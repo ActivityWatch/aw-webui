@@ -1,22 +1,48 @@
-<template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-  </div>
+<template lang="jade">
+ul
+  li(class="title") {{ menutitle }}
+  li(v-for="entry in entries") {{ entry.label }}
 </template>
 
 <script>
 export default {
+  props: {
+    entries: Array,
+    menutitle: String
+  },
   data () {
     return {
-      // note: changing this line won't causes changes
-      // with hot-reload because the reloaded component
-      // preserves its current state and we are modifying
-      // its initial state.
-      msg: 'Hello World!'
     }
   }
 }
 </script>
 
 <style scoped>
+ ul {
+     color: #999999;
+     width: 250px;
+     list-style: none;
+     padding-left: 0px;
+     height: 100vh;
+     background-color: #333;
+ }
+ li {
+     text-indent: 20px;
+     line-height: 40px;
+     background-color: #333;
+ }
+ li:hover {
+    background-color: #999999;
+    color: #fff;
+    cursor: pointer;
+ }
+ .title {
+     font-size: 24px;
+     padding-top: 20px;
+     padding-bottom: 10px;
+     color: #ededed;
+ }
+ .title:hover {
+     background-color: #333;
+ }
 </style>

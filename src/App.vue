@@ -1,13 +1,18 @@
 <template lang="jade">
-sidemenu
+sidemenu(:entries="menuEntries", menutitle="ActivityWatch")
 </template>
 
 <script>
-import sidemenu from './components/Sidemenu.vue';
+import Sidemenu from './components/Sidemenu.vue';
 
 export default {
   components: {
-    Hello
+    Sidemenu
+  },
+  data: function() {
+    return {
+      menuEntries: [{label: "Home"},{ label: "Buckets"}]
+    }
   }
 }
 </script>
