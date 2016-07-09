@@ -1,7 +1,9 @@
 <template lang="jade">
 ul
   li(class="title") {{ menutitle }}
-  li(v-for="entry in entries") {{ entry.label }}
+  a(v-for="entry in entries" v-link="{ path: entry.path }") 
+    li
+      {{ entry.label }}
 </template>
 
 <script>
@@ -44,5 +46,10 @@ export default {
  }
  .title:hover {
      background-color: #333;
+ }
+
+ a, a:focus {
+     color: #999;
+     text-decoration: none;
  }
 </style>
