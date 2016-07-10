@@ -1,5 +1,5 @@
 <template lang="jade">
-div#wrapper 
+div#wrapper
   div.sidebar-wrapper
     sidemenu(:entries="menuEntries", menutitle="ActivityWatch")
   div.pagecontent-wrapper
@@ -19,21 +19,36 @@ export default {
   data: function() {
     return {
       menuEntries: [
-        { label: "Home", path: "/" },
-        { label: "Buckets", path: "/buckets" }
+        { label: "Home",
+          path: "/",
+          iconCssClass: "glyphicon glyphicon-home" },
+        { label: "Buckets",
+          path: "/buckets",
+          iconCssClass: "glyphicon glyphicon-th-list" }
       ]
     }
   }
 }
 </script>
 
-<style>
+<style lang="scss">
+ $bgcolor: #242832;
+ $textcolor: #CCC;
+
+ $sidebar_width: 200px;
+
+ body {
+   background-color: $bgcolor;
+   color: #999;
+ }
+
+
  #wrapper {
-     padding-left: 250px;
+     padding-left: $sidebar_width;
  }
 
  .sidebar-wrapper {
-    margin-left: -250px;
+    margin-left: -$sidebar_width;
     position: fixed;
  }
 
