@@ -1,17 +1,17 @@
 <template lang="jade">
-div#sidebar
-  ul.top
-    li(class="title") {{ menutitle }}
+div#sidebar(v-bind:class="{ 'hide-labels': hideLabels }")
+  ul
+    li(v-on="click: toggleLabels")
+      span.glyphicon.glyphicon-menu-hamburger(style="text-align: center; width: 100%; font-size: 16pt; line-height: 50px")
     hr
     a(v-for="entry in entries" v-link="{ path: entry.path }")
       li
-        span(class="{{ entry.iconCssClass }}" style="text-indent: 0; margin-right: 20px")
+        span(class="{{ entry.iconCssClass }}")
         {{ entry.label }}
 
-  ul.bottom
-    hr
-    li
-      span(class="glyphicon glyphicon-menu-hamburger" style="text-align: center")
+  //ul.bottom
+  //  hr
+  //  li
 </template>
 
 <script>
@@ -22,6 +22,12 @@ export default {
   },
   data () {
     return {
+      hideLabels: false
+    }
+  },
+  methods: {
+    toggleLabels: function () {
+      this.hideLabels = !this.hideLabels;
     }
   }
 }
@@ -38,7 +44,14 @@ $bgcolor: #333;
     color: #999999;
     width: $sidebar_width;
     border-right: 1px solid #222;
+    transition: width 1s ease;
+
+    &.hideLabels {
+      width: 48px;
+    }
 }
+
+$icon_spacer: 15px;
 
 ul {
     $bgcolor_highlight: #393939;
@@ -53,20 +66,22 @@ ul {
       margin: 0px;
     }
 
-    &.top {
-        text-indent: 20px;
+    li {
+        overflow: hidden;
+        line-height: 40px;
+        white-space: nowrap;
 
-        >li.title {
-            text-indent: 20px;
-            font-size: 24px;
-            padding-top: 5px;
-            padding-bottom: 8px;
-            color: #ededed;
-
-            &:hover {
-                background-color: $bgcolor;
-            }
+        &:hover {
+            background-color: darken($bgcolor, 2%);
+            color: #fff;
+            cursor: pointer;
         }
+    }
+
+    .glyphicon {
+      font-size: 10pt;
+      padding-left: 2px + $icon_spacer;
+      padding-right: 2px + $icon_spacer;
     }
 
     &.bottom {
@@ -77,19 +92,6 @@ ul {
         background-color: $bgcolor;
     }
 }
-
-li {
-    line-height: 40px;
-
-    &:hover {
-        background-color: darken($bgcolor, 2%);
-        color: #fff;
-        cursor: pointer;
-    }
-}
-
-.title {
- }
 
 a, a:focus {
     color: #999;

@@ -1,9 +1,20 @@
 <template lang="jade">
-h2 this is home
+h2 Home
+
+h3 Status
+
+p
+  | Some text about status
+
+
+h3 Resources
+
+p
+  | Link to website and docs
 </template>
 
 <script>
 export default {
-  name: "Hom"
+  name: "Home"
 }
 </script>
