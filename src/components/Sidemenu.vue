@@ -1,7 +1,7 @@
 <template lang="jade">
 div#sidebar(v-bind:class="{ 'hide-labels': hideLabels }")
   ul
-    li(v-on="click: toggleLabels")
+    li(@click="toggleLabels")
       span.glyphicon.glyphicon-menu-hamburger(style="text-align: center; width: 100%; font-size: 16pt; line-height: 50px")
     hr
     a(v-for="entry in entries" v-link="{ path: entry.path }")
@@ -27,7 +27,9 @@ export default {
   },
   methods: {
     toggleLabels: function () {
+      console.log("labels toggeled");
       this.hideLabels = !this.hideLabels;
+      console.log(this.hideLabels);
     }
   }
 }
@@ -46,7 +48,7 @@ $bgcolor: #333;
     border-right: 1px solid #222;
     transition: width 1s ease;
 
-    &.hideLabels {
+    &.hide-labels {
       width: 48px;
     }
 }
