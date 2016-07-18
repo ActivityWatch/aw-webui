@@ -1,8 +1,8 @@
 <template lang="jade">
-div#sidebar(v-bind:class="{ 'hide-labels': hideLabels }")
+div#sidebar(v-bind:class="{ 'collapsed': collapsed }")
   ul
     li(@click="toggleLabels")
-      span.glyphicon.glyphicon-menu-hamburger(style="text-align: center; width: 100%; font-size: 16pt; line-height: 50px")
+      span.toggle-menu.glyphicon.glyphicon-menu-hamburger
     hr
     a(v-for="entry in entries" v-link="{ path: entry.path }")
       li
@@ -18,18 +18,16 @@ div#sidebar(v-bind:class="{ 'hide-labels': hideLabels }")
 export default {
   props: {
     entries: Array,
-    menutitle: String
+    collapsed: Boolean
   },
-  data () {
-    return {
-      hideLabels: false
-    }
-  },
+  data: function () {
+          return {};
+        },
   methods: {
     toggleLabels: function () {
-      console.log("labels toggeled");
-      this.hideLabels = !this.hideLabels;
-      console.log(this.hideLabels);
+      console.log(this);
+      this.collapsed = !this.collapsed;
+      this.$dispatch("sidebar-collapsed", this.collapsed);
     }
   }
 }
@@ -48,12 +46,13 @@ $bgcolor: #333;
     border-right: 1px solid #222;
     transition: width 1s ease;
 
-    &.hide-labels {
+    &.collapsed {
       width: 48px;
     }
 }
 
 $icon_spacer: 15px;
+
 
 ul {
     $bgcolor_highlight: #393939;
@@ -72,6 +71,14 @@ ul {
         overflow: hidden;
         line-height: 40px;
         white-space: nowrap;
+
+        span.toggle-menu {
+            text-align: center;
+            width: 100%;
+            font-size: 16pt;
+            line-height: 50px;
+            margin-left: -2px;
+        }
 
         &:hover {
             background-color: darken($bgcolor, 2%);
