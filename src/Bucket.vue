@@ -16,7 +16,7 @@ div
     | Showing {{ events.length }}/{{ events.length }} events
 
   ul.event-list
-    li(v-for="event in events")
+    li(v-for="event in events | orderBy 'timestamp' -1")
       span.event
         span.field(v-for="timestamp in event.timestamp")
           span.glyphicon.glyphicon-time
