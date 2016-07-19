@@ -76,9 +76,9 @@ body {
     text-align: center;
     color: #444;
 
-    float: right;
+    float: left;
     position: relative;
-    left: -50%; /* or right 50% */
+    left: 40%; /* or right 50% */
   }
 }
 

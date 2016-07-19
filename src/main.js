@@ -5,6 +5,7 @@ import VueRouter from 'vue-router';
 import Home from './Home.vue';
 import Buckets from './Buckets.vue';
 import Bucket from './Bucket.vue';
+import User from './User.vue';
 import Settings from './Settings.vue';
 
 Vue.use(require('vue-resource'));
@@ -21,6 +22,9 @@ router.map({
   },
   '/buckets/:id': {
     component: Bucket
+  },
+  '/u/:username': {
+    component: User
   },
   '/settings': {
     component: Settings
