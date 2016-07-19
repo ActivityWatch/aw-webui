@@ -18,12 +18,12 @@ div
   ul.event-list
     li(v-for="event in events")
       span.event
-        span.field
+        span.field(v-for="timestamp in event.timestamp")
           span.glyphicon.glyphicon-time
-          {{ event.timestamp }}
-        span.field
+          {{ timestamp }}
+        span.field(v-for="label in event.label")
           span.glyphicon.glyphicon-tags
-          {{ event.label }}
+          {{ label }}
 
 </template>
 
