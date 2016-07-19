@@ -1,7 +1,7 @@
 <template lang="jade">
 span#usermenu
   span(v-if="loggedIn")
-    a(:href="'/u/' + user.username")
+    a(v-link="'/u/' + user.username")
       {{user.name}}
     a.logout(@click="logout")
       | Log out

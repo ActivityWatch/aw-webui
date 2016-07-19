@@ -4,7 +4,7 @@ div#sidebar(v-bind:class="{ 'collapsed': collapsed }")
     li(@click="toggleLabels")
       span.toggle-menu.glyphicon.glyphicon-menu-hamburger
     hr
-    a(v-for="entry in entries" v-link="{ path: entry.path }")
+    a(v-for="entry in entries" v-link="{ path: entry.path, exact: entry.exact }")
       li
         span(class="{{ entry.iconCssClass }}")
         {{ entry.label }}
@@ -65,6 +65,10 @@ ul {
     >hr {
       border-color: rgb(41, 41, 41);
       margin: 0px;
+    }
+
+    a.v-link-active > li {
+      background-color: darken($bgcolor, 4%);
     }
 
     li {

@@ -35,6 +35,7 @@ export default {
       menuEntries: [
         { label: "Home",
           path: "/",
+          exact: true,
           iconCssClass: "glyphicon glyphicon-home" },
         { label: "Buckets",
           path: "/buckets",
