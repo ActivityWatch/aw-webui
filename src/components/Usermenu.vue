@@ -13,7 +13,7 @@ span#usermenu
 
   span(v-if="loggedIn")
     a(v-link="'/u/' + user.username")
-      div.profile-image(style="background-image: url('https://www.gravatar.com/avatar/{{ emailHash }}?size=36')")
+      div.profile-image(style="background-image: url('{{ pictureURL }}')")
       span.badge.active
         {{user.name}}
     a.logout(@click="logout")
@@ -31,7 +31,7 @@ export default {
   data: function () {
     return {
       'loggedIn': true,
-      'emailHash': '',
+      'pictureURL': '',
       'user': {
         'name': 'Erik Bjäreholt',
         'username': 'erb',
@@ -44,10 +44,20 @@ export default {
       console.log("Logging out");
       this.loggedIn = false;
       this.user = {};
-    }
+    },
   },
   ready: function() {
-    this.emailHash = MD5(this.user.email.trim().toLowerCase())
+    let v = this;
+
+    let getEmailHash = function(email) {
+        return MD5(email.trim().toLowerCase());
+      }
+
+    let getPictureURL = (email, size) => {
+      return "https://www.gravatar.com/avatar/" + getEmailHash(email) + "?size=" + size + "&default=identicon"
+    }
+
+    this.pictureURL = getPictureURL(this.user.email, 36);
   }
 }
 </script>
