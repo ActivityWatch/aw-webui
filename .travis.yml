@@ -1,0 +1,11 @@
+language: node_js
+python:
+ - "5"
+ - "6"
+ - "node"
+
+install:
+ - "npm install"
+
+script:
+ - "npm run build"

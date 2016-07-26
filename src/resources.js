@@ -2,8 +2,13 @@ import Vue from 'vue';
 
 Vue.use(require('vue-resource'));
 
-let $Bucket = Vue.resource('http://localhost:5666/api/0/buckets{/id}');
-let $Event = Vue.resource('http://localhost:5666/api/0/buckets/{id}/events');
+let protocol = "http";
+let hostname = "localhost";
+let port = "5600";
+let origin = protocol + "://" + hostname + ":" + port;
+
+let $Bucket = Vue.resource(origin + '/api/0/buckets{/id}');
+let $Event = Vue.resource(origin + '/api/0/buckets/{id}/events');
 
 export default {
   $Bucket: $Bucket,
