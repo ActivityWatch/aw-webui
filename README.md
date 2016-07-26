@@ -2,6 +2,8 @@
 
 > A webui for ActivityWatch built in Vue.js
 
+[![Build Status](https://travis-ci.org/ActivityWatch/aw-webui.svg?branch=master)](https://travis-ci.org/ActivityWatch/aw-webui)
+
 ## Build Setup
 
 ``` bash
