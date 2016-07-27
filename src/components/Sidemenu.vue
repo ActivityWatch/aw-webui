@@ -4,9 +4,11 @@ div#sidebar(v-bind:class="{ 'collapsed': collapsed }")
     li(@click="toggleLabels")
       span.toggle-menu.glyphicon.glyphicon-menu-hamburger
     hr
-    a(v-for="entry in entries" v-link="{ path: entry.path, exact: entry.exact }")
+    a(v-for="entry in entries", v-link="{ path: entry.path, exact: entry.exact }")
       li
-        span(class="{{ entry.iconCssClass }}")
+        tooltip(v-if="collapsed", trigger="hover", effect="fadein", placement="right", :content="entry.label")
+          span(class="menuicon {{ entry.iconCssClass }}")
+        span(v-else, class="menuicon {{ entry.iconCssClass }}")
         {{ entry.label }}
 
   //ul.bottom
@@ -15,10 +17,15 @@ div#sidebar(v-bind:class="{ 'collapsed': collapsed }")
 </template>
 
 <script>
+var tooltip = require('vue-strap').tooltip;
+
 export default {
   props: {
     entries: Array,
     collapsed: Boolean
+  },
+  components: {
+    'tooltip': tooltip
   },
   data: function () {
           return {};
@@ -75,6 +82,11 @@ ul {
         overflow: hidden;
         line-height: 40px;
         white-space: nowrap;
+
+        .menuicon {
+            padding-top: 15px;
+            padding-bottom: 15px;
+        }
 
         span.toggle-menu {
             text-align: center;

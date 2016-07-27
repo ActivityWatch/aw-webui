@@ -4,7 +4,9 @@ h2 Buckets
 div.pagination-header
   | Showing {{ buckets.length }}/{{buckets.length}} buckets
 
-ul.bucket-list
+
+
+//ul.bucket-list
   li(v-for="bucket in buckets")
     div.bucket
       div.title
@@ -18,46 +20,73 @@ ul.bucket-list
         br
         | # of events: Not implemented
 
+accordion(:one-at-atime="false")
+  panel(v-for="bucket in buckets", :header="bucket.id", :is-open="false")
+    div.actions
+      a(v-link="'/buckets/' + bucket.id")
+        button.btn.btn-default.btn-sm(type="button")
+          span.glyphicon.glyphicon-folder-open(aria-hidden="true")
+          | Open bucket
+      a(v-link="'/not_implemented'")
+        tooltip(trigger="hover" effect="scale" placement="bottom" content="Not implemented")
+          button.btn.btn-default.btn-sm(type="button" data-toggle="tooltip" data-placement="bottom" title="Not implemented")
+            span.glyphicon.glyphicon-save(aria-hidden="true")
+            | Export (No impl)
+      a(v-link="'/not_implemented'")
+        tooltip(trigger="hover" effect="scale" placement="bottom" content="Not implemented")
+          button.btn.btn-default.btn-sm(type="button" data-toggle="tooltip" data-placement="bottom" title="Not implemented")
+            span.glyphicon.glyphicon-tower(aria-hidden="true")
+            | Convert to Vault (No impl)
+      a(v-link="'/not_implemented'")
+        tooltip(trigger="hover" effect="scale" placement="bottom" content="Not implemented")
+          button.btn.btn-default.btn-sm(type="button" data-toggle="tooltip" data-placement="bottom" title="Not implemented")
+            span.glyphicon.glyphicon-lock(aria-hidden="true")
+            | Permissions (No impl)
+    br
+    | Hostname: {{ bucket.hostname }}
+    br
+    | Client: {{ bucket.client }}
+    br
+    | # of events: Not implemented
+
 </template>
 
 <style lang="scss">
-.bucket-list {
-  list-style-type: none;
-  padding: 0;
-}
+.actions {
+  margin: -5px;
+  a {
+    margin-right: 5px;
 
-.bucket {
-  border: 1px solid #555;
-  border-radius: 3px;
-  margin-bottom: 20px;
-
-  .title {
-    background-color: #eee;
-    margin: 0;
-    padding: 10px;
-    border: 0 solid #555;
-    border-width: 0 0 1px 0;
-
-    h4 {
-      margin: 0;
+    button > span {
+      margin-right: 5px;
     }
   }
-
-  .metadata {
-    color: #333;
-    padding: 10px;
-  }
 }
+
 </style>
 
 <script>
 import Resources from './resources.js';
 console.log(Resources);
 
+var tooltip = require('vue-strap').tooltip;
+var accordion = require('vue-strap').accordion;
+var panel = require('vue-strap').panel;
+
 let $Bucket = Resources.$Bucket;
 
 export default {
   name: "Buckets",
+  ready: function() {
+    console.log("Running ready() for buckets");
+    this.getBuckets();
+    this.getBucketInfo("test");
+  },
+  components: {
+    'tooltip': tooltip,
+    'accordion': accordion,
+    'panel': panel
+  },
   data: () => {
     return {
       buckets: [
@@ -78,13 +107,16 @@ export default {
     getBucketInfo: function(bucket_id) {
       $Bucket.get({"id": bucket_id}).then((response) => {
         console.log(response.json());
-        this.buckets.$add(bucket_id, response.json())
+        this.$set('buckets.'+bucket_id, response.json())
       });
     }
   },
-  ready: function() {
-    this.getBuckets();
-    this.getBucketInfo("test");
+  watch: {
+    buckets: function() {
+      this.$nextTick(function() {
+        console.log("Next tick");
+      });
+    }
   }
 }
 </script>
