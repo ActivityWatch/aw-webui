@@ -8,6 +8,8 @@ import Bucket from './Bucket.vue';
 import User from './User.vue';
 import Settings from './Settings.vue';
 
+import './filters.js';
+
 Vue.use(require('vue-resource'));
 
 Vue.use(VueRouter);

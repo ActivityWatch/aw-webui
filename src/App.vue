@@ -9,7 +9,7 @@ div#wrapper(v-bind:class="{ 'collapsed': collapsedSidebar }")
       span.title
        | ActivityWatch
       usermenu
-    div.container-fluid
+    div.container
       router-view
 </template>
 
@@ -69,16 +69,17 @@ body {
   border-bottom: 1px solid #CCC;
   height: 50px;
   line-height: 50px;
+  font-family: 'Varela Round', sans-serif;
+  font-size: 12pt;
+  font-weight: 400;
 
   .title {
-    margin: 0px;
+    display: inline-block;
+    width: 200px;
     font-size: 20pt;
     text-align: center;
     color: #444;
-
-    float: left;
-    position: relative;
-    left: 40%; /* or right 50% */
+    margin-left: calc(50% - 200px + 100px);
   }
 }
 
@@ -96,6 +97,9 @@ body {
     position: fixed;
     margin-left: -$sidebar_width;
     transition: margin 1s ease;
+    font-family: 'Varela Round', sans-serif;
+    font-size: 11pt;
+    font-weight: 400;
 
     &.collapsed {
         margin-left: -$sidebar_width_collapsed;

@@ -64,6 +64,9 @@ $icon_spacer: 15px;
 ul {
     $bgcolor_highlight: #393939;
     $bordercolor_highlight: #444;
+    $menubutton_color: #2e2e2e;
+    $item_hover_color: #222;
+    $item_active_color: #252525;
 
     width: 100%;
     list-style: none;
@@ -75,7 +78,8 @@ ul {
     }
 
     a.v-link-active > li {
-      background-color: darken($bgcolor, 4%);
+      background-color: $item_active_color;
+      color: #ddd;
     }
 
     li {
@@ -94,11 +98,17 @@ ul {
             font-size: 16pt;
             line-height: 50px;
             margin-left: -2px;
+            background-color: $menubutton_color;
+            border-color: #0F0;
+
+            &:hover {
+              background-color: $item_hover_color;
+            }
         }
 
         &:hover {
-            background-color: darken($bgcolor, 2%);
-            color: #fff;
+            background-color: $item_hover_color !important;
+            color: #fff !important;
             cursor: pointer;
         }
     }

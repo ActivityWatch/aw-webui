@@ -68,11 +68,11 @@ export default {
   margin-right: 20px;
 
   .profile-image {
-    background-color: #444;
+    background-color: #111;
     display: inline-block;
     width: 38px;
     height: 38px;
-    border: 1px solid #444;
+    border: 1px solid #2a2a2a;
     border-radius: 50%;
     position: relative;
     top: 14px;
@@ -82,7 +82,9 @@ export default {
 
   span.badge {
     padding-left: 25px;
-    font-size: 10pt;
+    font-size: 12pt;
+    background-color: #333;
+    font-weight: 400;
   }
 
   span {

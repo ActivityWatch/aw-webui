@@ -1,6 +1,8 @@
 <template lang="jade">
 h2 Home
 
+hr
+
 h3 Status
 
 div.status.good

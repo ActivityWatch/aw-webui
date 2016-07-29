@@ -1,6 +1,8 @@
 <template lang="jade">
 h2 Buckets
 
+hr
+
 div.pagination-header
   | Showing {{ buckets.length }}/{{buckets.length}} buckets
 
@@ -52,8 +54,20 @@ accordion(:one-at-atime="false")
 </template>
 
 <style lang="scss">
+.panel-default {
+  border-color: #BBB;
+  border-radius: 4px;
+
+  .panel-heading {
+    background-color: #eee;
+    border-color: #ccc;
+    border-radius: 4px;
+  }
+}
+
 .actions {
   margin: -5px;
+
   a {
     margin-right: 5px;
 
@@ -80,7 +94,6 @@ export default {
   ready: function() {
     console.log("Running ready() for buckets");
     this.getBuckets();
-    this.getBucketInfo("test");
   },
   components: {
     'tooltip': tooltip,
@@ -89,11 +102,7 @@ export default {
   },
   data: () => {
     return {
-      buckets: [
-          {name: "test", length: 1337},
-          {name: "another_test", length: 2},
-          {name: "or_rather_a_mock", length: 100}
-      ],
+      buckets: [],
     }
   },
   methods: {
