@@ -40,7 +40,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
-@import "../globalvars.scss";
+@import "../style/globalvars.scss";
 
 $bgcolor: #333;
 

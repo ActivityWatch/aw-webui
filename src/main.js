@@ -1,37 +1,9 @@
-import Vue from 'vue';
-import App from './App';
-import VueRouter from 'vue-router';
+// Loads all the resources (using vue-resource)
+import './resources.js';
 
-import Home from './views/Home.vue';
-import Buckets from './views/Buckets.vue';
-import Bucket from './views/Bucket.vue';
-import User from './views/User.vue';
-import Settings from './views/Settings.vue';
-
+// Loads all the filters
 import './filters.js';
 
-Vue.use(require('vue-resource'));
-
-Vue.use(VueRouter);
-var router = new VueRouter();
-
-router.map({
-  '/': {
-    component: Home
-  },
-  '/buckets': {
-    component: Buckets
-  },
-  '/buckets/:id': {
-    component: Bucket
-  },
-  '/u/:username': {
-    component: User
-  },
-  '/settings': {
-    component: Settings
-  }
-});
-
-router.start(App, "#app");
+// Sets up the routing and the base app (using vue-router)
+import './route.js';
 
