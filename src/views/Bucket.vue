@@ -83,7 +83,7 @@ $border-color: #ddd;
 </style>
 
 <script>
-import Resources from './resources.js';
+import Resources from '../resources.js';
 
 let $Bucket = Resources.$Bucket;
 let $Event = Resources.$Event;
@@ -100,20 +100,17 @@ export default {
   methods: {
     getBucketInfo: function(bucket_id) {
       $Bucket.get({"id": bucket_id}).then((response) => {
-        console.log(response.json());
         this.$set("bucket", response.json())
       });
     },
 
     getEvents: function(bucket_id) {
       $Event.get({"id": bucket_id}).then((response) => {
-        console.log(response.json());
         this.$set("events", response.json())
       });
     }
   },
   ready: function() {
-    console.log(this.$route.params);
     this.id = this.$route.params.id;
     this.getBucketInfo(this.id);
     this.getEvents(this.id);

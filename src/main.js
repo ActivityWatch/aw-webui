@@ -2,11 +2,11 @@ import Vue from 'vue';
 import App from './App';
 import VueRouter from 'vue-router';
 
-import Home from './Home.vue';
-import Buckets from './Buckets.vue';
-import Bucket from './Bucket.vue';
-import User from './User.vue';
-import Settings from './Settings.vue';
+import Home from './views/Home.vue';
+import Buckets from './views/Buckets.vue';
+import Bucket from './views/Bucket.vue';
+import User from './views/User.vue';
+import Settings from './views/Settings.vue';
 
 import './filters.js';
 

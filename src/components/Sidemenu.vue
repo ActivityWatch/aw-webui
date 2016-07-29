@@ -32,7 +32,6 @@ export default {
         },
   methods: {
     toggleLabels: function () {
-      console.log(this);
       this.collapsed = !this.collapsed;
       this.$dispatch("sidebar-collapsed", this.collapsed);
     }

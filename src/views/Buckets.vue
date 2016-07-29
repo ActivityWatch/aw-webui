@@ -80,8 +80,7 @@ accordion(:one-at-atime="false")
 </style>
 
 <script>
-import Resources from './resources.js';
-console.log(Resources);
+import Resources from '../resources.js';
 
 var tooltip = require('vue-strap').tooltip;
 var accordion = require('vue-strap').accordion;
@@ -92,7 +91,6 @@ let $Bucket = Resources.$Bucket;
 export default {
   name: "Buckets",
   ready: function() {
-    console.log("Running ready() for buckets");
     this.getBuckets();
   },
   components: {
@@ -108,22 +106,13 @@ export default {
   methods: {
     getBuckets: function() {
       $Bucket.get().then((response) => {
-        console.log(response.json());
         this.$set('buckets', response.json())
       });
     },
 
     getBucketInfo: function(bucket_id) {
       $Bucket.get({"id": bucket_id}).then((response) => {
-        console.log(response.json());
         this.$set('buckets.'+bucket_id, response.json())
-      });
-    }
-  },
-  watch: {
-    buckets: function() {
-      this.$nextTick(function() {
-        console.log("Next tick");
       });
     }
   }

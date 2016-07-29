@@ -45,7 +45,6 @@ export default {
   },
   events: {
     'sidebar-collapsed': function(collapsed) {
-      console.log("Event!");
       this.collapsedSidebar = collapsed;
     }
   }
