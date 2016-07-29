@@ -1,6 +1,8 @@
 <template lang="jade">
 h2 Bucket: {{ $route.params.id }}
 
+hr
+
 div
   h3 Info
   | ID: {{ bucket.id }}
@@ -18,9 +20,9 @@ div
   ul.event-list
     li(v-for="event in events | orderBy 'timestamp' -1")
       span.event
-        span.field(v-for="timestamp in event.timestamp")
+        span.field(v-for="timestamp in event.timestamp", title="{{ timestamp }}")
           span.glyphicon.glyphicon-time
-          {{ timestamp }}
+          {{ timestamp | friendlytime }}
         span.field(v-for="label in event.label")
           span.glyphicon.glyphicon-tags
           {{ label }}
