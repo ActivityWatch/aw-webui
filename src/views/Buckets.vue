@@ -7,21 +7,6 @@ div.pagination-header
   | Showing {{ buckets.length }}/{{buckets.length}} buckets
 
 
-
-//ul.bucket-list
-  li(v-for="bucket in buckets")
-    div.bucket
-      div.title
-        h4
-          a(v-link="'/buckets/' + bucket.id")
-            | {{ bucket.id }}
-      div.metadata
-        | Hostname: {{ bucket.hostname }}
-        br
-        | Client: {{ bucket.client }}
-        br
-        | # of events: Not implemented
-
 accordion(:one-at-atime="false")
   panel(v-for="bucket in buckets", :header="bucket.id", :is-open="false")
     div.actions
