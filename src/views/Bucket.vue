@@ -17,15 +17,29 @@ div
   div.pagination-header
     | Showing {{ events.length }}/{{ events.length }} events
 
-  ul.event-list
-    li(v-for="event in events | orderBy 'timestamp' -1")
-      span.event
-        span.field(v-for="timestamp in event.timestamp", title="{{ timestamp }}")
-          span.glyphicon.glyphicon-time
-          {{ timestamp | friendlytime }}
-        span.field(v-for="label in event.label")
-          span.glyphicon.glyphicon-tags
-          {{ label }}
+  div.well.well-sm(style="margin-bottom: 0;")
+    button.btn.btn-default.btn-sm(v-on:click="expandList")
+      span(v-if="expandList")
+        | Expand list
+      span(v-else)
+        | Condense list
+
+  div.scrollbar-flipped
+    ul.event-list(v-bind:class="{ 'expand': isListExpanded }")
+      li(v-for="event in events | orderBy 'timestamp' -1")
+        span.event
+          span.field(v-for="timestamp in event.timestamp", title="{{ timestamp }}")
+            span.glyphicon.glyphicon-time
+            {{ timestamp | friendlytime }}
+          span.field(v-for="label in event.label" track-by="$index")
+            span.glyphicon.glyphicon-tags
+            {{ label }}
+          span.field(v-for="duration in event.duration")
+            span.glyphicon.glyphicon-hourglass
+            {{ duration.value | friendlyduration }}
+          span.field(v-for="count in event.count")
+            span.glyphicon.glyphicon-option-horizontal
+            {{ count }}
 
 </template>
 
@@ -38,6 +52,8 @@ $border-color: #ddd;
   padding: 0;
   border: 1px solid $border-color;
   border-radius: 3px;
+  height: 300px;
+  overflow-y: auto;
 
   li {
     border: 0 solid $border-color;
@@ -48,6 +64,10 @@ $border-color: #ddd;
     &:last-child {
       border-width: 0;
     }
+  }
+
+  &.expand {
+    height: 100%;
   }
 }
 
@@ -80,6 +100,14 @@ $border-color: #ddd;
     margin-right: 0;
   }
 }
+
+/* Flips the outer element once, then all direct children once,
+   leaving the scrollbar in the first flipped yet the content correct */
+.scrollbar-flipped, .scrollbar-flipped > * {
+  transform: rotateX(180deg);
+  -ms-transform: rotateX(180deg); /* IE 9 */
+  -webkit-transform: rotateX(180deg); /* Safari and Chrome */
+}
 </style>
 
 <script>
@@ -94,7 +122,8 @@ export default {
     return {
       id: String,
       bucket: Object,
-      events: []
+      events: [],
+      isListExpanded: false,
     }
   },
   methods: {
@@ -108,6 +137,11 @@ export default {
       $Event.get({"id": bucket_id}).then((response) => {
         this.$set("events", response.json())
       });
+    },
+
+    expandList: function() {
+      this.isListExpanded = !this.isListExpanded;
+      console.log("List should be expanding: ", this.isListExpanded);
     }
   },
   ready: function() {
