@@ -39,6 +39,9 @@ export default {
           iconCssClass: "glyphicon glyphicon-home" },
         { label: "Buckets",
           path: "/buckets",
+          iconCssClass: "glyphicon glyphicon-th-list" },
+        { label: "Server Log",
+          path: "/log",
           iconCssClass: "glyphicon glyphicon-th-list" }
       ]
     }
