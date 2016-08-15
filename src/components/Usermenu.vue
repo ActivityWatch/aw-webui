@@ -1,24 +1,25 @@
 <template lang="jade">
 span#usermenu
   //ul.nav.nav-pills(role="tablist")
-  //  li.active(role="presentation")
-  //    a
-  //      | Home
-  //      span.badge 42
-  //  li.active
-  //    a Home
-  //      span.badge 42
+    li.active(role="presentation")
+      a
+        | Home
+        span.badge 42
+    li.active
+      a Home
+        span.badge 42
 
   span.label.label-success(style="margin-right: 20px;") Everything in order!
 
-  span(v-if="loggedIn")
+
+  //span(v-if="loggedIn")
     a(v-link="'/u/' + user.username")
       div.profile-image(style="background-image: url('{{ pictureURL }}')")
       span.badge.active
         {{user.name}}
     a.logout(@click="logout")
       | Log out
-  span(v-else)
+  //span(v-else)
     | Not logged in
 
 
