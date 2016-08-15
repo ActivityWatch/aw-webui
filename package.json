@@ -51,6 +51,10 @@
     "bootstrap-webpack": "0.0.5",
     "electron-packager": "^7.3.0",
     "jquery": "^3.1.0",
-    "vue-strap": "^1.0.11"
+    "vue-strap": "^1.0.11",
+    "less-loader": "^0.6.2",
+    "style-loader": "^0.6.0",
+    "imports-loader": "^0.6.3",
+    "exports-loader": "^0.6.2"
   }
 }

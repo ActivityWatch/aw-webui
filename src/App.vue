@@ -40,7 +40,10 @@ export default {
           iconCssClass: "glyphicon glyphicon-home" },
         { label: "Buckets",
           path: "/buckets",
-          iconCssClass: "glyphicon glyphicon-th-list" }
+          iconCssClass: "glyphicon glyphicon-folder-open" },
+        { label: "Server Log",
+          path: "/log",
+          iconCssClass: "glyphicon glyphicon-list-alt" }
       ]
     }
   },
