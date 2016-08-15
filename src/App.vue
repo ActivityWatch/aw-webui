@@ -9,8 +9,9 @@ div#wrapper(v-bind:class="{ 'collapsed': collapsedSidebar }")
       span.title
        | ActivityWatch
       usermenu
-    div.container
-      router-view
+    div.container-container
+      div.container
+        router-view
 </template>
 
 <script>
@@ -55,6 +56,7 @@ export default {
 $bgcolor: #FFF;
 $textcolor: #000;
 
+$topbar_height: 50px;
 $sidebar_width: 200px;
 $sidebar_width_collapsed: 50px;
 
@@ -82,6 +84,10 @@ body {
   }
 }
 
+.container-container {
+  height: calc(100vh - #{$topbar_height});
+  overflow-y: auto;
+}
 
 #wrapper {
     padding-left: $sidebar_width;
