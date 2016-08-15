@@ -53,7 +53,6 @@ export default {
     this.getLog();
   },
   components: {
-    'tooltip': tooltip,
     'accordion': accordion,
     'panel': panel
   },
