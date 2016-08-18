@@ -15,7 +15,7 @@ Vue.filter('friendlytime', function (timestamp) {
 
 Vue.filter('friendlyduration', function (seconds) {
   let d = moment.duration(Number.parseFloat(seconds)*1000);
-  let s = [d.hours() + "h", d.minutes() + "m", d.seconds() + "s"].join(" ");
+  let s = [Math.floor(d.asHours()) + "h", d.minutes() + "m", d.seconds() + "s"].join(" ");
   s = s.replace(/(0h| 0[ms])/g, "");
   s = s.replace(/ +/g, " ").trim();
   if(s === "") {
