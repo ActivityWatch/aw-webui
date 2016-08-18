@@ -2,7 +2,7 @@
 h2 {{user.name}} ({{ user.username }})
 
 div
-  {{ user.email }}
+| {{ user.email }}
 
 p
 | Some text about user should go here

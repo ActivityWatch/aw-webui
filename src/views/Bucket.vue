@@ -30,16 +30,16 @@ div
         span.event
           span.field(v-for="timestamp in event.timestamp", title="{{ timestamp }}")
             span.glyphicon.glyphicon-time
-            {{ timestamp | friendlytime }}
+            | {{ timestamp | friendlytime }}
           span.field(v-for="label in event.label" track-by="$index")
             span.glyphicon.glyphicon-tags
-            {{ label }}
+            | {{ label }}
           span.field(v-for="duration in event.duration")
             span.glyphicon.glyphicon-hourglass
-            {{ duration.value | friendlyduration }}
+            | {{ duration.value | friendlyduration }}
           span.field(v-for="count in event.count")
             span.glyphicon.glyphicon-option-horizontal
-            {{ count }}
+            | {{ count }}
 
 </template>
 

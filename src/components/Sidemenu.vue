@@ -9,7 +9,7 @@ div#sidebar(v-bind:class="{ 'collapsed': collapsed }")
         tooltip(v-if="collapsed", trigger="hover", effect="fadein", placement="right", :content="entry.label")
           span(class="menuicon {{ entry.iconCssClass }}")
         span(v-else, class="menuicon {{ entry.iconCssClass }}")
-        {{ entry.label }}
+        | {{ entry.label }}
 
   //ul.bottom
   //  hr

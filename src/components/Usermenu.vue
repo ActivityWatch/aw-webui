@@ -15,7 +15,7 @@ span#usermenu
     a(v-link="'/u/' + user.username")
       div.profile-image(style="background-image: url('{{ pictureURL }}')")
       span.badge.active
-        {{user.name}}
+      | {{user.name}}
     a.logout(@click="logout")
       | Log out
   span(v-else)
