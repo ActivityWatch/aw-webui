@@ -8,7 +8,7 @@ div.pagination-header
 
 
 accordion(:one-at-atime="false")
-  panel(v-for="bucket in buckets", :header="bucket.id", :is-open="false")
+  panel(v-for="bucket in buckets", :header="bucket.id", :is-open="true")
     div.actions
       a(v-link="'/buckets/' + bucket.id")
         button.btn.btn-default.btn-sm(type="button")
@@ -29,12 +29,12 @@ accordion(:one-at-atime="false")
           button.btn.btn-default.btn-sm(type="button" data-toggle="tooltip" data-placement="bottom" title="Not implemented")
             span.glyphicon.glyphicon-lock(aria-hidden="true")
             | Permissions (No impl)
-    br
-    | Hostname: {{ bucket.hostname }}
-    br
-    | Client: {{ bucket.client }}
-    br
-    | # of events: Not implemented
+    //br
+    //| Hostname: {{ bucket.hostname }}
+    //br
+    //| Client: {{ bucket.client }}
+    //br
+    //| # of events: Not implemented
 
 </template>
 
