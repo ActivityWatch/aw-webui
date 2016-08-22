@@ -10,6 +10,11 @@ div
   | Hostname: {{ bucket.hostname }}
   br
   | Client: {{ bucket.client }}
+  br
+  | Created: {{ bucket.created }}
+  br
+  | Event type: {{ bucket.type }}
+
 
 div
   h3 Events
