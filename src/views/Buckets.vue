@@ -4,8 +4,6 @@ h2 Buckets
 hr
 
 div.pagination-header
-  | Showing {{ buckets.length }}/{{buckets.length}} buckets
-
 
 accordion(:one-at-atime="false")
   panel(v-for="bucket in buckets", :header="bucket.id", :is-open="true")
