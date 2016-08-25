@@ -32,11 +32,14 @@ p
       a(href="https://activitywatch.github.io/")
         | Website
     li
+      a(href="https://github.com/ActivityWatch/activitywatch")
+        | GitHub
+    li
       a(href="https://activitywatch.readthedocs.org/")
         | Documentation
     li
-      a(href="https://github.com/ActivityWatch/activitywatch")
-        | GitHub
+      a(href="/api/")
+        | API Documentation
 
 </template>
 
