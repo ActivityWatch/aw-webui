@@ -3,6 +3,7 @@ import App from './App';
 import VueRouter from 'vue-router';
 
 import Home from './views/Home.vue';
+import Activity from './views/Activity.vue';
 import Buckets from './views/Buckets.vue';
 import Bucket from './views/Bucket.vue';
 import Log from './views/Log.vue';
@@ -15,6 +16,9 @@ var router = new VueRouter();
 router.map({
   '/': {
     component: Home
+  },
+  '/activity': {
+    component: Activity
   },
   '/buckets': {
     component: Buckets

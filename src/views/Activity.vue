@@ -1,0 +1,127 @@
+<template lang="jade">
+h1(style="color: red;") (IN DEVELOPMENT)
+h2 Window Activity Today
+
+hr
+
+p Showing activity between {{ starttime }} and {{ endtime }}
+
+div
+  p Eventcount: {{ eventcount }}
+div(v-for="app in apps")
+  h4 {{ app.name }}
+  p {{ app.duration.value }}{{ app.duration.unit }}
+  table
+    tr(v-for="(intex, title) in app.titles")
+      td {{ title.duration.value }}{{ title.duration.unit }}  
+      td | {{ title.name }}
+
+
+</template>
+
+<style lang="scss">
+
+</style>
+
+<script>
+import Resources from '../resources.js';
+
+let $EventChunk = Resources.$EventChunk;
+
+export default {
+  name: "Activity",
+  data: () => {
+    return {
+      starttime: "",
+      endtime: "",
+      eventcount: 0,
+      apps: {},
+      chunks: {},
+    }
+  },
+  methods: {
+    getEventChunk: function(bucket_id, starttime, endtime) {
+      $EventChunk.get({"id": bucket_id, "start": starttime, "end": endtime}).then((response) => {
+        var data = response.json();
+        this.chunks = data['chunks'];
+        this.$set("chunks", this.chunks);
+        this.eventcount = data['eventcount'];
+        this.$set("eventcount", this.eventcount);
+        this.parseChunksToApps(this.chunks);
+      });
+    },
+    
+    parseChunksToApps: function(chunks) {
+      var apps = {}
+      for (var label in this.chunks){
+          var labeltype = label.split(':')[0];
+          var labelvalue = label.split(':')[1];
+          if (labeltype == "appname"){
+              apps[labelvalue] = {
+                  'name':     labelvalue,
+                  'duration': this.chunks[label]['duration'],
+                  'titles': [],
+              };
+          }
+      }
+      for (var label in this.chunks){
+          var labeltype = label.split(':')[0];
+          var labelvalue = label.split(':')[1];
+          if (labeltype == "title"){
+              var appname = null;
+              for (var i in this.chunks[label]['other_labels']){
+                  var sublabel = this.chunks[label]['other_labels'][i];
+                  var sublabeltype = sublabel.split(':')[0];
+                  var sublabelvalue = sublabel.split(':')[1];
+                  if (sublabeltype == "appname" && sublabelvalue in apps){
+                      appname = sublabelvalue;
+                  }
+              }
+              if (appname){
+                  apps[appname]['titles'].push({
+                      'name': labelvalue,
+                      'duration': this.chunks[label]['duration'],
+                  });
+                  //console.log("Added title to "+appname+": "+labelvalue);
+              }
+          }
+           
+      }
+      for (var app in apps){
+          apps[app]['titles'].sort(function(a,b){
+              if (a['duration']['value'] < b['duration']['value'])
+                  return 1;
+              else
+                  return -1;
+          })
+      }
+      //console.log(apps);
+      
+      this.$set("apps", apps);
+    },
+  },
+  ready: function() {
+    // Get start time of today
+    this.start = new Date();
+    this.start.setHours(0);
+    this.start.setMinutes(0);
+    this.start.setSeconds(0);
+    this.start.setMilliseconds(0);
+    // End time of today
+    this.end = new Date(this.start);
+    this.end.setDate(this.end.getDate()+1);
+    this.end = new Date(this.end-1);
+    // Convert to iso8601
+    this.start = this.start.toISOString();
+    this.end = this.end.toISOString();
+    
+    // TODO: Make this not hardcoded
+    this.bucket = "aw-watcher-window_johan-desktop"
+
+    this.$set("starttime", this.start);
+    this.$set("endtime", this.end);
+
+    this.getEventChunk(this.bucket, this.start, this.end);
+  }
+}
+</script>
