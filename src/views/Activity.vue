@@ -52,41 +52,60 @@ export default {
     },
     
     parseChunksToApps: function(chunks) {
-      var apps = {}
-      for (var label in this.chunks){
-          var labeltype = label.split(':')[0];
-          var labelvalue = label.split(':')[1];
-          if (labeltype == "appname"){
-              apps[labelvalue] = {
-                  'name':     labelvalue,
-                  'duration': this.chunks[label]['duration'],
-                  'titles': [],
-              };
-          }
+      // Parse chunks
+      var applabels = []; // [name, full label]
+      var titlelabels = []; // [name, full label]
+      for (var label in chunks){
+        var labeltype = label.split(':')[0];
+        var labelvalue = label.split(':')[1];
+        if (labeltype == "appname"){
+          applabels.push([labelvalue, label]);
+        }
+        if (labeltype == "title"){
+          titlelabels.push([labelvalue, label]);
+        }
       }
-      for (var label in this.chunks){
-          var labeltype = label.split(':')[0];
-          var labelvalue = label.split(':')[1];
-          if (labeltype == "title"){
-              var appname = null;
-              for (var i in this.chunks[label]['other_labels']){
-                  var sublabel = this.chunks[label]['other_labels'][i];
-                  var sublabeltype = sublabel.split(':')[0];
-                  var sublabelvalue = sublabel.split(':')[1];
-                  if (sublabeltype == "appname" && sublabelvalue in apps){
-                      appname = sublabelvalue;
-                  }
-              }
-              if (appname){
-                  apps[appname]['titles'].push({
-                      'name': labelvalue,
-                      'duration': this.chunks[label]['duration'],
-                  });
-                  //console.log("Added title to "+appname+": "+labelvalue);
-              }
-          }
-           
+      //console.log(applabels);
+      //console.log(titlelabels);
+
+      // Add apps
+      var apps = {};
+      for (var i in applabels){
+        var name = applabels[i][0];
+        var label = applabels[i][1];
+        apps[name] = {
+          'name':     name,
+          'duration': chunks[label]['duration'],
+          'titles': [],
+        };
       }
+      console.log(apps);
+
+      // Add titles
+      for (var i in titlelabels){
+        var name = titlelabels[i][0];
+        var label = titlelabels[i][1];
+        // Find appname from sublabels
+        var appname = null;
+        for (var i in chunks[label]['other_labels']){
+          var sublabel = chunks[label]['other_labels'][i];
+          var sublabeltype = sublabel.split(':')[0];
+          var sublabelvalue = sublabel.split(':')[1];
+          if (sublabeltype == "appname" && sublabelvalue in apps){
+            appname = sublabelvalue;
+          }
+        }
+        if (appname){
+          apps[appname]['titles'].push({
+            'name': name,
+            'duration': chunks[label]['duration'],
+          });
+          console.log("Added title to "+appname+": "+name);
+        }
+      }
+      //console.log(apps);
+
+      // Sort titles by duration
       for (var app in apps){
           apps[app]['titles'].sort(function(a,b){
               if (a['duration']['value'] < b['duration']['value'])
@@ -95,8 +114,6 @@ export default {
                   return -1;
           })
       }
-      //console.log(apps);
-      
       this.$set("apps", apps);
     },
   },
