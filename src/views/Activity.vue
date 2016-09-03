@@ -10,7 +10,7 @@ div
   p Eventcount: {{ eventcount }}
 div(v-for="app in apps")
   h4 {{ app.name }}
-  p {{ app.duration.value }}{{ app.duration.unit }}
+  p Total: {{ app.duration.value }}{{ app.duration.unit }}
   table
     tr(v-for="(intex, title) in app.titles")
       td {{ title.duration.value }}{{ title.duration.unit }}  
@@ -27,6 +27,8 @@ div(v-for="app in apps")
 import Resources from '../resources.js';
 
 let $EventChunk = Resources.$EventChunk;
+let $QueryView  = Resources.$QueryView;
+let $CreateView  = Resources.$CreateView;
 
 export default {
   name: "Activity",
@@ -40,9 +42,47 @@ export default {
     }
   },
   methods: {
-    getEventChunk: function(bucket_id, starttime, endtime) {
-      $EventChunk.get({"id": bucket_id, "start": starttime, "end": endtime}).then((response) => {
+    createView: function(viewname, starttime, endtime){
+      $CreateView.save({viewname: viewname}, {
+        'query':
+        {
+          'chunk': true,
+          'transforms': 
+          [
+            {  // TODO: Remove hardcoding
+              'bucket': "aw-watcher-window-testing_johan-desktop",
+              'filters':
+              [
+                {
+                  'name': 'timeperiod_intersect',
+                  'transforms':
+                  [
+                    {   // TODO: Remove hardcoding
+                      'bucket': 'aw-watcher-afk-testing_johan-desktop',
+                      'filters': 
+                      [
+                        {
+                          'name': 'include_labels',
+                          'labels': ['not-afk'],
+                        },
+                      ]
+                    },
+                  ]
+                },
+              ],
+            },
+          ]
+        }
+      }).then((response) => {
         var data = response.json();
+        this.queryView(viewname, starttime, endtime);
+      });
+    },
+
+    queryView: function(viewname, starttime, endtime){
+      $QueryView.get({"viewname": viewname, "limit": -1, "start": starttime, "end": endtime}).then((response) => {
+        var data = response.json();
+        console.log(data);
         this.chunks = data['chunks'];
         this.$set("chunks", this.chunks);
         this.eventcount = data['eventcount'];
@@ -138,7 +178,8 @@ export default {
     this.$set("starttime", this.start);
     this.$set("endtime", this.end);
 
-    this.getEventChunk(this.bucket, this.start, this.end);
+    //this.getEventChunk(this.bucket, this.start, this.end);
+    this.createView('windows_johan-desktop', this.start, this.end);
   }
 }
 </script>
