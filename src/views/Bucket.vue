@@ -15,7 +15,9 @@ div
   br
   | Event type: {{ bucket.type }}
 
-div#timeline
+div
+  h3 Timeline
+    div#timeline
 
 div
   h3 Events
@@ -54,7 +56,7 @@ div
 $border-color: #ddd;
 
 #timeline {
-  height: 500px;
+  max-height: 500px;
   overflow-y: scroll;
 }
 
