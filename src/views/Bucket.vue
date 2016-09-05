@@ -15,6 +15,7 @@ div
   br
   | Event type: {{ bucket.type }}
 
+div#timeline
 
 div
   h3 Events
@@ -51,6 +52,12 @@ div
 <style lang="scss">
 
 $border-color: #ddd;
+
+#timeline {
+  height: 500px;
+  overflow-y: scroll;
+}
+
 
 .event-list {
   list-style-type: none;
@@ -118,6 +125,12 @@ $border-color: #ddd;
 <script>
 import Resources from '../resources.js';
 
+// TIMELINE TESTING START
+
+import renderTimeline from '../visualizations/timeline.js';
+
+// TIMELINE TESTING END
+
 let $Bucket = Resources.$Bucket;
 let $Event = Resources.$Event;
 
@@ -144,6 +157,11 @@ export default {
       });
     },
 
+    updateTimeline: function(e) {
+      console.log("Updating timeline");
+      renderTimeline(e, this.events);
+    },
+
     expandList: function() {
       this.isListExpanded = !this.isListExpanded;
       console.log("List should be expanding: ", this.isListExpanded);
@@ -153,6 +171,11 @@ export default {
     this.id = this.$route.params.id;
     this.getBucketInfo(this.id);
     this.getEvents(this.id);
+  },
+  watch: {
+    "events": function(events) {
+      renderTimeline(document.getElementById("timeline"), this.events);
+    }
   }
 }
 </script>

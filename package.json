@@ -49,12 +49,14 @@
   "dependencies": {
     "bootstrap": "^3.3.7",
     "bootstrap-webpack": "0.0.5",
+    "d3": "^4.2.2",
     "electron-packager": "^7.3.0",
+    "exports-loader": "^0.6.2",
+    "imports-loader": "^0.6.3",
     "jquery": "^3.1.0",
-    "vue-strap": "^1.0.11",
+    "jsdom": "^9.5.0",
     "less-loader": "^0.6.2",
     "style-loader": "^0.6.0",
-    "imports-loader": "^0.6.3",
-    "exports-loader": "^0.6.2"
+    "vue-strap": "^1.0.11"
   }
 }
