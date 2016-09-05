@@ -5,14 +5,17 @@ const Color = require("color");
 const _ = require("lodash");
 
 // TODO: Always give the same appname the same color
+// TODO: When hovering over a thin element, expand it's height so that more details can be viewed.
+//       For example, an element is 10px thin, make it's width 50px and move it's y-pos 20px up so
+//       that it overlaps the element above and below equally.
 
 function _windowLabelsAsProps(events) {
   return _.map(events, function(event) {
     _.each(event.label, function(label) {
       if(label.startsWith("appname:")) {
-        event.appname = label;
+        event.appname = label.slice(8);
       } else if(label.startsWith("title:")) {
-        event.title = label;
+        event.title = label.slice(6);
       }
     });
     return event;
@@ -50,7 +53,8 @@ function renderTimeline(el, events) {
   let g = svg.append("g");
   g.attr("transform", "translate(" + 50 + ", 0)");
 
-  let secondsPerPixel = 1;
+  // TODO: Add ability to zoom by modifying this variable
+  let secondsPerPixel = 2;
 
   var color = Color();
   color.hsv(0, 255, 150);
@@ -70,6 +74,8 @@ function renderTimeline(el, events) {
     }
 
     let eg = g.append("g");
+    eg.append("svg:title")
+      .text("Appname: " + e.appname + "\n" + "Duration: " + Math.round(e.duration[0].value) + "s");
 
     eg.append("rect")
      .attr("x", 0)
