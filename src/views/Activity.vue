@@ -10,10 +10,10 @@ div
   p Eventcount: {{ eventcount }}
 div(v-for="app in apps")
   h4 {{ app.name }}
-  p Total: {{ app.duration.value }}{{ app.duration.unit }}
+  p Total: {{ app.duration }}
   table
     tr(v-for="(intex, title) in app.titles")
-      td {{ title.duration.value }}{{ title.duration.unit }}  
+      td {{ title.duration }}
       td | {{ title.name }}
 
 
@@ -140,7 +140,7 @@ export default {
             'name': name,
             'duration': chunks[label]['duration'],
           });
-          console.log("Added title to "+appname+": "+name);
+          //console.log("Added title to "+appname+": "+name);
         }
       }
       //console.log(apps);
@@ -154,7 +154,29 @@ export default {
                   return -1;
           })
       }
+      for (var appname in apps){
+        var app = apps[appname];
+        app['duration'] = this.secondsToDuration(app['duration']['value']);
+        for (var titlename in app['titles']){
+          var title = app['titles'][titlename];
+          title['duration'] = this.secondsToDuration(title['duration']['value']);
+        }
+      }
       this.$set("apps", apps);
+    },
+    secondsToDuration: function(seconds){
+        var result = "";
+        var hrs = Math.floor(seconds/60/60);
+        var min = Math.floor(seconds/60%60);
+        var sec = Math.floor(seconds%60);
+        if (hrs != 0)
+            result += hrs + "h";
+        if (min != 0)
+            result += min + "m";
+        if (sec != 0 && hrs == 0)
+            result += sec + "s";
+        console.log(result);
+        return result;
     },
   },
   ready: function() {
