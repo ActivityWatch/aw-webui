@@ -1,6 +1,13 @@
 <template lang="jade">
 h1(style="color: red;") (IN DEVELOPMENT)
-h2 Window Activity Today
+h2 Window Activity {{ date }}
+
+hr
+
+p Yesterday: {{ prev_date }}
+p Tomorrow: {{ next_date }}
+button(v-on:click="loadDay(prev_date)") Previous day
+button(v-on:click="loadDay(next_date)") Next day
 
 hr
 
@@ -39,6 +46,9 @@ export default {
       eventcount: 0,
       apps: {},
       chunks: {},
+      prev_date: "",
+      date: "",
+      next_date: "",
     }
   },
   methods: {
@@ -82,7 +92,7 @@ export default {
     queryView: function(viewname, starttime, endtime){
       $QueryView.get({"viewname": viewname, "limit": -1, "start": starttime, "end": endtime}).then((response) => {
         var data = response.json();
-        console.log(data);
+        //console.log(data);
         this.chunks = data['chunks'];
         this.$set("chunks", this.chunks);
         this.eventcount = data['eventcount'];
@@ -119,7 +129,7 @@ export default {
           'titles': [],
         };
       }
-      console.log(apps);
+      //console.log(apps);
 
       // Add titles
       for (var i in titlelabels){
@@ -154,6 +164,7 @@ export default {
                   return -1;
           })
       }
+      // Convert second duration human readable form
       for (var appname in apps){
         var app = apps[appname];
         app['duration'] = this.secondsToDuration(app['duration']['value']);
@@ -171,44 +182,57 @@ export default {
         var sec = Math.floor(seconds%60);
         if (hrs != 0)
             result += hrs + "h";
-        if (min != 0)
+        if (hrs != 0 || min != 0)
             result += min + "m";
         if (hrs == 0)
             result += sec + "s";
         return result;
     },
+    timeToDateStr: function(date){
+      var mystr = date.toISOString().substring(0,10);
+      return mystr;
+    },
+    loadDay: function(date){
+      // Get start time of date
+      var datestart = new Date(Date.parse(date))
+      datestart.setHours(0);
+      datestart.setMinutes(0);
+      datestart.setSeconds(0);
+      datestart.setMilliseconds(0);
+      // End time of date
+      var dateend = new Date(datestart);
+      dateend.setDate(dateend.getDate()+1);
+      dateend = new Date(dateend-1);
+
+      //
+      var daylength = 86400000;
+      var timezonediff = datestart.getTimezoneOffset()*60*1000;
+      // Yeserday
+      var prev_date = new Date(datestart.getTime()-daylength-timezonediff);
+      // Tomorrow
+      var next_date = new Date(datestart.getTime()+daylength-timezonediff);
+
+      this.$set("prev_date", this.timeToDateStr(prev_date));
+      this.$set("date", this.timeToDateStr(new Date(datestart-timezonediff)));
+      this.$set("next_date", this.timeToDateStr(next_date));
+      
+      this.$set("starttime", datestart);
+      this.$set("endtime", dateend);
+
+      // Convert to iso8601
+      var datestartstr = datestart.toISOString();
+      var dateendstr = dateend.toISOString();
+     
+      // Do actual query and structure data for view
+      this.createView('windows_johan-desktop', datestartstr, dateendstr);
+    }
   },
   ready: function() {
-    this.date = this.$route.params.date;
-    console.log(this.date);
-    if (this.date != undefined){
-      this.start = new Date(Date.parse(this.date))
-      console.log(this.start);
+    var date = this.$route.params.date;
+    if (date == undefined){
+      date = new Date().toISOString();
     }
-    else {
-      this.start = new Date();
-    }
-    // Get start time of today
-    this.start.setHours(0);
-    this.start.setMinutes(0);
-    this.start.setSeconds(0);
-    this.start.setMilliseconds(0);
-    // End time of today
-    this.end = new Date(this.start);
-    this.end.setDate(this.end.getDate()+1);
-    this.end = new Date(this.end-1);
-    // Convert to iso8601
-    this.start = this.start.toISOString();
-    this.end = this.end.toISOString();
-    
-    // TODO: Make this not hardcoded
-    this.bucket = "aw-watcher-window_johan-desktop"
-
-    this.$set("starttime", this.start);
-    this.$set("endtime", this.end);
-
-    //this.getEventChunk(this.bucket, this.start, this.end);
-    this.createView('windows_johan-desktop', this.start, this.end);
+    this.loadDay(date)
   }
 }
 </script>
