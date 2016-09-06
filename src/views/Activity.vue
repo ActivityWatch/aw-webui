@@ -173,15 +173,22 @@ export default {
             result += hrs + "h";
         if (min != 0)
             result += min + "m";
-        if (sec != 0 && hrs == 0)
+        if (hrs == 0)
             result += sec + "s";
-        console.log(result);
         return result;
     },
   },
   ready: function() {
+    this.date = this.$route.params.date;
+    console.log(this.date);
+    if (this.date != undefined){
+      this.start = new Date(Date.parse(this.date))
+      console.log(this.start);
+    }
+    else {
+      this.start = new Date();
+    }
     // Get start time of today
-    this.start = new Date();
     this.start.setHours(0);
     this.start.setMinutes(0);
     this.start.setSeconds(0);

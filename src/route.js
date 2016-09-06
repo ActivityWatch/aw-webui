@@ -20,6 +20,9 @@ router.map({
   '/activity': {
     component: Activity
   },
+  '/activity/:date': {
+    component: Activity
+  },
   '/buckets': {
     component: Buckets
   },
