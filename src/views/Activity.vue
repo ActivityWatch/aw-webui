@@ -3,13 +3,15 @@ h1(style="color: red;") (IN DEVELOPMENT)
 h2 Window Activity {{ date }}
 
 hr
-
-p Yesterday: {{ prev_date }}
-p Tomorrow: {{ next_date }}
-button(v-on:click="loadDay(prev_date)") Previous day
-button(v-on:click="loadDay(next_date)") Next day
+p Viewname: {{ viewname }}
+p Prev day: {{ prev_date }}
+p Next day: {{ next_date }}
+button(v-on:click="queryDate(prev_date)") Previous day
+button(v-on:click="queryDate(next_date)") Next day
 
 hr
+
+h3(style="color: red;") {{ errormsg }}
 
 p Showing activity between {{ starttime }} and {{ endtime }}
 
@@ -36,11 +38,13 @@ import Resources from '../resources.js';
 let $EventChunk = Resources.$EventChunk;
 let $QueryView  = Resources.$QueryView;
 let $CreateView  = Resources.$CreateView;
+let $Bucket  = Resources.$Bucket;
 
 export default {
   name: "Activity",
   data: () => {
     return {
+      viewname: "",
       starttime: "",
       endtime: "",
       eventcount: 0,
@@ -49,48 +53,64 @@ export default {
       prev_date: "",
       date: "",
       next_date: "",
+      errormsg: "",
     }
   },
-  methods: {
-    createView: function(viewname, starttime, endtime){
-      $CreateView.save({viewname: viewname}, {
-        'query':
-        {
-          'chunk': true,
-          'transforms': 
-          [
-            {  // TODO: Remove hardcoding
-              'bucket': "aw-watcher-window-testing_johan-desktop",
-              'filters':
-              [
-                {
-                  'name': 'timeperiod_intersect',
-                  'transforms':
-                  [
-                    {   // TODO: Remove hardcoding
-                      'bucket': 'aw-watcher-afk-testing_johan-desktop',
-                      'filters': 
-                      [
-                        {
-                          'name': 'include_labels',
-                          'labels': ['not-afk'],
-                        },
-                      ]
-                    },
-                  ]
-                },
-              ],
-            },
-          ]
+  ready: function() {
+    // Date
+    var date = this.$route.params.date;
+    if (date == undefined){
+      date = new Date().toISOString();
+    }
+    this.loadDay(date)
+    // Create View
+    var type = this.$route.params.type;
+    var host = this.$route.params.host;
+    var view = {"type": type, "host": host}
+    $Bucket.get().then((response) => {
+      var buckets = response.json();
+      // {"host": {"buckettype": "bucketname"}}
+      var btypes = {}
+      console.log(buckets);
+      for (var bucketname in buckets){
+        var bucket = buckets[bucketname];
+        var bhost = bucket["hostname"];
+        var btype = bucket["type"];
+        if (!(bhost in btypes))
+          btypes[bhost] = {}
+        if (bucket[btype] in btypes[bhost])
+          btypes[bhost][btype] += [bucket];
+        else
+          btypes[bhost][btype] = [bucket];
+      }
+      console.log(btypes);
+
+      // Do actual query and structure data for view
+      for (var hostname in btypes){
+        if (type == "windowactivity"){
+          this.$set("viewname", "aw-webui_" + type + "_" + host);
+          var query = this.windowactivityQuery("aw-watcher-window-testing_johan-desktop", "aw-watcher-afk-testing_johan-desktop");
+          this.createView(this.viewname, query);
         }
-      }).then((response) => {
+        else {
+          this.$set("errormsg", "Unknown viewtype '"+type+"'");
+        }
+      }
+    });
+  },
+  methods: {
+    createView: function(viewname, query, callback){
+      $CreateView.save({viewname: viewname}, {'query': query}).then((response) => {
         var data = response.json();
-        this.queryView(viewname, starttime, endtime);
+        this.query();
       });
     },
-
-    queryView: function(viewname, starttime, endtime){
-      $QueryView.get({"viewname": viewname, "limit": -1, "start": starttime, "end": endtime}).then((response) => {
+    queryDate: function(date){
+      this.loadDay(date);
+      this.query();
+    },
+    query: function(viewname){
+      $QueryView.get({"viewname": this.viewname, "limit": -1, "start": this.datestartstr, "end": this.dateendstr}).then((response) => {
         var data = response.json();
         //console.log(data);
         this.chunks = data['chunks'];
@@ -100,8 +120,87 @@ export default {
         this.parseChunksToApps(this.chunks);
       });
     },
-    
+    windowactivityQuery: function(windowbucket, afkbucket){
+      return {
+        'chunk': true,
+        'transforms':  
+        [
+          {
+            'bucket': windowbucket,
+            'filters': [
+              {
+                'name': 'timeperiod_intersect',
+                'transforms':
+                [
+                  {
+                    'bucket': afkbucket,
+                    'filters': 
+                    [
+                      {
+                        'name': 'include_labels',
+                        'labels': ['not-afk'],
+                      },
+                    ]
+                  },
+                ]
+              },
+            ],
+          },
+        ]
+      };
+    },
+    secondsToDuration: function(seconds){
+        var result = "";
+        var hrs = Math.floor(seconds/60/60);
+        var min = Math.floor(seconds/60%60);
+        var sec = Math.floor(seconds%60);
+        if (hrs != 0)
+            result += hrs + "h";
+        if (hrs != 0 || min != 0)
+            result += min + "m";
+        if (hrs == 0)
+            result += sec + "s";
+        return result;
+    },
+    timeToDateStr: function(date){
+      var mystr = date.toISOString().substring(0,10);
+      return mystr;
+    },
+    loadDay: function(date){
+      // Get start time of date
+      var datestart = new Date(Date.parse(date));
+      datestart.setHours(0);
+      datestart.setMinutes(0);
+      datestart.setSeconds(0);
+      datestart.setMilliseconds(0);
+      // End time of date
+      var dateend = new Date(datestart);
+      dateend.setDate(dateend.getDate()+1);
+      dateend = new Date(dateend-1);
+
+      // Help vars
+      var daylength = 86400000;
+      var timezonediff = datestart.getTimezoneOffset()*60*1000;
+      // Yeserday
+      var prev_date = new Date(datestart.getTime()-daylength-timezonediff);
+      // Tomorrow
+      var next_date = new Date(datestart.getTime()+daylength-timezonediff);
+
+      this.$set("prev_date", this.timeToDateStr(prev_date));
+      this.$set("date", this.timeToDateStr(new Date(datestart-timezonediff)));
+      this.$set("next_date", this.timeToDateStr(next_date));
+      
+      this.$set("starttime", datestart);
+      this.$set("endtime", dateend);
+
+      // Convert to iso8601
+      this.datestartstr = datestart.toISOString();
+      this.dateendstr = dateend.toISOString();
+    },
     parseChunksToApps: function(chunks) {
+      /*
+        This code is ugly and unnecessarily complex, will hopefully be moved to aw-server in the future
+      */
       // Parse chunks
       var applabels = []; // [name, full label]
       var titlelabels = []; // [name, full label]
@@ -162,7 +261,7 @@ export default {
                   return 1;
               else
                   return -1;
-          })
+          });
       }
       // Convert second duration human readable form
       for (var appname in apps){
@@ -175,64 +274,6 @@ export default {
       }
       this.$set("apps", apps);
     },
-    secondsToDuration: function(seconds){
-        var result = "";
-        var hrs = Math.floor(seconds/60/60);
-        var min = Math.floor(seconds/60%60);
-        var sec = Math.floor(seconds%60);
-        if (hrs != 0)
-            result += hrs + "h";
-        if (hrs != 0 || min != 0)
-            result += min + "m";
-        if (hrs == 0)
-            result += sec + "s";
-        return result;
-    },
-    timeToDateStr: function(date){
-      var mystr = date.toISOString().substring(0,10);
-      return mystr;
-    },
-    loadDay: function(date){
-      // Get start time of date
-      var datestart = new Date(Date.parse(date))
-      datestart.setHours(0);
-      datestart.setMinutes(0);
-      datestart.setSeconds(0);
-      datestart.setMilliseconds(0);
-      // End time of date
-      var dateend = new Date(datestart);
-      dateend.setDate(dateend.getDate()+1);
-      dateend = new Date(dateend-1);
-
-      //
-      var daylength = 86400000;
-      var timezonediff = datestart.getTimezoneOffset()*60*1000;
-      // Yeserday
-      var prev_date = new Date(datestart.getTime()-daylength-timezonediff);
-      // Tomorrow
-      var next_date = new Date(datestart.getTime()+daylength-timezonediff);
-
-      this.$set("prev_date", this.timeToDateStr(prev_date));
-      this.$set("date", this.timeToDateStr(new Date(datestart-timezonediff)));
-      this.$set("next_date", this.timeToDateStr(next_date));
-      
-      this.$set("starttime", datestart);
-      this.$set("endtime", dateend);
-
-      // Convert to iso8601
-      var datestartstr = datestart.toISOString();
-      var dateendstr = dateend.toISOString();
-     
-      // Do actual query and structure data for view
-      this.createView('windows_johan-desktop', datestartstr, dateendstr);
-    }
   },
-  ready: function() {
-    var date = this.$route.params.date;
-    if (date == undefined){
-      date = new Date().toISOString();
-    }
-    this.loadDay(date)
-  }
 }
 </script>
