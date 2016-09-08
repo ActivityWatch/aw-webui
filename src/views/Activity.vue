@@ -207,10 +207,13 @@ export default {
       for (var label in chunks){
         var labeltype = label.split(':')[0];
         var labelvalue = label.split(':')[1];
-        if (labeltype == "appname"){
+        if (chunks[label]['duration'] === undefined){
+          console.error("Chunk has no duration: "+chunks[label].toSource());
+        }
+        else if (labeltype == "appname"){
           applabels.push([labelvalue, label]);
         }
-        if (labeltype == "title"){
+        else if (labeltype == "title"){
           titlelabels.push([labelvalue, label]);
         }
       }
