@@ -12,7 +12,7 @@ accordion(:one-at-atime="false")
         button.btn.btn-default.btn-sm(type="button")
           span.glyphicon.glyphicon-folder-open(aria-hidden="true")
           | Open bucket
-      a(v-link="'/api/0/buckets/' + bucket.id + '/events'")
+      a(v-bind:href="'/api/0/buckets/' + bucket.id + '/events'")
         button.btn.btn-default.btn-sm(type="button" data-toggle="tooltip" data-placement="bottom" title="Not implemented")
           span.glyphicon.glyphicon-save(aria-hidden="true")
           | Export as JSON
