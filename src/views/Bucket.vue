@@ -15,7 +15,7 @@ div
   br
   | Event type: {{ bucket.type }}
 
-div
+div(v-if="bucket.type == currentwindow")
   h3 Timeline
     div#timeline
 
