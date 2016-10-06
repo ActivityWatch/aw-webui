@@ -1,3 +1,6 @@
+// Load the Bootstrap CSS
+import 'bootstrap/dist/css/bootstrap.css';
+
 // Loads all the resources (using vue-resource)
 import './resources.js';
 
