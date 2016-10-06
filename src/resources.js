@@ -8,7 +8,7 @@ let port = "5600";
 //let port = "5666";
 let origin = protocol + "://" + hostname + ":" + port;
 
-let $Bucket     = Vue.resource(origin + '/api/0/buckets{id}');
+let $Bucket     = Vue.resource(origin + '/api/0/buckets/{id}');
 let $Event      = Vue.resource(origin + '/api/0/buckets/{id}/events');
 let $EventChunk = Vue.resource(origin + '/api/0/buckets/{id}/events/chunk?start={start}&end={end}');
 let $GetViews   = Vue.resource(origin + '/api/0/views/');
