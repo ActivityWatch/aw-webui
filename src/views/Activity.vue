@@ -68,7 +68,7 @@ export default {
     var host = this.$route.params.host;
     var view = {"type": type, "host": host}
     
-    if (type == "windowactivity"){
+    if (type == "windowactivity_summary"){
       this.$set("viewname", "aw-webui_" + type + "_" + host);
       var query = this.windowactivityQuery("aw-watcher-window_"+host, "aw-watcher-afk_"+host);
       this.createView(this.viewname, query);

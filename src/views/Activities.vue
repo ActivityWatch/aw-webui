@@ -5,8 +5,7 @@ h2 Views
 hr
 
 div(v-for="view in views")
-  h4(v-link="{ path: 'activity/'+view.type+'/'+view.host}") {{ view.name }}
-  p @{{view.host}}
+  h3(v-link="{ path: 'activity/'+view.type+'/'+view.host}") {{ view.name }} @ {{ view.host }}
 
 </template>
 
@@ -31,43 +30,35 @@ export default {
   },
   methods: {
     addView: function(view){
-      if (view["type"] == "windowactivity"){
-        view["link"] = view["type"] + "/" + view["host"];
-        this.views.push(view);
-      }
+      view["link"] = view["type"] + "/" + view["host"];
+      this.views.push(view);
     }
   },
   ready: function() {
     $Bucket.get().then((response) => {
       var buckets = response.json();
       // {"host": {"buckettype": "bucketname"}}
-      var btypes = {}
-      console.log(buckets);
+      var btypes_by_host = {}
       for (var bucketname in buckets){
         var bucket = buckets[bucketname];
         var bhost = bucket["hostname"];
         var btype = bucket["type"];
-        if (!(bhost in btypes))
-          btypes[bhost] = {}
-        if (bucket[btype] in btypes[bhost])
-          btypes[bhost][btype] += [bucket];
+        if (!(bhost in btypes_by_host))
+          btypes_by_host[bhost] = {}
+        if (bucket[btype] in btypes_by_host[bhost])
+          btypes_by_host[bhost][btype] += [bucket];
         else
-          btypes[bhost][btype] = [bucket];
+          btypes_by_host[bhost][btype] = [bucket];
       }
-      console.log(btypes);
       // Do actual query and structure data for view
-      console.log(btypes);
-      for (var hostname in btypes){
+      for (var hostname in btypes_by_host){
         // Window activity view
-        if (("afkstatus" in btypes[hostname]) && ("currentwindow" in btypes[hostname])){
-          var view_windowactivity = {"name": "Window activity", "type": "windowactivity", "host": hostname};
-          this.addView(view_windowactivity);
+        console.log("test1");
+        if (("afkstatus" in btypes_by_host[hostname]) && ("currentwindow" in btypes_by_host[hostname])){
+          console.log("test2");
+          var view_windowactivity_summary = {"name": "Window activity summary", "type": "windowactivity_summary", "host": hostname};
+          this.addView(view_windowactivity_summary);
         }
-        /*
-        for (var btype in btypes[hostname]){
-          console.log(hostname + " - " + btype);
-        }
-        */
       }
     });
   }
