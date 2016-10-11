@@ -67,36 +67,15 @@ export default {
     var type = this.$route.params.type;
     var host = this.$route.params.host;
     var view = {"type": type, "host": host}
-    $Bucket.get().then((response) => {
-      var buckets = response.json();
-      // {"host": {"buckettype": "bucketname"}}
-      var btypes = {}
-      console.log(buckets);
-      for (var bucketname in buckets){
-        var bucket = buckets[bucketname];
-        var bhost = bucket["hostname"];
-        var btype = bucket["type"];
-        if (!(bhost in btypes))
-          btypes[bhost] = {}
-        if (bucket[btype] in btypes[bhost])
-          btypes[bhost][btype] += [bucket];
-        else
-          btypes[bhost][btype] = [bucket];
-      }
-      console.log(btypes);
-
-      // Do actual query and structure data for view
-      for (var hostname in btypes){
-        if (type == "windowactivity"){
-          this.$set("viewname", "aw-webui_" + type + "_" + host);
-          var query = this.windowactivityQuery("aw-watcher-window-testing_johan-desktop", "aw-watcher-afk-testing_johan-desktop");
-          this.createView(this.viewname, query);
-        }
-        else {
-          this.$set("errormsg", "Unknown viewtype '"+type+"'");
-        }
-      }
-    });
+    
+    if (type == "windowactivity"){
+      this.$set("viewname", "aw-webui_" + type + "_" + host);
+      var query = this.windowactivityQuery("aw-watcher-window_"+host, "aw-watcher-afk_"+host);
+      this.createView(this.viewname, query);
+    }
+    else {
+      this.$set("errormsg", "Unknown viewtype '"+type+"'");
+    }
   },
   methods: {
     createView: function(viewname, query, callback){
@@ -208,7 +187,7 @@ export default {
         var labeltype = label.split(':')[0];
         var labelvalue = label.split(':')[1];
         if (chunks[label]['duration'] === undefined){
-          console.error("Chunk has no duration: "+chunks[label].toSource());
+          console.error("Chunk has no duration: "+Object.keys(chunks[label]));
         }
         else if (labeltype == "appname"){
           applabels.push([labelvalue, label]);

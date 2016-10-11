@@ -19,7 +19,8 @@ import Resources from '../resources.js';
 
 let $EventChunk = Resources.$EventChunk;
 let $QueryView  = Resources.$QueryView;
-let $CreateView  = Resources.$CreateView;
+let $CreateView = Resources.$CreateView;
+let $Bucket     = Resources.$Bucket;
 
 export default {
   name: "Views",
@@ -37,9 +38,38 @@ export default {
     }
   },
   ready: function() {
-    var view_windowactivity_johandesktop = {"name": "Window activity", "type": "windowactivity", "host": "johan-desktop"};
-    this.addView(view_windowactivity_johandesktop);
-    console.log("test");
+    $Bucket.get().then((response) => {
+      var buckets = response.json();
+      // {"host": {"buckettype": "bucketname"}}
+      var btypes = {}
+      console.log(buckets);
+      for (var bucketname in buckets){
+        var bucket = buckets[bucketname];
+        var bhost = bucket["hostname"];
+        var btype = bucket["type"];
+        if (!(bhost in btypes))
+          btypes[bhost] = {}
+        if (bucket[btype] in btypes[bhost])
+          btypes[bhost][btype] += [bucket];
+        else
+          btypes[bhost][btype] = [bucket];
+      }
+      console.log(btypes);
+      // Do actual query and structure data for view
+      console.log(btypes);
+      for (var hostname in btypes){
+        // Window activity view
+        if (("afkstatus" in btypes[hostname]) && ("currentwindow" in btypes[hostname])){
+          var view_windowactivity = {"name": "Window activity", "type": "windowactivity", "host": hostname};
+          this.addView(view_windowactivity);
+        }
+        /*
+        for (var btype in btypes[hostname]){
+          console.log(hostname + " - " + btype);
+        }
+        */
+      }
+    });
   }
 }
 </script>
