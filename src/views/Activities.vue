@@ -53,11 +53,11 @@ export default {
       // Do actual query and structure data for view
       for (var hostname in btypes_by_host){
         // Window activity view
-        console.log("test1");
         if (("afkstatus" in btypes_by_host[hostname]) && ("currentwindow" in btypes_by_host[hostname])){
-          console.log("test2");
           var view_windowactivity_summary = {"name": "Window activity summary", "type": "windowactivity_summary", "host": hostname};
           this.addView(view_windowactivity_summary);
+          var view_windowactivity_timeline = {"name": "Window activity timeline", "type": "windowactivity_timeline", "host": hostname};
+          this.addView(view_windowactivity_timeline);
         }
       }
     });

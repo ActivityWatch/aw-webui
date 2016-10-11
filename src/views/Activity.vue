@@ -17,14 +17,20 @@ p Showing activity between {{ starttime }} and {{ endtime }}
 
 div
   p Eventcount: {{ eventcount }}
-div(v-for="app in apps")
+div(v-for="app in appsummary")
   h4 {{ app.name }}
-  p Total: {{ app.duration }}
+  p Duration: {{ app.duration }}
   table
     tr(v-for="(intex, title) in app.titles")
       td {{ title.duration }}
       td | {{ title.name }}
 
+div(v-for="activity in apptimeline")
+  h4 {{ activity.app }}
+  p Duration: {{ activity.duration }}
+  p Timestamp: {{ activity.timestamp }}
+  div(v-for="titlee in activity.titles")
+    p | {{titlee.duration}} - {{ titlee.title }}
 
 </template>
 
@@ -48,8 +54,10 @@ export default {
       starttime: "",
       endtime: "",
       eventcount: 0,
-      apps: {},
+      appsummary: {},
+      apptimeline: [],
       chunks: {},
+      eventlist: [],
       prev_date: "",
       date: "",
       next_date: "",
@@ -68,22 +76,26 @@ export default {
     var host = this.$route.params.host;
     var view = {"type": type, "host": host}
     
+    this.$set("viewname", "aw-webui_" + type + "_" + host);
     if (type == "windowactivity_summary"){
-      this.$set("viewname", "aw-webui_" + type + "_" + host);
-      var query = this.windowactivityQuery("aw-watcher-window_"+host, "aw-watcher-afk_"+host);
-      this.createView(this.viewname, query);
+      var query = this.windowactivitysummaryQuery("aw-watcher-window_"+host, "aw-watcher-afk_"+host);
+      $CreateView.save({viewname: this.viewname}, {'query': query}).then((response) => {
+        var data = response.json();
+        this.query();
+      });
+    }
+    else if (type == "windowactivity_timeline"){
+      var query = this.windowactivitytimelineQuery("aw-watcher-window_"+host, "aw-watcher-afk_"+host);
+      $CreateView.save({viewname: this.viewname}, {'query': query}).then((response) => {
+        var data = response.json();
+        this.query();
+      });
     }
     else {
       this.$set("errormsg", "Unknown viewtype '"+type+"'");
     }
   },
   methods: {
-    createView: function(viewname, query, callback){
-      $CreateView.save({viewname: viewname}, {'query': query}).then((response) => {
-        var data = response.json();
-        this.query();
-      });
-    },
     queryDate: function(date){
       this.loadDay(date);
       this.query();
@@ -91,15 +103,44 @@ export default {
     query: function(viewname){
       $QueryView.get({"viewname": this.viewname, "limit": -1, "start": this.datestartstr, "end": this.dateendstr}).then((response) => {
         var data = response.json();
-        //console.log(data);
-        this.chunks = data['chunks'];
-        this.$set("chunks", this.chunks);
-        this.eventcount = data['eventcount'];
-        this.$set("eventcount", this.eventcount);
+        console.log(data);
+        this.$set("chunks", data["chunks"]);
+        this.$set("eventlist", data["eventlist"]);
+        this.$set("eventcount", data["eventcount"]);
         this.parseChunksToApps(this.chunks);
+        this.parseEventListToApps(this.eventlist);
       });
     },
-    windowactivityQuery: function(windowbucket, afkbucket){
+    windowactivitytimelineQuery: function(windowbucket, afkbucket){
+      return {
+        'chunk': false,
+        'transforms':  
+        [
+          {
+            'bucket': windowbucket,
+            'filters': [
+              {
+                'name': 'timeperiod_intersect',
+                'transforms':
+                [
+                  {
+                    'bucket': afkbucket,
+                    'filters': 
+                    [
+                      {
+                        'name': 'include_labels',
+                        'labels': ['not-afk'],
+                      },
+                    ]
+                  },
+                ]
+              },
+            ],
+          },
+        ]
+      };
+    },
+    windowactivitysummaryQuery: function(windowbucket, afkbucket){
       return {
         'chunk': true,
         'transforms':  
@@ -175,6 +216,62 @@ export default {
       // Convert to iso8601
       this.datestartstr = datestart.toISOString();
       this.dateendstr = dateend.toISOString();
+    },
+    parseEventListToApps: function(eventlist){
+      var apptimeline = [];
+      var prev_app = null;
+      var curr_app = null;
+      var curr_title = null;
+      var curr_event = null;
+      for (var event_i in eventlist){
+        var event = eventlist[event_i];
+        for (var label_i in event.label){
+          var label = event.label[label_i];
+          var labeltype = label.split(':')[0];
+          var labelvalue = label.split(':')[1];
+          if (labeltype == "appname"){
+            curr_app = labelvalue;
+          }
+          else if (labeltype == "title"){
+            curr_title = labelvalue;
+          }
+        }
+        console.log("Parsing "+curr_app+"-"+curr_title);
+        if (curr_app != prev_app){
+          if (prev_app != null){
+            apptimeline.push(curr_event);
+          }
+          curr_event = {
+            "app": curr_app,
+            "duration": 0,
+            "timestamp": event["timestamp"],
+            "titles": []
+          };
+        }
+        curr_event["duration"] += event["duration"][0]["value"];
+        curr_event["titles"].push({
+          "title": curr_title,
+          "duration": event["duration"][0]["value"],
+          "timestamp": event["timestamp"]
+        });
+        
+        prev_app = curr_app;
+      }
+      if (curr_event != null)
+        apptimeline.push(curr_event);
+      
+      // Change seconds duration to readable format
+      for (var activity_i in apptimeline){
+        var activity = apptimeline[activity_i];
+        for (var title_i in activity.titles){
+          var title = activity.titles[title_i];
+          title["duration"] = this.secondsToDuration(title["duration"]);
+        }
+        activity["duration"] = this.secondsToDuration(activity["duration"]);
+
+      }
+      console.log(apptimeline);
+      this.$set("apptimeline", apptimeline);
     },
     parseChunksToApps: function(chunks) {
       /*
@@ -254,7 +351,7 @@ export default {
           title['duration'] = this.secondsToDuration(title['duration']['value']);
         }
       }
-      this.$set("apps", apps);
+      this.$set("appsummary", apps);
     },
   },
 }
