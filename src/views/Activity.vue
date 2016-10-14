@@ -281,8 +281,9 @@ export default {
       var applabels = []; // [name, full label]
       var titlelabels = []; // [name, full label]
       for (var label in chunks){
-        var labeltype = label.split(':')[0];
-        var labelvalue = label.split(':')[1];
+        var slice_i = label.indexOf(':')
+        var labeltype = label.slice(0,slice_i);
+        var labelvalue = label.slice(slice_i+1);
         if (chunks[label]['duration'] === undefined){
           console.error("Chunk has no duration: "+Object.keys(chunks[label]));
         }
@@ -317,8 +318,9 @@ export default {
         var appname = null;
         for (var i in chunks[label]['other_labels']){
           var sublabel = chunks[label]['other_labels'][i];
-          var sublabeltype = sublabel.split(':')[0];
-          var sublabelvalue = sublabel.split(':')[1];
+          var slice_i = sublabel.indexOf(':');
+          var sublabeltype = sublabel.slice(0,slice_i);
+          var sublabelvalue = sublabel.slice(slice_i+1);
           if (sublabeltype == "appname" && sublabelvalue in apps){
             appname = sublabelvalue;
           }
