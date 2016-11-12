@@ -25,6 +25,7 @@ accordion
         td {{ title_entry.duration }}
         td {{ title_entry.title }}
 
+hr
 
 p Showing activity between {{ starttime }} and {{ endtime }}
 
