@@ -1,36 +1,34 @@
 <template lang="jade">
-h1(style="color: red;") (IN DEVELOPMENT)
 h2 Window Activity {{ date }}
 
 hr
 p Viewname: {{ viewname }}
-p Prev day: {{ prev_date }}
-p Next day: {{ next_date }}
-button(v-on:click="queryDate(prev_date)") Previous day
-button(v-on:click="queryDate(next_date)") Next day
+button(v-on:click="queryDate(getPrevDay(date))") Previous day
+button(v-on:click="queryDate(getNextDay(date))") Next day
 
 hr
 
 h3(style="color: red;") {{ errormsg }}
 
+accordion(:one-at-atime="false")
+  panel(v-for="app in appsummary", :header="app.name + '  (' + app.duration + ')'", :is-open="false")
+    table
+      tr(v-for="(index, title) in app.titles")
+        td {{ title.duration }}
+        td {{ title.name }}
+
+accordion
+  panel(v-for="activity in apptimeline", :header="activity.app + '  (' + activity.duration + ')'", :footer="activity.timestamp+'test'", :is-open="false")
+    p Timestamp: {{ activity.timestamp }}
+    table
+      tr(v-for="title_entry in activity.titles")
+        td {{ title_entry.duration }}
+        td {{ title_entry.title }}
+
+
 p Showing activity between {{ starttime }} and {{ endtime }}
 
-div
-  p Eventcount: {{ eventcount }}
-div(v-for="app in appsummary")
-  h4 {{ app.name }}
-  p Duration: {{ app.duration }}
-  table
-    tr(v-for="(intex, title) in app.titles")
-      td {{ title.duration }}
-      td | {{ title.name }}
-
-div(v-for="activity in apptimeline")
-  h4 {{ activity.app }}
-  p Duration: {{ activity.duration }}
-  p Timestamp: {{ activity.timestamp }}
-  div(v-for="titlee in activity.titles")
-    p | {{titlee.duration}} - {{ titlee.title }}
+p Events queried: {{ eventcount }}
 
 </template>
 
@@ -41,51 +39,61 @@ div(v-for="activity in apptimeline")
 <script>
 import Resources from '../resources.js';
 
+var panel = require('vue-strap').panel;
+var accordion = require('vue-strap').accordion;
+
 let $EventChunk = Resources.$EventChunk;
 let $QueryView  = Resources.$QueryView;
 let $CreateView  = Resources.$CreateView;
 let $Bucket  = Resources.$Bucket;
 
+var daylength = 86400000;
+
 export default {
   name: "Activity",
+  components: {
+    'panel': panel,
+    'accordion': accordion
+  },
   data: () => {
     return {
       viewname: "",
       starttime: "",
       endtime: "",
       eventcount: 0,
-      appsummary: {},
+      appsummary: [],
       apptimeline: [],
       chunks: {},
       eventlist: [],
-      prev_date: "",
-      date: "",
-      next_date: "",
+      date: null,
+      datestartstr: "",
+      dateendstr: "",
       errormsg: "",
     }
   },
+
   ready: function() {
     // Date
     var date = this.$route.params.date;
     if (date == undefined){
       date = new Date().toISOString();
     }
-    this.loadDay(date)
+    this.setDay(date)
     // Create View
     var type = this.$route.params.type;
     var host = this.$route.params.host;
     var view = {"type": type, "host": host}
-    
+
     this.$set("viewname", "aw-webui_" + type + "_" + host);
     if (type == "windowactivity_summary"){
-      var query = this.windowactivitysummaryQuery("aw-watcher-window_"+host, "aw-watcher-afk_"+host);
+      var query = this.windowSummaryQuery("aw-watcher-window_"+host, "aw-watcher-afk_"+host);
       $CreateView.save({viewname: this.viewname}, {'query': query}).then((response) => {
         var data = response.json();
         this.query();
       });
     }
     else if (type == "windowactivity_timeline"){
-      var query = this.windowactivitytimelineQuery("aw-watcher-window_"+host, "aw-watcher-afk_"+host);
+      var query = this.windowTimelineQuery("aw-watcher-window_"+host, "aw-watcher-afk_"+host);
       $CreateView.save({viewname: this.viewname}, {'query': query}).then((response) => {
         var data = response.json();
         this.query();
@@ -95,15 +103,16 @@ export default {
       this.$set("errormsg", "Unknown viewtype '"+type+"'");
     }
   },
+
   methods: {
     queryDate: function(date){
-      this.loadDay(date);
+      this.setDay(date);
       this.query();
     },
     query: function(viewname){
       $QueryView.get({"viewname": this.viewname, "limit": -1, "start": this.datestartstr, "end": this.dateendstr}).then((response) => {
         var data = response.json();
-        console.log(data);
+        //console.log(data);
         this.$set("chunks", data["chunks"]);
         this.$set("eventlist", data["eventlist"]);
         this.$set("eventcount", data["eventcount"]);
@@ -111,10 +120,12 @@ export default {
         this.parseEventListToApps(this.eventlist);
       });
     },
-    windowactivitytimelineQuery: function(windowbucket, afkbucket){
+
+
+    windowTimelineQuery: function(windowbucket, afkbucket){
       return {
         'chunk': false,
-        'transforms':  
+        'transforms':
         [
           {
             'bucket': windowbucket,
@@ -125,7 +136,7 @@ export default {
                 [
                   {
                     'bucket': afkbucket,
-                    'filters': 
+                    'filters':
                     [
                       {
                         'name': 'include_labels',
@@ -140,10 +151,12 @@ export default {
         ]
       };
     },
-    windowactivitysummaryQuery: function(windowbucket, afkbucket){
+
+
+    windowSummaryQuery: function(windowbucket, afkbucket){
       return {
         'chunk': true,
-        'transforms':  
+        'transforms':
         [
           {
             'bucket': windowbucket,
@@ -154,7 +167,7 @@ export default {
                 [
                   {
                     'bucket': afkbucket,
-                    'filters': 
+                    'filters':
                     [
                       {
                         'name': 'include_labels',
@@ -169,55 +182,17 @@ export default {
         ]
       };
     },
-    secondsToDuration: function(seconds){
-        var result = "";
-        var hrs = Math.floor(seconds/60/60);
-        var min = Math.floor(seconds/60%60);
-        var sec = Math.floor(seconds%60);
-        if (hrs != 0)
-            result += hrs + "h";
-        if (hrs != 0 || min != 0)
-            result += min + "m";
-        if (hrs == 0)
-            result += sec + "s";
-        return result;
-    },
-    timeToDateStr: function(date){
-      var mystr = date.toISOString().substring(0,10);
-      return mystr;
-    },
-    loadDay: function(date){
-      // Get start time of date
-      var datestart = new Date(Date.parse(date));
-      datestart.setHours(0);
-      datestart.setMinutes(0);
-      datestart.setSeconds(0);
-      datestart.setMilliseconds(0);
-      // End time of date
-      var dateend = new Date(datestart);
-      dateend.setDate(dateend.getDate()+1);
-      dateend = new Date(dateend-1);
 
-      // Help vars
-      var daylength = 86400000;
-      var timezonediff = datestart.getTimezoneOffset()*60*1000;
-      // Yeserday
-      var prev_date = new Date(datestart.getTime()-daylength-timezonediff);
-      // Tomorrow
-      var next_date = new Date(datestart.getTime()+daylength-timezonediff);
+    /*
 
-      this.$set("prev_date", this.timeToDateStr(prev_date));
-      this.$set("date", this.timeToDateStr(new Date(datestart-timezonediff)));
-      this.$set("next_date", this.timeToDateStr(next_date));
-      
-      this.$set("starttime", datestart);
-      this.$set("endtime", dateend);
+        Parsers
 
-      // Convert to iso8601
-      this.datestartstr = datestart.toISOString();
-      this.dateendstr = dateend.toISOString();
-    },
+    */
+
     parseEventListToApps: function(eventlist){
+      /*
+        This code is ugly and somewhat complex, will hopefully be moved to aw-server in the future
+      */
       var apptimeline = [];
       var prev_app = null;
       var curr_app = null;
@@ -236,7 +211,7 @@ export default {
             curr_title = labelvalue;
           }
         }
-        console.log("Parsing "+curr_app+"-"+curr_title);
+        //console.log("Parsing "+curr_app+"-"+curr_title);
         if (curr_app != prev_app){
           if (prev_app != null){
             apptimeline.push(curr_event);
@@ -254,12 +229,12 @@ export default {
           "duration": event["duration"][0]["value"],
           "timestamp": event["timestamp"]
         });
-        
+
         prev_app = curr_app;
       }
       if (curr_event != null)
         apptimeline.push(curr_event);
-      
+
       // Change seconds duration to readable format
       for (var activity_i in apptimeline){
         var activity = apptimeline[activity_i];
@@ -270,12 +245,14 @@ export default {
         activity["duration"] = this.secondsToDuration(activity["duration"]);
 
       }
-      console.log(apptimeline);
+      //console.log(apptimeline);
       this.$set("apptimeline", apptimeline);
     },
+
+
     parseChunksToApps: function(chunks) {
       /*
-        This code is ugly and unnecessarily complex, will hopefully be moved to aw-server in the future
+        This code is ugly and somewhat complex, will hopefully be moved to aw-server in the future
       */
       // Parse chunks
       var applabels = []; // [name, full label]
@@ -337,24 +314,110 @@ export default {
 
       // Sort titles by duration
       for (var app in apps){
-          apps[app]['titles'].sort(function(a,b){
-              if (a['duration']['value'] < b['duration']['value'])
-                  return 1;
-              else
-                  return -1;
-          });
+        apps[app]['titles'].sort(function(a,b){
+          if (a['duration']['value'] < b['duration']['value'])
+            return 1;
+          else
+            return -1;
+        });
       }
+      // Convert apps to a list and sort by duration
+      var applist = [];
+      for (var app in apps){
+        applist.push(apps[app]);
+      }
+      applist.sort(function(a,b){
+        if (a['duration']['value'] < b['duration']['value'])
+          return 1;
+        else
+          return -1;
+      });
       // Convert second duration human readable form
-      for (var appname in apps){
-        var app = apps[appname];
+      for (var appi in applist){
+        var app = applist[appi];
+        console.log(app);
         app['duration'] = this.secondsToDuration(app['duration']['value']);
         for (var titlename in app['titles']){
           var title = app['titles'][titlename];
           title['duration'] = this.secondsToDuration(title['duration']['value']);
         }
       }
-      this.$set("appsummary", apps);
+      // Set list
+      this.$set("appsummary", applist);
     },
+
+
+    /*
+
+        Date/time functions
+
+    */
+
+
+    setDay: function(datestr){
+      var datestart = this.getDay(datestr);
+      // End time of date
+      var dateend = new Date(datestart);
+      dateend.setDate(dateend.getDate()+1);
+      dateend = new Date(dateend-1);
+
+      var timezonediff = datestart.getTimezoneOffset()*60*1000;
+      this.$set("date", this.timeToDateStr(new Date(datestart-timezonediff)));
+
+      this.$set("starttime", datestart);
+      this.$set("endtime", dateend);
+
+      // Convert to iso8601
+      this.$set("datestartstr", this.starttime.toISOString());
+      this.$set("dateendstr", this.endtime.toISOString());
+    },
+
+    timeToDateStr: function(date){
+      var mystr = date.toISOString().substring(0,10);
+      return mystr;
+    },
+
+    getDay: function(datestr){
+      // Get start time of date
+      var datestart = new Date(Date.parse(datestr));
+      datestart.setHours(0);
+      datestart.setMinutes(0);
+      datestart.setSeconds(0);
+      datestart.setMilliseconds(0);
+
+      return datestart;
+    },
+
+    getPrevDay(datestr){
+      var datestart = this.getDay(datestr);
+      var timezonediff = datestart.getTimezoneOffset()*60*1000;
+      var prev_date = new Date(datestart.getTime()-daylength-timezonediff);
+      return prev_date;
+    },
+
+    getNextDay(datestr){
+      var datestart = this.getDay(datestr);
+      var timezonediff = datestart.getTimezoneOffset()*60*1000;
+      var next_date = new Date(datestart.getTime()+daylength-timezonediff);
+      return next_date;
+
+    },
+
+    secondsToDuration: function(seconds){
+        var result = "";
+        var hrs = Math.floor(seconds/60/60);
+        var min = Math.floor(seconds/60%60);
+        var sec = Math.floor(seconds%60);
+        if (hrs != 0)
+            result += hrs + "h";
+        if (hrs != 0 || min != 0)
+            result += min + "m";
+        if (hrs == 0)
+            result += sec + "s";
+        return result;
+    },
+
+
   },
 }
 </script>
