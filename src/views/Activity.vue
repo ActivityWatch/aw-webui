@@ -10,6 +10,8 @@ hr
 
 h3(style="color: red;") {{ errormsg }}
 
+h4 Total time: {{ duration }}
+
 accordion(:one-at-atime="false")
   panel(v-for="app in appsummary", :header="app.name + '  (' + app.duration + ')'", :is-open="false")
     table
@@ -61,6 +63,7 @@ export default {
       viewname: "",
       starttime: "",
       endtime: "",
+      duration: "",
       eventcount: 0,
       appsummary: [],
       apptimeline: [],
@@ -115,6 +118,7 @@ export default {
         var data = response.json();
         //console.log(data);
         this.$set("chunks", data["chunks"]);
+        this.$set("duration", this.secondsToDuration(data["duration"]["value"]));
         this.$set("eventlist", data["eventlist"]);
         this.$set("eventcount", data["eventcount"]);
         this.parseChunksToApps(this.chunks);
@@ -336,7 +340,7 @@ export default {
       // Convert second duration human readable form
       for (var appi in applist){
         var app = applist[appi];
-        console.log(app);
+        //console.log(app);
         app['duration'] = this.secondsToDuration(app['duration']['value']);
         for (var titlename in app['titles']){
           var title = app['titles'][titlename];
