@@ -1,5 +1,5 @@
 <template lang="jade">
-h2 Window Activity {{ date }}
+h2 Window Activity {{ datestr }}
 
 hr
 p Viewname: {{ viewname }}
@@ -29,7 +29,7 @@ accordion
 
 hr
 
-p Showing activity between {{ starttime }} and {{ endtime }}
+p Showing activity for: {{ date }}
 
 p Events queried: {{ eventcount }}
 
@@ -41,6 +41,7 @@ p Events queried: {{ eventcount }}
 
 <script>
 import Resources from '../resources.js';
+import moment from 'moment';
 
 var panel = require('vue-strap').panel;
 var accordion = require('vue-strap').accordion;
@@ -70,8 +71,7 @@ export default {
       chunks: {},
       eventlist: [],
       date: null,
-      datestartstr: "",
-      dateendstr: "",
+      datestr: "",
       errormsg: "",
     }
   },
@@ -83,6 +83,7 @@ export default {
       date = new Date().toISOString();
     }
     this.setDay(date)
+
     // Create View
     var type = this.$route.params.type;
     var host = this.$route.params.host;
@@ -114,7 +115,7 @@ export default {
       this.query();
     },
     query: function(viewname){
-      $QueryView.get({"viewname": this.viewname, "limit": -1, "start": this.datestartstr, "end": this.dateendstr}).then((response) => {
+      $QueryView.get({"viewname": this.viewname, "limit": -1, "start": moment(this.date).format(), "end": moment(this.date).add(1, 'days').format()}).then((response) => {
         var data = response.json();
         //console.log(data);
         this.$set("chunks", data["chunks"]);
@@ -360,52 +361,28 @@ export default {
 
 
     setDay: function(datestr){
-      var datestart = this.getDay(datestr);
-      // End time of date
-      var dateend = new Date(datestart);
-      dateend.setDate(dateend.getDate()+1);
-      dateend = new Date(dateend-1);
-
-      var timezonediff = datestart.getTimezoneOffset()*60*1000;
-      this.$set("date", this.timeToDateStr(new Date(datestart-timezonediff)));
-
-      this.$set("starttime", datestart);
-      this.$set("endtime", dateend);
-
-      // Convert to iso8601
-      this.$set("datestartstr", this.starttime.toISOString());
-      this.$set("dateendstr", this.endtime.toISOString());
-    },
-
-    timeToDateStr: function(date){
-      var mystr = date.toISOString().substring(0,10);
-      return mystr;
+      this.$set("date", this.getDay(datestr));
+      this.$set("datestr", this.date.format('YY-MM-DD'));
     },
 
     getDay: function(datestr){
       // Get start time of date
-      var datestart = new Date(Date.parse(datestr));
-      datestart.setHours(0);
-      datestart.setMinutes(0);
-      datestart.setSeconds(0);
-      datestart.setMilliseconds(0);
-
+      var datestart = moment(datestr);
+      datestart.set('hour', 0);
+      datestart.set('minute', 0);
+      datestart.set('second', 0);
+      datestart.set('millisecond', 0);
       return datestart;
     },
 
     getPrevDay(datestr){
-      var datestart = this.getDay(datestr);
-      var timezonediff = datestart.getTimezoneOffset()*60*1000;
-      var prev_date = new Date(datestart.getTime()-daylength-timezonediff);
-      return prev_date;
+      var newdate = moment(datestr).add(-1, 'days');
+      return newdate;
     },
 
     getNextDay(datestr){
-      var datestart = this.getDay(datestr);
-      var timezonediff = datestart.getTimezoneOffset()*60*1000;
-      var next_date = new Date(datestart.getTime()+daylength-timezonediff);
-      return next_date;
-
+      var newdate = moment(datestr).add(1, 'days');
+      return newdate;
     },
 
     secondsToDuration: function(seconds){
