@@ -20,12 +20,13 @@ accordion(:one-at-atime="false")
         td {{ title.name }}
 
 accordion
-  panel(v-for="activity in apptimeline", :header="activity.app + '  (' + activity.duration + ')'", :footer="activity.timestamp+'test'", :is-open="false")
-    p Timestamp: {{ activity.timestamp }}
+  panel(v-for="activity in apptimeline", :header="activity.time + ' - ' + activity.app + '  (' + activity.duration + ')'", :is-open="false")
     table
       tr(v-for="title_entry in activity.titles")
         td {{ title_entry.duration }}
         td {{ title_entry.title }}
+    br
+    p Timestamp: {{ activity.datetime }}
 
 hr
 
@@ -220,7 +221,9 @@ export default {
           curr_event = {
             "app": curr_app,
             "duration": 0,
-            "timestamp": event["timestamp"],
+            "datetime": event["timestamp"],
+            //"time": moment(event.timestamp).format('HH:mm:ss'), // This is cleaner, i do not know why it doesn't work though
+            "time": moment(new Date(event.timestamp)).format('HH:mm:ss'),
             "titles": []
           };
         }
