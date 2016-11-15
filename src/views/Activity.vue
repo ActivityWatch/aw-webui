@@ -62,14 +62,10 @@ export default {
   data: () => {
     return {
       viewname: "",
-      starttime: "",
-      endtime: "",
       duration: "",
       eventcount: 0,
       appsummary: [],
       apptimeline: [],
-      chunks: {},
-      eventlist: [],
       date: null,
       datestr: "",
       errormsg: "",
@@ -117,13 +113,12 @@ export default {
     query: function(viewname){
       $QueryView.get({"viewname": this.viewname, "limit": -1, "start": moment(this.date).format(), "end": moment(this.date).add(1, 'days').format()}).then((response) => {
         var data = response.json();
-        //console.log(data);
-        this.$set("chunks", data["chunks"]);
+        var chunks = data["chunks"];
+        var eventlist = data["eventlist"];
         this.$set("duration", this.secondsToDuration(data["duration"]["value"]));
-        this.$set("eventlist", data["eventlist"]);
         this.$set("eventcount", data["eventcount"]);
-        this.parseChunksToApps(this.chunks);
-        this.parseEventListToApps(this.eventlist);
+        this.parseChunksToApps(chunks);
+        this.parseEventListToApps(eventlist);
       });
     },
 
