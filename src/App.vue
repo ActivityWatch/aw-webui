@@ -1,38 +1,34 @@
 <template lang="jade">
-div#wrapper(v-bind:class="{ 'collapsed': collapsedSidebar }")
-  div.sidebar-wrapper(v-bind:class="{ 'collapsed': collapsedSidebar }")
-    sidemenu(:entries="menuEntries",
-             menutitle="ActivityWatch")
-             //:hideLabels="collapsedSidebar")
-  div.pagecontent-wrapper
-    div.header
+div#wrapper
+  div.header
+    div.container
       span.title
        | ActivityWatch
-      usermenu
-    div.container-container
-      div.container
-        router-view
+      //usermenu
+  div.container.aw-container
+    nav.row.navbar.aw-navbar
+      ul.nav.navbar-nav
+        li(v-for="entry in menuEntries")
+          a(v-link="{ path: entry.path, exact: entry.exact }")
+            span(class="menuicon {{ entry.iconCssClass }}")
+            | {{ entry.label }}
+    div
+      router-view
 </template>
 
 <script>
-import Sidemenu from './components/Sidemenu.vue';
 import Usermenu from './components/Usermenu.vue';
-//import Home from './Home.vue';
 
 export default {
   components: {
-    Sidemenu,
     Usermenu,
-//    Home
   },
 
   props: {
-//    collapsedSidebar: Boolean,
   },
 
   data: function() {
     return {
-      collapsedSidebar: false,
       menuEntries: [
         { label: "Home",
           path: "/",
@@ -50,11 +46,6 @@ export default {
       ]
     }
   },
-  events: {
-    'sidebar-collapsed': function(collapsed) {
-      this.collapsedSidebar = collapsed;
-    }
-  }
 }
 </script>
 
@@ -67,12 +58,28 @@ $sidebar_width: 200px;
 $sidebar_width_collapsed: 50px;
 
 body {
-    background-color: $bgcolor;
-    color: $textcolor;
+  color: $textcolor;
+  font-family: 'Varela Round', sans-serif;
+  background-color: #EEE;
 }
 
+.aw-navbar {
+    border: 0px solid #DDD;
+    border-bottom-width: 1px;
+    min-height: 20px;
+
+    li > a {
+        padding: 10px 15px 10px 15px;
+        color: #555;
+
+        span {
+            margin-right: 7px;
+        }
+    }
+}
+
+
 .header{
-  background-color: #EEE;
   border-bottom: 1px solid #CCC;
   height: 50px;
   line-height: 50px;
@@ -85,39 +92,15 @@ body {
     width: 200px;
     font-size: 20pt;
     text-align: center;
+    width: 100%;
     color: #444;
-    margin-left: calc(50% - 200px + 100px);
   }
 }
 
-.container-container {
-  height: calc(100vh - #{$topbar_height});
-  overflow-y: auto;
+.aw-container {
+  background-color: #FFF;
+  border: 1px solid #CCC;
+  border-top: 0px;
+  border-radius: 0px 0px 5px 5px;
 }
-
-#wrapper {
-    padding-left: $sidebar_width;
-    transition: padding 1s ease;
-
-    &.collapsed {
-        padding-left: $sidebar_width_collapsed;
-    }
-}
-
-.sidebar-wrapper {
-    position: fixed;
-    margin-left: -$sidebar_width;
-    transition: margin 1s ease;
-    font-family: 'Varela Round', sans-serif;
-    font-size: 11pt;
-    font-weight: 400;
-
-    &.collapsed {
-        margin-left: -$sidebar_width_collapsed;
-    }
-}
-
- .pagecontent-wrapper {
-     padding: 0px;
- }
 </style>
