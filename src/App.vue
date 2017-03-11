@@ -3,7 +3,9 @@ div#wrapper
   div.header
     div.container
       span.title
-       | ActivityWatch
+        img(src="/static/logo.png")
+        span(style="padding-left: 15px;")
+        | ActivityWatch
       //usermenu
   div.container.aw-container
     nav.row.navbar.aw-navbar
@@ -18,6 +20,8 @@ div#wrapper
 
 <script>
 import Usermenu from './components/Usermenu.vue';
+
+// TODO: Highlight active item in menubar
 
 export default {
   components: {
@@ -53,10 +57,6 @@ export default {
 $bgcolor: #FFF;
 $textcolor: #000;
 
-$topbar_height: 50px;
-$sidebar_width: 200px;
-$sidebar_width_collapsed: 50px;
-
 body {
   color: $textcolor;
   font-family: 'Varela Round', sans-serif;
@@ -71,6 +71,7 @@ body {
     li > a {
         padding: 10px 15px 10px 15px;
         color: #555;
+        font-size: 12pt;
 
         span {
             margin-right: 7px;
@@ -79,10 +80,10 @@ body {
 }
 
 
-.header{
+.header {
   border-bottom: 1px solid #CCC;
-  height: 50px;
-  line-height: 50px;
+  height: 55px;
+  line-height: 55px;
   font-family: 'Varela Round', sans-serif;
   font-size: 12pt;
   font-weight: 400;
@@ -91,9 +92,13 @@ body {
     display: inline-block;
     width: 200px;
     font-size: 20pt;
-    text-align: center;
     width: 100%;
     color: #444;
+
+    img {
+        width: 1.2em;
+        height: 1.2em;
+    }
   }
 }
 
