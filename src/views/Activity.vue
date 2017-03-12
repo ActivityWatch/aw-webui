@@ -100,6 +100,7 @@ export default {
     },
     query: function(){
       if (this.testing){
+        console.log("Using testing buckets");
         var window_bucket_name = "aw-watcher-window-testing_"+this.host;
         var afk_bucket_name = "aw-watcher-afk-testing_"+this.host;
       }
@@ -131,7 +132,6 @@ export default {
         var eventlist = data["eventlist"];
         this.$set("duration", data["duration"]["value"]);
         this.$set("eventcount", data["eventcount"]+this.eventcount);
-        console.log(this.eventcount)
         if (chunks != undefined){
           this.$set("appsummary", event_parsing.parse_chunks_to_apps(chunks));
           var e = document.getElementById("appsummary")
