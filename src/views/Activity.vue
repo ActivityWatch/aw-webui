@@ -3,6 +3,7 @@ h2 Window Activity {{ datestr }}
 
 button(v-on:click="queryDate(time.get_prev_day(date))") Previous day
 button(v-on:click="queryDate(time.get_next_day(date))") Next day
+button(v-on:click="query()") Refresh
 
 h3(style="color: red;") {{ errormsg }}
 
@@ -37,16 +38,14 @@ import Resources from '../resources.js';
 import moment from 'moment';
 import renderTimeline from '../visualizations/timeline.js';
 import renderSummary from '../visualizations/summary.js';
-var time = require("../util/time.js");
-var event_parsing = require("../util/event_parsing.js");
+import time from "../util/time.js";
+import event_parsing from "../util/event_parsing.js";
 
 var panel = require('vue-strap').panel;
 var accordion = require('vue-strap').accordion;
 
-let $EventChunk = Resources.$EventChunk;
 let $QueryView  = Resources.$QueryView;
 let $CreateView  = Resources.$CreateView;
-let $Bucket  = Resources.$Bucket;
 let $Info  = Resources.$Info;
 
 var daylength = 86400000;
@@ -123,6 +122,7 @@ export default {
         this.queryView(timeline_view_name);
       });
     },
+
     queryView: function(viewname){
       $QueryView.get({"viewname": viewname, "limit": -1, "start": moment(this.date).format(), "end": moment(this.date).add(1, 'days').format()}).then((response) => {
         console.log(viewname)
@@ -140,7 +140,7 @@ export default {
         if (eventlist != undefined){
           this.$set("apptimeline", event_parsing.parse_eventlist_by_apps(eventlist));
           var e = document.getElementById("timeline")
-          renderTimeline(e, this.apptimeline);
+          renderTimeline(e, this.apptimeline, this.duration);
         }
       });
     },

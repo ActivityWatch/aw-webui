@@ -23,9 +23,6 @@ import Resources from '../resources.js';
 var panel = require('vue-strap').panel;
 var accordion = require('vue-strap').accordion;
 
-let $EventChunk = Resources.$EventChunk;
-let $QueryView  = Resources.$QueryView;
-let $CreateView = Resources.$CreateView;
 let $Bucket     = Resources.$Bucket;
 
 export default {
