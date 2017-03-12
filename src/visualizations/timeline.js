@@ -48,6 +48,7 @@ function renderTimeline(el, events) {
     }
 
     let eg = g.append("g");
+    // TODO: Also render titles when expanded
     eg.append("svg:title")
       .text(  "Appname: " + e.appname + "\n" +
               "Duration: " + Math.round(e.duration) + "s" + "\n" +

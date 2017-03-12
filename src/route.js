@@ -21,10 +21,10 @@ router.map({
   '/activity': {
     component: Activities
   },
-  '/activity/:type/:host': {
+  '/activity/:host': {
     component: Activity
   },
-  '/activity/:type/:host/:date': {
+  '/activity/:host/:date': {
     component: Activity
   },
   '/buckets': {

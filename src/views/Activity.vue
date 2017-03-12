@@ -1,8 +1,6 @@
 <template lang="jade">
 h2 Window Activity {{ datestr }}
 
-hr
-p Viewname: {{ viewname }}
 button(v-on:click="queryDate(getPrevDay(date))") Previous day
 button(v-on:click="queryDate(getNextDay(date))") Next day
 
@@ -12,7 +10,9 @@ h3(style="color: red;") {{ errormsg }}
 
 h4 Total time: {{ duration }}
 
-div#timeline
+hr
+
+h4 Summary
 
 accordion(:one-at-atime="false")
   panel(v-for="app in appsummary", :header="app.name + '  (' + app.duration + ')'", :is-open="false")
@@ -21,14 +21,11 @@ accordion(:one-at-atime="false")
         td {{ title.duration }}
         td {{ title.name }}
 
-accordion
-  panel(v-for="activity in apptimeline", :header="activity.time + ' - ' + activity.appname + '  (' + activity.duration + ')'", :is-open="false")
-    table
-      tr(v-for="title_entry in activity.titles")
-        td {{ title_entry.duration }}
-        td {{ title_entry.title }}
-    br
-    p Timestamp: {{ activity.timestamp }}
+hr
+
+h4 Timeline
+
+div#timeline
 
 hr
 
@@ -39,11 +36,6 @@ p Events queried: {{ eventcount }}
 </template>
 
 <style lang="scss">
-
-#timeline {
-  max-height: 500px;
-  overflow-y: scroll;
-}
 
 </style>
 
@@ -70,7 +62,7 @@ export default {
   },
   data: () => {
     return {
-      viewname: "",
+      host: "",
       duration: "",
       eventcount: 0,
       appsummary: [],
@@ -82,36 +74,15 @@ export default {
   },
 
   ready: function() {
+    // Set host
+    this.$set("host", this.$route.params.host);
+
     // Date
     var date = this.$route.params.date;
     if (date == undefined){
       date = new Date().toISOString();
     }
-    this.setDay(date)
-
-    // Create View
-    var type = this.$route.params.type;
-    var host = this.$route.params.host;
-    var view = {"type": type, "host": host}
-
-    this.$set("viewname", "aw-webui_" + type + "_" + host);
-    if (type == "windowactivity_summary"){
-      var query = this.windowSummaryQuery("aw-watcher-window_"+host, "aw-watcher-afk_"+host);
-      $CreateView.save({viewname: this.viewname}, {'query': query}).then((response) => {
-        var data = response.json();
-        this.query();
-      });
-    }
-    else if (type == "windowactivity_timeline"){
-      var query = this.windowTimelineQuery("aw-watcher-window_"+host, "aw-watcher-afk_"+host);
-      $CreateView.save({viewname: this.viewname}, {'query': query}).then((response) => {
-        var data = response.json();
-        this.query();
-      });
-    }
-    else {
-      this.$set("errormsg", "Unknown viewtype '"+type+"'");
-    }
+    this.queryDate(date)
   },
 
   methods: {
@@ -119,15 +90,37 @@ export default {
       this.setDay(date);
       this.query();
     },
-    query: function(viewname){
-      $QueryView.get({"viewname": this.viewname, "limit": -1, "start": moment(this.date).format(), "end": moment(this.date).add(1, 'days').format()}).then((response) => {
+    query: function(){
+      var window_bucket_name = "aw-watcher-window_"+this.host;
+      var afk_bucket_name = "aw-watcher-afk_"+this.host;
+
+      var summary_view_name = "windowactivity_summary@"+this.host;
+      var query = this.windowSummaryQuery(window_bucket_name, afk_bucket_name);
+      $CreateView.save({viewname: summary_view_name}, {'query': query}).then((response) => {
+        var data = response.json();
+        this.queryView(summary_view_name);
+      });
+
+      var timeline_view_name = "windowactivity_timeline@"+this.host;
+      var query = this.windowTimelineQuery("aw-watcher-window_"+this.host, "aw-watcher-afk_"+this.host);
+      $CreateView.save({viewname: timeline_view_name}, {'query': query}).then((response) => {
+        var data = response.json();
+        this.queryView(timeline_view_name);
+      });
+
+    },
+    queryView: function(viewname){
+      $QueryView.get({"viewname": viewname, "limit": -1, "start": moment(this.date).format(), "end": moment(this.date).add(1, 'days').format()}).then((response) => {
+        console.log(viewname)
         var data = response.json();
         var chunks = data["chunks"];
         var eventlist = data["eventlist"];
         this.$set("duration", this.secondsToDuration(data["duration"]["value"]));
-        this.$set("eventcount", data["eventcount"]);
-        this.parseChunksToApps(chunks);
-        this.parseEventListToApps(eventlist);
+        this.$set("eventcount", data["eventcount"]+this.eventcount);
+        if (chunks != undefined)
+          this.parseChunksToApps(chunks);
+        if (eventlist != undefined)
+          this.parseEventListToApps(eventlist);
       });
     },
 
