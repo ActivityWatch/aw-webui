@@ -10,7 +10,7 @@ hr
 
 h4 Summary
 
-h5 Total time: {{ duration }}
+h5 Total time: {{ time.seconds_to_duration(duration) }}
 
 div#appsummary
 
@@ -117,7 +117,7 @@ export default {
       });
 
       var timeline_view_name = "windowactivity_timeline@"+this.host;
-      var query = this.windowTimelineQuery("aw-watcher-window_"+this.host, "aw-watcher-afk_"+this.host);
+      var query = this.windowTimelineQuery(window_bucket_name, afk_bucket_name);
       $CreateView.save({viewname: timeline_view_name}, {'query': query}).then((response) => {
         var data = response.json();
         this.queryView(timeline_view_name);
@@ -129,8 +129,9 @@ export default {
         var data = response.json();
         var chunks = data["chunks"];
         var eventlist = data["eventlist"];
-        this.$set("duration", time.seconds_to_duration(data["duration"]["value"]));
+        this.$set("duration", data["duration"]["value"]);
         this.$set("eventcount", data["eventcount"]+this.eventcount);
+        console.log(this.eventcount)
         if (chunks != undefined){
           this.$set("appsummary", event_parsing.parse_chunks_to_apps(chunks));
           var e = document.getElementById("appsummary")

@@ -83,10 +83,9 @@ module.exports = {
         else
           return -1;
       });
-      // Convert second duration human readable form
+      // Set duration to seconds
       for (var appi in applist){
         var app = applist[appi];
-        //console.log(app);
         app['duration'] = app['duration']['value']
         for (var titlename in app['titles']){
           var title = app['titles'][titlename];
@@ -145,18 +144,6 @@ module.exports = {
       if (curr_event != null)
         apptimeline.push(curr_event);
 
-      // Change seconds duration to readable format
-      /*
-      for (var activity_i in apptimeline){
-        var activity = apptimeline[activity_i];
-        for (var title_i in activity.titles){
-          var title = activity.titles[title_i];
-          title["duration"] = time.seconds_to_duration(title["duration"]);
-        }
-        activity["duration"] = time.seconds_to_duration(activity["duration"]);
-
-      }
-      */
       //console.log(apptimeline);
       return apptimeline
     },
