@@ -16,6 +16,12 @@ accordion(:one-at-atime="false")
         button.btn.btn-default.btn-sm(type="button" data-toggle="tooltip" data-placement="bottom" title="Not implemented")
           span.glyphicon.glyphicon-save(aria-hidden="true")
           | Export as JSON
+      div(v-if="bucket.last_updated", style="margin-top: 0.5em; font-size: 10pt; color: #666")
+        // More precisely prints time since the last event ending
+        span
+          | Last updated:
+        span(style="width: 8em; margin-left: 0.5em; display: inline-block")
+          | {{ bucket.last_updated | friendlytime }}
       //a(v-link="'/not_implemented'")
         tooltip(trigger="hover" effect="scale" placement="bottom" content="Not implemented")
           button.btn.btn-default.btn-sm(type="button" data-toggle="tooltip" data-placement="bottom" title="Not implemented")
@@ -48,8 +54,6 @@ accordion(:one-at-atime="false")
 }
 
 .actions {
-  margin: -5px;
-
   a {
     margin-right: 5px;
 
