@@ -23,7 +23,7 @@ div
   h3 Events
 
   div.pagination-header
-    | Showing {{ events.length }}/{{ events.length }} events
+    | Showing {{ events.length }} out of ? events
 
   div.well.well-sm(style="margin-bottom: 0;")
     button.btn.btn-default.btn-sm(v-on:click="expandList")
