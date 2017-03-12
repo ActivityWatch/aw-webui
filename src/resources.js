@@ -2,14 +2,14 @@ import Vue from 'vue';
 
 Vue.use(require('vue-resource'));
 
-/*
+
 let protocol = "http";
 let hostname = "localhost";
-let port = "5600";
-//let port = "5666";
+//let port = "5600";
+let port = "5666";
 let origin = protocol + "://" + hostname + ":" + port;
- */
-let origin = "";
+
+//let origin = "";
 
 let $Info       = Vue.resource(origin + '/api/0/info');
 let $Bucket     = Vue.resource(origin + '/api/0/buckets/{id}');
