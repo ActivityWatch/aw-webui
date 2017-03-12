@@ -4,40 +4,9 @@ const d3 = require("d3");
 const Color = require("color");
 const _ = require("lodash");
 
-// TODO: Always give the same appname the same color
 // TODO: When hovering over a thin element, expand it's height so that more details can be viewed.
 //       For example, an element is 10px thin, make it's width 50px and move it's y-pos 20px up so
 //       that it overlaps the element above and below equally.
-
-function _windowLabelsAsProps(events) {
-  return _.map(events, function(event) {
-    _.each(event.label, function(label) {
-      if(label.startsWith("appname:")) {
-        event.appname = label.slice(8);
-      } else if(label.startsWith("title:")) {
-        event.title = label.slice(6);
-      }
-    });
-    return event;
-  });
-}
-
-function _mergeWithSameAppname(events) {
-  return _.reduce(events, function(result, value, key) {
-    if(key === 0) {
-      result.push(value);
-    } else {
-      let last_event = result[result.length-1];
-      console.log(last_event);
-      if(last_event.appname === value.appname) {
-        last_event.duration[0].value += value.duration[0].value;
-      } else {
-        result.push(value);
-      }
-    }
-    return result;
-  }, []);
-}
 
 // Whenever a appname is found without a color in this dict, create one and assign
 let appname_colors = {};
@@ -59,20 +28,18 @@ function renderTimeline(el, events) {
   let width = "100%";
   svg.attr("width", width);
 
-  events = _windowLabelsAsProps(events);
-  events = _mergeWithSameAppname(events);
+  //events = _windowLabelsAsProps(events);
+  //events = _mergeWithSameAppname(events);
 
   let g = svg.append("g");
   //g.attr("transform", "translate(" + 50 + ", 0)");
 
   // TODO: Add ability to zoom by modifying this variable
-  let secondsPerPixel = 2;
+  let secondsPerPixel = 5;
 
   var curr_y = 0;
   _.each(events, function(e, i) {
-    console.log(i, e);
-
-    let barHeight = e.duration[0].value / secondsPerPixel;
+    let barHeight = e.duration / secondsPerPixel;
     let textSize = 0;
     if(barHeight > 20) {
       textSize = 16;
@@ -82,7 +49,9 @@ function renderTimeline(el, events) {
 
     let eg = g.append("g");
     eg.append("svg:title")
-      .text("Appname: " + e.appname + "\n" + "Duration: " + Math.round(e.duration[0].value) + "s");
+      .text(  "Appname: " + e.appname + "\n" +
+              "Duration: " + Math.round(e.duration) + "s" + "\n" +
+              "Timestamp: " + e.timestamp);
 
     eg.append("rect")
      .attr("x", 0)

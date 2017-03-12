@@ -12,6 +12,8 @@ h3(style="color: red;") {{ errormsg }}
 
 h4 Total time: {{ duration }}
 
+div#timeline
+
 accordion(:one-at-atime="false")
   panel(v-for="app in appsummary", :header="app.name + '  (' + app.duration + ')'", :is-open="false")
     table
@@ -20,13 +22,13 @@ accordion(:one-at-atime="false")
         td {{ title.name }}
 
 accordion
-  panel(v-for="activity in apptimeline", :header="activity.time + ' - ' + activity.app + '  (' + activity.duration + ')'", :is-open="false")
+  panel(v-for="activity in apptimeline", :header="activity.time + ' - ' + activity.appname + '  (' + activity.duration + ')'", :is-open="false")
     table
       tr(v-for="title_entry in activity.titles")
         td {{ title_entry.duration }}
         td {{ title_entry.title }}
     br
-    p Timestamp: {{ activity.datetime }}
+    p Timestamp: {{ activity.timestamp }}
 
 hr
 
@@ -38,11 +40,17 @@ p Events queried: {{ eventcount }}
 
 <style lang="scss">
 
+#timeline {
+  max-height: 500px;
+  overflow-y: scroll;
+}
+
 </style>
 
 <script>
 import Resources from '../resources.js';
 import moment from 'moment';
+import renderTimeline from '../visualizations/timeline.js';
 
 var panel = require('vue-strap').panel;
 var accordion = require('vue-strap').accordion;
@@ -219,9 +227,9 @@ export default {
             apptimeline.push(curr_event);
           }
           curr_event = {
-            "app": curr_app,
+            "appname": curr_app,
             "duration": 0,
-            "datetime": event["timestamp"],
+            "timestamp": event["timestamp"],
             //"time": moment(event.timestamp).format('HH:mm:ss'), // This is cleaner, i do not know why it doesn't work though
             "time": moment(new Date(event.timestamp)).format('HH:mm:ss'),
             "titles": []
@@ -240,6 +248,7 @@ export default {
         apptimeline.push(curr_event);
 
       // Change seconds duration to readable format
+      /*
       for (var activity_i in apptimeline){
         var activity = apptimeline[activity_i];
         for (var title_i in activity.titles){
@@ -249,8 +258,11 @@ export default {
         activity["duration"] = this.secondsToDuration(activity["duration"]);
 
       }
+      */
       //console.log(apptimeline);
       this.$set("apptimeline", apptimeline);
+      var e = document.getElementById("timeline")
+      renderTimeline(e, apptimeline);
     },
 
 
