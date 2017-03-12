@@ -36,6 +36,8 @@ function renderSummary(el, apps) {
     eg.append("rect")
      .attr("x", 0)
      .attr("y", curr_y)
+     .attr("rx", 5)
+     .attr("ry", 5)
      .attr("width", (app.duration/longest_duration)*80+"%")
      .attr("height", barHeight)
      .style("fill", nextColor());
