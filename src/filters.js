@@ -12,7 +12,8 @@ Vue.filter('friendlytime', function (timestamp) {
   } else if(-sinceNow.asSeconds() <= 60*60*24) {
     return sinceNow.humanize(true);
   }
-  return timestamp;
+  return sinceNow.humanize(true);
+  //return timestamp;
 });
 
 Vue.filter('friendlyduration', function (seconds) {
