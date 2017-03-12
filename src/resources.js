@@ -6,7 +6,7 @@ Vue.use(require('vue-resource'));
 let protocol = "http";
 let hostname = "localhost";
 //let port = "5600";
-let port = "5666";
+let port = PRODUCTION ? "5600" : "5666";
 let origin = protocol + "://" + hostname + ":" + port;
 
 //let origin = "";
