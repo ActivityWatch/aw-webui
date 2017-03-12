@@ -53,6 +53,7 @@ let $EventChunk = Resources.$EventChunk;
 let $QueryView  = Resources.$QueryView;
 let $CreateView  = Resources.$CreateView;
 let $Bucket  = Resources.$Bucket;
+let $Info  = Resources.$Info;
 
 var daylength = 86400000;
 
@@ -65,6 +66,7 @@ export default {
   data: () => {
     return {
       host: "",
+      testing: false,
       duration: "",
       eventcount: 0,
       appsummary: [],
@@ -85,7 +87,12 @@ export default {
     if (date == undefined){
       date = new Date().toISOString();
     }
-    this.queryDate(date)
+    $Info.get().then((response) => {
+      var data = response.json();
+      this.$set("testing", data.testing)
+
+      this.queryDate(date)
+    })
   },
 
   methods: {
@@ -97,6 +104,10 @@ export default {
       console.log(this.$route.params)
       var window_bucket_name = "aw-watcher-window_"+this.host;
       var afk_bucket_name = "aw-watcher-afk_"+this.host;
+      if (this.testing){
+        var window_bucket_name = "aw-watcher-window-testing_"+this.host;
+        var afk_bucket_name = "aw-watcher-afk-testing_"+this.host;
+      }
 
       var summary_view_name = "windowactivity_summary@"+this.host;
       var query = this.windowSummaryQuery(window_bucket_name, afk_bucket_name);
