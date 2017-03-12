@@ -4,6 +4,8 @@ const d3 = require("d3");
 const Color = require("color");
 const _ = require("lodash");
 
+var time = require("../util/time.js");
+
 // TODO: When hovering over a thin element, expand it's height so that more details can be viewed.
 //       For example, an element is 10px thin, make it's width 50px and move it's y-pos 20px up so
 //       that it overlaps the element above and below equally.
@@ -51,7 +53,7 @@ function renderTimeline(el, events) {
     // TODO: Also render titles when expanded
     eg.append("svg:title")
       .text(  "Appname: " + e.appname + "\n" +
-              "Duration: " + Math.round(e.duration) + "s" + "\n" +
+              "Duration: " + time.seconds_to_duration(e.duration) + "\n" +
               "Timestamp: " + e.timestamp);
 
     eg.append("rect")

@@ -1,8 +1,8 @@
 <template lang="jade">
 h2 Window Activity {{ datestr }}
 
-button(v-on:click="queryDate(getPrevDay(date))") Previous day
-button(v-on:click="queryDate(getNextDay(date))") Next day
+button(v-on:click="queryDate(time.get_prev_day(date))") Previous day
+button(v-on:click="queryDate(time.get_next_day(date))") Next day
 
 hr
 
@@ -43,6 +43,7 @@ p Events queried: {{ eventcount }}
 import Resources from '../resources.js';
 import moment from 'moment';
 import renderTimeline from '../visualizations/timeline.js';
+var time = require("../util/time.js");
 
 var panel = require('vue-strap').panel;
 var accordion = require('vue-strap').accordion;
@@ -68,6 +69,7 @@ export default {
       appsummary: [],
       apptimeline: [],
       date: null,
+      time: time,
       datestr: "",
       errormsg: "",
     }
@@ -91,6 +93,7 @@ export default {
       this.query();
     },
     query: function(){
+      console.log(this.$route.params)
       var window_bucket_name = "aw-watcher-window_"+this.host;
       var afk_bucket_name = "aw-watcher-afk_"+this.host;
 
@@ -107,7 +110,6 @@ export default {
         var data = response.json();
         this.queryView(timeline_view_name);
       });
-
     },
     queryView: function(viewname){
       $QueryView.get({"viewname": viewname, "limit": -1, "start": moment(this.date).format(), "end": moment(this.date).add(1, 'days').format()}).then((response) => {
@@ -115,7 +117,7 @@ export default {
         var data = response.json();
         var chunks = data["chunks"];
         var eventlist = data["eventlist"];
-        this.$set("duration", this.secondsToDuration(data["duration"]["value"]));
+        this.$set("duration", time.seconds_to_duration(data["duration"]["value"]));
         this.$set("eventcount", data["eventcount"]+this.eventcount);
         if (chunks != undefined)
           this.parseChunksToApps(chunks);
@@ -246,9 +248,9 @@ export default {
         var activity = apptimeline[activity_i];
         for (var title_i in activity.titles){
           var title = activity.titles[title_i];
-          title["duration"] = this.secondsToDuration(title["duration"]);
+          title["duration"] = time.seconds_to_duration(title["duration"]);
         }
-        activity["duration"] = this.secondsToDuration(activity["duration"]);
+        activity["duration"] = time.seconds_to_duration(activity["duration"]);
 
       }
       */
@@ -345,64 +347,20 @@ export default {
       for (var appi in applist){
         var app = applist[appi];
         //console.log(app);
-        app['duration'] = this.secondsToDuration(app['duration']['value']);
+        app['duration'] = time.seconds_to_duration(app['duration']['value']);
         for (var titlename in app['titles']){
           var title = app['titles'][titlename];
-          title['duration'] = this.secondsToDuration(title['duration']['value']);
+          title['duration'] = time.seconds_to_duration(title['duration']['value']);
         }
       }
       // Set list
       this.$set("appsummary", applist);
     },
 
-
-    /*
-
-        Date/time functions
-
-    */
-
-
     setDay: function(datestr){
-      this.$set("date", this.getDay(datestr));
+      this.$set("date", time.get_day_start(datestr));
       this.$set("datestr", this.date.format('YY-MM-DD'));
     },
-
-    getDay: function(datestr){
-      // Get start time of date
-      var datestart = moment(datestr);
-      datestart.set('hour', 0);
-      datestart.set('minute', 0);
-      datestart.set('second', 0);
-      datestart.set('millisecond', 0);
-      return datestart;
-    },
-
-    getPrevDay(datestr){
-      var newdate = moment(datestr).add(-1, 'days');
-      return newdate;
-    },
-
-    getNextDay(datestr){
-      var newdate = moment(datestr).add(1, 'days');
-      return newdate;
-    },
-
-    secondsToDuration: function(seconds){
-        var result = "";
-        var hrs = Math.floor(seconds/60/60);
-        var min = Math.floor(seconds/60%60);
-        var sec = Math.floor(seconds%60);
-        if (hrs != 0)
-            result += hrs + "h";
-        if (hrs != 0 || min != 0)
-            result += min + "m";
-        if (hrs == 0)
-            result += sec + "s";
-        return result;
-    },
-
-
   },
 }
 </script>
