@@ -13,7 +13,7 @@ var time = require("../util/time.js");
 // Whenever a appname is found without a color in this dict, create one and assign
 let appname_colors = {};
 var color = Color();
-color.hsv(0, 75, 100);
+color.hsv(0, 60, 100);
 function getColor(appname) {
   if(!(appname in appname_colors)) {
     appname_colors[appname] = color.rgbString();
@@ -30,11 +30,7 @@ function renderTimeline(el, events) {
   let width = "100%";
   svg.attr("width", width);
 
-  //events = _windowLabelsAsProps(events);
-  //events = _mergeWithSameAppname(events);
-
   let g = svg.append("g");
-  //g.attr("transform", "translate(" + 50 + ", 0)");
 
   // TODO: Add ability to zoom by modifying this variable
   let secondsPerPixel = 5;

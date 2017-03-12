@@ -4,22 +4,15 @@ h2 Window Activity {{ datestr }}
 button(v-on:click="queryDate(time.get_prev_day(date))") Previous day
 button(v-on:click="queryDate(time.get_next_day(date))") Next day
 
-hr
-
 h3(style="color: red;") {{ errormsg }}
-
-h4 Total time: {{ duration }}
 
 hr
 
 h4 Summary
 
-accordion(:one-at-atime="false")
-  panel(v-for="app in appsummary", :header="app.name + '  (' + time.seconds_to_duration(app.duration) + ')'", :is-open="false")
-    table
-      tr(v-for="(index, title) in app.titles")
-        td {{ time.seconds_to_duration(title.duration) }}
-        td {{ title.name }}
+h5 Total time: {{ duration }}
+
+div#appsummary
 
 hr
 
@@ -43,6 +36,7 @@ p Events queried: {{ eventcount }}
 import Resources from '../resources.js';
 import moment from 'moment';
 import renderTimeline from '../visualizations/timeline.js';
+import renderSummary from '../visualizations/summary.js';
 var time = require("../util/time.js");
 var event_parsing = require("../util/event_parsing.js");
 
@@ -96,17 +90,23 @@ export default {
   },
 
   methods: {
+    setDay: function(datestr){
+      this.$set("date", time.get_day_start(datestr));
+      this.$set("datestr", this.date.format('YY-MM-DD'));
+    },
+
     queryDate: function(date){
       this.setDay(date);
       this.query();
     },
     query: function(){
-      console.log(this.$route.params)
-      var window_bucket_name = "aw-watcher-window_"+this.host;
-      var afk_bucket_name = "aw-watcher-afk_"+this.host;
       if (this.testing){
         var window_bucket_name = "aw-watcher-window-testing_"+this.host;
         var afk_bucket_name = "aw-watcher-afk-testing_"+this.host;
+      }
+      else {
+        var window_bucket_name = "aw-watcher-window_"+this.host;
+        var afk_bucket_name = "aw-watcher-afk_"+this.host;
       }
 
       var summary_view_name = "windowactivity_summary@"+this.host;
@@ -131,8 +131,11 @@ export default {
         var eventlist = data["eventlist"];
         this.$set("duration", time.seconds_to_duration(data["duration"]["value"]));
         this.$set("eventcount", data["eventcount"]+this.eventcount);
-        if (chunks != undefined)
+        if (chunks != undefined){
           this.$set("appsummary", event_parsing.parse_chunks_to_apps(chunks));
+          var e = document.getElementById("appsummary")
+          renderSummary(e, this.appsummary);
+        }
         if (eventlist != undefined){
           this.$set("apptimeline", event_parsing.parse_eventlist_by_apps(eventlist));
           var e = document.getElementById("timeline")
@@ -201,19 +204,6 @@ export default {
           },
         ]
       };
-    },
-
-    /*
-
-        Parsers
-
-    */
-
-
-
-    setDay: function(datestr){
-      this.$set("date", time.get_day_start(datestr));
-      this.$set("datestr", this.date.format('YY-MM-DD'));
     },
   },
 }
