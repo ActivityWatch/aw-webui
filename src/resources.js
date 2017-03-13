@@ -2,14 +2,18 @@ import Vue from 'vue';
 
 Vue.use(require('vue-resource'));
 
-/*
-let protocol = "http";
-let hostname = "localhost";
-let port = "5600";
-//let port = "5666";
-let origin = protocol + "://" + hostname + ":" + port;
- */
+
 let origin = "";
+
+// If running with `npm node dev`, use testing server as origin.
+// Works since CORS is enabled by default when running `aw-server --testing`.
+if(!PRODUCTION) {
+    let protocol = "http";
+    let hostname = "localhost";
+    let port = "5666";
+    origin = protocol + "://" + hostname + ":" + port;
+}
+
 
 let $Bucket     = Vue.resource(origin + '/api/0/buckets/{id}');
 let $Event      = Vue.resource(origin + '/api/0/buckets/{id}/events');
