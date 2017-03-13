@@ -71,7 +71,7 @@ function renderSummary(el, apps) {
      .attr("y", curr_y)
      .attr("width", "100%")
      .attr("height", barHeight)
-     .style("fill", "#FFFFFF00")
+     .style("fill", "rgba(1, 1, 1, 0)")
      .attr("onmouseover", "set_color('summary_app_"+i+"', '"+hovercolor+"');")
      .attr("onmouseout", "set_color('summary_app_"+i+"', '"+appcolor+"')");
 
