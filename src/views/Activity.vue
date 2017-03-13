@@ -98,7 +98,7 @@ export default {
   methods: {
     setDay: function(datestr){
       this.$set("date", time.get_day_start(datestr));
-      this.$set("datestr", this.date.format('YY-MM-DD'));
+      this.$set("datestr", this.date.format('YYYY-MM-DD'));
     },
 
     queryDate: function(date){
