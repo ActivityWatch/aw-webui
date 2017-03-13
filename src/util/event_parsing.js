@@ -108,8 +108,9 @@ function parse_eventlist_by_apps(eventlist){
     var event = eventlist[event_i];
     for (var label_i in event.label){
       var label = event.label[label_i];
-      var labeltype = label.split(':')[0];
-      var labelvalue = label.split(':')[1];
+      var slice_i = label.indexOf(':')
+      var labeltype = label.slice(0,slice_i);
+      var labelvalue = label.slice(slice_i+1);
       if (labeltype == "appname"){
         curr_app = labelvalue;
       }
