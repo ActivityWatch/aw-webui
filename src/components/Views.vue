@@ -1,21 +1,13 @@
 <template lang="jade">
 
-// Trying to get it to work with bootstrap, doesn't even show up...
-dropdown(text="Action")
-  button(slot="button", type="button").btn.btn-default.dropdown-toggle Action
-    span.caret
-  ul(slot="dropdown-menu").dropdown-menu
-    li
-      a(href="#dropdown") Action
-    li
-      a(href="#dropdown") Another action
-
 // Fallback version
-div#views
-  div(v-for="host in hosts")
-    a(v-link="'/activity/'+host")
-      span.glyphicon.glyphicon-signal(aria-hidden="true")
-      |  {{ host }}
+div#views-container
+  nav.row.navbar.aw-navbar
+    ul.nav.navbar-nav
+      li(v-for="host in hosts")
+        a(v-link="'/activity/'+host")
+          span.glyphicon.glyphicon-signal(aria-hidden="true")
+          |  {{ host }}
 
 </template>
 
@@ -23,14 +15,9 @@ div#views
 
 import Resources from '../resources.js';
 
-var dropdown = require('vue-strap').dropdown;
-
 let $Bucket     = Resources.$Bucket;
 
 export default {
-  components: {
-    'dropdown': dropdown,
-  },
   data () {
     return {
       hosts: [],
@@ -60,21 +47,8 @@ export default {
       }
     });
   },
-  methods: {
-    test: function(){
-      var viewdiv = document.getElementById("views");
-      if (this.visible)
-        viewdiv.style.height = "100px";
-      else
-        viewdiv.style.height = "150px";
-    }
-  }
 }
 </script>
 
-<style lang="scss" scoped>
-#views {
-  position: absolute;
-  width: 100%;
-}
+<style lang="scss">
 </style>

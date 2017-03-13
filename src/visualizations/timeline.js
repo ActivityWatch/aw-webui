@@ -71,6 +71,7 @@ function renderTimeline(el, events, total_duration) {
     var infobox = titleinfolist.append("g")
       .attr("id", "titleinfo_event_"+i)
 
+    // Appname and duration text
     infobox.append("text")
       .attr("x", "10px")
       .attr("y", "20px")
@@ -116,4 +117,3 @@ function renderTimeline(el, events, total_duration) {
 }
 
 module.exports = renderTimeline;
-

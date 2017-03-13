@@ -1,6 +1,8 @@
 <template lang="jade">
 h2 Window Activity {{ datestr }}
 
+h5 {{ host }}
+
 div.btn-group
   button.btn.btn-default(v-on:click="queryDate(time.get_prev_day(date))")
     span(aria-hidden="true" class="glyphicon glyphicon-arrow-left")
