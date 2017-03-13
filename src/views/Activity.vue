@@ -4,13 +4,13 @@ h2 Window Activity {{ datestr }}
 div.btn-group
   button.btn.btn-default(v-on:click="queryDate(time.get_prev_day(date))")
     span(aria-hidden="true" class="glyphicon glyphicon-arrow-left")
-    | Previous day
+    |  Previous day
   button.btn.btn-default(v-on:click="queryDate(time.get_next_day(date))")
     span(aria-hidden="true" class="glyphicon glyphicon-arrow-right")
-    | Next day
+    |  Next day
 button.btn.btn-default(v-on:click="query()", style="margin-left: 1rem;")
   span(aria-hidden="true" class="glyphicon glyphicon-refresh")
-  | Refresh
+  |  Refresh
 
 h3(style="color: red;") {{ errormsg }}
 
