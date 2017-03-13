@@ -14,7 +14,8 @@ div#wrapper
           a(v-link="{ path: entry.path, exact: entry.exact }")
             span(class="menuicon {{ entry.iconCssClass }}")
             | {{ entry.label }}
-    div
+    Views
+    div#content
       router-view
 
   // TODO: Add link to website here when it contains something of interest
@@ -38,12 +39,14 @@ div#wrapper
 
 <script>
 import Usermenu from './components/Usermenu.vue';
+import Views from './components/Views.vue';
 
 // TODO: Highlight active item in menubar
 
 export default {
   components: {
     Usermenu,
+    Views
   },
 
   props: {
@@ -88,6 +91,7 @@ body {
 .aw-navbar {
     border: 0px solid #DDD;
     border-bottom-width: 1px;
+    margin-bottom: 0;
     min-height: 20px;
 
     li > a {
@@ -127,7 +131,11 @@ body {
 .aw-container {
   background-color: #FFF;
   border: 1px solid #CCC;
-  border-top: 0px;
+  border-top: 0;
   border-radius: 0px 0px 5px 5px;
+}
+
+#content {
+    padding-top: 20px;
 }
 </style>
