@@ -5,34 +5,9 @@ const Color = require("color");
 const _ = require("lodash");
 
 import event_parsing from "../util/event_parsing";
+import color from "../util/color.js"
 
 var time = require("../util/time.js");
-
-/*
-    Color generation
-    ================
-    Each app has its own color in app_colors
-    The first 4 apps get the 4 default colors
-    The preceeding apps get a mix in the order of 1+0,2+0,2+1,3+0,3+1,3+2...
-*/
-var colors = [Color('#549DDA'), Color('#FFB856'), Color('#FC5562'), Color('#89F478')];
-let app_colors = {};
-function getColor(appname) {
-  if(!(appname in app_colors)) {
-    if (colors.length == Object.keys(app_colors).length){
-      var color1 = colors[(colors.length >> 1)-1];
-      var color2 = colors[colors.length%(colors.length >> 1)];
-      var color = Color({
-        r: (color1.rgb().r+color2.rgb().r)/2,
-        g: (color1.rgb().g+color2.rgb().g)/2,
-        b: (color1.rgb().b+color2.rgb().b)/2
-      });
-      colors[Object.keys(app_colors).length] = color;
-    }
-    app_colors[appname] = colors[Object.keys(app_colors).length]
-  }
-  return app_colors[appname].rgbString();
-}
 
 function renderTimeline(el, events, total_duration) {
   // Clear element
@@ -81,16 +56,16 @@ function renderTimeline(el, events, total_duration) {
 
     // Timeline rect
     var e_width = e.duration / total_duration * 100;
-    var color = getColor(e.appname);
-    var hovercolor = Color(color).lighten(0.3).rgbString();
+    var appcolor = color.getAppColor(e.appname);
+    var hovercolor = Color(appcolor).darken(0.4).rgbString();
     eg.append("rect")
      .attr("x", curr_x)
      .attr("y", 0)
      .attr("width", e_width)
      .attr("height", 10)
      .attr("onmouseover", "set_color('timeline_event_"+i+"', '"+hovercolor+"'); show_info('titleinfo_event_"+i+"')")
-     .attr("onmouseout", "set_color('timeline_event_"+i+"', '"+color+"')")
-     .style("fill", getColor(e.appname));
+     .attr("onmouseout", "set_color('timeline_event_"+i+"', '"+appcolor+"')")
+     .style("fill", color.getAppColor(e.appname));
 
     // Titleinfo box
     var infobox = titleinfolist.append("g")

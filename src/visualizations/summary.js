@@ -4,20 +4,21 @@ const d3 = require("d3");
 const Color = require("color");
 const _ = require("lodash");
 
+import color from "../util/color.js";
+
 var time = require("../util/time.js");
 
-var color = null;
-function nextColor() {
-  var next = color.rgbString();
-  color.values.alpha = color.values.alpha*0.75+0.05;
-  return next;
-}
-
 function renderSummary(el, apps) {
-  // Reset next color
-  color = Color('#549DDA');
   // Clear element
   el.innerHTML = "";
+
+  // Function for hover animation
+  var script = document.createElement("script");
+  script.text =  'function set_color(elem_id, color) {'
+  script.text += '  var rect = document.getElementById(elem_id).children[0];'
+  script.text += '  rect.style.fill = color;'
+  script.text += '};'
+  el.appendChild(script);
 
   let svg = d3.select(el).append("svg");
   svg.attr("width", "100%");
@@ -31,8 +32,12 @@ function renderSummary(el, apps) {
     let textSize = 15;
 
     // TODO: Expand on click and list titles
-    let eg = g.append("g");
+    let eg = g.append("g")
+      .attr("id", "summary_app_"+i);
+
     // Color box background
+    var appcolor = color.getAppColor(app.name);
+    var hovercolor = Color(appcolor).darken(0.4).rgbString();
     eg.append("rect")
      .attr("x", 0)
      .attr("y", curr_y)
@@ -40,7 +45,9 @@ function renderSummary(el, apps) {
      .attr("ry", 5)
      .attr("width", (app.duration/longest_duration)*80+"%")
      .attr("height", barHeight)
-     .style("fill", nextColor());
+     .style("fill", appcolor)
+     .attr("onmouseover", "set_color('summary_app_"+i+"', '"+hovercolor+"');")
+     .attr("onmouseout", "set_color('summary_app_"+i+"', '"+appcolor+"')");
     // App name
     eg.append("text")
      .attr("x", 5)
@@ -48,7 +55,9 @@ function renderSummary(el, apps) {
      .text(app.name)
      .attr("font-family", "sans-serif")
      .attr("font-size", textSize + "px")
-     .attr("fill", "black");
+     .attr("fill", "black")
+     .attr("onmouseover", "set_color('summary_app_"+i+"', '"+hovercolor+"');")
+     .attr("onmouseout", "set_color('summary_app_"+i+"', '"+appcolor+"')");
     // Duration
     eg.append("text")
      .attr("x", 5)
@@ -56,7 +65,9 @@ function renderSummary(el, apps) {
      .text(time.seconds_to_duration(app.duration))
      .attr("font-family", "sans-serif")
      .attr("font-size", textSize + "px")
-     .attr("fill", "black");
+     .attr("fill", "black")
+     .attr("onmouseover", "set_color('summary_app_"+i+"', '"+hovercolor+"');")
+     .attr("onmouseout", "set_color('summary_app_"+i+"', '"+appcolor+"')");
 
     curr_y += barHeight + 5;
   });
