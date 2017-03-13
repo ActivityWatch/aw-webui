@@ -16,6 +16,24 @@ div#wrapper
             | {{ entry.label }}
     div
       router-view
+
+  // TODO: Add link to website here when it contains something of interest
+  div.container(style="margin-top: 1rem; margin-bottom: 1rem; color: #555")
+    | Made with ❤ by the ActivityWatch developers
+
+    div(style="float: right; text-align: right;")
+      div
+        | Follow ActivityWatch:
+        a.outlinks(href="https://github.com/ActivityWatch/activitywatch")
+          //i.fa.fa-github
+          | GitHub
+        a.outlinks(href="https://twitter.com/ActivityWatchIt")
+          //i.fa.fa-twitter
+          | Twitter
+      div
+        | Something not working as it should?
+        a(href="https://github.com/ActivityWatch/activitywatch-user-issues/issues/new")
+          |  File an issue.
 </template>
 
 <script>
@@ -61,6 +79,10 @@ body {
   color: $textcolor;
   font-family: 'Varela Round', sans-serif;
   background-color: #EEE;
+}
+
+.outlinks {
+  margin-left: 0.5rem;
 }
 
 .aw-navbar {
