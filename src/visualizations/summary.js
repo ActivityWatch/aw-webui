@@ -23,31 +23,30 @@ function renderSummary(el, apps) {
   let svg = d3.select(el).append("svg");
   svg.attr("width", "100%");
 
-  let g = svg.append("g");
-
   var curr_y = 0;
   var longest_duration = apps[0].duration
   _.each(apps, function(app, i) {
-    let barHeight = 50;
-    let textSize = 15;
-
     // TODO: Expand on click and list titles
-    let eg = g.append("g")
+    let eg = svg.append("g")
       .attr("id", "summary_app_"+i);
 
-    // Color box background
+    // Variables
+    var width = (app.duration/longest_duration)*80+"%";
+    let barHeight = 50;
+    let textSize = 15;
     var appcolor = color.getAppColor(app.name);
     var hovercolor = Color(appcolor).darken(0.4).rgbString();
+
+    // Color box background
     eg.append("rect")
      .attr("x", 0)
      .attr("y", curr_y)
      .attr("rx", 5)
      .attr("ry", 5)
-     .attr("width", (app.duration/longest_duration)*80+"%")
+     .attr("width", width)
      .attr("height", barHeight)
      .style("fill", appcolor)
-     .attr("onmouseover", "set_color('summary_app_"+i+"', '"+hovercolor+"');")
-     .attr("onmouseout", "set_color('summary_app_"+i+"', '"+appcolor+"')");
+
     // App name
     eg.append("text")
      .attr("x", 5)
@@ -56,8 +55,7 @@ function renderSummary(el, apps) {
      .attr("font-family", "sans-serif")
      .attr("font-size", textSize + "px")
      .attr("fill", "black")
-     .attr("onmouseover", "set_color('summary_app_"+i+"', '"+hovercolor+"');")
-     .attr("onmouseout", "set_color('summary_app_"+i+"', '"+appcolor+"')");
+
     // Duration
     eg.append("text")
      .attr("x", 5)
@@ -66,6 +64,14 @@ function renderSummary(el, apps) {
      .attr("font-family", "sans-serif")
      .attr("font-size", textSize + "px")
      .attr("fill", "black")
+
+    // Invisible hover animaiton rect
+    eg.append("rect")
+     .attr("x", 0)
+     .attr("y", curr_y)
+     .attr("width", "100%")
+     .attr("height", barHeight)
+     .style("fill", "#FFFFFF00")
      .attr("onmouseover", "set_color('summary_app_"+i+"', '"+hovercolor+"');")
      .attr("onmouseout", "set_color('summary_app_"+i+"', '"+appcolor+"')");
 
