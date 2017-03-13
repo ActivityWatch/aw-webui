@@ -1,49 +1,50 @@
 <template lang="jade">
-h2 Bucket: {{ $route.params.id }}
-
-hr
-
 div
-  h3 Info
-  | ID: {{ bucket.id }}
-  br
-  | Hostname: {{ bucket.hostname }}
-  br
-  | Client: {{ bucket.client }}
-  br
-  | Created: {{ bucket.created }}
-  br
-  | Event type: {{ bucket.type }}
+  h2 Bucket: {{ $route.params.id }}
 
-div
-  h3 Events
+  hr
 
-  div.pagination-header
-    | Showing {{ events.length }} out of ? events
+  div
+    h3 Info
+    | ID: {{ bucket.id }}
+    br
+    | Hostname: {{ bucket.hostname }}
+    br
+    | Client: {{ bucket.client }}
+    br
+    | Created: {{ bucket.created }}
+    br
+    | Event type: {{ bucket.type }}
 
-  div.well.well-sm(style="margin-bottom: 0;")
-    button.btn.btn-default.btn-sm(v-on:click="expandList")
-      span(v-if="expandList")
-        | Expand list
-      span(v-else)
-        | Condense list
+  div
+    h3 Events
 
-  div.scrollbar-flipped
-    ul.event-list(v-bind:class="{ 'expand': isListExpanded }")
-      li(v-for="event in events | orderBy 'timestamp' -1")
-        span.event
-          span.field(v-for="timestamp in event.timestamp", v-bind:title="timestamp")
-            span.glyphicon.glyphicon-time
-            | {{ timestamp | friendlytime }}
-          span.field(v-for="(label, index) in event.label" track-by="index")
-            span.glyphicon.glyphicon-tags
-            | {{ label }}
-          span.field(v-for="duration in event.duration")
-            span.glyphicon.glyphicon-hourglass
-            | {{ duration.value | friendlyduration }}
-          span.field(v-for="count in event.count")
-            span.glyphicon.glyphicon-option-horizontal
-            | {{ count }}
+    div.pagination-header
+      | Showing {{ events.length }} out of ? events
+
+    div.well.well-sm(style="margin-bottom: 0;")
+      button.btn.btn-default.btn-sm(v-on:click="expandList")
+        span(v-if="expandList")
+          | Expand list
+        span(v-else)
+          | Condense list
+
+    div.scrollbar-flipped
+      ul.event-list(v-bind:class="{ 'expand': isListExpanded }")
+        li(v-for="event in filters.orderBy(events, ['timestamp'], ['desc'])")
+          span.event
+            span.field(v-for="timestamp in event.timestamp", v-bind:title="timestamp")
+              span.glyphicon.glyphicon-time
+              | {{ timestamp | friendlytime }}
+            span.field(v-for="(label, index) in event.label" track-by="index")
+              span.glyphicon.glyphicon-tags
+              | {{ label }}
+            span.field(v-for="duration in event.duration")
+              span.glyphicon.glyphicon-hourglass
+              | {{ duration.value | friendlyduration }}
+            span.field(v-for="count in event.count")
+              span.glyphicon.glyphicon-option-horizontal
+              | {{ count }}
 
 </template>
 

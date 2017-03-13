@@ -1,15 +1,16 @@
 <template lang="jade">
-h2 Server Log
+div
+  h2 Server Log
 
-hr
+  hr
 
-accordion(:one-at-atime="false")
-  panel(v-for="logmsg in log", :header="logmsg.levelname+':'+logmsg.message", :is-open="false")
-    | Name: {{ logmsg.name }}
-    br
-    | Time: {{ logmsg.asctime }}
-    br
-    | Origin: {{ logmsg.funcName }}:{{ logmsg.lineno }}
+  accordion(:one-at-atime="false")
+    panel(v-for="logmsg in log", :header="logmsg.levelname+':'+logmsg.message", :is-open="false")
+      | Name: {{ logmsg.name }}
+      br
+      | Time: {{ logmsg.asctime }}
+      br
+      | Origin: {{ logmsg.funcName }}:{{ logmsg.lineno }}
 
 </template>
 

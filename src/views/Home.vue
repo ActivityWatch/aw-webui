@@ -1,46 +1,46 @@
 <template lang="jade">
-h2 Home
+div
+  h2 Home
 
-hr
+  hr
 
-h3 Status
+  h3 Status
 
-div.status.good
-  div.icon
-    span.glyphicon.glyphicon-ok-circle
-  div.message
-    | All good, or not, I don't know, because I lack an implementation.
+  div.status.good
+    div.icon
+      span.glyphicon.glyphicon-ok-circle
+    div.message
+      | All good, or not, I don't know, because I lack an implementation.
 
 
-div.status.warning
-  div.icon
-    span.glyphicon.glyphicon-alert
-  div.message
-    | Something requires your attention, or not, I don't know, because I lack an implementation.
+  div.status.warning
+    div.icon
+      span.glyphicon.glyphicon-alert
+    div.message
+      | Something requires your attention, or not, I don't know, because I lack an implementation.
 
-div.status.bad
-  div.icon
-    span.glyphicon.glyphicon-fire
-  div.message
-    | Something is bad, or not, I don't know, because I lack an implementation.
+  div.status.bad
+    div.icon
+      span.glyphicon.glyphicon-fire
+    div.message
+      | Something is bad, or not, I don't know, because I lack an implementation.
 
-h3 Resources
+  h3 Resources
 
-p
-  ul
-    li
-      a(href="https://activitywatch.github.io/")
-        | Website
-    li
-      a(href="https://github.com/ActivityWatch/activitywatch")
-        | GitHub
-    li
-      a(href="https://activitywatch.readthedocs.org/")
+  p
+    ul
+      li
+        a(href="https://activitywatch.github.io/")
+          | Website
+      li
+        a(href="https://github.com/ActivityWatch/activitywatch")
+          | GitHub
+      li
+        a(href="https://activitywatch.readthedocs.org/")
         | Documentation
-    li
-      a(href="/api/")
+      li
+        a(href="/api/")
         | API Documentation
-
 </template>
 
 <style lang="scss">

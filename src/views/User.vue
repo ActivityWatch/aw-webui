@@ -1,11 +1,12 @@
 <template lang="jade">
-h2 {{user.name}} ({{ user.username }})
-
 div
-| {{ user.email }}
+  h2 {{user.name}} ({{ user.username }})
 
-p
-| Some text about user should go here
+  div
+  | {{ user.email }}
+
+  p
+  | Some text about user should go here
 
 </template>
 

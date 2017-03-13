@@ -1,38 +1,39 @@
 <template lang="jade">
-h2 Window Activity {{ datestr }}
+div
+  h2 Window Activity {{ datestr }}
 
-div.btn-group
-  button.btn.btn-default(v-on:click="queryDate(time.get_prev_day(date))")
-    span(aria-hidden="true" class="glyphicon glyphicon-arrow-left")
-    |  Previous day
-  button.btn.btn-default(v-on:click="queryDate(time.get_next_day(date))")
-    span(aria-hidden="true" class="glyphicon glyphicon-arrow-right")
-    |  Next day
-button.btn.btn-default(v-on:click="query()", style="margin-left: 1rem;")
-  span(aria-hidden="true" class="glyphicon glyphicon-refresh")
-  |  Refresh
+  div.btn-group
+    button.btn.btn-default(v-on:click="queryDate(time.get_prev_day(date))")
+      span(aria-hidden="true" class="glyphicon glyphicon-arrow-left")
+      |  Previous day
+    button.btn.btn-default(v-on:click="queryDate(time.get_next_day(date))")
+      span(aria-hidden="true" class="glyphicon glyphicon-arrow-right")
+      |  Next day
+  button.btn.btn-default(v-on:click="query()", style="margin-left: 1rem;")
+    span(aria-hidden="true" class="glyphicon glyphicon-refresh")
+    |  Refresh
 
-h3(style="color: red;") {{ errormsg }}
+  h3(style="color: red;") {{ errormsg }}
 
-hr
+  hr
 
-h4 Summary
+  h4 Summary
 
-h5 Total time: {{ time.seconds_to_duration(duration) }}
+  h5 Total time: {{ time.seconds_to_duration(duration) }}
 
-div#appsummary
+  div#appsummary
 
-hr
+  hr
 
-h4 Timeline
+  h4 Timeline
 
-div#timeline
+  div#timeline
 
-hr
+  hr
 
-p Showing activity for: {{ date }}
+  p Showing activity for: {{ date }}
 
-p Events queried: {{ eventcount }}
+  p Events queried: {{ eventcount }}
 
 </template>
 

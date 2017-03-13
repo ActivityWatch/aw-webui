@@ -1,43 +1,44 @@
 <template lang="jade">
-h2 Buckets
+div
+  h2 Buckets
 
-hr
+  hr
 
-div.pagination-header
+  div.pagination-header
 
-accordion(:one-at-atime="false")
-  panel(v-for="bucket in buckets", :header="bucket.id", :is-open="true")
-    div.actions
-      router-link(to="'/buckets/' + bucket.id")
-        button.btn.btn-default.btn-sm(type="button")
-          span.glyphicon.glyphicon-folder-open(aria-hidden="true")
-          | Open bucket
-      a(v-bind:href="'/api/0/buckets/' + bucket.id + '/events'")
-        button.btn.btn-default.btn-sm(type="button" data-toggle="tooltip" data-placement="bottom" title="Not implemented")
-          span.glyphicon.glyphicon-save(aria-hidden="true")
-          | Export as JSON
-      div(v-if="bucket.last_updated", style="margin-top: 0.5em; font-size: 10pt; color: #666")
-        // More precisely prints time since the last event ending
-        span
-          | Last updated:
-        span(style="width: 8em; margin-left: 0.5em; display: inline-block")
-          | {{ bucket.last_updated | friendlytime }}
-      //router-link(to="'/not_implemented'")
-        tooltip(trigger="hover" effect="scale" placement="bottom" content="Not implemented")
+  accordion(:one-at-atime="false")
+    panel(v-for="bucket in buckets", :header="bucket.id", :is-open="true")
+      div.actions
+        router-link(to="'/buckets/' + bucket.id")
+          button.btn.btn-default.btn-sm(type="button")
+            span.glyphicon.glyphicon-folder-open(aria-hidden="true")
+            | Open bucket
+        a(v-bind:href="'/api/0/buckets/' + bucket.id + '/events'")
           button.btn.btn-default.btn-sm(type="button" data-toggle="tooltip" data-placement="bottom" title="Not implemented")
-            span.glyphicon.glyphicon-tower(aria-hidden="true")
-            | Convert to Vault (No impl)
-      //router-link(to="'/not_implemented'")
-        tooltip(trigger="hover" effect="scale" placement="bottom" content="Not implemented")
-          button.btn.btn-default.btn-sm(type="button" data-toggle="tooltip" data-placement="bottom" title="Not implemented")
-            span.glyphicon.glyphicon-lock(aria-hidden="true")
-            | Permissions (No impl)
-    //br
-    //| Hostname: {{ bucket.hostname }}
-    //br
-    //| Client: {{ bucket.client }}
-    //br
-    //| # of events: Not implemented
+            span.glyphicon.glyphicon-save(aria-hidden="true")
+            | Export as JSON
+        div(v-if="bucket.last_updated", style="margin-top: 0.5em; font-size: 10pt; color: #666")
+          // More precisely prints time since the last event ending
+          span
+            | Last updated:
+          span(style="width: 8em; margin-left: 0.5em; display: inline-block")
+            | {{ bucket.last_updated | friendlytime }}
+        //router-link(to="'/not_implemented'")
+          tooltip(trigger="hover" effect="scale" placement="bottom" content="Not implemented")
+            button.btn.btn-default.btn-sm(type="button" data-toggle="tooltip" data-placement="bottom" title="Not implemented")
+              span.glyphicon.glyphicon-tower(aria-hidden="true")
+              | Convert to Vault (No impl)
+        //router-link(to="'/not_implemented'")
+          tooltip(trigger="hover" effect="scale" placement="bottom" content="Not implemented")
+            button.btn.btn-default.btn-sm(type="button" data-toggle="tooltip" data-placement="bottom" title="Not implemented")
+              span.glyphicon.glyphicon-lock(aria-hidden="true")
+              | Permissions (No impl)
+      //br
+      //| Hostname: {{ bucket.hostname }}
+      //br
+      //| Client: {{ bucket.client }}
+      //br
+      //| # of events: Not implemented
 
 </template>
 

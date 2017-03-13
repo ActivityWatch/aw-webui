@@ -1,16 +1,15 @@
 <template lang="jade">
-h2 Views
+div
+  h2 Views
 
-hr
+  hr
 
-accordion(:one-at-atime="false")
-  panel(v-for="host in hosts", :header="host", :is-open="true")
-    router-link(to="'activity/'+host")
-      button.btn.btn-default.btn-sm(type="button")
-        span.glyphicon.glyphicon-folder-open(aria-hidden="true")
-        |  View
-
-
+  accordion(:one-at-atime="false")
+    panel(v-for="host in hosts", :header="host", :is-open="true")
+      router-link(to="'activity/'+host")
+        button.btn.btn-default.btn-sm(type="button")
+          span.glyphicon.glyphicon-folder-open(aria-hidden="true")
+          |  View
 </template>
 
 <style lang="scss">
