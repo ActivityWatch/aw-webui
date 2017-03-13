@@ -13,8 +13,8 @@ span#usermenu
 
 
   //span(v-if="loggedIn")
-    a(v-link="'/u/' + user.username")
-      div.profile-image(style="background-image: url('{{ pictureURL }}')")
+    router-link(to="'/u/' + user.username")
+      div.profile-image(v-bind:style="'background-image: url(' + pictureURL + ')'")
       span.badge.active
       | {{user.name}}
     a.logout(@click="logout")
@@ -47,7 +47,7 @@ export default {
       this.user = {};
     },
   },
-  ready: function() {
+  mounted: function() {
     let v = this;
 
     let getEmailHash = function(email) {

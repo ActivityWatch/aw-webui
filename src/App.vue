@@ -11,8 +11,8 @@ div#wrapper
     nav.row.navbar.aw-navbar
       ul.nav.navbar-nav
         li(v-for="entry in menuEntries")
-          a(v-link="{ path: entry.path, exact: entry.exact }")
-            span(class="menuicon {{ entry.iconCssClass }}")
+          router-link(to="{ path: entry.path, exact: entry.exact }")
+            span(v-bind:class="'menuicon ' + entry.iconCssClass")
             | {{ entry.label }}
     div
       router-view
