@@ -8,27 +8,30 @@ import event_parsing from "../util/event_parsing";
 
 var time = require("../util/time.js");
 
-// Whenever a appname is found without a color in this dict, create one and assign
+/*
+    Color generation
+    ================
+    Each app has its own color in app_colors
+    The first 4 apps get the 4 default colors
+    The preceeding apps get a mix in the order of 1+0,2+0,2+1,3+0,3+1,3+2...
+*/
 var colors = [Color('#549DDA'), Color('#FFB856'), Color('#FC5562'), Color('#89F478')];
-
-let appname_colors = {};
-var color = Color('#F44')
+let app_colors = {};
 function getColor(appname) {
-  if(!(appname in appname_colors)) {
-    if (colors.length == Object.keys(appname_colors).length){
+  if(!(appname in app_colors)) {
+    if (colors.length == Object.keys(app_colors).length){
       var color1 = colors[(colors.length >> 1)-1];
       var color2 = colors[colors.length%(colors.length >> 1)];
-      var color = Color();
-      color.rgb(
-        (color1.rgb().r+color2.rgb().r)/2,
-        (color1.rgb().g+color2.rgb().g)/2,
-        (color1.rgb().b+color2.rgb().b)/2
-      );
-      colors[Object.keys(appname_colors).length] = color;
+      var color = Color({
+        r: (color1.rgb().r+color2.rgb().r)/2,
+        g: (color1.rgb().g+color2.rgb().g)/2,
+        b: (color1.rgb().b+color2.rgb().b)/2
+      });
+      colors[Object.keys(app_colors).length] = color;
     }
-    appname_colors[appname] = colors[Object.keys(appname_colors).length]
+    app_colors[appname] = colors[Object.keys(app_colors).length]
   }
-  return appname_colors[appname].rgbString();
+  return app_colors[appname].rgbString();
 }
 
 function renderTimeline(el, events, total_duration) {
@@ -132,8 +135,6 @@ function renderTimeline(el, events, total_duration) {
     infobox.attr("height", curr_y+"px");
 
     curr_x += e_width
-
-
   });
 
   return el;
