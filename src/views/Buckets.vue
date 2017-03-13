@@ -8,7 +8,7 @@ div.pagination-header
 accordion(:one-at-atime="false")
   panel(v-for="bucket in buckets", :header="bucket.id", :is-open="true")
     div.actions
-      a(v-link="'/buckets/' + bucket.id")
+      router-link(to="'/buckets/' + bucket.id")
         button.btn.btn-default.btn-sm(type="button")
           span.glyphicon.glyphicon-folder-open(aria-hidden="true")
           | Open bucket
@@ -22,12 +22,12 @@ accordion(:one-at-atime="false")
           | Last updated:
         span(style="width: 8em; margin-left: 0.5em; display: inline-block")
           | {{ bucket.last_updated | friendlytime }}
-      //a(v-link="'/not_implemented'")
+      //router-link(to="'/not_implemented'")
         tooltip(trigger="hover" effect="scale" placement="bottom" content="Not implemented")
           button.btn.btn-default.btn-sm(type="button" data-toggle="tooltip" data-placement="bottom" title="Not implemented")
             span.glyphicon.glyphicon-tower(aria-hidden="true")
             | Convert to Vault (No impl)
-      //a(v-link="'/not_implemented'")
+      //router-link(to="'/not_implemented'")
         tooltip(trigger="hover" effect="scale" placement="bottom" content="Not implemented")
           button.btn.btn-default.btn-sm(type="button" data-toggle="tooltip" data-placement="bottom" title="Not implemented")
             span.glyphicon.glyphicon-lock(aria-hidden="true")
@@ -76,7 +76,7 @@ let $Bucket = Resources.$Bucket;
 
 export default {
   name: "Buckets",
-  ready: function() {
+  mounted: function() {
     this.getBuckets();
   },
   components: {

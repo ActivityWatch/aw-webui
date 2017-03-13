@@ -32,10 +32,10 @@ div
     ul.event-list(v-bind:class="{ 'expand': isListExpanded }")
       li(v-for="event in events | orderBy 'timestamp' -1")
         span.event
-          span.field(v-for="timestamp in event.timestamp", title="{{ timestamp }}")
+          span.field(v-for="timestamp in event.timestamp", v-bind:title="timestamp")
             span.glyphicon.glyphicon-time
             | {{ timestamp | friendlytime }}
-          span.field(v-for="label in event.label" track-by="$index")
+          span.field(v-for="(label, index) in event.label" track-by="index")
             span.glyphicon.glyphicon-tags
             | {{ label }}
           span.field(v-for="duration in event.duration")
@@ -148,7 +148,7 @@ export default {
       console.log("List should be expanding: ", this.isListExpanded);
     }
   },
-  ready: function() {
+  mounted: function() {
     this.id = this.$route.params.id;
     this.getBucketInfo(this.id);
     this.getEvents(this.id);

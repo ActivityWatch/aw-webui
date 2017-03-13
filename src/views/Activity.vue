@@ -78,7 +78,7 @@ export default {
     }
   },
 
-  ready: function() {
+  mounted: function() {
     // Set host
     this.$set("host", this.$route.params.host);
 

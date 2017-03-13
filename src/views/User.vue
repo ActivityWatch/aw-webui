@@ -26,7 +26,7 @@ export default {
   },
   methods: {
   },
-  ready: function() {
+  mounted: function() {
       let username = this.$route.params.username;
       // Fetch user by username
   }

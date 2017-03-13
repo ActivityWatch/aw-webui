@@ -49,7 +49,7 @@ let $Log = Resources.$Log;
 
 export default {
   name: "Log",
-  ready: function() {
+  mounted: function() {
     this.getLog();
   },
   components: {

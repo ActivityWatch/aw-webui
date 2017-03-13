@@ -5,7 +5,7 @@ hr
 
 accordion(:one-at-atime="false")
   panel(v-for="host in hosts", :header="host", :is-open="true")
-    a(v-link="'activity/'+host")
+    router-link(to="'activity/'+host")
       button.btn.btn-default.btn-sm(type="button")
         span.glyphicon.glyphicon-folder-open(aria-hidden="true")
         |  View
@@ -38,7 +38,7 @@ export default {
   },
   methods: {
   },
-  ready: function() {
+  mounted: function() {
     $Bucket.get().then((response) => {
       var buckets = response.json();
       // Sort buckettypes by hostname
