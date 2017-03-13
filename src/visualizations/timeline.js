@@ -9,18 +9,26 @@ import event_parsing from "../util/event_parsing";
 var time = require("../util/time.js");
 
 // Whenever a appname is found without a color in this dict, create one and assign
+var colors = [Color('#549DDA'), Color('#FFB856'), Color('#FC5562'), Color('#89F478')];
+
 let appname_colors = {};
 var color = Color('#F44')
 function getColor(appname) {
   if(!(appname in appname_colors)) {
-    appname_colors[appname] = color.rgbString();
-    color.hue(color.hue() + 90);
+    if (colors.length == Object.keys(appname_colors).length){
+      var color1 = colors[(colors.length >> 1)-1];
+      var color2 = colors[colors.length%(colors.length >> 1)];
+      var color = Color();
+      color.rgb(
+        (color1.rgb().r+color2.rgb().r)/2,
+        (color1.rgb().g+color2.rgb().g)/2,
+        (color1.rgb().b+color2.rgb().b)/2
+      );
+      colors[Object.keys(appname_colors).length] = color;
+    }
+    appname_colors[appname] = colors[Object.keys(appname_colors).length]
   }
-  return appname_colors[appname];
-}
-
-function test(){
-  document.body.style.backgroundcolor = "#fff"
+  return appname_colors[appname].rgbString();
 }
 
 function renderTimeline(el, events, total_duration) {

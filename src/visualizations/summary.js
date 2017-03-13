@@ -6,16 +6,16 @@ const _ = require("lodash");
 
 var time = require("../util/time.js");
 
-var color = Color();
+var color = null;
 function nextColor() {
-  color.values.alpha = color.values.alpha*0.7+0.05
-  return color.rgbString()
+  var next = color.rgbString();
+  color.values.alpha = color.values.alpha*0.75+0.05;
+  return next;
 }
 
 function renderSummary(el, apps) {
   // Reset next color
-  color = Color();
-  color.hsv(200, 100, 90);
+  color = Color('#549DDA');
   // Clear element
   el.innerHTML = "";
 
