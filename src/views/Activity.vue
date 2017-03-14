@@ -3,6 +3,8 @@ h2 Window Activity {{ datestr }}
 
 h5 {{ host }}
 
+h3(style="color: red;") {{ errormsg }}
+
 div.btn-group
   button.btn.btn-default(v-on:click="queryDate(time.get_prev_day(date))")
     span(aria-hidden="true" class="glyphicon glyphicon-arrow-left")
@@ -13,8 +15,6 @@ div.btn-group
 button.btn.btn-default(v-on:click="query()", style="margin-left: 1rem;")
   span(aria-hidden="true" class="glyphicon glyphicon-refresh")
   |  Refresh
-
-h3(style="color: red;") {{ errormsg }}
 
 hr
 
@@ -28,7 +28,7 @@ hr
 
 h4 Timeline
 
-div#timeline
+div#apptimeline
 
 hr
 
@@ -67,47 +67,81 @@ export default {
   },
   data: () => {
     return {
+      // Libraries
+      time: time,
+      // Init variables
       host: "",
       testing: false,
+      // Date variables
+      date: null,
+      datestr: "",
+      // Query variables
       duration: "",
       eventcount: 0,
-      appsummary: [],
-      apptimeline: [],
-      date: null,
-      time: time,
-      datestr: "",
       errormsg: "",
     }
   },
 
-  ready: function() {
-    // Set host
-    this.$set("host", this.$route.params.host);
+  watch: {
+    '$route': function(to, from) {
+      console.log("Route changed")
+      this.$set("host", this.$route.params.host);
+      document.getElementById("appsummary").innerHTML = "";
+      document.getElementById("apptimeline").innerHTML = "";
+      this.query();
+    },
 
-    // Date
-    var date = this.$route.params.date;
-    if (date == undefined){
-      date = new Date().toISOString();
+    'errormsg': function(to, from){
+      console.log(to);
     }
-    $Info.get().then((response) => {
-      var data = response.json();
-      this.$set("testing", data.testing)
-
-      this.queryDate(date)
-    })
   },
 
-  methods: {
-    setDay: function(datestr){
-      this.$set("date", time.get_day_start(datestr));
+ready: function() {
+// Set host
+this.$set("host", this.$route.params.host);
+
+// Date
+var date = this.$route.params.date;
+if (date == undefined){
+  date = new Date().toISOString();
+}
+$Info.get().then(
+  (response) => { // Success
+    if (response.status > 304){
+      var msg = "Request error "+response.status+" at get info";
+      this.$set("errormsg", msg)
+    }
+    else {
+      console.log(response);
+      var data = response.json();
+      this.$set("testing", data.testing);
+      this.queryDate(date);
+    }
+  },
+  (response) => { // Error
+    var msg = "Request error "+response.status+" at get info. Server offline?";
+    this.$set("errormsg", msg)
+  }
+)
+},
+
+methods: {
+
+queryDate: function(date){
+  this.setDay(date);
+  this.query();
+},
+
+setDay: function(datestr){
+    this.$set("date", time.get_day_start(datestr));
       this.$set("datestr", this.date.format('YYYY-MM-DD'));
     },
 
-    queryDate: function(date){
-      this.setDay(date);
-      this.query();
-    },
     query: function(){
+      this.$set('duration', "");
+      this.$set('eventcount', 0);
+      this.$set('errormsg', "");
+
       if (this.testing){
         console.log("Using testing buckets");
         var window_bucket_name = "aw-watcher-window-testing_"+this.host;
@@ -120,38 +154,77 @@ export default {
 
       var summary_view_name = "windowactivity_summary@"+this.host;
       var query = this.windowSummaryQuery(window_bucket_name, afk_bucket_name);
-      $CreateView.save({viewname: summary_view_name}, {'query': query}).then((response) => {
-        var data = response.json();
-        this.queryView(summary_view_name);
-      });
+      $CreateView.save({viewname: summary_view_name}, {'query': query}).then(
+        (response) => { // Success
+          if (response.status > 304){
+            var msg = "Request error "+response.status+" at create view";
+            this.$set("errormsg", msg)
+          }
+          else {
+            var data = response.json();
+            this.queryView(summary_view_name);
+          }
+        },
+        (response) => { // Error
+          var msg = "Request error "+response.status+" at create view";
+          this.$set("errormsg", msg);
+        }
+      );
 
       var timeline_view_name = "windowactivity_timeline@"+this.host;
       var query = this.windowTimelineQuery(window_bucket_name, afk_bucket_name);
-      $CreateView.save({viewname: timeline_view_name}, {'query': query}).then((response) => {
-        var data = response.json();
-        this.queryView(timeline_view_name);
-      });
+      $CreateView.save({viewname: timeline_view_name}, {'query': query}).then(
+        (response) => { // Success
+          if (response.status > 304){
+            var msg = "Request error "+response.status+" at create view";
+            this.$set("errormsg", msg)
+          }
+          else {
+            var data = response.json();
+            this.queryView(timeline_view_name);
+          }
+        },
+        (response) => { // Error
+          var msg = "Request error "+response.status+" at create view";
+          this.$set("errormsg", msg);
+        }
+      );
     },
 
     queryView: function(viewname){
-      $QueryView.get({"viewname": viewname, "limit": -1, "start": moment(this.date).format(), "end": moment(this.date).add(1, 'days').format()}).then((response) => {
-        console.log(viewname)
-        var data = response.json();
-        var chunks = data["chunks"];
-        var eventlist = data["eventlist"];
-        this.$set("duration", data["duration"]["value"]);
-        this.$set("eventcount", data["eventcount"]+this.eventcount);
-        if (chunks != undefined){
-          this.$set("appsummary", event_parsing.parse_chunks_to_apps(chunks));
-          var e = document.getElementById("appsummary")
-          renderSummary(e, this.appsummary);
-        }
-        if (eventlist != undefined){
-          this.$set("apptimeline", event_parsing.parse_eventlist_by_apps(eventlist));
-          var e = document.getElementById("timeline")
-          renderTimeline(e, this.apptimeline, this.duration);
-        }
-      });
+      $QueryView.get({"viewname": viewname,
+                      "limit": -1,
+                      "start": moment(this.date).format(),
+                      "end": moment(this.date).add(1, 'days').format()})
+        .then(
+        (response) => {
+          if (response.status > 304){
+            var msg = "Server error "+response.status+" at view query";
+            this.$set("errormsg", msg)
+          }
+          else {
+            console.log(viewname)
+            var data = response.json();
+            var chunks = data["chunks"];
+            var eventlist = data["eventlist"];
+            this.$set("duration", data["duration"]["value"]);
+            this.$set("eventcount", data["eventcount"]+this.eventcount);
+            if (chunks != undefined){
+              var appsummary = event_parsing.parse_chunks_to_apps(chunks);
+              var e = document.getElementById("appsummary")
+              renderSummary(e, appsummary);
+            }
+            if (eventlist != undefined){
+              var apptimeline = event_parsing.parse_eventlist_by_apps(eventlist);
+              var e = document.getElementById("apptimeline")
+              renderTimeline(e, apptimeline, this.duration);
+            }
+          }
+        },
+        (response) => {
+          var msg = "Request error "+response.status+" at view query";
+          this.$set("errormsg", msg)
+        });
     },
 
 
