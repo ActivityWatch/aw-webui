@@ -232,29 +232,22 @@ export default {
       return {
         'chunk': false,
         'transforms':
-        [
-          {
-            'bucket': windowbucket,
-            'filters': [
-              {
-                'name': 'timeperiod_intersect',
-                'transforms':
-                [
-                  {
-                    'bucket': afkbucket,
-                    'filters':
-                    [
-                      {
-                        'name': 'include_labels',
-                        'labels': ['not-afk'],
-                      },
-                    ]
-                  },
-                ]
-              },
-            ],
-          },
-        ]
+        [{
+          'bucket': windowbucket,
+          'filters':
+          [{
+            'name': 'timeperiod_intersect',
+            'transforms':
+            [{
+              'bucket': afkbucket,
+              'filters':
+              [{
+                'name': 'include_labels',
+                'labels': ['not-afk'],
+              }]
+            }]
+          }]
+        }]
       };
     },
 
@@ -263,29 +256,22 @@ export default {
       return {
         'chunk': true,
         'transforms':
-        [
-          {
-            'bucket': windowbucket,
-            'filters': [
-              {
-                'name': 'timeperiod_intersect',
-                'transforms':
-                [
-                  {
-                    'bucket': afkbucket,
-                    'filters':
-                    [
-                      {
-                        'name': 'include_labels',
-                        'labels': ['not-afk'],
-                      },
-                    ]
-                  },
-                ]
-              },
-            ],
-          },
-        ]
+        [{
+          'bucket': windowbucket,
+          'filters':
+          [{
+            'name': 'timeperiod_intersect',
+            'transforms':
+            [{
+              'bucket': afkbucket,
+              'filters':
+              [{
+                'name': 'include_labels',
+                'labels': ['not-afk'],
+              }]
+            }]
+          }]
+        }]
       };
     },
   },
