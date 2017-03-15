@@ -15,7 +15,6 @@ div
   br
   | Event type: {{ bucket.type }}
 
-
 div
   h3 Events
 
@@ -153,6 +152,6 @@ export default {
     this.id = this.$route.params.id;
     this.getBucketInfo(this.id);
     this.getEvents(this.id);
-  }
+  },
 }
 </script>

@@ -15,6 +15,7 @@ if(!PRODUCTION) {
 }
 
 
+let $Info       = Vue.resource(origin + '/api/0/info');
 let $Bucket     = Vue.resource(origin + '/api/0/buckets/{id}');
 let $Event      = Vue.resource(origin + '/api/0/buckets/{id}/events');
 let $EventChunk = Vue.resource(origin + '/api/0/buckets/{id}/events/chunk?start={start}&end={end}');
@@ -25,6 +26,7 @@ let $GetViewInfo= Vue.resource(origin + '/api/0/views/{viewname}/info');
 let $Log        = Vue.resource(origin + '/api/0/log');
 
 export default {
+  $Info:        $Info,
   $Bucket:      $Bucket,
   $Event:       $Event,
   $EventChunk:  $EventChunk,
