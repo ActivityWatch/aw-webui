@@ -96,43 +96,43 @@ export default {
     }
   },
 
-ready: function() {
-// Set host
-this.$set("host", this.$route.params.host);
+  ready: function() {
+    // Set host
+    this.$set("host", this.$route.params.host);
 
-// Date
-var date = this.$route.params.date;
-if (date == undefined){
-  date = new Date().toISOString();
-}
-$Info.get().then(
-  (response) => { // Success
-    if (response.status > 304){
-      var msg = "Request error "+response.status+" at get info";
-      this.$set("errormsg", msg)
+    // Date
+    var date = this.$route.params.date;
+    if (date == undefined){
+      date = new Date().toISOString();
     }
-    else {
-      console.log(response);
-      var data = response.json();
-      this.$set("testing", data.testing);
-      this.queryDate(date);
-    }
+    $Info.get().then(
+      (response) => { // Success
+        if (response.status > 304){
+          var msg = "Request error "+response.status+" at get info";
+          this.$set("errormsg", msg)
+        }
+        else {
+          console.log(response);
+          var data = response.json();
+          this.$set("testing", data.testing);
+          this.queryDate(date);
+        }
+      },
+      (response) => { // Error
+        var msg = "Request error "+response.status+" at get info. Server offline?";
+        this.$set("errormsg", msg)
+      }
+    );
   },
-  (response) => { // Error
-    var msg = "Request error "+response.status+" at get info. Server offline?";
-    this.$set("errormsg", msg)
-  }
-)
-},
 
-methods: {
+  methods: {
 
-queryDate: function(date){
-  this.setDay(date);
-  this.query();
-},
+  queryDate: function(date){
+    this.setDay(date);
+    this.query();
+  },
 
-setDay: function(datestr){
+  setDay: function(datestr){
     this.$set("date", time.get_day_start(datestr));
       this.$set("datestr", this.date.format('YYYY-MM-DD'));
     },
