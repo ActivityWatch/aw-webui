@@ -231,6 +231,7 @@ export default {
     windowTimelineQuery: function(windowbucket, afkbucket){
       return {
         'chunk': false,
+        'cache': false,
         'transforms':
         [{
           'bucket': windowbucket,
@@ -255,6 +256,7 @@ export default {
     windowSummaryQuery: function(windowbucket, afkbucket){
       return {
         'chunk': true,
+        'cache': true,
         'transforms':
         [{
           'bucket': windowbucket,
