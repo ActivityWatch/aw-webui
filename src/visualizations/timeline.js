@@ -94,7 +94,7 @@ function renderTimeline(el, events, total_duration) {
     var curr_y = 45
     _.each(e.titles, function(t, i){
       // Clocktime
-      var clocktime = t.timestamp[0].split("T")[1].split(".")[0];
+      var clocktime = t.timestamp.split("T")[1].split(".")[0];
       infobox.append("text")
         .attr("x", "10px")
         .attr("y", curr_y+"px")
