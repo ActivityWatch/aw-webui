@@ -17,19 +17,17 @@ function parse_chunks_to_apps(chunks) {
   for (var app in chunks){
     var titlelist = [];
     var titles = chunks[app]["keyvals"]["title"]["values"];
-    console.log(titles)
     for (var title in titles){
-      titlelist.push({
-        "title": title,
-        "duration": titles[title]["duration"]["value"],
-      })
+      var t = { "title": title };
+      if ("duration" in titles[title])
+        t["duration"] = titles[title]["duration"]["value"];
+      titlelist.push(t);
     }
     sort_events_by_duration(titlelist);
-    console.log(titlelist);
-    applist.push({
-      "name": app,
-      "duration": chunks[app]["duration"]["value"],
-    })
+    var a = { "name": app };
+    if ("duration" in chunks[app])
+      a["duration"] = chunks[app]["duration"]["value"]
+    applist.push(a);
   }
   sort_events_by_duration(applist);
   return applist;
