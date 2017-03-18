@@ -255,7 +255,7 @@ export default {
 
     windowSummaryQuery: function(windowbucket, afkbucket){
       return {
-        'chunk': true,
+        'chunk': 'full',
         'cache': true,
         'transforms':
         [{
