@@ -16,6 +16,17 @@ function renderSummary(el, apps) {
   svg.attr("width", "100%");
 
   var curr_y = 0;
+  if (apps.length <= 0){
+    svg.append("text")
+     .attr("x", "0px")
+     .attr("y", "25px")
+     .text("No data")
+     .attr("font-family", "sans-serif")
+     .attr("font-size", "25px")
+     .attr("fill", "black")
+    return el;
+  }
+
   var longest_duration = apps[0].duration
   _.each(apps, function(app, i) {
     // TODO: Expand on click and list titles
@@ -67,7 +78,7 @@ function renderSummary(el, apps) {
 
   svg.attr("height", curr_y);
 
-  return svg;
+  return el;
 }
 
 module.exports = renderSummary;

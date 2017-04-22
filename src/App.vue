@@ -10,11 +10,25 @@ div#wrapper
   div.container.aw-container
     nav.row.navbar.aw-navbar
       ul.nav.navbar-nav
-        li(v-for="entry in menuEntries")
-          a(v-link="{ path: entry.path, exact: entry.exact }")
-            span(class="menuicon {{ entry.iconCssClass }}")
-            | {{ entry.label }}
-    div
+        li
+          a(v-link="{ path: '/', exact: true }")
+            span.glyphicon.glyphicon-home
+            | Home
+        li
+          a(v-on:click="show_hide('views')", style="cursor:pointer;").dropdown-btn
+            span.glyphicon.glyphicon-time
+            | Activity
+        li
+          a(v-link="{ path: '/buckets' }")
+            span.glyphicon.glyphicon-folder-open
+            | Buckets
+        li
+          a(v-link="{ path: '/log' }")
+            span.glyphicon.glyphicon-list-alt
+            | Server Log
+    div.dropdown-content#views
+      Views
+    div#content
       router-view
 
   // TODO: Add link to website here when it contains something of interest
@@ -38,35 +52,24 @@ div#wrapper
 
 <script>
 import Usermenu from './components/Usermenu.vue';
+import Views from './components/Views.vue';
+var show_hide = require('./util/show_hide.js').show_hide;
 
 // TODO: Highlight active item in menubar
 
 export default {
   components: {
     Usermenu,
-  },
-
-  props: {
+    Views
   },
 
   data: function() {
     return {
-      menuEntries: [
-        { label: "Home",
-          path: "/",
-          exact: true,
-          iconCssClass: "glyphicon glyphicon-home" },
-        { label: "Activity",
-          path: "/activity",
-          iconCssClass: "glyphicon glyphicon-time" },
-        { label: "Buckets",
-          path: "/buckets",
-          iconCssClass: "glyphicon glyphicon-folder-open" },
-        { label: "Server Log",
-          path: "/log",
-          iconCssClass: "glyphicon glyphicon-list-alt" }
-      ]
+      views: Views
     }
+  },
+  methods: {
+    show_hide: show_hide,
   },
 }
 </script>
@@ -89,6 +92,7 @@ body {
     border: 0px solid #DDD;
     border-bottom-width: 1px;
     min-height: 20px;
+    margin-bottom: 0;
 
     li > a {
         padding: 10px 15px 10px 15px;
@@ -127,7 +131,11 @@ body {
 .aw-container {
   background-color: #FFF;
   border: 1px solid #CCC;
-  border-top: 0px;
+  border-top: 0;
   border-radius: 0px 0px 5px 5px;
+}
+
+#content {
+    padding-top: 20px;
 }
 </style>

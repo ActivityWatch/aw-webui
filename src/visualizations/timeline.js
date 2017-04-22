@@ -32,6 +32,16 @@ function renderTimeline(el, events, total_duration) {
     .attr("viewBox", "0 0 100 10")
     .attr("width", "100%");
 
+  if (events.length <= 0){
+    timeline.append("text")
+     .attr("x", "0")
+     .attr("y", "3")
+     .text("No data")
+     .attr("font-family", "sans-serif")
+     .attr("font-size", "3")
+     .attr("fill", "black")
+  }
+
   // Hidden svg image that stores all titleinfo for each timeperiod
   let titleinfolist = d3.select(el).append("svg")
     .attr("display", "none");
@@ -71,6 +81,7 @@ function renderTimeline(el, events, total_duration) {
     var infobox = titleinfolist.append("g")
       .attr("id", "titleinfo_event_"+i)
 
+    // Appname and duration text
     infobox.append("text")
       .attr("x", "10px")
       .attr("y", "20px")
@@ -116,4 +127,3 @@ function renderTimeline(el, events, total_duration) {
 }
 
 module.exports = renderTimeline;
-

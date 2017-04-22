@@ -1,42 +1,27 @@
 <template lang="jade">
-h2 Views
 
-hr
-
-accordion(:one-at-atime="false")
-  panel(v-for="host in hosts", :header="host", :is-open="true")
-    a(v-link="'activity/'+host")
-      button.btn.btn-default.btn-sm(type="button")
-        span.glyphicon.glyphicon-folder-open(aria-hidden="true")
-        |  View
-
+// Fallback version
+div#views-container
+  nav.row.navbar.aw-navbar
+    ul.nav.navbar-nav
+      li(v-for="host in hosts")
+        a(v-link="'/activity/'+host")
+          span.glyphicon.glyphicon-signal(aria-hidden="true")
+          |  {{ host }}
 
 </template>
 
-<style lang="scss">
-
-</style>
-
 <script>
-import Resources from '../resources.js';
 
-var panel = require('vue-strap').panel;
-var accordion = require('vue-strap').accordion;
+import Resources from '../resources.js';
 
 let $Bucket     = Resources.$Bucket;
 
 export default {
-  name: "Views",
-  components: {
-    'panel': panel,
-    'accordion': accordion
-  },
-  data: () => {
+  data () {
     return {
       hosts: [],
     }
-  },
-  methods: {
   },
   ready: function() {
     $Bucket.get().then((response) => {
@@ -57,11 +42,13 @@ export default {
       for (var hostname in btypes_by_host){
         // Window activity view (Will be available if a host has afkstatus and currentwindow)
         if (("afkstatus" in btypes_by_host[hostname]) && ("currentwindow" in btypes_by_host[hostname])){
-          var view_windowactivity = {"name": "Window activity", "type": "windowactivity", "host": hostname};
           this.hosts.push(hostname);
         }
       }
     });
-  }
+  },
 }
 </script>
+
+<style lang="scss">
+</style>
