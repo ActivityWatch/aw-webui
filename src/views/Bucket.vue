@@ -46,7 +46,7 @@ div
               span.glyphicon.glyphicon-option-horizontal
               | {{ count }}
           // TODO: This is unaligned, please fix
-          div(v-for="(key, val) in event.keyvals").field
+          div(v-for="(key, val) in event.data").field
             span
             | {{ key }}: {{ val }}
 

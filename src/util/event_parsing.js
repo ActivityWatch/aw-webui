@@ -16,7 +16,7 @@ function parse_chunks_to_apps(chunks) {
   var applist = [];
   for (var app in chunks){
     var titlelist = [];
-    var titles = chunks[app]["keyvals"]["title"]["values"];
+    var titles = chunks[app]["data"]["title"]["values"];
     for (var title in titles){
       var t = { "title": title };
       if ("duration" in titles[title])
@@ -46,7 +46,7 @@ function parse_eventlist_by_apps(eventlist){
     var event = eventlist[event_i];
     for (var label_i in event.label){
       curr_app = event.label;
-      curr_title = event["keyvals"]["title"]
+      curr_title = event["data"]["title"]
     }
     if (curr_app != prev_app){
       if (prev_app != null){
