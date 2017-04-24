@@ -20,13 +20,13 @@ function parse_chunks_to_apps(chunks) {
     for (var title in titles){
       var t = { "title": title };
       if ("duration" in titles[title])
-        t["duration"] = titles[title]["duration"]["value"];
+        t["duration"] = titles[title]["duration"];
       titlelist.push(t);
     }
     sort_events_by_duration(titlelist);
     var a = { "name": app };
     if ("duration" in chunks[app])
-      a["duration"] = chunks[app]["duration"]["value"]
+      a["duration"] = chunks[app]["duration"]
     applist.push(a);
   }
   sort_events_by_duration(applist);
@@ -44,10 +44,8 @@ function parse_eventlist_by_apps(eventlist){
   var curr_event = null;
   for (var event_i in eventlist){
     var event = eventlist[event_i];
-    for (var label_i in event.label){
-      curr_app = event.label;
-      curr_title = event["data"]["title"]
-    }
+    curr_app = event.data.app;
+    curr_title = event.data.title;
     if (curr_app != prev_app){
       if (prev_app != null){
         apptimeline.push(curr_event);
@@ -55,16 +53,15 @@ function parse_eventlist_by_apps(eventlist){
       curr_event = {
         "appname": curr_app,
         "duration": 0,
-        "timestamp": event["timestamp"],
         //"time": moment(event.timestamp).format('HH:mm:ss'), // This is cleaner, i do not know why it doesn't work though
         "time": moment(new Date(event.timestamp)).format('HH:mm:ss'),
         "titles": []
       };
     }
-    curr_event["duration"] += event["duration"]["value"];
+    curr_event["duration"] += event.duration;
     curr_event["titles"].push({
       "title": curr_title,
-      "duration": event["duration"]["value"],
+      "duration": event.duration,
       "timestamp": event["timestamp"]
     });
 

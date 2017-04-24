@@ -37,17 +37,11 @@ div
               span.glyphicon.glyphicon-time
               | {{ event.timestamp | friendlytime }}
             span.field
-              span.glyphicon.glyphicon-tags
-              | {{ event.label }}
-            span.field(v-for="duration in event.duration")
               span.glyphicon.glyphicon-hourglass
-              | {{ duration.value | friendlyduration }}
-            span.field(v-for="count in event.count")
-              span.glyphicon.glyphicon-option-horizontal
-              | {{ count }}
+              | {{ event.duration | friendlyduration }}
           // TODO: This is unaligned, please fix
           div(v-for="(key, val) in event.data").field
-            span
+            span.glyphicon.glyphicon-tags
             | {{ key }}: {{ val }}
 
 </template>
