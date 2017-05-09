@@ -27,10 +27,17 @@ function renderSummary(el, apps) {
     return el;
   }
 
+  // Remove apps without a duration from list
+  apps = apps.filter(function(app){
+    return app.duration !== undefined;
+  })
+
   var longest_duration = apps[0].duration
   _.each(apps, function(app, i) {
     // TODO: Expand on click and list titles
 
+    console.log(app)
+    console.log(app.duration)
     // Variables
     var width = (app.duration/longest_duration)*80+"%";
     let barHeight = 50;
@@ -73,6 +80,7 @@ function renderSummary(el, apps) {
      .attr("fill", "black")
 
     curr_y += barHeight + 5;
+
   });
   curr_y -= 5;
 

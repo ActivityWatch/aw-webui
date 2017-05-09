@@ -30,20 +30,19 @@ div
 
   div.scrollbar-flipped
     ul.event-list(v-bind:class="{ 'expand': isListExpanded }")
-      li(v-for="event in events | orderBy 'timestamp' -1")
-        span.event
-          span.field(v-for="timestamp in event.timestamp", title="{{ timestamp }}")
-            span.glyphicon.glyphicon-time
-            | {{ timestamp | friendlytime }}
-          span.field(v-for="label in event.label" track-by="$index")
+      li(v-for="event in events")
+        div
+          span.event
+            span.field(title="{{ event.timestamp }}")
+              span.glyphicon.glyphicon-time
+              | {{ event.timestamp | friendlytime }}
+            span.field
+              span.glyphicon.glyphicon-hourglass
+              | {{ event.duration | friendlyduration }}
+          // TODO: This is unaligned, please fix
+          div(v-for="(key, val) in event.data").field
             span.glyphicon.glyphicon-tags
-            | {{ label }}
-          span.field(v-for="duration in event.duration")
-            span.glyphicon.glyphicon-hourglass
-            | {{ duration.value | friendlyduration }}
-          span.field(v-for="count in event.count")
-            span.glyphicon.glyphicon-option-horizontal
-            | {{ count }}
+            | {{ key }}: {{ val }}
 
 </template>
 

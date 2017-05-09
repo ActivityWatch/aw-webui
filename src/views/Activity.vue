@@ -207,7 +207,7 @@ export default {
             var data = response.json();
             var chunks = data["chunks"];
             var eventlist = data["eventlist"];
-            this.$set("duration", data["duration"]["value"]);
+            this.$set("duration", data["duration"]);
             this.$set("eventcount", data["eventcount"]+this.eventcount);
             if (chunks != undefined){
               var appsummary = event_parsing.parse_chunks_to_apps(chunks);
@@ -231,6 +231,7 @@ export default {
     windowTimelineQuery: function(windowbucket, afkbucket){
       return {
         'chunk': false,
+        'cache': false,
         'transforms':
         [{
           'bucket': windowbucket,
@@ -242,8 +243,9 @@ export default {
               'bucket': afkbucket,
               'filters':
               [{
-                'name': 'include_labels',
-                'labels': ['not-afk'],
+                'name': 'include_keyvals',
+                'key': 'status',
+                'vals': ['not-afk'],
               }]
             }]
           }]
@@ -254,7 +256,8 @@ export default {
 
     windowSummaryQuery: function(windowbucket, afkbucket){
       return {
-        'chunk': true,
+        'chunk': 'app',
+        'cache': true,
         'transforms':
         [{
           'bucket': windowbucket,
@@ -266,8 +269,9 @@ export default {
               'bucket': afkbucket,
               'filters':
               [{
-                'name': 'include_labels',
-                'labels': ['not-afk'],
+                'name': 'include_keyvals',
+                'key': 'status',
+                'vals': ['not-afk'],
               }]
             }]
           }]
