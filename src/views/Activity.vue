@@ -216,8 +216,7 @@ export default {
             }
             if (eventlist != undefined){
               var apptimeline = event_parsing.parse_eventlist_by_apps(eventlist);
-              var e = document.getElementById("apptimeline")
-              renderTimeline(e, apptimeline, this.duration);
+              renderTimeline("#apptimeline", apptimeline, this.duration);
             }
           }
         },
