@@ -66,7 +66,7 @@ function _appendTitleSvg(container, events) {
   });
 
   // Container for titleinfo that has a fixed size and a overflow scroll
-  let titleInfo = container.append("div");
+  let titleInfo = container.append("div").attr("id", "titleinfo");
   titleInfo.style.width = "100%";
   titleInfo.style.height = "200px";
   titleInfo.style.overflowY = "scroll";
@@ -74,13 +74,9 @@ function _appendTitleSvg(container, events) {
   return svg;
 }
 
-function renderTimeline(selector, events, total_duration) {
-  // Clear element
-  var target_el = d3.select(selector);
-  target_el.selectAll("*").remove();
-
+function _appendTimeline(container, events, total_duration) {
   // svg for the colored timeline
-  let timeline = target_el.append("svg")
+  let timeline = container.append("svg")
     .attr("viewBox", "0 0 100 10")
     .attr("width", "100%");
 
@@ -113,29 +109,39 @@ function renderTimeline(selector, events, total_duration) {
   // Build timeline
   let curr_x = 0;
   _.each(events, function(e, i) {
-    let eg = timeline.append("g")
-      .attr("id", "timeline_event_"+i);
-
     // Timeline rect
     var e_width = e.duration / total_duration * 100;
     var appcolor = color.getAppColor(e.appname);
     var hovercolor = Color(appcolor).darken(0.4).rgbString();
+
+    let eg = timeline.append("g")
+      .attr("id", "timeline_event_"+i);
+
     eg.append("rect")
       .attr("x", curr_x)
       .attr("y", 0)
       .attr("width", e_width)
       .attr("height", 10)
       .style("fill", color.getAppColor(e.appname))
-      .on("mouseover", function() {
+      .on("mouseover", () => {
           set_color("timeline_event_" + i, hovercolor);
           show_info("titleinfo_event_" + i);
       })
-      .on("mouseout", function() {
+      .on("mouseout", () => {
           set_color('timeline_event_' + i, +appcolor);
       })
     curr_x += e_width
   });
 
+  return timeline;
+}
+
+function renderTimeline(selector, events, total_duration) {
+  // Clear element
+  var target_el = d3.select(selector);
+  target_el.selectAll("*").remove();
+
+  _appendTimeline(target_el, events, total_duration)
   _appendTitleSvg(target_el, events)
 
   return target_el;
