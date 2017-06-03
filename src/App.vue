@@ -5,7 +5,17 @@ div#wrapper
       span.title
         img(src="/static/logo.png")
         span(style="padding-left: 15px;")
-        | ActivityWatch
+          | ActivityWatch
+      span.status
+        span.good(v-show="connected")
+          span.glyphicon.glyphicon-ok-circle
+          span.text
+            | Connected
+        span.bad(v-show="!connected")
+          span.glyphicon.glyphicon-alert
+          span.text
+            | Not connected
+
       //usermenu
   div.container.aw-container
     nav.row.navbar.aw-navbar
@@ -53,7 +63,12 @@ div#wrapper
 <script>
 import Usermenu from './components/Usermenu.vue';
 import Views from './components/Views.vue';
+
+import Resources from './resources.js';
+
 var show_hide = require('./util/show_hide.js').show_hide;
+
+let $Info = Resources.$Info;
 
 // TODO: Highlight active item in menubar
 
@@ -65,12 +80,31 @@ export default {
 
   data: function() {
     return {
-      views: Views
+      views: Views,
+      connected: false
     }
   },
+
   methods: {
     show_hide: show_hide,
   },
+
+  ready() {
+    console.info("Ready!");
+
+    $Info.get().then(
+        (response) => {
+            if (response.status > 304) {
+                console.error("Status code from return call was >304");
+            } else {
+                this.$set("connected", true);
+            }
+        },
+        (response) => {
+            console.log("a");
+            this.$set("connected", false);
+        });
+  }
 }
 </script>
 
@@ -105,7 +139,6 @@ body {
     }
 }
 
-
 .header {
   border-bottom: 1px solid #CCC;
   height: 55px;
@@ -118,12 +151,28 @@ body {
     display: inline-block;
     width: 200px;
     font-size: 20pt;
-    width: 100%;
     color: #444;
+    white-space: nowrap;
 
     img {
         width: 1.2em;
         height: 1.2em;
+    }
+  }
+
+  .status {
+    float: right;
+
+    .text {
+        margin-left: 1em;
+    }
+
+    .good {
+        color: green;
+    }
+
+    .bad {
+        color: red;
     }
   }
 }
