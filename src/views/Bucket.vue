@@ -46,7 +46,7 @@ div
 
 </template>
 
-<style lang="scss">
+<style scoped lang="scss">
 
 $border-color: #ddd;
 
@@ -57,6 +57,7 @@ $border-color: #ddd;
   border-radius: 3px;
   height: 300px;
   overflow-y: auto;
+  white-space: nowrap;
 
   li {
     border: 0 solid $border-color;
