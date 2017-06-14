@@ -41,9 +41,10 @@ div#wrapper
     div#content
       router-view
 
-  // TODO: Add link to website here when it contains something of interest
   div.container(style="margin-top: 1rem; margin-bottom: 1rem; color: #555")
-    | Made with ❤ by the ActivityWatch developers
+    | Made with ❤ by the
+    a(href="http://activitywatch.net/contributors/")
+      | ActivityWatch developers
 
     div(style="float: right; text-align: right;")
       div
@@ -56,7 +57,7 @@ div#wrapper
           | Twitter
       div
         | Something not working as it should?
-        a(href="https://github.com/ActivityWatch/activitywatch-user-issues/issues/new")
+        a(href="https://github.com/ActivityWatch/activitywatch/issues/new")
           |  File an issue.
 </template>
 
