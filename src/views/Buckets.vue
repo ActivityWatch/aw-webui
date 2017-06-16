@@ -41,7 +41,7 @@ accordion(:one-at-atime="false")
 
 </template>
 
-<style lang="scss">
+<style scoped lang="scss">
 .panel-default {
   border-color: #BBB;
   border-radius: 4px;
