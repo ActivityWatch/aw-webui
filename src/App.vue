@@ -32,7 +32,7 @@ div#wrapper
           a(v-link="{ path: '/buckets' }")
             span.glyphicon.glyphicon-folder-open
             | Buckets
-        li
+        //li
           a(v-link="{ path: '/log' }")
             span.glyphicon.glyphicon-list-alt
             | Server Log
