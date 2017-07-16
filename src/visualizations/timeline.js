@@ -16,9 +16,9 @@ var time = require("../util/time.js");
  * titleinfo_container (visible titleinfo)
  * */
 
-function renderTimeline(el) {
+function create(container) {
   // Clear element
-  el.innerHTML = "";
+  container.innerHTML = "";
 
   // Animation functions for setting hover color and titlebox content
   var elem = document.createElement("script");
@@ -32,39 +32,42 @@ function renderTimeline(el) {
   elem.text += '  titleinfo.innerHTML = title_event_box.innerHTML;'
   elem.text += '  titleinfo.style.height = title_event_box.getAttribute("height");'
   elem.text += '};'
-  el.appendChild(elem);
+  container.appendChild(elem);
 
   // svg for the colored timeline
-  let timeline = d3.select(el).append("svg")
+  let timeline = d3.select(container).append("svg")
     .attr("viewBox", "0 0 100 10")
     .attr("width", "100%")
-    .attr("id", "apptimeline");
+    .attr("class", "apptimeline");
 
   // Hidden svg image that stores all titleinfo for each timeperiod
-  let titleinfo_list = d3.select(el).append("svg")
+  let titleinfo_list = d3.select(container).append("svg")
     .attr("display", "none")
-    .attr("id", "titleinfo_list");
+    .attr("class", "titleinfo_list");
 
   // Container for titleinfo that has a fixed size and a overflow scroll
   let titleinfo_container = document.createElement("div");
   titleinfo_container.style.width = "100%";
   titleinfo_container.style.height = "200px";
   titleinfo_container.style.overflowY = "scroll";
-  el.appendChild(titleinfo_container);
+  container.appendChild(titleinfo_container);
 
   // Titleinfo box that changes content depending on what was timeperiod was last recently hovered on
   let titleinfo = d3.select(titleinfo_container).append("svg")
     .attr("width", "100%")
-    .attr("id", "titleinfo_container");
+    .attr("class", "titleinfo_container");
 }
 
-function set_status(text){
-  let timeline_elem = document.getElementById("apptimeline");
+function set_status(container, text){
+  console.log(container);
+  console.log(text);
+  let timeline_elem = container.querySelector(".apptimeline");
+  let titleinfo_list_elem = container.querySelector(".titleinfo_list");
+  let titleinfo_container_elem = container.querySelector(".titleinfo_container");
+
   let timeline = d3.select(timeline_elem);
   timeline_elem.innerHTML = "";
-  let titleinfo_list_elem = document.getElementById("titleinfo_list");
   titleinfo_list_elem.innerHTML = "";
-  let titleinfo_container_elem = document.getElementById("titleinfo_container");
   titleinfo_container_elem.innerHTML = "";
 
   timeline.append("text")
@@ -76,21 +79,22 @@ function set_status(text){
    .attr("fill", "black")
 }
 
-function updateTimeline(el, events, total_duration){
-  let timeline_elem = document.getElementById("apptimeline");
+function update(container, events, total_duration){
+  let timeline_elem = container.querySelector(".apptimeline");
+  let titleinfo_list_elem = container.querySelector(".titleinfo_list");
+  let titleinfo_container_elem = container.querySelector(".titleinfo_container");
+
   let timeline = d3.select(timeline_elem);
   timeline_elem.innerHTML = "";
 
-  let titleinfo_list_elem = document.getElementById("titleinfo_list");
   let titleinfo_list = d3.select(titleinfo_list_elem);
   titleinfo_list_elem.innerHTML = "";
 
-  let titleinfo_container_elem = document.getElementById("titleinfo_container");
   let titleinfo_container = d3.select(titleinfo_container_elem);
   titleinfo_container_elem.innerHTML = "";
 
   if (events.length <= 0){
-    set_status("No data");
+    set_status(container, "No data");
     return;
   }
 
@@ -160,11 +164,11 @@ function updateTimeline(el, events, total_duration){
     curr_x += e_width
   });
 
-  return el;
+  return container;
 }
 
 module.exports = {
-  "create": renderTimeline,
-  "update": updateTimeline,
+  "create": create,
+  "update": update,
   "set_status": set_status,
 };
