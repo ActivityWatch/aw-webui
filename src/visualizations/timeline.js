@@ -55,7 +55,7 @@ function create(container) {
   // Titleinfo box that changes content depending on what was timeperiod was last recently hovered on
   let titleinfo = d3.select(titleinfo_container).append("svg")
     .attr("width", "100%")
-    .attr("class", "titleinfo_container");
+    .attr("id", "titleinfo_container");
 }
 
 function set_status(container, text){
@@ -63,7 +63,7 @@ function set_status(container, text){
   console.log(text);
   let timeline_elem = container.querySelector(".apptimeline");
   let titleinfo_list_elem = container.querySelector(".titleinfo_list");
-  let titleinfo_container_elem = container.querySelector(".titleinfo_container");
+  let titleinfo_container_elem = container.querySelector("#titleinfo_container");
 
   let timeline = d3.select(timeline_elem);
   timeline_elem.innerHTML = "";
@@ -82,7 +82,7 @@ function set_status(container, text){
 function update(container, events, total_duration){
   let timeline_elem = container.querySelector(".apptimeline");
   let titleinfo_list_elem = container.querySelector(".titleinfo_list");
-  let titleinfo_container_elem = container.querySelector(".titleinfo_container");
+  let titleinfo_container_elem = container.querySelector("#titleinfo_container");
 
   let timeline = d3.select(timeline_elem);
   timeline_elem.innerHTML = "";
