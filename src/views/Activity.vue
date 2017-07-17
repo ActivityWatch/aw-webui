@@ -86,9 +86,6 @@ export default {
     '$route': function(to, from) {
       console.log("Route changed")
       this.$set("host", this.$route.params.host);
-      // TODO: Update these
-      document.getElementById("appsummary_container").innerHTML = "";
-      document.getElementById("apptimeline_container").innerHTML = "";
       this.query();
     },
 

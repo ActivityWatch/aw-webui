@@ -54,8 +54,6 @@ function update(container, apps) {
   _.each(apps, function(app, i) {
     // TODO: Expand on click and list titles
 
-    console.log(app)
-    console.log(app.duration)
     // Variables
     var width = (app.duration/longest_duration)*80+"%";
     let barHeight = 50;
