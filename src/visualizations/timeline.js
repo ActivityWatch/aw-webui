@@ -9,9 +9,16 @@ import color from "../util/color.js"
 
 var time = require("../util/time.js");
 
-function renderTimeline(el, events, total_duration) {
+/*
+ * script
+ * apptimeline
+ * titleinfo_list (hidden titleinfo)
+ * titleinfo-container (visible titleinfo)
+ * */
+
+function create(container) {
   // Clear element
-  el.innerHTML = "";
+  container.innerHTML = "";
 
   // Animation functions for setting hover color and titlebox content
   var elem = document.createElement("script");
@@ -21,42 +28,74 @@ function renderTimeline(el, events, total_duration) {
   elem.text += '};'
   elem.text += 'function show_info(elem_id) {'
   elem.text += '  var title_event_box = document.getElementById(elem_id);'
-  elem.text += '  var titleinfo = document.getElementById("titleinfo");'
+  elem.text += '  var titleinfo = document.getElementById("titleinfo-container");'
   elem.text += '  titleinfo.innerHTML = title_event_box.innerHTML;'
   elem.text += '  titleinfo.style.height = title_event_box.getAttribute("height");'
   elem.text += '};'
-  el.appendChild(elem);
+  container.appendChild(elem);
 
   // svg for the colored timeline
-  let timeline = d3.select(el).append("svg")
+  let timeline = d3.select(container).append("svg")
     .attr("viewBox", "0 0 100 10")
-    .attr("width", "100%");
-
-  if (events.length <= 0){
-    timeline.append("text")
-     .attr("x", "0")
-     .attr("y", "3")
-     .text("No data")
-     .attr("font-family", "sans-serif")
-     .attr("font-size", "3")
-     .attr("fill", "black")
-  }
+    .attr("width", "100%")
+    .attr("class", "apptimeline");
 
   // Hidden svg image that stores all titleinfo for each timeperiod
-  let titleinfolist = d3.select(el).append("svg")
-    .attr("display", "none");
+  let titleinfo_list = d3.select(container).append("div")
+    .attr("display", "none")
+    .attr("class", "titleinfo_list");
 
   // Container for titleinfo that has a fixed size and a overflow scroll
   let titleinfo_container = document.createElement("div");
   titleinfo_container.style.width = "100%";
   titleinfo_container.style.height = "200px";
   titleinfo_container.style.overflowY = "scroll";
-  el.appendChild(titleinfo_container);
+  container.appendChild(titleinfo_container);
 
   // Titleinfo box that changes content depending on what was timeperiod was last recently hovered on
-  let titleinfo = d3.select(titleinfo_container).append("svg")
+  let titleinfo = d3.select(titleinfo_container).append("div")
     .attr("width", "100%")
-    .attr("id", "titleinfo");
+    .attr("id", "titleinfo-container");
+}
+
+function set_status(container, text){
+  let timeline_elem = container.querySelector(".apptimeline");
+  let titleinfo_list_elem = container.querySelector(".titleinfo_list");
+  let titleinfo_container_elem = container.querySelector("#titleinfo-container");
+
+  let timeline = d3.select(timeline_elem);
+  timeline_elem.innerHTML = "";
+  titleinfo_list_elem.innerHTML = "";
+  titleinfo_container_elem.innerHTML = "";
+
+  timeline.append("text")
+   .attr("x", "0")
+   .attr("y", "3")
+   .text(text)
+   .attr("font-family", "sans-serif")
+   .attr("font-size", "3")
+   .attr("fill", "black")
+}
+
+function update(container, events, total_duration){
+  let timeline_elem = container.querySelector(".apptimeline");
+  let titleinfo_list_elem = container.querySelector(".titleinfo_list");
+  let titleinfo_container_elem = container.querySelector("#titleinfo-container");
+
+  let timeline = d3.select(timeline_elem);
+  timeline_elem.innerHTML = "";
+
+  let titleinfo_list = d3.select(titleinfo_list_elem);
+  titleinfo_list_elem.innerHTML = "";
+
+  let titleinfo_container = d3.select(titleinfo_container_elem);
+  titleinfo_container_elem.innerHTML = "";
+
+  if (events.length <= 0){
+    set_status(container, "No data");
+    return;
+  }
+
 
   // Iterate over each app timeperiod
   let curr_x = 0;
@@ -78,11 +117,12 @@ function renderTimeline(el, events, total_duration) {
      .style("fill", color.getAppColor(e.appname));
 
     // Titleinfo box
-    var infobox = titleinfolist.append("g")
+    var infobox = titleinfo_list.append("div")
       .attr("id", "titleinfo_event_"+i)
+      .style("display", "none");
 
     // Appname and duration text
-    infobox.append("text")
+    infobox.append("h4")
       .attr("x", "10px")
       .attr("y", "20px")
       .text(e.appname + " (" + time.seconds_to_duration(e.duration) + ")")
@@ -91,39 +131,32 @@ function renderTimeline(el, events, total_duration) {
       .attr("fill", "black");
 
     // Titleinfo
-    var curr_y = 45
+    var infolist = infobox.append("table");
     _.each(e.titles, function(t, i){
+      var inforow = infolist.append("tr");
       // Clocktime
       var clocktime = t.timestamp.split("T")[1].split(".")[0];
-      infobox.append("text")
-        .attr("x", "10px")
-        .attr("y", curr_y+"px")
-        .text(clocktime)
-        .attr("font-family", "sans-serif")
-        .attr("font-size", "15px")
+      inforow.append("td")
+        .text(clocktime);
       // Duration
       var duration = time.seconds_to_duration(t.duration);
-      infobox.append("text")
-        .attr("x", "100px")
-        .attr("y", curr_y+"px")
+      inforow.append("td")
         .text(duration)
-        .attr("font-family", "sans-serif")
-        .attr("font-size", "15px")
+        .style("padding-left", "1em");
       // Title
-      infobox.append("text")
-        .attr("x", "170px")
-        .attr("y", curr_y+"px")
+      inforow.append("td")
         .text(t.title)
-        .attr("font-family", "sans-serif")
-        .attr("font-size", "15px")
-      curr_y += 20;
+        .style("padding-left", "1em");
     });
-    infobox.attr("height", curr_y+"px");
 
     curr_x += e_width
   });
 
-  return el;
+  return container;
 }
 
-module.exports = renderTimeline;
+module.exports = {
+  "create": create,
+  "update": update,
+  "set_status": set_status,
+};

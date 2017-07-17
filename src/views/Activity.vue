@@ -22,13 +22,13 @@ h4 Summary
 
 h5 Total time: {{ time.seconds_to_duration(duration) }}
 
-div#appsummary
+div#appsummary-container
 
 hr
 
 h4 Timeline
 
-div#apptimeline
+div#apptimeline-container
 
 hr
 
@@ -45,8 +45,8 @@ p Events queried: {{ eventcount }}
 <script>
 import Resources from '../resources.js';
 import moment from 'moment';
-import renderTimeline from '../visualizations/timeline.js';
-import renderSummary from '../visualizations/summary.js';
+import timeline from '../visualizations/timeline.js';
+import summary from '../visualizations/summary.js';
 import time from "../util/time.js";
 import event_parsing from "../util/event_parsing.js";
 
@@ -86,8 +86,6 @@ export default {
     '$route': function(to, from) {
       console.log("Route changed")
       this.$set("host", this.$route.params.host);
-      document.getElementById("appsummary").innerHTML = "";
-      document.getElementById("apptimeline").innerHTML = "";
       this.query();
     },
 
@@ -105,6 +103,14 @@ export default {
     if (date == undefined){
       date = new Date().toISOString();
     }
+    // Create summary
+    var summary_elem = document.getElementById("appsummary-container")
+    summary.create(summary_elem);
+
+    // Create timeline
+    var timeline_elem = document.getElementById("apptimeline-container")
+    timeline.create(timeline_elem);
+
     $Info.get().then(
       (response) => { // Success
         if (response.status > 304){
@@ -192,6 +198,12 @@ export default {
     },
 
     queryView: function(viewname){
+      var timeline_elem = document.getElementById("apptimeline-container")
+      timeline.set_status(timeline_elem, "Loading...");
+
+      var appsummary_elem = document.getElementById("appsummary-container")
+      summary.set_status(appsummary_elem, "Loading...");
+
       $QueryView.get({"viewname": viewname,
                       "limit": -1,
                       "start": moment(this.date).format(),
@@ -211,19 +223,19 @@ export default {
             this.$set("eventcount", data["eventcount"]+this.eventcount);
             if (chunks != undefined){
               var appsummary = event_parsing.parse_chunks_to_apps(chunks);
-              var e = document.getElementById("appsummary")
-              renderSummary(e, appsummary);
+              var el = document.getElementById("appsummary-container")
+              summary.update(el, appsummary);
             }
             if (eventlist != undefined){
               var apptimeline = event_parsing.parse_eventlist_by_apps(eventlist);
-              var e = document.getElementById("apptimeline")
-              renderTimeline(e, apptimeline, this.duration);
+              var el = document.getElementById("apptimeline-container")
+              timeline.update(el, apptimeline, this.duration);
             }
           }
         },
         (response) => {
           var msg = "Request error "+response.status+" at view query";
-          this.$set("errormsg", msg)
+          this.$set("errormsg", msg);
         });
     },
 
