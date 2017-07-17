@@ -41,7 +41,7 @@ function create(container) {
     .attr("class", "apptimeline");
 
   // Hidden svg image that stores all titleinfo for each timeperiod
-  let titleinfo_list = d3.select(container).append("svg")
+  let titleinfo_list = d3.select(container).append("div")
     .attr("display", "none")
     .attr("class", "titleinfo_list");
 
@@ -53,7 +53,7 @@ function create(container) {
   container.appendChild(titleinfo_container);
 
   // Titleinfo box that changes content depending on what was timeperiod was last recently hovered on
-  let titleinfo = d3.select(titleinfo_container).append("svg")
+  let titleinfo = d3.select(titleinfo_container).append("div")
     .attr("width", "100%")
     .attr("id", "titleinfo_container");
 }
@@ -117,11 +117,12 @@ function update(container, events, total_duration){
      .style("fill", color.getAppColor(e.appname));
 
     // Titleinfo box
-    var infobox = titleinfo_list.append("g")
+    var infobox = titleinfo_list.append("div")
       .attr("id", "titleinfo_event_"+i)
+      .style("display", "none");
 
     // Appname and duration text
-    infobox.append("text")
+    infobox.append("h4")
       .attr("x", "10px")
       .attr("y", "20px")
       .text(e.appname + " (" + time.seconds_to_duration(e.duration) + ")")
@@ -130,34 +131,23 @@ function update(container, events, total_duration){
       .attr("fill", "black");
 
     // Titleinfo
-    var curr_y = 45
+    var infolist = infobox.append("table");
     _.each(e.titles, function(t, i){
+      var inforow = infolist.append("tr");
       // Clocktime
       var clocktime = t.timestamp.split("T")[1].split(".")[0];
-      infobox.append("text")
-        .attr("x", "10px")
-        .attr("y", curr_y+"px")
-        .text(clocktime)
-        .attr("font-family", "sans-serif")
-        .attr("font-size", "15px")
+      inforow.append("td")
+        .text(clocktime);
       // Duration
       var duration = time.seconds_to_duration(t.duration);
-      infobox.append("text")
-        .attr("x", "100px")
-        .attr("y", curr_y+"px")
+      inforow.append("td")
         .text(duration)
-        .attr("font-family", "sans-serif")
-        .attr("font-size", "15px")
+        .style("padding-left", "1em");
       // Title
-      infobox.append("text")
-        .attr("x", "170px")
-        .attr("y", curr_y+"px")
+      inforow.append("td")
         .text(t.title)
-        .attr("font-family", "sans-serif")
-        .attr("font-size", "15px")
-      curr_y += 20;
+        .style("padding-left", "1em");
     });
-    infobox.attr("height", curr_y+"px");
 
     curr_x += e_width
   });
