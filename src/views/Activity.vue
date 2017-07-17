@@ -22,13 +22,13 @@ h4 Summary
 
 h5 Total time: {{ time.seconds_to_duration(duration) }}
 
-div#appsummary_container
+div#appsummary-container
 
 hr
 
 h4 Timeline
 
-div#apptimeline_container
+div#apptimeline-container
 
 hr
 
@@ -104,11 +104,11 @@ export default {
       date = new Date().toISOString();
     }
     // Create summary
-    var summary_elem = document.getElementById("appsummary_container")
+    var summary_elem = document.getElementById("appsummary-container")
     summary.create(summary_elem);
 
     // Create timeline
-    var timeline_elem = document.getElementById("apptimeline_container")
+    var timeline_elem = document.getElementById("apptimeline-container")
     timeline.create(timeline_elem);
 
     $Info.get().then(
@@ -198,10 +198,10 @@ export default {
     },
 
     queryView: function(viewname){
-      var timeline_elem = document.getElementById("apptimeline_container")
+      var timeline_elem = document.getElementById("apptimeline-container")
       timeline.set_status(timeline_elem, "Loading...");
 
-      var appsummary_elem = document.getElementById("appsummary_container")
+      var appsummary_elem = document.getElementById("appsummary-container")
       summary.set_status(appsummary_elem, "Loading...");
 
       $QueryView.get({"viewname": viewname,
@@ -223,12 +223,12 @@ export default {
             this.$set("eventcount", data["eventcount"]+this.eventcount);
             if (chunks != undefined){
               var appsummary = event_parsing.parse_chunks_to_apps(chunks);
-              var el = document.getElementById("appsummary_container")
+              var el = document.getElementById("appsummary-container")
               summary.update(el, appsummary);
             }
             if (eventlist != undefined){
               var apptimeline = event_parsing.parse_eventlist_by_apps(eventlist);
-              var el = document.getElementById("apptimeline_container")
+              var el = document.getElementById("apptimeline-container")
               timeline.update(el, apptimeline, this.duration);
             }
           }

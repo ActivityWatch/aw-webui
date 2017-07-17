@@ -13,7 +13,7 @@ var time = require("../util/time.js");
  * script
  * apptimeline
  * titleinfo_list (hidden titleinfo)
- * titleinfo_container (visible titleinfo)
+ * titleinfo-container (visible titleinfo)
  * */
 
 function create(container) {
@@ -28,7 +28,7 @@ function create(container) {
   elem.text += '};'
   elem.text += 'function show_info(elem_id) {'
   elem.text += '  var title_event_box = document.getElementById(elem_id);'
-  elem.text += '  var titleinfo = document.getElementById("titleinfo_container");'
+  elem.text += '  var titleinfo = document.getElementById("titleinfo-container");'
   elem.text += '  titleinfo.innerHTML = title_event_box.innerHTML;'
   elem.text += '  titleinfo.style.height = title_event_box.getAttribute("height");'
   elem.text += '};'
@@ -55,13 +55,13 @@ function create(container) {
   // Titleinfo box that changes content depending on what was timeperiod was last recently hovered on
   let titleinfo = d3.select(titleinfo_container).append("div")
     .attr("width", "100%")
-    .attr("id", "titleinfo_container");
+    .attr("id", "titleinfo-container");
 }
 
 function set_status(container, text){
   let timeline_elem = container.querySelector(".apptimeline");
   let titleinfo_list_elem = container.querySelector(".titleinfo_list");
-  let titleinfo_container_elem = container.querySelector("#titleinfo_container");
+  let titleinfo_container_elem = container.querySelector("#titleinfo-container");
 
   let timeline = d3.select(timeline_elem);
   timeline_elem.innerHTML = "";
@@ -80,7 +80,7 @@ function set_status(container, text){
 function update(container, events, total_duration){
   let timeline_elem = container.querySelector(".apptimeline");
   let titleinfo_list_elem = container.querySelector(".titleinfo_list");
-  let titleinfo_container_elem = container.querySelector("#titleinfo_container");
+  let titleinfo_container_elem = container.querySelector("#titleinfo-container");
 
   let timeline = d3.select(timeline_elem);
   timeline_elem.innerHTML = "";
