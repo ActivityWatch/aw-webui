@@ -32,7 +32,7 @@ div#wrapper
           a(v-link="{ path: '/buckets' }")
             span.glyphicon.glyphicon-folder-open
             | Buckets
-        li
+        //li
           a(v-link="{ path: '/log' }")
             span.glyphicon.glyphicon-list-alt
             | Server Log
@@ -42,7 +42,7 @@ div#wrapper
       router-view
 
   div.container(style="margin-top: 1rem; margin-bottom: 1rem; color: #555")
-    | Made with ❤ by the
+    | Made with ❤ by the &nbsp;
     a(href="http://activitywatch.net/contributors/")
       | ActivityWatch developers
 
