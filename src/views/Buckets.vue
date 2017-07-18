@@ -7,7 +7,7 @@ div
   div.pagination-header
 
   accordion(:one-at-atime="false")
-    panel(v-for="bucket in buckets", :header="bucket.id", :is-open="true")
+    panel(v-for="bucket in buckets", :key="bucket.id", :header="bucket.id", :is-open="true")
       div.actions
         a(v-link="'/buckets/' + bucket.id")
           button.btn.btn-default.btn-sm(type="button")

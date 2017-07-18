@@ -4,13 +4,13 @@
 div#views-container
   nav.row.navbar.aw-navbar
     ul.nav.navbar-nav
-      li(v-for="host in hosts")
+      li(v-for="host in hosts", :key="host")
         a(v-link="'/activity/'+host")
           span.glyphicon.glyphicon-signal(aria-hidden="true")
           |  {{ host }}
 
   accordion(:one-at-atime="false")
-    panel(v-for="host in hosts", :header="host", :is-open="true")
+    panel(v-for="host in hosts", :key="host", :header="host", :is-open="true")
       router-link(to="'activity/'+host")
         button.btn.btn-default.btn-sm(type="button")
           span.glyphicon.glyphicon-folder-open(aria-hidden="true")

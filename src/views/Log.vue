@@ -5,12 +5,12 @@ div
   hr
 
   accordion(:one-at-atime="false")
-    panel(v-for="logmsg in log", :header="logmsg.levelname+':'+logmsg.message", :is-open="false")
-      | Name: {{ logmsg.name }}
+    panel(v-for="(log, key) in logs", :key="key", :header="log.levelname+':'+log.message", :is-open="false")
+      | Name: {{ logm.name }}
       br
-      | Time: {{ logmsg.asctime }}
+      | Time: {{ log.asctime }}
       br
-      | Origin: {{ logmsg.funcName }}:{{ logmsg.lineno }}
+      | Origin: {{ log.funcName }}:{{ log.lineno }}
 
 </template>
 
@@ -59,13 +59,13 @@ export default {
   },
   data: () => {
     return {
-      log: [],
+      logs: [],
     }
   },
   methods: {
     getLog: function() {
       $Log.get().then((response) => {
-        this.$set('log', response.json())
+        this.$set('logs', response.json())
       });
     },
   }
