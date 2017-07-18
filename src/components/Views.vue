@@ -1,14 +1,20 @@
 <template lang="jade">
 
-b-nav-item-dropdown(text="Activity2")
+b-nav-item-dropdown
+  template(slot="button-content")
+    icon(name="clock-o")
+    | Activity
   b-dropdown-item(v-for="host in hosts", :key="host", :to="'/activity/' + host")
     | {{ host }}
+
 
 </template>
 
 <script>
 
 import Resources from '../resources.js';
+
+import 'vue-awesome/icons/clock-o'
 
 let $Bucket     = Resources.$Bucket;
 

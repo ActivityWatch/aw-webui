@@ -22,9 +22,9 @@ div
         li
           a(href="https://activitywatch.readthedocs.org/")
             | Documentation
-      li
-        a(href="/api/")
-          | API Documentation
+        li
+          a(href="/api/")
+            | API Documentation
 
 </template>
 

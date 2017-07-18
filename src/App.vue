@@ -8,31 +8,28 @@ div#wrapper
           | ActivityWatch
       span.status
         span.good(v-show="connected")
-          // TODO: Add icon
-          span.text
-            | Connected
+          | Connected
+          icon(name="check-circle")
         span.bad(v-show="!connected")
-          // TODO: Add icon
           span.text
             | Not connected
+            icon(name="times-circle")
 
       //usermenu
   div.container.aw-container
     b-nav.aw-navbar
       b-nav-item(to="/")
-        // TODO: Add icon
-        span Home
+        icon(name="home")
+        |  Home
       Views
       b-nav-item(to="/buckets")
-        // TODO: Add icon
-        span
+        icon(name="archive")
         | Buckets
       //li
         router-link(to="/log")
-          span.glyphicon.glyphicon-list-alt
+          // TODO: Add icon
           | Server Log
     div#content
-      icon(name="flag")
       router-view
 
   div.container(style="margin-top: 1rem; margin-bottom: 1rem; color: #555")
@@ -58,7 +55,10 @@ div#wrapper
 <script>
 
 // only import the icons you use to reduce bundle size
-import 'vue-awesome/icons/flag'
+import 'vue-awesome/icons/home'
+import 'vue-awesome/icons/archive'
+import 'vue-awesome/icons/check-circle'
+import 'vue-awesome/icons/times-circle'
 import Usermenu from './components/Usermenu.vue';
 import Views from './components/Views.vue';
 
