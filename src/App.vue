@@ -5,21 +5,46 @@ div#wrapper
       span.title
         img(src="/static/logo.png")
         span(style="padding-left: 15px;")
-        | ActivityWatch
+          | ActivityWatch
+      span.status
+        span.good(v-show="connected")
+          span.glyphicon.glyphicon-ok-circle
+          span.text
+            | Connected
+        span.bad(v-show="!connected")
+          span.glyphicon.glyphicon-alert
+          span.text
+            | Not connected
+
       //usermenu
   div.container.aw-container
     nav.row.navbar.aw-navbar
       ul.nav.navbar-nav
-        li(v-for="entry in menuEntries")
-          router-link(to="{ path: entry.path, exact: entry.exact }")
-            span(v-bind:class="'menuicon ' + entry.iconCssClass")
-            | {{ entry.label }}
-    div
+        li
+          a(v-link="{ path: '/', exact: true }")
+            span.glyphicon.glyphicon-home
+            | Home
+        li
+          a(v-on:click="show_hide('views')", style="cursor:pointer;").dropdown-btn
+            span.glyphicon.glyphicon-time
+            | Activity
+        li
+          a(v-link="{ path: '/buckets' }")
+            span.glyphicon.glyphicon-folder-open
+            | Buckets
+        //li
+          a(v-link="{ path: '/log' }")
+            span.glyphicon.glyphicon-list-alt
+            | Server Log
+    div.dropdown-content#views
+      Views
+    div#content
       router-view
 
-  // TODO: Add link to website here when it contains something of interest
   div.container(style="margin-top: 1rem; margin-bottom: 1rem; color: #555")
-    | Made with ❤ by the ActivityWatch developers
+    | Made with ❤ by the &nbsp;
+    a(href="http://activitywatch.net/contributors/")
+      | ActivityWatch developers
 
     div(style="float: right; text-align: right;")
       div
@@ -32,42 +57,55 @@ div#wrapper
           | Twitter
       div
         | Something not working as it should?
-        a(href="https://github.com/ActivityWatch/activitywatch-user-issues/issues/new")
+        a(href="https://github.com/ActivityWatch/activitywatch/issues/new")
           |  File an issue.
 </template>
 
 <script>
 import Usermenu from './components/Usermenu.vue';
+import Views from './components/Views.vue';
+
+import Resources from './resources.js';
+
+var show_hide = require('./util/show_hide.js').show_hide;
+
+let $Info = Resources.$Info;
 
 // TODO: Highlight active item in menubar
 
 export default {
   components: {
     Usermenu,
-  },
-
-  props: {
+    Views
   },
 
   data: function() {
     return {
-      menuEntries: [
-        { label: "Home",
-          path: "/",
-          exact: true,
-          iconCssClass: "glyphicon glyphicon-home" },
-        { label: "Activity",
-          path: "/activity",
-          iconCssClass: "glyphicon glyphicon-time" },
-        { label: "Buckets",
-          path: "/buckets",
-          iconCssClass: "glyphicon glyphicon-folder-open" },
-        { label: "Server Log",
-          path: "/log",
-          iconCssClass: "glyphicon glyphicon-list-alt" }
-      ]
+      views: Views,
+      connected: false
     }
   },
+
+  methods: {
+    show_hide: show_hide,
+  },
+
+  ready() {
+    console.info("Ready!");
+
+    $Info.get().then(
+        (response) => {
+            if (response.status > 304) {
+                console.error("Status code from return call was >304");
+            } else {
+                this.$set("connected", true);
+            }
+        },
+        (response) => {
+            console.log("a");
+            this.$set("connected", false);
+        });
+  }
 }
 </script>
 
@@ -89,6 +127,7 @@ body {
     border: 0px solid #DDD;
     border-bottom-width: 1px;
     min-height: 20px;
+    margin-bottom: 0;
 
     li > a {
         padding: 10px 15px 10px 15px;
@@ -100,7 +139,6 @@ body {
         }
     }
 }
-
 
 .header {
   border-bottom: 1px solid #CCC;
@@ -114,12 +152,28 @@ body {
     display: inline-block;
     width: 200px;
     font-size: 20pt;
-    width: 100%;
     color: #444;
+    white-space: nowrap;
 
     img {
         width: 1.2em;
         height: 1.2em;
+    }
+  }
+
+  .status {
+    float: right;
+
+    .text {
+        margin-left: 1em;
+    }
+
+    .good {
+        color: green;
+    }
+
+    .bad {
+        color: red;
     }
   }
 }
@@ -127,7 +181,11 @@ body {
 .aw-container {
   background-color: #FFF;
   border: 1px solid #CCC;
-  border-top: 0px;
+  border-top: 0;
   border-radius: 0px 0px 5px 5px;
+}
+
+#content {
+    padding-top: 20px;
 }
 </style>

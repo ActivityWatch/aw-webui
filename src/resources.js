@@ -21,7 +21,7 @@ let $Event      = Vue.resource(origin + '/api/0/buckets/{id}/events');
 let $EventChunk = Vue.resource(origin + '/api/0/buckets/{id}/events/chunk?start={start}&end={end}');
 let $GetViews   = Vue.resource(origin + '/api/0/views/');
 let $QueryView  = Vue.resource(origin + '/api/0/views/{viewname}?limit={limit}&start={start}&end={end}');
-let $CreateView = Vue.resource(origin + '/api/0/views/{viewname}/create');
+let $CreateView = Vue.resource(origin + '/api/0/views/{viewname}');
 let $GetViewInfo= Vue.resource(origin + '/api/0/views/{viewname}/info');
 let $Log        = Vue.resource(origin + '/api/0/log');
 

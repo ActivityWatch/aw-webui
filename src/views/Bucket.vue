@@ -1,54 +1,36 @@
 <template lang="jade">
 div
-  h2 Bucket: {{ $route.params.id }}
+  h3 Events
 
-  hr
+  div.pagination-header
+    | Showing {{ events.length }} out of ? events
 
-  div
-    h3 Info
-    | ID: {{ bucket.id }}
-    br
-    | Hostname: {{ bucket.hostname }}
-    br
-    | Client: {{ bucket.client }}
-    br
-    | Created: {{ bucket.created }}
-    br
-    | Event type: {{ bucket.type }}
+  div.well.well-sm(style="margin-bottom: 0;")
+    button.btn.btn-default.btn-sm(v-on:click="expandList")
+      span(v-if="expandList")
+        | Expand list
+      span(v-else)
+        | Condense list
 
-  div
-    h3 Events
-
-    div.pagination-header
-      | Showing {{ events.length }} out of ? events
-
-    div.well.well-sm(style="margin-bottom: 0;")
-      button.btn.btn-default.btn-sm(v-on:click="expandList")
-        span(v-if="expandList")
-          | Expand list
-        span(v-else)
-          | Condense list
-
-    div.scrollbar-flipped
-      ul.event-list(v-bind:class="{ 'expand': isListExpanded }")
-        li(v-for="event in filters.orderBy(events, ['timestamp'], ['desc'])")
+  div.scrollbar-flipped
+    ul.event-list(v-bind:class="{ 'expand': isListExpanded }")
+      li(v-for="event in events")
+        div
           span.event
-            span.field(v-for="timestamp in event.timestamp", v-bind:title="timestamp")
+            span.field(v-bind:title="event.timestamp")
               span.glyphicon.glyphicon-time
-              | {{ timestamp | friendlytime }}
-            span.field(v-for="(label, index) in event.label" track-by="index")
-              span.glyphicon.glyphicon-tags
-              | {{ label }}
-            span.field(v-for="duration in event.duration")
+              | {{ event.timestamp | friendlytime }}
+            span.field
               span.glyphicon.glyphicon-hourglass
-              | {{ duration.value | friendlyduration }}
-            span.field(v-for="count in event.count")
-              span.glyphicon.glyphicon-option-horizontal
-              | {{ count }}
+              | {{ event.duration | friendlyduration }}
+            span(v-for="(val, key) in event.data").field
+              span.glyphicon.glyphicon-tags
+              // TODO: Add some kind of highlighting to key
+              | {{ key }}: {{ val }}
 
 </template>
 
-<style lang="scss">
+<style scoped lang="scss">
 
 $border-color: #ddd;
 
@@ -59,6 +41,7 @@ $border-color: #ddd;
   border-radius: 3px;
   height: 300px;
   overflow-y: auto;
+  white-space: nowrap;
 
   li {
     border: 0 solid $border-color;

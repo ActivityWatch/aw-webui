@@ -8,12 +8,46 @@ import color from "../util/color.js";
 
 var time = require("../util/time.js");
 
-function renderSummary(el, apps) {
+function create(container){
   // Clear element
-  el.innerHTML = "";
+  container.innerHTML = "";
 
-  let svg = d3.select(el).append("svg");
-  svg.attr("width", "100%");
+  // Create svg canvas
+  let svg = d3.select(container).append("svg");
+  svg.attr("width", "100%")
+   .attr("height", "100px")
+   .attr("class", "appsummary");
+}
+
+function set_status(container, msg){
+  // Select svg canvas
+  let svg_elem = container.querySelector(".appsummary");
+  let svg = d3.select(svg_elem);
+  svg_elem.innerHTML = "";
+
+  svg.append("text")
+   .attr("x", "0px")
+   .attr("y", "25px")
+   .text(msg)
+   .attr("font-family", "sans-serif")
+   .attr("font-size", "25px")
+   .attr("fill", "black")
+}
+
+function update(container, apps) {
+  // No apps, sets status to "No data"
+  if (apps.length <= 0){
+    set_status(container, "No data");
+    return container;
+  }
+
+  let svg_elem = container.querySelector(".appsummary");
+  let svg = d3.select(svg_elem);
+
+  // Remove apps without a duration from list
+  apps = apps.filter(function(app){
+    return app.duration !== undefined;
+  })
 
   var curr_y = 0;
   var longest_duration = apps[0].duration
@@ -62,12 +96,17 @@ function renderSummary(el, apps) {
      .attr("fill", "black")
 
     curr_y += barHeight + 5;
+
   });
   curr_y -= 5;
 
   svg.attr("height", curr_y);
 
-  return svg;
+  return container;
 }
 
-module.exports = renderSummary;
+module.exports = {
+  "create": create,
+  "update": update,
+  "set_status": set_status,
+};

@@ -3,7 +3,6 @@ import App from './App';
 import VueRouter from 'vue-router';
 
 import Home from './views/Home.vue';
-import Activities from './views/Activities.vue';
 import Activity from './views/Activity.vue';
 import Buckets from './views/Buckets.vue';
 import Bucket from './views/Bucket.vue';
@@ -16,7 +15,6 @@ Vue.use(VueRouter);
 var router = new VueRouter({
   routes: [
     { path: '/',                        component: Home },
-    { path: '/activity',                component: Activities },
     { path: '/activity/:host',          component: Activity },
     { path: '/activity/:host/:date',    component: Activity },
     { path: '/buckets',                 component: Buckets },
