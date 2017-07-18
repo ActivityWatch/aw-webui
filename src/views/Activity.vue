@@ -95,41 +95,43 @@ export default {
     }
   },
 
-  ready: function() {
-    // Set host
-    this.$set("host", this.$route.params.host);
+  mounted: function() {
+    this.$nextTick(function(){
+      // Set host
+      this.$set("host", this.$route.params.host);
 
-    // Date
-    var date = this.$route.params.date;
-    if (date == undefined){
-      date = new Date().toISOString();
-    }
-    // Create summary
-    var summary_elem = document.getElementById("appsummary-container")
-    summary.create(summary_elem);
+      // Date
+      var date = this.$route.params.date;
+      if (date == undefined){
+        date = new Date().toISOString();
+      }
+      // Create summary
+      var summary_elem = document.getElementById("appsummary-container")
+      summary.create(summary_elem);
 
-    // Create timeline
-    var timeline_elem = document.getElementById("apptimeline-container")
-    timeline.create(timeline_elem);
+      // Create timeline
+      var timeline_elem = document.getElementById("apptimeline-container")
+      timeline.create(timeline_elem);
 
-    $Info.get().then(
-      (response) => { // Success
-        if (response.status > 304){
-          var msg = "Request error "+response.status+" at get info";
+      $Info.get().then(
+        (response) => { // Success
+          if (response.status > 304){
+            var msg = "Request error "+response.status+" at get info";
+            this.$set("errormsg", msg)
+          }
+          else {
+            console.log(response);
+            var data = response.json();
+            this.$set("testing", data.testing);
+            this.queryDate(date);
+          }
+        },
+        (response) => { // Error
+          var msg = "Request error "+response.status+" at get info. Server offline?";
           this.$set("errormsg", msg)
         }
-        else {
-          console.log(response);
-          var data = response.json();
-          this.$set("testing", data.testing);
-          this.queryDate(date);
-        }
-      },
-      (response) => { // Error
-        var msg = "Request error "+response.status+" at get info. Server offline?";
-        this.$set("errormsg", msg)
-      }
-    );
+      );
+    });
   },
 
   methods: {

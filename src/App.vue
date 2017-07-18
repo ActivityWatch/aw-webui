@@ -21,7 +21,7 @@ div#wrapper
     nav.row.navbar.aw-navbar
       ul.nav.navbar-nav
         li
-          a(v-link="{ path: '/', exact: true }")
+          router-link(to="/")
             span.glyphicon.glyphicon-home
             | Home
         li
@@ -29,11 +29,11 @@ div#wrapper
             span.glyphicon.glyphicon-time
             | Activity
         li
-          a(v-link="{ path: '/buckets' }")
+          router-link(to="/buckets")
             span.glyphicon.glyphicon-folder-open
             | Buckets
         //li
-          a(v-link="{ path: '/log' }")
+          router-link(to="/log")
             span.glyphicon.glyphicon-list-alt
             | Server Log
     div.dropdown-content#views
@@ -90,21 +90,22 @@ export default {
     show_hide: show_hide,
   },
 
-  ready() {
-    console.info("Ready!");
-
-    $Info.get().then(
+  mounted: function() {
+    this.$nextTick(function(){
+      $Info.get().then(
         (response) => {
-            if (response.status > 304) {
-                console.error("Status code from return call was >304");
-            } else {
-                this.$set("connected", true);
-            }
+          if (response.status > 304) {
+            console.error("Status code from return call was >304");
+          } else {
+            this.$set("connected", true);
+          }
         },
         (response) => {
-            console.log("a");
-            this.$set("connected", false);
-        });
+          console.log("a");
+          this.$set("connected", false);
+        }
+      );
+    });
   }
 }
 </script>

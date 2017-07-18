@@ -9,7 +9,7 @@ div
   accordion(:one-at-atime="false")
     panel(v-for="bucket in buckets", :key="bucket.id", :header="bucket.id", :is-open="true")
       div.actions
-        a(v-link="'/buckets/' + bucket.id")
+        router-link(to="'/buckets/' + bucket.id")
           button.btn.btn-default.btn-sm(type="button")
             span.glyphicon.glyphicon-folder-open(aria-hidden="true")
             | Open bucket
