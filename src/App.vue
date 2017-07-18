@@ -32,6 +32,7 @@ div#wrapper
           span.glyphicon.glyphicon-list-alt
           | Server Log
     div#content
+      icon(name="flag")
       router-view
 
   div.container(style="margin-top: 1rem; margin-bottom: 1rem; color: #555")
@@ -55,10 +56,14 @@ div#wrapper
 </template>
 
 <script>
+
+// only import the icons you use to reduce bundle size
+import 'vue-awesome/icons/flag'
 import Usermenu from './components/Usermenu.vue';
 import Views from './components/Views.vue';
 
 import Resources from './resources.js';
+
 
 let $Info = Resources.$Info;
 
