@@ -86,7 +86,7 @@ export default {
   watch: {
     '$route': function(to, from) {
       console.log("Route changed")
-      this.$set("host", this.$route.params.host);
+      this.host = this.$route.params.host;
       this.query();
     },
 
@@ -98,7 +98,7 @@ export default {
   mounted: function() {
     this.$nextTick(function(){
       // Set host
-      this.$set("host", this.$route.params.host);
+      this.host = this.$route.params.host;
 
       // Date
       var date = this.$route.params.date;
@@ -116,19 +116,17 @@ export default {
       $Info.get().then(
         (response) => { // Success
           if (response.status > 304){
-            var msg = "Request error "+response.status+" at get info";
-            this.$set("errormsg", msg)
+            this.errormsg = "Request error "+response.status+" at get info";
           }
           else {
             console.log(response);
             var data = response.json();
-            this.$set("testing", data.testing);
+            this.testing = data.testing;
             this.queryDate(date);
           }
         },
         (response) => { // Error
-          var msg = "Request error "+response.status+" at get info. Server offline?";
-          this.$set("errormsg", msg)
+          this.errormsg = "Request error "+response.status+" at get info. Server offline?";
         }
       );
     });
@@ -142,14 +140,14 @@ export default {
   },
 
   setDay: function(datestr){
-    this.$set("date", time.get_day_start(datestr));
-      this.$set("datestr", this.date.format('YYYY-MM-DD'));
+      this.date = time.get_day_start(datestr);
+      this.datestr = this.date.format('YYYY-MM-DD');
     },
 
     query: function(){
-      this.$set('duration', "");
-      this.$set('eventcount', 0);
-      this.$set('errormsg', "");
+      this.duration = "";
+      this.eventcount = 0;
+      this.errormsg = "";
 
       if (this.testing){
         console.log("Using testing buckets");
@@ -166,8 +164,7 @@ export default {
       $CreateView.save({viewname: summary_view_name}, {'query': query}).then(
         (response) => { // Success
           if (response.status > 304){
-            var msg = "Request error "+response.status+" at create view";
-            this.$set("errormsg", msg)
+            this.errormsg = "Request error "+response.status+" at create view";
           }
           else {
             var data = response.json();
@@ -175,8 +172,7 @@ export default {
           }
         },
         (response) => { // Error
-          var msg = "Request error "+response.status+" at create view";
-          this.$set("errormsg", msg);
+          this.errormsg = "Request error "+response.status+" at create view";
         }
       );
 
@@ -185,8 +181,7 @@ export default {
       $CreateView.save({viewname: timeline_view_name}, {'query': query}).then(
         (response) => { // Success
           if (response.status > 304){
-            var msg = "Request error "+response.status+" at create view";
-            this.$set("errormsg", msg)
+            this.errormsg = "Request error "+response.status+" at create view";
           }
           else {
             var data = response.json();
@@ -194,8 +189,7 @@ export default {
           }
         },
         (response) => { // Error
-          var msg = "Request error "+response.status+" at create view";
-          this.$set("errormsg", msg);
+          this.errormsg = "Request error "+response.status+" at create view";
         }
       );
     },
@@ -214,16 +208,15 @@ export default {
         .then(
         (response) => {
           if (response.status > 304){
-            var msg = "Server error "+response.status+" at view query";
-            this.$set("errormsg", msg)
+            this.errormsg = "Server error "+response.status+" at view query";
           }
           else {
             console.log(viewname)
             var data = response.json();
             var chunks = data["chunks"];
             var eventlist = data["eventlist"];
-            this.$set("duration", data["duration"]);
-            this.$set("eventcount", data["eventcount"]+this.eventcount);
+            this.duration = data["duration"];
+            this.eventcount = data["eventcount"]+this.eventcount;
             if (chunks != undefined){
               var appsummary = event_parsing.parse_chunks_to_apps(chunks);
               var el = document.getElementById("appsummary-container")
@@ -237,8 +230,7 @@ export default {
           }
         },
         (response) => {
-          var msg = "Request error "+response.status+" at view query";
-          this.$set("errormsg", msg);
+          this.errormsg = "Request error "+response.status+" at view query";
         });
     },
 

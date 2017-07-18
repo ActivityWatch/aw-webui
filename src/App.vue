@@ -97,12 +97,12 @@ export default {
           if (response.status > 304) {
             console.error("Status code from return call was >304");
           } else {
-            this.$set("connected", true);
+            this.connected = true;
           }
         },
         (response) => {
           console.log("a");
-          this.$set("connected", false);
+          this.connected = false;
         }
       );
     });

@@ -65,7 +65,7 @@ export default {
   methods: {
     getLog: function() {
       $Log.get().then((response) => {
-        this.$set('logs', response.json())
+        this.logs = response.json();
       });
     },
   }

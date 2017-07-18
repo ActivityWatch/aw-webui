@@ -1,6 +1,4 @@
 <template lang="jade">
-
-// Fallback version
 div#views-container
   nav.row.navbar.aw-navbar
     ul.nav.navbar-nav
@@ -8,13 +6,6 @@ div#views-container
         router-link(v-bind:to="'/activity/'+host")
           span.glyphicon.glyphicon-signal(aria-hidden="true")
           |  {{ host }}
-
-  accordion(:one-at-atime="false")
-    panel(v-for="host in hosts", :key="host", :header="host", :is-open="true")
-      router-link(to="'activity/'+host")
-        button.btn.btn-default.btn-sm(type="button")
-          span.glyphicon.glyphicon-folder-open(aria-hidden="true")
-          |  View
 </template>
 
 <script>

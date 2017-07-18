@@ -104,13 +104,13 @@ export default {
   methods: {
     getBuckets: function() {
       $Bucket.get().then((response) => {
-        this.$set('buckets', response.json())
+        this.buckets = response.json();
       });
     },
 
     getBucketInfo: function(bucket_id) {
       $Bucket.get({"id": bucket_id}).then((response) => {
-        this.$set('buckets.'+bucket_id, response.json())
+        this.buckets[bucket_id] = response.json();
       });
     }
   }

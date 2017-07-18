@@ -117,13 +117,13 @@ export default {
   methods: {
     getBucketInfo: function(bucket_id) {
       $Bucket.get({"id": bucket_id}).then((response) => {
-        this.$set("bucket", response.json())
+        this.bucket = response.json();
       });
     },
 
     getEvents: function(bucket_id) {
       $Event.get({"id": bucket_id}).then((response) => {
-        this.$set("events", response.json())
+        this.events = response.json();
       });
     },
 
