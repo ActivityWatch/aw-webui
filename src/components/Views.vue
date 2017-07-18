@@ -1,4 +1,4 @@
-<template lang="jade">
+<template lang="pug">
 
 b-nav-item-dropdown
   template(slot="button-content")

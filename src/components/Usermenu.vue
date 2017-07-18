@@ -1,4 +1,4 @@
-<template lang="jade">
+<template lang="pug">
 span#usermenu
   //ul.nav.nav-pills(role="tablist")
     li.active(role="presentation")
