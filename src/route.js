@@ -1,5 +1,4 @@
 import Vue from 'vue';
-import App from './App';
 import VueRouter from 'vue-router';
 
 import Home from './views/Home.vue';
@@ -25,10 +24,4 @@ var router = new VueRouter({
   ]
 });
 
-// TODO: Maybe export the router object instead and do the
-// initialization in main.js or something.
-new Vue({
-  el: '#app',
-  router: router,
-  render: h => h(App)
-});
+export default router;

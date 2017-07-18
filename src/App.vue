@@ -8,36 +8,29 @@ div#wrapper
           | ActivityWatch
       span.status
         span.good(v-show="connected")
-          span.glyphicon.glyphicon-ok-circle
+          // TODO: Add icon
           span.text
             | Connected
         span.bad(v-show="!connected")
-          span.glyphicon.glyphicon-alert
+          // TODO: Add icon
           span.text
             | Not connected
 
       //usermenu
   div.container.aw-container
-    nav.row.navbar.aw-navbar
-      ul.nav.navbar-nav
-        li
-          router-link(to="/")
-            span.glyphicon.glyphicon-home
-            | Home
-        li
-          a(v-on:click="show_hide('views')", style="cursor:pointer;").dropdown-btn
-            span.glyphicon.glyphicon-time
-            | Activity
-        li
-          router-link(to="/buckets")
-            span.glyphicon.glyphicon-folder-open
-            | Buckets
-        //li
-          router-link(to="/log")
-            span.glyphicon.glyphicon-list-alt
-            | Server Log
-    div.dropdown-content#views
+    b-nav.aw-navbar
+      b-nav-item(to="/")
+        // TODO: Add icon
+        span Home
       Views
+      b-nav-item(to="/buckets")
+        // TODO: Add icon
+        span
+        | Buckets
+      //li
+        router-link(to="/log")
+          span.glyphicon.glyphicon-list-alt
+          | Server Log
     div#content
       router-view
 

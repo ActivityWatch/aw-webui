@@ -1,11 +1,9 @@
 <template lang="jade">
-div#views-container
-  nav.row.navbar.aw-navbar
-    ul.nav.navbar-nav
-      li(v-for="host in hosts", :key="host")
-        router-link(v-bind:to="'/activity/'+host")
-          span.glyphicon.glyphicon-signal(aria-hidden="true")
-          |  {{ host }}
+
+b-nav-item-dropdown(text="Activity2")
+  b-dropdown-item(v-for="host in hosts", :key="host", :to="'/activity/' + host")
+    | {{ host }}
+
 </template>
 
 <script>

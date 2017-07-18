@@ -51,9 +51,6 @@ import summary from '../visualizations/summary.js';
 import time from "../util/time.js";
 import event_parsing from "../util/event_parsing.js";
 
-var panel = require('vue-strap').panel;
-var accordion = require('vue-strap').accordion;
-
 let $QueryView  = Resources.$QueryView;
 let $CreateView  = Resources.$CreateView;
 let $Info  = Resources.$Info;
@@ -62,10 +59,6 @@ var daylength = 86400000;
 
 export default {
   name: "Activity",
-  components: {
-    'panel': panel,
-    'accordion': accordion
-  },
   data: () => {
     return {
       // Libraries

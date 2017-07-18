@@ -43,19 +43,12 @@ div
 <script>
 import Resources from '../resources.js';
 
-var accordion = require('vue-strap').accordion;
-var panel = require('vue-strap').panel;
-
 let $Log = Resources.$Log;
 
 export default {
   name: "Log",
   mounted: function() {
     this.getLog();
-  },
-  components: {
-    'accordion': accordion,
-    'panel': panel
   },
   data: () => {
     return {
