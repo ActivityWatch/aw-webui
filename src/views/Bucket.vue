@@ -6,7 +6,7 @@ div
     | Showing {{ events.length }} out of ? events
 
   div.well.well-sm(style="margin-bottom: 0;")
-    button.btn.btn-default.btn-sm(v-on:click="expandList")
+    b-button(v-on:click="expandList")
       span(v-if="expandList")
         | Expand list
       span(v-else)

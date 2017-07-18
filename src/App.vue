@@ -60,8 +60,6 @@ import Views from './components/Views.vue';
 
 import Resources from './resources.js';
 
-var show_hide = require('./util/show_hide.js').show_hide;
-
 let $Info = Resources.$Info;
 
 // TODO: Highlight active item in menubar
@@ -77,10 +75,6 @@ export default {
       views: Views,
       connected: false
     }
-  },
-
-  methods: {
-    show_hide: show_hide,
   },
 
   mounted: function() {
@@ -132,6 +126,10 @@ body {
             margin-right: 7px;
         }
     }
+}
+
+.nav-item:hover {
+  background-color: #DDD;
 }
 
 .header {

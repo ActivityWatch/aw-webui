@@ -6,14 +6,14 @@ div
 
   h3(style="color: red;") {{ errormsg }}
 
-  div.btn-group
-    button.btn.btn-default(v-on:click="queryDate(time.get_prev_day(date))")
+  b-button-group
+    b-button(v-on:click="queryDate(time.get_prev_day(date))")
       span(aria-hidden="true" class="glyphicon glyphicon-arrow-left")
       |  Previous day
-    button.btn.btn-default(v-on:click="queryDate(time.get_next_day(date))")
+    b-button(v-on:click="queryDate(time.get_next_day(date))")
       span(aria-hidden="true" class="glyphicon glyphicon-arrow-right")
       |  Next day
-  button.btn.btn-default(v-on:click="query()", style="margin-left: 1rem;")
+  b-button(v-on:click="query()", style="margin-left: 1rem;")
     span(aria-hidden="true" class="glyphicon glyphicon-refresh")
     |  Refresh
 
