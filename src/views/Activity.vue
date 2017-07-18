@@ -2,26 +2,26 @@
 div
   h2 Window Activity {{ datestr }}
 
-  h5 {{ host }}
+  p {{ host }}
 
-  h3(style="color: red;") {{ errormsg }}
+  p(style="color: red;") {{ errormsg }}
 
   b-button-group
     b-button(v-on:click="queryDate(time.get_prev_day(date))")
-      span(aria-hidden="true" class="glyphicon glyphicon-arrow-left")
+      icon(name="arrow-left")
       |  Previous day
     b-button(v-on:click="queryDate(time.get_next_day(date))")
-      span(aria-hidden="true" class="glyphicon glyphicon-arrow-right")
       |  Next day
+      icon(name="arrow-right")
   b-button(v-on:click="query()", style="margin-left: 1rem;")
-    span(aria-hidden="true" class="glyphicon glyphicon-refresh")
+    icon(name="refresh")
     |  Refresh
 
   hr
 
   h4 Summary
 
-  h5 Total time: {{ time.seconds_to_duration(duration) }}
+  p Total time: {{ time.seconds_to_duration(duration) }}
 
   div#appsummary-container
 
@@ -33,7 +33,7 @@ div
 
   hr
 
-  p Showing activity for: {{ date }}
+  p Showing activity from {{ date }} until 24 hours later
 
   p Events queried: {{ eventcount }}
 
@@ -50,6 +50,10 @@ import timeline from '../visualizations/timeline.js';
 import summary from '../visualizations/summary.js';
 import time from "../util/time.js";
 import event_parsing from "../util/event_parsing.js";
+
+import 'vue-awesome/icons/arrow-left'
+import 'vue-awesome/icons/arrow-right'
+import 'vue-awesome/icons/refresh'
 
 let $QueryView  = Resources.$QueryView;
 let $CreateView  = Resources.$CreateView;

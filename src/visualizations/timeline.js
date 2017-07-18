@@ -122,7 +122,7 @@ function update(container, events, total_duration){
       .style("display", "none");
 
     // Appname and duration text
-    infobox.append("h4")
+    infobox.append("h5")
       .attr("x", "10px")
       .attr("y", "20px")
       .text(e.appname + " (" + time.seconds_to_duration(e.duration) + ")")
