@@ -16,20 +16,19 @@ div#wrapper
             icon(name="times-circle")
 
       //usermenu
-  div.container.aw-container
-    b-nav.aw-navbar
-      b-nav-item(to="/")
-        icon(name="home")
-        |  Home
-      Views
-      b-nav-item(to="/buckets")
-        icon(name="archive")
-        | Buckets
-      //li
-        router-link(to="/log")
-          // TODO: Add icon
-          | Server Log
-    div#content
+  b-nav.container.aw-container.aw-navbar
+    b-nav-item(to="/")
+      icon(name="home")
+      |  Home
+    Views
+    b-nav-item(to="/buckets")
+      icon(name="archive")
+      | Buckets
+    //li
+      router-link(to="/log")
+        // TODO: Add icon
+        | Server Log
+  div.container.aw-container#content
       router-view
 
   div.container(style="margin-top: 1rem; margin-bottom: 1rem; color: #555")
@@ -121,6 +120,7 @@ body {
     border-bottom-width: 1px;
     min-height: 20px;
     margin-bottom: 0;
+    padding: 0;
 
     li > a {
         padding: 10px 15px 10px 15px;
