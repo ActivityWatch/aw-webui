@@ -19,7 +19,7 @@ div#wrapper
   b-nav.container.aw-container.aw-navbar
     b-nav-item(to="/")
       icon(name="home")
-      |  Home
+      | Home
     Views
     b-nav-item(to="/buckets")
       icon(name="archive")
@@ -109,6 +109,13 @@ body {
   color: $textcolor;
   font-family: 'Varela Round', sans-serif;
   background-color: #EEE;
+}
+
+.fa-icon {
+  margin: 2px;
+  margin-left: 4px;
+  margin-right: 4px;
+  vertical-align: middle;
 }
 
 .outlinks {
