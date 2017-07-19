@@ -16,24 +16,21 @@ div
       td Created:
       td {{ bucket.created }}
 
-  hr
+  br
 
-  h4 Events
+  b-card.event-container(header="Events")
+    span(slot="header")
+      h4.card-title Events
+      span.pagination-header
+        | Showing {{ events.length }} out of ? events
+      b-button(v-on:click="expandList", size="sm", style="float: right;")
+        span(v-if="!isListExpanded")
+          | Expand list
+        span(v-else)
+          | Condense list
 
-  div.pagination-header
-    | Showing {{ events.length }} out of ? events
-
-  div.well.well-sm(style="margin-bottom: 0;")
-    b-button(v-on:click="expandList")
-      span(v-if="expandList")
-        | Expand list
-      span(v-else)
-        | Condense list
-
-  div.scrollbar-flipped
     ul.event-list(v-bind:class="{ 'expand': isListExpanded }")
       li(v-for="event in events")
-        div
           span.event
             span.field(v-bind:title="event.timestamp")
               icon(name="calendar-o")
@@ -52,12 +49,17 @@ div
 
 $border-color: #ddd;
 
+.card-title {
+  display: inline-block;
+  margin-bottom: 0;
+  margin-right: 1em;
+}
+
 .event-list {
   list-style-type: none;
   padding: 0;
-  border: 1px solid $border-color;
   border-radius: 3px;
-  height: 300px;
+  height: 25em;
   overflow-y: auto;
   white-space: nowrap;
 
@@ -96,11 +98,6 @@ $border-color: #ddd;
   background-color: #ddd;
   border: 1px solid #ccc;
   border-radius: 2px;
-
-  .glyphicon {
-    font-size: 10pt;
-    margin-right: 5px;
-  }
 
   &:last-child {
     margin-right: 0;
