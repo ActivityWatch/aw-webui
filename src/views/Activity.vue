@@ -93,40 +93,38 @@ export default {
   },
 
   mounted: function() {
-    this.$nextTick(function(){
-      // Set host
-      this.host = this.$route.params.host;
+    // Set host
+    this.host = this.$route.params.host;
 
-      // Date
-      var date = this.$route.params.date;
-      if (date == undefined){
-        date = new Date().toISOString();
-      }
-      // Create summary
-      var summary_elem = document.getElementById("appsummary-container")
-      summary.create(summary_elem);
+    // Date
+    var date = this.$route.params.date;
+    if (date == undefined){
+      date = new Date().toISOString();
+    }
+    // Create summary
+    var summary_elem = document.getElementById("appsummary-container")
+    summary.create(summary_elem);
 
-      // Create timeline
-      var timeline_elem = document.getElementById("apptimeline-container")
-      timeline.create(timeline_elem);
+    // Create timeline
+    var timeline_elem = document.getElementById("apptimeline-container")
+    timeline.create(timeline_elem);
 
-      $Info.get().then(
-        (response) => { // Success
-          if (response.status > 304){
-            this.errormsg = "Request error "+response.status+" at get info";
-          }
-          else {
-            console.log(response);
-            var data = response.json();
-            this.testing = data.testing;
-            this.queryDate(date);
-          }
-        },
-        (response) => { // Error
-          this.errormsg = "Request error "+response.status+" at get info. Server offline?";
+    $Info.get().then(
+      (response) => { // Success
+        if (response.status > 304){
+          this.errormsg = "Request error "+response.status+" at get info";
         }
-      );
-    });
+        else {
+          console.log(response);
+          var data = response.json();
+          this.testing = data.testing;
+          this.queryDate(date);
+        }
+      },
+      (response) => { // Error
+        this.errormsg = "Request error "+response.status+" at get info. Server offline?";
+      }
+    );
   },
 
   methods: {

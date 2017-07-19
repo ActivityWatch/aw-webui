@@ -8,13 +8,11 @@ div
     b-button-toolbar
       router-link(:to="'/buckets/' + bucket.id")
         b-button
-          span.glyphicon.glyphicon-folder-open(aria-hidden="true")
           | Open bucket
       router-link(:to="'/api/0/buckets/' + bucket.id + '/events?limit=-1'")
         b-button
-          span.glyphicon.glyphicon-save(aria-hidden="true")
           | Export as JSON
-    div.bucket-last-updated(v-if="bucket.last_updated")
+    small.bucket-last-updated(v-if="bucket.last_updated", slot="footer")
       span
         | Last updated:
       span(style="width: 8em; margin-left: 0.5em; display: inline-block")
@@ -29,7 +27,6 @@ div
 }
 
 .bucket-last-updated{
-    margin-top: 0.5em;
     font-size: 10pt;
     color: #666;
 }

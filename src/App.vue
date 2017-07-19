@@ -82,23 +82,22 @@ export default {
   },
 
   mounted: function() {
-    this.$nextTick(function(){
-      $Info.get().then(
-        (response) => {
-          if (response.status > 304) {
-            console.error("Status code from return call was >304");
-          } else {
-            this.connected = true;
-          }
-        },
-        (response) => {
-          console.log("a");
-          this.connected = false;
+    $Info.get().then(
+      (response) => {
+        if (response.status > 304) {
+          console.error("Status code from return call was >304");
+        } else {
+          this.connected = true;
         }
-      );
-    });
+      },
+      (response) => {
+        console.log("a");
+        this.connected = false;
+      }
+    );
   }
 }
+
 </script>
 
 <style lang="scss">
