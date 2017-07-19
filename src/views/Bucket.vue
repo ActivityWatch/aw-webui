@@ -1,6 +1,24 @@
 <template lang="pug">
+
 div
-  h3 Events
+  h3 {{ bucket.id }}
+  table
+    tr
+      td Type:
+      td {{ bucket.type }}
+    tr
+      td Client:
+      td {{ bucket.client }}
+    tr
+      td Hostname:
+      td {{ bucket.hostname }}
+    tr
+      td Created:
+      td {{ bucket.created }}
+
+  hr
+
+  h4 Events
 
   div.pagination-header
     | Showing {{ events.length }} out of ? events
@@ -18,13 +36,13 @@ div
         div
           span.event
             span.field(v-bind:title="event.timestamp")
-              span.glyphicon.glyphicon-time
+              icon(name="calendar-o")
               | {{ event.timestamp | friendlytime }}
             span.field
-              span.glyphicon.glyphicon-hourglass
+              icon(name="clock-o")
               | {{ event.duration | friendlyduration }}
             span(v-for="(val, key) in event.data").field
-              span.glyphicon.glyphicon-tags
+              icon(name="tags")
               // TODO: Add some kind of highlighting to key
               | {{ key }}: {{ val }}
 
@@ -100,6 +118,10 @@ $border-color: #ddd;
 
 <script>
 import Resources from '../resources.js';
+
+import 'vue-awesome/icons/tags'
+import 'vue-awesome/icons/clock-o'
+import 'vue-awesome/icons/calendar-o'
 
 let $Bucket = Resources.$Bucket;
 let $Event = Resources.$Event;
