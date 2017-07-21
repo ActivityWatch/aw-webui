@@ -4,6 +4,8 @@ b-nav-item-dropdown
   template(slot="button-content")
     icon(name="clock-o")
     | Activity
+  b-dropdown-item(v-if="hosts.length<=0", disabled)
+    | No activity reports available
   b-dropdown-item(v-for="host in hosts", :key="host", :to="'/activity/' + host")
     | {{ host }}
 
