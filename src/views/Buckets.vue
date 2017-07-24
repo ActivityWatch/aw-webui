@@ -13,7 +13,7 @@ accordion(:one-at-atime="false")
           span.glyphicon.glyphicon-folder-open(aria-hidden="true")
           | Open bucket
       a(v-bind:href="'/api/0/buckets/' + bucket.id + '/events?limit=-1'")
-        button.btn.btn-default.btn-sm(type="button" data-toggle="tooltip" data-placement="bottom" title="Not implemented")
+        button.btn.btn-default.btn-sm(type="button" data-toggle="tooltip" data-placement="bottom" title="Export all the events from this bucket to JSON")
           span.glyphicon.glyphicon-save(aria-hidden="true")
           | Export as JSON
       div(v-if="bucket.last_updated", style="margin-top: 0.5em; font-size: 10pt; color: #666")

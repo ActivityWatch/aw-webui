@@ -3,6 +3,15 @@ h2 Window Activity {{ datestr }}
 
 h5 {{ host }}
 
+h4(style="color: red;")
+  | This is currently work in progress and is known to have issues (such as 
+  a(href='https://github.com/ActivityWatch/aw-webui/issues/22') needing a date selector
+  | , 
+  a(href='https://github.com/ActivityWatch/activitywatch/issues/72') timezone issues
+  | , etc.) - see 
+  a(href='https://github.com/ActivityWatch/aw-webui/issues') all issues
+  | .
+
 h3(style="color: red;") {{ errormsg }}
 
 div.btn-group
