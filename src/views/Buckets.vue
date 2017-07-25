@@ -9,9 +9,10 @@ div
       router-link(:to="'/buckets/' + bucket.id")
         b-button
           | Open bucket
-      router-link(:to="'/api/0/buckets/' + bucket.id + '/events?limit=-1'")
-        b-button
-          | Export as JSON
+      b-tooltip(content="Export all events from this bucket to JSON")
+        router-link(:to="'/api/0/buckets/' + bucket.id + '/events?limit=-1'")
+          b-button
+            | Export as JSON
     small.bucket-last-updated(v-if="bucket.last_updated", slot="footer")
       span
         | Last updated:

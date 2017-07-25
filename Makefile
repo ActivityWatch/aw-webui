@@ -1,3 +1,5 @@
+.PHONY: build dev clean
+
 .FORCE: ;
 
 
@@ -8,3 +10,6 @@ build: .FORCE
 dev:
 	npm install
 	npm run dev
+
+clean:
+	rm -rf node_modules dist
