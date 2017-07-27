@@ -1,5 +1,4 @@
 import Vue from 'vue';
-import App from './App';
 import VueRouter from 'vue-router';
 
 import Home from './views/Home.vue';
@@ -11,34 +10,18 @@ import User from './views/User.vue';
 import Settings from './views/Settings.vue';
 
 Vue.use(VueRouter);
-var router = new VueRouter();
 
-router.map({
-  '/': {
-    component: Home
-  },
-  '/activity/:host': {
-    component: Activity
-  },
-  '/activity/:host/:date': {
-    component: Activity
-  },
-  '/buckets': {
-    component: Buckets
-  },
-  '/buckets/:id': {
-    component: Bucket
-  },
-  '/log': {
-    component: Log
-  },
-  '/u/:username': {
-    component: User
-  },
-  '/settings': {
-    component: Settings
-  }
+var router = new VueRouter({
+  routes: [
+    { path: '/',                        component: Home },
+    { path: '/activity/:host',          component: Activity },
+    { path: '/activity/:host/:date',    component: Activity },
+    { path: '/buckets',                 component: Buckets },
+    { path: '/buckets/:id',             component: Bucket },
+    { path: '/log',                     component: Log },
+    { path: '/u/:username',             component: User },
+    { path: '/settings',                component: Settings },
+  ]
 });
 
-router.start(App, "#app");
-
+export default router;

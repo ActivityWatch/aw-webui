@@ -1,4 +1,4 @@
-<template lang="jade">
+<template lang="pug">
 div#wrapper
   div.header
     div.container
@@ -8,37 +8,27 @@ div#wrapper
           | ActivityWatch
       span.status
         span.good(v-show="connected")
-          span.glyphicon.glyphicon-ok-circle
-          span.text
-            | Connected
+          | Connected
+          icon(name="check-circle")
         span.bad(v-show="!connected")
-          span.glyphicon.glyphicon-alert
           span.text
             | Not connected
+            icon(name="times-circle")
 
       //usermenu
-  div.container.aw-container
-    nav.row.navbar.aw-navbar
-      ul.nav.navbar-nav
-        li
-          a(v-link="{ path: '/', exact: true }")
-            span.glyphicon.glyphicon-home
-            | Home
-        li
-          a(v-on:click="show_hide('views')", style="cursor:pointer;").dropdown-btn
-            span.glyphicon.glyphicon-time
-            | Activity
-        li
-          a(v-link="{ path: '/buckets' }")
-            span.glyphicon.glyphicon-folder-open
-            | Buckets
-        //li
-          a(v-link="{ path: '/log' }")
-            span.glyphicon.glyphicon-list-alt
-            | Server Log
-    div.dropdown-content#views
-      Views
-    div#content
+  b-nav.container.aw-container.aw-navbar
+    b-nav-item(to="/")
+      icon(name="home")
+      | Home
+    Views
+    b-nav-item(to="/buckets")
+      icon(name="archive")
+      | Buckets
+    //li
+      router-link(to="/log")
+        // TODO: Add icon
+        | Server Log
+  div.container.aw-container#content
       router-view
 
   div.container(style="margin-top: 1rem; margin-bottom: 1rem; color: #555")
@@ -62,12 +52,17 @@ div#wrapper
 </template>
 
 <script>
+
+// only import the icons you use to reduce bundle size
+import 'vue-awesome/icons/home'
+import 'vue-awesome/icons/archive'
+import 'vue-awesome/icons/check-circle'
+import 'vue-awesome/icons/times-circle'
 import Usermenu from './components/Usermenu.vue';
 import Views from './components/Views.vue';
 
 import Resources from './resources.js';
 
-var show_hide = require('./util/show_hide.js').show_hide;
 
 let $Info = Resources.$Info;
 
@@ -86,27 +81,23 @@ export default {
     }
   },
 
-  methods: {
-    show_hide: show_hide,
-  },
-
-  ready() {
-    console.info("Ready!");
-
+  mounted: function() {
     $Info.get().then(
-        (response) => {
-            if (response.status > 304) {
-                console.error("Status code from return call was >304");
-            } else {
-                this.$set("connected", true);
-            }
-        },
-        (response) => {
-            console.log("a");
-            this.$set("connected", false);
-        });
+      (response) => {
+        if (response.status > 304) {
+          console.error("Status code from return call was >304");
+        } else {
+          this.connected = true;
+        }
+      },
+      (response) => {
+        console.log("a");
+        this.connected = false;
+      }
+    );
   }
 }
+
 </script>
 
 <style lang="scss">
@@ -119,6 +110,13 @@ body {
   background-color: #EEE;
 }
 
+.fa-icon {
+  margin: 2px;
+  margin-left: 4px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
 .outlinks {
   margin-left: 0.5rem;
 }
@@ -128,6 +126,7 @@ body {
     border-bottom-width: 1px;
     min-height: 20px;
     margin-bottom: 0;
+    padding: 0;
 
     li > a {
         padding: 10px 15px 10px 15px;
@@ -138,6 +137,10 @@ body {
             margin-right: 7px;
         }
     }
+}
+
+.nav-item:hover {
+  background-color: #DDD;
 }
 
 .header {

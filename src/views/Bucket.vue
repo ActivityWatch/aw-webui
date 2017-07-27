@@ -1,46 +1,45 @@
-<template lang="jade">
-h2 Bucket: {{ $route.params.id }}
-
-hr
+<template lang="pug">
 
 div
-  h3 Info
-  | ID: {{ bucket.id }}
-  br
-  | Hostname: {{ bucket.hostname }}
-  br
-  | Client: {{ bucket.client }}
-  br
-  | Created: {{ bucket.created }}
-  br
-  | Event type: {{ bucket.type }}
+  h3 {{ bucket.id }}
+  table
+    tr
+      td Type:
+      td {{ bucket.type }}
+    tr
+      td Client:
+      td {{ bucket.client }}
+    tr
+      td Hostname:
+      td {{ bucket.hostname }}
+    tr
+      td Created:
+      td {{ bucket.created }}
 
-div
-  h3 Events
+  br
 
-  div.pagination-header
-    | Showing {{ events.length }} out of ? events
+  b-card.event-container(header="Events")
+    span(slot="header")
+      h4.card-title Events
+      span.pagination-header
+        | Showing {{ events.length }} out of ? events
+      b-button(v-on:click="expandList", size="sm", style="float: right;")
+        span(v-if="!isListExpanded")
+          | Expand list
+        span(v-else)
+          | Condense list
 
-  div.well.well-sm(style="margin-bottom: 0;")
-    button.btn.btn-default.btn-sm(v-on:click="expandList")
-      span(v-if="expandList")
-        | Expand list
-      span(v-else)
-        | Condense list
-
-  div.scrollbar-flipped
     ul.event-list(v-bind:class="{ 'expand': isListExpanded }")
       li(v-for="event in events")
-        div
           span.event
-            span.field(title="{{ event.timestamp }}")
-              span.glyphicon.glyphicon-time
+            span.field(v-bind:title="event.timestamp")
+              icon(name="calendar-o")
               | {{ event.timestamp | friendlytime }}
             span.field
-              span.glyphicon.glyphicon-hourglass
+              icon(name="clock-o")
               | {{ event.duration | friendlyduration }}
-            span(v-for="(key, val) in event.data").field
-              span.glyphicon.glyphicon-tags
+            span(v-for="(val, key) in event.data").field
+              icon(name="tags")
               // TODO: Add some kind of highlighting to key
               | {{ key }}: {{ val }}
 
@@ -50,12 +49,17 @@ div
 
 $border-color: #ddd;
 
+.card-title {
+  display: inline-block;
+  margin-bottom: 0;
+  margin-right: 1em;
+}
+
 .event-list {
   list-style-type: none;
   padding: 0;
-  border: 1px solid $border-color;
   border-radius: 3px;
-  height: 300px;
+  height: 25em;
   overflow-y: auto;
   white-space: nowrap;
 
@@ -95,11 +99,6 @@ $border-color: #ddd;
   border: 1px solid #ccc;
   border-radius: 2px;
 
-  .glyphicon {
-    font-size: 10pt;
-    margin-right: 5px;
-  }
-
   &:last-child {
     margin-right: 0;
   }
@@ -117,6 +116,10 @@ $border-color: #ddd;
 <script>
 import Resources from '../resources.js';
 
+import 'vue-awesome/icons/tags'
+import 'vue-awesome/icons/clock-o'
+import 'vue-awesome/icons/calendar-o'
+
 let $Bucket = Resources.$Bucket;
 let $Event = Resources.$Event;
 
@@ -133,13 +136,13 @@ export default {
   methods: {
     getBucketInfo: function(bucket_id) {
       $Bucket.get({"id": bucket_id}).then((response) => {
-        this.$set("bucket", response.json())
+        this.bucket = response.json();
       });
     },
 
     getEvents: function(bucket_id) {
       $Event.get({"id": bucket_id}).then((response) => {
-        this.$set("events", response.json())
+        this.events = response.json();
       });
     },
 
@@ -148,7 +151,7 @@ export default {
       console.log("List should be expanding: ", this.isListExpanded);
     }
   },
-  ready: function() {
+  mounted: function() {
     this.id = this.$route.params.id;
     this.getBucketInfo(this.id);
     this.getEvents(this.id);

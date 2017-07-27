@@ -1,19 +1,22 @@
-<template lang="jade">
+<template lang="pug">
 
-// Fallback version
-div#views-container
-  nav.row.navbar.aw-navbar
-    ul.nav.navbar-nav
-      li(v-for="host in hosts")
-        a(v-link="'/activity/'+host")
-          span.glyphicon.glyphicon-signal(aria-hidden="true")
-          |  {{ host }}
+b-nav-item-dropdown
+  template(slot="button-content")
+    icon(name="clock-o")
+    | Activity
+  b-dropdown-item(v-if="hosts.length<=0", disabled)
+    | No activity reports available
+  b-dropdown-item(v-for="host in hosts", :key="host", :to="'/activity/' + host")
+    | {{ host }}
+
 
 </template>
 
 <script>
 
 import Resources from '../resources.js';
+
+import 'vue-awesome/icons/clock-o'
 
 let $Bucket     = Resources.$Bucket;
 
@@ -23,7 +26,7 @@ export default {
       hosts: [],
     }
   },
-  ready: function() {
+  mounted: function() {
     $Bucket.get().then((response) => {
       var buckets = response.json();
       // Sort buckettypes by hostname
@@ -46,7 +49,7 @@ export default {
         }
       }
     });
-  },
+  }
 }
 </script>
 

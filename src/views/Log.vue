@@ -1,15 +1,16 @@
-<template lang="jade">
-h2 Server Log
+<template lang="pug">
+div
+  h2 Server Log
 
-hr
+  hr
 
-accordion(:one-at-atime="false")
-  panel(v-for="logmsg in log", :header="logmsg.levelname+':'+logmsg.message", :is-open="false")
-    | Name: {{ logmsg.name }}
-    br
-    | Time: {{ logmsg.asctime }}
-    br
-    | Origin: {{ logmsg.funcName }}:{{ logmsg.lineno }}
+  accordion(:one-at-atime="false")
+    panel(v-for="(log, key) in logs", :key="key", :header="log.levelname+':'+log.message", :is-open="false")
+      | Name: {{ logm.name }}
+      br
+      | Time: {{ log.asctime }}
+      br
+      | Origin: {{ log.funcName }}:{{ log.lineno }}
 
 </template>
 
@@ -42,29 +43,22 @@ accordion(:one-at-atime="false")
 <script>
 import Resources from '../resources.js';
 
-var accordion = require('vue-strap').accordion;
-var panel = require('vue-strap').panel;
-
 let $Log = Resources.$Log;
 
 export default {
   name: "Log",
-  ready: function() {
+  mounted: function() {
     this.getLog();
-  },
-  components: {
-    'accordion': accordion,
-    'panel': panel
   },
   data: () => {
     return {
-      log: [],
+      logs: [],
     }
   },
   methods: {
     getLog: function() {
       $Log.get().then((response) => {
-        this.$set('log', response.json())
+        this.logs = response.json();
       });
     },
   }

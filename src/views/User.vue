@@ -1,11 +1,12 @@
-<template lang="jade">
-h2 {{user.name}} ({{ user.username }})
-
+<template lang="pug">
 div
-| {{ user.email }}
+  h2 {{user.name}} ({{ user.username }})
 
-p
-| Some text about user should go here
+  div
+  | {{ user.email }}
+
+  p
+  | Some text about user should go here
 
 </template>
 
@@ -26,7 +27,7 @@ export default {
   },
   methods: {
   },
-  ready: function() {
+  mounted: function() {
       let username = this.$route.params.username;
       // Fetch user by username
   }
