@@ -22,8 +22,8 @@ div#wrapper
       | Home
     Views
     b-nav-item(to="/buckets")
-      icon(name="archive")
-      | Buckets
+      icon(name="database")
+      | Raw Data
     //li
       router-link(to="/log")
         // TODO: Add icon
@@ -55,9 +55,10 @@ div#wrapper
 
 // only import the icons you use to reduce bundle size
 import 'vue-awesome/icons/home'
-import 'vue-awesome/icons/archive'
+import 'vue-awesome/icons/database'
 import 'vue-awesome/icons/check-circle'
 import 'vue-awesome/icons/times-circle'
+
 import Usermenu from './components/Usermenu.vue';
 import Views from './components/Views.vue';
 
