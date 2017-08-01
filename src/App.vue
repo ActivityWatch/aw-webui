@@ -32,7 +32,7 @@ div#wrapper
       router-view
 
   div.container(style="margin-top: 1rem; margin-bottom: 1rem; color: #555")
-    | Made with ❤ by the &nbsp;
+    | Made with ❤ by the&nbsp;
     a(href="http://activitywatch.net/contributors/")
       | ActivityWatch developers
 
@@ -105,14 +105,17 @@ export default {
 $bgcolor: #FFF;
 $textcolor: #000;
 
-body {
+html, body, button {
   color: $textcolor;
-  font-family: 'Varela Round', sans-serif;
+  font-family: 'Varela Round', sans-serif !important;
+}
+
+body {
   background-color: #EEE;
 }
 
 .fa-icon {
-  margin: 2px;
+  margin-top: -0.125em;
   margin-left: 4px;
   margin-right: 4px;
   vertical-align: middle;

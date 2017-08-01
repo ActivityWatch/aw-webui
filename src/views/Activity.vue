@@ -6,14 +6,15 @@ div
 
   p(style="color: red;") {{ errormsg }}
 
-  h4(style="color: red;")
-    | This is currently work in progress and is known to have issues (such as
-    a(href='https://github.com/ActivityWatch/aw-webui/issues/22')  needing a date selector
-    | ,
-    a(href='https://github.com/ActivityWatch/activitywatch/issues/72')  timezone issues
-    | , etc.) - see
-    a(href='https://github.com/ActivityWatch/aw-webui/issues')  all issues
-    | .
+  div.alert.alert-info(role="alert")
+    small
+      | This page is currently considered early work and is known to have issues:
+      li
+        a(href='https://github.com/ActivityWatch/aw-webui/issues/22')
+          | Needs a date selector
+      li
+        a(href='https://github.com/ActivityWatch/activitywatch/issues/72')
+          | Timezone issues
 
   b-button-group
     b-button(v-on:click="queryDate(time.get_prev_day(date))")
