@@ -205,10 +205,11 @@ export default {
       var appsummary_elem = document.getElementById("appsummary-container")
       summary.set_status(appsummary_elem, "Loading...");
 
+      let today = moment(this.date);
       $QueryView.get({"viewname": viewname,
                       "limit": -1,
-                      "start": moment(this.date).format(),
-                      "end": moment(this.date).add(1, 'days').format()})
+                      "start": today.format(),
+                      "end": today.add(1, 'days').format()})
         .then(
         (response) => {
           if (response.status > 304){

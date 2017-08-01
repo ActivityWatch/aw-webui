@@ -3,6 +3,7 @@
 const d3 = require("d3");
 const Color = require("color");
 const _ = require("lodash");
+const moment = require("moment");
 
 import event_parsing from "../util/event_parsing";
 import color from "../util/color.js"
@@ -135,7 +136,7 @@ function update(container, events, total_duration){
     _.each(e.titles, function(t, i){
       var inforow = infolist.append("tr");
       // Clocktime
-      var clocktime = t.timestamp.split("T")[1].split(".")[0];
+      var clocktime = moment(t.timestamp).format("HH:mm:ss");
       inforow.append("td")
         .text(clocktime);
       // Duration
