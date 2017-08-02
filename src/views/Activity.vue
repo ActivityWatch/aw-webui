@@ -43,13 +43,21 @@ div
 
   hr
 
-  p Showing activity from {{ date }} until 24 hours later
-
-  p Events queried: {{ eventcount }}
+  p
+    //| Showing activity from {{ date }} until 24 hours later
+    //br
+    | Events queried: {{ eventcount }}
 
 </template>
 
 <style lang="scss">
+
+#apptimeline-container {
+    white-space: nowrap;
+    font-family: arial;
+    font-size: 10pt;
+    line-height: 1.2em;
+}
 
 </style>
 

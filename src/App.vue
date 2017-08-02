@@ -15,21 +15,17 @@ div#wrapper
             | Not connected
             icon(name="times-circle")
 
-      //usermenu
-  b-nav.container.aw-container.aw-navbar
-    b-nav-item(to="/")
-      icon(name="home")
-      | Home
-    Views
-    b-nav-item(to="/buckets")
-      icon(name="database")
-      | Raw Data
-    //li
-      router-link(to="/log")
-        // TODO: Add icon
-        | Server Log
-  div.container.aw-container#content
-      router-view
+  div.container.aw-container.rounded-bottom
+    b-nav.aw-navbar
+      b-nav-item(to="/")
+        icon(name="home")
+        | Home
+      Views
+      b-nav-item(to="/buckets")
+        icon(name="database")
+        | Raw Data
+    div#content
+        router-view
 
   div.container(style="margin-top: 1rem; margin-bottom: 1rem; color: #555")
     | Made with ❤ by the&nbsp;
@@ -37,18 +33,17 @@ div#wrapper
       | ActivityWatch developers
 
     div(style="float: right; text-align: right;")
-      div
-        | Follow ActivityWatch:
-        a.outlinks(href="https://github.com/ActivityWatch/activitywatch")
-          //i.fa.fa-github
-          | GitHub
-        a.outlinks(href="https://twitter.com/ActivityWatchIt")
-          //i.fa.fa-twitter
-          | Twitter
-      div
-        | Something not working as it should?
-        a(href="https://github.com/ActivityWatch/activitywatch/issues/new")
-          |  File an issue.
+      | Follow ActivityWatch:
+      a.outlinks(href="https://github.com/ActivityWatch/activitywatch")
+        icon(name="github")
+        | GitHub
+      a.outlinks(href="https://twitter.com/ActivityWatchIt")
+        icon(name="twitter")
+        | Twitter
+      br
+      | Something not working as it should?
+      a(href="https://github.com/ActivityWatch/activitywatch/issues/new")
+        |  File an issue.
 </template>
 
 <script>
@@ -58,6 +53,8 @@ import 'vue-awesome/icons/home'
 import 'vue-awesome/icons/database'
 import 'vue-awesome/icons/check-circle'
 import 'vue-awesome/icons/times-circle'
+import 'vue-awesome/icons/twitter'
+import 'vue-awesome/icons/github'
 
 import Usermenu from './components/Usermenu.vue';
 import Views from './components/Views.vue';
@@ -126,11 +123,10 @@ body {
 }
 
 .aw-navbar {
+    margin-left: -1em;
+    margin-right: -1em;
     border: 0px solid #DDD;
     border-bottom-width: 1px;
-    min-height: 20px;
-    margin-bottom: 0;
-    padding: 0;
 
     li > a {
         padding: 10px 15px 10px 15px;
@@ -189,10 +185,13 @@ body {
   background-color: #FFF;
   border: 1px solid #CCC;
   border-top: 0;
+}
+
+.rounded-bottom {
   border-radius: 0px 0px 5px 5px;
 }
 
 #content {
-    padding-top: 20px;
+  padding-top: 2em;
 }
 </style>
