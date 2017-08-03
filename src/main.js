@@ -6,6 +6,9 @@ import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue/dist/bootstrap-vue.css';
 Vue.use(BootstrapVue);
 
+// Load the Varela Round font
+import '../static/css/varela-round.css';
+
 // Loads all the resources (using vue-resource)
 import './resources.js';
 
