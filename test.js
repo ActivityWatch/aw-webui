@@ -1,9 +1,11 @@
 const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
-
-import renderTimeline from "./src/visualizations/timeline.js";
+const timeline = require("./src/visualizations/timeline.js");
 
 var dom = new JSDOM("")
+global.window = dom.window;
+global.document = dom.window.document;
+
 
 var root_el = dom.window.document.createElement("div");
 
@@ -14,5 +16,6 @@ var example_events = [
 
 var total_duration = 20;
 
-renderTimeline(root_el, example_events, total_duration)
+timeline.create(root_el)
+timeline.update(root_el, example_events, total_duration)
 
