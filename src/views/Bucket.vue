@@ -18,7 +18,7 @@ div
 
   br
 
-  b-card.event-container(header="Events", no-block=true)
+  b-card.event-container(no-block=true)
     span(slot="header")
       h4.card-title Events
       span.pagination-header
@@ -49,6 +49,10 @@ div
 
 $border-color: #ddd;
 
+.card {
+  margin-bottom: 1em;
+}
+
 .card-title {
   display: inline-block;
   margin-bottom: 0;
@@ -62,6 +66,7 @@ $border-color: #ddd;
   height: 25em;
   overflow-y: auto;
   white-space: nowrap;
+  margin-bottom: 0px;
 
   li {
     border: 0 solid $border-color;
