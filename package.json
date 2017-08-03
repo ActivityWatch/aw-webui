@@ -48,7 +48,6 @@
     "webpack-merge": "^0.8.3"
   },
   "dependencies": {
-    "babel-cli": "^6.24.1",
     "bootstrap": "^4.0.0-alpha.6",
     "bootstrap-vue": "^0.18.0",
     "d3": "^4.2.2",
