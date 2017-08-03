@@ -1,40 +1,50 @@
-<template lang="jade">
-h2 Window Activity {{ datestr }}
+<template lang="pug">
+div
+  h2 Window Activity {{ datestr }}
 
-h5 {{ host }}
+  p {{ host }}
 
-h3(style="color: red;") {{ errormsg }}
+  p(style="color: red;") {{ errormsg }}
 
-div.btn-group
-  button.btn.btn-default(v-on:click="queryDate(time.get_prev_day(date))")
-    span(aria-hidden="true" class="glyphicon glyphicon-arrow-left")
-    |  Previous day
-  button.btn.btn-default(v-on:click="queryDate(time.get_next_day(date))")
-    span(aria-hidden="true" class="glyphicon glyphicon-arrow-right")
-    |  Next day
-button.btn.btn-default(v-on:click="query()", style="margin-left: 1rem;")
-  span(aria-hidden="true" class="glyphicon glyphicon-refresh")
-  |  Refresh
+  h4(style="color: red;")
+    | This is currently work in progress and is known to have issues (such as
+    a(href='https://github.com/ActivityWatch/aw-webui/issues/22')  needing a date selector
+    | ,
+    a(href='https://github.com/ActivityWatch/activitywatch/issues/72')  timezone issues
+    | , etc.) - see
+    a(href='https://github.com/ActivityWatch/aw-webui/issues')  all issues
+    | .
 
-hr
+  b-button-group
+    b-button(v-on:click="queryDate(time.get_prev_day(date))")
+      icon(name="arrow-left")
+      |  Previous day
+    b-button(v-on:click="queryDate(time.get_next_day(date))")
+      |  Next day
+      icon(name="arrow-right")
+  b-button(v-on:click="query()", style="margin-left: 1rem;")
+    icon(name="refresh")
+    |  Refresh
 
-h4 Summary
+  hr
 
-h5 Total time: {{ time.seconds_to_duration(duration) }}
+  h4 Summary
 
-div#appsummary
+  p Total time: {{ time.seconds_to_duration(duration) }}
 
-hr
+  div#appsummary-container
 
-h4 Timeline
+  hr
 
-div#apptimeline
+  h4 Timeline
 
-hr
+  div#apptimeline-container
 
-p Showing activity for: {{ date }}
+  hr
 
-p Events queried: {{ eventcount }}
+  p Showing activity from {{ date }} until 24 hours later
+
+  p Events queried: {{ eventcount }}
 
 </template>
 
@@ -45,13 +55,14 @@ p Events queried: {{ eventcount }}
 <script>
 import Resources from '../resources.js';
 import moment from 'moment';
-import renderTimeline from '../visualizations/timeline.js';
-import renderSummary from '../visualizations/summary.js';
+import timeline from '../visualizations/timeline.js';
+import summary from '../visualizations/summary.js';
 import time from "../util/time.js";
 import event_parsing from "../util/event_parsing.js";
 
-var panel = require('vue-strap').panel;
-var accordion = require('vue-strap').accordion;
+import 'vue-awesome/icons/arrow-left'
+import 'vue-awesome/icons/arrow-right'
+import 'vue-awesome/icons/refresh'
 
 let $QueryView  = Resources.$QueryView;
 let $CreateView  = Resources.$CreateView;
@@ -61,10 +72,6 @@ var daylength = 86400000;
 
 export default {
   name: "Activity",
-  components: {
-    'panel': panel,
-    'accordion': accordion
-  },
   data: () => {
     return {
       // Libraries
@@ -85,9 +92,7 @@ export default {
   watch: {
     '$route': function(to, from) {
       console.log("Route changed")
-      this.$set("host", this.$route.params.host);
-      document.getElementById("appsummary").innerHTML = "";
-      document.getElementById("apptimeline").innerHTML = "";
+      this.host = this.$route.params.host;
       this.query();
     },
 
@@ -96,31 +101,37 @@ export default {
     }
   },
 
-  ready: function() {
+  mounted: function() {
     // Set host
-    this.$set("host", this.$route.params.host);
+    this.host = this.$route.params.host;
 
     // Date
     var date = this.$route.params.date;
     if (date == undefined){
       date = new Date().toISOString();
     }
+    // Create summary
+    var summary_elem = document.getElementById("appsummary-container")
+    summary.create(summary_elem);
+
+    // Create timeline
+    var timeline_elem = document.getElementById("apptimeline-container")
+    timeline.create(timeline_elem);
+
     $Info.get().then(
       (response) => { // Success
         if (response.status > 304){
-          var msg = "Request error "+response.status+" at get info";
-          this.$set("errormsg", msg)
+          this.errormsg = "Request error "+response.status+" at get info";
         }
         else {
           console.log(response);
           var data = response.json();
-          this.$set("testing", data.testing);
+          this.testing = data.testing;
           this.queryDate(date);
         }
       },
       (response) => { // Error
-        var msg = "Request error "+response.status+" at get info. Server offline?";
-        this.$set("errormsg", msg)
+        this.errormsg = "Request error "+response.status+" at get info. Server offline?";
       }
     );
   },
@@ -133,14 +144,14 @@ export default {
   },
 
   setDay: function(datestr){
-    this.$set("date", time.get_day_start(datestr));
-      this.$set("datestr", this.date.format('YYYY-MM-DD'));
+      this.date = time.get_day_start(datestr);
+      this.datestr = this.date.format('YYYY-MM-DD');
     },
 
     query: function(){
-      this.$set('duration', "");
-      this.$set('eventcount', 0);
-      this.$set('errormsg', "");
+      this.duration = "";
+      this.eventcount = 0;
+      this.errormsg = "";
 
       if (this.testing){
         console.log("Using testing buckets");
@@ -157,8 +168,7 @@ export default {
       $CreateView.save({viewname: summary_view_name}, {'query': query}).then(
         (response) => { // Success
           if (response.status > 304){
-            var msg = "Request error "+response.status+" at create view";
-            this.$set("errormsg", msg)
+            this.errormsg = "Request error "+response.status+" at create view";
           }
           else {
             var data = response.json();
@@ -166,8 +176,7 @@ export default {
           }
         },
         (response) => { // Error
-          var msg = "Request error "+response.status+" at create view";
-          this.$set("errormsg", msg);
+          this.errormsg = "Request error "+response.status+" at create view";
         }
       );
 
@@ -176,8 +185,7 @@ export default {
       $CreateView.save({viewname: timeline_view_name}, {'query': query}).then(
         (response) => { // Success
           if (response.status > 304){
-            var msg = "Request error "+response.status+" at create view";
-            this.$set("errormsg", msg)
+            this.errormsg = "Request error "+response.status+" at create view";
           }
           else {
             var data = response.json();
@@ -185,44 +193,49 @@ export default {
           }
         },
         (response) => { // Error
-          var msg = "Request error "+response.status+" at create view";
-          this.$set("errormsg", msg);
+          this.errormsg = "Request error "+response.status+" at create view";
         }
       );
     },
 
     queryView: function(viewname){
+      var timeline_elem = document.getElementById("apptimeline-container")
+      timeline.set_status(timeline_elem, "Loading...");
+
+      var appsummary_elem = document.getElementById("appsummary-container")
+      summary.set_status(appsummary_elem, "Loading...");
+
+      let today = moment(this.date);
       $QueryView.get({"viewname": viewname,
                       "limit": -1,
-                      "start": moment(this.date).format(),
-                      "end": moment(this.date).add(1, 'days').format()})
+                      "start": today.format(),
+                      "end": today.add(1, 'days').format()})
         .then(
         (response) => {
           if (response.status > 304){
-            var msg = "Server error "+response.status+" at view query";
-            this.$set("errormsg", msg)
+            this.errormsg = "Server error "+response.status+" at view query";
           }
           else {
             console.log(viewname)
             var data = response.json();
             var chunks = data["chunks"];
             var eventlist = data["eventlist"];
-            this.$set("duration", data["duration"]);
-            this.$set("eventcount", data["eventcount"]+this.eventcount);
+            this.duration = data["duration"];
+            this.eventcount = data["eventcount"]+this.eventcount;
             if (chunks != undefined){
               var appsummary = event_parsing.parse_chunks_to_apps(chunks);
-              var e = document.getElementById("appsummary")
-              renderSummary(e, appsummary);
+              var el = document.getElementById("appsummary-container")
+              summary.update(el, appsummary);
             }
             if (eventlist != undefined){
               var apptimeline = event_parsing.parse_eventlist_by_apps(eventlist);
-              renderTimeline("#apptimeline", apptimeline, this.duration);
+              var el = document.getElementById("apptimeline-container")
+              timeline.update(el, apptimeline, this.duration);
             }
           }
         },
         (response) => {
-          var msg = "Request error "+response.status+" at view query";
-          this.$set("errormsg", msg)
+          this.errormsg = "Request error "+response.status+" at view query";
         });
     },
 

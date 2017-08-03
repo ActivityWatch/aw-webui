@@ -1,3 +1,5 @@
+.PHONY: build dev clean
+
 .FORCE: ;
 
 
@@ -12,3 +14,6 @@ dev:
 test:
 	npm install babel-cli babel-preset-es2015 jsdom@10.1
 	babel-node test.js
+
+clean:
+	rm -rf node_modules dist

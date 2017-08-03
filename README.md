@@ -1,8 +1,10 @@
-# aw-webui
+aw-webui
+========
 
 > A webui for ActivityWatch built in Vue.js
 
 [![Build Status](https://travis-ci.org/ActivityWatch/aw-webui.svg?branch=master)](https://travis-ci.org/ActivityWatch/aw-webui)
+
 
 ## Build Setup
 
@@ -21,4 +23,14 @@ npm run dev
 npm run build
 ```
 
-For detailed explanation on how things work, checkout the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+
+## Code structure
+
+One of the first things that happen in the application is the execution of `src/main.js`. 
+
+This loads things such as bootstrap-vue and a bunch of other stuff that's globally used (filters, resources).
+
+The main.js file then loads the `src/App.js` file, which is the root component of the application and where everything thing begins.
+
+This repo was initialized with a Vue.js template that uses webpack, so for detailed explanation on how things work, checkout the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+

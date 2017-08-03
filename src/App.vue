@@ -1,39 +1,40 @@
-<template lang="jade">
+<template lang="pug">
 div#wrapper
   div.header
     div.container
       span.title
         img(src="/static/logo.png")
         span(style="padding-left: 15px;")
-        | ActivityWatch
+          | ActivityWatch
+      span.status
+        span.good(v-show="connected")
+          | Connected
+          icon(name="check-circle")
+        span.bad(v-show="!connected")
+          span.text
+            | Not connected
+            icon(name="times-circle")
+
       //usermenu
-  div.container.aw-container
-    nav.row.navbar.aw-navbar
-      ul.nav.navbar-nav
-        li
-          a(v-link="{ path: '/', exact: true }")
-            span.glyphicon.glyphicon-home
-            | Home
-        li
-          a(v-on:click="show_hide('views')", style="cursor:pointer;").dropdown-btn
-            span.glyphicon.glyphicon-time
-            | Activity
-        li
-          a(v-link="{ path: '/buckets' }")
-            span.glyphicon.glyphicon-folder-open
-            | Buckets
-        li
-          a(v-link="{ path: '/log' }")
-            span.glyphicon.glyphicon-list-alt
-            | Server Log
-    div.dropdown-content#views
-      Views
-    div#content
+  b-nav.container.aw-container.aw-navbar
+    b-nav-item(to="/")
+      icon(name="home")
+      | Home
+    Views
+    b-nav-item(to="/buckets")
+      icon(name="database")
+      | Raw Data
+    //li
+      router-link(to="/log")
+        // TODO: Add icon
+        | Server Log
+  div.container.aw-container#content
       router-view
 
-  // TODO: Add link to website here when it contains something of interest
   div.container(style="margin-top: 1rem; margin-bottom: 1rem; color: #555")
-    | Made with ❤ by the ActivityWatch developers
+    | Made with ❤ by the &nbsp;
+    a(href="http://activitywatch.net/contributors/")
+      | ActivityWatch developers
 
     div(style="float: right; text-align: right;")
       div
@@ -46,14 +47,25 @@ div#wrapper
           | Twitter
       div
         | Something not working as it should?
-        a(href="https://github.com/ActivityWatch/activitywatch-user-issues/issues/new")
+        a(href="https://github.com/ActivityWatch/activitywatch/issues/new")
           |  File an issue.
 </template>
 
 <script>
+
+// only import the icons you use to reduce bundle size
+import 'vue-awesome/icons/home'
+import 'vue-awesome/icons/database'
+import 'vue-awesome/icons/check-circle'
+import 'vue-awesome/icons/times-circle'
+
 import Usermenu from './components/Usermenu.vue';
 import Views from './components/Views.vue';
-var show_hide = require('./util/show_hide.js').show_hide;
+
+import Resources from './resources.js';
+
+
+let $Info = Resources.$Info;
 
 // TODO: Highlight active item in menubar
 
@@ -65,13 +77,28 @@ export default {
 
   data: function() {
     return {
-      views: Views
+      views: Views,
+      connected: false
     }
   },
-  methods: {
-    show_hide: show_hide,
-  },
+
+  mounted: function() {
+    $Info.get().then(
+      (response) => {
+        if (response.status > 304) {
+          console.error("Status code from return call was >304");
+        } else {
+          this.connected = true;
+        }
+      },
+      (response) => {
+        console.log("a");
+        this.connected = false;
+      }
+    );
+  }
 }
+
 </script>
 
 <style lang="scss">
@@ -84,6 +111,13 @@ body {
   background-color: #EEE;
 }
 
+.fa-icon {
+  margin: 2px;
+  margin-left: 4px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
 .outlinks {
   margin-left: 0.5rem;
 }
@@ -93,6 +127,7 @@ body {
     border-bottom-width: 1px;
     min-height: 20px;
     margin-bottom: 0;
+    padding: 0;
 
     li > a {
         padding: 10px 15px 10px 15px;
@@ -105,6 +140,9 @@ body {
     }
 }
 
+.nav-item:hover {
+  background-color: #DDD;
+}
 
 .header {
   border-bottom: 1px solid #CCC;
@@ -118,12 +156,28 @@ body {
     display: inline-block;
     width: 200px;
     font-size: 20pt;
-    width: 100%;
     color: #444;
+    white-space: nowrap;
 
     img {
         width: 1.2em;
         height: 1.2em;
+    }
+  }
+
+  .status {
+    float: right;
+
+    .text {
+        margin-left: 1em;
+    }
+
+    .good {
+        color: green;
+    }
+
+    .bad {
+        color: red;
     }
   }
 }

@@ -1,5 +1,6 @@
 'use strict';
 
+import _ from 'lodash';
 import Vue from 'vue';
 
 import moment from 'moment';
@@ -26,3 +27,10 @@ Vue.filter('friendlyduration', function (seconds) {
   }
   return s;
 });
+
+// Apparently this is how we should do filters now
+// https://github.com/vuejs/vue/issues/2756#issuecomment-215508316
+Vue.prototype.filters = {
+//  filterBy: ...,
+  orderBy: _.orderBy
+}
