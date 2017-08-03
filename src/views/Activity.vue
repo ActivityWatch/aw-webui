@@ -6,15 +6,12 @@ div
 
   p(style="color: red;") {{ errormsg }}
 
-  div.alert.alert-info(role="alert")
+  //div.alert.alert-info(role="alert")
     small
       | This page is currently considered early work and is known to have issues:
       li
         a(href='https://github.com/ActivityWatch/aw-webui/issues/22')
           | Needs a date selector
-      li
-        a(href='https://github.com/ActivityWatch/activitywatch/issues/72')
-          | Timezone issues
 
   b-button-group
     b-button(v-on:click="queryDate(time.get_prev_day(date))")
