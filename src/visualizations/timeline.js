@@ -100,6 +100,28 @@ function update(container, events, total_duration){
   // Iterate over each app timeperiod
   let curr_x = 0;
   _.each(events, function(e, i) {
+    // Timeline rect
+    var e_width = e.duration / total_duration * 100;
+    var appcolor = color.getAppColor(e.appname);
+    var hovercolor = Color(appcolor).darken(0.4).rgbString();
+
+    let eg = timeline.append("g")
+      .attr("id", "timeline_event_"+i);
+
+    eg.append("rect")
+      .attr("x", curr_x)
+      .attr("y", 0)
+      .attr("width", e_width)
+      .attr("height", 10)
+      .style("fill", color.getAppColor(e.appname))
+      .on("mouseover", () => {
+          set_color("timeline_event_" + i, hovercolor);
+          show_info("titleinfo_event_" + i);
+      })
+      .on("mouseout", () => {
+          set_color('timeline_event_' + i, appcolor);
+      })
+
     // Titleinfo box
     var infobox = titleinfo_list.append("div")
       .attr("id", "titleinfo_event_"+i)
@@ -133,28 +155,6 @@ function update(container, events, total_duration){
         .style("padding-left", "1em");
     });
 
-
-    // Timeline rect
-    var e_width = e.duration / total_duration * 100;
-    var appcolor = color.getAppColor(e.appname);
-    var hovercolor = Color(appcolor).darken(0.4).rgbString();
-
-    let eg = timeline.append("g")
-      .attr("id", "timeline_event_"+i);
-
-    eg.append("rect")
-      .attr("x", curr_x)
-      .attr("y", 0)
-      .attr("width", e_width)
-      .attr("height", 10)
-      .style("fill", color.getAppColor(e.appname))
-      .on("mouseover", () => {
-          set_color("timeline_event_" + i, hovercolor);
-          show_info("titleinfo_event_" + i);
-      })
-      .on("mouseout", () => {
-          set_color('timeline_event_' + i, appcolor);
-      })
     curr_x += e_width
   });
 
