@@ -17,23 +17,22 @@ var time = require("../util/time.js");
  * titleinfo-container (visible titleinfo)
  * */
 
+// Helper functions used when hover state changes.
+function set_color(elem_id, color) {
+  var rect = document.getElementById(elem_id).children[0];
+  rect.style.fill = color;
+};
+
+function show_info(elem_id) {
+  var title_event_box = document.getElementById(elem_id);
+  var titleinfo = document.getElementById("titleinfo-container");
+  titleinfo.innerHTML = title_event_box.innerHTML;
+  titleinfo.style.height = title_event_box.getAttribute("height");
+};
+
 function create(container) {
   // Clear element
   container.innerHTML = "";
-
-  // Animation functions for setting hover color and titlebox content
-  var elem = document.createElement("script");
-  elem.text =  'function set_color(elem_id, color) {'
-  elem.text += '  var rect = document.getElementById(elem_id).children[0];'
-  elem.text += '  rect.style.fill = color;'
-  elem.text += '};'
-  elem.text += 'function show_info(elem_id) {'
-  elem.text += '  var title_event_box = document.getElementById(elem_id);'
-  elem.text += '  var titleinfo = document.getElementById("titleinfo-container");'
-  elem.text += '  titleinfo.innerHTML = title_event_box.innerHTML;'
-  elem.text += '  titleinfo.style.height = title_event_box.getAttribute("height");'
-  elem.text += '};'
-  container.appendChild(elem);
 
   // svg for the colored timeline
   let timeline = d3.select(container).append("svg")
@@ -101,21 +100,27 @@ function update(container, events, total_duration){
   // Iterate over each app timeperiod
   let curr_x = 0;
   _.each(events, function(e, i) {
-    let eg = timeline.append("g")
-      .attr("id", "timeline_event_"+i);
-
     // Timeline rect
     var e_width = e.duration / total_duration * 100;
     var appcolor = color.getAppColor(e.appname);
     var hovercolor = Color(appcolor).darken(0.4).rgbString();
+
+    let eg = timeline.append("g")
+      .attr("id", "timeline_event_"+i);
+
     eg.append("rect")
-     .attr("x", curr_x)
-     .attr("y", 0)
-     .attr("width", e_width)
-     .attr("height", 10)
-     .attr("onmouseover", "set_color('timeline_event_"+i+"', '"+hovercolor+"'); show_info('titleinfo_event_"+i+"')")
-     .attr("onmouseout", "set_color('timeline_event_"+i+"', '"+appcolor+"')")
-     .style("fill", color.getAppColor(e.appname));
+      .attr("x", curr_x)
+      .attr("y", 0)
+      .attr("width", e_width)
+      .attr("height", 10)
+      .style("fill", color.getAppColor(e.appname))
+      .on("mouseover", () => {
+          set_color("timeline_event_" + i, hovercolor);
+          show_info("titleinfo_event_" + i);
+      })
+      .on("mouseout", () => {
+          set_color('timeline_event_' + i, appcolor);
+      })
 
     // Titleinfo box
     var infobox = titleinfo_list.append("div")

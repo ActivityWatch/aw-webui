@@ -11,6 +11,7 @@
     "test": ""
   },
   "devDependencies": {
+    "babel-cli": "^6.0.0",
     "babel-core": "^6.0.0",
     "babel-loader": "^6.0.0",
     "babel-plugin-transform-runtime": "^6.0.0",
@@ -54,7 +55,7 @@
     "exports-loader": "^0.6.2",
     "imports-loader": "^0.6.3",
     "jquery": "^3.1.0",
-    "jsdom": "^9.5.0",
+    "jsdom": "^10.1.0",
     "less-loader": "^0.6.2",
     "pug": "^2.0.0-rc.2",
     "style-loader": "^0.6.5",

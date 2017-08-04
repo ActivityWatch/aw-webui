@@ -11,5 +11,8 @@ dev:
 	npm install
 	npm run dev
 
+test:
+	babel-node test.js
+
 clean:
 	rm -rf node_modules dist
