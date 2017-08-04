@@ -1,6 +1,75 @@
 <template lang="pug">
-svg
+div
+  div#main
+    div#sequence
+    div#chart
+      div#explanation(style="visibility: hidden")
+        span#percentage
+
+  div#sidebar
+    input(type="checkbox", id="togglelegend")
+    | Legend
+    br
+    div#legend(style="visibility: hidden")
 </template>
+
+<style scoped lang="scss">
+div {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  background-color: #fff;
+  width: 960px;
+  height: 700px;
+  margin-top: 10px;
+
+  #main {
+    float: left;
+    width: 750px;
+  }
+
+  #sidebar {
+    float: right;
+    width: 100px;
+  }
+
+  #sequence {
+    width: 600px;
+    height: 70px;
+  }
+
+  #legend {
+    padding: 10px 0 0 3px;
+  }
+
+  #sequence text, #legend text {
+    font-weight: 600;
+    fill: #fff;
+  }
+
+  #chart {
+    position: relative;
+  }
+
+  #chart path {
+    stroke: #fff;
+  }
+
+  #explanation {
+    position: absolute;
+    top: 260px;
+    left: 305px;
+    width: 140px;
+    text-align: center;
+    color: #666;
+    z-index: -1;
+  }
+
+  #percentage {
+    font-size: 2.5em;
+  }
+}
+</style>
 
 <script>
 // NOTE: This is just a Vue.js component wrapper for timeline-simple.js
@@ -11,16 +80,18 @@ svg
 import sunburst from './sunburst.js';
 import coloring_types from './coloring.js';
 
-export default {
-  name: "aw-sunburst,
-  props: ['event_type', 'events'],
+let aw_sunburst = {
+  name: "aw-sunburst",
+  props: ['events'],
   mounted: function() {
     sunburst.create(this.$el);
   },
   watch: {
     "events": function() {
-      sunburst.update(this.$el, this.events, event_type);
+      sunburst.update(this.$el, this.events);
     }
   }
 }
+
+export default aw_sunburst;
 </script>

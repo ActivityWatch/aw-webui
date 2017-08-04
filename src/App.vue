@@ -21,6 +21,9 @@ div#wrapper
       icon(name="home")
       | Home
     Views
+    b-nav-item(to="/today")
+      //icon(name="database")
+      | Today
     b-nav-item(to="/buckets")
       icon(name="database")
       | Raw Data
