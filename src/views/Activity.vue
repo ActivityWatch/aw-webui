@@ -51,8 +51,8 @@ div
 
 #apptimeline-container {
     white-space: nowrap;
-    font-family: arial;
-    font-size: 10pt;
+    font-family: sans-serif;
+    font-size: 11pt;
     line-height: 1.2em;
 }
 
