@@ -18,7 +18,7 @@ div
 
   hr
 
-  svg#timeline
+  timeline-simple(:event_type="bucket.type", :events="events")
 
   hr
 
@@ -121,6 +121,8 @@ $border-color: #ddd;
 import Resources from '../resources.js';
 import timeline_simple from '../visualizations/timeline-simple.js';
 
+import TimelineSimple from '../visualizations/TimelineSimple.vue';
+
 import 'vue-awesome/icons/tags'
 import 'vue-awesome/icons/clock-o'
 import 'vue-awesome/icons/calendar-o'
@@ -128,18 +130,11 @@ import 'vue-awesome/icons/calendar-o'
 let $Bucket = Resources.$Bucket;
 let $Event = Resources.$Event;
 
-let coloring = {
-    currentwindow: {
-        key: "app",
-    },
-    afkstatus: {
-        key: "status",
-        colors: {afk: "#CCC", "not-afk": "#0F4"}
-    }
-}
-
 export default {
   name: "Bucket",
+  components: {
+    "timeline-simple": TimelineSimple,
+  },
   data: () => {
     return {
       id: String,
@@ -158,10 +153,6 @@ export default {
     getEvents: function(bucket_id) {
       $Event.get({"id": bucket_id}).then((response) => {
         this.events = response.json();
-        let el = document.getElementById("timeline")
-        timeline_simple.create(el);
-        timeline_simple.update(el, this.events, {"coloring": coloring[this.bucket.type]});
-
       });
     },
 

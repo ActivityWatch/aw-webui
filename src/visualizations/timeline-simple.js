@@ -59,7 +59,7 @@ function update(svg_el, events, options) {
   timeline.selectAll("*").remove();
 
   if (events.length <= 0){
-    set_status(container, "No data");
+    set_status(svg_el, "No data");
     return;
   }
 
