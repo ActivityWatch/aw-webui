@@ -18,7 +18,7 @@ div
 
   hr
 
-  timeline-simple(:event_type="bucket.type", :events="events")
+  aw-timeline(type="simple" :event_type="bucket.type", :events="events")
 
   hr
 
@@ -119,9 +119,8 @@ $border-color: #ddd;
 
 <script>
 import Resources from '../resources.js';
-import timeline_simple from '../visualizations/timeline-simple.js';
 
-import TimelineSimple from '../visualizations/TimelineSimple.vue';
+import Timeline from '../visualizations/Timeline.vue';
 
 import 'vue-awesome/icons/tags'
 import 'vue-awesome/icons/clock-o'
@@ -133,7 +132,7 @@ let $Event = Resources.$Event;
 export default {
   name: "Bucket",
   components: {
-    "timeline-simple": TimelineSimple,
+    "aw-timeline": Timeline,
   },
   data: () => {
     return {

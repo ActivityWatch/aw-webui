@@ -6,7 +6,8 @@ const _ = require("lodash");
 const moment = require("moment");
 
 import event_parsing from "../util/event_parsing";
-import color from "../util/color.js"
+import color from "../util/color.js";
+import coloring_types from "./coloring.js";
 
 var time = require("../util/time.js");
 
@@ -39,21 +40,11 @@ function set_status(svg_el, text){
    .attr("fill", "black")
 }
 
-function update(svg_el, events, options) {
-  /*
-   * The options object is of the format:
-   *   {
-   *     "coloring": {
-   *        "colors": {string: color},
-   *        "key": string
-   *     }
-   *   }
-   */
-
-  if(options.coloring === undefined) {
-    options.coloring = {};
+function update(svg_el, events, event_type) {
+  if(coloring_types[event_type] === undefined) {
+    console.log("");
   }
-  console.log(options);
+  let coloring = coloring_types[event_type];
 
   let timeline = d3.select(svg_el);
   timeline.selectAll("*").remove();
@@ -80,10 +71,11 @@ function update(svg_el, events, options) {
     let timestamp = moment(e.timestamp);
 
     let color_base = undefined;
-    let color_key = options.coloring.key !== undefined ? e.data[options.coloring.key] : JSON.stringify(e.data);
-    if(options.coloring.colors !== undefined) {
-      color_base = options.coloring.colors[color_key];
+    let color_key = coloring.key !== undefined ? e.data[coloring.key] : JSON.stringify(e.data);
+    if(coloring.colors !== undefined) {
+      color_base = coloring.colors[color_key];
     } else {
+      // Get one random color per value
       color_base = color.getAppColor(color_key);
     }
 
@@ -117,7 +109,7 @@ function update(svg_el, events, options) {
         .attr("x", 1)
         .attr("y", 2.5)
         .attr("pointer-events", "none")
-        .text(e.data[options.coloring.key])
+        .text(e.data[coloring.key])
     }
   });
 
