@@ -16,7 +16,11 @@ div
       td Created:
       td {{ bucket.created }}
 
-  br
+  hr
+
+  timeline-simple(:event_type="bucket.type", :events="events")
+
+  hr
 
   b-card.event-container(header="Events")
     span(slot="header")
@@ -115,6 +119,9 @@ $border-color: #ddd;
 
 <script>
 import Resources from '../resources.js';
+import timeline_simple from '../visualizations/timeline-simple.js';
+
+import TimelineSimple from '../visualizations/TimelineSimple.vue';
 
 import 'vue-awesome/icons/tags'
 import 'vue-awesome/icons/clock-o'
@@ -125,6 +132,9 @@ let $Event = Resources.$Event;
 
 export default {
   name: "Bucket",
+  components: {
+    "timeline-simple": TimelineSimple,
+  },
   data: () => {
     return {
       id: String,
