@@ -17,10 +17,12 @@
 const d3 = require("d3");
 const moment = require("moment");
 
+const time = require("../util/time.js");
+const color = require("../util/color.js");
 
 // Dimensions of sunburst.
-var width = 500;
-var height = 500;
+var width = 750;
+var height = 600;
 var radius = Math.min(width, height) / 2;
 
 // Breadcrumb dimensions: width, height, spacing, width of tip/tail.
@@ -35,7 +37,9 @@ var colors = {
   "search": "#de783b",
   "account": "#6ab975",
   "other": "#a173d1",
-  "end": "#bbbbbb"
+  "end": "#bbbbbb",
+  "afk": "#ccc",
+  "not-afk": "#3F6"
 };
 
 // Total size of all segments; we set this later, after loading the data.
@@ -84,8 +88,8 @@ function createVisualization(json) {
 
   // Turn the data into a d3 hierarchy and calculate the sums.
   var root = d3.hierarchy(json)
-      .sum(function(d) { return d.duration; });
-      //.sort(function(a, b) { return moment(a.timestamp) < moment(b.timestamp); });
+      .sum(function(d) { return d.duration; })
+      .sort(function(a, b) { return moment(a.timestamp) < moment(b.timestamp); });
   console.log(root);
 
   // For efficiency, filter nodes to keep only those large enough to see.
@@ -100,7 +104,9 @@ function createVisualization(json) {
       .attr("display", function(d) { return d.depth ? null : "none"; })
       .attr("d", arc)
       .attr("fill-rule", "evenodd")
-      .style("fill", function(d) { return colors[d.data.name]; })
+      .style("fill", function(d) {
+          return colors[d.data.data.status] || color.getAppColor(d.data.data.app);
+      })
       .style("opacity", 1)
       .on("mouseover", mouseover);
 
@@ -114,11 +120,9 @@ function createVisualization(json) {
 // Fade all but the current sequence, and show it in the breadcrumb trail.
 function mouseover(d) {
 
-  var percentage = (100 * d.value / totalSize).toPrecision(3);
-  var percentageString = percentage + "%";
-  if (percentage < 0.1) {
-    percentageString = "< 0.1%";
-  }
+  console.log(d);
+  var percentage = d.data.duration;
+  var percentageString = time.seconds_to_duration(percentage);
 
   d3.select("#percentage")
       .text(percentageString);
@@ -155,7 +159,7 @@ function mouseleave(d) {
   // Transition each segment to full opacity and then reactivate it.
   d3.selectAll("path")
       .transition()
-      .duration(1000)
+      .duration(100)
       .style("opacity", 1)
       .on("end", function() {
               d3.select(this).on("mouseover", mouseover);
@@ -207,7 +211,7 @@ function updateBreadcrumbs(nodeArray, percentageString) {
 
   entering.append("svg:polygon")
       .attr("points", breadcrumbPoints)
-      .style("fill", function(d) { return colors[d.data.name]; });
+      .style("fill", function(d) { return colors[d.data.data.status] || color.getAppColor(d.data.data.app); });
 
   entering.append("svg:text")
       .attr("x", (b.w + b.t) / 2)

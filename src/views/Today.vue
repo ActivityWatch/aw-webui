@@ -53,52 +53,39 @@ export default {
             let p = parents[i_parent];
             let p_start = moment(p.timestamp);
             let p_end = p_start.clone().add(p.duration, "seconds");
-            //console.log(p_start.format());
-            //console.log(p_end.format());
-            //console.log(p.duration);
-
-            // I have no idea why, but when I print them like
-            // this they seem to be the same event...
-            /*
-            console.log(p_start, p_end);
-            if(p_start === p_end) {
-                // Yet they aren't
-                console.warn("This should never happen")
-            }
-            */
 
             p.children = [];
             while(i_child < children.length) {
                 var e = children[i_child];
                 var e_start = moment(e.timestamp);
-                var e_end = e_start.add(e.duration, "seconds");
+                var e_end = e_start.clone().add(e.duration, "seconds");
 
-                let p1 = e_start.isAfter(p_start);
-                //let p2 = p_end.isAfter(p_start);
-                //let p3 = p_end.isAfter(e_end);
-                //console.log(p1 + ": " + (e_start - p_start));
-                //console.log(p2 + ": " + (e_start - e_end));
-                //console.log(p3 + ": " + (p_end - e_end));
+                let too_far = e_start.isAfter(p_end);
+                let within_parent = e_end.isBefore(p_end);
 
                 // TODO: This isn't correct, yet
-                if(p1 /*&& p2 && p3*/) {
+                if(too_far) {
+                  // Events are ahead
+                  console.log("Too far ahead: " + i_child);
+                  break;
+                } else if(within_parent /*&& p2 && p3*/) {
                   console.log("Added relation: " + i_child);
                   p.children = _.concat(p.children, e);
                   i_child++;
                 } else {
-                  console.log("Skipped: " + i_child);
+                  // Events are behind
+                  console.log("Too far behind: " + i_child);
                   i_child++;
-                  break;
                 }
             }
         }
 
         // Build the root node
+        let m_start = moment(_.first(parents).timestamp)
+        let m_end = moment(_.tail(parents).timestamp)
         return {
           "timestamp": _.first(parents).timestamp,
-          // TODO: This should be the time between the first and last events,
-          //       not the durations summed.
-          "duration": _.sum(_.map(parents, (e) => e.duration)),
+          "duration": moment.duration(m_end.diff(m_end)).asSeconds(),
           "data": {"title": "ROOT"},
           "children": parents
         }

@@ -1,10 +1,12 @@
 <template lang="pug">
-div
+div#root
   div#main
     div#sequence
     div#chart
       div#explanation(style="visibility: hidden")
         span#percentage
+        br
+        | of visits begin with this sequence of pages
 
   div#sidebar
     input(type="checkbox", id="togglelegend")
@@ -14,11 +16,10 @@ div
 </template>
 
 <style scoped lang="scss">
-div {
+#root {
   font-family: 'Open Sans', sans-serif;
   font-size: 12px;
   font-weight: 400;
-  background-color: #fff;
   width: 960px;
   height: 700px;
   margin-top: 10px;
@@ -62,7 +63,7 @@ div {
     width: 140px;
     text-align: center;
     color: #666;
-    z-index: -1;
+    z-index: 10; // might not be needed
   }
 
   #percentage {
