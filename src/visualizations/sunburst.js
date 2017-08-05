@@ -32,14 +32,8 @@ var b = {
 
 // Mapping of step names to colors.
 var colors = {
-  "home": "#5687d1",
-  "product": "#7b615c",
-  "search": "#de783b",
-  "account": "#6ab975",
-  "other": "#a173d1",
-  "end": "#bbbbbb",
-  "afk": "#ccc",
-  "not-afk": "#3F6"
+  "afk": "#EEE",
+  "not-afk": "#0F4"
 };
 
 // Total size of all segments; we set this later, after loading the data.
@@ -61,8 +55,23 @@ function create(el) {
       .size([2 * Math.PI, radius * radius]);
 
   arc = d3.arc()
-      .startAngle(function(d) { return d.x0; })
-      .endAngle(function(d) { return d.x1; })
+      .startAngle(function(d) {
+          // Ugly hack...
+          let diff = 0;
+          if(d.depth >= 2) {
+              diff = d.x0 - d.parent.x0;
+          }
+          return d.x0 + diff;
+      })
+      .endAngle(function(d) {
+          // Ugly hack...
+          let diff = 0;
+          if(d.depth >= 2) {
+              diff = d.x0 - d.parent.x0;
+              diff += 2 * (d.x1 - d.x0);
+          }
+          return d.x1 + diff;
+      })
       .innerRadius(function(d) { return Math.sqrt(d.y0); })
       .outerRadius(function(d) { return Math.sqrt(d.y1); });
 }
@@ -86,6 +95,8 @@ function createVisualization(json) {
       .attr("r", radius)
       .style("opacity", 0);
 
+  let m_start = moment(json.timestamp);
+
   // Turn the data into a d3 hierarchy and calculate the sums.
   var root = d3.hierarchy(json)
       // TODO: If we want a 12/24h clock, this has to change.
@@ -96,13 +107,19 @@ function createVisualization(json) {
           // But it was slow:
           //   https://stackoverflow.com/q/14677060/965332)
           return a.data.timestamp < b.data.timestamp ? -1 : (a.data.timestamp > b.data.timestamp ? 1 : 0);
+      })
+      .each(function(d) {
+          // TODO: Potential replacement for sum. Broken, needs fixing.
+          //let diff_ms = moment(d.data.timestamp).diff(m_start, 'seconds', true);
+          //d.x0 = diff_ms;
+          console.log(d.value);
       });
   console.log(root);
 
   // For efficiency, filter nodes to keep only those large enough to see.
   var nodes = partition(root).descendants()
       .filter(function(d) {
-          return (d.x1 - d.x0 > 0.002); // 0.005 radians = 0.29 degrees
+          return (d.x1 - d.x0 > 0.000); // 0.005 radians = 0.29 degrees
       });
 
   var path = vis.data([json]).selectAll("path")
