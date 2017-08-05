@@ -15,11 +15,12 @@
 // limitations under the License.
 
 const d3 = require("d3");
+const moment = require("moment");
 
 
 // Dimensions of sunburst.
-var width = 750;
-var height = 600;
+var width = 500;
+var height = 500;
 var radius = Math.min(width, height) / 2;
 
 // Breadcrumb dimensions: width, height, spacing, width of tip/tail.
@@ -40,33 +41,31 @@ var colors = {
 // Total size of all segments; we set this later, after loading the data.
 var totalSize = 0;
 
+var vis;
+var partition;
+var arc;
+
 function create(el) {
-  var vis = d3.select("#chart").append("svg:svg")
+  vis = d3.select("#chart").append("svg:svg")
       .attr("width", width)
       .attr("height", height)
       .append("svg:g")
       .attr("id", "container")
       .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
-  var partition = d3.partition()
+  partition = d3.partition()
       .size([2 * Math.PI, radius * radius]);
 
-  var arc = d3.arc()
+  arc = d3.arc()
       .startAngle(function(d) { return d.x0; })
       .endAngle(function(d) { return d.x1; })
       .innerRadius(function(d) { return Math.sqrt(d.y0); })
       .outerRadius(function(d) { return Math.sqrt(d.y1); });
 }
 
-function update(el, events) {
-  // Use d3.text and d3.csvParseRows so that we do not need to have a header
-  // row, and can receive the csv as an array of arrays.
-  //d3.text("visit-sequences.csv", function(text) {
-  //  var csv = d3.csvParseRows(text);
-  //  var json = buildHierarchy(csv);
-  //  createVisualization(json);
-  //});
-  console.warn("Not implemented");
+function update(el, hierarchy) {
+  createVisualization(hierarchy);
+  //console.warn("Not implemented");
 }
 
 // Main function to draw and set up the visualization, once we have the data.
@@ -85,8 +84,9 @@ function createVisualization(json) {
 
   // Turn the data into a d3 hierarchy and calculate the sums.
   var root = d3.hierarchy(json)
-      .sum(function(d) { return d.size; })
-      .sort(function(a, b) { return b.value - a.value; });
+      .sum(function(d) { return d.duration; });
+      //.sort(function(a, b) { return moment(a.timestamp) < moment(b.timestamp); });
+  console.log(root);
 
   // For efficiency, filter nodes to keep only those large enough to see.
   var nodes = partition(root).descendants()

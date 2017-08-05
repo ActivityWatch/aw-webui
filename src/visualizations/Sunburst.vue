@@ -82,13 +82,13 @@ import coloring_types from './coloring.js';
 
 let aw_sunburst = {
   name: "aw-sunburst",
-  props: ['events'],
+  props: ['hierarchy'],
   mounted: function() {
     sunburst.create(this.$el);
   },
   watch: {
-    "events": function() {
-      sunburst.update(this.$el, this.events);
+    "hierarchy": function() {
+      sunburst.update(this.$el, this.hierarchy);
     }
   }
 }
