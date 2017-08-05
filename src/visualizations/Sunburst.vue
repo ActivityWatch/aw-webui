@@ -1,12 +1,14 @@
 <template lang="pug">
-div#root
+div.sunburst
   div#main
     div#sequence
     div#chart
       div#explanation(style="visibility: hidden")
-        span#percentage
-        br
-        | of visits begin with this sequence of pages
+        div#date
+        div#time
+        div#duration
+        div#data(style="white-space: pre-line;")
+        //| of visits begin with this sequence of pages
 
   div#sidebar
     input(type="checkbox", id="togglelegend")
@@ -16,7 +18,7 @@ div#root
 </template>
 
 <style scoped lang="scss">
-#root {
+.sunburst {
   font-family: 'Open Sans', sans-serif;
   font-size: 12px;
   font-weight: 400;
@@ -66,8 +68,20 @@ div#root
     z-index: 10; // might not be needed
   }
 
-  #percentage {
-    font-size: 2.5em;
+  #date {
+    font-size: 1em;
+  }
+
+  #time {
+    font-size: 2em;
+  }
+
+  #duration {
+    font-size: 1.5em;
+  }
+
+  #data {
+    font-size: 1em;
   }
 }
 </style>

@@ -88,14 +88,21 @@ function createVisualization(json) {
 
   // Turn the data into a d3 hierarchy and calculate the sums.
   var root = d3.hierarchy(json)
+      // TODO: If we want a 12/24h clock, this has to change.
       .sum(function(d) { return d.duration; })
-      .sort(function(a, b) { return moment(a.timestamp) < moment(b.timestamp); });
+      .sort(function(a, b) {
+          // First I used .localeCompare here:
+          //   return a.data.timestamp.localeCompare(b.data.timestamp);
+          // But it was slow:
+          //   https://stackoverflow.com/q/14677060/965332)
+          return a.data.timestamp < b.data.timestamp ? -1 : (a.data.timestamp > b.data.timestamp ? 1 : 0);
+      });
   console.log(root);
 
   // For efficiency, filter nodes to keep only those large enough to see.
   var nodes = partition(root).descendants()
       .filter(function(d) {
-          return (d.x1 - d.x0 > 0.005); // 0.005 radians = 0.29 degrees
+          return (d.x1 - d.x0 > 0.002); // 0.005 radians = 0.29 degrees
       });
 
   var path = vis.data([json]).selectAll("path")
@@ -119,26 +126,34 @@ function createVisualization(json) {
 
 // Fade all but the current sequence, and show it in the breadcrumb trail.
 function mouseover(d) {
-
   console.log(d);
-  var percentage = d.data.duration;
-  var percentageString = time.seconds_to_duration(percentage);
 
-  d3.select("#percentage")
-      .text(percentageString);
+  let m = moment(d.data.timestamp);
+  d3.select("#date")
+      .text(m.format("YYYY-MM-DD"));
+  d3.select("#time")
+      .text(m.format("HH:mm:ss"));
+
+  let durationString = time.seconds_to_duration(d.data.duration)
+  d3.select("#duration")
+      .text(durationString);
+
+  d3.select("#data")
+      .text(_.reduce(d.data.data, (a, b) => { return a + "\n" + b; }));
 
   d3.select("#explanation")
       .style("visibility", "");
 
   var sequenceArray = d.ancestors().reverse();
   sequenceArray.shift(); // remove root node from the array
-  updateBreadcrumbs(sequenceArray, percentageString);
+  updateBreadcrumbs(sequenceArray, durationString);
 
   // Fade all the segments.
   d3.selectAll("path")
       .style("opacity", 0.3);
 
   // Then highlight only those that are an ancestor of the current segment.
+  // FIXME: This currently makes all other svg paths on the page faded as well
   vis.selectAll("path")
       .filter(function(node) {
                 return (sequenceArray.indexOf(node) >= 0);
@@ -148,7 +163,6 @@ function mouseover(d) {
 
 // Restore everything to full opacity when moving off the visualization.
 function mouseleave(d) {
-
   // Hide the breadcrumb trail
   d3.select("#trail")
       .style("visibility", "hidden");
@@ -158,12 +172,12 @@ function mouseleave(d) {
 
   // Transition each segment to full opacity and then reactivate it.
   d3.selectAll("path")
-      .transition()
-      .duration(100)
-      .style("opacity", 1)
-      .on("end", function() {
-              d3.select(this).on("mouseover", mouseover);
-            });
+    .transition()
+    .duration(100)
+    .style("opacity", 1)
+    .on("end", function() {
+                 d3.select(this).on("mouseover", mouseover);
+               });
 
   d3.select("#explanation")
       .style("visibility", "hidden");
