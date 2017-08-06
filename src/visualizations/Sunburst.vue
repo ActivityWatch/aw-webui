@@ -3,12 +3,16 @@ div.sunburst
   div#main
     div#sequence
     div#chart
-      div#explanation(style="visibility: hidden")
-        div#date
-        div#time
-        div#duration
-        div#data(style="white-space: pre-line;")
-        //| of visits begin with this sequence of pages
+      div#explanation
+        div#base
+          | Hover to inspect
+        div#hover(style="visibility: hidden")
+          div#date
+          div#title
+          div#time
+          div#duration
+          div#data(style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;")
+          //| of visits begin with this sequence of pages
 
   div#sidebar
     input(type="checkbox", id="togglelegend")
@@ -66,22 +70,34 @@ div.sunburst
     text-align: center;
     color: #666;
     z-index: 10; // might not be needed
-  }
 
-  #date {
-    font-size: 1em;
-  }
+    #base {
+        color: #DDD;
+        font-size: 2em;
+    }
 
-  #time {
-    font-size: 2em;
-  }
+    #hover {
+      #date {
+        font-size: 0.8em;
+      }
 
-  #duration {
-    font-size: 1.5em;
-  }
+      #time {
+        font-size: 1em;
+      }
 
-  #data {
-    font-size: 1em;
+      #title {
+        font-size: 2em;
+        font-weight: bold;
+      }
+
+      #duration {
+        font-size: 1em;
+      }
+
+      #data {
+        font-size: 1em;
+      }
+    }
   }
 }
 </style>

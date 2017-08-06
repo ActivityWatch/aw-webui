@@ -98,6 +98,7 @@ export default {
         }
 
         // Build the root node
+        console.log(parents);
         let m_start = moment(_.first(parents).timestamp)
         let m_end = moment(_.tail(parents).timestamp)
         let duration = (m_end - m_start) / 1000;
@@ -115,8 +116,18 @@ export default {
         // TODO: Merge window events with same title and assign the title events as children
     }
 
-    let start = moment().startOf('day');
-    let end = start.clone().endOf('day');
+    // TODO: There can currently be a gap after 00:00, we need to "overquery"
+    //       to get events that start before 00:00 but ends until after 00:00.
+    let now = moment();
+    let start = now.clone().startOf('day').subtract(0, "days");
+    let end = now.clone().endOf('day');
+
+    // This seems to be needed, for some reason...
+    start = start.subtract(start.utcOffset(), "minutes");
+    end = end.subtract(end.utcOffset(), "minutes");
+
+    console.log(start.format());
+    console.log(end.format());
 
     this.getEvents(bucket_id_afk, start.format(), end.format()).then((events_afk) => {
         this.getEvents(bucket_id_window, start.format(), end.format()).then((events_window) => {

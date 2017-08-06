@@ -65,8 +65,38 @@ function update(el, hierarchy) {
   createVisualization(hierarchy);
 }
 
+function drawClock(h) {
+  let a = 2 * Math.PI * (h / 24) - (1/2 * Math.PI);
+  let xn = Math.cos(a);
+  let yn = Math.sin(a);
+
+  vis.append("line")
+     .attr("x1", 170 * xn)
+     .attr("y1", 170 * yn)
+     .attr("x2", 155 * xn)
+     .attr("y2", 155 * yn)
+     .style("stroke", "#CCC")
+     .style("stroke-width", 1);
+
+
+  vis.append("text")
+     .text(moment({hours: h}).format("HH:mm"))
+     .attr("text-anchor", "middle")
+     .attr("font-size", "1.2em")
+     //.attr("font-weight", "bold")
+     .style("fill", "#999")
+     .attr("x", 130 * xn)
+     .attr("y", 5 + 140 * yn);
+
+}
+
 // Main function to draw and set up the visualization, once we have the data.
 function createVisualization(json) {
+
+    drawClock(0);
+    drawClock(6);
+    drawClock(12);
+    drawClock(18);
 
   // Basic setup of page elements.
   initializeBreadcrumbTrail();
@@ -96,8 +126,8 @@ function createVisualization(json) {
       let loc_start_sec = moment(d.data.timestamp).diff(root_start, "seconds", true);
       let loc_end_sec = moment(d.data.timestamp).add(d.data.duration, "seconds").diff(root_start, "seconds", true);
 
-      let loc_start = loc_start_sec / ((root_end - root_start) / 1000);
-      let loc_end = loc_end_sec / ((root_end - root_start) / 1000);
+      let loc_start = Math.max(0, loc_start_sec / ((root_end - root_start) / 1000));
+      let loc_end = Math.min(1, loc_end_sec / ((root_end - root_start) / 1000));
 
       d.x0 = 2 * Math.PI * loc_start;
       d.x1 = 2 * Math.PI * loc_end;
@@ -123,7 +153,8 @@ function createVisualization(json) {
           return colors[d.data.data.status] || color.getAppColor(d.data.data.app);
       })
       .style("opacity", 1)
-      .on("mouseover", mouseover);
+      .on("mouseover", mouseover)
+      .on("click", mouseclick);
 
   // Add the mouseleave handler to the bounding circle.
   d3.select("#container").on("mouseleave", mouseleave);
@@ -132,8 +163,12 @@ function createVisualization(json) {
   totalSize = path.datum().value;
  };
 
-// Fade all but the current sequence, and show it in the breadcrumb trail.
-function mouseover(d) {
+function mouseclick(d) {
+  console.log("Clicked");
+  console.log(d);
+}
+
+function showInfo(d) {
   let m = moment(d.data.timestamp);
   d3.select("#date")
       .text(m.format("YYYY-MM-DD"));
@@ -144,15 +179,25 @@ function mouseover(d) {
   d3.select("#duration")
       .text(durationString);
 
-  d3.select("#data")
-      .text(_.reduce(d.data.data, (a, b) => { return a + "\n" + b; }));
+  d3.select("#title")
+      .text(d.data.data.app || d.data.data.status);
 
-  d3.select("#explanation")
+  d3.select("#data")
+      .text(d.data.data.title || "");
+
+  d3.select("#explanation > #base")
+      .style("display", "none");
+  d3.select("#explanation > #hover")
       .style("visibility", "");
+}
+
+// Fade all but the current sequence, and show it in the breadcrumb trail.
+function mouseover(d) {
+  showInfo(d);
 
   var sequenceArray = d.ancestors().reverse();
   sequenceArray.shift(); // remove root node from the array
-  updateBreadcrumbs(sequenceArray, durationString);
+  updateBreadcrumbs(sequenceArray, time.seconds_to_duration(d.data.duration));
 
   // Fade all the segments.
   d3.selectAll("path")
@@ -185,7 +230,9 @@ function mouseleave(d) {
                  d3.select(this).on("mouseover", mouseover);
                });
 
-  d3.select("#explanation")
+  d3.select("#explanation > #base")
+      .style("display", "");
+  d3.select("#explanation > #hover")
       .style("visibility", "hidden");
 }
 
@@ -216,12 +263,12 @@ function breadcrumbPoints(d, i) {
 }
 
 // Update the breadcrumb trail to show the current sequence and percentage.
-function updateBreadcrumbs(nodeArray, percentageString) {
+function updateBreadcrumbs(nodeArray, valueString) {
 
   // Data join; key function combines name and depth (= position in sequence).
   var trail = d3.select("#trail")
       .selectAll("g")
-      .data(nodeArray, function(d) { return d.data.name + d.depth; });
+      .data(nodeArray, function(d) { return d.data.timestamp + d.depth; });
 
   // Remove exiting nodes.
   trail.exit().remove();
@@ -238,7 +285,7 @@ function updateBreadcrumbs(nodeArray, percentageString) {
       .attr("y", b.h / 2)
       .attr("dy", "0.35em")
       .attr("text-anchor", "middle")
-      .text(function(d) { return d.data.name; });
+      .text(function(d) { return d.data.data.status || d.data.data.app; });
 
   // Merge enter and update selections; set position for all nodes.
   entering.merge(trail).attr("transform", function(d, i) {
@@ -251,7 +298,7 @@ function updateBreadcrumbs(nodeArray, percentageString) {
       .attr("y", b.h / 2)
       .attr("dy", "0.35em")
       .attr("text-anchor", "middle")
-      .text(percentageString);
+      .text(valueString);
 
   // Make the breadcrumb trail visible, if it's hidden.
   d3.select("#trail")
