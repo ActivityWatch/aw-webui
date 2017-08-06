@@ -79,15 +79,15 @@ export default {
                 // TODO: This isn't correct, yet
                 if(before_parent) {
                   // Children is behind parent
-                  console.log("Too far behind: " + i_child);
+                  //console.log("Too far behind: " + i_child);
                   i_child++;
                 } else if(within_parent) {
-                  console.log("Added relation: " + i_child);
+                  //console.log("Added relation: " + i_child);
                   p.children = _.concat(p.children, e);
                   i_child++;
                 } else if(after_parent) {
                   // Children is ahead of parent
-                  console.log("Too far ahead: " + i_child);
+                  //console.log("Too far ahead: " + i_child);
                   break;
                 } else {
                   // TODO: Split events when this happens
@@ -100,27 +100,29 @@ export default {
         // Build the root node
         let m_start = moment(_.first(parents).timestamp)
         let m_end = moment(_.tail(parents).timestamp)
+        let duration = (m_end - m_start) / 1000;
         return {
           "timestamp": _.first(parents).timestamp,
           // TODO: If we want a 12/24h clock, this has to change
-          "duration": moment.duration(m_end.diff(m_end)).asSeconds(),
+          "duration": duration,
           "data": {"title": "ROOT"},
           "children": parents
         }
 
     }
 
+    function createWindowHierachy(events) {
+        // TODO: Merge window events with same title and assign the title events as children
+    }
+
     let start = moment().startOf('day');
     let end = start.clone().endOf('day');
 
     this.getEvents(bucket_id_afk, start.format(), end.format()).then((events_afk) => {
-        console.log(events_afk);
-        return this.getEvents(bucket_id_window, start.format(), end.format()).then((events_window) => {
-            return buildHierarchy(events_afk, events_window);
+        this.getEvents(bucket_id_window, start.format(), end.format()).then((events_window) => {
+            // TODO: Implement and use createWindowHierarchy
+            this.hierarchy = buildHierarchy(events_afk, events_window);
         });
-    }).then((hierarchy) => {
-        console.log(hierarchy);
-        this.hierarchy = hierarchy;
     });
   },
 }

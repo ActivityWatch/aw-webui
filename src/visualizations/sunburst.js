@@ -55,30 +55,14 @@ function create(el) {
       .size([2 * Math.PI, radius * radius]);
 
   arc = d3.arc()
-      .startAngle(function(d) {
-          // Ugly hack...
-          let diff = 0;
-          if(d.depth >= 2) {
-              diff = d.x0 - d.parent.x0;
-          }
-          return d.x0 + diff;
-      })
-      .endAngle(function(d) {
-          // Ugly hack...
-          let diff = 0;
-          if(d.depth >= 2) {
-              diff = d.x0 - d.parent.x0;
-              diff += 2 * (d.x1 - d.x0);
-          }
-          return d.x1 + diff;
-      })
+      .startAngle(function(d) { return d.x0; })
+      .endAngle(function(d) { return d.x1; })
       .innerRadius(function(d) { return Math.sqrt(d.y0); })
       .outerRadius(function(d) { return Math.sqrt(d.y1); });
 }
 
 function update(el, hierarchy) {
   createVisualization(hierarchy);
-  //console.warn("Not implemented");
 }
 
 // Main function to draw and set up the visualization, once we have the data.
@@ -95,32 +79,39 @@ function createVisualization(json) {
       .attr("r", radius)
       .style("opacity", 0);
 
-  let m_start = moment(json.timestamp);
-
   // Turn the data into a d3 hierarchy and calculate the sums.
-  var root = d3.hierarchy(json)
-      // TODO: If we want a 12/24h clock, this has to change.
-      .sum(function(d) { return d.duration; })
-      .sort(function(a, b) {
-          // First I used .localeCompare here:
-          //   return a.data.timestamp.localeCompare(b.data.timestamp);
-          // But it was slow:
-          //   https://stackoverflow.com/q/14677060/965332)
-          return a.data.timestamp < b.data.timestamp ? -1 : (a.data.timestamp > b.data.timestamp ? 1 : 0);
-      })
-      .each(function(d) {
-          // TODO: Potential replacement for sum. Broken, needs fixing.
-          //let diff_ms = moment(d.data.timestamp).diff(m_start, 'seconds', true);
-          //d.x0 = diff_ms;
-          console.log(d.value);
-      });
-  console.log(root);
+  var root = d3.hierarchy(json);
+
+  // TODO: Make this a checkbox in the UI
+  let show_whole_day = false;
+
+  let root_start = moment(json.timestamp);
+  let root_end = moment(json.timestamp).add(json.duration, "seconds");
+  if(show_whole_day) {
+    root_start = root_start.startOf("day");
+    root_end = root_end.endOf("day");
+  }
+
+  var nodes = partition(root).each(function(d) {
+      let loc_start_sec = moment(d.data.timestamp).diff(root_start, "seconds", true);
+      let loc_end_sec = moment(d.data.timestamp).add(d.data.duration, "seconds").diff(root_start, "seconds", true);
+
+      let loc_start = loc_start_sec / ((root_end - root_start) / 1000);
+      let loc_end = loc_end_sec / ((root_end - root_start) / 1000);
+
+      d.x0 = 2 * Math.PI * loc_start;
+      d.x1 = 2 * Math.PI * loc_end;
+    }).descendants()
 
   // For efficiency, filter nodes to keep only those large enough to see.
-  var nodes = partition(root).descendants()
-      .filter(function(d) {
-          return (d.x1 - d.x0 > 0.000); // 0.005 radians = 0.29 degrees
-      });
+  nodes = nodes.filter(function(d) {
+    // 0.005 radians = 0.29 degrees
+    // If show_whole_day:
+    //   0.0044 rad = 1min
+    //   0.0011 rad = 15s
+    let threshold = 0.001;
+    return (d.x1 - d.x0 > threshold);
+  });
 
   var path = vis.data([json]).selectAll("path")
       .data(nodes)
@@ -143,8 +134,6 @@ function createVisualization(json) {
 
 // Fade all but the current sequence, and show it in the breadcrumb trail.
 function mouseover(d) {
-  console.log(d);
-
   let m = moment(d.data.timestamp);
   d3.select("#date")
       .text(m.format("YYYY-MM-DD"));
