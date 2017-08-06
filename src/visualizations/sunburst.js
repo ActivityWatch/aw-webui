@@ -83,13 +83,13 @@ function createVisualization(json) {
   var root = d3.hierarchy(json);
 
   // TODO: Make this a checkbox in the UI
-  let show_whole_day = false;
+  let show_whole_day = true;
 
   let root_start = moment(json.timestamp);
   let root_end = moment(json.timestamp).add(json.duration, "seconds");
   if(show_whole_day) {
     root_start = root_start.startOf("day");
-    root_end = root_end.endOf("day");
+    root_end = root_start.clone().endOf("day");
   }
 
   var nodes = partition(root).each(function(d) {
