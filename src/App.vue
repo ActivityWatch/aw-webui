@@ -15,51 +15,50 @@ div#wrapper
             | Not connected
             icon(name="times-circle")
 
-      //usermenu
+  div.container.aw-container.rounded-bottom
+    // TODO: Refactor into Mainmenu component
+    b-nav.aw-navbar
+      b-nav-item(to="/")
+        icon(name="home")
+        | Home
+      b-nav-item-dropdown
+        template(slot="button-content")
+          icon(name="clock-o")
+          | Activity
+        b-dropdown-item(v-if="activity_hosts.length <= 0", disabled)
+          | No activity reports available
+          br
+          small Make sure you have both an afk and window watcher running
+        b-dropdown-item(v-for="host in activity_hosts", :key="host", :to="'/activity/' + host")
+          | {{ host }}
+      b-nav-item(to="/buckets")
+        icon(name="database")
+        | Raw Data
+      //li
+        router-link(to="/log")
+          // TODO: Add icon
+          | Server Log
 
-  // TODO: Refactor into Mainmenu component
-  b-nav.container.aw-container.aw-navbar
-    b-nav-item(to="/")
-      icon(name="home")
-      | Home
-    b-nav-item-dropdown
-      template(slot="button-content")
-        icon(name="clock-o")
-        | Activity
-      b-dropdown-item(v-if="activity_hosts.length <= 0", disabled)
-        | No activity reports available
-        br
-        small Make sure you have both an afk and window watcher running
-      b-dropdown-item(v-for="host in activity_hosts", :key="host", :to="'/activity/' + host")
-        | {{ host }}
-    b-nav-item(to="/buckets")
-      icon(name="database")
-      | Raw Data
-    //li
-      router-link(to="/log")
-        // TODO: Add icon
-        | Server Log
   div.container.aw-container#content
       router-view
 
   div.container(style="margin-top: 1rem; margin-bottom: 1rem; color: #555")
-    | Made with ❤ by the &nbsp;
+    | Made with ❤ by the&nbsp;
     a(href="http://activitywatch.net/contributors/")
       | ActivityWatch developers
 
     div(style="float: right; text-align: right;")
-      div
-        | Follow ActivityWatch:
-        a.outlinks(href="https://github.com/ActivityWatch/activitywatch")
-          //i.fa.fa-github
-          | GitHub
-        a.outlinks(href="https://twitter.com/ActivityWatchIt")
-          //i.fa.fa-twitter
-          | Twitter
-      div
-        | Something not working as it should?
-        a(href="https://github.com/ActivityWatch/activitywatch/issues/new")
-          |  File an issue.
+      | Follow ActivityWatch:
+      a.outlinks(href="https://github.com/ActivityWatch/activitywatch")
+        icon(name="github")
+        | GitHub
+      a.outlinks(href="https://twitter.com/ActivityWatchIt")
+        icon(name="twitter")
+        | Twitter
+      br
+      | Something not working as it should?
+      a(href="https://github.com/ActivityWatch/activitywatch/issues/new")
+        |  File an issue.
 </template>
 
 <script>
@@ -70,6 +69,8 @@ import 'vue-awesome/icons/database';
 import 'vue-awesome/icons/check-circle';
 import 'vue-awesome/icons/times-circle';
 import 'vue-awesome/icons/clock-o';
+import 'vue-awesome/icons/twitter'
+import 'vue-awesome/icons/github'
 
 import Usermenu from './components/Usermenu.vue';
 
@@ -139,14 +140,17 @@ export default {
 $bgcolor: #FFF;
 $textcolor: #000;
 
-body {
+html, body, button {
   color: $textcolor;
-  font-family: 'Varela Round', sans-serif;
+  font-family: 'Varela Round', sans-serif !important;
+}
+
+body {
   background-color: #EEE;
 }
 
 .fa-icon {
-  margin: 2px;
+  margin-top: -0.125em;
   margin-left: 4px;
   margin-right: 4px;
   vertical-align: middle;
@@ -157,11 +161,10 @@ body {
 }
 
 .aw-navbar {
+    margin-left: -1em;
+    margin-right: -1em;
     border: 0px solid #DDD;
     border-bottom-width: 1px;
-    min-height: 20px;
-    margin-bottom: 0;
-    padding: 0;
 
     li > a {
         padding: 10px 15px 10px 15px;
@@ -220,10 +223,13 @@ body {
   background-color: #FFF;
   border: 1px solid #CCC;
   border-top: 0;
+}
+
+.rounded-bottom {
   border-radius: 0px 0px 5px 5px;
 }
 
 #content {
-    padding-top: 20px;
+  padding-top: 2em;
 }
 </style>

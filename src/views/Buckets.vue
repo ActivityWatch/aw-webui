@@ -7,15 +7,15 @@ div
     br
     small #[b Note:] This is currently not as easy as we want it to be, so some familiarity with programming is currently needed to run most of them.
 
-  b-card.bucket-card(v-for="bucket in buckets", :key="bucket.id", :header="bucket.id", :is-open="true")
+  //b-card-group(columns=true)
+  b-card.bucket-card(v-for="bucket in buckets", :key="bucket.id", :header="bucket.id")
     b-button-toolbar
-      router-link(:to="'/buckets/' + bucket.id")
-        b-button
+      b-button-group(size="sm", class="mx-1")
+        b-button(variant="primary", :to="'/buckets/' + bucket.id")
           | Open bucket
-      b-tooltip(content="Export all events from this bucket to JSON")
-        router-link(:to="'/api/0/buckets/' + bucket.id + '/events?limit=-1'")
-          b-button
-            | Export as JSON
+      b-button-group(size="sm", class="mx-1")
+        b-button(:href="'/api/0/buckets/' + bucket.id + '/events?limit=-1'", title="Export all events from this bucket to JSON")
+          | Export as JSON
     small.bucket-last-updated(v-if="bucket.last_updated", slot="footer")
       span
         | Last updated:
@@ -24,17 +24,27 @@ div
 
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
+// This won't work if scoped
+.bucket-card {
+  .card-header, .card-footer {
+    padding: 0.5em 0.75em 0.5em 0.75em;
+  }
 
+  .card-block {
+    padding: 0.5em;
+  }
+}
+</style>
+
+<style scoped lang="scss">
 .bucket-card {
   margin-bottom: 1em;
 }
 
-.bucket-last-updated{
-    font-size: 10pt;
+.bucket-last-updated {
     color: #666;
 }
-
 </style>
 
 <script>
