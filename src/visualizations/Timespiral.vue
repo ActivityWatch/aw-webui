@@ -10,7 +10,7 @@ svg
 import coloring_types from './coloring.js';
 
 export default {
-  name: "aw-timespiral,
+  name: "aw-timespiral",
   props: ['type', 'event_type', 'events'],
   mounted: function() {
     if(self.type !== undefined) {
