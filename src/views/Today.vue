@@ -195,7 +195,7 @@ export default {
             //events_window = _.filter(events_window, (e) => e.duration > 10);
 
             //events_afk = chunkHierarchy(events_afk, "status");
-            events_window = chunkHierarchy2(events_window, "app");
+            //events_window = chunkHierarchy(events_window, "app");
             this.hierarchy = buildHierarchy(events_afk, events_window);
         });
     });
