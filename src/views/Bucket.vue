@@ -13,11 +13,15 @@ div
       td Hostname:
       td {{ bucket.hostname }}
     tr
-      td Created:
-      td {{ bucket.created }}
+      td
+        small Created:
+      td
+        small {{ bucket.created }}
 
   hr
 
+  b-alert(variant="warning" show)
+    | This timeline is a work in progress. It only shows the last 100 events. Hover to get details.
   aw-timeline(type="simple" :event_type="bucket.type", :events="events")
 
   hr

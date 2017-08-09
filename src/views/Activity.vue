@@ -1,10 +1,15 @@
 <template lang="pug">
 div
-  h2 Window Activity {{ datestr }}
+  h2 Window Activity for {{ dateShort }}
 
-  p {{ host }}
+  p Host: {{ host }}
 
-  p(style="color: red;") {{ errormsg }}
+  b-alert(variant="danger" :show="errormsg.length > 0")
+    | {{ errormsg }}
+
+  b-alert(show)
+    | Check out the new today view! Currently in alpha.
+    b-button(style="float: right" :to="'/today/' + host" size="sm" variant="info") Open today view
 
   h4(style="color: red;")
     | This is currently work in progress and is known to have issues (such as
@@ -16,10 +21,10 @@ div
     | .
 
   b-button-group
-    b-button(v-on:click="queryDate(time.get_prev_day(date))")
+    b-button(:to="'/activity/' + host + '/' + previousDay()")
       icon(name="arrow-left")
       |  Previous day
-    b-button(v-on:click="queryDate(time.get_next_day(date))")
+    b-button(:to="'/activity/' + host + '/' + nextDay()", :disabled="nextDay() > today")
       |  Next day
       icon(name="arrow-right")
   b-button(v-on:click="query()", style="margin-left: 1rem;")
@@ -30,7 +35,7 @@ div
 
   h4 Summary
 
-  p Total time: {{ time.seconds_to_duration(duration) }}
+  p Total time: {{ readableDuration }}
 
   div#appsummary-container
 
@@ -42,7 +47,7 @@ div
 
   hr
 
-  p Showing activity from {{ date }} until 24 hours later
+  p Showing activity from {{ datestart }} until 24 hours later
 
   p Events queried: {{ eventcount }}
 
@@ -74,14 +79,8 @@ export default {
   name: "Activity",
   data: () => {
     return {
-      // Libraries
-      time: time,
-      // Init variables
-      host: "",
-      testing: false,
-      // Date variables
-      date: null,
-      datestr: "",
+      today: moment().format("YYYY-MM-DD"),
+
       // Query variables
       duration: "",
       eventcount: 0,
@@ -92,7 +91,6 @@ export default {
   watch: {
     '$route': function(to, from) {
       console.log("Route changed")
-      this.host = this.$route.params.host;
       this.query();
     },
 
@@ -101,15 +99,30 @@ export default {
     }
   },
 
-  mounted: function() {
-    // Set host
-    this.host = this.$route.params.host;
-
-    // Date
-    var date = this.$route.params.date;
-    if (date == undefined){
-      date = new Date().toISOString();
+  computed: {
+    readableDuration: function() {
+      return time.seconds_to_duration(this.duration);
+    },
+    host: function() {
+      return this.$route.params.host;
+    },
+    date: function() {
+      return this.$route.params.date || new Date().toISOString();
+    },
+    datestart: function() {
+      // Returns a
+      console.log(this.date);
+      let datestart = moment(this.date).startOf('day').format();
+      console.log(datestart);
+      return datestart;
+    },
+    dateShort: function() {
+      return moment(this.date).format("YYYY-MM-DD");
     }
+
+  },
+
+  mounted: function() {
     // Create summary
     var summary_elem = document.getElementById("appsummary-container")
     summary.create(summary_elem);
@@ -119,33 +132,21 @@ export default {
     timeline.create(timeline_elem);
 
     $Info.get().then(
-      (response) => { // Success
-        if (response.status > 304){
-          this.errormsg = "Request error "+response.status+" at get info";
-        }
-        else {
-          console.log(response);
-          var data = response.json();
-          this.testing = data.testing;
-          this.queryDate(date);
-        }
+      (response) => {
+        this.query();
       },
-      (response) => { // Error
+      (response) => {
         this.errormsg = "Request error "+response.status+" at get info. Server offline?";
       }
     );
   },
 
   methods: {
-
-  queryDate: function(date){
-    this.setDay(date);
-    this.query();
-  },
-
-  setDay: function(datestr){
-      this.date = time.get_day_start(datestr);
-      this.datestr = this.date.format('YYYY-MM-DD');
+    previousDay: function() {
+        return moment(this.datestart).subtract(1, 'days').format("YYYY-MM-DD");
+    },
+    nextDay: function() {
+        return moment(this.datestart).add(1, 'days').format("YYYY-MM-DD");
     },
 
     query: function(){
@@ -153,17 +154,16 @@ export default {
       this.eventcount = 0;
       this.errormsg = "";
 
-      if (this.testing){
+      if (PRODUCTION){
+        var window_bucket_name = "aw-watcher-window_" + this.host;
+        var afk_bucket_name = "aw-watcher-afk_" + this.host;
+      } else {
         console.log("Using testing buckets");
-        var window_bucket_name = "aw-watcher-window-testing_"+this.host;
-        var afk_bucket_name = "aw-watcher-afk-testing_"+this.host;
-      }
-      else {
-        var window_bucket_name = "aw-watcher-window_"+this.host;
-        var afk_bucket_name = "aw-watcher-afk_"+this.host;
+        var window_bucket_name = "aw-watcher-window-testing_" + this.host;
+        var afk_bucket_name = "aw-watcher-afk-testing_" + this.host;
       }
 
-      var summary_view_name = "windowactivity_summary@"+this.host;
+      var summary_view_name = "windowactivity_summary@" + this.host;
       var query = this.windowSummaryQuery(window_bucket_name, afk_bucket_name);
       $CreateView.save({viewname: summary_view_name}, {'query': query}).then(
         (response) => { // Success
@@ -205,7 +205,7 @@ export default {
       var appsummary_elem = document.getElementById("appsummary-container")
       summary.set_status(appsummary_elem, "Loading...");
 
-      let today = moment(this.date);
+      let today = moment(this.datestart);
       $QueryView.get({"viewname": viewname,
                       "limit": -1,
                       "start": today.format(),

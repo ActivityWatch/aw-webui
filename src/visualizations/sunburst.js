@@ -65,8 +65,7 @@ function update(el, hierarchy) {
   createVisualization(hierarchy);
 }
 
-function drawClock(h) {
-  let a = 2 * Math.PI * (h / 24) - (1/2 * Math.PI);
+function drawClockTick(a) {
   let xn = Math.cos(a);
   let yn = Math.sin(a);
 
@@ -77,10 +76,17 @@ function drawClock(h) {
      .attr("y2", 155 * yn)
      .style("stroke", "#CCC")
      .style("stroke-width", 1);
+}
 
+function drawClock(h, m, text) {
+  let a = 2 * Math.PI * ((h / 24) + (m / 24 / 60)) - (1/2 * Math.PI);
+  drawClockTick(a);
+
+  let xn = Math.cos(a);
+  let yn = Math.sin(a);
 
   vis.append("text")
-     .text(moment({hours: h}).format("HH:mm"))
+     .text(text || moment({hours: h}).format("HH:mm"))
      .attr("text-anchor", "middle")
      .attr("font-size", "1.2em")
      //.attr("font-weight", "bold")
@@ -92,12 +98,6 @@ function drawClock(h) {
 
 // Main function to draw and set up the visualization, once we have the data.
 function createVisualization(json) {
-
-    drawClock(0);
-    drawClock(6);
-    drawClock(12);
-    drawClock(18);
-
   // Basic setup of page elements.
   initializeBreadcrumbTrail();
   drawLegend();
@@ -111,27 +111,44 @@ function createVisualization(json) {
 
   // Turn the data into a d3 hierarchy and calculate the sums.
   var root = d3.hierarchy(json);
+  var nodes = partition(root);
 
-  // TODO: Make this a checkbox in the UI
-  let show_whole_day = true;
+  let mode_clock = true;
+  if(mode_clock) {
+    // TODO: Make this a checkbox in the UI
+    let show_whole_day = true;
 
-  let root_start = moment(json.timestamp);
-  let root_end = moment(json.timestamp).add(json.duration, "seconds");
-  if(show_whole_day) {
-    root_start = root_start.startOf("day");
-    root_end = root_start.clone().endOf("day");
+    let root_start = moment(json.timestamp);
+    let root_end = moment(json.timestamp).add(json.duration, "seconds");
+    if(show_whole_day) {
+      root_start = root_start.startOf("day");
+      root_end = root_start.clone().endOf("day");
+
+      drawClock(0, 0);
+      drawClock(6, 0);
+      drawClock(12, 0);
+      drawClock(18, 0);
+
+      // TODO: Draw only if showing today
+      let now = moment();
+      drawClock(now.hour(), now.minute(), "Now");
+    }
+
+    nodes = nodes.each(function(d) {
+        let loc_start_sec = moment(d.data.timestamp).diff(root_start, "seconds", true);
+        let loc_end_sec = moment(d.data.timestamp).add(d.data.duration, "seconds").diff(root_start, "seconds", true);
+
+        let loc_start = Math.max(0, loc_start_sec / ((root_end - root_start) / 1000));
+        let loc_end = Math.min(1, loc_end_sec / ((root_end - root_start) / 1000));
+
+        d.x0 = 2 * Math.PI * loc_start;
+        d.x1 = 2 * Math.PI * loc_end;
+      }).descendants()
+  } else {
+      root = root.sum((d) => d.duration)
+                 .sort((a, b) => JSON.stringify(a.data.data).localeCompare(JSON.stringify(b.data.data)));
+      nodes = nodes.descendants();
   }
-
-  var nodes = partition(root).each(function(d) {
-      let loc_start_sec = moment(d.data.timestamp).diff(root_start, "seconds", true);
-      let loc_end_sec = moment(d.data.timestamp).add(d.data.duration, "seconds").diff(root_start, "seconds", true);
-
-      let loc_start = Math.max(0, loc_start_sec / ((root_end - root_start) / 1000));
-      let loc_end = Math.min(1, loc_end_sec / ((root_end - root_start) / 1000));
-
-      d.x0 = 2 * Math.PI * loc_start;
-      d.x1 = 2 * Math.PI * loc_end;
-    }).descendants()
 
   // For efficiency, filter nodes to keep only those large enough to see.
   nodes = nodes.filter(function(d) {
@@ -139,7 +156,7 @@ function createVisualization(json) {
     // If show_whole_day:
     //   0.0044 rad = 1min
     //   0.0011 rad = 15s
-    let threshold = 0.001;
+    let threshold = 0.000;
     return (d.x1 - d.x0 > threshold);
   });
 
@@ -201,7 +218,7 @@ function mouseover(d) {
 
   // Fade all the segments.
   d3.selectAll("path")
-      .style("opacity", 0.3);
+      .style("opacity", 0.5);
 
   // Then highlight only those that are an ancestor of the current segment.
   // FIXME: This currently makes all other svg paths on the page faded as well

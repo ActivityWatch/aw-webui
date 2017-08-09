@@ -2,7 +2,10 @@
 div
   h2 Buckets
 
-  hr
+  b-alert(show)
+    | Are you looking to collect more data? Check out #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") the docs] for more watchers.
+    br
+    small #[b Note:] This is currently not as easy as we want it to be, so some familiarity with programming is currently needed to run most of them.
 
   b-card.bucket-card(v-for="bucket in buckets", :key="bucket.id", :header="bucket.id", :is-open="true")
     b-button-toolbar
