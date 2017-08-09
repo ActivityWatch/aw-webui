@@ -11,9 +11,11 @@ div
 
   hr
 
-  h3 Spread the word
+  h4 Spread the word
   p
-    | Nothing is as motivating as getting ActivityWatch into the hands of users. So by sharing it you help make ActivityWatch even better!
+    | Nothing is as motivating as getting ActivityWatch into the hands of users.
+    br
+    | By sharing it you help us make ActivityWatch even better!
   p
     ul
       li
@@ -25,7 +27,7 @@ div
 
   hr
 
-  h3 Resources
+  h4 Resources
   p
     ul
       li
