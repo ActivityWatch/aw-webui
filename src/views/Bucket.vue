@@ -13,10 +13,18 @@ div
       td Hostname:
       td {{ bucket.hostname }}
     tr
-      td Created:
-      td {{ bucket.created }}
+      td
+        small Created:
+      td
+        small {{ bucket.created }}
 
-  br
+  hr
+
+  b-alert(variant="warning" show)
+    | This timeline is a work in progress. It only shows the last 100 events. Hover to get details.
+  aw-timeline(type="simple" :event_type="bucket.type", :events="events")
+
+  hr
 
   b-card.event-container(no-block=true)
     span(slot="header")
@@ -121,6 +129,8 @@ $border-color: #ddd;
 <script>
 import Resources from '../resources.js';
 
+import Timeline from '../visualizations/Timeline.vue';
+
 import 'vue-awesome/icons/tags'
 import 'vue-awesome/icons/clock-o'
 import 'vue-awesome/icons/calendar-o'
@@ -130,6 +140,9 @@ let $Event = Resources.$Event;
 
 export default {
   name: "Bucket",
+  components: {
+    "aw-timeline": Timeline,
+  },
   data: () => {
     return {
       id: String,

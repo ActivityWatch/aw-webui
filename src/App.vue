@@ -16,16 +16,31 @@ div#wrapper
             icon(name="times-circle")
 
   div.container.aw-container.rounded-bottom
+    // TODO: Refactor into Mainmenu component
     b-nav.aw-navbar
       b-nav-item(to="/")
         icon(name="home")
         | Home
-      Views
+      b-nav-item-dropdown
+        template(slot="button-content")
+          icon(name="clock-o")
+          | Activity
+        b-dropdown-item(v-if="activity_hosts.length <= 0", disabled)
+          | No activity reports available
+          br
+          small Make sure you have both an afk and window watcher running
+        b-dropdown-item(v-for="host in activity_hosts", :key="host", :to="'/activity/' + host")
+          | {{ host }}
       b-nav-item(to="/buckets")
         icon(name="database")
         | Raw Data
-    div#content
-        router-view
+      //li
+        router-link(to="/log")
+          // TODO: Add icon
+          | Server Log
+
+  div.container.aw-container#content
+      router-view
 
   div.container(style="margin-top: 1rem; margin-bottom: 1rem; color: #555")
     | Made with ❤ by the&nbsp;
@@ -49,33 +64,33 @@ div#wrapper
 <script>
 
 // only import the icons you use to reduce bundle size
-import 'vue-awesome/icons/home'
-import 'vue-awesome/icons/database'
-import 'vue-awesome/icons/check-circle'
-import 'vue-awesome/icons/times-circle'
+import 'vue-awesome/icons/home';
+import 'vue-awesome/icons/database';
+import 'vue-awesome/icons/check-circle';
+import 'vue-awesome/icons/times-circle';
+import 'vue-awesome/icons/clock-o';
 import 'vue-awesome/icons/twitter'
 import 'vue-awesome/icons/github'
 
 import Usermenu from './components/Usermenu.vue';
-import Views from './components/Views.vue';
 
 import Resources from './resources.js';
 
 
 let $Info = Resources.$Info;
+let $Bucket = Resources.$Bucket;
 
 // TODO: Highlight active item in menubar
 
 export default {
   components: {
     Usermenu,
-    Views
   },
 
   data: function() {
     return {
-      views: Views,
-      connected: false
+      activity_hosts: [],
+      connected: false,
     }
   },
 
@@ -93,6 +108,29 @@ export default {
         this.connected = false;
       }
     );
+
+    $Bucket.get().then((response) => {
+        let buckets = response.json();
+        let types_by_host = {};
+        _.each(buckets, (v, k) => {
+            types_by_host[v.hostname] = types_by_host[v.hostname] || {};
+            if(v.type == "afkstatus") {
+                types_by_host[v.hostname].afk = true;
+            } else if(v.type == "currentwindow") {
+                types_by_host[v.hostname].window = true;
+            }
+        })
+
+        _.each(types_by_host, (types, hostname) => {
+            console.log(types);
+            console.log(hostname);
+            if(types.afk === true && types.window === true) {
+                this.activity_hosts.push(hostname);
+            }
+        })
+
+        console.log(this.activity_hosts);
+    })
   }
 }
 
