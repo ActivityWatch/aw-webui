@@ -71,8 +71,13 @@ export default {
     });
   },
   visualize: function() {
-    let bucket_id_afk = "aw-watcher-afk-testing_" + this.host;
-    let bucket_id_window = "aw-watcher-window-testing_" + this.host;
+    let bucket_id_afk = "aw-watcher-afk_" + this.host;
+    let bucket_id_window = "aw-watcher-window_" + this.host;
+
+    if(!PRODUCTION) {
+        bucket_id_afk = "aw-watcher-afk-testing_" + this.host;
+        bucket_id_window = "aw-watcher-window-testing_" + this.host;
+    }
 
     function buildHierarchy(parents, children) {
         _.sortBy(parents, (o) => o.timestamp);
