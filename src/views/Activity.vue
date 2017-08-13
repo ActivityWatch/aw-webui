@@ -52,7 +52,7 @@ div
   hr
 
   p
-    //| Showing activity from {{ datestart }} until 24 hours later
+    //| Showing activity from {{ dateStart }} until 24 hours later
     //br
     | Events queried: {{ eventcount }}
 
@@ -106,61 +106,34 @@ export default {
     '$route': function(to, from) {
       console.log("Route changed")
       this.query();
-    },
-
-    'errormsg': function(to, from){
-      console.log(to);
     }
   },
 
   computed: {
-    readableDuration: function() {
-      return time.seconds_to_duration(this.duration);
-    },
-    host: function() {
-      return this.$route.params.host;
-    },
-    date: function() {
-      return this.$route.params.date || new Date().toISOString();
-    },
-    datestart: function() {
-      let datestart = moment(this.date).startOf('day').format();
-      return datestart;
-    },
-    dateShort: function() {
-      return moment(this.date).format("YYYY-MM-DD");
-    }
-
+    readableDuration: function() { return time.seconds_to_duration(this.duration) },
+    host: function() { return this.$route.params.host },
+    date: function() { return this.$route.params.date || new Date().toISOString() },
+    dateStart: function() { return moment(this.date).startOf('day').format() },
+    dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
+    windowBucketId: function() { return "aw-watcher-window" + (PRODUCTION ? "_" : "-testing_") + this.host },
+    afkBucketId:    function() { return "aw-watcher-afk"    + (PRODUCTION ? "_" : "-testing_") + this.host }
   },
 
   mounted: function() {
-    // Create summary
-    var summary_elem = document.getElementById("appsummary-container")
-    summary.create(summary_elem);
+    summary.create(document.getElementById("appsummary-container"));
+    summary.create(document.getElementById("windowtitles-container"));
+    timeline.create(document.getElementById("apptimeline-container"));
 
-    var titles_elem = document.getElementById("windowtitles-container")
-    summary.create(titles_elem);
-
-    // Create timeline
-    var timeline_elem = document.getElementById("apptimeline-container")
-    timeline.create(timeline_elem);
-
-    $Info.get().then(
-      (response) => {
-        this.query();
-      },
-      (response) => {
-        this.errormsg = "Request error "+response.status+" at get info. Server offline?";
-      }
-    );
+    this.query();
   },
 
   methods: {
-    previousDay: function() {
-        return moment(this.datestart).subtract(1, 'days').format("YYYY-MM-DD");
-    },
-    nextDay: function() {
-        return moment(this.datestart).add(1, 'days').format("YYYY-MM-DD");
+    previousDay: function() { return moment(this.dateStart).subtract(1, 'days').format("YYYY-MM-DD") },
+    nextDay: function() { return moment(this.dateStart).add(1, 'days').format("YYYY-MM-DD") },
+
+    errorHandler: function(response) {
+      console.error(response);
+      this.errormsg = "Request error " + response.status + ". See F12 console for more info.";
     },
 
     query: function(){
@@ -168,41 +141,14 @@ export default {
       this.eventcount = 0;
       this.errormsg = "";
 
-      if (PRODUCTION){
-        this.window_bucket_name = "aw-watcher-window_" + this.host;
-        this.afk_bucket_name = "aw-watcher-afk_" + this.host;
-      } else {
-        console.log("Using testing buckets");
-        this.window_bucket_name = "aw-watcher-window-testing_" + this.host;
-        this.afk_bucket_name = "aw-watcher-afk-testing_" + this.host;
-      }
-
-      this.querySummary();
+      this.queryApps();
       this.queryWindowTitles();
       this.queryTimeline();
     },
 
-    querySummary: function() {
-      var summary_view_name = "windowactivity_summary@" + this.host;
-      var query = this.windowSummaryQuery(this.window_bucket_name, this.afk_bucket_name);
-      $CreateView.save({viewname: summary_view_name}, {'query': query}).then(
-        (response) => { // Success
-          if (response.status > 304){
-            this.errorHandler(response);
-          } else {
-            this.queryViewSummary(summary_view_name);
-          }
-        }, this.errorHandler);
-    },
-
-    errorHandler: function(response) {
-      console.error(response);
-      this.errormsg = "Request error " + response.status + ". See F12 console for more info.";
-    },
-
     queryTimeline: function() {
       var timeline_view_name = "windowactivity_timeline@"+this.host;
-      var query = this.windowTimelineQuery(this.window_bucket_name, this.afk_bucket_name);
+      var query = this.windowTimelineQuery(this.windowBucketId, this.afkBucketId);
       $CreateView.save({viewname: timeline_view_name}, {'query': query}).then(
         (response) => { // Success
           if (response.status > 304){
@@ -214,62 +160,50 @@ export default {
     },
 
     todaysEvents: function(bucket_id) {
-      let today = moment(this.datestart);
+      let today = moment(this.dateStart);
       return $Event.get({id: bucket_id, limit: -1,
                          start: today.format(), end: today.add(1, "days").format()});
+    },
+
+    filterByAFKAndGroup: function(groupingFunc) {
+      return this.todaysEvents(this.windowBucketId)
+        .then((response) => {
+          let events = response.json();
+          return this.todaysEvents(this.afkBucketId).then((response) => {
+              let afkevents = response.json();
+              let filteredevents = event_parsing.filterAFKTime(events, afkevents);
+
+              let groups = _.groupBy(filteredevents, groupingFunc);
+              let durations = _.mapValues(groups, (v, i) => _.reduce(v, (sum, o) => sum + o.duration, 0));
+
+              // Sort objects by duration
+              let durationPairs = _.sortBy(_.toPairs(durations), (a) => a[1]).reverse();
+              return durationPairs;
+          })
+        }, this.errorHandler);
     },
 
     queryWindowTitles: function() {
       var container = document.getElementById("windowtitles-container")
       summary.set_status(container, "Loading...");
 
-      this.todaysEvents(this.window_bucket_name)
-        .then((response) => {
-          let events = response.json();
-
-          this.todaysEvents(this.afk_bucket_name).then((response) => {
-              let afkevents = response.json();
-              let filteredevents = event_parsing.filterAFKTime(events, afkevents);
-
-              let groups = _.groupBy(filteredevents, (o) => o.data.title);
-              let durations = _.mapValues(groups, (v, i) => _.reduce(v, (sum, o) => sum + o.duration, 0));
-
-              // Sort objects by duration
-              let durationPairs = _.sortBy(_.toPairs(durations), (a) => a[1]).reverse();
-              summary.updatePairs(container, _.take(durationPairs, this.numberOfWindowTitles));
-          })
-        }, this.errorHandler);
+      this.filterByAFKAndGroup((o) => o.data.title)
+          .then((durationPairs) => summary.updatePairs(container, _.take(durationPairs, this.numberOfWindowTitles)));
     },
 
-    queryViewSummary: function(viewname){
-      var appsummary_elem = document.getElementById("appsummary-container")
-      summary.set_status(appsummary_elem, "Loading...");
+    queryApps: function(viewname){
+      var container = document.getElementById("appsummary-container")
+      summary.set_status(container, "Loading...");
 
-      let today = moment(this.datestart);
-      $QueryView.get({"viewname": viewname, "limit": -1,
-                      "start": today.format(), "end": today.add(1, 'days').format()})
-        .then((response) => {
-          if (response.status > 304){
-            this.errorHandler(request);
-          } else {
-            var data = response.json();
-            var chunks = data["chunks"];
-            this.duration = data["duration"];
-            this.eventcount = data["eventcount"]+this.eventcount;
-            if (chunks != undefined){
-              var appsummary = event_parsing.parse_chunks_to_apps(chunks);
-              var el = document.getElementById("appsummary-container")
-              summary.update(el, appsummary);
-            }
-          }
-        }, this.errorHandler);
+      this.filterByAFKAndGroup((o) => o.data.app)
+          .then((durationPairs) => summary.updatePairs(container, _.take(durationPairs, this.numberOfWindowTitles)));
     },
 
     queryViewTimeline: function(viewname){
       var timeline_elem = document.getElementById("apptimeline-container")
       timeline.set_status(timeline_elem, "Loading...");
 
-      let today = moment(this.datestart);
+      let today = moment(this.dateStart);
       $QueryView.get({"viewname": viewname,
                       "limit": -1,
                       "start": today.format(),
@@ -294,32 +228,6 @@ export default {
       return {
         'chunk': false,
         'cache': false,
-        'transforms':
-        [{
-          'bucket': windowbucket,
-          'filters':
-          [{
-            'name': 'timeperiod_intersect',
-            'transforms':
-            [{
-              'bucket': afkbucket,
-              'filters':
-              [{
-                'name': 'include_keyvals',
-                'key': 'status',
-                'vals': ['not-afk'],
-              }]
-            }]
-          }]
-        }]
-      };
-    },
-
-
-    windowSummaryQuery: function(windowbucket, afkbucket){
-      return {
-        'chunk': 'app',
-        'cache': true,
         'transforms':
         [{
           'bucket': windowbucket,
