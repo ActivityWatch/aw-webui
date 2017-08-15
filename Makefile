@@ -1,14 +1,14 @@
-.PHONY: build dev clean
+.PHONY: install build dev test clean
 
 .FORCE: ;
 
-
-build: .FORCE
+install:
 	npm install
+
+build: install
 	npm run build
 
 dev:
-	npm install
 	npm run dev
 
 test:
