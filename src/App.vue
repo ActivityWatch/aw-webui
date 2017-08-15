@@ -104,7 +104,6 @@ export default {
         }
       },
       (response) => {
-        console.log("a");
         this.connected = false;
       }
     );
@@ -122,14 +121,10 @@ export default {
         })
 
         _.each(types_by_host, (types, hostname) => {
-            console.log(types);
-            console.log(hostname);
             if(types.afk === true && types.window === true) {
                 this.activity_hosts.push(hostname);
             }
         })
-
-        console.log(this.activity_hosts);
     })
   }
 }

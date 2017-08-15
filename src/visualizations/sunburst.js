@@ -30,11 +30,10 @@ var b = {
   w: 75, h: 30, s: 3, t: 10
 };
 
-// Mapping of step names to colors.
-var colors = {
-  "afk": "#EEE",
-  "not-afk": "#0F4"
-};
+var legendData = {
+    "afk": color.getColorFromString("afk"),
+    "not-afk": color.getColorFromString("not-afk"),
+}
 
 // Total size of all segments; we set this later, after loading the data.
 var totalSize = 0;
@@ -156,7 +155,7 @@ function createVisualization(json) {
     // If show_whole_day:
     //   0.0044 rad = 1min
     //   0.0011 rad = 15s
-    let threshold = 0.000;
+    let threshold = 0.001;
     return (d.x1 - d.x0 > threshold);
   });
 
@@ -167,7 +166,7 @@ function createVisualization(json) {
       .attr("d", arc)
       .attr("fill-rule", "evenodd")
       .style("fill", function(d) {
-          return colors[d.data.data.status] || color.getAppColor(d.data.data.app);
+          return color.getColorFromString(d.data.data.status || d.data.data.app);
       })
       .style("opacity", 1)
       .on("mouseover", mouseover)
@@ -295,7 +294,7 @@ function updateBreadcrumbs(nodeArray, valueString) {
 
   entering.append("svg:polygon")
       .attr("points", breadcrumbPoints)
-      .style("fill", function(d) { return colors[d.data.data.status] || color.getAppColor(d.data.data.app); });
+      .style("fill", function(d) { return color.getColorFromString(d.data.data.status || d.data.data.app); });
 
   entering.append("svg:text")
       .attr("x", (b.w + b.t) / 2)
@@ -332,10 +331,10 @@ function drawLegend() {
 
   var legend = d3.select("#legend").append("svg:svg")
       .attr("width", li.w)
-      .attr("height", d3.keys(colors).length * (li.h + li.s));
+      .attr("height", d3.keys(legendData).length * (li.h + li.s));
 
   var g = legend.selectAll("g")
-      .data(d3.entries(colors))
+      .data(d3.entries(legendData))
       .enter().append("svg:g")
       .attr("transform", function(d, i) {
               return "translate(0," + i * (li.h + li.s) + ")";

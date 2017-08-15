@@ -61,13 +61,15 @@ export default {
   },
 
   getEvents: function(bucket_id, start, end) {
-    let limit = 1000;
-    return $Event.get({"id": bucket_id, "start": start, "end": end, "limit": 1000}).then((response) => {
+    let limit = 10000;
+    return $Event.get({"id": bucket_id, "start": start, "end": end, "limit": limit}).then((response) => {
       let events = response.json();
       if(events.length >= limit) {
         console.warn("Reached event limit");
       }
       return events;
+    }, (e) => {
+      console.error(e);
     });
   },
   visualize: function() {
@@ -80,11 +82,8 @@ export default {
     }
 
     function buildHierarchy(parents, children) {
-        _.sortBy(parents, (o) => o.timestamp);
-        _.sortBy(children, (o) => o.timestamp);
-
-        _.reverse(parents);
-        _.reverse(children);
+        parents = _.sortBy(parents, "timestamp", "desc");
+        children = _.sortBy(children, "timestamp", "desc");
 
         var i_child = 0;
         for(var i_parent = 0; i_parent < parents.length; i_parent++) {
@@ -173,9 +172,6 @@ export default {
     // This seems to be needed, for some reason...
     start = start.subtract(start.utcOffset(), "minutes");
     end = end.subtract(end.utcOffset(), "minutes");
-
-    //console.log(start.format());
-    //console.log(end.format());
 
     function chunkHierarchy2(events, key) {
       events = _.sortBy(events, (e) => e.timestamp);
