@@ -51,6 +51,7 @@
   "dependencies": {
     "bootstrap": "4.0.0-alpha.6",
     "bootstrap-vue": "^0.18.0",
+    "color": "^2.0.0",
     "d3": "^4.2.2",
     "electron-packager": "^7.3.0",
     "exports-loader": "^0.6.2",
@@ -58,7 +59,7 @@
     "jquery": "^3.1.0",
     "jsdom": "^10.1.0",
     "less-loader": "^0.6.2",
-    "pug": "^2.0.0-rc.2",
+    "pug": "^2.0.0-rc.3",
     "style-loader": "^0.6.5",
     "vue-awesome": "^2.3.1"
   }
