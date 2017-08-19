@@ -34,6 +34,11 @@ function set_status(container, msg){
    .attr("fill", "black")
 }
 
+function updatePairs(container, appDurations) {
+  let apps = _.map(appDurations, (a) => { return {name: a[0], duration: a[1]} });
+  update(container, apps);
+}
+
 function update(container, apps) {
   // No apps, sets status to "No data"
   if (apps.length <= 0){
@@ -93,7 +98,7 @@ function update(container, apps) {
      .text(time.seconds_to_duration(app.duration))
      .attr("font-family", "sans-serif")
      .attr("font-size", textSize + "px")
-     .attr("fill", "black")
+     .attr("fill", "black");
 
     curr_y += barHeight + 5;
 
@@ -108,5 +113,6 @@ function update(container, apps) {
 module.exports = {
   "create": create,
   "update": update,
+  "updatePairs": updatePairs,
   "set_status": set_status,
 };
