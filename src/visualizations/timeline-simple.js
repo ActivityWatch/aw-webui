@@ -91,7 +91,7 @@ function update(svg_el, events, event_type) {
       .attr("height", 4)
       .style("fill", color_base)
       .on("mouseover", () => {
-          let color_hover = Color(color_base).darken(0.4).rgbString();
+          let color_hover = Color(color_base).darken(0.4).hex();
           set_color(id, color_hover);
       })
       .on("mouseout", () => {

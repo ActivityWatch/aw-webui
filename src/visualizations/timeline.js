@@ -103,7 +103,7 @@ function update(container, events, total_duration){
     // Timeline rect
     var e_width = e.duration / total_duration * 100;
     var appcolor = color.getAppColor(e.appname);
-    var hovercolor = Color(appcolor).darken(0.4).rgbString();
+    var hovercolor = Color(appcolor).darken(0.4).hex();
 
     let eg = timeline.append("g")
       .attr("id", "timeline_event_"+i);
