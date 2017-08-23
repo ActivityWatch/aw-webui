@@ -31,15 +31,20 @@ function set_status(container, msg){
    .text(msg)
    .attr("font-family", "sans-serif")
    .attr("font-size", "25px")
-   .attr("fill", "black")
+   .attr("fill", "black");
 }
 
-function updatePairs(container, appDurations) {
-  let apps = _.map(appDurations, (a) => { return {name: a[0], duration: a[1]} });
+function updateSummedEvents(container, summedEvents,
+                            titleKeyFunc, colorKeyFunc) {
+  let apps = _.map(summedEvents, (e) => { return {name: titleKeyFunc(e),
+                                                  duration: e.duration,
+                                                  colorKey: colorKeyFunc(e)}; });
   update(container, apps);
 }
 
 function update(container, apps) {
+  console.log(apps);
+
   // No apps, sets status to "No data"
   if (apps.length <= 0){
     set_status(container, "No data");
@@ -52,10 +57,10 @@ function update(container, apps) {
   // Remove apps without a duration from list
   apps = apps.filter(function(app){
     return app.duration !== undefined;
-  })
+  });
 
   var curr_y = 0;
-  var longest_duration = apps[0].duration
+  var longest_duration = apps[0].duration;
   _.each(apps, function(app, i) {
     // TODO: Expand on click and list titles
 
@@ -63,14 +68,14 @@ function update(container, apps) {
     var width = (app.duration/longest_duration)*80+"%";
     let barHeight = 50;
     let textSize = 15;
-    var appcolor = color.getAppColor(app.name);
+    var appcolor = color.getAppColor(app.colorKey || app.name);
     var hovercolor = Color(appcolor).darken(0.4).hex();
 
     // The group representing an application in the barchart
     let eg = svg.append("g");
     eg.attr("id", "summary_app_"+i)
-      .on("mouseover", function() { eg.select("rect").style("fill", hovercolor) })
-      .on("mouseout", function() { eg.select("rect").style("fill", appcolor) });
+      .on("mouseover", function() { eg.select("rect").style("fill", hovercolor); })
+      .on("mouseout", function() { eg.select("rect").style("fill", appcolor); });
 
     // Color box background
     eg.append("rect")
@@ -89,7 +94,7 @@ function update(container, apps) {
      .text(app.name)
      .attr("font-family", "sans-serif")
      .attr("font-size", textSize + "px")
-     .attr("fill", "black")
+     .attr("fill", "black");
 
     // Duration
     eg.append("text")
@@ -113,6 +118,6 @@ function update(container, apps) {
 module.exports = {
   "create": create,
   "update": update,
-  "updatePairs": updatePairs,
+  "updateSummedEvents": updateSummedEvents,
   "set_status": set_status,
 };

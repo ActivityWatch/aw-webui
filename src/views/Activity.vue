@@ -165,38 +165,56 @@ export default {
                          start: today.format(), end: today.add(1, "days").format()});
     },
 
-    filterByAFKAndGroup: function(groupingFunc) {
+    windowEventsFilteredByAFK: function() {
       return this.todaysEvents(this.windowBucketId)
         .then((response) => {
           let events = response.json();
           return this.todaysEvents(this.afkBucketId).then((response) => {
               let afkevents = response.json();
               let filteredevents = event_parsing.filterAFKTime(events, afkevents);
-
-              let groups = _.groupBy(filteredevents, groupingFunc);
-              let durations = _.mapValues(groups, (v, i) => _.reduce(v, (sum, o) => sum + o.duration, 0));
-
-              // Sort objects by duration
-              let durationPairs = _.sortBy(_.toPairs(durations), (a) => a[1]).reverse();
-              return durationPairs;
+              return filteredevents;
           })
         }, this.errorHandler);
+    },
+
+    groupAndSumEvents: function(events, groupingFunc) {
+      let groups = _.groupBy(events, groupingFunc);
+      let groupsList = _.values(groups);
+
+      let summedEvents = _.map(groupsList,
+            (v, i) => _.reduce(_.drop(v, 1),
+                (acc, e) => {
+                  acc.duration += e.duration;
+                  delete acc.id;
+                  delete acc.timestamp;
+                  delete acc.range;
+                  return acc;
+                }, v[0]))
+
+      // Sort objects by duration
+      summedEvents = _.sortBy(summedEvents, (e) => e.duration).reverse();
+      return summedEvents;
     },
 
     queryWindowTitles: function() {
       var container = document.getElementById("windowtitles-container")
       summary.set_status(container, "Loading...");
 
-      this.filterByAFKAndGroup((o) => o.data.title)
-          .then((durationPairs) => summary.updatePairs(container, _.take(durationPairs, this.numberOfWindowTitles)));
+      this.windowEventsFilteredByAFK().then((events) => {
+          let summedEvents = this.groupAndSumEvents(events, (o) => o.data.title);
+          summedEvents = _.take(summedEvents, this.numberOfWindowTitles);
+          summary.updateSummedEvents(container, summedEvents, (e) => e.data.title, (e) => e.data.app);
+      });
     },
 
     queryApps: function(viewname){
       var container = document.getElementById("appsummary-container")
       summary.set_status(container, "Loading...");
 
-      this.filterByAFKAndGroup((o) => o.data.app)
-          .then((durationPairs) => summary.updatePairs(container, _.take(durationPairs, this.numberOfWindowTitles)));
+      this.windowEventsFilteredByAFK().then((events) => {
+          let summedEvents = this.groupAndSumEvents(events, (o) => o.data.app);
+          summary.updateSummedEvents(container, summedEvents, (e) => e.data.app, (e) => e.data.app);
+      });
     },
 
     queryViewTimeline: function(viewname){
