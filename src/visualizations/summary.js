@@ -43,8 +43,6 @@ function updateSummedEvents(container, summedEvents,
 }
 
 function update(container, apps) {
-  console.log(apps);
-
   // No apps, sets status to "No data"
   if (apps.length <= 0){
     set_status(container, "No data");
