@@ -42,23 +42,18 @@ div#wrapper
   div.container.aw-container#content
       router-view
 
-  div.container(style="margin-top: 1rem; margin-bottom: 1rem; color: #555")
-    | Made with ❤ by the&nbsp;
-    a(href="http://activitywatch.net/contributors/")
-      | ActivityWatch developers
+  div.container(style="height: 4rem; margin-top: 1rem; margin-bottom: 1rem; color: #555")
+    div(style="float: left")
+      div
+        | Made with ❤ by the #[a(href="http://activitywatch.net/contributors/") ActivityWatch developers]
+      div
+        a.outlinks(href="https://github.com/ActivityWatch/activitywatch", target="_blank")
+          img(title="GitHub", src="https://img.shields.io/github/stars/ActivityWatch/activitywatch.svg?style=social&label=Star")
+        a.outlinks(href="https://twitter.com/ActivityWatchIt", target="_blank")
+          img(title="Twitter", src="https://img.shields.io/twitter/follow/ActivityWatchIt.svg?style=social&label=Follow")
 
     div(style="float: right; text-align: right;")
-      | Follow ActivityWatch:
-      a.outlinks(href="https://github.com/ActivityWatch/activitywatch")
-        icon(name="github")
-        | GitHub
-      a.outlinks(href="https://twitter.com/ActivityWatchIt")
-        icon(name="twitter")
-        | Twitter
-      br
-      | Something not working as it should?
-      a(href="https://github.com/ActivityWatch/activitywatch/issues/new")
-        |  File an issue.
+      | Something not working as it should? #[a(href="https://github.com/ActivityWatch/activitywatch/issues/new") File an issue.]
 </template>
 
 <script>
@@ -152,7 +147,10 @@ body {
 }
 
 .outlinks {
-  margin-left: 0.5rem;
+  img {
+    margin: 0.5rem 0.5rem 0.5rem 0;
+    height: 1.5rem;
+  }
 }
 
 .aw-navbar {
