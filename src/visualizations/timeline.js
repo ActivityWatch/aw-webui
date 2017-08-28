@@ -1,5 +1,9 @@
 "use strict";
 
+/*
+ * Creates a colored timeline where you can hover for more info.
+ */
+
 const d3 = require("d3");
 const Color = require("color");
 const _ = require("lodash");
@@ -8,20 +12,7 @@ const moment = require("moment");
 import event_parsing from "../util/event_parsing";
 import color from "../util/color.js"
 
-var time = require("../util/time.js");
-
-/*
- * script
- * apptimeline
- * titleinfo_list (hidden titleinfo)
- * titleinfo-container (visible titleinfo)
- * */
-
-// Helper functions used when hover state changes.
-function set_color(elem_id, color) {
-  var rect = document.getElementById(elem_id).children[0];
-  rect.style.fill = color;
-};
+const time = require("../util/time.js");
 
 function show_info(elem_id) {
   var title_event_box = document.getElementById(elem_id);
@@ -77,7 +68,7 @@ function set_status(container, text){
    .attr("fill", "black")
 }
 
-function update(container, events, total_duration){
+function update(container, events, total_duration, showAFK){
   let timeline_elem = container.querySelector(".apptimeline");
   let titleinfo_list_elem = container.querySelector(".titleinfo_list");
   let titleinfo_container_elem = container.querySelector("#titleinfo-container");
@@ -96,30 +87,52 @@ function update(container, events, total_duration){
     return;
   }
 
+  if(showAFK) {
+    let firstEvent = _.minBy(events, (o) => o.titles[0].timestamp);
+    let lastEvent = _.maxBy(events, (o) => o.titles[0].timestamp);
+
+    var timeStart = moment(firstEvent.titles[0].timestamp);
+    var timeEnd = moment(lastEvent.titles[0].timestamp).add(lastEvent.duration, "seconds");
+
+    var secSinceStart = timeEnd.diff(timeStart, "seconds", true);
+
+    // If we want to show from 00:00
+    //timeStart = timeStart.startOf('day');
+  }
 
   // Iterate over each app timeperiod
   let curr_x = 0;
   _.each(events, function(e, i) {
     // Timeline rect
-    var e_width = e.duration / total_duration * 100;
+
+    if(showAFK) {
+      let eventBegin = moment(_.minBy(e.titles, (t) => t.timestamp).timestamp);
+      var eventX = eventBegin.diff(timeStart, "seconds", true) / secSinceStart;
+      eventX = eventX * 100 + "%";
+      var eventWidth = e.duration / secSinceStart * 100 + "%";
+    } else {
+      var eventX = curr_x;
+      var eventWidth = e.duration / total_duration * 100;
+    }
+
     var appcolor = color.getAppColor(e.appname);
     var hovercolor = Color(appcolor).darken(0.4).hex();
 
     let eg = timeline.append("g")
       .attr("id", "timeline_event_"+i);
 
-    eg.append("rect")
-      .attr("x", curr_x)
+    let rect = eg.append("rect")
+      .attr("x", eventX)
       .attr("y", 0)
-      .attr("width", e_width)
+      .attr("width", eventWidth)
       .attr("height", 10)
       .style("fill", color.getAppColor(e.appname))
       .on("mouseover", () => {
-          set_color("timeline_event_" + i, hovercolor);
+          rect.style("fill", hovercolor);
           show_info("titleinfo_event_" + i);
       })
       .on("mouseout", () => {
-          set_color('timeline_event_' + i, appcolor);
+          rect.style("fill", appcolor);
       })
 
     // Titleinfo box
@@ -155,7 +168,7 @@ function update(container, events, total_duration){
         .style("padding-left", "1em");
     });
 
-    curr_x += e_width
+    curr_x += eventWidth;
   });
 
   return container;
