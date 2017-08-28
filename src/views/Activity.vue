@@ -31,30 +31,49 @@ div
 
   hr
 
-  h4 Summary
 
-  p Total time: {{ readableDuration }}
-
-  div#appsummary-container
+  div.row
+    div.col-md-6
+      h5 Summary
+      | Total active time: {{ readableDuration }}
+      br
+      | Events queried: {{ eventcount }}
+    div.col-md-6
+      b Options
+      div
+        label.custom-control.custom-checkbox
+          input.custom-control-input(type="checkbox", v-model="filterAFK")
+          span.custom-control-indicator
+          span.custom-control-description
+            | Filter away AFK time
 
   hr
 
-  h4 Window titles #[b-button(size="sm" v-on:click="numberOfWindowTitles += 5; queryWindowTitles()") Show 5 more]
+  div.row
+    div.col-md-6
+      h5 Top Applications
 
-  div#windowtitles-container
+      div#appsummary-container
+
+    div.col-md-6
+      h5 Top Window Titles
+
+      div#windowtitles-container
+
+      b-button(size="sm" v-on:click="numberOfWindowTitles += 5; queryWindowTitles()")
+        | Show more
 
   hr
 
   h4 Timeline
 
+  label.custom-control.custom-checkbox
+    input.custom-control-input(type="checkbox", v-model="timelineShowAFK")
+    span.custom-control-indicator
+    span.custom-control-description
+      | Show AFK time
+
   div#apptimeline-container
-
-  hr
-
-  p
-    //| Showing activity from {{ dateStart }} until 24 hours later
-    //br
-    | Events queried: {{ eventcount }}
 
 </template>
 
@@ -94,6 +113,9 @@ export default {
     return {
       today: moment().format("YYYY-MM-DD"),
 
+      filterAFK: true,
+      timelineShowAFK: true,
+
       // Query variables
       duration: "",
       eventcount: 0,
@@ -105,6 +127,12 @@ export default {
   watch: {
     '$route': function(to, from) {
       console.log("Route changed")
+      this.query();
+    },
+    'filterAFK': function(to, from) {
+      this.query();
+    },
+    'timelineShowAFK': function(to, from) {
       this.query();
     }
   },
@@ -171,8 +199,10 @@ export default {
           let events = response.json();
           return this.todaysEvents(this.afkBucketId).then((response) => {
               let afkevents = response.json();
-              let filteredevents = event_parsing.filterAFKTime(events, afkevents);
-              return filteredevents;
+              if(this.filterAFK) {
+                events = event_parsing.filterAFKTime(events, afkevents);
+              }
+              return events;
           })
         }, this.errorHandler);
     },
@@ -234,9 +264,10 @@ export default {
             var eventlist = data["eventlist"];
             this.duration = data["duration"];
             this.eventcount = data["eventcount"]+this.eventcount;
+
             var apptimeline = event_parsing.parse_eventlist_by_apps(eventlist);
             var el = document.getElementById("apptimeline-container")
-            timeline.update(el, apptimeline, this.duration);
+            timeline.update(el, apptimeline, this.duration, this.timelineShowAFK);
           }
         }, this.errorHandler);
     },
@@ -249,7 +280,8 @@ export default {
         'transforms':
         [{
           'bucket': windowbucket,
-          'filters':
+          // TODO: How is this condition handled when bucket is cached? Seems to work...
+          'filters': this.filterAFK ?
           [{
             'name': 'timeperiod_intersect',
             'transforms':
@@ -262,7 +294,7 @@ export default {
                 'vals': ['not-afk'],
               }]
             }]
-          }]
+          }] : []
         }]
       };
     },
