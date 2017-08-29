@@ -14,7 +14,12 @@ div
         b-button(variant="primary", :to="'/buckets/' + bucket.id")
           | Open bucket
       b-button-group(size="sm", class="mx-1")
-        b-button(:href="'/api/0/buckets/' + bucket.id + '/events?limit=-1'", title="Export all events from this bucket to JSON")
+        // TODO: This currently does not export bucket metadata, which makes importing difficult
+        //       See: https://github.com/ActivityWatch/activitywatch/issues/103
+        // NOTE: When this is done we should also change the download name from "events-export" to "bucket-export".
+        b-button(:href="'/api/0/buckets/' + bucket.id + '/events?limit=-1'",
+                 :download="'aw-event-export-' + bucket.id + '.json'",
+                 title="Export all events from this bucket to JSON")
           | Export as JSON
     small.bucket-last-updated(v-if="bucket.last_updated", slot="footer")
       span
