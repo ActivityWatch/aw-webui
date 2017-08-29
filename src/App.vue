@@ -15,9 +15,9 @@ div#wrapper
             | Not connected
             icon(name="times-circle")
 
-  div.container.aw-container.rounded-bottom
+  div.container.aw-container
     // TODO: Refactor into Mainmenu component
-    b-nav.aw-navbar
+    b-nav.row.aw-navbar
       b-nav-item(to="/")
         icon(name="home")
         | Home
@@ -39,7 +39,7 @@ div#wrapper
           // TODO: Add icon
           | Server Log
 
-  div.container.aw-container#content
+  div.container.aw-container.rounded-bottom#content
       router-view
 
   div.container(style="height: 4rem; margin-top: 1rem; margin-bottom: 1rem; color: #555")
@@ -154,11 +154,6 @@ body {
 }
 
 .aw-navbar {
-    margin-left: -1em;
-    margin-right: -1em;
-    border: 0px solid #DDD;
-    border-bottom-width: 1px;
-
     li > a {
         padding: 10px 15px 10px 15px;
         color: #555;
