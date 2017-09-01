@@ -66,8 +66,9 @@ function update(container, apps) {
     var width = (app.duration/longest_duration)*80+"%";
     let barHeight = 50;
     let textSize = 15;
-    var appcolor = color.getAppColor(app.colorKey || app.name);
-    var hovercolor = Color(appcolor).darken(0.4).hex();
+    var baseappcolor = color.getAppColor(app.colorKey || app.name);
+    var appcolor = Color(baseappcolor).lighten(0.1).hex();
+    var hovercolor = Color(baseappcolor).darken(0.1).hex();
 
     // The group representing an application in the barchart
     let eg = svg.append("g");
