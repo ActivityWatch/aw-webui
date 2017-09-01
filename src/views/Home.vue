@@ -19,11 +19,9 @@ div
   p
     ul
       li
-        | Give us a like on&nbsp;
-        a(href="https://alternativeto.net/software/activitywatch/") AlternativeTo
+        | Give us a like on #[a(href="https://alternativeto.net/software/activitywatch/") AlternativeTo]
       li
-        | Tell people about us on&nbsp;
-        a(href="https://twitter.com/intent/tweet?text=Say%20something%20nice%20about%20@ActivityWatchIt") Twitter
+        | Tell people about us on #[a(href="https://twitter.com/intent/tweet?text=Say%20something%20nice%20about%20@ActivityWatchIt") Twitter]
 
   hr
 
@@ -31,8 +29,11 @@ div
   p
     ul
       li
-        a(href="https://activitywatch.github.io/")
+        a(href="http://activitywatch.net/")
           | Website
+      li
+        a(href="https://forum.activitywatch.net/")
+          | Forum
       li
         a(href="https://github.com/ActivityWatch/activitywatch")
           | GitHub

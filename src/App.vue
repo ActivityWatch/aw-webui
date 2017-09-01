@@ -53,7 +53,9 @@ div#wrapper
           img(title="Twitter", src="https://img.shields.io/twitter/follow/ActivityWatchIt.svg?style=social&label=Follow")
 
     div(style="float: right; text-align: right;")
-      | Something not working as it should? #[a(href="https://github.com/ActivityWatch/activitywatch/issues/new") File an issue.]
+      | Need help? #[a(href="https://forum.activitywatch.net") Ask on the forum]
+      br
+      | Found a bug? #[a(href="https://github.com/ActivityWatch/activitywatch/issues/new") File an issue]
 </template>
 
 <script>
