@@ -54,7 +54,6 @@
     "bootstrap-vue": "^0.18.0",
     "color": "^2.0.0",
     "d3": "^4.2.2",
-    "electron-packager": "^7.3.0",
     "exports-loader": "^0.6.2",
     "imports-loader": "^0.6.3",
     "jquery": "^3.1.0",
