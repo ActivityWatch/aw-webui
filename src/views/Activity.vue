@@ -115,7 +115,6 @@ export default {
 
       filterAFK: true,
       timelineShowAFK: true,
-      readableDuration: "",
 
       // Query variables
       duration: "",
@@ -128,13 +127,13 @@ export default {
   watch: {
     '$route': function(to, from) {
       console.log("Route changed")
-      this.query();
+      this.reset();
     },
     'filterAFK': function(to, from) {
-      this.query();
+      this.reset();
     },
     'timelineShowAFK': function(to, from) {
-      this.query();
+      this.reset();
     }
   },
 
@@ -159,6 +158,13 @@ export default {
   methods: {
     previousDay: function() { return moment(this.dateStart).subtract(1, 'days').format("YYYY-MM-DD") },
     nextDay: function() { return moment(this.dateStart).add(1, 'days').format("YYYY-MM-DD") },
+
+    reset: function(){
+      this.duration = "";
+      this.numberOfWindowApps = 5;
+      this.numberOfWindowTitles = 5;
+      this.query();
+    },
 
     errorHandler: function(response) {
       console.error(response);
@@ -245,7 +251,7 @@ export default {
           } else {
             var events = response.json();
 
-            this.readableDuration = time.seconds_to_duration(events[0].duration);
+            this.duration = events[0].duration;
           }
         }, this.errorHandler
       );
@@ -257,7 +263,7 @@ STARTTIME="'+starttime+'" \n\
 ENDTIME="'+endtime+'" \n\
 not_afk=query_bucket("'+afkbucket+'") \n\
 events=query_bucket("'+windowbucket+'") \n\
-not_afk=filter_keyval(not_afk, "status", "not-afk", TRUE) \n\
+not_afk=filter_keyval(not_afk, "status", "not-afk", FALSE) \n\
 events=filter_period_intersect(events, not_afk) \n\
 events=sort_by_duration(events) \n\
 RETURN=events';
@@ -269,7 +275,7 @@ STARTTIME="'+starttime+'" \n\
 ENDTIME="'+endtime+'" \n\
 not_afk=query_bucket("'+afkbucket+'") \n\
 events=query_bucket("'+windowbucket+'") \n\
-not_afk=filter_keyval(not_afk, "status", "not-afk", TRUE) \n\
+not_afk=filter_keyval(not_afk, "status", "not-afk", FALSE) \n\
 events=filter_period_intersect(events, not_afk) \n\
 events=merge_events_by_key(events, "app") \n\
 events=sort_by_duration(events) \n\
@@ -283,7 +289,7 @@ STARTTIME="'+starttime+'" \n\
 ENDTIME="'+endtime+'" \n\
 not_afk=query_bucket("'+afkbucket+'") \n\
 events=query_bucket("'+windowbucket+'") \n\
-not_afk=filter_keyval(not_afk, "status", "not-afk", TRUE) \n\
+not_afk=filter_keyval(not_afk, "status", "not-afk", FALSE) \n\
 events=filter_period_intersect(events, not_afk) \n\
 events=merge_events_by_keys2(events, "app", "title") \n\
 events=sort_by_duration(events) \n\
@@ -296,7 +302,7 @@ RETURN=events';
 STARTTIME="'+starttime+'" \n\
 ENDTIME="'+endtime+'" \n\
 events=query_bucket("'+afkbucket+'") \n\
-events=filter_keyval(events, "status", "not-afk", TRUE) \n\
+events=filter_keyval(events, "status", "not-afk", FALSE) \n\
 events=merge_events_by_key(events, "status") \n\
 RETURN=events';
     },
