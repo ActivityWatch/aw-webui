@@ -33,6 +33,7 @@ var b = {
 var legendData = {
     "afk": color.getColorFromString("afk"),
     "not-afk": color.getColorFromString("not-afk"),
+    "hibernating": color.getColorFromString("hibernating"),
 }
 
 // Total size of all segments; we set this later, after loading the data.

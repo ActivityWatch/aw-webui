@@ -100,8 +100,7 @@ import 'vue-awesome/icons/arrow-left'
 import 'vue-awesome/icons/arrow-right'
 import 'vue-awesome/icons/refresh'
 
-let $QueryView  = Resources.$QueryView;
-let $CreateView  = Resources.$CreateView;
+let $Query  = Resources.$Query;
 let $Info  = Resources.$Info;
 let $Event  = Resources.$Event;
 
@@ -169,134 +168,99 @@ export default {
       this.eventcount = 0;
       this.errormsg = "";
 
-      this.queryApps();
-      this.queryWindowTitles();
-      this.queryTimeline();
+      let starttime = moment(this.dateStart).format();
+      let endtime = moment(this.dateStart).add(1, 'days').format();
+
+      this.queryApps(starttime, endtime);
+      this.queryWindowTitles(starttime, endtime);
+      this.queryTimeline(starttime, endtime);
     },
 
-    queryTimeline: function() {
-      var timeline_view_name = "windowactivity_timeline@"+this.host;
-      var query = this.windowTimelineQuery(this.windowBucketId, this.afkBucketId);
-      $CreateView.save({viewname: timeline_view_name}, {'query': query}).then(
+    queryTimeline: function(starttime, endtime) {
+      var timeline_elem = document.getElementById("apptimeline-container")
+      timeline.set_status(timeline_elem, "Loading...");
+      var query = this.windowTimelineQuery(this.windowBucketId, this.afkBucketId, this.host, starttime, endtime);
+      $Query.save({}, query).then(
         (response) => { // Success
           if (response.status > 304){
             this.errorHandler(response);
           } else {
-            this.queryViewTimeline(timeline_view_name);
+            var eventlist = response.json();
+            var apptimeline = event_parsing.parse_eventlist_by_apps(eventlist);
+            timeline.update(timeline_elem, apptimeline, this.duration, this.timelineShowAFK);
           }
         }, this.errorHandler);
     },
 
-    todaysEvents: function(bucket_id) {
-      let today = moment(this.dateStart);
-      return $Event.get({id: bucket_id, limit: -1,
-                         start: today.format(), end: today.add(1, "days").format()});
-    },
-
-    windowEventsFilteredByAFK: function() {
-      return this.todaysEvents(this.windowBucketId)
-        .then((response) => {
-          let events = response.json();
-          return this.todaysEvents(this.afkBucketId).then((response) => {
-              let afkevents = response.json();
-              if(this.filterAFK) {
-                events = event_parsing.filterAFKTime(events, afkevents);
-              }
-              return events;
-          })
-        }, this.errorHandler);
-    },
-
-    groupAndSumEvents: function(events, groupingFunc) {
-      let groups = _.groupBy(events, groupingFunc);
-      let groupsList = _.values(groups);
-
-      let summedEvents = _.map(groupsList,
-            (v, i) => _.reduce(_.drop(v, 1),
-                (acc, e) => {
-                  acc.duration += e.duration;
-                  delete acc.id;
-                  delete acc.timestamp;
-                  delete acc.range;
-                  return acc;
-                }, v[0]))
-
-      // Sort objects by duration
-      summedEvents = _.sortBy(summedEvents, (e) => e.duration).reverse();
-      return summedEvents;
-    },
-
-    queryWindowTitles: function() {
+    queryWindowTitles: function(starttime, endtime) {
       var container = document.getElementById("windowtitles-container")
       summary.set_status(container, "Loading...");
-
-      this.windowEventsFilteredByAFK().then((events) => {
-          let summedEvents = this.groupAndSumEvents(events, (o) => o.data.title);
-          summedEvents = _.take(summedEvents, this.numberOfWindowTitles);
-          summary.updateSummedEvents(container, summedEvents, (e) => e.data.title, (e) => e.data.app);
-      });
-    },
-
-    queryApps: function(viewname){
-      var container = document.getElementById("appsummary-container")
-      summary.set_status(container, "Loading...");
-
-      this.windowEventsFilteredByAFK().then((events) => {
-          let summedEvents = this.groupAndSumEvents(events, (o) => o.data.app);
-          summary.updateSummedEvents(container, summedEvents, (e) => e.data.app, (e) => e.data.app);
-      });
-    },
-
-    queryViewTimeline: function(viewname){
-      var timeline_elem = document.getElementById("apptimeline-container")
-      timeline.set_status(timeline_elem, "Loading...");
-
-      let today = moment(this.dateStart);
-      $QueryView.get({"viewname": viewname,
-                      "limit": -1,
-                      "start": today.format(),
-                      "end": today.add(1, 'days').format()})
-        .then((response) => {
+      var query = this.titleSummaryQuery(this.windowBucketId, this.afkBucketId, this.host, starttime, endtime);
+      $Query.save({}, query).then(
+        (response) => { // Success
           if (response.status > 304){
             this.errorHandler(response);
           } else {
-            var data = response.json();
-            var eventlist = data["eventlist"];
-            this.duration = data["duration"];
-            this.eventcount = data["eventcount"]+this.eventcount;
-
-            var apptimeline = event_parsing.parse_eventlist_by_apps(eventlist);
-            var el = document.getElementById("apptimeline-container")
-            timeline.update(el, apptimeline, this.duration, this.timelineShowAFK);
+            var summedEvents = response.json();
+            summary.updateSummedEvents(container, summedEvents, (e) => e.data.title, (e) => e.data.app);
           }
-        }, this.errorHandler);
+        }, this.errorHandler
+      );
     },
 
+    queryApps: function(starttime, endtime){
+      var container = document.getElementById("appsummary-container")
+      summary.set_status(container, "Loading...");
+      var query = this.appSummaryQuery(this.windowBucketId, this.afkBucketId, this.host, starttime, endtime);
+      console.log(query);
+      $Query.save({}, query).then(
+        (response) => { // Success
+          if (response.status > 304){
+            this.errorHandler(response);
+          } else {
+            var summedEvents = response.json();
+            summary.updateSummedEvents(container, summedEvents, (e) => e.data.app, (e) => e.data.app);
+          }
+        }, this.errorHandler
+      );
+    },
 
-    windowTimelineQuery: function(windowbucket, afkbucket){
-      return {
-        'chunk': false,
-        'cache': false,
-        'transforms':
-        [{
-          'bucket': windowbucket,
-          // TODO: How is this condition handled when bucket is cached? Seems to work...
-          'filters': this.filterAFK ?
-          [{
-            'name': 'timeperiod_intersect',
-            'transforms':
-            [{
-              'bucket': afkbucket,
-              'filters':
-              [{
-                'name': 'include_keyvals',
-                'key': 'status',
-                'vals': ['not-afk'],
-              }]
-            }]
-          }] : []
-        }]
-      };
+    windowTimelineQuery: function(windowbucket, afkbucket, host, starttime, endtime){
+      return 'NAME="window_timeline@'+host+'" \n\
+STARTTIME="'+starttime+'" \n\
+ENDTIME="'+endtime+'" \n\
+not_afk=query_bucket("'+afkbucket+'") \n\
+events=query_bucket("'+windowbucket+'") \n\
+not_afk=filter_keyval(not_afk, "status", "not-afk", TRUE) \n\
+events=filter_period_intersect(events, not_afk) \n\
+events=sort_by_duration(events) \n\
+RETURN=events';
+    },
+
+    appSummaryQuery: function(windowbucket, afkbucket, host, starttime, endtime){
+      return 'NAME="app_summary@'+host+'" \n\
+STARTTIME="'+starttime+'" \n\
+ENDTIME="'+endtime+'" \n\
+not_afk=query_bucket("'+afkbucket+'") \n\
+events=query_bucket("'+windowbucket+'") \n\
+not_afk=filter_keyval(not_afk, "status", "not-afk", TRUE) \n\
+events=filter_period_intersect(events, not_afk) \n\
+events=merge_events_by_key(events, "app") \n\
+events=sort_by_duration(events) \n\
+RETURN=events';
+    },
+
+    titleSummaryQuery: function(windowbucket, afkbucket, host, starttime, endtime){
+      return 'NAME="title_summary@'+host+'" \n\
+STARTTIME="'+starttime+'" \n\
+ENDTIME="'+endtime+'" \n\
+not_afk=query_bucket("'+afkbucket+'") \n\
+events=query_bucket("'+windowbucket+'") \n\
+not_afk=filter_keyval(not_afk, "status", "not-afk", TRUE) \n\
+events=filter_period_intersect(events, not_afk) \n\
+events=merge_events_by_keys2(events, "app", "title") \n\
+events=sort_by_duration(events) \n\
+RETURN=events';
     },
   },
 }
