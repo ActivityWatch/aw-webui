@@ -36,8 +36,6 @@ div
     div.col-md-6
       h5 Summary
       | Total active time: {{ readableDuration }}
-      br
-      | Events queried: {{ eventcount }}
     div.col-md-6
       b Options
       div
@@ -54,6 +52,9 @@ div
       h5 Top Applications
 
       div#appsummary-container
+
+      b-button(size="sm" v-on:click="numberOfAppTitles += 5; queryWindowApps()")
+        | Show more
 
     div.col-md-6
       h5 Top Window Titles
@@ -114,12 +115,13 @@ export default {
 
       filterAFK: true,
       timelineShowAFK: true,
+      readableDuration: "",
 
       // Query variables
       duration: "",
-      eventcount: 0,
       errormsg: "",
-      numberOfWindowTitles: 5
+      numberOfWindowApps: 5,
+      numberOfWindowTitles: 5,
     }
   },
 
@@ -168,15 +170,16 @@ export default {
       this.eventcount = 0;
       this.errormsg = "";
 
+      this.queryApps();
+      this.queryWindowTitles();
+      this.queryTimeline();
+      this.queryTotalTime();
+    },
+
+    queryTimeline: function() {
       let starttime = moment(this.dateStart).format();
       let endtime = moment(this.dateStart).add(1, 'days').format();
 
-      this.queryApps(starttime, endtime);
-      this.queryWindowTitles(starttime, endtime);
-      this.queryTimeline(starttime, endtime);
-    },
-
-    queryTimeline: function(starttime, endtime) {
       var timeline_elem = document.getElementById("apptimeline-container")
       timeline.set_status(timeline_elem, "Loading...");
       var query = this.windowTimelineQuery(this.windowBucketId, this.afkBucketId, this.host, starttime, endtime);
@@ -192,10 +195,13 @@ export default {
         }, this.errorHandler);
     },
 
-    queryWindowTitles: function(starttime, endtime) {
+    queryWindowTitles: function() {
+      let starttime = moment(this.dateStart).format();
+      let endtime = moment(this.dateStart).add(1, 'days').format();
+
       var container = document.getElementById("windowtitles-container")
       summary.set_status(container, "Loading...");
-      var query = this.titleSummaryQuery(this.windowBucketId, this.afkBucketId, this.host, starttime, endtime);
+      var query = this.titleSummaryQuery(this.windowBucketId, this.afkBucketId, this.host, starttime, endtime, this.numberOfWindowTitles);
       $Query.save({}, query).then(
         (response) => { // Success
           if (response.status > 304){
@@ -208,11 +214,13 @@ export default {
       );
     },
 
-    queryApps: function(starttime, endtime){
+    queryApps: function(){
+      let starttime = moment(this.dateStart).format();
+      let endtime = moment(this.dateStart).add(1, 'days').format();
+
       var container = document.getElementById("appsummary-container")
       summary.set_status(container, "Loading...");
-      var query = this.appSummaryQuery(this.windowBucketId, this.afkBucketId, this.host, starttime, endtime);
-      console.log(query);
+      var query = this.appSummaryQuery(this.windowBucketId, this.afkBucketId, this.host, starttime, endtime, this.numberOfWindowApps);
       $Query.save({}, query).then(
         (response) => { // Success
           if (response.status > 304){
@@ -220,6 +228,24 @@ export default {
           } else {
             var summedEvents = response.json();
             summary.updateSummedEvents(container, summedEvents, (e) => e.data.app, (e) => e.data.app);
+          }
+        }, this.errorHandler
+      );
+    },
+
+    queryTotalTime: function(){
+      let starttime = moment(this.dateStart).format();
+      let endtime = moment(this.dateStart).add(1, 'days').format();
+
+      var query = this.totalTimeQuery(this.afkBucketId, this.host, starttime, endtime);
+      $Query.save({}, query).then(
+        (response) => { // Success
+          if (response.status > 304){
+            this.errorHandler(response);
+          } else {
+            var events = response.json();
+
+            this.readableDuration = time.seconds_to_duration(events[0].duration);
           }
         }, this.errorHandler
       );
@@ -237,7 +263,7 @@ events=sort_by_duration(events) \n\
 RETURN=events';
     },
 
-    appSummaryQuery: function(windowbucket, afkbucket, host, starttime, endtime){
+    appSummaryQuery: function(windowbucket, afkbucket, host, starttime, endtime, count){
       return 'NAME="app_summary@'+host+'" \n\
 STARTTIME="'+starttime+'" \n\
 ENDTIME="'+endtime+'" \n\
@@ -247,10 +273,11 @@ not_afk=filter_keyval(not_afk, "status", "not-afk", TRUE) \n\
 events=filter_period_intersect(events, not_afk) \n\
 events=merge_events_by_key(events, "app") \n\
 events=sort_by_duration(events) \n\
+events=limit_events(events, '+count+') \n\
 RETURN=events';
     },
 
-    titleSummaryQuery: function(windowbucket, afkbucket, host, starttime, endtime){
+    titleSummaryQuery: function(windowbucket, afkbucket, host, starttime, endtime, count){
       return 'NAME="title_summary@'+host+'" \n\
 STARTTIME="'+starttime+'" \n\
 ENDTIME="'+endtime+'" \n\
@@ -260,6 +287,17 @@ not_afk=filter_keyval(not_afk, "status", "not-afk", TRUE) \n\
 events=filter_period_intersect(events, not_afk) \n\
 events=merge_events_by_keys2(events, "app", "title") \n\
 events=sort_by_duration(events) \n\
+events=limit_events(events, '+count+') \n\
+RETURN=events';
+    },
+
+    totalTimeQuery: function(afkbucket, host, starttime, endtime){
+      return 'NAME="time_summary@'+host+'" \n\
+STARTTIME="'+starttime+'" \n\
+ENDTIME="'+endtime+'" \n\
+events=query_bucket("'+afkbucket+'") \n\
+events=filter_keyval(events, "status", "not-afk", TRUE) \n\
+events=merge_events_by_key(events, "status") \n\
 RETURN=events';
     },
   },
