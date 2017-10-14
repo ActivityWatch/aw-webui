@@ -277,7 +277,7 @@ not_afk=query_bucket("'+afkbucket+'") \n\
 events=query_bucket("'+windowbucket+'") \n\
 not_afk=filter_keyval(not_afk, "status", "not-afk", FALSE) \n\
 events=filter_period_intersect(events, not_afk) \n\
-events=merge_events_by_key(events, "app") \n\
+events=merge_events_by_keys(events, "app") \n\
 events=sort_by_duration(events) \n\
 events=limit_events(events, '+count+') \n\
 RETURN=events';
@@ -291,7 +291,7 @@ not_afk=query_bucket("'+afkbucket+'") \n\
 events=query_bucket("'+windowbucket+'") \n\
 not_afk=filter_keyval(not_afk, "status", "not-afk", FALSE) \n\
 events=filter_period_intersect(events, not_afk) \n\
-events=merge_events_by_keys2(events, "app", "title") \n\
+events=merge_events_by_keys(events, "app", "title") \n\
 events=sort_by_duration(events) \n\
 events=limit_events(events, '+count+') \n\
 RETURN=events';
@@ -303,7 +303,7 @@ STARTTIME="'+starttime+'" \n\
 ENDTIME="'+endtime+'" \n\
 events=query_bucket("'+afkbucket+'") \n\
 events=filter_keyval(events, "status", "not-afk", FALSE) \n\
-events=merge_events_by_key(events, "status") \n\
+events=merge_events_by_keys(events, "status") \n\
 RETURN=events';
     },
   },
