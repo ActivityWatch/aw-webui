@@ -128,12 +128,15 @@ export default {
     '$route': function(to, from) {
       console.log("Route changed")
       this.reset();
+      this.query();
     },
     'filterAFK': function(to, from) {
       this.reset();
+      this.query();
     },
     'timelineShowAFK': function(to, from) {
       this.reset();
+      this.queryTimeline();
     }
   },
 
@@ -163,7 +166,6 @@ export default {
       this.duration = "";
       this.numberOfWindowApps = 5;
       this.numberOfWindowTitles = 5;
-      this.query();
     },
 
     errorHandler: function(response) {
