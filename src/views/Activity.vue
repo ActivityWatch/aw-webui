@@ -140,11 +140,11 @@ export default {
   computed: {
     readableDuration: function() { return time.seconds_to_duration(this.duration) },
     host: function() { return this.$route.params.host },
-    date: function() { return this.$route.params.date || new Date().toISOString() },
+    date: function() { return this.$route.params.date || moment().format() },
     dateStart: function() { return moment(this.date).startOf('day').format() },
     dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
-    windowBucketId: function() { return "aw-watcher-window" + (PRODUCTION ? "_" : "-testing_") + this.host },
-    afkBucketId:    function() { return "aw-watcher-afk"    + (PRODUCTION ? "_" : "-testing_") + this.host }
+    windowBucketId: function() { return "aw-watcher-window_" + this.host },
+    afkBucketId:    function() { return "aw-watcher-afk_"    + this.host }
   },
 
   mounted: function() {
