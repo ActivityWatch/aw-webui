@@ -181,7 +181,6 @@ export default {
       this.queryApps();
       this.queryWindowTitles();
       this.queryTimeline();
-      this.queryTotalTime();
     },
 
     queryTimeline: function() {
@@ -198,7 +197,9 @@ export default {
           } else {
             var eventlist = response.json();
             var apptimeline = event_parsing.parse_eventlist_by_apps(eventlist);
-            timeline.update(timeline_elem, apptimeline, this.duration, this.timelineShowAFK);
+            var total_duration = this.totalDuration(eventlist);
+            this.duration = total_duration;
+            timeline.update(timeline_elem, apptimeline, total_duration, this.timelineShowAFK);
           }
         }, this.errorHandler);
     },
@@ -222,6 +223,14 @@ export default {
       );
     },
 
+    totalDuration: function(eventlist){
+        var duration = 0;
+        for (var i in eventlist){
+            duration += eventlist[i].duration;
+        }
+        return duration;
+    },
+
     queryApps: function(){
       let starttime = moment(this.dateStart).format();
       let endtime = moment(this.dateStart).add(1, 'days').format();
@@ -236,24 +245,6 @@ export default {
           } else {
             var summedEvents = response.json();
             summary.updateSummedEvents(container, summedEvents, (e) => e.data.app, (e) => e.data.app);
-          }
-        }, this.errorHandler
-      );
-    },
-
-    queryTotalTime: function(){
-      let starttime = moment(this.dateStart).format();
-      let endtime = moment(this.dateStart).add(1, 'days').format();
-
-      var query = this.totalTimeQuery(this.afkBucketId, this.host, starttime, endtime);
-      $Query.save({}, query).then(
-        (response) => { // Success
-          if (response.status > 304){
-            this.errorHandler(response);
-          } else {
-            var events = response.json();
-
-            this.duration = events[0].duration;
           }
         }, this.errorHandler
       );
@@ -296,16 +287,6 @@ events=filter_period_intersect(events, not_afk) \n\
 events=merge_events_by_keys(events, "app", "title") \n\
 events=sort_by_duration(events) \n\
 events=limit_events(events, '+count+') \n\
-RETURN=events';
-    },
-
-    totalTimeQuery: function(afkbucket, host, starttime, endtime){
-      return 'NAME="time_summary@'+host+'" \n\
-STARTTIME="'+starttime+'" \n\
-ENDTIME="'+endtime+'" \n\
-events=query_bucket("'+afkbucket+'") \n\
-events=filter_keyval(events, "status", "not-afk", FALSE) \n\
-events=merge_events_by_keys(events, "status") \n\
 RETURN=events';
     },
   },
