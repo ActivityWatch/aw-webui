@@ -31,7 +31,6 @@ div
 
   hr
 
-
   div.row
     div.col-md-6
       h5 Summary
@@ -75,6 +74,19 @@ div
       | Show AFK time
 
   div#apptimeline-container
+
+  hr
+
+  h5 Top Browser Domains
+
+  p {{ browserBucketId }}
+
+  div#browserdomains-container
+
+  b-button(size="sm" v-on:click="numberOfBrowserDomains += 5; queryBrowserDomains()")
+    | Show more
+
+  br
 
 </template>
 
@@ -121,6 +133,7 @@ export default {
       errormsg: "",
       numberOfWindowApps: 5,
       numberOfWindowTitles: 5,
+      numberOfBrowserDomains: 5,
     }
   },
 
@@ -147,12 +160,14 @@ export default {
     dateStart: function() { return moment(this.date).startOf('day').format() },
     dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
     windowBucketId: function() { return "aw-watcher-window_" + this.host },
-    afkBucketId:    function() { return "aw-watcher-afk_"    + this.host }
+    afkBucketId:    function() { return "aw-watcher-afk_"    + this.host },
+    browserBucketId:    function() { return "aw-watcher-web-firefox" /* OBS! No host on browser extension */}
   },
 
   mounted: function() {
     summary.create(document.getElementById("appsummary-container"));
     summary.create(document.getElementById("windowtitles-container"));
+    summary.create(document.getElementById("browserdomains-container"));
     timeline.create(document.getElementById("apptimeline-container"));
 
     this.query();
@@ -180,6 +195,7 @@ export default {
 
       this.queryApps();
       this.queryWindowTitles();
+      this.queryBrowserDomains();
       this.queryTimeline();
     },
 
@@ -250,6 +266,26 @@ export default {
       );
     },
 
+    queryBrowserDomains: function(){
+      let starttime = moment(this.dateStart).format();
+      let endtime = moment(this.dateStart).add(1, 'days').format();
+
+      var container = document.getElementById("browserdomains-container")
+      summary.set_status(container, "Loading...");
+      var query = this.browserSummaryQuery(this.browserBucketId, this.windowBucketId, this.afkBucketId, this.host, starttime, endtime, this.numberOfBrowserDomains);
+      $Query.save({}, query).then(
+        (response) => { // Success
+          if (response.status > 304){
+            this.errorHandler(response);
+          } else {
+            var summedEvents = response.json();
+            console.log(summedEvents);
+            summary.updateSummedEvents(container, summedEvents, (e) => e.data.domain, (e) => e.data.domain);
+          }
+        }, this.errorHandler
+      );
+    },
+
     windowTimelineQuery: function(windowbucket, afkbucket, host, starttime, endtime){
       return 'NAME="window_timeline@'+host+'" \n\
 STARTTIME="'+starttime+'" \n\
@@ -289,6 +325,25 @@ events=sort_by_duration(events) \n\
 events=limit_events(events, '+count+') \n\
 RETURN=events';
     },
+
+    browserSummaryQuery: function(browserbucket, windowbucket, afkbucket, host, starttime, endtime, count){
+      return 'NAME="browser_summary@'+host+'" \n\
+STARTTIME="'+starttime+'" \n\
+ENDTIME="'+endtime+'" \n\
+CACHE=TRUE \n\
+events=query_bucket("'+browserbucket+'") \n\
+not_afk=query_bucket("'+afkbucket+'") \n\
+not_afk=filter_keyval(not_afk, "status", "not-afk", FALSE) \n\
+window_firefox=query_bucket("'+windowbucket+'") \n\
+window_firefox=filter_keyval(window_firefox, "app", "Firefox", FALSE) \n\
+window_firefox=filter_period_intersect(window_firefox, not_afk) \n\
+events=filter_period_intersect(events, window_firefox) \n\
+events=split_url_events(events) \n\
+events=merge_events_by_keys(events, "domain") \n\
+events=sort_by_duration(events) \n\
+events=limit_events(events, '+count+') \n\
+RETURN=events';
+    }
   },
 }
 </script>
