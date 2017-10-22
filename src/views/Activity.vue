@@ -81,12 +81,15 @@ div
 
   p {{ browserBucketId }}
 
+  b-alert(variant="warning" show)
+    | This is an early version. It is missing basic functionality such as not working on all platforms and browsers.
+    br
+    | See #[a(href="https://github.com/ActivityWatch/activitywatch/issues/99") issue #99] for details.
+
   div#browserdomains-container
 
-  b-button(size="sm" v-on:click="numberOfBrowserDomains += 5; queryBrowserDomains()")
+  b-button(size="sm" v-on:click="numberOfBrowserDomains += 5; queryBrowserDomains()" style="margin-bottom: 1em")
     | Show more
-
-  br
 
 </template>
 
