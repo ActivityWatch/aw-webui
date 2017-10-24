@@ -70,7 +70,9 @@ export default {
   methods: {
     getBuckets: function() {
       $Bucket.get().then((response) => {
-        this.buckets = response.json();
+        let buckets = response.json();
+        buckets = _.orderBy(buckets, [(b) => b.last_updated], ["desc"]);
+        this.buckets = buckets;
       });
     },
 
