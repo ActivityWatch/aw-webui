@@ -297,7 +297,7 @@ not_afk=query_bucket("'+afkbucket+'") \n\
 events=query_bucket("'+windowbucket+'") \n\
 not_afk=filter_keyval(not_afk, "status", "not-afk", FALSE) \n\
 events=filter_period_intersect(events, not_afk) \n\
-events=sort_by_duration(events) \n\
+events=sort_by_timestamp(events) \n\
 RETURN=events';
     },
 
