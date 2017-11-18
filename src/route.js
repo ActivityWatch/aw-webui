@@ -17,8 +17,6 @@ var router = new VueRouter({
     { path: '/',                        component: Home },
     { path: '/activity/:host',          component: Activity },
     { path: '/activity/:host/:date',    component: Activity },
-    { path: '/today/:host',             component: Today },
-    { path: '/today/:host/:date',       component: Today },
     { path: '/buckets',                 component: Buckets },
     { path: '/buckets/:id',             component: Bucket },
     { path: '/log',                     component: Log },
