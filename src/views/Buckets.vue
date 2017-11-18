@@ -36,7 +36,7 @@ div
     padding: 0.5em 0.75em 0.5em 0.75em;
   }
 
-  .card-block {
+  .card-body {
     padding: 0.5em;
   }
 }

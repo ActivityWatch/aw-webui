@@ -49,7 +49,8 @@ div
 
       div#windowtitles-container
 
-      b-button(size="sm" v-on:click="numberOfWindowTitles += 5; queryWindowTitles()")
+      b-button(size="sm", variant="outline-secondary", v-on:click="numberOfWindowTitles += 5; queryWindowTitles()")
+        icon(name="angle-double-down")
         | Show more
 
   hr
@@ -66,14 +67,13 @@ div
 
   hr
 
-  div
-    h4 Clock
+  h4 Clock
 
-    b-alert(variant="warning" show)
-      | #[b Note:] This is an early version. It has known issues that will be resolved in a future update.
-      | See #[a(href="https://github.com/ActivityWatch/aw-webui/issues/36") issue #36] for details.
+  b-alert(variant="warning" show)
+    | #[b Note:] This is an early version. It has known issues that will be resolved in a future update.
+    | See #[a(href="https://github.com/ActivityWatch/aw-webui/issues/36") issue #36] for details.
 
-    aw-sunburst(:hierarchy="hierarchy")
+  aw-sunburst(:hierarchy="hierarchy")
 </template>
 
 <style lang="scss">
@@ -97,6 +97,7 @@ import event_parsing from "../util/event_parsing.js";
 
 import 'vue-awesome/icons/arrow-left'
 import 'vue-awesome/icons/arrow-right'
+import 'vue-awesome/icons/angle-double-down'
 import 'vue-awesome/icons/refresh'
 
 import Sunburst from '../visualizations/Sunburst.vue';
@@ -178,7 +179,7 @@ export default {
       this.errormsg = "Request error " + response.status + ". See F12 console for more info.";
     },
 
-    query: function(){
+    query: function() {
       this.duration = "";
       this.eventcount = 0;
       this.errormsg = "";

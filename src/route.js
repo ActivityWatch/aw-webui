@@ -5,7 +5,6 @@ import Home from './views/Home.vue';
 import Activity from './views/Activity.vue';
 import Buckets from './views/Buckets.vue';
 import Bucket from './views/Bucket.vue';
-import Today from './views/Today.vue';
 import Log from './views/Log.vue';
 import User from './views/User.vue';
 import Settings from './views/Settings.vue';
