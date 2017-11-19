@@ -19,7 +19,7 @@ let $Info       = Vue.resource(origin + '/api/0/info');
 let $Bucket     = Vue.resource(origin + '/api/0/buckets/{id}');
 let $Event      = Vue.resource(origin + '/api/0/buckets/{id}/events');
 let $EventChunk = Vue.resource(origin + '/api/0/buckets/{id}/events/chunk?start={start}&end={end}');
-let $Query      = Vue.resource(origin + '/api/0/query/');
+let $Query      = Vue.resource(origin + '/api/0/query/?name={name}&start={start}&end={end}&cache={cache}');
 let $Log        = Vue.resource(origin + '/api/0/log');
 
 export default {

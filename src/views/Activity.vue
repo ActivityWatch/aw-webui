@@ -89,7 +89,8 @@ div
 
   div#browserdomains-container
 
-  b-button(size="sm" v-on:click="numberOfBrowserDomains += 5; queryBrowserDomains()" style="margin-bottom: 1em")
+  b-button(size="sm", variant="outline-secondary", v-on:click="numberOfBrowserDomains += 5; queryBrowserDomains()")
+    icon(name="angle-double-down")
     | Show more
 
 </template>
@@ -225,8 +226,8 @@ export default {
 
       var timeline_elem = document.getElementById("apptimeline-container")
       timeline.set_status(timeline_elem, "Loading...");
-      var query = this.windowTimelineQuery(this.windowBucketId, this.afkBucketId, this.host, starttime, endtime);
-      $Query.save({}, query).then(
+      var query = this.windowTimelineQuery(this.windowBucketId, this.afkBucketId);
+      $Query.save({"name": "window_timeline@"+this.host, "start": starttime, "end": endtime, "cache": 0}, query).then(
         (response) => { // Success
           if (response.status > 304){
             this.errorHandler(response);
@@ -285,8 +286,8 @@ export default {
 
       var container = document.getElementById("windowtitles-container")
       summary.set_status(container, "Loading...");
-      var query = this.titleSummaryQuery(this.windowBucketId, this.afkBucketId, this.host, starttime, endtime, this.numberOfWindowTitles);
-      $Query.save({}, query).then(
+      var query = this.titleSummaryQuery(this.windowBucketId, this.afkBucketId, this.numberOfWindowTitles);
+      $Query.save({"name": "title_summary@"+this.host, "start": starttime, "end": endtime, "cache": 1}, query).then(
         (response) => { // Success
           if (response.status > 304){
             this.errorHandler(response);
@@ -312,8 +313,8 @@ export default {
 
       var container = document.getElementById("appsummary-container")
       summary.set_status(container, "Loading...");
-      var query = this.appSummaryQuery(this.windowBucketId, this.afkBucketId, this.host, starttime, endtime, this.numberOfWindowApps);
-      $Query.save({}, query).then(
+      var query = this.appSummaryQuery(this.windowBucketId, this.afkBucketId, this.numberOfWindowApps);
+      $Query.save({"name": "appsummary@"+this.host, "start": starttime, "end": endtime, "cache": 1}, query).then(
         (response) => { // Success
           if (response.status > 304){
             this.errorHandler(response);
@@ -331,8 +332,8 @@ export default {
 
       var container = document.getElementById("browserdomains-container")
       summary.set_status(container, "Loading...");
-      var query = this.browserSummaryQuery(this.browserBucketId, this.windowBucketId, this.afkBucketId, this.host, starttime, endtime, this.numberOfBrowserDomains);
-      $Query.save({}, query).then(
+      var query = this.browserSummaryQuery(this.browserBucketId, this.windowBucketId, this.afkBucketId, this.numberOfBrowserDomains);
+      $Query.save({"name": "browser_summary@"+this.host, "start": starttime, "end": endtime, "cache": 1}, query).then(
         (response) => { // Success
           if (response.status > 304){
             this.errorHandler(response);
@@ -345,63 +346,58 @@ export default {
       );
     },
 
-    windowTimelineQuery: function(windowbucket, afkbucket, host, starttime, endtime){
-      return 'NAME="window_timeline@'+host+'" \n\
-STARTTIME="'+starttime+'" \n\
-ENDTIME="'+endtime+'" \n\
-not_afk=query_bucket("'+afkbucket+'") \n\
-events=query_bucket("'+windowbucket+'") \n\
-not_afk=filter_keyval(not_afk, "status", "not-afk", FALSE) \n\
-events=filter_period_intersect(events, not_afk) \n\
-events=sort_by_timestamp(events) \n\
-RETURN=events';
+    windowTimelineQuery: function(windowbucket, afkbucket){
+      return { "query": [
+        'not_afk = query_bucket("'+afkbucket+'");',
+        'events  = query_bucket("'+windowbucket+'");',
+        'not_afk = filter_keyval(not_afk, "status", "not-afk", FALSE);',
+        'events  = filter_period_intersect(events, not_afk);',
+        'events  = sort_by_timestamp(events);',
+        'RETURN  = events;',
+      ]};
     },
 
-    appSummaryQuery: function(windowbucket, afkbucket, host, starttime, endtime, count){
-      return 'NAME="app_summary@'+host+'" \n\
-STARTTIME="'+starttime+'" \n\
-ENDTIME="'+endtime+'" \n\
-not_afk=query_bucket("'+afkbucket+'") \n\
-events=query_bucket("'+windowbucket+'") \n\
-not_afk=filter_keyval(not_afk, "status", "not-afk", FALSE) \n\
-events=filter_period_intersect(events, not_afk) \n\
-events=merge_events_by_keys(events, "app") \n\
-events=sort_by_duration(events) \n\
-events=limit_events(events, '+count+') \n\
-RETURN=events';
+    appSummaryQuery: function(windowbucket, afkbucket, count){
+      return { "query": [
+        'not_afk = query_bucket("'+afkbucket+'");',
+        'events  = query_bucket("'+windowbucket+'");',
+        'not_afk = filter_keyval(not_afk, "status", "not-afk", FALSE);',
+        'events  = filter_period_intersect(events, not_afk);',
+        'events  = merge_events_by_keys(events, "app");',
+        'events  = sort_by_duration(events);',
+        'events  = limit_events(events, '+count+');',
+        'RETURN  = events;',
+      ]};
     },
 
-    titleSummaryQuery: function(windowbucket, afkbucket, host, starttime, endtime, count){
-      return 'NAME="title_summary@'+host+'" \n\
-STARTTIME="'+starttime+'" \n\
-ENDTIME="'+endtime+'" \n\
-not_afk=query_bucket("'+afkbucket+'") \n\
-events=query_bucket("'+windowbucket+'") \n\
-not_afk=filter_keyval(not_afk, "status", "not-afk", FALSE) \n\
-events=filter_period_intersect(events, not_afk) \n\
-events=merge_events_by_keys(events, "app", "title") \n\
-events=sort_by_duration(events) \n\
-events=limit_events(events, '+count+') \n\
-RETURN=events';
+    titleSummaryQuery: function(windowbucket, afkbucket, count){
+      return { "query": [
+        'not_afk=query_bucket("'+afkbucket+'");',
+        'events=query_bucket("'+windowbucket+'");',
+        'not_afk=filter_keyval(not_afk, "status", "not-afk", FALSE);',
+        'events=filter_period_intersect(events, not_afk);',
+        'events=merge_events_by_keys(events, "app", "title");',
+        'events=sort_by_duration(events);',
+        'events=limit_events(events, '+count+');',
+        'RETURN=events;',
+      ]};
     },
 
-    browserSummaryQuery: function(browserbucket, windowbucket, afkbucket, host, starttime, endtime, count){
-      return 'NAME="browser_summary@'+host+'" \n\
-STARTTIME="'+starttime+'" \n\
-ENDTIME="'+endtime+'" \n\
-CACHE=TRUE \n\
-events=query_bucket("'+browserbucket+'") \n\
-not_afk=query_bucket("'+afkbucket+'") \n\
-not_afk=filter_keyval(not_afk, "status", "not-afk", FALSE) \n\
-window_firefox=query_bucket("'+windowbucket+'") \n\
-window_firefox=filter_keyval(window_firefox, "app", "Firefox", FALSE) \n\
-window_firefox=filter_period_intersect(window_firefox, not_afk) \n\
-events=filter_period_intersect(events, window_firefox) \n\
-events=split_url_events(events) \n\
-events=merge_events_by_keys(events, "domain") \n\
-events=sort_by_duration(events) \n\
-events=limit_events(events, '+count+') \n\
-RETURN=events';
+    browserSummaryQuery: function(browserbucket, windowbucket, afkbucket, count){
+      return { "query": [
+        'events=query_bucket("'+browserbucket+'");',
+        'not_afk=query_bucket("'+afkbucket+'");',
+        'not_afk=filter_keyval(not_afk, "status", "not-afk", FALSE);',
+        'window_firefox=query_bucket("'+windowbucket+'");',
+        'window_firefox=filter_keyval(window_firefox, "app", "Firefox", FALSE);',
+        'window_firefox=filter_period_intersect(window_firefox, not_afk);',
+        'events=filter_period_intersect(events, window_firefox);',
+        'events=split_url_events(events);',
+        'events=merge_events_by_keys(events, "domain");',
+        'events=sort_by_duration(events);',
+        'events=limit_events(events, '+count+');',
+        'RETURN=events;',
+      ]};
     },
 
     // Everything below is related to the sunburst visualization
