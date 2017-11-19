@@ -8,13 +8,13 @@ div
     | {{ errormsg }}
 
   b-button-group
-    b-button(:to="'/activity/' + host + '/' + previousDay()")
+    b-button(:to="'/activity/' + host + '/' + previousDay()", variant="outline-dark")
       icon(name="arrow-left")
       |  Previous day
-    b-button(:to="'/activity/' + host + '/' + nextDay()", :disabled="nextDay() > today")
+    b-button(:to="'/activity/' + host + '/' + nextDay()", :disabled="nextDay() > today", variant="outline-dark")
       |  Next day
       icon(name="arrow-right")
-  b-button(v-on:click="refresh()", style="margin-left: 1rem;")
+  b-button(v-on:click="refresh()", style="margin-left: 1rem;", variant="outline-dark")
     icon(name="refresh")
     |  Refresh
 
