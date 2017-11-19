@@ -1,5 +1,11 @@
 <template lang="pug">
 div.sunburst
+  div#sidebar
+    input(type="checkbox", id="togglelegend")
+    | Legend
+    br
+    div#legend(style="visibility: hidden")
+
   div#main
     div#sequence
     div#chart
@@ -12,12 +18,6 @@ div.sunburst
           div#time
           div#duration
           div#data(style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;")
-
-  div#sidebar
-    input(type="checkbox", id="togglelegend")
-    | Legend
-    br
-    div#legend(style="visibility: hidden")
 </template>
 
 <style scoped lang="scss">
@@ -25,13 +25,14 @@ div.sunburst
   font-family: 'Open Sans', sans-serif;
   font-size: 12px;
   font-weight: 400;
-  width: 960px;
+  width: 100%;
   height: 700px;
   margin-top: 10px;
 
   #main {
-    float: left;
     width: 750px;
+    margin-right: auto;
+    margin-left: auto;
   }
 
   #sidebar {
@@ -118,6 +119,7 @@ let aw_sunburst = {
   },
   watch: {
     "hierarchy": function() {
+      sunburst.create(this.$el);
       sunburst.update(this.$el, this.hierarchy);
     }
   }

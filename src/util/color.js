@@ -11,14 +11,14 @@ let scale = d3.scaleOrdinal(['#90CAF9', '#FFE082', '#EF9A9A', '#A5D6A7']);
 scale.domain([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
 
 let customColors = {
-    "afk": "#DDD",
-    "not-afk": "#2D6",
+    "afk": "#EEE",
+    "not-afk": "#7F6",
     "hibernating": "#DD6",
 
-    "google-chrome": "#4885ed",   // Google Blue
-    "chromium": "#4885ed", // Google Blue
-    "spotify": "#1ED760",  // Spotify Green
-    "alacritty": "#EA5"
+    "google-chrome": "#6AA7FE",   // Google Blue: "#4885ed"
+    "chromium": "#8CF", // Google Blue: "#4885ed"
+    "spotify": "#5FA",  // Spotify Green: "#1ED760"
+    "alacritty": "#FC7"
 };
 
 function hashcode(str){

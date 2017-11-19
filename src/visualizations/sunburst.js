@@ -44,6 +44,9 @@ var partition;
 var arc;
 
 function create(el) {
+  // Clear the svg in case we are redrawing
+  d3.select("#chart").selectAll("svg").remove();
+
   vis = d3.select("#chart").append("svg:svg")
       .attr("width", width)
       .attr("height", height)

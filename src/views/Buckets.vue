@@ -11,7 +11,7 @@ div
   b-card.bucket-card(v-for="bucket in buckets", :key="bucket.id", :header="bucket.id")
     b-button-toolbar
       b-button-group(size="sm", class="mx-1")
-        b-button(variant="primary", :to="'/buckets/' + bucket.id")
+        b-button(variant="outline-primary", :to="'/buckets/' + bucket.id")
           | Open bucket
       b-button-group(size="sm", class="mx-1")
         // TODO: This currently does not export bucket metadata, which makes importing difficult
@@ -19,7 +19,8 @@ div
         // NOTE: When this is done we should also change the download name from "events-export" to "bucket-export".
         b-button(:href="'/api/0/buckets/' + bucket.id + '/events?limit=-1'",
                  :download="'aw-event-export-' + bucket.id + '.json'",
-                 title="Export all events from this bucket to JSON")
+                 title="Export all events from this bucket to JSON",
+                 variant="outline-secondary")
           | Export as JSON
     small.bucket-last-updated(v-if="bucket.last_updated", slot="footer")
       span
@@ -36,7 +37,7 @@ div
     padding: 0.5em 0.75em 0.5em 0.75em;
   }
 
-  .card-block {
+  .card-body {
     padding: 0.5em;
   }
 }
@@ -70,7 +71,9 @@ export default {
   methods: {
     getBuckets: function() {
       $Bucket.get().then((response) => {
-        this.buckets = response.json();
+        let buckets = response.json();
+        buckets = _.orderBy(buckets, [(b) => b.last_updated], ["desc"]);
+        this.buckets = buckets;
       });
     },
 
