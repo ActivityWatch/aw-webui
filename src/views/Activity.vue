@@ -346,6 +346,8 @@ export default {
       );
     },
 
+    // TODO: Sanitize string input of buckets
+
     windowTimelineQuery: function(windowbucket, afkbucket){
       return { "query": [
         'not_afk = query_bucket("'+afkbucket+'");',
