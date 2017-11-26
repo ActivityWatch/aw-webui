@@ -143,6 +143,8 @@ export default {
       numberOfWindowApps: 5,
       numberOfWindowTitles: 5,
       numberOfBrowserDomains: 5,
+
+      browserBucketId: "",
     }
   },
 
@@ -167,6 +169,9 @@ export default {
     'timelineShowAFK': function(to, from) {
       this.refresh();
     },
+    'browserBucketId': function(to, from) {
+      this.queryBrowserDomains();
+    },
   },
 
   computed: {
@@ -177,7 +182,6 @@ export default {
     dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
     windowBucketId: function() { return "aw-watcher-window_" + this.host },
     afkBucketId:    function() { return "aw-watcher-afk_"    + this.host },
-    browserBucketId:    function() { return "aw-watcher-web-firefox" /* OBS! No host on browser extension */}
   },
 
   mounted: function() {
@@ -185,6 +189,8 @@ export default {
     summary.create(document.getElementById("windowtitles-container"));
     summary.create(document.getElementById("browserdomains-container"));
     timeline.create(document.getElementById("apptimeline-container"));
+
+    this.getBrowserBucket();
 
     this.refresh();
   },
@@ -214,6 +220,22 @@ export default {
       this.queryWindowTitles();
       this.queryBrowserDomains();
       this.queryTimeline();
+    },
+
+    getBrowserBucket: function() {
+      $Bucket.get().then((response) => {
+        let buckets = response.json();
+        for (var bucket in buckets){
+          /*
+             TODO: Select the most suitable browser bucket (or even merge the buckets)
+             instead of selecting the first one
+          */
+          if (buckets[bucket]["type"] === "web.tab.current"){
+            this.browserBucketId = bucket;
+            break;
+          }
+        }
+      });
     },
 
     queryTimeline: function() {
@@ -289,17 +311,19 @@ export default {
 
       var container = document.getElementById("browserdomains-container")
       summary.set_status(container, "Loading...");
-      var query = this.browserSummaryQuery(this.browserBucketId, this.windowBucketId, this.afkBucketId, this.numberOfBrowserDomains);
-      $Query.save({"name": "browser_summary@"+this.host, "start": starttime, "end": endtime, "cache": 1}, query).then(
-        (response) => { // Success
-          if (response.status > 304){
-            this.errorHandler(response);
-          } else {
-            var summedEvents = response.json();
-            summary.updateSummedEvents(container, summedEvents, (e) => e.data.domain, (e) => e.data.domain);
-          }
-        }, this.errorHandler
-      );
+      if (this.browserBucketId !== ""){
+        var query = this.browserSummaryQuery(this.browserBucketId, this.windowBucketId, this.afkBucketId, this.numberOfBrowserDomains);
+        $Query.save({"name": "browser_summary@"+this.host, "start": starttime, "end": endtime, "cache": 1}, query).then(
+          (response) => { // Success
+            if (response.status > 304){
+              this.errorHandler(response);
+            } else {
+              var summedEvents = response.json();
+              summary.updateSummedEvents(container, summedEvents, (e) => e.data.domain, (e) => e.data.domain);
+            }
+          }, this.errorHandler
+        );
+      }
     },
 
     // TODO: Sanitize string input of buckets
