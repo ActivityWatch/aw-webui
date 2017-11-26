@@ -80,6 +80,14 @@ div
 
   h4 Top Browser Domains
 
+  b-dropdown(text="Select browser watcher bucket", variant="outline-secondary")
+    b-dropdown-item(v-if="browserBuckets.length <= 0", name="b", disabled)
+      | No browser buckets available
+      br
+      small Make sure you have an browser extension installed
+    b-dropdown-item-button(v-for="browserBucket in browserBuckets", :key="browserBucket", v-on:click="browserBucketId = browserBucket")
+      | {{ browserBucket }}
+
   p {{ browserBucketId }}
 
   b-alert(variant="warning" show)
@@ -144,6 +152,7 @@ export default {
       numberOfWindowTitles: 5,
       numberOfBrowserDomains: 5,
 
+      browserBuckets: [],
       browserBucketId: "",
     }
   },
@@ -226,14 +235,12 @@ export default {
       $Bucket.get().then((response) => {
         let buckets = response.json();
         for (var bucket in buckets){
-          /*
-             TODO: Select the most suitable browser bucket (or even merge the buckets)
-             instead of selecting the first one
-          */
           if (buckets[bucket]["type"] === "web.tab.current"){
-            this.browserBucketId = bucket;
-            break;
+            this.browserBuckets.push(bucket);
           }
+        }
+        if (this.browserBuckets.length > 0){
+          this.browserBucketId = this.browserBuckets[0]
         }
       });
     },
