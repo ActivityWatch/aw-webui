@@ -339,7 +339,7 @@ export default {
       return { "query": [
         'not_afk = query_bucket("'+afkbucket+'");',
         'events  = query_bucket("'+windowbucket+'");',
-        'not_afk = filter_keyval(not_afk, "status", "not-afk", FALSE);',
+        'not_afk = filter_keyvals(not_afk, "status", "not-afk");',
         'events  = filter_period_intersect(events, not_afk);',
         'events  = sort_by_timestamp(events);',
         'RETURN  = events;',
@@ -350,7 +350,7 @@ export default {
       return { "query": [
         'not_afk = query_bucket("'+afkbucket+'");',
         'events  = query_bucket("'+windowbucket+'");',
-        'not_afk = filter_keyval(not_afk, "status", "not-afk", FALSE);',
+        'not_afk = filter_keyvals(not_afk, "status", "not-afk");',
         'events  = filter_period_intersect(events, not_afk);',
         'events  = merge_events_by_keys(events, "app");',
         'events  = sort_by_duration(events);',
@@ -363,7 +363,7 @@ export default {
       return { "query": [
         'not_afk=query_bucket("'+afkbucket+'");',
         'events=query_bucket("'+windowbucket+'");',
-        'not_afk=filter_keyval(not_afk, "status", "not-afk", FALSE);',
+        'not_afk=filter_keyvals(not_afk, "status", "not-afk");',
         'events=filter_period_intersect(events, not_afk);',
         'events=merge_events_by_keys(events, "app", "title");',
         'events=sort_by_duration(events);',
@@ -382,9 +382,9 @@ export default {
       return { "query": [
         'events=query_bucket("'+browserbucket+'");',
         'not_afk=query_bucket("'+afkbucket+'");',
-        'not_afk=filter_keyval(not_afk, "status", "not-afk", FALSE);',
+        'not_afk=filter_keyvals(not_afk, "status", "not-afk");',
         'window_browser=query_bucket("'+windowbucket+'");',
-        'window_browser=filter_keyval(window_browser, "app", "'+browser_appname+'", FALSE);',
+        'window_browser=filter_keyvals(window_browser, "app", "'+browser_appname+'");',
         'window_browser=filter_period_intersect(window_browser, not_afk);',
         'events=filter_period_intersect(events, window_browser);',
         'events=split_url_events(events);',
