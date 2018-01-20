@@ -373,18 +373,18 @@ export default {
     },
 
     browserSummaryQuery: function(browserbucket, windowbucket, afkbucket, count){
-      var browser_appname = "";
+      var browser_appnames = "";
       if (browserbucket.endsWith("-chrome")){
-        browser_appname = "Google-chrome";
+        browser_appname = '"Google-chrome", "chrome.exe"';
       } else if (browserbucket.endsWith("-firefox")){
-        browser_appname = "Firefox";
+        browser_appnames = '"Firefox", "Firefox.exe"';
       }
       return { "query": [
         'events=query_bucket("'+browserbucket+'");',
         'not_afk=query_bucket("'+afkbucket+'");',
         'not_afk=filter_keyvals(not_afk, "status", "not-afk");',
         'window_browser=query_bucket("'+windowbucket+'");',
-        'window_browser=filter_keyvals(window_browser, "app", "'+browser_appname+'");',
+        'window_browser=filter_keyvals(window_browser, "app", '+browser_appnames+');',
         'window_browser=filter_period_intersect(window_browser, not_afk);',
         'events=filter_period_intersect(events, window_browser);',
         'events=split_url_events(events);',
