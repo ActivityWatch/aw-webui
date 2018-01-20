@@ -1,23 +1,20 @@
 <template lang="pug">
 div.sunburst
-  div#sidebar
-    input(type="checkbox", id="togglelegend")
-    | Legend
-    br
-    div#legend(style="visibility: hidden")
+  div.sidebar
+    div.legend
 
-  div#main
-    div#sequence
-    div#chart
-      div#explanation
-        div#base
+  div.main
+    div.sequence
+    div.chart
+      div.explanation
+        div.base
           | {{ centerMsg }}
-        div#hover(style="visibility: hidden")
-          div#date
-          div#title
-          div#time
-          div#duration
-          div#data(style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;")
+        div.hover(style="visibility: hidden")
+          div.date
+          div.title
+          div.time
+          div.duration
+          div.data(style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;")
 </template>
 
 <style scoped lang="scss">
@@ -29,40 +26,40 @@ div.sunburst
   height: 700px;
   margin-top: 10px;
 
-  #main {
+  .main {
     width: 750px;
     margin-right: auto;
     margin-left: auto;
   }
 
-  #sidebar {
+  .sidebar {
     float: right;
     width: 100px;
   }
 
-  #sequence {
+  .sequence {
     width: 600px;
     height: 70px;
   }
 
-  #legend {
+  .legend {
     padding: 10px 0 0 3px;
   }
 
-  #sequence text, #legend text {
+  .sequence text, .legend text {
     font-weight: 600;
     fill: #fff;
   }
 
-  #chart {
+  .chart {
     position: relative;
   }
 
-  #chart path {
+  .chart path {
     stroke: #fff;
   }
 
-  #explanation {
+  .explanation {
     position: absolute;
     top: 260px;
     left: 305px;
@@ -71,30 +68,30 @@ div.sunburst
     color: #666;
     z-index: 10; // might not be needed
 
-    #base {
+    .base {
         color: #DDD;
         font-size: 2em;
     }
 
-    #hover {
-      #date {
+    .hover {
+      .date {
         font-size: 0.8em;
       }
 
-      #time {
+      .time {
         font-size: 1em;
       }
 
-      #title {
+      .title {
         font-size: 2em;
         font-weight: bold;
       }
 
-      #duration {
+      .duration {
         font-size: 1em;
       }
 
-      #data {
+      .data {
         font-size: 1em;
       }
     }
