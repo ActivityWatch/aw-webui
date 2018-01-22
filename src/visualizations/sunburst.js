@@ -33,6 +33,7 @@ var b = {
 var legendData = {
     "afk": color.getColorFromString("afk"),
     "not-afk": color.getColorFromString("not-afk"),
+    "hibernating": color.getColorFromString("hibernating"),
 }
 
 // Total size of all segments; we set this later, after loading the data.
@@ -44,14 +45,16 @@ var arc;
 
 function create(el) {
   // Clear the svg in case we are redrawing
-  d3.select("#chart").selectAll("svg").remove();
+  d3.select(".chart").selectAll("svg").remove();
 
-  vis = d3.select("#chart").append("svg:svg")
+  vis = d3.select(".chart").append("svg:svg")
       .attr("width", width)
       .attr("height", height)
       .append("svg:g")
       .attr("id", "container")
       .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+  drawLegend(el);
 
   partition = d3.partition()
       .size([2 * Math.PI, radius * radius]);
@@ -61,10 +64,6 @@ function create(el) {
       .endAngle(function(d) { return d.x1; })
       .innerRadius(function(d) { return Math.sqrt(d.y0); })
       .outerRadius(function(d) { return Math.sqrt(d.y1); });
-}
-
-function update(el, hierarchy) {
-  createVisualization(hierarchy);
 }
 
 function drawClockTick(a) {
@@ -99,11 +98,11 @@ function drawClock(h, m, text) {
 }
 
 // Main function to draw and set up the visualization, once we have the data.
-function createVisualization(json) {
+function update(el, json) {
   // Basic setup of page elements.
   initializeBreadcrumbTrail();
-  drawLegend();
-  d3.select("#togglelegend").on("click", toggleLegend);
+
+  el.querySelector("#container").innerHTML = "";
 
   // Bounding circle underneath the sunburst, to make it easier to detect
   // when the mouse leaves the parent g.
@@ -176,7 +175,7 @@ function createVisualization(json) {
       .on("click", mouseclick);
 
   // Add the mouseleave handler to the bounding circle.
-  d3.select("#container").on("mouseleave", mouseleave);
+  d3.select(".container").on("mouseleave", mouseleave);
 
   // Get total size of the tree = value of root node from partition.
   totalSize = path.datum().value;
@@ -189,24 +188,24 @@ function mouseclick(d) {
 
 function showInfo(d) {
   let m = moment(d.data.timestamp);
-  d3.select("#date")
+  d3.select(".date")
       .text(m.format("YYYY-MM-DD"));
-  d3.select("#time")
+  d3.select(".time")
       .text(m.format("HH:mm:ss"));
 
   let durationString = time.seconds_to_duration(d.data.duration)
-  d3.select("#duration")
+  d3.select(".duration")
       .text(durationString);
 
-  d3.select("#title")
+  d3.select(".title")
       .text(d.data.data.app || d.data.data.status);
 
-  d3.select("#data")
+  d3.select(".data")
       .text(d.data.data.title || "");
 
-  d3.select("#explanation > #base")
+  d3.select(".explanation > .base")
       .style("display", "none");
-  d3.select("#explanation > #hover")
+  d3.select(".explanation > .hover")
       .style("visibility", "");
 }
 
@@ -234,7 +233,7 @@ function mouseover(d) {
 // Restore everything to full opacity when moving off the visualization.
 function mouseleave(d) {
   // Hide the breadcrumb trail
-  d3.select("#trail")
+  d3.select(".trail")
       .style("visibility", "hidden");
 
   // Deactivate all segments during transition.
@@ -249,15 +248,15 @@ function mouseleave(d) {
                  d3.select(this).on("mouseover", mouseover);
                });
 
-  d3.select("#explanation > #base")
+  d3.select(".explanation > .base")
       .style("display", "");
-  d3.select("#explanation > #hover")
+  d3.select(".explanation > .hover")
       .style("visibility", "hidden");
 }
 
 function initializeBreadcrumbTrail() {
   // Add the svg area.
-  var trail = d3.select("#sequence").append("svg:svg")
+  var trail = d3.select(".sequence").append("svg:svg")
       .attr("width", width)
       .attr("height", 50)
       .attr("id", "trail");
@@ -285,7 +284,7 @@ function breadcrumbPoints(d, i) {
 function updateBreadcrumbs(nodeArray, valueString) {
 
   // Data join; key function combines name and depth (= position in sequence).
-  var trail = d3.select("#trail")
+  var trail = d3.select(".trail")
       .selectAll("g")
       .data(nodeArray, function(d) { return d.data.timestamp + d.depth; });
 
@@ -312,7 +311,7 @@ function updateBreadcrumbs(nodeArray, valueString) {
   });
 
   // Now move and update the percentage at the end.
-  d3.select("#trail").select("#endlabel")
+  d3.select(".trail").select(".endlabel")
       .attr("x", (nodeArray.length + 0.5) * (b.w + b.s))
       .attr("y", b.h / 2)
       .attr("dy", "0.35em")
@@ -320,7 +319,7 @@ function updateBreadcrumbs(nodeArray, valueString) {
       .text(valueString);
 
   // Make the breadcrumb trail visible, if it's hidden.
-  d3.select("#trail")
+  d3.select(".trail")
       .style("visibility", "");
 
 }
@@ -332,7 +331,7 @@ function drawLegend() {
     w: 75, h: 30, s: 3, r: 3
   };
 
-  var legend = d3.select("#legend").append("svg:svg")
+  var legend = d3.select(".legend").append("svg:svg")
       .attr("width", li.w)
       .attr("height", d3.keys(legendData).length * (li.h + li.s));
 
@@ -356,15 +355,6 @@ function drawLegend() {
       .attr("dy", "0.35em")
       .attr("text-anchor", "middle")
       .text(function(d) { return d.key; });
-}
-
-function toggleLegend() {
-  var legend = d3.select("#legend");
-  if (legend.style("visibility") == "hidden") {
-    legend.style("visibility", "");
-  } else {
-    legend.style("visibility", "hidden");
-  }
 }
 
 // NOTE: The original version of this sunburst contained a buildHierarchy

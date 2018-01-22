@@ -13,9 +13,11 @@ scale.domain([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 
 let customColors = {
     "afk": "#EEE",
     "not-afk": "#7F6",
+    "hibernating": "#DD6",
 
     "google-chrome": "#6AA7FE",   // Google Blue: "#4885ed"
     "chromium": "#8CF", // Google Blue: "#4885ed"
+    "firefox": "#F94", // Firefox Orange: "#E55B0A"
     "spotify": "#5FA",  // Spotify Green: "#1ED760"
     "alacritty": "#FC7"
 };

@@ -2,6 +2,19 @@
 div
   h2 Buckets
 
+  b-alert(variant="danger" :show="bucket_to_delete.length > 0")
+    | Are you sure you want to delete bucket {{bucket_to_delete}}? (This is permanent and cannot be undone)
+    b-button-toolbar
+      b-button-group(size="sm", class="mx-1")
+        b-button(v-on:click="deleteBucket(bucket_to_delete); bucket_to_delete = ''"
+                 title="Export all events from this bucket to JSON",
+                 variant="danger")
+          | Confirm
+        b-button(v-on:click="bucket_to_delete = ''"
+                 title="Export all events from this bucket to JSON",
+                 variant="success")
+          | Abort
+
   b-alert(show)
     | Are you looking to collect more data? Check out #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") the docs] for more watchers.
     br
@@ -11,7 +24,7 @@ div
   b-card.bucket-card(v-for="bucket in buckets", :key="bucket.id", :header="bucket.id")
     b-button-toolbar
       b-button-group(size="sm", class="mx-1")
-        b-button(variant="outline-primary", :to="'/buckets/' + bucket.id")
+        b-button(variant="primary", :to="'/buckets/' + bucket.id")
           | Open bucket
       b-button-group(size="sm", class="mx-1")
         // TODO: This currently does not export bucket metadata, which makes importing difficult
@@ -22,6 +35,11 @@ div
                  title="Export all events from this bucket to JSON",
                  variant="outline-secondary")
           | Export as JSON
+      b-button-group(size="sm", class="mx-1")
+        b-button(v-on:click="bucket_to_delete = bucket.id"
+                 title="Export all events from this bucket to JSON",
+                 variant="outline-danger")
+          | Delete bucket
     small.bucket-last-updated(v-if="bucket.last_updated", slot="footer")
       span
         | Last updated:
@@ -66,6 +84,7 @@ export default {
   data: () => {
     return {
       buckets: [],
+      bucket_to_delete: "",
     }
   },
   methods: {
@@ -80,6 +99,13 @@ export default {
     getBucketInfo: function(bucket_id) {
       $Bucket.get({"id": bucket_id}).then((response) => {
         this.buckets[bucket_id] = response.json();
+      });
+    },
+
+    deleteBucket: function(bucket_id) {
+      console.log("Deleting bucket " + bucket_id);
+      $Bucket.delete({"id": bucket_id}).then(() => {
+        this.getBuckets();
       });
     }
   }

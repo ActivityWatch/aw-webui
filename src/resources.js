@@ -16,13 +16,10 @@ if(!PRODUCTION) {
 
 
 let $Info       = Vue.resource(origin + '/api/0/info');
-let $Bucket     = Vue.resource(origin + '/api/0/buckets/{id}');
+let $Bucket     = Vue.resource(origin + '/api/0/buckets/{id}?force=1');
 let $Event      = Vue.resource(origin + '/api/0/buckets/{id}/events');
 let $EventChunk = Vue.resource(origin + '/api/0/buckets/{id}/events/chunk?start={start}&end={end}');
-let $GetViews   = Vue.resource(origin + '/api/0/views/');
-let $QueryView  = Vue.resource(origin + '/api/0/views/{viewname}?limit={limit}&start={start}&end={end}');
-let $CreateView = Vue.resource(origin + '/api/0/views/{viewname}');
-let $GetViewInfo= Vue.resource(origin + '/api/0/views/{viewname}/info');
+let $Query      = Vue.resource(origin + '/api/0/query/?name={name}&start={start}&end={end}&cache={cache}');
 let $Log        = Vue.resource(origin + '/api/0/log');
 
 export default {
@@ -30,10 +27,7 @@ export default {
   $Bucket:      $Bucket,
   $Event:       $Event,
   $EventChunk:  $EventChunk,
-  $GetViews:    $GetViews,
-  $QueryView:   $QueryView,
-  $CreateView:  $CreateView,
-  $GetViewInfo: $GetViewInfo,
+  $Query:       $Query,
   $Log:         $Log,
 };
 
