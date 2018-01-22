@@ -59,12 +59,16 @@ $border-color: #ddd;
 
 .card {
   margin-bottom: 1em;
-}
 
-.card-title {
-  display: inline-block;
-  margin-bottom: 0;
-  margin-right: 1em;
+  .card-title {
+    display: inline-block;
+    margin-bottom: 0;
+    margin-right: 1em;
+  }
+
+  .card-body {
+    padding: 0;
+  }
 }
 
 .event-list {

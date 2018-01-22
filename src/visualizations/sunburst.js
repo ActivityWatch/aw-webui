@@ -218,7 +218,7 @@ function mouseover(d) {
   updateBreadcrumbs(sequenceArray, time.seconds_to_duration(d.data.duration));
 
   // Fade all the segments.
-  d3.selectAll("path")
+  vis.selectAll("path")
       .style("opacity", 0.5);
 
   // Then highlight only those that are an ancestor of the current segment.
@@ -233,14 +233,14 @@ function mouseover(d) {
 // Restore everything to full opacity when moving off the visualization.
 function mouseleave(d) {
   // Hide the breadcrumb trail
-  d3.select(".trail")
+  vis.select(".trail")
       .style("visibility", "hidden");
 
   // Deactivate all segments during transition.
-  d3.selectAll("path").on("mouseover", null);
+  vis.selectAll("path").on("mouseover", null);
 
   // Transition each segment to full opacity and then reactivate it.
-  d3.selectAll("path")
+  vis.selectAll("path")
     .transition()
     .duration(100)
     .style("opacity", 1)
@@ -248,9 +248,9 @@ function mouseleave(d) {
                  d3.select(this).on("mouseover", mouseover);
                });
 
-  d3.select(".explanation > .base")
+  vis.select(".explanation > .base")
       .style("display", "");
-  d3.select(".explanation > .hover")
+  vis.select(".explanation > .hover")
       .style("visibility", "hidden");
 }
 

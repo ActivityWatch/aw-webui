@@ -22,7 +22,7 @@ div
 
   //b-card-group(columns=true)
   b-card.bucket-card(v-for="bucket in buckets", :key="bucket.id", :header="bucket.id")
-    b-button-toolbar
+    b-button-toolbar.float-left
       b-button-group(size="sm", class="mx-1")
         b-button(variant="primary", :to="'/buckets/' + bucket.id")
           | Open bucket
@@ -35,11 +35,12 @@ div
                  title="Export all events from this bucket to JSON",
                  variant="outline-secondary")
           | Export as JSON
+    b-button-toolbar.float-right
       b-button-group(size="sm", class="mx-1")
         b-button(v-on:click="bucket_to_delete = bucket.id"
                  title="Export all events from this bucket to JSON",
                  variant="outline-danger")
-          | Delete bucket
+          | #[icon(name="trash")] Delete bucket
     small.bucket-last-updated(v-if="bucket.last_updated", slot="footer")
       span
         | Last updated:
@@ -73,6 +74,8 @@ div
 
 <script>
 import Resources from '../resources.js';
+
+import 'vue-awesome/icons/trash';
 
 let $Bucket = Resources.$Bucket;
 
