@@ -20,6 +20,8 @@ div
     li
       | Give us a like on #[a(href="https://alternativeto.net/software/activitywatch/") AlternativeTo]
     li
+      | Follow us on #[a(href="https://twitter.com/ActivityWatchIt") Twitter] and #[a(href="https://www.facebook.com/ActivityWatch") Facebook].
+    li
       | Tell people about us on #[a(href="https://twitter.com/intent/tweet?text=Say%20something%20nice%20about%20@ActivityWatchIt") Twitter] or #[a(href="http://www.facebook.com/share.php?u=https://activitywatch.net/") Facebook]
 
   hr
