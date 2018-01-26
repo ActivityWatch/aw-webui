@@ -187,26 +187,27 @@ function mouseclick(d) {
 }
 
 function showInfo(d) {
+  let hoverEl = d3.select(".explanation > .hover");
+
   let m = moment(d.data.timestamp);
-  d3.select(".date")
+  hoverEl.select(".date")
       .text(m.format("YYYY-MM-DD"));
-  d3.select(".time")
+  hoverEl.select(".time")
       .text(m.format("HH:mm:ss"));
 
   let durationString = time.seconds_to_duration(d.data.duration)
-  d3.select(".duration")
+  hoverEl.select(".duration")
       .text(durationString);
 
-  d3.select(".title")
-      .text(d.data.data.app || d.data.data.status);
+  hoverEl.select(".title")
+    .text(d.data.data.app || d.data.data.status);
 
-  d3.select(".data")
+  hoverEl.select(".data")
       .text(d.data.data.title || "");
 
   d3.select(".explanation > .base")
       .style("display", "none");
-  d3.select(".explanation > .hover")
-      .style("visibility", "");
+  hoverEl.style("visibility", "");
 }
 
 // Fade all but the current sequence, and show it in the breadcrumb trail.
