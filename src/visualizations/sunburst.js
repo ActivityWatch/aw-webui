@@ -216,7 +216,9 @@ function showInfo(d) {
 function mouseover(d) {
   showInfo(d);
 
-  updateBreadcrumbs(sequenceArray, time.seconds_to_duration(d.data.duration));
+  var sequenceArray = d.ancestors().reverse();
+  sequenceArray.shift(); // remove root node from the array
+
   // Fade all the segments.
   rootEl.selectAll("path")
       .style("opacity", 0.5);
