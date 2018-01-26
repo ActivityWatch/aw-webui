@@ -16,12 +16,28 @@ div
     | Nothing is as motivating as getting ActivityWatch into the hands of users.
     br
     | By sharing it you help us make ActivityWatch even better!
+  ul
+    li
+      | Give us a like on #[a(href="https://alternativeto.net/software/activitywatch/") AlternativeTo]
+    li
+      | Follow us on #[a(href="https://twitter.com/ActivityWatchIt") Twitter] and #[a(href="https://www.facebook.com/ActivityWatch") Facebook].
+    li
+      | Tell people about us on #[a(href="https://twitter.com/intent/tweet?text=Say%20something%20nice%20about%20@ActivityWatchIt") Twitter] or #[a(href="http://www.facebook.com/share.php?u=https://activitywatch.net/") Facebook]
+
+  hr
+
+  h4 Support us!
   p
-    ul
-      li
-        | Give us a like on #[a(href="https://alternativeto.net/software/activitywatch/") AlternativeTo]
-      li
-        | Tell people about us on #[a(href="https://twitter.com/intent/tweet?text=Say%20something%20nice%20about%20@ActivityWatchIt") Twitter]
+    | Do you like what we do? Help us out by donating so we can keep doing it!
+    br
+    | You can donate to us via:
+  ul
+    li #[a(href="https://www.patreon.com/erikbjare") Patreon]
+    li #[a(href="https://opencollective.com/activitywatch") Open Collective]
+    li #[a(href="https://www.bountysource.com/teams/activitywatch") Bountysource]
+    li #[a(href="https://activitywatch.net/donate/") Other methods] (incl. cryptocurrency)
+  p
+    | For more info about the how and why of donating, please visit #[a(href="https://activitywatch.net/donate/") the donation page on out website].
 
   hr
 

@@ -41,7 +41,7 @@ div
 
       div#appsummary-container
 
-      b-button(size="sm", variant="outline-secondary", v-on:click="numberOfAppTitles += 5; queryWindowApps()")
+      b-button(size="sm", variant="outline-secondary", v-on:click="numberOfWindowApps += 5; queryApps()")
         icon(name="angle-double-down")
         | Show more
 
@@ -80,26 +80,30 @@ div
 
   h4 Top Browser Domains
 
-  b-dropdown(text="Select browser watcher bucket", variant="outline-secondary")
-    b-dropdown-item(v-if="browserBuckets.length <= 0", name="b", disabled)
-      | No browser buckets available
-      br
-      small Make sure you have an browser extension installed
-    b-dropdown-item-button(v-for="browserBucket in browserBuckets", :key="browserBucket", v-on:click="browserBucketId = browserBucket")
-      | {{ browserBucket }}
-
-  p {{ browserBucketId }}
-
   b-alert(variant="warning" show)
-    | This is an early version. It is missing basic functionality such as not working on all platforms and browsers.
+    | #[b Note:] This is an early version. It is missing basic functionality such as not working on all platforms and browsers. See #[a(href="https://github.com/ActivityWatch/activitywatch/issues/99") issue #99] for details.
+
+  b-input-group(size="sm")
+    b-input-group-addon
+      | Browser bucket:
+    b-input-group-button
+      b-dropdown(:text="browserBucketId || 'Select browser watcher bucket'", size="sm", variant="outline-secondary")
+        b-dropdown-item(v-if="browserBuckets.length <= 0", name="b", disabled)
+          | No browser buckets available
+          br
+          small Make sure you have an browser extension installed
+        b-dropdown-item-button(v-for="browserBucket in browserBuckets", :key="browserBucket", v-on:click="browserBucketId = browserBucket")
+          | {{ browserBucket }}
+
+  div(v-show="browserBucketId")
     br
-    | See #[a(href="https://github.com/ActivityWatch/activitywatch/issues/99") issue #99] for details.
+    div#browserdomains-container
 
-  div#browserdomains-container
+    b-button(size="sm", variant="outline-secondary", v-on:click="numberOfBrowserDomains += 5; queryBrowserDomains()")
+      icon(name="angle-double-down")
+      | Show more
 
-  b-button(size="sm", variant="outline-secondary", v-on:click="numberOfBrowserDomains += 5; queryBrowserDomains()")
-    icon(name="angle-double-down")
-    | Show more
+  br
 
 </template>
 
@@ -375,7 +379,7 @@ export default {
     browserSummaryQuery: function(browserbucket, windowbucket, afkbucket, count){
       var browser_appnames = "";
       if (browserbucket.endsWith("-chrome")){
-        browser_appname = '"Google-chrome", "chrome.exe"';
+        browser_appnames = '"Google-chrome", "chrome.exe", "Chromium"';
       } else if (browserbucket.endsWith("-firefox")){
         browser_appnames = '"Firefox", "Firefox.exe"';
       }
