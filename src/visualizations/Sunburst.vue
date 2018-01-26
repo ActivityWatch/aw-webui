@@ -33,6 +33,7 @@ div.sunburst
 
   .sidebar {
     float: right;
+    height: 0;
     width: 100px;
   }
 
