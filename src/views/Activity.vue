@@ -379,9 +379,9 @@ export default {
     browserSummaryQuery: function(browserbucket, windowbucket, afkbucket, count){
       var browser_appnames = "";
       if (browserbucket.endsWith("-chrome")){
-        browser_appnames = '"Google-chrome", "chrome.exe", "Chromium"';
+        browser_appnames = '"Google-chrome", "chrome.exe", "Chromium", "Google Chrome"';
       } else if (browserbucket.endsWith("-firefox")){
-        browser_appnames = '"Firefox", "Firefox.exe"';
+        browser_appnames = '"Firefox", "Firefox.exe", "firefox"';
       }
       return { "query": [
         'events=query_bucket("'+browserbucket+'");',
