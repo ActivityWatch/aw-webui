@@ -93,7 +93,7 @@ div
 
   div(v-show="browserBucketId")
     br
-    div#browserdomains-container
+    aw-summary(:fields="top_web_domains", :namefunc="top_web_domains_namefunc", :colorfunc="top_web_domains_colorfunc")
 
     b-button(size="sm", variant="outline-secondary", v-on:click="numberOfBrowserDomains += 5; queryBrowserDomains()")
       icon(name="angle-double-down")
@@ -156,13 +156,17 @@ export default {
       browserBuckets: [],
       browserBucketId: "",
 
-      top_applications: "test1",
+      top_applications: [],
       top_applications_namefunc: null,
       top_applications_colorfunc: null,
 
-      top_window_titles: "test2",
+      top_window_titles: [],
       top_window_titles_namefunc: null,
       top_window_titles_colorfunc: null,
+
+      top_web_domains: {},
+      top_web_domains_namefunc: null,
+      top_web_domains_colorfunc: null,
     }
   },
 
@@ -197,16 +201,14 @@ export default {
     readableDuration: function() { return time.seconds_to_duration(this.duration) },
     host: function() { return this.$route.params.host },
     date: function() { return this.$route.params.date || moment().startOf('day').format() },
-    dateStart: function() { return moment(this.date).startOf('day').format() },
+    dateStart: function() { return this.date },
+    dateEnd: function() { return moment(this.date).add(1, 'days').format() },
     dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
     windowBucketId: function() { return "aw-watcher-window_" + this.host },
     afkBucketId:    function() { return "aw-watcher-afk_"    + this.host },
   },
 
   mounted: function() {
-    //summary.create(document.getElementById("appsummary-container"));
-    //summary.create(document.getElementById("windowtitles-container"));
-    summary.create(document.getElementById("browserdomains-container"));
     timeline.create(document.getElementById("apptimeline-container"));
 
     this.getBrowserBucket();
@@ -256,13 +258,10 @@ export default {
     },
 
     queryTimeline: function() {
-      let starttime = moment(this.dateStart).format();
-      let endtime = moment(this.dateStart).add(1, 'days').format();
-
       var timeline_elem = document.getElementById("apptimeline-container")
       timeline.set_status(timeline_elem, "Loading...");
       var query = this.windowTimelineQuery(this.windowBucketId, this.afkBucketId);
-      $Query.save({"name": "window_timeline@"+this.host, "start": starttime, "end": endtime, "cache": 0}, query).then(
+      $Query.save({"name": "window_timeline@"+this.host, "start": this.dateStart, "end": this.dateEnd, "cache": 0}, query).then(
         (response) => { // Success
           if (response.status > 304){
             this.errorHandler(response);
@@ -277,11 +276,8 @@ export default {
     },
 
     queryWindowTitles: function() {
-      let starttime = moment(this.dateStart).format();
-      let endtime = moment(this.dateStart).add(1, 'days').format();
-
       var query = this.titleSummaryQuery(this.windowBucketId, this.afkBucketId, this.numberOfWindowTitles);
-      $Query.save({"name": "title_summary@"+this.host, "start": starttime, "end": endtime, "cache": 1}, query).then(
+      $Query.save({"name": "title_summary@"+this.host, "start": this.dateStart, "end": this.dateEnd, "cache": 1}, query).then(
         (response) => { // Success
           if (response.status > 304){
             this.errorHandler(response);
@@ -303,11 +299,8 @@ export default {
     },
 
     queryApps: function(){
-      let starttime = moment(this.dateStart).format();
-      let endtime = moment(this.dateStart).add(1, 'days').format();
-
       var query = this.appSummaryQuery(this.windowBucketId, this.afkBucketId, this.numberOfWindowApps);
-      $Query.save({"name": "appsummary@"+this.host, "start": starttime, "end": endtime, "cache": 1}, query).then(
+      $Query.save({"name": "appsummary@"+this.host, "start": this.dateStart, "end": this.dateEnd, "cache": 1}, query).then(
         (response) => { // Success
           if (response.status > 304){
             this.errorHandler(response);
@@ -321,20 +314,16 @@ export default {
     },
 
     queryBrowserDomains: function(){
-      let starttime = moment(this.dateStart).format();
-      let endtime = moment(this.dateStart).add(1, 'days').format();
-
-      var container = document.getElementById("browserdomains-container")
-      summary.set_status(container, "Loading...");
       if (this.browserBucketId !== ""){
         var query = this.browserSummaryQuery(this.browserBucketId, this.windowBucketId, this.afkBucketId, this.numberOfBrowserDomains);
-        $Query.save({"name": "browser_summary@"+this.host, "start": starttime, "end": endtime, "cache": 1}, query).then(
+        $Query.save({"name": "browser_summary@"+this.host, "start": this.dateStart, "end": this.dateEnd, "cache": 1}, query).then(
           (response) => { // Success
             if (response.status > 304){
               this.errorHandler(response);
             } else {
-              var summedEvents = response.json();
-              summary.updateSummedEvents(container, summedEvents, (e) => e.data.domain, (e) => e.data.domain);
+              this.top_web_domains_namefunc = (e) => e.data.domain;
+              this.top_web_domains_colorfunc = (e) => e.data.domain;
+              this.top_web_domains = response.json();
             }
           }, this.errorHandler
         );

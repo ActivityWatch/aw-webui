@@ -25,9 +25,7 @@ export default {
   },
   watch: {
     "fields": function() {
-      console.log("Weee");
       summary.updateSummedEvents(this.$el, this.fields, this.namefunc, this.colorfunc)
-      // Update
     }
   }
 }
