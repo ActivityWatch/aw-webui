@@ -38,18 +38,14 @@ div
   div.row
     div.col-md-6
       h5 Top Applications
-
-      div#appsummary-container
-
+      aw-summary(:fields="top_applications", :namefunc="top_applications_namefunc", :colorfunc="top_applications_colorfunc")
       b-button(size="sm", variant="outline-secondary", v-on:click="numberOfWindowApps += 5; queryApps()")
         icon(name="angle-double-down")
         | Show more
 
     div.col-md-6
       h5 Top Window Titles
-
-      div#windowtitles-container
-
+      aw-summary(:fields="top_window_titles", :namefunc="top_window_titles_namefunc", :colorfunc="top_window_titles_colorfunc")
       b-button(size="sm", variant="outline-secondary", v-on:click="numberOfWindowTitles += 5; queryWindowTitles()")
         icon(name="angle-double-down")
         | Show more
@@ -130,6 +126,7 @@ import 'vue-awesome/icons/arrow-right'
 import 'vue-awesome/icons/angle-double-down'
 import 'vue-awesome/icons/refresh'
 
+import Summary from '../visualizations/Summary.vue';
 import Sunburst from '../visualizations/Sunburst.vue';
 
 import Resources from '../resources.js';
@@ -158,11 +155,20 @@ export default {
 
       browserBuckets: [],
       browserBucketId: "",
+
+      top_applications: "test1",
+      top_applications_namefunc: null,
+      top_applications_colorfunc: null,
+
+      top_window_titles: "test2",
+      top_window_titles_namefunc: null,
+      top_window_titles_colorfunc: null,
     }
   },
 
   components: {
     "aw-sunburst": Sunburst,
+    "aw-summary": Summary,
   },
 
   watch: {
@@ -198,8 +204,8 @@ export default {
   },
 
   mounted: function() {
-    summary.create(document.getElementById("appsummary-container"));
-    summary.create(document.getElementById("windowtitles-container"));
+    //summary.create(document.getElementById("appsummary-container"));
+    //summary.create(document.getElementById("windowtitles-container"));
     summary.create(document.getElementById("browserdomains-container"));
     timeline.create(document.getElementById("apptimeline-container"));
 
@@ -274,16 +280,15 @@ export default {
       let starttime = moment(this.dateStart).format();
       let endtime = moment(this.dateStart).add(1, 'days').format();
 
-      var container = document.getElementById("windowtitles-container")
-      summary.set_status(container, "Loading...");
       var query = this.titleSummaryQuery(this.windowBucketId, this.afkBucketId, this.numberOfWindowTitles);
       $Query.save({"name": "title_summary@"+this.host, "start": starttime, "end": endtime, "cache": 1}, query).then(
         (response) => { // Success
           if (response.status > 304){
             this.errorHandler(response);
           } else {
-            var summedEvents = response.json();
-            summary.updateSummedEvents(container, summedEvents, (e) => e.data.title, (e) => e.data.app);
+            this.top_window_titles_namefunc = (e) => e.data.title;
+            this.top_window_titles_colorfunc = (e) => e.data.app;
+            this.top_window_titles = response.json();
           }
         }, this.errorHandler
       );
@@ -301,16 +306,15 @@ export default {
       let starttime = moment(this.dateStart).format();
       let endtime = moment(this.dateStart).add(1, 'days').format();
 
-      var container = document.getElementById("appsummary-container")
-      summary.set_status(container, "Loading...");
       var query = this.appSummaryQuery(this.windowBucketId, this.afkBucketId, this.numberOfWindowApps);
       $Query.save({"name": "appsummary@"+this.host, "start": starttime, "end": endtime, "cache": 1}, query).then(
         (response) => { // Success
           if (response.status > 304){
             this.errorHandler(response);
           } else {
-            var summedEvents = response.json();
-            summary.updateSummedEvents(container, summedEvents, (e) => e.data.app, (e) => e.data.app);
+            this.top_applications_namefunc = (e) => e.data.app;
+            this.top_applications_colorfunc = (e) => e.data.app;
+            this.top_applications = response.json();
           }
         }, this.errorHandler
       );
