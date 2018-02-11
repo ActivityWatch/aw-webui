@@ -46,7 +46,8 @@ div.sunburst
     padding: 10px 0 0 3px;
   }
 
-  .sequence text, .legend text {
+  .sequence text,
+  .legend text {
     font-weight: 600;
     fill: #fff;
   }
@@ -69,8 +70,8 @@ div.sunburst
     z-index: 10; // might not be needed
 
     .base {
-        color: #DDD;
-        font-size: 2em;
+      color: #ddd;
+      font-size: 2em;
     }
 
     .hover {
@@ -111,171 +112,182 @@ import coloring_types from './coloring.js';
 
 import Resources from '../resources.js';
 let $Bucket = Resources.$Bucket;
-let $Event  = Resources.$Event;
+let $Event = Resources.$Event;
 
 let aw_sunburst = {
-  name: "aw-sunburst",
+  name: 'aw-sunburst',
   props: ['date', 'afkBucketId', 'windowBucketId'],
   mounted: function() {
     sunburst.create(this.$el);
     this.starttime = moment(this.date);
     this.endtime = moment(this.date).add(1, 'days');
     this.visualize();
-    console.log("Initialized aw-sunburst");
+    console.log('Initialized aw-sunburst');
   },
 
   data: () => {
     return {
       starttime: moment(),
       endtime: moment(),
-      centerMsg: "Loading...",
-    }
+      centerMsg: 'Loading...',
+    };
   },
 
   watch: {
-    "date": function(to, from) {
+    date: function(to, from) {
       this.starttime = moment(to);
       this.endtime = moment(this.starttime).add(1, 'days');
       this.visualize();
-    }
+    },
   },
 
   methods: {
     getBucketInfo: function(bucket_id) {
-      return $Bucket.get({"id": bucket_id}).then((response) => {
+      return $Bucket.get({id: bucket_id}).then(response => {
         return response.json();
       });
     },
 
     todaysEvents: function(bucket_id) {
-      return $Event.get({id: bucket_id, limit: -1,
-                         start: this.starttime.format(), end: this.endtime.format()})
-                   .then((response) => response.json());
+      return $Event
+        .get({
+          id: bucket_id,
+          limit: -1,
+          start: this.starttime.format(),
+          end: this.endtime.format(),
+        })
+        .then(response => response.json());
     },
 
     visualize: function() {
       function buildHierarchy(parents, children) {
-          parents = _.sortBy(parents, "timestamp", "desc");
-          children = _.sortBy(children, "timestamp", "desc");
+        parents = _.sortBy(parents, 'timestamp', 'desc');
+        children = _.sortBy(children, 'timestamp', 'desc');
 
-          var i_child = 0;
-          for(var i_parent = 0; i_parent < parents.length; i_parent++) {
-              let p = parents[i_parent];
-              let p_start = moment(p.timestamp);
-              let p_end = p_start.clone().add(p.duration, "seconds");
+        var i_child = 0;
+        for (var i_parent = 0; i_parent < parents.length; i_parent++) {
+          let p = parents[i_parent];
+          let p_start = moment(p.timestamp);
+          let p_end = p_start.clone().add(p.duration, 'seconds');
 
-              p.children = [];
-              while(i_child < children.length) {
-                  var e = children[i_child];
-                  var e_start = moment(e.timestamp);
-                  var e_end = e_start.clone().add(e.duration, "seconds");
+          p.children = [];
+          while (i_child < children.length) {
+            var e = children[i_child];
+            var e_start = moment(e.timestamp);
+            var e_end = e_start.clone().add(e.duration, 'seconds');
 
-                  let too_far = e_start.isAfter(p_end);
-                  let before_parent = e_end.isBefore(p_start);
-                  let within_parent = e_start.isAfter(p_start) && e_end.isBefore(p_end);
-                  let after_parent = e_start.isAfter(p_end);
+            let too_far = e_start.isAfter(p_end);
+            let before_parent = e_end.isBefore(p_start);
+            let within_parent =
+              e_start.isAfter(p_start) && e_end.isBefore(p_end);
+            let after_parent = e_start.isAfter(p_end);
 
-                  // TODO: This isn't correct, yet
-                  if(before_parent) {
-                    // Child is behind parent
-                    //console.log("Too far behind: " + i_child);
-                    i_child++;
-                  } else if(within_parent) {
-                    //console.log("Added relation: " + i_child);
-                    p.children = _.concat(p.children, e);
-                    i_child++;
-                  } else if(after_parent) {
-                    // Child is ahead of parent
-                    //console.log("Too far ahead: " + i_child);
-                    break;
-                  } else {
-                    // TODO: Split events when this happens
-                    console.warn("Between parents");
-                    p.children = _.concat(p.children, e);
-                    i_child++;
-                  }
-              }
+            // TODO: This isn't correct, yet
+            if (before_parent) {
+              // Child is behind parent
+              //console.log("Too far behind: " + i_child);
+              i_child++;
+            } else if (within_parent) {
+              //console.log("Added relation: " + i_child);
+              p.children = _.concat(p.children, e);
+              i_child++;
+            } else if (after_parent) {
+              // Child is ahead of parent
+              //console.log("Too far ahead: " + i_child);
+              break;
+            } else {
+              // TODO: Split events when this happens
+              console.warn('Between parents');
+              p.children = _.concat(p.children, e);
+              i_child++;
+            }
           }
+        }
 
-          // Build the root node
-          //console.log(parents);
-          let m_start = moment(_.first(parents).timestamp)
-          let m_end = moment(_.tail(parents).timestamp)
-          let duration = (m_end - m_start) / 1000;
-          return {
-            "timestamp": _.first(parents).timestamp,
-            // TODO: If we want a 12/24h clock, this has to change
-            "duration": duration,
-            "data": {"title": "ROOT"},
-            "children": parents
-          }
+        // Build the root node
+        //console.log(parents);
+        let m_start = moment(_.first(parents).timestamp);
+        let m_end = moment(_.tail(parents).timestamp);
+        let duration = (m_end - m_start) / 1000;
+        return {
+          timestamp: _.first(parents).timestamp,
+          // TODO: If we want a 12/24h clock, this has to change
+          duration: duration,
+          data: {title: 'ROOT'},
+          children: parents,
+        };
       }
 
       function chunkHierarchy(events, key) {
-          // TODO: Merge window events with same app and assign the title events as children
-          let new_events = [events[0]];
-          let p_i = 0;
-          _.each(events, (e, i) => {
-              if(e.data[key] === new_events[p_i].data[key]) {
-                  //console.log("merge");
-                  let e_moment = moment(e.timestamp);
-                  let ne_moment = moment(new_events[p_i].timestamp);
-                  new_events[p_i].duration = -e_moment.diff(ne_moment, "seconds", true) + e.duration;
-                  //console.log(new_events[p_i].duration);
-              } else {
-                  //console.log("skip");
-                  //console.log(new_events[p_i].duration);
-                  p_i++;
-                  new_events[p_i] = e;
-              }
-          });
-          _.each(new_events, (e, i) => {
-              // Get rid of other keys
-              e.data = _.pickBy(e.data, (v, k) => k === key);
-          })
-          return new_events;
+        // TODO: Merge window events with same app and assign the title events as children
+        let new_events = [events[0]];
+        let p_i = 0;
+        _.each(events, (e, i) => {
+          if (e.data[key] === new_events[p_i].data[key]) {
+            //console.log("merge");
+            let e_moment = moment(e.timestamp);
+            let ne_moment = moment(new_events[p_i].timestamp);
+            new_events[p_i].duration =
+              -e_moment.diff(ne_moment, 'seconds', true) + e.duration;
+            //console.log(new_events[p_i].duration);
+          } else {
+            //console.log("skip");
+            //console.log(new_events[p_i].duration);
+            p_i++;
+            new_events[p_i] = e;
+          }
+        });
+        _.each(new_events, (e, i) => {
+          // Get rid of other keys
+          e.data = _.pickBy(e.data, (v, k) => k === key);
+        });
+        return new_events;
       }
 
       function chunkHierarchy2(events, key) {
-        events = _.sortBy(events, (e) => e.timestamp);
+        events = _.sortBy(events, e => e.timestamp);
         events = _.reverse(events);
-        events = _.reduce(events,
+        events = _.reduce(
+          events,
           function(acc, e) {
             let last = _.last(acc);
-            if(last.data[key] === e.data[key]) {
-              last.duration = moment(e.timestamp).diff(last.timestamp, "seconds", true) + e.duration;
+            if (last.data[key] === e.data[key]) {
+              last.duration =
+                moment(e.timestamp).diff(last.timestamp, 'seconds', true) +
+                e.duration;
             } else {
               acc.push(e);
             }
             return acc;
           },
-          [events[0]]);
+          [events[0]],
+        );
         return events;
       }
 
-      this.todaysEvents(this.afkBucketId).then((events_afk) => {
-        this.todaysEvents(this.windowBucketId).then((events_window) => {
+      this.todaysEvents(this.afkBucketId).then(events_afk => {
+        this.todaysEvents(this.windowBucketId).then(events_window => {
           let hierarchy = null;
-          if(events_afk.length > 0 && events_window.length > 0) {
+          if (events_afk.length > 0 && events_window.length > 0) {
             hierarchy = buildHierarchy(events_afk, events_window);
-            this.centerMsg = "Hover to inspect";
+            this.centerMsg = 'Hover to inspect';
           } else {
             // FIXME: This should do the equivalent of "No data" when such is the case, but it doesn't.
             hierarchy = {
-              "timestamp": "",
+              timestamp: '',
               // TODO: If we want a 12/24h clock, this has to change
-              "duration": 0,
-              "data": {"title": "ROOT"},
-              "children": []
+              duration: 0,
+              data: {title: 'ROOT'},
+              children: [],
             };
-            this.centerMsg = "No data";
+            this.centerMsg = 'No data';
           }
           sunburst.update(this.$el, hierarchy);
         });
       });
     },
   },
-}
+};
 
 export default aw_sunburst;
 </script>

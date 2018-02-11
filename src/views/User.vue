@@ -11,25 +11,28 @@ div
 </template>
 
 <style lang="scss">
+
 </style>
 
 <script>
 export default {
-  name: "User",
+  name: 'User',
+
   data: () => {
     return {
       user: {
-          name: "Erik Bjäreholt",
-          username: "erb",
-          email: "erik@bjareho.lt"
-      }
-    }
+        name: 'Erik Bjäreholt',
+        username: 'erb',
+        email: 'erik@bjareho.lt',
+      },
+    };
   },
-  methods: {
-  },
+
   mounted: function() {
-      let username = this.$route.params.username;
-      // Fetch user by username
-  }
-}
+    let username = this.$route.params.username;
+    // Fetch user by username
+  },
+
+  methods: {},
+};
 </script>

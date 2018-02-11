@@ -16,7 +16,7 @@ div
 
 <style lang="scss">
 .panel-default {
-  border-color: #BBB;
+  border-color: #bbb;
   border-radius: 4px;
 
   .panel-heading {
@@ -37,7 +37,6 @@ div
     }
   }
 }
-
 </style>
 
 <script>
@@ -46,21 +45,24 @@ import Resources from '../resources.js';
 let $Log = Resources.$Log;
 
 export default {
-  name: "Log",
-  mounted: function() {
-    this.getLog();
-  },
+  name: 'Log',
+
   data: () => {
     return {
       logs: [],
-    }
+    };
   },
+
+  mounted: function() {
+    this.getLog();
+  },
+
   methods: {
     getLog: function() {
-      $Log.get().then((response) => {
+      $Log.get().then(response => {
         this.logs = response.json();
       });
     },
-  }
-}
+  },
+};
 </script>
