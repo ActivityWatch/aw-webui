@@ -21,7 +21,10 @@ div#wrapper
       b-nav-item(to="/")
         icon(name="home")
         | Home
-      b-nav-item-dropdown
+      b-nav-item(v-if="activity_hosts.length === 1", v-for="host in activity_hosts", :key="host", :to="'/activity/' + host")
+        icon(name="clock-o")
+        | Activity
+      b-nav-item-dropdown(v-if="activity_hosts.length !== 1")
         template(slot="button-content")
           icon(name="clock-o")
           | Activity
