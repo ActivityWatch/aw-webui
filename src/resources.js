@@ -18,7 +18,7 @@ if(!PRODUCTION) {
 let $Info       = Vue.resource(origin + '/api/0/info');
 let $Bucket     = Vue.resource(origin + '/api/0/buckets/{id}?force=1');
 let $Event      = Vue.resource(origin + '/api/0/buckets/{id}/events');
-let $EventChunk = Vue.resource(origin + '/api/0/buckets/{id}/events/chunk?start={start}&end={end}');
+let $EventCount = Vue.resource(origin + '/api/0/buckets/{id}/events/count');
 let $Query      = Vue.resource(origin + '/api/0/query/?name={name}&start={start}&end={end}&cache={cache}');
 let $Log        = Vue.resource(origin + '/api/0/log');
 
@@ -26,7 +26,7 @@ export default {
   $Info:        $Info,
   $Bucket:      $Bucket,
   $Event:       $Event,
-  $EventChunk:  $EventChunk,
+  $EventCount:  $EventCount,
   $Query:       $Query,
   $Log:         $Log,
 };

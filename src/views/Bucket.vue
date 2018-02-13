@@ -17,6 +17,11 @@ div
         small Created:
       td
         small {{ bucket.created }}
+    tr
+      td
+        small Eventcount:
+      td
+        small {{ eventcount }}
 
   hr
 
@@ -141,6 +146,7 @@ import 'vue-awesome/icons/calendar-o'
 
 let $Bucket = Resources.$Bucket;
 let $Event = Resources.$Event;
+let $EventCount = Resources.$EventCount;
 
 export default {
   name: "Bucket",
@@ -153,6 +159,7 @@ export default {
       bucket: Object,
       events: [],
       isListExpanded: false,
+      eventcount: "?",
     }
   },
   methods: {
@@ -168,6 +175,12 @@ export default {
       });
     },
 
+    getEventCount: function(bucket_id) {
+      $EventCount.get({"id": bucket_id}).then((response) => {
+        this.eventcount = response.json();
+      });
+    },
+
     expandList: function() {
       this.isListExpanded = !this.isListExpanded;
       console.log("List should be expanding: ", this.isListExpanded);
@@ -177,6 +190,7 @@ export default {
     this.id = this.$route.params.id;
     this.getBucketInfo(this.id);
     this.getEvents(this.id);
+    this.getEventCount(this.id);
   },
 }
 </script>

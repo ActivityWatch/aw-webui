@@ -72,7 +72,6 @@ import 'vue-awesome/icons/clock-o';
 import 'vue-awesome/icons/twitter'
 import 'vue-awesome/icons/github'
 
-import Usermenu from './components/Usermenu.vue';
 
 import Resources from './resources.js';
 
@@ -83,10 +82,6 @@ let $Bucket = Resources.$Bucket;
 // TODO: Highlight active item in menubar
 
 export default {
-  components: {
-    Usermenu,
-  },
-
   data: function() {
     return {
       activity_hosts: [],
