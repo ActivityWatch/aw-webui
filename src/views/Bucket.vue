@@ -59,7 +59,6 @@ div
 </template>
 
 <style scoped lang="scss">
-
 $border-color: #ddd;
 
 .card {
@@ -128,7 +127,8 @@ $border-color: #ddd;
 
 /* Flips the outer element once, then all direct children once,
    leaving the scrollbar in the first flipped yet the content correct */
-.scrollbar-flipped, .scrollbar-flipped > * {
+.scrollbar-flipped,
+.scrollbar-flipped > * {
   transform: rotateX(180deg);
   -ms-transform: rotateX(180deg); /* IE 9 */
   -webkit-transform: rotateX(180deg); /* Safari and Chrome */
@@ -140,57 +140,60 @@ import Resources from '../resources.js';
 
 import Timeline from '../visualizations/Timeline.vue';
 
-import 'vue-awesome/icons/tags'
-import 'vue-awesome/icons/clock-o'
-import 'vue-awesome/icons/calendar-o'
+import 'vue-awesome/icons/tags';
+import 'vue-awesome/icons/clock-o';
+import 'vue-awesome/icons/calendar-o';
 
 let $Bucket = Resources.$Bucket;
 let $Event = Resources.$Event;
 let $EventCount = Resources.$EventCount;
 
 export default {
-  name: "Bucket",
+  name: 'Bucket',
   components: {
-    "aw-timeline": Timeline,
+    'aw-timeline': Timeline,
   },
+
   data: () => {
     return {
       id: String,
       bucket: Object,
       events: [],
       isListExpanded: false,
-      eventcount: "?",
-    }
+      eventcount: '?',
+    };
   },
-  methods: {
-    getBucketInfo: function(bucket_id) {
-      $Bucket.get({"id": bucket_id}).then((response) => {
-        this.bucket = response.json();
-      });
-    },
 
-    getEvents: function(bucket_id) {
-      $Event.get({"id": bucket_id}).then((response) => {
-        this.events = response.json();
-      });
-    },
-
-    getEventCount: function(bucket_id) {
-      $EventCount.get({"id": bucket_id}).then((response) => {
-        this.eventcount = response.json();
-      });
-    },
-
-    expandList: function() {
-      this.isListExpanded = !this.isListExpanded;
-      console.log("List should be expanding: ", this.isListExpanded);
-    }
-  },
   mounted: function() {
     this.id = this.$route.params.id;
     this.getBucketInfo(this.id);
     this.getEvents(this.id);
     this.getEventCount(this.id);
   },
-}
+
+  methods: {
+    getBucketInfo: function(bucket_id) {
+      $Bucket.get({id: bucket_id}).then(response => {
+        this.bucket = response.json();
+      });
+    },
+
+    getEvents: function(bucket_id) {
+      $Event.get({id: bucket_id}).then(response => {
+        this.events = response.json();
+      });
+    },
+
+    getEventCount: function(bucket_id) {
+      $EventCount.get({id: bucket_id}).then(response => {
+        this.eventcount = response.json();
+      });
+    },
+
+    expandList: function() {
+      this.isListExpanded = !this.isListExpanded;
+      console.log('List should be expanding: ', this.isListExpanded);
+    },
+  },
+};
 </script>
