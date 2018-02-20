@@ -108,100 +108,122 @@ div
 </template>
 
 <style lang="scss">
-
 #apptimeline-container {
-    white-space: nowrap;
-    font-family: sans-serif;
-    font-size: 11pt;
-    line-height: 1.2em;
+  white-space: nowrap;
+  font-family: sans-serif;
+  font-size: 11pt;
+  line-height: 1.2em;
 }
-
 </style>
 
 <script>
 import moment from 'moment';
 import timeline from '../visualizations/timeline.js';
 import summary from '../visualizations/summary.js';
-import time from "../util/time.js";
-import event_parsing from "../util/event_parsing.js";
+import time from '../util/time.js';
+import event_parsing from '../util/event_parsing.js';
 
-import 'vue-awesome/icons/arrow-left'
-import 'vue-awesome/icons/arrow-right'
-import 'vue-awesome/icons/angle-double-down'
-import 'vue-awesome/icons/refresh'
+import 'vue-awesome/icons/arrow-left';
+import 'vue-awesome/icons/arrow-right';
+import 'vue-awesome/icons/angle-double-down';
+import 'vue-awesome/icons/refresh';
 
 import Sunburst from '../visualizations/Sunburst.vue';
 
 import Resources from '../resources.js';
-let $Query  = Resources.$Query;
-let $Info  = Resources.$Info;
+let $Query = Resources.$Query;
+let $Info = Resources.$Info;
 let $Bucket = Resources.$Bucket;
-let $Event  = Resources.$Event;
+let $Event = Resources.$Event;
 
 var daylength = 86400000;
 
 export default {
-  name: "Activity",
+  name: 'Activity',
+
+  components: {
+    'aw-sunburst': Sunburst,
+  },
+
   data: () => {
     return {
-      today: moment().startOf('day').format("YYYY-MM-DD"),
+      today: moment()
+        .startOf('day')
+        .format('YYYY-MM-DD'),
 
       filterAFK: true,
       timelineShowAFK: true,
 
       // Query variables
-      duration: "",
-      errormsg: "",
+      duration: '',
+      errormsg: '',
       numberOfWindowApps: 5,
       numberOfWindowTitles: 5,
       numberOfBrowserDomains: 5,
 
       browserBuckets: [],
-      browserBucketId: "",
-    }
+      browserBucketId: '',
+    };
   },
 
-  components: {
-    "aw-sunburst": Sunburst,
+  computed: {
+    readableDuration: function() {
+      return time.seconds_to_duration(this.duration);
+    },
+    host: function() {
+      return this.$route.params.host;
+    },
+    date: function() {
+      return (
+        this.$route.params.date ||
+        moment()
+          .startOf('day')
+          .format()
+      );
+    },
+    dateStart: function() {
+      return moment(this.date)
+        .startOf('day')
+        .format();
+    },
+    dateShort: function() {
+      return moment(this.date).format('YYYY-MM-DD');
+    },
+    windowBucketId: function() {
+      return 'aw-watcher-window_' + this.host;
+    },
+    afkBucketId: function() {
+      return 'aw-watcher-afk_' + this.host;
+    },
   },
 
   watch: {
-    '$route': function(to, from) {
-      console.log("Route changed");
+    $route: function(to, from) {
+      console.log('Route changed');
       this.refresh();
     },
-    'filterAFK': function(to, from) {
+    filterAFK: function(to, from) {
       this.refresh();
     },
-    'timelineShowAFK': function(to, from) {
+    timelineShowAFK: function(to, from) {
       this.refresh();
     },
-    'filterAFK': function(to, from) {
+    filterAFK: function(to, from) {
       this.refresh();
     },
-    'timelineShowAFK': function(to, from) {
+    timelineShowAFK: function(to, from) {
       this.refresh();
     },
-    'browserBucketId': function(to, from) {
+    browserBucketId: function(to, from) {
       this.queryBrowserDomains();
     },
   },
 
-  computed: {
-    readableDuration: function() { return time.seconds_to_duration(this.duration) },
-    host: function() { return this.$route.params.host },
-    date: function() { return this.$route.params.date || moment().startOf('day').format() },
-    dateStart: function() { return moment(this.date).startOf('day').format() },
-    dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
-    windowBucketId: function() { return "aw-watcher-window_" + this.host },
-    afkBucketId:    function() { return "aw-watcher-afk_"    + this.host },
-  },
-
   mounted: function() {
-    summary.create(document.getElementById("appsummary-container"));
-    summary.create(document.getElementById("windowtitles-container"));
-    summary.create(document.getElementById("browserdomains-container"));
-    timeline.create(document.getElementById("apptimeline-container"));
+    summary.create(document.getElementById('appsummary-container'));
+    summary.create(document.getElementById('windowtitles-container'));
+    summary.create(document.getElementById('browserdomains-container'));
+    timeline.create(document.getElementById('apptimeline-container'));
 
     this.getBrowserBucket();
 
@@ -209,25 +231,34 @@ export default {
   },
 
   methods: {
-    previousDay: function() { return moment(this.dateStart).subtract(1, 'days').format("YYYY-MM-DD") },
-    nextDay: function() { return moment(this.dateStart).add(1, 'days').format("YYYY-MM-DD") },
+    previousDay: function() {
+      return moment(this.dateStart)
+        .subtract(1, 'days')
+        .format('YYYY-MM-DD');
+    },
+    nextDay: function() {
+      return moment(this.dateStart)
+        .add(1, 'days')
+        .format('YYYY-MM-DD');
+    },
 
     refresh: function() {
       this.query();
-      this.duration = "";
+      this.duration = '';
       this.numberOfWindowApps = 5;
       this.numberOfWindowTitles = 5;
     },
 
     errorHandler: function(response) {
       console.error(response);
-      this.errormsg = "Request error " + response.status + ". See F12 console for more info.";
+      this.errormsg =
+        'Request error ' + response.status + '. See F12 console for more info.';
     },
 
     query: function() {
-      this.duration = "";
+      this.duration = '';
       this.eventcount = 0;
-      this.errormsg = "";
+      this.errormsg = '';
 
       this.queryApps();
       this.queryWindowTitles();
@@ -236,168 +267,265 @@ export default {
     },
 
     getBrowserBucket: function() {
-      $Bucket.get().then((response) => {
+      $Bucket.get().then(response => {
         let buckets = response.json();
-        for (var bucket in buckets){
-          if (buckets[bucket]["type"] === "web.tab.current"){
+        for (var bucket in buckets) {
+          if (buckets[bucket]['type'] === 'web.tab.current') {
             this.browserBuckets.push(bucket);
           }
         }
-        if (this.browserBuckets.length > 0){
-          this.browserBucketId = this.browserBuckets[0]
+        if (this.browserBuckets.length > 0) {
+          this.browserBucketId = this.browserBuckets[0];
         }
       });
     },
 
     queryTimeline: function() {
       let starttime = moment(this.dateStart).format();
-      let endtime = moment(this.dateStart).add(1, 'days').format();
+      let endtime = moment(this.dateStart)
+        .add(1, 'days')
+        .format();
 
-      var timeline_elem = document.getElementById("apptimeline-container")
-      timeline.set_status(timeline_elem, "Loading...");
-      var query = this.windowTimelineQuery(this.windowBucketId, this.afkBucketId);
-      $Query.save({"name": "window_timeline@"+this.host, "start": starttime, "end": endtime, "cache": 0}, query).then(
-        (response) => { // Success
-          if (response.status > 304){
+      var timeline_elem = document.getElementById('apptimeline-container');
+      timeline.set_status(timeline_elem, 'Loading...');
+      var query = this.windowTimelineQuery(
+        this.windowBucketId,
+        this.afkBucketId,
+      );
+      $Query
+        .save(
+          {
+            name: 'window_timeline@' + this.host,
+            start: starttime,
+            end: endtime,
+            cache: 0,
+          },
+          query,
+        )
+        .then(response => {
+          // Success
+          if (response.status > 304) {
             this.errorHandler(response);
           } else {
             var eventlist = response.json();
             var apptimeline = event_parsing.parse_eventlist_by_apps(eventlist);
             var total_duration = this.totalDuration(eventlist);
             this.duration = total_duration;
-            timeline.update(timeline_elem, apptimeline, total_duration, this.timelineShowAFK);
+            timeline.update(
+              timeline_elem,
+              apptimeline,
+              total_duration,
+              this.timelineShowAFK,
+            );
           }
         }, this.errorHandler);
     },
 
     queryWindowTitles: function() {
       let starttime = moment(this.dateStart).format();
-      let endtime = moment(this.dateStart).add(1, 'days').format();
+      let endtime = moment(this.dateStart)
+        .add(1, 'days')
+        .format();
 
-      var container = document.getElementById("windowtitles-container")
-      summary.set_status(container, "Loading...");
-      var query = this.titleSummaryQuery(this.windowBucketId, this.afkBucketId, this.numberOfWindowTitles);
-      $Query.save({"name": "title_summary@"+this.host, "start": starttime, "end": endtime, "cache": 1}, query).then(
-        (response) => { // Success
-          if (response.status > 304){
+      var container = document.getElementById('windowtitles-container');
+      summary.set_status(container, 'Loading...');
+      var query = this.titleSummaryQuery(
+        this.windowBucketId,
+        this.afkBucketId,
+        this.numberOfWindowTitles,
+      );
+      $Query
+        .save(
+          {
+            name: 'title_summary@' + this.host,
+            start: starttime,
+            end: endtime,
+            cache: 1,
+          },
+          query,
+        )
+        .then(response => {
+          // Success
+          if (response.status > 304) {
             this.errorHandler(response);
           } else {
             var summedEvents = response.json();
-            summary.updateSummedEvents(container, summedEvents, (e) => e.data.title, (e) => e.data.app);
+            summary.updateSummedEvents(
+              container,
+              summedEvents,
+              e => e.data.title,
+              e => e.data.app,
+            );
           }
-        }, this.errorHandler
-      );
+        }, this.errorHandler);
     },
 
-    totalDuration: function(eventlist){
-        var duration = 0;
-        for (var i in eventlist){
-            duration += eventlist[i].duration;
-        }
-        return duration;
+    totalDuration: function(eventlist) {
+      var duration = 0;
+      for (var i in eventlist) {
+        duration += eventlist[i].duration;
+      }
+      return duration;
     },
 
-    queryApps: function(){
+    queryApps: function() {
       let starttime = moment(this.dateStart).format();
-      let endtime = moment(this.dateStart).add(1, 'days').format();
+      let endtime = moment(this.dateStart)
+        .add(1, 'days')
+        .format();
 
-      var container = document.getElementById("appsummary-container")
-      summary.set_status(container, "Loading...");
-      var query = this.appSummaryQuery(this.windowBucketId, this.afkBucketId, this.numberOfWindowApps);
-      $Query.save({"name": "appsummary@"+this.host, "start": starttime, "end": endtime, "cache": 1}, query).then(
-        (response) => { // Success
-          if (response.status > 304){
+      var container = document.getElementById('appsummary-container');
+      summary.set_status(container, 'Loading...');
+      var query = this.appSummaryQuery(
+        this.windowBucketId,
+        this.afkBucketId,
+        this.numberOfWindowApps,
+      );
+      $Query
+        .save(
+          {
+            name: 'appsummary@' + this.host,
+            start: starttime,
+            end: endtime,
+            cache: 1,
+          },
+          query,
+        )
+        .then(response => {
+          // Success
+          if (response.status > 304) {
             this.errorHandler(response);
           } else {
             var summedEvents = response.json();
-            summary.updateSummedEvents(container, summedEvents, (e) => e.data.app, (e) => e.data.app);
+            summary.updateSummedEvents(
+              container,
+              summedEvents,
+              e => e.data.app,
+              e => e.data.app,
+            );
           }
-        }, this.errorHandler
-      );
+        }, this.errorHandler);
     },
 
-    queryBrowserDomains: function(){
+    queryBrowserDomains: function() {
       let starttime = moment(this.dateStart).format();
-      let endtime = moment(this.dateStart).add(1, 'days').format();
+      let endtime = moment(this.dateStart)
+        .add(1, 'days')
+        .format();
 
-      var container = document.getElementById("browserdomains-container")
-      summary.set_status(container, "Loading...");
-      if (this.browserBucketId !== ""){
-        var query = this.browserSummaryQuery(this.browserBucketId, this.windowBucketId, this.afkBucketId, this.numberOfBrowserDomains);
-        $Query.save({"name": "browser_summary@"+this.host, "start": starttime, "end": endtime, "cache": 1}, query).then(
-          (response) => { // Success
-            if (response.status > 304){
+      var container = document.getElementById('browserdomains-container');
+      summary.set_status(container, 'Loading...');
+      if (this.browserBucketId !== '') {
+        var query = this.browserSummaryQuery(
+          this.browserBucketId,
+          this.windowBucketId,
+          this.afkBucketId,
+          this.numberOfBrowserDomains,
+        );
+        $Query
+          .save(
+            {
+              name: 'browser_summary@' + this.host,
+              start: starttime,
+              end: endtime,
+              cache: 1,
+            },
+            query,
+          )
+          .then(response => {
+            // Success
+            if (response.status > 304) {
               this.errorHandler(response);
             } else {
               var summedEvents = response.json();
-              summary.updateSummedEvents(container, summedEvents, (e) => e.data.domain, (e) => e.data.domain);
+              summary.updateSummedEvents(
+                container,
+                summedEvents,
+                e => e.data.domain,
+                e => e.data.domain,
+              );
             }
-          }, this.errorHandler
-        );
+          }, this.errorHandler);
       }
     },
 
     // TODO: Sanitize string input of buckets
 
-    windowTimelineQuery: function(windowbucket, afkbucket){
-      return { "query": [
-        'not_afk = query_bucket("'+afkbucket+'");',
-        'events  = query_bucket("'+windowbucket+'");',
-        'not_afk = filter_keyvals(not_afk, "status", "not-afk");',
-        'events  = filter_period_intersect(events, not_afk);',
-        'events  = sort_by_timestamp(events);',
-        'RETURN  = events;',
-      ]};
+    windowTimelineQuery: function(windowbucket, afkbucket) {
+      return {
+        query: [
+          'not_afk = query_bucket("' + afkbucket + '");',
+          'events  = query_bucket("' + windowbucket + '");',
+          'not_afk = filter_keyvals(not_afk, "status", "not-afk");',
+          'events  = filter_period_intersect(events, not_afk);',
+          'events  = sort_by_timestamp(events);',
+          'RETURN  = events;',
+        ],
+      };
     },
 
-    appSummaryQuery: function(windowbucket, afkbucket, count){
-      return { "query": [
-        'not_afk = query_bucket("'+afkbucket+'");',
-        'events  = query_bucket("'+windowbucket+'");',
-        'not_afk = filter_keyvals(not_afk, "status", "not-afk");',
-        'events  = filter_period_intersect(events, not_afk);',
-        'events  = merge_events_by_keys(events, "app");',
-        'events  = sort_by_duration(events);',
-        'events  = limit_events(events, '+count+');',
-        'RETURN  = events;',
-      ]};
+    appSummaryQuery: function(windowbucket, afkbucket, count) {
+      return {
+        query: [
+          'not_afk = query_bucket("' + afkbucket + '");',
+          'events  = query_bucket("' + windowbucket + '");',
+          'not_afk = filter_keyvals(not_afk, "status", "not-afk");',
+          'events  = filter_period_intersect(events, not_afk);',
+          'events  = merge_events_by_keys(events, "app");',
+          'events  = sort_by_duration(events);',
+          'events  = limit_events(events, ' + count + ');',
+          'RETURN  = events;',
+        ],
+      };
     },
 
-    titleSummaryQuery: function(windowbucket, afkbucket, count){
-      return { "query": [
-        'not_afk=query_bucket("'+afkbucket+'");',
-        'events=query_bucket("'+windowbucket+'");',
-        'not_afk=filter_keyvals(not_afk, "status", "not-afk");',
-        'events=filter_period_intersect(events, not_afk);',
-        'events=merge_events_by_keys(events, "app", "title");',
-        'events=sort_by_duration(events);',
-        'events=limit_events(events, '+count+');',
-        'RETURN=events;',
-      ]};
+    titleSummaryQuery: function(windowbucket, afkbucket, count) {
+      return {
+        query: [
+          'not_afk=query_bucket("' + afkbucket + '");',
+          'events=query_bucket("' + windowbucket + '");',
+          'not_afk=filter_keyvals(not_afk, "status", "not-afk");',
+          'events=filter_period_intersect(events, not_afk);',
+          'events=merge_events_by_keys(events, "app", "title");',
+          'events=sort_by_duration(events);',
+          'events=limit_events(events, ' + count + ');',
+          'RETURN=events;',
+        ],
+      };
     },
 
-    browserSummaryQuery: function(browserbucket, windowbucket, afkbucket, count){
-      var browser_appnames = "";
-      if (browserbucket.endsWith("-chrome")){
-        browser_appnames = '"Google-chrome", "chrome.exe", "Chromium"';
-      } else if (browserbucket.endsWith("-firefox")){
-        browser_appnames = '"Firefox", "Firefox.exe"';
+    browserSummaryQuery: function(
+      browserbucket,
+      windowbucket,
+      afkbucket,
+      count,
+    ) {
+      var browser_appnames = '';
+      if (browserbucket.endsWith('-chrome')) {
+        browser_appnames =
+          '"Google-chrome", "chrome.exe", "Chromium", "Google Chrome"';
+      } else if (browserbucket.endsWith('-firefox')) {
+        browser_appnames = '"Firefox", "Firefox.exe", "firefox"';
       }
-      return { "query": [
-        'events=query_bucket("'+browserbucket+'");',
-        'not_afk=query_bucket("'+afkbucket+'");',
-        'not_afk=filter_keyvals(not_afk, "status", "not-afk");',
-        'window_browser=query_bucket("'+windowbucket+'");',
-        'window_browser=filter_keyvals(window_browser, "app", '+browser_appnames+');',
-        'window_browser=filter_period_intersect(window_browser, not_afk);',
-        'events=filter_period_intersect(events, window_browser);',
-        'events=split_url_events(events);',
-        'events=merge_events_by_keys(events, "domain");',
-        'events=sort_by_duration(events);',
-        'events=limit_events(events, '+count+');',
-        'RETURN=events;',
-      ]};
+      return {
+        query: [
+          'events=query_bucket("' + browserbucket + '");',
+          'not_afk=query_bucket("' + afkbucket + '");',
+          'not_afk=filter_keyvals(not_afk, "status", "not-afk");',
+          'window_browser=query_bucket("' + windowbucket + '");',
+          'window_browser=filter_keyvals(window_browser, "app", ' +
+            browser_appnames +
+            ');',
+          'window_browser=filter_period_intersect(window_browser, not_afk);',
+          'events=filter_period_intersect(events, window_browser);',
+          'events=split_url_events(events);',
+          'events=merge_events_by_keys(events, "domain");',
+          'events=sort_by_duration(events);',
+          'events=limit_events(events, ' + count + ');',
+          'RETURN=events;',
+        ],
+      };
     },
   },
-}
+};
 </script>

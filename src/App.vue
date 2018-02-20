@@ -21,7 +21,10 @@ div#wrapper
       b-nav-item(to="/")
         icon(name="home")
         | Home
-      b-nav-item-dropdown
+      b-nav-item(v-if="activity_hosts.length === 1", v-for="host in activity_hosts", :key="host", :to="'/activity/' + host")
+        icon(name="clock-o")
+        | Activity
+      b-nav-item-dropdown(v-if="activity_hosts.length !== 1")
         template(slot="button-content")
           icon(name="clock-o")
           | Activity
@@ -59,20 +62,16 @@ div#wrapper
 </template>
 
 <script>
-
 // only import the icons you use to reduce bundle size
 import 'vue-awesome/icons/home';
 import 'vue-awesome/icons/database';
 import 'vue-awesome/icons/check-circle';
 import 'vue-awesome/icons/times-circle';
 import 'vue-awesome/icons/clock-o';
-import 'vue-awesome/icons/twitter'
-import 'vue-awesome/icons/github'
-
-import Usermenu from './components/Usermenu.vue';
+import 'vue-awesome/icons/twitter';
+import 'vue-awesome/icons/github';
 
 import Resources from './resources.js';
-
 
 let $Info = Resources.$Info;
 let $Bucket = Resources.$Bucket;
@@ -80,65 +79,62 @@ let $Bucket = Resources.$Bucket;
 // TODO: Highlight active item in menubar
 
 export default {
-  components: {
-    Usermenu,
-  },
-
   data: function() {
     return {
       activity_hosts: [],
       connected: false,
-    }
+    };
   },
 
   mounted: function() {
     $Info.get().then(
-      (response) => {
+      response => {
         if (response.status > 304) {
-          console.error("Status code from return call was >304");
+          console.error('Status code from return call was >304');
         } else {
           this.connected = true;
         }
       },
-      (response) => {
+      response => {
         this.connected = false;
-      }
+      },
     );
 
-    $Bucket.get().then((response) => {
-        let buckets = response.json();
-        let types_by_host = {};
-        _.each(buckets, (v, k) => {
-            types_by_host[v.hostname] = types_by_host[v.hostname] || {};
-            if(v.type == "afkstatus") {
-                types_by_host[v.hostname].afk = true;
-            } else if(v.type == "currentwindow") {
-                types_by_host[v.hostname].window = true;
-            }
-        })
+    $Bucket.get().then(response => {
+      let buckets = response.json();
+      let types_by_host = {};
+      _.each(buckets, (v, k) => {
+        types_by_host[v.hostname] = types_by_host[v.hostname] || {};
+        if (v.type == 'afkstatus') {
+          types_by_host[v.hostname].afk = true;
+        } else if (v.type == 'currentwindow') {
+          types_by_host[v.hostname].window = true;
+        }
+      });
 
-        _.each(types_by_host, (types, hostname) => {
-            if(types.afk === true && types.window === true) {
-                this.activity_hosts.push(hostname);
-            }
-        })
-    })
-  }
-}
-
+      _.each(types_by_host, (types, hostname) => {
+        if (types.afk === true && types.window === true) {
+          this.activity_hosts.push(hostname);
+        }
+      });
+    });
+  },
+};
 </script>
 
 <style lang="scss">
-$bgcolor: #FFF;
+$bgcolor: #fff;
 $textcolor: #000;
 
-html, body, button {
+html,
+body,
+button {
   color: $textcolor;
   font-family: 'Varela Round', sans-serif !important;
 }
 
 body {
-  background-color: #EEE;
+  background-color: #eee;
 }
 
 .fa-icon {
@@ -156,23 +152,23 @@ body {
 }
 
 .aw-navbar {
-    li > a {
-        padding: 10px 15px 10px 15px;
-        color: #555;
-        font-size: 12pt;
+  li > a {
+    padding: 10px 15px 10px 15px;
+    color: #555;
+    font-size: 12pt;
 
-        span {
-            margin-right: 7px;
-        }
+    span {
+      margin-right: 7px;
     }
+  }
 }
 
 .nav-item:hover {
-  background-color: #DDD;
+  background-color: #ddd;
 }
 
 .header {
-  border-bottom: 1px solid #CCC;
+  border-bottom: 1px solid #ccc;
   height: 55px;
   line-height: 55px;
   font-family: 'Varela Round', sans-serif;
@@ -187,8 +183,8 @@ body {
     white-space: nowrap;
 
     img {
-        width: 1.2em;
-        height: 1.2em;
+      width: 1.2em;
+      height: 1.2em;
     }
   }
 
@@ -196,22 +192,22 @@ body {
     float: right;
 
     .text {
-        margin-left: 1em;
+      margin-left: 1em;
     }
 
     .good {
-        color: green;
+      color: green;
     }
 
     .bad {
-        color: red;
+      color: red;
     }
   }
 }
 
 .aw-container {
-  background-color: #FFF;
-  border: 1px solid #CCC;
+  background-color: #fff;
+  border: 1px solid #ccc;
   border-top: 0;
 }
 

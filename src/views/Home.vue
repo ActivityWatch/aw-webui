@@ -62,10 +62,11 @@ div
 </template>
 
 <style scoped lang="scss">
+
 </style>
 
 <script>
 export default {
-  name: "Home"
-}
+  name: 'Home',
+};
 </script>
