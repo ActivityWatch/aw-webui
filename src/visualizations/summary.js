@@ -50,6 +50,7 @@ function update(container, apps) {
   }
 
   let svg_elem = container.querySelector(".appsummary");
+  svg_elem.innerHTML = "";
   let svg = d3.select(svg_elem);
 
   // Remove apps without a duration from list

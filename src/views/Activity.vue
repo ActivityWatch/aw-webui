@@ -18,6 +18,8 @@ div
     icon(name="refresh")
     |  Refresh
 
+  aw-periodusage(:periodusage_arr="daily_activity", :host="host")
+
   hr
 
   div.row
@@ -130,6 +132,7 @@ import query from '../queries.js';
 
 import Summary from '../visualizations/Summary.vue';
 import Sunburst from '../visualizations/Sunburst.vue';
+import PeriodUsage from '../visualizations/PeriodUsage.vue';
 
 import Resources from '../resources.js';
 let $Query  = Resources.$Query;
@@ -169,12 +172,15 @@ export default {
       top_web_domains: {},
       top_web_domains_namefunc: null,
       top_web_domains_colorfunc: null,
+
+      daily_activity: [],
     }
   },
 
   components: {
     "aw-sunburst": Sunburst,
     "aw-summary": Summary,
+    "aw-periodusage": PeriodUsage,
   },
 
   watch: {
@@ -242,6 +248,7 @@ export default {
       this.queryApps();
       this.queryWindowTitles();
       this.queryBrowserDomains();
+      this.queryDailyActivity();
       this.queryTimeline();
     },
 
@@ -262,13 +269,13 @@ export default {
     queryTimeline: function() {
       var timeline_elem = document.getElementById("apptimeline-container")
       timeline.set_status(timeline_elem, "Loading...");
-      var q = query.windowTimelineQuery(this.windowBucketId, this.afkBucketId);
-      $Query.save({"name": "window_timeline@"+this.host, "start": this.dateStart, "end": this.dateEnd, "cache": 0}, q).then(
+      var q = query.windowTimelineQuery(this.dateStart, this.dateEnd, this.windowBucketId, this.afkBucketId);
+      $Query.save({"name": "window_timeline@"+this.host}, q).then(
         (response) => { // Success
           if (response.status > 304){
             this.errorHandler(response);
           } else {
-            var eventlist = response.json();
+            var eventlist = response.json()[0];
             var apptimeline = event_parsing.parse_eventlist_by_apps(eventlist);
             var total_duration = this.totalDuration(eventlist);
             this.duration = total_duration;
@@ -278,15 +285,15 @@ export default {
     },
 
     queryWindowTitles: function() {
-      var q = query.titleSummaryQuery(this.windowBucketId, this.afkBucketId, this.numberOfWindowTitles);
-      $Query.save({"name": "title_summary@"+this.host, "start": this.dateStart, "end": this.dateEnd, "cache": 1}, q).then(
+      var q = query.titleSummaryQuery(this.dateStart, this.dateEnd, this.windowBucketId, this.afkBucketId, this.numberOfWindowTitles);
+      $Query.save({"name": "title_summary@"+this.host}, q).then(
         (response) => { // Success
           if (response.status > 304){
             this.errorHandler(response);
           } else {
             this.top_window_titles_namefunc = (e) => e.data.title;
             this.top_window_titles_colorfunc = (e) => e.data.app;
-            this.top_window_titles = response.json();
+            this.top_window_titles = response.json()[0];
           }
         }, this.errorHandler
       );
@@ -301,15 +308,15 @@ export default {
     },
 
     queryApps: function(){
-      var q = query.appSummaryQuery(this.windowBucketId, this.afkBucketId, this.numberOfWindowApps);
-      $Query.save({"name": "appsummary@"+this.host, "start": this.dateStart, "end": this.dateEnd, "cache": 1}, q).then(
+      var q = query.appSummaryQuery(this.dateStart, this.dateEnd, this.windowBucketId, this.afkBucketId, this.numberOfWindowApps);
+      $Query.save({"name": "appsummary@"+this.host}, q).then(
         (response) => { // Success
           if (response.status > 304){
             this.errorHandler(response);
           } else {
             this.top_applications_namefunc = (e) => e.data.app;
             this.top_applications_colorfunc = (e) => e.data.app;
-            this.top_applications = response.json();
+            this.top_applications = response.json()[0];
           }
         }, this.errorHandler
       );
@@ -317,19 +324,39 @@ export default {
 
     queryBrowserDomains: function(){
       if (this.browserBucketId !== ""){
-        var q = query.browserSummaryQuery(this.browserBucketId, this.windowBucketId, this.afkBucketId, this.numberOfBrowserDomains);
-        $Query.save({"name": "browser_summary@"+this.host, "start": this.dateStart, "end": this.dateEnd, "cache": 1}, q).then(
+        var q = query.browserSummaryQuery(this.dateStart, this.dateEnd, this.browserBucketId, this.windowBucketId, this.afkBucketId, this.numberOfBrowserDomains);
+        $Query.save({"name": "browser_summary@"+this.host}, q).then(
           (response) => { // Success
             if (response.status > 304){
               this.errorHandler(response);
             } else {
               this.top_web_domains_namefunc = (e) => e.data.domain;
               this.top_web_domains_colorfunc = (e) => e.data.domain;
-              this.top_web_domains = response.json();
+              this.top_web_domains = response.json()[0];
             }
           }, this.errorHandler
         );
       }
+    },
+
+    queryDailyActivity: function(){
+      var timeperiods = [];
+      for (var i=-15; i<=15; i++) {
+        var startdate = moment(this.date).add(i, 'days').format();
+        var enddate = moment(this.date).add(i+1, 'days').format();
+        var period = startdate+'/'+enddate;
+        timeperiods.push(period);
+      }
+      var q = query.dailyActivityQuery(timeperiods, this.afkBucketId);
+      $Query.save({"name": "daily_activity_summary@"+this.host}, q).then(
+        (response) => { // Success
+          if (response.status > 304){
+            this.errorHandler(response);
+          } else {
+            this.daily_activity = response.json();
+          }
+        }, this.errorHandler
+      );
     },
   },
 }
