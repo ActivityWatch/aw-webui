@@ -8,12 +8,7 @@
     "dev": "node build/dev-server.js",
     "build": "node build/build.js",
     "package": "node build/package_electron.js",
-    "test": "",
-    "lint": "eslint --fix --ext .js,.vue src",
-    "precommit": "lint-staged"
-  },
-  "lint-staged": {
-    "*.js": ["eslint --fix --ext .js,.vue src", "git add"]
+    "test": ""
   },
   "devDependencies": {
     "babel-cli": "^6.0.0",
@@ -25,10 +20,6 @@
     "connect-history-api-fallback": "^1.1.0",
     "crypto-js": "^3.1.6",
     "css-loader": "^0.23.0",
-    "eslint": "^4.17.0",
-    "eslint-config-prettier": "^2.9.0",
-    "eslint-plugin-prettier": "^2.6.0",
-    "eslint-plugin-vue": "^4.2.2",
     "eventsource-polyfill": "^0.9.6",
     "express": "^4.13.3",
     "extract-text-webpack-plugin": "^3.0.0",
@@ -36,15 +27,12 @@
     "function-bind": "^1.0.2",
     "html-webpack-plugin": "^2.8.1",
     "http-proxy-middleware": "^0.12.0",
-    "husky": "^0.14.3",
     "json-loader": "^0.5.4",
-    "lint-staged": "^6.1.0",
     "lodash": "^4.17.4",
     "moment": "^2.14.1",
     "moment-range": "^3.0.3",
     "node-sass": "^4.7.2",
     "ora": "^0.2.0",
-    "prettier": "^1.10.2",
     "sass-loader": "^6.0.6",
     "shelljs": "^0.6.0",
     "url-loader": "^0.5.7",
@@ -74,10 +62,5 @@
     "pug": "^2.0.0-rc.3",
     "style-loader": "^0.6.5",
     "vue-awesome": "^2.3.1"
-  },
-  "prettier": {
-    "singleQuote": true,
-    "trailingComma": "all",
-    "bracketSpacing": false
   }
 }

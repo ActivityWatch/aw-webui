@@ -4,6 +4,6 @@ h2 this is settings
 
 <script>
 export default {
-  name: 'Settings',
-};
+  name: "Settings"
+}
 </script>

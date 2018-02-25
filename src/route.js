@@ -13,15 +13,15 @@ Vue.use(VueRouter);
 
 var router = new VueRouter({
   routes: [
-    {path: '/', component: Home},
-    {path: '/activity/:host', component: Activity},
-    {path: '/activity/:host/:date', component: Activity},
-    {path: '/buckets', component: Buckets},
-    {path: '/buckets/:id', component: Bucket},
-    {path: '/log', component: Log},
-    {path: '/u/:username', component: User},
-    {path: '/settings', component: Settings},
-  ],
+    { path: '/',                        component: Home },
+    { path: '/activity/:host',          component: Activity },
+    { path: '/activity/:host/:date',    component: Activity },
+    { path: '/buckets',                 component: Buckets },
+    { path: '/buckets/:id',             component: Bucket },
+    { path: '/log',                     component: Log },
+    { path: '/u/:username',             component: User },
+    { path: '/settings',                component: Settings },
+  ]
 });
 
 export default router;
