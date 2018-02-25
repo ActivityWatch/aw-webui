@@ -4,8 +4,8 @@ div.aw-summary-container
 
 <style scoped lang="scss">
 svg {
-  border: 1px solid #999;
-  border-radius: 0.5em;
+    border: 1px solid #999;
+    border-radius: 0.5em;
 }
 </style>
 
@@ -16,28 +16,17 @@ svg {
 import summary from './summary.js';
 
 export default {
-  name: 'AwSummary',
-  props: {
-    fields: {type: Array, required: true},
-    namefunc: {type: Function, required: true},
-    colorfunc: {type: Function, required: true},
-  },
-
-  watch: {
-    fields: function() {
-      summary.updateSummedEvents(
-        this.$el,
-        this.fields,
-        this.namefunc,
-        this.colorfunc,
-      );
-    },
-  },
-
+  name: "aw-summary",
+  props: ['fields', 'namefunc', 'colorfunc'],
   mounted: function() {
-    console.log('Mounting aw-summary');
+    console.log("Mounting aw-summary");
     summary.create(this.$el);
-    summary.set_status(this.$el, 'Loading...');
+    summary.set_status(this.$el, "Loading...");
   },
-};
+  watch: {
+    "fields": function() {
+      summary.updateSummedEvents(this.$el, this.fields, this.namefunc, this.colorfunc)
+    }
+  }
+}
 </script>

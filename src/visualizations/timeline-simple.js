@@ -1,58 +1,56 @@
-'use strict';
+"use strict";
 
-const d3 = require('d3');
-const Color = require('color');
-const _ = require('lodash');
-const moment = require('moment');
+const d3 = require("d3");
+const Color = require("color");
+const _ = require("lodash");
+const moment = require("moment");
 
-import event_parsing from '../util/event_parsing';
-import color from '../util/color.js';
-import coloring_types from './coloring.js';
+import event_parsing from "../util/event_parsing";
+import color from "../util/color.js";
+import coloring_types from "./coloring.js";
 
-var time = require('../util/time.js');
+var time = require("../util/time.js");
 
 // Helper functions used when hover state changes.
 function set_color(elem_id, color) {
   var rect = document.getElementById(elem_id).children[0];
   rect.style.fill = color;
-}
+};
 
 function create(svg_el) {
   // Clear element
-  svg_el.innerHTML = '';
+  svg_el.innerHTML = "";
 
   // svg for the colored timeline
-  let timeline = d3
-    .select(svg_el)
-    .attr('viewBox', '0 0 100 4')
-    .attr('width', '100%');
+  let timeline = d3.select(svg_el)
+    .attr("viewBox", "0 0 100 4")
+    .attr("width", "100%");
 }
 
-function set_status(svg_el, text) {
+function set_status(svg_el, text){
   let timeline = d3.select(svg_el);
-  timeline.selectAll('*').remove();
+  timeline.selectAll("*").remove();
 
-  timeline
-    .append('text')
-    .attr('x', '0')
-    .attr('y', '3')
-    .text(text)
-    .attr('font-family', 'sans-serif')
-    .attr('font-size', '2')
-    .attr('fill', 'black');
+  timeline.append("text")
+   .attr("x", "0")
+   .attr("y", "3")
+   .text(text)
+   .attr("font-family", "sans-serif")
+   .attr("font-size", "2")
+   .attr("fill", "black")
 }
 
 function update(svg_el, events, event_type) {
-  if (coloring_types[event_type] === undefined) {
-    console.log('');
+  if(coloring_types[event_type] === undefined) {
+    console.log("");
   }
   let coloring = coloring_types[event_type];
 
   let timeline = d3.select(svg_el);
-  timeline.selectAll('*').remove();
+  timeline.selectAll("*").remove();
 
-  if (events.length <= 0) {
-    set_status(svg_el, 'No data');
+  if (events.length <= 0){
+    set_status(svg_el, "No data");
     return;
   }
 
@@ -63,21 +61,18 @@ function update(svg_el, events, event_type) {
   let m_first = moment(e_first.timestamp);
   let m_last = moment(e_last.timestamp);
   let total_duration = (m_last - m_first) / 1000 + e_last.duration;
-  console.log('First: ' + m_first.format());
-  console.log('Last: ' + m_last.format());
-  console.log('Duration: ' + total_duration);
+  console.log("First: " + m_first.format());
+  console.log("Last: " + m_last.format());
+  console.log("Duration: " + total_duration);
 
   // Iterate over each event and create interval boxes
   _.each(events, function(e, i) {
-    let id = 'timeline_event_' + i;
+    let id = "timeline_event_" + i;
     let timestamp = moment(e.timestamp);
 
     let color_base = undefined;
-    let color_key =
-      coloring.key !== undefined
-        ? e.data[coloring.key]
-        : JSON.stringify(e.data);
-    if (coloring.colors !== undefined) {
+    let color_key = coloring.key !== undefined ? e.data[coloring.key] : JSON.stringify(e.data);
+    if(coloring.colors !== undefined) {
       color_base = coloring.colors[color_key];
     } else {
       // Get one random color per value
@@ -87,45 +82,34 @@ function update(svg_el, events, event_type) {
     let x = (timestamp - m_first) / 1000 / total_duration;
     let width = 100 * e.duration / total_duration;
 
-    let eg = timeline
-      .append('g')
-      .attr('id', id)
-      .attr('transform', 'translate(' + 100 * x + ',' + 0 + ')');
+    let eg = timeline.append("g")
+      .attr("id", id)
+      .attr("transform", "translate(" + 100 * x + "," + 0 + ")");
 
-    let rect = eg
-      .append('rect')
-      .attr('width', width)
-      .attr('height', 4)
-      .style('fill', color_base)
-      .on('mouseover', () => {
-        let color_hover = Color(color_base)
-          .darken(0.4)
-          .hex();
-        set_color(id, color_hover);
+    let rect = eg.append("rect")
+      .attr("width", width)
+      .attr("height", 4)
+      .style("fill", color_base)
+      .on("mouseover", () => {
+          let color_hover = Color(color_base).darken(0.4).hex();
+          set_color(id, color_hover);
       })
-      .on('mouseout', () => {
-        set_color(id, color_base);
+      .on("mouseout", () => {
+          set_color(id, color_base);
       });
 
-    rect
-      .append('title')
-      .text(
-        timestamp.format() +
-          '\n' +
-          'Duration: ' +
-          time.seconds_to_duration(e.duration) +
-          '\n' +
-          JSON.stringify(e.data),
-      );
+    rect.append("title")
+        .text(timestamp.format() + "\n"
+            + "Duration: " + time.seconds_to_duration(e.duration) + "\n"
+            + JSON.stringify(e.data));
 
-    if (e.duration > 0.05 * total_duration) {
-      eg
-        .append('text')
-        .attr('font-size', 2)
-        .attr('x', 1)
-        .attr('y', 2.5)
-        .attr('pointer-events', 'none')
-        .text(e.data[coloring.key]);
+    if(e.duration > 0.05 * total_duration) {
+      eg.append("text")
+        .attr("font-size", 2)
+        .attr("x", 1)
+        .attr("y", 2.5)
+        .attr("pointer-events", "none")
+        .text(e.data[coloring.key])
     }
   });
 
@@ -133,6 +117,6 @@ function update(svg_el, events, event_type) {
 }
 
 module.exports = {
-  create: create,
-  update: update,
+  "create": create,
+  "update": update,
 };

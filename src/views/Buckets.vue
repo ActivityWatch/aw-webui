@@ -52,8 +52,7 @@ div
 <style lang="scss">
 // This won't work if scoped
 .bucket-card {
-  .card-header,
-  .card-footer {
+  .card-header, .card-footer {
     padding: 0.5em 0.75em 0.5em 0.75em;
   }
 
@@ -69,7 +68,7 @@ div
 }
 
 .bucket-last-updated {
-  color: #666;
+    color: #666;
 }
 </style>
 
@@ -81,40 +80,37 @@ import 'vue-awesome/icons/trash';
 let $Bucket = Resources.$Bucket;
 
 export default {
-  name: 'Buckets',
-
-  data: () => {
-    return {
-      buckets: [],
-      bucket_to_delete: '',
-    };
-  },
-
+  name: "Buckets",
   mounted: function() {
     this.getBuckets();
   },
-
+  data: () => {
+    return {
+      buckets: [],
+      bucket_to_delete: "",
+    }
+  },
   methods: {
     getBuckets: function() {
-      $Bucket.get().then(response => {
+      $Bucket.get().then((response) => {
         let buckets = response.json();
-        buckets = _.orderBy(buckets, [b => b.last_updated], ['desc']);
+        buckets = _.orderBy(buckets, [(b) => b.last_updated], ["desc"]);
         this.buckets = buckets;
       });
     },
 
     getBucketInfo: function(bucket_id) {
-      $Bucket.get({id: bucket_id}).then(response => {
+      $Bucket.get({"id": bucket_id}).then((response) => {
         this.buckets[bucket_id] = response.json();
       });
     },
 
     deleteBucket: function(bucket_id) {
-      console.log('Deleting bucket ' + bucket_id);
-      $Bucket.delete({id: bucket_id}).then(() => {
+      console.log("Deleting bucket " + bucket_id);
+      $Bucket.delete({"id": bucket_id}).then(() => {
         this.getBuckets();
       });
-    },
-  },
-};
+    }
+  }
+}
 </script>

@@ -19,13 +19,13 @@ import './filters.js';
 import router from './route.js';
 
 // Register Font Awesome icon component
-import Icon from 'vue-awesome/components/Icon';
-Vue.component('icon', Icon);
+import Icon from 'vue-awesome/components/Icon'
+Vue.component('icon', Icon)
 
 // Setup Vue app
 import App from './App';
 new Vue({
   el: '#app',
   router: router,
-  render: h => h(App),
+  render: h => h(App)
 });
