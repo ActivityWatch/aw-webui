@@ -11,12 +11,6 @@ import coloring_types from "./coloring.js";
 
 var time = require("../util/time.js");
 
-// Helper functions used when hover state changes.
-function set_color(elem_id, color) {
-  var rect = document.getElementById(elem_id).children[0];
-  rect.style.fill = color;
-};
-
 function create(svg_el) {
   // Clear element
   svg_el.innerHTML = "";
@@ -78,6 +72,7 @@ function update(svg_el, events, event_type) {
       // Get one random color per value
       color_base = color.getAppColor(color_key);
     }
+    let color_hover = Color(color_base).darken(0.4).hex();
 
     let x = (timestamp - m_first) / 1000 / total_duration;
     let width = 100 * e.duration / total_duration;
@@ -90,12 +85,13 @@ function update(svg_el, events, event_type) {
       .attr("width", width)
       .attr("height", 4)
       .style("fill", color_base)
-      .on("mouseover", () => {
-          let color_hover = Color(color_base).darken(0.4).hex();
-          set_color(id, color_hover);
+      .on("mouseover", function(d, i, n){
+          let elem = n[i];
+          elem.style.fill = color_hover;
       })
-      .on("mouseout", () => {
-          set_color(id, color_base);
+      .on("mouseout", function(d, i, n){
+          let elem = n[i];
+          elem.style.fill = color_base;
       });
 
     rect.append("title")
