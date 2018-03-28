@@ -73,11 +73,9 @@ div
 </style>
 
 <script>
-import Resources from '../resources.js';
-
 import 'vue-awesome/icons/trash';
 
-let $Bucket = Resources.$Bucket;
+import awclient from '../awclient.js';
 
 export default {
   name: "Buckets",
@@ -92,22 +90,22 @@ export default {
   },
   methods: {
     getBuckets: function() {
-      $Bucket.get().then((response) => {
-        let buckets = response.json();
+      awclient.getBuckets().then((response) => {
+        let buckets = response.data;
         buckets = _.orderBy(buckets, [(b) => b.last_updated], ["desc"]);
         this.buckets = buckets;
       });
     },
 
     getBucketInfo: function(bucket_id) {
-      $Bucket.get({"id": bucket_id}).then((response) => {
-        this.buckets[bucket_id] = response.json();
+      $Bucket.getBucket(bucket_id).then((response) => {
+        this.buckets[bucket_id] = response.data;
       });
     },
 
     deleteBucket: function(bucket_id) {
       console.log("Deleting bucket " + bucket_id);
-      $Bucket.delete({"id": bucket_id}).then(() => {
+      $Bucket.deleteBucket(bucket_id).then(() => {
         this.getBuckets();
       });
     }

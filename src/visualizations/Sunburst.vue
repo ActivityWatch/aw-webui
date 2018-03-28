@@ -109,9 +109,7 @@ import sunburst from './sunburst.js';
 import moment from 'moment';
 import coloring_types from './coloring.js';
 
-import Resources from '../resources.js';
-let $Bucket = Resources.$Bucket;
-let $Event  = Resources.$Event;
+import awclient from '../awclient.js';
 
 let aw_sunburst = {
   name: "aw-sunburst",
@@ -148,9 +146,10 @@ let aw_sunburst = {
     },
 
     todaysEvents: function(bucket_id) {
-      return $Event.get({id: bucket_id, limit: -1,
-                         start: this.starttime.format(), end: this.endtime.format()})
-                   .then((response) => response.json());
+      return awclient.getEvents(bucket_id, {
+        limit: -1,
+        start: this.starttime.format(), end: this.endtime.format()
+      }).then(res => res.data);
     },
 
     visualize: function() {
