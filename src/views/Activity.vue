@@ -14,11 +14,15 @@ div
     b-button(:to="'/activity/' + host + '/' + nextDay()", :disabled="nextDay() > today", variant="outline-dark")
       |  Next day
       icon(name="arrow-right")
-  b-button(v-on:click="refresh()", style="margin-left: 1rem;", variant="outline-dark")
+
+  input(id="date" type="date" :value="dateShort" :max="today" v-on:change="setDate($event.target.value)", style="margin-left: 1rem; height: 100%;")
+
+  b-button(v-on:click="refresh()", style="float: right;", variant="outline-dark")
     icon(name="refresh")
     |  Refresh
 
   aw-periodusage(:periodusage_arr="daily_activity", :host="host")
+
 
   hr
 
@@ -227,6 +231,7 @@ export default {
   methods: {
     previousDay: function() { return moment(this.dateStart).subtract(1, 'days').format("YYYY-MM-DD") },
     nextDay: function() { return moment(this.dateStart).add(1, 'days').format("YYYY-MM-DD") },
+    setDate: function(date) { this.$router.push('/activity/'+this.host+'/'+date); },
 
     refresh: function() {
       this.queryAll();
