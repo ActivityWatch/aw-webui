@@ -7,19 +7,23 @@ div
   b-alert(variant="danger" :show="errormsg.length > 0")
     | {{ errormsg }}
 
-  b-button-group
-    b-button(:to="'/activity/' + host + '/' + previousDay()", variant="outline-dark")
-      icon(name="arrow-left")
-      |  Previous day
-    b-button(:to="'/activity/' + host + '/' + nextDay()", :disabled="nextDay() > today", variant="outline-dark")
-      |  Next day
-      icon(name="arrow-right")
+  div.form-row(style="margin: 0")
+    div.form-group
+      b-button-group
+        b-button(:to="'/activity/' + host + '/' + previousDay()", variant="outline-dark")
+          icon(name="arrow-left")
+          |  Previous day
+        b-button(:to="'/activity/' + host + '/' + nextDay()", :disabled="nextDay() > today", variant="outline-dark")
+          |  Next day
+          icon(name="arrow-right")
 
-  input(id="date" type="date" :value="dateShort" :max="today" v-on:change="setDate($event.target.value)", style="margin-left: 1rem; height: 100%;")
+    input.form-control.col-md-3(id="date" type="date" :value="dateShort" :max="today" v-on:change="setDate($event.target.value)", style="margin-left: 1rem; height: 100%;")
 
-  b-button(v-on:click="refresh()", style="float: right;", variant="outline-dark")
-    icon(name="refresh")
-    |  Refresh
+    div.form-group
+      b-button-group(style="margin-left: 1rem")
+        b-button(v-on:click="refresh()", variant="outline-dark")
+          icon(name="refresh")
+          |  Refresh
 
   aw-periodusage(:periodusage_arr="daily_activity", :host="host")
 
