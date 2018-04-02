@@ -139,12 +139,6 @@ let aw_sunburst = {
   },
 
   methods: {
-    getBucketInfo: function(bucket_id) {
-      return $Bucket.get({"id": bucket_id}).then((response) => {
-        return response.json();
-      });
-    },
-
     todaysEvents: function(bucket_id) {
       return awclient.getEvents(bucket_id, {
         limit: -1,
