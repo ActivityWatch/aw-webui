@@ -7,8 +7,8 @@ div
   b-alert(variant="danger" :show="errormsg.length > 0")
     | {{ errormsg }}
 
-  div.form-row(style="margin: 0")
-    div.form-group
+  div.d-flex
+    div.p-1
       b-button-group
         b-button(:to="'/activity/' + host + '/' + previousDay()", variant="outline-dark")
           icon(name="arrow-left")
@@ -16,11 +16,11 @@ div
         b-button(:to="'/activity/' + host + '/' + nextDay()", :disabled="nextDay() > today", variant="outline-dark")
           |  Next day
           icon(name="arrow-right")
+    div.p-1
+      input.form-control(id="date" type="date" :value="dateShort" :max="today" v-on:change="setDate($event.target.value)")
 
-    input.form-control.col-md-3(id="date" type="date" :value="dateShort" :max="today" v-on:change="setDate($event.target.value)", style="margin-left: 1rem; height: 100%;")
-
-    div.form-group
-      b-button-group(style="margin-left: 1rem")
+    div.p-1.ml-auto
+      b-button-group
         b-button(v-on:click="refresh()", variant="outline-dark")
           icon(name="refresh")
           |  Refresh
