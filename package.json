@@ -40,7 +40,6 @@
     "vue-hot-reload-api": "^2.0.11",
     "vue-html-loader": "^1.2.4",
     "vue-loader": "^12.2.2",
-    "vue-resource": "^0.9.3",
     "vue-router": "^2.3.0",
     "vue-style-loader": "^1.0.0",
     "vue-template-compiler": "^2.0.0",
