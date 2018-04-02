@@ -1,11 +1,14 @@
-.PHONY: install build dev test clean
+.PHONY: install build dev test clean aw-client-js
 
 .FORCE: ;
+
+aw-client-js:
+	(cd aw-client-js; npm install)
 
 build: install
 	npm run build
 
-install:
+install: aw-client-js
 	npm install
 
 uninstall:

@@ -10,7 +10,7 @@ Vue.use(BootstrapVue);
 import '../static/css/varela-round.css';
 
 // Loads all the resources (using vue-resource)
-import './resources.js';
+import './awclient.js';
 
 // Loads all the filters
 import './filters.js';

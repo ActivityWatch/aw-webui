@@ -136,17 +136,13 @@ $border-color: #ddd;
 </style>
 
 <script>
-import Resources from '../resources.js';
+import awclient from '../awclient.js';
 
 import Timeline from '../visualizations/Timeline.vue';
 
 import 'vue-awesome/icons/tags'
 import 'vue-awesome/icons/clock-o'
 import 'vue-awesome/icons/calendar-o'
-
-let $Bucket = Resources.$Bucket;
-let $Event = Resources.$Event;
-let $EventCount = Resources.$EventCount;
 
 export default {
   name: "Bucket",
@@ -164,20 +160,20 @@ export default {
   },
   methods: {
     getBucketInfo: function(bucket_id) {
-      $Bucket.get({"id": bucket_id}).then((response) => {
-        this.bucket = response.json();
+      awclient.getBucketInfo(bucket_id).then((response) => {
+        this.bucket = response.data;
       });
     },
 
     getEvents: function(bucket_id) {
-      $Event.get({"id": bucket_id}).then((response) => {
-        this.events = response.json();
+      awclient.getEvents(bucket_id).then((response) => {
+        this.events = response.data;
       });
     },
 
     getEventCount: function(bucket_id) {
-      $EventCount.get({"id": bucket_id}).then((response) => {
-        this.eventcount = response.json();
+      awclient.getEventCount(bucket_id).then((response) => {
+        this.eventcount = response.data;
       });
     },
 

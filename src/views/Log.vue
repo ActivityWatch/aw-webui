@@ -41,7 +41,8 @@ div
 </style>
 
 <script>
-import Resources from '../resources.js';
+/* This is completely broken */
+import Resources from '../awclient.js';
 
 let $Log = Resources.$Log;
 

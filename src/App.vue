@@ -72,12 +72,7 @@ import 'vue-awesome/icons/clock-o';
 import 'vue-awesome/icons/twitter'
 import 'vue-awesome/icons/github'
 
-
-import Resources from './resources.js';
-
-
-let $Info = Resources.$Info;
-let $Bucket = Resources.$Bucket;
+import awclient from './awclient.js';
 
 // TODO: Highlight active item in menubar
 
@@ -90,7 +85,7 @@ export default {
   },
 
   mounted: function() {
-    $Info.get().then(
+    awclient.info().then(
       (response) => {
         if (response.status > 304) {
           console.error("Status code from return call was >304");
@@ -103,8 +98,8 @@ export default {
       }
     );
 
-    $Bucket.get().then((response) => {
-        let buckets = response.json();
+    awclient.getBuckets().then((response) => {
+        let buckets = response.data;
         let types_by_host = {};
         _.each(buckets, (v, k) => {
             types_by_host[v.hostname] = types_by_host[v.hostname] || {};
