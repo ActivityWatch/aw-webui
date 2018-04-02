@@ -41,11 +41,9 @@ div
 
 <script>
 import moment from 'moment';
-import Resources from '../resources.js';
+import awclient from '../awclient.js';
 
 import Timeline from '../visualizations/Timeline.vue';
-
-let $Query = Resources.$Query;
 
 let today = moment().startOf("day");
 let tomorrow = moment(today).add(24, "hours");
@@ -71,13 +69,12 @@ RETURN = events;",
   methods: {
     query: function() {
       let query = this.query_code.split(";").map((s) => s.trim() + ";");
-      $Query.save({"name": "query-explorer", "cache": false},
-        {"timeperiods": [moment(this.startdate).format() + "/" + moment(this.enddate).format()],
-         "query": query}).then((response) => {
-        console.log(response.json());
-        this.events = response.json()[0];
+      let timeperiods = [moment(this.startdate).format() + "/" + moment(this.enddate).format()];
+      awclient.query(timeperiods, query).then((response) => {
+        console.log(response.data);
+        this.events = response.data[0];
         this.error = "";
-       }, (r) => this.error_handler(r.json().message));
+       }, (err) => this.error_handler(err.response.data.message));
     },
     error_handler: function(error) {
       this.error = error;
