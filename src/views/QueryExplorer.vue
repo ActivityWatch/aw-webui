@@ -55,7 +55,8 @@ export default {
   components: {"aw-timeline": Timeline},
   data: () => {
     return {
-      "query_code": "events = query_bucket('aw-watcher-window_erb-laptop2-arch');\n\
+      "query_code": "bucketname='aw-watcher-window_hostname';\n\
+events = query_bucket(bucketname);\n\
 RETURN = events;",
       "vis_method": "",
       "event_type": "currentwindow",
@@ -74,7 +75,8 @@ RETURN = events;",
         {"timeperiods": [moment(this.startdate).format() + "/" + moment(this.enddate).format()],
          "query": query}).then((response) => {
         console.log(response.json());
-        this.events = response.json();
+        this.events = response.json()[0];
+        this.error = "";
        }, (r) => this.error_handler(r.json().message));
     },
     error_handler: function(error) {
