@@ -98,14 +98,14 @@ export default {
     },
 
     getBucketInfo: function(bucket_id) {
-      $Bucket.getBucket(bucket_id).then((response) => {
+      awclient.getBucket(bucket_id).then((response) => {
         this.buckets[bucket_id] = response.data;
       });
     },
 
     deleteBucket: function(bucket_id) {
       console.log("Deleting bucket " + bucket_id);
-      $Bucket.deleteBucket(bucket_id).then(() => {
+      awclient.deleteBucket(bucket_id).then((response) => {
         this.getBuckets();
       });
     }
