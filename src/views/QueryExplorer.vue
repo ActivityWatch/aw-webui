@@ -28,14 +28,18 @@ div
 
   div.form-group
     select.form-control(v-model="vis_method")
-      option(value="") Select a visualization method
-      option(value="timeline") Timeline
       option(value="eventlist") Event List
+      option(value="timeline") Timeline
+      option(value="summary") Summary
 
   div(v-if="vis_method == 'timeline'")
     aw-timeline(type="simple", :event_type="event_type", :events="events")
   div(v-if="vis_method == 'eventlist'")
     aw-eventlist(:events="events")
+  div(v-if="vis_method == 'summary'")
+    input.form-control(type="text" v-model.lazy.trim="summaryKey" placeholder="data key" style="margin-bottom: 1em;")
+    aw-summary(:fields="events", :colorfunc="colorfunc", :namefunc="namefunc")
+
 </template>
 
 <style scoped lang="scss">
@@ -47,6 +51,7 @@ import awclient from '../awclient.js';
 
 import Timeline from '../visualizations/Timeline.vue';
 import EventList from '../visualizations/EventList.vue';
+import Summary from '../visualizations/Summary.vue';
 
 let today = moment().startOf("day");
 let tomorrow = moment(today).add(24, "hours");
@@ -56,13 +61,14 @@ export default {
   components: {
     "aw-timeline": Timeline,
     "aw-eventlist": EventList,
+    "aw-summary": Summary,
   },
   data: () => {
     return {
-      "query_code": "bucketname='aw-watcher-window_hostname';\n\
+      "query_code": "bucketname = 'aw-watcher-window_hostname';\n\
 events = query_bucket(bucketname);\n\
 RETURN = events;",
-      "vis_method": "",
+      "vis_method": "eventlist",
       "event_type": "currentwindow",
       "events": [],
       "today": today.format(),
@@ -70,7 +76,16 @@ RETURN = events;",
       "error": "",
       "startdate": today.format("YYYY-MM-DD"),
       "enddate": tomorrow.format("YYYY-MM-DD"),
+
+      /* Summary props */
+      "summaryKey": "",
+      "colorfunc": null,
+      "namefunc": null,
     }
+  },
+  mounted: function() {
+    this.colorfunc = this.summaryKeyFunc;
+    this.namefunc = this.summaryKeyFunc;
   },
   methods: {
     query: function() {
@@ -84,9 +99,10 @@ RETURN = events;",
     },
     error_handler: function(error) {
       this.error = error;
-    }
-  },
-  mounted: function() {
+    },
+    summaryKeyFunc: function(e) {
+      return e.data[this.summaryKey];
+    },
   },
 }
 </script>
