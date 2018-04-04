@@ -31,6 +31,7 @@ div
       option(value="eventlist") Event List
       option(value="timeline") Timeline
       option(value="summary") Summary
+      option(value="raw") Raw JSON
 
   div(v-if="vis_method == 'timeline'")
     aw-timeline(type="simple", :event_type="event_type", :events="events")
@@ -39,6 +40,8 @@ div
   div(v-if="vis_method == 'summary'")
     input.form-control(type="text" v-model.lazy.trim="summaryKey" placeholder="data key" style="margin-bottom: 1em;")
     aw-summary(:fields="events", :colorfunc="colorfunc", :namefunc="namefunc")
+  div(v-if="vis_method == 'raw'")
+    pre {{ events }}
 
 </template>
 
