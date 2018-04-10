@@ -23,7 +23,7 @@ div
       textarea.form-control(v-model="query_code", style="font-family: monospace" rows=4)
     div.form-inline
       div.form-group
-        button.btn.btn-success(v-on:click="query()") Query
+        button.btn.btn-success(type="button", v-on:click="query()") Query
       span(style="padding-left: 1em;")
       | {{eventcount_str}}
 
