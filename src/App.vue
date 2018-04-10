@@ -37,6 +37,10 @@ div#wrapper
       b-nav-item(to="/buckets")
         icon(name="database")
         | Raw Data
+      b-nav-item(to="/query")
+        // TODO: Use 'searchengin' icon instead, when landed in vue-awesome
+        icon(name="search")
+        | Query
       //li
         router-link(to="/log")
           // TODO: Add icon
@@ -69,8 +73,9 @@ import 'vue-awesome/icons/database';
 import 'vue-awesome/icons/check-circle';
 import 'vue-awesome/icons/times-circle';
 import 'vue-awesome/icons/clock-o';
-import 'vue-awesome/icons/twitter'
-import 'vue-awesome/icons/github'
+import 'vue-awesome/icons/twitter';
+import 'vue-awesome/icons/github';
+import 'vue-awesome/icons/search';
 
 import awclient from './awclient.js';
 
