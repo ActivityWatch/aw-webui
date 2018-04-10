@@ -48,14 +48,14 @@ div
   div.row
     div.col-md-6
       h5 Top Applications
-      aw-summary(:fields="top_applications", :namefunc="top_applications_namefunc", :colorfunc="top_applications_colorfunc")
+      aw-summary(:fields="top_apps", :namefunc="top_apps_namefunc", :colorfunc="top_apps_colorfunc")
       b-button(size="sm", variant="outline-secondary", v-on:click="numberOfWindowApps += 5; queryApps()")
         icon(name="angle-double-down")
         | Show more
 
     div.col-md-6
       h5 Top Window Titles
-      aw-summary(:fields="top_window_titles", :namefunc="top_window_titles_namefunc", :colorfunc="top_window_titles_colorfunc")
+      aw-summary(:fields="top_windowtitles", :namefunc="top_windowtitles_namefunc", :colorfunc="top_windowtitles_colorfunc")
       b-button(size="sm", variant="outline-secondary", v-on:click="numberOfWindowTitles += 5; queryWindowTitles()")
         icon(name="angle-double-down")
         | Show more
@@ -144,7 +144,6 @@ import PeriodUsage from '../visualizations/PeriodUsage.vue';
 
 import awclient from '../awclient.js';
 
-var daylength = 86400000;
 
 export default {
   name: "Activity",
@@ -165,17 +164,17 @@ export default {
       browserBuckets: [],
       browserBucketId: "",
 
-      top_applications: [],
-      top_applications_namefunc: null,
-      top_applications_colorfunc: null,
+      top_apps: [],
+      top_apps_namefunc: (e) => e.data.app,
+      top_apps_colorfunc: (e) => e.data.app,
 
-      top_window_titles: [],
-      top_window_titles_namefunc: null,
-      top_window_titles_colorfunc: null,
+      top_windowtitles: [],
+      top_windowtitles_namefunc: (e) => e.data.title,
+      top_windowtitles_colorfunc: (e) => e.data.app,
 
-      top_web_domains: {},
-      top_web_domains_namefunc: null,
-      top_web_domains_colorfunc: null,
+      top_web_domains: [],
+      top_web_domains_namefunc: (e) => e.data.domain,
+      top_web_domains_colorfunc: (e) => e.data.domain,
 
       daily_activity: [],
     }
@@ -274,8 +273,8 @@ export default {
     queryTimeline: function() {
       var timeline_elem = document.getElementById("apptimeline-container")
       timeline.set_status(timeline_elem, "Loading...");
-      var periods = [this.dateStart+"/"+this.dateEnd];
-      var q = query.windowTimelineQuery(this.windowBucketId, this.afkBucketId);
+      var periods = [this.dateStart + "/" + this.dateEnd];
+      var q = query.windowTimelineQuery(this.windowBucketId, this.afkBucketId, this.filterAFK);
       awclient.query(periods, q).then(
         (response) => { // Success
           if (response.status > 304){
@@ -291,16 +290,14 @@ export default {
     },
 
     queryWindowTitles: function() {
-      var periods = [this.dateStart+"/"+this.dateEnd];
-      var q = query.titleSummaryQuery(this.windowBucketId, this.afkBucketId, this.numberOfWindowTitles);
+      var periods = [this.dateStart + "/" + this.dateEnd];
+      var q = query.titleSummaryQuery(this.windowBucketId, this.afkBucketId, this.numberOfWindowTitles, this.filterAFK);
       awclient.query(periods, q).then(
         (response) => { // Success
           if (response.status > 304){
             this.errorHandler(response);
           } else {
-            this.top_window_titles_namefunc = (e) => e.data.title;
-            this.top_window_titles_colorfunc = (e) => e.data.app;
-            this.top_window_titles = response.data[0];
+            this.top_windowtitles = response.data[0];
           }
         }, this.errorHandler
       );
@@ -315,16 +312,14 @@ export default {
     },
 
     queryApps: function(){
-      var periods = [this.dateStart+"/"+this.dateEnd];
-      var q = query.appSummaryQuery(this.windowBucketId, this.afkBucketId, this.numberOfWindowApps);
+      var periods = [this.dateStart + "/" + this.dateEnd];
+      var q = query.appSummaryQuery(this.windowBucketId, this.afkBucketId, this.numberOfWindowApps, this.filterAFK);
       awclient.query(periods, q).then(
         (response) => { // Success
           if (response.status > 304){
             this.errorHandler(response);
           } else {
-            this.top_applications_namefunc = (e) => e.data.app;
-            this.top_applications_colorfunc = (e) => e.data.app;
-            this.top_applications = response.data[0];
+            this.top_apps = response.data[0];
           }
         }, this.errorHandler
       );
@@ -332,15 +327,13 @@ export default {
 
     queryBrowserDomains: function(){
       if (this.browserBucketId !== ""){
-        var periods = [this.dateStart+"/"+this.dateEnd];
-        var q = query.browserSummaryQuery(this.browserBucketId, this.windowBucketId, this.afkBucketId, this.numberOfBrowserDomains);
+        var periods = [this.dateStart + "/" + this.dateEnd];
+        var q = query.browserSummaryQuery(this.browserBucketId, this.windowBucketId, this.afkBucketId, this.numberOfBrowserDomains, this.filterAFK);
         awclient.query(periods, q).then(
           (response) => { // Success
             if (response.status > 304){
               this.errorHandler(response);
             } else {
-              this.top_web_domains_namefunc = (e) => e.data.domain;
-              this.top_web_domains_colorfunc = (e) => e.data.domain;
               this.top_web_domains = response.data[0];
             }
           }, this.errorHandler
