@@ -63,6 +63,11 @@ div#wrapper
       | Need help? #[a(href="https://forum.activitywatch.net") Ask on the forum]
       br
       | Found a bug? #[a(href="https://github.com/ActivityWatch/activitywatch/issues/new") File an issue]
+      br
+      span(v-show="connected", style="color: #888")
+        | Host: {{info.hostname}}
+        br
+        | Version: {{info.version}}
 </template>
 
 <script>
@@ -86,6 +91,7 @@ export default {
     return {
       activity_hosts: [],
       connected: false,
+      info: {}
     }
   },
 
@@ -96,10 +102,12 @@ export default {
           console.error("Status code from return call was >304");
         } else {
           this.connected = true;
+          this.info = response.data;
         }
       },
       (response) => {
         this.connected = false;
+        this.info = {};
       }
     );
 
