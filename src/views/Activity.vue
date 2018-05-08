@@ -37,11 +37,8 @@ div
     div.col-md-6
       b Options
       div
-        label.custom-control.custom-checkbox
-          input.custom-control-input(type="checkbox", v-model="filterAFK")
-          span.custom-control-indicator
-          span.custom-control-description
-            | Filter away AFK time
+        b-form-checkbox(v-model="filterAFK")
+          | Filter away AFK time
 
   hr
 
@@ -64,11 +61,8 @@ div
 
   h4 Timeline
 
-  label.custom-control.custom-checkbox
-    input.custom-control-input(type="checkbox", v-model="timelineShowAFK")
-    span.custom-control-indicator
-    span.custom-control-description
-      | Show AFK time
+  b-form-checkbox(v-model="timelineShowAFK")
+    | Show AFK time
 
   div#apptimeline-container
 
@@ -86,20 +80,19 @@ div
 
   h4 Top Browser Domains
 
-  b-alert(variant="warning" show)
-    | #[b Note:] This is an early version. It is missing basic functionality such as not working on all platforms and browsers. See #[a(href="https://github.com/ActivityWatch/activitywatch/issues/99") issue #99] for details.
+  //b-alert(variant="warning" show)
+  //  | #[b Note:] This is an early version. It is missing basic functionality such as not working on all platforms and browsers. See #[a(href="https://github.com/ActivityWatch/activitywatch/issues/99") issue #99] for details.
 
   b-input-group(size="sm")
-    b-input-group-addon
-      | Browser bucket:
-    b-input-group-button
-      b-dropdown(:text="browserBucketId || 'Select browser watcher bucket'", size="sm", variant="outline-secondary")
-        b-dropdown-item(v-if="browserBuckets.length <= 0", name="b", disabled)
-          | No browser buckets available
-          br
-          small Make sure you have an browser extension installed
-        b-dropdown-item-button(v-for="browserBucket in browserBuckets", :key="browserBucket", v-on:click="browserBucketId = browserBucket")
-          | {{ browserBucket }}
+    b-dropdown(:text="browserBucketId || 'Select browser watcher bucket'", size="sm", variant="outline-secondary")
+      b-dropdown-header
+        | Browser bucket to use
+      b-dropdown-item(v-if="browserBuckets.length <= 0", name="b", disabled)
+        | No browser buckets available
+        br
+        small Make sure you have an browser extension installed
+      b-dropdown-item-button(v-for="browserBucket in browserBuckets", :key="browserBucket", v-on:click="browserBucketId = browserBucket")
+        | {{ browserBucket }}
 
   div(v-show="browserBucketId")
     br

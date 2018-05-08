@@ -19,11 +19,11 @@ div
         | By sharing it you help us make ActivityWatch even better!
       ul
         li
-          | Give us a like on #[a(href="https://alternativeto.net/software/activitywatch/") AlternativeTo]
+          | Give us a like and a review on #[a(href="https://alternativeto.net/software/activitywatch/") AlternativeTo]
         li
-          | Follow us on #[a(href="https://twitter.com/ActivityWatchIt") Twitter] and #[a(href="https://www.facebook.com/ActivityWatch") Facebook].
+          | Follow us and spread the word on #[a(href="https://twitter.com/ActivityWatchIt") Twitter] and #[a(href="https://www.facebook.com/ActivityWatch") Facebook]
         li
-          | Tell people about us on #[a(href="https://twitter.com/intent/tweet?text=Say%20something%20nice%20about%20@ActivityWatchIt") Twitter] or #[a(href="http://www.facebook.com/share.php?u=https://activitywatch.net/") Facebook]
+          | Star us on #[a(href="https://github.com/ActivityWatch/activitywatch") GitHub]
 
     div.col-md-6
       h4 Support us!
