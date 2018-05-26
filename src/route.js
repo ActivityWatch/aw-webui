@@ -8,7 +8,6 @@ import Bucket from './views/Bucket.vue';
 import QueryExplorer from './views/QueryExplorer.vue';
 import Log from './views/Log.vue';
 import User from './views/User.vue';
-import Settings from './views/Settings.vue';
 
 Vue.use(VueRouter);
 
@@ -22,7 +21,6 @@ var router = new VueRouter({
     { path: '/query',                   component: QueryExplorer },
     { path: '/log',                     component: Log },
     { path: '/u/:username',             component: User },
-    { path: '/settings',                component: Settings },
   ]
 });
 

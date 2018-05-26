@@ -22,7 +22,7 @@ div
     div.p-1.ml-auto
       b-button-group
         b-button(v-on:click="refresh()", variant="outline-dark")
-          icon(name="refresh")
+          icon(name="sync")
           |  Refresh
 
   aw-periodusage(:periodusage_arr="daily_activity", :host="host")
@@ -127,7 +127,7 @@ import event_parsing from "../util/event_parsing.js";
 import 'vue-awesome/icons/arrow-left'
 import 'vue-awesome/icons/arrow-right'
 import 'vue-awesome/icons/angle-double-down'
-import 'vue-awesome/icons/refresh'
+import 'vue-awesome/icons/sync'
 
 import query from '../queries.js';
 
