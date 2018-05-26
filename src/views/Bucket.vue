@@ -46,10 +46,6 @@ import awclient from '../awclient.js';
 import Timeline from '../visualizations/Timeline.vue';
 import EventList from '../visualizations/EventList.vue';
 
-import 'vue-awesome/icons/tags'
-import 'vue-awesome/icons/clock-o'
-import 'vue-awesome/icons/calendar-o'
-
 export default {
   name: "Bucket",
   components: {

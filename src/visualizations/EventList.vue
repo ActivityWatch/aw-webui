@@ -16,10 +16,10 @@ div
       li(v-for="event in events")
           span.event
             span.field(v-bind:title="event.timestamp")
-              icon(name="calendar-o")
+              icon(name="calendar")
               | {{ event.timestamp | friendlytime }}
             span.field
-              icon(name="clock-o")
+              icon(name="clock")
               | {{ event.duration | friendlyduration }}
             span(v-for="(val, key) in event.data").field
               icon(name="tags")
@@ -107,8 +107,8 @@ $border-color: #ddd;
 
 <script>
 import 'vue-awesome/icons/tags'
-import 'vue-awesome/icons/clock-o'
-import 'vue-awesome/icons/calendar-o'
+import 'vue-awesome/icons/clock'
+import 'vue-awesome/icons/calendar'
 
 export default {
   name: "EventList",

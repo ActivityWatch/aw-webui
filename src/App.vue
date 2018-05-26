@@ -22,11 +22,11 @@ div#wrapper
         icon(name="home")
         | Home
       b-nav-item(v-if="activity_hosts.length === 1", v-for="host in activity_hosts", :key="host", :to="'/activity/' + host")
-        icon(name="clock-o")
+        icon(name="clock")
         | Activity
       b-nav-item-dropdown(v-if="activity_hosts.length !== 1")
         template(slot="button-content")
-          icon(name="clock-o")
+          icon(name="clock")
           | Activity
         b-dropdown-item(v-if="activity_hosts.length <= 0", disabled)
           | No activity reports available
@@ -41,10 +41,6 @@ div#wrapper
         // TODO: Use 'searchengin' icon instead, when landed in vue-awesome
         icon(name="search")
         | Query
-      //li
-        router-link(to="/log")
-          // TODO: Add icon
-          | Server Log
 
   div.container.aw-container.rounded-bottom#content
       router-view
@@ -55,9 +51,12 @@ div#wrapper
         | Made with ❤ by the #[a(href="http://activitywatch.net/contributors/") ActivityWatch developers]
       div
         a.outlinks(href="https://github.com/ActivityWatch/activitywatch", target="_blank")
-          img(title="GitHub", src="https://img.shields.io/github/stars/ActivityWatch/activitywatch.svg?style=social&label=Star")
+          icon(name="brands/github")
+          | GitHub
+        div
         a.outlinks(href="https://twitter.com/ActivityWatchIt", target="_blank")
-          img(title="Twitter", src="https://img.shields.io/twitter/follow/ActivityWatchIt.svg?style=social&label=Follow")
+          icon(name="brands/twitter")
+          | Twitter
 
     div(style="float: right; text-align: right;")
       | Need help? #[a(href="https://forum.activitywatch.net") Ask on the forum]
@@ -77,9 +76,9 @@ import 'vue-awesome/icons/home';
 import 'vue-awesome/icons/database';
 import 'vue-awesome/icons/check-circle';
 import 'vue-awesome/icons/times-circle';
-import 'vue-awesome/icons/clock-o';
-import 'vue-awesome/icons/twitter';
-import 'vue-awesome/icons/github';
+import 'vue-awesome/icons/clock';
+import 'vue-awesome/icons/brands/twitter';
+import 'vue-awesome/icons/brands/github';
 import 'vue-awesome/icons/search';
 
 import awclient from './awclient.js';
