@@ -8,29 +8,30 @@ module.exports = {
   entry: {
     app: './src/main.js'
   },
+
   output: {
     path: config.build.assetsRoot,
     publicPath: config.build.assetsPublicPath,
     filename: '[name].js'
   },
+
   resolve: {
     extensions: ['.js', '.vue'],
     alias: {
       'src': path.resolve(__dirname, '../src'),
       'assets': path.resolve(__dirname, '../src/assets'),
       'components': path.resolve(__dirname, '../src/components'),
-      'vue-awesome': path.resolve(__dirname, '../node_modules/vue-awesome'),
     }
   },
+
   plugins: [
     new MiniCssExtractPlugin({
-      // Options similar to the same options in webpackOptions.output
-      // both options are optional
       filename: "[name].css",
       chunkFilename: "[id].css"
     }),
     new VueLoaderPlugin()
   ],
+
   module: {
     rules: [
       {
