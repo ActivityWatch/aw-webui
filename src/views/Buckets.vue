@@ -25,6 +25,7 @@ div
     b-button-toolbar.float-left
       b-button-group(size="sm", class="mx-1")
         b-button(variant="primary", :to="'/buckets/' + bucket.id")
+          icon(name="folder-open")
           | Open bucket
       b-button-group(size="sm", class="mx-1")
         // TODO: This currently does not export bucket metadata, which makes importing difficult
@@ -34,6 +35,7 @@ div
                  :download="'aw-event-export-' + bucket.id + '.json'",
                  title="Export all events from this bucket to JSON",
                  variant="outline-secondary")
+          icon(name="download")
           | Export as JSON
     b-button-toolbar.float-right
       b-button-group(size="sm", class="mx-1")
@@ -74,6 +76,8 @@ div
 
 <script>
 import 'vue-awesome/icons/trash';
+import 'vue-awesome/icons/download';
+import 'vue-awesome/icons/folder-open';
 
 import awclient from '../awclient.js';
 
