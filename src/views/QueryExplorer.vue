@@ -71,9 +71,11 @@ export default {
   },
   data: () => {
     return {
-      "query_code": "bucketname = 'aw-watcher-window_hostname';\n\
-events = query_bucket(bucketname);\n\
-RETURN = events;",
+      "query_code": "\
+afk_events = query_bucket(find_bucket('aw-watcher-afk_'));\n\
+window_events = query_bucket(find_bucket('aw-watcher-window_'));\n\
+window_events = filter_period_intersect(window_events, filter_keyvals(afk_events, 'status', 'not-afk'));\n\
+RETURN = merge_events_by_keys(window_events, 'app', 'title');",
       "vis_method": "eventlist",
       "event_type": "currentwindow",
       "events": [],
