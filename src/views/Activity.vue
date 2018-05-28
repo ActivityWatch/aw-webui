@@ -43,19 +43,47 @@ div
   hr
 
   div.row
-    div.col-md-6
+    div.col-md-4
       h5 Top Applications
       aw-summary(:fields="top_apps", :namefunc="top_apps_namefunc", :colorfunc="top_apps_colorfunc")
       b-button(size="sm", variant="outline-secondary", v-on:click="numberOfWindowApps += 5; queryApps()")
         icon(name="angle-double-down")
         | Show more
 
-    div.col-md-6
+    div.col-md-4
       h5 Top Window Titles
       aw-summary(:fields="top_windowtitles", :namefunc="top_windowtitles_namefunc", :colorfunc="top_windowtitles_colorfunc")
       b-button(size="sm", variant="outline-secondary", v-on:click="numberOfWindowTitles += 5; queryWindowTitles()")
         icon(name="angle-double-down")
         | Show more
+
+    div.col-md-4
+      h5 Top Browser Domains
+      //b-alert(variant="warning" show)
+      //  | #[b Note:] This is an early version. It is missing basic functionality such as not working on all platforms and browsers. See #[a(href="https://github.com/ActivityWatch/activitywatch/issues/99") issue #99] for details.
+
+      div(v-show="browserBucketId")
+        aw-summary(:fields="top_web_domains", :namefunc="top_web_domains_namefunc", :colorfunc="top_web_domains_colorfunc")
+
+        b-button(size="sm", variant="outline-secondary", v-on:click="numberOfBrowserDomains += 5; queryBrowserDomains()")
+          icon(name="angle-double-down")
+          | Show more
+        br
+        br
+
+      b-input-group(size="sm")
+        b-input-group-prepend
+          span.input-group-text
+            | Bucket
+        b-dropdown(:text="browserBucketId || 'Select browser watcher bucket'", size="sm", variant="outline-secondary")
+          b-dropdown-header
+            | Browser bucket to use
+          b-dropdown-item(v-if="browserBuckets.length <= 0", name="b", disabled)
+            | No browser buckets available
+            br
+            small Make sure you have an browser extension installed
+          b-dropdown-item-button(v-for="browserBucket in browserBuckets", :key="browserBucket", v-on:click="browserBucketId = browserBucket")
+            | {{ browserBucket }}
 
   hr
 
@@ -70,39 +98,11 @@ div
 
   h4 Clock
 
-  b-alert(variant="warning" show)
-    | #[b Note:] This is an early version. It has known issues that will be resolved in a future update.
-    | See #[a(href="https://github.com/ActivityWatch/aw-webui/issues/36") issue #36] for details.
+  //b-alert(variant="warning" show)
+  //  | #[b Note:] This is an early version. It has known issues that will be resolved in a future update.
+  //  | See #[a(href="https://github.com/ActivityWatch/aw-webui/issues/36") issue #36] for details.
 
   aw-sunburst(:date="date", :afkBucketId="afkBucketId", :windowBucketId="windowBucketId")
-
-  hr
-
-  h4 Top Browser Domains
-
-  //b-alert(variant="warning" show)
-  //  | #[b Note:] This is an early version. It is missing basic functionality such as not working on all platforms and browsers. See #[a(href="https://github.com/ActivityWatch/activitywatch/issues/99") issue #99] for details.
-
-  b-input-group(size="sm")
-    b-dropdown(:text="browserBucketId || 'Select browser watcher bucket'", size="sm", variant="outline-secondary")
-      b-dropdown-header
-        | Browser bucket to use
-      b-dropdown-item(v-if="browserBuckets.length <= 0", name="b", disabled)
-        | No browser buckets available
-        br
-        small Make sure you have an browser extension installed
-      b-dropdown-item-button(v-for="browserBucket in browserBuckets", :key="browserBucket", v-on:click="browserBucketId = browserBucket")
-        | {{ browserBucket }}
-
-  div(v-show="browserBucketId")
-    br
-    aw-summary(:fields="top_web_domains", :namefunc="top_web_domains_namefunc", :colorfunc="top_web_domains_colorfunc")
-
-    b-button(size="sm", variant="outline-secondary", v-on:click="numberOfBrowserDomains += 5; queryBrowserDomains()")
-      icon(name="angle-double-down")
-      | Show more
-
-  br
 
 </template>
 
@@ -152,7 +152,7 @@ export default {
       errormsg: "",
       numberOfWindowApps: 5,
       numberOfWindowTitles: 5,
-      numberOfBrowserDomains: 5,
+      numberOfBrowserDomains: 4,
 
       browserBuckets: [],
       browserBucketId: "",
