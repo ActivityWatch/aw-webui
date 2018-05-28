@@ -13,19 +13,13 @@ svg {
 // NOTE: This is just a Vue.js component wrapper for timeline-simple.js
 //       Code should generally go in the framework-independent file.
 
-// TODO: Integrate timeline-browser (old timeline)
-
 import timeline_simple from './timeline-simple.js';
 
 export default {
   name: "aw-timeline",
   props: ['type', 'event_type', 'events'],
   mounted: function() {
-    if(this.type == "simple") {
-      timeline_simple.create(this.$el);
-    } else {
-      console.error("Unknown type");
-    }
+    timeline_simple.create(this.$el);
   },
   watch: {
     "events": function() {

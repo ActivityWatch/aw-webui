@@ -55,7 +55,7 @@ div
 import moment from 'moment';
 import awclient from '../awclient.js';
 
-import Timeline from '../visualizations/Timeline.vue';
+import Timeline from '../visualizations/TimelineSimple.vue';
 import EventList from '../visualizations/EventList.vue';
 import Summary from '../visualizations/Summary.vue';
 
@@ -74,8 +74,8 @@ export default {
       "query_code": "\
 afk_events = query_bucket(find_bucket('aw-watcher-afk_'));\n\
 window_events = query_bucket(find_bucket('aw-watcher-window_'));\n\
-window_events = filter_period_intersect(window_events, filter_keyvals(afk_events, 'status', 'not-afk'));\n\
-RETURN = merge_events_by_keys(window_events, 'app', 'title');",
+window_events = filter_period_intersect(window_events, filter_keyvals(afk_events, 'status', ['not-afk']));\n\
+RETURN = merge_events_by_keys(window_events, ['app', 'title']);",
       "vis_method": "eventlist",
       "event_type": "currentwindow",
       "events": [],

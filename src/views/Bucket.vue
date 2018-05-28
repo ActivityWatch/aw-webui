@@ -28,7 +28,7 @@ div
   b-alert(variant="warning" show)
     | This timeline is a work in progress. It only shows the last 100 events. Hover to get details.
 
-  aw-timeline(type="simple" :event_type="bucket.type", :events="events")
+  aw-timeline(:event_type="bucket.type", :events="events")
 
   hr
 
@@ -43,7 +43,7 @@ div
 <script>
 import awclient from '../awclient.js';
 
-import Timeline from '../visualizations/Timeline.vue';
+import Timeline from '../visualizations/TimelineSimple.vue';
 import EventList from '../visualizations/EventList.vue';
 
 export default {

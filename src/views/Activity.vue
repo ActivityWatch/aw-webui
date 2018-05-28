@@ -92,7 +92,7 @@ div
   b-form-checkbox(v-model="timelineShowAFK")
     | Show AFK time
 
-  div#apptimeline-container
+  aw-timeline(:events="events_apptimeline", :total_duration='duration', :show_afk='timelineShowAFK')
 
   hr
 
@@ -134,6 +134,7 @@ import query from '../queries.js';
 import Summary from '../visualizations/Summary.vue';
 import Sunburst from '../visualizations/Sunburst.vue';
 import PeriodUsage from '../visualizations/PeriodUsage.vue';
+import Timeline from '../visualizations/TimelineInspect.vue';
 
 import awclient from '../awclient.js';
 
@@ -170,6 +171,7 @@ export default {
       top_web_domains_colorfunc: (e) => e.data.domain,
 
       daily_activity: [],
+      events_apptimeline: [],
     }
   },
 
@@ -177,6 +179,7 @@ export default {
     "aw-sunburst": Sunburst,
     "aw-summary": Summary,
     "aw-periodusage": PeriodUsage,
+    "aw-timeline": Timeline,
   },
 
   watch: {
@@ -213,8 +216,6 @@ export default {
   },
 
   mounted: function() {
-    timeline.create(document.getElementById("apptimeline-container"));
-
     this.getBrowserBucket();
 
     this.refresh();
@@ -264,8 +265,6 @@ export default {
     },
 
     queryTimeline: function() {
-      var timeline_elem = document.getElementById("apptimeline-container")
-      timeline.set_status(timeline_elem, "Loading...");
       var periods = [this.dateStart + "/" + this.dateEnd];
       var q = query.windowTimelineQuery(this.windowBucketId, this.afkBucketId, this.filterAFK);
       awclient.query(periods, q).then(
@@ -274,10 +273,8 @@ export default {
             this.errorHandler(response);
           } else {
             var eventlist = response.data[0];
-            var apptimeline = event_parsing.parse_eventlist_by_apps(eventlist);
-            var total_duration = this.totalDuration(eventlist);
-            this.duration = total_duration;
-            timeline.update(timeline_elem, apptimeline, total_duration, this.timelineShowAFK);
+            this.events_apptimeline = event_parsing.parse_eventlist_by_apps(eventlist);
+            this.duration = this.totalDuration(eventlist);
           }
         }, this.errorHandler);
     },
