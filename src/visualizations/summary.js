@@ -77,6 +77,8 @@ function update(container, apps) {
       .on("mouseover", function() { eg.select("rect").style("fill", hovercolor); })
       .on("mouseout", function() { eg.select("rect").style("fill", appcolor); });
 
+    eg.append("title").text(app.name + "\n" + time.seconds_to_duration(app.duration));
+
     // Color box background
     eg.append("rect")
      .attr("x", 0)
