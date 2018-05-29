@@ -64,7 +64,7 @@ function update(container, apps) {
     // TODO: Expand on click and list titles
 
     // Variables
-    var width = (app.duration/longest_duration)*80+"%";
+    var width = (app.duration/longest_duration) * 100 + "%";
     let barHeight = 50;
     let textSize = 15;
     var baseappcolor = color.getAppColor(app.colorKey || app.name);
