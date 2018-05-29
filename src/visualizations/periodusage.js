@@ -3,6 +3,7 @@
 const d3 = require("d3");
 const Color = require("color");
 const _ = require("lodash");
+const moment = require("moment");
 
 import color from "../util/color.js";
 
@@ -27,9 +28,9 @@ function set_status(svg_elem, msg){
    .attr("fill", "black");
 }
 
-var diagramcolor = "#46f"
-var center_diagramcolor = "#8cf"
-var focused_diagramcolor = "#adf"
+var diagramcolor = "#aaa";
+var diagramcolor_selected = "#fc5";
+var diagramcolor_focused = "#adf";
 
 function update(svg_elem, usage_arr, host) {
   // No apps, sets status to "No data"
@@ -52,31 +53,53 @@ function update(svg_elem, usage_arr, host) {
     longest_usage = 0.00000000001;
   }
 
-  var padding = (100 / (usage_arr.length-1))/10;
+  var padding = 0.3 * (100 / (usage_arr.length-1));
   var width = (100/usage_arr.length) - padding;
   var center_elem = Math.floor(usage_arr.length/2);
 
+
   for (var i in usage_arr){
     var usage_time = get_usage_time(usage_arr[i]);
-    var height = 100*(usage_time / longest_usage);
+    var height = 85 * (usage_time / longest_usage);
     var date = "";
     if (usage_arr[i].length > 0){
       /* slice off so it's only the day */
       date = usage_arr[i][0].timestamp.slice(0,10);
     }
-    var color = (i == center_elem) ? center_diagramcolor : diagramcolor;
+    var color = (i == center_elem) ? diagramcolor_selected : diagramcolor;
+    var offset = 50;
+
+		let x = i * padding + i * width + 0.25 * width;
+
+		if(moment(date).isSame(moment(), "day")) {
+			svg.append("line")
+				.attr("x1", x + width / 2 + "%")
+				.attr("y1", 0)
+				.attr("x2", x + width / 2 + "%")
+				.attr("y2", 200)
+				.attr("style", "stroke: #888; stroke-width: 2px;")
+				.attr("stroke-dasharray", "4, 2")
+
+			svg.append("text")
+				.attr("x", x + width + "%")
+				.attr("y", "30")
+				.text("Today")
+		}
 
     let rect = svg.append("rect")
-      .attr("x", padding*(i-1)+width*i+"%")
-      .attr("y", 100-height+"%") // Draw rect bottom-up
-      .attr("width", width+"%")
-      .attr("height", height+"%")
+      .attr("x", x + "%")
+      .attr("y", 101 - height + "%") // Draw rect bottom-up
+      .attr("rx", 3)
+      .attr("ry", 3)
+      .attr("style", (i == center_elem) ? "stroke: black; stroke-width: 1;" : "stroke: #222; stroke-width: 1;")
+      .attr("width", width + "%")
+      .attr("height", height + offset + "%")
       .attr("color", color)
       .attr("date", date)
       .attr("host", host)
       .style("fill", color)
       .on("mouseover", () => {
-          rect.style("fill", focused_diagramcolor);
+          rect.style("fill", diagramcolor_focused);
       })
       .on("mouseout", (d, i, n) => {
           var a = n[i];
