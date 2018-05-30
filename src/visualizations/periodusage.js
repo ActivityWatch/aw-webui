@@ -81,7 +81,7 @@ function update(svg_elem, usage_arr, host) {
 				.attr("stroke-dasharray", "4, 2")
 
 			svg.append("text")
-				.attr("x", x + width + "%")
+				.attr("x", x + 1.5*width + "%")
 				.attr("y", "30")
 				.text("Today")
 		}
