@@ -46,14 +46,14 @@ div
     div.col-md-4
       h5 Top Applications
       aw-summary(:fields="top_apps", :namefunc="top_apps_namefunc", :colorfunc="top_apps_colorfunc")
-      b-button(size="sm", variant="outline-secondary", v-on:click="numberOfWindowApps += 5; queryApps()")
+      b-button(size="sm", variant="outline-secondary", :disabled="top_apps.length < numberOfSummaryWindows", v-on:click="numberOfSummaryWindows += 5; queryWindows()")
         icon(name="angle-double-down")
         | Show more
 
     div.col-md-4
       h5 Top Window Titles
       aw-summary(:fields="top_windowtitles", :namefunc="top_windowtitles_namefunc", :colorfunc="top_windowtitles_colorfunc")
-      b-button(size="sm", variant="outline-secondary", v-on:click="numberOfWindowTitles += 5; queryWindowTitles()")
+      b-button(size="sm", variant="outline-secondary", :disabled="top_windowtitles.length < numberOfSummaryWindows", v-on:click="numberOfSummaryWindows += 5; queryWindows()")
         icon(name="angle-double-down")
         | Show more
 
@@ -65,7 +65,7 @@ div
       div(v-show="browserBucketId")
         aw-summary(:fields="top_web_domains", :namefunc="top_web_domains_namefunc", :colorfunc="top_web_domains_colorfunc")
 
-        b-button(size="sm", variant="outline-secondary", v-on:click="numberOfBrowserDomains += 5; queryBrowserDomains()")
+        b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length < numberOfBrowserDomains" v-on:click="numberOfBrowserDomains += 5; queryBrowserDomains()")
           icon(name="angle-double-down")
           | Show more
         br
@@ -151,7 +151,7 @@ export default {
       // Query variables
       duration: "",
       errormsg: "",
-      numberOfWindowApps: 5,
+      numberOfSummaryWindows: 5,
       numberOfWindowTitles: 5,
       numberOfBrowserDomains: 4,
 
@@ -229,8 +229,7 @@ export default {
     refresh: function() {
       this.queryAll();
       this.duration = "";
-      this.numberOfWindowApps = 5;
-      this.numberOfWindowTitles = 5;
+      this.numberOfSummaryWindows = 5;
     },
 
     errorHandler: function(response) {
@@ -243,11 +242,9 @@ export default {
       this.eventcount = 0;
       this.errormsg = "";
 
-      this.queryApps();
-      this.queryWindowTitles();
+      this.queryWindows();
       this.queryBrowserDomains();
       this.queryDailyActivity();
-      this.queryTimeline();
     },
 
     getBrowserBucket: function() {
@@ -264,35 +261,6 @@ export default {
       });
     },
 
-    queryTimeline: function() {
-      var periods = [this.dateStart + "/" + this.dateEnd];
-      var q = query.windowTimelineQuery(this.windowBucketId, this.afkBucketId, this.filterAFK);
-      awclient.query(periods, q).then(
-        (response) => { // Success
-          if (response.status > 304){
-            this.errorHandler(response);
-          } else {
-            var eventlist = response.data[0];
-            this.events_apptimeline = event_parsing.parse_eventlist_by_apps(eventlist);
-            this.duration = this.totalDuration(eventlist);
-          }
-        }, this.errorHandler);
-    },
-
-    queryWindowTitles: function() {
-      var periods = [this.dateStart + "/" + this.dateEnd];
-      var q = query.titleSummaryQuery(this.windowBucketId, this.afkBucketId, this.numberOfWindowTitles, this.filterAFK);
-      awclient.query(periods, q).then(
-        (response) => { // Success
-          if (response.status > 304){
-            this.errorHandler(response);
-          } else {
-            this.top_windowtitles = response.data[0];
-          }
-        }, this.errorHandler
-      );
-    },
-
     totalDuration: function(eventlist){
         var duration = 0;
         for (var i in eventlist){
@@ -301,15 +269,21 @@ export default {
         return duration;
     },
 
-    queryApps: function(){
+    queryWindows: function(){
       var periods = [this.dateStart + "/" + this.dateEnd];
-      var q = query.appSummaryQuery(this.windowBucketId, this.afkBucketId, this.numberOfWindowApps, this.filterAFK);
+      var q = query.windowQuery(this.windowBucketId, this.afkBucketId, this.numberOfSummaryWindows, this.filterAFK);
       awclient.query(periods, q).then(
         (response) => { // Success
           if (response.status > 304){
             this.errorHandler(response);
           } else {
-            this.top_apps = response.data[0];
+            let events = response.data[0][0];
+            let not_afk_events = response.data[0][1];
+            this.top_apps = response.data[0][2];
+            this.top_windowtitles = response.data[0][3];
+
+            this.events_apptimeline = event_parsing.parse_eventlist_by_apps(events);
+            this.duration = this.totalDuration(not_afk_events);
           }
         }, this.errorHandler
       );
@@ -336,11 +310,9 @@ export default {
       for (var i=-15; i<=15; i++) {
         var startdate = moment(this.date).add(i, 'days').format();
         var enddate = moment(this.date).add(i+1, 'days').format();
-        var period = startdate+'/'+enddate;
-        timeperiods.push(period);
+        timeperiods.push(startdate + '/' + enddate);
       }
-      var q = query.dailyActivityQuery(this.afkBucketId);
-      awclient.query(timeperiods, q).then(
+      awclient.query(timeperiods, query.dailyActivityQuery(this.afkBucketId)).then(
         (response) => { // Success
           if (response.status > 304){
             this.errorHandler(response);
