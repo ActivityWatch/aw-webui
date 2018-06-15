@@ -3,7 +3,7 @@
 .FORCE: ;
 
 aw-client-js:
-	(cd aw-client-js; npm install)
+	(cd aw-client-js; npm install; npm run compile)
 
 build: install
 	npm run build

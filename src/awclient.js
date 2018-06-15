@@ -1,4 +1,4 @@
-const AWClient = require('../aw-client-js/aw-client').AWClient;
+const AWClient = require('../aw-client-js/out/aw-client').AWClient;
 
 let origin = "";
 
