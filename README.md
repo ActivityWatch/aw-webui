@@ -10,7 +10,7 @@ aw-webui
 
 ``` bash
 # Install dependencies
-npm install
+make install
 
 # Make sure you have aw-server running, the testing port will be used by default
 # so make sure you are running with the --testing flag
@@ -26,7 +26,7 @@ npm run build
 
 ## Code structure
 
-One of the first things that happen in the application is the execution of `src/main.js`. 
+One of the first things that happen in the application is the execution of `src/main.js`.
 
 This loads things such as bootstrap-vue and a bunch of other stuff that's globally used (filters, resources).
 
