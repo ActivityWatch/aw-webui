@@ -104,6 +104,41 @@ div
 
   aw-sunburst(:date="date", :afkBucketId="afkBucketId", :windowBucketId="windowBucketId")
 
+  hr
+
+  h4 Editor activity
+
+  b-input-group(size="sm")
+    b-input-group-prepend
+      span.input-group-text
+        | Bucket
+    b-dropdown(:text="editorBucketId || 'Select editor watcher bucket'", size="sm", variant="outline-secondary")
+      b-dropdown-header
+        | Editor bucket to use
+      b-dropdown-item(v-if="editorBuckets.length <= 0", name="b", disabled)
+        | No editor buckets available
+        br
+        small Make sure you have an editor watcher installed to use this feature
+      b-dropdown-item-button(v-for="editorBucket in editorBuckets", :key="editorBucket", v-on:click="editorBucketId = editorBucket")
+        | {{ editorBucket }}
+
+  div.row
+    div.col-md-4
+      h5 Top file activity
+      aw-summary(:fields="top_editor_files", :namefunc="top_editor_files_namefunc", :colorfunc="top_editor_files_colorfunc")
+
+    div.col-md-4
+      h5 Top language activity
+      aw-summary(:fields="top_editor_languages", :namefunc="top_editor_languages_namefunc", :colorfunc="top_editor_languages_colorfunc")
+
+    div.col-md-4
+      h5 Top project activity
+      aw-summary(:fields="top_editor_projects", :namefunc="top_editor_projects_namefunc", :colorfunc="top_editor_projects_colorfunc")
+
+  b-button(variant="outline-secondary", v-on:click="top_editor_count += 5; queryEditorActivity()")
+    icon(name="angle-double-down")
+    | Show more
+
 </template>
 
 <style lang="scss">
@@ -158,6 +193,9 @@ export default {
       browserBuckets: [],
       browserBucketId: "",
 
+      editorBuckets: [],
+      editorBucketId: "",
+
       top_apps: [],
       top_apps_namefunc: (e) => e.data.app,
       top_apps_colorfunc: (e) => e.data.app,
@@ -169,6 +207,30 @@ export default {
       top_web_domains: [],
       top_web_domains_namefunc: (e) => e.data.domain,
       top_web_domains_colorfunc: (e) => e.data.domain,
+
+      top_editor_files: [],
+      top_editor_files_namefunc: (e) => {
+        let f = e.data.file || "";
+        f = f.split("/");
+        f = f[f.length-1];
+        return f;
+      },
+      top_editor_files_colorfunc: (e) => e.data.language,
+
+      top_editor_languages: [],
+      top_editor_languages_namefunc: (e) => e.data.language,
+      top_editor_languages_colorfunc: (e) => e.data.language,
+
+      top_editor_projects: [],
+      top_editor_projects_namefunc: (e) => {
+        let f = e.data.project || "";
+        f = f.split("/");
+        f = f[f.length-1];
+        return f;
+      },
+      top_editor_projects_colorfunc: (e) => e.data.project,
+
+      top_editor_count: 5,
 
       daily_activity: [],
       events_apptimeline: [],
@@ -202,6 +264,9 @@ export default {
     'browserBucketId': function(to, from) {
       this.queryBrowserDomains();
     },
+    'editorBucketId': function(to, from) {
+      this.queryEditorActivity();
+    },
   },
 
   computed: {
@@ -217,6 +282,7 @@ export default {
 
   mounted: function() {
     this.getBrowserBucket();
+    this.getEditorBucket();
 
     this.refresh();
   },
@@ -244,6 +310,7 @@ export default {
 
       this.queryWindows();
       this.queryBrowserDomains();
+      this.queryEditorActivity();
       this.queryDailyActivity();
     },
 
@@ -257,6 +324,20 @@ export default {
         }
         if (this.browserBuckets.length > 0){
           this.browserBucketId = this.browserBuckets[0]
+        }
+      });
+    },
+
+    getEditorBucket: function() {
+      awclient.getBuckets().then((response) => {
+        let buckets = response.data;
+        for (var bucket in buckets){
+          if (buckets[bucket]["type"] === "app.editor.activity"){
+            this.editorBuckets.push(bucket);
+          }
+        }
+        if (this.editorBuckets.length > 0){
+          this.editorBucketId = this.editorBuckets[0]
         }
       });
     },
@@ -299,6 +380,25 @@ export default {
               this.errorHandler(response);
             } else {
               this.top_web_domains = response.data[0];
+            }
+          }, this.errorHandler
+        );
+      }
+    },
+
+    queryEditorActivity: function(){
+      if (this.editorBucketId !== ""){
+        var periods = [this.dateStart + "/" + this.dateEnd];
+        var q = query.editorActivityQuery(this.editorBucketId, this.top_editor_count);
+        awclient.query(periods, q).then(
+          (response) => { // Success
+            if (response.status > 304){
+              this.errorHandler(response);
+            } else {
+              let data = response.data[0];
+              this.top_editor_files = data["files"];
+              this.top_editor_languages = data["languages"];
+              this.top_editor_projects = data["projects"];
             }
           }, this.errorHandler
         );
