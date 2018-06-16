@@ -21,9 +21,9 @@ let customColors = {
     "spotify": "#5FA",  // Spotify Green: "#1ED760"
     "alacritty": "#FC7",
 
-    "vue": "#4fc08d",
-    "python": "#2b5b84",
-    "javascript": "#eb47a5",
+    "vue": "#5d9", // Vue teal #4fc08d
+    "python": "#369", // Python blue #2b5b84
+    "javascript": "#f6b", // JavaScript pink #eb47a5
 };
 
 function hashcode(str){

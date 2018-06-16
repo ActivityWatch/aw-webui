@@ -1,6 +1,6 @@
 // TODO: Sanitize string input of buckets
 
-function windowQuery(windowbucket, afkbucket, count, filterAFK) {
+function windowQuery(windowbucket, afkbucket, appcount, titlecount, filterAFK) {
   return [
     'events  = flood(query_bucket("' + windowbucket + '"));',
   ].concat(filterAFK ? [
@@ -14,8 +14,8 @@ function windowQuery(windowbucket, afkbucket, count, filterAFK) {
     'app_events  = sort_by_duration(app_events);',
 
     'events = sort_by_timestamp(events);',
-    'app_events  = limit_events(app_events, ' + count + ');',
-    'title_events  = limit_events(title_events, ' + count + ');',
+    'app_events  = limit_events(app_events, ' + appcount + ');',
+    'title_events  = limit_events(title_events, ' + titlecount + ');',
 
     'RETURN  = [events, not_afk, app_events, title_events];',
   ]);

@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  h2 Window Activity for {{ dateShort }}
+  h2 Activity for {{ dateShort }}
 
   p Host: {{ host }}
 
@@ -46,14 +46,14 @@ div
     div.col-md-4
       h5 Top Applications
       aw-summary(:fields="top_apps", :namefunc="top_apps_namefunc", :colorfunc="top_apps_colorfunc")
-      b-button(size="sm", variant="outline-secondary", :disabled="top_apps.length < numberOfSummaryWindows", v-on:click="numberOfSummaryWindows += 5; queryWindows()")
+      b-button(size="sm", variant="outline-secondary", :disabled="top_apps.length < top_apps_count", v-on:click="top_apps_count += 5; queryWindows()")
         icon(name="angle-double-down")
         | Show more
 
     div.col-md-4
       h5 Top Window Titles
       aw-summary(:fields="top_windowtitles", :namefunc="top_windowtitles_namefunc", :colorfunc="top_windowtitles_colorfunc")
-      b-button(size="sm", variant="outline-secondary", :disabled="top_windowtitles.length < numberOfSummaryWindows", v-on:click="numberOfSummaryWindows += 5; queryWindows()")
+      b-button(size="sm", variant="outline-secondary", :disabled="top_windowtitles.length < top_windowtitles_count", v-on:click="top_windowtitles_count += 5; queryWindows()")
         icon(name="angle-double-down")
         | Show more
 
@@ -65,7 +65,7 @@ div
       div(v-show="browserBucketId")
         aw-summary(:fields="top_web_domains", :namefunc="top_web_domains_namefunc", :colorfunc="top_web_domains_colorfunc")
 
-        b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length < numberOfBrowserDomains" v-on:click="numberOfBrowserDomains += 5; queryBrowserDomains()")
+        b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length < top_web_domains_count" v-on:click="top_web_domains_count += 5; queryBrowserDomains()")
           icon(name="angle-double-down")
           | Show more
         br
@@ -122,7 +122,7 @@ div
       b-dropdown-item-button(v-for="editorBucket in editorBuckets", :key="editorBucket", v-on:click="editorBucketId = editorBucket")
         | {{ editorBucket }}
 
-  div.row
+  div.row(style="padding-top: 0.5em;")
     div.col-md-4
       h5 Top file activity
       aw-summary(:fields="top_editor_files", :namefunc="top_editor_files_namefunc", :colorfunc="top_editor_files_colorfunc")
@@ -135,20 +135,13 @@ div
       h5 Top project activity
       aw-summary(:fields="top_editor_projects", :namefunc="top_editor_projects_namefunc", :colorfunc="top_editor_projects_colorfunc")
 
-  b-button(variant="outline-secondary", v-on:click="top_editor_count += 5; queryEditorActivity()")
+  b-button(size="sm", variant="outline-secondary", v-on:click="top_editor_count += 5; queryEditorActivity()")
     icon(name="angle-double-down")
     | Show more
 
 </template>
 
 <style lang="scss">
-
-#apptimeline-container {
-    white-space: nowrap;
-    font-family: sans-serif;
-    font-size: 11pt;
-    line-height: 1.2em;
-}
 
 </style>
 
@@ -186,9 +179,9 @@ export default {
       // Query variables
       duration: "",
       errormsg: "",
-      numberOfSummaryWindows: 5,
-      numberOfWindowTitles: 5,
-      numberOfBrowserDomains: 4,
+
+      daily_activity: [],
+      events_apptimeline: [],
 
       browserBuckets: [],
       browserBucketId: "",
@@ -197,16 +190,21 @@ export default {
       editorBucketId: "",
 
       top_apps: [],
+      top_apps_count: 5,
       top_apps_namefunc: (e) => e.data.app,
       top_apps_colorfunc: (e) => e.data.app,
 
       top_windowtitles: [],
+      top_windowtitles_count: 5,
       top_windowtitles_namefunc: (e) => e.data.title,
       top_windowtitles_colorfunc: (e) => e.data.app,
 
       top_web_domains: [],
+      top_web_domains_count: 4,
       top_web_domains_namefunc: (e) => e.data.domain,
       top_web_domains_colorfunc: (e) => e.data.domain,
+
+      top_editor_count: 5,
 
       top_editor_files: [],
       top_editor_files_namefunc: (e) => {
@@ -229,11 +227,6 @@ export default {
         return f;
       },
       top_editor_projects_colorfunc: (e) => e.data.project,
-
-      top_editor_count: 5,
-
-      daily_activity: [],
-      events_apptimeline: [],
     }
   },
 
@@ -295,7 +288,6 @@ export default {
     refresh: function() {
       this.queryAll();
       this.duration = "";
-      this.numberOfSummaryWindows = 5;
     },
 
     errorHandler: function(response) {
@@ -352,7 +344,7 @@ export default {
 
     queryWindows: function(){
       var periods = [this.dateStart + "/" + this.dateEnd];
-      var q = query.windowQuery(this.windowBucketId, this.afkBucketId, this.numberOfSummaryWindows, this.filterAFK);
+      var q = query.windowQuery(this.windowBucketId, this.afkBucketId, this.top_apps_count, this.top_windowtitles_count, this.filterAFK);
       awclient.query(periods, q).then(
         (response) => { // Success
           if (response.status > 304){
@@ -373,7 +365,7 @@ export default {
     queryBrowserDomains: function(){
       if (this.browserBucketId !== ""){
         var periods = [this.dateStart + "/" + this.dateEnd];
-        var q = query.browserSummaryQuery(this.browserBucketId, this.windowBucketId, this.afkBucketId, this.numberOfBrowserDomains, this.filterAFK);
+        var q = query.browserSummaryQuery(this.browserBucketId, this.windowBucketId, this.afkBucketId, this.top_web_domains_count, this.filterAFK);
         awclient.query(periods, q).then(
           (response) => { // Success
             if (response.status > 304){
