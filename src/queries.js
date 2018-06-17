@@ -1,11 +1,11 @@
 // TODO: Sanitize string input of buckets
 
-function windowQuery(windowbucket, afkbucket, count, filterAFK) {
+function windowQuery(windowbucket, afkbucket, appcount, titlecount, filterAFK) {
   return [
     'events  = flood(query_bucket("' + windowbucket + '"));',
-  ].concat(filterAFK ? [
     'not_afk = flood(query_bucket("' + afkbucket + '"));',
     'not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);',
+  ].concat(filterAFK ? [
     'events  = filter_period_intersect(events, not_afk);',
   ] : []).concat([
     'title_events  = merge_events_by_keys(events, ["app", "title"]);',
@@ -14,8 +14,8 @@ function windowQuery(windowbucket, afkbucket, count, filterAFK) {
     'app_events  = sort_by_duration(app_events);',
 
     'events = sort_by_timestamp(events);',
-    'app_events  = limit_events(app_events, ' + count + ');',
-    'title_events  = limit_events(title_events, ' + count + ');',
+    'app_events  = limit_events(app_events, ' + appcount + ');',
+    'title_events  = limit_events(title_events, ' + titlecount + ');',
 
     'RETURN  = [events, not_afk, app_events, title_events];',
   ]);
@@ -48,6 +48,20 @@ function browserSummaryQuery(browserbucket, windowbucket, afkbucket, count, filt
   ]);
 }
 
+function editorActivityQuery (editorbucket, limit){
+  return [
+    'editorbucket = "' + editorbucket + '";',
+    'events = flood(query_bucket(editorbucket));',
+    'files = sort_by_duration(merge_events_by_keys(events, ["file", "language"]));',
+    'files = limit_events(files, ' + limit + ');',
+    'languages = sort_by_duration(merge_events_by_keys(events, ["language"]));',
+    'languages = limit_events(languages, ' + limit + ');',
+    'projects = sort_by_duration(merge_events_by_keys(events, ["project"]));',
+    'projects = limit_events(projects, ' + limit + ');',
+    'RETURN = {"files": files, "languages": languages, "projects": projects};'
+  ];
+}
+
 function dailyActivityQuery (afkbucket){
   return [
     'afkbucket = "' + afkbucket + '";',
@@ -60,5 +74,6 @@ function dailyActivityQuery (afkbucket){
 module.exports = {
     "windowQuery": windowQuery,
     "browserSummaryQuery": browserSummaryQuery,
+    "editorActivityQuery": editorActivityQuery,
     "dailyActivityQuery": dailyActivityQuery,
 }

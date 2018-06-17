@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  h2 Window Activity for {{ dateShort }}
+  h2 Activity for {{ dateShort }}
 
   p Host: {{ host }}
 
@@ -46,26 +46,24 @@ div
     div.col-md-4
       h5 Top Applications
       aw-summary(:fields="top_apps", :namefunc="top_apps_namefunc", :colorfunc="top_apps_colorfunc")
-      b-button(size="sm", variant="outline-secondary", :disabled="top_apps.length < numberOfSummaryWindows", v-on:click="numberOfSummaryWindows += 5; queryWindows()")
+      b-button(size="sm", variant="outline-secondary", :disabled="top_apps.length < top_apps_count", v-on:click="top_apps_count += 5; queryWindows()")
         icon(name="angle-double-down")
         | Show more
 
     div.col-md-4
       h5 Top Window Titles
       aw-summary(:fields="top_windowtitles", :namefunc="top_windowtitles_namefunc", :colorfunc="top_windowtitles_colorfunc")
-      b-button(size="sm", variant="outline-secondary", :disabled="top_windowtitles.length < numberOfSummaryWindows", v-on:click="numberOfSummaryWindows += 5; queryWindows()")
+      b-button(size="sm", variant="outline-secondary", :disabled="top_windowtitles.length < top_windowtitles_count", v-on:click="top_windowtitles_count += 5; queryWindows()")
         icon(name="angle-double-down")
         | Show more
 
     div.col-md-4
       h5 Top Browser Domains
-      //b-alert(variant="warning" show)
-      //  | #[b Note:] This is an early version. It is missing basic functionality such as not working on all platforms and browsers. See #[a(href="https://github.com/ActivityWatch/activitywatch/issues/99") issue #99] for details.
 
-      div(v-show="browserBucketId")
+      div(v-if="browserBucketId")
         aw-summary(:fields="top_web_domains", :namefunc="top_web_domains_namefunc", :colorfunc="top_web_domains_colorfunc")
 
-        b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length < numberOfBrowserDomains" v-on:click="numberOfBrowserDomains += 5; queryBrowserDomains()")
+        b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length < top_web_domains_count" v-on:click="top_web_domains_count += 5; queryBrowserDomains()")
           icon(name="angle-double-down")
           | Show more
         br
@@ -104,16 +102,45 @@ div
 
   aw-sunburst(:date="date", :afkBucketId="afkBucketId", :windowBucketId="windowBucketId")
 
+  hr
+
+  h4 Editor activity
+
+  b-input-group(size="sm")
+    b-input-group-prepend
+      span.input-group-text
+        | Bucket
+    b-dropdown(:text="editorBucketId || 'Select editor watcher bucket'", size="sm", variant="outline-secondary")
+      b-dropdown-header
+        | Editor bucket to use
+      b-dropdown-item(v-if="editorBuckets.length <= 0", name="b", disabled)
+        | No editor buckets available
+        br
+        small Make sure you have an editor watcher installed to use this feature
+      b-dropdown-item-button(v-for="editorBucket in editorBuckets", :key="editorBucket", v-on:click="editorBucketId = editorBucket")
+        | {{ editorBucket }}
+
+  div(v-if="editorBucketId")
+    div.row(style="padding-top: 0.5em;")
+      div.col-md-4
+        h5 Top file activity
+        aw-summary(:fields="top_editor_files", :namefunc="top_editor_files_namefunc", :colorfunc="top_editor_files_colorfunc")
+
+      div.col-md-4
+        h5 Top language activity
+        aw-summary(:fields="top_editor_languages", :namefunc="top_editor_languages_namefunc", :colorfunc="top_editor_languages_colorfunc")
+
+      div.col-md-4
+        h5 Top project activity
+        aw-summary(:fields="top_editor_projects", :namefunc="top_editor_projects_namefunc", :colorfunc="top_editor_projects_colorfunc")
+
+    b-button(size="sm", variant="outline-secondary", v-on:click="top_editor_count += 5; queryEditorActivity()")
+      icon(name="angle-double-down")
+      | Show more
+
 </template>
 
 <style lang="scss">
-
-#apptimeline-container {
-    white-space: nowrap;
-    font-family: sans-serif;
-    font-size: 11pt;
-    line-height: 1.2em;
-}
 
 </style>
 
@@ -151,27 +178,54 @@ export default {
       // Query variables
       duration: "",
       errormsg: "",
-      numberOfSummaryWindows: 5,
-      numberOfWindowTitles: 5,
-      numberOfBrowserDomains: 4,
+
+      daily_activity: [],
+      events_apptimeline: [],
 
       browserBuckets: [],
       browserBucketId: "",
 
+      editorBuckets: [],
+      editorBucketId: "",
+
       top_apps: [],
+      top_apps_count: 5,
       top_apps_namefunc: (e) => e.data.app,
       top_apps_colorfunc: (e) => e.data.app,
 
       top_windowtitles: [],
+      top_windowtitles_count: 5,
       top_windowtitles_namefunc: (e) => e.data.title,
       top_windowtitles_colorfunc: (e) => e.data.app,
 
       top_web_domains: [],
+      top_web_domains_count: 4,
       top_web_domains_namefunc: (e) => e.data.domain,
       top_web_domains_colorfunc: (e) => e.data.domain,
 
-      daily_activity: [],
-      events_apptimeline: [],
+      top_editor_count: 5,
+
+      top_editor_files: [],
+      top_editor_files_namefunc: (e) => {
+        let f = e.data.file || "";
+        f = f.split("/");
+        f = f[f.length-1];
+        return f;
+      },
+      top_editor_files_colorfunc: (e) => e.data.language,
+
+      top_editor_languages: [],
+      top_editor_languages_namefunc: (e) => e.data.language,
+      top_editor_languages_colorfunc: (e) => e.data.language,
+
+      top_editor_projects: [],
+      top_editor_projects_namefunc: (e) => {
+        let f = e.data.project || "";
+        f = f.split("/");
+        f = f[f.length-1];
+        return f;
+      },
+      top_editor_projects_colorfunc: (e) => e.data.project,
     }
   },
 
@@ -202,6 +256,9 @@ export default {
     'browserBucketId': function(to, from) {
       this.queryBrowserDomains();
     },
+    'editorBucketId': function(to, from) {
+      this.queryEditorActivity();
+    },
   },
 
   computed: {
@@ -217,6 +274,7 @@ export default {
 
   mounted: function() {
     this.getBrowserBucket();
+    this.getEditorBucket();
 
     this.refresh();
   },
@@ -229,7 +287,6 @@ export default {
     refresh: function() {
       this.queryAll();
       this.duration = "";
-      this.numberOfSummaryWindows = 5;
     },
 
     errorHandler: function(response) {
@@ -244,6 +301,7 @@ export default {
 
       this.queryWindows();
       this.queryBrowserDomains();
+      this.queryEditorActivity();
       this.queryDailyActivity();
     },
 
@@ -261,6 +319,20 @@ export default {
       });
     },
 
+    getEditorBucket: function() {
+      awclient.getBuckets().then((response) => {
+        let buckets = response.data;
+        for (var bucket in buckets){
+          if (buckets[bucket]["type"] === "app.editor.activity"){
+            this.editorBuckets.push(bucket);
+          }
+        }
+        if (this.editorBuckets.length > 0){
+          this.editorBucketId = this.editorBuckets[0]
+        }
+      });
+    },
+
     totalDuration: function(eventlist){
         var duration = 0;
         for (var i in eventlist){
@@ -271,7 +343,7 @@ export default {
 
     queryWindows: function(){
       var periods = [this.dateStart + "/" + this.dateEnd];
-      var q = query.windowQuery(this.windowBucketId, this.afkBucketId, this.numberOfSummaryWindows, this.filterAFK);
+      var q = query.windowQuery(this.windowBucketId, this.afkBucketId, this.top_apps_count, this.top_windowtitles_count, this.filterAFK);
       awclient.query(periods, q).then(
         (response) => { // Success
           if (response.status > 304){
@@ -292,13 +364,32 @@ export default {
     queryBrowserDomains: function(){
       if (this.browserBucketId !== ""){
         var periods = [this.dateStart + "/" + this.dateEnd];
-        var q = query.browserSummaryQuery(this.browserBucketId, this.windowBucketId, this.afkBucketId, this.numberOfBrowserDomains, this.filterAFK);
+        var q = query.browserSummaryQuery(this.browserBucketId, this.windowBucketId, this.afkBucketId, this.top_web_domains_count, this.filterAFK);
         awclient.query(periods, q).then(
           (response) => { // Success
             if (response.status > 304){
               this.errorHandler(response);
             } else {
               this.top_web_domains = response.data[0];
+            }
+          }, this.errorHandler
+        );
+      }
+    },
+
+    queryEditorActivity: function(){
+      if (this.editorBucketId !== ""){
+        var periods = [this.dateStart + "/" + this.dateEnd];
+        var q = query.editorActivityQuery(this.editorBucketId, this.top_editor_count);
+        awclient.query(periods, q).then(
+          (response) => { // Success
+            if (response.status > 304){
+              this.errorHandler(response);
+            } else {
+              let data = response.data[0];
+              this.top_editor_files = data["files"];
+              this.top_editor_languages = data["languages"];
+              this.top_editor_projects = data["projects"];
             }
           }, this.errorHandler
         );
