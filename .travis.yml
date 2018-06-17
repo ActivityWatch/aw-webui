@@ -9,7 +9,7 @@ matrix:
    - node_js: "node"
 
 install:
- - "npm install"
+ - "make install"
 
 script:
- - "npm run build"
+ - "make build"
