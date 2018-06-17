@@ -59,10 +59,8 @@ div
 
     div.col-md-4
       h5 Top Browser Domains
-      //b-alert(variant="warning" show)
-      //  | #[b Note:] This is an early version. It is missing basic functionality such as not working on all platforms and browsers. See #[a(href="https://github.com/ActivityWatch/activitywatch/issues/99") issue #99] for details.
 
-      div(v-show="browserBucketId")
+      div(v-if="browserBucketId")
         aw-summary(:fields="top_web_domains", :namefunc="top_web_domains_namefunc", :colorfunc="top_web_domains_colorfunc")
 
         b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length < top_web_domains_count" v-on:click="top_web_domains_count += 5; queryBrowserDomains()")
@@ -122,22 +120,23 @@ div
       b-dropdown-item-button(v-for="editorBucket in editorBuckets", :key="editorBucket", v-on:click="editorBucketId = editorBucket")
         | {{ editorBucket }}
 
-  div.row(style="padding-top: 0.5em;")
-    div.col-md-4
-      h5 Top file activity
-      aw-summary(:fields="top_editor_files", :namefunc="top_editor_files_namefunc", :colorfunc="top_editor_files_colorfunc")
+  div(v-if="editorBucketId")
+    div.row(style="padding-top: 0.5em;")
+      div.col-md-4
+        h5 Top file activity
+        aw-summary(:fields="top_editor_files", :namefunc="top_editor_files_namefunc", :colorfunc="top_editor_files_colorfunc")
 
-    div.col-md-4
-      h5 Top language activity
-      aw-summary(:fields="top_editor_languages", :namefunc="top_editor_languages_namefunc", :colorfunc="top_editor_languages_colorfunc")
+      div.col-md-4
+        h5 Top language activity
+        aw-summary(:fields="top_editor_languages", :namefunc="top_editor_languages_namefunc", :colorfunc="top_editor_languages_colorfunc")
 
-    div.col-md-4
-      h5 Top project activity
-      aw-summary(:fields="top_editor_projects", :namefunc="top_editor_projects_namefunc", :colorfunc="top_editor_projects_colorfunc")
+      div.col-md-4
+        h5 Top project activity
+        aw-summary(:fields="top_editor_projects", :namefunc="top_editor_projects_namefunc", :colorfunc="top_editor_projects_colorfunc")
 
-  b-button(size="sm", variant="outline-secondary", v-on:click="top_editor_count += 5; queryEditorActivity()")
-    icon(name="angle-double-down")
-    | Show more
+    b-button(size="sm", variant="outline-secondary", v-on:click="top_editor_count += 5; queryEditorActivity()")
+      icon(name="angle-double-down")
+      | Show more
 
 </template>
 
