@@ -41,10 +41,14 @@ function browserSummaryQuery(browserbucket, windowbucket, afkbucket, count, filt
   .concat([
     'events = filter_period_intersect(events, window_browser);',
     'events = split_url_events(events);',
-    'events = merge_events_by_keys(events, ["domain"]);',
-    'events = sort_by_duration(events);',
-    'events = limit_events(events, ' + count + ');',
-    'RETURN = events;',
+    'urls = merge_events_by_keys(events, ["domain", "url"]);',
+    'urls = sort_by_duration(urls);',
+    'urls = limit_events(urls, ' + count + ');',
+    'domains = split_url_events(events);',
+    'domains = merge_events_by_keys(domains, ["domain"]);',
+    'domains = sort_by_duration(domains);',
+    'domains = limit_events(domains, ' + count + ');',
+    'RETURN = {"domains": domains, "urls": urls};',
   ]);
 }
 
