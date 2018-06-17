@@ -3,9 +3,9 @@
 function windowQuery(windowbucket, afkbucket, appcount, titlecount, filterAFK) {
   return [
     'events  = flood(query_bucket("' + windowbucket + '"));',
-  ].concat(filterAFK ? [
     'not_afk = flood(query_bucket("' + afkbucket + '"));',
     'not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);',
+  ].concat(filterAFK ? [
     'events  = filter_period_intersect(events, not_afk);',
   ] : []).concat([
     'title_events  = merge_events_by_keys(events, ["app", "title"]);',
