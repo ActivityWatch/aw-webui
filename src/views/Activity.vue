@@ -2,7 +2,10 @@
 div
   h2 Activity for {{ dateShort }}
 
-  p Host: {{ host }}
+  p
+    | Host: {{ host }}
+    br
+    | Active time: {{ readableDuration }}
 
   b-alert(variant="danger" :show="errormsg.length > 0")
     | {{ errormsg }}
@@ -27,33 +30,19 @@ div
 
   aw-periodusage(:periodusage_arr="daily_activity", :host="host")
 
-  hr
-
-  div.row
-    div.col-md-6
-      h5 Summary
-      | Total active time: {{ readableDuration }}
-    div.col-md-6
-      b Options
-      div
-        b-form-checkbox(v-model="filterAFK")
-          | Filter away AFK time
-
-  br
-
   ul.nav.nav-tabs
-    li.nav-item
-      a.nav-link(v-on:click="view = 'summary'" v-bind:class="{ active: view=='summary'}")
-        | Summary
-    li.nav-item
-      a.nav-link(v-on:click="view = 'window'" v-bind:class="{ active: view=='window'}")
-        | Window
-    li.nav-item
-      a.nav-link(v-on:click="view = 'browser'" v-bind:class="{ active: view=='browser'}")
-        | Browser
-    li.nav-item
-      a.nav-link(v-on:click="view = 'editor'" v-bind:class="{ active: view=='editor'}")
-        | Editor
+    li.nav-item.aw-nav-item
+      a.nav-link.aw-nav-link(v-on:click="view = 'summary'" v-bind:class="{ active: view=='summary' }")
+        h5 Summary
+    li.nav-item.aw-nav-item
+      a.nav-link.aw-nav-link(v-on:click="view = 'window'" v-bind:class="{ active: view=='window' }")
+        h5 Window
+    li.nav-item.aw-nav-item
+      a.nav-link.aw-nav-link(v-on:click="view = 'browser'" v-bind:class="{ active: view=='browser' }")
+        h5.active-h5 Browser
+    li.nav-item.aw-nav-item
+      a.nav-link.aw-nav-link(v-on:click="view = 'editor'" v-bind:class="{ active: view=='editor' }")
+        h5 Editor
   br
 
   div.row(v-show="view == 'summary'")
@@ -162,9 +151,37 @@ div
         icon(name="angle-double-down")
         | Show more
 
+
+  hr
+
+  div.row
+    div.col-md-6
+      b Options
+      div
+        b-form-checkbox(v-model="filterAFK")
+          | Filter away AFK time
+
+
 </template>
 
 <style lang="scss">
+
+.aw-nav-link {
+  background-color: #eee;
+  border: 2px solid #eee !important;
+  border-bottom: none !important;
+  margin-left: 0.1em;
+  margin-right: 0.1em;
+  border-top-left-radius: 0.5rem !important;
+  border-top-right-radius: 0.5rem !important;
+}
+.aw-nav-link:hover {
+  background-color: #fff;
+}
+
+.aw-nav-item:hover {
+  background-color: #fff !important;
+}
 
 </style>
 

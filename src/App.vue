@@ -225,6 +225,5 @@ body {
 
 #content {
   padding: 1em;
-  padding-top: 2em;
 }
 </style>
