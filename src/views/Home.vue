@@ -36,7 +36,7 @@ div
         li #[a(href="https://www.bountysource.com/teams/activitywatch") Bountysource]
         li #[a(href="https://activitywatch.net/donate/") Other methods] (incl. cryptocurrency)
       p
-        | For more info about the how and why of donating, please visit #[a(href="https://activitywatch.net/donate/") the donation page on out website].
+        | For more info about the how and why of donating, please visit #[a(href="https://activitywatch.net/donate/") the donation page on our website].
 
   hr
 
