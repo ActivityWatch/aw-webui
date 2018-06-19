@@ -4,28 +4,30 @@ import Vue from 'vue';
 import BootstrapVue from 'bootstrap-vue';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue/dist/bootstrap-vue.css';
-Vue.use(BootstrapVue);
+
+// Register Font Awesome icon component
+import Icon from 'vue-awesome/components/Icon.vue';
 
 // Load the Varela Round font
 import '../static/css/varela-round.css';
 
 // Loads all the resources (using vue-resource)
-import './awclient.js';
+import './awclient';
 
 // Loads all the filters
-import './filters.js';
+import './filters';
 
 // Sets up the routing and the base app (using vue-router)
-import router from './route.js';
+import router from './route';
 
-// Register Font Awesome icon component
-import Icon from 'vue-awesome/components/Icon'
-Vue.component('icon', Icon)
+// Import Vue app
+import App from './App.vue';
 
-// Setup Vue app
-import App from './App';
-new Vue({
+Vue.use(BootstrapVue);
+Vue.component('icon', Icon);
+
+Vue({
+  router,
   el: '#app',
-  router: router,
-  render: h => h(App)
+  render: h => h(App),
 });
