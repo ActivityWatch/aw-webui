@@ -66,7 +66,7 @@ div
       div(v-if="browserBucketId")
         aw-summary(:fields="top_web_domains", :namefunc="top_web_domains_namefunc", :colorfunc="top_web_domains_colorfunc")
 
-        b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length < top_web_domains_count" v-on:click="top_web_domains_count += 5; queryBrowserDomains()")
+        b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length < top_web_count" v-on:click="top_web_count += 5; queryBrowserDomains()")
           icon(name="angle-double-down")
           | Show more
         br
@@ -98,6 +98,8 @@ div
         b-dropdown-item-button(v-for="browserBucket in browserBuckets", :key="browserBucket", v-on:click="browserBucketId = browserBucket")
           | {{ browserBucket }}
     br
+
+    h6 Active browser time: {{ readableWebDuration }}
 
     div.row
       div.col-md-6
@@ -132,6 +134,10 @@ div
           small Make sure you have an editor watcher installed to use this feature
         b-dropdown-item-button(v-for="editorBucket in editorBuckets", :key="editorBucket", v-on:click="editorBucketId = editorBucket")
           | {{ editorBucket }}
+
+    br
+
+    h6 Active editor time: {{ readableEditorDuration }}
 
     div(v-if="editorBucketId")
       div.row(style="padding-top: 0.5em;")
@@ -242,6 +248,7 @@ export default {
       top_windowtitles_colorfunc: (e) => e.data.app,
 
       top_web_count: 5,
+      web_duration: 0,
 
       top_web_domains: [],
       top_web_domains_namefunc: (e) => e.data.domain,
@@ -251,6 +258,7 @@ export default {
       top_web_urls_namefunc: (e) => e.data.url,
       top_web_urls_colorfunc: (e) => e.data.domain,
 
+      editor_duration: 0,
       top_editor_count: 5,
 
       top_editor_files: [],
@@ -311,6 +319,8 @@ export default {
 
   computed: {
     readableDuration: function() { return time.seconds_to_duration(this.duration) },
+    readableWebDuration: function() { return time.seconds_to_duration(this.web_duration) },
+    readableEditorDuration: function() { return time.seconds_to_duration(this.editor_duration) },
     host: function() { return this.$route.params.host },
     date: function() { return this.$route.params.date || moment().startOf('day').format() },
     dateStart: function() { return this.date },
@@ -381,14 +391,6 @@ export default {
       });
     },
 
-    totalDuration: function(eventlist){
-        var duration = 0;
-        for (var i in eventlist){
-            duration += eventlist[i].duration;
-        }
-        return duration;
-    },
-
     queryWindows: function(){
       var periods = [this.dateStart + "/" + this.dateEnd];
       var q = query.windowQuery(this.windowBucketId, this.afkBucketId, this.top_apps_count, this.top_windowtitles_count, this.filterAFK);
@@ -397,13 +399,15 @@ export default {
           if (response.status > 304){
             this.errorHandler(response);
           } else {
-            let events = response.data[0][0];
-            let not_afk_events = response.data[0][1];
-            this.top_apps = response.data[0][2];
-            this.top_windowtitles = response.data[0][3];
+            let data = response.data[0];
+            let events = data["events"];
+            let not_afk_events = data["not_afk_events"];
+            console.log(data);
+            this.top_apps = data["app_events"];
+            this.top_windowtitles = data["title_events"];
 
             this.events_apptimeline = event_parsing.parse_eventlist_by_apps(events);
-            this.duration = this.totalDuration(not_afk_events);
+            this.duration = data["duration"];
           }
         }, this.errorHandler
       );
@@ -418,8 +422,10 @@ export default {
             if (response.status > 304){
               this.errorHandler(response);
             } else {
-              this.top_web_domains = response.data[0]["domains"];
-              this.top_web_urls = response.data[0]["urls"];
+              let data = response.data[0];
+              this.web_duration = data["duration"];
+              this.top_web_domains = data["domains"];
+              this.top_web_urls = data["urls"];
             }
           }, this.errorHandler
         );
@@ -436,6 +442,7 @@ export default {
               this.errorHandler(response);
             } else {
               let data = response.data[0];
+              this.editor_duration = data["duration"];
               this.top_editor_files = data["files"];
               this.top_editor_languages = data["languages"];
               this.top_editor_projects = data["projects"];

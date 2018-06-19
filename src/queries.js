@@ -16,8 +16,8 @@ function windowQuery(windowbucket, afkbucket, appcount, titlecount, filterAFK) {
     'events = sort_by_timestamp(events);',
     'app_events  = limit_events(app_events, ' + appcount + ');',
     'title_events  = limit_events(title_events, ' + titlecount + ');',
-
-    'RETURN  = [events, not_afk, app_events, title_events];',
+    'duration = sum_durations(events);',
+    'RETURN  = {"events": events, "app_events": app_events, "title_events": title_events, "duration": duration};',
   ]);
 }
 
@@ -48,7 +48,8 @@ function browserSummaryQuery(browserbucket, windowbucket, afkbucket, count, filt
     'domains = merge_events_by_keys(domains, ["domain"]);',
     'domains = sort_by_duration(domains);',
     'domains = limit_events(domains, ' + count + ');',
-    'RETURN = {"domains": domains, "urls": urls};',
+    'duration = sum_durations(events);',
+    'RETURN = {"domains": domains, "urls": urls, "duration": duration};',
   ]);
 }
 
@@ -62,7 +63,8 @@ function editorActivityQuery (editorbucket, limit){
     'languages = limit_events(languages, ' + limit + ');',
     'projects = sort_by_duration(merge_events_by_keys(events, ["project"]));',
     'projects = limit_events(projects, ' + limit + ');',
-    'RETURN = {"files": files, "languages": languages, "projects": projects};'
+    'duration = sum_durations(events);',
+    'RETURN = {"files": files, "languages": languages, "projects": projects, "timeline": events, "duration": duration};'
   ];
 }
 
