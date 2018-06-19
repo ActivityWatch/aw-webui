@@ -9,7 +9,6 @@ const Color = require("color");
 const _ = require("lodash");
 const moment = require("moment");
 
-import event_parsing from "../util/event_parsing";
 import color from "../util/color.js"
 
 const time = require("../util/time.js");
@@ -88,11 +87,11 @@ function update(container, events, total_duration, showAFK){
   }
 
   if(showAFK) {
-    let firstEvent = _.minBy(events, (o) => o.titles[0].timestamp);
-    let lastEvent = _.maxBy(events, (o) => o.titles[0].timestamp);
+    var firstEvent = events[0];
+    var lastEvent = events[events.length-1];
 
-    var timeStart = moment(firstEvent.titles[0].timestamp);
-    var timeEnd = moment(lastEvent.titles[0].timestamp).add(lastEvent.duration, "seconds");
+    var timeStart = moment(firstEvent.timestamp);
+    var timeEnd = moment(lastEvent.timestamp).add(lastEvent.duration, "seconds");
 
     var secSinceStart = timeEnd.diff(timeStart, "seconds", true);
 
@@ -106,7 +105,7 @@ function update(container, events, total_duration, showAFK){
     // Timeline rect
 
     if(showAFK) {
-      let eventBegin = moment(_.minBy(e.titles, (t) => t.timestamp).timestamp);
+      let eventBegin = moment(e.timestamp);
       var eventX = eventBegin.diff(timeStart, "seconds", true) / secSinceStart;
       eventX = eventX * 100 + "%";
       var eventWidth = e.duration / secSinceStart * 100 + "%";
@@ -115,7 +114,7 @@ function update(container, events, total_duration, showAFK){
       var eventWidth = e.duration / total_duration * 100;
     }
 
-    var appcolor = color.getAppColor(e.appname);
+    var appcolor = color.getAppColor(e.data.app);
     var hovercolor = Color(appcolor).darken(0.4).hex();
 
     let eg = timeline.append("g")
@@ -126,7 +125,7 @@ function update(container, events, total_duration, showAFK){
       .attr("y", 0)
       .attr("width", eventWidth)
       .attr("height", 10)
-      .style("fill", color.getAppColor(e.appname))
+      .style("fill", color.getAppColor(e.data.app))
       .on("mouseover", () => {
           rect.style("fill", hovercolor);
           show_info("titleinfo_event_" + i);
@@ -144,14 +143,14 @@ function update(container, events, total_duration, showAFK){
     infobox.append("h5")
       .attr("x", "10px")
       .attr("y", "20px")
-      .text(e.appname + " (" + time.seconds_to_duration(e.duration) + ")")
+      .text(e.data.app + " (" + time.seconds_to_duration(e.duration) + ")")
       .attr("font-family", "sans-serif")
       .attr("font-size", "20px")
       .attr("fill", "black");
 
     // Titleinfo
     var infolist = infobox.append("table");
-    _.each(e.titles, function(t, i){
+    _.each(e.data.subevents, function(t, i){
       var inforow = infolist.append("tr");
       // Clocktime
       var clocktime = moment(t.timestamp).format("HH:mm:ss");
@@ -164,7 +163,7 @@ function update(container, events, total_duration, showAFK){
         .style("padding-left", "1em");
       // Title
       inforow.append("td")
-        .text(t.title)
+        .text(t.data.title)
         .style("padding-left", "1em");
     });
 

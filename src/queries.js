@@ -14,10 +14,11 @@ function windowQuery(windowbucket, afkbucket, appcount, titlecount, filterAFK) {
     'app_events  = sort_by_duration(app_events);',
 
     'events = sort_by_timestamp(events);',
+    'app_chunks = chunk_events_by_key(events, "app");',
     'app_events  = limit_events(app_events, ' + appcount + ');',
     'title_events  = limit_events(title_events, ' + titlecount + ');',
     'duration = sum_durations(events);',
-    'RETURN  = {"events": events, "app_events": app_events, "title_events": title_events, "duration": duration};',
+    'RETURN  = {"app_events": app_events, "title_events": title_events, "app_chunks": app_chunks, "duration": duration};',
   ]);
 }
 

@@ -77,7 +77,7 @@ div
     b-form-checkbox(v-model="timelineShowAFK")
       | Show AFK time
 
-    aw-timeline(:events="events_apptimeline", :total_duration='duration', :show_afk='timelineShowAFK')
+    aw-timeline(:chunks="app_chunks", :total_duration='duration', :show_afk='timelineShowAFK')
 
     hr
 
@@ -196,7 +196,6 @@ import moment from 'moment';
 import timeline from '../visualizations/timeline.js';
 import summary from '../visualizations/summary.js';
 import time from "../util/time.js";
-import event_parsing from "../util/event_parsing.js";
 
 import 'vue-awesome/icons/arrow-left'
 import 'vue-awesome/icons/arrow-right'
@@ -246,6 +245,8 @@ export default {
       top_windowtitles_count: 5,
       top_windowtitles_namefunc: (e) => e.data.title,
       top_windowtitles_colorfunc: (e) => e.data.app,
+
+      app_chunks: [],
 
       top_web_count: 5,
       web_duration: 0,
@@ -301,13 +302,8 @@ export default {
       this.refresh();
     },
     'timelineShowAFK': function(to, from) {
-      this.refresh();
-    },
-    'filterAFK': function(to, from) {
-      this.refresh();
-    },
-    'timelineShowAFK': function(to, from) {
-      this.refresh();
+      console.log(to);
+      //this.refresh();
     },
     'browserBucketId': function(to, from) {
       this.queryBrowserDomains();
@@ -402,11 +398,9 @@ export default {
             let data = response.data[0];
             let events = data["events"];
             let not_afk_events = data["not_afk_events"];
-            console.log(data);
             this.top_apps = data["app_events"];
             this.top_windowtitles = data["title_events"];
-
-            this.events_apptimeline = event_parsing.parse_eventlist_by_apps(events);
+            this.app_chunks = data["app_chunks"];
             this.duration = data["duration"];
           }
         }, this.errorHandler
