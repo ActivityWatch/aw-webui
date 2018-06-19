@@ -11,9 +11,8 @@ div#wrapper
           | Connected
           icon(name="check-circle")
         span.bad(v-show="!connected")
-          span.text
-            | Not connected
-            icon(name="times-circle")
+          | Not connected
+          icon(name="times-circle")
 
   div.container.aw-container
     // TODO: Refactor into Mainmenu component
@@ -226,6 +225,5 @@ body {
 
 #content {
   padding: 1em;
-  padding-top: 2em;
 }
 </style>
