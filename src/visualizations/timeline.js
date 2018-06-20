@@ -13,9 +13,9 @@ import color from "../util/color.js"
 
 const time = require("../util/time.js");
 
-function show_info(elem_id) {
-  var title_event_box = document.getElementById(elem_id);
-  var titleinfo = document.getElementById("titleinfo-container");
+function show_info(container, elem_id) {
+  var title_event_box = container.querySelector("#"+elem_id);
+  var titleinfo = container.querySelector(".titleinfo-container");
   titleinfo.innerHTML = title_event_box.innerHTML;
   titleinfo.style.height = title_event_box.getAttribute("height");
 };
@@ -45,13 +45,13 @@ function create(container) {
   // Titleinfo box that changes content depending on what was timeperiod was last recently hovered on
   let titleinfo = d3.select(titleinfo_container).append("div")
     .attr("width", "100%")
-    .attr("id", "titleinfo-container");
+    .attr("class", "titleinfo-container");
 }
 
 function set_status(container, text){
   let timeline_elem = container.querySelector(".apptimeline");
   let titleinfo_list_elem = container.querySelector(".titleinfo_list");
-  let titleinfo_container_elem = container.querySelector("#titleinfo-container");
+  let titleinfo_container_elem = container.querySelector(".titleinfo-container");
 
   let timeline = d3.select(timeline_elem);
   timeline_elem.innerHTML = "";
@@ -67,10 +67,10 @@ function set_status(container, text){
    .attr("fill", "black")
 }
 
-function update(container, events, total_duration, showAFK){
+function update(container, events, total_duration, showAFK, chunkfunc, eventfunc){
   let timeline_elem = container.querySelector(".apptimeline");
   let titleinfo_list_elem = container.querySelector(".titleinfo_list");
-  let titleinfo_container_elem = container.querySelector("#titleinfo-container");
+  let titleinfo_container_elem = container.querySelector(".titleinfo-container");
 
   let timeline = d3.select(timeline_elem);
   timeline_elem.innerHTML = "";
@@ -114,7 +114,7 @@ function update(container, events, total_duration, showAFK){
       var eventWidth = e.duration / total_duration * 100;
     }
 
-    var appcolor = color.getAppColor(e.data.app);
+    var appcolor = color.getAppColor(chunkfunc(e));
     var hovercolor = Color(appcolor).darken(0.4).hex();
 
     let eg = timeline.append("g")
@@ -125,10 +125,10 @@ function update(container, events, total_duration, showAFK){
       .attr("y", 0)
       .attr("width", eventWidth)
       .attr("height", 10)
-      .style("fill", color.getAppColor(e.data.app))
+      .style("fill", color.getAppColor(chunkfunc(e)))
       .on("mouseover", () => {
           rect.style("fill", hovercolor);
-          show_info("titleinfo_event_" + i);
+          show_info(container, "titleinfo_event_" + i);
       })
       .on("mouseout", () => {
           rect.style("fill", appcolor);
@@ -143,7 +143,7 @@ function update(container, events, total_duration, showAFK){
     infobox.append("h5")
       .attr("x", "10px")
       .attr("y", "20px")
-      .text(e.data.app + " (" + time.seconds_to_duration(e.duration) + ")")
+      .text(chunkfunc(e) + " (" + time.seconds_to_duration(e.duration) + ")")
       .attr("font-family", "sans-serif")
       .attr("font-size", "20px")
       .attr("fill", "black");
@@ -163,7 +163,7 @@ function update(container, events, total_duration, showAFK){
         .style("padding-left", "1em");
       // Title
       inforow.append("td")
-        .text(t.data.title)
+        .text(eventfunc(t))
         .style("padding-left", "1em");
     });
 

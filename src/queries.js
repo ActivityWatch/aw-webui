@@ -49,8 +49,9 @@ function browserSummaryQuery(browserbucket, windowbucket, afkbucket, count, filt
     'domains = merge_events_by_keys(domains, ["domain"]);',
     'domains = sort_by_duration(domains);',
     'domains = limit_events(domains, ' + count + ');',
+    'chunks = chunk_events_by_key(events, "domain");',
     'duration = sum_durations(events);',
-    'RETURN = {"domains": domains, "urls": urls, "duration": duration};',
+    'RETURN = {"domains": domains, "urls": urls, "chunks": chunks, "duration": duration};',
   ]);
 }
 
@@ -65,7 +66,7 @@ function editorActivityQuery (editorbucket, limit){
     'projects = sort_by_duration(merge_events_by_keys(events, ["project"]));',
     'projects = limit_events(projects, ' + limit + ');',
     'duration = sum_durations(events);',
-    'RETURN = {"files": files, "languages": languages, "projects": projects, "timeline": events, "duration": duration};'
+    'RETURN = {"files": files, "languages": languages, "projects": projects, "duration": duration};'
   ];
 }
 

@@ -77,7 +77,7 @@ div
     b-form-checkbox(v-model="timelineShowAFK")
       | Show AFK time
 
-    aw-timeline(:chunks="app_chunks", :total_duration='duration', :show_afk='timelineShowAFK')
+    aw-timeline(:chunks="app_chunks", :total_duration='duration', :show_afk='timelineShowAFK', :chunkfunc='app_chunkfunc', :eventfunc='app_eventfunc')
 
     hr
 
@@ -118,6 +118,14 @@ div
       icon(name="angle-double-down")
       | Show more
 
+    hr
+
+    b-form-checkbox(v-model="timelineShowAFK")
+      | Show AFK time
+
+    br
+
+    aw-timeline(:chunks="web_chunks", :total_duration='duration', :show_afk='timelineShowAFK', :chunkfunc='web_chunkfunc', :eventfunc='web_eventfunc')
 
   div(v-show="view == 'editor'")
 
@@ -247,9 +255,15 @@ export default {
       top_windowtitles_colorfunc: (e) => e.data.app,
 
       app_chunks: [],
+      app_chunkfunc: (e) => e.data.app,
+      app_eventfunc: (e) => e.data.title,
 
       top_web_count: 5,
       web_duration: 0,
+
+      web_chunks: [],
+      web_chunkfunc: (e) => e.data.domain,
+      web_eventfunc: (e) => e.data.url,
 
       top_web_domains: [],
       top_web_domains_namefunc: (e) => e.data.domain,
@@ -300,10 +314,6 @@ export default {
     },
     'filterAFK': function(to, from) {
       this.refresh();
-    },
-    'timelineShowAFK': function(to, from) {
-      console.log(to);
-      //this.refresh();
     },
     'browserBucketId': function(to, from) {
       this.queryBrowserDomains();
@@ -420,6 +430,7 @@ export default {
               this.web_duration = data["duration"];
               this.top_web_domains = data["domains"];
               this.top_web_urls = data["urls"];
+              this.web_chunks = data["chunks"];
             }
           }, this.errorHandler
         );
