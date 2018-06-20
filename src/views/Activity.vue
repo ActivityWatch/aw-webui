@@ -30,127 +30,120 @@ div
 
   aw-periodusage(:periodusage_arr="daily_activity", :host="host")
 
-  ul.nav.nav-tabs
-    li.nav-item.aw-nav-item
-      a.nav-link.aw-nav-link(v-on:click="view = 'summary'" v-bind:class="{ active: view=='summary' }")
-        h5 Summary
-    li.nav-item.aw-nav-item
-      a.nav-link.aw-nav-link(v-on:click="view = 'window'" v-bind:class="{ active: view=='window' }")
-        h5 Window
-    li.nav-item.aw-nav-item
-      a.nav-link.aw-nav-link(v-on:click="view = 'browser'" v-bind:class="{ active: view=='browser' }")
-        h5.active-h5 Browser
-    li.nav-item.aw-nav-item
-      a.nav-link.aw-nav-link(v-on:click="view = 'editor'" v-bind:class="{ active: view=='editor' }")
-        h5 Editor
-  br
+  // Nav tabs
+  ul.nav.nav-tabs.nav-pills.lead.mb-3.mt-4
+    li.nav-item
+      a.nav-link.active(data-toggle='tab' href='#summary') Summary
+    li.nav-item
+      a.nav-link(data-toggle='tab' href='#window') Window
+    li.nav-item
+      a.nav-link(data-toggle='tab' href='#browser') Browser
+    li.nav-item
+      a.nav-link(data-toggle='tab' href='#editor') Editor
 
-  div.row(v-show="view == 'summary'")
-    div.col-md-4
-      h5 Top Applications
-      aw-summary(:fields="top_apps", :namefunc="top_apps_namefunc", :colorfunc="top_apps_colorfunc")
-      b-button(size="sm", variant="outline-secondary", :disabled="top_apps.length < top_apps_count", v-on:click="top_apps_count += 5; queryWindows()")
+  // Tab panes
+  .tab-content
+    #summary.container.tab-pane.active
+      .row
+        .col-md-4
+          h5 Top Applications
+          aw-summary(:fields="top_apps", :namefunc="top_apps_namefunc", :colorfunc="top_apps_colorfunc")
+          b-button(size="sm", variant="outline-secondary", :disabled="top_apps.length < top_apps_count", v-on:click="top_apps_count += 5; queryWindows()")
+            icon(name="angle-double-down")
+            | Show more
+
+        .col-md-4
+          h5 Top Window Titles
+          aw-summary(:fields="top_windowtitles", :namefunc="top_windowtitles_namefunc", :colorfunc="top_windowtitles_colorfunc")
+          b-button(size="sm", variant="outline-secondary", :disabled="top_windowtitles.length < top_windowtitles_count", v-on:click="top_windowtitles_count += 5; queryWindows()")
+            icon(name="angle-double-down")
+            | Show more
+
+        .col-md-4
+          h5 Top Browser Domains
+
+          div(v-if="browserBucketId")
+            aw-summary(:fields="top_web_domains", :namefunc="top_web_domains_namefunc", :colorfunc="top_web_domains_colorfunc")
+
+            b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length < top_web_domains_count" v-on:click="top_web_domains_count += 5; queryBrowserDomains()")
+              icon(name="angle-double-down")
+              | Show more
+
+    #window.container.tab-pane.fade
+      b-form-checkbox(v-model="timelineShowAFK")
+        | Show AFK time
+
+      aw-timeline(:events="events_apptimeline", :total_duration='duration', :show_afk='timelineShowAFK')
+
+      hr
+
+      aw-sunburst(:date="date", :afkBucketId="afkBucketId", :windowBucketId="windowBucketId")
+      
+    #browser.container.tab-pane.fade
+      b-input-group(size="sm")
+        b-input-group-prepend
+          span.input-group-text
+            | Bucket
+        b-dropdown(:text="browserBucketId || 'Select browser watcher bucket'", size="sm", variant="outline-secondary")
+          b-dropdown-header
+            | Browser bucket to use
+          b-dropdown-item(v-if="browserBuckets.length <= 0", name="b", disabled)
+            | No browser buckets available
+            br
+            small Make sure you have an browser extension installed
+          b-dropdown-item-button(v-for="browserBucket in browserBuckets", :key="browserBucket", v-on:click="browserBucketId = browserBucket")
+            | {{ browserBucket }}
+      br
+
+      div.row
+        div.col-md-6
+          h5 Top Browser Domains
+
+          div(v-if="browserBucketId")
+            aw-summary(:fields="top_web_domains", :namefunc="top_web_domains_namefunc", :colorfunc="top_web_domains_colorfunc")
+
+        div.col-md-6
+          h5 Top Browser URLs
+
+          div(v-if="browserBucketId")
+            aw-summary(:fields="top_web_urls", :namefunc="top_web_urls_namefunc", :colorfunc="top_web_urls_colorfunc")
+
+      b-button(size="sm", variant="outline-secondary", :disabled="top_web_urls.length < top_web_count && top_web_domains.length < top_web_count" v-on:click="top_web_count += 5; queryBrowserDomains()")
         icon(name="angle-double-down")
         | Show more
 
-    div.col-md-4
-      h5 Top Window Titles
-      aw-summary(:fields="top_windowtitles", :namefunc="top_windowtitles_namefunc", :colorfunc="top_windowtitles_colorfunc")
-      b-button(size="sm", variant="outline-secondary", :disabled="top_windowtitles.length < top_windowtitles_count", v-on:click="top_windowtitles_count += 5; queryWindows()")
-        icon(name="angle-double-down")
-        | Show more
+    #editor.container.tab-pane.fade
+      b-input-group(size="sm")
+        b-input-group-prepend
+          span.input-group-text
+            | Bucket
+        b-dropdown(:text="editorBucketId || 'Select editor watcher bucket'", size="sm", variant="outline-secondary")
+          b-dropdown-header
+            | Editor bucket to use
+          b-dropdown-item(v-if="editorBuckets.length <= 0", name="b", disabled)
+            | No editor buckets available
+            br
+            small Make sure you have an editor watcher installed to use this feature
+          b-dropdown-item-button(v-for="editorBucket in editorBuckets", :key="editorBucket", v-on:click="editorBucketId = editorBucket")
+            | {{ editorBucket }}
 
-    div.col-md-4
-      h5 Top Browser Domains
+      div(v-if="editorBucketId")
+        div.row(style="padding-top: 0.5em;")
+          div.col-md-4
+            h5 Top file activity
+            aw-summary(:fields="top_editor_files", :namefunc="top_editor_files_namefunc", :colorfunc="top_editor_files_colorfunc")
 
-      div(v-if="browserBucketId")
-        aw-summary(:fields="top_web_domains", :namefunc="top_web_domains_namefunc", :colorfunc="top_web_domains_colorfunc")
+          div.col-md-4
+            h5 Top language activity
+            aw-summary(:fields="top_editor_languages", :namefunc="top_editor_languages_namefunc", :colorfunc="top_editor_languages_colorfunc")
 
-        b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length < top_web_domains_count" v-on:click="top_web_domains_count += 5; queryBrowserDomains()")
+          div.col-md-4
+            h5 Top project activity
+            aw-summary(:fields="top_editor_projects", :namefunc="top_editor_projects_namefunc", :colorfunc="top_editor_projects_colorfunc")
+
+        b-button(size="sm", variant="outline-secondary", v-on:click="top_editor_count += 5; queryEditorActivity()")
           icon(name="angle-double-down")
           | Show more
-        br
-        br
-
-  div(v-show="view == 'window'")
-
-    b-form-checkbox(v-model="timelineShowAFK")
-      | Show AFK time
-
-    aw-timeline(:events="events_apptimeline", :total_duration='duration', :show_afk='timelineShowAFK')
-
-    hr
-
-    aw-sunburst(:date="date", :afkBucketId="afkBucketId", :windowBucketId="windowBucketId")
-
-  div(v-show="view == 'browser'")
-    b-input-group(size="sm")
-      b-input-group-prepend
-        span.input-group-text
-          | Bucket
-      b-dropdown(:text="browserBucketId || 'Select browser watcher bucket'", size="sm", variant="outline-secondary")
-        b-dropdown-header
-          | Browser bucket to use
-        b-dropdown-item(v-if="browserBuckets.length <= 0", name="b", disabled)
-          | No browser buckets available
-          br
-          small Make sure you have an browser extension installed
-        b-dropdown-item-button(v-for="browserBucket in browserBuckets", :key="browserBucket", v-on:click="browserBucketId = browserBucket")
-          | {{ browserBucket }}
-    br
-
-    div.row
-      div.col-md-6
-        h5 Top Browser Domains
-
-        div(v-if="browserBucketId")
-          aw-summary(:fields="top_web_domains", :namefunc="top_web_domains_namefunc", :colorfunc="top_web_domains_colorfunc")
-
-      div.col-md-6
-        h5 Top Browser URLs
-
-        div(v-if="browserBucketId")
-          aw-summary(:fields="top_web_urls", :namefunc="top_web_urls_namefunc", :colorfunc="top_web_urls_colorfunc")
-
-    b-button(size="sm", variant="outline-secondary", :disabled="top_web_urls.length < top_web_count && top_web_domains.length < top_web_count" v-on:click="top_web_count += 5; queryBrowserDomains()")
-      icon(name="angle-double-down")
-      | Show more
-
-
-  div(v-show="view == 'editor'")
-
-    b-input-group(size="sm")
-      b-input-group-prepend
-        span.input-group-text
-          | Bucket
-      b-dropdown(:text="editorBucketId || 'Select editor watcher bucket'", size="sm", variant="outline-secondary")
-        b-dropdown-header
-          | Editor bucket to use
-        b-dropdown-item(v-if="editorBuckets.length <= 0", name="b", disabled)
-          | No editor buckets available
-          br
-          small Make sure you have an editor watcher installed to use this feature
-        b-dropdown-item-button(v-for="editorBucket in editorBuckets", :key="editorBucket", v-on:click="editorBucketId = editorBucket")
-          | {{ editorBucket }}
-
-    div(v-if="editorBucketId")
-      div.row(style="padding-top: 0.5em;")
-        div.col-md-4
-          h5 Top file activity
-          aw-summary(:fields="top_editor_files", :namefunc="top_editor_files_namefunc", :colorfunc="top_editor_files_colorfunc")
-
-        div.col-md-4
-          h5 Top language activity
-          aw-summary(:fields="top_editor_languages", :namefunc="top_editor_languages_namefunc", :colorfunc="top_editor_languages_colorfunc")
-
-        div.col-md-4
-          h5 Top project activity
-          aw-summary(:fields="top_editor_projects", :namefunc="top_editor_projects_namefunc", :colorfunc="top_editor_projects_colorfunc")
-
-      b-button(size="sm", variant="outline-secondary", v-on:click="top_editor_count += 5; queryEditorActivity()")
-        icon(name="angle-double-down")
-        | Show more
-
 
   hr
 
@@ -163,27 +156,6 @@ div
 
 
 </template>
-
-<style lang="scss">
-
-.aw-nav-link {
-  background-color: #eee;
-  border: 2px solid #eee !important;
-  border-bottom: none !important;
-  margin-left: 0.1em;
-  margin-right: 0.1em;
-  border-top-left-radius: 0.5rem !important;
-  border-top-right-radius: 0.5rem !important;
-}
-.aw-nav-link:hover {
-  background-color: #fff;
-}
-
-.aw-nav-item:hover {
-  background-color: #fff !important;
-}
-
-</style>
 
 <script>
 import moment from 'moment';
