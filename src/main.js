@@ -26,7 +26,7 @@ import App from './App.vue';
 Vue.use(BootstrapVue);
 Vue.component('icon', Icon);
 
-Vue({
+new Vue({ // eslint-disable-line no-new
   router,
   el: '#app',
   render: h => h(App),

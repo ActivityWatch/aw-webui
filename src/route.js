@@ -9,8 +9,6 @@ import QueryExplorer from './views/QueryExplorer.vue';
 import Log from './views/Log.vue';
 import User from './views/User.vue';
 
-Vue.use(VueRouter);
-
 const router = new VueRouter({
   routes: [
     {
@@ -47,5 +45,7 @@ const router = new VueRouter({
     },
   ],
 });
+
+Vue.use(VueRouter);
 
 export default router;
