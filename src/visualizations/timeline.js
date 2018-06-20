@@ -161,7 +161,8 @@ function update(container, events, total_duration, showAFK){
       var duration = time.seconds_to_duration(t.duration);
       inforow.append("td")
         .text(duration)
-        .style("padding-left", "1em");
+        .style("padding-left", "1em")
+        .style("text-align", "right");
       // Title
       inforow.append("td")
         .text(t.title)
