@@ -5,7 +5,6 @@ const Color = require("color");
 const _ = require("lodash");
 const moment = require("moment");
 
-import event_parsing from "../util/event_parsing";
 import color from "../util/color.js";
 import coloring_types from "./coloring.js";
 

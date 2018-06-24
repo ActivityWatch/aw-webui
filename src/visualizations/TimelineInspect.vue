@@ -1,5 +1,5 @@
 <template lang="pug">
-div#apptimeline-container
+div
 </template>
 
 <style scoped lang="scss">
@@ -17,19 +17,21 @@ import timeline from './timeline.js';
 
 export default {
   name: "aw-timeline",
-  props: ['events', 'total_duration', 'show_afk'],
+  props: ['chunks', 'total_duration', 'show_afk', 'chunkfunc', 'eventfunc'],
   mounted: function() {
-    var timeline_elem = document.getElementById("apptimeline-container");
-    timeline.create(timeline_elem);
+    console.log("Mounting aw-timeline");
+    timeline.create(this.$el);
   },
   watch: {
-    "events": function() {
-      var timeline_elem = document.getElementById("apptimeline-container");
-      if(this.events.length == 0) {
-        timeline.set_status(timeline_elem, 'Loading...')
+    "chunks": function() {
+      if(this.chunks.length == 0) {
+        timeline.set_status(this.$el, 'Loading...')
       } else {
-        timeline.update(timeline_elem, this.events, this.total_duration, this.show_afk);
+        timeline.update(this.$el, this.chunks, this.total_duration, this.show_afk, this.chunkfunc, this.eventfunc);
       }
+    },
+    "show_afk": function() {
+      timeline.update(this.$el, this.chunks, this.total_duration, this.show_afk, this.chunkfunc, this.eventfunc);
     }
   }
 }
