@@ -174,6 +174,8 @@ div
       div
         b-form-checkbox(v-model="filterAFK")
           | Filter away AFK time
+        b-form-checkbox(v-model="countAudibleAsActive")
+          | Count browser audible as active
 
 
 </template>
@@ -227,6 +229,7 @@ export default {
       today: moment().startOf('day').format("YYYY-MM-DD"),
 
       filterAFK: true,
+      countAudibleAsActive: true,
       timelineShowAFK: true,
 
       view: "summary",
@@ -420,7 +423,8 @@ export default {
     queryBrowserDomains: function(){
       if (this.browserBucketId !== ""){
         var periods = [this.dateStart + "/" + this.dateEnd];
-        var q = query.browserSummaryQuery(this.browserBucketId, this.windowBucketId, this.afkBucketId, this.top_web_count, this.filterAFK);
+        var q = query.browserSummaryQuery(this.browserBucketId, this.windowBucketId, this.afkBucketId,
+																				  this.top_web_count, this.filterAFK, this.countAudibleAsActive);
         awclient.query(periods, q).then(
           (response) => { // Success
             if (response.status > 304){
