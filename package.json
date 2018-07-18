@@ -63,6 +63,7 @@
     "jsdom": "^10.1.0",
     "less": "^3.0.4",
     "less-loader": "^4.1.0",
+    "material-design-icons-iconfont": "^3.0.3",
     "style-loader": "^0.21.0",
     "typeface-varela-round": "0.0.54",
     "vue-awesome": "^3.0.0",
