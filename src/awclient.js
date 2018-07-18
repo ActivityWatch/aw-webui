@@ -2,7 +2,7 @@ const AWClient = require('../aw-client-js/out/aw-client').AWClient;
 
 let origin = "";
 
-// If running with `npm node dev`, use testing server as origin.
+// If running with `make dev`, use testing server as origin.
 // Works since CORS is enabled by default when running `aw-server --testing`.
 if(!PRODUCTION) {
     let protocol = "http";
