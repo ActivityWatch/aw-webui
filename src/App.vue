@@ -4,7 +4,7 @@ v-app
     div.header
       div.container
         span.title
-          img(src="/static/logo.png")
+          img(src="/static/logo.png" style="height: 2em")
           span(style="padding-left: 15px;")
             | ActivityWatch
         span.status
