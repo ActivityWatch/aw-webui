@@ -161,8 +161,6 @@ div
 
 <script>
 import moment from 'moment';
-import timeline from '../visualizations/timeline.js';
-import summary from '../visualizations/summary.js';
 import time from "../util/time.js";
 
 import 'vue-awesome/icons/arrow-left'
