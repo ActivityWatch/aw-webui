@@ -29,6 +29,16 @@ import router from './route.js';
 import Icon from 'vue-awesome/components/Icon'
 Vue.component('icon', Icon)
 
+// Custom components
+import Summary from './visualizations/Summary.vue';
+import Sunburst from './visualizations/Sunburst.vue';
+import PeriodUsage from './visualizations/PeriodUsage.vue';
+import Timeline from './visualizations/TimelineInspect.vue';
+Vue.component('aw-summary', Summary)
+Vue.component('aw-sunburst', Sunburst)
+Vue.component('aw-periodusage', PeriodUsage)
+Vue.component('aw-timeline', Timeline)
+
 // Setup Vue app
 import App from './App';
 new Vue({
