@@ -115,11 +115,11 @@ let aw_sunburst = {
   name: "aw-sunburst",
   props: ['date', 'afkBucketId', 'windowBucketId'],
   mounted: function() {
+    console.log("Mounting aw-sunburst");
     sunburst.create(this.$el);
     this.starttime = moment(this.date);
     this.endtime = moment(this.date).add(1, 'days');
     this.visualize();
-    console.log("Initialized aw-sunburst");
   },
 
   data: () => {

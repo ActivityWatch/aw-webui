@@ -14,10 +14,11 @@ function windowQuery(windowbucket, afkbucket, appcount, titlecount, filterAFK) {
     'app_events  = sort_by_duration(app_events);',
 
     'events = sort_by_timestamp(events);',
+    'app_chunks = chunk_events_by_key(events, "app");',
     `app_events  = limit_events(app_events, ${appcount});`,
     `title_events  = limit_events(title_events, ${titlecount});`,
-
-    'RETURN  = [events, not_afk, app_events, title_events];',
+    'duration = sum_durations(events);',
+    'RETURN  = {"app_events": app_events, "title_events": title_events, "app_chunks": app_chunks, "duration": duration};',
   ]);
 }
 
@@ -26,7 +27,7 @@ function browserSummaryQuery(browserbucket, windowbucket, afkbucket, count, filt
   if (browserbucket.endsWith('-chrome')) {
     browserAppnames = '["Google-chrome", "chrome.exe", "Chromium", "Google Chrome"]';
   } else if (browserbucket.endsWith('-firefox')) {
-    browserAppnames = '["Firefox", "Firefox.exe", "firefox"]';
+    browserAppnames = '["Firefox", "Firefox.exe", "firefox", "firefox.exe"]';
   }
 
   return [
@@ -48,7 +49,9 @@ function browserSummaryQuery(browserbucket, windowbucket, afkbucket, count, filt
       'domains = merge_events_by_keys(domains, ["domain"]);',
       'domains = sort_by_duration(domains);',
       `domains = limit_events(domains, ${count});`,
-      'RETURN = {"domains": domains, "urls": urls};',
+      'chunks = chunk_events_by_key(events, "domain");',
+      'duration = sum_durations(events);',
+      'RETURN = {"domains": domains, "urls": urls, "chunks": chunks, "duration": duration};',
     ]);
 }
 
@@ -62,7 +65,8 @@ function editorActivityQuery(editorbucket, limit) {
     `languages = limit_events(languages, ${limit});`,
     'projects = sort_by_duration(merge_events_by_keys(events, ["project"]));',
     `projects = limit_events(projects, ${limit});`,
-    'RETURN = {"files": files, "languages": languages, "projects": projects};',
+    'duration = sum_durations(events);',
+    'RETURN = {"files": files, "languages": languages, "projects": projects, "duration": duration};',
   ];
 }
 

@@ -23,6 +23,10 @@ npm run dev
 npm run build
 ```
 
+For development you'll also have to add/change CORS configuration in the
+aw-server config by adding `cors_origins = http://localhost:27180` to your
+configuration file `~/.config/activitywatch/aw-server/aw-server.ini` under the
+`server-testing` section.
 
 ## Code structure
 
