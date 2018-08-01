@@ -70,6 +70,7 @@
     "less-loader": "^4.1.0",
     "material-design-icons-iconfont": "^3.0.3",
     "style-loader": "^0.21.0",
+    "typeface-roboto": "0.0.54",
     "typeface-varela-round": "0.0.54",
     "vue-awesome": "^3.0.0",
     "vuetify": "^1.1.6"

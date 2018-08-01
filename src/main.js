@@ -12,6 +12,7 @@ Vue.use(BootstrapVue);
 
 // Load the Varela Round font
 import 'typeface-varela-round';
+import 'typeface-roboto';
 
 // Material design icons
 import 'material-design-icons-iconfont/dist/material-design-icons.css';
