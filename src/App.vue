@@ -49,13 +49,8 @@ v-app
 
   v-footer(dark height="auto")
     v-layout(justify-center row wrap)
-      v-card.white--text.text-xs-center(flat tile width="100%")
-        v-card-text.white--text
-          v-btn.white--text.mx-2(icon href="https://github.com/ActivityWatch/activitywatch" target="_blank")
-            icon(height="48px" width="48px" name="brands/github")
-          v-btn.white--text.mx-2(icon href="https://twitter.com/ActivityWatchIt" target="_blank")
-            icon(height="48px" width="48px" name="brands/twitter")
-
+      v-card.flex.text-xs-center(flat tile )
+        v-card-text
           v-layout(justify-center row wrap)
             div.text-xs-right(style="border-right: 1px solid black; margin-right: 1em; padding-right: 1em")
               | Need help? #[a(href="https://forum.activitywatch.net") Ask on the forum]
@@ -66,8 +61,14 @@ v-app
               br
               | Version: {{info.version}}
         v-divider
-        v-card-text.white--text
+        v-card-text
           | Made with #[span(style="color: #F44; font-size: 1.5em; vertical-align: middle") ❤] by the #[a(href="http://activitywatch.net/contributors/") ActivityWatch developers]
+          br
+          v-btn.mx-2(icon href="https://github.com/ActivityWatch/activitywatch" target="_blank")
+            icon(height="42px" width="42px" name="brands/github")
+          v-btn.mx-2(icon href="https://twitter.com/ActivityWatchIt" target="_blank")
+            icon(height="42px" width="42px" name="brands/twitter")
+
 </template>
 
 <script>
