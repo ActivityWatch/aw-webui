@@ -47,28 +47,27 @@ v-app
   v-container
     router-view
 
-    div.container(style="height: 4rem; margin-top: 1rem; margin-bottom: 1rem; color: #555")
-      div(style="float: left")
-        div
-          | Made with ❤ by the #[a(href="http://activitywatch.net/contributors/") ActivityWatch developers]
-        div
-          a.outlinks(href="https://github.com/ActivityWatch/activitywatch", target="_blank")
-            icon(name="brands/github")
-            | GitHub
-          div
-          a.outlinks(href="https://twitter.com/ActivityWatchIt", target="_blank")
-            icon(name="brands/twitter")
-            | Twitter
+  v-footer(dark height="auto")
+    v-layout(justify-center row wrap)
+      v-card.white--text.text-xs-center(flat tile width="100%")
+        v-card-text.white--text
+          v-btn.white--text.mx-2(icon href="https://github.com/ActivityWatch/activitywatch" target="_blank")
+            icon(height="48px" width="48px" name="brands/github")
+          v-btn.white--text.mx-2(icon href="https://twitter.com/ActivityWatchIt" target="_blank")
+            icon(height="48px" width="48px" name="brands/twitter")
 
-      div(style="float: right; text-align: right;")
-        | Need help? #[a(href="https://forum.activitywatch.net") Ask on the forum]
-        br
-        | Found a bug? #[a(href="https://github.com/ActivityWatch/activitywatch/issues/new") File an issue]
-        br
-        span(v-show="connected", style="color: #888")
-          | Host: {{info.hostname}}
-          br
-          | Version: {{info.version}}
+          v-layout(justify-center row wrap)
+            div.text-xs-right(style="border-right: 1px solid black; margin-right: 1em; padding-right: 1em")
+              | Need help? #[a(href="https://forum.activitywatch.net") Ask on the forum]
+              br
+              | Found a bug? #[a(href="https://github.com/ActivityWatch/activitywatch/issues/new") File an issue]
+            div.text-xs-left.yellow-darken-3--text(v-show="connected")
+              | Host: {{info.hostname}}
+              br
+              | Version: {{info.version}}
+        v-divider
+        v-card-text.white--text
+          | Made with #[span(style="color: #F44; font-size: 1.5em; vertical-align: middle") ❤] by the #[a(href="http://activitywatch.net/contributors/") ActivityWatch developers]
 </template>
 
 <script>
@@ -139,9 +138,11 @@ export default {
 $bgcolor: #FFF;
 $textcolor: #000;
 
-html, body, button {
+html,
+body,
+button {
   color: $textcolor;
-  font-family: 'Varela Round', sans-serif !important;
+  //font-family: 'Varela Round', sans-serif !important;
 }
 
 .fa-icon {
