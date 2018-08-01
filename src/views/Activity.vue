@@ -1,14 +1,15 @@
 <template lang="pug">
 div
-  h2 Activity for {{ dateShort }}
+  v-card.mb-2.pa-2
+    h2 Activity for {{ dateShort }}
 
-  p
-    | Host: {{ host }}
-    br
-    | Active time: {{ readableDuration }}
+    p
+      | Host: {{ host }}
+      br
+      | Active time: {{ readableDuration }}
 
-  v-alert(type="error" :show="errormsg.length > 0")
-    | {{ errormsg }}
+    v-alert(type="error" :show="errormsg.length > 0")
+      | {{ errormsg }}
 
   v-card.mb-2.pa-2
     v-layout(row)

@@ -1,49 +1,51 @@
 <template lang="pug">
 v-app
-  v-container
-    div.header
-      div.container
-        span.title
-          img(src="/static/logo.png" style="height: 2em")
-          span(style="padding-left: 15px;")
-            | ActivityWatch
+  v-toolbar
+    //v-toolbar-side-icon
+    v-toolbar-title.pr-3
+      img(src="/static/logo.png" style="height: 1.5em; vertical-align: middle; margin-right: 0.5em; margin-top: -0.2em")
+      | ActivityWatch
+    v-toolbar-items
+      v-btn(flat)
         span.status
-          span.good(v-show="connected")
-            | Connected
-            icon(name="check-circle")
-          span.bad(v-show="!connected")
-            | Not connected
-            icon(name="times-circle")
-
-    div.container.aw-container
-      // TODO: Refactor into Mainmenu component
-      b-nav.row.aw-navbar
-        b-nav-item(to="/")
-          icon(name="home")
-          | Home
-        b-nav-item(v-if="activity_hosts.length === 1", v-for="host in activity_hosts", :key="host", :to="'/activity/' + host")
+          span(v-show="connected" v-bind:style="{ color: connected ? '#0A0' : '#A00' }")
+            span(v-show="connected")
+              | Connected
+              icon(name="check-circle")
+            span(v-show="!connected")
+              | Not connected
+              icon(name="times-circle")
+    v-spacer
+    v-toolbar-items.hidden-sm-and-down
+      v-btn(flat to="/")
+        icon(name="home")
+        | Home
+      v-btn(flat v-if="activity_hosts.length === 1", v-for="host in activity_hosts", :key="host", :to="'/activity/' + host")
+        icon(name="clock")
+        | Activity
+      v-menu(v-if="activity_hosts.length !== 1")
+        v-btn(flat slot="activator")
           icon(name="clock")
           | Activity
-        b-nav-item-dropdown(v-if="activity_hosts.length !== 1")
-          template(slot="button-content")
-            icon(name="clock")
-            | Activity
-          b-dropdown-item(v-if="activity_hosts.length <= 0", disabled)
-            | No activity reports available
-            br
-            small Make sure you have both an afk and window watcher running
-          b-dropdown-item(v-for="host in activity_hosts", :key="host", :to="'/activity/' + host")
-            | {{ host }}
-        b-nav-item(to="/buckets")
-          icon(name="database")
-          | Raw Data
-        b-nav-item(to="/query")
-          // TODO: Use 'searchengin' icon instead, when landed in vue-awesome
-          icon(name="search")
-          | Query
+        v-list
+          v-list-tile(v-if="activity_hosts.length <= 0", disabled)
+            v-list-tile-title
+              | No activity reports available
+              br
+              small Make sure you have both an afk and window watcher running
+          v-list-tile(v-for="host in activity_hosts", :key="host", :to="'/activity/' + host")
+            v-list-tile-title
+              | {{ host }}
+      v-btn(flat to="/buckets")
+        icon(name="database")
+        | Raw Data
+      v-btn(flat to="/query")
+        // TODO: Use 'searchengin' icon instead, when landed in vue-awesome
+        icon(name="search")
+        | Query
 
-    div.container.aw-container.rounded-bottom#content
-        router-view
+  v-container
+    router-view
 
     div.container(style="height: 4rem; margin-top: 1rem; margin-bottom: 1rem; color: #555")
       div(style="float: left")
