@@ -19,7 +19,7 @@ div#wrapper
     b-nav.row.aw-navbar
       b-nav-item(to="/" exact v-on:click="current='home'" :class="{ inCategory: current=='home' || isHomePath}"  )
         icon(name="home")
-        | HomeTest
+        | Home
       b-nav-item(v-if="activity_hosts.length === 1", v-for="host in activity_hosts", :key="host", :to="'/activity/' + host" v-on:click="current='activity'" :class="{ inCategory: current=='activity' || isActivityPath}")
         icon(name="clock")
         | Activity
