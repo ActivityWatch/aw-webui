@@ -17,10 +17,10 @@ div#wrapper
   div.container.aw-container
     // TODO: Refactor into Mainmenu component
     b-nav.row.aw-navbar
-      b-nav-item(to="/" exact v-on:click="current='home'" :class="{ inCategory: current=='home' || isHomePath}"  )
+      b-nav-item(to="/" exact :class="{inCategory: isHomePath}"  )
         icon(name="home")
         | Home
-      b-nav-item(v-if="activity_hosts.length === 1", v-for="host in activity_hosts", :key="host", :to="'/activity/' + host" v-on:click="current='activity'" :class="{ inCategory: current=='activity' || isActivityPath}")
+      b-nav-item(v-if="activity_hosts.length === 1", v-for="host in activity_hosts", :key="host", :to="'/activity/' + host" :class="{inCategory: isActivityPath}")
         icon(name="clock")
         | Activity
       b-nav-item-dropdown(v-if="activity_hosts.length !== 1")
@@ -33,10 +33,10 @@ div#wrapper
           small Make sure you have both an afk and window watcher running
         b-dropdown-item(v-for="host in activity_hosts", :key="host", :to="'/activity/' + host")
           | {{ host }}
-      b-nav-item(v-on:click="current='raw data'" :class="{ inCategory: current=='raw data' || isRawDataPath}" to="/buckets" )
+      b-nav-item(:class="{inCategory: isRawDataPath}" to="/buckets" )
         icon(name="database")
         | Raw Data
-      b-nav-item(v-on:click="current='query'" :class="{ inCategory: current=='query' || isQueryPath}" to="/query" )
+      b-nav-item(:class="{inCategory: isQueryPath}" to="/query" )
         // TODO: Use 'searchengin' icon instead, when landed in vue-awesome
         icon(name="search")
         | Query
@@ -88,16 +88,15 @@ export default {
     return {
       activity_hosts: [],
       connected: false,
-      current:"",
       info: {}
     }
   },
   computed: {
-      isQueryPath: function(thepath) { return this.$route.path=="/query" },
+  
       isHomePath: function(thepath) { return this.$route.path=="/" },
       isActivityPath: function(thepath) { return this.$route.path=="/activity" },
-      isRawDataPath: function(thepath) { return this.$route.path=="/buckets" }
-
+      isRawDataPath: function(thepath) { return this.$route.path=="/buckets" },
+      isQueryPath: function(thepath) { return this.$route.path=="/query" }
   },
 
 
@@ -232,7 +231,7 @@ body {
 }
 
 .inCategory {
- background-color: #DDD;
+ background-color: #00FFFF;
 }
 
 #content {
