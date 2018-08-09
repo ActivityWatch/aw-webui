@@ -231,7 +231,7 @@ body {
 }
 
 .inCategory {
- background-color: #00FFFF;
+ background-color: #DDD;
 }
 
 #content {
