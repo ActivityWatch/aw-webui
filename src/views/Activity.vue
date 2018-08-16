@@ -49,29 +49,39 @@ div
     div.col-md-4
       h5 Top Applications
       aw-summary(:fields="top_apps", :namefunc="top_apps_namefunc", :colorfunc="top_apps_colorfunc")
-      b-button(size="sm", variant="outline-secondary", :disabled="(top_apps.length < top_apps_count) && top_apps_count==5 ",
-	  v-on:click="(top_apps.length < top_apps_count) ? top_apps_count = 5 : top_apps_count +=5; queryWindows();")
-        icon(:name="btnIconApplications")
-        |  {{btnTxtApplications}}
+      b-button-group
+        b-button(size="sm", variant="outline-secondary", :disabled="top_apps.length <= 5", v-on:click="top_apps_count = 5; queryWindows()")
+          icon(name="angle-double-up")
+        b-button(size="sm", variant="outline-secondary", :disabled="top_apps.length <= 5", v-on:click="top_apps_count -= 5; queryWindows()")
+          icon(name="angle-up")
+        b-button(size="sm", variant="outline-secondary", :disabled="top_apps.length < top_apps_count", v-on:click="top_apps_count += 5; queryWindows()")
+          icon(name="angle-down")
+
 
     div.col-md-4
       h5 Top Window Titles
       aw-summary(:fields="top_windowtitles", :namefunc="top_windowtitles_namefunc", :colorfunc="top_windowtitles_colorfunc")
-      b-button(size="sm", variant="outline-secondary", :disabled="top_windowtitles.length < top_windowtitles_count && top_windowtitles_count == 5",
-	  v-on:click="(top_windowtitles.length < top_windowtitles_count) ? top_windowtitles_count = 5 : top_windowtitles_count +=5; queryWindows()")
-        icon(:name="btnIconTitles")
-        | {{btnTxtTitles}}
-
+      b-button-group 
+        b-button(size="sm", variant="outline-secondary", :disabled="top_windowtitles.length <= 5", v-on:click="top_windowtitles_count = 5; queryWindows()")
+          icon(name="angle-double-up")
+        b-button(size="sm", variant="outline-secondary", :disabled="top_windowtitles.length <= 5", v-on:click="top_windowtitles_count -= 5; queryWindows()")
+          icon(name="angle-up")  
+        b-button(size="sm", variant="outline-secondary", :disabled="top_windowtitles.length < top_windowtitles_count", v-on:click="top_windowtitles_count += 5; queryWindows()")
+          icon(name="angle-down")
+      br
+      
     div.col-md-4
       h5 Top Browser Domains
 
       div(v-if="browserBucketId")
         aw-summary(:fields="top_web_domains", :namefunc="top_web_domains_namefunc", :colorfunc="top_web_domains_colorfunc")
-
-        b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length < top_web_count && top_web_count == 5",
-		v-on:click="(top_web_domains.length < top_web_count) ? top_web_count = 5 : top_web_count +=5; queryBrowserDomains()")
-          icon(:name="btnIconDomains")
-          | {{btnTxtDomains}}
+        b-button-group 
+          b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length <= 5", v-on:click="top_web_count = 5; queryBrowserDomains()")
+            icon(name="angle-double-up")
+          b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length <= 5", v-on:click="top_web_count -= 5; queryBrowserDomains()")
+            icon(name="angle-up") 
+          b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length < top_web_count", v-on:click="top_web_count += 5; queryBrowserDomains()")
+            icon(name="angle-down")
         br
         br
 
@@ -192,6 +202,7 @@ div
   border-top-left-radius: 0.5rem !important;
   border-top-right-radius: 0.5rem !important;
 }
+
 .aw-nav-link:hover {
   background-color: #fff;
 }
@@ -212,6 +223,10 @@ import 'vue-awesome/icons/arrow-left'
 import 'vue-awesome/icons/arrow-right'
 import 'vue-awesome/icons/angle-double-down'
 import 'vue-awesome/icons/angle-double-up'
+import 'vue-awesome/icons/angle-up'
+import 'vue-awesome/icons/angle-down'
+
+
 import 'vue-awesome/icons/sync'
 
 import query from '../queries.js';
@@ -301,12 +316,6 @@ export default {
         return f;
       },
       top_editor_projects_colorfunc: (e) => e.data.project,
-      btnIconApplications: "angle-double-down",
-	  btnIconTitles: "angle-double-down",
-	  btnIconDomains: "angle-double-down",
-	  btnTxtApplications: "Show more",
-	  btnTxtTitles: "Show more",
-	  btnTxtDomains: "Show more",
     }
   },
 
@@ -322,40 +331,6 @@ export default {
       console.log("Route changed");
       this.refresh();
     },
-	'top_apps': function(newVal, oldVal) {
-      console.log("top app watcher");
-      if(newVal.length % 5 != 0 || (newVal.length == oldVal.length && newVal.length != this.top_apps_count)){
-        this.btnTxtApplications = "Show less";
-        this.btnIconApplications = "angle-double-up";
-      }
-      else{
-        this.btnTxtApplications = "Show more";
-        this.btnIconApplications = "angle-double-down";
-      }
-	},
-	'top_windowtitles': function(newVal, oldVal) {
-      console.log("top windowtitles watcher");
-      if(newVal.length % 5 != 0 || (newVal.length == oldVal.length && newVal.length != this.top_windowtitles_count)){
-        this.btnTxtTitles="Show less";
-        this.btnIconTitles = "angle-double-up";
-      }
-      else{
-        this.btnTxtTitles="Show more";
-        this.btnIconTitles = "angle-double-down";
-      }
-	},
-	'top_web_domains': function(newVal, oldVal) {
-      console.log("top web domains watcher");
-      if(newVal.length % 5 != 0 || (newVal.length == oldVal.length && newVal.length != this.top_web_count)){
-        this.btnTxtDomains="Show less";
-        this.btnIconDomains = "angle-double-up";
-      }
-      else{
-        this.btnTxtDomains="Show more";
-        this.btnIconDomains = "angle-double-down";
-      }
-	},
-	
     'filterAFK': function(to, from) {
       this.refresh();
     },
@@ -366,7 +341,7 @@ export default {
     'editorBucketId': function(to, from) {
       this.queryEditorActivity();
     },
-	
+    
     
   },
 
