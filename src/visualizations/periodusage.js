@@ -62,9 +62,9 @@ function update(svg_elem, usage_arr, host) {
     var usage_time = get_usage_time(usage_arr[i]);
     var height = 85 * (usage_time / longest_usage);
     var date = "";
-    if (usage_arr[i].length > 0){
-      /* slice off so it's only the day */
-      date = usage_arr[i][0].timestamp.slice(0,10);
+    if (usage_arr[i].length > 0) {
+      // slice off so it's only the day
+      date = moment(usage_arr[i][0].timestamp).format('YYYY-MM-DD');
     }
     var color = (i == center_elem) ? diagramcolor_selected : diagramcolor;
     var offset = 50;
