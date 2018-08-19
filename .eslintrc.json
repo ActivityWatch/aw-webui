@@ -1,0 +1,24 @@
+{
+  "plugins": ["prettier", "vue", "jest"],
+  "extends": [
+    "eslint:recommended",
+    "prettier",
+    "plugin:vue/essential",
+    "plugin:jest/recommended"
+  ],
+  "rules": {
+    "prettier/prettier": "warn",
+    "no-shadow": [
+      "error",
+      {
+        "builtinGlobals": true,
+        "allow": ["name", "Promise"]
+      }
+    ],
+    "no-console": ["off"]
+  },
+  "parserOptions": {
+    "ecmaVersion": 2017,
+    "sourceType": "module"
+  }
+}

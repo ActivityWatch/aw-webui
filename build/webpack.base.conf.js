@@ -1,6 +1,6 @@
-var path = require('path')
-var config = require('../config')
-var utils = require('./utils')
+const path = require('path')
+const config = require('../config')
+const utils = require('./utils')
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const VueLoaderPlugin = require('vue-loader/lib/plugin')
 
@@ -82,7 +82,7 @@ module.exports = {
       },
       {
         test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
-        loader: 'url',
+        loader: 'url-loader',
         query: {
           limit: 10000,
           name: utils.assetsPath('img/[name].[hash:7].[ext]')
@@ -90,7 +90,7 @@ module.exports = {
       },
       {
         test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
-        loader: 'url',
+        loader: 'url-loader',
         query: {
           limit: 10000,
           name: utils.assetsPath('fonts/[name].[hash:7].[ext]')

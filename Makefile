@@ -20,5 +20,8 @@ dev:
 test:
 	babel-node test.js
 
+lint:
+	npx eslint src/ --ext .vue,.js
+
 clean:
 	rm -rf node_modules dist
