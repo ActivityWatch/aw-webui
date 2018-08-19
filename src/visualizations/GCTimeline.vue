@@ -6,18 +6,21 @@ div
 <script>
 
 import moment from 'moment';
+import {seconds_to_duration} from '../util/time.js'
 
 export default {
   props: ['buckets'],
   computed: {
+    // Array will be automatically processed with visualization.arrayToDataTable function
     chartData() {
       console.log(this.buckets);
       let data = [
         [
-          {label: 'Bucket', type: 'string'},
-          {label: 'Title', type: 'string'},
-          {label: 'Start', type: 'date'},
-          {label: 'End', type: 'date'},
+          { id: 'Bucket', type: 'string' },
+          { id: 'App', type: 'string' },
+          { id: 'tooltip', role: 'tooltip', type: 'string', p: { 'html': true } },
+          { id: 'Start', type: 'date' },
+          { id: 'End', type: 'date' },
         ]
       ];
       _.each(this.buckets, (bucket) => {
@@ -26,32 +29,34 @@ export default {
         _.each(bucket.events, (event) => {
           data.push([
             bucket.name,
-            event.data.title,
+            event.data.app,
+            // WARNING: XSS risk
+            // TODO: This will be subject to an XSS attack and must be escaped
+            (
+              `<table>
+              <tr><th>App:</th><td>${event.data.app}</td></tr>
+              <tr><th>Title:</th><td>${event.data.title}</td></tr>
+              <tr></tr>
+              <tr><th>Time:</th><td style="white-space: nowrap;">${event.timestamp.toISOString()}</td></tr>
+              <tr><th>Duration:</th><td>${seconds_to_duration(event.duration)}</td></tr>
+              </table>`
+            ),
             new Date(event.timestamp),
             new Date(moment(event.timestamp).add(event.duration, 'seconds'))
           ]);
         })
       })
-
-      //data = [data[0], data[1]]
-      console.log(data);
       return data;
     },
   },
   data () {
     return {
-      // Array will be automatically processed with visualization.arrayToDataTable function
-      /*chartData: [
-        ['Title', 'Start', 'End'],
-        ['', 1000, 400],
-        ['2015', 1170, 460, 250],
-        ['2016', 660, 1120, 300],
-        ['2017', 1030, 540, 350]
-      ],*/
       chartOptions: {
-        chart: {
-          title: 'Company Performance',
-          subtitle: 'Sales, Expenses, and Profit: 2014-2017',
+        timeline: {
+          showRowLabels: false
+        },
+        tooltip: {
+          isHtml: true
         }
       }
     }
