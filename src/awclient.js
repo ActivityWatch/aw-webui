@@ -11,6 +11,6 @@ if(!PRODUCTION) {
     origin = protocol + "://" + hostname + ":" + port;
 }
 
-let awc = new AWClient("aw-webui", !PRODUCTION, origin);
+let awc = new AWClient("aw-webui", {testing: !PRODUCTION, baseURL: origin});
 
 export default awc;

@@ -93,25 +93,18 @@ export default {
     }
   },
   methods: {
-    getBuckets: function() {
-      awclient.getBuckets().then((response) => {
-        let buckets = response.data;
-        buckets = _.orderBy(buckets, [(b) => b.last_updated], ["desc"]);
-        this.buckets = buckets;
-      });
+    getBuckets: async function() {
+      this.buckets = _.orderBy(await awclient.getBuckets(), [(b) => b.last_updated], ["desc"]);
     },
 
-    getBucketInfo: function(bucket_id) {
-      awclient.getBucket(bucket_id).then((response) => {
-        this.buckets[bucket_id] = response.data;
-      });
+    getBucketInfo: async function(bucket_id) {
+      this.buckets[bucket_id] = await awclient.getBucket(bucket_id);
     },
 
-    deleteBucket: function(bucket_id) {
+    deleteBucket: async function(bucket_id) {
       console.log("Deleting bucket " + bucket_id);
-      awclient.deleteBucket(bucket_id).then((response) => {
-        this.getBuckets();
-      });
+      await awclient.deleteBucket(bucket_id);
+      await this.getBuckets();
     }
   }
 }

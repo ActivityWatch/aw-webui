@@ -369,110 +369,87 @@ export default {
       this.queryDailyActivity();
     },
 
-    getBrowserBucket: function() {
-      awclient.getBuckets().then((response) => {
-        let buckets = response.data;
-        for (var bucket in buckets){
-          if (buckets[bucket]["type"] === "web.tab.current"){
-            this.browserBuckets.push(bucket);
-          }
+    getBrowserBucket: async function() {
+      let buckets = await awclient.getBuckets();
+      for (var bucket in buckets){
+        if (buckets[bucket]["type"] === "web.tab.current"){
+          this.browserBuckets.push(bucket);
         }
-        if (this.browserBuckets.length > 0){
-          this.browserBucketId = this.browserBuckets[0]
-        }
-      });
+      }
+      if (this.browserBuckets.length > 0){
+        this.browserBucketId = this.browserBuckets[0]
+      }
     },
 
-    getEditorBucket: function() {
-      awclient.getBuckets().then((response) => {
-        let buckets = response.data;
-        for (var bucket in buckets){
-          if (buckets[bucket]["type"] === "app.editor.activity"){
-            this.editorBuckets.push(bucket);
-          }
+    getEditorBucket: async function() {
+      let buckets = await awclient.getBuckets();
+      for (var bucket in buckets){
+        if (buckets[bucket]["type"] === "app.editor.activity"){
+          this.editorBuckets.push(bucket);
         }
-        if (this.editorBuckets.length > 0){
-          this.editorBucketId = this.editorBuckets[0]
-        }
-      });
+      }
+      if (this.editorBuckets.length > 0){
+        this.editorBucketId = this.editorBuckets[0]
+      }
     },
 
-    queryWindows: function(){
+    queryWindows: async function() {
       var periods = [this.dateStart + "/" + this.dateEnd];
       var q = query.windowQuery(this.windowBucketId, this.afkBucketId, this.top_apps_count, this.top_windowtitles_count, this.filterAFK);
       awclient.query(periods, q).then(
-        (response) => { // Success
-          if (response.status > 304){
-            this.errorHandler(response);
-          } else {
-            let data = response.data[0];
-            let events = data["events"];
-            let not_afk_events = data["not_afk_events"];
-            this.top_apps = data["app_events"];
-            this.top_windowtitles = data["title_events"];
-            this.app_chunks = data["app_chunks"];
-            this.duration = data["duration"];
-          }
+        (data) => { // Success
+          data = data[0];
+          let events = data["events"];
+          let not_afk_events = data["not_afk_events"];
+          this.top_apps = data["app_events"];
+          this.top_windowtitles = data["title_events"];
+          this.app_chunks = data["app_chunks"];
+          this.duration = data["duration"];
         }, this.errorHandler
       );
     },
 
-    queryBrowserDomains: function(){
-      if (this.browserBucketId !== ""){
+    queryBrowserDomains: async function() {
+      if (this.browserBucketId !== "") {
         var periods = [this.dateStart + "/" + this.dateEnd];
         var q = query.browserSummaryQuery(this.browserBucketId, this.windowBucketId, this.afkBucketId, this.top_web_count, this.filterAFK);
-        awclient.query(periods, q).then(
-          (response) => { // Success
-            if (response.status > 304){
-              this.errorHandler(response);
-            } else {
-              let data = response.data[0];
-              this.web_duration = data["duration"];
-              this.top_web_domains = data["domains"];
-              this.top_web_urls = data["urls"];
-              this.web_chunks = data["chunks"];
-            }
-          }, this.errorHandler
-        );
+        let data = (await awclient.query(periods, q))[0];
+        this.web_duration = data["duration"];
+        this.top_web_domains = data["domains"];
+        this.top_web_urls = data["urls"];
+        this.web_chunks = data["chunks"];
       }
     },
 
-    queryEditorActivity: function(){
+    queryEditorActivity: async function() {
       if (this.editorBucketId !== ""){
         var periods = [this.dateStart + "/" + this.dateEnd];
         var q = query.editorActivityQuery(this.editorBucketId, this.top_editor_count);
-        awclient.query(periods, q).then(
-          (response) => { // Success
-            if (response.status > 304){
-              this.errorHandler(response);
-            } else {
-              let data = response.data[0];
-              this.editor_duration = data["duration"];
-              this.top_editor_files = data["files"];
-              this.top_editor_languages = data["languages"];
-              this.top_editor_projects = data["projects"];
-            }
-          }, this.errorHandler
-        );
+        try {
+          data = await awclient.query(periods, q);
+          data = response.data[0];
+          this.editor_duration = data["duration"];
+          this.top_editor_files = data["files"];
+          this.top_editor_languages = data["languages"];
+          this.top_editor_projects = data["projects"];
+        } catch (e) {
+          this.errorHandler(e);
+        }
       }
     },
 
-    queryDailyActivity: function(){
+    queryDailyActivity: async function() {
       var timeperiods = [];
       for (var i=-15; i<=15; i++) {
         var startdate = moment(this.date).add(i, 'days').format();
         var enddate = moment(this.date).add(i+1, 'days').format();
         timeperiods.push(startdate + '/' + enddate);
       }
-      awclient.query(timeperiods, query.dailyActivityQuery(this.afkBucketId)).then(
-        (response) => { // Success
-          if (response.status > 304){
-            this.errorHandler(response);
-          } else {
-            this.daily_activity = response.data;
-          }
-        }, this.errorHandler
-      );
+      try {
+        this.daily_activity = await awclient.query(timeperiods, query.dailyActivityQuery(this.afkBucketId));
+      } catch (e) {
+        this.errorHandler(e);
+      }
     },
   },
 }

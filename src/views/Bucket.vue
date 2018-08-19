@@ -30,6 +30,8 @@ div
 
   aw-timeline(:event_type="bucket.type", :events="events")
 
+  GCTimeline(:buckets="[{name: bucket.id, events: events}]")
+
   hr
 
   aw-eventlist(:events="events")
@@ -44,6 +46,7 @@ div
 import awclient from '../awclient.js';
 
 import Timeline from '../visualizations/TimelineSimple.vue';
+import GCTimeline from '../visualizations/GCTimeline.vue';
 import EventList from '../visualizations/EventList.vue';
 
 export default {
@@ -51,6 +54,7 @@ export default {
   components: {
     "aw-timeline": Timeline,
     "aw-eventlist": EventList,
+    "GCTimeline": GCTimeline,
   },
   data: () => {
     return {
@@ -61,22 +65,16 @@ export default {
     }
   },
   methods: {
-    getBucketInfo: function(bucket_id) {
-      awclient.getBucketInfo(bucket_id).then((response) => {
-        this.bucket = response.data;
-      });
+    getBucketInfo: async function(bucket_id) {
+      this.bucket = await awclient.getBucketInfo(bucket_id);
     },
 
-    getEvents: function(bucket_id) {
-      awclient.getEvents(bucket_id).then((response) => {
-        this.events = response.data;
-      });
+    getEvents: async function(bucket_id) {
+      this.events = await awclient.getEvents(bucket_id);
     },
 
-    getEventCount: function(bucket_id) {
-      awclient.getEventCount(bucket_id).then((response) => {
-        this.eventcount = response.data;
-      });
+    getEventCount: async function(bucket_id) {
+      this.eventcount = (await awclient.countEvents(bucket_id)).data;
     },
   },
   mounted: function() {

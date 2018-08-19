@@ -64,6 +64,7 @@
     "less": "^3.0.4",
     "less-loader": "^4.1.0",
     "style-loader": "^0.21.0",
-    "vue-awesome": "^3.0.0"
+    "vue-awesome": "^3.0.0",
+    "vue-google-charts": "^0.3.1"
   }
 }

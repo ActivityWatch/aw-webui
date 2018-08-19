@@ -143,7 +143,7 @@ let aw_sunburst = {
       return awclient.getEvents(bucket_id, {
         limit: -1,
         start: this.starttime.format(), end: this.endtime.format()
-      }).then(res => res.data);
+      });
     },
 
     visualize: function() {
