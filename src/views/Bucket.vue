@@ -32,7 +32,7 @@ div
 
   aw-timeline(:event_type="bucket.type", :events="events")
 
-  GCTimeline(:buckets="buckets", style="max-height: 60px")
+  GCTimeline(:buckets="buckets", showRowLabels='false', style="max-height: 60px")
 
   hr
 

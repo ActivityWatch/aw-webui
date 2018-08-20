@@ -22,7 +22,7 @@ function titleKey(bucket, event) {
 }
 
 export default {
-  props: ['buckets'],
+  props: ['buckets', 'showRowLabels'],
   data () {
     return {};
   },
@@ -95,7 +95,7 @@ export default {
       return {
         colors: this.colors,
         timeline: {
-          showRowLabels: false
+          showRowLabels: this.showRowLabels,
         },
         tooltip: {
           isHtml: true

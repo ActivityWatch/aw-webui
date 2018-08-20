@@ -20,7 +20,7 @@ div
     br
     small #[b Note:] This is currently not as easy as we want it to be, so some familiarity with programming is currently needed to run most of them.
 
-  GCTimeline(:buckets="buckets")
+  GCTimeline(:buckets="buckets", showRowLabels=true)
 
   //b-card-group(columns=true)
   b-card.bucket-card(v-for="bucket in buckets", :key="bucket.id", :header="bucket.id")
