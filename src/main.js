@@ -25,6 +25,13 @@ import router from './route.js';
 import Icon from 'vue-awesome/components/Icon'
 Vue.component('icon', Icon)
 
+import Timeline from './visualizations/TimelineSimple.vue';
+import EventList from './visualizations/EventList.vue';
+import GCTimeline from './visualizations/GCTimeline.vue';
+Vue.component('aw-timeline', Timeline);
+Vue.component('aw-eventlist', EventList);
+Vue.component('GCTimeline', GCTimeline);
+
 // Setup Vue app
 import App from './App';
 new Vue({

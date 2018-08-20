@@ -20,6 +20,8 @@ div
     br
     small #[b Note:] This is currently not as easy as we want it to be, so some familiarity with programming is currently needed to run most of them.
 
+  GCTimeline(:buckets="buckets")
+
   //b-card-group(columns=true)
   b-card.bucket-card(v-for="bucket in buckets", :key="bucket.id", :header="bucket.id")
     b-button-toolbar.float-left
@@ -78,6 +80,7 @@ div
 import 'vue-awesome/icons/trash';
 import 'vue-awesome/icons/download';
 import 'vue-awesome/icons/folder-open';
+import moment from 'moment';
 
 import awclient from '../awclient.js';
 
@@ -94,7 +97,12 @@ export default {
   },
   methods: {
     getBuckets: async function() {
-      this.buckets = _.orderBy(await awclient.getBuckets(), [(b) => b.last_updated], ["desc"]);
+      let now = moment().add(1, 'minutes');
+      this.buckets = _.orderBy(await awclient.getBuckets(), [(b) => b.id], ["asc"]);
+      this.buckets = await Promise.all(_.map(this.buckets, async (bucket) => {
+        bucket.events = await awclient.getEvents(bucket.id, {end: now.format(), start: moment(now).subtract(2, 'hours').format(), limit: -1});
+        return bucket;
+      }));
     },
 
     getBucketInfo: async function(bucket_id) {

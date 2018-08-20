@@ -32,7 +32,7 @@ div
 
   aw-timeline(:event_type="bucket.type", :events="events")
 
-  GCTimeline(:buckets="[{name: bucket.id, events: events}]", style="max-height: 100px")
+  GCTimeline(:buckets="buckets", style="max-height: 60px")
 
   hr
 
@@ -48,17 +48,8 @@ div
 import moment from 'moment'
 import awclient from '../awclient.js';
 
-import Timeline from '../visualizations/TimelineSimple.vue';
-import GCTimeline from '../visualizations/GCTimeline.vue';
-import EventList from '../visualizations/EventList.vue';
-
 export default {
   name: "Bucket",
-  components: {
-    "aw-timeline": Timeline,
-    "aw-eventlist": EventList,
-    "GCTimeline": GCTimeline,
-  },
   data: () => {
     return {
       id: String,
@@ -66,6 +57,13 @@ export default {
       events: [],
       eventcount: "?",
       timeline_duration: 60*15,
+    }
+  },
+  computed: {
+    buckets() {
+      let bucket = this.bucket;
+      bucket.events = this.events;
+      return [bucket];
     }
   },
   watch: {
