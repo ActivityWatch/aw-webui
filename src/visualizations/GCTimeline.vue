@@ -4,16 +4,30 @@ div
 </template>
 
 <script>
-
 import moment from 'moment';
 import {seconds_to_duration} from '../util/time.js'
+import {getColorFromString} from '../util/color.js'
 
 export default {
   props: ['buckets'],
+  data () {
+    return {};
+  },
   computed: {
     // Array will be automatically processed with visualization.arrayToDataTable function
+    colors() {
+      let colors = [];
+      _.each(this.buckets, (bucket) => {
+        _.each(_.sortBy(bucket.events, (e) => e.timestamp), (event) => {
+          let c = getColorFromString(event.data.app);
+          if(!_.includes(colors, c)) {
+            colors.push(c);
+          }
+        })
+      });
+      return colors;
+    },
     chartData() {
-      console.log(this.buckets);
       let data = [
         [
           { id: 'Bucket', type: 'string' },
@@ -24,9 +38,7 @@ export default {
         ]
       ];
       _.each(this.buckets, (bucket) => {
-        console.log("Bucket:");
-        console.log(bucket);
-        _.each(bucket.events, (event) => {
+        _.each(_.sortBy(bucket.events, (e) => e.timestamp), (event) => {
           data.push([
             bucket.name,
             event.data.app,
@@ -39,6 +51,7 @@ export default {
               <tr></tr>
               <tr><th>Time:</th><td style="white-space: nowrap;">${event.timestamp.toISOString()}</td></tr>
               <tr><th>Duration:</th><td>${seconds_to_duration(event.duration)}</td></tr>
+              <tr><th>Color:</th><td>${seconds_to_duration(event.duration)}</td></tr>
               </table>`
             ),
             new Date(event.timestamp),
@@ -48,10 +61,9 @@ export default {
       })
       return data;
     },
-  },
-  data () {
-    return {
-      chartOptions: {
+    chartOptions() {
+      return {
+        colors: this.colors,
         timeline: {
           showRowLabels: false
         },
@@ -60,6 +72,6 @@ export default {
         }
       }
     }
-  }
+  },
 }
 </script>

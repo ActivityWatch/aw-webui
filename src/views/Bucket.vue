@@ -13,24 +13,26 @@ div
       td Hostname:
       td {{ bucket.hostname }}
     tr
-      td
-        small Created:
-      td
-        small {{ bucket.created }}
+      td Created:
+      td {{ bucket.created }}
     tr
+      td Eventcount:
+      td {{ eventcount }}
+    tr
+      td Show last:
       td
-        small Eventcount:
-      td
-        small {{ eventcount }}
+        select(v-model="timeline_duration")
+          option(:value="15*60") 15min
+          option(:value="60*60") 1h
+          option(:value="6*60*60") 6h
+          option(:value="24*60*60") 24h
 
   hr
 
-  b-alert(variant="warning" show)
-    | This timeline is a work in progress. It only shows the last 100 events. Hover to get details.
 
   aw-timeline(:event_type="bucket.type", :events="events")
 
-  GCTimeline(:buckets="[{name: bucket.id, events: events}]")
+  GCTimeline(:buckets="[{name: bucket.id, events: events}]", style="max-height: 100px")
 
   hr
 
@@ -43,6 +45,7 @@ div
 </style>
 
 <script>
+import moment from 'moment'
 import awclient from '../awclient.js';
 
 import Timeline from '../visualizations/TimelineSimple.vue';
@@ -62,6 +65,12 @@ export default {
       bucket: Object,
       events: [],
       eventcount: "?",
+      timeline_duration: 60*15,
+    }
+  },
+  watch: {
+    timeline_duration: function() {
+      this.getEvents(this.id);
     }
   },
   methods: {
@@ -70,7 +79,8 @@ export default {
     },
 
     getEvents: async function(bucket_id) {
-      this.events = await awclient.getEvents(bucket_id);
+      const now = moment();
+      this.events = await awclient.getEvents(bucket_id, {end: now.format(), start: now.subtract(this.timeline_duration, "seconds").format(), limit: -1});
     },
 
     getEventCount: async function(bucket_id) {
