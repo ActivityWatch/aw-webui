@@ -13,7 +13,11 @@ function titleKey(bucket, event) {
   if(bucket.type == "currentwindow") {
     return event.data.app;
   } else if(bucket.type == "web.tab.current") {
-    return (new URL(event.data.url)).hostname;
+    try {
+      return (new URL(event.data.url)).hostname;
+    } catch(e) {
+      return event.data.url;
+    }
   } else if(bucket.type == "afkstatus") {
     return event.data.status;
   } else {
