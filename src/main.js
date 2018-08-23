@@ -31,6 +31,8 @@ import GCTimeline from './visualizations/GCTimeline.vue';
 Vue.component('aw-timeline', Timeline);
 Vue.component('aw-eventlist', EventList);
 Vue.component('GCTimeline', GCTimeline);
+import VisTimeline from './visualizations/VisTimeline.vue';
+Vue.component('VisTimeline', VisTimeline);
 
 // Setup Vue app
 import App from './App';
