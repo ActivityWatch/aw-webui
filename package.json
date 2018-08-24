@@ -61,6 +61,7 @@
     "bootstrap-vue": "^2.0.0-rc.11",
     "color": "^3.0.0",
     "d3": "^4.13.0",
+    "dompurify": "^1.0.7",
     "exports-loader": "^0.7.0",
     "imports-loader": "^0.8.0",
     "jquery": "^3.3.1",
