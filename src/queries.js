@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 // TODO: Sanitize string input of buckets
 
 function windowQuery(windowbucket, afkbucket, appcount, titlecount, filterAFK) {

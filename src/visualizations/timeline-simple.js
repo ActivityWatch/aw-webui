@@ -14,7 +14,7 @@ function create(svg_el) {
   svg_el.innerHTML = "";
 
   // svg for the colored timeline
-  let timeline = d3.select(svg_el)
+  d3.select(svg_el)
     .attr("viewBox", "0 0 100 4")
     .attr("width", "100%");
 }
@@ -71,12 +71,12 @@ function update(svg_el, events, event_type) {
       .attr("width", width)
       .attr("height", 4)
       .style("fill", color_base)
-      .on("mouseover", function(d, i, n){
-          let elem = n[i];
+      .on("mouseover", function(d, j, n){
+          let elem = n[j];
           elem.style.fill = color_hover;
       })
-      .on("mouseout", function(d, i, n){
-          let elem = n[i];
+      .on("mouseout", function(d, j, n){
+          let elem = n[j];
           elem.style.fill = color_base;
       });
 

@@ -58,18 +58,18 @@ export function getColorFromString(appname) {
     return customColors[appname] || scale(Math.abs(hashcode(appname) % 20));
 }
 
-export function getTitleAttr(bucket, event) {
+export function getTitleAttr(bucket, e) {
   if(bucket.type == "currentwindow") {
-    return event.data.app;
+    return e.data.app;
   } else if(bucket.type == "web.tab.current") {
     try {
-      return (new URL(event.data.url)).hostname.replace("www.", "");
-    } catch(e) {
-      return event.data.url;
+      return (new URL(e.data.url)).hostname.replace("www.", "");
+    } catch(err) {
+      return e.data.url;
     }
   } else if(bucket.type == "afkstatus") {
-    return event.data.status;
+    return e.data.status;
   } else {
-    return event.data.title;
+    return e.data.title;
   }
 }

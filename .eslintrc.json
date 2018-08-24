@@ -1,0 +1,28 @@
+{
+  "plugins": ["vue", "jest"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:vue/essential",
+    "plugin:jest/recommended"
+  ],
+  "rules": {
+    "no-shadow": [
+      "error",
+      {
+        "builtinGlobals": true,
+        "allow": ["name", "Promise"]
+      }
+    ],
+    "no-console": ["off"]
+  },
+  "parserOptions": {
+    "ecmaVersion": 2017,
+    "sourceType": "module"
+  },
+  "env": {
+    "node": true
+  },
+  "globals": {
+    "PRODUCTION": false
+  }
+}
