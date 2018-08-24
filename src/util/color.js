@@ -39,13 +39,24 @@ function hashcode(str){
     return hash;
 }
 
-function getColorFromString(appname) {
+export function getColorFromString(appname) {
     appname = appname || "";
     appname = appname.toLowerCase();
     return customColors[appname] || scale(Math.abs(hashcode(appname) % 20));
 }
 
-module.exports = {
-    getAppColor: getColorFromString,
-    getColorFromString: getColorFromString
-};
+export function getTitleAttr(bucket, event) {
+  if(bucket.type == "currentwindow") {
+    return event.data.app;
+  } else if(bucket.type == "web.tab.current") {
+    try {
+      return (new URL(event.data.url)).hostname;
+    } catch(e) {
+      return event.data.url;
+    }
+  } else if(bucket.type == "afkstatus") {
+    return event.data.status;
+  } else {
+    return event.data.title;
+  }
+}

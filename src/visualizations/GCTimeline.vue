@@ -6,45 +6,25 @@ div
 <script>
 import moment from 'moment';
 import {seconds_to_duration} from '../util/time.js'
-import {getColorFromString} from '../util/color.js'
+import {getColorFromString, getTitleAttr} from '../util/color.js'
 
-// TODO: Move to utils
-function titleKey(bucket, event) {
-  if(bucket.type == "currentwindow") {
-    return event.data.app;
-  } else if(bucket.type == "web.tab.current") {
-    try {
-      return (new URL(event.data.url)).hostname;
-    } catch(e) {
-      return event.data.url;
-    }
-  } else if(bucket.type == "afkstatus") {
-    return event.data.status;
-  } else {
-    return event.data.title;
-  }
-}
+
+import VueGoogleCharts from 'vue-google-charts';
+Vue.use(VueGoogleCharts);
+
+console.warn("This should not be used anywhere as it depends on Google Charts that may not be used offline according to their TOS!");
 
 export default {
   props: ['buckets', 'showRowLabels'],
   data () {
-    return {};
+    return {
+      colors: []
+    };
   },
   computed: {
     // Array will be automatically processed with visualization.arrayToDataTable function
-    colors() {
-      let colors = [];
-      _.each(this.buckets, (bucket) => {
-        _.each(_.sortBy(bucket.events, (e) => e.timestamp), (event) => {
-          let c = getColorFromString(titleKey(bucket, event));
-          if(!_.includes(colors, c)) {
-            colors.push(c);
-          }
-        })
-      });
-      return colors;
-    },
     chartData() {
+      this.colors = [];
       let data = [
         [
           { id: 'Bucket', type: 'string' },
@@ -84,9 +64,13 @@ export default {
           return;
         }
         _.each(_.sortBy(bucket.events, (e) => e.timestamp), (event) => {
+          let color = getColorFromString(getTitleAttr(bucket, event));
+          if(!_.includes(this.colors, color)) {
+            this.colors.push(color);
+          }
           data.push([
             bucket.id,
-            titleKey(bucket, event),
+            getTitleAttr(bucket, event),
             buildTooltip(bucket, event),
             new Date(event.timestamp),
             new Date(moment(event.timestamp).add(event.duration, 'seconds'))

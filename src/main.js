@@ -6,9 +6,6 @@ import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue/dist/bootstrap-vue.css';
 Vue.use(BootstrapVue);
 
-import VueGoogleCharts from 'vue-google-charts'
-Vue.use(VueGoogleCharts)
-
 // Load the Varela Round font
 import '../static/css/varela-round.css';
 
@@ -25,14 +22,30 @@ import router from './route.js';
 import Icon from 'vue-awesome/components/Icon'
 Vue.component('icon', Icon)
 
-import Timeline from './visualizations/TimelineSimple.vue';
+// Our custom components
+import Summary from './visualizations/Summary.vue';
+Vue.component('aw-summary', Summary);
+
+import PeriodUsage from './visualizations/PeriodUsage.vue';
+Vue.component('aw-periodusage', PeriodUsage);
+
 import EventList from './visualizations/EventList.vue';
-import GCTimeline from './visualizations/GCTimeline.vue';
-Vue.component('aw-timeline', Timeline);
 Vue.component('aw-eventlist', EventList);
-Vue.component('GCTimeline', GCTimeline);
+
+import Sunburst from './visualizations/Sunburst.vue';
+Vue.component('aw-sunburst', Sunburst);
+
+import TimelineInspect from './visualizations/TimelineInspect.vue';
+Vue.component('aw-timeline-inspect', TimelineInspect);
+
+import Timeline from './visualizations/TimelineSimple.vue';
+Vue.component('aw-timeline', Timeline);
+
 import VisTimeline from './visualizations/VisTimeline.vue';
-Vue.component('VisTimeline', VisTimeline);
+Vue.component('vis-timeline', VisTimeline);
+
+//import GCTimeline from './visualizations/GCTimeline.vue';
+//Vue.component('GCTimeline', GCTimeline);
 
 // Setup Vue app
 import App from './App';

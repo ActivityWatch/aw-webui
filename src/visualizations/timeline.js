@@ -9,7 +9,7 @@ const Color = require("color");
 const _ = require("lodash");
 const moment = require("moment");
 
-import color from "../util/color.js"
+import {getColorFromString} from "../util/color.js"
 
 const time = require("../util/time.js");
 
@@ -114,7 +114,7 @@ function update(container, events, total_duration, showAFK, chunkfunc, eventfunc
       var eventWidth = e.duration / total_duration * 100;
     }
 
-    var appcolor = color.getAppColor(chunkfunc(e));
+    var appcolor = getColorFromString(chunkfunc(e));
     var hovercolor = Color(appcolor).darken(0.4).hex();
 
     let eg = timeline.append("g")
@@ -125,7 +125,7 @@ function update(container, events, total_duration, showAFK, chunkfunc, eventfunc
       .attr("y", 0)
       .attr("width", eventWidth)
       .attr("height", 10)
-      .style("fill", color.getAppColor(chunkfunc(e)))
+      .style("fill", appcolor)
       .on("mouseover", () => {
           rect.style("fill", hovercolor);
           show_info(container, "titleinfo_event_" + i);

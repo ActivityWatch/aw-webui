@@ -107,7 +107,6 @@ div.sunburst
 
 import sunburst from './sunburst.js';
 import moment from 'moment';
-import coloring_types from './coloring.js';
 
 import awclient from '../awclient.js';
 

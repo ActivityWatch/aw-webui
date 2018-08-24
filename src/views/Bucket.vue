@@ -27,14 +27,7 @@ div
           option(:value="6*60*60") 6h
           option(:value="24*60*60") 24h
 
-  hr
-
-
-  aw-timeline(:event_type="bucket.type", :events="events")
-
-  GCTimeline(:buckets="buckets", showRowLabels='false', style="max-height: 60px")
-
-  hr
+  vis-timeline(:buckets="buckets", showRowLabels='false')
 
   aw-eventlist(:events="events")
 

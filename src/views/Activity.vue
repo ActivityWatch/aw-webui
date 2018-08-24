@@ -77,7 +77,7 @@ div
     b-form-checkbox(v-model="timelineShowAFK")
       | Show AFK time
 
-    aw-timeline(:chunks="app_chunks", :total_duration='duration', :show_afk='timelineShowAFK', :chunkfunc='app_chunkfunc', :eventfunc='app_eventfunc')
+    aw-timeline-inspect(:chunks="app_chunks", :total_duration='duration', :show_afk='timelineShowAFK', :chunkfunc='app_chunkfunc', :eventfunc='app_eventfunc')
 
     hr
 
@@ -125,7 +125,7 @@ div
 
     br
 
-    aw-timeline(:chunks="web_chunks", :total_duration='duration', :show_afk='timelineShowAFK', :chunkfunc='web_chunkfunc', :eventfunc='web_eventfunc')
+    aw-timeline-inspect(:chunks="web_chunks", :total_duration='duration', :show_afk='timelineShowAFK', :chunkfunc='web_chunkfunc', :eventfunc='web_eventfunc')
 
   div(v-show="view == 'editor'")
 
@@ -212,11 +212,6 @@ import 'vue-awesome/icons/sync'
 
 import query from '../queries.js';
 
-import Summary from '../visualizations/Summary.vue';
-import Sunburst from '../visualizations/Sunburst.vue';
-import PeriodUsage from '../visualizations/PeriodUsage.vue';
-import Timeline from '../visualizations/TimelineInspect.vue';
-
 import awclient from '../awclient.js';
 
 
@@ -298,13 +293,6 @@ export default {
       },
       top_editor_projects_colorfunc: (e) => e.data.project,
     }
-  },
-
-  components: {
-    "aw-sunburst": Sunburst,
-    "aw-summary": Summary,
-    "aw-periodusage": PeriodUsage,
-    "aw-timeline": Timeline,
   },
 
   watch: {

@@ -3,103 +3,104 @@ div
   div#visualization
 </template>
 
+
+<style lang="scss">
+div#visualization {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.vis-timeline {
+  font-family: arial;
+  font-size: 9pt;
+
+  .vis-item {
+    border: 0;
+    /*
+    border-width: 0 1px 0 1px !important;
+    border-color: #fff !important;
+    */
+
+    .vis-item-content {
+      color: #333;
+    }
+  }
+
+  .vis-tooltip {
+    font-family: arial !important;
+    font-size: 9pt !important;
+
+    table {
+      td {
+        max-width: 25em;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+    }
+  }
+}
+</style>
+
+
 <script>
 import moment from 'moment';
 import {seconds_to_duration} from '../util/time.js'
-import {getColorFromString} from '../util/color.js'
+import {getColorFromString, getTitleAttr} from '../util/color.js'
 
+// Docs: http://visjs.org/docs/timeline/
 import {DataSet, Timeline} from 'vis/dist/vis-timeline-graph2d.min.js';
 import 'vis/dist/vis-timeline-graph2d.min.css';
-
-// TODO: Move to utils
-function titleKey(bucket, event) {
-  if(bucket.type == "currentwindow") {
-    return event.data.app;
-  } else if(bucket.type == "web.tab.current") {
-    try {
-      return (new URL(event.data.url)).hostname;
-    } catch(e) {
-      return event.data.url;
-    }
-  } else if(bucket.type == "afkstatus") {
-    return event.data.status;
-  } else {
-    return event.data.title;
-  }
-}
 
 export default {
   props: ['buckets', 'showRowLabels'],
   data () {
     return {
-      groups: [],
-      items: [],
+      timeline: null,
+      options: {
+        zoomMin: 1000 * 60,             // 10min in milliseconds
+        zoomMax: 1000 * 60 * 60 * 24 * 31 * 3,    // about three months in milliseconds
+        stack: false,
+        tooltip: {
+          followMouse: true,
+          overflowMethod: 'cap',
+        }
+      }
     };
   },
   mounted() {
-    this.container = document.getElementById('visualization');
-    this.groups = new DataSet();
-    this.items = new DataSet([]);
-    var options = {
-      min: new Date(2018, 7, 1),                // lower limit of visible range
-      max: new Date(2018, 10, 1),                // upper limit of visible range
-      zoomMin: 1000 * 60 * 60 * 24,             // one day in milliseconds
-      zoomMax: 1000 * 60 * 60 * 24 * 31 * 3,    // about three months in milliseconds
-      tooltip: {
-        followMouse: true,
-        overflowMethod: 'cap'
-      }
-    };
-    var timeline = new Timeline(this.container, this.items, this.groups, options);
+    this.$nextTick(() => {
+      let el = this.$el.querySelector('#visualization');
+      this.timeline = new Timeline(el, [], [], this.options);
+    });
   },
   watch: {
     buckets() {
-      this.groups.clear();
-      this.items.clear();
-      _.each(this.buckets, (bucket, bidx) => {
-        this.groups.add({id: bidx, content: bucket.id});
+      let groups = _.map(this.buckets, (bucket, bidx) => {
+        return {id: bidx, content: this.showRowLabels ? '': bucket.id};
       });
-      console.log(this.groups);
-      _.each(this.chartData, (row, i) => {
-        if (i === 0 || i > 4) return;
-        console.log(row);
-        this.items.add({
+      let items = _.map(this.chartData, (row, i) => {
+        return {
           id: i,
           group: row[0],
           content: row[1],
-          //text: row[2],
-          start: moment(row[3]).format('YYYY-MM-DDTHH:mm:ss'),
-          end: moment(row[4]).add(1, 'day').format('YYYY-MM-DDTHH:mm:ss'),
-        });
+          title: row[2],
+          start: moment(row[3]),
+          end: moment(row[4]),
+          style: `background-color: ${row[5]}`,
+        }
       });
-      this.items = this.items;
-      console.log(this.items);
+      if(groups.length > 0 && items.length > 0) {
+        this.options.min = _.min(_.map(items, (item) => item.start));
+        this.options.max = _.max(_.map(items, (item) => item.end));
+        this.timeline.setOptions(this.options);
+        this.timeline.setData({groups: groups, items: items})
+        this.timeline.fit();
+      }
     }
   },
   computed: {
-    // Array will be automatically processed with visualization.arrayToDataTable function
-    colors() {
-      let colors = [];
-      _.each(this.buckets, (bucket) => {
-        _.each(_.sortBy(bucket.events, (e) => e.timestamp), (event) => {
-          let c = getColorFromString(titleKey(bucket, event));
-          if(!_.includes(colors, c)) {
-            colors.push(c);
-          }
-        })
-      });
-      return colors;
-    },
     chartData() {
-      let data = [
-        [
-          { id: 'Bucket', type: 'string' },
-          { id: 'App', type: 'string' },
-          { id: 'tooltip', role: 'tooltip', type: 'string', p: { 'html': true } },
-          { id: 'Start', type: 'date' },
-          { id: 'End', type: 'date' },
-        ]
-      ];
+      let data = [];
       function buildTooltip(bucket, event) {
         // WARNING: XSS risk
         // TODO: This will be subject to an XSS attack and must be escaped
@@ -121,7 +122,7 @@ export default {
         }
         return `<table>${inner}
           <tr></tr>
-          <tr><th>Time:</th><td style="white-space: nowrap;">${event.timestamp.toISOString()}</td></tr>
+          <tr><th>Time:</th><td>${event.timestamp.toISOString()}</td></tr>
           <tr><th>Duration:</th><td>${seconds_to_duration(event.duration)}</td></tr>
           </table>`;
       }
@@ -132,26 +133,16 @@ export default {
         _.each(_.sortBy(bucket.events, (e) => e.timestamp), (event) => {
           data.push([
             bidx,
-            titleKey(bucket, event),
+            getTitleAttr(bucket, event),
             buildTooltip(bucket, event),
             new Date(event.timestamp),
-            new Date(moment(event.timestamp).add(event.duration, 'seconds'))
+            new Date(moment(event.timestamp).add(event.duration, 'seconds')),
+            getColorFromString(getTitleAttr(bucket, event)),
           ]);
         })
       })
       return data;
     },
-    chartOptions() {
-      return {
-        colors: this.colors,
-        timeline: {
-          showRowLabels: this.showRowLabels,
-        },
-        tooltip: {
-          isHtml: true
-        }
-      }
-    }
   },
 }
 </script>
