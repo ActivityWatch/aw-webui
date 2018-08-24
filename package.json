@@ -4,6 +4,7 @@
   "description": "A webui for ActivityWatch built in Vue.js",
   "author": "ActivityWatch Developers",
   "private": true,
+  "license": "MPL-2.0",
   "scripts": {
     "dev": "node build/dev-server.js",
     "build": "node build/build.js",
