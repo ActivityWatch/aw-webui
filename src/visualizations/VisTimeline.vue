@@ -16,6 +16,7 @@ div#visualization {
 
   .vis-item {
     border: 0;
+    border-radius: 0;
     /*
     border-width: 0 1px 0 1px !important;
     border-color: #fff !important;
@@ -23,6 +24,9 @@ div#visualization {
 
     .vis-item-content {
       color: #333;
+      text-overflow: ellipsis;
+      overflow-x: hidden;
+      display: block;
     }
   }
 

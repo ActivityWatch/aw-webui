@@ -1,5 +1,6 @@
 'use strict';
 
+const Color = require('color');
 const d3 = require("d3");
 
 // See here for examples:
@@ -19,11 +20,23 @@ let customColors = {
     "chromium": "#8CF", // Google Blue: "#4885ed"
     "firefox": "#F94", // Firefox Orange: "#E55B0A"
     "spotify": "#5FA",  // Spotify Green: "#1ED760"
-    "alacritty": "#FC7",
+    "alacritty": "#FD8",
 
     "vue": "#5d9", // Vue teal #4fc08d
     "python": "#369", // Python blue #2b5b84
     "javascript": "#f6b", // JavaScript pink #eb47a5
+
+    // Developer domains
+    "localhost": "#CCC",
+    "github.com": "#EBF",
+    "stackoverflow.com": Color("#F48024").lighten(0.3),
+
+    "google.com": "#0AF",
+    "google.se": "#0AF",
+
+    // Social media sites
+    "messenger.com": Color("#3b5998").lighten(0.5),
+    "facebook.com": Color("#3b5998").lighten(0.5),
 };
 
 function hashcode(str){
@@ -50,7 +63,7 @@ export function getTitleAttr(bucket, event) {
     return event.data.app;
   } else if(bucket.type == "web.tab.current") {
     try {
-      return (new URL(event.data.url)).hostname;
+      return (new URL(event.data.url)).hostname.replace("www.", "");
     } catch(e) {
       return event.data.url;
     }
