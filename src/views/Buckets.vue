@@ -81,8 +81,7 @@ import 'vue-awesome/icons/trash';
 import 'vue-awesome/icons/download';
 import 'vue-awesome/icons/folder-open';
 import moment from 'moment';
-
-import awclient from '../awclient.js';
+import _ from 'lodash';
 
 export default {
   name: "Buckets",
@@ -98,20 +97,20 @@ export default {
   methods: {
     getBuckets: async function() {
       let now = moment().add(1, 'minutes');
-      this.buckets = _.orderBy(await awclient.getBuckets(), [(b) => b.id], ["asc"]);
+      this.buckets = _.orderBy(await this.$aw.getBuckets(), [(b) => b.id], ["asc"]);
       this.buckets = await Promise.all(_.map(this.buckets, async (bucket) => {
-        bucket.events = await awclient.getEvents(bucket.id, {end: now.format(), start: moment(now).subtract(2, 'hours').format(), limit: -1});
+        bucket.events = await this.$aw.getEvents(bucket.id, {end: now.format(), start: moment(now).subtract(3, 'hours').format(), limit: -1});
         return bucket;
       }));
     },
 
     getBucketInfo: async function(bucket_id) {
-      this.buckets[bucket_id] = await awclient.getBucket(bucket_id);
+      this.buckets[bucket_id] = await this.$aw.getBucket(bucket_id);
     },
 
     deleteBucket: async function(bucket_id) {
       console.log("Deleting bucket " + bucket_id);
-      await awclient.deleteBucket(bucket_id);
+      await this.$aw.deleteBucket(bucket_id);
       await this.getBuckets();
     }
   }

@@ -80,7 +80,7 @@ import 'vue-awesome/icons/brands/twitter';
 import 'vue-awesome/icons/brands/github';
 import 'vue-awesome/icons/search';
 
-import awclient from './awclient.js';
+import _ from 'lodash';
 
 // TODO: Highlight active item in menubar
 
@@ -94,20 +94,21 @@ export default {
   },
 
   mounted: async function() {
-    awclient.getInfo().then(
+    this.$aw.getInfo().then(
       (info) => {
         this.connected = true;
         this.info = info;
       },
       (e) => {
+        console.error("Unable to connect:", e)
         this.connected = false;
         this.info = {};
       }
     );
 
-    let buckets = await awclient.getBuckets();
+    let buckets = await this.$aw.getBuckets();
     let types_by_host = {};
-    _.each(buckets, (v, k) => {
+    _.each(buckets, (v) => {
         types_by_host[v.hostname] = types_by_host[v.hostname] || {};
         if(v.type == "afkstatus") {
             types_by_host[v.hostname].afk = true;

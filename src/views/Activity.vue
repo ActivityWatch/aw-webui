@@ -201,8 +201,6 @@ div
 
 <script>
 import moment from 'moment';
-import timeline from '../visualizations/timeline.js';
-import summary from '../visualizations/summary.js';
 import time from "../util/time.js";
 
 import 'vue-awesome/icons/arrow-left'
@@ -296,17 +294,17 @@ export default {
   },
 
   watch: {
-    '$route': function(to, from) {
+    '$route': function() {
       console.log("Route changed");
       this.refresh();
     },
-    'filterAFK': function(to, from) {
+    filterAFK() {
       this.refresh();
     },
-    'browserBucketId': function(to, from) {
+    browserBucketId() {
       this.queryBrowserDomains();
     },
-    'editorBucketId': function(to, from) {
+    editorBucketId() {
       this.queryEditorActivity();
     },
   },
@@ -387,8 +385,6 @@ export default {
       awclient.query(periods, q).then(
         (data) => { // Success
           data = data[0];
-          let events = data["events"];
-          let not_afk_events = data["not_afk_events"];
           this.top_apps = data["app_events"];
           this.top_windowtitles = data["title_events"];
           this.app_chunks = data["app_chunks"];
@@ -414,8 +410,7 @@ export default {
         var periods = [this.dateStart + "/" + this.dateEnd];
         var q = query.editorActivityQuery(this.editorBucketId, this.top_editor_count);
         try {
-          data = await awclient.query(periods, q);
-          data = response.data[0];
+          let data = await awclient.query(periods, q)[0];
           this.editor_duration = data["duration"];
           this.top_editor_files = data["files"];
           this.top_editor_languages = data["languages"];

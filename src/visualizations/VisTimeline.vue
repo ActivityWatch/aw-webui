@@ -47,12 +47,13 @@ div#visualization {
 
 
 <script>
+import _ from 'lodash';
 import moment from 'moment';
 import {seconds_to_duration} from '../util/time.js'
 import {getColorFromString, getTitleAttr} from '../util/color.js'
 
 // Docs: http://visjs.org/docs/timeline/
-import {DataSet, Timeline} from 'vis/dist/vis-timeline-graph2d.min.js';
+import {Timeline} from 'vis/dist/vis-timeline-graph2d.min.js';
 import 'vis/dist/vis-timeline-graph2d.min.css';
 
 export default {
@@ -105,42 +106,42 @@ export default {
   computed: {
     chartData() {
       let data = [];
-      function buildTooltip(bucket, event) {
+      function buildTooltip(bucket, e) {
         // WARNING: XSS risk
         // TODO: This will be subject to an XSS attack and must be escaped
         let inner = "Unknown bucket type";
         if(bucket.type == "currentwindow") {
           inner = `
-            <tr><th>App:</th><td>${event.data.app}</td></tr>
-            <tr><th>Title:</th><td>${event.data.title}</td></tr>
+            <tr><th>App:</th><td>${e.data.app}</td></tr>
+            <tr><th>Title:</th><td>${e.data.title}</td></tr>
             `;
         } else if(bucket.type == "web.tab.current") {
           inner = `
-            <tr><th>Title:</th><td>${event.data.title}</td></tr>
-            <tr><th>URL:</th><td><a href=${event.data.url}>${event.data.url}</a></td></tr>
+            <tr><th>Title:</th><td>${e.data.title}</td></tr>
+            <tr><th>URL:</th><td><a href=${e.data.url}>${e.data.url}</a></td></tr>
             `;
         } else {
           inner = `
-            <tr><td>Data:</td><td>${JSON.stringify(event.data)}</td></tr>
+            <tr><td>Data:</td><td>${JSON.stringify(e.data)}</td></tr>
             `;
         }
         return `<table>${inner}
           <tr></tr>
-          <tr><th>Time:</th><td>${event.timestamp.toISOString()}</td></tr>
-          <tr><th>Duration:</th><td>${seconds_to_duration(event.duration)}</td></tr>
+          <tr><th>Time:</th><td>${e.timestamp.toISOString()}</td></tr>
+          <tr><th>Duration:</th><td>${seconds_to_duration(e.duration)}</td></tr>
           </table>`;
       }
       _.each(this.buckets, (bucket, bidx) => {
         if(bucket.events === undefined) {
           return;
         }
-        _.each(_.sortBy(bucket.events, (e) => e.timestamp), (event) => {
+        _.each(_.sortBy(bucket.events, (e) => e.timestamp), (e) => {
           data.push([
             bidx,
-            getTitleAttr(bucket, event),
-            buildTooltip(bucket, event),
-            new Date(event.timestamp),
-            new Date(moment(event.timestamp).add(event.duration, 'seconds')),
+            getTitleAttr(bucket, e),
+            buildTooltip(bucket, e),
+            new Date(e.timestamp),
+            new Date(moment(e.timestamp).add(e.duration, 'seconds')),
             getColorFromString(getTitleAttr(bucket, event)),
           ]);
         })

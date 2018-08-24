@@ -46,6 +46,11 @@ Vue.component('vis-timeline', VisTimeline);
 
 //import GCTimeline from './visualizations/GCTimeline.vue';
 //Vue.component('GCTimeline', GCTimeline);
+//
+
+// Create an instance of AWClient as this.$aw
+import awclient from './awclient.js';
+Vue.prototype.$aw = awclient;
 
 // Setup Vue app
 import App from './App';
