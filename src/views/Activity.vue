@@ -65,11 +65,9 @@ div
 
       div(v-if="browserBucketId")
         aw-summary(:fields="top_web_domains", :namefunc="top_web_domains_namefunc", :colorfunc="top_web_domains_colorfunc")
-
         b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length < top_web_count" v-on:click="top_web_count += 5; queryBrowserDomains()")
           icon(name="angle-double-down")
           | Show more
-        br
         br
 
   div(v-show="view == 'window'")
@@ -189,6 +187,7 @@ div
   border-top-left-radius: 0.5rem !important;
   border-top-right-radius: 0.5rem !important;
 }
+
 .aw-nav-link:hover {
   background-color: #fff;
 }
