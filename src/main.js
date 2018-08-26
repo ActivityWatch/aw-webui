@@ -23,6 +23,9 @@ import Icon from 'vue-awesome/components/Icon'
 Vue.component('icon', Icon)
 
 // Our custom components
+import ErrorBoundary from './ErrorBoundary.vue';
+Vue.component('error-boundary', ErrorBoundary);
+
 import Summary from './visualizations/Summary.vue';
 Vue.component('aw-summary', Summary);
 

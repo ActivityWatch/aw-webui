@@ -42,6 +42,7 @@ div#wrapper
         | Query
 
   div.container.aw-container.rounded-bottom#content
+    error-boundary
       router-view
 
   div.container(style="height: 4rem; margin-top: 1rem; margin-bottom: 1rem; color: #555")
