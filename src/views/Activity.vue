@@ -49,26 +49,39 @@ div
     div.col-md-4
       h5 Top Applications
       aw-summary(:fields="top_apps", :namefunc="top_apps_namefunc", :colorfunc="top_apps_colorfunc")
-      b-button(size="sm", variant="outline-secondary", :disabled="top_apps.length < top_apps_count", v-on:click="top_apps_count += 5; queryWindows()")
-        icon(name="angle-double-down")
-        | Show more
+      b-button-group
+        b-button(size="sm", variant="outline-secondary", :disabled="top_apps.length <= 5", v-on:click="top_apps_count = 5; queryWindows()")
+          icon(name="angle-double-up")
+        b-button(size="sm", variant="outline-secondary", :disabled="top_apps.length <= 5", v-on:click="top_apps_count -= 5; queryWindows()")
+          icon(name="angle-up")
+        b-button(size="sm", variant="outline-secondary", :disabled="top_apps.length < top_apps_count", v-on:click="top_apps_count += 5; queryWindows()")
+          icon(name="angle-down")
+
 
     div.col-md-4
       h5 Top Window Titles
       aw-summary(:fields="top_windowtitles", :namefunc="top_windowtitles_namefunc", :colorfunc="top_windowtitles_colorfunc")
-      b-button(size="sm", variant="outline-secondary", :disabled="top_windowtitles.length < top_windowtitles_count", v-on:click="top_windowtitles_count += 5; queryWindows()")
-        icon(name="angle-double-down")
-        | Show more
+      b-button-group
+        b-button(size="sm", variant="outline-secondary", :disabled="top_windowtitles.length <= 5", v-on:click="top_windowtitles_count = 5; queryWindows()")
+          icon(name="angle-double-up")
+        b-button(size="sm", variant="outline-secondary", :disabled="top_windowtitles.length <= 5", v-on:click="top_windowtitles_count -= 5; queryWindows()")
+          icon(name="angle-up")
+        b-button(size="sm", variant="outline-secondary", :disabled="top_windowtitles.length < top_windowtitles_count", v-on:click="top_windowtitles_count += 5; queryWindows()")
+          icon(name="angle-down")
+      br
 
     div.col-md-4
       h5 Top Browser Domains
 
       div(v-if="browserBucketId")
         aw-summary(:fields="top_web_domains", :namefunc="top_web_domains_namefunc", :colorfunc="top_web_domains_colorfunc")
-
-        b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length < top_web_count" v-on:click="top_web_count += 5; queryBrowserDomains()")
-          icon(name="angle-double-down")
-          | Show more
+        b-button-group
+          b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length <= 5", v-on:click="top_web_count = 5; queryBrowserDomains()")
+            icon(name="angle-double-up")
+          b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length <= 5", v-on:click="top_web_count -= 5; queryBrowserDomains()")
+            icon(name="angle-up")
+          b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length < top_web_count", v-on:click="top_web_count += 5; queryBrowserDomains()")
+            icon(name="angle-down")
         br
         br
 
@@ -189,6 +202,7 @@ div
   border-top-left-radius: 0.5rem !important;
   border-top-right-radius: 0.5rem !important;
 }
+
 .aw-nav-link:hover {
   background-color: #fff;
 }
@@ -206,6 +220,11 @@ import time from "../util/time.js";
 import 'vue-awesome/icons/arrow-left'
 import 'vue-awesome/icons/arrow-right'
 import 'vue-awesome/icons/angle-double-down'
+import 'vue-awesome/icons/angle-double-up'
+import 'vue-awesome/icons/angle-up'
+import 'vue-awesome/icons/angle-down'
+
+
 import 'vue-awesome/icons/sync'
 
 import query from '../queries.js';
