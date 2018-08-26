@@ -1,4 +1,4 @@
-﻿<template lang="pug">
+<template lang="pug">
 div#wrapper
   div.header
     div.container
@@ -17,10 +17,10 @@ div#wrapper
   div.container.aw-container
     // TODO: Refactor into Mainmenu component
     b-nav.row.aw-navbar
-      b-nav-item(to="/" exact :class="{inCategory: isHomePath}"  )
+      b-nav-item(to="/" exact)
         icon(name="home")
         | Home
-      b-nav-item(v-if="activity_hosts.length === 1", v-for="host in activity_hosts", :key="host", :to="'/activity/' + host" :class="{inCategory: isActivityPath}")
+      b-nav-item(v-if="activity_hosts.length === 1", v-for="host in activity_hosts", :key="host", :to="'/activity/' + host")
         icon(name="clock")
         | Activity
       b-nav-item-dropdown(v-if="activity_hosts.length !== 1")
@@ -33,10 +33,10 @@ div#wrapper
           small Make sure you have both an afk and window watcher running
         b-dropdown-item(v-for="host in activity_hosts", :key="host", :to="'/activity/' + host")
           | {{ host }}
-      b-nav-item(:class="{inCategory: isRawDataPath}" to="/buckets" )
+      b-nav-item(to="/buckets")
         icon(name="database")
         | Raw Data
-      b-nav-item(:class="{inCategory: isQueryPath}" to="/query" )
+      b-nav-item(to="/query")
         // TODO: Use 'searchengin' icon instead, when landed in vue-awesome
         icon(name="search")
         | Query
@@ -91,14 +91,6 @@ export default {
       info: {}
     }
   },
-  computed: {
-  
-      isHomePath: function(thepath) { return this.$route.path=="/" },
-      isActivityPath: function(thepath) { return this.$route.path=="/activity" },
-      isRawDataPath: function(thepath) { return this.$route.path=="/buckets" },
-      isQueryPath: function(thepath) { return this.$route.path=="/query" }
-  },
-
 
   mounted: async function() {
     this.$aw.getInfo().then(
@@ -171,6 +163,10 @@ body {
             margin-right: 7px;
         }
     }
+
+  .active {
+    background-color: #EEE;
+  }
 }
 
 .nav-item:hover {
@@ -223,10 +219,6 @@ body {
 
 .rounded-bottom {
   border-radius: 0px 0px 5px 5px;
-}
-
-.inCategory {
- background-color: #DDD;
 }
 
 #content {
