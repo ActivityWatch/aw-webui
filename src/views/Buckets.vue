@@ -20,6 +20,8 @@ div
     br
     small #[b Note:] This is currently not as easy as we want it to be, so some familiarity with programming is currently needed to run most of them.
 
+  vis-timeline(:buckets="buckets", showRowLabels=true)
+
   //b-card-group(columns=true)
   b-card.bucket-card(v-for="bucket in buckets", :key="bucket.id", :header="bucket.id")
     b-button-toolbar.float-left
@@ -78,8 +80,8 @@ div
 import 'vue-awesome/icons/trash';
 import 'vue-awesome/icons/download';
 import 'vue-awesome/icons/folder-open';
-
-import awclient from '../awclient.js';
+import moment from 'moment';
+import _ from 'lodash';
 
 export default {
   name: "Buckets",
@@ -93,25 +95,23 @@ export default {
     }
   },
   methods: {
-    getBuckets: function() {
-      awclient.getBuckets().then((response) => {
-        let buckets = response.data;
-        buckets = _.orderBy(buckets, [(b) => b.last_updated], ["desc"]);
-        this.buckets = buckets;
-      });
+    getBuckets: async function() {
+      let now = moment().add(1, 'minutes');
+      this.buckets = _.orderBy(await this.$aw.getBuckets(), [(b) => b.id], ["asc"]);
+      this.buckets = await Promise.all(_.map(this.buckets, async (bucket) => {
+        bucket.events = await this.$aw.getEvents(bucket.id, {end: now.format(), start: moment(now).subtract(3, 'hours').format(), limit: -1});
+        return bucket;
+      }));
     },
 
-    getBucketInfo: function(bucket_id) {
-      awclient.getBucket(bucket_id).then((response) => {
-        this.buckets[bucket_id] = response.data;
-      });
+    getBucketInfo: async function(bucket_id) {
+      this.buckets[bucket_id] = await this.$aw.getBucket(bucket_id);
     },
 
-    deleteBucket: function(bucket_id) {
+    deleteBucket: async function(bucket_id) {
       console.log("Deleting bucket " + bucket_id);
-      awclient.deleteBucket(bucket_id).then((response) => {
-        this.getBuckets();
-      });
+      await this.$aw.deleteBucket(bucket_id);
+      await this.getBuckets();
     }
   }
 }

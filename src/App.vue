@@ -80,7 +80,7 @@ import 'vue-awesome/icons/brands/twitter';
 import 'vue-awesome/icons/brands/github';
 import 'vue-awesome/icons/search';
 
-import awclient from './awclient.js';
+import _ from 'lodash';
 
 // TODO: Highlight active item in menubar
 
@@ -93,39 +93,34 @@ export default {
     }
   },
 
-  mounted: function() {
-    awclient.info().then(
-      (response) => {
-        if (response.status > 304) {
-          console.error("Status code from return call was >304");
-        } else {
-          this.connected = true;
-          this.info = response.data;
-        }
+  mounted: async function() {
+    this.$aw.getInfo().then(
+      (info) => {
+        this.connected = true;
+        this.info = info;
       },
-      (response) => {
+      (e) => {
+        console.error("Unable to connect:", e)
         this.connected = false;
         this.info = {};
       }
     );
 
-    awclient.getBuckets().then((response) => {
-        let buckets = response.data;
-        let types_by_host = {};
-        _.each(buckets, (v, k) => {
-            types_by_host[v.hostname] = types_by_host[v.hostname] || {};
-            if(v.type == "afkstatus") {
-                types_by_host[v.hostname].afk = true;
-            } else if(v.type == "currentwindow") {
-                types_by_host[v.hostname].window = true;
-            }
-        })
+    let buckets = await this.$aw.getBuckets();
+    let types_by_host = {};
+    _.each(buckets, (v) => {
+        types_by_host[v.hostname] = types_by_host[v.hostname] || {};
+        if(v.type == "afkstatus") {
+            types_by_host[v.hostname].afk = true;
+        } else if(v.type == "currentwindow") {
+            types_by_host[v.hostname].window = true;
+        }
+    })
 
-        _.each(types_by_host, (types, hostname) => {
-            if(types.afk === true && types.window === true) {
-                this.activity_hosts.push(hostname);
-            }
-        })
+    _.each(types_by_host, (types, hostname) => {
+        if(types.afk === true && types.window === true) {
+            this.activity_hosts.push(hostname);
+        }
     })
   }
 }

@@ -4,7 +4,7 @@ const d3 = require("d3");
 const Color = require("color");
 const _ = require("lodash");
 
-import color from "../util/color.js";
+import {getColorFromString} from "../util/color.js";
 
 var time = require("../util/time.js");
 
@@ -67,7 +67,7 @@ function update(container, apps) {
     var width = (app.duration/longest_duration) * 100 + "%";
     let barHeight = 50;
     let textSize = 15;
-    var baseappcolor = color.getAppColor(app.colorKey || app.name);
+    var baseappcolor = getColorFromString(app.colorKey || app.name);
     var appcolor = Color(baseappcolor).lighten(0.1).hex();
     var hovercolor = Color(baseappcolor).darken(0.1).hex();
 

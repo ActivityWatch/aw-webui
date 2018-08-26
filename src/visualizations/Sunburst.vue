@@ -107,7 +107,7 @@ div.sunburst
 
 import sunburst from './sunburst.js';
 import moment from 'moment';
-import coloring_types from './coloring.js';
+import _ from 'lodash';
 
 import awclient from '../awclient.js';
 
@@ -131,7 +131,7 @@ let aw_sunburst = {
   },
 
   watch: {
-    "date": function(to, from) {
+    "date": function(to) {
       this.starttime = moment(to);
       this.endtime = moment(this.starttime).add(1, 'days');
       this.visualize();
@@ -143,7 +143,7 @@ let aw_sunburst = {
       return awclient.getEvents(bucket_id, {
         limit: -1,
         start: this.starttime.format(), end: this.endtime.format()
-      }).then(res => res.data);
+      });
     },
 
     visualize: function() {
@@ -163,7 +163,6 @@ let aw_sunburst = {
                   var e_start = moment(e.timestamp);
                   var e_end = e_start.clone().add(e.duration, "seconds");
 
-                  let too_far = e_start.isAfter(p_end);
                   let before_parent = e_end.isBefore(p_start);
                   let within_parent = e_start.isAfter(p_start) && e_end.isBefore(p_end);
                   let after_parent = e_start.isAfter(p_end);
@@ -202,48 +201,6 @@ let aw_sunburst = {
             "data": {"title": "ROOT"},
             "children": parents
           }
-      }
-
-      function chunkHierarchy(events, key) {
-          // TODO: Merge window events with same app and assign the title events as children
-          let new_events = [events[0]];
-          let p_i = 0;
-          _.each(events, (e, i) => {
-              if(e.data[key] === new_events[p_i].data[key]) {
-                  //console.log("merge");
-                  let e_moment = moment(e.timestamp);
-                  let ne_moment = moment(new_events[p_i].timestamp);
-                  new_events[p_i].duration = -e_moment.diff(ne_moment, "seconds", true) + e.duration;
-                  //console.log(new_events[p_i].duration);
-              } else {
-                  //console.log("skip");
-                  //console.log(new_events[p_i].duration);
-                  p_i++;
-                  new_events[p_i] = e;
-              }
-          });
-          _.each(new_events, (e, i) => {
-              // Get rid of other keys
-              e.data = _.pickBy(e.data, (v, k) => k === key);
-          })
-          return new_events;
-      }
-
-      function chunkHierarchy2(events, key) {
-        events = _.sortBy(events, (e) => e.timestamp);
-        events = _.reverse(events);
-        events = _.reduce(events,
-          function(acc, e) {
-            let last = _.last(acc);
-            if(last.data[key] === e.data[key]) {
-              last.duration = moment(e.timestamp).diff(last.timestamp, "seconds", true) + e.duration;
-            } else {
-              acc.push(e);
-            }
-            return acc;
-          },
-          [events[0]]);
-        return events;
       }
 
       this.todaysEvents(this.afkBucketId).then((events_afk) => {

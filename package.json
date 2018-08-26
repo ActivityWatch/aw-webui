@@ -4,6 +4,7 @@
   "description": "A webui for ActivityWatch built in Vue.js",
   "author": "ActivityWatch Developers",
   "private": true,
+  "license": "MPL-2.0",
   "scripts": {
     "dev": "node build/dev-server.js",
     "build": "node build/build.js",
@@ -20,9 +21,12 @@
     "connect-history-api-fallback": "^1.5.0",
     "crypto-js": "^3.1.6",
     "css-loader": "^0.23.0",
+    "eslint": "^5.4.0",
+    "eslint-plugin-jest": "^21.21.0",
+    "eslint-plugin-vue": "^4.7.1",
     "eventsource-polyfill": "^0.9.6",
     "express": "^4.16.3",
-    "file-loader": "^0.8.4",
+    "file-loader": "^1.1.11",
     "function-bind": "^1.0.2",
     "html-webpack-plugin": "^3.2.0",
     "http-proxy-middleware": "^0.18.0",
@@ -37,7 +41,7 @@
     "pug-plain-loader": "^1.0.0",
     "sass-loader": "^7.0.1",
     "shelljs": "^0.6.0",
-    "url-loader": "^1.0.1",
+    "url-loader": "^1.1.0",
     "vue": "^2.5.16",
     "vue-hot-reload-api": "^2.3.0",
     "vue-html-loader": "^1.2.4",
@@ -57,6 +61,7 @@
     "bootstrap-vue": "^2.0.0-rc.11",
     "color": "^3.0.0",
     "d3": "^4.13.0",
+    "dompurify": "^1.0.7",
     "exports-loader": "^0.7.0",
     "imports-loader": "^0.8.0",
     "jquery": "^3.3.1",
@@ -64,6 +69,9 @@
     "less": "^3.0.4",
     "less-loader": "^4.1.0",
     "style-loader": "^0.21.0",
-    "vue-awesome": "^3.0.0"
+    "typeface-varela-round": "0.0.54",
+    "vis": "git://github.com/almende/vis.git#develop",
+    "vue-awesome": "^3.0.0",
+    "vue-google-charts": "^0.3.1"
   }
 }

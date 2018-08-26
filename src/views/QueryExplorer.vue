@@ -55,27 +55,17 @@ div
 import moment from 'moment';
 import awclient from '../awclient.js';
 
-import Timeline from '../visualizations/TimelineSimple.vue';
-import EventList from '../visualizations/EventList.vue';
-import Summary from '../visualizations/Summary.vue';
-
 let today = moment().startOf("day");
 let tomorrow = moment(today).add(24, "hours");
 
 export default {
   name: "QueryExplorer",
-  components: {
-    "aw-timeline": Timeline,
-    "aw-eventlist": EventList,
-    "aw-summary": Summary,
-  },
-  data: () => {
+  data() {
     return {
-      "query_code": "\
-afk_events = query_bucket(find_bucket('aw-watcher-afk_'));\n\
-window_events = query_bucket(find_bucket('aw-watcher-window_'));\n\
-window_events = filter_period_intersect(window_events, filter_keyvals(afk_events, 'status', ['not-afk']));\n\
-RETURN = merge_events_by_keys(window_events, ['app', 'title']);",
+      query_code: `afk_events = query_bucket(find_bucket('aw-watcher-afk_'));
+window_events = query_bucket(find_bucket('aw-watcher-window_'));
+window_events = filter_period_intersect(window_events, filter_keyvals(afk_events, 'status', ['not-afk']));
+RETURN = merge_events_by_keys(window_events, ['app', 'title']);`,
       "vis_method": "eventlist",
       "event_type": "currentwindow",
       "events": [],
@@ -104,17 +94,16 @@ RETURN = merge_events_by_keys(window_events, ['app', 'title']);",
     this.namefunc = this.summaryKeyFunc;
   },
   methods: {
-    query: function() {
+    query: async function() {
       let query = this.query_code.split(";").map((s) => s.trim() + ";");
       let timeperiods = [moment(this.startdate).format() + "/" + moment(this.enddate).format()];
-      awclient.query(timeperiods, query).then((response) => {
-        console.log(response.data);
-        this.events = response.data[0];
+      try {
+        let data = await awclient.query(timeperiods, query);
+        this.events = data[0];
         this.error = "";
-       }, (err) => this.error_handler(err.response.data.message));
-    },
-    error_handler: function(error) {
-      this.error = error;
+      } catch(e) {
+        this.error = e.response.data.message;
+      }
     },
     summaryKeyFunc: function(e) {
       return e.data[this.summaryKey];
