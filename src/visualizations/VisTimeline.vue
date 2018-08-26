@@ -13,6 +13,7 @@ div#visualization {
 .vis-timeline {
   font-family: arial;
   font-size: 9pt;
+  border-width: 1px 1px 2px 1px;
 
   .vis-item {
     border: 0;
@@ -27,6 +28,36 @@ div#visualization {
       text-overflow: ellipsis;
       overflow-x: hidden;
       display: block;
+    }
+  }
+
+  .vis-content {
+    .vis-label:nth-child(even) {
+      background-color:  rgba(230, 230, 230, 0.5);
+
+    }
+
+    .vis-foreground .vis-group:nth-child(even) {
+      background-color: rgba(230, 230, 230, 0.5);
+    }
+
+    .vis-foreground .vis-group {
+      height: 38px !important;
+      border-bottom-width: 2px;
+
+      .vis-item {
+        top: 8px !important;
+
+        .vis-item-content {
+          padding: 2px 2px 2px 8px;
+        }
+      }
+    }
+  }
+
+  .vis-background {
+    .vis-time-axis .vis-grid.vis-vertical {
+      border-width: 2px !important;
     }
   }
 
