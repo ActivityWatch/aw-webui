@@ -409,7 +409,7 @@ export default {
         var periods = [this.dateStart + "/" + this.dateEnd];
         var q = query.editorActivityQuery(this.editorBucketId, this.top_editor_count);
         try {
-          let data = await awclient.query(periods, q)[0];
+          let data = (await awclient.query(periods, q))[0];
           this.editor_duration = data["duration"];
           this.top_editor_files = data["files"];
           this.top_editor_languages = data["languages"];
