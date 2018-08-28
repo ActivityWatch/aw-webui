@@ -1,5 +1,6 @@
 import {seconds_to_duration} from './time.js';
 import DOMPurify from 'dompurify';
+import _ from 'lodash';
 
 let sanitize = DOMPurify.sanitize;
 
@@ -16,6 +17,12 @@ export function buildTooltip(bucket, e) {
     inner = `
       <tr><th>Title:</th><td>${sanitize(e.data.title)}</td></tr>
       <tr><th>URL:</th><td><a href=${sanitize(e.data.url)}>${sanitize(e.data.url)}</a></td></tr>
+      `;
+  } else if(bucket.type.startsWith("app.editor")) {
+    inner = `
+      <tr><th>Filename:</th><td>${sanitize(_.last(e.data.file.split("/")))}</td></tr>
+      <tr><th>Path:</th><td>${sanitize(e.data.file)}</td></tr>
+      <tr><th>Language:</th><td>${sanitize(e.data.language)}</td></tr>
       `;
   } else {
     inner = `

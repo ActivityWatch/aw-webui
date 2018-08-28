@@ -1,7 +1,9 @@
 'use strict';
 
+import _ from 'lodash';
 const Color = require('color');
 const d3 = require("d3");
+
 
 // See here for examples:
 //   https://bl.ocks.org/pstuffa/3393ff2711a53975040077b7453781a9
@@ -69,6 +71,8 @@ export function getTitleAttr(bucket, e) {
     }
   } else if(bucket.type == "afkstatus") {
     return e.data.status;
+  } else if(bucket.type.startsWith("app.editor")) {
+    return _.last(e.data.file.split("/"));
   } else {
     return e.data.title;
   }
