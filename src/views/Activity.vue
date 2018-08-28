@@ -336,9 +336,9 @@ export default {
       this.duration = "";
     },
 
-    errorHandler: function(response) {
-      console.error(response);
-      this.errormsg = "Request error " + response.status + ". See F12 console for more info.";
+    errorHandler: function(error) {
+      this.errormsg = "" + error + ". See dev console (F12) and/or server logs for more info.";
+      throw error;
     },
 
     queryAll: function() {
@@ -353,7 +353,7 @@ export default {
     },
 
     getBrowserBucket: async function() {
-      let buckets = await this.$aw.getBuckets();
+      let buckets = await this.$aw.getBuckets().catch(this.errorHandler);
       for (var bucket in buckets){
         if (buckets[bucket]["type"] === "web.tab.current"){
           this.browserBuckets.push(bucket);
@@ -365,7 +365,7 @@ export default {
     },
 
     getEditorBucket: async function() {
-      let buckets = await this.$aw.getBuckets();
+      let buckets = await this.$aw.getBuckets().catch(this.errorHandler);
       for (var bucket in buckets){
         if (buckets[bucket]["type"] === "app.editor.activity"){
           this.editorBuckets.push(bucket);
@@ -379,7 +379,7 @@ export default {
     queryWindows: async function() {
       var periods = [this.dateStart + "/" + this.dateEnd];
       var q = query.windowQuery(this.windowBucketId, this.afkBucketId, this.top_apps_count, this.top_windowtitles_count, this.filterAFK);
-      let data = await this.$aw.query(periods, q);
+      let data = await this.$aw.query(periods, q).catch(this.errorHandler);
       data = data[0];
       this.top_apps = data["app_events"];
       this.top_windowtitles = data["title_events"];
@@ -391,7 +391,7 @@ export default {
       if (this.browserBucketId !== "") {
         var periods = [this.dateStart + "/" + this.dateEnd];
         var q = query.browserSummaryQuery(this.browserBucketId, this.windowBucketId, this.afkBucketId, this.top_web_count, this.filterAFK);
-        let data = (await this.$aw.query(periods, q))[0];
+        let data = (await this.$aw.query(periods, q).catch(this.errorHandler))[0];
         this.web_duration = data["duration"];
         this.top_web_domains = data["domains"];
         this.top_web_urls = data["urls"];
@@ -403,7 +403,7 @@ export default {
       if (this.editorBucketId !== ""){
         var periods = [this.dateStart + "/" + this.dateEnd];
         var q = query.editorActivityQuery(this.editorBucketId, this.top_editor_count);
-        let data = (await this.$aw.query(periods, q))[0];
+        let data = (await this.$aw.query(periods, q).catch(this.errorHandler))[0];
         this.editor_duration = data["duration"];
         this.top_editor_files = data["files"];
         this.top_editor_languages = data["languages"];
@@ -418,11 +418,11 @@ export default {
         var enddate = moment(this.date).add(i+1, 'days').format();
         timeperiods.push(startdate + '/' + enddate);
       }
-      this.daily_activity = await this.$aw.query(timeperiods, query.dailyActivityQuery(this.afkBucketId));
+      this.daily_activity = await this.$aw.query(timeperiods, query.dailyActivityQuery(this.afkBucketId)).catch(this.errorHandler);
     },
 
     testError() {
-      throw 'error: some message';
+      //throw 'error: some message';
     }
   },
 }
