@@ -17,7 +17,7 @@ div#wrapper
   div.container.aw-container
     // TODO: Refactor into Mainmenu component
     b-nav.row.aw-navbar
-      b-nav-item(to="/")
+      b-nav-item(to="/" exact)
         icon(name="home")
         | Home
       b-nav-item(v-if="activity_hosts.length === 1", v-for="host in activity_hosts", :key="host", :to="'/activity/' + host")
@@ -83,7 +83,6 @@ import 'vue-awesome/icons/search';
 
 import _ from 'lodash';
 
-// TODO: Highlight active item in menubar
 
 export default {
   data: function() {
@@ -165,6 +164,10 @@ body {
             margin-right: 7px;
         }
     }
+
+  .active {
+    background-color: #EEE;
+  }
 }
 
 .nav-item:hover {

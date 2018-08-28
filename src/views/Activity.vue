@@ -20,11 +20,11 @@ div
           |  Next day
           icon(name="arrow-right")
     div.p-1
-      input.form-control(id="date" type="date" :value="dateShort" :max="today" v-on:change="setDate($event.target.value)")
+      input.form-control(id="date" type="date" :value="dateShort" :max="today" @change="setDate($event.target.value)")
 
     div.p-1.ml-auto
       b-button-group
-        b-button(v-on:click="refresh()", variant="outline-dark")
+        b-button(@click="refresh()", variant="outline-dark")
           icon(name="sync")
           |  Refresh
 
@@ -32,16 +32,16 @@ div
 
   ul.nav.nav-tabs
     li.nav-item.aw-nav-item
-      a.nav-link.aw-nav-link(v-on:click="view = 'summary'" v-bind:class="{ active: view=='summary' }")
+      a.nav-link.aw-nav-link(@click="view = 'summary'" :class="{ active: view=='summary' }")
         h5 Summary
     li.nav-item.aw-nav-item
-      a.nav-link.aw-nav-link(v-on:click="view = 'window'" v-bind:class="{ active: view=='window' }")
+      a.nav-link.aw-nav-link(@click="view = 'window'" :class="{ active: view=='window' }")
         h5 Window
     li.nav-item.aw-nav-item
-      a.nav-link.aw-nav-link(v-on:click="view = 'browser'" v-bind:class="{ active: view=='browser' }")
+      a.nav-link.aw-nav-link(@click="view = 'browser'" :class="{ active: view=='browser' }")
         h5.active-h5 Browser
     li.nav-item.aw-nav-item
-      a.nav-link.aw-nav-link(v-on:click="view = 'editor'" v-bind:class="{ active: view=='editor' }")
+      a.nav-link.aw-nav-link(@click="view = 'editor'" :class="{ active: view=='editor' }")
         h5 Editor
   br
 
@@ -49,14 +49,14 @@ div
     div.col-md-4
       h5 Top Applications
       aw-summary(:fields="top_apps", :namefunc="top_apps_namefunc", :colorfunc="top_apps_colorfunc")
-      b-button(size="sm", variant="outline-secondary", :disabled="top_apps.length < top_apps_count", v-on:click="top_apps_count += 5; queryWindows()")
+      b-button(size="sm", variant="outline-secondary", :disabled="top_apps.length < top_apps_count", @click="top_apps_count += 5; queryWindows()")
         icon(name="angle-double-down")
         | Show more
 
     div.col-md-4
       h5 Top Window Titles
       aw-summary(:fields="top_windowtitles", :namefunc="top_windowtitles_namefunc", :colorfunc="top_windowtitles_colorfunc")
-      b-button(size="sm", variant="outline-secondary", :disabled="top_windowtitles.length < top_windowtitles_count", v-on:click="top_windowtitles_count += 5; queryWindows()")
+      b-button(size="sm", variant="outline-secondary", :disabled="top_windowtitles.length < top_windowtitles_count", @click="top_windowtitles_count += 5; queryWindows()")
         icon(name="angle-double-down")
         | Show more
 
@@ -65,11 +65,9 @@ div
 
       div(v-if="browserBucketId")
         aw-summary(:fields="top_web_domains", :namefunc="top_web_domains_namefunc", :colorfunc="top_web_domains_colorfunc")
-
-        b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length < top_web_count" v-on:click="top_web_count += 5; queryBrowserDomains()")
+        b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length < top_web_count" @click="top_web_count += 5; queryBrowserDomains()")
           icon(name="angle-double-down")
           | Show more
-        br
         br
 
   div(v-show="view == 'window'")
@@ -95,7 +93,7 @@ div
           | No browser buckets available
           br
           small Make sure you have an browser extension installed
-        b-dropdown-item-button(v-for="browserBucket in browserBuckets", :key="browserBucket", v-on:click="browserBucketId = browserBucket")
+        b-dropdown-item-button(v-for="browserBucket in browserBuckets", :key="browserBucket", @click="browserBucketId = browserBucket")
           | {{ browserBucket }}
     br
 
@@ -114,7 +112,7 @@ div
         div(v-if="browserBucketId")
           aw-summary(:fields="top_web_urls", :namefunc="top_web_urls_namefunc", :colorfunc="top_web_urls_colorfunc")
 
-    b-button(size="sm", variant="outline-secondary", :disabled="top_web_urls.length < top_web_count && top_web_domains.length < top_web_count" v-on:click="top_web_count += 5; queryBrowserDomains()")
+    b-button(size="sm", variant="outline-secondary", :disabled="top_web_urls.length < top_web_count && top_web_domains.length < top_web_count" @click="top_web_count += 5; queryBrowserDomains()")
       icon(name="angle-double-down")
       | Show more
 
@@ -140,7 +138,7 @@ div
           | No editor buckets available
           br
           small Make sure you have an editor watcher installed to use this feature
-        b-dropdown-item-button(v-for="editorBucket in editorBuckets", :key="editorBucket", v-on:click="editorBucketId = editorBucket")
+        b-dropdown-item-button(v-for="editorBucket in editorBuckets", :key="editorBucket", @click="editorBucketId = editorBucket")
           | {{ editorBucket }}
 
     br
@@ -161,7 +159,7 @@ div
           h5 Top project activity
           aw-summary(:fields="top_editor_projects", :namefunc="top_editor_projects_namefunc", :colorfunc="top_editor_projects_colorfunc")
 
-      b-button(size="sm", variant="outline-secondary", v-on:click="top_editor_count += 5; queryEditorActivity()")
+      b-button(size="sm", variant="outline-secondary", @click="top_editor_count += 5; queryEditorActivity()")
         icon(name="angle-double-down")
         | Show more
 
@@ -189,6 +187,7 @@ div
   border-top-left-radius: 0.5rem !important;
   border-top-right-radius: 0.5rem !important;
 }
+
 .aw-nav-link:hover {
   background-color: #fff;
 }
@@ -404,7 +403,7 @@ export default {
       if (this.editorBucketId !== ""){
         var periods = [this.dateStart + "/" + this.dateEnd];
         var q = query.editorActivityQuery(this.editorBucketId, this.top_editor_count);
-        let data = await this.$aw.query(periods, q)[0];
+        let data = (await this.$aw.query(periods, q))[0];
         this.editor_duration = data["duration"];
         this.top_editor_files = data["files"];
         this.top_editor_languages = data["languages"];
