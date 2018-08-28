@@ -6,7 +6,7 @@ let baseURL = "";
 // Works since CORS is enabled by default when running `aw-server --testing`.
 if(!PRODUCTION) {
     let protocol = "http";
-    let hostname = "localhost";
+    let hostname = "127.0.0.1";
     let port = "5666";
     baseURL = protocol + "://" + hostname + ":" + port;
 }
