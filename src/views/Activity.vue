@@ -209,8 +209,6 @@ import 'vue-awesome/icons/sync'
 
 import query from '../queries.js';
 
-import awclient from '../awclient.js';
-
 
 export default {
   name: "Activity",
@@ -291,7 +289,6 @@ export default {
       top_editor_projects_colorfunc: (e) => e.data.project,
     }
   },
-
   watch: {
     '$route': function() {
       console.log("Route changed");
@@ -326,6 +323,7 @@ export default {
     this.getEditorBucket();
 
     this.refresh();
+    this.testError();
   },
 
   methods: {
@@ -338,9 +336,9 @@ export default {
       this.duration = "";
     },
 
-    errorHandler: function(response) {
-      console.error(response);
-      this.errormsg = "Request error " + response.status + ". See F12 console for more info.";
+    errorHandler: function(error) {
+      this.errormsg = "" + error + ". See dev console (F12) and/or server logs for more info.";
+      throw error;
     },
 
     queryAll: function() {
@@ -355,7 +353,7 @@ export default {
     },
 
     getBrowserBucket: async function() {
-      let buckets = await awclient.getBuckets();
+      let buckets = await this.$aw.getBuckets().catch(this.errorHandler);
       for (var bucket in buckets){
         if (buckets[bucket]["type"] === "web.tab.current"){
           this.browserBuckets.push(bucket);
@@ -367,7 +365,7 @@ export default {
     },
 
     getEditorBucket: async function() {
-      let buckets = await awclient.getBuckets();
+      let buckets = await this.$aw.getBuckets().catch(this.errorHandler);
       for (var bucket in buckets){
         if (buckets[bucket]["type"] === "app.editor.activity"){
           this.editorBuckets.push(bucket);
@@ -381,22 +379,19 @@ export default {
     queryWindows: async function() {
       var periods = [this.dateStart + "/" + this.dateEnd];
       var q = query.windowQuery(this.windowBucketId, this.afkBucketId, this.top_apps_count, this.top_windowtitles_count, this.filterAFK);
-      awclient.query(periods, q).then(
-        (data) => { // Success
-          data = data[0];
-          this.top_apps = data["app_events"];
-          this.top_windowtitles = data["title_events"];
-          this.app_chunks = data["app_chunks"];
-          this.duration = data["duration"];
-        }, this.errorHandler
-      );
+      let data = await this.$aw.query(periods, q).catch(this.errorHandler);
+      data = data[0];
+      this.top_apps = data["app_events"];
+      this.top_windowtitles = data["title_events"];
+      this.app_chunks = data["app_chunks"];
+      this.duration = data["duration"];
     },
 
     queryBrowserDomains: async function() {
       if (this.browserBucketId !== "") {
         var periods = [this.dateStart + "/" + this.dateEnd];
         var q = query.browserSummaryQuery(this.browserBucketId, this.windowBucketId, this.afkBucketId, this.top_web_count, this.filterAFK);
-        let data = (await awclient.query(periods, q))[0];
+        let data = (await this.$aw.query(periods, q).catch(this.errorHandler))[0];
         this.web_duration = data["duration"];
         this.top_web_domains = data["domains"];
         this.top_web_urls = data["urls"];
@@ -408,15 +403,11 @@ export default {
       if (this.editorBucketId !== ""){
         var periods = [this.dateStart + "/" + this.dateEnd];
         var q = query.editorActivityQuery(this.editorBucketId, this.top_editor_count);
-        try {
-          let data = (await awclient.query(periods, q))[0];
-          this.editor_duration = data["duration"];
-          this.top_editor_files = data["files"];
-          this.top_editor_languages = data["languages"];
-          this.top_editor_projects = data["projects"];
-        } catch (e) {
-          this.errorHandler(e);
-        }
+        let data = (await this.$aw.query(periods, q).catch(this.errorHandler))[0];
+        this.editor_duration = data["duration"];
+        this.top_editor_files = data["files"];
+        this.top_editor_languages = data["languages"];
+        this.top_editor_projects = data["projects"];
       }
     },
 
@@ -427,12 +418,12 @@ export default {
         var enddate = moment(this.date).add(i+1, 'days').format();
         timeperiods.push(startdate + '/' + enddate);
       }
-      try {
-        this.daily_activity = await awclient.query(timeperiods, query.dailyActivityQuery(this.afkBucketId));
-      } catch (e) {
-        this.errorHandler(e);
-      }
+      this.daily_activity = await this.$aw.query(timeperiods, query.dailyActivityQuery(this.afkBucketId)).catch(this.errorHandler);
     },
+
+    testError() {
+      //throw 'error: some message';
+    }
   },
 }
 </script>
