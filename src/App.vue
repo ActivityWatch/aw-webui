@@ -33,6 +33,9 @@ div#wrapper
           small Make sure you have both an afk and window watcher running
         b-dropdown-item(v-for="host in activity_hosts", :key="host", :to="'/activity/' + host")
           | {{ host }}
+      b-nav-item(to="/timeline")
+        icon(name="calendar")
+        | Timeline
       b-nav-item(to="/buckets")
         icon(name="database")
         | Raw Data
@@ -77,6 +80,7 @@ import 'vue-awesome/icons/database';
 import 'vue-awesome/icons/check-circle';
 import 'vue-awesome/icons/times-circle';
 import 'vue-awesome/icons/clock';
+import 'vue-awesome/icons/calendar';
 import 'vue-awesome/icons/brands/twitter';
 import 'vue-awesome/icons/brands/github';
 import 'vue-awesome/icons/search';
