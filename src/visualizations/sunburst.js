@@ -25,19 +25,11 @@ var width = 750;
 var height = 600;
 var radius = Math.min(width, height) / 2;
 
-// Breadcrumb dimensions: width, height, spacing, width of tip/tail.
-var b = {
-  w: 75, h: 30, s: 3, t: 10
-};
-
 var legendData = {
     "afk": color.getColorFromString("afk"),
     "not-afk": color.getColorFromString("not-afk"),
     "hibernating": color.getColorFromString("hibernating"),
 }
-
-// Total size of all segments; we set this later, after loading the data.
-var totalSize = 0;
 
 var rootEl;  // The root DOM node of the graph as a d3 object
 var vis;     // The root SVG node of the graph as a d3 object
@@ -163,7 +155,7 @@ function update(el, json) {
     return (d.x1 - d.x0 > threshold);
   });
 
-  var path = vis.data([json]).selectAll("path")
+  vis.data([json]).selectAll("path")
       .data(nodes)
       .enter().append("svg:path")
       .attr("display", function(d) { return d.depth ? null : "none"; })
@@ -178,9 +170,6 @@ function update(el, json) {
 
   // Add the mouseleave handler to the bounding circle.
   d3.select("#container").on("mouseleave", mouseleave);
-
-  // Get total size of the tree = value of root node from partition.
-  totalSize = path.datum().value;
 }
 
 function mouseclick(d) {
@@ -233,7 +222,7 @@ function mouseover(d) {
 }
 
 // Restore everything to full opacity when moving off the visualization.
-function mouseleave(d) {
+function mouseleave() {
   // Deactivate all segments during transition.
   rootEl.selectAll("path").on("mouseover", null);
 

@@ -4,7 +4,7 @@ const d3 = require("d3");
 const Color = require("color");
 const _ = require("lodash");
 
-import color from "../util/color.js";
+import {getColorFromString} from "../util/color.js";
 
 var time = require("../util/time.js");
 
@@ -50,6 +50,7 @@ function update(container, apps) {
   }
 
   let svg_elem = container.querySelector(".appsummary");
+  svg_elem.innerHTML = "";
   let svg = d3.select(svg_elem);
 
   // Remove apps without a duration from list
@@ -63,10 +64,10 @@ function update(container, apps) {
     // TODO: Expand on click and list titles
 
     // Variables
-    var width = (app.duration/longest_duration)*80+"%";
+    var width = (app.duration/longest_duration) * 100 + "%";
     let barHeight = 50;
     let textSize = 15;
-    var baseappcolor = color.getAppColor(app.colorKey || app.name);
+    var baseappcolor = getColorFromString(app.colorKey || app.name);
     var appcolor = Color(baseappcolor).lighten(0.1).hex();
     var hovercolor = Color(baseappcolor).darken(0.1).hex();
 
@@ -75,6 +76,8 @@ function update(container, apps) {
     eg.attr("id", "summary_app_"+i)
       .on("mouseover", function() { eg.select("rect").style("fill", hovercolor); })
       .on("mouseout", function() { eg.select("rect").style("fill", appcolor); });
+
+    eg.append("title").text(app.name + "\n" + time.seconds_to_duration(app.duration));
 
     // Color box background
     eg.append("rect")

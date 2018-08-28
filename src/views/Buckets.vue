@@ -6,11 +6,11 @@ div
     | Are you sure you want to delete bucket {{bucket_to_delete}}? (This is permanent and cannot be undone)
     b-button-toolbar
       b-button-group(size="sm", class="mx-1")
-        b-button(v-on:click="deleteBucket(bucket_to_delete); bucket_to_delete = ''"
+        b-button(@click="deleteBucket(bucket_to_delete); bucket_to_delete = ''"
                  title="Export all events from this bucket to JSON",
                  variant="danger")
           | Confirm
-        b-button(v-on:click="bucket_to_delete = ''"
+        b-button(@click="bucket_to_delete = ''"
                  title="Export all events from this bucket to JSON",
                  variant="success")
           | Abort
@@ -20,11 +20,14 @@ div
     br
     small #[b Note:] This is currently not as easy as we want it to be, so some familiarity with programming is currently needed to run most of them.
 
+  vis-timeline(:buckets="buckets", showRowLabels=true)
+
   //b-card-group(columns=true)
   b-card.bucket-card(v-for="bucket in buckets", :key="bucket.id", :header="bucket.id")
     b-button-toolbar.float-left
       b-button-group(size="sm", class="mx-1")
         b-button(variant="primary", :to="'/buckets/' + bucket.id")
+          icon(name="folder-open")
           | Open bucket
       b-button-group(size="sm", class="mx-1")
         // TODO: This currently does not export bucket metadata, which makes importing difficult
@@ -34,10 +37,11 @@ div
                  :download="'aw-event-export-' + bucket.id + '.json'",
                  title="Export all events from this bucket to JSON",
                  variant="outline-secondary")
+          icon(name="download")
           | Export as JSON
     b-button-toolbar.float-right
       b-button-group(size="sm", class="mx-1")
-        b-button(v-on:click="bucket_to_delete = bucket.id"
+        b-button(@click="bucket_to_delete = bucket.id"
                  title="Export all events from this bucket to JSON",
                  variant="outline-danger")
           | #[icon(name="trash")] Delete bucket
@@ -73,11 +77,11 @@ div
 </style>
 
 <script>
-import Resources from '../resources.js';
-
 import 'vue-awesome/icons/trash';
-
-let $Bucket = Resources.$Bucket;
+import 'vue-awesome/icons/download';
+import 'vue-awesome/icons/folder-open';
+import moment from 'moment';
+import _ from 'lodash';
 
 export default {
   name: "Buckets",
@@ -91,25 +95,23 @@ export default {
     }
   },
   methods: {
-    getBuckets: function() {
-      $Bucket.get().then((response) => {
-        let buckets = response.json();
-        buckets = _.orderBy(buckets, [(b) => b.last_updated], ["desc"]);
-        this.buckets = buckets;
-      });
+    getBuckets: async function() {
+      let now = moment().add(1, 'minutes');
+      this.buckets = _.orderBy(await this.$aw.getBuckets(), [(b) => b.id], ["asc"]);
+      this.buckets = await Promise.all(_.map(this.buckets, async (bucket) => {
+        bucket.events = await this.$aw.getEvents(bucket.id, {end: now.format(), start: moment(now).subtract(3, 'hours').format(), limit: -1});
+        return bucket;
+      }));
     },
 
-    getBucketInfo: function(bucket_id) {
-      $Bucket.get({"id": bucket_id}).then((response) => {
-        this.buckets[bucket_id] = response.json();
-      });
+    getBucketInfo: async function(bucket_id) {
+      this.buckets[bucket_id] = await this.$aw.getBucket(bucket_id);
     },
 
-    deleteBucket: function(bucket_id) {
+    deleteBucket: async function(bucket_id) {
       console.log("Deleting bucket " + bucket_id);
-      $Bucket.delete({"id": bucket_id}).then(() => {
-        this.getBuckets();
-      });
+      await this.$aw.deleteBucket(bucket_id);
+      await this.getBuckets();
     }
   }
 }

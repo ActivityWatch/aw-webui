@@ -9,32 +9,31 @@ const Color = require("color");
 const _ = require("lodash");
 const moment = require("moment");
 
-import event_parsing from "../util/event_parsing";
-import color from "../util/color.js"
+import {getColorFromString} from "../util/color.js"
 
 const time = require("../util/time.js");
 
-function show_info(elem_id) {
-  var title_event_box = document.getElementById(elem_id);
-  var titleinfo = document.getElementById("titleinfo-container");
+function show_info(container, elem_id) {
+  var title_event_box = container.querySelector("#"+elem_id);
+  var titleinfo = container.querySelector(".titleinfo-container");
   titleinfo.innerHTML = title_event_box.innerHTML;
   titleinfo.style.height = title_event_box.getAttribute("height");
-};
+}
 
 function create(container) {
   // Clear element
   container.innerHTML = "";
 
   // svg for the colored timeline
-  let timeline = d3.select(container).append("svg")
+  d3.select(container).append("svg")
+    .attr("class", "apptimeline")
     .attr("viewBox", "0 0 100 10")
-    .attr("width", "100%")
-    .attr("class", "apptimeline");
+    .attr("width", "100%");
 
   // Hidden svg image that stores all titleinfo for each timeperiod
-  let titleinfo_list = d3.select(container).append("div")
-    .attr("display", "none")
-    .attr("class", "titleinfo_list");
+  d3.select(container).append("div")
+    .attr("class", "titleinfo-list")
+    .attr("display", "none");
 
   // Container for titleinfo that has a fixed size and a overflow scroll
   let titleinfo_container = document.createElement("div");
@@ -44,15 +43,15 @@ function create(container) {
   container.appendChild(titleinfo_container);
 
   // Titleinfo box that changes content depending on what was timeperiod was last recently hovered on
-  let titleinfo = d3.select(titleinfo_container).append("div")
-    .attr("width", "100%")
-    .attr("id", "titleinfo-container");
+  d3.select(titleinfo_container).append("div")
+      .attr("width", "100%")
+      .attr("class", "titleinfo-container");
 }
 
 function set_status(container, text){
   let timeline_elem = container.querySelector(".apptimeline");
-  let titleinfo_list_elem = container.querySelector(".titleinfo_list");
-  let titleinfo_container_elem = container.querySelector("#titleinfo-container");
+  let titleinfo_list_elem = container.querySelector(".titleinfo-list");
+  let titleinfo_container_elem = container.querySelector(".titleinfo-container");
 
   let timeline = d3.select(timeline_elem);
   timeline_elem.innerHTML = "";
@@ -68,19 +67,10 @@ function set_status(container, text){
    .attr("fill", "black")
 }
 
-function update(container, events, total_duration, showAFK){
-  let timeline_elem = container.querySelector(".apptimeline");
-  let titleinfo_list_elem = container.querySelector(".titleinfo_list");
-  let titleinfo_container_elem = container.querySelector("#titleinfo-container");
-
-  let timeline = d3.select(timeline_elem);
-  timeline_elem.innerHTML = "";
-
-  let titleinfo_list = d3.select(titleinfo_list_elem);
-  titleinfo_list_elem.innerHTML = "";
-
-  let titleinfo_container = d3.select(titleinfo_container_elem);
-  titleinfo_container_elem.innerHTML = "";
+function update(container, events, total_duration, showAFK, chunkfunc, eventfunc){
+  let timeline = d3.select(container.querySelector(".apptimeline")).html(null);
+  let titleinfo_list = d3.select(container.querySelector(".titleinfo-list")).html(null);
+  d3.select(container.querySelector(".titleinfo-container")).html(null);
 
   if (events.length <= 0){
     set_status(container, "No data");
@@ -88,11 +78,11 @@ function update(container, events, total_duration, showAFK){
   }
 
   if(showAFK) {
-    let firstEvent = _.minBy(events, (o) => o.titles[0].timestamp);
-    let lastEvent = _.maxBy(events, (o) => o.titles[0].timestamp);
+    var firstEvent = events[0];
+    var lastEvent = events[events.length-1];
 
-    var timeStart = moment(firstEvent.titles[0].timestamp);
-    var timeEnd = moment(lastEvent.titles[0].timestamp).add(lastEvent.duration, "seconds");
+    var timeStart = moment(firstEvent.timestamp);
+    var timeEnd = moment(lastEvent.timestamp).add(lastEvent.duration, "seconds");
 
     var secSinceStart = timeEnd.diff(timeStart, "seconds", true);
 
@@ -105,17 +95,18 @@ function update(container, events, total_duration, showAFK){
   _.each(events, function(e, i) {
     // Timeline rect
 
+    let eventX, eventWidth;
     if(showAFK) {
-      let eventBegin = moment(_.minBy(e.titles, (t) => t.timestamp).timestamp);
-      var eventX = eventBegin.diff(timeStart, "seconds", true) / secSinceStart;
+      let eventBegin = moment(e.timestamp);
+      eventX = eventBegin.diff(timeStart, "seconds", true) / secSinceStart;
       eventX = eventX * 100 + "%";
-      var eventWidth = e.duration / secSinceStart * 100 + "%";
+      eventWidth = e.duration / secSinceStart * 100 + "%";
     } else {
-      var eventX = curr_x;
-      var eventWidth = e.duration / total_duration * 100;
+      eventX = curr_x;
+      eventWidth = e.duration / total_duration * 100;
     }
 
-    var appcolor = color.getAppColor(e.appname);
+    var appcolor = getColorFromString(chunkfunc(e));
     var hovercolor = Color(appcolor).darken(0.4).hex();
 
     let eg = timeline.append("g")
@@ -126,10 +117,10 @@ function update(container, events, total_duration, showAFK){
       .attr("y", 0)
       .attr("width", eventWidth)
       .attr("height", 10)
-      .style("fill", color.getAppColor(e.appname))
+      .style("fill", appcolor)
       .on("mouseover", () => {
           rect.style("fill", hovercolor);
-          show_info("titleinfo_event_" + i);
+          show_info(container, "titleinfo_event_" + i);
       })
       .on("mouseout", () => {
           rect.style("fill", appcolor);
@@ -144,14 +135,14 @@ function update(container, events, total_duration, showAFK){
     infobox.append("h5")
       .attr("x", "10px")
       .attr("y", "20px")
-      .text(e.appname + " (" + time.seconds_to_duration(e.duration) + ")")
+      .text(chunkfunc(e) + " (" + time.seconds_to_duration(e.duration) + ")")
       .attr("font-family", "sans-serif")
       .attr("font-size", "20px")
       .attr("fill", "black");
 
     // Titleinfo
     var infolist = infobox.append("table");
-    _.each(e.titles, function(t, i){
+    _.each(e.data.subevents, function(t) {
       var inforow = infolist.append("tr");
       // Clocktime
       var clocktime = moment(t.timestamp).format("HH:mm:ss");
@@ -161,10 +152,11 @@ function update(container, events, total_duration, showAFK){
       var duration = time.seconds_to_duration(t.duration);
       inforow.append("td")
         .text(duration)
-        .style("padding-left", "1em");
+        .style("padding-left", "1em")
+        .style("text-align", "right");
       // Title
       inforow.append("td")
-        .text(t.title)
+        .text(eventfunc(t))
         .style("padding-left", "1em");
     });
 

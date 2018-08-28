@@ -1,6 +1,9 @@
 'use strict';
 
+import _ from 'lodash';
+const Color = require('color');
 const d3 = require("d3");
+
 
 // See here for examples:
 //   https://bl.ocks.org/pstuffa/3393ff2711a53975040077b7453781a9
@@ -19,7 +22,23 @@ let customColors = {
     "chromium": "#8CF", // Google Blue: "#4885ed"
     "firefox": "#F94", // Firefox Orange: "#E55B0A"
     "spotify": "#5FA",  // Spotify Green: "#1ED760"
-    "alacritty": "#FC7"
+    "alacritty": "#FD8",
+
+    "vue": "#5d9", // Vue teal #4fc08d
+    "python": "#369", // Python blue #2b5b84
+    "javascript": "#f6b", // JavaScript pink #eb47a5
+
+    // Developer domains
+    "localhost": "#CCC",
+    "github.com": "#EBF",
+    "stackoverflow.com": Color("#F48024").lighten(0.3),
+
+    "google.com": "#0AF",
+    "google.se": "#0AF",
+
+    // Social media sites
+    "messenger.com": Color("#3b5998").lighten(0.5),
+    "facebook.com": Color("#3b5998").lighten(0.5),
 };
 
 function hashcode(str){
@@ -35,13 +54,26 @@ function hashcode(str){
     return hash;
 }
 
-function getColorFromString(appname) {
+export function getColorFromString(appname) {
     appname = appname || "";
     appname = appname.toLowerCase();
     return customColors[appname] || scale(Math.abs(hashcode(appname) % 20));
 }
 
-module.exports = {
-    getAppColor: getColorFromString,
-    getColorFromString: getColorFromString
-};
+export function getTitleAttr(bucket, e) {
+  if(bucket.type == "currentwindow") {
+    return e.data.app;
+  } else if(bucket.type == "web.tab.current") {
+    try {
+      return (new URL(e.data.url)).hostname.replace("www.", "");
+    } catch(err) {
+      return e.data.url;
+    }
+  } else if(bucket.type == "afkstatus") {
+    return e.data.status;
+  } else if(bucket.type.startsWith("app.editor")) {
+    return _.last(e.data.file.split("/"));
+  } else {
+    return e.data.title;
+  }
+}

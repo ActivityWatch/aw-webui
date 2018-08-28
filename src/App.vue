@@ -11,19 +11,21 @@ div#wrapper
           | Connected
           icon(name="check-circle")
         span.bad(v-show="!connected")
-          span.text
-            | Not connected
-            icon(name="times-circle")
+          | Not connected
+          icon(name="times-circle")
 
   div.container.aw-container
     // TODO: Refactor into Mainmenu component
     b-nav.row.aw-navbar
-      b-nav-item(to="/")
+      b-nav-item(to="/" exact)
         icon(name="home")
         | Home
-      b-nav-item-dropdown
+      b-nav-item(v-if="activity_hosts.length === 1", v-for="host in activity_hosts", :key="host", :to="'/activity/' + host")
+        icon(name="clock")
+        | Activity
+      b-nav-item-dropdown(v-if="activity_hosts.length !== 1")
         template(slot="button-content")
-          icon(name="clock-o")
+          icon(name="clock")
           | Activity
         b-dropdown-item(v-if="activity_hosts.length <= 0", disabled)
           | No activity reports available
@@ -34,12 +36,13 @@ div#wrapper
       b-nav-item(to="/buckets")
         icon(name="database")
         | Raw Data
-      //li
-        router-link(to="/log")
-          // TODO: Add icon
-          | Server Log
+      b-nav-item(to="/query")
+        // TODO: Use 'searchengin' icon instead, when landed in vue-awesome
+        icon(name="search")
+        | Query
 
   div.container.aw-container.rounded-bottom#content
+    error-boundary
       router-view
 
   div.container(style="height: 4rem; margin-top: 1rem; margin-bottom: 1rem; color: #555")
@@ -48,14 +51,22 @@ div#wrapper
         | Made with ❤ by the #[a(href="http://activitywatch.net/contributors/") ActivityWatch developers]
       div
         a.outlinks(href="https://github.com/ActivityWatch/activitywatch", target="_blank")
-          img(title="GitHub", src="https://img.shields.io/github/stars/ActivityWatch/activitywatch.svg?style=social&label=Star")
+          icon(name="brands/github")
+          | GitHub
+        div
         a.outlinks(href="https://twitter.com/ActivityWatchIt", target="_blank")
-          img(title="Twitter", src="https://img.shields.io/twitter/follow/ActivityWatchIt.svg?style=social&label=Follow")
+          icon(name="brands/twitter")
+          | Twitter
 
     div(style="float: right; text-align: right;")
       | Need help? #[a(href="https://forum.activitywatch.net") Ask on the forum]
       br
       | Found a bug? #[a(href="https://github.com/ActivityWatch/activitywatch/issues/new") File an issue]
+      br
+      span(v-show="connected", style="color: #888")
+        | Host: {{info.hostname}}
+        br
+        | Version: {{info.version}}
 </template>
 
 <script>
@@ -65,63 +76,51 @@ import 'vue-awesome/icons/home';
 import 'vue-awesome/icons/database';
 import 'vue-awesome/icons/check-circle';
 import 'vue-awesome/icons/times-circle';
-import 'vue-awesome/icons/clock-o';
-import 'vue-awesome/icons/twitter'
-import 'vue-awesome/icons/github'
+import 'vue-awesome/icons/clock';
+import 'vue-awesome/icons/brands/twitter';
+import 'vue-awesome/icons/brands/github';
+import 'vue-awesome/icons/search';
 
-import Usermenu from './components/Usermenu.vue';
+import _ from 'lodash';
 
-import Resources from './resources.js';
-
-
-let $Info = Resources.$Info;
-let $Bucket = Resources.$Bucket;
-
-// TODO: Highlight active item in menubar
 
 export default {
-  components: {
-    Usermenu,
-  },
-
   data: function() {
     return {
       activity_hosts: [],
       connected: false,
+      info: {}
     }
   },
 
-  mounted: function() {
-    $Info.get().then(
-      (response) => {
-        if (response.status > 304) {
-          console.error("Status code from return call was >304");
-        } else {
-          this.connected = true;
-        }
+  mounted: async function() {
+    this.$aw.getInfo().then(
+      (info) => {
+        this.connected = true;
+        this.info = info;
       },
-      (response) => {
+      (e) => {
+        console.error("Unable to connect:", e)
         this.connected = false;
+        this.info = {};
       }
     );
 
-    $Bucket.get().then((response) => {
-        let buckets = response.json();
-        let types_by_host = {};
-        _.each(buckets, (v, k) => {
-            types_by_host[v.hostname] = types_by_host[v.hostname] || {};
-            if(v.type == "afkstatus") {
-                types_by_host[v.hostname].afk = true;
-            } else if(v.type == "currentwindow") {
-                types_by_host[v.hostname].window = true;
-            }
-        })
+    let buckets = await this.$aw.getBuckets();
+    let types_by_host = {};
+    _.each(buckets, (v) => {
+        types_by_host[v.hostname] = types_by_host[v.hostname] || {};
+        if(v.type == "afkstatus") {
+            types_by_host[v.hostname].afk = true;
+        } else if(v.type == "currentwindow") {
+            types_by_host[v.hostname].window = true;
+        }
+    })
 
-        _.each(types_by_host, (types, hostname) => {
-            if(types.afk === true && types.window === true) {
-                this.activity_hosts.push(hostname);
-            }
-        })
+    _.each(types_by_host, (types, hostname) => {
+        if(types.afk === true && types.window === true) {
+            this.activity_hosts.push(hostname);
+        }
     })
   }
 }
@@ -165,6 +164,10 @@ body {
             margin-right: 7px;
         }
     }
+
+  .active {
+    background-color: #EEE;
+  }
 }
 
 .nav-item:hover {
@@ -220,6 +223,6 @@ body {
 }
 
 #content {
-  padding-top: 2em;
+  padding: 1em;
 }
 </style>

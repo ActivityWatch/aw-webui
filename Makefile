@@ -1,11 +1,12 @@
-.PHONY: install build dev test clean
+.PHONY: install build dev test clean aw-client-js
 
 .FORCE: ;
 
 build: install
+	(cd node_modules/vis; npm install; npm run build; true)
 	npm run build
 
-install:
+install: aw-client-js
 	npm install
 
 uninstall:
@@ -19,3 +20,9 @@ test:
 
 clean:
 	rm -rf node_modules dist
+
+lint:
+	npx eslint --ext=js,vue src/
+
+aw-client-js:
+	(cd aw-client-js; make build)
