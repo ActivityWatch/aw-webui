@@ -24,35 +24,68 @@ function windowQuery(windowbucket, afkbucket, appcount, titlecount, filterAFK) {
 
 function browserSummaryQuery(browserbucket, windowbucket, afkbucket, count, filterAFK) {
   var browser_appnames = "";
-  if (browserbucket.endsWith("-chrome")){
+  var initialList = [];
+  // if it's a list, then add all browsers names.
+  if(!!browserbucket && browserbucket.constructor === Array){
+    console.log("list of buckets test4");
+    console.log(browserbucket[0]);
+    console.log(browserbucket[1]);
+	var firstBucket = browserbucket[0];
+	var secondBucket = browserbucket[1];
+    browser_appnames = '["Google-chrome", "chrome.exe", "Chromium", "Google Chrome", "Firefox", "Firefox.exe", "firefox", "firefox.exe"]';
+    console.log(browser_appnames);
+    try{
+        initialList = ['eventsBrowser1 = flood(query_bucket("' + firstBucket + '"));',
+		'eventsBrowser2 = flood(query_bucket("' + secondBucket + '"));',
+		'events = sum_event_lists(eventsBrowser1, eventsBrowser2);',
+        'window_browser = flood(query_bucket("' + windowbucket + '"));',
+        'window_browser = filter_keyvals(window_browser, "app", ' + browser_appnames + ');',];
+        console.log("initial List worked");
+    }
+    catch(error){
+        console.log(error.message);
+        console.log("initial List didn't work");
+    }
+    console.log("moving to return");
+  } 
+  else{
+    console.log("one bucket");
+    if (browserbucket.endsWith("-chrome")){
     browser_appnames = '["Google-chrome", "chrome.exe", "Chromium", "Google Chrome"]';
-  } else if (browserbucket.endsWith("-firefox")){
-    browser_appnames = '["Firefox", "Firefox.exe", "firefox"]';
-  }
-
-  return [
-    'events = flood(query_bucket("' + browserbucket + '"));',
+    } else if (browserbucket.endsWith("-firefox")){
+    browser_appnames = '["Firefox", "Firefox.exe", "firefox", "firefox.exe"]';
+    }
+    initialList = ['events = flood(query_bucket("' + browserbucket + '"));',
     'window_browser = flood(query_bucket("' + windowbucket + '"));',
-    'window_browser = filter_keyvals(window_browser, "app", ' + browser_appnames + ');',
-  ].concat(filterAFK ? [
-    'not_afk = flood(query_bucket("' + afkbucket + '"));',
-    'not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);',
-    'window_browser = filter_period_intersect(window_browser, not_afk);',
-  ] : [])
-  .concat([
-    'events = filter_period_intersect(events, window_browser);',
-    'events = split_url_events(events);',
-    'urls = merge_events_by_keys(events, ["domain", "url"]);',
-    'urls = sort_by_duration(urls);',
-    'urls = limit_events(urls, ' + count + ');',
-    'domains = split_url_events(events);',
-    'domains = merge_events_by_keys(domains, ["domain"]);',
-    'domains = sort_by_duration(domains);',
-    'domains = limit_events(domains, ' + count + ');',
-    'chunks = chunk_events_by_key(events, "domain");',
-    'duration = sum_durations(events);',
-    'RETURN = {"domains": domains, "urls": urls, "chunks": chunks, "duration": duration};',
-  ]);
+    'window_browser = filter_keyvals(window_browser, "app", ' + browser_appnames + ');',];
+  }
+  try {
+      return initialList.concat(filterAFK ? [
+        'not_afk = flood(query_bucket("' + afkbucket + '"));',
+        'not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);',
+        'window_browser = filter_period_intersect(window_browser, not_afk);',
+      ] : [])
+      .concat([
+        'events = filter_period_intersect(events, window_browser);',
+        'events = split_url_events(events);',
+        'urls = merge_events_by_keys(events, ["domain", "url"]);',
+        'urls = sort_by_duration(urls);',
+        'urls = limit_events(urls, ' + count + ');',
+        'domains = split_url_events(events);',
+        'domains = merge_events_by_keys(domains, ["domain"]);',
+        'domains = sort_by_duration(domains);',
+        'domains = limit_events(domains, ' + count + ');',
+        'chunks = chunk_events_by_key(events, "domain");',
+        'duration = sum_durations(events);',
+        'RETURN = {"domains": domains, "urls": urls, "chunks": chunks, "duration": duration};',
+      ]);
+  }
+  catch(error){
+      console.log("error");
+      console.log(error.message);
+      
+  }
+  
 }
 
 function editorActivityQuery (editorbucket, limit){
