@@ -2,13 +2,7 @@
 div
   h2 Timeline
 
-  select(v-model="duration")
-    option(:value="1 * 60 * 60") 1 hour
-    option(:value="3 * 60 * 60") 3 hours
-    option(:value="6 * 60 * 60") 6 hours
-    option(:value="12 * 60 * 60") 12 hours
-    option(:value="24 * 60 * 60") 1 day
-    option(:value="2 * 24 * 60 * 60") 2 days
+  input-daterange(v-model="duration")
 
   hr
 

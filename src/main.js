@@ -47,6 +47,9 @@ Vue.component('aw-timeline', Timeline);
 import VisTimeline from './visualizations/VisTimeline.vue';
 Vue.component('vis-timeline', VisTimeline);
 
+import DateRangeInput from './components/DateRangeInput.vue';
+Vue.component('input-daterange', DateRangeInput);
+
 //import GCTimeline from './visualizations/GCTimeline.vue';
 //Vue.component('GCTimeline', GCTimeline);
 //
