@@ -53,7 +53,6 @@ div
 
 <script>
 import moment from 'moment';
-import awclient from '../awclient.js';
 
 let today = moment().startOf("day");
 let tomorrow = moment(today).add(24, "hours");
@@ -98,7 +97,7 @@ RETURN = merge_events_by_keys(window_events, ['app', 'title']);`,
       let query = this.query_code.split(";").map((s) => s.trim() + ";");
       let timeperiods = [moment(this.startdate).format() + "/" + moment(this.enddate).format()];
       try {
-        let data = await awclient.query(timeperiods, query);
+        let data = await this.$aw.query(timeperiods, query);
         this.events = data[0];
         this.error = "";
       } catch(e) {
