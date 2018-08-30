@@ -57,7 +57,7 @@ import {Timeline} from 'vis/dist/vis-timeline-graph2d.min.js';
 import 'vis/dist/vis-timeline-graph2d.min.css';
 
 export default {
-  props: ['buckets', 'showRowLabels'],
+  props: ['buckets', 'showRowLabels', 'queriedInterval', 'showQueriedInterval'],
   data () {
     return {
       timeline: null,
@@ -95,11 +95,31 @@ export default {
         }
       });
       if(groups.length > 0 && items.length > 0) {
-        this.options.min = _.min(_.map(items, (item) => item.start));
-        this.options.max = _.max(_.map(items, (item) => item.end));
+        if(this.queriedInterval && this.showQueriedInterval) {
+          let duration = this.queriedInterval[1].diff(this.queriedInterval[0], "seconds");
+          groups.push({id: groups.length, content: "queried interval"});
+          items.push({
+            id: items.length + 1,
+            group: groups.length - 1,
+            title: buildTooltip({"type": "test"}, {
+              timestamp: this.queriedInterval[0],
+              duration: duration,
+              data: {title: 'test'}
+            }),
+            content: 'query',
+            start: this.queriedInterval[0],
+            end: this.queriedInterval[1],
+            style: "background-color: #aaa; height: 10px",
+          });
+        }
+
+        let start = (this.queriedInterval && this.queriedInterval[0]) || _.min(_.map(items, (item) => item.start));
+        let end = (this.queriedInterval && this.queriedInterval[1]) || _.max(_.map(items, (item) => item.end));
+        this.options.min = start;
+        this.options.max = end;
         this.timeline.setOptions(this.options);
         this.timeline.setData({groups: groups, items: items})
-        this.timeline.fit();
+        this.timeline.setWindow(start, end);
       }
     }
   },

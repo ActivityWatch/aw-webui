@@ -11,7 +11,7 @@ div
       div(style="float: right; color: #999")
         | Drag to pan and scroll to zoom.
     div(style="clear: both")
-    vis-timeline(:buckets="buckets", showRowLabels=true)
+    vis-timeline(:buckets="buckets", showRowLabels=true, :queriedInterval="daterange")
   div(v-show="!(buckets !== null && num_events)")
     h1 Loading...
 </template>
@@ -40,21 +40,6 @@ export default {
     num_events() {
       return _.sumBy(this.buckets, "events.length");
     },
-    duration() {
-      return moment(this.daterange[1]).diff(this.daterange[0], "seconds");
-    },
-    queried_interval_bucket() {
-      console.log(this.duration, this.daterange);
-      return {
-        "id": "$queried_interval",
-        "type": "test",
-        events: [{
-          "duration": this.duration,
-          "timestamp": this.daterange[0],
-          "data": { "title": "a queried interval" },
-        }]
-      }
-    }
   },
   methods: {
     getBuckets: async function() {
@@ -67,7 +52,6 @@ export default {
         });
         return bucket;
       }));
-      this.buckets.push(this.queried_interval_bucket);
       this.buckets = _.orderBy(this.buckets, [(b) => b.id], ["asc"]);
     },
 
