@@ -1,3 +1,4 @@
+import moment from 'moment';
 import {seconds_to_duration} from './time.js';
 import DOMPurify from 'dompurify';
 import _ from 'lodash';
@@ -31,7 +32,7 @@ export function buildTooltip(bucket, e) {
   }
   return `<table>${inner}
     <tr></tr>
-    <tr><th>Time:</th><td>${e.timestamp.toISOString()}</td></tr>
+    <tr><th>Time:</th><td>${moment(e.timestamp).format()}</td></tr>
     <tr><th>Duration:</th><td>${seconds_to_duration(e.duration)}</td></tr>
     </table>`;
 }
