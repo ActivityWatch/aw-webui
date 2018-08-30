@@ -17,7 +17,7 @@ div#wrapper
   div.container.aw-container
     // TODO: Refactor into Mainmenu component
     b-nav.row.aw-navbar
-      b-nav-item(to="/")
+      b-nav-item(to="/" exact)
         icon(name="home")
         | Home
       b-nav-item(v-if="activity_hosts.length === 1", v-for="host in activity_hosts", :key="host", :to="'/activity/' + host")
@@ -33,6 +33,9 @@ div#wrapper
           small Make sure you have both an afk and window watcher running
         b-dropdown-item(v-for="host in activity_hosts", :key="host", :to="'/activity/' + host")
           | {{ host }}
+      b-nav-item(to="/timeline")
+        icon(name="calendar")
+        | Timeline
       b-nav-item(to="/buckets")
         icon(name="database")
         | Raw Data
@@ -42,6 +45,7 @@ div#wrapper
         | Query
 
   div.container.aw-container.rounded-bottom#content
+    error-boundary
       router-view
 
   div.container(style="height: 4rem; margin-top: 1rem; margin-bottom: 1rem; color: #555")
@@ -76,13 +80,13 @@ import 'vue-awesome/icons/database';
 import 'vue-awesome/icons/check-circle';
 import 'vue-awesome/icons/times-circle';
 import 'vue-awesome/icons/clock';
+import 'vue-awesome/icons/calendar';
 import 'vue-awesome/icons/brands/twitter';
 import 'vue-awesome/icons/brands/github';
 import 'vue-awesome/icons/search';
 
-import awclient from './awclient.js';
+import _ from 'lodash';
 
-// TODO: Highlight active item in menubar
 
 export default {
   data: function() {
@@ -93,39 +97,34 @@ export default {
     }
   },
 
-  mounted: function() {
-    awclient.info().then(
-      (response) => {
-        if (response.status > 304) {
-          console.error("Status code from return call was >304");
-        } else {
-          this.connected = true;
-          this.info = response.data;
-        }
+  mounted: async function() {
+    this.$aw.getInfo().then(
+      (info) => {
+        this.connected = true;
+        this.info = info;
       },
-      (response) => {
+      (e) => {
+        console.error("Unable to connect:", e)
         this.connected = false;
         this.info = {};
       }
     );
 
-    awclient.getBuckets().then((response) => {
-        let buckets = response.data;
-        let types_by_host = {};
-        _.each(buckets, (v, k) => {
-            types_by_host[v.hostname] = types_by_host[v.hostname] || {};
-            if(v.type == "afkstatus") {
-                types_by_host[v.hostname].afk = true;
-            } else if(v.type == "currentwindow") {
-                types_by_host[v.hostname].window = true;
-            }
-        })
+    let buckets = await this.$aw.getBuckets();
+    let types_by_host = {};
+    _.each(buckets, (v) => {
+        types_by_host[v.hostname] = types_by_host[v.hostname] || {};
+        if(v.type == "afkstatus") {
+            types_by_host[v.hostname].afk = true;
+        } else if(v.type == "currentwindow") {
+            types_by_host[v.hostname].window = true;
+        }
+    })
 
-        _.each(types_by_host, (types, hostname) => {
-            if(types.afk === true && types.window === true) {
-                this.activity_hosts.push(hostname);
-            }
-        })
+    _.each(types_by_host, (types, hostname) => {
+        if(types.afk === true && types.window === true) {
+            this.activity_hosts.push(hostname);
+        }
     })
   }
 }
@@ -169,6 +168,10 @@ body {
             margin-right: 7px;
         }
     }
+
+  .active {
+    background-color: #EEE;
+  }
 }
 
 .nav-item:hover {

@@ -6,11 +6,11 @@ div
     | Are you sure you want to delete bucket {{bucket_to_delete}}? (This is permanent and cannot be undone)
     b-button-toolbar
       b-button-group(size="sm", class="mx-1")
-        b-button(v-on:click="deleteBucket(bucket_to_delete); bucket_to_delete = ''"
+        b-button(@click="deleteBucket(bucket_to_delete); bucket_to_delete = ''"
                  title="Export all events from this bucket to JSON",
                  variant="danger")
           | Confirm
-        b-button(v-on:click="bucket_to_delete = ''"
+        b-button(@click="bucket_to_delete = ''"
                  title="Export all events from this bucket to JSON",
                  variant="success")
           | Abort
@@ -39,7 +39,7 @@ div
           | Export as JSON
     b-button-toolbar.float-right
       b-button-group(size="sm", class="mx-1")
-        b-button(v-on:click="bucket_to_delete = bucket.id"
+        b-button(@click="bucket_to_delete = bucket.id"
                  title="Export all events from this bucket to JSON",
                  variant="outline-danger")
           | #[icon(name="trash")] Delete bucket
@@ -78,8 +78,7 @@ div
 import 'vue-awesome/icons/trash';
 import 'vue-awesome/icons/download';
 import 'vue-awesome/icons/folder-open';
-
-import awclient from '../awclient.js';
+import _ from 'lodash';
 
 export default {
   name: "Buckets",
@@ -93,25 +92,18 @@ export default {
     }
   },
   methods: {
-    getBuckets: function() {
-      awclient.getBuckets().then((response) => {
-        let buckets = response.data;
-        buckets = _.orderBy(buckets, [(b) => b.last_updated], ["desc"]);
-        this.buckets = buckets;
-      });
+    getBuckets: async function() {
+      this.buckets = _.orderBy(await this.$aw.getBuckets(), [(b) => b.id], ["asc"]);
     },
 
-    getBucketInfo: function(bucket_id) {
-      awclient.getBucket(bucket_id).then((response) => {
-        this.buckets[bucket_id] = response.data;
-      });
+    getBucketInfo: async function(bucket_id) {
+      this.buckets[bucket_id] = await this.$aw.getBucket(bucket_id);
     },
 
-    deleteBucket: function(bucket_id) {
+    deleteBucket: async function(bucket_id) {
       console.log("Deleting bucket " + bucket_id);
-      awclient.deleteBucket(bucket_id).then((response) => {
-        this.getBuckets();
-      });
+      await this.$aw.deleteBucket(bucket_id);
+      await this.getBuckets();
     }
   }
 }

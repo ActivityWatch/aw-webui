@@ -2,10 +2,8 @@
 
 .FORCE: ;
 
-aw-client-js:
-	(cd aw-client-js; npm install; npm run compile)
-
 build: install
+	(cd node_modules/vis; npm install; npm run build; true)
 	npm run build
 
 install: aw-client-js
@@ -22,3 +20,9 @@ test:
 
 clean:
 	rm -rf node_modules dist
+
+lint:
+	npx eslint --ext=js,vue src/
+
+aw-client-js:
+	(cd aw-client-js; make build)
