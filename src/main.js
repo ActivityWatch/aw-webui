@@ -9,11 +9,8 @@ Vue.use(BootstrapVue);
 // Load the Varela Round font
 import 'typeface-varela-round';
 
-// Loads all the resources (using vue-resource)
-import './awclient.js';
-
 // Loads all the filters
-import './filters.js';
+import './util/filters.js';
 
 // Sets up the routing and the base app (using vue-router)
 import router from './route.js';
@@ -23,8 +20,11 @@ import Icon from 'vue-awesome/components/Icon'
 Vue.component('icon', Icon)
 
 // Our custom components
-import ErrorBoundary from './ErrorBoundary.vue';
+import ErrorBoundary from './components/ErrorBoundary.vue';
 Vue.component('error-boundary', ErrorBoundary);
+
+import InputTimeInterval from './components/InputTimeInterval.vue';
+Vue.component('input-timeinterval', InputTimeInterval);
 
 import Summary from './visualizations/Summary.vue';
 Vue.component('aw-summary', Summary);
@@ -47,15 +47,12 @@ Vue.component('aw-timeline', Timeline);
 import VisTimeline from './visualizations/VisTimeline.vue';
 Vue.component('vis-timeline', VisTimeline);
 
-import InputTimeInterval from './components/InputTimeInterval.vue';
-Vue.component('input-timeinterval', InputTimeInterval);
-
 //import GCTimeline from './visualizations/GCTimeline.vue';
 //Vue.component('GCTimeline', GCTimeline);
 //
 
 // Create an instance of AWClient as this.$aw
-import awclient from './awclient.js';
+import awclient from './util/awclient.js';
 Vue.prototype.$aw = awclient;
 
 // Setup Vue app

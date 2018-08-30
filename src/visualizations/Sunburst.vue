@@ -109,8 +109,6 @@ import sunburst from './sunburst.js';
 import moment from 'moment';
 import _ from 'lodash';
 
-import awclient from '../awclient.js';
-
 let aw_sunburst = {
   name: "aw-sunburst",
   props: ['date', 'afkBucketId', 'windowBucketId'],
@@ -140,7 +138,7 @@ let aw_sunburst = {
 
   methods: {
     todaysEvents: function(bucket_id) {
-      return awclient.getEvents(bucket_id, {
+      return this.$aw.getEvents(bucket_id, {
         limit: -1,
         start: this.starttime.format(), end: this.endtime.format()
       });

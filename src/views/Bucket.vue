@@ -33,7 +33,6 @@ div
 
 <script>
 import moment from 'moment'
-import awclient from '../awclient.js';
 
 export default {
   name: "Bucket",
@@ -60,12 +59,12 @@ export default {
   },
   methods: {
     getBucketInfo: async function(bucket_id) {
-      this.bucket = await awclient.getBucketInfo(bucket_id);
+      this.bucket = await this.$aw.getBucketInfo(bucket_id);
     },
 
     getEvents: async function(bucket_id) {
       console.log(this.daterange);
-      this.events = await awclient.getEvents(bucket_id, {
+      this.events = await this.$aw.getEvents(bucket_id, {
         start: this.daterange[0].format(),
         end: this.daterange[1].format(),
         limit: -1
@@ -73,7 +72,7 @@ export default {
     },
 
     getEventCount: async function(bucket_id) {
-      this.eventcount = (await awclient.countEvents(bucket_id)).data;
+      this.eventcount = (await this.$aw.countEvents(bucket_id)).data;
     },
   },
   mounted: function() {
