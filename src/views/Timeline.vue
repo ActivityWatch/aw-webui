@@ -2,24 +2,16 @@
 div
   h2 Timeline
 
-  select(v-model="duration")
-    option(:value="1 * 60 * 60") 1 hour
-    option(:value="3 * 60 * 60") 3 hours
-    option(:value="6 * 60 * 60") 6 hours
-    option(:value="12 * 60 * 60") 12 hours
-    option(:value="24 * 60 * 60") 1 day
-    option(:value="2 * 24 * 60 * 60") 2 days
-
-  hr
+  input-timeinterval(v-model="daterange")
 
   div(v-show="buckets !== null")
     div
       div(style="float: left")
         | Events shown:  {{ num_events }}
       div(style="float: right; color: #999")
-        | Drag and scroll to pan and zoom.
+        | Drag to pan and scroll to zoom.
     div(style="clear: both")
-    vis-timeline(:buckets="buckets", showRowLabels=true)
+    vis-timeline(:buckets="buckets", showRowLabels=true, :queriedInterval="daterange")
   div(v-show="!(buckets !== null && num_events)")
     h1 Loading...
 </template>
@@ -36,11 +28,11 @@ export default {
   data: () => {
     return {
       buckets: null,
-      duration: 1 * 60 * 60,
+      daterange: [moment().subtract(1, "hour"), moment()],
     }
   },
   watch: {
-    duration() {
+    daterange() {
       this.getBuckets();
     }
   },
@@ -48,28 +40,18 @@ export default {
     num_events() {
       return _.sumBy(this.buckets, "events.length");
     },
-    queried_interval_bucket() {
-      let now = moment().add(2, 'minutes');
-      return {
-        "id": "$queried_interval",
-        "type": "test",
-        events: [{
-          "duration": this.duration,
-          "timestamp": moment(now).subtract(this.duration, 'seconds'),
-          "data": { "title": "a queried interval" },
-        }]
-      }
-    }
   },
   methods: {
     getBuckets: async function() {
-      let now = moment().add(2, 'minutes');
       this.buckets = await this.$aw.getBuckets()
       this.buckets = await Promise.all(_.map(this.buckets, async (bucket) => {
-        bucket.events = await this.$aw.getEvents(bucket.id, {end: now.format(), start: moment(now).subtract(this.duration, 'seconds').format(), limit: -1});
+        bucket.events = await this.$aw.getEvents(bucket.id, {
+          start: this.daterange[0].format(),
+          end: this.daterange[1].format(),
+          limit: -1
+        });
         return bucket;
       }));
-      this.buckets.push(this.queried_interval_bucket);
       this.buckets = _.orderBy(this.buckets, [(b) => b.id], ["asc"]);
     },
 

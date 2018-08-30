@@ -18,14 +18,8 @@ div
     tr
       td Eventcount:
       td {{ eventcount }}
-    tr
-      td Show last:
-      td
-        select(v-model="timeline_duration")
-          option(:value="15*60") 15min
-          option(:value="60*60") 1h
-          option(:value="6*60*60") 6h
-          option(:value="24*60*60") 24h
+
+  input-timeinterval(v-model="daterange")
 
   vis-timeline(:buckets="buckets", showRowLabels='false')
 
@@ -49,7 +43,7 @@ export default {
       bucket: Object,
       events: [],
       eventcount: "?",
-      timeline_duration: 60*15,
+      daterange: [moment().subtract(1, "hour"), moment()],
     }
   },
   computed: {
@@ -60,7 +54,7 @@ export default {
     }
   },
   watch: {
-    timeline_duration: function() {
+    daterange: function() {
       this.getEvents(this.id);
     }
   },
@@ -70,8 +64,12 @@ export default {
     },
 
     getEvents: async function(bucket_id) {
-      const now = moment();
-      this.events = await awclient.getEvents(bucket_id, {end: now.format(), start: now.subtract(this.timeline_duration, "seconds").format(), limit: -1});
+      console.log(this.daterange);
+      this.events = await awclient.getEvents(bucket_id, {
+        start: this.daterange[0].format(),
+        end: this.daterange[1].format(),
+        limit: -1
+      });
     },
 
     getEventCount: async function(bucket_id) {

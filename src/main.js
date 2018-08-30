@@ -47,6 +47,9 @@ Vue.component('aw-timeline', Timeline);
 import VisTimeline from './visualizations/VisTimeline.vue';
 Vue.component('vis-timeline', VisTimeline);
 
+import InputTimeInterval from './components/InputTimeInterval.vue';
+Vue.component('input-timeinterval', InputTimeInterval);
+
 //import GCTimeline from './visualizations/GCTimeline.vue';
 //Vue.component('GCTimeline', GCTimeline);
 //
