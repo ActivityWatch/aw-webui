@@ -72,7 +72,7 @@ export default {
     },
 
     getEventCount: async function(bucket_id) {
-      this.eventcount = (await awclient.countEvents(bucket_id)).data;
+      this.eventcount = (await this.$aw.countEvents(bucket_id)).data;
     },
   },
   mounted: function() {

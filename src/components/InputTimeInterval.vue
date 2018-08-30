@@ -56,7 +56,6 @@ export default {
         }
       },
       set(newValue) {
-        console.log(newValue);
         if(!isNaN(newValue)) {
           this.customRange = null;
           this.duration = newValue;
@@ -69,7 +68,6 @@ export default {
   methods: {
     valueChanged(e) {
       this.value = e.target.value;
-      console.log(this.value);
       this.$emit('input', this.value);
     }
   }
