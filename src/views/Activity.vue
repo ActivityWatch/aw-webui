@@ -93,6 +93,8 @@ div
           | No browser buckets available
           br
           small Make sure you have an browser extension installed
+        b-dropdown-item-button(v-if="browserBuckets.length > 1", v-on:click="browserBucketId = browserBuckets")
+          | All
         b-dropdown-item-button(v-for="browserBucket in browserBuckets", :key="browserBucket", @click="browserBucketId = browserBucket")
           | {{ browserBucket }}
     br
@@ -359,7 +361,10 @@ export default {
           this.browserBuckets.push(bucket);
         }
       }
-      if (this.browserBuckets.length > 0){
+      if (this.browserBuckets.length > 1){
+        this.browserBucketId = this.browserBuckets
+      }
+      else if (this.browserBuckets.length > 0){
         this.browserBucketId = this.browserBuckets[0]
       }
     },
