@@ -1,14 +1,29 @@
 <template lang="pug">
 div
   div
-    span(style="margin-right: 1em")
-      label(for="duration") Show last:
-    span
-      select(id="duration" :value="duration", @change="valueChanged")
-        option(:value="15*60") 15min
-        option(:value="60*60") 1h
-        option(:value="6*60*60") 6h
-        option(:value="24*60*60") 24h
+    table
+      tr
+        td.pr-2
+          label(for="mode") Interval mode:
+        td
+          select(id="mode" v-model="mode")
+            option(value='last_duration') Last duration
+            option(value='range') Date range
+      tr(v-if="mode == 'last_duration'")
+        td.pr-2
+          label(for="duration") Show last:
+        td
+          select(id="duration" :value="duration", @change="valueChanged")
+            option(:value="15*60") 15min
+            option(:value="60*60") 1h
+            option(:value="6*60*60") 6h
+            option(:value="24*60*60") 24h
+      tr(v-if="mode == 'range'")
+        td.pr-2 Range:
+        td
+          input(type="date", v-model="start", @input="valueChanged")
+          input(type="date", v-model="end", @input="valueChanged")
+
 </template>
 
 <style scoped lang="scss">
@@ -22,15 +37,17 @@ export default {
   data: () => {
     return {
       now: moment(),
+      mode: 'last_duration',
       duration: 60 * 60,
-      customRange: null,
+      start: null,
+      end: null,
     }
   },
   computed: {
     value: {
       get() {
-        if(this.customRange) {
-          return this.customRange;
+        if(this.mode == 'range' && this.start && this.end) {
+          return [moment(this.start), moment(this.end)];
         } else {
           return [
             moment(this.now).subtract(this.duration, "seconds"),
@@ -52,6 +69,7 @@ export default {
   methods: {
     valueChanged(e) {
       this.value = e.target.value;
+      console.log(this.value);
       this.$emit('input', this.value);
     }
   }
