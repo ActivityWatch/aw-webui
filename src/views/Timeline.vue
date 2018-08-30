@@ -2,7 +2,7 @@
 div
   h2 Timeline
 
-  input-daterange(v-model="duration")
+  input-daterange(v-model="daterange")
 
   hr
 
@@ -30,11 +30,11 @@ export default {
   data: () => {
     return {
       buckets: null,
-      duration: 1 * 60 * 60,
+      daterange: [moment().subtract(1, "hour"), moment()],
     }
   },
   watch: {
-    duration() {
+    daterange() {
       this.getBuckets();
     }
   },
@@ -42,14 +42,17 @@ export default {
     num_events() {
       return _.sumBy(this.buckets, "events.length");
     },
+    duration() {
+      return moment(this.daterange[1]).diff(this.daterange[0], "seconds");
+    },
     queried_interval_bucket() {
-      let now = moment().add(2, 'minutes');
+      console.log(this.duration, this.daterange);
       return {
         "id": "$queried_interval",
         "type": "test",
         events: [{
           "duration": this.duration,
-          "timestamp": moment(now).subtract(this.duration, 'seconds'),
+          "timestamp": this.daterange[0],
           "data": { "title": "a queried interval" },
         }]
       }
@@ -57,10 +60,13 @@ export default {
   },
   methods: {
     getBuckets: async function() {
-      let now = moment().add(2, 'minutes');
       this.buckets = await this.$aw.getBuckets()
       this.buckets = await Promise.all(_.map(this.buckets, async (bucket) => {
-        bucket.events = await this.$aw.getEvents(bucket.id, {end: now.format(), start: moment(now).subtract(this.duration, 'seconds').format(), limit: -1});
+        bucket.events = await this.$aw.getEvents(bucket.id, {
+          start: this.daterange[0].format(),
+          end: this.daterange[1].format(),
+          limit: -1
+        });
         return bucket;
       }));
       this.buckets.push(this.queried_interval_bucket);

@@ -44,7 +44,7 @@ export default {
       bucket: Object,
       events: [],
       eventcount: "?",
-      daterange: 60*15,
+      daterange: [moment().subtract(1, "hour"), moment()],
     }
   },
   computed: {
@@ -65,11 +65,10 @@ export default {
     },
 
     getEvents: async function(bucket_id) {
-      const now = moment();
-      console.log(this.daterange * 10);
+      console.log(this.daterange);
       this.events = await awclient.getEvents(bucket_id, {
-        start: moment(now).subtract(this.daterange, "seconds").format(),
-        end: now.format(),
+        start: this.daterange[0].format(),
+        end: this.daterange[1].format(),
         limit: -1
       });
     },
