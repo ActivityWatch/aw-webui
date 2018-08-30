@@ -1,5 +1,4 @@
 <template lang="pug">
-
 div
   div
     span Show last:
@@ -18,7 +17,7 @@ div
 import moment from 'moment';
 
 export default {
-  name: "DateRangeInput",
+  name: "input-timeinterval",
   data: () => {
     return {
       now: moment(),

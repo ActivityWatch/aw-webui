@@ -2,7 +2,7 @@
 div
   h2 Timeline
 
-  input-daterange(v-model="daterange")
+  input-timeinterval(v-model="daterange")
 
   hr
 
@@ -11,7 +11,7 @@ div
       div(style="float: left")
         | Events shown:  {{ num_events }}
       div(style="float: right; color: #999")
-        | Drag and scroll to pan and zoom.
+        | Drag to pan and scroll to zoom.
     div(style="clear: both")
     vis-timeline(:buckets="buckets", showRowLabels=true)
   div(v-show="!(buckets !== null && num_events)")

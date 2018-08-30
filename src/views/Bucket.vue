@@ -20,7 +20,7 @@ div
       td {{ eventcount }}
     tr
       td(colwidth=2)
-        input-daterange(v-model="daterange")
+        input-timeinterval(v-model="daterange")
 
   vis-timeline(:buckets="buckets", showRowLabels='false')
 
