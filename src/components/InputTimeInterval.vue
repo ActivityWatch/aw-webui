@@ -1,9 +1,10 @@
 <template lang="pug">
 div
   div
-    span Show last:
+    span(style="margin-right: 1em")
+      label(for="duration") Show last:
     span
-      select(:value="duration", @change="valueChanged")
+      select(id="duration" :value="duration", @change="valueChanged")
         option(:value="15*60") 15min
         option(:value="60*60") 1h
         option(:value="6*60*60") 6h

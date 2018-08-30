@@ -4,8 +4,6 @@ div
 
   input-timeinterval(v-model="daterange")
 
-  hr
-
   div(v-show="buckets !== null")
     div
       div(style="float: left")
