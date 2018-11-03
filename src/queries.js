@@ -29,9 +29,9 @@ function windowQuery(windowbucket, afkbucket, appcount, titlecount, filterAFK) {
 function browserSummaryQuery(browserbucket, windowbucket, afkbucket, count, filterAFK) {
   var browser_appnames = "";
   if (browserbucket.endsWith("-chrome")){
-    browser_appnames = '["Google-chrome", "chrome.exe", "Chromium", "Google Chrome", "Chromium-browser-chromium", "Google-chrome-beta", "Google-chrome-unstable"]';
+    browser_appnames = JSON.stringify(["Google-chrome", "chrome.exe", "Chromium", "Google Chrome", "Chromium-browser", "Chromium-browser-chromium", "Google-chrome-beta", "Google-chrome-unstable"]);
   } else if (browserbucket.endsWith("-firefox")){
-    browser_appnames = '["Firefox", "Firefox.exe", "firefox", "firefox.exe", "Firefox Developer Edition", "Firefox Beta"]';
+    browser_appnames = JSON.stringify(["Firefox", "Firefox.exe", "firefox", "firefox.exe", "Firefox Developer Edition", "Firefox Beta"]);
   }
 
   return [
