@@ -312,7 +312,7 @@ export default {
     host: function() { return this.$route.params.host },
     date: function() { 
       var dateParam = this.$route.params.date;
-      var dateMoment = dateParam ? moment(dateParam) || moment();
+      var dateMoment = dateParam ? moment(dateParam) : moment();
       return dateMoment.startOf('day').format();
     },
     dateStart: function() { return this.date },
