@@ -311,7 +311,7 @@ export default {
     readableEditorDuration: function() { return time.seconds_to_duration(this.editor_duration) },
     host: function() { return this.$route.params.host },
     date: function() { return this.$route.params.date || moment().startOf('day').format() },
-    dateStart: function() { return this.date },
+    dateStart: function() { return moment(this.date).format() },
     dateEnd: function() { return moment(this.date).add(1, 'days').format() },
     dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
     windowBucketId: function() { return "aw-watcher-window_" + this.host },
