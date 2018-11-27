@@ -310,8 +310,12 @@ export default {
     readableWebDuration: function() { return time.seconds_to_duration(this.web_duration) },
     readableEditorDuration: function() { return time.seconds_to_duration(this.editor_duration) },
     host: function() { return this.$route.params.host },
-    date: function() { return this.$route.params.date || moment().startOf('day').format() },
-    dateStart: function() { return moment(this.date).format() },
+    date: function() { 
+      var dateParam = this.$route.params.date;
+      var dateMoment = dateParam ? moment(dateParam) || moment();
+      return dateMoment.startOf('day').format();
+    },
+    dateStart: function() { return this.date },
     dateEnd: function() { return moment(this.date).add(1, 'days').format() },
     dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
     windowBucketId: function() { return "aw-watcher-window_" + this.host },
