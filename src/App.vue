@@ -39,6 +39,9 @@ div#wrapper
       b-nav-item(to="/buckets")
         icon(name="database")
         | Raw Data
+      b-nav-item(to="/timer")
+        icon(name="stopwatch")
+        | Timer
       b-nav-item(to="/query")
         // TODO: Use 'searchengin' icon instead, when landed in vue-awesome
         icon(name="search")
@@ -84,6 +87,7 @@ import 'vue-awesome/icons/calendar';
 import 'vue-awesome/icons/brands/twitter';
 import 'vue-awesome/icons/brands/github';
 import 'vue-awesome/icons/search';
+import 'vue-awesome/icons/stopwatch';
 
 import _ from 'lodash';
 

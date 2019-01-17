@@ -8,6 +8,7 @@ import Bucket from './views/Bucket.vue';
 import QueryExplorer from './views/QueryExplorer.vue';
 import Timeline from './views/Timeline.vue';
 import Log from './views/Log.vue';
+import Timer from './views/Timer.vue';
 
 Vue.use(VueRouter);
 
@@ -21,6 +22,7 @@ var router = new VueRouter({
     { path: '/timeline',                component: Timeline },
     { path: '/query',                   component: QueryExplorer },
     { path: '/log',                     component: Log },
+    { path: '/timer',                   component: Timer },
   ]
 });
 

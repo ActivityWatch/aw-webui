@@ -9,7 +9,7 @@ Vue.filter('friendlytime', function (timestamp) {
   let m = moment.parseZone(timestamp);
   let sinceNow = moment.duration(m.diff(moment()));
   if(-sinceNow.asSeconds() <= 60) {
-    return "" + -sinceNow.asSeconds() + "s ago";
+    return `${Math.round(-sinceNow.asSeconds())}s ago`;
   } else if(-sinceNow.asSeconds() <= 60*60*24) {
     return sinceNow.humanize(true);
   }
