@@ -1,76 +1,60 @@
 <template lang="pug">
 div
   h2 Timer
-
-  testComponent
-
   p
     | Using bucket: {{bucket_id}}
 
-  input(v-model="label")
-  button(@click="startTimer()")
-    | Start timer
+  input(v-model="label", placeholder="Label")
+  b-button(@click="startTimer()", variant="success")
+    icon(name="play")
+    | Start
 
-  h3 Running timers
-  div
-    ul
-      li(v-for="e in runningTimers")
+  hr
+
+  div.row
+    div.col-md-6
+      h3 Running timers
+      div(v-for="e in runningTimers")
         timer-entry(:event="e", :now="now", @stop="stopTimer(e)", @delete="deleteTimer(e)")
-        //div Timestamp: {{e.timestamp | friendlytime}}
-        //div Duration: {{(now - e.timestamp) / 1000 | friendlyduration}}
-        //div Label: {{e.data.label}}
-        //b-button(v-if="e.data.state == 'running'", @click="stopTimer(e)", size="sm")
-        //  | Stop
-        //b-button(@click="deleteTimer(e)", size="sm", variant="danger")
-        //  | Delete
+        hr(style="margin: 0")
 
-
-  h3 Stopped timers
-  div
-    ul
-      li(v-for="e in stoppedTimers")
+    div.col-md-6
+      h3 Stopped timers
+      div(v-for="e in stoppedTimers")
         timer-entry(:event="e", :now="now", @stop="stopTimer(e)", @delete="deleteTimer(e)")
-        //div Timestamp: {{e.timestamp | friendlytime}}
-        //div Duration: {{e.duration | friendlyduration}}
-        //div Label: {{e.data.label}}
-        //b-button(@click="deleteTimer(e)", size="sm", variant="danger")
-        //  | Delete
-
+        hr(style="margin: 0")
 </template>
 
 <style scoped lang="scss">
 .btn {
   margin-right: 0.5em;
+
+  .fa-icon {
+    margin-left: 0;
+    margin-right: 0.5em;
+  }
 }
 </style>
 
 <script>
-import Vue from 'vue';
-import 'vue-awesome/icons/trash';
 import _ from 'lodash';
 import moment from 'moment';
 
 import TimerEntry from '../components/TimerEntry.vue';
-
-let testComponent = Vue.component("testComponent", {
-  name: "testComponent",
-  template: `
-    <div> Test</div>
-  `
-})
+import 'vue-awesome/icons/play';
+import 'vue-awesome/icons/trash';
 
 export default {
   name: "Timer",
   components: {
-    "testComponent": testComponent,
     "timer-entry": TimerEntry
   },
   mounted: function() {
     // TODO: List all possible timer buckets
     //this.getBuckets();
 
-    // TODO: Create timer bucket
-    this.$aw.createBucket(this.bucket_id, "timer", "unknown").catch(console.log);
+    // Create default timer bucket
+    this.$aw.ensureBucket(this.bucket_id, "timer", "unknown");
 
     // TODO: Get all timer events
     this.getEvents()
@@ -87,19 +71,25 @@ export default {
   },
   computed: {
     runningTimers() {
-      return _.filter(this.events, (e) => (e.data.state === "running"))
+      return _.filter(this.events, (e) => (e.data.running))
     },
     stoppedTimers() {
-      return _.filter(this.events, (e) => (e.data.state === "stopped"))
+      return _.filter(this.events, (e) => (!e.data.running))
     }
   },
   methods: {
     startTimer: async function() {
-      this.events.unshift(await this.$aw.heartbeat(this.bucket_id, 0, {timestamp: new Date(), data: {state: "running", label: this.label}}))
+      this.events.unshift(await this.$aw.heartbeat(this.bucket_id, 0, {
+        timestamp: new Date(),
+        data: {
+          running: true,
+          label: this.label
+        }
+      }))
     },
 
     stopTimer: async function(event) {
-      event.data.state = "stopped";
+      event.data.running = false;
       event.duration = (moment() - moment(event.timestamp)) / 1000;
       await this.$aw.replaceEvent(this.bucket_id, event);
     },
