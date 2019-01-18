@@ -4,10 +4,12 @@ div
   p
     | Using bucket: {{bucket_id}}
 
-  input(v-model="label", placeholder="Label")
-  b-button(@click="startTimer()", variant="success")
-    icon(name="play")
-    | Start
+  b-input-group(prepend="New timer", size="lg")
+    b-input(v-model="label" placeholder="Label")
+    b-input-group-append
+      b-button(@click="startTimer()", variant="success")
+        icon(name="play")
+        | Start
 
   hr
 
@@ -15,13 +17,13 @@ div
     div.col-md-6
       h3 Running timers
       div(v-for="e in runningTimers")
-        timer-entry(:event="e", :now="now", @stop="stopTimer(e)", @delete="deleteTimer(e)")
+        timer-entry(:event="e", :bucket_id="bucket_id", :now="now", @stop="stopTimer(e)", @delete="deleteTimer(e)")
         hr(style="margin: 0")
 
     div.col-md-6
       h3 Stopped timers
       div(v-for="e in stoppedTimers")
-        timer-entry(:event="e", :now="now", @stop="stopTimer(e)", @delete="deleteTimer(e)")
+        timer-entry(:event="e", :bucket_id="bucket_id", :now="now", @stop="stopTimer(e)", @delete="deleteTimer(e)")
         hr(style="margin: 0")
 </template>
 

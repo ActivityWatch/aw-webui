@@ -36,12 +36,12 @@ div#wrapper
       b-nav-item(to="/timeline")
         icon(name="calendar")
         | Timeline
-      b-nav-item(to="/buckets")
-        icon(name="database")
-        | Raw Data
       b-nav-item(to="/timer")
         icon(name="stopwatch")
         | Timer
+      b-nav-item(to="/buckets")
+        icon(name="database")
+        | Raw Data
       b-nav-item(to="/query")
         // TODO: Use 'searchengin' icon instead, when landed in vue-awesome
         icon(name="search")

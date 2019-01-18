@@ -18,6 +18,10 @@ Vue.filter('friendlytime', function (timestamp) {
   //return timestamp;
 });
 
+Vue.filter('iso8601', function(timestamp) {
+  return moment.parseZone(timestamp).format();
+});
+
 Vue.filter('friendlyduration', function (seconds) {
   if(seconds <= 0) {
     console.log(seconds)
