@@ -4,6 +4,9 @@ div
   p
     | Using bucket: {{bucket_id}}
 
+  b-alert(show)
+    | This is an early experiment, an important missing feature is the ability to set start/end of timers manually.
+
   b-input-group(prepend="New timer", size="lg")
     b-input(v-model="label" placeholder="Label")
     b-input-group-append
