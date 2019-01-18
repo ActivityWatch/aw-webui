@@ -17,13 +17,13 @@ div
     div.col-md-6
       h3 Running timers
       div(v-for="e in runningTimers")
-        timer-entry(:event="e", :bucket_id="bucket_id", :now="now", @stop="stopTimer(e)", @delete="deleteTimer(e)")
+        timer-entry(:event="e", :bucket_id="bucket_id", :now="now", @delete="deleteTimer(e)")
         hr(style="margin: 0")
 
     div.col-md-6
       h3 Stopped timers
       div(v-for="e in stoppedTimers")
-        timer-entry(:event="e", :bucket_id="bucket_id", :now="now", @stop="stopTimer(e)", @delete="deleteTimer(e)")
+        timer-entry(:event="e", :bucket_id="bucket_id", :now="now", @delete="deleteTimer(e)")
         hr(style="margin: 0")
 </template>
 
@@ -65,7 +65,7 @@ export default {
   },
   data: () => {
     return {
-      bucket_id: "timer-test",
+      bucket_id: "timers",
       events: [],
       label: "",
       now: moment(),
@@ -90,14 +90,7 @@ export default {
       }))
     },
 
-    stopTimer: async function(event) {
-      event.data.running = false;
-      event.duration = (moment() - moment(event.timestamp)) / 1000;
-      await this.$aw.replaceEvent(this.bucket_id, event);
-    },
-
     deleteTimer: async function(event) {
-      await this.$aw.deleteEvent(this.bucket_id, event.id);
       this.events = _.filter(this.events, (e) => e.id != event.id);
     },
 
