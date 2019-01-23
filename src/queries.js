@@ -31,7 +31,7 @@ function browserSummaryQuery(browserbucket, windowbucket, afkbucket, count, filt
   if (browserbucket.endsWith("-chrome")){
     browser_appnames = JSON.stringify(["Google-chrome", "chrome.exe", "Chromium", "Google Chrome", "Chromium-browser", "Chromium-browser-chromium", "Google-chrome-beta", "Google-chrome-unstable"]);
   } else if (browserbucket.endsWith("-firefox")){
-    browser_appnames = JSON.stringify(["Firefox", "Firefox.exe", "firefox", "firefox.exe", "Firefox Developer Edition", "Firefox Beta"]);
+    browser_appnames = JSON.stringify(["Firefox", "Firefox.exe", "firefox", "firefox.exe", "Firefox Developer Edition", "Firefox Beta", "Nightly"]);
   }
 
   return [
