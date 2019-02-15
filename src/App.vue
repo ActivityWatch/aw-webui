@@ -1,6 +1,6 @@
 <template lang="pug">
 div#wrapper
-  div.header
+  div.header(v-show="!isAndroidApp")
     div.container
       span.title
         img(src="/static/logo.png")
@@ -93,7 +93,8 @@ export default {
     return {
       activity_hosts: [],
       connected: false,
-      info: {}
+      info: {},
+      isAndroidApp: navigator.userAgent.includes("Android") && navigator.userAgent.includes("wv"), // Checks for Android and WebView
     }
   },
 

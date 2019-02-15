@@ -39,7 +39,7 @@
     "ora": "^0.2.0",
     "pug": "^2.0.3",
     "pug-plain-loader": "^1.0.0",
-    "sass-loader": "^7.0.1",
+    "sass-loader": "^7.1.0",
     "shelljs": "^0.6.0",
     "url-loader": "^1.1.0",
     "vue": "^2.5.16",
