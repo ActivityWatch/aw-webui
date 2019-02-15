@@ -1,6 +1,6 @@
 <template lang="pug">
 div#wrapper
-  div.header
+  div.header(v-show="!isWebview")
     div.container
       span.title
         img(src="/static/logo.png")
@@ -87,13 +87,16 @@ import 'vue-awesome/icons/search';
 
 import _ from 'lodash';
 
+import isWebview from 'is-webview';
+
 
 export default {
   data: function() {
     return {
       activity_hosts: [],
       connected: false,
-      info: {}
+      info: {},
+      isWebview: isWebview(navigator.userAgent),
     }
   },
 
