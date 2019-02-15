@@ -1,6 +1,6 @@
 <template lang="pug">
 div#wrapper
-  div.header(v-show="!isWebview")
+  div.header(v-show="!isAndroidApp")
     div.container
       span.title
         img(src="/static/logo.png")
@@ -87,8 +87,6 @@ import 'vue-awesome/icons/search';
 
 import _ from 'lodash';
 
-import isWebview from 'is-webview';
-
 
 export default {
   data: function() {
@@ -96,7 +94,7 @@ export default {
       activity_hosts: [],
       connected: false,
       info: {},
-      isWebview: isWebview(navigator.userAgent),
+      isAndroidApp: navigator.userAgent.includes("Android") && navigator.userAgent.includes("wv"), // Checks for Android and WebView
     }
   },
 
