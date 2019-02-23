@@ -2,7 +2,7 @@ import _ from 'lodash';
 
 // TODO: Sanitize string input of buckets
 
-function windowQuery(windowbucket, afkbucket, appcount, titlecount, filterAFK) {
+export function windowQuery(windowbucket, afkbucket, appcount, titlecount, filterAFK) {
   let code = (
     `events  = flood(query_bucket("${windowbucket}"));
      not_afk = flood(query_bucket("${afkbucket}"));
@@ -26,7 +26,21 @@ function windowQuery(windowbucket, afkbucket, appcount, titlecount, filterAFK) {
   return _.map(lines, (l) => l + ";");
 }
 
-function browserSummaryQuery(browserbucket, windowbucket, afkbucket, count, filterAFK) {
+export function queryApps(appbucket, limit) {
+  let code = (
+    `events  = flood(query_bucket("${appbucket}"));`
+  ) + (
+    `events  = merge_events_by_keys(events, ["app"]);
+    events  = sort_by_duration(events);
+    events  = limit_events(events, ${limit});
+    total_duration = sum_durations(events);
+    RETURN  = {"events": events, "total_duration": total_duration};`
+  );
+  let lines = code.split(";");
+  return _.map(lines, (l) => l + ";");
+}
+
+export function browserSummaryQuery(browserbucket, windowbucket, afkbucket, count, filterAFK) {
   var browser_appnames = "";
   if (browserbucket.endsWith("-chrome")){
     browser_appnames = JSON.stringify(["Google-chrome", "chrome.exe", "Chromium", "Google Chrome", "Chromium-browser", "Chromium-browser-chromium", "Google-chrome-beta", "Google-chrome-unstable"]);
@@ -46,7 +60,7 @@ function browserSummaryQuery(browserbucket, windowbucket, afkbucket, count, filt
   .concat([
     'events = filter_period_intersect(events, window_browser);',
     'events = split_url_events(events);',
-    'urls = merge_events_by_keys(events, ["domain", "url"]);',
+    'urls = merge_events_by_keys(events, ["url"]);',
     'urls = sort_by_duration(urls);',
     'urls = limit_events(urls, ' + count + ');',
     'domains = split_url_events(events);',
@@ -59,7 +73,7 @@ function browserSummaryQuery(browserbucket, windowbucket, afkbucket, count, filt
   ]);
 }
 
-function editorActivityQuery (editorbucket, limit){
+export function editorActivityQuery(editorbucket, limit) {
   return [
     'editorbucket = "' + editorbucket + '";',
     'events = flood(query_bucket(editorbucket));',
@@ -74,18 +88,11 @@ function editorActivityQuery (editorbucket, limit){
   ];
 }
 
-function dailyActivityQuery (afkbucket){
+export function dailyActivityQuery(afkbucket) {
   return [
     'afkbucket = "' + afkbucket + '";',
     'not_afk = flood(query_bucket(afkbucket));',
     'not_afk = merge_events_by_keys(not_afk, ["status"]);',
     'RETURN = not_afk;'
   ];
-}
-
-module.exports = {
-    "windowQuery": windowQuery,
-    "browserSummaryQuery": browserSummaryQuery,
-    "editorActivityQuery": editorActivityQuery,
-    "dailyActivityQuery": dailyActivityQuery,
 }
