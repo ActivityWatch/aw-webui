@@ -20,19 +20,22 @@ div#wrapper
       b-nav-item(to="/" exact)
         icon(name="home")
         | Home
-      b-nav-item(v-if="activity_hosts.length === 1", v-for="host in activity_hosts", :key="host", :to="'/activity/' + host")
+      // If only a single view (the default) is available
+      b-nav-item(v-if="activityViews.length === 1", v-for="view in activityViews", :key="view.name", :to="view.pathUrl + '/' + view.name")
         icon(name="clock")
         | Activity
-      b-nav-item-dropdown(v-if="activity_hosts.length !== 1")
+      // If multiple activity views are available
+      b-nav-item-dropdown(v-if="activityViews.length !== 1")
         template(slot="button-content")
           icon(name="clock")
           | Activity
-        b-dropdown-item(v-if="activity_hosts.length <= 0", disabled)
+        b-dropdown-item(v-if="activityViews.length <= 0", disabled)
           | No activity reports available
           br
-          small Make sure you have both an afk and window watcher running
-        b-dropdown-item(v-for="host in activity_hosts", :key="host", :to="'/activity/' + host")
-          | {{ host }}
+          small Make sure you have both an AFK and window watcher running
+        b-dropdown-item(v-for="view in activityViews", :key="view.name", :to="view.pathUrl + '/' + view.name")
+          icon(:name="view.icon")
+          | {{ view.name }}
       b-nav-item(to="/timeline")
         icon(name="calendar")
         | Timeline
@@ -84,17 +87,20 @@ import 'vue-awesome/icons/calendar';
 import 'vue-awesome/icons/brands/twitter';
 import 'vue-awesome/icons/brands/github';
 import 'vue-awesome/icons/search';
+import 'vue-awesome/icons/mobile';
+import 'vue-awesome/icons/desktop';
 
 import _ from 'lodash';
 
+let testingAndroid = true;
 
 export default {
   data: function() {
     return {
-      activity_hosts: [],
+      activityViews: [],
       connected: false,
       info: {},
-      isAndroidApp: navigator.userAgent.includes("Android") && navigator.userAgent.includes("wv"), // Checks for Android and WebView
+      isAndroidApp: testingAndroid || navigator.userAgent.includes("Android") && navigator.userAgent.includes("wv"), // Checks for Android and WebView
     }
   },
 
@@ -115,18 +121,22 @@ export default {
     let types_by_host = {};
     _.each(buckets, (v) => {
         types_by_host[v.hostname] = types_by_host[v.hostname] || {};
-        if(v.type == "afkstatus") {
-            types_by_host[v.hostname].afk = true;
-        } else if(v.type == "currentwindow") {
-            types_by_host[v.hostname].window = true;
-        }
+        // The '&& true;' is just to typecoerce into booleans
+        types_by_host[v.hostname].afk |= v.type == "afkstatus";
+        types_by_host[v.hostname].window |= v.type == "currentwindow";
+        types_by_host[v.hostname].android |= v.type == "currentwindow" && this.isAndroidApp;  // Use other bucket type ID in the future
     })
+    console.log(types_by_host);
 
     _.each(types_by_host, (types, hostname) => {
-        if(types.afk === true && types.window === true) {
-            this.activity_hosts.push(hostname);
+        if(types.afk && types.window) {
+          this.activityViews.push({name: hostname, type: "default", pathUrl: '/activity', icon: 'desktop'});
+        }
+        if(types.android) {
+          this.activityViews.push({name: `${hostname} (Android) `, type: "android", pathUrl: '/activity-android', icon: 'mobile'});
         }
     })
+    console.log(this.activityViews);
   }
 }
 

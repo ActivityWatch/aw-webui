@@ -26,7 +26,7 @@ export function windowQuery(windowbucket, afkbucket, appcount, titlecount, filte
   return _.map(lines, (l) => l + ";");
 }
 
-export function queryApps(appbucket, limit) {
+export function appQuery(appbucket, limit) {
   let code = (
     `events  = flood(query_bucket("${appbucket}"));`
   ) + (
@@ -96,3 +96,11 @@ export function dailyActivityQuery(afkbucket) {
     'RETURN = not_afk;'
   ];
 }
+
+export default {
+  windowQuery,
+  browserSummaryQuery,
+  appQuery,
+  dailyActivityQuery,
+  editorActivityQuery,
+};
