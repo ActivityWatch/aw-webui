@@ -1,7 +1,7 @@
 import moment from 'moment';
 
-module.exports = {
-    seconds_to_duration: function(seconds){
+export default {
+    seconds_to_duration(seconds) {
         var result = "";
         var hrs = Math.floor(seconds/60/60);
         var min = Math.floor(seconds/60%60);
@@ -15,7 +15,7 @@ module.exports = {
         return result;
     },
 
-    get_day_start: function(datestr){
+    get_day_start(datestr) {
       // Get start time of date
       var datestart = moment(datestr);
       datestart.set('hour', 0);

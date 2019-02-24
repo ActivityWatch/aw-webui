@@ -1,14 +1,14 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 
-import Home from './views/Home.vue';
-import Activity from './views/Activity.vue';
-import ActivityAndroid from './views/ActivityAndroid.vue';
-import Buckets from './views/Buckets.vue';
-import Bucket from './views/Bucket.vue';
-import QueryExplorer from './views/QueryExplorer.vue';
-import Timeline from './views/Timeline.vue';
-import Log from './views/Log.vue';
+const Home = () => import('./views/Home.vue');
+const Activity = () => import('./views/Activity.vue');
+const ActivityAndroid = () => import('./views/ActivityAndroid.vue');
+const Buckets = () => import('./views/Buckets.vue');
+const Bucket = () => import('./views/Bucket.vue');
+const QueryExplorer = () => import('./views/QueryExplorer.vue');
+const Timeline = () => import('./views/Timeline.vue');
+const Log = () => import('./views/Log.vue');
 
 Vue.use(VueRouter);
 

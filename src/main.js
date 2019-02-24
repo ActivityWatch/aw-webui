@@ -1,3 +1,5 @@
+import "@babel/polyfill";
+
 import Vue from 'vue';
 
 // Load the Bootstrap CSS
