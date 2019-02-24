@@ -21,7 +21,7 @@ div#wrapper
         icon(name="home")
         | Home
       // If only a single view (the default) is available
-      b-nav-item(v-if="activityViews.length === 1", v-for="view in activityViews", :key="view.name", :to="view.pathUrl + '/' + view.name")
+      b-nav-item(v-if="activityViews.length === 1", v-for="view in activityViews", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
         icon(name="clock")
         | Activity
       // If multiple activity views are available
@@ -33,7 +33,7 @@ div#wrapper
           | No activity reports available
           br
           small Make sure you have both an AFK and window watcher running
-        b-dropdown-item(v-for="view in activityViews", :key="view.name", :to="view.pathUrl + '/' + view.name")
+        b-dropdown-item(v-for="view in activityViews", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
           icon(:name="view.icon")
           | {{ view.name }}
       b-nav-item(to="/timeline")
@@ -130,10 +130,22 @@ export default {
 
     _.each(types_by_host, (types, hostname) => {
         if(types.afk && types.window) {
-          this.activityViews.push({name: hostname, type: "default", pathUrl: '/activity', icon: 'desktop'});
+          this.activityViews.push({
+            name: hostname,
+            hostname: hostname,
+            type: "default",
+            pathUrl: '/activity',
+            icon: 'desktop'
+          });
         }
         if(types.android) {
-          this.activityViews.push({name: `${hostname} (Android) `, type: "android", pathUrl: '/activity-android', icon: 'mobile'});
+          this.activityViews.push({
+            name: `${hostname} (Android)`,
+            hostname: hostname,
+            type: "android",
+            pathUrl: '/activity-android',
+            icon: 'mobile'
+          });
         }
     })
     console.log(this.activityViews);

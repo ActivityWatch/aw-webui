@@ -38,7 +38,7 @@ div
     div.col-md-4
       h5 Top Applications
       aw-summary(:fields="top_apps", :namefunc="top_apps_namefunc", :colorfunc="top_apps_colorfunc")
-      b-button(size="sm", variant="outline-secondary", :disabled="top_apps.length < top_apps_count", @click="top_apps_count += 5; queryWindows()")
+      b-button(size="sm", variant="outline-secondary", :disabled="top_apps.length < top_apps_count", @click="top_apps_count += 5; queryApps()")
         icon(name="angle-double-down")
         | Show more
 
@@ -76,6 +76,8 @@ export default {
       top_apps_count: 5,
       top_apps_namefunc: (e) => e.data.app,
       top_apps_colorfunc: (e) => e.data.app,
+
+      appBucketId: "aw-watcher-window_erb-laptop2-arch", //android-test
     }
   },
   watch: {
@@ -96,7 +98,6 @@ export default {
     dateStart: function() { return this.date },
     dateEnd: function() { return moment(this.date).add(1, 'days').format() },
     dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
-    appBucketId: function() { return "aw-watcher-android-test" },
   },
 
   mounted: function() {
@@ -130,10 +131,11 @@ export default {
 
     queryApps: async function() {
       var periods = [this.dateStart + "/" + this.dateEnd];
-      var q = query.appQuery(this.appBucketId);
+      console.log(this.appBucketId);
+      var q = query.appQuery(this.appBucketId, this.top_apps_count);
       let data = await this.$aw.query(periods, q).catch(this.errorHandler);
       data = data[0];
-      this.top_apps = data["app_events"];
+      this.top_apps = data["events"];
       this.total_duration = data["total_duration"];
     },
 
@@ -144,7 +146,7 @@ export default {
         var enddate = moment(this.date).add(i+1, 'days').format();
         timeperiods.push(startdate + '/' + enddate);
       }
-      this.daily_activity = await this.$aw.query(timeperiods, query.dailyActivityQuery(this.afkBucketId)).catch(this.errorHandler);
+      this.daily_activity = await this.$aw.query(timeperiods, query.dailyActivityQueryAndroid(this.appBucketId)).catch(this.errorHandler);
     },
 
     testError() {

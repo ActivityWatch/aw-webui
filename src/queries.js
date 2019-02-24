@@ -27,6 +27,7 @@ export function windowQuery(windowbucket, afkbucket, appcount, titlecount, filte
 }
 
 export function appQuery(appbucket, limit) {
+  limit = limit || 5;
   let code = (
     `events  = flood(query_bucket("${appbucket}"));`
   ) + (
@@ -97,10 +98,18 @@ export function dailyActivityQuery(afkbucket) {
   ];
 }
 
+export function dailyActivityQueryAndroid(androidbucket) {
+  return [
+    `not_afk = sort_by_duration(flood(query_bucket('${androidbucket}')));`,
+    'RETURN = limit_events(not_afk, 10);'
+  ];
+}
+
 export default {
   windowQuery,
   browserSummaryQuery,
   appQuery,
   dailyActivityQuery,
+  dailyActivityQueryAndroid,
   editorActivityQuery,
 };

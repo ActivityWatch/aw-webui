@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  b-alert(variant="danger", v-for="error in errors", :show='!error.dismissed', dismissible, @dismissed="error.dismissed = false")
+  b-alert(variant="danger", v-for="error in errors", :key='error.msg', :show='!error.dismissed', dismissible, @dismissed="error.dismissed = false")
     | {{ error.msg }}
   slot
 </template>
