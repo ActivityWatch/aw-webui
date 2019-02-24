@@ -92,7 +92,8 @@ import 'vue-awesome/icons/desktop';
 
 import _ from 'lodash';
 
-let testingAndroid = true;
+// Set this to true to test Android behavior when on a desktop
+let testingAndroid = false;
 
 export default {
   data: function() {
