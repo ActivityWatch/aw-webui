@@ -87,7 +87,7 @@ module.exports = {
       },
       {
         test: /\.html$/,
-        loader: 'vue-html-loader'
+        loader: 'html-loader'
       },
       {
         test: /\.css$/,
