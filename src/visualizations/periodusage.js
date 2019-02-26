@@ -4,7 +4,7 @@ const d3 = require("d3");
 const _ = require("lodash");
 const moment = require("moment");
 
-var time = require("../util/time.js");
+import time from "../util/time.js";
 
 function create(svg_elem){
   // Clear element
@@ -112,7 +112,7 @@ function update(svg_elem, usage_arr, host) {
   });
 }
 
-module.exports = {
+export default {
   "create": create,
   "update": update,
   "set_status": set_status,

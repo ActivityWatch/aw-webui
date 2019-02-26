@@ -11,7 +11,7 @@ const moment = require("moment");
 
 import {getColorFromString} from "../util/color.js"
 
-const time = require("../util/time.js");
+import time from "../util/time.js";
 
 function show_info(container, elem_id) {
   var title_event_box = container.querySelector("#"+elem_id);
@@ -166,7 +166,7 @@ function update(container, events, total_duration, showAFK, chunkfunc, eventfunc
   return container;
 }
 
-module.exports = {
+export default {
   "create": create,
   "update": update,
   "set_status": set_status,
