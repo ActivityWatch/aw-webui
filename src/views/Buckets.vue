@@ -1,5 +1,10 @@
 <template lang="pug">
 div
+
+  b-alert(show)
+    | Are you looking to collect more data? Check out #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") the docs] for more watchers.
+    br
+    small #[b Note:] This is currently not as easy as we want it to be, so some familiarity with programming is currently needed to run most of them.
   h2 Buckets
 
   b-alert(variant="danger" :show="bucket_to_delete.length > 0")
@@ -14,11 +19,6 @@ div
                  title="Abort",
                  variant="success")
           | Abort
-
-  b-alert(show)
-    | Are you looking to collect more data? Check out #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") the docs] for more watchers.
-    br
-    small #[b Note:] This is currently not as easy as we want it to be, so some familiarity with programming is currently needed to run most of them.
 
   //b-card-group(columns=true)
   b-card.bucket-card(v-for="bucket in buckets", :key="bucket.id", :header="bucket.id")
@@ -45,6 +45,26 @@ div
         | Last updated:
       span(style="width: 8em; margin-left: 0.5em; display: inline-block")
         | {{ bucket.last_updated | friendlytime }}
+
+  br
+
+  h3 Import and export buckets
+
+  b-card-group.deck
+    b-card(header="Import buckets")
+      form(method="post", :action="$aw.baseURL + '/api/0/import'", enctype="multipart/form-data")
+        input(type="file", name="buckets.json")
+        input(type="submit", value="Import")
+      span
+        | A valid file to import is a JSON file from either an export of a single bucket or an export from multiple buckets.
+        | If there are buckets with the same name the import will fail
+    b-card(header="Export buckets")
+      b-button(:href="$aw.baseURL + '/api/0/export'",
+               :download="'aw-bucket-export.json'",
+               title="Export bucket to JSON",
+               variant="outline-secondary")
+        icon(name="download")
+        | Export all buckets as JSON
 
 </template>
 
