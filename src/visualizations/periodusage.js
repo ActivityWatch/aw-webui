@@ -1,11 +1,8 @@
 "use strict";
 
 const d3 = require("d3");
-const Color = require("color");
 const _ = require("lodash");
 const moment = require("moment");
-
-import color from "../util/color.js";
 
 var time = require("../util/time.js");
 
@@ -57,14 +54,13 @@ function update(svg_elem, usage_arr, host) {
   var width = (100/usage_arr.length) - padding;
   var center_elem = Math.floor(usage_arr.length/2);
 
-
-  for (var i in usage_arr){
-    var usage_time = get_usage_time(usage_arr[i]);
+  _.each(usage_arr, (events, i) => {
+    var usage_time = get_usage_time(events);
     var height = 85 * (usage_time / longest_usage);
     var date = "";
-    if (usage_arr[i].length > 0){
-      /* slice off so it's only the day */
-      date = usage_arr[i][0].timestamp.slice(0,10);
+    if (events.length > 0) {
+      // slice off so it's only the day
+      date = moment(usage_arr[i][0].timestamp).format('YYYY-MM-DD');
     }
     var color = (i == center_elem) ? diagramcolor_selected : diagramcolor;
     var offset = 50;
@@ -101,23 +97,19 @@ function update(svg_elem, usage_arr, host) {
       .on("mouseover", () => {
           rect.style("fill", diagramcolor_focused);
       })
-      .on("mouseout", (d, i, n) => {
-          var a = n[i];
+      .on("mouseout", (d, j, n) => {
+          var a = n[j];
           rect.style("fill", a.getAttribute("color"));
       })
-      .on("click", function(d, i, n) {
-        var me = n[i];
-        var host = d3.select(me).attr('host');
-        var day = d3.select(me).attr('date');
-        var url = '/#/activity/'+host+'/'+day;
+      .on("click", function(d, j, n) {
+        var me = n[j];
+        var url = `/#/activity/${host}/${d3.select(me).attr('date')}`;
         /* Not the vue-way, but works */
         window.location.assign(url);
         /* Hardcoding click behavior also isn't optimal I guess */
       });
     rect.append("title").text(date+"\n"+time.seconds_to_duration(usage_time));
-  }
-
-  return container;
+  });
 }
 
 module.exports = {

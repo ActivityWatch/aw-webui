@@ -13,24 +13,15 @@ div
       td Hostname:
       td {{ bucket.hostname }}
     tr
-      td
-        small Created:
-      td
-        small {{ bucket.created }}
+      td Created:
+      td {{ bucket.created }}
     tr
-      td
-        small Eventcount:
-      td
-        small {{ eventcount }}
+      td Eventcount:
+      td {{ eventcount }}
 
-  hr
+  input-timeinterval(v-model="daterange")
 
-  b-alert(variant="warning" show)
-    | This timeline is a work in progress. It only shows the last 100 events. Hover to get details.
-
-  aw-timeline(:event_type="bucket.type", :events="events")
-
-  hr
+  vis-timeline(:buckets="buckets", showRowLabels='false')
 
   aw-eventlist(:events="events")
 
@@ -41,42 +32,47 @@ div
 </style>
 
 <script>
-import awclient from '../awclient.js';
-
-import Timeline from '../visualizations/TimelineSimple.vue';
-import EventList from '../visualizations/EventList.vue';
+import moment from 'moment'
 
 export default {
   name: "Bucket",
-  components: {
-    "aw-timeline": Timeline,
-    "aw-eventlist": EventList,
-  },
   data: () => {
     return {
       id: String,
       bucket: Object,
       events: [],
       eventcount: "?",
+      daterange: [moment().subtract(1, "hour"), moment()],
+    }
+  },
+  computed: {
+    buckets() {
+      let bucket = this.bucket;
+      bucket.events = this.events;
+      return [bucket];
+    }
+  },
+  watch: {
+    daterange: function() {
+      this.getEvents(this.id);
     }
   },
   methods: {
-    getBucketInfo: function(bucket_id) {
-      awclient.getBucketInfo(bucket_id).then((response) => {
-        this.bucket = response.data;
+    getBucketInfo: async function(bucket_id) {
+      this.bucket = await this.$aw.getBucketInfo(bucket_id);
+    },
+
+    getEvents: async function(bucket_id) {
+      console.log(this.daterange);
+      this.events = await this.$aw.getEvents(bucket_id, {
+        start: this.daterange[0].format(),
+        end: this.daterange[1].format(),
+        limit: -1
       });
     },
 
-    getEvents: function(bucket_id) {
-      awclient.getEvents(bucket_id).then((response) => {
-        this.events = response.data;
-      });
-    },
-
-    getEventCount: function(bucket_id) {
-      awclient.getEventCount(bucket_id).then((response) => {
-        this.eventcount = response.data;
-      });
+    getEventCount: async function(bucket_id) {
+      this.eventcount = (await this.$aw.countEvents(bucket_id)).data;
     },
   },
   mounted: function() {

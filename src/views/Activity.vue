@@ -20,11 +20,11 @@ div
           |  Next day
           icon(name="arrow-right")
     div.p-1
-      input.form-control(id="date" type="date" :value="dateShort" :max="today" v-on:change="setDate($event.target.value)")
+      input.form-control(id="date" type="date" :value="dateShort" :max="today" @change="setDate($event.target.value)")
 
     div.p-1.ml-auto
       b-button-group
-        b-button(v-on:click="refresh()", variant="outline-dark")
+        b-button(@click="refresh()", variant="outline-dark")
           icon(name="sync")
           |  Refresh
 
@@ -32,16 +32,16 @@ div
 
   ul.nav.nav-tabs
     li.nav-item.aw-nav-item
-      a.nav-link.aw-nav-link(v-on:click="view = 'summary'" v-bind:class="{ active: view=='summary' }")
+      a.nav-link.aw-nav-link(@click="view = 'summary'" :class="{ active: view=='summary' }")
         h5 Summary
     li.nav-item.aw-nav-item
-      a.nav-link.aw-nav-link(v-on:click="view = 'window'" v-bind:class="{ active: view=='window' }")
+      a.nav-link.aw-nav-link(@click="view = 'window'" :class="{ active: view=='window' }")
         h5 Window
     li.nav-item.aw-nav-item
-      a.nav-link.aw-nav-link(v-on:click="view = 'browser'" v-bind:class="{ active: view=='browser' }")
+      a.nav-link.aw-nav-link(@click="view = 'browser'" :class="{ active: view=='browser' }")
         h5.active-h5 Browser
     li.nav-item.aw-nav-item
-      a.nav-link.aw-nav-link(v-on:click="view = 'editor'" v-bind:class="{ active: view=='editor' }")
+      a.nav-link.aw-nav-link(@click="view = 'editor'" :class="{ active: view=='editor' }")
         h5 Editor
   br
 
@@ -49,14 +49,14 @@ div
     div.col-md-4
       h5 Top Applications
       aw-summary(:fields="top_apps", :namefunc="top_apps_namefunc", :colorfunc="top_apps_colorfunc")
-      b-button(size="sm", variant="outline-secondary", :disabled="top_apps.length < top_apps_count", v-on:click="top_apps_count += 5; queryWindows()")
+      b-button(size="sm", variant="outline-secondary", :disabled="top_apps.length < top_apps_count", @click="top_apps_count += 5; queryWindows()")
         icon(name="angle-double-down")
         | Show more
 
     div.col-md-4
       h5 Top Window Titles
       aw-summary(:fields="top_windowtitles", :namefunc="top_windowtitles_namefunc", :colorfunc="top_windowtitles_colorfunc")
-      b-button(size="sm", variant="outline-secondary", :disabled="top_windowtitles.length < top_windowtitles_count", v-on:click="top_windowtitles_count += 5; queryWindows()")
+      b-button(size="sm", variant="outline-secondary", :disabled="top_windowtitles.length < top_windowtitles_count", @click="top_windowtitles_count += 5; queryWindows()")
         icon(name="angle-double-down")
         | Show more
 
@@ -65,11 +65,9 @@ div
 
       div(v-if="browserBucketId")
         aw-summary(:fields="top_web_domains", :namefunc="top_web_domains_namefunc", :colorfunc="top_web_domains_colorfunc")
-
-        b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length < top_web_count" v-on:click="top_web_count += 5; queryBrowserDomains()")
+        b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length < top_web_count" @click="top_web_count += 5; queryBrowserDomains()")
           icon(name="angle-double-down")
           | Show more
-        br
         br
 
   div(v-show="view == 'window'")
@@ -77,7 +75,7 @@ div
     b-form-checkbox(v-model="timelineShowAFK")
       | Show AFK time
 
-    aw-timeline(:chunks="app_chunks", :total_duration='duration', :show_afk='timelineShowAFK', :chunkfunc='app_chunkfunc', :eventfunc='app_eventfunc')
+    aw-timeline-inspect(:chunks="app_chunks", :total_duration='duration', :show_afk='timelineShowAFK', :chunkfunc='app_chunkfunc', :eventfunc='app_eventfunc')
 
     hr
 
@@ -95,7 +93,7 @@ div
           | No browser buckets available
           br
           small Make sure you have an browser extension installed
-        b-dropdown-item-button(v-for="browserBucket in browserBuckets", :key="browserBucket", v-on:click="browserBucketId = browserBucket")
+        b-dropdown-item-button(v-for="browserBucket in browserBuckets", :key="browserBucket", @click="browserBucketId = browserBucket")
           | {{ browserBucket }}
     br
 
@@ -114,7 +112,7 @@ div
         div(v-if="browserBucketId")
           aw-summary(:fields="top_web_urls", :namefunc="top_web_urls_namefunc", :colorfunc="top_web_urls_colorfunc")
 
-    b-button(size="sm", variant="outline-secondary", :disabled="top_web_urls.length < top_web_count && top_web_domains.length < top_web_count" v-on:click="top_web_count += 5; queryBrowserDomains()")
+    b-button(size="sm", variant="outline-secondary", :disabled="top_web_urls.length < top_web_count && top_web_domains.length < top_web_count" @click="top_web_count += 5; queryBrowserDomains()")
       icon(name="angle-double-down")
       | Show more
 
@@ -125,7 +123,7 @@ div
 
     br
 
-    aw-timeline(:chunks="web_chunks", :total_duration='duration', :show_afk='timelineShowAFK', :chunkfunc='web_chunkfunc', :eventfunc='web_eventfunc')
+    aw-timeline-inspect(:chunks="web_chunks", :total_duration='duration', :show_afk='timelineShowAFK', :chunkfunc='web_chunkfunc', :eventfunc='web_eventfunc')
 
   div(v-show="view == 'editor'")
 
@@ -140,7 +138,7 @@ div
           | No editor buckets available
           br
           small Make sure you have an editor watcher installed to use this feature
-        b-dropdown-item-button(v-for="editorBucket in editorBuckets", :key="editorBucket", v-on:click="editorBucketId = editorBucket")
+        b-dropdown-item-button(v-for="editorBucket in editorBuckets", :key="editorBucket", @click="editorBucketId = editorBucket")
           | {{ editorBucket }}
 
     br
@@ -161,7 +159,7 @@ div
           h5 Top project activity
           aw-summary(:fields="top_editor_projects", :namefunc="top_editor_projects_namefunc", :colorfunc="top_editor_projects_colorfunc")
 
-      b-button(size="sm", variant="outline-secondary", v-on:click="top_editor_count += 5; queryEditorActivity()")
+      b-button(size="sm", variant="outline-secondary", @click="top_editor_count += 5; queryEditorActivity()")
         icon(name="angle-double-down")
         | Show more
 
@@ -191,6 +189,7 @@ div
   border-top-left-radius: 0.5rem !important;
   border-top-right-radius: 0.5rem !important;
 }
+
 .aw-nav-link:hover {
   background-color: #fff;
 }
@@ -203,8 +202,6 @@ div
 
 <script>
 import moment from 'moment';
-import timeline from '../visualizations/timeline.js';
-import summary from '../visualizations/summary.js';
 import time from "../util/time.js";
 
 import 'vue-awesome/icons/arrow-left'
@@ -213,13 +210,6 @@ import 'vue-awesome/icons/angle-double-down'
 import 'vue-awesome/icons/sync'
 
 import query from '../queries.js';
-
-import Summary from '../visualizations/Summary.vue';
-import Sunburst from '../visualizations/Sunburst.vue';
-import PeriodUsage from '../visualizations/PeriodUsage.vue';
-import Timeline from '../visualizations/TimelineInspect.vue';
-
-import awclient from '../awclient.js';
 
 
 export default {
@@ -302,26 +292,18 @@ export default {
       top_editor_projects_colorfunc: (e) => e.data.project,
     }
   },
-
-  components: {
-    "aw-sunburst": Sunburst,
-    "aw-summary": Summary,
-    "aw-periodusage": PeriodUsage,
-    "aw-timeline": Timeline,
-  },
-
   watch: {
-    '$route': function(to, from) {
+    '$route': function() {
       console.log("Route changed");
       this.refresh();
     },
-    'filterAFK': function(to, from) {
+    filterAFK() {
       this.refresh();
     },
-    'browserBucketId': function(to, from) {
+    browserBucketId() {
       this.queryBrowserDomains();
     },
-    'editorBucketId': function(to, from) {
+    editorBucketId() {
       this.queryEditorActivity();
     },
   },
@@ -331,7 +313,11 @@ export default {
     readableWebDuration: function() { return time.seconds_to_duration(this.web_duration) },
     readableEditorDuration: function() { return time.seconds_to_duration(this.editor_duration) },
     host: function() { return this.$route.params.host },
-    date: function() { return this.$route.params.date || moment().startOf('day').format() },
+    date: function() {
+      var dateParam = this.$route.params.date;
+      var dateMoment = dateParam ? moment(dateParam) : moment();
+      return dateMoment.startOf('day').format();
+    },
     dateStart: function() { return this.date },
     dateEnd: function() { return moment(this.date).add(1, 'days').format() },
     dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
@@ -344,6 +330,7 @@ export default {
     this.getEditorBucket();
 
     this.refresh();
+    this.testError();
   },
 
   methods: {
@@ -356,9 +343,9 @@ export default {
       this.duration = "";
     },
 
-    errorHandler: function(response) {
-      console.error(response);
-      this.errormsg = "Request error " + response.status + ". See F12 console for more info.";
+    errorHandler: function(error) {
+      this.errormsg = "" + error + ". See dev console (F12) and/or server logs for more info.";
+      throw error;
     },
 
     queryAll: function() {
@@ -372,112 +359,78 @@ export default {
       this.queryDailyActivity();
     },
 
-    getBrowserBucket: function() {
-      awclient.getBuckets().then((response) => {
-        let buckets = response.data;
-        for (var bucket in buckets){
-          if (buckets[bucket]["type"] === "web.tab.current"){
-            this.browserBuckets.push(bucket);
-          }
+    getBrowserBucket: async function() {
+      let buckets = await this.$aw.getBuckets().catch(this.errorHandler);
+      for (var bucket in buckets){
+        if (buckets[bucket]["type"] === "web.tab.current"){
+          this.browserBuckets.push(bucket);
         }
-        if (this.browserBuckets.length > 0){
-          this.browserBucketId = this.browserBuckets[0]
-        }
-      });
-    },
-
-    getEditorBucket: function() {
-      awclient.getBuckets().then((response) => {
-        let buckets = response.data;
-        for (var bucket in buckets){
-          if (buckets[bucket]["type"] === "app.editor.activity"){
-            this.editorBuckets.push(bucket);
-          }
-        }
-        if (this.editorBuckets.length > 0){
-          this.editorBucketId = this.editorBuckets[0]
-        }
-      });
-    },
-
-    queryWindows: function(){
-      var periods = [this.dateStart + "/" + this.dateEnd];
-      var q = query.windowQuery(this.windowBucketId, this.afkBucketId, this.top_apps_count, this.top_windowtitles_count, this.filterAFK);
-      awclient.query(periods, q).then(
-        (response) => { // Success
-          if (response.status > 304){
-            this.errorHandler(response);
-          } else {
-            let data = response.data[0];
-            let events = data["events"];
-            let not_afk_events = data["not_afk_events"];
-            this.top_apps = data["app_events"];
-            this.top_windowtitles = data["title_events"];
-            this.app_chunks = data["app_chunks"];
-            this.duration = data["duration"];
-          }
-        }, this.errorHandler
-      );
-    },
-
-    queryBrowserDomains: function(){
-      if (this.browserBucketId !== ""){
-        var periods = [this.dateStart + "/" + this.dateEnd];
-        var q = query.browserSummaryQuery(this.browserBucketId, this.windowBucketId, this.afkBucketId,
-																				  this.top_web_count, this.filterAFK, this.countAudibleAsActive);
-        awclient.query(periods, q).then(
-          (response) => { // Success
-            if (response.status > 304){
-              this.errorHandler(response);
-            } else {
-              let data = response.data[0];
-              this.web_duration = data["duration"];
-              this.top_web_domains = data["domains"];
-              this.top_web_urls = data["urls"];
-              this.web_chunks = data["chunks"];
-            }
-          }, this.errorHandler
-        );
+      }
+      if (this.browserBuckets.length > 0){
+        this.browserBucketId = this.browserBuckets[0]
       }
     },
 
-    queryEditorActivity: function(){
+    getEditorBucket: async function() {
+      let buckets = await this.$aw.getBuckets().catch(this.errorHandler);
+      for (var bucket in buckets){
+        if (buckets[bucket]["type"] === "app.editor.activity"){
+          this.editorBuckets.push(bucket);
+        }
+      }
+      if (this.editorBuckets.length > 0){
+        this.editorBucketId = this.editorBuckets[0]
+      }
+    },
+
+    queryWindows: async function() {
+      var periods = [this.dateStart + "/" + this.dateEnd];
+      var q = query.windowQuery(this.windowBucketId, this.afkBucketId, this.top_apps_count, this.top_windowtitles_count, this.filterAFK);
+      let data = await this.$aw.query(periods, q).catch(this.errorHandler);
+      data = data[0];
+      this.top_apps = data["app_events"];
+      this.top_windowtitles = data["title_events"];
+      this.app_chunks = data["app_chunks"];
+      this.duration = data["duration"];
+    },
+
+    queryBrowserDomains: async function() {
+      if (this.browserBucketId !== "") {
+        var periods = [this.dateStart + "/" + this.dateEnd];
+        var q = query.browserSummaryQuery(this.browserBucketId, this.windowBucketId, this.afkBucketId, this.top_web_count, this.filterAFK);
+        let data = (await this.$aw.query(periods, q).catch(this.errorHandler))[0];
+        this.web_duration = data["duration"];
+        this.top_web_domains = data["domains"];
+        this.top_web_urls = data["urls"];
+        this.web_chunks = data["chunks"];
+      }
+    },
+
+    queryEditorActivity: async function() {
       if (this.editorBucketId !== ""){
         var periods = [this.dateStart + "/" + this.dateEnd];
         var q = query.editorActivityQuery(this.editorBucketId, this.top_editor_count);
-        awclient.query(periods, q).then(
-          (response) => { // Success
-            if (response.status > 304){
-              this.errorHandler(response);
-            } else {
-              let data = response.data[0];
-              this.editor_duration = data["duration"];
-              this.top_editor_files = data["files"];
-              this.top_editor_languages = data["languages"];
-              this.top_editor_projects = data["projects"];
-            }
-          }, this.errorHandler
-        );
+        let data = (await this.$aw.query(periods, q).catch(this.errorHandler))[0];
+        this.editor_duration = data["duration"];
+        this.top_editor_files = data["files"];
+        this.top_editor_languages = data["languages"];
+        this.top_editor_projects = data["projects"];
       }
     },
 
-    queryDailyActivity: function(){
+    queryDailyActivity: async function() {
       var timeperiods = [];
       for (var i=-15; i<=15; i++) {
         var startdate = moment(this.date).add(i, 'days').format();
         var enddate = moment(this.date).add(i+1, 'days').format();
         timeperiods.push(startdate + '/' + enddate);
       }
-      awclient.query(timeperiods, query.dailyActivityQuery(this.afkBucketId)).then(
-        (response) => { // Success
-          if (response.status > 304){
-            this.errorHandler(response);
-          } else {
-            this.daily_activity = response.data;
-          }
-        }, this.errorHandler
-      );
+      this.daily_activity = await this.$aw.query(timeperiods, query.dailyActivityQuery(this.afkBucketId)).catch(this.errorHandler);
     },
+
+    testError() {
+      //throw 'error: some message';
+    }
   },
 }
 </script>

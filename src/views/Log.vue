@@ -41,11 +41,6 @@ div
 </style>
 
 <script>
-/* This is completely broken */
-import Resources from '../awclient.js';
-
-let $Log = Resources.$Log;
-
 export default {
   name: "Log",
   mounted: function() {

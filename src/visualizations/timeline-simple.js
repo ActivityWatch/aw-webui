@@ -5,8 +5,7 @@ const Color = require("color");
 const _ = require("lodash");
 const moment = require("moment");
 
-import color from "../util/color.js";
-import coloring_types from "./coloring.js";
+import {getTitleAttr, getColorFromString} from "../util/color.js";
 
 var time = require("../util/time.js");
 
@@ -15,7 +14,7 @@ function create(svg_el) {
   svg_el.innerHTML = "";
 
   // svg for the colored timeline
-  let timeline = d3.select(svg_el)
+  d3.select(svg_el)
     .attr("viewBox", "0 0 100 4")
     .attr("width", "100%");
 }
@@ -34,11 +33,6 @@ function set_status(svg_el, text){
 }
 
 function update(svg_el, events, event_type) {
-  if(coloring_types[event_type] === undefined) {
-    console.log("");
-  }
-  let coloring = coloring_types[event_type];
-
   let timeline = d3.select(svg_el);
   timeline.selectAll("*").remove();
 
@@ -63,14 +57,7 @@ function update(svg_el, events, event_type) {
     let id = "timeline_event_" + i;
     let timestamp = moment(e.timestamp);
 
-    let color_base = undefined;
-    let color_key = coloring.key !== undefined ? e.data[coloring.key] : JSON.stringify(e.data);
-    if(coloring.colors !== undefined) {
-      color_base = coloring.colors[color_key];
-    } else {
-      // Get one random color per value
-      color_base = color.getAppColor(color_key);
-    }
+    let color_base = getColorFromString(getTitleAttr({type: event_type}, e));
     let color_hover = Color(color_base).darken(0.4).hex();
 
     let x = (timestamp - m_first) / 1000 / total_duration;
@@ -84,12 +71,12 @@ function update(svg_el, events, event_type) {
       .attr("width", width)
       .attr("height", 4)
       .style("fill", color_base)
-      .on("mouseover", function(d, i, n){
-          let elem = n[i];
+      .on("mouseover", function(d, j, n){
+          let elem = n[j];
           elem.style.fill = color_hover;
       })
-      .on("mouseout", function(d, i, n){
-          let elem = n[i];
+      .on("mouseout", function(d, j, n){
+          let elem = n[j];
           elem.style.fill = color_base;
       });
 
@@ -104,7 +91,7 @@ function update(svg_el, events, event_type) {
         .attr("x", 1)
         .attr("y", 2.5)
         .attr("pointer-events", "none")
-        .text(e.data[coloring.key])
+        .text(getTitleAttr({type: event_type}, e))
     }
   });
 

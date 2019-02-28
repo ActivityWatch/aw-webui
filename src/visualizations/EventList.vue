@@ -6,16 +6,16 @@ div
       h4.card-title Events
       span.pagination-header
         | Showing {{ events.length }} events
-      b-button(v-on:click="expandList", size="sm", style="float: right;")
+      b-button(@click="expandList", size="sm", style="float: right;")
         span(v-if="!isListExpanded")
           | Expand list
         span(v-else)
           | Condense list
 
-    ul.event-list(v-bind:class="{ 'expand': isListExpanded }")
+    ul.event-list(:class="{ 'expand': isListExpanded }")
       li(v-for="event in events")
           span.event
-            span.field(v-bind:title="event.timestamp")
+            span.field(:title="event.timestamp")
               icon(name="calendar")
               | {{ event.timestamp | friendlytime }}
             span.field
