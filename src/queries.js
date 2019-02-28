@@ -4,15 +4,17 @@ import _ from 'lodash';
 
 // Helper function returning a query that defines a variable events_active
 // that can be used to filter away non-active time.
-// NOTE: Requires that you have events_browser declared in advance if audibleAsActive is to be used
-function _events_active(afkbucket, audibleAsActive) {
+// TODO: Handle events from all available browser buckets, as done in: https://github.com/ActivityWatch/aw-webui/pull/108
+// TODO: Don't count audible as activity if window isn't active
+function _events_active(afkbucket, browserbucket, audibleAsActive) {
   return (
     `events_active = [];
      events_afk = flood(query_bucket("${afkbucket}"));
      events_active = period_union(events_active, filter_keyvals(events_afk, "status", ["not-afk"]))`
   ) + (
     audibleAsActive ?
-    `events_audible = filter_keyvals(events_browser, "audible", [true]);
+    `events_browser = flood(query_bucket("${browserbucket}"));
+     events_audible = filter_keyvals(events_browser, "audible", [true]);
      events_active = period_union(events_active, events_audible);`
      : ''
   );
@@ -94,8 +96,8 @@ function editorActivityQuery (editorbucket, limit){
   return _.map(lines, (l) => l + ";");
 }
 
-function dailyActivityQuery(afkbucket) {
-  return _events_active(afkbucket, false).concat([
+function dailyActivityQuery(afkbucket, browserbucket, audibleAsActive) {
+  return _events_active(afkbucket, browserbucket, audibleAsActive).concat([
     'RETURN = events_active;'
   ]);
 }
