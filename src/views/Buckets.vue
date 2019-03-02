@@ -1,5 +1,10 @@
 <template lang="pug">
 div
+
+  b-alert(show)
+    | Are you looking to collect more data? Check out #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") the docs] for more watchers.
+    br
+    small #[b Note:] This is currently not as easy as we want it to be, so some familiarity with programming is currently needed to run most of them.
   h2 Buckets
 
   b-alert(variant="danger" :show="bucket_to_delete.length > 0")
@@ -7,18 +12,13 @@ div
     b-button-toolbar
       b-button-group(size="sm", class="mx-1")
         b-button(@click="deleteBucket(bucket_to_delete); bucket_to_delete = ''"
-                 title="Export all events from this bucket to JSON",
+                 title="Confirm",
                  variant="danger")
           | Confirm
         b-button(@click="bucket_to_delete = ''"
-                 title="Export all events from this bucket to JSON",
+                 title="Abort",
                  variant="success")
           | Abort
-
-  b-alert(show)
-    | Are you looking to collect more data? Check out #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") the docs] for more watchers.
-    br
-    small #[b Note:] This is currently not as easy as we want it to be, so some familiarity with programming is currently needed to run most of them.
 
   //b-card-group(columns=true)
   b-card.bucket-card(v-for="bucket in buckets", :key="bucket.id", :header="bucket.id")
@@ -28,19 +28,16 @@ div
           icon(name="folder-open")
           | Open bucket
       b-button-group(size="sm", class="mx-1")
-        // TODO: This currently does not export bucket metadata, which makes importing difficult
-        //       See: https://github.com/ActivityWatch/activitywatch/issues/103
-        // NOTE: When this is done we should also change the download name from "events-export" to "bucket-export".
-        b-button(:href="'/api/0/buckets/' + bucket.id + '/events?limit=-1'",
-                 :download="'aw-event-export-' + bucket.id + '.json'",
-                 title="Export all events from this bucket to JSON",
+        b-button(:href="$aw.baseURL + '/api/0/buckets/' + bucket.id + '/export'",
+                 :download="'aw-bucket-export-' + bucket.id + '.json'",
+                 title="Export bucket to JSON",
                  variant="outline-secondary")
           icon(name="download")
           | Export as JSON
     b-button-toolbar.float-right
       b-button-group(size="sm", class="mx-1")
         b-button(@click="bucket_to_delete = bucket.id"
-                 title="Export all events from this bucket to JSON",
+                 title="Delete this bucket permanently",
                  variant="outline-danger")
           | #[icon(name="trash")] Delete bucket
     small.bucket-last-updated(v-if="bucket.last_updated", slot="footer")
@@ -48,6 +45,26 @@ div
         | Last updated:
       span(style="width: 8em; margin-left: 0.5em; display: inline-block")
         | {{ bucket.last_updated | friendlytime }}
+
+  br
+
+  h3 Import and export buckets
+
+  b-card-group.deck
+    b-card(header="Import buckets")
+      form(method="post", :action="$aw.baseURL + '/api/0/import'", enctype="multipart/form-data")
+        input(type="file", name="buckets.json")
+        input(type="submit", value="Import")
+      span
+        | A valid file to import is a JSON file from either an export of a single bucket or an export from multiple buckets.
+        | If there are buckets with the same name the import will fail
+    b-card(header="Export buckets")
+      b-button(:href="$aw.baseURL + '/api/0/export'",
+               :download="'aw-bucket-export.json'",
+               title="Export bucket to JSON",
+               variant="outline-secondary")
+        icon(name="download")
+        | Export all buckets as JSON
 
 </template>
 
