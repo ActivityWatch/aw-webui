@@ -10,19 +10,23 @@ div
   //b-card-group(columns=true)
   b-card.bucket-card(v-for="bucket in buckets", :key="bucket.id", :header="bucket.id")
     b-button-toolbar.float-left
-      b-button.mr-2(variant="primary", :to="'/buckets/' + bucket.id", size="sm")
-        icon.ml-0.mr-2(name="folder-open")
-        | Open
-      b-button(:href="$aw.baseURL + '/api/0/buckets/' + bucket.id + '/export'",
-               :download="'aw-bucket-export-' + bucket.id + '.json'",
-               title="Export this bucket and all its events as JSON",
-               variant="outline-secondary", size="sm")
-        icon.ml-0.mr-2(name="download")
-        | Export
+      b-button-group(size="sm", class="mx-1")
+        b-button(variant="primary", :to="'/buckets/' + bucket.id")
+          icon(name="folder-open")
+          | Open bucket
+      b-button-group(size="sm", class="mx-1")
+        b-button(:href="$aw.baseURL + '/api/0/buckets/' + bucket.id + '/export'",
+                 :download="'aw-bucket-export-' + bucket.id + '.json'",
+                 title="Export bucket to JSON",
+                 variant="outline-secondary")
+          icon(name="download")
+          | Export as JSON
     b-button-toolbar.float-right
-      b-button(v-b-modal="'delete-modal-' + bucket.id", variant="outline-danger", size="sm")
-        icon.ml-0.mr-2(name="trash")
-        | Delete
+      b-button-group(size="sm", class="mx-1")
+        b-button(v-b-modal="'delete-modal-' + bucket.id",
+                 title="Delete this bucket permanently",
+                 variant="outline-danger")
+          | #[icon(name="trash")] Delete bucket
     small.bucket-last-updated(v-if="bucket.last_updated", slot="footer")
       span
         | Last updated:
@@ -40,6 +44,25 @@ div
           | Cancel
         b-button(@click="deleteBucket(bucket.id)", variant="danger")
           | Confirm
+  br
+
+  h3 Import and export buckets
+
+  b-card-group.deck
+    b-card(header="Import buckets")
+      form(method="post", :action="$aw.baseURL + '/api/0/import'", enctype="multipart/form-data")
+        input(type="file", name="buckets.json")
+        input(type="submit", value="Import")
+      span
+        | A valid file to import is a JSON file from either an export of a single bucket or an export from multiple buckets.
+        | If there are buckets with the same name the import will fail
+    b-card(header="Export buckets")
+      b-button(:href="$aw.baseURL + '/api/0/export'",
+               :download="'aw-bucket-export.json'",
+               title="Export bucket to JSON",
+               variant="outline-secondary")
+        icon(name="download")
+        | Export all buckets as JSON
 
 </template>
 
