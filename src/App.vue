@@ -39,9 +39,9 @@ div#wrapper
       b-nav-item(to="/timeline")
         icon(name="calendar")
         | Timeline
-      b-nav-item(to="/timer")
+      b-nav-item(to="/stopwatch")
         icon(name="stopwatch")
-        | Timer
+        | Stopwatch
       b-nav-item(to="/buckets")
         icon(name="database")
         | Raw Data

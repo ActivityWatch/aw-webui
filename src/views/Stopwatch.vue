@@ -1,11 +1,11 @@
 <template lang="pug">
 div
-  h2 Timer
+  h2 Stopwatch
   p
     | Using bucket: {{bucket_id}}
 
   b-alert(show)
-    | This is an early experiment, an important missing feature is the ability to set start/end of timers manually.
+    | This is an early experiment, an important missing feature is the ability to set start/end times manually.
 
   b-input-group(prepend="New timer", size="lg")
     b-input(v-model="label" placeholder="Label")
@@ -18,15 +18,18 @@ div
 
   div.row
     div.col-md-6
-      h3 Running timers
-      div(v-for="e in runningTimers")
-        timer-entry(:event="e", :bucket_id="bucket_id", :now="now", @delete="deleteTimer(e)")
-        hr(style="margin: 0")
+      h3 Running
+      div(v-if="runningTimers.length > 0")
+        div(v-for="e in runningTimers")
+          stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now", @delete="deleteTimer(e)")
+          hr(style="margin: 0")
+      div(v-else)
+        span(style="color: #555") No stopwatch running
 
     div.col-md-6
-      h3 Stopped timers
+      h3 Stopped
       div(v-for="e in stoppedTimers")
-        timer-entry(:event="e", :bucket_id="bucket_id", :now="now", @delete="deleteTimer(e)", @new="startTimer(e.data.label)")
+        stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now", @delete="deleteTimer(e)", @new="startTimer(e.data.label)")
         hr(style="margin: 0")
 </template>
 
@@ -45,21 +48,21 @@ div
 import _ from 'lodash';
 import moment from 'moment';
 
-import TimerEntry from '../components/TimerEntry.vue';
+import StopwatchEntry from '../components/StopwatchEntry.vue';
 import 'vue-awesome/icons/play';
 import 'vue-awesome/icons/trash';
 
 export default {
-  name: "Timer",
+  name: "Stopwatch",
   components: {
-    "timer-entry": TimerEntry
+    "stopwatch-entry": StopwatchEntry
   },
   mounted: function() {
     // TODO: List all possible timer buckets
     //this.getBuckets();
 
     // Create default timer bucket
-    this.$aw.ensureBucket(this.bucket_id, "timer", "unknown");
+    this.$aw.ensureBucket(this.bucket_id, "general.stopwatch", "unknown");
 
     // TODO: Get all timer events
     this.getEvents()
@@ -68,7 +71,7 @@ export default {
   },
   data: () => {
     return {
-      bucket_id: "timers",
+      bucket_id: "aw-stopwatch",
       events: [],
       label: "",
       now: moment(),

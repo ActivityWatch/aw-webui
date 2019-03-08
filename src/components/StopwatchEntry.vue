@@ -38,7 +38,7 @@ import 'vue-awesome/icons/trash';
 import EventEditor from './EventEditor.vue';
 
 export default {
-  name: "TimerEntry",
+  name: "StopwatchEntry",
   components: {
     "event-editor": EventEditor,
   },
