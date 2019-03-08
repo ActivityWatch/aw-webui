@@ -7,8 +7,8 @@ div
   b-alert(show)
     | This is an early experiment, an important missing feature is the ability to set start/end times manually.
 
-  b-input-group(prepend="New timer", size="lg")
-    b-input(v-model="label" placeholder="Label")
+  b-input-group(size="lg")
+    b-input(v-model="label" placeholder="What are you working on?")
     b-input-group-append
       b-button(@click="startTimer(label)", variant="success")
         icon(name="play")
