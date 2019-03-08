@@ -6,7 +6,7 @@ const _ = require("lodash");
 
 import {getColorFromString} from "../util/color.js";
 
-var time = require("../util/time.js");
+import time from "../util/time.js";
 
 function create(container){
   // Clear element
@@ -117,7 +117,7 @@ function update(container, apps) {
   return container;
 }
 
-module.exports = {
+export default {
   "create": create,
   "update": update,
   "updateSummedEvents": updateSummedEvents,

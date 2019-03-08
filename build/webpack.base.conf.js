@@ -4,6 +4,30 @@ var utils = require('./utils')
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const VueLoaderPlugin = require('vue-loader/lib/plugin')
 
+// Cleans up log spam from mini-css-extract-plugin and the like.
+// Based on: https://github.com/webpack-contrib/mini-css-extract-plugin/issues/168#issuecomment-420095982
+class CleanUpStatsPlugin {
+  constructor(name) {
+    this.name = name;
+  }
+
+  shouldPickStatChild(child) {
+    return child.name.indexOf(this.name) !== 0;
+  }
+
+  apply(compiler) {
+    compiler.hooks.done.tap('CleanUpStatsPlugin', stats => {
+      const children = stats.compilation.children;
+      if (Array.isArray(children)) {
+        // eslint-disable-next-line no-param-reassign
+        stats.compilation.children = children.filter(child =>
+          this.shouldPickStatChild(child)
+        );
+      }
+    });
+  }
+}
+
 module.exports = {
   entry: {
     app: './src/main.js'
@@ -29,7 +53,9 @@ module.exports = {
       filename: "[name].css",
       chunkFilename: "[id].css"
     }),
-    new VueLoaderPlugin()
+    new VueLoaderPlugin(),
+    new CleanUpStatsPlugin('mini-css-extract-plugin'),
+    new CleanUpStatsPlugin('html-webpack-plugin'),
   ],
 
   module: {
@@ -48,7 +74,7 @@ module.exports = {
         exclude: /(node_modules|bower_components)/,
         use: [{
           loader: "babel-loader",
-          options: { presets: ['env'] }
+          options: { presets: ['@babel/preset-env'] }
         }]
       },
       {
@@ -61,7 +87,7 @@ module.exports = {
       },
       {
         test: /\.html$/,
-        loader: 'vue-html-loader'
+        loader: 'html-loader'
       },
       {
         test: /\.css$/,
