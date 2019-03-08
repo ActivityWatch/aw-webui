@@ -10,7 +10,7 @@ div
   b-input-group(prepend="New timer", size="lg")
     b-input(v-model="label" placeholder="Label")
     b-input-group-append
-      b-button(@click="startTimer()", variant="success")
+      b-button(@click="startTimer(label)", variant="success")
         icon(name="play")
         | Start
 
@@ -26,7 +26,7 @@ div
     div.col-md-6
       h3 Stopped timers
       div(v-for="e in stoppedTimers")
-        timer-entry(:event="e", :bucket_id="bucket_id", :now="now", @delete="deleteTimer(e)")
+        timer-entry(:event="e", :bucket_id="bucket_id", :now="now", @delete="deleteTimer(e)", @new="startTimer(e.data.label)")
         hr(style="margin: 0")
 </template>
 
@@ -83,12 +83,12 @@ export default {
     }
   },
   methods: {
-    startTimer: async function() {
+    startTimer: async function(label) {
       this.events.unshift(await this.$aw.heartbeat(this.bucket_id, 0, {
         timestamp: new Date(),
         data: {
           running: true,
-          label: this.label
+          label: label
         }
       }))
     },

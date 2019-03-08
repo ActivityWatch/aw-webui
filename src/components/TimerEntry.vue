@@ -9,9 +9,9 @@ div
       b-button.mx-1(v-if="event.data.running", @click="stop", variant="outline-primary", size="sm")
         icon.ml-0.mr-1(name="stop")
         | Stop
-      b-button.mx-1(v-if="!event.data.running", @click="resume", variant="outline-primary", size="sm")
+      b-button.mx-1(v-if="!event.data.running", @click="$emit('new')", variant="outline-primary", size="sm")
         icon.ml-0.mr-1(name="play")
-        | Resume
+        | Start new
       b-button.mx-1(v-b-modal="'edit-modal-' + event.id", variant="outline-dark", size="sm")
         icon.ml-0.mr-1(name="edit")
         | Edit
@@ -55,12 +55,6 @@ export default {
       this.event.duration = (moment() - moment(this.event.timestamp)) / 1000;
       await this.$aw.replaceEvent(this.bucket_id, this.event);
     },
-
-    resume: async function() {
-      this.event.data.running = true;
-      await this.$aw.replaceEvent(this.bucket_id, this.event);
-    },
-
     delete_: async function() {
       await this.$aw.deleteEvent(this.bucket_id, this.event.id);
       this.$emit('delete');
