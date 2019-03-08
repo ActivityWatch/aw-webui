@@ -6,6 +6,7 @@ import _ from 'lodash';
 // that can be used to filter away non-active time.
 // TODO: Handle events from all available browser buckets, as done in: https://github.com/ActivityWatch/aw-webui/pull/108
 // TODO: Don't count audible as activity if window isn't active
+// NOTE: This returns a string, not a list of strings.
 function _events_active(afkbucket, browserbucket, audibleAsActive) {
   return (
     `events_active = [];
@@ -23,12 +24,10 @@ function _events_active(afkbucket, browserbucket, audibleAsActive) {
 export function windowQuery(windowbucket, afkbucket, appcount, titlecount, filterAFK) {
   // TODO: Take into account audible browser activity (tricky)
   let code = (
-    `events  = flood(query_bucket("${windowbucket}"));
-     not_afk = flood(query_bucket("${afkbucket}"));
-     not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);`
+    `events  = flood(query_bucket("${windowbucket}"));`
   ) + (
     filterAFK ?
-    `not_afk = flood(query_bucket("' + afkbucket + '"));
+    `not_afk = flood(query_bucket("${afkbucket}"));
      not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);
      events  = filter_period_intersect(events, not_afk);`
     : ''
