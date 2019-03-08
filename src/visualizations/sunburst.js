@@ -17,7 +17,7 @@
 const d3 = require("d3");
 const moment = require("moment");
 
-const time = require("../util/time.js");
+import time from "../util/time.js";
 const color = require("../util/color.js");
 
 // Dimensions of sunburst.
@@ -186,7 +186,7 @@ function showInfo(d) {
   hoverEl.select(".time")
       .text(m.format("HH:mm:ss"));
 
-  let durationString = time.seconds_to_duration(d.data.duration)
+  let durationString = time.seconds_to_duration(d.data.duration);
   hoverEl.select(".duration")
       .text(durationString);
 
