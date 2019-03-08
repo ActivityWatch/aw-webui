@@ -14,7 +14,7 @@ div
       td {{ bucket.hostname }}
     tr
       td Created:
-      td {{ bucket.created }}
+      td {{ bucket.created | iso8601 }}
     tr
       td Eventcount:
       td {{ eventcount }}

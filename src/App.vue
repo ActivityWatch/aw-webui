@@ -39,6 +39,9 @@ div#wrapper
       b-nav-item(to="/timeline")
         icon(name="calendar")
         | Timeline
+      b-nav-item(to="/timer")
+        icon(name="stopwatch")
+        | Timer
       b-nav-item(to="/buckets")
         icon(name="database")
         | Raw Data
@@ -87,6 +90,7 @@ import 'vue-awesome/icons/calendar';
 import 'vue-awesome/icons/brands/twitter';
 import 'vue-awesome/icons/brands/github';
 import 'vue-awesome/icons/search';
+import 'vue-awesome/icons/stopwatch';
 import 'vue-awesome/icons/mobile';
 import 'vue-awesome/icons/desktop';
 

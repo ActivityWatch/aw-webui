@@ -1,24 +1,11 @@
 <template lang="pug">
 div
+  h2 Buckets
 
   b-alert(show)
     | Are you looking to collect more data? Check out #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") the docs] for more watchers.
     br
     small #[b Note:] This is currently not as easy as we want it to be, so some familiarity with programming is currently needed to run most of them.
-  h2 Buckets
-
-  b-alert(variant="danger" :show="bucket_to_delete.length > 0")
-    | Are you sure you want to delete bucket {{bucket_to_delete}}? (This is permanent and cannot be undone)
-    b-button-toolbar
-      b-button-group(size="sm", class="mx-1")
-        b-button(@click="deleteBucket(bucket_to_delete); bucket_to_delete = ''"
-                 title="Confirm",
-                 variant="danger")
-          | Confirm
-        b-button(@click="bucket_to_delete = ''"
-                 title="Abort",
-                 variant="success")
-          | Abort
 
   //b-card-group(columns=true)
   b-card.bucket-card(v-for="bucket in buckets", :key="bucket.id", :header="bucket.id")
@@ -36,7 +23,7 @@ div
           | Export as JSON
     b-button-toolbar.float-right
       b-button-group(size="sm", class="mx-1")
-        b-button(@click="bucket_to_delete = bucket.id"
+        b-button(v-b-modal="'delete-modal-' + bucket.id",
                  title="Delete this bucket permanently",
                  variant="outline-danger")
           | #[icon(name="trash")] Delete bucket
@@ -46,6 +33,17 @@ div
       span(style="width: 8em; margin-left: 0.5em; display: inline-block")
         | {{ bucket.last_updated | friendlytime }}
 
+    b-modal(:id="'delete-modal-' + bucket.id", title="Danger!", centered, hide-footer)
+      | Are you sure you want to delete bucket "{{bucket.id}}"?
+      br
+      br
+      b This is permanent and cannot be undone!
+      hr
+      div.float-right
+        b-button.mx-2(@click="$root.$emit('bv::hide::modal','delete-modal-' + bucket.id)")
+          | Cancel
+        b-button(@click="deleteBucket(bucket.id)", variant="danger")
+          | Confirm
   br
 
   h3 Import and export buckets
@@ -105,7 +103,6 @@ export default {
   data: () => {
     return {
       buckets: [],
-      bucket_to_delete: "",
     }
   },
   methods: {
@@ -121,6 +118,7 @@ export default {
       console.log("Deleting bucket " + bucket_id);
       await this.$aw.deleteBucket(bucket_id);
       await this.getBuckets();
+      this.$root.$emit('bv::hide::modal','delete-modal-' + bucket_id)
     }
   }
 }
