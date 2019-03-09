@@ -3,8 +3,8 @@ div#wrapper
   div.header(v-show="!isAndroidApp")
     div.container
       span.title
-        img(src="/static/logo.png")
-        span(style="padding-left: 15px;")
+        img.ml-0(src="/static/logo.png")
+        span.ml-2
           | ActivityWatch
       span.status
         span.good(v-show="connected")
@@ -46,33 +46,35 @@ div#wrapper
         icon(name="database")
         | Raw Data
       b-nav-item(to="/query")
-        // TODO: Use 'searchengin' icon instead, when landed in vue-awesome
         icon(name="search")
         | Query
 
-  div.container.aw-container.rounded-bottom#content
+  div.container.aw-container.rounded-bottom.pt-3.pd-3
     error-boundary
       router-view
 
-  div.container(style="height: 4rem; margin-top: 1rem; margin-bottom: 1rem; color: #555")
+  div.container.mt-3.mb-3(style="color: #555")
     div(style="float: left")
-      div
+      div.mb-1
         | Made with ❤ by the #[a(href="http://activitywatch.net/contributors/") ActivityWatch developers]
       div
-        a.outlinks(href="https://github.com/ActivityWatch/activitywatch", target="_blank")
+        a.mr-2(href="https://github.com/ActivityWatch/activitywatch", target="_blank")
           icon(name="brands/github")
           | GitHub
-        div
-        a.outlinks(href="https://twitter.com/ActivityWatchIt", target="_blank")
+        a(href="https://twitter.com/ActivityWatchIt", target="_blank")
           icon(name="brands/twitter")
           | Twitter
 
     div(style="float: right; text-align: right;")
-      | Need help? #[a(href="https://forum.activitywatch.net") Ask on the forum]
-      br
       | Found a bug? #[a(href="https://github.com/ActivityWatch/activitywatch/issues/new") File an issue]
       br
-      span(v-show="connected", style="color: #888")
+      | Need help? #[a(href="https://forum.activitywatch.net/c/support") Ask on the forum]
+      br
+      | Missing a feature? #[a(href="https://forum.activitywatch.net/c/features") Vote on the forum]
+      br
+      | Built something cool? #[a(href="https://forum.activitywatch.net/c/projects") Share it on the forum]
+      br
+      span.mt-2(v-show="connected", style="color: #888; font-size: 0.8em")
         | Host: {{info.hostname}}
         br
         | Version: {{info.version}}
@@ -153,7 +155,6 @@ export default {
           });
         }
     })
-    console.log(this.activityViews);
   }
 }
 
@@ -177,13 +178,6 @@ body {
   margin-left: 4px;
   margin-right: 4px;
   vertical-align: middle;
-}
-
-.outlinks {
-  img {
-    margin: 0.5rem 0.5rem 0.5rem 0;
-    height: 1.5rem;
-  }
 }
 
 .aw-navbar {
@@ -216,7 +210,6 @@ body {
 
   .title {
     display: inline-block;
-    width: 200px;
     font-size: 20pt;
     color: #444;
     white-space: nowrap;
@@ -252,9 +245,5 @@ body {
 
 .rounded-bottom {
   border-radius: 0px 0px 5px 5px;
-}
-
-#content {
-  padding: 1em;
 }
 </style>
