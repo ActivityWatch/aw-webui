@@ -77,7 +77,7 @@ export default {
       top_apps_namefunc: (e) => e.data.app,
       top_apps_colorfunc: (e) => e.data.app,
 
-      appBucketId: "aw-watcher-window_erb-laptop2-arch", //android-test
+      appBucketId: "aw-watcher-android-test",
     }
   },
   watch: {

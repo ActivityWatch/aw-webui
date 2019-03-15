@@ -100,7 +100,7 @@ export function dailyActivityQuery(afkbucket) {
 
 export function dailyActivityQueryAndroid(androidbucket) {
   return [
-    `not_afk = sort_by_duration(flood(query_bucket('${androidbucket}')));`,
+    `not_afk = sort_by_duration(flood(query_bucket("${androidbucket}")));`,
     'RETURN = limit_events(not_afk, 10);'
   ];
 }
