@@ -39,6 +39,7 @@ export default {
   data () {
     return {
       timeline: null,
+      filterShortEvents: true,
       options: {
         zoomMin: 1000 * 60,             // 10min in milliseconds
         zoomMax: 1000 * 60 * 60 * 24 * 31 * 3,    // about three months in milliseconds
@@ -82,10 +83,6 @@ export default {
         }
       });
 
-      // Filter out events shorter than 1 second (notably including 0-duration events)
-      // TODO: Use flooding instead, preferably with some additional method of removing/simplifying short events for even greater performance
-      items = _.filter(items, (d) => (d.end - d.start) > 1000);
-
       if(groups.length > 0 && items.length > 0) {
         if(this.queriedInterval && this.showQueriedInterval) {
           let duration = this.queriedInterval[1].diff(this.queriedInterval[0], "seconds");
@@ -122,7 +119,14 @@ export default {
         if(bucket.events === undefined) {
           return;
         }
-        _.each(_.sortBy(bucket.events, (e) => e.timestamp), (e) => {
+        let events = bucket.events;
+        // Filter out events shorter than 1 second (notably including 0-duration events)
+        // TODO: Use flooding instead, preferably with some additional method of removing/simplifying short events for even greater performance
+        if(this.filterShortEvents) {
+          events = _.filter(events, (e) => e.duration > 1);
+        }
+        events = _.sortBy(events, (e) => e.timestamp);
+        _.each(events, (e) => {
           data.push([
             bidx,
             getTitleAttr(bucket, e),
