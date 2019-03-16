@@ -3,6 +3,8 @@ import _ from 'lodash';
 // TODO: Sanitize string input of buckets
 
 export function windowQuery(windowbucket, afkbucket, appcount, titlecount, filterAFK) {
+  windowbucket = windowbucket.replace('"', '\\"');
+  afkbucket = afkbucket.replace('"', '\\"');
   let code = (
     `events  = flood(query_bucket("${windowbucket}"));
      not_afk = flood(query_bucket("${afkbucket}"));
@@ -27,6 +29,7 @@ export function windowQuery(windowbucket, afkbucket, appcount, titlecount, filte
 }
 
 export function appQuery(appbucket, limit) {
+  appbucket = appbucket.replace('"', '\\"');
   limit = limit || 5;
   let code = (
     `events  = flood(query_bucket("${appbucket}"));`
@@ -42,6 +45,10 @@ export function appQuery(appbucket, limit) {
 }
 
 export function browserSummaryQuery(browserbucket, windowbucket, afkbucket, count, filterAFK) {
+  browserbucket = browserbucket.replace('"', '\\"');
+  windowbucket = windowbucket.replace('"', '\\"');
+  afkbucket = afkbucket.replace('"', '\\"');
+  limit = limit || 5;
   var browser_appnames = "";
   if (browserbucket.endsWith("-chrome")){
     browser_appnames = JSON.stringify(["Google-chrome", "chrome.exe", "Chromium", "Google Chrome", "Chromium-browser", "Chromium-browser-chromium", "Google-chrome-beta", "Google-chrome-unstable"]);
@@ -75,6 +82,7 @@ export function browserSummaryQuery(browserbucket, windowbucket, afkbucket, coun
 }
 
 export function editorActivityQuery(editorbucket, limit) {
+  editorbucket = editorbucket.replace('"', '\\"');
   return [
     'editorbucket = "' + editorbucket + '";',
     'events = flood(query_bucket(editorbucket));',
@@ -90,6 +98,7 @@ export function editorActivityQuery(editorbucket, limit) {
 }
 
 export function dailyActivityQuery(afkbucket) {
+  afkbucket = afkbucket.replace('"', '\\"');
   return [
     'afkbucket = "' + afkbucket + '";',
     'not_afk = flood(query_bucket(afkbucket));',
@@ -99,6 +108,7 @@ export function dailyActivityQuery(afkbucket) {
 }
 
 export function dailyActivityQueryAndroid(androidbucket) {
+  androidbucket = androidbucket.replace('"', '\\"');
   return [
     `not_afk = sort_by_duration(flood(query_bucket("${androidbucket}")));`,
     'RETURN = limit_events(not_afk, 10);'
