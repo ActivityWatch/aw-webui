@@ -3,7 +3,6 @@
 .FORCE: ;
 
 build: install
-	(cd node_modules/vis; npm install; npm run build; true)
 	npm run build
 
 install: aw-client-js

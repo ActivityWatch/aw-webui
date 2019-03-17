@@ -8,38 +8,17 @@ div
 div#visualization {
   margin-top: 0.5em;
   margin-bottom: 0.5em;
-}
 
-.vis-timeline {
-  font-family: arial;
-  font-size: 9pt;
+  .timeline-timeline {
+    font-family: sans-serif !important;
 
-  .vis-item {
-    border: 0;
-    border-radius: 0;
-    /*
-    border-width: 0 1px 0 1px !important;
-    border-color: #fff !important;
-    */
-
-    .vis-item-content {
-      color: #333;
-      text-overflow: ellipsis;
-      overflow-x: hidden;
-      display: block;
+    .timeline-panel {
+      box-sizing: border-box;
     }
-  }
 
-  .vis-tooltip {
-    font-family: arial !important;
-    font-size: 9pt !important;
-
-    table {
-      td {
-        max-width: 25em;
-        text-overflow: ellipsis;
-        overflow: hidden;
-      }
+    .timeline-item {
+      border-color: rgba(0, 0, 0, 0.075);
+      border-radius: 2px;
     }
   }
 }
@@ -52,15 +31,15 @@ import moment from 'moment';
 import {buildTooltip} from '../util/tooltip.js'
 import {getColorFromString, getTitleAttr} from '../util/color.js'
 
-// Docs: http://visjs.org/docs/timeline/
-import {Timeline} from 'vis/dist/vis-timeline-graph2d.min.js';
-import 'vis/dist/vis-timeline-graph2d.min.css';
+import {Timeline} from 'timeline-plus/dist/timeline.js';
+import 'timeline-plus/dist/timeline.css';
 
 export default {
   props: ['buckets', 'showRowLabels', 'queriedInterval', 'showQueriedInterval'],
   data () {
     return {
       timeline: null,
+      filterShortEvents: true,
       options: {
         zoomMin: 1000 * 60,             // 10min in milliseconds
         zoomMax: 1000 * 60 * 60 * 24 * 31 * 3,    // about three months in milliseconds
@@ -80,9 +59,18 @@ export default {
   },
   watch: {
     buckets() {
+      // For some reason, an object is passed here, after which the correct array arrives
+      if(this.buckets.length === undefined) {
+        //console.log("I told you so!")
+        return;
+      }
+
+      // Build groups
       let groups = _.map(this.buckets, (bucket, bidx) => {
         return {id: bidx, content: this.showRowLabels ? '': bucket.id};
       });
+
+      // Build items
       let items = _.map(this.chartData, (row, i) => {
         return {
           id: i,
@@ -94,6 +82,7 @@ export default {
           style: `background-color: ${row[5]}`,
         }
       });
+
       if(groups.length > 0 && items.length > 0) {
         if(this.queriedInterval && this.showQueriedInterval) {
           let duration = this.queriedInterval[1].diff(this.queriedInterval[0], "seconds");
@@ -118,8 +107,8 @@ export default {
         this.options.min = start;
         this.options.max = end;
         this.timeline.setOptions(this.options);
-        this.timeline.setData({groups: groups, items: items})
         this.timeline.setWindow(start, end);
+        this.timeline.setData({groups: groups, items: items})
       }
     }
   },
@@ -130,7 +119,14 @@ export default {
         if(bucket.events === undefined) {
           return;
         }
-        _.each(_.sortBy(bucket.events, (e) => e.timestamp), (e) => {
+        let events = bucket.events;
+        // Filter out events shorter than 1 second (notably including 0-duration events)
+        // TODO: Use flooding instead, preferably with some additional method of removing/simplifying short events for even greater performance
+        if(this.filterShortEvents) {
+          events = _.filter(events, (e) => e.duration > 1);
+        }
+        events = _.sortBy(events, (e) => e.timestamp);
+        _.each(events, (e) => {
           data.push([
             bidx,
             getTitleAttr(bucket, e),
