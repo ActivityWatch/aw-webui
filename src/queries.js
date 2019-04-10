@@ -44,7 +44,7 @@ export function appQuery(appbucket, limit) {
   return _.map(lines, (l) => l + ";");
 }
 
-export function browserSummaryQuery(browserbucket, windowbucket, afkbucket, count, filterAFK) {
+export function browserSummaryQuery(browserbucket, windowbucket, afkbucket, limit, filterAFK) {
   browserbucket = browserbucket.replace('"', '\\"');
   windowbucket = windowbucket.replace('"', '\\"');
   afkbucket = afkbucket.replace('"', '\\"');
@@ -70,11 +70,11 @@ export function browserSummaryQuery(browserbucket, windowbucket, afkbucket, coun
     'events = split_url_events(events);',
     'urls = merge_events_by_keys(events, ["url"]);',
     'urls = sort_by_duration(urls);',
-    'urls = limit_events(urls, ' + count + ');',
+    'urls = limit_events(urls, ' + limit + ');',
     'domains = split_url_events(events);',
     'domains = merge_events_by_keys(domains, ["domain"]);',
     'domains = sort_by_duration(domains);',
-    'domains = limit_events(domains, ' + count + ');',
+    'domains = limit_events(domains, ' + limit + ');',
     'chunks = chunk_events_by_key(events, "domain");',
     'duration = sum_durations(events);',
     'RETURN = {"domains": domains, "urls": urls, "chunks": chunks, "duration": duration};',
