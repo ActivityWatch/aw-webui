@@ -310,10 +310,14 @@ export default {
     readableWebDuration: function() { return time.seconds_to_duration(this.web_duration) },
     readableEditorDuration: function() { return time.seconds_to_duration(this.editor_duration) },
     host: function() { return this.$route.params.host },
-    date: function() { 
+    date: function() {
       var dateParam = this.$route.params.date;
-      var dateMoment = dateParam ? moment(dateParam) : moment();
-      return dateMoment.startOf('day').format();
+      var dateMoment = dateParam ? moment(dateParam) : moment().startOf('day');
+      var start_of_day = localStorage.startOfDay;
+      var start_of_day_hours = parseInt(start_of_day.split(":")[0]);
+      var start_of_day_minutes = parseInt(start_of_day.split(":")[1]);
+      var dateMoment = dateMoment.hour(start_of_day_hours).minute(start_of_day_minutes);
+      return dateMoment.format();
     },
     dateStart: function() { return this.date },
     dateEnd: function() { return moment(this.date).add(1, 'days').format() },
