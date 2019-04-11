@@ -1,56 +1,45 @@
 <template lang="pug">
 div#wrapper
-  div.header(v-show="!isAndroidApp")
-    div.container
-      span.title
-        img.ml-0(src="/static/logo.png")
-        span.ml-2
-          | ActivityWatch
-      span.status
-        span.good(v-show="connected")
-          | Connected
-          icon(name="check-circle")
-        span.bad(v-show="!connected")
-          | Not connected
-          icon(name="times-circle")
-
-  div.container.aw-container
+  div.aw-container
     // TODO: Refactor into Mainmenu component
-    b-nav.row.aw-navbar
-      b-nav-item(to="/" exact)
-        icon(name="home")
-        | Home
-      // If only a single view (the default) is available
-      b-nav-item(v-if="activityViews.length === 1", v-for="view in activityViews", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
-        icon(name="clock")
-        | Activity
-      // If multiple activity views are available
-      b-nav-item-dropdown(v-if="activityViews.length !== 1")
-        template(slot="button-content")
+    b-nav.aw-navbar.navbar-expand-md
+      b-navbar-nav
+        // If only a single view (the default) is available
+        b-nav-item(v-if="activityViews.length === 1", v-for="view in activityViews", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
           icon(name="clock")
           | Activity
-        b-dropdown-item(v-if="activityViews.length <= 0", disabled)
-          | No activity reports available
-          br
-          small Make sure you have both an AFK and window watcher running
-        b-dropdown-item(v-for="view in activityViews", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
-          icon(:name="view.icon")
-          | {{ view.name }}
-      b-nav-item(to="/timeline")
-        icon(name="calendar")
-        | Timeline
-      b-nav-item(to="/stopwatch")
-        icon(name="stopwatch")
-        | Stopwatch
-      b-nav-item(to="/buckets")
-        icon(name="database")
-        | Raw Data
-      b-nav-item(to="/query")
-        icon(name="search")
-        | Query
-      b-nav-item(to="/settings")
-        icon(name="cog")
-        | Settings
+        // If multiple activity views are available
+        b-nav-item-dropdown(v-if="activityViews.length !== 1")
+          template(slot="button-content")
+            icon(name="clock")
+            | Activity
+          b-dropdown-item(v-if="activityViews.length <= 0", disabled)
+            | No activity reports available
+            br
+            small Make sure you have both an AFK and window watcher running
+          b-dropdown-item(v-for="view in activityViews", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
+              icon(:name="view.icon")
+              | {{ view.name }}
+        b-nav-item(to="/timeline")
+          icon(name="calendar")
+          | Timeline
+        b-nav-item(to="/stopwatch")
+          icon(name="stopwatch")
+          | Stopwatch
+      b-navbar-nav.abs-center
+        b-navbar-brand(to="/" style="background-color: transparent;")
+          img.ml-0.aligh-middle(src="/static/logo.png" style="height: 1.5em;")
+          span.ml-2.align-middle(style="font-size: 1.0em; color: #000;") ActivityWatch
+      b-navbar-nav.ml-auto
+        b-nav-item(to="/query")
+          icon(name="search")
+          | Query
+        b-nav-item(to="/buckets")
+          icon(name="database")
+          | Raw Data
+        b-nav-item(to="/settings")
+          icon(name="cog")
+          | Settings
 
   div.container.aw-container.rounded-bottom.pt-3.pd-3
     error-boundary
@@ -86,10 +75,10 @@ div#wrapper
 <script>
 
 // only import the icons you use to reduce bundle size
-import 'vue-awesome/icons/home';
 import 'vue-awesome/icons/database';
 import 'vue-awesome/icons/check-circle';
 import 'vue-awesome/icons/times-circle';
+import 'vue-awesome/icons/bars';
 import 'vue-awesome/icons/clock';
 import 'vue-awesome/icons/calendar';
 import 'vue-awesome/icons/brands/twitter';
@@ -185,60 +174,30 @@ body {
 }
 
 .aw-navbar {
-    li > a {
-        padding: 10px 15px 10px 15px;
-        color: #555;
-        font-size: 12pt;
-
-        span {
-            margin-right: 7px;
-        }
-    }
-
-  .active {
-    background-color: #EEE;
+  li > a {
+    color: #000;
   }
+  .active {
+    background-color: #DDD;
+    border-radius: 0.5em;
+  }
+
+  border-radius: 0.5em;
+
+  padding: 0.5em;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+
+  margin-left: 0.2em;
+  margin-right: 0.2em;
+  border-radius: 0.5em;
 }
 
 .nav-item:hover {
   background-color: #DDD;
-}
-
-.header {
-  border-bottom: 1px solid #CCC;
-  height: 55px;
-  line-height: 55px;
-  font-family: 'Varela Round', sans-serif;
-  font-size: 12pt;
-  font-weight: 400;
-
-  .title {
-    display: inline-block;
-    font-size: 20pt;
-    color: #444;
-    white-space: nowrap;
-
-    img {
-        width: 1.2em;
-        height: 1.2em;
-    }
-  }
-
-  .status {
-    float: right;
-
-    .text {
-        margin-left: 1em;
-    }
-
-    .good {
-        color: green;
-    }
-
-    .bad {
-        color: red;
-    }
-  }
 }
 
 .aw-container {
@@ -250,4 +209,11 @@ body {
 .rounded-bottom {
   border-radius: 0px 0px 5px 5px;
 }
+
+.abs-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
 </style>
