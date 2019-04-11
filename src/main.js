@@ -28,6 +28,7 @@ Vue.component('icon', () => import('vue-awesome/components/Icon'));
 // Our custom components
 Vue.component('error-boundary', () => import('./components/ErrorBoundary.vue'));
 Vue.component('input-timeinterval', () => import('./components/InputTimeInterval.vue'));
+Vue.component('aw-header', () => import('./components/Header.vue'));
 Vue.component('aw-summary', () => import('./visualizations/Summary.vue'));
 Vue.component('aw-periodusage', () => import('./visualizations/PeriodUsage.vue'));
 Vue.component('aw-eventlist', () => import('./visualizations/EventList.vue'));
