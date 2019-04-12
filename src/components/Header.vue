@@ -1,46 +1,69 @@
 <template lang="pug">
 div.aw-container
-  b-nav.aw-navbar.navbar-expand-md
-    b-navbar-nav
-      // If only a single view (the default) is available
-      b-nav-item(v-if="activityViews.length === 1", v-for="view in activityViews", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
-        icon(name="clock")
-        | Activity
-      // If multiple activity views are available
-      b-nav-item-dropdown(v-if="activityViews.length !== 1")
-        template(slot="button-content")
-          icon(name="clock")
-          | Activity
-        b-dropdown-item(v-if="activityViews.length <= 0", disabled)
-          | No activity reports available
-          br
-          small Make sure you have both an AFK and window watcher running
-        b-dropdown-item(v-for="view in activityViews", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
+  b-navbar(toggleable="lg")
+    // Brand on mobile
+    b-navbar-nav.d-block.d-lg-none
+      b-navbar-brand(to="/" style="background-color: transparent;")
+        img.aligh-middle(src="/static/logo.png" style="height: 1.5em;")
+        span.ml-2.align-middle(style="font-size: 1.0em; color: #000;") ActivityWatch
+
+    b-navbar-toggle(target="nav-collapse")
+
+    b-collapse#nav-collapse(is-nav)
+      b-navbar-nav
+        // If only a single view (the default) is available
+        b-nav-item(v-if="activityViews.length === 1", v-for="view in activityViews", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
+          div.px-2.px-lg-1
+            icon(name="clock")
+            | Activity
+
+        // If multiple (or no) activity views are available
+        b-nav-item-dropdown(v-if="activityViews.length !== 1")
+          template(slot="button-content")
+            div.d-inline.px-2.px-lg-1
+              icon(name="clock")
+              | Activity
+          b-dropdown-item(v-if="activityViews.length <= 0", disabled)
+            | No activity reports available
+            br
+            small Make sure you have both an AFK and window watcher running
+          b-dropdown-item(v-for="view in activityViews", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
             icon(:name="view.icon")
             | {{ view.name }}
-      b-nav-item(to="/timeline" style="font-color: #000;")
-        icon(name="calendar")
-        | Timeline
-      b-nav-item(to="/stopwatch")
-        icon(name="stopwatch")
-        | Stopwatch
-    b-navbar-nav.abs-center
-      b-navbar-brand(to="/" style="background-color: transparent;")
-        img.ml-0.aligh-middle(src="/static/logo.png" style="height: 1.5em;")
-        span.ml-2.align-middle(style="font-size: 1.0em; color: #000;") ActivityWatch
-    b-navbar-nav.ml-auto
-      b-nav-item(to="/query")
-        icon(name="search")
-        | Query
-      b-nav-item(to="/buckets")
-        icon(name="database")
-        | Raw Data
-      b-nav-item(to="/settings")
-        icon(name="cog")
-        | Settings
+
+        b-nav-item(to="/timeline" style="font-color: #000;")
+          div.px-2.px-lg-1
+            icon(name="calendar")
+            | Timeline
+        b-nav-item(to="/stopwatch")
+          div.px-2.px-lg-1
+            icon(name="stopwatch")
+            | Stopwatch
+
+      // Brand on large screens (centered)
+      b-navbar-nav.abs-center.d-none.d-lg-block
+        b-navbar-brand(to="/" style="background-color: transparent;")
+          img.ml-0.aligh-middle(src="/static/logo.png" style="height: 1.5em;")
+          span.ml-2.align-middle(style="font-size: 1.0em; color: #000;") ActivityWatch
+
+      b-navbar-nav.ml-auto
+        b-nav-item(to="/query", active-class="aw-active")
+          div.px-2.px-lg-1
+            icon(name="search")
+            | Query
+        b-nav-item(to="/buckets")
+          div.px-2.px-lg-1
+            icon(name="database")
+            | Raw Data
+        b-nav-item(to="/settings")
+          div.px-2.px-lg-1
+            icon(name="cog")
+            | Settings
 </template>
 
 <script>
+import _ from 'lodash';
+
 export default {
   name: 'Header',
   data() {
@@ -81,30 +104,23 @@ export default {
   }
 }
 </script>
-<style scoped>
 
-.aw-navbar {
-  .active {
-    background-color: #DDD;
-    border-radius: 0.5em;
-  }
-
+<style lang="scss" scoped>
+.active {
+  background-color: #DDD;
   border-radius: 0.5em;
-
-  padding: 0.5em;
 }
 
 .nav-item {
-  display: flex;
   align-items: center;
 
   margin-left: 0.2em;
   margin-right: 0.2em;
   border-radius: 0.5em;
-}
 
-.nav-item:hover {
-  background-color: #DDD;
+  &:hover {
+    background-color: #DDD;
+  }
 }
 
 .abs-center {
@@ -112,5 +128,13 @@ export default {
     left: 50%;
     transform: translateX(-50%);
 }
+</style>
 
+<style lang="scss">
+// Needed because dropdown somehow doesn't properly work with scoping
+.nav-item {
+  .nav-link {
+    color: #555 !important;
+  }
+}
 </style>
