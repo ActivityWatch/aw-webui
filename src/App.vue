@@ -2,11 +2,11 @@
 div#wrapper
   aw-header
 
-  div.container.aw-container.rounded-bottom.pt-3.pd-3
+  div.container.aw-container.my-3.py-3
     error-boundary
       router-view
 
-  div.container.mt-3.mb-3(style="color: #555")
+  div.container(style="color: #555")
     div(style="float: left")
       div.mb-1
         | Made with ❤ by the #[a(href="http://activitywatch.net/contributors/") ActivityWatch developers]
@@ -101,15 +101,6 @@ body {
 .aw-container {
   background-color: #FFF;
   border: 1px solid #CCC;
-  border-top: 0;
+  border-radius: 5px 5px 5px 5px;
 }
-
-.rounded-bottom {
-  border-radius: 0px 0px 5px 5px;
-}
-
-.nav-link {
-  color: #000;
-}
-
 </style>

@@ -17,9 +17,11 @@ div
       b-button-group
         b-button(:to="'/activity/' + host + '/' + previousDay()", variant="outline-dark")
           icon(name="arrow-left")
-          |  Previous day
+          span.d-none.d-lg-inline
+            |  Previous day
         b-button(:to="'/activity/' + host + '/' + nextDay()", :disabled="nextDay() > today", variant="outline-dark")
-          |  Next day
+          span.d-none.d-lg-inline
+            |  Next day
           icon(name="arrow-right")
     div.p-1
       input.form-control(id="date" type="date" :value="dateShort" :max="today" @change="setDate($event.target.value)")
@@ -28,7 +30,8 @@ div
       b-button-group
         b-button(@click="refresh()", variant="outline-dark")
           icon(name="sync")
-          |  Refresh
+          span.d-none.d-lg-inline
+            |  Refresh
 
   aw-periodusage(:periodusage_arr="daily_activity", :host="host")
 

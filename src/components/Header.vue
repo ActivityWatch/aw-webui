@@ -1,5 +1,5 @@
 <template lang="pug">
-div.aw-container
+div.aw-navbar
   b-navbar(toggleable="lg")
     // Brand on mobile
     b-navbar-nav.d-block.d-lg-none
@@ -64,6 +64,9 @@ div.aw-container
 <script>
 import _ from 'lodash';
 
+// This should never be committed as true
+let testing = false;
+
 export default {
   name: 'Header',
   data() {
@@ -91,7 +94,7 @@ export default {
             icon: 'desktop'
           });
         }
-        if(types.android) {
+        if(testing || types.android) {
           this.activityViews.push({
             name: `${hostname} (Android)`,
             hostname: hostname,
@@ -106,6 +109,12 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.aw-navbar {
+  background-color: #FFF;
+  border: solid #CCC;
+  border-width: 0 0 1px 0;
+}
+
 .active {
   background-color: #DDD;
   border-radius: 0.5em;
