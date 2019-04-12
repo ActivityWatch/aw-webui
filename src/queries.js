@@ -2,6 +2,26 @@ import _ from 'lodash';
 
 // TODO: Sanitize string input of buckets
 
+export function summaryQuery(windowbucket, afkbucket, count) {
+  windowbucket = windowbucket.replace('"', '\\"');
+  afkbucket = afkbucket.replace('"', '\\"');
+  let code = (
+   `events  = flood(query_bucket("${windowbucket}"));
+    not_afk = flood(query_bucket("${afkbucket}"));
+    not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);
+    events  = filter_period_intersect(events, not_afk);
+    title_events  = merge_events_by_keys(events, ["app", "title"]);
+    title_events  = sort_by_duration(title_events);
+    app_events  = merge_events_by_keys(title_events, ["app"]);
+    app_events  = sort_by_duration(app_events);
+    app_events  = limit_events(app_events, ${count});
+    title_events  = limit_events(title_events, ${count});
+    RETURN  = {"app_events": app_events, "title_events": title_events};`
+  );
+  let lines = code.split(";");
+  return _.map(lines, (l) => l + ";");
+}
+
 export function windowQuery(windowbucket, afkbucket, appcount, titlecount, filterAFK) {
   windowbucket = windowbucket.replace('"', '\\"');
   afkbucket = afkbucket.replace('"', '\\"');
@@ -116,6 +136,7 @@ export function dailyActivityQueryAndroid(androidbucket) {
 }
 
 export default {
+  summaryQuery,
   windowQuery,
   browserSummaryQuery,
   appQuery,

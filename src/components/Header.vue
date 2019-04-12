@@ -12,29 +12,51 @@ div.aw-navbar
     b-collapse#nav-collapse(is-nav)
       b-navbar-nav
         // If only a single view (the default) is available
-        b-nav-item(v-if="activityViews.length === 1", v-for="view in activityViews", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
+        b-nav-item(v-if="activityViewsDaily.length === 1", v-for="view in activityViewsDaily", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
           div.px-2.px-lg-1
             icon(name="clock")
             | Activity
 
         // If multiple (or no) activity views are available
-        b-nav-item-dropdown(v-if="activityViews.length !== 1")
+        b-nav-item-dropdown(v-if="activityViewsDaily.length !== 1")
           template(slot="button-content")
             div.d-inline.px-2.px-lg-1
               icon(name="clock")
               | Activity
-          b-dropdown-item(v-if="activityViews.length <= 0", disabled)
+          b-dropdown-item(v-if="activityViewsDaily.length <= 0", disabled)
             | No activity reports available
             br
             small Make sure you have both an AFK and window watcher running
-          b-dropdown-item(v-for="view in activityViews", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
+          b-dropdown-item(v-for="view in activityViewsDaily", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
             icon(:name="view.icon")
             | {{ view.name }}
+
+        // If only a single view (the default) is available
+        b-nav-item(v-if="activityViewsSummary.length === 1", v-for="view in activityViewsSummary", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
+          div.px-2.px-lg-1
+            icon(name="clock")
+            | Summary
+
+        // If multiple (or no) activity views are available
+        b-nav-item-dropdown(v-if="activityViewsSummary.length !== 1")
+          template(slot="button-content")
+            div.d-inline.px-2.px-lg-1
+              icon(name="clock")
+              | Summary
+          b-dropdown-item(v-if="activityViewsSummary.length <= 0", disabled)
+            | No activity reports available
+            br
+            small Make sure you have both an AFK and window watcher running
+          b-dropdown-item(v-for="view in activityViewsSummary", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
+            icon(:name="view.icon")
+            | {{ view.name }}
+
 
         b-nav-item(to="/timeline" style="font-color: #000;")
           div.px-2.px-lg-1
             icon(name="calendar")
             | Timeline
+
         b-nav-item(to="/stopwatch")
           div.px-2.px-lg-1
             icon(name="stopwatch")
@@ -62,6 +84,18 @@ div.aw-navbar
 </template>
 
 <script>
+
+// only import the icons you use to reduce bundle size
+import 'vue-awesome/icons/clock';
+import 'vue-awesome/icons/calendar';
+import 'vue-awesome/icons/database';
+import 'vue-awesome/icons/search';
+import 'vue-awesome/icons/stopwatch';
+import 'vue-awesome/icons/cog';
+
+import 'vue-awesome/icons/mobile';
+import 'vue-awesome/icons/desktop';
+
 import _ from 'lodash';
 
 // This should never be committed as true
@@ -70,7 +104,10 @@ let testing = false;
 export default {
   name: 'Header',
   data() {
-    return { activityViews: [] };
+    return {
+      activityViewsDaily: [],
+      activityViewsSummary: [],
+    };
   },
   mounted: async function() {
     let buckets = await this.$aw.getBuckets();
@@ -86,16 +123,23 @@ export default {
 
     _.each(types_by_host, (types, hostname) => {
         if(types.afk && types.window) {
-          this.activityViews.push({
+          this.activityViewsDaily.push({
             name: hostname,
             hostname: hostname,
             type: "default",
-            pathUrl: '/activity',
+            pathUrl: '/activity/daily',
+            icon: 'desktop'
+          });
+          this.activityViewsSummary.push({
+            name: hostname,
+            hostname: hostname,
+            type: "default",
+            pathUrl: '/activity/summary',
             icon: 'desktop'
           });
         }
         if(testing || types.android) {
-          this.activityViews.push({
+          this.activityViewsDaily.push({
             name: `${hostname} (Android)`,
             hostname: hostname,
             type: "android",

@@ -36,19 +36,8 @@ div#wrapper
 <script>
 
 // only import the icons you use to reduce bundle size
-import 'vue-awesome/icons/database';
-import 'vue-awesome/icons/check-circle';
-import 'vue-awesome/icons/times-circle';
-import 'vue-awesome/icons/bars';
-import 'vue-awesome/icons/clock';
-import 'vue-awesome/icons/calendar';
 import 'vue-awesome/icons/brands/twitter';
 import 'vue-awesome/icons/brands/github';
-import 'vue-awesome/icons/search';
-import 'vue-awesome/icons/stopwatch';
-import 'vue-awesome/icons/cog';
-import 'vue-awesome/icons/mobile';
-import 'vue-awesome/icons/desktop';
 
 import _ from 'lodash';
 
