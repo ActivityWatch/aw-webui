@@ -48,6 +48,9 @@ div#wrapper
       b-nav-item(to="/query")
         icon(name="search")
         | Query
+      b-nav-item(to="/settings")
+        icon(name="cog")
+        | Settings
 
   div.container.aw-container.rounded-bottom.pt-3.pd-3
     error-boundary
@@ -93,6 +96,7 @@ import 'vue-awesome/icons/brands/twitter';
 import 'vue-awesome/icons/brands/github';
 import 'vue-awesome/icons/search';
 import 'vue-awesome/icons/stopwatch';
+import 'vue-awesome/icons/cog';
 import 'vue-awesome/icons/mobile';
 import 'vue-awesome/icons/desktop';
 

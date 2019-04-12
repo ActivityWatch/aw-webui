@@ -8,6 +8,11 @@ import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue/dist/bootstrap-vue.css';
 Vue.use(BootstrapVue);
 
+// Setup default settings
+if (!("startOfDay" in localStorage)) {
+  localStorage.startOfDay = '04:00';
+}
+
 // Load the Varela Round font
 import 'typeface-varela-round';
 

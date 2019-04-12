@@ -9,6 +9,7 @@ const Bucket = () => import('./views/Bucket.vue');
 const QueryExplorer = () => import('./views/QueryExplorer.vue');
 const Timeline = () => import('./views/Timeline.vue');
 const Log = () => import('./views/Log.vue');
+const Settings = () => import('./views/Settings.vue');
 const Stopwatch = () => import('./views/Stopwatch.vue');
 
 Vue.use(VueRouter);
@@ -25,6 +26,7 @@ var router = new VueRouter({
     { path: '/timeline',                component: Timeline },
     { path: '/query',                   component: QueryExplorer },
     { path: '/log',                     component: Log },
+    { path: '/settings',                component: Settings },
     { path: '/stopwatch',               component: Stopwatch },
   ]
 });
