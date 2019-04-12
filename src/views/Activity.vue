@@ -15,9 +15,11 @@ div
       b-button-group
         b-button(:to="'/activity/' + host + '/' + previousDay()", variant="outline-dark")
           icon(name="arrow-left")
-          |  Previous day
+          span.d-none.d-md-inline
+            |  Previous day
         b-button(:to="'/activity/' + host + '/' + nextDay()", :disabled="nextDay() > today", variant="outline-dark")
-          |  Next day
+          span.d-none.d-md-inline
+            |  Next day
           icon(name="arrow-right")
     div.p-1
       input.form-control(id="date" type="date" :value="dateShort" :max="today" @change="setDate($event.target.value)")
@@ -26,11 +28,12 @@ div
       b-button-group
         b-button(@click="refresh()", variant="outline-dark")
           icon(name="sync")
-          |  Refresh
+          span.d-none.d-md-inline
+            |  Refresh
 
   aw-periodusage(:periodusage_arr="daily_activity", :host="host")
 
-  ul.nav.nav-tabs
+  ul.nav.nav-tabs.my-3
     li.nav-item.aw-nav-item
       a.nav-link.aw-nav-link(@click="view = 'summary'" :class="{ active: view=='summary' }")
         h5 Summary
@@ -43,7 +46,6 @@ div
     li.nav-item.aw-nav-item
       a.nav-link.aw-nav-link(@click="view = 'editor'" :class="{ active: view=='editor' }")
         h5 Editor
-  br
 
   div.row(v-show="view == 'summary'")
     div.col-md-4
