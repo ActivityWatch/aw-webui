@@ -64,13 +64,16 @@ div.aw-navbar
 <script>
 import _ from 'lodash';
 
-// This should never be committed as true
-let testing = false;
+// Set this to true to test Android behavior when on a desktop
+let testingAndroid = false;
 
 export default {
   name: 'Header',
   data() {
-    return { activityViews: [] };
+    return {
+      activityViews: [],
+      isAndroidApp: testingAndroid || navigator.userAgent.includes("Android") && navigator.userAgent.includes("wv"), // Checks for Android and WebView
+    };
   },
   mounted: async function() {
     let buckets = await this.$aw.getBuckets();
@@ -94,12 +97,12 @@ export default {
             icon: 'desktop'
           });
         }
-        if(testing || types.android) {
+        if(testingAndroid || types.android) {
           this.activityViews.push({
             name: `${hostname} (Android)`,
             hostname: hostname,
             type: "android",
-            pathUrl: '/activity-android',
+            pathUrl: '/activity/android',
             icon: 'mobile'
           });
         }

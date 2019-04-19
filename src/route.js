@@ -17,10 +17,10 @@ Vue.use(VueRouter);
 var router = new VueRouter({
   routes: [
     { path: '/',                        component: Home },
-    { path: '/activity/:host',          component: Activity },
-    { path: '/activity/:host/:date',    component: Activity },
-    { path: '/activity-android/:host',          component: ActivityAndroid },
-    { path: '/activity-android/:host/:date',    component: ActivityAndroid },
+    { path: '/activity/daily/:host',          component: Activity },
+    { path: '/activity/daily/:host/:date',    component: Activity },
+    { path: '/activity/android/:host',          component: ActivityAndroid },
+    { path: '/activity/android/:host/:date',    component: ActivityAndroid },
     { path: '/buckets',                 component: Buckets },
     { path: '/buckets/:id',             component: Bucket },
     { path: '/timeline',                component: Timeline },

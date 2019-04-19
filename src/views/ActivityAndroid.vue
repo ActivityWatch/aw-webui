@@ -15,11 +15,11 @@ div
   div.d-flex
     div.p-1
       b-button-group
-        b-button(:to="'/activity/' + host + '/' + previousDay()", variant="outline-dark")
+        b-button(:to="'/activity/android/' + host + '/' + previousDay()", variant="outline-dark")
           icon(name="arrow-left")
           span.d-none.d-lg-inline
             |  Previous day
-        b-button(:to="'/activity/' + host + '/' + nextDay()", :disabled="nextDay() > today", variant="outline-dark")
+        b-button(:to="'/activity/android/' + host + '/' + nextDay()", :disabled="nextDay() > today", variant="outline-dark")
           span.d-none.d-lg-inline
             |  Next day
           icon(name="arrow-right")
@@ -111,7 +111,7 @@ export default {
   methods: {
     previousDay: function() { return moment(this.dateStart).subtract(1, 'days').format("YYYY-MM-DD") },
     nextDay: function() { return moment(this.dateStart).add(1, 'days').format("YYYY-MM-DD") },
-    setDate: function(date) { this.$router.push('/activity/'+this.host+'/'+date); },
+    setDate: function(date) { this.$router.push('/activity/android/' + this.host + '/' + date); },
 
     refresh: function() {
       this.queryAll();
