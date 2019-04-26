@@ -74,6 +74,6 @@
     "style-loader": "^0.21.0",
     "timeline-plus": "^2.3.6",
     "typeface-varela-round": "0.0.54",
-    "vue-awesome": "^3.0.0"
+    "vue-awesome": "^3.5.1"
   }
 }

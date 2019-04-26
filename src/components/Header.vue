@@ -14,15 +14,15 @@ div.aw-navbar
         // If only a single view (the default) is available
         b-nav-item(v-if="activityViewsDaily.length === 1", v-for="view in activityViewsDaily", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
           div.px-2.px-lg-1
-            icon(name="clock")
-            | Activity
+            icon(name="calendar-day")
+            | Today
 
         // If multiple (or no) activity views are available
         b-nav-item-dropdown(v-if="activityViewsDaily.length !== 1")
           template(slot="button-content")
             div.d-inline.px-2.px-lg-1
-              icon(name="clock")
-              | Activity
+              icon(name="calendar-day")
+              | Today
           b-dropdown-item(v-if="activityViewsDaily.length <= 0", disabled)
             | No activity reports available
             br
@@ -34,14 +34,14 @@ div.aw-navbar
         // If only a single view (the default) is available
         b-nav-item(v-if="activityViewsSummary.length === 1", v-for="view in activityViewsSummary", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
           div.px-2.px-lg-1
-            icon(name="clock")
+            icon(name="calendar-week")
             | Summary
 
         // If multiple (or no) activity views are available
         b-nav-item-dropdown(v-if="activityViewsSummary.length !== 1")
           template(slot="button-content")
             div.d-inline.px-2.px-lg-1
-              icon(name="clock")
+              icon(name="calendar-week")
               | Summary
           b-dropdown-item(v-if="activityViewsSummary.length <= 0", disabled)
             | No activity reports available
@@ -54,7 +54,7 @@ div.aw-navbar
 
         b-nav-item(to="/timeline" style="font-color: #000;")
           div.px-2.px-lg-1
-            icon(name="calendar")
+            icon(name="stream")
             | Timeline
 
         b-nav-item(to="/stopwatch")
@@ -86,8 +86,9 @@ div.aw-navbar
 <script>
 
 // only import the icons you use to reduce bundle size
-import 'vue-awesome/icons/clock';
-import 'vue-awesome/icons/calendar';
+import 'vue-awesome/icons/calendar-day';
+import 'vue-awesome/icons/calendar-week';
+import 'vue-awesome/icons/stream';
 import 'vue-awesome/icons/database';
 import 'vue-awesome/icons/search';
 import 'vue-awesome/icons/stopwatch';
