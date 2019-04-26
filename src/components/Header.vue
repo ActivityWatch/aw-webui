@@ -98,8 +98,8 @@ import 'vue-awesome/icons/desktop';
 
 import _ from 'lodash';
 
-// This should never be committed as true
-let testing = false;
+// Set this to true to test Android behavior when on a desktop
+let testingAndroid = false;
 
 export default {
   name: 'Header',
@@ -107,6 +107,7 @@ export default {
     return {
       activityViewsDaily: [],
       activityViewsSummary: [],
+      isAndroidApp: testingAndroid || navigator.userAgent.includes("Android") && navigator.userAgent.includes("wv"), // Checks for Android and WebView
     };
   },
   mounted: async function() {
@@ -138,12 +139,12 @@ export default {
             icon: 'desktop'
           });
         }
-        if(testing || types.android) {
+        if(testingAndroid || types.android) {
           this.activityViewsDaily.push({
             name: `${hostname} (Android)`,
             hostname: hostname,
             type: "android",
-            pathUrl: '/activity-android',
+            pathUrl: '/activity/android',
             icon: 'mobile'
           });
         }

@@ -41,15 +41,11 @@ import 'vue-awesome/icons/brands/github';
 
 import _ from 'lodash';
 
-// Set this to true to test Android behavior when on a desktop
-let testingAndroid = false;
-
 export default {
   data: function() {
     return {
       activityViews: [],
       info: {},
-      isAndroidApp: testingAndroid || navigator.userAgent.includes("Android") && navigator.userAgent.includes("wv"), // Checks for Android and WebView
     }
   },
 
@@ -59,7 +55,7 @@ export default {
         this.info = info;
       },
       (e) => {
-        console.error("Unable to connect:", e)
+        console.error("Unable to connect: ", e)
         this.info = {};
       }
     );
