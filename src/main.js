@@ -37,6 +37,8 @@ Vue.component('aw-timeline-inspect', () => import('./visualizations/TimelineInsp
 Vue.component('aw-timeline', () => import('./visualizations/TimelineSimple.vue'));
 Vue.component('vis-timeline', () => import('./visualizations/VisTimeline.vue'));
 
+Vue.component('aw-summaryview', () => import('./components/SummaryView.vue'));
+
 //import GCTimeline from './visualizations/GCTimeline.vue';
 //Vue.component('GCTimeline', GCTimeline);
 //

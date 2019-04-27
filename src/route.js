@@ -2,7 +2,8 @@ import Vue from 'vue';
 import VueRouter from 'vue-router';
 
 const Home = () => import('./views/Home.vue');
-const Activity = () => import('./views/Activity.vue');
+const Activity = () => import('./views/ActivityDaily.vue');
+const ActivitySummary = () => import('./views/ActivitySummary.vue');
 const ActivityAndroid = () => import('./views/ActivityAndroid.vue');
 const Buckets = () => import('./views/Buckets.vue');
 const Bucket = () => import('./views/Bucket.vue');
@@ -17,8 +18,10 @@ Vue.use(VueRouter);
 var router = new VueRouter({
   routes: [
     { path: '/',                        component: Home },
-    { path: '/activity/daily/:host',          component: Activity },
-    { path: '/activity/daily/:host/:date',    component: Activity },
+    { path: '/activity/daily/:host',    component: Activity},
+    { path: '/activity/daily/:host/:date',      component: Activity },
+    { path: '/activity/summary/:host',           component: ActivitySummary },
+    { path: '/activity/summary/:host/:date',     component: ActivitySummary },
     { path: '/activity/android/:host',          component: ActivityAndroid },
     { path: '/activity/android/:host/:date',    component: ActivityAndroid },
     { path: '/buckets',                 component: Buckets },

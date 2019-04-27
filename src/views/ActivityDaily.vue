@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  h2 Activity for {{ dateShort }}
+  h2 Daily Activity for {{ dateShort }}
 
   p
     | Host: {{ host }}
@@ -13,11 +13,11 @@ div
   div.d-flex
     div.p-1
       b-button-group
-        b-button(:to="'/activity/' + host + '/' + previousDay()", variant="outline-dark")
+        b-button(:to="link_prefix + '/' + previousDay()", variant="outline-dark")
           icon(name="arrow-left")
           span.d-none.d-md-inline
             |  Previous day
-        b-button(:to="'/activity/' + host + '/' + nextDay()", :disabled="nextDay() > today", variant="outline-dark")
+        b-button(:to="link_prefix + '/' + nextDay()", :disabled="nextDay() > today", variant="outline-dark")
           span.d-none.d-md-inline
             |  Next day
           icon(name="arrow-right")
@@ -31,7 +31,7 @@ div
           span.d-none.d-md-inline
             |  Refresh
 
-  aw-periodusage(:periodusage_arr="daily_activity", :host="host")
+  aw-periodusage(:periodusage_arr="daily_activity", :link_prefix="link_prefix" dateformat="YYYY-MM-DD")
 
   ul.nav.nav-tabs.my-3
     li.nav-item.aw-nav-item
@@ -326,6 +326,7 @@ export default {
     dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
     windowBucketId: function() { return "aw-watcher-window_" + this.host },
     afkBucketId:    function() { return "aw-watcher-afk_"    + this.host },
+    link_prefix:    function() { return "/activity/daily/"   + this.host },
   },
 
   mounted: function() {
@@ -339,7 +340,7 @@ export default {
   methods: {
     previousDay: function() { return moment(this.dateStart).subtract(1, 'days').format("YYYY-MM-DD") },
     nextDay: function() { return moment(this.dateStart).add(1, 'days').format("YYYY-MM-DD") },
-    setDate: function(date) { this.$router.push('/activity/'+this.host+'/'+date); },
+    setDate: function(date) { this.$router.push('/activity/daily/' + this.host + '/' + date); },
 
     refresh: function() {
       this.queryAll();
