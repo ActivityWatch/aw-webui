@@ -48,6 +48,22 @@ export function windowQuery(windowbucket, afkbucket, appcount, titlecount, filte
   return _.map(lines, (l) => l + ";");
 }
 
+export function appQuery(appbucket, limit) {
+  appbucket = appbucket.replace('"', '\\"');
+  limit = limit || 5;
+  let code = (
+    `events  = flood(query_bucket("${appbucket}"));`
+  ) + (
+    `events  = merge_events_by_keys(events, ["app"]);
+    events  = sort_by_duration(events);
+    events  = limit_events(events, ${limit});
+    total_duration = sum_durations(events);
+    RETURN  = {"events": events, "total_duration": total_duration};`
+  );
+  let lines = code.split(";");
+  return _.map(lines, (l) => l + ";");
+}
+
 const chrome_appnames = ["Google-chrome", "chrome.exe", "Chromium", "Google Chrome", "Chromium-browser", "Chromium-browser-chromium", "Google-chrome-beta", "Google-chrome-unstable"];
 const firefox_appnames = ["Firefox", "Firefox.exe", "firefox", "firefox.exe", "Firefox Developer Edition", "Firefox Beta", "Nightly"]
 const chrome_appnames_str = JSON.stringify(chrome_appnames);
@@ -101,22 +117,6 @@ export function browserSummaryQuery(browserbuckets, windowbucket, afkbucket, lim
     'duration = sum_durations(events);',
     'RETURN = {"domains": domains, "urls": urls, "chunks": chunks, "duration": duration};',
   ]);
-}
-
-export function appQuery(appbucket, limit) {
-  appbucket = appbucket.replace('"', '\\"');
-  limit = limit || 5;
-  let code = (
-    `events  = flood(query_bucket("${appbucket}"));`
-  ) + (
-    `events  = merge_events_by_keys(events, ["app"]);
-    events  = sort_by_duration(events);
-    events  = limit_events(events, ${limit});
-    total_duration = sum_durations(events);
-    RETURN  = {"events": events, "total_duration": total_duration};`
-  );
-  let lines = code.split(";");
-  return _.map(lines, (l) => l + ";");
 }
 
 export function editorActivityQuery(editorbucket, limit) {
