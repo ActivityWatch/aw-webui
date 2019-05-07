@@ -65,7 +65,7 @@ div
     div.col-md-4
       h5 Top Browser Domains
 
-      div(v-if="browserBucketId")
+      div(v-if="browserBuckets")
         aw-summary(:fields="top_web_domains", :namefunc="top_web_domains_namefunc", :colorfunc="top_web_domains_colorfunc")
         b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length < top_web_count" @click="top_web_count += 5; queryBrowserDomains()")
           icon(name="angle-double-down")
@@ -88,16 +88,16 @@ div
       b-input-group-prepend
         span.input-group-text
           | Bucket
-      b-dropdown(:text="browserBucketId || 'Select browser watcher bucket'", size="sm", variant="outline-secondary")
+      b-dropdown(:text="(browserBucketSelected !== 'all' && browserBucketSelected) || 'Select browser watcher bucket'", size="sm", variant="outline-secondary")
         b-dropdown-header
           | Browser bucket to use
         b-dropdown-item(v-if="browserBuckets.length <= 0", name="b", disabled)
           | No browser buckets available
           br
           small Make sure you have an browser extension installed
-        b-dropdown-item-button(v-if="browserBuckets.length > 1", v-on:click="browserBucketId = browserBuckets")
+        b-dropdown-item-button(v-if="browserBuckets.length > 1", @click="browserBucketSelected = 'all'")
           | All
-        b-dropdown-item-button(v-for="browserBucket in browserBuckets", :key="browserBucket", @click="browserBucketId = browserBucket")
+        b-dropdown-item-button(v-for="browserBucket in browserBuckets", :key="browserBucket", @click="browserBucketSelected = browserBucket")
           | {{ browserBucket }}
     br
 
@@ -107,13 +107,13 @@ div
       div.col-md-6
         h5 Top Browser Domains
 
-        div(v-if="browserBucketId")
+        div(v-if="browserBuckets")
           aw-summary(:fields="top_web_domains", :namefunc="top_web_domains_namefunc", :colorfunc="top_web_domains_colorfunc")
 
       div.col-md-6
         h5 Top Browser URLs
 
-        div(v-if="browserBucketId")
+        div(v-if="browserBuckets")
           aw-summary(:fields="top_web_urls", :namefunc="top_web_urls_namefunc", :colorfunc="top_web_urls_colorfunc")
 
     b-button(size="sm", variant="outline-secondary", :disabled="top_web_urls.length < top_web_count && top_web_domains.length < top_web_count" @click="top_web_count += 5; queryBrowserDomains()")
@@ -130,7 +130,6 @@ div
     aw-timeline-inspect(:chunks="web_chunks", :total_duration='duration', :show_afk='timelineShowAFK', :chunkfunc='web_chunkfunc', :eventfunc='web_eventfunc')
 
   div(v-show="view == 'editor'")
-
     b-input-group(size="sm")
       b-input-group-prepend
         span.input-group-text
@@ -205,6 +204,7 @@ div
 <script>
 import moment from 'moment';
 import time from "../util/time.js";
+import _ from 'lodash';
 
 import 'vue-awesome/icons/arrow-left'
 import 'vue-awesome/icons/arrow-right'
@@ -233,7 +233,7 @@ export default {
       events_apptimeline: [],
 
       browserBuckets: [],
-      browserBucketId: "",
+      browserBucketSelected: 'all',
 
       editorBuckets: [],
       editorBucketId: "",
@@ -301,7 +301,10 @@ export default {
     filterAFK() {
       this.refresh();
     },
-    browserBucketId() {
+    browserBucketSelected() {
+      this.queryBrowserDomains();
+    },
+    browserBuckets() {
       this.queryBrowserDomains();
     },
     editorBucketId() {
@@ -367,17 +370,8 @@ export default {
 
     getBrowserBucket: async function() {
       let buckets = await this.$aw.getBuckets().catch(this.errorHandler);
-      for (var bucket in buckets){
-        if (buckets[bucket]["type"] === "web.tab.current"){
-          this.browserBuckets.push(bucket);
-        }
-      }
-      if (this.browserBuckets.length > 1){
-        this.browserBucketId = this.browserBuckets
-      }
-      else if (this.browserBuckets.length > 0){
-        this.browserBucketId = this.browserBuckets[0]
-      }
+      this.browserBuckets = _.map(_.filter(buckets, (bucket) => bucket["type"] === "web.tab.current"), (bucket) => bucket["id"]);
+      console.log(this.browserBuckets);
     },
 
     getEditorBucket: async function() {
@@ -404,9 +398,10 @@ export default {
     },
 
     queryBrowserDomains: async function() {
-      if (this.browserBucketId !== "") {
+      let browserBuckets = this.browserBucketSelected == 'all' ? this.browserBuckets : [this.browserBucketSelected];
+      if (browserBuckets) {
         var periods = [this.dateStart + "/" + this.dateEnd];
-        var q = query.browserSummaryQuery(this.browserBucketId, this.windowBucketId, this.afkBucketId, this.top_web_count, this.filterAFK);
+        var q = query.browserSummaryQuery(browserBuckets, this.windowBucketId, this.afkBucketId, this.top_web_count, this.filterAFK);
         let data = (await this.$aw.query(periods, q).catch(this.errorHandler))[0];
         this.web_duration = data["duration"];
         this.top_web_domains = data["domains"];

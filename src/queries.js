@@ -48,8 +48,59 @@ export function windowQuery(windowbucket, afkbucket, appcount, titlecount, filte
   return _.map(lines, (l) => l + ";");
 }
 
+const chrome_appnames = ["Google-chrome", "chrome.exe", "Chromium", "Google Chrome", "Chromium-browser", "Chromium-browser-chromium", "Google-chrome-beta", "Google-chrome-unstable"];
+const firefox_appnames = ["Firefox", "Firefox.exe", "firefox", "firefox.exe", "Firefox Developer Edition", "Firefox Beta", "Nightly"]
+const chrome_appnames_str = JSON.stringify(chrome_appnames);
+const firefox_appnames_str = JSON.stringify(firefox_appnames);
+
 export function browserSummaryQuery(browserbuckets, windowbucket, afkbucket, limit, filterAFK) {
-  // Merge in progress
+  // Escape `"`
+  windowbucket = windowbucket.replace('"', '\\"');
+  afkbucket = afkbucket.replace('"', '\\"');
+  limit = limit || 5;
+
+  // If multiple browser buckets were found
+  let code = (
+    'events = [];'
+  ) + (
+    `not_afk = flood(query_bucket("${afkbucket}"));
+     not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);`
+  )
+
+  _.each(["chrome", "firefox", "brave"], (browserName) => {
+    let bucketId = _.filter(browserbuckets, (buckets) => buckets.indexOf(browserName) !== -1)[0];
+    if(bucketId === undefined) {
+      // Skip browser if specific bucket not available
+      return;
+    }
+    let appnames_str = browserName == 'chrome' ? chrome_appnames_str : firefox_appnames_str;
+    code += (
+      `events_${browserName} = flood(query_bucket("${bucketId}"));
+       window_${browserName} = flood(query_bucket("${windowbucket}"));
+       window_${browserName} = filter_keyvals(window_${browserName}, "app", ${appnames_str});`
+    ) + (
+      filterAFK ? `window_${browserName} = filter_period_intersect(window_${browserName}, not_afk);` : ''
+    ) + (
+      `events_${browserName} = filter_period_intersect(events_${browserName}, window_${browserName});
+       events_${browserName} = split_url_events(events_${browserName});
+       events = sort_by_timestamp(concat(events, events_${browserName}));`
+    );
+  })
+
+  let lines = code.split(";");
+  let query = _.map(lines, (l) => l + ";");
+  return query.concat([
+    'urls = merge_events_by_keys(events, ["url"]);',
+    'urls = sort_by_duration(urls);',
+    'urls = limit_events(urls, ' + limit + ');',
+    'domains = split_url_events(events);',
+    'domains = merge_events_by_keys(domains, ["domain"]);',
+    'domains = sort_by_duration(domains);',
+    'domains = limit_events(domains, ' + limit + ');',
+    'chunks = chunk_events_by_key(events, "domain");',
+    'duration = sum_durations(events);',
+    'RETURN = {"domains": domains, "urls": urls, "chunks": chunks, "duration": duration};',
+  ]);
 }
 
 export function appQuery(appbucket, limit) {
