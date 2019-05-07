@@ -64,30 +64,47 @@ export function appQuery(appbucket, limit) {
   return _.map(lines, (l) => l + ";");
 }
 
-export function browserSummaryQuery(browserbucket, windowbucket, afkbucket, limit, filterAFK) {
-  browserbucket = browserbucket.replace('"', '\\"');
+const chrome_appnames = ["Google-chrome", "chrome.exe", "Chromium", "Google Chrome", "Chromium-browser", "Chromium-browser-chromium", "Google-chrome-beta", "Google-chrome-unstable"];
+const firefox_appnames = ["Firefox", "Firefox.exe", "firefox", "firefox.exe", "Firefox Developer Edition", "Firefox Beta", "Nightly"]
+
+export function browserSummaryQuery(browserbuckets, windowbucket, afkbucket, limit, filterAFK) {
+  // Escape `"`
+  browserbuckets = _.map(browserbuckets, (b) => b.replace('"', '\\"'));
   windowbucket = windowbucket.replace('"', '\\"');
   afkbucket = afkbucket.replace('"', '\\"');
   limit = limit || 5;
-  var browser_appnames = "";
-  if (browserbucket.endsWith("-chrome")){
-    browser_appnames = JSON.stringify(["Google-chrome", "chrome.exe", "Chromium", "Google Chrome", "Chromium-browser", "Chromium-browser-chromium", "Google-chrome-beta", "Google-chrome-unstable"]);
-  } else if (browserbucket.endsWith("-firefox")){
-    browser_appnames = JSON.stringify(["Firefox", "Firefox.exe", "firefox", "firefox.exe", "Firefox Developer Edition", "Firefox Beta", "Nightly"]);
-  }
 
-  return [
-    'events = flood(query_bucket("' + browserbucket + '"));',
-    'window_browser = flood(query_bucket("' + windowbucket + '"));',
-    'window_browser = filter_keyvals(window_browser, "app", ' + browser_appnames + ');',
-  ].concat(filterAFK ? [
-    'not_afk = flood(query_bucket("' + afkbucket + '"));',
-    'not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);',
-    'window_browser = filter_period_intersect(window_browser, not_afk);',
-  ] : [])
-  .concat([
-    'events = filter_period_intersect(events, window_browser);',
-    'events = split_url_events(events);',
+  // If multiple browser buckets were found
+  let code = (
+    `events = [];
+     window = flood(query_bucket("${windowbucket}"));`
+  ) + (filterAFK ?
+    `not_afk = flood(query_bucket("${afkbucket}"));
+     not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);` : ''
+  );
+
+  _.each(["chrome", "firefox"], (browserName) => {
+    let bucketId = _.filter(browserbuckets, (buckets) => buckets.indexOf(browserName) !== -1)[0];
+    if(bucketId === undefined) {
+      // Skip browser if specific bucket not available
+      return;
+    }
+    let appnames_str = JSON.stringify(browserName == 'chrome' ? chrome_appnames : firefox_appnames);
+    code += (
+      `events_${browserName} = flood(query_bucket("${bucketId}"));
+       window_${browserName} = filter_keyvals(window, "app", ${appnames_str});`
+    ) + (
+      filterAFK ? `window_${browserName} = filter_period_intersect(window_${browserName}, not_afk);` : ''
+    ) + (
+      `events_${browserName} = filter_period_intersect(events_${browserName}, window_${browserName});
+       events_${browserName} = split_url_events(events_${browserName});
+       events = sort_by_timestamp(concat(events, events_${browserName}));`
+    );
+  })
+
+  let lines = code.split(";");
+  let query = _.map(lines, (l) => l + ";");
+  return query.concat([
     'urls = merge_events_by_keys(events, ["url"]);',
     'urls = sort_by_duration(urls);',
     'urls = limit_events(urls, ' + limit + ');',

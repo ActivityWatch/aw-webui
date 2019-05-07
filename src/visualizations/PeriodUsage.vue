@@ -23,7 +23,6 @@ export default {
   name: "aw-periodusage",
   props: ['periodusage_arr', 'link_prefix', 'dateformat'],
   mounted: function() {
-    console.log("Mounting aw-periodusage");
     periodusage.create(this.$el);
     periodusage.set_status(this.$el, "Loading...");
   },
