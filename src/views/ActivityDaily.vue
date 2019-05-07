@@ -64,7 +64,6 @@ div
 
     div.col-md-4
       h5 Top Browser Domains
-
       div(v-if="browserBuckets")
         aw-summary(:fields="top_web_domains", :namefunc="top_web_domains_namefunc", :colorfunc="top_web_domains_colorfunc")
         b-button(size="sm", variant="outline-secondary", :disabled="top_web_domains.length < top_web_count" @click="top_web_count += 5; queryBrowserDomains()")
@@ -323,8 +322,7 @@ export default {
       var start_of_day = localStorage.startOfDay;
       var start_of_day_hours = parseInt(start_of_day.split(":")[0]);
       var start_of_day_minutes = parseInt(start_of_day.split(":")[1]);
-      var dateMoment = dateMoment.hour(start_of_day_hours).minute(start_of_day_minutes);
-      return dateMoment.format();
+      return dateMoment.hour(start_of_day_hours).minute(start_of_day_minutes).format();
     },
     dateStart: function() { return this.date },
     dateEnd: function() { return moment(this.date).add(1, 'days').format() },
@@ -371,7 +369,6 @@ export default {
     getBrowserBucket: async function() {
       let buckets = await this.$aw.getBuckets().catch(this.errorHandler);
       this.browserBuckets = _.map(_.filter(buckets, (bucket) => bucket["type"] === "web.tab.current"), (bucket) => bucket["id"]);
-      console.log(this.browserBuckets);
     },
 
     getEditorBucket: async function() {

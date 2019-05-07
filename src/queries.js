@@ -61,13 +61,14 @@ export function browserSummaryQuery(browserbuckets, windowbucket, afkbucket, lim
 
   // If multiple browser buckets were found
   let code = (
-    'events = [];'
+    `events = [];
+     window = flood(query_bucket("${windowbucket}"));`
   ) + (
     `not_afk = flood(query_bucket("${afkbucket}"));
      not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);`
   )
 
-  _.each(["chrome", "firefox", "brave"], (browserName) => {
+  _.each(["chrome", "firefox"], (browserName) => {
     let bucketId = _.filter(browserbuckets, (buckets) => buckets.indexOf(browserName) !== -1)[0];
     if(bucketId === undefined) {
       // Skip browser if specific bucket not available
@@ -76,8 +77,7 @@ export function browserSummaryQuery(browserbuckets, windowbucket, afkbucket, lim
     let appnames_str = browserName == 'chrome' ? chrome_appnames_str : firefox_appnames_str;
     code += (
       `events_${browserName} = flood(query_bucket("${bucketId}"));
-       window_${browserName} = flood(query_bucket("${windowbucket}"));
-       window_${browserName} = filter_keyvals(window_${browserName}, "app", ${appnames_str});`
+       window_${browserName} = filter_keyvals(window, "app", ${appnames_str});`
     ) + (
       filterAFK ? `window_${browserName} = filter_period_intersect(window_${browserName}, not_afk);` : ''
     ) + (
