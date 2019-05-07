@@ -66,11 +66,10 @@ export function appQuery(appbucket, limit) {
 
 const chrome_appnames = ["Google-chrome", "chrome.exe", "Chromium", "Google Chrome", "Chromium-browser", "Chromium-browser-chromium", "Google-chrome-beta", "Google-chrome-unstable"];
 const firefox_appnames = ["Firefox", "Firefox.exe", "firefox", "firefox.exe", "Firefox Developer Edition", "Firefox Beta", "Nightly"]
-const chrome_appnames_str = JSON.stringify(chrome_appnames);
-const firefox_appnames_str = JSON.stringify(firefox_appnames);
 
 export function browserSummaryQuery(browserbuckets, windowbucket, afkbucket, limit, filterAFK) {
   // Escape `"`
+  browserbuckets = _.map(browserbuckets, (b) => b.replace('"', '\\"'));
   windowbucket = windowbucket.replace('"', '\\"');
   afkbucket = afkbucket.replace('"', '\\"');
   limit = limit || 5;
@@ -90,7 +89,7 @@ export function browserSummaryQuery(browserbuckets, windowbucket, afkbucket, lim
       // Skip browser if specific bucket not available
       return;
     }
-    let appnames_str = browserName == 'chrome' ? chrome_appnames_str : firefox_appnames_str;
+    let appnames_str = JSON.stringify(browserName == 'chrome' ? chrome_appnames : firefox_appnames);
     code += (
       `events_${browserName} = flood(query_bucket("${bucketId}"));
        window_${browserName} = filter_keyvals(window, "app", ${appnames_str});`
