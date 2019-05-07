@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  h2 Activity for {{ dateShort }}
+  h2 Daily Activity for {{ dateShort }}
 
   p
     | Host: {{ host }}
@@ -13,11 +13,13 @@ div
   div.d-flex
     div.p-1
       b-button-group
-        b-button(:to="'/activity/' + host + '/' + previousDay()", variant="outline-dark")
+        b-button(:to="link_prefix + '/' + previousDay()", variant="outline-dark")
           icon(name="arrow-left")
-          |  Previous day
-        b-button(:to="'/activity/' + host + '/' + nextDay()", :disabled="nextDay() > today", variant="outline-dark")
-          |  Next day
+          span.d-none.d-md-inline
+            |  Previous day
+        b-button(:to="link_prefix + '/' + nextDay()", :disabled="nextDay() > today", variant="outline-dark")
+          span.d-none.d-md-inline
+            |  Next day
           icon(name="arrow-right")
     div.p-1
       input.form-control(id="date" type="date" :value="dateShort" :max="today" @change="setDate($event.target.value)")
@@ -26,11 +28,12 @@ div
       b-button-group
         b-button(@click="refresh()", variant="outline-dark")
           icon(name="sync")
-          |  Refresh
+          span.d-none.d-md-inline
+            |  Refresh
 
-  aw-periodusage(:periodusage_arr="daily_activity", :host="host")
+  aw-periodusage(:periodusage_arr="daily_activity", :link_prefix="link_prefix" dateformat="YYYY-MM-DD")
 
-  ul.nav.nav-tabs
+  ul.nav.nav-tabs.my-3
     li.nav-item.aw-nav-item
       a.nav-link.aw-nav-link(@click="view = 'summary'" :class="{ active: view=='summary' }")
         h5 Summary
@@ -43,7 +46,6 @@ div
     li.nav-item.aw-nav-item
       a.nav-link.aw-nav-link(@click="view = 'editor'" :class="{ active: view=='editor' }")
         h5 Editor
-  br
 
   div.row(v-show="view == 'summary'")
     div.col-md-4
@@ -312,12 +314,21 @@ export default {
     readableWebDuration: function() { return time.seconds_to_duration(this.web_duration) },
     readableEditorDuration: function() { return time.seconds_to_duration(this.editor_duration) },
     host: function() { return this.$route.params.host },
-    date: function() { return this.$route.params.date || moment().startOf('day').format() },
+    date: function() {
+      var dateParam = this.$route.params.date;
+      var dateMoment = dateParam ? moment(dateParam) : moment().startOf('day');
+      var start_of_day = localStorage.startOfDay;
+      var start_of_day_hours = parseInt(start_of_day.split(":")[0]);
+      var start_of_day_minutes = parseInt(start_of_day.split(":")[1]);
+      var dateMoment = dateMoment.hour(start_of_day_hours).minute(start_of_day_minutes);
+      return dateMoment.format();
+    },
     dateStart: function() { return this.date },
     dateEnd: function() { return moment(this.date).add(1, 'days').format() },
     dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
     windowBucketId: function() { return "aw-watcher-window_" + this.host },
     afkBucketId:    function() { return "aw-watcher-afk_"    + this.host },
+    link_prefix:    function() { return "/activity/daily/"   + this.host },
   },
 
   mounted: function() {
@@ -331,7 +342,7 @@ export default {
   methods: {
     previousDay: function() { return moment(this.dateStart).subtract(1, 'days').format("YYYY-MM-DD") },
     nextDay: function() { return moment(this.dateStart).add(1, 'days').format("YYYY-MM-DD") },
-    setDate: function(date) { this.$router.push('/activity/'+this.host+'/'+date); },
+    setDate: function(date) { this.$router.push('/activity/daily/' + this.host + '/' + date); },
 
     refresh: function() {
       this.queryAll();

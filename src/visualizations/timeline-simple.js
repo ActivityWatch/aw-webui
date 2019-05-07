@@ -98,7 +98,7 @@ function update(svg_el, events, event_type) {
   return svg_el;
 }
 
-module.exports = {
+export default {
   "create": create,
   "update": update,
 };

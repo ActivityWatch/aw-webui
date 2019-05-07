@@ -4,6 +4,7 @@ aw-webui
 > A webui for ActivityWatch built in Vue.js
 
 [![Build Status](https://travis-ci.org/ActivityWatch/aw-webui.svg?branch=master)](https://travis-ci.org/ActivityWatch/aw-webui)
+[![Known Vulnerabilities](https://snyk.io/test/github/ActivityWatch/aw-webui/badge.svg)](https://snyk.io/test/github/ActivityWatch/aw-webui) 
 
 
 ## Build Setup

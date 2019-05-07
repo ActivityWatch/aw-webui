@@ -4,7 +4,7 @@ const d3 = require("d3");
 const _ = require("lodash");
 const moment = require("moment");
 
-var time = require("../util/time.js");
+import time from "../util/time.js";
 
 function create(svg_elem){
   // Clear element
@@ -29,7 +29,7 @@ var diagramcolor = "#aaa";
 var diagramcolor_selected = "#fc5";
 var diagramcolor_focused = "#adf";
 
-function update(svg_elem, usage_arr, host) {
+function update(svg_elem, usage_arr, link_prefix, dateformat) {
   // No apps, sets status to "No data"
   if (usage_arr.length <= 0){
     set_status(svg_elem, "No data");
@@ -65,22 +65,22 @@ function update(svg_elem, usage_arr, host) {
     var color = (i == center_elem) ? diagramcolor_selected : diagramcolor;
     var offset = 50;
 
-		let x = i * padding + i * width + 0.25 * width;
+    let x = i * padding + i * width + 0.25 * width;
 
-		if(moment(date).isSame(moment(), "day")) {
-			svg.append("line")
-				.attr("x1", x + width / 2 + "%")
-				.attr("y1", 0)
-				.attr("x2", x + width / 2 + "%")
-				.attr("y2", 200)
-				.attr("style", "stroke: #888; stroke-width: 2px;")
-				.attr("stroke-dasharray", "4, 2")
+    if(moment(date).isSame(moment(), "day")) {
+      svg.append("line")
+        .attr("x1", x + width / 2 + "%")
+        .attr("y1", 0)
+        .attr("x2", x + width / 2 + "%")
+        .attr("y2", 200)
+        .attr("style", "stroke: #888; stroke-width: 2px;")
+        .attr("stroke-dasharray", "4, 2")
 
-			svg.append("text")
-				.attr("x", x + 1.5*width + "%")
-				.attr("y", "30")
-				.text("Today")
-		}
+      svg.append("text")
+        .attr("x", x + 1.5*width + "%")
+        .attr("y", "30")
+        .text("Today")
+    }
 
     let rect = svg.append("rect")
       .attr("x", x + "%")
@@ -92,7 +92,7 @@ function update(svg_elem, usage_arr, host) {
       .attr("height", height + offset + "%")
       .attr("color", color)
       .attr("date", date)
-      .attr("host", host)
+      .attr("data", link_prefix)
       .style("fill", color)
       .on("mouseover", () => {
           rect.style("fill", diagramcolor_focused);
@@ -103,16 +103,18 @@ function update(svg_elem, usage_arr, host) {
       })
       .on("click", function(d, j, n) {
         var me = n[j];
-        var url = `/#/activity/${host}/${d3.select(me).attr('date')}`;
+        var date = d3.select(me).attr('date');
+        var link_prefix = d3.select(me).attr('data');
+        var url = `/#${link_prefix}/${date}`;
         /* Not the vue-way, but works */
         window.location.assign(url);
         /* Hardcoding click behavior also isn't optimal I guess */
       });
-    rect.append("title").text(date+"\n"+time.seconds_to_duration(usage_time));
+    rect.append("title").text(moment(date).format(dateformat)+"\n"+time.seconds_to_duration(usage_time));
   });
 }
 
-module.exports = {
+export default {
   "create": create,
   "update": update,
   "set_status": set_status,

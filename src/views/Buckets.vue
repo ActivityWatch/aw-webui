@@ -2,19 +2,6 @@
 div
   h2 Buckets
 
-  b-alert(variant="danger" :show="bucket_to_delete.length > 0")
-    | Are you sure you want to delete bucket {{bucket_to_delete}}? (This is permanent and cannot be undone)
-    b-button-toolbar
-      b-button-group(size="sm", class="mx-1")
-        b-button(@click="deleteBucket(bucket_to_delete); bucket_to_delete = ''"
-                 title="Export all events from this bucket to JSON",
-                 variant="danger")
-          | Confirm
-        b-button(@click="bucket_to_delete = ''"
-                 title="Export all events from this bucket to JSON",
-                 variant="success")
-          | Abort
-
   b-alert(show)
     | Are you looking to collect more data? Check out #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") the docs] for more watchers.
     br
@@ -28,19 +15,16 @@ div
           icon(name="folder-open")
           | Open bucket
       b-button-group(size="sm", class="mx-1")
-        // TODO: This currently does not export bucket metadata, which makes importing difficult
-        //       See: https://github.com/ActivityWatch/activitywatch/issues/103
-        // NOTE: When this is done we should also change the download name from "events-export" to "bucket-export".
-        b-button(:href="'/api/0/buckets/' + bucket.id + '/events?limit=-1'",
-                 :download="'aw-event-export-' + bucket.id + '.json'",
-                 title="Export all events from this bucket to JSON",
+        b-button(:href="$aw.baseURL + '/api/0/buckets/' + bucket.id + '/export'",
+                 :download="'aw-bucket-export-' + bucket.id + '.json'",
+                 title="Export bucket to JSON",
                  variant="outline-secondary")
           icon(name="download")
           | Export as JSON
     b-button-toolbar.float-right
       b-button-group(size="sm", class="mx-1")
-        b-button(@click="bucket_to_delete = bucket.id"
-                 title="Export all events from this bucket to JSON",
+        b-button(v-b-modal="'delete-modal-' + bucket.id",
+                 title="Delete this bucket permanently",
                  variant="outline-danger")
           | #[icon(name="trash")] Delete bucket
     small.bucket-last-updated(v-if="bucket.last_updated", slot="footer")
@@ -48,6 +32,37 @@ div
         | Last updated:
       span(style="width: 8em; margin-left: 0.5em; display: inline-block")
         | {{ bucket.last_updated | friendlytime }}
+
+    b-modal(:id="'delete-modal-' + bucket.id", title="Danger!", centered, hide-footer)
+      | Are you sure you want to delete bucket "{{bucket.id}}"?
+      br
+      br
+      b This is permanent and cannot be undone!
+      hr
+      div.float-right
+        b-button.mx-2(@click="$root.$emit('bv::hide::modal','delete-modal-' + bucket.id)")
+          | Cancel
+        b-button(@click="deleteBucket(bucket.id)", variant="danger")
+          | Confirm
+  br
+
+  h3 Import and export buckets
+
+  b-card-group.deck
+    b-card(header="Import buckets")
+      form(method="post", :action="$aw.baseURL + '/api/0/import'", enctype="multipart/form-data")
+        input(type="file", name="buckets.json")
+        input(type="submit", value="Import")
+      span
+        | A valid file to import is a JSON file from either an export of a single bucket or an export from multiple buckets.
+        | If there are buckets with the same name the import will fail
+    b-card(header="Export buckets")
+      b-button(:href="$aw.baseURL + '/api/0/export'",
+               :download="'aw-bucket-export.json'",
+               title="Export bucket to JSON",
+               variant="outline-secondary")
+        icon(name="download")
+        | Export all buckets as JSON
 
 </template>
 
@@ -88,7 +103,6 @@ export default {
   data: () => {
     return {
       buckets: [],
-      bucket_to_delete: "",
     }
   },
   methods: {
@@ -104,6 +118,7 @@ export default {
       console.log("Deleting bucket " + bucket_id);
       await this.$aw.deleteBucket(bucket_id);
       await this.getBuckets();
+      this.$root.$emit('bv::hide::modal','delete-modal-' + bucket_id)
     }
   }
 }

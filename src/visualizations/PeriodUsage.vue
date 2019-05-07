@@ -21,7 +21,7 @@ import periodusage from './periodusage.js';
 
 export default {
   name: "aw-periodusage",
-  props: ['periodusage_arr', 'host'],
+  props: ['periodusage_arr', 'link_prefix', 'dateformat'],
   mounted: function() {
     console.log("Mounting aw-periodusage");
     periodusage.create(this.$el);
@@ -29,7 +29,7 @@ export default {
   },
   watch: {
     "periodusage_arr": function() {
-      periodusage.update(this.$el, this.periodusage_arr, this.host);
+      periodusage.update(this.$el, this.periodusage_arr, this.link_prefix, this.dateformat);
     }
   }
 }

@@ -1,3 +1,5 @@
+import "@babel/polyfill";
+
 import Vue from 'vue';
 
 // Load the Bootstrap CSS
@@ -5,6 +7,11 @@ import BootstrapVue from 'bootstrap-vue';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue/dist/bootstrap-vue.css';
 Vue.use(BootstrapVue);
+
+// Setup default settings
+if (!("startOfDay" in localStorage)) {
+  localStorage.startOfDay = '04:00';
+}
 
 // Load the Varela Round font
 import 'typeface-varela-round';
@@ -16,36 +23,21 @@ import './util/filters.js';
 import router from './route.js';
 
 // Register Font Awesome icon component
-import Icon from 'vue-awesome/components/Icon'
-Vue.component('icon', Icon)
+Vue.component('icon', () => import('vue-awesome/components/Icon'));
 
 // Our custom components
-import ErrorBoundary from './components/ErrorBoundary.vue';
-Vue.component('error-boundary', ErrorBoundary);
+Vue.component('error-boundary', () => import('./components/ErrorBoundary.vue'));
+Vue.component('input-timeinterval', () => import('./components/InputTimeInterval.vue'));
+Vue.component('aw-header', () => import('./components/Header.vue'));
+Vue.component('aw-summary', () => import('./visualizations/Summary.vue'));
+Vue.component('aw-periodusage', () => import('./visualizations/PeriodUsage.vue'));
+Vue.component('aw-eventlist', () => import('./visualizations/EventList.vue'));
+Vue.component('aw-sunburst', () => import('./visualizations/Sunburst.vue'));
+Vue.component('aw-timeline-inspect', () => import('./visualizations/TimelineInspect.vue'));
+Vue.component('aw-timeline', () => import('./visualizations/TimelineSimple.vue'));
+Vue.component('vis-timeline', () => import('./visualizations/VisTimeline.vue'));
 
-import InputTimeInterval from './components/InputTimeInterval.vue';
-Vue.component('input-timeinterval', InputTimeInterval);
-
-import Summary from './visualizations/Summary.vue';
-Vue.component('aw-summary', Summary);
-
-import PeriodUsage from './visualizations/PeriodUsage.vue';
-Vue.component('aw-periodusage', PeriodUsage);
-
-import EventList from './visualizations/EventList.vue';
-Vue.component('aw-eventlist', EventList);
-
-import Sunburst from './visualizations/Sunburst.vue';
-Vue.component('aw-sunburst', Sunburst);
-
-import TimelineInspect from './visualizations/TimelineInspect.vue';
-Vue.component('aw-timeline-inspect', TimelineInspect);
-
-import Timeline from './visualizations/TimelineSimple.vue';
-Vue.component('aw-timeline', Timeline);
-
-import VisTimeline from './visualizations/VisTimeline.vue';
-Vue.component('vis-timeline', VisTimeline);
+Vue.component('aw-summaryview', () => import('./components/SummaryView.vue'));
 
 //import GCTimeline from './visualizations/GCTimeline.vue';
 //Vue.component('GCTimeline', GCTimeline);
