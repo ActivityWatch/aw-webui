@@ -19,7 +19,6 @@ export default {
   name: "aw-summary",
   props: ['fields', 'namefunc', 'colorfunc'],
   mounted: function() {
-    console.log("Mounting aw-summary");
     summary.create(this.$el);
     summary.set_status(this.$el, "Loading...");
   },

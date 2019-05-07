@@ -5,7 +5,7 @@ div.aw-navbar
     b-navbar-nav.d-block.d-lg-none
       b-navbar-brand(to="/" style="background-color: transparent;")
         img.aligh-middle(src="/static/logo.png" style="height: 1.5em;")
-        span.ml-2.align-middle(style="font-size: 1.0em; color: #000;") ActivityWatch
+        span.ml-2.align-middle(style="font-size: 1em; color: #000;") ActivityWatch
 
     b-navbar-toggle(target="nav-collapse")
 
@@ -32,7 +32,7 @@ div.aw-navbar
             | {{ view.name }}
 
         // If only a single view (the default) is available
-        b-nav-item(v-if="activityViewsSummary.length === 1", v-for="view in activityViewsSummary", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
+        b-nav-item(v-if="activityViewsSummary.length === 1", v-for="view in activityViewsSummary", :key="view.name + '_summary'", :to="view.pathUrl + '/' + view.hostname")
           div.px-2.px-lg-1
             icon(name="calendar-week")
             | Summary
@@ -47,7 +47,7 @@ div.aw-navbar
             | No activity reports available
             br
             small Make sure you have both an AFK and window watcher running
-          b-dropdown-item(v-for="view in activityViewsSummary", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
+          b-dropdown-item(v-for="view in activityViewsSummary", :key="view.name + '_summary'", :to="view.pathUrl + '/' + view.hostname")
             icon(:name="view.icon")
             | {{ view.name }}
 
@@ -121,7 +121,7 @@ export default {
         types_by_host[v.hostname].window |= v.type == "currentwindow";
         types_by_host[v.hostname].android |= v.type == "currentwindow" && this.isAndroidApp;  // Use other bucket type ID in the future
     })
-    console.log(types_by_host);
+    //console.log(types_by_host);
 
     _.each(types_by_host, (types, hostname) => {
         if(types.afk && types.window) {

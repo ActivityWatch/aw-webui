@@ -19,7 +19,6 @@ export default {
   name: "aw-timeline",
   props: ['chunks', 'total_duration', 'show_afk', 'chunkfunc', 'eventfunc'],
   mounted: function() {
-    console.log("Mounting aw-timeline");
     timeline.create(this.$el);
   },
   watch: {
