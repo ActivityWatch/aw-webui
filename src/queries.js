@@ -78,10 +78,10 @@ export function browserSummaryQuery(browserbuckets, windowbucket, afkbucket, lim
   let code = (
     `events = [];
      window = flood(query_bucket("${windowbucket}"));`
-  ) + (
+  ) + (filterAFK ?
     `not_afk = flood(query_bucket("${afkbucket}"));
-     not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);`
-  )
+     not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);` : ''
+  );
 
   _.each(["chrome", "firefox"], (browserName) => {
     let bucketId = _.filter(browserbuckets, (buckets) => buckets.indexOf(browserName) !== -1)[0];
