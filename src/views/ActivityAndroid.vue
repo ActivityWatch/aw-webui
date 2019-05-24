@@ -7,7 +7,7 @@ div
     br
     | Host: {{ host }}
     br
-    | Active time: {{ readableDuration }}
+    | Active time: {{ total_duration | friendlyduration }}
 
   b-alert(variant="danger" :show="errormsg.length > 0")
     | {{ errormsg }}
@@ -54,6 +54,7 @@ div
 <script>
 import moment from 'moment';
 import time from "../util/time.js";
+import _ from 'lodash';
 
 import 'vue-awesome/icons/arrow-left'
 import 'vue-awesome/icons/arrow-right'
@@ -69,9 +70,10 @@ export default {
     return {
       today: moment().startOf('day').format("YYYY-MM-DD"),
 
-      // Query variables
-      duration: "",
       errormsg: "",
+
+      // Query variables
+      total_duration: "",
 
       daily_activity: [],
 
@@ -85,13 +87,11 @@ export default {
   },
   watch: {
     '$route': function() {
-      console.log("Route changed");
       this.refresh();
     },
   },
 
   computed: {
-    readableDuration: function() { return time.seconds_to_duration(this.duration) },
     host: function() { return this.$route.params.host },
     date: function() {
       var dateParam = this.$route.params.date;
@@ -115,7 +115,6 @@ export default {
 
     refresh: function() {
       this.queryAll();
-      this.duration = "";
     },
 
     errorHandler: function(error) {
@@ -124,7 +123,7 @@ export default {
     },
 
     queryAll: function() {
-      this.duration = "";
+      this.total_duration = 0;
       this.eventcount = 0;
       this.errormsg = "";
 
@@ -134,7 +133,6 @@ export default {
 
     queryApps: async function() {
       var periods = [this.dateStart + "/" + this.dateEnd];
-      console.log(this.appBucketId);
       var q = query.appQuery(this.appBucketId, this.top_apps_count);
       let data = await this.$aw.query(periods, q).catch(this.errorHandler);
       data = data[0];
@@ -149,7 +147,22 @@ export default {
         var enddate = moment(this.date).add(i+1, 'days').format();
         timeperiods.push(startdate + '/' + enddate);
       }
-      this.daily_activity = await this.$aw.query(timeperiods, query.dailyActivityQueryAndroid(this.appBucketId)).catch(this.errorHandler);
+      let dur_per_date = await this.$aw.query(timeperiods, query.dailyActivityQueryAndroid(this.appBucketId)).catch(this.errorHandler);
+      // TODO: This is some nasty shit, aw-periodusage should really just accept an array with (timestamp, duration) tuples instead.
+      this.daily_activity = _.map(_.zip(timeperiods, dur_per_date), (t) => {
+        let timestamp = t[0].split("/")[0];
+        let duration = t[1];
+        return [
+          {
+            "timestamp": timestamp,
+            "duration": duration,
+            "data": {
+              "status": "not-afk"
+            }
+          }
+        ]
+      })
+      console.log(this.daily_activity);
     },
 
     testError() {

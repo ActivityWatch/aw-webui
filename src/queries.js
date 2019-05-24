@@ -52,7 +52,7 @@ export function appQuery(appbucket, limit) {
   appbucket = appbucket.replace('"', '\\"');
   limit = limit || 5;
   let code = (
-    `events  = flood(query_bucket("${appbucket}"));`
+    `events  = query_bucket("${appbucket}");`
   ) + (
     `events  = merge_events_by_keys(events, ["app"]);
     events  = sort_by_duration(events);
@@ -147,8 +147,8 @@ export function dailyActivityQuery(afkbucket) {
 export function dailyActivityQueryAndroid(androidbucket) {
   androidbucket = androidbucket.replace('"', '\\"');
   return [
-    `not_afk = sort_by_duration(flood(query_bucket("${androidbucket}")));`,
-    'RETURN = limit_events(not_afk, 10);'
+    `events = query_bucket("${androidbucket}");`,
+    'RETURN = sum_durations(events);'
   ];
 }
 
