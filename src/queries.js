@@ -64,8 +64,12 @@ export function appQuery(appbucket, limit) {
   return _.map(lines, (l) => l + ";");
 }
 
-const chrome_appnames = ["Google-chrome", "chrome.exe", "Chromium", "Google Chrome", "Chromium-browser", "Chromium-browser-chromium", "Google-chrome-beta", "Google-chrome-unstable"];
-const firefox_appnames = ["Firefox", "Firefox.exe", "firefox", "firefox.exe", "Firefox Developer Edition", "Firefox Beta", "Nightly"]
+const appnames = {
+    "chrome": ["Google-chrome", "chrome.exe", "Chromium", "Google Chrome", "Chromium-browser", "Chromium-browser-chromium", "Google-chrome-beta", "Google-chrome-unstable"],
+    "firefox": ["Firefox", "Firefox.exe", "firefox", "firefox.exe", "Firefox Developer Edition", "Firefox Beta", "Nightly"],
+    "opera": ["opera.exe", "Opera"],
+    "brave": ["brave.exe"],
+};
 
 export function browserSummaryQuery(browserbuckets, windowbucket, afkbucket, limit, filterAFK) {
   // Escape `"`
@@ -83,13 +87,13 @@ export function browserSummaryQuery(browserbuckets, windowbucket, afkbucket, lim
      not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);` : ''
   );
 
-  _.each(["chrome", "firefox"], (browserName) => {
+  _.each(["chrome", "firefox", "opera", "brave"], (browserName) => {
     let bucketId = _.filter(browserbuckets, (buckets) => buckets.indexOf(browserName) !== -1)[0];
     if(bucketId === undefined) {
       // Skip browser if specific bucket not available
       return;
     }
-    let appnames_str = JSON.stringify(browserName == 'chrome' ? chrome_appnames : firefox_appnames);
+    let appnames_str = JSON.stringify(appnames[browserName]);
     code += (
       `events_${browserName} = flood(query_bucket("${bucketId}"));
        window_${browserName} = filter_keyvals(window, "app", ${appnames_str});`
