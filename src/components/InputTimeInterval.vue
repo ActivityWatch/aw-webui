@@ -15,8 +15,11 @@ div
         td
           select(id="duration" :value="duration", @change="valueChanged")
             option(:value="15*60") 15min
+            option(:value="30*60") 30min
             option(:value="60*60") 1h
+            option(:value="4*60*60") 4h
             option(:value="6*60*60") 6h
+            option(:value="12*60*60") 12h
             option(:value="24*60*60") 24h
       tr(v-if="mode == 'range'")
         td.pr-2 Range:
@@ -57,10 +60,11 @@ export default {
       },
       set(newValue) {
         if(!isNaN(newValue)) {
-          this.customRange = null;
+          // Set new now and duration
+          this.now = moment();
           this.duration = newValue;
         } else {
-          this.customRange = newValue;
+          // Not required for mode='range', start and end set directly through v-model
         }
       }
     }
