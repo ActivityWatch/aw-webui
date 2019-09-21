@@ -405,8 +405,12 @@ export default {
     queryWindows: async function() {
       var periods = [this.dateStart + "/" + this.dateEnd];
       let classes = [
-        ["Work", "[Aa]lacritty"],
-        ["Work -> Programming", "[Pp]ython"],
+        ["Media -> Games", "RimWorld"],
+        ["Media -> Video", "YouTube"],
+        ["Media -> Social Media", "reddit|Facebook|Twitter"],
+        ["Remote", "Shadow"],
+        ["Work", "[Aa]lacritty|Google Docs"],
+        ["Work -> Programming", "[Pp]ython|GitHub"],
         ["Work -> Programming -> ActivityWatch", "aw-|[Aa]ctivity[Ww]atch"],
         ["Comms -> IM", "Messenger"],
         ["Comms -> Email", "Gmail"],
