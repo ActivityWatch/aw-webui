@@ -83,7 +83,7 @@ div
     div.col-md-4
       h5 Category Tree
       div(v-if="top_cats")
-        aw-categorytree(:categories="top_cats")
+        aw-categorytree(:events="top_cats")
 
   div(v-show="view == 'window'")
 

@@ -36,7 +36,6 @@ Vue.component('aw-sunburst', () => import('./visualizations/Sunburst.vue'));
 Vue.component('aw-timeline-inspect', () => import('./visualizations/TimelineInspect.vue'));
 Vue.component('aw-timeline', () => import('./visualizations/TimelineSimple.vue'));
 Vue.component('vis-timeline', () => import('./visualizations/VisTimeline.vue'));
-Vue.component('aw-categorytree', () => import('./visualizations/CategoryTree.vue'));
 
 Vue.component('aw-summaryview', () => import('./components/SummaryView.vue'));
 Vue.component('aw-categorytree', () => import('./visualizations/CategoryTree.vue'));

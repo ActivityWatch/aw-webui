@@ -32,33 +32,50 @@ function get_parent_cats(cat) {
 
 export default {
   name: "aw-categorytree",
-  props: ['categories'],
+  props: ['events'],
   computed: {
     category_hierarchy: function() {
-      let events = JSON.parse(JSON.stringify(this.categories));
+      let events = JSON.parse(JSON.stringify(this.events));
 
       // Compute hierarchy for all events
       _.map(events, e => e.data["$category_hierarchy"] = get_parent_cats(e.data["$category"]));
 
       // Collect all categories at all depths
-      let categories = _.union(_.flatten(_.map(events, (e) => e.data["$category_hierarchy"])));
-
-      let cat_time = _.map(categories, (c) => {
+      let all_cat_names = _.union(_.flatten(_.map(events, (e) => e.data["$category_hierarchy"])));
+      let cats = _.map(all_cat_names, (c) => {
+        let depth = count_substr(c, "->");
         return {
           name: c,
+          parent: c.split("->").map(s => s.trim()).slice(0, depth).join(" -> ") || null,
           subname: c.split("->").slice(-1).pop(),
-          depth: count_substr(c, "->"),
+          depth: depth,
           duration: _.sumBy(_.filter(events, e => e.data["$category_hierarchy"].includes(c)), e => e.duration)
         }
       });
-      console.log(cat_time);
 
-      return cat_time;
+      function _get_child_cats(cat, all_cats) {
+        return _.filter(all_cats, c => c.parent == cat.name)
+      }
+
+      function _assign_children(parent, all_cats) {
+        let child_cats = _get_child_cats(parent, all_cats);
+        // Recurse
+        _.map(child_cats, c => _assign_children(c, all_cats));
+        parent.children = _.sortBy(child_cats, cc => -cc.duration);
+      }
+
+      let cats_with_depth0 = _.sortBy(_.filter(cats, c => c.depth == 0), c => -c.duration);
+      _.map(cats_with_depth0, c => _assign_children(c, cats));
+
+      // Flattens the category hierarchy
+      function _flatten_hierarchy(c) {
+        if(!c.children) return [];
+        return _.flattenDeep([c, _.map(c.children, cc => _flatten_hierarchy(cc))]);
+      }
+      cats = _.flatten(_.map(cats_with_depth0, c => _flatten_hierarchy(c)));
+      console.log(cats);
+      return cats;
     }
   },
-  mounted: function() {
-  },
-  watch: {
-  }
 }
 </script>
