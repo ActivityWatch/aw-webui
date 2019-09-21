@@ -71,6 +71,20 @@ div
           | Show more
         br
 
+    div.col-md-4
+      h5 Top categories
+      div(v-if="top_cats")
+        aw-summary(:fields="top_cats", :namefunc="top_cats_namefunc", :colorfunc="top_cats_colorfunc")
+        b-button(size="sm", variant="outline-secondary", :disabled="top_cats.length < top_cats_count" @click="top_cats_count += 5; queryTopCategories()")
+          icon(name="angle-double-down")
+          | Show more
+        br
+
+    div.col-md-4
+      h5 Category Tree
+      div(v-if="top_cats")
+        aw-categorytree(:categories="top_cats")
+
   div(v-show="view == 'window'")
 
     b-form-checkbox(v-model="timelineShowAFK")
@@ -266,6 +280,11 @@ export default {
       top_web_urls_namefunc: (e) => e.data.url,
       top_web_urls_colorfunc: (e) => e.data.domain,
 
+      top_cats: [],
+      top_cats_namefunc: (e) => e.data["$category"],
+      top_cats_colorfunc: (e) => e.data["$category"],
+      top_cats_count: 5,
+
       editor_duration: 0,
       top_editor_count: 5,
 
@@ -385,13 +404,22 @@ export default {
 
     queryWindows: async function() {
       var periods = [this.dateStart + "/" + this.dateEnd];
-      var q = query.windowQuery(this.windowBucketId, this.afkBucketId, this.top_apps_count, this.top_windowtitles_count, this.filterAFK);
+      let classes = [
+        ["Work", "[Aa]lacritty"],
+        ["Work -> Programming", "[Pp]ython"],
+        ["Work -> Programming -> ActivityWatch", "aw-|[Aa]ctivity[Ww]atch"],
+        ["Comms -> IM", "Messenger"],
+        ["Comms -> Email", "Gmail"],
+      ];
+      var q = query.windowQuery(this.windowBucketId, this.afkBucketId, this.top_apps_count, this.top_windowtitles_count, this.filterAFK, classes);
       let data = await this.$aw.query(periods, q).catch(this.errorHandler);
       data = data[0];
       this.top_apps = data["app_events"];
       this.top_windowtitles = data["title_events"];
       this.app_chunks = data["app_chunks"];
       this.duration = data["duration"];
+      this.top_cats = data["cat_events"];
+      console.log(JSON.parse(JSON.stringify(this.top_cats)));
     },
 
     queryBrowserDomains: async function() {

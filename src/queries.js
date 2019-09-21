@@ -19,33 +19,38 @@ export function summaryQuery(windowbucket, afkbucket, count) {
     RETURN  = {"app_events": app_events, "title_events": title_events};`
   );
   let lines = code.split(";");
-  return _.map(lines, (l) => l + ";");
+  return _.map(lines, l => l + ";");
 }
 
-export function windowQuery(windowbucket, afkbucket, appcount, titlecount, filterAFK) {
+export function windowQuery(
+  windowbucket,
+  afkbucket,
+  appcount,
+  titlecount,
+  filterAFK,
+  classes
+) {
   windowbucket = windowbucket.replace('"', '\\"');
   afkbucket = afkbucket.replace('"', '\\"');
-  let code = (
+  let code =
     `events  = flood(query_bucket("${windowbucket}"));
      not_afk = flood(query_bucket("${afkbucket}"));
-     not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);`
-  ) + (
-    filterAFK ? 'events  = filter_period_intersect(events, not_afk);' : ''
-  ) + (
-    `title_events  = merge_events_by_keys(events, ["app", "title"]);
-    title_events  = sort_by_duration(title_events);
-    app_events  = merge_events_by_keys(title_events, ["app"]);
-    app_events  = sort_by_duration(app_events);
+     not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);` +
+    (filterAFK ? "events  = filter_period_intersect(events, not_afk);" : "") +
+    `
+    events = classify(events, ${JSON.stringify(classes)});
+    title_events = sort_by_duration(merge_events_by_keys(events, ["app", "title"]));
+    app_events   = sort_by_duration(merge_events_by_keys(title_events, ["app"]));
+    cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
 
     events = sort_by_timestamp(events);
     app_chunks = chunk_events_by_key(events, "app");
     app_events  = limit_events(app_events, ${appcount});
     title_events  = limit_events(title_events, ${titlecount});
     duration = sum_durations(events);
-    RETURN  = {"app_events": app_events, "title_events": title_events, "app_chunks": app_chunks, "duration": duration};`
-  );
+    RETURN  = {"app_events": app_events, "title_events": title_events, "cat_events": cat_events, "app_chunks": app_chunks, "duration": duration};`;
   let lines = code.split(";");
-  return _.map(lines, (l) => l + ";");
+  return _.map(lines, l => l + ";");
 }
 
 export function appQuery(appbucket, limit) {
