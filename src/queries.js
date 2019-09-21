@@ -2,6 +2,13 @@ import _ from 'lodash';
 
 // TODO: Sanitize string input of buckets
 
+function querystr_to_array(querystr) {
+  return querystr
+    .split(';')
+    .filter(l => l)
+    .map(l => l + ';');
+}
+
 export function summaryQuery(windowbucket, afkbucket, count) {
   windowbucket = windowbucket.replace('"', '\\"');
   afkbucket = afkbucket.replace('"', '\\"');
@@ -16,8 +23,7 @@ export function summaryQuery(windowbucket, afkbucket, count) {
     app_events  = limit_events(app_events, ${count});
     title_events  = limit_events(title_events, ${count});
     RETURN  = {"app_events": app_events, "title_events": title_events};`;
-  let lines = code.split(';');
-  return _.map(lines, l => l + ';');
+  return querystr_to_array(code);
 }
 
 export function windowQuery(windowbucket, afkbucket, appcount, titlecount, filterAFK, classes) {
@@ -28,8 +34,7 @@ export function windowQuery(windowbucket, afkbucket, appcount, titlecount, filte
      not_afk = flood(query_bucket("${afkbucket}"));
      not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);` +
     (filterAFK ? 'events  = filter_period_intersect(events, not_afk);' : '') +
-    `
-    events = classify(events, ${JSON.stringify(classes)});
+    `events = classify(events, ${JSON.stringify(classes)});
     title_events = sort_by_duration(merge_events_by_keys(events, ["app", "title"]));
     app_events   = sort_by_duration(merge_events_by_keys(title_events, ["app"]));
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
@@ -40,8 +45,7 @@ export function windowQuery(windowbucket, afkbucket, appcount, titlecount, filte
     title_events  = limit_events(title_events, ${titlecount});
     duration = sum_durations(events);
     RETURN  = {"app_events": app_events, "title_events": title_events, "cat_events": cat_events, "app_chunks": app_chunks, "duration": duration};`;
-  let lines = code.split(';');
-  return _.map(lines, l => l + ';');
+  return querystr_to_array(code);
 }
 
 export function appQuery(appbucket, limit) {
@@ -54,8 +58,7 @@ export function appQuery(appbucket, limit) {
     events  = limit_events(events, ${limit});
     total_duration = sum_durations(events);
     RETURN  = {"events": events, "total_duration": total_duration};`;
-  let lines = code.split(';');
-  return _.map(lines, l => l + ';');
+  return querystr_to_array(code);
 }
 
 const appnames = {
@@ -116,9 +119,7 @@ export function browserSummaryQuery(browserbuckets, windowbucket, afkbucket, lim
        events = sort_by_timestamp(concat(events, events_${browserName}));`;
   });
 
-  let lines = code.split(';');
-  let query = _.map(lines, l => l + ';');
-  return query.concat([
+  return querystr_to_array(code).concat([
     'urls = merge_events_by_keys(events, ["url"]);',
     'urls = sort_by_duration(urls);',
     'urls = limit_events(urls, ' + limit + ');',
