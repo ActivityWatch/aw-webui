@@ -5,8 +5,7 @@ import _ from 'lodash';
 export function summaryQuery(windowbucket, afkbucket, count) {
   windowbucket = windowbucket.replace('"', '\\"');
   afkbucket = afkbucket.replace('"', '\\"');
-  let code = (
-   `events  = flood(query_bucket("${windowbucket}"));
+  let code = `events  = flood(query_bucket("${windowbucket}"));
     not_afk = flood(query_bucket("${afkbucket}"));
     not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);
     events  = filter_period_intersect(events, not_afk);
@@ -16,27 +15,19 @@ export function summaryQuery(windowbucket, afkbucket, count) {
     app_events  = sort_by_duration(app_events);
     app_events  = limit_events(app_events, ${count});
     title_events  = limit_events(title_events, ${count});
-    RETURN  = {"app_events": app_events, "title_events": title_events};`
-  );
-  let lines = code.split(";");
-  return _.map(lines, l => l + ";");
+    RETURN  = {"app_events": app_events, "title_events": title_events};`;
+  let lines = code.split(';');
+  return _.map(lines, l => l + ';');
 }
 
-export function windowQuery(
-  windowbucket,
-  afkbucket,
-  appcount,
-  titlecount,
-  filterAFK,
-  classes
-) {
+export function windowQuery(windowbucket, afkbucket, appcount, titlecount, filterAFK, classes) {
   windowbucket = windowbucket.replace('"', '\\"');
   afkbucket = afkbucket.replace('"', '\\"');
   let code =
     `events  = flood(query_bucket("${windowbucket}"));
      not_afk = flood(query_bucket("${afkbucket}"));
      not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);` +
-    (filterAFK ? "events  = filter_period_intersect(events, not_afk);" : "") +
+    (filterAFK ? 'events  = filter_period_intersect(events, not_afk);' : '') +
     `
     events = classify(events, ${JSON.stringify(classes)});
     title_events = sort_by_duration(merge_events_by_keys(events, ["app", "title"]));
@@ -49,70 +40,84 @@ export function windowQuery(
     title_events  = limit_events(title_events, ${titlecount});
     duration = sum_durations(events);
     RETURN  = {"app_events": app_events, "title_events": title_events, "cat_events": cat_events, "app_chunks": app_chunks, "duration": duration};`;
-  let lines = code.split(";");
-  return _.map(lines, l => l + ";");
+  let lines = code.split(';');
+  return _.map(lines, l => l + ';');
 }
 
 export function appQuery(appbucket, limit) {
   appbucket = appbucket.replace('"', '\\"');
   limit = limit || 5;
-  let code = (
-    `events  = query_bucket("${appbucket}");`
-  ) + (
+  let code =
+    `events  = query_bucket("${appbucket}");` +
     `events  = merge_events_by_keys(events, ["app"]);
     events  = sort_by_duration(events);
     events  = limit_events(events, ${limit});
     total_duration = sum_durations(events);
-    RETURN  = {"events": events, "total_duration": total_duration};`
-  );
-  let lines = code.split(";");
-  return _.map(lines, (l) => l + ";");
+    RETURN  = {"events": events, "total_duration": total_duration};`;
+  let lines = code.split(';');
+  return _.map(lines, l => l + ';');
 }
 
 const appnames = {
-    "chrome": ["Google-chrome", "chrome.exe", "Chromium", "Google Chrome", "Chromium-browser", "Chromium-browser-chromium", "Google-chrome-beta", "Google-chrome-unstable"],
-    "firefox": ["Firefox", "Firefox.exe", "firefox", "firefox.exe", "Firefox Developer Edition", "Firefox Beta", "Nightly"],
-    "opera": ["opera.exe", "Opera"],
-    "brave": ["brave.exe"],
+  chrome: [
+    'Google-chrome',
+    'chrome.exe',
+    'Chromium',
+    'Google Chrome',
+    'Chromium-browser',
+    'Chromium-browser-chromium',
+    'Google-chrome-beta',
+    'Google-chrome-unstable',
+  ],
+  firefox: [
+    'Firefox',
+    'Firefox.exe',
+    'firefox',
+    'firefox.exe',
+    'Firefox Developer Edition',
+    'Firefox Beta',
+    'Nightly',
+  ],
+  opera: ['opera.exe', 'Opera'],
+  brave: ['brave.exe'],
 };
 
 export function browserSummaryQuery(browserbuckets, windowbucket, afkbucket, limit, filterAFK) {
   // Escape `"`
-  browserbuckets = _.map(browserbuckets, (b) => b.replace('"', '\\"'));
+  browserbuckets = _.map(browserbuckets, b => b.replace('"', '\\"'));
   windowbucket = windowbucket.replace('"', '\\"');
   afkbucket = afkbucket.replace('"', '\\"');
   limit = limit || 5;
 
   // If multiple browser buckets were found
-  let code = (
+  let code =
     `events = [];
-     window = flood(query_bucket("${windowbucket}"));`
-  ) + (filterAFK ?
-    `not_afk = flood(query_bucket("${afkbucket}"));
-     not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);` : ''
-  );
+     window = flood(query_bucket("${windowbucket}"));` +
+    (filterAFK
+      ? `not_afk = flood(query_bucket("${afkbucket}"));
+     not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);`
+      : '');
 
-  _.each(["chrome", "firefox", "opera", "brave"], (browserName) => {
-    let bucketId = _.filter(browserbuckets, (buckets) => buckets.indexOf(browserName) !== -1)[0];
-    if(bucketId === undefined) {
+  _.each(['chrome', 'firefox', 'opera', 'brave'], browserName => {
+    let bucketId = _.filter(browserbuckets, buckets => buckets.indexOf(browserName) !== -1)[0];
+    if (bucketId === undefined) {
       // Skip browser if specific bucket not available
       return;
     }
     let appnames_str = JSON.stringify(appnames[browserName]);
-    code += (
+    code +=
       `events_${browserName} = flood(query_bucket("${bucketId}"));
-       window_${browserName} = filter_keyvals(window, "app", ${appnames_str});`
-    ) + (
-      filterAFK ? `window_${browserName} = filter_period_intersect(window_${browserName}, not_afk);` : ''
-    ) + (
+       window_${browserName} = filter_keyvals(window, "app", ${appnames_str});` +
+      (filterAFK
+        ? `window_${browserName} = filter_period_intersect(window_${browserName}, not_afk);`
+        : '') +
       `events_${browserName} = filter_period_intersect(events_${browserName}, window_${browserName});
        events_${browserName} = split_url_events(events_${browserName});
-       events = sort_by_timestamp(concat(events, events_${browserName}));`
-    );
-  })
+       events = sort_by_timestamp(concat(events, events_${browserName}));`;
+  });
 
-  let lines = code.split(";");
-  let query = _.map(lines, (l) => l + ";");
+  let lines = code.split(';');
+  let query = _.map(lines, l => l + ';');
   return query.concat([
     'urls = merge_events_by_keys(events, ["url"]);',
     'urls = sort_by_duration(urls);',
@@ -139,7 +144,7 @@ export function editorActivityQuery(editorbucket, limit) {
     'projects = sort_by_duration(merge_events_by_keys(events, ["project"]));',
     'projects = limit_events(projects, ' + limit + ');',
     'duration = sum_durations(events);',
-    'RETURN = {"files": files, "languages": languages, "projects": projects, "duration": duration};'
+    'RETURN = {"files": files, "languages": languages, "projects": projects, "duration": duration};',
   ];
 }
 
@@ -149,16 +154,13 @@ export function dailyActivityQuery(afkbucket) {
     'afkbucket = "' + afkbucket + '";',
     'not_afk = flood(query_bucket(afkbucket));',
     'not_afk = merge_events_by_keys(not_afk, ["status"]);',
-    'RETURN = not_afk;'
+    'RETURN = not_afk;',
   ];
 }
 
 export function dailyActivityQueryAndroid(androidbucket) {
   androidbucket = androidbucket.replace('"', '\\"');
-  return [
-    `events = query_bucket("${androidbucket}");`,
-    'RETURN = sum_durations(events);'
-  ];
+  return [`events = query_bucket("${androidbucket}");`, 'RETURN = sum_durations(events);'];
 }
 
 export default {

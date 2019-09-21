@@ -1,4 +1,4 @@
-import "@babel/polyfill";
+import '@babel/polyfill';
 
 import Vue from 'vue';
 
@@ -9,7 +9,7 @@ import 'bootstrap-vue/dist/bootstrap-vue.css';
 Vue.use(BootstrapVue);
 
 // Setup default settings
-if (!("startOfDay" in localStorage)) {
+if (!('startOfDay' in localStorage)) {
   localStorage.startOfDay = '04:00';
 }
 
@@ -36,9 +36,10 @@ Vue.component('aw-sunburst', () => import('./visualizations/Sunburst.vue'));
 Vue.component('aw-timeline-inspect', () => import('./visualizations/TimelineInspect.vue'));
 Vue.component('aw-timeline', () => import('./visualizations/TimelineSimple.vue'));
 Vue.component('vis-timeline', () => import('./visualizations/VisTimeline.vue'));
+Vue.component('aw-categorytree', () => import('./visualizations/CategoryTree.vue'));
 
 Vue.component('aw-summaryview', () => import('./components/SummaryView.vue'));
-Vue.component("aw-categorytree", () => import("./visualizations/CategoryTree.vue"));
+Vue.component('aw-categorytree', () => import('./visualizations/CategoryTree.vue'));
 
 //import GCTimeline from './visualizations/GCTimeline.vue';
 //Vue.component('GCTimeline', GCTimeline);
@@ -53,5 +54,5 @@ import App from './App';
 new Vue({
   el: '#app',
   router: router,
-  render: h => h(App)
+  render: h => h(App),
 });
