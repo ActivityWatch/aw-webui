@@ -12,7 +12,7 @@ import query from '../queries.js';
 export default {
   name: "SummaryView",
 
-  props: [ "period" ],
+  props: ["period", "host"],
 
   data: () => {
     return {
