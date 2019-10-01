@@ -3,7 +3,7 @@
 div
   h3 Settings
 
-  | Note: These settings are only saved in your browser and will not remain if you switch browser. We are working on getting this fixed.
+  b-alert(variant="warning", show) #[b Note:] These settings are only saved in your browser and will not remain if you switch browser. We are working on getting this fixed.
 
   hr
 
@@ -18,15 +18,18 @@ div
   hr
 
   h5
-    | Tagging & Categorization
+    div Tagging & Categorization
     b-btn.float-right(@click="resetClasses", variant="warning" size="sm")
       | Reset
+  div
+    small An event can have many tags, but only one category. If several categories match, the deepest one will be chosen.
+
   div.row(v-for="cls in classes")
     div.col-sm-6
       b-input-group.mb-2(prepend="Name")
         b-form-input(v-model="cls.name")
     div.col-sm-6
-      b-input-group.mb-2(prepend="Expression")
+      b-input-group.mb-2(prepend="Regex")
         b-form-input(v-model="cls.re")
   div.row
     div.col-sm-12
@@ -36,7 +39,7 @@ div
 </template>
 
 <script>
-import { saveClasses, loadClasses, resetClasses } from '~/util/classes.js';
+import { saveClasses, loadClasses, defaultClasses } from '~/util/classes.js';
 
 export default {
   name: "Settings",
@@ -64,7 +67,7 @@ export default {
       saveClasses(this.classes);
     },
     resetClasses: function() {
-      resetClasses();
+      this.classes = defaultClasses;
     },
   }
 }
