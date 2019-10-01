@@ -53,7 +53,7 @@ div
 
 <script>
 import moment from 'moment';
-import time from "../util/time.js";
+import { get_day_start_with_offset, get_day_period } from "../util/time.js";
 import _ from 'lodash';
 
 import 'vue-awesome/icons/arrow-left'
@@ -93,9 +93,7 @@ export default {
 
   computed: {
     host: function() { return this.$route.params.host },
-    date: function() { return time.get_day_start_with_offset(this.$route.params.date) },
-    dateStart: function() { return this.date },
-    dateEnd: function() { return moment(this.date).add(1, 'days').format() },
+    date: function() { return get_day_start_with_offset(this.$route.params.date) },
     dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
   },
 
@@ -128,7 +126,7 @@ export default {
     },
 
     queryApps: async function() {
-      var periods = [this.dateStart + "/" + this.dateEnd];
+      var periods = [get_day_period(this.date)];
       var q = query.appQuery(this.appBucketId, this.top_apps_count);
       let data = await this.$aw.query(periods, q).catch(this.errorHandler);
       data = data[0];
@@ -139,9 +137,7 @@ export default {
     queryDailyActivity: async function() {
       var timeperiods = [];
       for (var i=-15; i<=15; i++) {
-        var startdate = moment(this.date).add(i, 'days').format();
-        var enddate = moment(this.date).add(i+1, 'days').format();
-        timeperiods.push(startdate + '/' + enddate);
+        timeperiods.push(get_day_period(moment(this.date).add(i, 'days')));
       }
       let dur_per_date = await this.$aw.query(timeperiods, query.dailyActivityQueryAndroid(this.appBucketId)).catch(this.errorHandler);
       // TODO: This is some nasty shit, aw-periodusage should really just accept an array with (timestamp, duration) tuples instead.

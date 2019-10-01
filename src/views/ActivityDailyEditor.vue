@@ -16,7 +16,7 @@ div
 
   br
 
-  h6 Active editor time: {{ readableEditorDuration }}
+  h6 Active editor time: {{ editor_duration | friendlyduration }}
 
   div(v-if="editorBucketId")
     div.row(style="padding-top: 0.5em;")
@@ -39,14 +39,14 @@ div
 
 <script>
 import moment from 'moment';
-import time from "../util/time.js";
+import { seconds_to_duration, get_day_period } from "../util/time.js";
 
 import query from '../queries.js';
 
 
 export default {
   name: "Activity",
-  props: ['date'],
+  props: ['host', 'date'],
   data: () => {
     return {
       editorBuckets: [],
@@ -89,9 +89,6 @@ export default {
   },
 
   computed: {
-    readableEditorDuration: function() { return time.seconds_to_duration(this.editor_duration) },
-    host: function() { return this.$route.params.host },
-    dateStart: function() { return time.get_day_start_with_offset(this.$route.params.date) },
     dateEnd: function() { return moment(this.date).add(1, 'days').format() },
     dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
   },
@@ -120,7 +117,7 @@ export default {
 
     queryEditorActivity: async function() {
       if (this.editorBucketId !== ""){
-        var periods = [this.dateStart + "/" + this.dateEnd];
+        var periods = [get_day_period(this.date)];
         var q = query.editorActivityQuery(this.editorBucketId, this.top_editor_count);
         let data = (await this.$aw.query(periods, q).catch(this.errorHandler))[0];
         this.editor_duration = data["duration"];

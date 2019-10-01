@@ -10,12 +10,8 @@ div
 
 </template>
 
-<style scoped lang="scss">
-</style>
-
 <script>
 import moment from 'moment';
-import time from "../util/time.js";
 import query from '../queries.js';
 
 export default {
@@ -26,7 +22,6 @@ export default {
   data: () => {
     return {
       errormsg: "",
-      top_apps: [],
       limit: 10,
       top_apps: [],
       top_apps_namefunc: (e) => e.data.app,
@@ -38,7 +33,6 @@ export default {
   },
 
   computed: {
-    readableDuration: function() { return time.seconds_to_duration(this.duration) },
     host: function() { return this.$route.params.host },
     windowBucketId: function() { return "aw-watcher-window_" + this.host },
     afkBucketId:    function() { return "aw-watcher-afk_"    + this.host },

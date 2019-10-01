@@ -40,8 +40,7 @@ div
 </template>
 
 <script>
-import moment from 'moment';
-import time from "../util/time.js";
+import { get_day_period } from "../util/time.js";
 import { loadClasses } from "../util/classes.js";
 import _ from 'lodash';
 
@@ -50,13 +49,10 @@ import query from '../queries.js';
 
 export default {
   name: "Activity",
+  props: ['date', 'host'],
   data: () => {
     return {
-      today: moment().startOf('day').format("YYYY-MM-DD"),
-
       filterAFK: true,
-
-      duration: "",
 
       daily_activity: [],
       events_apptimeline: [],
@@ -76,7 +72,6 @@ export default {
       top_web_domains: [],
       top_web_urls: [],
       top_web_count: 5,
-      web_duration: 0,
     }
   },
   watch: {
@@ -99,21 +94,6 @@ export default {
   },
 
   computed: {
-    readableDuration: function() { return time.seconds_to_duration(this.duration) },
-    readableWebDuration: function() { return time.seconds_to_duration(this.web_duration) },
-    readableEditorDuration: function() { return time.seconds_to_duration(this.editor_duration) },
-    host: function() { return this.$route.params.host },
-    date: function() {
-      var dateParam = this.$route.params.date;
-      var dateMoment = dateParam ? moment(dateParam) : moment().startOf('day');
-      var start_of_day = localStorage.startOfDay;
-      var start_of_day_hours = parseInt(start_of_day.split(":")[0]);
-      var start_of_day_minutes = parseInt(start_of_day.split(":")[1]);
-      return dateMoment.hour(start_of_day_hours).minute(start_of_day_minutes).format();
-    },
-    dateStart: function() { return this.date },
-    dateEnd: function() { return moment(this.date).add(1, 'days').format() },
-    dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
     windowBucketId: function() { return "aw-watcher-window_" + this.host },
     afkBucketId:    function() { return "aw-watcher-afk_"    + this.host },
   },
@@ -134,20 +114,19 @@ export default {
     },
 
     getBrowserBucket: async function() {
-      let buckets = await this.$aw.getBuckets().catch(this.errorHandler);
+      let buckets = await this.$aw.getBuckets();
       this.browserBuckets = _.map(_.filter(buckets, (bucket) => bucket["type"] === "web.tab.current"), (bucket) => bucket["id"]);
     },
 
     queryWindows: async function() {
-      var periods = [this.dateStart + "/" + this.dateEnd];
+      var periods = [get_day_period(this.date)];
       let classes = loadClasses();
       var q = query.windowQuery(this.windowBucketId, this.afkBucketId, this.top_apps_count, this.top_windowtitles_count, this.filterAFK, classes);
-      let data = await this.$aw.query(periods, q).catch(this.errorHandler);
+      let data = await this.$aw.query(periods, q);
       data = data[0];
       this.top_apps = data["app_events"];
       this.top_windowtitles = data["title_events"];
       this.app_chunks = data["app_chunks"];
-      this.duration = data["duration"];
       this.top_cats = data["cat_events"];
       console.log(JSON.parse(JSON.stringify(this.top_cats)));
     },
@@ -155,10 +134,9 @@ export default {
     queryBrowserDomains: async function() {
       let browserBuckets = this.browserBucketSelected == 'all' ? this.browserBuckets : [this.browserBucketSelected];
       if (browserBuckets) {
-        var periods = [this.dateStart + "/" + this.dateEnd];
+        var periods = [get_day_period(this.date)];
         var q = query.browserSummaryQuery(browserBuckets, this.windowBucketId, this.afkBucketId, this.top_web_count, this.filterAFK);
-        let data = (await this.$aw.query(periods, q).catch(this.errorHandler))[0];
-        this.web_duration = data["duration"];
+        let data = (await this.$aw.query(periods, q))[0];
         this.top_web_domains = data["domains"];
         this.top_web_urls = data["urls"];
         this.web_chunks = data["chunks"];

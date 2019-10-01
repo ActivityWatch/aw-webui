@@ -5,7 +5,7 @@ div
   p
     | Host: {{ host }}
     br
-    | Active time: {{ readableDuration }}
+    | Active time: {{ duration | friendlyduration }}
 
   b-alert(variant="danger" :show="errormsg.length > 0")
     | {{ errormsg }}
@@ -13,11 +13,11 @@ div
   div.d-flex
     div.p-1
       b-button-group
-        b-button(:to="link_prefix + '/' + previousDay()", variant="outline-dark")
+        b-button(:to="link_prefix + '/' + previousDay() + '/summary'", variant="outline-dark")
           icon(name="arrow-left")
           span.d-none.d-md-inline
             |  Previous day
-        b-button(:to="link_prefix + '/' + nextDay()", :disabled="nextDay() > today", variant="outline-dark")
+        b-button(:to="link_prefix + '/' + nextDay() + '/summary'", :disabled="nextDay() > today", variant="outline-dark")
           span.d-none.d-md-inline
             |  Next day
           icon(name="arrow-right")
@@ -84,8 +84,7 @@ div
 
 <script>
 import moment from 'moment';
-import time from "../util/time.js";
-import _ from 'lodash';
+import { seconds_to_duration, get_day_period } from "../util/time.js";
 
 import 'vue-awesome/icons/arrow-left'
 import 'vue-awesome/icons/arrow-right'
@@ -132,9 +131,6 @@ export default {
   },
 
   computed: {
-    readableDuration: function() { return time.seconds_to_duration(this.duration) },
-    dateStart: function() { return time.get_day_start_with_offset(this.date) },
-    dateEnd: function() { return moment(this.date).add(1, 'days').format() },
     dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
     windowBucketId: function() { return "aw-watcher-window_" + this.host },
     afkBucketId:    function() { return "aw-watcher-afk_"    + this.host },
@@ -146,8 +142,8 @@ export default {
   },
 
   methods: {
-    previousDay: function() { return moment(this.dateStart).subtract(1, 'days').format("YYYY-MM-DD") },
-    nextDay: function() { return moment(this.dateStart).add(1, 'days').format("YYYY-MM-DD") },
+    previousDay: function() { return moment(this.date).subtract(1, 'days').format("YYYY-MM-DD") },
+    nextDay: function() { return moment(this.date).add(1, 'days').format("YYYY-MM-DD") },
     setDate: function(date) { this.$router.push('/activity/daily/' + this.host + '/' + date); },
 
     refresh: function() {
@@ -171,9 +167,7 @@ export default {
     queryDailyActivity: async function() {
       var timeperiods = [];
       for (var i=-15; i<=15; i++) {
-        var startdate = moment(this.date).add(i, 'days').format();
-        var enddate = moment(this.date).add(i+1, 'days').format();
-        timeperiods.push(startdate + '/' + enddate);
+        timeperiods.push(get_day_period(moment(this.date).add(i, 'days')));
       }
       this.daily_activity = await this.$aw.query(timeperiods, query.dailyActivityQuery(this.afkBucketId)).catch(this.errorHandler);
       console.log(this.daily_activity);

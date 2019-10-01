@@ -11,7 +11,7 @@ const moment = require('moment');
 
 import { getColorFromString } from '../util/color.js';
 
-import time from '../util/time.js';
+import { seconds_to_duration } from '../util/time.js';
 
 function show_info(container, elem_id) {
   var title_event_box = container.querySelector('#' + elem_id);
@@ -139,7 +139,7 @@ function update(container, events, showAFK, chunkfunc, eventfunc) {
       .append('h5')
       .attr('x', '10px')
       .attr('y', '20px')
-      .text(chunkfunc(e) + ' (' + time.seconds_to_duration(e.duration) + ')')
+      .text(chunkfunc(e) + ' (' + seconds_to_duration(e.duration) + ')')
       .attr('font-family', 'sans-serif')
       .attr('font-size', '20px')
       .attr('fill', 'black');
@@ -152,7 +152,7 @@ function update(container, events, showAFK, chunkfunc, eventfunc) {
       var clocktime = moment(t.timestamp).format('HH:mm:ss');
       inforow.append('td').text(clocktime);
       // Duration
-      var duration = time.seconds_to_duration(t.duration);
+      var duration = seconds_to_duration(t.duration);
       inforow
         .append('td')
         .text(duration)

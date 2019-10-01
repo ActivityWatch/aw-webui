@@ -4,7 +4,8 @@ div
     span(:style="'padding-left: ' + cat.depth + 'em'")
       span(v-if="cat.depth > 0") ⮡
       | {{cat.subname}}
-    span(style="float: right") {{cat.duration | friendlyduration}}
+    span(style="float: right")
+      | {{cat.duration | friendlyduration}}
 </template>
 
 <style scoped lang="scss">

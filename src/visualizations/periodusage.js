@@ -4,7 +4,7 @@ const d3 = require('d3');
 const _ = require('lodash');
 const moment = require('moment');
 
-import time from '../util/time.js';
+import { seconds_to_duration } from '../util/time.js';
 
 function create(svg_elem) {
   // Clear element
@@ -121,7 +121,7 @@ function update(svg_elem, usage_arr, link_prefix) {
       });
     rect
       .append('title')
-      .text(moment(date).format(dateformat) + '\n' + time.seconds_to_duration(usage_time));
+      .text(moment(date).format(dateformat) + '\n' + seconds_to_duration(usage_time));
   });
 }
 

@@ -17,7 +17,7 @@ div
         | {{ browserBucket }}
   br
 
-  h6 Active browser time: {{ readableWebDuration }}
+  h6 Active browser time: {{ web_duration | friendlyduration }}
 
   div.row
     div.col-md-6
@@ -47,12 +47,9 @@ div
 </template>
 
 <script>
-import moment from 'moment';
-import time from "../util/time.js";
 import _ from 'lodash';
-
+import { get_day_period } from '../util/time.js';
 import query from '../queries.js';
-
 
 export default {
   name: "Activity",
@@ -101,10 +98,6 @@ export default {
   },
 
   computed: {
-    readableWebDuration: function() { return time.seconds_to_duration(this.web_duration) },
-    dateStart: function() { return time.get_day_start_with_offset(this.date) },
-    dateEnd: function() { return moment(this.date).add(1, 'days').format() },
-    dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
     windowBucketId: function() { return "aw-watcher-window_" + this.host },
     afkBucketId:    function() { return "aw-watcher-afk_"    + this.host },
   },
@@ -127,7 +120,7 @@ export default {
     queryBrowserDomains: async function() {
       let browserBuckets = this.browserBucketSelected == 'all' ? this.browserBuckets : [this.browserBucketSelected];
       if (browserBuckets) {
-        var periods = [this.dateStart + "/" + this.dateEnd];
+        var periods = [get_day_period(this.date)];
         var q = query.browserSummaryQuery(browserBuckets, this.windowBucketId, this.afkBucketId, this.top_web_count, this.filterAFK);
         let data = (await this.$aw.query(periods, q).catch(this.errorHandler))[0];
         this.web_duration = data["duration"];
