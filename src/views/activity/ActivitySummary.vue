@@ -44,8 +44,8 @@ div
 
 <script>
 import moment from 'moment';
-import { get_day_start_with_offset } from "../util/time.js";
-import query from '../queries.js';
+import { get_day_start_with_offset } from "~/util/time.js";
+import query from '~/queries.js';
 
 export default {
   name: "ActivitySummary",

@@ -48,8 +48,8 @@ div
 
 <script>
 import _ from 'lodash';
-import { get_day_period } from '../util/time.js';
-import query from '../queries.js';
+import { get_day_period } from '~/util/time.js';
+import query from '~/queries.js';
 
 export default {
   name: "Activity",

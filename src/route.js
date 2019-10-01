@@ -4,14 +4,14 @@ import VueRouter from 'vue-router';
 const Home = () => import('./views/Home.vue');
 
 // Daily activity views for desktop
-const ActivityDaily = () => import('./views/ActivityDaily.vue');
-const ActivityDailySummary = () => import('./views/ActivityDailySummary.vue');
-const ActivityDailyWindow = () => import('./views/ActivityDailyWindow.vue');
-const ActivityDailyBrowser = () => import('./views/ActivityDailyBrowser.vue');
-const ActivityDailyEditor = () => import('./views/ActivityDailyEditor.vue');
+const ActivityDaily = () => import('./views/activity/daily/ActivityDaily.vue');
+const ActivityDailySummary = () => import('./views/activity/daily/ActivityDailySummary.vue');
+const ActivityDailyWindow = () => import('./views/activity/daily/ActivityDailyWindow.vue');
+const ActivityDailyBrowser = () => import('./views/activity/daily/ActivityDailyBrowser.vue');
+const ActivityDailyEditor = () => import('./views/activity/daily/ActivityDailyEditor.vue');
 
-const ActivitySummary = () => import('./views/ActivitySummary.vue');
-const ActivityAndroid = () => import('./views/ActivityAndroid.vue');
+const ActivitySummary = () => import('./views/activity/ActivitySummary.vue');
+const ActivityAndroid = () => import('./views/activity/ActivityAndroid.vue');
 const Buckets = () => import('./views/Buckets.vue');
 const Bucket = () => import('./views/Bucket.vue');
 const QueryExplorer = () => import('./views/QueryExplorer.vue');

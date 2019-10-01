@@ -84,14 +84,14 @@ div
 
 <script>
 import moment from 'moment';
-import { seconds_to_duration, get_day_period } from "../util/time.js";
+import { seconds_to_duration, get_day_period } from "~/util/time.js";
 
 import 'vue-awesome/icons/arrow-left'
 import 'vue-awesome/icons/arrow-right'
 import 'vue-awesome/icons/angle-double-down'
 import 'vue-awesome/icons/sync'
 
-import query from '../queries.js';
+import query from '~/queries.js';
 
 
 export default {

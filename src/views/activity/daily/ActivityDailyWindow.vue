@@ -12,10 +12,10 @@ div
 </template>
 
 <script>
-import {get_day_period} from "../util/time.js";
-import {loadClasses} from "../util/classes.js";
+import {get_day_period} from "~/util/time.js";
+import {loadClasses} from "~/util/classes.js";
 
-import query from '../queries.js';
+import query from '~/queries.js';
 
 
 export default {
