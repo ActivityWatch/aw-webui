@@ -5,7 +5,7 @@ div
   br
   | Active time: {{ duration | friendlyduration }}
 
-  aw-periodusage(:periodusage_arr="period_activity", :link_prefix="link_prefix" :dateformat="dateformat")
+  aw-periodusage(:periodusage_arr="period_activity", :link_prefix="link_prefix")
 
   ul.nav.nav-tabs.my-3
     li.nav-item.aw-nav-item
@@ -18,7 +18,7 @@ div
       a.nav-link.aw-nav-link(@click="periodLength = 'year'" :class="{ active: periodLength == 'year' }")
         h5 Yearly
 
-  aw-summaryview(:period="period")
+  aw-summaryview(:period="period", :host="host")
 
 </template>
 
@@ -44,15 +44,13 @@ div
 
 <script>
 import moment from 'moment';
-import { get_day_start_with_offset } from "~/util/time.js";
 import query from '~/queries.js';
 
 export default {
   name: "ActivitySummary",
-
+  props: ['date', 'host'],
   data: () => {
     return {
-      errormsg: "",
       duration: 0,
       periodLength: "week",
       period_activity: [],
@@ -66,8 +64,6 @@ export default {
         else if (this.periodLength == "year") { return "YYYY"; }
     },
     periodReadable: function() { return moment(this.periodStart).format(this.dateformat); },
-    host: function() { return this.$route.params.host },
-    date: function() { return get_day_start_with_offset(this.$route.params.date) },
     periodStart: function() { return moment(this.date).startOf(this.periodLength).format(); },
     periodEnd: function() { return moment(this.periodStart).add(1, this.periodLength).format(); },
     period: function() { return this.periodStart + "/" + this.periodEnd },
@@ -80,7 +76,6 @@ export default {
 
   watch: {
     '$route': function() {
-      console.log("Route changed");
       this.refresh();
     },
     'periodLength': function() {

@@ -9,9 +9,6 @@ div
     br
     | Active time: {{ total_duration | friendlyduration }}
 
-  b-alert(variant="danger" :show="errormsg.length > 0")
-    | {{ errormsg }}
-
   div.d-flex
     div.p-1
       b-button-group
@@ -53,7 +50,7 @@ div
 
 <script>
 import moment from 'moment';
-import { get_day_start_with_offset, get_day_period } from "~/util/time.js";
+import { get_day_period } from "~/util/time.js";
 import _ from 'lodash';
 
 import 'vue-awesome/icons/arrow-left'
@@ -69,8 +66,6 @@ export default {
   data: () => {
     return {
       today: moment().startOf('day').format("YYYY-MM-DD"),
-
-      errormsg: "",
 
       // Query variables
       total_duration: "",
@@ -92,8 +87,6 @@ export default {
   },
 
   computed: {
-    host: function() { return this.$route.params.host },
-    date: function() { return get_day_start_with_offset(this.$route.params.date) },
     dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
   },
 
@@ -111,15 +104,9 @@ export default {
       this.queryAll();
     },
 
-    errorHandler: function(error) {
-      this.errormsg = "" + error + ". See dev console (F12) and/or server logs for more info.";
-      throw error;
-    },
-
     queryAll: function() {
       this.total_duration = 0;
       this.eventcount = 0;
-      this.errormsg = "";
 
       this.queryApps();
       this.queryDailyActivity();

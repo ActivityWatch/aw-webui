@@ -43,6 +43,9 @@ Vue.component('vis-timeline', () => import('./visualizations/VisTimeline.vue'));
 Vue.component('aw-summaryview', () => import('./components/SummaryView.vue'));
 Vue.component('aw-categorytree', () => import('./visualizations/CategoryTree.vue'));
 
+// A mixin to make async method errors propagate
+Vue.mixin(require('~/mixins/asyncErrorCaptured.js'));
+
 //import GCTimeline from './visualizations/GCTimeline.vue';
 //Vue.component('GCTimeline', GCTimeline);
 //

@@ -107,7 +107,6 @@ export default {
     refresh: function() {
       this.duration = "";
       this.eventcount = 0;
-      this.errormsg = "";
 
       this.queryWindows();
       this.queryBrowserDomains();

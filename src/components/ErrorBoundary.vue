@@ -13,9 +13,11 @@ export default {
     return { errors: [] };
   },
   errorCaptured (err, vm, info) {
+    //console.error("Error captured!");
     //console.error(err, vm, info);
+    let msg = (err.name && err.message) ? (err.name + ": " + err.message) : err;
     this.errors.push({
-      msg: (err.name && err.message) ? (err.name + ": " + err.message) : err,
+      msg: "" + msg + " See dev console (F12) and/or server logs for more info.",
       dismissed: false,
     });
   },

@@ -7,9 +7,6 @@ div
     br
     | Active time: {{ duration | friendlyduration }}
 
-  b-alert(variant="danger" :show="errormsg.length > 0")
-    | {{ errormsg }}
-
   div.d-flex
     div.p-1
       b-button-group
@@ -84,14 +81,14 @@ div
 
 <script>
 import moment from 'moment';
-import { seconds_to_duration, get_day_period } from "~/util/time.js";
+import { get_day_period } from "~/util/time.js";
 
 import 'vue-awesome/icons/arrow-left'
 import 'vue-awesome/icons/arrow-right'
 import 'vue-awesome/icons/angle-double-down'
 import 'vue-awesome/icons/sync'
 
-import query from '~/queries.js';
+import queries from '~/queries.js';
 
 
 export default {
@@ -102,31 +99,17 @@ export default {
       today: moment().startOf('day').format("YYYY-MM-DD"),
 
       filterAFK: true,
-      timelineShowAFK: true,
 
-      // Query variables
       duration: "",
-      errormsg: "",
-
       daily_activity: [],
     }
   },
   watch: {
     '$route': function() {
-      console.log("Route changed");
       //this.refresh();
     },
-    filterAFK() {
-      this.refresh();
-    },
-    browserBucketSelected() {
-      this.queryBrowserDomains();
-    },
-    browserBuckets() {
-      this.queryBrowserDomains();
-    },
-    editorBucketId() {
-      this.queryEditorActivity();
+    async filterAFK() {
+      await this.refresh();
     },
   },
 
@@ -137,8 +120,8 @@ export default {
     link_prefix:    function() { return "/activity/daily/"   + this.host },
   },
 
-  mounted: function() {
-    this.refresh();
+  mounted: async function() {
+    await this.refresh();
   },
 
   methods: {
@@ -146,22 +129,10 @@ export default {
     nextDay: function() { return moment(this.date).add(1, 'days').format("YYYY-MM-DD") },
     setDate: function(date) { this.$router.push('/activity/daily/' + this.host + '/' + date); },
 
-    refresh: function() {
-      this.queryAll();
-      this.duration = "";
-    },
-
-    errorHandler: function(error) {
-      this.errormsg = "" + error + ". See dev console (F12) and/or server logs for more info.";
-      throw error;
-    },
-
-    queryAll: function() {
+    refresh: async function() {
       this.duration = "";
       this.eventcount = 0;
-      this.errormsg = "";
-
-      this.queryDailyActivity();
+      await this.queryDailyActivity();
     },
 
     queryDailyActivity: async function() {
@@ -169,8 +140,7 @@ export default {
       for (var i=-15; i<=15; i++) {
         timeperiods.push(get_day_period(moment(this.date).add(i, 'days')));
       }
-      this.daily_activity = await this.$aw.query(timeperiods, query.dailyActivityQuery(this.afkBucketId)).catch(this.errorHandler);
-      console.log(this.daily_activity);
+      this.daily_activity = await this.$aw.query(timeperiods, queries.dailyActivityQuery(this.afkBucketId));
       this.duration = this.daily_activity[0][1].duration;
     },
   },
