@@ -22,6 +22,9 @@ import './util/filters.js';
 // Sets up the routing and the base app (using vue-router)
 import router from './route.js';
 
+// Sets up the vuex store
+import store from './store';
+
 // Register Font Awesome icon component
 Vue.component('icon', () => import('vue-awesome/components/Icon'));
 
