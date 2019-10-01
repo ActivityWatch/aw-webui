@@ -3,42 +3,69 @@
 div
   h3 Settings
 
+  | Note: These settings are only saved in your browser and will not remain if you switch browser. We are working on getting this fixed.
+
   hr
 
   div.row
     div.col-sm-9
-      div
-        b Start of day
+      h5.mb-0 Start of day
       small
-        | Sets the time where the start/end of a day is in the daily activity view. &nbsp;
-        div.d-inline.d-md-block
-          | Set to 02:00 by default but can be set later for the night-owls.
+        | Sets the time where the start/end of a day is in the daily activity view. Set to 04:00 by default.
     div.col-sm-3
       input.form-control(type="time" :value="startOfDay" @change="setStartOfDay($event.target.value)")
-  br
+
+  hr
+
+  h5
+    | Tagging & Categorization
+    b-btn.float-right(@click="resetClasses", variant="warning" size="sm")
+      | Reset
+  div.row(v-for="cls in classes")
+    div.col-sm-6
+      b-input-group.mb-2(prepend="Name")
+        b-form-input(v-model="cls.name")
+    div.col-sm-6
+      b-input-group.mb-2(prepend="Expression")
+        b-form-input(v-model="cls.re")
+  div.row
+    div.col-sm-12
+      b-btn(@click="addClass") Add new class
+      b-btn.float-right(@click="saveClasses", variant="success")
+        | Save tagging rules
 </template>
 
-<style scoped lang="scss">
-</style>
-
 <script>
+import { saveClasses, loadClasses, resetClasses } from '~/util/classes.js';
+
 export default {
   name: "Settings",
 
   data: () => {
     return {
       startOfDay: '',
+      classes: [],
     }
   },
 
   mounted() {
     this.startOfDay = localStorage.startOfDay;
+    this.classes = loadClasses();
   },
 
   methods: {
     setStartOfDay: function(time_minutes) {
       localStorage.startOfDay = time_minutes;
-    }
+    },
+    addClass: function() {
+      this.classes.push({name: "New class", re: "FILL ME"})
+    },
+    saveClasses: function() {
+      saveClasses(this.classes);
+    },
+    resetClasses: function() {
+      resetClasses();
+    },
   }
 }
 </script>

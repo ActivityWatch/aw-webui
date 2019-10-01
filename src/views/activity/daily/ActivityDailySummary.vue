@@ -41,7 +41,7 @@ div
 
 <script>
 import { get_day_period } from "~/util/time.js";
-import { loadClasses } from "~/util/classes.js";
+import { loadClassesForQuery } from "~/util/classes.js";
 import _ from 'lodash';
 
 import query from '~/queries.js';
@@ -119,7 +119,7 @@ export default {
 
     queryWindows: async function() {
       var periods = [get_day_period(this.date)];
-      let classes = loadClasses();
+      let classes = loadClassesForQuery();
       var q = query.windowQuery(this.windowBucketId, this.afkBucketId, this.top_apps_count, this.top_windowtitles_count, this.filterAFK, classes);
       let data = await this.$aw.query(periods, q);
       data = data[0];
