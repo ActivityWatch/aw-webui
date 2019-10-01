@@ -17,20 +17,25 @@ import timeline from './timeline.js';
 
 export default {
   name: "aw-timeline",
-  props: ['chunks', 'total_duration', 'show_afk', 'chunkfunc', 'eventfunc'],
+  props: ['chunks', 'show_afk', 'chunkfunc', 'eventfunc'],
   mounted: function() {
     timeline.create(this.$el);
   },
   watch: {
-    "chunks": function() {
+    chunks: function() {
+      this.update();
+    },
+    show_afk: function() {
+      this.update();
+    }
+  },
+  methods: {
+    update: function() {
       if(this.chunks.length == 0) {
         timeline.set_status(this.$el, 'Loading...')
       } else {
-        timeline.update(this.$el, this.chunks, this.total_duration, this.show_afk, this.chunkfunc, this.eventfunc);
+        timeline.update(this.$el, this.chunks, this.show_afk, this.chunkfunc, this.eventfunc);
       }
-    },
-    "show_afk": function() {
-      timeline.update(this.$el, this.chunks, this.total_duration, this.show_afk, this.chunkfunc, this.eventfunc);
     }
   }
 }

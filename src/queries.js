@@ -124,10 +124,10 @@ export function browserSummaryQuery(browserbuckets, windowbucket, afkbucket, lim
     'urls = sort_by_duration(urls);',
     'urls = limit_events(urls, ' + limit + ');',
     'domains = split_url_events(events);',
-    'domains = merge_events_by_keys(domains, ["domain"]);',
+    'domains = merge_events_by_keys(domains, ["$domain"]);',
     'domains = sort_by_duration(domains);',
     'domains = limit_events(domains, ' + limit + ');',
-    'chunks = chunk_events_by_key(events, "domain");',
+    'chunks = chunk_events_by_key(events, "$domain");',
     'duration = sum_durations(events);',
     'RETURN = {"domains": domains, "urls": urls, "chunks": chunks, "duration": duration};',
   ]);

@@ -71,11 +71,7 @@ export default {
     periodReadable: function() { return moment(this.periodStart).format(this.dateformat); },
     readableDuration: function() { return time.seconds_to_duration(this.duration) },
     host: function() { return this.$route.params.host },
-    date: function() {
-      var dateParam = this.$route.params.date;
-      var dateMoment = dateParam ? moment(dateParam) : moment();
-      return dateMoment.format();
-    },
+    date: function() { return time.get_day_start_with_offset(this.$route.params.date) },
     periodStart: function() { return moment(this.date).startOf(this.periodLength).format(); },
     periodEnd: function() { return moment(this.periodStart).add(1, this.periodLength).format(); },
     period: function() { return this.periodStart + "/" + this.periodEnd },

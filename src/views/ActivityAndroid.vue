@@ -93,11 +93,7 @@ export default {
 
   computed: {
     host: function() { return this.$route.params.host },
-    date: function() {
-      var dateParam = this.$route.params.date;
-      var dateMoment = dateParam ? moment(dateParam) : moment();
-      return dateMoment.startOf('day').format();
-    },
+    date: function() { return time.get_day_start_with_offset(this.$route.params.date) },
     dateStart: function() { return this.date },
     dateEnd: function() { return moment(this.date).add(1, 'days').format() },
     dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
