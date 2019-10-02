@@ -1,11 +1,15 @@
 {
-  "plugins": ["vue", "jest"],
+  "plugins": ["prettier", "vue", "jest", "@typescript-eslint"],
   "extends": [
+    "prettier",
     "eslint:recommended",
-    "plugin:vue/essential",
-    "plugin:jest/recommended"
+    "plugin:vue/recommended",
+    "plugin:jest/recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/eslint-recommended"
   ],
   "rules": {
+    "prettier/prettier": "warn",
     "no-shadow": [
       "error",
       {
@@ -15,6 +19,7 @@
     ],
     "no-console": ["off"]
   },
+  "parser": "vue-eslint-parser",
   "parserOptions": {
     "ecmaVersion": 2017,
     "sourceType": "module"
@@ -24,5 +29,25 @@
   },
   "globals": {
     "PRODUCTION": false
-  }
+  },
+  "overrides": [
+    {
+      "files": [".*\\.vue$"],
+      "parserOptions": {
+          "parser": "vue-eslint-parser"
+      }
+    },
+    {
+      "files": [".*\\.js$"],
+      "parserOptions": {
+          "parser": "babel-eslint"
+      }
+    },
+    {
+      "files": [".*\\.ts$"],
+      "parserOptions": {
+          "parser": "@typescript-eslint/parser"
+      }
+    }
+  ]
 }

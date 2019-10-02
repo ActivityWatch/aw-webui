@@ -59,7 +59,7 @@ export let defaultCategories = [
   },
 ];
 
-export function build_category_hierarchy(classes: List[cls]) {
+export function build_category_hierarchy(classes: any[]) {
   function annotateClass(c) {
     let ch = c.name.split('->').map(s => s.trim());
     c.name = ch.join('->');
