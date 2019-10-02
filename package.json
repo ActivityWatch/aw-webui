@@ -9,7 +9,7 @@
     "dev": "node build/dev-server.js",
     "build": "node build/build.js",
     "package": "node build/package_electron.js",
-    "test": ""
+    "test": "jest --rootDir=src"
   },
   "devDependencies": {
     "@babel/cli": "^7.2.3",
@@ -44,6 +44,9 @@
     "pug-plain-loader": "^1.0.0",
     "sass-loader": "^7.1.0",
     "shelljs": "^0.6.0",
+    "ts-loader": "^6.2.0",
+    "tslint": "^5.20.0",
+    "typescript": "^3.6.3",
     "url-loader": "^1.1.0",
     "vue": "^2.6.10",
     "vue-hot-reload-api": "^2.3.0",
@@ -58,6 +61,9 @@
   },
   "dependencies": {
     "@babel/polyfill": "^7.2.5",
+    "@types/chrome": "0.0.89",
+    "@types/jest": "^24.0.18",
+    "@types/node": "^12.7.9",
     "ajv": "^6.5.0",
     "ajv-keywords": "^3.2.0",
     "bootstrap": "^4.3.1",
@@ -67,6 +73,7 @@
     "dompurify": "^1.0.7",
     "exports-loader": "^0.7.0",
     "imports-loader": "^0.8.0",
+    "jest": "^24.9.0",
     "jquery": "^3.4.1",
     "jsdom": "^13.2.0",
     "less": "^3.0.4",

@@ -60,4 +60,5 @@ new Vue({
   el: '#app',
   router: router,
   render: h => h(App),
+  store,
 });

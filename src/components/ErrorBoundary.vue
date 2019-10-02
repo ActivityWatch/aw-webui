@@ -1,7 +1,8 @@
 <template lang="pug">
 div
-  b-alert(variant="danger", v-for="error in errors", :key='error.msg', :show='!error.dismissed', dismissible, @dismissed="error.dismissed = false")
-    | {{ error.msg }}
+  b-alert(variant="danger", v-for="error in errors", :key='error.time', :show='!error.dismissed', dismissible, @dismissed="error.dismissed = false")
+    | {{ error.msg }}.
+    | See dev console (F12) and/or server logs for more info.
   slot
 </template>
 
@@ -17,7 +18,8 @@ export default {
     //console.error(err, vm, info);
     let msg = (err.name && err.message) ? (err.name + ": " + err.message) : err;
     this.errors.push({
-      msg: "" + msg + " See dev console (F12) and/or server logs for more info.",
+      msg: msg,
+      time: new Date().toISOString(),
       dismissed: false,
     });
   },

@@ -41,7 +41,7 @@ div
 
 <script>
 import { get_day_period } from "~/util/time.js";
-import { loadClassesForQuery } from "~/util/classes.js";
+import { loadClassesForQuery } from "~/util/classes";
 import _ from 'lodash';
 
 import query from '~/queries.js';

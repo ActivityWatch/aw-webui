@@ -38,7 +38,7 @@ module.exports = {
   },
 
   resolve: {
-    extensions: ['.js', '.vue'],
+    extensions: ['.js', '.ts', '.vue'],
     alias: {
       '~': path.resolve(__dirname, '../src'),
       src: path.resolve(__dirname, '../src'),
@@ -77,6 +77,12 @@ module.exports = {
             options: { presets: ['@babel/preset-env'] },
           },
         ],
+      },
+      {
+        test: /\.tsx?$/,
+        use: 'ts-loader',
+        include: /src/,
+        exclude: /(node_modules|aw-client-js)/,
       },
       {
         test: /\.pug$/,

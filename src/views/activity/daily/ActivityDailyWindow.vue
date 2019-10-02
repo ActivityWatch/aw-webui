@@ -13,7 +13,7 @@ div
 
 <script>
 import {get_day_period} from "~/util/time.js";
-import {loadClasses} from "~/util/classes.js";
+import {loadClasses} from "~/util/classes";
 
 import query from '~/queries.js';
 

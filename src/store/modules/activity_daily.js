@@ -1,5 +1,5 @@
 import queries from '~/queries.js';
-import { loadClasses } from '~/util/classes.js';
+import { loadClasses } from '~/util/classes';
 import { get_day_period } from '~/util/time.js';
 
 // initial state

@@ -1,4 +1,3 @@
-
 <template lang="pug">
 div
   h3 Settings
@@ -24,13 +23,9 @@ div
   div
     small An event can have many tags, but only one category. If several categories match, the deepest one will be chosen.
 
-  div.row(v-for="cls in classes")
-    div.col-sm-6
-      b-input-group.mb-2(prepend="Name")
-        b-form-input(v-model="cls.name")
-    div.col-sm-6
-      b-input-group.mb-2(prepend="Regex")
-        b-form-input(v-model="cls.re")
+  h6 Categories
+  div(v-for="cls in $store.getters['settings/classes_hierarchy']")
+    CategoryEditTree(:cls="cls")
   div.row
     div.col-sm-12
       b-btn(@click="addClass") Add new class
@@ -39,7 +34,7 @@ div
 </template>
 
 <script>
-import { saveClasses, loadClasses, defaultClasses } from '~/util/classes.js';
+import CategoryEditTree from './CategoryEditTree.vue';
 
 export default {
   name: "Settings",
@@ -47,13 +42,16 @@ export default {
   data: () => {
     return {
       startOfDay: '',
-      classes: [],
     }
+  },
+  components: {
+    CategoryEditTree,
   },
 
   mounted() {
+    console.log(this.$store);
     this.startOfDay = localStorage.startOfDay;
-    this.classes = loadClasses();
+    this.$store.dispatch('settings/load');
   },
 
   methods: {
@@ -61,13 +59,13 @@ export default {
       localStorage.startOfDay = time_minutes;
     },
     addClass: function() {
-      this.classes.push({name: "New class", re: "FILL ME"})
+      this.$store.commit('settings/addClass', {name: "New class", rule: {type: "regex", pattern: "FILL ME"}});
     },
     saveClasses: function() {
-      saveClasses(this.classes);
+      this.$store.dispatch('settings/save');
     },
     resetClasses: function() {
-      this.classes = defaultClasses;
+      this.$store.dispatch('settings/load');
     },
   }
 }
