@@ -1,7 +1,19 @@
-// TODO: This would work better as a vuex store
 let _ = require('lodash');
 
-export let defaultClasses = [
+interface Class {
+    name?: string,
+    subname?: string,
+    rule?: {
+        type: string,
+        pattern: string,
+    },
+    full_name?: string[],
+    depth?: number,
+    parent?: string[],
+    children?: Class[],
+}
+
+export let defaultClasses: Class[] = [
   { name: '#test-tag', rule: { type: 'regex', pattern: 'test' } },
   { name: 'Test category -> subcategory', rule: { type: 'regex', pattern: 'test' } },
   { name: 'Work', rule: { type: 'regex', pattern: '[Aa]lacritty|Google Docs' } },
@@ -20,47 +32,8 @@ export let defaultClasses = [
   { name: 'Comms -> Email', rule: { type: 'regex', pattern: 'Gmail' } },
 ];
 
-export let defaultCategories = [
-  { name: '#test-tag', rule: { type: 'regex', pattern: 'test' } },
-  { name: 'Test category -> subcategory', rule: { type: 'regex', pattern: 'test' } },
-  {
-    name: 'Work',
-    rule: { type: 'regex', pattern: '[Aa]lacritty|Google Docs' },
-    children: [
-      {
-        name: 'Programming',
-        rule: { type: 'regex', pattern: '\\~/Programming|[Pp]ython|GitHub' },
-        children: [
-          {
-            name: 'ActivityWatch',
-            rule: { type: 'regex', pattern: '[Aa]ctivity[Ww]atch|aw-' },
-          },
-        ],
-      },
-    ],
-  },
-  {
-    name: 'Media',
-    children: [
-      { name: 'Media -> Games', rule: { type: 'regex', pattern: 'Minecraft|RimWorld' } },
-      { name: 'Media -> Video', rule: { type: 'regex', pattern: 'YouTube|Plex' } },
-      {
-        name: 'Media -> Social Media',
-        rule: { type: 'regex', pattern: 'reddit|Facebook|Twitter' },
-      },
-    ],
-  },
-  {
-    name: 'Comms',
-    children: [
-      { name: 'IM', rule: { type: 'regex', pattern: 'Messenger' } },
-      { name: 'Email', rule: { type: 'regex', pattern: 'Gmail' } },
-    ],
-  },
-];
-
-export function build_category_hierarchy(classes: any[]) {
-  function annotateClass(c) {
+export function build_category_hierarchy(classes: Class[]): Class[] {
+  function annotateClass(c: Class) {
     let ch = c.name.split('->').map(s => s.trim());
     c.name = ch.join('->');
     c.subname = ch.slice(-1)[0];
@@ -101,7 +74,7 @@ export function build_category_hierarchy(classes: any[]) {
   return assignChildren(classes.filter(c => !c.parent));
 }
 
-export function flatten_category_hierarchy(hier) {
+export function flatten_category_hierarchy(hier: Class[]): Class[] {
   return _.flattenDeep(
     hier.map(h => {
       let level = [h, flatten_category_hierarchy(h.children)];
@@ -111,12 +84,12 @@ export function flatten_category_hierarchy(hier) {
   );
 }
 
-export function saveClasses(classes) {
+export function saveClasses(classes: Class[]) {
   localStorage.classes = JSON.stringify(classes);
   console.log('Saved classes', localStorage.classes);
 }
 
-export function loadClasses() {
+export function loadClasses(): Class[] {
   let classes = JSON.parse(localStorage.classes);
   console.log(classes);
   if (classes.length < 1) {
@@ -126,6 +99,6 @@ export function loadClasses() {
   return classes;
 }
 
-export function loadClassesForQuery() {
+export function loadClassesForQuery(): string[][] {
   return loadClasses().map(c => [c.name, c.rule.pattern]);
 }
