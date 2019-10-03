@@ -32,16 +32,16 @@ div
 
   ul.nav.nav-tabs.my-3
     li.nav-item.aw-nav-item
-      router-link.nav-link.aw-nav-link(:to="{ name: 'activity-daily-summary', params: $route.params }" :class="{ active: $route.path.includes('summary') }")
+      router-link.nav-link.aw-nav-link(:to="{ name: 'activity-daily-summary', params: subroute_params }" :class="{ active: $route.path.includes('summary') }")
         h5 Summary
     li.nav-item.aw-nav-item
-      router-link.nav-link.aw-nav-link(:to="{ name: 'activity-daily-window', params: $route.params }" :class="{ active: $route.path.includes('window') }")
+      router-link.nav-link.aw-nav-link(:to="{ name: 'activity-daily-window', params: subroute_params }" :class="{ active: $route.path.includes('window') }")
         h5 Window
     li.nav-item.aw-nav-item
-      router-link.nav-link.aw-nav-link(:to="{ name: 'activity-daily-browser', params: $route.params }" :class="{ active: $route.path.includes('browser') }")
+      router-link.nav-link.aw-nav-link(:to="{ name: 'activity-daily-browser', params: subroute_params }" :class="{ active: $route.path.includes('browser') }")
         h5.active-h5 Browser
     li.nav-item.aw-nav-item
-      router-link.nav-link.aw-nav-link(:to="{ name: 'activity-daily-editor', params: $route.params }" :class="{ active: $route.path.includes('editor') }")
+      router-link.nav-link.aw-nav-link(:to="{ name: 'activity-daily-editor', params: subroute_params }" :class="{ active: $route.path.includes('editor') }")
         h5 Editor
 
   div
@@ -118,6 +118,7 @@ export default {
     windowBucketId: function() { return "aw-watcher-window_" + this.host },
     afkBucketId:    function() { return "aw-watcher-afk_"    + this.host },
     link_prefix:    function() { return "/activity/daily/"   + this.host },
+    subroute_params: function() { return Object.assign(this.$route.params, { date: this.date || this.dateShort }) },
   },
 
   mounted: async function() {
@@ -141,7 +142,9 @@ export default {
         timeperiods.push(get_day_period(moment(this.date).add(i, 'days')));
       }
       this.daily_activity = await this.$aw.query(timeperiods, queries.dailyActivityQuery(this.afkBucketId));
-      this.duration = this.daily_activity[0][1].duration;
+      const events = this.daily_activity[0];
+      const non_afk_event = events.filter(e => e.data.status === "not-afk")[0];
+      this.duration = non_afk_event.duration;
     },
   },
 }

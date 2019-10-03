@@ -10,6 +10,8 @@
   ],
   "rules": {
     "prettier/prettier": "warn",
+    "@typescript-eslint/camelcase": ["off"],
+    "@typescript-eslint/explicit-function-return-type": ["off"],
     "no-shadow": [
       "error",
       {

@@ -3,17 +3,15 @@ div
   b-form-checkbox(v-model="timelineShowAFK")
     | Show AFK time
 
-  aw-timeline-inspect(:chunks="app_chunks", :show_afk='timelineShowAFK', :chunkfunc='app_chunkfunc', :eventfunc='app_eventfunc')
+  aw-timeline-inspect(:chunks="app_chunks", :show_afk='timelineShowAFK', :chunkfunc='e => e.data.app', :eventfunc='e => e.data.title')
 
   hr
 
-  aw-sunburst(:date="date", :afkBucketId="afkBucketId", :windowBucketId="windowBucketId")
-
+  aw-sunburst(:date="date", :afkBucketId="bucket_id_afk", :windowBucketId="bucket_id_window")
 </template>
 
 <script>
 import {get_day_period} from "~/util/time.js";
-import {loadClasses} from "~/util/classes";
 
 import query from '~/queries.js';
 
@@ -24,48 +22,27 @@ export default {
   data: () => {
     return {
       timelineShowAFK: true,
-
-      app_chunks: [],
-      app_chunkfunc: (e) => e.data.app,
-      app_eventfunc: (e) => e.data.title,
     }
   },
   watch: {
     '$route': function() {
-      console.log("Route changed");
-      this.refresh();
-    },
-    filterAFK() {
       this.refresh();
     },
   },
 
   computed: {
-    windowBucketId: function() { return "aw-watcher-window_" + this.host },
-    afkBucketId:    function() { return "aw-watcher-afk_"    + this.host },
+    app_chunks: function() { return this.$store.state.activity_daily.app_chunks },
+    bucket_id_window: function() { return 'aw-watcher-window_' + this.host; },
+    bucket_id_afk: function() { return 'aw-watcher-afk_' + this.host; },
   },
 
-  mounted: function() {
-    this.refresh();
+  mounted: async function() {
+    await this.refresh();
   },
 
   methods: {
-    refresh: function() {
-      this.queryAll();
-    },
-
-    queryAll: function() {
-      this.queryWindows();
-    },
-
-    // TODO: Move to vuex store
-    queryWindows: async function() {
-      var periods = [get_day_period(this.date)];
-      let classes = loadClasses();
-      var q = query.windowQuery(this.windowBucketId, this.afkBucketId, 0, 0, this.filterAFK, classes);
-      let data = await this.$aw.query(periods, q).catch(this.errorHandler);
-      data = data[0];
-      this.app_chunks = data["app_chunks"];
+    refresh: async function() {
+      await this.$store.dispatch("activity_daily/ensure_loaded", { aw_client: this.$aw, date: this.date, host: this.host });
     },
   },
 }
