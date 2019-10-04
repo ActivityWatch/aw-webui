@@ -4,14 +4,14 @@ div
     div.col-md-4
       h5 Top Applications
       aw-summary(:fields="top_apps.slice(0, top_apps_count)", :namefunc="e => e.data.app", :colorfunc="e => e.data.app")
-      b-button(size="sm", variant="outline-secondary", :disabled="top_apps.length < top_apps_count", @click="top_apps_count += 5; queryWindows()")
+      b-button(size="sm", variant="outline-secondary", :disabled="top_apps.length < top_apps_count", @click="top_apps_count += 5")
         icon(name="angle-double-down")
         | Show more
 
     div.col-md-4
       h5 Top Window Titles
       aw-summary(:fields="top_titles.slice(0, top_titles_count)", :namefunc="e => e.data.title", :colorfunc="e => e.data.app")
-      b-button(size="sm", variant="outline-secondary", :disabled="top_titles.length < top_titles_count", @click="top_windowtitles_count += 5; queryWindows()")
+      b-button(size="sm", variant="outline-secondary", :disabled="top_titles.length < top_titles_count", @click="top_titles_count += 5")
         icon(name="angle-double-down")
         | Show more
 
@@ -19,7 +19,7 @@ div
       h5 Top Browser Domains
       div(v-if="browserBuckets")
         aw-summary(:fields="top_domains.slice(0, top_web_count)", :namefunc="e => e.data.$domain", :colorfunc="e => e.data.$domain")
-        b-button(size="sm", variant="outline-secondary", :disabled="top_domains.length < top_web_count" @click="top_web_count += 5; queryBrowserDomains()")
+        b-button(size="sm", variant="outline-secondary", :disabled="top_domains.length < top_web_count" @click="top_web_count += 5")
           icon(name="angle-double-down")
           | Show more
         br
@@ -28,7 +28,7 @@ div
       h5 Top categories
       div(v-if="top_categories")
         aw-summary(:fields="top_categories", :namefunc="e => e.data['$category']", :colorfunc="e => e.data['$category']")
-        b-button(size="sm", variant="outline-secondary", :disabled="top_categories.length < top_cats_count" @click="top_cats_count += 5; queryTopCategories()")
+        b-button(size="sm", variant="outline-secondary", :disabled="top_categories.length < top_cats_count" @click="top_cats_count += 5")
           icon(name="angle-double-down")
           | Show more
         br

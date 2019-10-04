@@ -7,7 +7,7 @@ div
 
   hr
 
-  aw-sunburst(:date="date", :afkBucketId="bucket_id_afk", :windowBucketId="bucket_id_window")
+  aw-sunburst-clock(:date="date", :afkBucketId="bucket_id_afk", :windowBucketId="bucket_id_window")
 </template>
 
 <script>
