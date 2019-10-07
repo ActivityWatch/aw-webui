@@ -3,8 +3,8 @@ div
   div.row.my-2
     div.col-8.col-md-4
       span(:style="{ marginLeft: (2 * depth) + 'em'}")
-        //| {{ cls.name.split("->").slice(0, -1).join(" ➤ ")}}
-      | #[span(v-if="depth > 0") ➤] {{ cls.name.split("->").slice(-1).join(" ➤ ")}}
+        //| {{ cls.name.join(" ➤ ")}}
+      | #[span(v-if="depth > 0") ➤] {{ cls.name.join(" ➤ ")}}
       //b-input-group.my-1
         b-form-input(v-model="cls.subname")
     div.col-4.col-md-8

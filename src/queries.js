@@ -34,7 +34,7 @@ export function windowQuery(windowbucket, afkbucket, appcount, titlecount, filte
      not_afk = flood(query_bucket("${afkbucket}"));
      not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);` +
     (filterAFK ? 'events  = filter_period_intersect(events, not_afk);' : '') +
-    `events = classify(events, ${JSON.stringify(classes)});
+    `events = categorize(events, ${JSON.stringify(classes)});
     title_events = sort_by_duration(merge_events_by_keys(events, ["app", "title"]));
     app_events   = sort_by_duration(merge_events_by_keys(title_events, ["app"]));
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));

@@ -49,6 +49,7 @@
     "pug-plain-loader": "^1.0.0",
     "sass-loader": "^7.1.0",
     "shelljs": "^0.6.0",
+    "ts-jest": "^24.1.0",
     "ts-loader": "^6.2.0",
     "tslint": "^5.20.0",
     "typescript": "^3.6.3",

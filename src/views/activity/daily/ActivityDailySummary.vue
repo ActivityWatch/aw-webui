@@ -27,7 +27,7 @@ div
     div.col-md-4
       h5 Top categories
       div(v-if="top_categories")
-        aw-summary(:fields="top_categories", :namefunc="e => e.data['$category']", :colorfunc="e => e.data['$category']")
+        aw-summary(:fields="top_categories", :namefunc="e => e.data['$category'].join(' -> ')", :colorfunc="e => e.data['$category'].join(' -> ')")
         b-button(size="sm", variant="outline-secondary", :disabled="top_categories.length < top_cats_count" @click="top_cats_count += 5")
           icon(name="angle-double-down")
           | Show more

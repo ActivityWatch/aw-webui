@@ -17,16 +17,12 @@ svg {
 
 <script>
 const _ = require('lodash');
-
-function count_substr(string, word) {
-   return string.split(word).length - 1;
-}
+const classes = require('~/util/classes.ts');
 
 function get_parent_cats(cat) {
   let parents = [];
-  let cs = cat.split("->").map((c) => c.trim());
-  for(let i = 1; i<=cs.length; i++) {
-    parents.push(cs.slice(0, i).join(" -> "));
+  for(let i = 1; i<=cat.length; i++) {
+    parents.push(cat.slice(0, i));
   }
   return parents;
 }
@@ -36,30 +32,26 @@ export default {
   props: ['events'],
   computed: {
     category_hierarchy: function() {
-      let events = JSON.parse(JSON.stringify(this.events));
+      const events = JSON.parse(JSON.stringify(this.events));
 
-      // Compute hierarchy for all events
-      _.map(events, e => e.data["$category_hierarchy"] = get_parent_cats(e.data["$category"]));
+      const hier = classes.build_category_hierarchy(_.map(events, e => {
+        return { name: e.data["$category"] }
+      }));
 
-      // Collect all categories at all depths
-      let all_cat_names = _.union(_.flatten(_.map(events, (e) => e.data["$category_hierarchy"])));
-      let cats = _.map(all_cat_names, (c) => {
-        let depth = count_substr(c, "->");
-        return {
-          name: c,
-          parent: c.split("->").map(s => s.trim()).slice(0, depth).join(" -> ") || null,
-          subname: c.split("->").slice(-1).pop(),
-          depth: depth,
-          duration: _.sumBy(_.filter(events, e => e.data["$category_hierarchy"].includes(c)), e => e.duration)
-        }
+      let cats = classes.flatten_category_hierarchy(hier).map(c => {
+        c.duration = _.sumBy(events.filter(e => {
+          const pcat = e.data["$category"].slice(0, c.name.length);
+          return _.isEqual(c.name, pcat);
+        }), e => e.duration);
+        return c;
       });
 
       function _get_child_cats(cat, all_cats) {
-        return _.filter(all_cats, c => c.parent == cat.name)
+        return _.filter(all_cats, c => _.isEqual(c.parent, cat.name))
       }
 
       function _assign_children(parent, all_cats) {
-        let child_cats = _get_child_cats(parent, all_cats);
+        const child_cats = _get_child_cats(parent, all_cats);
         // Recurse
         _.map(child_cats, c => _assign_children(c, all_cats));
         parent.children = _.sortBy(child_cats, cc => -cc.duration);
