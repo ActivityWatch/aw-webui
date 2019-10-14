@@ -18,8 +18,10 @@ div
 
   h5
     div Tagging & Categorization
-    b-btn.float-right(@click="resetClasses", variant="warning" size="sm")
+    b-btn.float-right.ml-1(@click="resetClasses", variant="warning" size="sm")
       | Reset
+    b-btn.float-right.ml-1(@click="restoreDefaults", variant="warning" size="sm")
+      | Restore defaults
   div
     small An event can have many tags, but only one category. If several categories match, the deepest one will be chosen.
 
@@ -35,6 +37,7 @@ div
 
 <script>
 import CategoryEditTree from './CategoryEditTree.vue';
+import { restoreDefaultClasses } from '~/util/classes';
 
 export default {
   name: "Settings",
@@ -61,11 +64,15 @@ export default {
     addClass: function() {
       this.$store.commit('settings/addClass', {name: "New class", rule: {type: "regex", pattern: "FILL ME"}});
     },
-    saveClasses: function() {
-      this.$store.dispatch('settings/save');
+    saveClasses: async function() {
+      await this.$store.dispatch('settings/save');
     },
-    resetClasses: function() {
-      this.$store.dispatch('settings/load');
+    resetClasses: async function() {
+      await this.$store.dispatch('settings/load');
+    },
+    restoreDefaults: async function() {
+      restoreDefaultClasses();
+      await this.$store.dispatch('settings/load');
     },
   }
 }

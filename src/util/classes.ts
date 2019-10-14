@@ -16,6 +16,7 @@ interface Category {
 export let defaultCategories: Category[] = [
   //{ name: '#test-tag', rule: { type: 'regex', pattern: 'test' } },
   { name: ['Test category', 'subcategory'], rule: { type: 'regex', pattern: 'test' } },
+  { name: ['Test'], rule: { type: null, pattern: '[Aa]lacritty|Google Docs' } },
   { name: ['Work'], rule: { type: 'regex', pattern: '[Aa]lacritty|Google Docs' } },
   {
     name: ['Work', 'Programming'],
@@ -90,6 +91,11 @@ export function flatten_category_hierarchy(hier: Category[]): Category[] {
   );
 }
 
+export function restoreDefaultClasses() {
+  localStorage.classes = JSON.stringify(defaultCategories);
+  console.log('Saved classes', localStorage.classes);
+}
+
 export function saveClasses(classes: Category[]) {
   localStorage.classes = JSON.stringify(classes);
   console.log('Saved classes', localStorage.classes);
@@ -97,15 +103,15 @@ export function saveClasses(classes: Category[]) {
 
 export function loadClasses(): Category[] {
   let classes_json = localStorage.classes;
-  let classes;
   if(classes_json && classes_json.length >= 1) {
-      classes = JSON.parse(localStorage.classes);
+    return JSON.parse(classes_json);
   } else {
-    classes = defaultCategories;
+    return defaultCategories;
   }
-  return classes;
 }
 
 export function loadClassesForQuery(): [string[], any][] {
-  return loadClasses().map(c => [c.name, { regex: c.rule.pattern }]);
+  return loadClasses().map(c => {
+      return [c.name, { regex: c.rule.type === "regex" ? c.rule.pattern : "" }]
+  });
 }
