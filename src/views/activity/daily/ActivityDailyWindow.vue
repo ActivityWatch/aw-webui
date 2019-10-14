@@ -19,8 +19,7 @@ export default {
   props: ['date', 'host'],
   data: () => {
     return {
-      // FIXME: Broken when true
-      timelineShowAFK: false,
+      timelineShowAFK: true,
     }
   },
   computed: {

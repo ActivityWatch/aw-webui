@@ -12,6 +12,8 @@ const _state = {
   top_domains: [],
   top_urls: [],
   top_categories: [],
+  app_chunks: [],
+  web_chunks: [],
   active_duration: 0,
   active_history: [],
   query_options: {
@@ -114,12 +116,11 @@ const mutations = {
     state.top_apps = null;
     state.top_titles = null;
     state.top_domains = null;
+    state.top_urls = null;
     state.top_categories = null;
     state.active_duration = null;
-
-    // FIXME: This one might take up a lot of size in the request, move it to a seperate request
-    // (or remove entirely, since we have the other timeline now)
-    state.app_chunks = [];
+    state.app_chunks = null;
+    state.web_chunks = null;
   },
 
   query_window_completed(state, data) {
@@ -134,7 +135,8 @@ const mutations = {
     state.top_domains = data['domains'];
     state.top_urls = data['urls'];
 
-    // Again, might not be worth the size
+    // FIXME: This one might take up a lot of size in the request, move it to a seperate request
+    // (or remove entirely, since we have the other timeline now)
     state.web_chunks = data['chunks'];
   },
 

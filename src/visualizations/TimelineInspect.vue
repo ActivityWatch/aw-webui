@@ -20,6 +20,7 @@ export default {
   props: ['chunks', 'show_afk', 'chunkfunc', 'eventfunc'],
   mounted: function() {
     timeline.create(this.$el);
+    this.update();
   },
   watch: {
     chunks: function() {
@@ -31,7 +32,7 @@ export default {
   },
   methods: {
     update: function() {
-      if(this.chunks.length == 0) {
+      if(this.chunks === null) {
         timeline.set_status(this.$el, 'Loading...')
       } else {
         timeline.update(this.$el, this.chunks, this.show_afk, this.chunkfunc, this.eventfunc);

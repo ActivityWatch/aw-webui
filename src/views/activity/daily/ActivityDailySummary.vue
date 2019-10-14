@@ -11,8 +11,7 @@ div
 
     div.col-md-4
       h5 Top Browser Domains
-      div(v-if="browser_buckets")
-        aw-summary(:fields="top_domains", :namefunc="e => e.data.$domain", :colorfunc="e => e.data.$domain", with_limit)
+      aw-summary(:fields="top_domains", :namefunc="e => e.data.$domain", :colorfunc="e => e.data.$domain", with_limit)
 
   div.row
     hr
