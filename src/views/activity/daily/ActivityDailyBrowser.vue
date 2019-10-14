@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  b-input-group(size="sm")
+  //b-input-group(size="sm")
     b-input-group-prepend
       span.input-group-text
         | Bucket
@@ -15,26 +15,20 @@ div
         | All
       b-dropdown-item-button(v-for="browserBucket in browserBuckets", :key="browserBucket", @click="browserBucketSelected = browserBucket")
         | {{ browserBucket }}
-  br
+  //br
 
-  h6 Active browser time: {{ web_duration | friendlyduration }}
+  // h6 Active browser time: {{ web_duration | friendlyduration }}
 
   div.row
     div.col-md-6
       h5 Top Browser Domains
-
       div(v-if="browserBuckets")
-        aw-summary(:fields="top_web_domains", :namefunc="top_web_domains_namefunc", :colorfunc="top_web_domains_colorfunc")
+        aw-summary(:fields="$store.state.activity_daily.top_domains", :namefunc="e => e.data.$domain", :colorfunc="e => e.data.$domain", with_limit)
 
     div.col-md-6
       h5 Top Browser URLs
-
       div(v-if="browserBuckets")
-        aw-summary(:fields="top_web_urls", :namefunc="top_web_urls_namefunc", :colorfunc="top_web_urls_colorfunc")
-
-  b-button(size="sm", variant="outline-secondary", :disabled="top_web_urls.length < top_web_count && top_web_domains.length < top_web_count" @click="top_web_count += 5; queryBrowserDomains()")
-    icon(name="angle-double-down")
-    | Show more
+        aw-summary(:fields="$store.state.activity_daily.top_urls", :namefunc="e => e.data.url", :colorfunc="e => e.data.$domain", with_limit)
 
   hr
 
@@ -43,13 +37,11 @@ div
 
   br
 
-  aw-timeline-inspect(:chunks="web_chunks", :show_afk='timelineShowAFK', :chunkfunc='web_chunkfunc', :eventfunc='web_eventfunc')
+  aw-timeline-inspect(:chunks="$store.state.activity_daily.web_chunks", :show_afk='timelineShowAFK', :chunkfunc='e => e.data.$domain', :eventfunc='e => e.data.url')
 </template>
 
 <script>
 import _ from 'lodash';
-import { get_day_period } from '~/util/time.js';
-import query from '~/queries.js';
 
 export default {
   name: "Activity",
@@ -59,76 +51,13 @@ export default {
       filterAFK: true,
       timelineShowAFK: true,
 
-      browserBuckets: [],
-      browserBucketSelected: 'all',
+      // browserBucketSelected: 'all',
 
       top_web_count: 5,
-      web_duration: 0,
-
-      web_chunks: [],
-      web_chunkfunc: (e) => e.data.$domain,
-      web_eventfunc: (e) => e.data.url,
-
-      top_web_domains: [],
-      top_web_domains_namefunc: (e) => e.data.$domain,
-      top_web_domains_colorfunc: (e) => e.data.$domain,
-
-      top_web_urls: [],
-      top_web_urls_namefunc: (e) => e.data.url,
-      top_web_urls_colorfunc: (e) => e.data.$domain,
     }
   },
-  watch: {
-    '$route': function() {
-      console.log("Route changed");
-      this.refresh();
-    },
-    filterAFK() {
-      this.refresh();
-    },
-    browserBucketSelected() {
-      this.queryBrowserDomains();
-    },
-    browserBuckets() {
-      this.queryBrowserDomains();
-    },
-    editorBucketId() {
-      this.queryEditorActivity();
-    },
-  },
-
   computed: {
-    windowBucketId: function() { return "aw-watcher-window_" + this.host },
-    afkBucketId:    function() { return "aw-watcher-afk_"    + this.host },
-  },
-
-  mounted: function() {
-    this.getBrowserBucket();
-    this.refresh();
-  },
-
-  methods: {
-    refresh: function() {
-      this.queryBrowserDomains();
-    },
-
-    getBrowserBucket: async function() {
-      let buckets = await this.$aw.getBuckets().catch(this.errorHandler);
-      this.browserBuckets = _.map(_.filter(buckets, (bucket) => bucket["type"] === "web.tab.current"), (bucket) => bucket["id"]);
-    },
-
-    queryBrowserDomains: async function() {
-      let browserBuckets = this.browserBucketSelected == 'all' ? this.browserBuckets : [this.browserBucketSelected];
-      if (browserBuckets) {
-        var periods = [get_day_period(this.date)];
-        var q = query.browserSummaryQuery(browserBuckets, this.windowBucketId, this.afkBucketId, this.top_web_count, this.filterAFK);
-        let data = (await this.$aw.query(periods, q).catch(this.errorHandler))[0];
-        this.web_duration = data["duration"];
-        this.top_web_domains = data["domains"];
-        this.top_web_urls = data["urls"];
-        this.web_chunks = data["chunks"];
-      }
-    },
+    browserBuckets: function() { return this.$store.state.activity_daily.browser_buckets_available },
   },
 }
 </script>

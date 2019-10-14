@@ -6,6 +6,10 @@ import { seconds_to_duration, friendlydate } from './time.js';
 
 import moment from 'moment';
 
+Vue.filter('shortdate', function(timestamp) {
+  return moment(timestamp).format('YYYY-MM-DD');
+});
+
 Vue.filter('friendlytime', function(timestamp) {
   return friendlydate(timestamp);
 });

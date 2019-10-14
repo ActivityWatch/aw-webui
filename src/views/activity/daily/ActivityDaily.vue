@@ -1,11 +1,11 @@
 <template lang="pug">
 div
-  h2 Daily Activity for {{ dateShort }}
+  h2 Daily Activity for {{ date | shortdate }}
 
   p
     | Host: {{ host }}
     br
-    | Active time: {{ duration | friendlyduration }}
+    | Active time: {{ $store.state.activity_daily.active_duration | friendlyduration }}
 
   div.d-flex
     div.p-1
@@ -19,16 +19,16 @@ div
             |  Next day
           icon(name="arrow-right")
     div.p-1
-      input.form-control(id="date" type="date" :value="dateShort" :max="today" @change="setDate($event.target.value)")
+      input.form-control(id="date" type="date" :value="date" :max="today" @change="setDate($event.target.value)")
 
     div.p-1.ml-auto
       b-button-group
-        b-button(@click="refresh()", variant="outline-dark")
+        b-button(@click="refresh(true)", variant="outline-dark")
           icon(name="sync")
           span.d-none.d-md-inline
             |  Refresh
 
-  aw-periodusage(:periodusage_arr="daily_activity", :link_prefix="link_prefix")
+  aw-periodusage(:periodusage_arr="$store.state.activity_daily.active_history", :link_prefix="link_prefix")
 
   ul.nav.nav-tabs.my-3
     li.nav-item.aw-nav-item
@@ -46,19 +46,9 @@ div
 
   div
     router-view
-
-  hr
-
-  div.row
-    div.col-md-6
-      b Options
-      div
-        b-form-checkbox(v-model="filterAFK")
-          | Filter away AFK time
 </template>
 
 <style lang="scss">
-
 .aw-nav-link {
   background-color: #eee;
   border: 2px solid #eee !important;
@@ -76,7 +66,6 @@ div
 .aw-nav-item:hover {
   background-color: #fff !important;
 }
-
 </style>
 
 <script>
@@ -93,32 +82,26 @@ import queries from '~/queries.js';
 
 export default {
   name: "Activity",
-  props: ['host', 'date'],
-  data: () => {
+  props: {
+    host: String,
+  },
+  data: function() {
     return {
       today: moment().startOf('day').format("YYYY-MM-DD"),
-
-      filterAFK: true,
-
-      duration: "",
-      daily_activity: [],
     }
   },
   watch: {
-    '$route': function() {
-      //this.refresh();
-    },
-    async filterAFK() {
-      await this.refresh();
+    date: function() {
+      this.refresh();
     },
   },
 
   computed: {
-    dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
-    windowBucketId: function() { return "aw-watcher-window_" + this.host },
-    afkBucketId:    function() { return "aw-watcher-afk_"    + this.host },
-    link_prefix:    function() { return "/activity/daily/"   + this.host },
-    subroute_params: function() { return Object.assign(this.$route.params, { date: this.date || this.dateShort }) },
+    date: function() { return this.$route.params.date || moment().format("YYYY-MM-DD") },
+    link_prefix: function() { return "/activity/daily/"   + this.host },
+    subroute_params: function() {
+      return Object.assign(this.$route.params, { date: this.date });
+    },
   },
 
   mounted: async function() {
@@ -130,21 +113,8 @@ export default {
     nextDay: function() { return moment(this.date).add(1, 'days').format("YYYY-MM-DD") },
     setDate: function(date) { this.$router.push('/activity/daily/' + this.host + '/' + date); },
 
-    refresh: async function() {
-      this.duration = "";
-      this.eventcount = 0;
-      await this.queryDailyActivity();
-    },
-
-    queryDailyActivity: async function() {
-      var timeperiods = [];
-      for (var i=-15; i<=15; i++) {
-        timeperiods.push(get_day_period(moment(this.date).add(i, 'days')));
-      }
-      this.daily_activity = await this.$aw.query(timeperiods, queries.dailyActivityQuery(this.afkBucketId));
-      const events = this.daily_activity[0];
-      const non_afk_event = events.filter(e => e.data.status === "not-afk")[0];
-      this.duration = non_afk_event.duration;
+    refresh: async function(force) {
+      await this.$store.dispatch("activity_daily/ensure_loaded", Object.assign(this.subroute_params, { force: force, filterAFK: true }));
     },
   },
 }

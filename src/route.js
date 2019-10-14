@@ -19,6 +19,7 @@ const Timeline = () => import('./views/Timeline.vue');
 const Log = () => import('./views/Log.vue');
 const Settings = () => import('./views/Settings.vue');
 const Stopwatch = () => import('./views/Stopwatch.vue');
+const Dev = () => import('./views/Dev.vue');
 
 Vue.use(VueRouter);
 
@@ -35,7 +36,6 @@ var router = new VueRouter({
           path: 'summary',
           name: 'activity-daily-summary',
           component: ActivityDailySummary,
-          props: true,
         },
         {
           path: 'window',
@@ -47,13 +47,11 @@ var router = new VueRouter({
           path: 'browser',
           name: 'activity-daily-browser',
           component: ActivityDailyBrowser,
-          props: true,
         },
         {
           path: 'editor',
           name: 'activity-daily-editor',
           component: ActivityDailyEditor,
-          props: true,
         },
       ],
     },
@@ -66,6 +64,7 @@ var router = new VueRouter({
     { path: '/log', component: Log },
     { path: '/settings', component: Settings },
     { path: '/stopwatch', component: Stopwatch },
+    { path: '/dev', component: Dev },
   ],
 });
 

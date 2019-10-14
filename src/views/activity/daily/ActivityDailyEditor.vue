@@ -22,19 +22,15 @@ div
     div.row(style="padding-top: 0.5em;")
       div.col-md-4
         h5 Top file activity
-        aw-summary(:fields="top_editor_files", :namefunc="top_editor_files_namefunc", :colorfunc="top_editor_files_colorfunc")
+        aw-summary(:fields="top_editor_files", :namefunc="top_editor_files_namefunc", :colorfunc="top_editor_files_colorfunc", with_limit)
 
       div.col-md-4
         h5 Top language activity
-        aw-summary(:fields="top_editor_languages", :namefunc="top_editor_languages_namefunc", :colorfunc="top_editor_languages_colorfunc")
+        aw-summary(:fields="top_editor_languages", :namefunc="top_editor_languages_namefunc", :colorfunc="top_editor_languages_colorfunc", with_limit)
 
       div.col-md-4
         h5 Top project activity
-        aw-summary(:fields="top_editor_projects", :namefunc="top_editor_projects_namefunc", :colorfunc="top_editor_projects_colorfunc")
-
-    b-button(size="sm", variant="outline-secondary", @click="top_editor_count += 5; queryEditorActivity()")
-      icon(name="angle-double-down")
-      | Show more
+        aw-summary(:fields="top_editor_projects", :namefunc="top_editor_projects_namefunc", :colorfunc="top_editor_projects_colorfunc", with_limit)
 </template>
 
 <script>
@@ -52,7 +48,6 @@ export default {
       editorBucketId: "",
 
       editor_duration: 0,
-      top_editor_count: 5,
 
       top_editor_files: [],
       top_editor_files_namefunc: (e) => {
@@ -117,7 +112,7 @@ export default {
     queryEditorActivity: async function() {
       if (this.editorBucketId !== ""){
         var periods = [get_day_period(this.date)];
-        var q = query.editorActivityQuery(this.editorBucketId, this.top_editor_count);
+        var q = query.editorActivityQuery(this.editorBucketId, 100);
         let data = (await this.$aw.query(periods, q).catch(this.errorHandler))[0];
         this.editor_duration = data["duration"];
         this.top_editor_files = data["files"];

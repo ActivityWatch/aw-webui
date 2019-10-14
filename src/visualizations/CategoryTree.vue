@@ -66,7 +66,7 @@ export default {
         return _.flattenDeep([c, _.map(c.children, cc => _flatten_hierarchy(cc))]);
       }
       cats = _.flatten(_.map(cats_with_depth0, c => _flatten_hierarchy(c)));
-      console.log(cats);
+      //console.log(cats);
       // TODO: If a category has children, but also activity attributed directly to the parent that does not belong to a child, then create a "Other" child containing the activity.
       return cats;
     }
