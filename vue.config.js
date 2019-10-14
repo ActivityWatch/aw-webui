@@ -4,6 +4,12 @@ const webpack_base_conf = require('./build/webpack.base.conf.js');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
+  pages: {
+    index: {
+      entry: './src/main.js',
+      template: './src/index.html',
+    },
+  },
   configureWebpack: {
     resolve: { alias: webpack_base_conf.resolve.alias },
     plugins: [
