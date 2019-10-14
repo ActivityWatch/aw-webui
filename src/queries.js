@@ -76,7 +76,8 @@ const appnames = {
     "Chromium-browser",
     "Chromium-browser-chromium",
     "Google-chrome-beta",
-    "Google-chrome-unstable"
+    "Google-chrome-unstable",
+    "Brave-browser"
   ],
   firefox: [
     "Firefox",
@@ -88,7 +89,8 @@ const appnames = {
     "Nightly"
   ],
   opera: ["opera.exe", "Opera"],
-  brave: ["brave.exe"]
+  brave: ["brave.exe"],
+  vivaldi: ["Vivaldi-stable"]
 };
 
 export function browserSummaryQuery(
@@ -113,7 +115,7 @@ export function browserSummaryQuery(
      not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);`
       : "");
 
-  _.each(["chrome", "firefox", "opera", "brave"], browserName => {
+  _.each(Object.keys(appnames), browserName => {
     let bucketId = _.filter(
       browserbuckets,
       buckets => buckets.indexOf(browserName) !== -1
