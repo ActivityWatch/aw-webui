@@ -8,13 +8,10 @@
   "scripts": {
     "serve": "vue-cli-service serve src/main.js",
     "build": "vue-cli-service build src/main.js",
+    "test": "jest --rootDir=src",
     "test:unit": "vue-cli-service test:unit",
     "test:e2e": "vue-cli-service test:e2e",
-    "lint": "vue-cli-service lint",
-    "dev_old": "vue-cli-service serve ",
-    "build_old": "node build/build.js",
-    "package": "node build/package_electron.js",
-    "test": "jest --rootDir=src",
+    "lint": "vue-cli-service lint --no-fix-warnings",
     "lint_old": "eslint --ignore-path=.gitignore --ext .vue,.js,.ts ."
   },
   "devDependencies": {

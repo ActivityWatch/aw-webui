@@ -1,16 +1,16 @@
 let _ = require('lodash');
 
 interface Category {
-    name: string[],
-    name_pretty?: string,
-    subname?: string,
+    name: string[];
+    name_pretty?: string;
+    subname?: string;
     rule: {
-        type: string,
-        pattern: string,
-    },
-    depth?: number,
-    parent?: string[],
-    children?: Category[],
+        type: string;
+        pattern: string;
+    };
+    depth?: number;
+    parent?: string[];
+    children?: Category[];
 }
 
 export let defaultCategories: Category[] = [

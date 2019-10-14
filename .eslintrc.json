@@ -2,8 +2,10 @@
   "plugins": ["prettier", "vue", "jest", "@typescript-eslint"],
   "extends": [
     "prettier",
+    "plugin:vue/essential",
     "eslint:recommended",
     "plugin:vue/recommended",
+    "@vue/typescript",
     "plugin:jest/recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:@typescript-eslint/eslint-recommended"
@@ -18,10 +20,12 @@
       "error",
       {
         "builtinGlobals": true,
-        "allow": ["name", "Promise", "event"]
+        "allow": ["name", "Promise", "event", "parent"]
       }
     ],
-    "no-console": ["off"]
+    "no-console": ["off"],
+    "prefer-const": "warn",
+    "no-var": "warn"
   },
   "parser": "vue-eslint-parser",
   "parserOptions": {

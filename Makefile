@@ -12,7 +12,7 @@ uninstall:
 	rm -r node_modules/
 
 dev:
-	npm run dev
+	npm run serve
 
 test:
 	npm test

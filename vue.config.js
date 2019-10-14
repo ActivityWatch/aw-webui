@@ -8,7 +8,7 @@ module.exports = {
     resolve: { alias: webpack_base_conf.resolve.alias },
     plugins: [
       new webpack.DefinePlugin({
-        PRODUCTION: false, // FIXME: Should sometimes be true
+        PRODUCTION: process.env.NODE_ENV === 'production',
       }),
       new CopyWebpackPlugin([{ from: 'static/', to: 'static' }]),
     ],
