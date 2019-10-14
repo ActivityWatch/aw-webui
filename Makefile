@@ -24,4 +24,4 @@ lint:
 	npx eslint --ext=js,vue src/
 
 aw-client-js:
-	(cd aw-client-js; make build)
+	make --directory=aw-client-js build
