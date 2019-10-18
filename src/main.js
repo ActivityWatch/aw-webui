@@ -35,6 +35,7 @@ Vue.component('aw-header', () => import('./components/Header.vue'));
 Vue.component('aw-summary', () => import('./visualizations/Summary.vue'));
 Vue.component('aw-periodusage', () => import('./visualizations/PeriodUsage.vue'));
 Vue.component('aw-eventlist', () => import('./visualizations/EventList.vue'));
+Vue.component('aw-sunburst-categories', () => import('./visualizations/SunburstCategories.vue'));
 Vue.component('aw-sunburst-clock', () => import('./visualizations/SunburstClock.vue'));
 Vue.component('aw-timeline-inspect', () => import('./visualizations/TimelineInspect.vue'));
 Vue.component('aw-timeline', () => import('./visualizations/TimelineSimple.vue'));
