@@ -71,6 +71,7 @@ const appnames = {
     'Chromium-browser-chromium',
     'Google-chrome-beta',
     'Google-chrome-unstable',
+    'Brave-browser',
   ],
   firefox: [
     'Firefox',
@@ -83,6 +84,7 @@ const appnames = {
   ],
   opera: ['opera.exe', 'Opera'],
   brave: ['brave.exe'],
+  vivaldi: ['Vivaldi-stable'],
 };
 
 export function browserSummaryQuery(browserbuckets, windowbucket, afkbucket, limit, filterAFK) {
@@ -101,7 +103,7 @@ export function browserSummaryQuery(browserbuckets, windowbucket, afkbucket, lim
      not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);`
       : '');
 
-  _.each(['chrome', 'firefox', 'opera', 'brave'], browserName => {
+  _.each(Object.keys(appnames), browserName => {
     let bucketId = _.filter(browserbuckets, buckets => buckets.indexOf(browserName) !== -1)[0];
     if (bucketId === undefined) {
       // Skip browser if specific bucket not available
