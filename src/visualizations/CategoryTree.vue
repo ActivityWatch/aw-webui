@@ -2,7 +2,7 @@
 div
   div(v-for="cat in category_hierarchy", style="padding: 0.1em 0 0.1em 0")
     span(:style="'padding-left: ' + cat.depth + 'em'")
-      span(v-if="cat.depth > 0") ⮡
+      span(v-if="cat.depth > 0") ⮡&nbsp;
       | {{cat.subname}}
     span(style="float: right")
       | {{cat.duration | friendlyduration}}

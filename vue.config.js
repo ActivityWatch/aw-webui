@@ -13,6 +13,7 @@ module.exports = {
   configureWebpack: {
     resolve: { alias: webpack_base_conf.resolve.alias },
     plugins: [
+      new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
       new webpack.DefinePlugin({
         PRODUCTION: process.env.NODE_ENV === 'production',
       }),
@@ -23,5 +24,10 @@ module.exports = {
     contentBase: path.join(__dirname, 'dist'),
     compress: true,
     port: 27180,
+  },
+  pluginOptions: {
+    webpackBundleAnalyzer: {
+      openAnalyzer: false,
+    },
   },
 };

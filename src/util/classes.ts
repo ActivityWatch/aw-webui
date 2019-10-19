@@ -1,6 +1,9 @@
 let _ = require('lodash');
 
+const level_sep = ">";
+
 interface Category {
+    id?: number,
     name: string[];
     name_pretty?: string;
     subname?: string;
@@ -14,13 +17,10 @@ interface Category {
 }
 
 export let defaultCategories: Category[] = [
-  //{ name: '#test-tag', rule: { type: 'regex', pattern: 'test' } },
-  { name: ['Test category', 'subcategory'], rule: { type: 'regex', pattern: 'test' } },
-  { name: ['Test'], rule: { type: null, pattern: '[Aa]lacritty|Google Docs' } },
-  { name: ['Work'], rule: { type: 'regex', pattern: '[Aa]lacritty|Google Docs' } },
+  { name: ['Work'], rule: { type: 'regex', pattern: 'Google Docs' } },
   {
     name: ['Work', 'Programming'],
-    rule: { type: 'regex', pattern: '\\~/Programming|[Pp]ython|GitHub' },
+    rule: { type: 'regex', pattern: 'GitHub|Stack Overflow' },
   },
   {
     name: ['Work', 'Programming', 'ActivityWatch'],
@@ -28,15 +28,15 @@ export let defaultCategories: Category[] = [
   },
   { name: ['Media', 'Games'], rule: { type: 'regex', pattern: 'Minecraft|RimWorld' } },
   { name: ['Media', 'Video'], rule: { type: 'regex', pattern: 'YouTube|Plex' } },
-  { name: ['Media', 'Social Media'], rule: { type: 'regex', pattern: 'reddit|Facebook|Twitter' } },
-  { name: ['Comms', 'IM'], rule: { type: 'regex', pattern: 'Messenger' } },
+  { name: ['Media', 'Social Media'], rule: { type: 'regex', pattern: 'reddit|Facebook|Twitter|Instagram' } },
+  { name: ['Comms', 'IM'], rule: { type: 'regex', pattern: 'Messenger|Telegram|Signal|WhatsApp' } },
   { name: ['Comms', 'Email'], rule: { type: 'regex', pattern: 'Gmail' } },
 ];
 
 export function build_category_hierarchy(classes: Category[]): Category[] {
   function annotate(c: Category) {
     let ch = c.name;
-    c.name_pretty = ch.join('->');
+    c.name_pretty = ch.join(level_sep);
     c.subname = ch.slice(-1)[0];
     c.parent = ch.length > 1 ? ch.slice(0, -1) : null;
     c.depth = ch.length - 1;
@@ -46,14 +46,14 @@ export function build_category_hierarchy(classes: Category[]): Category[] {
   let new_classes = classes.slice().map(c => annotate(c));
 
   // Insert dangling/undefined parents
-  let all_full_names = new Set(new_classes.map(c => c.name.join('->')));
+  let all_full_names = new Set(new_classes.map(c => c.name.join(level_sep)));
 
   function createMissingParents(children) {
      children
         .map(c => c.parent)
         .filter(p => !!p)
         .map(p => {
-          let name = p.join('->');
+          let name = p.join(level_sep);
           if (p && !all_full_names.has(name)) {
             let new_parent = annotate({ name: p, rule: { type: null, pattern: '' } });
             classes.push(new_parent);

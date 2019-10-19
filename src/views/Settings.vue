@@ -10,49 +10,56 @@ div
     div.col-sm-9
       h5.mb-0 Start of day
       small
-        | Sets the time where the start/end of a day is in the daily activity view. Set to 04:00 by default.
+        | The time at which days "start", since humans don't always go to bed before midnight. Set to 04:00 by default.
     div.col-sm-3
       input.form-control(type="time" :value="startOfDay" @change="setStartOfDay($event.target.value)")
 
   hr
 
-  h5
-    div Tagging & Categorization
-    b-btn.float-right.ml-1(@click="resetClasses", variant="warning" size="sm")
-      | Reset
-    b-btn.float-right.ml-1(@click="restoreDefaults", variant="warning" size="sm")
+  h5.d-inline-block
+    div Categorization
+  div.float-right
+    b-btn.ml-1(@click="restoreDefaults", variant="warning" size="sm")
       | Restore defaults
   div
-    small An event can have many tags, but only one category. If several categories match, the deepest one will be chosen.
+    | An event can have many tags, but only one category. If several categories match, the deepest one will be chosen.
 
-  h6 Categories
-  div(v-for="cls in $store.getters['settings/classes_hierarchy']")
-    CategoryEditTree(:cls="cls")
+  div.my-4
+    b-alert(variant="warning" :show="classes_unsaved_changes")
+      | You have unsaved changes!
+      b-btn.float-right.ml-1(@click="resetClasses", variant="warning" size="sm")
+        | Reset
+    div(v-for="cls in classes_hierarchy")
+      CategoryEditTree(:cls="cls")
+
   div.row
     div.col-sm-12
-      b-btn(@click="addClass") Add new class
-      b-btn.float-right(@click="saveClasses", variant="success")
-        | Save tagging rules
+      b-btn(@click="addClass") Add category
+      b-btn.float-right(@click="saveClasses", variant="success" :disabled="!classes_unsaved_changes")
+        | Save
 </template>
 
 <script>
 import CategoryEditTree from './CategoryEditTree.vue';
 import { restoreDefaultClasses } from '~/util/classes';
+import { mapState, mapGetters } from 'vuex';
 
 export default {
   name: "Settings",
-
+  components: {
+    CategoryEditTree,
+  },
   data: () => {
     return {
       startOfDay: '',
     }
   },
-  components: {
-    CategoryEditTree,
+  computed: {
+    ...mapGetters('settings', ['classes_hierarchy']),
+    ...mapState('settings', ['classes_unsaved_changes'])
   },
 
   mounted() {
-    console.log(this.$store);
     this.startOfDay = localStorage.startOfDay;
     this.$store.dispatch('settings/load');
   },
@@ -62,7 +69,7 @@ export default {
       localStorage.startOfDay = time_minutes;
     },
     addClass: function() {
-      this.$store.commit('settings/addClass', {name: "New class", rule: {type: "regex", pattern: "FILL ME"}});
+      this.$store.commit('settings/addClass', {name: ["New class"], rule: {type: "regex", pattern: "FILL ME"}});
     },
     saveClasses: async function() {
       await this.$store.dispatch('settings/save');

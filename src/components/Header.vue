@@ -12,7 +12,7 @@ div.aw-navbar
     b-collapse#nav-collapse(is-nav)
       b-navbar-nav
         // If only a single view (the default) is available
-        b-nav-item(v-if="activityViewsDaily.length === 1", v-for="view in activityViewsDaily", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
+        b-nav-item(v-if="activityViewsDaily.length === 1", v-for="view in activityViewsDaily", :key="view.name", :to="view.pathUrl + '/' + view.hostname + '/summary'")
           div.px-2.px-lg-1
             icon(name="calendar-day")
             | Today
@@ -32,7 +32,7 @@ div.aw-navbar
             | {{ view.name }}
 
         // If only a single view (the default) is available
-        b-nav-item(v-if="activityViewsSummary.length === 1", v-for="view in activityViewsSummary", :key="view.name + '_summary'", :to="view.pathUrl + '/' + view.hostname + '/summary'")
+        b-nav-item(v-if="activityViewsSummary.length === 1", v-for="view in activityViewsSummary", :key="view.name + '_summary'", :to="view.pathUrl + '/' + view.hostname")
           div.px-2.px-lg-1
             icon(name="calendar-week")
             | Summary

@@ -48,16 +48,6 @@ const example_data = {
           ]
         },
         {
-          "name": "graph",
-          "children": [
-            { "name": "BetweennessCentrality", "size": 3534 },
-            { "name": "LinkDistance", "size": 5731 },
-            { "name": "MaxFlowMinCut", "size": 7840 },
-            { "name": "ShortestPaths", "size": 5914 },
-            { "name": "SpanningTree", "size": 3416 }
-          ]
-        },
-        {
           "name": "optimization",
           "children": [
             { "name": "AspectRatioBanker", "size": 7074 }

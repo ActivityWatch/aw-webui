@@ -17,7 +17,7 @@ div
     div.col-md-4
       h5 Top categories
       div(v-if="top_categories")
-        aw-summary(:fields="top_categories", :namefunc="e => e.data['$category'].join(' -> ')", :colorfunc="e => e.data['$category'].join(' -> ')", with_limit)
+        aw-summary(:fields="top_categories", :namefunc="e => e.data['$category'].join(' > ')", :colorfunc="e => e.data['$category'].join(' > ')", with_limit)
 
     div.col-md-4
       h5 Category Tree
