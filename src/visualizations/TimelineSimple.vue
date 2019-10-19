@@ -18,13 +18,13 @@ import timeline_simple from './timeline-simple.js';
 export default {
   name: "aw-timeline",
   props: ['type', 'event_type', 'events'],
-  mounted: function() {
-    timeline_simple.create(this.$el);
-  },
   watch: {
     "events": function() {
       timeline_simple.update(this.$el, this.events, this.event_type)
     }
+  },
+  mounted: function() {
+    timeline_simple.create(this.$el);
   }
 }
 </script>

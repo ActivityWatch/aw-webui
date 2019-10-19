@@ -13,7 +13,7 @@ function create(container) {
   container.innerHTML = '';
 
   // Create svg canvas
-  let svg = d3.select(container).append('svg');
+  const svg = d3.select(container).append('svg');
   svg
     .attr('width', '100%')
     .attr('height', '100px')
@@ -22,8 +22,8 @@ function create(container) {
 
 function set_status(container, msg) {
   // Select svg canvas
-  let svg_elem = container.querySelector('.appsummary');
-  let svg = d3.select(svg_elem);
+  const svg_elem = container.querySelector('.appsummary');
+  const svg = d3.select(svg_elem);
   svg_elem.innerHTML = '';
 
   svg
@@ -37,7 +37,7 @@ function set_status(container, msg) {
 }
 
 function updateSummedEvents(container, summedEvents, titleKeyFunc, colorKeyFunc) {
-  let apps = _.map(summedEvents, e => {
+  const apps = _.map(summedEvents, e => {
     return { name: titleKeyFunc(e), duration: e.duration, colorKey: colorKeyFunc(e) };
   });
   update(container, apps);
@@ -50,34 +50,34 @@ function update(container, apps) {
     return container;
   }
 
-  let svg_elem = container.querySelector('.appsummary');
+  const svg_elem = container.querySelector('.appsummary');
   svg_elem.innerHTML = '';
-  let svg = d3.select(svg_elem);
+  const svg = d3.select(svg_elem);
 
   // Remove apps without a duration from list
   apps = apps.filter(function(app) {
     return app.duration !== undefined;
   });
 
-  var curr_y = 0;
-  var longest_duration = apps[0].duration;
+  let curr_y = 0;
+  const longest_duration = apps[0].duration;
   _.each(apps, function(app, i) {
     // TODO: Expand on click and list titles
 
     // Variables
-    var width = (app.duration / longest_duration) * 100 + '%';
-    let barHeight = 50;
-    let textSize = 15;
-    var baseappcolor = getColorFromString(app.colorKey || app.name);
-    var appcolor = Color(baseappcolor)
+    const width = (app.duration / longest_duration) * 100 + '%';
+    const barHeight = 50;
+    const textSize = 15;
+    const baseappcolor = getColorFromString(app.colorKey || app.name);
+    const appcolor = Color(baseappcolor)
       .lighten(0.1)
       .hex();
-    var hovercolor = Color(baseappcolor)
+    const hovercolor = Color(baseappcolor)
       .darken(0.1)
       .hex();
 
     // The group representing an application in the barchart
-    let eg = svg.append('g');
+    const eg = svg.append('g');
     eg.attr('id', 'summary_app_' + i)
       .on('mouseover', function() {
         eg.select('rect').style('fill', hovercolor);

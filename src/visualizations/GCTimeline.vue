@@ -25,8 +25,8 @@ export default {
   computed: {
     // Array will be automatically processed with visualization.arrayToDataTable function
     dataAndColors() {
-      let colors = [];
-      let data = [
+      const colors = [];
+      const data = [
         [
           { id: 'Bucket', type: 'string' },
           { id: 'App', type: 'string' },
@@ -40,7 +40,7 @@ export default {
           return;
         }
         _.each(_.sortBy(bucket.events, (e) => e.timestamp), (event) => {
-          let color = getColorFromString(getTitleAttr(bucket, event));
+          const color = getColorFromString(getTitleAttr(bucket, event));
           if(!_.includes(colors, color)) {
             colors.push(color);
           }

@@ -95,10 +95,10 @@ export default {
     },
 
     queryPeriodActivity: async function() {
-      var timeperiods = [];
-      for (var i=-8; i<=8; i++) {
-        var start = moment(this.periodStart).add(i, this.periodLength).format();
-        var end = moment(start).add(1, this.periodLength).format();
+      const timeperiods = [];
+      for (let i=-8; i<=8; i++) {
+        const start = moment(this.periodStart).add(i, this.periodLength).format();
+        const end = moment(start).add(1, this.periodLength).format();
         timeperiods.push(start + '/' + end);
       }
       this.period_activity = await this.$aw.query(timeperiods, query.dailyActivityQuery(this.afkBucketId));

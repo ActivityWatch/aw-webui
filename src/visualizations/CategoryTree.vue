@@ -20,7 +20,7 @@ const _ = require('lodash');
 const classes = require('~/util/classes.ts');
 
 function get_parent_cats(cat) {
-  let parents = [];
+  const parents = [];
   for(let i = 1; i<=cat.length; i++) {
     parents.push(cat.slice(0, i));
   }
@@ -57,7 +57,7 @@ export default {
         parent.children = _.sortBy(child_cats, cc => -cc.duration);
       }
 
-      let cats_with_depth0 = _.sortBy(_.filter(cats, c => c.depth == 0), c => -c.duration);
+      const cats_with_depth0 = _.sortBy(_.filter(cats, c => c.depth == 0), c => -c.duration);
       _.map(cats_with_depth0, c => _assign_children(c, cats));
 
       // Flattens the category hierarchy

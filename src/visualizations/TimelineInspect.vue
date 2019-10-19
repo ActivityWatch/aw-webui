@@ -18,10 +18,6 @@ import timeline from './timeline.js';
 export default {
   name: "aw-timeline",
   props: ['chunks', 'show_afk', 'chunkfunc', 'eventfunc'],
-  mounted: function() {
-    timeline.create(this.$el);
-    this.update();
-  },
   watch: {
     chunks: function() {
       this.update();
@@ -29,6 +25,10 @@ export default {
     show_afk: function() {
       this.update();
     }
+  },
+  mounted: function() {
+    timeline.create(this.$el);
+    this.update();
   },
   methods: {
     update: function() {

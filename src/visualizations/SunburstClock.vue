@@ -112,12 +112,6 @@ import _ from 'lodash';
 export default {
   name: "aw-sunburst-clock",
   props: ['date', 'afkBucketId', 'windowBucketId'],
-  mounted: function() {
-    sunburst.create(this.$el);
-    this.starttime = moment(this.date);
-    this.endtime = moment(this.date).add(1, 'days');
-    this.visualize();
-  },
 
   data: () => {
     return {
@@ -134,6 +128,12 @@ export default {
       this.visualize();
     }
   },
+  mounted: function() {
+    sunburst.create(this.$el);
+    this.starttime = moment(this.date);
+    this.endtime = moment(this.date).add(1, 'days');
+    this.visualize();
+  },
 
   methods: {
     todaysEvents: function(bucket_id) {
@@ -148,21 +148,21 @@ export default {
           parents = _.sortBy(parents, "timestamp", "desc");
           children = _.sortBy(children, "timestamp", "desc");
 
-          var i_child = 0;
-          for(var i_parent = 0; i_parent < parents.length; i_parent++) {
-              let p = parents[i_parent];
-              let p_start = moment(p.timestamp);
-              let p_end = p_start.clone().add(p.duration, "seconds");
+          let i_child = 0;
+          for(let i_parent = 0; i_parent < parents.length; i_parent++) {
+              const p = parents[i_parent];
+              const p_start = moment(p.timestamp);
+              const p_end = p_start.clone().add(p.duration, "seconds");
 
               p.children = [];
               while(i_child < children.length) {
-                  var e = children[i_child];
-                  var e_start = moment(e.timestamp);
-                  var e_end = e_start.clone().add(e.duration, "seconds");
+                  const e = children[i_child];
+                  const e_start = moment(e.timestamp);
+                  const e_end = e_start.clone().add(e.duration, "seconds");
 
-                  let before_parent = e_end.isBefore(p_start);
-                  let within_parent = e_start.isAfter(p_start) && e_end.isBefore(p_end);
-                  let after_parent = e_start.isAfter(p_end);
+                  const before_parent = e_end.isBefore(p_start);
+                  const within_parent = e_start.isAfter(p_start) && e_end.isBefore(p_end);
+                  const after_parent = e_start.isAfter(p_end);
 
                   // TODO: This isn't correct, yet
                   if(before_parent) {
@@ -188,9 +188,9 @@ export default {
 
           // Build the root node
           //console.log(parents);
-          let m_start = moment(_.first(parents).timestamp)
-          let m_end = moment(_.tail(parents).timestamp)
-          let duration = (m_end - m_start) / 1000;
+          const m_start = moment(_.first(parents).timestamp)
+          const m_end = moment(_.tail(parents).timestamp)
+          const duration = (m_end - m_start) / 1000;
           return {
             "timestamp": _.first(parents).timestamp,
             // TODO: If we want a 12/24h clock, this has to change

@@ -47,7 +47,7 @@ export default {
   },
   computed: {
     buckets() {
-      let bucket = this.bucket;
+      const bucket = this.bucket;
       bucket.events = this.events;
       return [bucket];
     }
@@ -56,6 +56,12 @@ export default {
     daterange: function() {
       this.getEvents(this.id);
     }
+  },
+  mounted: function() {
+    this.id = this.$route.params.id;
+    this.getBucketInfo(this.id);
+    this.getEvents(this.id);
+    this.getEventCount(this.id);
   },
   methods: {
     getBucketInfo: async function(bucket_id) {
@@ -74,12 +80,6 @@ export default {
     getEventCount: async function(bucket_id) {
       this.eventcount = (await this.$aw.countEvents(bucket_id)).data;
     },
-  },
-  mounted: function() {
-    this.id = this.$route.params.id;
-    this.getBucketInfo(this.id);
-    this.getEvents(this.id);
-    this.getEventCount(this.id);
   },
 }
 </script>

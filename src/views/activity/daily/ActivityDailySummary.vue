@@ -56,7 +56,7 @@ export default {
     top_categories_hierarchy: function() {
       if(this.top_categories) {
         console.log(this.top_categories);
-        let categories = this.top_categories.map(c => { return { name: c.data.$category, size: c.duration }; });
+        const categories = this.top_categories.map(c => { return { name: c.data.$category, size: c.duration }; });
         console.log(categories);
 
         return {

@@ -97,13 +97,13 @@ import _ from 'lodash';
 
 export default {
   name: "Buckets",
-  mounted: function() {
-    this.getBuckets();
-  },
   data: () => {
     return {
       buckets: [],
     }
+  },
+  mounted: function() {
+    this.getBuckets();
   },
   methods: {
     getBuckets: async function() {

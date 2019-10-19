@@ -21,20 +21,20 @@ import { seconds_to_duration } from '../util/time.js';
 const color = require('../util/color.js');
 
 // Dimensions of sunburst.
-var width = 750;
-var height = 600;
-var radius = Math.min(width, height) / 2;
+const width = 750;
+const height = 600;
+const radius = Math.min(width, height) / 2;
 
-var legendData = {
+const legendData = {
   afk: color.getColorFromString('afk'),
   'not-afk': color.getColorFromString('not-afk'),
   hibernating: color.getColorFromString('hibernating'),
 };
 
-var rootEl; // The root DOM node of the graph as a d3 object
-var vis; // The root SVG node of the graph as a d3 object
-var partition;
-var arc;
+let rootEl; // The root DOM node of the graph as a d3 object
+let vis; // The root SVG node of the graph as a d3 object
+let partition;
+let arc;
 
 function create(el) {
   // Clear the svg in case we are redrawing
@@ -70,8 +70,8 @@ function create(el) {
 }
 
 function drawClockTick(a) {
-  let xn = Math.cos(a);
-  let yn = Math.sin(a);
+  const xn = Math.cos(a);
+  const yn = Math.sin(a);
 
   vis
     .append('line')
@@ -84,11 +84,11 @@ function drawClockTick(a) {
 }
 
 function drawClock(h, m, text) {
-  let a = 2 * Math.PI * (h / 24 + m / 24 / 60) - (1 / 2) * Math.PI;
+  const a = 2 * Math.PI * (h / 24 + m / 24 / 60) - (1 / 2) * Math.PI;
   drawClockTick(a);
 
-  let xn = Math.cos(a);
-  let yn = Math.sin(a);
+  const xn = Math.cos(a);
+  const yn = Math.sin(a);
 
   vis
     .append('text')
@@ -116,13 +116,13 @@ function update(el, json) {
     .style('opacity', 0);
 
   // Turn the data into a d3 hierarchy and calculate the sums.
-  var root = d3.hierarchy(json);
-  var nodes = partition(root);
+  let root = d3.hierarchy(json);
+  let nodes = partition(root);
 
-  let mode_clock = true;
+  const mode_clock = true;
   if (mode_clock) {
     // TODO: Make this a checkbox in the UI
-    let show_whole_day = true;
+    const show_whole_day = true;
 
     let root_start = moment(json.timestamp);
     let root_end = moment(json.timestamp).add(json.duration, 'seconds');
@@ -136,19 +136,19 @@ function update(el, json) {
       drawClock(18, 0);
 
       // TODO: Draw only if showing today
-      let now = moment();
+      const now = moment();
       drawClock(now.hour(), now.minute(), 'Now');
     }
 
     nodes = nodes
       .each(function(d) {
-        let loc_start_sec = moment(d.data.timestamp).diff(root_start, 'seconds', true);
-        let loc_end_sec = moment(d.data.timestamp)
+        const loc_start_sec = moment(d.data.timestamp).diff(root_start, 'seconds', true);
+        const loc_end_sec = moment(d.data.timestamp)
           .add(d.data.duration, 'seconds')
           .diff(root_start, 'seconds', true);
 
-        let loc_start = Math.max(0, loc_start_sec / ((root_end - root_start) / 1000));
-        let loc_end = Math.min(1, loc_end_sec / ((root_end - root_start) / 1000));
+        const loc_start = Math.max(0, loc_start_sec / ((root_end - root_start) / 1000));
+        const loc_end = Math.min(1, loc_end_sec / ((root_end - root_start) / 1000));
 
         d.x0 = 2 * Math.PI * loc_start;
         d.x1 = 2 * Math.PI * loc_end;
@@ -167,7 +167,7 @@ function update(el, json) {
     // If show_whole_day:
     //   0.0044 rad = 1min
     //   0.0011 rad = 15s
-    let threshold = 0.001;
+    const threshold = 0.001;
     return d.x1 - d.x0 > threshold;
   });
 
@@ -199,13 +199,13 @@ function mouseclick(d) {
 }
 
 function showInfo(d) {
-  let hoverEl = d3.select('.explanation > .hover');
+  const hoverEl = d3.select('.explanation > .hover');
 
-  let m = moment(d.data.timestamp);
+  const m = moment(d.data.timestamp);
   hoverEl.select('.date').text(m.format('YYYY-MM-DD'));
   hoverEl.select('.time').text(m.format('HH:mm:ss'));
 
-  let durationString = seconds_to_duration(d.data.duration);
+  const durationString = seconds_to_duration(d.data.duration);
   hoverEl.select('.duration').text(durationString);
 
   hoverEl.select('.title').text(d.data.data.app || d.data.data.status);
@@ -220,7 +220,7 @@ function showInfo(d) {
 function mouseover(d) {
   showInfo(d);
 
-  var sequenceArray = d.ancestors().reverse();
+  const sequenceArray = d.ancestors().reverse();
   sequenceArray.shift(); // remove root node from the array
 
   // Fade all the segments.
@@ -257,7 +257,7 @@ function mouseleave() {
 
 function initializeBreadcrumbTrail() {
   // Add the svg area.
-  var trail = d3
+  const trail = d3
     .select('.sequence')
     .append('svg:svg')
     .attr('width', width)
@@ -272,20 +272,20 @@ function initializeBreadcrumbTrail() {
 
 function drawLegend() {
   // Dimensions of legend item: width, height, spacing, radius of rounded rect.
-  var li = {
+  const li = {
     w: 75,
     h: 30,
     s: 3,
     r: 3,
   };
 
-  var legend = d3
+  const legend = d3
     .select('.legend')
     .append('svg:svg')
     .attr('width', li.w)
     .attr('height', d3.keys(legendData).length * (li.h + li.s));
 
-  var g = legend
+  const g = legend
     .selectAll('g')
     .data(d3.entries(legendData))
     .enter()

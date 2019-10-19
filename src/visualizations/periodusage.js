@@ -14,7 +14,7 @@ function create(svg_elem) {
 function set_status(svg_elem, msg) {
   // Select svg canvas
   svg_elem.innerHTML = '';
-  let svg = d3.select(svg_elem);
+  const svg = d3.select(svg_elem);
 
   svg
     .append('text')
@@ -26,12 +26,12 @@ function set_status(svg_elem, msg) {
     .attr('fill', 'black');
 }
 
-var diagramcolor = '#aaa';
-var diagramcolor_selected = '#fc5';
-var diagramcolor_focused = '#adf';
+const diagramcolor = '#aaa';
+const diagramcolor_selected = '#fc5';
+const diagramcolor_focused = '#adf';
 
 function update(svg_elem, usage_arr, link_prefix) {
-  let dateformat = 'YYYY-MM-DD';
+  const dateformat = 'YYYY-MM-DD';
 
   // No apps, sets status to "No data"
   if (usage_arr.length <= 0) {
@@ -42,33 +42,33 @@ function update(svg_elem, usage_arr, link_prefix) {
   var svg = d3.select(svg_elem);
 
   function get_usage_time(day_events) {
-    var day_event = _.head(_.filter(day_events, e => e.data.status == 'not-afk'));
+    const day_event = _.head(_.filter(day_events, e => e.data.status == 'not-afk'));
     return day_event != undefined ? day_event.duration : 0;
   }
 
-  var usage_times = usage_arr.map(day_events => get_usage_time(day_events));
-  var longest_usage = Math.max.apply(null, usage_times);
+  const usage_times = usage_arr.map(day_events => get_usage_time(day_events));
+  let longest_usage = Math.max.apply(null, usage_times);
   // Avoid division by zero
   if (longest_usage <= 0) {
     longest_usage = 0.00000000001;
   }
 
-  var padding = 0.3 * (100 / (usage_arr.length - 1));
-  var width = 100 / usage_arr.length - padding;
-  var center_elem = Math.floor(usage_arr.length / 2);
+  const padding = 0.3 * (100 / (usage_arr.length - 1));
+  const width = 100 / usage_arr.length - padding;
+  const center_elem = Math.floor(usage_arr.length / 2);
 
   _.each(usage_arr, (events, i) => {
-    var usage_time = get_usage_time(events);
-    var height = 85 * (usage_time / longest_usage);
-    var date = '';
+    const usage_time = get_usage_time(events);
+    const height = 85 * (usage_time / longest_usage);
+    let date = '';
     if (events.length > 0) {
       // slice off so it's only the day
       date = moment(usage_arr[i][0].timestamp).format(dateformat);
     }
-    var color = i == center_elem ? diagramcolor_selected : diagramcolor;
-    var offset = 50;
+    const color = i == center_elem ? diagramcolor_selected : diagramcolor;
+    const offset = 50;
 
-    let x = i * padding + i * width + 0.25 * width;
+    const x = i * padding + i * width + 0.25 * width;
 
     if (moment(date).isSame(moment(), 'day')) {
       svg
@@ -87,7 +87,7 @@ function update(svg_elem, usage_arr, link_prefix) {
         .text('Today');
     }
 
-    let rect = svg
+    const rect = svg
       .append('rect')
       .attr('x', x + '%')
       .attr('y', 101 - height + '%') // Draw rect bottom-up
@@ -107,14 +107,14 @@ function update(svg_elem, usage_arr, link_prefix) {
         rect.style('fill', diagramcolor_focused);
       })
       .on('mouseout', (d, j, n) => {
-        var a = n[j];
+        const a = n[j];
         rect.style('fill', a.getAttribute('color'));
       })
       .on('click', function(d, j, n) {
-        var me = n[j];
-        var date = d3.select(me).attr('date');
-        var link_prefix = d3.select(me).attr('data');
-        var url = `/#${link_prefix}/${date}`;
+        const me = n[j];
+        const date = d3.select(me).attr('date');
+        const link_prefix = d3.select(me).attr('data');
+        const url = `/#${link_prefix}/${date}`;
         /* Not the vue-way, but works */
         window.location.assign(url);
         /* Hardcoding click behavior also isn't optimal I guess */

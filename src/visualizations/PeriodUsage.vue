@@ -22,14 +22,14 @@ import periodusage from './periodusage.js';
 export default {
   name: "aw-periodusage",
   props: ['periodusage_arr', 'link_prefix'],
-  mounted: function() {
-    periodusage.create(this.$el);
-    periodusage.set_status(this.$el, "Loading...");
-  },
   watch: {
     "periodusage_arr": function() {
       periodusage.update(this.$el, this.periodusage_arr, this.link_prefix);
     }
+  },
+  mounted: function() {
+    periodusage.create(this.$el);
+    periodusage.set_status(this.$el, "Loading...");
   }
 }
 </script>

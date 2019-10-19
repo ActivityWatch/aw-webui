@@ -43,13 +43,13 @@ div
 <script>
 export default {
   name: "Log",
-  mounted: function() {
-    this.getLog();
-  },
   data: () => {
     return {
       logs: [],
     }
+  },
+  mounted: function() {
+    this.getLog();
   },
   methods: {
     getLog: function() {

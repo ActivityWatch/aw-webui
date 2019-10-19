@@ -37,11 +37,6 @@ export default {
   data: function() {
     return { limit_: this.limit }
   },
-  mounted: function() {
-    let el = this.$el.children[0];
-    summary.create(el);
-    this.update();
-  },
   watch: {
     fields: function() {
       this.update();
@@ -50,9 +45,14 @@ export default {
       this.update();
     },
   },
+  mounted: function() {
+    const el = this.$el.children[0];
+    summary.create(el);
+    this.update();
+  },
   methods: {
     update: function() {
-      let el = this.$el.children[0];
+      const el = this.$el.children[0];
       if(this.fields !== null) {
         summary.updateSummedEvents(el, this.fields.slice(0, this.limit_), this.namefunc, this.colorfunc)
       } else {

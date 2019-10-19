@@ -105,15 +105,15 @@ export default {
       today: get_today(),
     }
   },
-  watch: {
-    date: function() {
-      this.refresh();
-    },
-  },
 
   computed: {
     date: function() { return this.$route.params.date || moment().format("YYYY-MM-DD") },
     link_prefix: function() { return "/activity/daily/"   + this.host },
+  },
+  watch: {
+    date: function() {
+      this.refresh();
+    },
   },
 
   mounted: async function() {
