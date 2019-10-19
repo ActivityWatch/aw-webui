@@ -57,18 +57,6 @@ export default {
   components: {
     "stopwatch-entry": StopwatchEntry
   },
-  mounted: function() {
-    // TODO: List all possible timer buckets
-    //this.getBuckets();
-
-    // Create default timer bucket
-    this.$aw.ensureBucket(this.bucket_id, "general.stopwatch", "unknown");
-
-    // TODO: Get all timer events
-    this.getEvents()
-
-    setInterval(() => this.now = moment(), 1000);
-  },
   data: () => {
     return {
       bucket_id: "aw-stopwatch",
@@ -84,6 +72,18 @@ export default {
     stoppedTimers() {
       return _.filter(this.events, (e) => (!e.data.running))
     }
+  },
+  mounted: function() {
+    // TODO: List all possible timer buckets
+    //this.getBuckets();
+
+    // Create default timer bucket
+    this.$aw.ensureBucket(this.bucket_id, "general.stopwatch", "unknown");
+
+    // TODO: Get all timer events
+    this.getEvents()
+
+    setInterval(() => this.now = moment(), 1000);
   },
   methods: {
     startTimer: async function(label) {

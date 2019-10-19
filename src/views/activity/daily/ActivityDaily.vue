@@ -10,11 +10,11 @@ div
   div.d-flex
     div.p-1
       b-button-group
-        b-button(:to="link_prefix + '/' + previousDay() + '/summary'", variant="outline-dark")
+        b-button(:to="link_prefix + '/' + previousDay()", variant="outline-dark")
           icon(name="arrow-left")
           span.d-none.d-md-inline
             |  Previous day
-        b-button(:to="link_prefix + '/' + nextDay() + '/summary'", :disabled="nextDay() > today", variant="outline-dark")
+        b-button(:to="link_prefix + '/' + nextDay()", :disabled="nextDay() > today", variant="outline-dark")
           span.d-none.d-md-inline
             |  Next day
           icon(name="arrow-right")
@@ -105,15 +105,14 @@ export default {
       today: get_today(),
     }
   },
+
+  computed: {
+    link_prefix: function() { return "/activity/daily/"   + this.host },
+  },
   watch: {
     date: function() {
       this.refresh();
     },
-  },
-
-  computed: {
-    date: function() { return this.$route.params.date || moment().format("YYYY-MM-DD") },
-    link_prefix: function() { return "/activity/daily/"   + this.host },
   },
 
   mounted: async function() {

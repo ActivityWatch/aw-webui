@@ -2,10 +2,10 @@ import moment from 'moment';
 
 export function seconds_to_duration(seconds) {
   // Returns a human-readable duration string
-  var hrs = Math.floor(seconds / 60 / 60);
-  var min = Math.floor((seconds / 60) % 60);
-  var sec = Math.floor(seconds % 60);
-  let l = [];
+  const hrs = Math.floor(seconds / 60 / 60);
+  const min = Math.floor((seconds / 60) % 60);
+  const sec = Math.floor(seconds % 60);
+  const l = [];
   if (hrs != 0) l.push(hrs + 'h');
   if (min != 0) l.push(min + 'm');
   if (sec != 0 || l.length == 0) l.push(sec + 's');
@@ -13,9 +13,9 @@ export function seconds_to_duration(seconds) {
 }
 
 export function friendlydate(timestamp) {
-  let now = moment();
-  let m = moment.parseZone(timestamp);
-  let sinceNow = moment.duration(m.diff(now));
+  const now = moment();
+  const m = moment.parseZone(timestamp);
+  const sinceNow = moment.duration(m.diff(now));
   if (-sinceNow.asSeconds() <= 60) {
     return `${Math.round(-sinceNow.asSeconds())}s ago`;
   } else if (-sinceNow.asSeconds() <= 60 * 60 * 24) {
@@ -25,10 +25,10 @@ export function friendlydate(timestamp) {
 }
 
 export function get_day_start_with_offset(dateParam) {
-  var dateMoment = dateParam ? moment(dateParam) : moment().startOf('day');
-  var start_of_day = localStorage.startOfDay;
-  var start_of_day_hours = parseInt(start_of_day.split(':')[0]);
-  var start_of_day_minutes = parseInt(start_of_day.split(':')[1]);
+  const dateMoment = dateParam ? moment(dateParam) : moment().startOf('day');
+  const start_of_day = localStorage.startOfDay;
+  const start_of_day_hours = parseInt(start_of_day.split(':')[0]);
+  const start_of_day_minutes = parseInt(start_of_day.split(':')[1]);
   return dateMoment
     .hour(start_of_day_hours)
     .minute(start_of_day_minutes)
@@ -47,7 +47,7 @@ export function get_day_period(date) {
 
 export function get_day_start(datestr) {
   // Get start time of date
-  var datestart = moment(datestr);
+  const datestart = moment(datestr);
   datestart.set('hour', 0);
   datestart.set('minute', 0);
   datestart.set('second', 0);

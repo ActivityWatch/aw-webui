@@ -3,7 +3,7 @@ import { seconds_to_duration } from './time.js';
 import DOMPurify from 'dompurify';
 import _ from 'lodash';
 
-let sanitize = DOMPurify.sanitize;
+const sanitize = DOMPurify.sanitize;
 
 export function buildTooltip(bucket, e) {
   // WARNING: XSS risk, make sure to sanitize properly

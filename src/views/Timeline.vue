@@ -22,24 +22,24 @@ import _ from 'lodash';
 
 export default {
   name: "Timeline",
-  mounted: function() {
-    this.getBuckets();
-  },
   data: () => {
     return {
       buckets: null,
       daterange: [moment().subtract(1, "hour"), moment()],
     }
   },
+  computed: {
+    num_events() {
+      return _.sumBy(this.buckets, "events.length");
+    },
+  },
   watch: {
     daterange() {
       this.getBuckets();
     }
   },
-  computed: {
-    num_events() {
-      return _.sumBy(this.buckets, "events.length");
-    },
+  mounted: function() {
+    this.getBuckets();
   },
   methods: {
     getBuckets: async function() {

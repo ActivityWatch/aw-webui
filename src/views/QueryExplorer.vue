@@ -54,8 +54,8 @@ div
 <script>
 import moment from 'moment';
 
-let today = moment().startOf("day");
-let tomorrow = moment(today).add(24, "hours");
+const today = moment().startOf("day");
+const tomorrow = moment(today).add(24, "hours");
 
 export default {
   name: "QueryExplorer",
@@ -94,10 +94,10 @@ RETURN = merge_events_by_keys(window_events, ['app', 'title']);`,
   },
   methods: {
     query: async function() {
-      let query = this.query_code.split(";").map((s) => s.trim() + ";");
-      let timeperiods = [moment(this.startdate).format() + "/" + moment(this.enddate).format()];
+      const query = this.query_code.split(";").map((s) => s.trim() + ";");
+      const timeperiods = [moment(this.startdate).format() + "/" + moment(this.enddate).format()];
       try {
-        let data = await this.$aw.query(timeperiods, query);
+        const data = await this.$aw.query(timeperiods, query);
         this.events = data[0];
         this.error = "";
       } catch(e) {

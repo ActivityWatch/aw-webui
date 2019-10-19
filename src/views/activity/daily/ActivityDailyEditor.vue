@@ -72,6 +72,11 @@ export default {
       top_editor_projects_colorfunc: (e) => e.data.project,
     }
   },
+
+  computed: {
+    dateEnd: function() { return moment(this.date).add(1, 'days').format() },
+    dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
+  },
   watch: {
     '$route': function() {
       console.log("Route changed");
@@ -80,11 +85,6 @@ export default {
     editorBucketId() {
       this.queryEditorActivity();
     },
-  },
-
-  computed: {
-    dateEnd: function() { return moment(this.date).add(1, 'days').format() },
-    dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
   },
 
   mounted: function() {
@@ -98,8 +98,8 @@ export default {
     },
 
     getEditorBucket: async function() {
-      let buckets = await this.$aw.getBuckets().catch(this.errorHandler);
-      for (var bucket in buckets){
+      const buckets = await this.$aw.getBuckets().catch(this.errorHandler);
+      for (const bucket in buckets){
         if (buckets[bucket]["type"] === "app.editor.activity"){
           this.editorBuckets.push(bucket);
         }
@@ -111,9 +111,9 @@ export default {
 
     queryEditorActivity: async function() {
       if (this.editorBucketId !== ""){
-        var periods = [get_day_period(this.date)];
-        var q = query.editorActivityQuery(this.editorBucketId, 100);
-        let data = (await this.$aw.query(periods, q).catch(this.errorHandler))[0];
+        const periods = [get_day_period(this.date)];
+        const q = query.editorActivityQuery(this.editorBucketId, 100);
+        const data = (await this.$aw.query(periods, q).catch(this.errorHandler))[0];
         this.editor_duration = data["duration"];
         this.top_editor_files = data["files"];
         this.top_editor_languages = data["languages"];

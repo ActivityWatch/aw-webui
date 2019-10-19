@@ -51,70 +51,9 @@ export default {
       }
     };
   },
-  mounted() {
-    this.$nextTick(() => {
-      let el = this.$el.querySelector('#visualization');
-      this.timeline = new Timeline(el, [], [], this.options);
-    });
-  },
-  watch: {
-    buckets() {
-      // For some reason, an object is passed here, after which the correct array arrives
-      if(this.buckets.length === undefined) {
-        //console.log("I told you so!")
-        return;
-      }
-
-      // Build groups
-      let groups = _.map(this.buckets, (bucket, bidx) => {
-        return {id: bidx, content: this.showRowLabels ? '': bucket.id};
-      });
-
-      // Build items
-      let items = _.map(this.chartData, (row, i) => {
-        return {
-          id: i,
-          group: row[0],
-          content: row[1],
-          title: row[2],
-          start: moment(row[3]),
-          end: moment(row[4]),
-          style: `background-color: ${row[5]}`,
-        }
-      });
-
-      if(groups.length > 0 && items.length > 0) {
-        if(this.queriedInterval && this.showQueriedInterval) {
-          let duration = this.queriedInterval[1].diff(this.queriedInterval[0], "seconds");
-          groups.push({id: groups.length, content: "queried interval"});
-          items.push({
-            id: items.length + 1,
-            group: groups.length - 1,
-            title: buildTooltip({"type": "test"}, {
-              timestamp: this.queriedInterval[0],
-              duration: duration,
-              data: {title: 'test'}
-            }),
-            content: 'query',
-            start: this.queriedInterval[0],
-            end: this.queriedInterval[1],
-            style: "background-color: #aaa; height: 10px",
-          });
-        }
-
-        let start = (this.queriedInterval && this.queriedInterval[0]) || _.min(_.map(items, (item) => item.start));
-        let end = (this.queriedInterval && this.queriedInterval[1]) || _.max(_.map(items, (item) => item.end));
-        this.options.min = start;
-        this.options.max = end;
-        this.timeline.setOptions(this.options);
-        this.timeline.setWindow(start, end);
-        this.timeline.setData({groups: groups, items: items})
-      }
-    }
-  },
   computed: {
     chartData() {
-      let data = [];
+      const data = [];
       _.each(this.buckets, (bucket, bidx) => {
         if(bucket.events === undefined) {
           return;
@@ -139,6 +78,67 @@ export default {
       })
       return data;
     },
+  },
+  watch: {
+    buckets() {
+      // For some reason, an object is passed here, after which the correct array arrives
+      if(this.buckets.length === undefined) {
+        //console.log("I told you so!")
+        return;
+      }
+
+      // Build groups
+      const groups = _.map(this.buckets, (bucket, bidx) => {
+        return {id: bidx, content: this.showRowLabels ? '': bucket.id};
+      });
+
+      // Build items
+      const items = _.map(this.chartData, (row, i) => {
+        return {
+          id: i,
+          group: row[0],
+          content: row[1],
+          title: row[2],
+          start: moment(row[3]),
+          end: moment(row[4]),
+          style: `background-color: ${row[5]}`,
+        }
+      });
+
+      if(groups.length > 0 && items.length > 0) {
+        if(this.queriedInterval && this.showQueriedInterval) {
+          const duration = this.queriedInterval[1].diff(this.queriedInterval[0], "seconds");
+          groups.push({id: groups.length, content: "queried interval"});
+          items.push({
+            id: items.length + 1,
+            group: groups.length - 1,
+            title: buildTooltip({"type": "test"}, {
+              timestamp: this.queriedInterval[0],
+              duration: duration,
+              data: {title: 'test'}
+            }),
+            content: 'query',
+            start: this.queriedInterval[0],
+            end: this.queriedInterval[1],
+            style: "background-color: #aaa; height: 10px",
+          });
+        }
+
+        const start = (this.queriedInterval && this.queriedInterval[0]) || _.min(_.map(items, (item) => item.start));
+        const end = (this.queriedInterval && this.queriedInterval[1]) || _.max(_.map(items, (item) => item.end));
+        this.options.min = start;
+        this.options.max = end;
+        this.timeline.setOptions(this.options);
+        this.timeline.setWindow(start, end);
+        this.timeline.setData({groups: groups, items: items})
+      }
+    }
+  },
+  mounted() {
+    this.$nextTick(() => {
+      const el = this.$el.querySelector('#visualization');
+      this.timeline = new Timeline(el, [], [], this.options);
+    });
   },
 }
 </script>

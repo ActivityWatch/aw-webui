@@ -16,7 +16,7 @@ export default {
   errorCaptured (err, vm, info) {
     //console.error("Error captured!");
     //console.error(err, vm, info);
-    let msg = (err.name && err.message) ? (err.name + ": " + err.message) : err;
+    const msg = (err.name && err.message) ? (err.name + ": " + err.message) : err;
     this.errors.push({
       msg: msg,
       time: new Date().toISOString(),

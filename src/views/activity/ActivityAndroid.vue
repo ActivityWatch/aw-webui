@@ -80,14 +80,14 @@ export default {
       appBucketId: "aw-watcher-android-test",
     }
   },
+
+  computed: {
+    dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
+  },
   watch: {
     '$route': function() {
       this.refresh();
     },
-  },
-
-  computed: {
-    dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
   },
 
   mounted: function() {
@@ -113,8 +113,8 @@ export default {
     },
 
     queryApps: async function() {
-      var periods = [get_day_period(this.date)];
-      var q = query.appQuery(this.appBucketId, this.top_apps_count);
+      const periods = [get_day_period(this.date)];
+      const q = query.appQuery(this.appBucketId, this.top_apps_count);
       let data = await this.$aw.query(periods, q).catch(this.errorHandler);
       data = data[0];
       this.top_apps = data["events"];
@@ -122,15 +122,15 @@ export default {
     },
 
     queryDailyActivity: async function() {
-      var timeperiods = [];
-      for (var i=-15; i<=15; i++) {
+      const timeperiods = [];
+      for (let i=-15; i<=15; i++) {
         timeperiods.push(get_day_period(moment(this.date).add(i, 'days')));
       }
-      let dur_per_date = await this.$aw.query(timeperiods, query.dailyActivityQueryAndroid(this.appBucketId)).catch(this.errorHandler);
+      const dur_per_date = await this.$aw.query(timeperiods, query.dailyActivityQueryAndroid(this.appBucketId)).catch(this.errorHandler);
       // TODO: This is some nasty shit, aw-periodusage should really just accept an array with (timestamp, duration) tuples instead.
       this.daily_activity = _.map(_.zip(timeperiods, dur_per_date), (t) => {
-        let timestamp = t[0].split("/")[0];
-        let duration = t[1];
+        const timestamp = t[0].split("/")[0];
+        const duration = t[1];
         return [
           {
             "timestamp": timestamp,

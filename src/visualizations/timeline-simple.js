@@ -7,7 +7,7 @@ const moment = require("moment");
 
 import {getTitleAttr, getColorFromString} from "../util/color.js";
 
-var time = require("../util/time.js");
+const time = require("../util/time.js");
 
 function create(svg_el) {
   // Clear element
@@ -20,7 +20,7 @@ function create(svg_el) {
 }
 
 function set_status(svg_el, text){
-  let timeline = d3.select(svg_el);
+  const timeline = d3.select(svg_el);
   timeline.selectAll("*").remove();
 
   timeline.append("text")
@@ -33,7 +33,7 @@ function set_status(svg_el, text){
 }
 
 function update(svg_el, events, event_type) {
-  let timeline = d3.select(svg_el);
+  const timeline = d3.select(svg_el);
   timeline.selectAll("*").remove();
 
   if (events.length <= 0){
@@ -43,40 +43,40 @@ function update(svg_el, events, event_type) {
 
   events = _.clone(events);
   _.reverse(events);
-  let e_first = _.first(events);
-  let e_last = _.last(events);
-  let m_first = moment(e_first.timestamp);
-  let m_last = moment(e_last.timestamp);
-  let total_duration = (m_last - m_first) / 1000 + e_last.duration;
+  const e_first = _.first(events);
+  const e_last = _.last(events);
+  const m_first = moment(e_first.timestamp);
+  const m_last = moment(e_last.timestamp);
+  const total_duration = (m_last - m_first) / 1000 + e_last.duration;
   console.log("First: " + m_first.format());
   console.log("Last: " + m_last.format());
   console.log("Duration: " + total_duration);
 
   // Iterate over each event and create interval boxes
   _.each(events, function(e, i) {
-    let id = "timeline_event_" + i;
-    let timestamp = moment(e.timestamp);
+    const id = "timeline_event_" + i;
+    const timestamp = moment(e.timestamp);
 
-    let color_base = getColorFromString(getTitleAttr({type: event_type}, e));
-    let color_hover = Color(color_base).darken(0.4).hex();
+    const color_base = getColorFromString(getTitleAttr({type: event_type}, e));
+    const color_hover = Color(color_base).darken(0.4).hex();
 
-    let x = (timestamp - m_first) / 1000 / total_duration;
-    let width = 100 * e.duration / total_duration;
+    const x = (timestamp - m_first) / 1000 / total_duration;
+    const width = 100 * e.duration / total_duration;
 
-    let eg = timeline.append("g")
+    const eg = timeline.append("g")
       .attr("id", id)
       .attr("transform", "translate(" + 100 * x + "," + 0 + ")");
 
-    let rect = eg.append("rect")
+    const rect = eg.append("rect")
       .attr("width", width)
       .attr("height", 4)
       .style("fill", color_base)
       .on("mouseover", function(d, j, n){
-          let elem = n[j];
+          const elem = n[j];
           elem.style.fill = color_hover;
       })
       .on("mouseout", function(d, j, n){
-          let elem = n[j];
+          const elem = n[j];
           elem.style.fill = color_base;
       });
 

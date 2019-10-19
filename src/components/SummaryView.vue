@@ -43,8 +43,8 @@ export default {
 
   methods: {
     query: async function() {
-      var periods = [this.period];
-      var q = query.summaryQuery(this.windowBucketId, this.afkBucketId, this.limit);
+      const periods = [this.period];
+      const q = query.summaryQuery(this.windowBucketId, this.afkBucketId, this.limit);
       let data = await this.$aw.query(periods, q);
       console.log(data);
       data = data[0];

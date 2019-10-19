@@ -23,7 +23,7 @@ const Dev = () => import('./views/Dev.vue');
 
 Vue.use(VueRouter);
 
-var router = new VueRouter({
+const router = new VueRouter({
   routes: [
     { path: '/', component: Home },
     {

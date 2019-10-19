@@ -1,9 +1,9 @@
-let _ = require('lodash');
+const _ = require('lodash');
 
 const level_sep = ">";
 
 interface Category {
-    id?: number,
+    id?: number;
     name: string[];
     name_pretty?: string;
     subname?: string;
@@ -16,7 +16,7 @@ interface Category {
     children?: Category[];
 }
 
-export let defaultCategories: Category[] = [
+export const defaultCategories: Category[] = [
   { name: ['Work'], rule: { type: 'regex', pattern: 'Google Docs' } },
   {
     name: ['Work', 'Programming'],
@@ -35,7 +35,7 @@ export let defaultCategories: Category[] = [
 
 export function build_category_hierarchy(classes: Category[]): Category[] {
   function annotate(c: Category) {
-    let ch = c.name;
+    const ch = c.name;
     c.name_pretty = ch.join(level_sep);
     c.subname = ch.slice(-1)[0];
     c.parent = ch.length > 1 ? ch.slice(0, -1) : null;
@@ -43,19 +43,19 @@ export function build_category_hierarchy(classes: Category[]): Category[] {
     return c;
   }
 
-  let new_classes = classes.slice().map(c => annotate(c));
+  const new_classes = classes.slice().map(c => annotate(c));
 
   // Insert dangling/undefined parents
-  let all_full_names = new Set(new_classes.map(c => c.name.join(level_sep)));
+  const all_full_names = new Set(new_classes.map(c => c.name.join(level_sep)));
 
   function createMissingParents(children) {
      children
         .map(c => c.parent)
         .filter(p => !!p)
         .map(p => {
-          let name = p.join(level_sep);
+          const name = p.join(level_sep);
           if (p && !all_full_names.has(name)) {
-            let new_parent = annotate({ name: p, rule: { type: null, pattern: '' } });
+            const new_parent = annotate({ name: p, rule: { type: null, pattern: '' } });
             classes.push(new_parent);
             all_full_names.add(name);
             // New parent might not be top-level, so we need to recurse
@@ -84,7 +84,7 @@ export function build_category_hierarchy(classes: Category[]): Category[] {
 export function flatten_category_hierarchy(hier: Category[]): Category[] {
   return _.flattenDeep(
     hier.map(h => {
-      let level = [h, flatten_category_hierarchy(h.children)];
+      const level = [h, flatten_category_hierarchy(h.children)];
       h.children = [];
       return level;
     })
@@ -102,7 +102,7 @@ export function saveClasses(classes: Category[]) {
 }
 
 export function loadClasses(): Category[] {
-  let classes_json = localStorage.classes;
+  const classes_json = localStorage.classes;
   if(classes_json && classes_json.length >= 1) {
     return JSON.parse(classes_json);
   } else {

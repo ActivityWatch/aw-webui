@@ -100,7 +100,7 @@ import 'vue-awesome/icons/desktop';
 import _ from 'lodash';
 
 // Set this to true to test Android behavior when on a desktop
-let testingAndroid = false;
+const testingAndroid = false;
 
 export default {
   name: 'Header',
@@ -112,8 +112,8 @@ export default {
     };
   },
   mounted: async function() {
-    let buckets = await this.$aw.getBuckets();
-    let types_by_host = {};
+    const buckets = await this.$aw.getBuckets();
+    const types_by_host = {};
     _.each(buckets, (v) => {
         types_by_host[v.hostname] = types_by_host[v.hostname] || {};
         // The '&& true;' is just to typecoerce into booleans
