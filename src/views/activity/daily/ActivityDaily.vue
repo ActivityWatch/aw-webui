@@ -32,16 +32,16 @@ div
 
   ul.row.nav.nav-tabs.my-3.px-3
     li.nav-item
-      router-link.nav-link(:to="{ name: 'activity-daily-summary', params: subroute_params }")
+      router-link.nav-link(:to="{ name: 'activity-daily-summary', params: $route.params }")
         h5 Summary
     li.nav-item
-      router-link.nav-link(:to="{ name: 'activity-daily-window', params: subroute_params }")
+      router-link.nav-link(:to="{ name: 'activity-daily-window', params: $route.params }")
         h5 Window
     li.nav-item
-      router-link.nav-link(:to="{ name: 'activity-daily-browser', params: subroute_params }")
+      router-link.nav-link(:to="{ name: 'activity-daily-browser', params: $route.params }")
         h5 Browser
     li.nav-item
-      router-link.nav-link(:to="{ name: 'activity-daily-editor', params: subroute_params }")
+      router-link.nav-link(:to="{ name: 'activity-daily-editor', params: $route.params }")
         h5 Editor
 
   div
@@ -89,15 +89,20 @@ import 'vue-awesome/icons/sync'
 
 import queries from '~/queries.js';
 
+const get_today = () => moment().startOf('day').format("YYYY-MM-DD");
 
 export default {
   name: "Activity",
   props: {
     host: String,
+    date: {
+      type: String,
+      default: get_today(),
+    }
   },
   data: function() {
     return {
-      today: moment().startOf('day').format("YYYY-MM-DD"),
+      today: get_today(),
     }
   },
   watch: {
@@ -109,9 +114,6 @@ export default {
   computed: {
     date: function() { return this.$route.params.date || moment().format("YYYY-MM-DD") },
     link_prefix: function() { return "/activity/daily/"   + this.host },
-    subroute_params: function() {
-      return Object.assign(this.$route.params, { date: this.date });
-    },
   },
 
   mounted: async function() {
@@ -124,7 +126,7 @@ export default {
     setDate: function(date) { this.$router.push('/activity/daily/' + this.host + '/' + date); },
 
     refresh: async function(force) {
-      await this.$store.dispatch("activity_daily/ensure_loaded", Object.assign(this.subroute_params, { force: force, filterAFK: true }));
+      await this.$store.dispatch("activity_daily/ensure_loaded", Object.assign(this.$route.params, { force: force, filterAFK: true }));
     },
   },
 }

@@ -12,7 +12,7 @@ div.aw-navbar
     b-collapse#nav-collapse(is-nav)
       b-navbar-nav
         // If only a single view (the default) is available
-        b-nav-item(v-if="activityViewsDaily.length === 1", v-for="view in activityViewsDaily", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
+        b-nav-item(v-if="activityViewsDaily.length === 1", v-for="view in activityViewsDaily", :key="view.name", :to="view.pathUrl")
           div.px-2.px-lg-1
             icon(name="calendar-day")
             | Today
@@ -27,12 +27,12 @@ div.aw-navbar
             | No activity reports available
             br
             small Make sure you have both an AFK and window watcher running
-          b-dropdown-item(v-for="view in activityViewsDaily", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
+          b-dropdown-item(v-for="view in activityViewsDaily", :key="view.name", :to="view.pathUrl")
             icon(:name="view.icon")
             | {{ view.name }}
 
         // If only a single view (the default) is available
-        b-nav-item(v-if="activityViewsSummary.length === 1", v-for="view in activityViewsSummary", :key="view.name + '_summary'", :to="view.pathUrl + '/' + view.hostname")
+        b-nav-item(v-if="activityViewsSummary.length === 1", v-for="view in activityViewsSummary", :key="view.name + '_summary'", :to="view.pathUrl")
           div.px-2.px-lg-1
             icon(name="calendar-week")
             | Summary
@@ -47,7 +47,7 @@ div.aw-navbar
             | No activity reports available
             br
             small Make sure you have both an AFK and window watcher running
-          b-dropdown-item(v-for="view in activityViewsSummary", :key="view.name + '_summary'", :to="view.pathUrl + '/' + view.hostname")
+          b-dropdown-item(v-for="view in activityViewsSummary", :key="view.name + '_summary'", :to="view.pathUrl")
             icon(:name="view.icon")
             | {{ view.name }}
 
@@ -129,14 +129,14 @@ export default {
             name: hostname,
             hostname: hostname,
             type: "default",
-            pathUrl: '/activity/daily',
+            pathUrl: `/activity/daily/${hostname}`,
             icon: 'desktop'
           });
           this.activityViewsSummary.push({
             name: hostname,
             hostname: hostname,
             type: "default",
-            pathUrl: '/activity/summary',
+            pathUrl: `/activity/summary/${hostname}`,
             icon: 'desktop'
           });
         }
