@@ -9,9 +9,6 @@ div
     br
     | Active time: {{ total_duration | friendlyduration }}
 
-  b-alert(variant="danger" :show="errormsg.length > 0")
-    | {{ errormsg }}
-
   div.d-flex
     div.p-1
       b-button-group
@@ -53,7 +50,7 @@ div
 
 <script>
 import moment from 'moment';
-import time from "../util/time.js";
+import { get_day_period } from "~/util/time.js";
 import _ from 'lodash';
 
 import 'vue-awesome/icons/arrow-left'
@@ -61,7 +58,7 @@ import 'vue-awesome/icons/arrow-right'
 import 'vue-awesome/icons/angle-double-down'
 import 'vue-awesome/icons/sync'
 
-import query from '../queries.js';
+import query from '~/queries.js';
 
 
 export default {
@@ -69,8 +66,6 @@ export default {
   data: () => {
     return {
       today: moment().startOf('day').format("YYYY-MM-DD"),
-
-      errormsg: "",
 
       // Query variables
       total_duration: "",
@@ -92,14 +87,6 @@ export default {
   },
 
   computed: {
-    host: function() { return this.$route.params.host },
-    date: function() {
-      var dateParam = this.$route.params.date;
-      var dateMoment = dateParam ? moment(dateParam) : moment();
-      return dateMoment.startOf('day').format();
-    },
-    dateStart: function() { return this.date },
-    dateEnd: function() { return moment(this.date).add(1, 'days').format() },
     dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
   },
 
@@ -117,22 +104,16 @@ export default {
       this.queryAll();
     },
 
-    errorHandler: function(error) {
-      this.errormsg = "" + error + ". See dev console (F12) and/or server logs for more info.";
-      throw error;
-    },
-
     queryAll: function() {
       this.total_duration = 0;
       this.eventcount = 0;
-      this.errormsg = "";
 
       this.queryApps();
       this.queryDailyActivity();
     },
 
     queryApps: async function() {
-      var periods = [this.dateStart + "/" + this.dateEnd];
+      var periods = [get_day_period(this.date)];
       var q = query.appQuery(this.appBucketId, this.top_apps_count);
       let data = await this.$aw.query(periods, q).catch(this.errorHandler);
       data = data[0];
@@ -143,9 +124,7 @@ export default {
     queryDailyActivity: async function() {
       var timeperiods = [];
       for (var i=-15; i<=15; i++) {
-        var startdate = moment(this.date).add(i, 'days').format();
-        var enddate = moment(this.date).add(i+1, 'days').format();
-        timeperiods.push(startdate + '/' + enddate);
+        timeperiods.push(get_day_period(moment(this.date).add(i, 'days')));
       }
       let dur_per_date = await this.$aw.query(timeperiods, query.dailyActivityQueryAndroid(this.appBucketId)).catch(this.errorHandler);
       // TODO: This is some nasty shit, aw-periodusage should really just accept an array with (timestamp, duration) tuples instead.

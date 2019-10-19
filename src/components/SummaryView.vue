@@ -1,32 +1,21 @@
 <template lang="pug">
-
 div
-  b-alert(variant="danger" :show="errormsg.length > 0")
-    | {{ errormsg }}
   div.row
     aw-summary.col-md-6(:fields="top_apps", :namefunc="top_apps_namefunc", :colorfunc="top_apps_colorfunc")
 
     aw-summary.col-md-6(:fields="top_windowtitles", :namefunc="top_windowtitles_namefunc", :colorfunc="top_windowtitles_colorfunc")
-
 </template>
 
-<style scoped lang="scss">
-</style>
-
 <script>
-import moment from 'moment';
-import time from "../util/time.js";
 import query from '../queries.js';
 
 export default {
   name: "SummaryView",
 
-  props: [ "period" ],
+  props: ["period", "host"],
 
   data: () => {
     return {
-      errormsg: "",
-      top_apps: [],
       limit: 10,
       top_apps: [],
       top_apps_namefunc: (e) => e.data.app,
@@ -38,32 +27,25 @@ export default {
   },
 
   computed: {
-    readableDuration: function() { return time.seconds_to_duration(this.duration) },
-    host: function() { return this.$route.params.host },
     windowBucketId: function() { return "aw-watcher-window_" + this.host },
     afkBucketId:    function() { return "aw-watcher-afk_"    + this.host },
   },
 
   watch: {
-    'period': function() {
-      this.query();
+    'period': async function() {
+      await this.query();
     },
   },
 
-  mounted() {
-    this.query();
+  async mounted() {
+    await this.query();
   },
 
   methods: {
-    errorHandler: function(error) {
-      this.errormsg = "" + error + ". See dev console (F12) and/or server logs for more info.";
-      throw error;
-    },
-
     query: async function() {
       var periods = [this.period];
       var q = query.summaryQuery(this.windowBucketId, this.afkBucketId, this.limit);
-      let data = await this.$aw.query(periods, q).catch(this.errorHandler);
+      let data = await this.$aw.query(periods, q);
       console.log(data);
       data = data[0];
       console.log(data);

@@ -12,10 +12,10 @@ uninstall:
 	rm -r node_modules/
 
 dev:
-	npm run dev
+	npm run serve
 
 test:
-	babel-node test.js
+	npm test
 
 clean:
 	rm -rf node_modules dist
@@ -24,4 +24,4 @@ lint:
 	npx eslint --ext=js,vue src/
 
 aw-client-js:
-	(cd aw-client-js; make build)
+	make --directory=aw-client-js build

@@ -105,12 +105,12 @@ div.sunburst
 
 // TODO: Sunburst requires a hierarchical data format
 
-import sunburst from './sunburst.js';
+import sunburst from './sunburst-clock.js';
 import moment from 'moment';
 import _ from 'lodash';
 
-let aw_sunburst = {
-  name: "aw-sunburst",
+export default {
+  name: "aw-sunburst-clock",
   props: ['date', 'afkBucketId', 'windowBucketId'],
   mounted: function() {
     sunburst.create(this.$el);
@@ -223,6 +223,4 @@ let aw_sunburst = {
     },
   },
 }
-
-export default aw_sunburst;
 </script>

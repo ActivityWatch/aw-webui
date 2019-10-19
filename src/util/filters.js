@@ -2,44 +2,29 @@
 
 import _ from 'lodash';
 import Vue from 'vue';
+import { seconds_to_duration, friendlydate } from './time.js';
 
 import moment from 'moment';
 
-Vue.filter('friendlytime', function (timestamp) {
-  let now = moment();
-  let m = moment.parseZone(timestamp);
-  let sinceNow = moment.duration(m.diff(now));
-  if(-sinceNow.asSeconds() <= 60) {
-    return `${Math.round(-sinceNow.asSeconds())}s ago`;
-  } else if(-sinceNow.asSeconds() <= 60*60*24) {
-    return sinceNow.humanize(true);
-  }
-  return sinceNow.humanize(true);
-  //return timestamp;
+Vue.filter('shortdate', function(timestamp) {
+  return moment(timestamp).format('YYYY-MM-DD');
+});
+
+Vue.filter('friendlytime', function(timestamp) {
+  return friendlydate(timestamp);
 });
 
 Vue.filter('iso8601', function(timestamp) {
   return moment.parseZone(timestamp).format();
 });
 
-Vue.filter('friendlyduration', function (seconds) {
-  if(seconds <= 0) {
-    console.log(seconds)
-    return "0s";
-  }
-  let d = moment.duration(Number.parseFloat(seconds)*1000);
-  let s = [Math.floor(d.asHours()) + "h", d.minutes() + "m", d.seconds() + "s"].join(" ");
-  s = s.replace(/(0h| 0[ms])/g, "");
-  s = s.replace(/ +/g, " ").trim();
-  if(s === "") {
-    s = "<1s";
-  }
-  return s;
+Vue.filter('friendlyduration', function(seconds) {
+  return seconds_to_duration(seconds);
 });
 
 // Apparently this is how we should do filters now
 // https://github.com/vuejs/vue/issues/2756#issuecomment-215508316
 Vue.prototype.filters = {
-//  filterBy: ...,
-  orderBy: _.orderBy
-}
+  //  filterBy: ...,
+  orderBy: _.orderBy,
+};

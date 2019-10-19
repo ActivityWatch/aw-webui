@@ -1,20 +1,33 @@
 {
-  "plugins": ["vue", "jest"],
+  "plugins": ["prettier", "vue", "jest", "@typescript-eslint"],
   "extends": [
-    "eslint:recommended",
+    "prettier",
     "plugin:vue/essential",
-    "plugin:jest/recommended"
+    "eslint:recommended",
+    "plugin:vue/recommended",
+    "@vue/typescript",
+    "plugin:jest/recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/eslint-recommended"
   ],
   "rules": {
+    "prettier/prettier": "off",
+    "vue/require-default-prop": "off",
+    "@typescript-eslint/camelcase": ["off"],
+    "@typescript-eslint/explicit-function-return-type": ["off"],
+    "@typescript-eslint/no-var-requires": ["off"],
     "no-shadow": [
       "error",
       {
         "builtinGlobals": true,
-        "allow": ["name", "Promise", "event"]
+        "allow": ["name", "Promise", "event", "parent"]
       }
     ],
-    "no-console": ["off"]
+    "no-console": ["off"],
+    "prefer-const": "warn",
+    "no-var": "warn"
   },
+  "parser": "vue-eslint-parser",
   "parserOptions": {
     "ecmaVersion": 2017,
     "sourceType": "module"
@@ -24,5 +37,25 @@
   },
   "globals": {
     "PRODUCTION": false
-  }
+  },
+  "overrides": [
+    {
+      "files": [".*\\.vue$"],
+      "parserOptions": {
+          "parser": "vue-eslint-parser"
+      }
+    },
+    {
+      "files": [".*\\.js$"],
+      "parserOptions": {
+          "parser": "babel-eslint"
+      }
+    },
+    {
+      "files": [".*\\.ts$"],
+      "parserOptions": {
+          "parser": "@typescript-eslint/parser"
+      }
+    }
+  ]
 }

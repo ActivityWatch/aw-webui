@@ -1,5 +1,9 @@
 <template lang="pug">
-div.aw-summary-container
+div
+  div.aw-summary-container
+  b-button.mt-1(v-if="fields && fields.length > 0 && with_limit", size="sm", variant="outline-secondary", :disabled="fields.length < limit_", @click="limit_ += 5")
+    icon(name="angle-double-down")
+    | Show more
 </template>
 
 <style scoped lang="scss">
@@ -17,15 +21,44 @@ import summary from './summary.js';
 
 export default {
   name: "aw-summary",
-  props: ['fields', 'namefunc', 'colorfunc'],
+  props: {
+    fields: Array,
+    namefunc: Function,
+    colorfunc: Function,
+    limit: {
+      type: Number,
+      default: 5,
+    },
+    with_limit: {
+      type: Boolean,
+      default: false,
+    }
+  },
+  data: function() {
+    return { limit_: this.limit }
+  },
   mounted: function() {
-    summary.create(this.$el);
-    summary.set_status(this.$el, "Loading...");
+    let el = this.$el.children[0];
+    summary.create(el);
+    this.update();
   },
   watch: {
-    "fields": function() {
-      summary.updateSummedEvents(this.$el, this.fields, this.namefunc, this.colorfunc)
-    }
-  }
+    fields: function() {
+      this.update();
+    },
+    limit_: function() {
+      this.update();
+    },
+  },
+  methods: {
+    update: function() {
+      let el = this.$el.children[0];
+      if(this.fields !== null) {
+        summary.updateSummedEvents(el, this.fields.slice(0, this.limit_), this.namefunc, this.colorfunc)
+      } else {
+        summary.set_status(el, "Loading...");
+      }
+    },
+  },
 }
 </script>

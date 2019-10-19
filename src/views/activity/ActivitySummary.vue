@@ -3,12 +3,9 @@ div
   h3 Summary for {{ periodReadable }}
   | {{ periodStartShort }} - {{ periodEndShort }}
   br
-  | Active time: {{ readableDuration }}
+  | Active time: {{ duration | friendlyduration }}
 
-  b-alert(variant="danger" :show="errormsg.length > 0")
-    | {{ errormsg }}
-
-  aw-periodusage(:periodusage_arr="period_activity", :link_prefix="link_prefix" :dateformat="dateformat")
+  aw-periodusage(:periodusage_arr="period_activity", :link_prefix="link_prefix")
 
   ul.nav.nav-tabs.my-3
     li.nav-item.aw-nav-item
@@ -21,7 +18,7 @@ div
       a.nav-link.aw-nav-link(@click="periodLength = 'year'" :class="{ active: periodLength == 'year' }")
         h5 Yearly
 
-  aw-summaryview(:period="period")
+  aw-summaryview(:period="period", :host="host")
 
 </template>
 
@@ -47,15 +44,13 @@ div
 
 <script>
 import moment from 'moment';
-import time from "../util/time.js";
-import query from '../queries.js';
+import query from '~/queries.js';
 
 export default {
   name: "ActivitySummary",
-
+  props: ['date', 'host'],
   data: () => {
     return {
-      errormsg: "",
       duration: 0,
       periodLength: "week",
       period_activity: [],
@@ -69,13 +64,6 @@ export default {
         else if (this.periodLength == "year") { return "YYYY"; }
     },
     periodReadable: function() { return moment(this.periodStart).format(this.dateformat); },
-    readableDuration: function() { return time.seconds_to_duration(this.duration) },
-    host: function() { return this.$route.params.host },
-    date: function() {
-      var dateParam = this.$route.params.date;
-      var dateMoment = dateParam ? moment(dateParam) : moment();
-      return dateMoment.format();
-    },
     periodStart: function() { return moment(this.date).startOf(this.periodLength).format(); },
     periodEnd: function() { return moment(this.periodStart).add(1, this.periodLength).format(); },
     period: function() { return this.periodStart + "/" + this.periodEnd },
@@ -88,7 +76,6 @@ export default {
 
   watch: {
     '$route': function() {
-      console.log("Route changed");
       this.refresh();
     },
     'periodLength': function() {
@@ -103,11 +90,6 @@ export default {
   methods: {
     setDate: function(date) { this.$router.push(this.link_prefix+'/'+date); },
 
-    errorHandler: function(error) {
-      this.errormsg = "" + error + ". See dev console (F12) and/or server logs for more info.";
-      throw error;
-    },
-
     refresh: function() {
       this.queryPeriodActivity();
     },
@@ -119,7 +101,7 @@ export default {
         var end = moment(start).add(1, this.periodLength).format();
         timeperiods.push(start + '/' + end);
       }
-      this.period_activity = await this.$aw.query(timeperiods, query.dailyActivityQuery(this.afkBucketId)).catch(this.errorHandler);
+      this.period_activity = await this.$aw.query(timeperiods, query.dailyActivityQuery(this.afkBucketId));
       if (this.period_activity[8].length > 0) {
         this.duration = this.period_activity[8][0].duration;
       } else {
