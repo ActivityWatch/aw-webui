@@ -12,7 +12,7 @@ div.aw-navbar
     b-collapse#nav-collapse(is-nav)
       b-navbar-nav
         // If only a single view (the default) is available
-        b-nav-item(v-if="activityViewsDaily.length === 1", v-for="view in activityViewsDaily", :key="view.name", :to="view.pathUrl + '/' + view.hostname + '/summary'")
+        b-nav-item(v-if="activityViewsDaily.length === 1", v-for="view in activityViewsDaily", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
           div.px-2.px-lg-1
             icon(name="calendar-day")
             | Today
@@ -27,7 +27,7 @@ div.aw-navbar
             | No activity reports available
             br
             small Make sure you have both an AFK and window watcher running
-          b-dropdown-item(v-for="view in activityViewsDaily", :key="view.name", :to="view.pathUrl + '/' + view.hostname + '/summary'")
+          b-dropdown-item(v-for="view in activityViewsDaily", :key="view.name", :to="view.pathUrl + '/' + view.hostname")
             icon(:name="view.icon")
             | {{ view.name }}
 

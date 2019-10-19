@@ -24,11 +24,10 @@ div
       div(v-if="top_categories")
         aw-categorytree(:events="top_categories")
 
-  div.row.mb-4
-    div.col-md-6
+    div.col-md-4
       h5 Category Sunburst
       div(v-if="top_categories")
-        aw-sunburst-categories(:data="top_categories_hierarchy", style="height: 30em")
+        aw-sunburst-categories(:data="top_categories_hierarchy", style="height: 20em")
 
 </template>
 
