@@ -30,41 +30,51 @@ div
 
   aw-periodusage(:periodusage_arr="$store.state.activity_daily.active_history", :link_prefix="link_prefix")
 
-  ul.nav.nav-tabs.my-3
-    li.nav-item.aw-nav-item
-      router-link.nav-link.aw-nav-link(:to="{ name: 'activity-daily-summary', params: subroute_params }" :class="{ active: $route.path.includes('summary') }")
+  ul.row.nav.nav-tabs.my-3.px-3
+    li.nav-item
+      router-link.nav-link(:to="{ name: 'activity-daily-summary', params: subroute_params }")
         h5 Summary
-    li.nav-item.aw-nav-item
-      router-link.nav-link.aw-nav-link(:to="{ name: 'activity-daily-window', params: subroute_params }" :class="{ active: $route.path.includes('window') }")
+    li.nav-item
+      router-link.nav-link(:to="{ name: 'activity-daily-window', params: subroute_params }")
         h5 Window
-    li.nav-item.aw-nav-item
-      router-link.nav-link.aw-nav-link(:to="{ name: 'activity-daily-browser', params: subroute_params }" :class="{ active: $route.path.includes('browser') }")
-        h5.active-h5 Browser
-    li.nav-item.aw-nav-item
-      router-link.nav-link.aw-nav-link(:to="{ name: 'activity-daily-editor', params: subroute_params }" :class="{ active: $route.path.includes('editor') }")
+    li.nav-item
+      router-link.nav-link(:to="{ name: 'activity-daily-browser', params: subroute_params }")
+        h5 Browser
+    li.nav-item
+      router-link.nav-link(:to="{ name: 'activity-daily-editor', params: subroute_params }")
         h5 Editor
 
   div
     router-view
 </template>
 
-<style lang="scss">
-.aw-nav-link {
-  background-color: #eee;
-  border: 2px solid #eee !important;
-  border-bottom: none !important;
-  margin-left: 0.1em;
-  margin-right: 0.1em;
-  border-top-left-radius: 0.5rem !important;
-  border-top-right-radius: 0.5rem !important;
-}
+<style lang="scss" scoped>
+.nav {
+  border-bottom: 2px solid #eee;
 
-.aw-nav-link:hover {
-  background-color: #fff;
-}
+  .nav-item {
+    margin-bottom: -2px;
 
-.aw-nav-item:hover {
-  background-color: #fff !important;
+    .nav-link {
+      background-color: #eee;
+      border: 2px solid #eee;
+      border-bottom: none;
+      margin: 0 0.2em 0 0.2em;
+      border-radius: 0.5rem 0.5rem 0 0;
+
+      &:hover {
+        background-color: #f8f8f8;
+      }
+
+      &.router-link-exact-active {
+        background-color: #fff;
+
+        &:hover {
+          background-color: #fff;
+        }
+      }
+    }
+  }
 }
 </style>
 

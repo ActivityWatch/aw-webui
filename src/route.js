@@ -33,11 +33,6 @@ var router = new VueRouter({
       props: true,
       children: [
         {
-          path: 'summary',
-          name: 'activity-daily-summary',
-          component: ActivityDailySummary,
-        },
-        {
           path: 'window',
           name: 'activity-daily-window',
           component: ActivityDailyWindow,
@@ -52,6 +47,12 @@ var router = new VueRouter({
           path: 'editor',
           name: 'activity-daily-editor',
           component: ActivityDailyEditor,
+        },
+        // Default view is the summary view (needs to be last since otherwise it'll always match first)
+        {
+          path: '',
+          name: 'activity-daily-summary',
+          component: ActivityDailySummary,
         },
       ],
     },
