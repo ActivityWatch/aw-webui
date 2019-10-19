@@ -1,6 +1,5 @@
 const path = require('path');
 const webpack = require('webpack');
-const webpack_base_conf = require('./build/webpack.base.conf.js');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
@@ -11,7 +10,14 @@ module.exports = {
     },
   },
   configureWebpack: {
-    resolve: { alias: webpack_base_conf.resolve.alias },
+    resolve: {
+      alias: {
+        '~': path.resolve(__dirname, './src'),
+        src: path.resolve(__dirname, './src'),
+        assets: path.resolve(__dirname, './src/assets'),
+        components: path.resolve(__dirname, './src/components'),
+      },
+    },
     plugins: [
       new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
       new webpack.DefinePlugin({
