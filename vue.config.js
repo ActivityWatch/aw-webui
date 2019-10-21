@@ -34,6 +34,7 @@ module.exports = {
   pluginOptions: {
     webpackBundleAnalyzer: {
       openAnalyzer: false,
+      analyzerPort: 11000,
     },
   },
 };
