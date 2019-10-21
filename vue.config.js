@@ -24,12 +24,14 @@ module.exports = {
         PRODUCTION: process.env.NODE_ENV === 'production',
       }),
       new CopyWebpackPlugin([{ from: 'static/', to: 'static' }]),
+      new CopyWebpackPlugin([{ from: 'static/manifest.json', to: 'manifest.json' }]),
     ],
   },
   devServer: {
     contentBase: path.join(__dirname, 'dist'),
     compress: true,
     port: 27180,
+    headers: { 'Access-Control-Allow-Origin': '*' },
   },
   pluginOptions: {
     webpackBundleAnalyzer: {
