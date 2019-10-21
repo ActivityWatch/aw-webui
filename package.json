@@ -14,7 +14,9 @@
     "lint": "vue-cli-service lint",
     "lint_old": "eslint --ignore-path=.gitignore --ext .vue,.js,.ts ."
   },
-  "eslintIgnore": ["aw-client-js/**"],
+  "eslintIgnore": [
+    "aw-client-js/**"
+  ],
   "devDependencies": {
     "@babel/cli": "^7.2.3",
     "@babel/core": "^7.3.3",
@@ -105,6 +107,7 @@
     "typeface-varela-round": "0.0.54",
     "vue-awesome": "^3.5.1",
     "vue-d3-sunburst": "^1.0.0",
-    "vuex": "^3.1.1"
+    "vuex": "^3.1.1",
+    "zstd-codec": "^0.1.1"
   }
 }

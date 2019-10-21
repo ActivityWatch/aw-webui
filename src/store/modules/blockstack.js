@@ -1,26 +1,66 @@
 import * as blockstack from 'blockstack';
+import { ZstdCodec } from 'zstd-codec';
+
+const enc = new TextEncoder();
+const dec = new TextDecoder();
+
+async function compress(data) {
+  console.log('compress arg:', data);
+  return new Promise((resolve, reject) => {
+    ZstdCodec.run(zstd => {
+      const simple = new zstd.Simple();
+      data = enc.encode(data);
+      const compressed = simple.compress(data);
+      const compression_ratio = compressed.byteLength / data.byteLength;
+      console.log(
+        `compressed ${data.byteLength} into ${compressed.byteLength} (${compression_ratio})`
+      );
+      resolve(simple.compress(data));
+    });
+  });
+}
+
+async function decompress(data) {
+  return new Promise((resolve, reject) => {
+    ZstdCodec.run(zstd => {
+      const simple = new zstd.Simple();
+      resolve(dec.decode(simple.decompress(data)));
+    });
+  });
+}
 
 const _state = {
   signedIn: false,
-  profile: null,
+  userData: null,
 };
 
-const getters = {};
+const getters = {
+  profile: function(state) {
+    if (state.userData !== null) {
+      const person = new blockstack.Person(state.userData.profile);
+      return {
+        name: person.name(),
+        avatarUrl: person.avatarUrl(),
+      };
+    } else {
+      return null;
+    }
+  },
+};
 
 const actions = {
   loadSession: async function({ commit }, options) {
-    console.log('load session');
     const session = new blockstack.UserSession();
-    console.log(options);
+    let userData = null;
     if (session.isUserSignedIn()) {
-      console.log('signed in');
-      const userData = blockstack.loadUserData();
-      commit('signedIn', userData.profile);
+      userData = session.loadUserData();
     } else if (options && options.authResponse) {
-      console.log('authresponse');
-      const userData = await session.handlePendingSignIn(options.authResponse);
-      commit('signedIn', userData.profile);
+      userData = await session.handlePendingSignIn(options.authResponse);
     }
+    if (userData !== null) {
+      commit('signedIn', userData);
+    }
+    return userData;
   },
   signin: function() {
     const session = new blockstack.UserSession();
@@ -42,16 +82,27 @@ const actions = {
   signout: function() {
     blockstack.signUserOut(window.location.origin);
   },
+  listFiles: function({ state }) {
+    blockstack.listFiles(f => {
+      console.log(f);
+      return true;
+    });
+  },
+  putFile: async function({ state }, { filename, data }) {
+    data = await compress(data);
+    console.log('compressed: ', data);
+    await blockstack.putFile(filename, data);
+  },
+  getFile: async function({ state }, filename) {
+    const data = await blockstack.getFile(filename);
+    return await decompress(data);
+  },
 };
 
 const mutations = {
-  signedIn(state, profile) {
-    const person = new blockstack.Person(profile);
+  signedIn(state, userData) {
     state.signedIn = true;
-    state.profile = {
-      name: person.name(),
-      avatarUrl: person.avatarUrl(),
-    };
+    state.userData = userData;
   },
 };
 
