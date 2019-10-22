@@ -28,7 +28,7 @@ div
           span.d-none.d-md-inline
             |  Refresh
 
-  aw-periodusage(:periodusage_arr="$store.state.activity_daily.active_history", :link_prefix="link_prefix")
+  aw-periodusage(:periodusage_arr="periodusage", :link_prefix="link_prefix")
 
   ul.row.nav.nav-tabs.my-3.px-3
     li.nav-item
@@ -108,6 +108,9 @@ export default {
 
   computed: {
     link_prefix: function() { return "/activity/daily/"   + this.host },
+    periodusage: function() {
+      return this.$store.getters['activity_daily/getActiveHistoryAroundDate'](this.date);
+    },
   },
   watch: {
     date: function() {

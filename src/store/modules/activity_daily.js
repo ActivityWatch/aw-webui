@@ -15,7 +15,7 @@ const _state = {
   app_chunks: [],
   web_chunks: [],
   active_duration: 0,
-  active_history: [],
+  active_history: {},
   query_options: {
     browser_buckets: 'all',
   },
@@ -23,7 +23,21 @@ const _state = {
 };
 
 // getters
-const getters = {};
+const getters = {
+  getActiveHistoryAroundDate: state => date => {
+    const _history = [];
+    for (let i = -15; i <= 15; i++) {
+      const tp = get_day_period(moment(date).add(i, 'days'));
+      if (_.has(state.active_history, tp)) {
+        _history.push(state.active_history[tp]);
+      } else {
+        // Push a zero-duration placeholder until new data has been fetched
+        _history.push([{ timestamp: moment(tp.split('/')[0]).format(), duration: 0, data: {} }]);
+      }
+    }
+    return _history;
+  },
+};
 
 // actions
 const actions = {
@@ -82,18 +96,21 @@ const actions = {
     }
   },
 
-  async query_active_history({ commit }, { host, date }) {
-    // TODO: Avoid re-querying already fetched dates
+  async query_active_history({ commit, state }, { host, date }) {
     const start = moment();
     const timeperiods = [];
     for (let i = -15; i <= 15; i++) {
-      timeperiods.push(get_day_period(moment(date).add(i, 'days')));
+      const tp = get_day_period(moment(date).add(i, 'days'));
+      if (!_.includes(state.active_history, tp)) timeperiods.push(tp);
     }
     const bucket_id_afk = 'aw-watcher-afk_' + host;
-    let data = await this._vm.$aw.query(timeperiods, queries.dailyActivityQuery(bucket_id_afk));
-    data = _.map(data, pair => _.filter(pair, e => e.data.status == 'not-afk'));
+    const data = await this._vm.$aw.query(timeperiods, queries.dailyActivityQuery(bucket_id_afk));
+    const active_history = _.zipObject(
+      timeperiods,
+      _.map(data, pair => _.filter(pair, e => e.data.status == 'not-afk'))
+    );
     console.info(`Completed history query in ${moment() - start}ms`);
-    commit('query_active_history_completed', data);
+    commit('query_active_history_completed', { active_history });
   },
 
   async get_browser_buckets({ commit }) {
@@ -140,8 +157,11 @@ const mutations = {
     state.web_chunks = data['chunks'];
   },
 
-  query_active_history_completed(state, data) {
-    state.active_history = data;
+  query_active_history_completed(state, { active_history }) {
+    state.active_history = {
+      ...state.active_history,
+      ...active_history,
+    };
   },
 
   browser_buckets(state, data) {
