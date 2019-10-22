@@ -29,7 +29,6 @@ const router = new VueRouter({
     {
       path: '/activity/daily/:host/:date?',
       component: ActivityDaily,
-      name: 'activity-daily',
       props: true,
       children: [
         {

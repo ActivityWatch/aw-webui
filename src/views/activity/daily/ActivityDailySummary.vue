@@ -55,13 +55,12 @@ export default {
     browser_buckets: function() { return this.$store.state.activity_daily.browser_buckets },
     top_categories_hierarchy: function() {
       if(this.top_categories) {
-        console.log(this.top_categories);
         const categories = this.top_categories.map(c => { return { name: c.data.$category, size: c.duration }; });
-        console.log(categories);
 
         return {
           name: "All",
-          children: build_category_hierarchy(categories).map(c => pick_subname_as_name(c))};
+          children: build_category_hierarchy(categories).map(c => pick_subname_as_name(c))
+        };
       } else {
         return null;
       }
