@@ -102,7 +102,7 @@ export default {
     },
   },
   mounted: async function() {
-    await this.$store.dispatch("buckets/loadBuckets");
+    await this.$store.dispatch("buckets/ensureBuckets");
   },
   methods: {
     deleteBucket: async function(bucketId) {

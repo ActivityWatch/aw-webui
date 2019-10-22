@@ -1,24 +1,53 @@
 // initial state
-const _state = {
+const state = {
   buckets: [],
 };
 
 // getters
 const getters = {
-  async browserBuckets(state) {
+  browserBuckets(state) {
     return _.map(
       _.filter(state.buckets, bucket => bucket['type'] === 'web.tab.current'),
       bucket => bucket['id']
     );
   },
+  getBucket: state => id => _.filter(state.buckets, b => b.id === id)[0],
 };
 
 // actions
 const actions = {
+  async ensureBuckets({ state, dispatch }) {
+    if (state.buckets.length === 0) {
+      await dispatch('loadBuckets');
+    }
+  },
+
   async loadBuckets({ commit }) {
     const buckets = await this._vm.$aw.getBuckets();
-    console.info(`Received buckets ${buckets}`);
+    console.info('Received buckets: ', buckets);
     commit('update_buckets', buckets);
+  },
+
+  async getBucketWithEvents({ getters, dispatch }, { id, start, end }) {
+    await dispatch('ensureBuckets');
+    const bucket = getters.getBucket(id);
+    bucket.events = await this._vm.$aw.getEvents(bucket.id, {
+      start,
+      end,
+      limit: -1,
+    });
+    return bucket;
+  },
+
+  async getBucketsWithEvents({ state, dispatch }, { start, end }) {
+    await dispatch('ensureBuckets');
+    const buckets = await Promise.all(
+      _.map(
+        state.buckets,
+        async bucket => await dispatch('getBucketWithEvents', { id: bucket.id, start, end })
+      )
+    );
+    return _.orderBy(buckets, [b => b.id], ['asc']);
   },
 
   async deleteBucket({ dispatch }, { bucketId }) {
@@ -37,7 +66,7 @@ const mutations = {
 
 export default {
   namespaced: true,
-  state: _state,
+  state: state,
   getters,
   actions,
   mutations,

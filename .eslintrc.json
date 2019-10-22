@@ -22,7 +22,7 @@
       "error",
       {
         "builtinGlobals": true,
-        "allow": ["name", "Promise", "event", "parent"]
+        "allow": ["name", "Promise", "event", "parent", "state", "getters"]
       }
     ],
     "no-console": ["off"],

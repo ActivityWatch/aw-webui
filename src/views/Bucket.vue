@@ -1,7 +1,7 @@
 <template lang="pug">
 
 div
-  h3 {{ bucket.id }}
+  h3 {{ id }}
   table
     tr
       td Type:
@@ -21,62 +21,49 @@ div
 
   input-timeinterval(v-model="daterange")
 
-  vis-timeline(:buckets="buckets", showRowLabels='false')
+  vis-timeline(:buckets="[bucket_with_events]", showRowLabels='false')
 
-  aw-eventlist(:events="events")
-
+  aw-eventlist(:events="bucket_with_events.events")
 </template>
-
-<style scoped lang="scss">
-
-</style>
 
 <script>
 import moment from 'moment'
 
 export default {
   name: "Bucket",
+  props: {
+    id: String,
+  },
   data: () => {
     return {
-      id: String,
-      bucket: Object,
-      events: [],
+      bucket_with_events: { events: [] },
       eventcount: "?",
       daterange: [moment().subtract(1, "hour"), moment()],
     }
   },
   computed: {
-    buckets() {
-      const bucket = this.bucket;
-      bucket.events = this.events;
-      return [bucket];
-    }
+    bucket() {
+      return this.$store.getters['buckets/getBucket'](this.id) || {};
+    },
   },
   watch: {
     daterange: function() {
       this.getEvents(this.id);
     }
   },
-  mounted: function() {
-    this.id = this.$route.params.id;
-    this.getBucketInfo(this.id);
-    this.getEvents(this.id);
-    this.getEventCount(this.id);
+  mounted: async function() {
+    await this.$store.dispatch('buckets/ensureBuckets');
+    await this.getEvents(this.id);
+    await this.getEventCount(this.id);
   },
   methods: {
-    getBucketInfo: async function(bucket_id) {
-      this.bucket = await this.$aw.getBucketInfo(bucket_id);
-    },
-
     getEvents: async function(bucket_id) {
-      console.log(this.daterange);
-      this.events = await this.$aw.getEvents(bucket_id, {
+      this.bucket_with_events = await this.$store.dispatch('buckets/getBucketWithEvents', {
+        id: bucket_id,
         start: this.daterange[0].format(),
         end: this.daterange[1].format(),
-        limit: -1
       });
     },
-
     getEventCount: async function(bucket_id) {
       this.eventcount = (await this.$aw.countEvents(bucket_id)).data;
     },
