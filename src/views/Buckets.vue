@@ -7,7 +7,6 @@ div
     br
     small #[b Note:] This is currently not as easy as we want it to be, so some familiarity with programming is currently needed to run most of them.
 
-  //b-card-group(columns=true)
   b-card.bucket-card(v-for="bucket in buckets", :key="bucket.id", :header="bucket.id")
     b-button-toolbar.float-left
       b-button-group(size="sm", class="mx-1")
@@ -97,28 +96,18 @@ import _ from 'lodash';
 
 export default {
   name: "Buckets",
-  data: () => {
-    return {
-      buckets: [],
-    }
+  computed: {
+    buckets: function() {
+      return _.orderBy(this.$store.state.buckets.buckets, [(b) => b.id], ["asc"]);
+    },
   },
-  mounted: function() {
-    this.getBuckets();
+  mounted: async function() {
+    await this.$store.dispatch("buckets/loadBuckets");
   },
   methods: {
-    getBuckets: async function() {
-      this.buckets = _.orderBy(await this.$aw.getBuckets(), [(b) => b.id], ["asc"]);
-    },
-
-    getBucketInfo: async function(bucket_id) {
-      this.buckets[bucket_id] = await this.$aw.getBucket(bucket_id);
-    },
-
-    deleteBucket: async function(bucket_id) {
-      console.log("Deleting bucket " + bucket_id);
-      await this.$aw.deleteBucket(bucket_id);
-      await this.getBuckets();
-      this.$root.$emit('bv::hide::modal','delete-modal-' + bucket_id)
+    deleteBucket: async function(bucketId) {
+      await this.$store.dispatch("buckets/deleteBucket", { bucketId });
+      this.$root.$emit('bv::hide::modal','delete-modal-' + bucketId)
     }
   }
 }
