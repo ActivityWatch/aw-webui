@@ -4,47 +4,47 @@ div
 
   b-alert(show)
     | Are you looking to collect more data? Check out #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") the docs] for more watchers.
+
+  b-table(hover, small, :items="buckets", :fields="fields", responsive="md", sort-by="last_updated", :sort-desc="true")
+    template(v-slot:cell(id)="data")
+      small
+        | {{ data.item.id }}
+    template(v-slot:cell(hostname)="data")
+      small
+        | {{ data.item.hostname }}
+    template(v-slot:cell(last_updated)="data")
+      small(v-if="data.item.last_updated")
+        | {{ data.item.last_updated | friendlytime }}
+    template(v-slot:cell(actions)="data")
+      b-button-toolbar.float-right
+        b-button-group(size="sm", class="mx-1")
+          b-button(variant="primary", :to="'/buckets/' + data.item.id")
+            icon(name="folder-open").d-none.d-md-inline-block
+            | Open
+          b-dropdown(variant="outline-secondary", size="sm", text="More")
+            b-dropdown-item-button(:href="$aw.baseURL + '/api/0/buckets/' + data.item.id + '/export'",
+                       :download="'aw-bucket-export-' + data.item.id + '.json'",
+                       title="Export bucket to JSON",
+                       variant="secondary")
+                icon(name="download")
+                | Export as JSON
+            b-dropdown-divider
+            b-dropdown-item-button(@click="openDeleteBucketModal(data.item.id)",
+                     title="Delete this bucket permanently",
+                     variant="danger")
+              | #[icon(name="trash")] Delete bucket
+
+  b-modal(id="delete-modal", title="Danger!", centered, hide-footer)
+    | Are you sure you want to delete bucket "{{delete_bucket_selected}}"?
     br
-    small #[b Note:] This is currently not as easy as we want it to be, so some familiarity with programming is currently needed to run most of them.
-
-  //b-card-group(columns=true)
-  b-card.bucket-card(v-for="bucket in buckets", :key="bucket.id", :header="bucket.id")
-    b-button-toolbar.float-left
-      b-button-group(size="sm", class="mx-1")
-        b-button(variant="primary", :to="'/buckets/' + bucket.id")
-          icon(name="folder-open")
-          | Open bucket
-      b-button-group(size="sm", class="mx-1")
-        b-button(:href="$aw.baseURL + '/api/0/buckets/' + bucket.id + '/export'",
-                 :download="'aw-bucket-export-' + bucket.id + '.json'",
-                 title="Export bucket to JSON",
-                 variant="outline-secondary")
-          icon(name="download")
-          | Export as JSON
-    b-button-toolbar.float-right
-      b-button-group(size="sm", class="mx-1")
-        b-button(v-b-modal="'delete-modal-' + bucket.id",
-                 title="Delete this bucket permanently",
-                 variant="outline-danger")
-          | #[icon(name="trash")] Delete bucket
-    small.bucket-last-updated(v-if="bucket.last_updated", slot="footer")
-      span
-        | Last updated:
-      span(style="width: 8em; margin-left: 0.5em; display: inline-block")
-        | {{ bucket.last_updated | friendlytime }}
-
-    b-modal(:id="'delete-modal-' + bucket.id", title="Danger!", centered, hide-footer)
-      | Are you sure you want to delete bucket "{{bucket.id}}"?
-      br
-      br
-      b This is permanent and cannot be undone!
-      hr
-      div.float-right
-        b-button.mx-2(@click="$root.$emit('bv::hide::modal','delete-modal-' + bucket.id)")
-          | Cancel
-        b-button(@click="deleteBucket(bucket.id)", variant="danger")
-          | Confirm
-  br
+    br
+    b This is permanent and cannot be undone!
+    hr
+    div.float-right
+      b-button.mx-2(@click="$root.$emit('bv::hide::modal','delete-modal')")
+        | Cancel
+      b-button(@click="deleteBucket(delete_bucket_selected)", variant="danger")
+        | Confirm
 
   h3 Import and export buckets
 
@@ -97,28 +97,33 @@ import _ from 'lodash';
 
 export default {
   name: "Buckets",
-  data: () => {
+  data() {
     return {
-      buckets: [],
+      delete_bucket_selected: null,
+      fields: [
+        { key: 'id', label: 'Bucket ID', sortable: true },
+        { key: 'hostname', sortable: true },
+        { key: 'last_updated', label: 'Updated', sortable: true },
+        { key: 'actions', label: '' },
+      ],
     }
   },
-  mounted: function() {
-    this.getBuckets();
+  computed: {
+    buckets: function() {
+      return _.orderBy(this.$store.state.buckets.buckets, [(b) => b.id], ["asc"]);
+    },
+  },
+  mounted: async function() {
+    await this.$store.dispatch("buckets/ensureBuckets");
   },
   methods: {
-    getBuckets: async function() {
-      this.buckets = _.orderBy(await this.$aw.getBuckets(), [(b) => b.id], ["asc"]);
+    openDeleteBucketModal: function(bucketId) {
+      this.delete_bucket_selected = bucketId;
+      this.$root.$emit('bv::show::modal','delete-modal')
     },
-
-    getBucketInfo: async function(bucket_id) {
-      this.buckets[bucket_id] = await this.$aw.getBucket(bucket_id);
-    },
-
-    deleteBucket: async function(bucket_id) {
-      console.log("Deleting bucket " + bucket_id);
-      await this.$aw.deleteBucket(bucket_id);
-      await this.getBuckets();
-      this.$root.$emit('bv::hide::modal','delete-modal-' + bucket_id)
+    deleteBucket: async function(bucketId) {
+      await this.$store.dispatch("buckets/deleteBucket", { bucketId });
+      this.$root.$emit('bv::hide::modal','delete-modal')
     }
   }
 }

@@ -59,7 +59,7 @@ const router = new VueRouter({
     { path: '/activity/summary/:host/:date?', component: ActivitySummary, props: true },
     { path: '/activity/android/:host/:date?', component: ActivityAndroid, props: true },
     { path: '/buckets', component: Buckets },
-    { path: '/buckets/:id', component: Bucket },
+    { path: '/buckets/:id', component: Bucket, props: true },
     { path: '/timeline', component: Timeline },
     { path: '/query', component: QueryExplorer },
     { path: '/log', component: Log },
