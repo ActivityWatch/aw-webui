@@ -14,9 +14,6 @@
     "lint": "vue-cli-service lint",
     "lint_old": "eslint --ignore-path=.gitignore --ext .vue,.js,.ts ."
   },
-  "eslintIgnore": [
-    "aw-client-js/**"
-  ],
   "devDependencies": {
     "@babel/cli": "^7.2.3",
     "@babel/core": "^7.3.3",
