@@ -10,7 +10,13 @@
     "sourceMap": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+        "~/*": [
+            "src/*"
+        ]
+    },
   },
   "exclude": ["aw-client-js/**/*.ts", "node_modules"]
 }

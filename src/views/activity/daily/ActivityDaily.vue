@@ -13,12 +13,14 @@ div
         b-button(:to="link_prefix + '/' + previousDay()", variant="outline-dark")
           icon(name="arrow-left")
           span.d-none.d-md-inline
-            |  Previous day
+            |  Previous
         b-button(:to="link_prefix + '/' + nextDay()", :disabled="nextDay() > today", variant="outline-dark")
           span.d-none.d-md-inline
-            |  Next day
+            |  Next
           icon(name="arrow-right")
     div.p-1
+      b-select(v-model="periodLength", :options="['day', 'week', 'month']")
+    div.p-1(v-if="periodLength === 'day'")
       input.form-control(id="date" type="date" :value="date" :max="today" @change="setDate($event.target.value)")
 
     div.p-1.ml-auto
@@ -80,7 +82,7 @@ div
 
 <script>
 import moment from 'moment';
-import { get_day_period } from "~/util/time.js";
+import { get_day_start_with_offset } from '~/util/time';
 
 import 'vue-awesome/icons/arrow-left'
 import 'vue-awesome/icons/arrow-right'
@@ -92,6 +94,7 @@ export default {
   name: "Activity",
   props: {
     host: String,
+    // TODO: Add ability to set timeperiod instead
     date: {
       type: String,
       default: get_today(),
@@ -100,17 +103,21 @@ export default {
   data: function() {
     return {
       today: get_today(),
-    }
+      periodLength: 'day',
+    };
   },
 
   computed: {
     link_prefix: function() { return "/activity/daily/"   + this.host },
     periodusage: function() {
-      return this.$store.getters['activity_daily/getActiveHistoryAroundDate'](this.date);
+      return this.$store.getters['activity_daily/getActiveHistoryAroundTimeperiod'](this.timeperiod);
+    },
+    timeperiod: function() {
+      return { start: get_day_start_with_offset(this.date), length: [1, this.periodLength] };
     },
   },
   watch: {
-    date: function() {
+    timeperiod: function() {
       this.refresh();
     },
   },
@@ -125,7 +132,7 @@ export default {
     setDate: function(date) { this.$router.push('/activity/daily/' + this.host + '/' + date); },
 
     refresh: async function(force) {
-      await this.$store.dispatch("activity_daily/ensure_loaded", { date: this.date, host: this.host, force: force, filterAFK: true });
+      await this.$store.dispatch("activity_daily/ensure_loaded", { timeperiod: this.timeperiod, host: this.host, force: force, filterAFK: true });
     },
   },
 }
