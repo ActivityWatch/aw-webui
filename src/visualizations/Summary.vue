@@ -1,7 +1,7 @@
 <template lang="pug">
 div
   div.aw-summary-container
-  b-button.mt-1(v-if="fields && fields.length > 0 && with_limit", size="sm", variant="outline-secondary", :disabled="fields.length < limit_", @click="limit_ += 5")
+  b-button.mt-1(v-if="fields && fields.length > 0 && with_limit && fields.length > limit_", size="sm", variant="outline-secondary", @click="limit_ += 5")
     icon(name="angle-double-down")
     | Show more
 </template>
