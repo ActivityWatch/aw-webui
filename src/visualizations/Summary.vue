@@ -7,7 +7,7 @@ div
 </template>
 
 <style scoped lang="scss">
-svg {
+.aw-summary-container > svg {
     border: 1px solid #999;
     border-radius: 0.5em;
 }
@@ -18,6 +18,7 @@ svg {
 //       Code should generally go in the framework-independent file.
 
 import summary from './summary.js';
+import 'vue-awesome/icons/angle-double-down'
 
 export default {
   name: "aw-summary",

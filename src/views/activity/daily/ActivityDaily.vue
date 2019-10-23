@@ -84,10 +84,7 @@ import { get_day_period } from "~/util/time.js";
 
 import 'vue-awesome/icons/arrow-left'
 import 'vue-awesome/icons/arrow-right'
-import 'vue-awesome/icons/angle-double-down'
 import 'vue-awesome/icons/sync'
-
-import queries from '~/queries.js';
 
 const get_today = () => moment().startOf('day').format("YYYY-MM-DD");
 
@@ -128,7 +125,7 @@ export default {
     setDate: function(date) { this.$router.push('/activity/daily/' + this.host + '/' + date); },
 
     refresh: async function(force) {
-      await this.$store.dispatch("activity_daily/ensure_loaded", Object.assign(this.$route.params, { force: force, filterAFK: true }));
+      await this.$store.dispatch("activity_daily/ensure_loaded", { date: this.date, host: this.host, force: force, filterAFK: true });
     },
   },
 }

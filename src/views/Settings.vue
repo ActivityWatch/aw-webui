@@ -19,29 +19,33 @@ div
   h5.d-inline-block
     div Categorization
   div.float-right
-    b-btn.ml-1(@click="restoreDefaults", variant="warning" size="sm")
+    b-btn.ml-1(@click="restoreDefaultClasses", variant="outline-warning" size="sm")
       | Restore defaults
   div
-    | An event can have many tags, but only one category. If several categories match, the deepest one will be chosen.
+    | Rules for categorizing events. An event can only have one category. If several categories match, the deepest one will be chosen.
 
   div.my-4
     b-alert(variant="warning" :show="classes_unsaved_changes")
       | You have unsaved changes!
-      b-btn.float-right.ml-1(@click="resetClasses", variant="warning" size="sm")
-        | Reset
+      div.float-right(style="margin-top: -0.15em; margin-right: -0.6em")
+        b-btn.ml-2(@click="saveClasses", variant="success" size="sm")
+          | Save
+        b-btn.ml-2(@click="resetClasses", variant="warning" size="sm")
+          | Discard
     div(v-for="cls in classes_hierarchy")
       CategoryEditTree(:cls="cls")
 
   div.row
     div.col-sm-12
-      b-btn(@click="addClass") Add category
+      b-btn(@click="addClass")
+        icon.mr-2(name="plus")
+        | Add category
       b-btn.float-right(@click="saveClasses", variant="success" :disabled="!classes_unsaved_changes")
         | Save
 </template>
 
 <script>
-import CategoryEditTree from './CategoryEditTree.vue';
-import { restoreDefaultClasses } from '~/util/classes';
+import CategoryEditTree from '~/components/CategoryEditTree.vue';
 import { mapState, mapGetters } from 'vuex';
 
 export default {
@@ -58,12 +62,10 @@ export default {
     ...mapGetters('settings', ['classes_hierarchy']),
     ...mapState('settings', ['classes_unsaved_changes'])
   },
-
   mounted() {
     this.startOfDay = localStorage.startOfDay;
     this.$store.dispatch('settings/load');
   },
-
   methods: {
     setStartOfDay: function(time_minutes) {
       localStorage.startOfDay = time_minutes;
@@ -77,9 +79,8 @@ export default {
     resetClasses: async function() {
       await this.$store.dispatch('settings/load');
     },
-    restoreDefaults: async function() {
-      restoreDefaultClasses();
-      await this.$store.dispatch('settings/load');
+    restoreDefaultClasses: async function() {
+      await this.$store.commit('settings/restoreDefaultClasses');
     },
   }
 }

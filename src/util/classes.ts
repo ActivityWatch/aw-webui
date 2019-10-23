@@ -94,11 +94,6 @@ export function flatten_category_hierarchy(hier: Category[]): Category[] {
   );
 }
 
-export function restoreDefaultClasses() {
-  localStorage.classes = JSON.stringify(defaultCategories);
-  console.log('Saved classes', localStorage.classes);
-}
-
 export function saveClasses(classes: Category[]) {
   localStorage.classes = JSON.stringify(classes);
   console.log('Saved classes', localStorage.classes);
