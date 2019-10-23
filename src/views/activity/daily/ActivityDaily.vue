@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  h2 Daily Activity for {{ date | shortdate }}
+  h2 Activity for {{ periodReadable }}
 
   p
     | Host: {{ host }}
@@ -106,15 +106,25 @@ export default {
       periodLength: 'day',
     };
   },
-
   computed: {
-    link_prefix: function() { return "/activity/daily/"   + this.host },
+    link_prefix: function() { return "/activity/"   + this.host },
     periodusage: function() {
       return this.$store.getters['activity_daily/getActiveHistoryAroundTimeperiod'](this.timeperiod);
     },
     timeperiod: function() {
+      // TODO: Get start of day/week/month (depending on periodLength) with offset
       return { start: get_day_start_with_offset(this.date), length: [1, this.periodLength] };
     },
+    dateformat: function() {
+      if(this.periodLength === 'day') { return "YYYY-MM-DD"; }
+      else if(this.periodLength === 'week') { return "YYYY[ W]WW"; }
+      else if(this.periodLength === 'month') { return "YYYY-MM"; }
+      else if(this.periodLength === 'year') { return "YYYY"; }
+      else {
+        throw `Unknown periodLength ${this.periodLength}`;
+      }
+    },
+    periodReadable: function() { return moment(this.timeperiod.start).format(this.dateformat); },
   },
   watch: {
     timeperiod: function() {
@@ -129,7 +139,7 @@ export default {
   methods: {
     previousDay: function() { return moment(this.date).subtract(1, 'days').format("YYYY-MM-DD") },
     nextDay: function() { return moment(this.date).add(1, 'days').format("YYYY-MM-DD") },
-    setDate: function(date) { this.$router.push('/activity/daily/' + this.host + '/' + date); },
+    setDate: function(date) { this.$router.push('/activity/' + this.host + '/' + date); },
 
     refresh: async function(force) {
       await this.$store.dispatch("activity_daily/ensure_loaded", { timeperiod: this.timeperiod, host: this.host, force: force, filterAFK: true });

@@ -12,45 +12,24 @@ div.aw-navbar
     b-collapse#nav-collapse(is-nav)
       b-navbar-nav
         // If only a single view (the default) is available
-        b-nav-item(v-if="activityViewsDaily.length === 1", v-for="view in activityViewsDaily", :key="view.name", :to="view.pathUrl")
+        b-nav-item(v-if="activityViews.length === 1", v-for="view in activityViews", :key="view.name", :to="view.pathUrl")
           div.px-2.px-lg-1
             icon(name="calendar-day")
-            | Today
+            | Activity
 
         // If multiple (or no) activity views are available
-        b-nav-item-dropdown(v-if="activityViewsDaily.length !== 1")
+        b-nav-item-dropdown(v-if="activityViews.length !== 1")
           template(slot="button-content")
             div.d-inline.px-2.px-lg-1
               icon(name="calendar-day")
-              | Today
-          b-dropdown-item(v-if="activityViewsDaily.length <= 0", disabled)
+              | Activity
+          b-dropdown-item(v-if="activityViews.length <= 0", disabled)
             | No activity reports available
             br
             small Make sure you have both an AFK and window watcher running
-          b-dropdown-item(v-for="view in activityViewsDaily", :key="view.name", :to="view.pathUrl")
+          b-dropdown-item(v-for="view in activityViews", :key="view.name", :to="view.pathUrl")
             icon(:name="view.icon")
             | {{ view.name }}
-
-        // If only a single view (the default) is available
-        b-nav-item(v-if="activityViewsSummary.length === 1", v-for="view in activityViewsSummary", :key="view.name + '_summary'", :to="view.pathUrl")
-          div.px-2.px-lg-1
-            icon(name="calendar-week")
-            | Summary
-
-        // If multiple (or no) activity views are available
-        b-nav-item-dropdown(v-if="activityViewsSummary.length !== 1")
-          template(slot="button-content")
-            div.d-inline.px-2.px-lg-1
-              icon(name="calendar-week")
-              | Summary
-          b-dropdown-item(v-if="activityViewsSummary.length <= 0", disabled)
-            | No activity reports available
-            br
-            small Make sure you have both an AFK and window watcher running
-          b-dropdown-item(v-for="view in activityViewsSummary", :key="view.name + '_summary'", :to="view.pathUrl")
-            icon(:name="view.icon")
-            | {{ view.name }}
-
 
         b-nav-item(to="/timeline" style="font-color: #000;")
           div.px-2.px-lg-1
@@ -106,8 +85,7 @@ export default {
   name: 'Header',
   data() {
     return {
-      activityViewsDaily: [],
-      activityViewsSummary: [],
+      activityViews: [],
       isAndroidApp: testingAndroid || navigator.userAgent.includes("Android") && navigator.userAgent.includes("wv"), // Checks for Android and WebView
     };
   },
@@ -125,23 +103,16 @@ export default {
 
     _.each(types_by_host, (types, hostname) => {
         if(types.afk && types.window) {
-          this.activityViewsDaily.push({
+          this.activityViews.push({
             name: hostname,
             hostname: hostname,
             type: "default",
-            pathUrl: `/activity/daily/${hostname}`,
-            icon: 'desktop'
-          });
-          this.activityViewsSummary.push({
-            name: hostname,
-            hostname: hostname,
-            type: "default",
-            pathUrl: `/activity/summary/${hostname}`,
+            pathUrl: `/activity/${hostname}`,
             icon: 'desktop'
           });
         }
         if(testingAndroid || types.android) {
-          this.activityViewsDaily.push({
+          this.activityViews.push({
             name: `${hostname} (Android)`,
             hostname: hostname,
             type: "android",
