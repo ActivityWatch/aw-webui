@@ -40,11 +40,10 @@ export function windowQuery(windowbucket, afkbucket, appcount, titlecount, filte
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
 
     events = sort_by_timestamp(events);
-    app_chunks = chunk_events_by_key(events, "app");
     app_events  = limit_events(app_events, ${appcount});
     title_events  = limit_events(title_events, ${titlecount});
     duration = sum_durations(events);
-    RETURN  = {"app_events": app_events, "title_events": title_events, "cat_events": cat_events, "app_chunks": app_chunks, "duration": duration};`;
+    RETURN  = {"app_events": app_events, "title_events": title_events, "cat_events": cat_events, "duration": duration};`;
   return querystr_to_array(code);
 }
 
@@ -129,9 +128,8 @@ export function browserSummaryQuery(browserbuckets, windowbucket, afkbucket, lim
     'domains = merge_events_by_keys(domains, ["$domain"]);',
     'domains = sort_by_duration(domains);',
     'domains = limit_events(domains, ' + limit + ');',
-    'chunks = chunk_events_by_key(events, "$domain");',
     'duration = sum_durations(events);',
-    'RETURN = {"domains": domains, "urls": urls, "chunks": chunks, "duration": duration};',
+    'RETURN = {"domains": domains, "urls": urls, "duration": duration};',
   ]);
 }
 

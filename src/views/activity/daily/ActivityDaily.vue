@@ -19,7 +19,7 @@ div
             |  Next
           icon(name="arrow-right")
     div.p-1
-      b-select(v-model="periodLength", :options="['day', 'week', 'month']")
+      b-select(:value="periodLength", :options="['day', 'week', 'month']", @change="(periodLength) => setDate(date, periodLength)")
     div.p-1(v-if="periodLength === 'day'")
       input.form-control(id="date" type="date" :value="date" :max="today" @change="setDate($event.target.value)")
 
@@ -94,20 +94,22 @@ export default {
   name: "Activity",
   props: {
     host: String,
-    // TODO: Add ability to set timeperiod instead
     date: {
       type: String,
       default: get_today(),
-    }
+    },
+    periodLength: {
+      type: String,
+      default: 'day',
+    },
   },
   data: function() {
     return {
       today: get_today(),
-      periodLength: 'day',
     };
   },
   computed: {
-    link_prefix: function() { return "/activity/"   + this.host },
+    link_prefix: function() { return `/activity/${this.host}/${this.periodLength}` },
     periodusage: function() {
       return this.$store.getters['activity_daily/getActiveHistoryAroundTimeperiod'](this.timeperiod);
     },
@@ -121,7 +123,7 @@ export default {
       else if(this.periodLength === 'month') { return "YYYY-MM"; }
       else if(this.periodLength === 'year') { return "YYYY"; }
       else {
-        throw `Unknown periodLength ${this.periodLength}`;
+        return "YYYY-MM-DD";
       }
     },
     periodReadable: function() { return moment(this.timeperiod.start).format(this.dateformat); },
@@ -139,7 +141,7 @@ export default {
   methods: {
     previousDay: function() { return moment(this.date).subtract(1, 'days').format("YYYY-MM-DD") },
     nextDay: function() { return moment(this.date).add(1, 'days').format("YYYY-MM-DD") },
-    setDate: function(date) { this.$router.push('/activity/' + this.host + '/' + date); },
+    setDate: function(date, periodLength) { this.$router.push(`/activity/${this.host}/${periodLength}/${date}`); },
 
     refresh: async function(force) {
       await this.$store.dispatch("activity_daily/ensure_loaded", { timeperiod: this.timeperiod, host: this.host, force: force, filterAFK: true });

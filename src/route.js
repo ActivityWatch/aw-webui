@@ -28,7 +28,7 @@ const router = new VueRouter({
     // Must be before general activity view such that it matches first
     { path: '/activity/android/:host/:date?', component: ActivityAndroid, props: true },
     {
-      path: '/activity/:host/:date?',
+      path: '/activity/:host/:periodLength?/:date?',
       component: ActivityDaily,
       props: true,
       children: [

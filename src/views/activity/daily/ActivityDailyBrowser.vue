@@ -30,14 +30,12 @@ div
       div(v-if="browserBuckets")
         aw-summary(:fields="$store.state.activity_daily.top_urls", :namefunc="e => e.data.url", :colorfunc="e => e.data.$domain", with_limit)
 
-  hr
-
-  b-form-checkbox(v-model="timelineShowAFK")
-    | Show AFK time
-
-  br
-
-  aw-timeline-inspect(:chunks="$store.state.activity_daily.web_chunks", :show_afk='timelineShowAFK', :chunkfunc='e => e.data.$domain', :eventfunc='e => e.data.url')
+  //div(v-if="periodLength === 'day'")
+    br
+    hr
+    b-form-checkbox(v-model="timelineShowAFK")
+      | Show AFK time
+    aw-timeline-inspect(:chunks="$store.state.activity_daily.web_chunks", :show_afk='timelineShowAFK', :chunkfunc='e => e.data.$domain', :eventfunc='e => e.data.url')
 </template>
 
 <script>
@@ -45,7 +43,7 @@ import _ from 'lodash';
 
 export default {
   name: "Activity",
-  props: ['host', 'date'],
+  props: ['host', 'periodLength', 'date'],
   data: () => {
     return {
       filterAFK: true,
