@@ -53,6 +53,7 @@ const router = new VueRouter({
           path: '',
           name: 'activity-daily-summary',
           component: ActivityDailySummary,
+          props: true,
         },
       ],
     },

@@ -1,9 +1,9 @@
 import moment from 'moment';
 import { unitOfTime } from 'moment';
 import * as _ from 'lodash';
-import queries from '~/queries.js';
+import queries from '~/queries';
 import { loadClassesForQuery } from '~/util/classes';
-import { get_day_start_with_offset } from '~/util/time.js';
+import { get_day_start_with_offset } from '~/util/time';
 
 const default_limit = 100;
 
@@ -37,6 +37,7 @@ const _state = {
   top_domains: [],
   top_urls: [],
   top_categories: [],
+  active_events: [],
   app_chunks: [],
   web_chunks: [],
   active_duration: 0,
@@ -177,6 +178,7 @@ const mutations = {
     state.top_urls = null;
     state.top_categories = null;
     state.active_duration = null;
+    state.active_events = null;
     state.app_chunks = null;
     state.web_chunks = null;
   },
@@ -187,6 +189,8 @@ const mutations = {
     state.top_categories = data['cat_events'];
     state.active_duration = data['duration'];
     state.app_chunks = data['app_chunks'];
+    state.active_events = data['active_events'];
+    console.log(state.active_events);
   },
 
   query_browser_completed(state, data) {

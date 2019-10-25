@@ -43,7 +43,7 @@ export function windowQuery(windowbucket, afkbucket, appcount, titlecount, filte
     app_events  = limit_events(app_events, ${appcount});
     title_events  = limit_events(title_events, ${titlecount});
     duration = sum_durations(events);
-    RETURN  = {"app_events": app_events, "title_events": title_events, "cat_events": cat_events, "duration": duration};`;
+    RETURN  = {"app_events": app_events, "title_events": title_events, "cat_events": cat_events, "duration": duration, "active_events": not_afk};`;
   return querystr_to_array(code);
 }
 

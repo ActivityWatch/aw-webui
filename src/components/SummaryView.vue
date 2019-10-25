@@ -7,7 +7,7 @@ div
 </template>
 
 <script>
-import query from '../queries.js';
+import query from '~/queries';
 
 export default {
   name: "SummaryView",
