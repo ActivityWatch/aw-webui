@@ -73,7 +73,6 @@ function split_by_hour_into_data(events) {
         } else {
           // Happens if event covers entire hour and more
           duration += 3600;
-          // console.warn('unhandled, should never happen');
         }
       }
     });
