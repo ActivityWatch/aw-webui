@@ -6,7 +6,7 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     "lib": ["DOM", "ES6", "DOM.Iterable", "ScriptHost"],
-    "types": ["chrome", "node", "jest"],
+    "types": ["chrome", "node", "jest", "lodash"],
     "sourceMap": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,

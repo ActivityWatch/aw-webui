@@ -96,7 +96,7 @@ function browsersWithBuckets(browserbuckets: string[]): [string, string][] {
     return [browserName, bucketId];
   });
   // Skip browsers for which a bucket couldn't be found
-  return _.filter(browsername_to_bucketid, pair => pair[1]);
+  return _.filter(browsername_to_bucketid, ([, bucketId]) => bucketId !== undefined);
 }
 
 // Returns a list of active browser events (where the browser was the active window) from all browser buckets

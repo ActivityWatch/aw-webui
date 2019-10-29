@@ -86,6 +86,7 @@
     "@babel/polyfill": "^7.2.5",
     "@types/chrome": "0.0.89",
     "@types/jest": "^24.0.18",
+    "@types/lodash": "^4.14.144",
     "@types/node": "^12.7.9",
     "ajv": "^6.5.0",
     "ajv-keywords": "^3.2.0",
