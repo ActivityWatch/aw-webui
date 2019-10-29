@@ -39,11 +39,14 @@ div
 </template>
 
 <script>
-import _ from 'lodash';
-
 export default {
   name: "Activity",
-  props: ['host', 'periodLength', 'date'],
+  props: {
+    periodLength: {
+      type: String,
+      default: 'day',
+    },
+  },
   data: () => {
     return {
       filterAFK: true,

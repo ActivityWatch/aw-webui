@@ -46,6 +46,7 @@ export default {
     event: Object,
     bucket_id: String,
     now: {
+      type: moment,
       default: moment()
     }
   },

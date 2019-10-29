@@ -25,11 +25,9 @@ div
               icon(name="tags")
               // TODO: Add some kind of highlighting to key
               | {{ key }}: {{ val }}
-
 </template>
 
 <style scoped lang="scss">
-
 $border-color: #ddd;
 
 .card {
@@ -113,7 +111,9 @@ import 'vue-awesome/icons/calendar'
 export default {
   name: "EventList",
   components: {},
-  props: ["events"],
+  props: {
+    events: Array,
+  },
   data: () => {
     return {
       isListExpanded: false,
