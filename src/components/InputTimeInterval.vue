@@ -17,6 +17,7 @@ div
             option(:value="15*60") 15min
             option(:value="30*60") 30min
             option(:value="60*60") 1h
+            option(:value="2*60*60") 2h
             option(:value="4*60*60") 4h
             option(:value="6*60*60") 6h
             option(:value="12*60*60") 12h
