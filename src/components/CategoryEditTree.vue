@@ -8,8 +8,8 @@ div
     div.col-4.col-md-8
       //span.d-none.d-sm-inline.d-md-none(:style="{ marginLeft: (2 * depth) + 'em'}")
       span.d-none.d-md-inline
-        span(v-if="cls.rule.type === null", style="color: #888") No rule
-        span(v-else, style="") Rule ({{cls.rule.type}}): #[code {{cls.rule.pattern}}]
+        span(v-if="cls.rule.type === 'regex'") Rule ({{cls.rule.type}}): #[code {{cls.rule.regex}}]
+        span(v-else, style="color: #888") No rule
       span.float-right
         b-btn.ml-1(size="sm", variant="outline-secondary", @click="showEditModal($event)" style="border: 0;" pill)
           icon(name="edit")
@@ -32,8 +32,11 @@ div
       b Rule
       b-input-group.my-1(prepend="Type")
         b-select(v-model="editing.rule.type", :options="allRuleTypes")
-      b-input-group.my-1(prepend="Pattern", v-if="editing.rule.type !== null")
-        b-form-input(v-model="editing.rule.pattern")
+      div(v-if="editing.rule.type === 'regex'")
+        b-input-group.my-1(prepend="Pattern")
+          b-form-input(v-model="editing.rule.regex")
+        b-form-checkbox(v-model="editing.rule.ignore_case" switch)
+          | Ignore case
 
     hr
 
@@ -81,13 +84,13 @@ export default {
       return [
         { value: null, text: 'None' },
         { value: 'regex', text: 'Regular Expression' },
-        { value: 'glob', text: 'Glob pattern' },
+        //{ value: 'glob', text: 'Glob pattern' },
       ]
     },
   },
   methods: {
     addSubclass: function(parent) {
-      this.$store.commit('settings/addClass', {name: parent.name.concat(["New class"]), rule: {type: "regex", pattern: "FILL ME"}});
+      this.$store.commit('settings/addClass', {name: parent.name.concat(["New class"]), rule: {type: "regex", regex: "FILL ME"}});
     },
     removeClass: function(cls) {
       // TODO: Show a confirmation dialog
@@ -118,7 +121,7 @@ export default {
       const new_class = {
         id: this.editing.id,
         name: this.editing.parent.concat(this.editing.name),
-        rule: this.editing.rule,
+        rule: this.editing.rule.type !== null ? this.editing.rule : { type: null },
       };
       this.$store.commit("settings/updateClass", new_class);
 

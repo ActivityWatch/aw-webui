@@ -17,7 +17,11 @@ import timeline_simple from './timeline-simple.js';
 
 export default {
   name: "aw-timeline",
-  props: ['type', 'event_type', 'events'],
+  props: {
+    type: String,
+    event_type: String,
+    events: Array,
+  },
   watch: {
     "events": function() {
       timeline_simple.update(this.$el, this.events, this.event_type)

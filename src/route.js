@@ -10,7 +10,6 @@ const ActivityDailyWindow = () => import('./views/activity/daily/ActivityDailyWi
 const ActivityDailyBrowser = () => import('./views/activity/daily/ActivityDailyBrowser.vue');
 const ActivityDailyEditor = () => import('./views/activity/daily/ActivityDailyEditor.vue');
 
-const ActivitySummary = () => import('./views/activity/ActivitySummary.vue');
 const ActivityAndroid = () => import('./views/activity/ActivityAndroid.vue');
 const Buckets = () => import('./views/Buckets.vue');
 const Bucket = () => import('./views/Bucket.vue');
@@ -26,10 +25,11 @@ Vue.use(VueRouter);
 const router = new VueRouter({
   routes: [
     { path: '/', component: Home },
+    // Must be before general activity view such that it matches first
+    { path: '/activity/android/:host/:date?', component: ActivityAndroid, props: true },
     {
-      path: '/activity/daily/:host/:date?',
+      path: '/activity/:host/:periodLength?/:date?',
       component: ActivityDaily,
-      name: 'activity-daily',
       props: true,
       children: [
         {
@@ -53,11 +53,10 @@ const router = new VueRouter({
           path: '',
           name: 'activity-daily-summary',
           component: ActivityDailySummary,
+          props: true,
         },
       ],
     },
-    { path: '/activity/summary/:host/:date?', component: ActivitySummary, props: true },
-    { path: '/activity/android/:host/:date?', component: ActivityAndroid, props: true },
     { path: '/buckets', component: Buckets },
     { path: '/buckets/:id', component: Bucket, props: true },
     { path: '/timeline', component: Timeline },

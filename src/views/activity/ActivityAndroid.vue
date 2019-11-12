@@ -50,15 +50,14 @@ div
 
 <script>
 import moment from 'moment';
-import { get_day_period } from "~/util/time.js";
 import _ from 'lodash';
-
 import 'vue-awesome/icons/arrow-left'
 import 'vue-awesome/icons/arrow-right'
 import 'vue-awesome/icons/angle-double-down'
 import 'vue-awesome/icons/sync'
 
-import query from '~/queries.js';
+import query from '~/queries';
+import { get_day_period } from "~/util/time";
 
 
 export default {

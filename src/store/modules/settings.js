@@ -1,5 +1,10 @@
 import * as _ from 'lodash';
-import { saveClasses, loadClasses, build_category_hierarchy } from '~/util/classes';
+import {
+  saveClasses,
+  loadClasses,
+  defaultCategories,
+  build_category_hierarchy,
+} from '~/util/classes';
 
 // initial state
 const _state = {
@@ -78,6 +83,11 @@ const mutations = {
   },
   removeClass(state, cls) {
     state.classes = state.classes.filter(c => c.id !== cls.id);
+    state.classes_unsaved_changes = true;
+  },
+  restoreDefaultClasses(state) {
+    let i = 0;
+    state.classes = defaultCategories.map(c => Object.assign(c, { id: i++ }));
     state.classes_unsaved_changes = true;
   },
   saveCompleted(state) {

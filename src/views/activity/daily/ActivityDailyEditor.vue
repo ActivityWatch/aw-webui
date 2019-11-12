@@ -35,8 +35,8 @@ div
 
 <script>
 import moment from 'moment';
-import { get_day_period } from "~/util/time.js";
-import query from '~/queries.js';
+import { get_day_period } from "~/util/time";
+import query from '~/queries';
 
 
 export default {

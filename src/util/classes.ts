@@ -2,35 +2,38 @@ const _ = require('lodash');
 
 const level_sep = ">";
 
+interface Rule {
+    type: string;
+    regex?: string;
+    ignore_case?: boolean;
+}
+
 interface Category {
     id?: number;
     name: string[];
     name_pretty?: string;
     subname?: string;
-    rule: {
-        type: string;
-        pattern: string;
-    };
+    rule: Rule;
     depth?: number;
     parent?: string[];
     children?: Category[];
 }
 
 export const defaultCategories: Category[] = [
-  { name: ['Work'], rule: { type: 'regex', pattern: 'Google Docs' } },
+  { name: ['Work'], rule: { type: 'regex', regex: 'Google Docs' } },
   {
     name: ['Work', 'Programming'],
-    rule: { type: 'regex', pattern: 'GitHub|Stack Overflow' },
+    rule: { type: 'regex', regex: 'GitHub|Stack Overflow' },
   },
   {
     name: ['Work', 'Programming', 'ActivityWatch'],
-    rule: { type: 'regex', pattern: '[Aa]ctivity[Ww]atch|aw-' },
+    rule: { type: 'regex', regex: 'ActivityWatch|aw-', ignore_case: true },
   },
-  { name: ['Media', 'Games'], rule: { type: 'regex', pattern: 'Minecraft|RimWorld' } },
-  { name: ['Media', 'Video'], rule: { type: 'regex', pattern: 'YouTube|Plex' } },
-  { name: ['Media', 'Social Media'], rule: { type: 'regex', pattern: 'reddit|Facebook|Twitter|Instagram' } },
-  { name: ['Comms', 'IM'], rule: { type: 'regex', pattern: 'Messenger|Telegram|Signal|WhatsApp' } },
-  { name: ['Comms', 'Email'], rule: { type: 'regex', pattern: 'Gmail' } },
+  { name: ['Media', 'Games'], rule: { type: 'regex', regex: 'Minecraft|RimWorld' } },
+  { name: ['Media', 'Video'], rule: { type: 'regex', regex: 'YouTube|Plex' } },
+  { name: ['Media', 'Social Media'], rule: { type: 'regex', regex: 'reddit|Facebook|Twitter|Instagram', ignore_case: true } },
+  { name: ['Comms', 'IM'], rule: { type: 'regex', regex: 'Messenger|Telegram|Signal|WhatsApp' } },
+  { name: ['Comms', 'Email'], rule: { type: 'regex', regex: 'Gmail' } },
 ];
 
 export function build_category_hierarchy(classes: Category[]): Category[] {
@@ -55,7 +58,7 @@ export function build_category_hierarchy(classes: Category[]): Category[] {
         .map(p => {
           const name = p.join(level_sep);
           if (p && !all_full_names.has(name)) {
-            const new_parent = annotate({ name: p, rule: { type: null, pattern: '' } });
+            const new_parent = annotate({ name: p, rule: { type: null } });
             classes.push(new_parent);
             all_full_names.add(name);
             // New parent might not be top-level, so we need to recurse
@@ -91,11 +94,6 @@ export function flatten_category_hierarchy(hier: Category[]): Category[] {
   );
 }
 
-export function restoreDefaultClasses() {
-  localStorage.classes = JSON.stringify(defaultCategories);
-  console.log('Saved classes', localStorage.classes);
-}
-
 export function saveClasses(classes: Category[]) {
   localStorage.classes = JSON.stringify(classes);
   console.log('Saved classes', localStorage.classes);
@@ -110,8 +108,8 @@ export function loadClasses(): Category[] {
   }
 }
 
-export function loadClassesForQuery(): [string[], any][] {
+export function loadClassesForQuery(): [string[], Rule][] {
   return loadClasses().map(c => {
-      return [c.name, { regex: c.rule.type === "regex" ? c.rule.pattern : "" }]
+      return [c.name, c.rule]
   });
 }

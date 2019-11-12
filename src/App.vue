@@ -34,12 +34,9 @@ div#wrapper
 </template>
 
 <script>
-
 // only import the icons you use to reduce bundle size
 import 'vue-awesome/icons/brands/twitter';
 import 'vue-awesome/icons/brands/github';
-
-import _ from 'lodash';
 
 export default {
   data: function() {
@@ -61,7 +58,6 @@ export default {
     );
   }
 }
-
 </script>
 
 <style lang="scss">

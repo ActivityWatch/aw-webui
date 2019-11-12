@@ -1,13 +1,13 @@
 <template lang="pug">
 div
   div.aw-summary-container
-  b-button.mt-1(v-if="fields && fields.length > 0 && with_limit", size="sm", variant="outline-secondary", :disabled="fields.length < limit_", @click="limit_ += 5")
+  b-button.mt-1(v-if="fields && fields.length > 0 && with_limit && fields.length > limit_", size="sm", variant="outline-secondary", @click="limit_ += 5")
     icon(name="angle-double-down")
     | Show more
 </template>
 
 <style scoped lang="scss">
-svg {
+.aw-summary-container > svg {
     border: 1px solid #999;
     border-radius: 0.5em;
 }
@@ -18,6 +18,7 @@ svg {
 //       Code should generally go in the framework-independent file.
 
 import summary from './summary.js';
+import 'vue-awesome/icons/angle-double-down'
 
 export default {
   name: "aw-summary",

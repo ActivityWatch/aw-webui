@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  h2 Daily Activity for {{ date | shortdate }}
+  h2 Activity for {{ periodReadable }}
 
   p
     | Host: {{ host }}
@@ -13,12 +13,14 @@ div
         b-button(:to="link_prefix + '/' + previousDay()", variant="outline-dark")
           icon(name="arrow-left")
           span.d-none.d-md-inline
-            |  Previous day
+            |  Previous
         b-button(:to="link_prefix + '/' + nextDay()", :disabled="nextDay() > today", variant="outline-dark")
           span.d-none.d-md-inline
-            |  Next day
+            |  Next
           icon(name="arrow-right")
     div.p-1
+      b-select(:value="periodLength", :options="['day', 'week', 'month']", @change="(periodLength) => setDate(date, periodLength)")
+    div.p-1(v-if="periodLength === 'day'")
       input.form-control(id="date" type="date" :value="date" :max="today" @change="setDate($event.target.value)")
 
     div.p-1.ml-auto
@@ -28,7 +30,7 @@ div
           span.d-none.d-md-inline
             |  Refresh
 
-  aw-periodusage(:periodusage_arr="$store.state.activity_daily.active_history", :link_prefix="link_prefix")
+  aw-periodusage(:periodusage_arr="periodusage", :link_prefix="link_prefix")
 
   ul.row.nav.nav-tabs.my-3.px-3
     li.nav-item
@@ -80,14 +82,11 @@ div
 
 <script>
 import moment from 'moment';
-import { get_day_period } from "~/util/time.js";
+import { get_day_start_with_offset } from '~/util/time';
 
 import 'vue-awesome/icons/arrow-left'
 import 'vue-awesome/icons/arrow-right'
-import 'vue-awesome/icons/angle-double-down'
 import 'vue-awesome/icons/sync'
-
-import queries from '~/queries.js';
 
 const get_today = () => moment().startOf('day').format("YYYY-MM-DD");
 
@@ -98,19 +97,39 @@ export default {
     date: {
       type: String,
       default: get_today(),
-    }
+    },
+    periodLength: {
+      type: String,
+      default: 'day',
+    },
   },
   data: function() {
     return {
       today: get_today(),
-    }
+    };
   },
-
   computed: {
-    link_prefix: function() { return "/activity/daily/"   + this.host },
+    link_prefix: function() { return `/activity/${this.host}/${this.periodLength}` },
+    periodusage: function() {
+      return this.$store.getters['activity_daily/getActiveHistoryAroundTimeperiod'](this.timeperiod);
+    },
+    timeperiod: function() {
+      // TODO: Get start of day/week/month (depending on periodLength) with offset
+      return { start: get_day_start_with_offset(this.date), length: [1, this.periodLength] };
+    },
+    dateformat: function() {
+      if(this.periodLength === 'day') { return "YYYY-MM-DD"; }
+      else if(this.periodLength === 'week') { return "YYYY[ W]WW"; }
+      else if(this.periodLength === 'month') { return "YYYY-MM"; }
+      else if(this.periodLength === 'year') { return "YYYY"; }
+      else {
+        return "YYYY-MM-DD";
+      }
+    },
+    periodReadable: function() { return moment(this.timeperiod.start).format(this.dateformat); },
   },
   watch: {
-    date: function() {
+    timeperiod: function() {
       this.refresh();
     },
   },
@@ -122,10 +141,10 @@ export default {
   methods: {
     previousDay: function() { return moment(this.date).subtract(1, 'days').format("YYYY-MM-DD") },
     nextDay: function() { return moment(this.date).add(1, 'days').format("YYYY-MM-DD") },
-    setDate: function(date) { this.$router.push('/activity/daily/' + this.host + '/' + date); },
+    setDate: function(date, periodLength) { this.$router.push(`/activity/${this.host}/${periodLength}/${date}`); },
 
     refresh: async function(force) {
-      await this.$store.dispatch("activity_daily/ensure_loaded", Object.assign(this.$route.params, { force: force, filterAFK: true }));
+      await this.$store.dispatch("activity_daily/ensure_loaded", { timeperiod: this.timeperiod, host: this.host, force: force, filterAFK: true });
     },
   },
 }
