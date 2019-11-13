@@ -10,11 +10,11 @@ div
   div.d-flex
     div.p-1
       b-button-group
-        b-button(:to="link_prefix + '/' + previousDay()", variant="outline-dark")
+        b-button(:to="link_prefix + '/' + previousPeriod()", variant="outline-dark")
           icon(name="arrow-left")
           span.d-none.d-md-inline
             |  Previous
-        b-button(:to="link_prefix + '/' + nextDay()", :disabled="nextDay() > today", variant="outline-dark")
+        b-button(:to="link_prefix + '/' + nextPeriod()", :disabled="nextPeriod() > today", variant="outline-dark")
           span.d-none.d-md-inline
             |  Next
           icon(name="arrow-right")
@@ -139,9 +139,12 @@ export default {
   },
 
   methods: {
-    previousDay: function() { return moment(this.date).subtract(1, 'days').format("YYYY-MM-DD") },
-    nextDay: function() { return moment(this.date).add(1, 'days').format("YYYY-MM-DD") },
-    setDate: function(date, periodLength) { this.$router.push(`/activity/${this.host}/${periodLength}/${date}`); },
+    previousPeriod: function() { return moment(this.date).subtract(1, `${this.periodLength}s`).format("YYYY-MM-DD") },
+    nextPeriod: function() { return moment(this.date).add(1, `${this.periodLength}s`).format("YYYY-MM-DD") },
+    setDate: function(date, periodLength) {
+      const new_date = moment(date).startOf(periodLength).format("YYYY-MM-DD");
+      this.$router.push(`/activity/${this.host}/${periodLength}/${new_date}`);
+    },
 
     refresh: async function(force) {
       await this.$store.dispatch("activity_daily/ensure_loaded", { timeperiod: this.timeperiod, host: this.host, force: force, filterAFK: true });
