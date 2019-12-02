@@ -92,7 +92,11 @@ const appnames = {
   ],
   opera: ['opera.exe', 'Opera'],
   brave: ['brave.exe'],
-  vivaldi: ['Vivaldi-stable'],
+  vivaldi: [
+    'Vivaldi-stable',
+    'Vivaldi-snapshot',
+    'vivaldi.exe',
+  ],
 };
 
 // Returns a list of (browserName, bucketId) pairs for found browser buckets
