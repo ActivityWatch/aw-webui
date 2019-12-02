@@ -89,6 +89,7 @@ const appnames = {
   vivaldi: [
     'Vivaldi-stable',
     'Vivaldi-snapshot',
+    'vivaldi.exe',
   ],
 };
 
