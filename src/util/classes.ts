@@ -109,7 +109,7 @@ export function loadClasses(): Category[] {
 }
 
 export function loadClassesForQuery(): [string[], Rule][] {
-  return loadClasses().map(c => {
+  return loadClasses().filter(c => c.rule.type !== null).map(c => {
       return [c.name, c.rule]
   });
 }
