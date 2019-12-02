@@ -31,13 +31,19 @@ function canonicalEvents(params: QueryParams): string {
   `;
 }
 
-export function windowQuery(windowbucket, afkbucket, appcount, titlecount, filterAFK, classes): string[] {
+export function windowQuery(windowbucket, afkbucket, appcount, titlecount, filterAFK, classes, filterCategories: string[][]): string[] {
   windowbucket = windowbucket.replace('"', '\\"');
   afkbucket = afkbucket.replace('"', '\\"');
   const params: QueryParams = { bid_window: windowbucket, bid_afk: afkbucket, classes: classes, filter_afk: filterAFK };
-  const code =`
-    ${canonicalEvents(params)}
-    events = categorize(events, ${JSON.stringify(params.classes)});
+  const code =
+    `
+      ${canonicalEvents(params)}
+      events = categorize(events, ${JSON.stringify(params.classes)});
+    `
+      +
+        (filterCategories ? `events = filter_keyvals(events, "$category", ${JSON.stringify(filterCategories)});` : '')
+      +
+    `
     title_events = sort_by_duration(merge_events_by_keys(events, ["app", "title"]));
     app_events   = sort_by_duration(merge_events_by_keys(title_events, ["app"]));
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));

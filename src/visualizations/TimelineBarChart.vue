@@ -26,24 +26,40 @@ export default class ChartTimelineBars extends Vue<Bar> {
 
   renderData() {
     // Overwriting base render method with actual data.
-    this.renderChart({
+    const data = {
       labels: _.range(0, 24).map(h => `${h}`),
       datasets: this.datasets,
       title: {
         display: true,
         text: 'Timeline'
       },
+      responsive: true,
+      maintainAspectRatio: false,
+    };
+    const options = {
       tooltips: {
         mode: 'index',
         intersect: false
       },
-      responsive: true,
-      maintainAspectRatio: false,
       scales: {
         xAxes: [{ stacked: true }],
-        yAxes: [{ stacked: true }],
+        yAxes: [{
+          ticks: {
+            stepSize: 0.25,
+            min: 0,
+            max: 1,
+            callback: function(value) {
+              if(value == 1) {
+                return "1h";
+              } else {
+                return Math.round(value * 60) + 'min';
+              }
+            }
+          }
+        }]
       }
-    });
+    };
+    this.renderChart(data, options);
   }
 }
 </script>

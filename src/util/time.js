@@ -45,20 +45,24 @@ export function get_day_period(date) {
   return get_day_start_with_offset(date) + '/' + get_day_end_with_offset(date);
 }
 
-export function get_day_start(datestr) {
-  // Get start time of date
-  const datestart = moment(datestr);
-  datestart.set('hour', 0);
-  datestart.set('minute', 0);
-  datestart.set('second', 0);
-  datestart.set('millisecond', 0);
-  return datestart;
-}
-
 export function get_prev_day(datestr) {
   return moment(datestr).add(-1, 'days');
 }
 
 export function get_next_day(datestr) {
   return moment(datestr).add(1, 'days');
+}
+
+export function get_offset() {
+  const start_of_day = localStorage.startOfDay;
+  const [hours, minutes] = start_of_day.split(':');
+  return moment.duration({ hours, minutes });
+}
+
+export function get_today() {
+  // Gets "today" in an offset-aware way
+  return moment()
+    .subtract(get_offset())
+    .startOf('day')
+    .format('YYYY-MM-DD');
 }

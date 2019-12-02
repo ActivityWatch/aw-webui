@@ -31,6 +31,13 @@ module.exports = {
     compress: true,
     port: 27180,
   },
+  pwa: {
+    name: 'ActivityWatch',
+    iconPaths: {
+      favicon32: 'static/logo.png',
+      favicon16: 'static/logo.png',
+    },
+  },
   pluginOptions: {
     webpackBundleAnalyzer: {
       openAnalyzer: false,
