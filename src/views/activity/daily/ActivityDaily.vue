@@ -82,13 +82,11 @@ div
 
 <script>
 import moment from 'moment';
-import { get_day_start_with_offset } from '~/util/time';
+import { get_day_start_with_offset, get_today } from '~/util/time';
 
 import 'vue-awesome/icons/arrow-left'
 import 'vue-awesome/icons/arrow-right'
 import 'vue-awesome/icons/sync'
-
-const get_today = () => moment().startOf('day').format("YYYY-MM-DD");
 
 export default {
   name: "Activity",

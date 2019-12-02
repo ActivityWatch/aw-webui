@@ -15,11 +15,19 @@ div
 </template>
 
 <script>
+import { get_today } from '~/util/time';
+
 export default {
   name: "Activity",
   props: {
-    date: String,
-    periodLength: String,
+    date: {
+      type: String,
+      default: get_today(),
+    },
+    periodLength: {
+      type: String,
+      default: 'day',
+    },
     host: String
   },
   data: () => {
