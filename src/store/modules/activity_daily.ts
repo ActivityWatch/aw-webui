@@ -27,6 +27,7 @@ interface QueryOptions {
   date?: string;
   timeperiod?: TimePeriod;
   filterAFK?: boolean;
+  filterCategories?: string[][];
   force?: boolean;
 }
 
@@ -101,7 +102,7 @@ const actions = {
     }
   },
 
-  async query_window({ commit }, { host, timeperiod, filterAFK }: QueryOptions) {
+  async query_window({ commit }, { host, timeperiod, filterAFK, filterCategories }: QueryOptions) {
     const start = moment();
     const periods = [timeperiodToStr(timeperiod)];
     const classes = loadClassesForQuery();
@@ -113,7 +114,8 @@ const actions = {
       default_limit, // this.top_apps_count,
       default_limit, // this.top_windowtitles_count,
       filterAFK,
-      classes
+      classes,
+      filterCategories,
     );
     const data = await this._vm.$aw.query(periods, q);
     console.info(`Completed window query in ${moment().diff(start)}ms`);

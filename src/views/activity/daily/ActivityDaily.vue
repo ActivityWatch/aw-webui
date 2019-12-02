@@ -48,21 +48,33 @@ div
 
   div
     router-view
+
+  div
+    h5 Options
+
+    div.row
+      div.col-md-6
+        b-form-group(label="Show category" label-cols="5" label-cols-lg="4")
+          b-form-select(v-model="filterCategory", :options="categories")
 </template>
 
 <style lang="scss" scoped>
+$buttoncolor: #ddd;
+$bordercolor: #ddd;
+
 .nav {
-  border-bottom: 2px solid #eee;
+  border-bottom: 2px solid $bordercolor;
 
   .nav-item {
     margin-bottom: -2px;
 
     .nav-link {
-      background-color: #eee;
-      border: 2px solid #eee;
-      border-bottom: none;
+      background-color: $buttoncolor;
       margin: 0 0.2em 0 0.2em;
+      border: 2px solid $bordercolor;
+      border-bottom: none;
       border-radius: 0.5rem 0.5rem 0 0;
+      color: #111 !important;
 
       &:hover {
         background-color: #f8f8f8;
@@ -70,6 +82,7 @@ div
 
       &.router-link-exact-active {
         background-color: #fff;
+        color: #333 !important;
 
         &:hover {
           background-color: #fff;
@@ -104,9 +117,28 @@ export default {
   data: function() {
     return {
       today: get_today(),
+      filterCategory: null,
     };
   },
   computed: {
+    categories: function() {
+      const cats = this.$store.getters["settings/all_categories"];
+      console.log(cats);
+      const entries = cats.map(c => { return { text: c.join(" > "), value: c } });
+      return [{ text: "All", value: null}, { text: "Uncategorized", value: ["Uncategorized"]}].concat(entries);
+    },
+    filterCategories: function() {
+      // TODO: Also return all child categories
+      if(this.filterCategory) {
+        const cats = this.$store.getters["settings/all_categories"];
+        const isChild = p => c => c.length > p.length && _.isEqual(p, c.slice(0, p.length));
+        const children = _.filter(cats, isChild(this.filterCategory));
+        console.log(children);
+        return [this.filterCategory].concat(children);
+      } else {
+        return null;
+      }
+    },
     link_prefix: function() { return `/activity/${this.host}/${this.periodLength}` },
     periodusage: function() {
       return this.$store.getters['activity_daily/getActiveHistoryAroundTimeperiod'](this.timeperiod);
@@ -130,9 +162,13 @@ export default {
     timeperiod: function() {
       this.refresh();
     },
+    filterCategory: function() {
+      this.refresh();
+    },
   },
 
   mounted: async function() {
+    this.$store.dispatch('settings/load');
     await this.refresh();
   },
 
@@ -145,7 +181,7 @@ export default {
     },
 
     refresh: async function(force) {
-      await this.$store.dispatch("activity_daily/ensure_loaded", { timeperiod: this.timeperiod, host: this.host, force: force, filterAFK: true });
+      await this.$store.dispatch("activity_daily/ensure_loaded", { timeperiod: this.timeperiod, host: this.host, force: force, filterAFK: true, filterCategories: this.filterCategories });
     },
   },
 }
