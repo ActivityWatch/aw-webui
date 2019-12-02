@@ -54,7 +54,7 @@
     "mini-css-extract-plugin": "^0.4.0",
     "moment": "^2.22.1",
     "moment-range": "^3.1.1",
-    "node-sass": "^4.11.0",
+    "node-sass": "^4.13.0",
     "ora": "^0.2.0",
     "pug": "^2.0.3",
     "pug-plain-loader": "^1.0.0",
