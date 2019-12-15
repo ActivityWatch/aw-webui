@@ -157,11 +157,13 @@ export function browserSummaryQuery(browserbuckets: string[], windowbucket: stri
   `);
 }
 
-export function editorActivityQuery(editorbucket: string, limit): string[] {
-  editorbucket = editorbucket.replace('"', '\\"');
-  return [
-    'editorbucket = "' + editorbucket + '";',
-    'events = flood(query_bucket(editorbucket));',
+export function editorActivityQuery(editorbuckets: string[], limit): string[] {
+  let q = ['events = [];'];
+  for (let editorbucket of editorbuckets) {
+    editorbucket = editorbucket.replace('"', '\\"');
+    q.push('events = concat(events, flood(query_bucket("' + editorbucket + '")));');
+  }
+  q = q.concat([
     'files = sort_by_duration(merge_events_by_keys(events, ["file", "language"]));',
     'files = limit_events(files, ' + limit + ');',
     'languages = sort_by_duration(merge_events_by_keys(events, ["language"]));',
@@ -169,8 +171,9 @@ export function editorActivityQuery(editorbucket: string, limit): string[] {
     'projects = sort_by_duration(merge_events_by_keys(events, ["project"]));',
     'projects = limit_events(projects, ' + limit + ');',
     'duration = sum_durations(events);',
-    'RETURN = {"files": files, "languages": languages, "projects": projects, "duration": duration};',
-  ];
+    'RETURN = {"files": files, "languages": languages, "projects": projects, "duration": duration};'
+  ]);
+  return q;
 }
 
 export function dailyActivityQuery(afkbucket: string): string[] {

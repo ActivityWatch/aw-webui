@@ -22,7 +22,8 @@ div
             icon(name="folder-open").d-none.d-md-inline-block
             | Open
           b-dropdown(variant="outline-secondary", size="sm", text="More")
-            b-dropdown-item-button(:href="$aw.baseURL + '/api/0/buckets/' + data.item.id + '/export'",
+            b-dropdown-item-button(
+                       :href="$aw.baseURL + '/api/0/buckets/' + data.item.id + '/export'",
                        :download="'aw-bucket-export-' + data.item.id + '.json'",
                        title="Export bucket to JSON",
                        variant="secondary")
