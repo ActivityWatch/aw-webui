@@ -33,27 +33,36 @@ const router = new VueRouter({
       props: true,
       children: [
         {
+          path: 'summary',
+          meta: { subview: 'summary' },
+          name: 'activity-daily-summary',
+          component: ActivityDailySummary,
+          props: true,
+        },
+        {
           path: 'window',
+          meta: { subview: 'window' },
           name: 'activity-daily-window',
           component: ActivityDailyWindow,
           props: true,
         },
         {
           path: 'browser',
+          meta: { subview: 'browser' },
           name: 'activity-daily-browser',
           component: ActivityDailyBrowser,
         },
         {
           path: 'editor',
+          meta: { subview: 'editor' },
           name: 'activity-daily-editor',
           component: ActivityDailyEditor,
         },
-        // Default view is the summary view (needs to be last since otherwise it'll always match first)
+        // Unspecified should redirect to summary view is the summary view
+        // (needs to be last since otherwise it'll always match first)
         {
           path: '',
-          name: 'activity-daily-summary',
-          component: ActivityDailySummary,
-          props: true,
+          redirect: 'summary',
         },
       ],
     },
