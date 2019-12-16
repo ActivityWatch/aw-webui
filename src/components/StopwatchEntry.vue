@@ -55,8 +55,13 @@ export default {
       this.event.data.running = false;
       this.event.duration = (moment() - moment(this.event.timestamp)) / 1000;
       // Convert the string to a list of tags
-      this.event.data.tags = this.event.data.tags.replace(/ /g,'')
-      this.event.data.tags = this.event.data.tags.split(',')
+      if(this.event.data.tags){
+        this.event.data.tags = this.event.data.tags.replace(/ /g,'')
+        this.event.data.tags = this.event.data.tags.split(',')
+      }
+      else{
+        this.event.data.tags = []
+      }
       await this.$aw.replaceEvent(this.bucket_id, this.event);
     },
     delete_: async function() {
