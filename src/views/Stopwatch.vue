@@ -91,7 +91,8 @@ export default {
         timestamp: new Date(),
         data: {
           running: true,
-          label: label
+          label: label,
+          tags: ""
         }
       }))
     },
