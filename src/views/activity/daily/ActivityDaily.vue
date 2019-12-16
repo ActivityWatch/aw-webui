@@ -10,18 +10,22 @@ div
   div.d-flex
     div.p-1
       b-button-group
-        b-button(:to="link_prefix + '/' + previousPeriod()", variant="outline-dark")
+        b-button(:to="link_prefix + '/' + previousPeriod() + '/' + subview",
+                 variant="outline-dark")
           icon(name="arrow-left")
           span.d-none.d-md-inline
             |  Previous
-        b-button(:to="link_prefix + '/' + nextPeriod()", :disabled="nextPeriod() > today", variant="outline-dark")
+        b-button(:to="link_prefix + '/' + nextPeriod() + '/' + subview",
+                 :disabled="nextPeriod() > today", variant="outline-dark")
           span.d-none.d-md-inline
             |  Next
           icon(name="arrow-right")
     div.p-1
-      b-select(:value="periodLength", :options="['day', 'week', 'month']", @change="(periodLength) => setDate(date, periodLength)")
+      b-select(:value="periodLength", :options="['day', 'week', 'month']",
+               @change="(periodLength) => setDate(date, periodLength)")
     div.p-1(v-if="periodLength === 'day'")
-      input.form-control(id="date" type="date" :value="date" :max="today" @change="setDate($event.target.value)")
+      input.form-control(id="date" type="date" :value="date" :max="today"
+                         @change="setDate($event.target.value)")
 
     div.p-1.ml-auto
       b-button-group
@@ -121,6 +125,7 @@ export default {
     };
   },
   computed: {
+    subview: function() { return this.$route.meta.subview; },
     categories: function() {
       const cats = this.$store.getters["settings/all_categories"];
       console.log(cats);

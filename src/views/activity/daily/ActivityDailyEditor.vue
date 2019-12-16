@@ -1,55 +1,45 @@
 <template lang="pug">
 div
-  b-input-group(size="sm")
-    b-input-group-prepend
-      span.input-group-text
-        | Bucket
-    b-dropdown(:text="editorBucketId || 'Select editor watcher bucket'", size="sm", variant="outline-secondary")
-      b-dropdown-header
-        | Editor bucket to use
-      b-dropdown-item(v-if="editorBuckets.length <= 0", name="b", disabled)
-        | No editor buckets available
-        br
-        small Make sure you have an editor watcher installed to use this feature
-      b-dropdown-item-button(v-for="editorBucket in editorBuckets", :key="editorBucket", @click="editorBucketId = editorBucket")
-        | {{ editorBucket }}
-
-  br
-
-  h6 Active editor time: {{ editor_duration | friendlyduration }}
-
-  div(v-if="editorBucketId")
+  // TODO: Add back option to choose a specific editor bucket
+  div(v-if="editorBuckets.length <= 0")
+    h6 No editor buckets available
+    small Make sure you have an editor watcher installed to use this feature
+  div(v-if="editorBuckets.length")
+    h6 Active editor time: {{ $store.state.activity_daily.editor_duration | friendlyduration }}
     div.row(style="padding-top: 0.5em;")
       div.col-md-4
         h5 Top file activity
-        aw-summary(:fields="top_editor_files", :namefunc="top_editor_files_namefunc", :colorfunc="top_editor_files_colorfunc", with_limit)
+        aw-summary(:fields="$store.state.activity_daily.top_editor_files",
+                   :namefunc="top_editor_files_namefunc",
+                   :colorfunc="top_editor_files_colorfunc", with_limit)
 
       div.col-md-4
         h5 Top language activity
-        aw-summary(:fields="top_editor_languages", :namefunc="top_editor_languages_namefunc", :colorfunc="top_editor_languages_colorfunc", with_limit)
+        aw-summary(:fields="$store.state.activity_daily.top_editor_languages",
+                   :namefunc="top_editor_languages_namefunc",
+                   :colorfunc="top_editor_languages_colorfunc", with_limit)
 
       div.col-md-4
         h5 Top project activity
-        aw-summary(:fields="top_editor_projects", :namefunc="top_editor_projects_namefunc", :colorfunc="top_editor_projects_colorfunc", with_limit)
+        aw-summary(:fields="$store.state.activity_daily.top_editor_projects",
+                   :namefunc="top_editor_projects_namefunc",
+                   :colorfunc="top_editor_projects_colorfunc", with_limit)
+  br
 </template>
 
 <script>
 import moment from 'moment';
-import { get_day_period } from "~/util/time";
-import query from '~/queries';
-
 
 export default {
   name: "Activity",
-  props: ['host', 'date'],
+  props: {
+    periodLength: {
+      type: String,
+      default: 'day',
+    },
+  },
   data: () => {
     return {
-      editorBuckets: [],
-      editorBucketId: "",
-
-      editor_duration: 0,
-
-      top_editor_files: [],
       top_editor_files_namefunc: (e) => {
         let f = e.data.file || "";
         f = f.split("/");
@@ -58,11 +48,9 @@ export default {
       },
       top_editor_files_colorfunc: (e) => e.data.language,
 
-      top_editor_languages: [],
       top_editor_languages_namefunc: (e) => e.data.language,
       top_editor_languages_colorfunc: (e) => e.data.language,
 
-      top_editor_projects: [],
       top_editor_projects_namefunc: (e) => {
         let f = e.data.project || "";
         f = f.split("/");
@@ -74,52 +62,11 @@ export default {
   },
 
   computed: {
+    editorBuckets: function() {
+      return this.$store.state.activity_daily.editor_buckets_available
+    },
     dateEnd: function() { return moment(this.date).add(1, 'days').format() },
     dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
-  },
-  watch: {
-    '$route': function() {
-      console.log("Route changed");
-      this.refresh();
-    },
-    editorBucketId() {
-      this.queryEditorActivity();
-    },
-  },
-
-  mounted: function() {
-    this.getEditorBucket();
-    this.refresh();
-  },
-
-  methods: {
-    refresh: function() {
-      this.queryEditorActivity();
-    },
-
-    getEditorBucket: async function() {
-      const buckets = await this.$aw.getBuckets().catch(this.errorHandler);
-      for (const bucket in buckets){
-        if (buckets[bucket]["type"] === "app.editor.activity"){
-          this.editorBuckets.push(bucket);
-        }
-      }
-      if (this.editorBuckets.length > 0){
-        this.editorBucketId = this.editorBuckets[0]
-      }
-    },
-
-    queryEditorActivity: async function() {
-      if (this.editorBucketId !== ""){
-        const periods = [get_day_period(this.date)];
-        const q = query.editorActivityQuery(this.editorBucketId, 100);
-        const data = (await this.$aw.query(periods, q).catch(this.errorHandler))[0];
-        this.editor_duration = data["duration"];
-        this.top_editor_files = data["files"];
-        this.top_editor_languages = data["languages"];
-        this.top_editor_projects = data["projects"];
-      }
-    },
   },
 }
 </script>
