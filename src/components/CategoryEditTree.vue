@@ -11,7 +11,7 @@ div
         span(v-if="cls.rule.type === 'regex'") Rule ({{cls.rule.type}}): #[code {{cls.rule.regex}}], 
         span(v-else, style="color: #888") No rule, 
       span.d-none.d-md-inline
-        span(v-if="cls.productivity !== -1") {{ productivityType }}
+        span(v-if="cls.productivity && cls.productivity !== -1") {{ productivityType }}
         span(v-else, style="color: #888") Unknown Productivity
       span.float-right
         b-btn.ml-1(size="sm", variant="outline-secondary", @click="showEditModal($event)" style="border: 0;" pill)
