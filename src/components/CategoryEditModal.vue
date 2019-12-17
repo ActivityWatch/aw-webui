@@ -34,12 +34,14 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
       | Inherit parent color
     div.mt-1(v-show="!editing.inherit_color")
       color-picker(v-model="editing.color")
-
-  //
-    div.my-1
-      b Productivity score
-      b-input-group.my-1(prepend="Points")
-        b-form-input(v-model="editing.productivity")
+  
+  hr
+  div.my-1
+    b Productivity score
+    b-form-checkbox(v-model="editing.inherit_score" switch)
+      | Inherit parent score
+    b-input-group.my-1(prepend="Score" v-if="!editing.inherit_score")
+      b-form-input(v-model="editing.score")
 
   hr
   div.my-1
@@ -159,13 +161,17 @@ export default {
       const cat = this.categoryStore.get_category_by_id(this.categoryId);
       const color = cat.data ? cat.data.color : undefined;
       const inherit_color = !color;
+      const score = cat.data ? cat.data.score : undefined;
+      const inherit_score = !score;
       this.editing = {
         id: cat.id,
         name: cat.subname,
         rule: _.cloneDeep(cat.rule),
+        parent: cat.parent ? cat.parent : [],
         color,
         inherit_color,
-        parent: cat.parent ? cat.parent : [],
+        score,
+        inherit_score,
       };
     },
   },

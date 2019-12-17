@@ -10,6 +10,8 @@ div
         | {{ _class.name.slice(depth).join(" ➤ ")}}
         icon.ml-1(v-if="_class.data && _class.data.color" name="circle" :style="'color: ' + _class.data.color")
         span.ml-1(v-if="_class.children.length > 0" style="opacity: 0.5") ({{totalChildren}})
+        span.d-none.d-md-inline
+          span(v-if="_class.data && _class.data.score !== undefined") {{ _class.data.score }}
 
     div.col-4.col-md-8
       span.d-none.d-md-inline
