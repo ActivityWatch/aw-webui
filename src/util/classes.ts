@@ -15,25 +15,26 @@ interface Category {
     subname?: string;
     rule: Rule;
     depth?: number;
+    productivity?: number;
     parent?: string[];
     children?: Category[];
 }
 
 export const defaultCategories: Category[] = [
-  { name: ['Work'], rule: { type: 'regex', regex: 'Google Docs' } },
+  { name: ['Work'], productivity:1, rule: { type: 'regex', regex: 'Google Docs' } },
   {
-    name: ['Work', 'Programming'],
+    name: ['Work', 'Programming'], productivity:1,
     rule: { type: 'regex', regex: 'GitHub|Stack Overflow' },
   },
   {
-    name: ['Work', 'Programming', 'ActivityWatch'],
+    name: ['Work', 'Programming', 'ActivityWatch'], productivity:1,
     rule: { type: 'regex', regex: 'ActivityWatch|aw-', ignore_case: true },
   },
-  { name: ['Media', 'Games'], rule: { type: 'regex', regex: 'Minecraft|RimWorld' } },
-  { name: ['Media', 'Video'], rule: { type: 'regex', regex: 'YouTube|Plex' } },
-  { name: ['Media', 'Social Media'], rule: { type: 'regex', regex: 'reddit|Facebook|Twitter|Instagram', ignore_case: true } },
-  { name: ['Comms', 'IM'], rule: { type: 'regex', regex: 'Messenger|Telegram|Signal|WhatsApp' } },
-  { name: ['Comms', 'Email'], rule: { type: 'regex', regex: 'Gmail' } },
+  { name: ['Media', 'Games'], productivity:0, rule: { type: 'regex', regex: 'Minecraft|RimWorld' } },
+  { name: ['Media', 'Video'], productivity:0,rule: { type: 'regex', regex: 'YouTube|Plex' } },
+  { name: ['Media', 'Social Media'], productivity:0,rule: { type: 'regex', regex: 'reddit|Facebook|Twitter|Instagram', ignore_case: true } },
+  { name: ['Comms', 'IM'], productivity:2, rule: { type: 'regex', regex: 'Messenger|Telegram|Signal|WhatsApp' } },
+  { name: ['Comms', 'Email'], productivity:1,rule: { type: 'regex', regex: 'Gmail' } },
 ];
 
 export function build_category_hierarchy(classes: Category[]): Category[] {
@@ -58,7 +59,7 @@ export function build_category_hierarchy(classes: Category[]): Category[] {
         .map(p => {
           const name = p.join(level_sep);
           if (p && !all_full_names.has(name)) {
-            const new_parent = annotate({ name: p, rule: { type: null } });
+            const new_parent = annotate({ name: p, productivity:-1, rule: { type: null } });
             classes.push(new_parent);
             all_full_names.add(name);
             // New parent might not be top-level, so we need to recurse

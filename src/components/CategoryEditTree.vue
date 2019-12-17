@@ -8,8 +8,11 @@ div
     div.col-4.col-md-8
       //span.d-none.d-sm-inline.d-md-none(:style="{ marginLeft: (2 * depth) + 'em'}")
       span.d-none.d-md-inline
-        span(v-if="cls.rule.type === 'regex'") Rule ({{cls.rule.type}}): #[code {{cls.rule.regex}}]
-        span(v-else, style="color: #888") No rule
+        span(v-if="cls.rule.type === 'regex'") Rule ({{cls.rule.type}}): #[code {{cls.rule.regex}}], 
+        span(v-else, style="color: #888") No rule, 
+      span.d-none.d-md-inline
+        span(v-if="cls.productivity !== -1") {{ productivityType }}
+        span(v-else, style="color: #888") Unknown Productivity
       span.float-right
         b-btn.ml-1(size="sm", variant="outline-secondary", @click="showEditModal($event)" style="border: 0;" pill)
           icon(name="edit")
@@ -25,7 +28,9 @@ div
         b-form-input(v-model="editing.name")
       b-input-group(prepend="Parent")
         b-select(v-model="editing.parent", :options="allCategories")
-
+    div.my-1
+      b-input-group.mv-1(prepend="Productivity")
+        b-select(v-model="editing.productivity", :options="allProductivityTypes")
     hr
 
     div.my-1
@@ -70,8 +75,15 @@ export default {
         id: 0, // FIXME: Use ID assigned to category in vuex store, in order for saves to be uniquely targeted
         name: null,
         rule: {},
+        productivity: -1,
         parent: [],
       },
+      productivity_description:{
+        '-1':"Unknown Productivity",
+        '0':"Not Productive",
+        '1': "Productive",
+        '2': "Neutral Productivity"  
+      }
     };
   },
   computed: {
@@ -87,10 +99,21 @@ export default {
         //{ value: 'glob', text: 'Glob pattern' },
       ]
     },
+    productivityType: function(){
+      return this.productivity_description[this.cls.productivity]
+    },
+    allProductivityTypes: function(){
+      return [
+        { value: -1,text:this.productivity_description[-1]},
+        { value: 0, text:this.productivity_description[0]},
+        { value: 1, text:this.productivity_description[1]},
+        { value: 2, text:this.productivity_description[2]}
+      ]
+    }
   },
   methods: {
     addSubclass: function(parent) {
-      this.$store.commit('settings/addClass', {name: parent.name.concat(["New class"]), rule: {type: "regex", regex: "FILL ME"}});
+      this.$store.commit('settings/addClass', {name: parent.name.concat(["New class"]), productivity: parent.productivity, rule: {type: "regex", regex: "FILL ME"}});
     },
     removeClass: function(cls) {
       // TODO: Show a confirmation dialog
@@ -122,6 +145,7 @@ export default {
         id: this.editing.id,
         name: this.editing.parent.concat(this.editing.name),
         rule: this.editing.rule.type !== null ? this.editing.rule : { type: null },
+        productivity: this.editing.productivity ? this.editing.productivity : -1
       };
       this.$store.commit("settings/updateClass", new_class);
 
@@ -135,6 +159,7 @@ export default {
         id: this.cls.id,
         name: this.cls.subname,
         rule: _.cloneDeep(this.cls.rule),
+        productivity: this.cls.productivity ? this.cls.productivity : -1,
         parent: this.cls.parent ? this.cls.parent : [],
       };
       //console.log(this.editing);

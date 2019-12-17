@@ -71,7 +71,7 @@ export default {
       localStorage.startOfDay = time_minutes;
     },
     addClass: function() {
-      this.$store.commit('settings/addClass', {name: ["New class"], rule: {type: "regex", regex: "FILL ME"}});
+      this.$store.commit('settings/addClass', {name: ["New class"], productivity:-1, rule: {type: "regex", regex: "FILL ME"}});
     },
     saveClasses: async function() {
       await this.$store.dispatch('settings/save');
