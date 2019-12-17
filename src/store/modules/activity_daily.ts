@@ -2,7 +2,7 @@ import moment from 'moment';
 import { unitOfTime } from 'moment';
 import * as _ from 'lodash';
 import queries from '~/queries';
-import { loadClassesForQuery } from '~/util/classes';
+import { loadClassesForQuery, loadProductivityPerCategory } from '~/util/classes';
 import { get_day_start_with_offset } from '~/util/time';
 
 const default_limit = 100;
@@ -46,6 +46,7 @@ const _state = {
   top_editor_projects: [],
 
   top_categories: [],
+  top_productive: [],
   active_events: [],
   active_duration: 0,
   active_history: {},
@@ -115,6 +116,7 @@ const actions = {
     const start = moment();
     const periods = [timeperiodToStr(timeperiod)];
     const classes = loadClassesForQuery();
+    const cat_productivity_assignments = loadProductivityPerCategory();
     const bucket_id_window = 'aw-watcher-window_' + host;
     const bucket_id_afk = 'aw-watcher-afk_' + host;
     const q = queries.windowQuery(
@@ -124,6 +126,7 @@ const actions = {
       default_limit, // this.top_windowtitles_count,
       filterAFK,
       classes,
+      cat_productivity_assignments,
       filterCategories,
     );
     const data = await this._vm.$aw.query(periods, q);
@@ -210,6 +213,7 @@ const mutations = {
     state.top_editor_projects = null,
 
     state.top_categories = null;
+    state.top_productive = null;
     state.active_duration = null;
     state.active_events = null;
   },
@@ -218,6 +222,7 @@ const mutations = {
     state.top_apps = data['app_events'];
     state.top_titles = data['title_events'];
     state.top_categories = data['cat_events'];
+    state.top_productive = data['productivity_events'];
     state.active_duration = data['duration'];
     state.app_chunks = data['app_chunks'];
     state.active_events = data['active_events'];

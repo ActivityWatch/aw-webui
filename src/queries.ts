@@ -14,6 +14,7 @@ interface QueryParams {
   bid_afk: string;
   bid_browsers?: string[];
   filter_afk: boolean;
+  cat_productivity_assignments? : Record<string, number>;
   include_audible?: boolean;
   classes: Record<string, any>;
 }
@@ -31,10 +32,10 @@ function canonicalEvents(params: QueryParams): string {
   `;
 }
 
-export function windowQuery(windowbucket, afkbucket, appcount, titlecount, filterAFK, classes, filterCategories: string[][]): string[] {
+export function windowQuery(windowbucket, afkbucket, appcount, titlecount, filterAFK, classes, cat_productivity_assignments,filterCategories: string[][]): string[] {
   windowbucket = windowbucket.replace('"', '\\"');
   afkbucket = afkbucket.replace('"', '\\"');
-  const params: QueryParams = { bid_window: windowbucket, bid_afk: afkbucket, classes: classes, filter_afk: filterAFK };
+  const params: QueryParams = { bid_window: windowbucket, bid_afk: afkbucket, classes: classes, filter_afk: filterAFK, cat_productivity_assignments: cat_productivity_assignments };
   const code =
     `
       ${canonicalEvents(params)}
@@ -47,12 +48,13 @@ export function windowQuery(windowbucket, afkbucket, appcount, titlecount, filte
     title_events = sort_by_duration(merge_events_by_keys(events, ["app", "title"]));
     app_events   = sort_by_duration(merge_events_by_keys(title_events, ["app"]));
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
-
+    cat_events_with_productivity = assign_productivity(cat_events, ${JSON.stringify(params.cat_productivity_assignments)});
+    productivity_events = sort_by_duration(merge_events_by_keys(cat_events_with_productivity, ["$productivity"]));
     events = sort_by_timestamp(events);
     app_events  = limit_events(app_events, ${appcount});
     title_events  = limit_events(title_events, ${titlecount});
     duration = sum_durations(events);
-    RETURN  = {"app_events": app_events, "title_events": title_events, "cat_events": cat_events, "duration": duration, "active_events": not_afk};`;
+    RETURN  = {"app_events": app_events, "title_events": title_events, "cat_events": cat_events, "duration": duration, "active_events": not_afk, "productivity_events":productivity_events};`;
   return querystr_to_array(code);
 }
 

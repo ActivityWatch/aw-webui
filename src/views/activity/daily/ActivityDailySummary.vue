@@ -28,6 +28,10 @@ div
       div(v-if="top_categories")
         aw-sunburst-categories(:data="top_categories_hierarchy", style="height: 20em")
 
+    div.col-md-4
+      h5 Productivity
+      aw-summary(:fields="top_productive", :namefunc="e => productivity_score_to_str(e.data['$productivity'])", :colorfunc="e => e.data['$productivity']", with_limit)
+
   aw-devonly(v-if="periodLength === 'day'" reason="Not ready for production, still experimenting")
     div.row.mb-4
       div.col-md-12
@@ -92,6 +96,7 @@ export default {
     top_apps: function() { return this.$store.state.activity_daily.top_apps },
     top_titles: function() { return this.$store.state.activity_daily.top_titles },
     top_categories: function() { return this.$store.state.activity_daily.top_categories },
+    top_productive: function() { return this.$store.state.activity_daily.top_productive },
     top_domains: function() { return this.$store.state.activity_daily.top_domains },
     //top_urls: function() { return this.$store.state.activity_daily.top_urls },
     browser_buckets: function() { return this.$store.state.activity_daily.browser_buckets },
@@ -116,5 +121,17 @@ export default {
       }];
     },
   },
+  methods:{
+    productivity_score_to_str: function(score){
+      let productivity_score = {
+        '-1':"Unknown Productivity",
+        '0':"Not Productive",
+        '1': "Productive",
+        '2': "Neutral Productivity"  
+      }
+      return productivity_score[score]
+      }
+
+  } 
 }
 </script>
