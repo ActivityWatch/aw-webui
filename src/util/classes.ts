@@ -116,5 +116,6 @@ export function loadClassesForQuery(): [string[], Rule][] {
 }
 
 export function loadProductivityPerCategory(): [string[], number][] {
-  return loadClasses().map(c => {return [c.name, c.productivity]});
+  return loadClasses().map(c => {return [c.name, (c.productivity ? c.productivity : -1) ]});
+  
 }

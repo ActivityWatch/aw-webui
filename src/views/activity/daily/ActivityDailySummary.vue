@@ -30,7 +30,7 @@ div
 
     div.col-md-4
       h5 Productivity
-      aw-summary(:fields="top_productive", :namefunc="e => productivity_score_to_str(e.data['$productivity'])", :colorfunc="e => e.data['$productivity']", with_limit)
+      aw-summary(:fields="top_productive", :namefunc="e => productivity_score_to_str(e.data['$productivity'])", :colorfunc="e => e.data['$productivity'].toString()", with_limit)
 
   aw-devonly(v-if="periodLength === 'day'" reason="Not ready for production, still experimenting")
     div.row.mb-4
