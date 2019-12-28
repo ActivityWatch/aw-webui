@@ -144,8 +144,8 @@ export function browserSummaryQuery(browserbuckets: string[], windowbucket: stri
   // TODO: Get classes
   const params: QueryParams = { bid_window: windowbucket, bid_afk: afkbucket, bid_browsers: browserbuckets, classes: {}, filter_afk: filterAFK };
 
-  return querystr_to_array(`
-    ${browserEvents(params)}
+  return querystr_to_array(
+   `${browserEvents(params)}
     urls = merge_events_by_keys(events, ["url"]);
     urls = sort_by_duration(urls);
     urls = limit_events(urls, ${limit});
@@ -154,8 +154,7 @@ export function browserSummaryQuery(browserbuckets: string[], windowbucket: stri
     domains = sort_by_duration(domains);
     domains = limit_events(domains, ${limit});
     duration = sum_durations(events);
-    RETURN = {"domains": domains, "urls": urls, "duration": duration};
-  `);
+    RETURN = {"domains": domains, "urls": urls, "duration": duration};`);
 }
 
 export function editorActivityQuery(editorbuckets: string[], limit): string[] {
