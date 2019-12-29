@@ -33,9 +33,9 @@ div
   hr
 
   div.float-right
-    b-button.mx-1(@click="$emit('cancel')")
+    b-button.mx-1(@click="$emit('close');")
       | Cancel
-    b-button.mx-1(@click="save()", variant="primary")
+    b-button.mx-1(@click="save(); $emit('close');", variant="primary")
       | Save
 </template>
 
@@ -56,9 +56,8 @@ export default {
   },
   methods: {
     async save() {
-      this.event.data = this.editedEvent.data;
-      await this.$aw.replaceEvent(this.bucket_id, this.event);
-      this.$emit('save');
+      await this.$aw.replaceEvent(this.bucket_id, this.editedEvent);
+      this.$emit('save', this.editedEvent);
     }
   }
 }
