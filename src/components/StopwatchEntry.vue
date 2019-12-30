@@ -18,8 +18,8 @@ div
       b-button.mx-1(@click="delete_", variant="outline-danger", size="sm")
         icon.mx-0(name="trash")
         //| Delete
-  b-modal(:id="'edit-modal-' + event.id", ref="editEventRef", title="Edit event", centered, hide-footer)
-    event-editor(:event="event", :bucket_id="bucket_id", @save="$refs.editEventRef.hide()", @cancel="$refs.editEventRef.hide()")
+  b-modal(:id="'edit-modal-' + event.id", ref="eventEditModal", title="Edit event", centered, hide-footer)
+    event-editor(:event="event", :bucket_id="bucket_id", @save="save", @close="$refs.eventEditModal.hide()")
 </template>
 
 <style scoped lang="scss">
@@ -52,12 +52,16 @@ export default {
   },
   methods: {
     stop: async function() {
-      this.event.data.running = false;
-      this.event.duration = (moment() - moment(this.event.timestamp)) / 1000;
-      await this.$aw.replaceEvent(this.bucket_id, this.event);
+      let new_event = JSON.parse(JSON.stringify(this.event));
+      new_event.data.running = false;
+      new_event.duration = (moment() - moment(new_event.timestamp)) / 1000;
+      new_event = await this.$aw.replaceEvent(this.bucket_id, new_event);
+      this.$emit('update', new_event);
+    },
+    save: async function(new_event) {
+      this.$emit('update', new_event);
     },
     delete_: async function() {
-      await this.$aw.deleteEvent(this.bucket_id, this.event.id);
       this.$emit('delete');
     },
   }

@@ -21,7 +21,8 @@ div
       h3 Running
       div(v-if="runningTimers.length > 0")
         div(v-for="e in runningTimers")
-          stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now", @delete="deleteTimer(e)")
+          stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
+            @delete="deleteTimer", @update="updateTimer")
           hr(style="margin: 0")
       div(v-else)
         span(style="color: #555") No stopwatch running
@@ -29,7 +30,8 @@ div
     div.col-md-6
       h3 Stopped
       div(v-for="e in stoppedTimers")
-        stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now", @delete="deleteTimer(e)", @new="startTimer(e.data.label)")
+        stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
+          @delete="deleteTimer", @update="updateTimer", @new="startTimer(e.data.label)")
         hr(style="margin: 0")
 </template>
 
@@ -87,16 +89,29 @@ export default {
   },
   methods: {
     startTimer: async function(label) {
-      this.events.unshift(await this.$aw.heartbeat(this.bucket_id, 0, {
+      const event = await this.$aw.insertEvent(this.bucket_id, {
         timestamp: new Date(),
         data: {
           running: true,
           label: label
         }
-      }))
+      });
+      this.events.unshift(event);
+    },
+
+    updateTimer: async function(new_event) {
+      const i = this.events.findIndex((e) => e.id == new_event.id);
+      if (i != -1) {
+        // This is needed instead of this.events[i] because insides of arrays
+        // are not reactive in Vue
+        this.$set(this.events, i, new_event);
+      } else {
+        console.log(":(");
+      }
     },
 
     deleteTimer: async function(event) {
+      await this.$aw.deleteEvent(this.bucket_id, event.id);
       this.events = _.filter(this.events, (e) => e.id != event.id);
     },
 
