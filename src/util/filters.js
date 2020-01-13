@@ -10,6 +10,10 @@ Vue.filter('shortdate', function(timestamp) {
   return moment(timestamp).format('YYYY-MM-DD');
 });
 
+Vue.filter('shorttime', function(timestamp) {
+  return moment(timestamp).format('hh:mm');
+});
+
 Vue.filter('friendlytime', function(timestamp) {
   return friendlydate(timestamp);
 });

@@ -9,13 +9,13 @@ div
       td {{ event.id }}
     tr
       th Start
-      td {{ event.timestamp | iso8601 }}
+      datetime(type="datetime" v-model="start")
     tr
       th End
-      td {{ 1 * event.timestamp + 1000 * event.duration | iso8601 }}
+      datetime(type="datetime" v-model="end")
     tr
       th Duration
-      td {{ event.duration | friendlyduration }}
+      td {{ editedEvent.duration | friendlyduration }}
 
   hr
 
@@ -43,6 +43,9 @@ div
 </style>
 
 <script>
+import moment from 'moment';
+
+
 export default {
   name: "EventEditor",
   props: {
@@ -54,10 +57,39 @@ export default {
       editedEvent: JSON.parse(JSON.stringify(this.event)),
     }
   },
+  computed: {
+    start: {
+      get: function() {
+        return moment(this.editedEvent.timestamp).format();
+      },
+      set: function(dt) {
+        const start = moment(dt);
+        const end = moment(this.end);
+        this.editedEvent.timestamp = start.format();
+        this.editedEvent.duration = end.diff(start, 'seconds');
+      }
+    },
+    end: {
+      get: function() {
+        const end = moment(this.editedEvent.timestamp).add(this.editedEvent.duration, 'seconds');
+        return end.format();
+      },
+      set: function(dt) {
+        this.editedEvent.duration = moment(dt).diff(this.editedEvent.timestamp, 'seconds');
+      },
+    },
+  },
   methods: {
     async save() {
       await this.$aw.replaceEvent(this.bucket_id, this.editedEvent);
       this.$emit('save', this.editedEvent);
+    },
+    endformat(end) {
+      if (moment(this.event.timestamp).isSame(end, 'day')) {
+        return "HH:MM";
+      } else {
+        return end;
+      }
     }
   }
 }

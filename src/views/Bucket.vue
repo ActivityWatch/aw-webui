@@ -23,7 +23,7 @@ div
 
   vis-timeline(:buckets="[bucket_with_events]", showRowLabels='false')
 
-  aw-eventlist(:events="bucket_with_events.events")
+  aw-eventlist(:bucket_id=id, :events="bucket_with_events.events")
 </template>
 
 <script>
