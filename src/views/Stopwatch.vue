@@ -78,9 +78,7 @@ export default {
       return _.filter(this.events, (e) => (!e.data.running))
     },
     timersByDate() {
-      let d = _.groupBy(this.stoppedTimers, (e) => (moment(e.timestamp).format("YYYY-MM-DD")));
-      console.log(d);
-      return d;
+      return _.groupBy(this.stoppedTimers, (e) => (moment(e.timestamp).format("YYYY-MM-DD")));
     },
   },
   mounted: function() {

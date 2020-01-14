@@ -23,7 +23,7 @@ div
 
   vis-timeline(:buckets="[bucket_with_events]", showRowLabels='false')
 
-  aw-eventlist(:bucket_id=id, :events="bucket_with_events.events")
+  aw-eventlist(:bucket_id="id", @save="updateEvent", :events="events")
 </template>
 
 <script>
@@ -37,6 +37,7 @@ export default {
   data: () => {
     return {
       bucket_with_events: { events: [] },
+      events: [],
       eventcount: "?",
       daterange: [moment().subtract(1, "hour"), moment()],
     }
@@ -47,8 +48,8 @@ export default {
     },
   },
   watch: {
-    daterange: function() {
-      this.getEvents(this.id);
+    daterange: async function() {
+      await this.getEvents(this.id);
     }
   },
   mounted: async function() {
@@ -63,9 +64,18 @@ export default {
         start: this.daterange[0].format(),
         end: this.daterange[1].format(),
       });
+      this.events = this.bucket_with_events.events;
     },
     getEventCount: async function(bucket_id) {
       this.eventcount = (await this.$aw.countEvents(bucket_id)).data;
+    },
+    updateEvent: function(event) {
+      const i = this.events.findIndex((e) => e.id == event.id);
+      if(i != -1) {
+        this.$set(this.events, i, event);
+      } else {
+        console.error(":(");
+      }
     },
   },
 }

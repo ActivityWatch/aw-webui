@@ -84,13 +84,6 @@ export default {
       await this.$aw.replaceEvent(this.bucket_id, this.editedEvent);
       this.$emit('save', this.editedEvent);
     },
-    endformat(end) {
-      if (moment(this.event.timestamp).isSame(end, 'day')) {
-        return "HH:MM";
-      } else {
-        return end;
-      }
-    }
   }
 }
 </script>
