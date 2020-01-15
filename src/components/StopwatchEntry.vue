@@ -5,9 +5,11 @@ div
       span #[b {{event.data.label || 'No label'}}]
       span(style="color: #888") &nbsp;|&nbsp;
       span(v-if="event.data.running")
-        | Running for #[span(:title="event.timestamp") {{event.data.running ? (now - event.timestamp) / 1000 : event.duration | friendlyduration}}] (Started {{ event.timestamp | shorttime }})
+        | Running for #[span(:title="event.timestamp") {{event.data.running ? (now - event.timestamp) / 1000 : event.duration | friendlyduration}}]
+        | &nbsp;(Started {{ event.timestamp | shorttime }})
       span(v-else)
-        | Started #[span(:title="event.timestamp") {{event.timestamp | friendlytime}}] ({{event.data.running ? (now - event.timestamp) / 1000 : event.duration | friendlyduration}})
+        | Started #[span(:title="event.timestamp") {{event.timestamp | friendlytime}}]
+        | &nbsp;({{event.data.running ? (now - event.timestamp) / 1000 : event.duration | friendlyduration}})
     div
       b-button.mx-1(v-if="event.data.running", @click="stop", variant="outline-primary", size="sm")
         icon.ml-0.mr-1(name="stop")
