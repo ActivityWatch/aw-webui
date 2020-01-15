@@ -11,7 +11,7 @@ Vue.filter('shortdate', function(timestamp) {
 });
 
 Vue.filter('shorttime', function(timestamp) {
-  return moment(timestamp).format('hh:mm');
+  return moment(timestamp).format('HH:mm');
 });
 
 Vue.filter('friendlytime', function(timestamp) {

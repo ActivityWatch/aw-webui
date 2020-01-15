@@ -72,6 +72,8 @@ export default {
     updateEvent: function(event) {
       const i = this.events.findIndex((e) => e.id == event.id);
       if(i != -1) {
+        // This is needed instead of this.events[i] because insides of arrays
+        // are not reactive in Vue.
         this.$set(this.events, i, event);
       } else {
         console.error(":(");

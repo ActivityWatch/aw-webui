@@ -65,7 +65,7 @@ export default {
       this.$emit('update', new_event);
     },
     delete_: async function() {
-      this.$emit('delete');
+      this.$emit('delete', this.event);
     },
   }
 }

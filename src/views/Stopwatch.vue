@@ -28,14 +28,17 @@ div
         span(style="color: #555") No stopwatch running
         hr
 
-      div.mb-2
-
-      div(v-for="(v, k) in timersByDate")
-        h5.mt-4 {{ k }}
-        div(v-for="e in timersByDate[k]")
-          stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
-            @delete="deleteTimer", @update="updateTimer", @new="startTimer(e.data.label)")
-          hr(style="margin: 0")
+      div(v-if="stoppedTimers.length > 0")
+        h3.mt-4.mb-4 History
+        div(v-for="k in Object.keys(timersByDate).sort().reverse()")
+          h5.mt-2.mb-1 {{ k }}
+          div(v-for="e in timersByDate[k]")
+            stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
+              @delete="deleteTimer", @update="updateTimer", @new="startTimer(e.data.label)")
+            hr(style="margin: 0")
+      div(v-else)
+        span(style="color: #555") No history to show
+        hr
 </template>
 
 <style scoped lang="scss">
@@ -112,7 +115,7 @@ export default {
         // are not reactive in Vue
         this.$set(this.events, i, new_event);
       } else {
-        console.log(":(");
+        console.error(":(");
       }
     },
 

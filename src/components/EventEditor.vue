@@ -63,10 +63,9 @@ export default {
         return moment(this.editedEvent.timestamp).format();
       },
       set: function(dt) {
-        const start = moment(dt);
-        const end = moment(this.end);
-        this.editedEvent.timestamp = start.format();
-        this.editedEvent.duration = end.diff(start, 'seconds');
+        // Duration needs to be set first since otherwise the computed for end will use the new timestamp
+        this.editedEvent.duration = moment(this.end).diff(dt, 'seconds');
+        this.editedEvent.timestamp = new Date(dt);
       }
     },
     end: {
@@ -81,8 +80,9 @@ export default {
   },
   methods: {
     async save() {
-      await this.$aw.replaceEvent(this.bucket_id, this.editedEvent);
+      // This emit needs to be called first, otherwise it won't occur for some reason
       this.$emit('save', this.editedEvent);
+      await this.$aw.replaceEvent(this.bucket_id, this.editedEvent);
     },
   }
 }
