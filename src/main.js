@@ -8,6 +8,10 @@ import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue/dist/bootstrap-vue.css';
 Vue.use(BootstrapVue);
 
+import { Datetime } from 'vue-datetime';
+import 'vue-datetime/dist/vue-datetime.css';
+Vue.component('datetime', Datetime);
+
 // Setup default settings
 if (!('startOfDay' in localStorage)) {
   localStorage.startOfDay = '04:00';

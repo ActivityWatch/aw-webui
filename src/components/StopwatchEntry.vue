@@ -1,10 +1,15 @@
 <template lang="pug">
 div
-  div.row.p-3#root
+  div.row.px-3.py-2#root
     div.flex-fill
-      div #[b {{event.data.label || 'No label'}}]
-      div
-        | Started #[span(:title="event.timestamp") {{event.timestamp | friendlytime}}] ({{event.data.running ? (now - event.timestamp) / 1000 : event.duration | friendlyduration}})
+      span #[b {{event.data.label || 'No label'}}]
+      span(style="color: #888") &nbsp;|&nbsp;
+      span(v-if="event.data.running")
+        | Running for #[span(:title="event.timestamp") {{event.data.running ? (now - event.timestamp) / 1000 : event.duration | friendlyduration}}]
+        | &nbsp;(Started {{ event.timestamp | shorttime }})
+      span(v-else)
+        | Started #[span(:title="event.timestamp") {{event.timestamp | friendlytime}}]
+        | &nbsp;({{event.data.running ? (now - event.timestamp) / 1000 : event.duration | friendlyduration}})
     div
       b-button.mx-1(v-if="event.data.running", @click="stop", variant="outline-primary", size="sm")
         icon.ml-0.mr-1(name="stop")
@@ -62,7 +67,7 @@ export default {
       this.$emit('update', new_event);
     },
     delete_: async function() {
-      this.$emit('delete');
+      this.$emit('delete', this.event);
     },
   }
 }

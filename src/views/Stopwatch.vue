@@ -17,22 +17,28 @@ div
   hr
 
   div.row
-    div.col-md-6
-      h3 Running
+    div.col-md-12
       div(v-if="runningTimers.length > 0")
+        h3 Running
         div(v-for="e in runningTimers")
           stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
             @delete="deleteTimer", @update="updateTimer")
           hr(style="margin: 0")
       div(v-else)
         span(style="color: #555") No stopwatch running
+        hr
 
-    div.col-md-6
-      h3 Stopped
-      div(v-for="e in stoppedTimers")
-        stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
-          @delete="deleteTimer", @update="updateTimer", @new="startTimer(e.data.label)")
-        hr(style="margin: 0")
+      div(v-if="stoppedTimers.length > 0")
+        h3.mt-4.mb-4 History
+        div(v-for="k in Object.keys(timersByDate).sort().reverse()")
+          h5.mt-2.mb-1 {{ k }}
+          div(v-for="e in timersByDate[k]")
+            stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
+              @delete="deleteTimer", @update="updateTimer", @new="startTimer(e.data.label)")
+            hr(style="margin: 0")
+      div(v-else)
+        span(style="color: #555") No history to show
+        hr
 </template>
 
 <style scoped lang="scss">
@@ -73,7 +79,10 @@ export default {
     },
     stoppedTimers() {
       return _.filter(this.events, (e) => (!e.data.running))
-    }
+    },
+    timersByDate() {
+      return _.groupBy(this.stoppedTimers, (e) => (moment(e.timestamp).format("YYYY-MM-DD")));
+    },
   },
   mounted: function() {
     // TODO: List all possible timer buckets
@@ -106,7 +115,7 @@ export default {
         // are not reactive in Vue
         this.$set(this.events, i, new_event);
       } else {
-        console.log(":(");
+        console.error(":(");
       }
     },
 
