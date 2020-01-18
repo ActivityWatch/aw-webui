@@ -61,10 +61,11 @@ export default {
   name: "QueryExplorer",
   data() {
     return {
-      query_code: `afk_events = query_bucket(find_bucket('aw-watcher-afk_'));
-window_events = query_bucket(find_bucket('aw-watcher-window_'));
-window_events = filter_period_intersect(window_events, filter_keyvals(afk_events, 'status', ['not-afk']));
-RETURN = merge_events_by_keys(window_events, ['app', 'title']);`,
+      query_code: `afk_events = query_bucket(find_bucket("aw-watcher-afk_"));
+window_events = query_bucket(find_bucket("aw-watcher-window_"));
+window_events = filter_period_intersect(window_events, filter_keyvals(afk_events, "status", ["not-afk"]));
+merged_events = merge_events_by_keys(window_events, ["app", "title"]);
+RETURN = sort_by_duration(merged_events);`,
       "vis_method": "eventlist",
       "event_type": "currentwindow",
       "events": [],
