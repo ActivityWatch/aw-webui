@@ -38,11 +38,16 @@ import moment from 'moment';
 
 export default {
   name: "input-timeinterval",
+  props: {
+      duration: {
+          type: Number,
+          default: 60 * 60
+      }
+  },
   data: () => {
     return {
       now: moment(),
       mode: 'last_duration',
-      duration: 60 * 60,
       start: null,
       end: null,
     }
