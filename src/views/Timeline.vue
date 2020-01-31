@@ -2,7 +2,7 @@
 div
   h2 Timeline
 
-  input-timeinterval(v-model="daterange")
+  input-timeinterval(v-model="daterange", v-bind:duration="timeintervalDefaultDuration")
 
   div(v-show="buckets !== null")
     div
@@ -26,6 +26,7 @@ export default {
     return {
       buckets: null,
       daterange: [moment().subtract(1, "hour"), moment()],
+      timeintervalDefaultDuration: localStorage.durationDefault
     }
   },
   computed: {
