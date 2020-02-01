@@ -31,8 +31,8 @@ import moment from 'moment';
 import {buildTooltip} from '../util/tooltip.js'
 import {getColorFromString, getTitleAttr} from '../util/color.js'
 
-import {Timeline} from 'timeline-plus/dist/timeline.js';
-import 'timeline-plus/dist/timeline.css';
+import {Timeline} from 'vis-timeline/esnext';
+import 'vis-timeline/styles/vis-timeline-graph2d.css';
 
 export default {
   props: ['buckets', 'showRowLabels', 'queriedInterval', 'showQueriedInterval'],
