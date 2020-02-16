@@ -20,10 +20,10 @@ interface Category {
 }
 
 export const defaultCategories: Category[] = [
-  { name: ['Work'], rule: { type: 'regex', regex: 'Google Docs' } },
+  { name: ['Work'], rule: { type: 'regex', regex: 'Google Docs|LibreOffice' } },
   {
     name: ['Work', 'Programming'],
-    rule: { type: 'regex', regex: 'GitHub|Stack Overflow' },
+    rule: { type: 'regex', regex: 'GitHub|Stack Overflow|VIM' },
   },
   {
     name: ['Work', 'Programming', 'ActivityWatch'],
@@ -31,9 +31,10 @@ export const defaultCategories: Category[] = [
   },
   { name: ['Media', 'Games'], rule: { type: 'regex', regex: 'Minecraft|RimWorld' } },
   { name: ['Media', 'Video'], rule: { type: 'regex', regex: 'YouTube|Plex' } },
-  { name: ['Media', 'Social Media'], rule: { type: 'regex', regex: 'reddit|Facebook|Twitter|Instagram', ignore_case: true } },
-  { name: ['Comms', 'IM'], rule: { type: 'regex', regex: 'Messenger|Telegram|Signal|WhatsApp' } },
-  { name: ['Comms', 'Email'], rule: { type: 'regex', regex: 'Gmail' } },
+  { name: ['Media', 'Social Media'], rule: { type: 'regex', regex: 'reddit|Facebook|Twitter|Instagram|devRant', ignore_case: true } },
+  { name: ['Media', 'Music'], rule: { type: 'regex', regex: 'Spotify|Deezer', ignore_case: true } },
+  { name: ['Comms', 'IM'], rule: { type: 'regex', regex: 'Messenger|Telegram|Signal|WhatsApp|Riot|Discord' } },
+  { name: ['Comms', 'Email'], rule: { type: 'regex', regex: 'Gmail|mutt|' } },
 ];
 
 export function build_category_hierarchy(classes: Category[]): Category[] {
