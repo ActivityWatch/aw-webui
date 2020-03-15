@@ -60,6 +60,10 @@ div
       div.col-md-6
         b-form-group(label="Show category" label-cols="5" label-cols-lg="4")
           b-form-select(v-model="filterCategory", :options="categories")
+
+    aw-devonly
+      b-btn(@click="load_demo")
+        | Load demo data
 </template>
 
 <style lang="scss" scoped>
@@ -187,6 +191,10 @@ export default {
 
     refresh: async function(force) {
       await this.$store.dispatch("activity_daily/ensure_loaded", { timeperiod: this.timeperiod, host: this.host, force: force, filterAFK: true, filterCategories: this.filterCategories });
+    },
+
+    load_demo: async function() {
+      await this.$store.dispatch('activity_daily/load_demo');
     },
   },
 }

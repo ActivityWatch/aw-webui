@@ -111,6 +111,15 @@ const actions = {
     }
   },
 
+  async load_demo({ commit }) {
+    // A function to load some demo data (for screenshots and stuff)
+    commit('query_window_completed', {
+      app_events: [{ duration: 10, data: { app: 'test' } }],
+    });
+    commit('query_browser_completed', {});
+    commit('query_editor_completed', {});
+  },
+
   async query_window({ commit }, { host, timeperiod, filterAFK, filterCategories }: QueryOptions) {
     const start = moment();
     const periods = [timeperiodToStr(timeperiod)];
