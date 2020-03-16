@@ -111,15 +111,6 @@ const actions = {
     }
   },
 
-  async load_demo({ commit }) {
-    // A function to load some demo data (for screenshots and stuff)
-    commit('query_window_completed', {
-      app_events: [{ duration: 10, data: { app: 'test' } }],
-    });
-    commit('query_browser_completed', {});
-    commit('query_editor_completed', {});
-  },
-
   async query_window({ commit }, { host, timeperiod, filterAFK, filterCategories }: QueryOptions) {
     const start = moment();
     const periods = [timeperiodToStr(timeperiod)];
@@ -197,6 +188,34 @@ const actions = {
     commit('browser_buckets', browser_buckets);
     commit('editor_buckets', editor_buckets);
   },
+
+  async load_demo({ commit }) {
+    // A function to load some demo data (for screenshots and stuff)
+    commit('start_loading', {});
+
+    commit('query_window_completed', {
+      duration: 30,
+      app_events: [{ duration: 10, data: { app: 'test' } }],
+      title_events: [{ duration: 10, data: { title: 'test' }}],
+      cat_events: [{ duration: 10, data: { $category: ['test', 'subtest'] }}],
+      active_events: [{ timestamp: new Date().toISOString(), duration: 1.5*60*60, data: { afk: 'not-afk' }}],
+    });
+
+    commit('browser_buckets', ['aw-watcher-firefox']);
+    commit('query_browser_completed', {
+      duration: 20,
+      domains: [{ duration: 10, data: { $domain: "github.com" } }],
+      urls: [{ duration: 10, data: { url: "https://github.com/ActivityWatch/activitywatch" } }],
+    });
+
+    commit('editor_buckets', ['aw-watcher-vim']);
+    commit('query_editor_completed', {
+      duration: 30,
+      files: [{ duration: 10, data: { file: "test.py" }}],
+      languages: [{ duration: 10, data: { language: "python" }}],
+      projects: [{ duration: 10, data: { project: "aw-core" }}],
+    });
+  },
 };
 
 // mutations
@@ -214,9 +233,9 @@ const mutations = {
     state.top_urls = null;
 
     state.editor_duration = 0;
-    state.top_editor_files = null,
-    state.top_editor_languages = null,
-    state.top_editor_projects = null,
+    state.top_editor_files = null;
+    state.top_editor_languages = null;
+    state.top_editor_projects = null;
 
     state.top_categories = null;
     state.active_duration = null;
