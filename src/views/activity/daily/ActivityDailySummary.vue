@@ -39,7 +39,7 @@ div
 import _ from 'lodash';
 import moment from 'moment';
 
-import { build_category_hierarchy } from "~/util/classes";
+import { build_category_hierarchy } from '~/util/classes';
 
 function pick_subname_as_name(c) {
   c.name = c.subname;
@@ -49,8 +49,7 @@ function pick_subname_as_name(c) {
 
 // TODO: Move somewhere else, possibly turn into a serverside transform
 function split_by_hour_into_data(events) {
-  if(events === undefined || events === null || events.length == 0)
-    return [];
+  if (events === undefined || events === null || events.length == 0) return [];
   const d = moment(events[0].timestamp).startOf('day');
   return _.range(0, 24).map(h => {
     let duration = 0;
@@ -60,14 +59,18 @@ function split_by_hour_into_data(events) {
     events.map(e => {
       const e_start = moment(e.timestamp);
       const e_end = e_start.clone().add(e.duration, 'seconds');
-      if(e_start.isBetween(d_start, d_end) || e_end.isBetween(d_start, d_end) || d_start.isBetween(e_start, e_end)) {
-        if(d_start < e_start && e_end < d_end) {
+      if (
+        e_start.isBetween(d_start, d_end) ||
+        e_end.isBetween(d_start, d_end) ||
+        d_start.isBetween(e_start, e_end)
+      ) {
+        if (d_start < e_start && e_end < d_end) {
           // If entire event is contained within the hour
           duration += e.duration;
-        } else if(d_start < e_start) {
+        } else if (d_start < e_start) {
           // If start of event is within the hour, but not the end
           duration += (d_end - e_start) / 1000;
-        } else if(e_end < d_end) {
+        } else if (e_end < d_end) {
           // If end of event is within the hour, but not the start
           duration += (e_end - d_start) / 1000;
         } else {
@@ -81,7 +84,7 @@ function split_by_hour_into_data(events) {
 }
 
 export default {
-  name: "Activity",
+  name: 'Activity',
   props: {
     periodLength: {
       type: String,
@@ -89,19 +92,31 @@ export default {
     },
   },
   computed: {
-    top_apps: function() { return this.$store.state.activity_daily.top_apps },
-    top_titles: function() { return this.$store.state.activity_daily.top_titles },
-    top_categories: function() { return this.$store.state.activity_daily.top_categories },
-    top_domains: function() { return this.$store.state.activity_daily.top_domains },
+    top_apps: function() {
+      return this.$store.state.activity_daily.top_apps;
+    },
+    top_titles: function() {
+      return this.$store.state.activity_daily.top_titles;
+    },
+    top_categories: function() {
+      return this.$store.state.activity_daily.top_categories;
+    },
+    top_domains: function() {
+      return this.$store.state.activity_daily.top_domains;
+    },
     //top_urls: function() { return this.$store.state.activity_daily.top_urls },
-    browser_buckets: function() { return this.$store.state.activity_daily.browser_buckets },
+    browser_buckets: function() {
+      return this.$store.state.activity_daily.browser_buckets;
+    },
     top_categories_hierarchy: function() {
-      if(this.top_categories) {
-        const categories = this.top_categories.map(c => { return { name: c.data.$category, size: c.duration }; });
+      if (this.top_categories) {
+        const categories = this.top_categories.map(c => {
+          return { name: c.data.$category, size: c.duration };
+        });
 
         return {
-          name: "All",
-          children: build_category_hierarchy(categories).map(c => pick_subname_as_name(c))
+          name: 'All',
+          children: build_category_hierarchy(categories).map(c => pick_subname_as_name(c)),
         };
       } else {
         return null;
@@ -109,12 +124,14 @@ export default {
     },
     datasets: function() {
       const data = split_by_hour_into_data(this.$store.state.activity_daily.active_events);
-      return [{
-        label: 'Total time',
-        backgroundColor: '#6699ff',
-        data,
-      }];
+      return [
+        {
+          label: 'Total time',
+          backgroundColor: '#6699ff',
+          data,
+        },
+      ];
     },
   },
-}
+};
 </script>

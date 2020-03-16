@@ -25,24 +25,35 @@ function canonicalEvents(params: QueryParams): string {
     events  = flood(query_bucket("${params.bid_window}"));
     not_afk = flood(query_bucket("${params.bid_afk}"));
     not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);
-    ${params.filter_afk
-      ? 'events  = filter_period_intersect(events, not_afk);'
-      : ''}
+    ${params.filter_afk ? 'events  = filter_period_intersect(events, not_afk);' : ''}
   `;
 }
 
-export function windowQuery(windowbucket, afkbucket, appcount, titlecount, filterAFK, classes, filterCategories: string[][]): string[] {
+export function windowQuery(
+  windowbucket,
+  afkbucket,
+  appcount,
+  titlecount,
+  filterAFK,
+  classes,
+  filterCategories: string[][]
+): string[] {
   windowbucket = windowbucket.replace('"', '\\"');
   afkbucket = afkbucket.replace('"', '\\"');
-  const params: QueryParams = { bid_window: windowbucket, bid_afk: afkbucket, classes: classes, filter_afk: filterAFK };
+  const params: QueryParams = {
+    bid_window: windowbucket,
+    bid_afk: afkbucket,
+    classes: classes,
+    filter_afk: filterAFK,
+  };
   const code =
     `
       ${canonicalEvents(params)}
       events = categorize(events, ${JSON.stringify(params.classes)});
-    `
-      +
-        (filterCategories ? `events = filter_keyvals(events, "$category", ${JSON.stringify(filterCategories)});` : '')
-      +
+    ` +
+    (filterCategories
+      ? `events = filter_keyvals(events, "$category", ${JSON.stringify(filterCategories)});`
+      : '') +
     `
     title_events = sort_by_duration(merge_events_by_keys(events, ["app", "title"]));
     app_events   = sort_by_duration(merge_events_by_keys(title_events, ["app"]));
@@ -87,25 +98,24 @@ const appnames = {
     'firefox',
     'firefox.exe',
     'Firefox Developer Edition',
-    "firefoxdeveloperedition",
+    'firefoxdeveloperedition',
     'Firefox Beta',
     'Nightly',
   ],
   opera: ['opera.exe', 'Opera'],
   brave: ['brave.exe'],
-  vivaldi: [
-    'Vivaldi-stable',
-    'Vivaldi-snapshot',
-    'vivaldi.exe',
-  ],
+  vivaldi: ['Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe'],
 };
 
 // Returns a list of (browserName, bucketId) pairs for found browser buckets
 function browsersWithBuckets(browserbuckets: string[]): [string, string][] {
-  const browsername_to_bucketid: [string, string|undefined][] = _.map(Object.keys(appnames), browserName => {
-    const bucketId = _.find(browserbuckets, bucket_id => _.includes(bucket_id, browserName));
-    return [browserName, bucketId];
-  });
+  const browsername_to_bucketid: [string, string | undefined][] = _.map(
+    Object.keys(appnames),
+    browserName => {
+      const bucketId = _.find(browserbuckets, bucket_id => _.includes(bucket_id, browserName));
+      return [browserName, bucketId];
+    }
+  );
   // Skip browsers for which a bucket couldn't be found
   return _.filter(browsername_to_bucketid, ([, bucketId]) => bucketId !== undefined);
 }
@@ -115,19 +125,20 @@ function browserEvents(params: QueryParams): string {
   // If multiple browser buckets were found
   // AFK filtered later in the process
   let code = `
-    ${canonicalEvents({...params, filter_afk: false})}
+    ${canonicalEvents({ ...params, filter_afk: false })}
     window = events;
     events = [];
   `;
 
   _.each(browsersWithBuckets(params.bid_browsers), ([browserName, bucketId]) => {
     const appnames_str = JSON.stringify(appnames[browserName]);
-    code +=
-      `events_${browserName} = flood(query_bucket("${bucketId}"));
+    code += `events_${browserName} = flood(query_bucket("${bucketId}"));
        window_${browserName} = filter_keyvals(window, "app", ${appnames_str});
-       ${params.filter_afk
-         ? `window_${browserName} = filter_period_intersect(window_${browserName}, not_afk);`
-         : ''}
+       ${
+         params.filter_afk
+           ? `window_${browserName} = filter_period_intersect(window_${browserName}, not_afk);`
+           : ''
+       }
        events_${browserName} = filter_period_intersect(events_${browserName}, window_${browserName});
        events_${browserName} = split_url_events(events_${browserName});
        events = sort_by_timestamp(concat(events, events_${browserName}));`;
@@ -135,17 +146,29 @@ function browserEvents(params: QueryParams): string {
   return code;
 }
 
-export function browserSummaryQuery(browserbuckets: string[], windowbucket: string, afkbucket: string, limit = 5, filterAFK = true): string[] {
+export function browserSummaryQuery(
+  browserbuckets: string[],
+  windowbucket: string,
+  afkbucket: string,
+  limit = 5,
+  filterAFK = true
+): string[] {
   // Escape `"`
   browserbuckets = _.map(browserbuckets, b => b.replace('"', '\\"'));
   windowbucket = windowbucket.replace('"', '\\"');
   afkbucket = afkbucket.replace('"', '\\"');
 
   // TODO: Get classes
-  const params: QueryParams = { bid_window: windowbucket, bid_afk: afkbucket, bid_browsers: browserbuckets, classes: {}, filter_afk: filterAFK };
+  const params: QueryParams = {
+    bid_window: windowbucket,
+    bid_afk: afkbucket,
+    bid_browsers: browserbuckets,
+    classes: {},
+    filter_afk: filterAFK,
+  };
 
   return querystr_to_array(
-   `${browserEvents(params)}
+    `${browserEvents(params)}
     urls = merge_events_by_keys(events, ["url"]);
     urls = sort_by_duration(urls);
     urls = limit_events(urls, ${limit});
@@ -154,7 +177,8 @@ export function browserSummaryQuery(browserbuckets: string[], windowbucket: stri
     domains = sort_by_duration(domains);
     domains = limit_events(domains, ${limit});
     duration = sum_durations(events);
-    RETURN = {"domains": domains, "urls": urls, "duration": duration};`);
+    RETURN = {"domains": domains, "urls": urls, "duration": duration};`
+  );
 }
 
 export function editorActivityQuery(editorbuckets: string[], limit): string[] {
@@ -171,7 +195,7 @@ export function editorActivityQuery(editorbuckets: string[], limit): string[] {
     'projects = sort_by_duration(merge_events_by_keys(events, ["project"]));',
     'projects = limit_events(projects, ' + limit + ');',
     'duration = sum_durations(events);',
-    'RETURN = {"files": files, "languages": languages, "projects": projects, "duration": duration};'
+    'RETURN = {"files": files, "languages": languages, "projects": projects, "duration": duration};',
   ]);
   return q;
 }

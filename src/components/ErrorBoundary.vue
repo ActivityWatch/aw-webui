@@ -13,15 +13,15 @@ export default {
   data() {
     return { errors: [] };
   },
-  errorCaptured (err, vm, info) {
+  errorCaptured(err, vm, info) {
     //console.error("Error captured!");
     //console.error(err, vm, info);
-    const msg = (err.name && err.message) ? (err.name + ": " + err.message) : err;
+    const msg = err.name && err.message ? err.name + ': ' + err.message : err;
     this.errors.push({
       msg: msg,
       time: new Date().toISOString(),
       dismissed: false,
     });
   },
-}
+};
 </script>

@@ -27,10 +27,10 @@ div
 </template>
 
 <script>
-import moment from 'moment'
+import moment from 'moment';
 
 export default {
-  name: "Bucket",
+  name: 'Bucket',
   props: {
     id: String,
   },
@@ -38,9 +38,9 @@ export default {
     return {
       bucket_with_events: { events: [] },
       events: [],
-      eventcount: "?",
-      daterange: [moment().subtract(1, "hour"), moment()],
-    }
+      eventcount: '?',
+      daterange: [moment().subtract(1, 'hour'), moment()],
+    };
   },
   computed: {
     bucket() {
@@ -50,7 +50,7 @@ export default {
   watch: {
     daterange: async function() {
       await this.getEvents(this.id);
-    }
+    },
   },
   mounted: async function() {
     await this.$store.dispatch('buckets/ensureBuckets');
@@ -70,15 +70,15 @@ export default {
       this.eventcount = (await this.$aw.countEvents(bucket_id)).data;
     },
     updateEvent: function(event) {
-      const i = this.events.findIndex((e) => e.id == event.id);
-      if(i != -1) {
+      const i = this.events.findIndex(e => e.id == event.id);
+      if (i != -1) {
         // This is needed instead of this.events[i] because insides of arrays
         // are not reactive in Vue.
         this.$set(this.events, i, event);
       } else {
-        console.error(":(");
+        console.error(':(');
       }
     },
   },
-}
+};
 </script>

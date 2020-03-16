@@ -25,7 +25,7 @@ div
 
 <script>
 export default {
-  name: "Activity",
+  name: 'Activity',
   props: {
     periodLength: {
       type: String,
@@ -40,10 +40,12 @@ export default {
       // browserBucketSelected: 'all',
 
       top_web_count: 5,
-    }
+    };
   },
   computed: {
-    browserBuckets: function() { return this.$store.state.activity_daily.browser_buckets_available },
+    browserBuckets: function() {
+      return this.$store.state.activity_daily.browser_buckets_available;
+    },
   },
-}
+};
 </script>

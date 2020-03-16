@@ -30,19 +30,18 @@ div
 
 </template>
 
-<style scoped lang="scss">
-</style>
+<style scoped lang="scss"></style>
 
 <script>
 import moment from 'moment';
 
 export default {
-  name: "input-timeinterval",
+  name: 'input-timeinterval',
   props: {
-      duration: {
-          type: Number,
-          default: 60 * 60
-      }
+    duration: {
+      type: Number,
+      default: 60 * 60,
+    },
   },
   data: () => {
     return {
@@ -50,36 +49,33 @@ export default {
       mode: 'last_duration',
       start: null,
       end: null,
-    }
+    };
   },
   computed: {
     value: {
       get() {
-        if(this.mode == 'range' && this.start && this.end) {
+        if (this.mode == 'range' && this.start && this.end) {
           return [moment(this.start), moment(this.end)];
         } else {
-          return [
-            moment(this.now).subtract(this.duration, "seconds"),
-            moment(this.now)
-          ];
+          return [moment(this.now).subtract(this.duration, 'seconds'), moment(this.now)];
         }
       },
       set(newValue) {
-        if(!isNaN(newValue)) {
+        if (!isNaN(newValue)) {
           // Set new now and duration
           this.now = moment();
           this.duration = newValue;
         } else {
           // Not required for mode='range', start and end set directly through v-model
         }
-      }
-    }
+      },
+    },
   },
   methods: {
     valueChanged(e) {
       this.value = e.target.value;
       this.$emit('input', this.value);
-    }
-  }
-}
+    },
+  },
+};
 </script>

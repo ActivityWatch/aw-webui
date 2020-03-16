@@ -70,7 +70,8 @@ div
 <style lang="scss">
 // This won't work if scoped
 .bucket-card {
-  .card-header, .card-footer {
+  .card-header,
+  .card-footer {
     padding: 0.5em 0.75em 0.5em 0.75em;
   }
 
@@ -86,7 +87,7 @@ div
 }
 
 .bucket-last-updated {
-    color: #666;
+  color: #666;
 }
 </style>
 
@@ -97,7 +98,7 @@ import 'vue-awesome/icons/folder-open';
 import _ from 'lodash';
 
 export default {
-  name: "Buckets",
+  name: 'Buckets',
   data() {
     return {
       delete_bucket_selected: null,
@@ -107,25 +108,25 @@ export default {
         { key: 'last_updated', label: 'Updated', sortable: true },
         { key: 'actions', label: '' },
       ],
-    }
+    };
   },
   computed: {
     buckets: function() {
-      return _.orderBy(this.$store.state.buckets.buckets, [(b) => b.id], ["asc"]);
+      return _.orderBy(this.$store.state.buckets.buckets, [b => b.id], ['asc']);
     },
   },
   mounted: async function() {
-    await this.$store.dispatch("buckets/ensureBuckets");
+    await this.$store.dispatch('buckets/ensureBuckets');
   },
   methods: {
     openDeleteBucketModal: function(bucketId) {
       this.delete_bucket_selected = bucketId;
-      this.$root.$emit('bv::show::modal','delete-modal')
+      this.$root.$emit('bv::show::modal', 'delete-modal');
     },
     deleteBucket: async function(bucketId) {
-      await this.$store.dispatch("buckets/deleteBucket", { bucketId });
-      this.$root.$emit('bv::hide::modal','delete-modal')
-    }
-  }
-}
+      await this.$store.dispatch('buckets/deleteBucket', { bucketId });
+      this.$root.$emit('bv::hide::modal', 'delete-modal');
+    },
+  },
+};
 </script>

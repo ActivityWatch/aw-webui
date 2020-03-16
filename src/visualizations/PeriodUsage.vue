@@ -4,12 +4,12 @@ svg
 
 <style scoped lang="scss">
 svg {
-    width: 100%;
-    height: 40pt;
-    border: 1px solid #999;
-    margin-top: 0.2em;
-    margin-bottom: 0.2em;
-    border-radius: 0.5em;
+  width: 100%;
+  height: 40pt;
+  border: 1px solid #999;
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
+  border-radius: 0.5em;
 }
 </style>
 
@@ -20,16 +20,16 @@ svg {
 import periodusage from './periodusage.js';
 
 export default {
-  name: "aw-periodusage",
+  name: 'aw-periodusage',
   props: ['periodusage_arr', 'link_prefix'],
   watch: {
-    "periodusage_arr": function() {
+    periodusage_arr: function() {
       periodusage.update(this.$el, this.periodusage_arr, this.link_prefix);
-    }
+    },
   },
   mounted: function() {
     periodusage.create(this.$el);
-    periodusage.set_status(this.$el, "Loading...");
-  }
-}
+    periodusage.set_status(this.$el, 'Loading...');
+  },
+};
 </script>

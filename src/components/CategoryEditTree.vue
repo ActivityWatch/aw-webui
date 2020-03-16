@@ -55,13 +55,13 @@ import 'vue-awesome/icons/plus';
 import 'vue-awesome/icons/edit';
 
 export default {
-  name: "CategoryEditTree",
+  name: 'CategoryEditTree',
   props: {
     cls: Object,
     depth: {
       type: Number,
       default: 0,
-    }
+    },
   },
   data: () => {
     return {
@@ -76,21 +76,26 @@ export default {
   },
   computed: {
     allCategories: function() {
-      const categories = this.$store.getters["settings/all_categories"];
-      const entries = categories.map(c => { return { text: c.join("->"), value: c } });
-      return [{ value: [], text: 'None'}].concat(entries);
+      const categories = this.$store.getters['settings/all_categories'];
+      const entries = categories.map(c => {
+        return { text: c.join('->'), value: c };
+      });
+      return [{ value: [], text: 'None' }].concat(entries);
     },
     allRuleTypes: function() {
       return [
         { value: null, text: 'None' },
         { value: 'regex', text: 'Regular Expression' },
         //{ value: 'glob', text: 'Glob pattern' },
-      ]
+      ];
     },
   },
   methods: {
     addSubclass: function(parent) {
-      this.$store.commit('settings/addClass', {name: parent.name.concat(["New class"]), rule: {type: "regex", regex: "FILL ME"}});
+      this.$store.commit('settings/addClass', {
+        name: parent.name.concat(['New class']),
+        rule: { type: 'regex', regex: 'FILL ME' },
+      });
     },
     removeClass: function(cls) {
       // TODO: Show a confirmation dialog
@@ -99,7 +104,7 @@ export default {
       this.$store.commit('settings/removeClass', cls);
     },
     showEditModal(event) {
-      this.$refs.edit.show()
+      this.$refs.edit.show();
     },
     checkFormValidity() {
       // FIXME
@@ -107,14 +112,14 @@ export default {
     },
     handleOk(event) {
       // Prevent modal from closing
-      event.preventDefault()
+      event.preventDefault();
       // Trigger submit handler
-      this.handleSubmit()
+      this.handleSubmit();
     },
     handleSubmit() {
       // Exit when the form isn't valid
       if (!this.checkFormValidity()) {
-        return
+        return;
       }
 
       // Save the category
@@ -123,12 +128,12 @@ export default {
         name: this.editing.parent.concat(this.editing.name),
         rule: this.editing.rule.type !== null ? this.editing.rule : { type: null },
       };
-      this.$store.commit("settings/updateClass", new_class);
+      this.$store.commit('settings/updateClass', new_class);
 
       // Hide the modal manually
       this.$nextTick(() => {
-        this.$refs.edit.hide()
-      })
+        this.$refs.edit.hide();
+      });
     },
     resetModal() {
       this.editing = {
@@ -139,13 +144,13 @@ export default {
       };
       //console.log(this.editing);
     },
-  }
-}
+  },
+};
 </script>
 
 <style scoped lang="scss">
 .row.cls:hover {
-  background-color: #EEE;
+  background-color: #eee;
   boder-radius: 5px;
 }
 </style>

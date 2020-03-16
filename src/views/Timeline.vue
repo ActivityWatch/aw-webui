@@ -21,34 +21,34 @@ import moment from 'moment';
 import _ from 'lodash';
 
 export default {
-  name: "Timeline",
+  name: 'Timeline',
   data: () => {
     return {
       buckets: null,
-      daterange: [moment().subtract(1, "hour"), moment()],
-      timeintervalDefaultDuration: localStorage.durationDefault
-    }
+      daterange: [moment().subtract(1, 'hour'), moment()],
+      timeintervalDefaultDuration: localStorage.durationDefault,
+    };
   },
   computed: {
     num_events() {
-      return _.sumBy(this.buckets, "events.length");
+      return _.sumBy(this.buckets, 'events.length');
     },
   },
   watch: {
     daterange() {
       this.getBuckets();
-    }
+    },
   },
   mounted: function() {
     this.getBuckets();
   },
   methods: {
     getBuckets: async function() {
-      this.buckets = await this.$store.dispatch("buckets/getBucketsWithEvents", {
+      this.buckets = await this.$store.dispatch('buckets/getBucketsWithEvents', {
         start: this.daterange[0].format(),
-        end: this.daterange[1].format()
+        end: this.daterange[1].format(),
       });
     },
-  }
-}
+  },
+};
 </script>

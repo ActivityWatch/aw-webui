@@ -66,19 +66,19 @@ import CategoryEditTree from '~/components/CategoryEditTree.vue';
 import { mapState, mapGetters } from 'vuex';
 
 export default {
-  name: "Settings",
+  name: 'Settings',
   components: {
     CategoryEditTree,
   },
   data: () => {
     return {
       startOfDay: '',
-      durationDefaultValue: localStorage.durationDefault || 60 * 60
-    }
+      durationDefaultValue: localStorage.durationDefault || 60 * 60,
+    };
   },
   computed: {
     ...mapGetters('settings', ['classes_hierarchy']),
-    ...mapState('settings', ['classes_unsaved_changes'])
+    ...mapState('settings', ['classes_unsaved_changes']),
   },
   mounted() {
     this.startOfDay = localStorage.startOfDay;
@@ -89,7 +89,10 @@ export default {
       localStorage.startOfDay = time_minutes;
     },
     addClass: function() {
-      this.$store.commit('settings/addClass', {name: ["New class"], rule: {type: "regex", regex: "FILL ME"}});
+      this.$store.commit('settings/addClass', {
+        name: ['New class'],
+        rule: { type: 'regex', regex: 'FILL ME' },
+      });
     },
     saveClasses: async function() {
       await this.$store.dispatch('settings/save');
@@ -101,8 +104,8 @@ export default {
       await this.$store.commit('settings/restoreDefaultClasses');
     },
     setDurationDefault: function(duration) {
-        localStorage.durationDefault = duration;
-    }
-  }
-}
+      localStorage.durationDefault = duration;
+    },
+  },
+};
 </script>
