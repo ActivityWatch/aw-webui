@@ -1,6 +1,7 @@
 import moment from 'moment';
 import { unitOfTime } from 'moment';
 import * as _ from 'lodash';
+import { map, filter, values, groupBy, sortBy, flow, reverse } from 'lodash/fp';
 import queries from '~/queries';
 import { loadClassesForQuery } from '~/util/classes';
 import { get_day_start_with_offset } from '~/util/time';
@@ -195,11 +196,88 @@ const actions = {
     // A function to load some demo data (for screenshots and stuff)
     commit('start_loading', {});
 
+    const window_events = [
+      {
+        duration: 32.1 * 60,
+        data: {
+          app: 'Firefox',
+          title: 'ActivityWatch/activitywatch: Track how you spend your time - Mozilla Firefox',
+          url: 'https://github.com/ActivityWatch/activitywatch',
+          $category: ['Work', 'Programming', 'ActivityWatch'],
+        },
+      },
+      {
+        duration: 14.6 * 60,
+        data: {
+          app: 'Firefox',
+          title: 'Inbox - Gmail - Mozilla Firefox',
+          url: 'https://mail.google.com',
+          $category: ['Work'],
+        },
+      },
+      {
+        duration: 21.17 * 60,
+        data: {
+          app: 'Firefox',
+          title: 'reddit: the front page of the internet - Mozilla Firefox',
+          url: 'https://reddit.com',
+          $category: ['Media', 'Social Media'],
+        },
+      },
+      {
+        duration: 0.2 * 60 * 60,
+        data: {
+          app: 'Firefox',
+          title: 'YouTube - Mozilla Firefox',
+          url: 'https://youtube.com',
+          $category: ['Media', 'Video'],
+        },
+      },
+      {
+        duration: 0.15 * 60 * 60,
+        data: {
+          app: 'Firefox',
+          title: 'Home / Twitter - Mozilla Firefox',
+          url: 'https://twitter.com',
+          $category: ['Media', 'Social Media'],
+        },
+      },
+      {
+        duration: 0.4 * 60 * 60,
+        data: { app: 'Minecraft', title: 'Minecraft', $category: ['Media', 'Games'] },
+      },
+      {
+        duration: 3.15 * 60,
+        data: { app: 'Spotify', title: 'Spotify', $category: ['Media', 'Music'] },
+      },
+    ];
+
+    function groupSumEventsBy(events, key, f) {
+      return flow(
+        filter(f),
+        groupBy(f),
+        values,
+        map((es: any) => {
+          return { duration: _.sumBy(es, 'duration'), data: { [key]: f(es[0]) } };
+        }),
+        sortBy('duration'),
+        reverse
+      )(events);
+    }
+
+    const app_events = groupSumEventsBy(window_events, 'app', (e: any) => e.data.app);
+    const title_events = groupSumEventsBy(window_events, 'title', (e: any) => e.data.title);
+    const cat_events = groupSumEventsBy(window_events, '$category', (e: any) => e.data.$category);
+    const url_events = groupSumEventsBy(window_events, 'url', (e: any) => e.data.url);
+    const domain_events = groupSumEventsBy(window_events, '$domain', (e: any) =>
+      e.data.url === undefined ? '' : new URL(e.data.url).host
+    );
+
     commit('query_window_completed', {
-      duration: 30,
-      app_events: [{ duration: 10, data: { app: 'test' } }],
-      title_events: [{ duration: 10, data: { title: 'test' } }],
-      cat_events: [{ duration: 10, data: { $category: ['test', 'subtest'] } }],
+      duration: _.sumBy(window_events, 'duration'),
+      app_events,
+      title_events,
+      cat_events,
       active_events: [
         { timestamp: new Date().toISOString(), duration: 1.5 * 60 * 60, data: { afk: 'not-afk' } },
       ],
@@ -207,9 +285,9 @@ const actions = {
 
     commit('browser_buckets', ['aw-watcher-firefox']);
     commit('query_browser_completed', {
-      duration: 20,
-      domains: [{ duration: 10, data: { $domain: 'github.com' } }],
-      urls: [{ duration: 10, data: { url: 'https://github.com/ActivityWatch/activitywatch' } }],
+      duration: _.sumBy(url_events, 'duration'),
+      domains: domain_events,
+      urls: url_events,
     });
 
     commit('editor_buckets', ['aw-watcher-vim']);
