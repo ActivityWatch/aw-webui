@@ -21,7 +21,10 @@ clean:
 	rm -rf node_modules dist
 
 lint:
-	npx eslint --ext=js,vue src/
+	npx eslint --ext=js,ts,vue src/
+
+lint-fix:
+	npx eslint --ext=js,ts,vue --fix src/
 
 aw-client-js:
 	make --directory=aw-client-js build

@@ -11,7 +11,7 @@
     "plugin:@typescript-eslint/eslint-recommended"
   ],
   "rules": {
-    "prettier/prettier": "off",
+    "prettier/prettier": "warn",
     "vue/require-default-prop": "off",
     "vue/prop-name-casing": "off",
     "vue/name-property-casing": "off",
