@@ -5,17 +5,21 @@ import { Bar } from 'vue-chartjs';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 
 @Component({
-    extends: Bar, // this is important to add the functionality to your component
+  extends: Bar, // this is important to add the functionality to your component
 })
 export default class ChartTimelineBars extends Vue<Bar> {
-  @Prop({default: [{
-    label: 'Total time',
-    backgroundColor: '#6699ff',
-    data: Array.from({length: 40}, () => Math.floor(Math.random() * 40)),
-  }]})
+  @Prop({
+    default: [
+      {
+        label: 'Total time',
+        backgroundColor: '#6699ff',
+        data: Array.from({ length: 40 }, () => Math.floor(Math.random() * 40)),
+      },
+    ],
+  })
   datasets: Record<string, any>[];
 
-  mounted () {
+  mounted() {
     this.renderData();
   }
 
@@ -31,7 +35,7 @@ export default class ChartTimelineBars extends Vue<Bar> {
       datasets: this.datasets,
       title: {
         display: true,
-        text: 'Timeline'
+        text: 'Timeline',
       },
       responsive: true,
       maintainAspectRatio: false,
@@ -39,30 +43,31 @@ export default class ChartTimelineBars extends Vue<Bar> {
     const options = {
       tooltips: {
         mode: 'index',
-        intersect: false
+        intersect: false,
       },
       scales: {
         xAxes: [{ stacked: true }],
-        yAxes: [{
-          ticks: {
-            stepSize: 0.25,
-            min: 0,
-            max: 1,
-            callback: function(value) {
-              if(value == 1) {
-                return "1h";
-              } else {
-                return Math.round(value * 60) + 'min';
-              }
-            }
-          }
-        }]
-      }
+        yAxes: [
+          {
+            ticks: {
+              stepSize: 0.25,
+              min: 0,
+              max: 1,
+              callback: function(value) {
+                if (value == 1) {
+                  return '1h';
+                } else {
+                  return Math.round(value * 60) + 'min';
+                }
+              },
+            },
+          },
+        ],
+      },
     };
     this.renderChart(data, options);
   }
 }
 </script>
 
-<style>
-</style>
+<style></style>

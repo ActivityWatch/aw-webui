@@ -39,15 +39,13 @@ div
       | Save
 </template>
 
-<style lang="scss">
-</style>
+<style lang="scss"></style>
 
 <script>
 import moment from 'moment';
 
-
 export default {
-  name: "EventEditor",
+  name: 'EventEditor',
   props: {
     event: Object,
     bucket_id: String,
@@ -55,7 +53,7 @@ export default {
   data() {
     return {
       editedEvent: JSON.parse(JSON.stringify(this.event)),
-    }
+    };
   },
   computed: {
     start: {
@@ -66,7 +64,7 @@ export default {
         // Duration needs to be set first since otherwise the computed for end will use the new timestamp
         this.editedEvent.duration = moment(this.end).diff(dt, 'seconds');
         this.editedEvent.timestamp = new Date(dt);
-      }
+      },
     },
     end: {
       get: function() {
@@ -84,6 +82,6 @@ export default {
       this.$emit('save', this.editedEvent);
       await this.$aw.replaceEvent(this.bucket_id, this.editedEvent);
     },
-  }
-}
+  },
+};
 </script>

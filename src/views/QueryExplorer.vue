@@ -48,17 +48,16 @@ div
 
 </template>
 
-<style scoped lang="scss">
-</style>
+<style scoped lang="scss"></style>
 
 <script>
 import moment from 'moment';
 
-const today = moment().startOf("day");
-const tomorrow = moment(today).add(24, "hours");
+const today = moment().startOf('day');
+const tomorrow = moment(today).add(24, 'hours');
 
 export default {
-  name: "QueryExplorer",
+  name: 'QueryExplorer',
   data() {
     return {
       query_code: `afk_events = query_bucket(find_bucket("aw-watcher-afk_"));
@@ -66,27 +65,25 @@ window_events = query_bucket(find_bucket("aw-watcher-window_"));
 window_events = filter_period_intersect(window_events, filter_keyvals(afk_events, "status", ["not-afk"]));
 merged_events = merge_events_by_keys(window_events, ["app", "title"]);
 RETURN = sort_by_duration(merged_events);`,
-      "vis_method": "eventlist",
-      "event_type": "currentwindow",
-      "events": [],
-      "today": today.format(),
-      "tomorrow": tomorrow.format(),
-      "error": "",
-      "startdate": today.format("YYYY-MM-DD"),
-      "enddate": tomorrow.format("YYYY-MM-DD"),
+      vis_method: 'eventlist',
+      event_type: 'currentwindow',
+      events: [],
+      today: today.format(),
+      tomorrow: tomorrow.format(),
+      error: '',
+      startdate: today.format('YYYY-MM-DD'),
+      enddate: tomorrow.format('YYYY-MM-DD'),
 
       /* Summary props */
-      "summaryKey": "",
-      "colorfunc": null,
-      "namefunc": null,
-    }
+      summaryKey: '',
+      colorfunc: null,
+      namefunc: null,
+    };
   },
   computed: {
-    eventcount_str: function(){
-      if (Array.isArray(this.events))
-        return "Number of events: " + this.events.length;
-      else
-        return "";
+    eventcount_str: function() {
+      if (Array.isArray(this.events)) return 'Number of events: ' + this.events.length;
+      else return '';
     },
   },
   mounted: function() {
@@ -95,13 +92,13 @@ RETURN = sort_by_duration(merged_events);`,
   },
   methods: {
     query: async function() {
-      const query = this.query_code.split(";").map((s) => s.trim() + ";");
-      const timeperiods = [moment(this.startdate).format() + "/" + moment(this.enddate).format()];
+      const query = this.query_code.split(';').map(s => s.trim() + ';');
+      const timeperiods = [moment(this.startdate).format() + '/' + moment(this.enddate).format()];
       try {
         const data = await this.$aw.query(timeperiods, query);
         this.events = data[0];
-        this.error = "";
-      } catch(e) {
+        this.error = '';
+      } catch (e) {
         this.error = e.response.data.message;
       }
     },
@@ -109,5 +106,5 @@ RETURN = sort_by_duration(merged_events);`,
       return e.data[this.summaryKey];
     },
   },
-}
+};
 </script>

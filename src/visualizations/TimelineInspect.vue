@@ -4,8 +4,8 @@ div
 
 <style scoped lang="scss">
 svg {
-    border: 1px solid #999;
-    border-radius: 0.5em;
+  border: 1px solid #999;
+  border-radius: 0.5em;
 }
 </style>
 
@@ -16,7 +16,7 @@ svg {
 import timeline from './timeline.js';
 
 export default {
-  name: "aw-timeline",
+  name: 'aw-timeline',
   props: ['chunks', 'show_afk', 'chunkfunc', 'eventfunc'],
   watch: {
     chunks: function() {
@@ -24,7 +24,7 @@ export default {
     },
     show_afk: function() {
       this.update();
-    }
+    },
   },
   mounted: function() {
     timeline.create(this.$el);
@@ -32,12 +32,12 @@ export default {
   },
   methods: {
     update: function() {
-      if(this.chunks === null) {
-        timeline.set_status(this.$el, 'Loading...')
+      if (this.chunks === null) {
+        timeline.set_status(this.$el, 'Loading...');
       } else {
         timeline.update(this.$el, this.chunks, this.show_afk, this.chunkfunc, this.eventfunc);
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>

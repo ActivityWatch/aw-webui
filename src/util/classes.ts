@@ -1,22 +1,22 @@
 const _ = require('lodash');
 
-const level_sep = ">";
+const level_sep = '>';
 
 interface Rule {
-    type: string;
-    regex?: string;
-    ignore_case?: boolean;
+  type: string;
+  regex?: string;
+  ignore_case?: boolean;
 }
 
 interface Category {
-    id?: number;
-    name: string[];
-    name_pretty?: string;
-    subname?: string;
-    rule: Rule;
-    depth?: number;
-    parent?: string[];
-    children?: Category[];
+  id?: number;
+  name: string[];
+  name_pretty?: string;
+  subname?: string;
+  rule: Rule;
+  depth?: number;
+  parent?: string[];
+  children?: Category[];
 }
 
 export const defaultCategories: Category[] = [
@@ -31,7 +31,10 @@ export const defaultCategories: Category[] = [
   },
   { name: ['Media', 'Games'], rule: { type: 'regex', regex: 'Minecraft|RimWorld' } },
   { name: ['Media', 'Video'], rule: { type: 'regex', regex: 'YouTube|Plex' } },
-  { name: ['Media', 'Social Media'], rule: { type: 'regex', regex: 'reddit|Facebook|Twitter|Instagram', ignore_case: true } },
+  {
+    name: ['Media', 'Social Media'],
+    rule: { type: 'regex', regex: 'reddit|Facebook|Twitter|Instagram', ignore_case: true },
+  },
   { name: ['Comms', 'IM'], rule: { type: 'regex', regex: 'Messenger|Telegram|Signal|WhatsApp' } },
   { name: ['Comms', 'Email'], rule: { type: 'regex', regex: 'Gmail' } },
 ];
@@ -52,19 +55,19 @@ export function build_category_hierarchy(classes: Category[]): Category[] {
   const all_full_names = new Set(new_classes.map(c => c.name.join(level_sep)));
 
   function createMissingParents(children) {
-     children
-        .map(c => c.parent)
-        .filter(p => !!p)
-        .map(p => {
-          const name = p.join(level_sep);
-          if (p && !all_full_names.has(name)) {
-            const new_parent = annotate({ name: p, rule: { type: null } });
-            classes.push(new_parent);
-            all_full_names.add(name);
-            // New parent might not be top-level, so we need to recurse
-            createMissingParents([new_parent]);
-          }
-        });
+    children
+      .map(c => c.parent)
+      .filter(p => !!p)
+      .map(p => {
+        const name = p.join(level_sep);
+        if (p && !all_full_names.has(name)) {
+          const new_parent = annotate({ name: p, rule: { type: null } });
+          classes.push(new_parent);
+          all_full_names.add(name);
+          // New parent might not be top-level, so we need to recurse
+          createMissingParents([new_parent]);
+        }
+      });
   }
 
   createMissingParents(new_classes);
@@ -101,7 +104,7 @@ export function saveClasses(classes: Category[]) {
 
 export function loadClasses(): Category[] {
   const classes_json = localStorage.classes;
-  if(classes_json && classes_json.length >= 1) {
+  if (classes_json && classes_json.length >= 1) {
     return JSON.parse(classes_json);
   } else {
     return defaultCategories;
@@ -109,7 +112,9 @@ export function loadClasses(): Category[] {
 }
 
 export function loadClassesForQuery(): [string[], Rule][] {
-  return loadClasses().filter(c => c.rule.type !== null).map(c => {
-      return [c.name, c.rule]
-  });
+  return loadClasses()
+    .filter(c => c.rule.type !== null)
+    .map(c => {
+      return [c.name, c.rule];
+    });
 }

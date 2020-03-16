@@ -18,8 +18,10 @@ function dateToTimeperiod(date: string): TimePeriod {
 
 function timeperiodToStr(tp: TimePeriod): string {
   const start = moment(tp.start).format();
-  const end = moment(start).add(tp.length[0], tp.length[1] as moment.unitOfTime.DurationConstructor).format()
-  return [start, end].join("/");
+  const end = moment(start)
+    .add(tp.length[0], tp.length[1] as moment.unitOfTime.DurationConstructor)
+    .format();
+  return [start, end].join('/');
 }
 
 interface QueryOptions {
@@ -63,7 +65,7 @@ function timeperiodsAroundTimeperiod(timeperiod: TimePeriod): TimePeriod[] {
     const start = moment(timeperiod.start)
       .add(i * timeperiod.length[0], timeperiod.length[1] as moment.unitOfTime.DurationConstructor)
       .format();
-    periods.push({...timeperiod, start});
+    periods.push({ ...timeperiod, start });
   }
   return periods;
 }
@@ -83,7 +85,7 @@ const getters = {
         // A zero-duration placeholder until new data has been fetched
         return [{ timestamp: moment(tp.split('/')[0]).format(), duration: 0, data: {} }];
       }
-    })
+    });
     return _history;
   },
 };
@@ -94,7 +96,7 @@ const actions = {
     console.info('Query options: ', query_options);
     if (!state.loaded || state.query_options !== query_options || query_options.force) {
       commit('start_loading', query_options);
-      if(!query_options.timeperiod) {
+      if (!query_options.timeperiod) {
         query_options.timeperiod = dateToTimeperiod(query_options.date);
       }
       await dispatch('get_buckets', query_options);
@@ -124,7 +126,7 @@ const actions = {
       default_limit, // this.top_windowtitles_count,
       filterAFK,
       classes,
-      filterCategories,
+      filterCategories
     );
     const data = await this._vm.$aw.query(periods, q);
     console.info(`Completed window query in ${moment().diff(start)}ms`);
@@ -154,7 +156,7 @@ const actions = {
     if (state.editor_buckets_available) {
       const periods = [timeperiodToStr(timeperiod)];
       const q = queries.editorActivityQuery(state.editor_buckets_available, 100);
-      const data = (await this._vm.$aw.query(periods, q).catch(this.errorHandler));
+      const data = await this._vm.$aw.query(periods, q).catch(this.errorHandler);
       commit('query_editor_completed', data[0]);
     }
   },
@@ -196,24 +198,26 @@ const actions = {
     commit('query_window_completed', {
       duration: 30,
       app_events: [{ duration: 10, data: { app: 'test' } }],
-      title_events: [{ duration: 10, data: { title: 'test' }}],
-      cat_events: [{ duration: 10, data: { $category: ['test', 'subtest'] }}],
-      active_events: [{ timestamp: new Date().toISOString(), duration: 1.5*60*60, data: { afk: 'not-afk' }}],
+      title_events: [{ duration: 10, data: { title: 'test' } }],
+      cat_events: [{ duration: 10, data: { $category: ['test', 'subtest'] } }],
+      active_events: [
+        { timestamp: new Date().toISOString(), duration: 1.5 * 60 * 60, data: { afk: 'not-afk' } },
+      ],
     });
 
     commit('browser_buckets', ['aw-watcher-firefox']);
     commit('query_browser_completed', {
       duration: 20,
-      domains: [{ duration: 10, data: { $domain: "github.com" } }],
-      urls: [{ duration: 10, data: { url: "https://github.com/ActivityWatch/activitywatch" } }],
+      domains: [{ duration: 10, data: { $domain: 'github.com' } }],
+      urls: [{ duration: 10, data: { url: 'https://github.com/ActivityWatch/activitywatch' } }],
     });
 
     commit('editor_buckets', ['aw-watcher-vim']);
     commit('query_editor_completed', {
       duration: 30,
-      files: [{ duration: 10, data: { file: "test.py" }}],
-      languages: [{ duration: 10, data: { language: "python" }}],
-      projects: [{ duration: 10, data: { project: "aw-core" }}],
+      files: [{ duration: 10, data: { file: 'test.py' } }],
+      languages: [{ duration: 10, data: { language: 'python' } }],
+      projects: [{ duration: 10, data: { project: 'aw-core' } }],
     });
   },
 };
@@ -263,10 +267,10 @@ const mutations = {
   },
 
   query_editor_completed(state, data) {
-    state.editor_duration = data["duration"];
-    state.top_editor_files = data["files"];
-    state.top_editor_languages = data["languages"];
-    state.top_editor_projects = data["projects"];
+    state.editor_duration = data['duration'];
+    state.top_editor_files = data['files'];
+    state.top_editor_languages = data['languages'];
+    state.top_editor_projects = data['projects'];
   },
 
   query_active_history_completed(state, { active_history }) {

@@ -18,7 +18,7 @@ div
 import { get_today } from '~/util/time';
 
 export default {
-  name: "Activity",
+  name: 'Activity',
   props: {
     date: {
       type: String,
@@ -28,17 +28,23 @@ export default {
       type: String,
       default: 'day',
     },
-    host: String
+    host: String,
   },
   data: () => {
     return {
       timelineShowAFK: true,
-    }
+    };
   },
   computed: {
-    app_chunks: function() { return this.$store.state.activity_daily.app_chunks },
-    bucket_id_window: function() { return 'aw-watcher-window_' + this.host; },
-    bucket_id_afk: function() { return 'aw-watcher-afk_' + this.host; },
+    app_chunks: function() {
+      return this.$store.state.activity_daily.app_chunks;
+    },
+    bucket_id_window: function() {
+      return 'aw-watcher-window_' + this.host;
+    },
+    bucket_id_afk: function() {
+      return 'aw-watcher-afk_' + this.host;
+    },
   },
-}
+};
 </script>

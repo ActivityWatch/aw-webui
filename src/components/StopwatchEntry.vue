@@ -29,7 +29,7 @@ div
 
 <style scoped lang="scss">
 #root:hover {
-  background-color: #EEE;
+  background-color: #eee;
 }
 </style>
 
@@ -43,17 +43,17 @@ import 'vue-awesome/icons/trash';
 import EventEditor from './EventEditor.vue';
 
 export default {
-  name: "StopwatchEntry",
+  name: 'StopwatchEntry',
   components: {
-    "event-editor": EventEditor,
+    'event-editor': EventEditor,
   },
   props: {
     event: Object,
     bucket_id: String,
     now: {
       type: moment,
-      default: moment()
-    }
+      default: moment(),
+    },
   },
   methods: {
     stop: async function() {
@@ -69,6 +69,6 @@ export default {
     delete_: async function() {
       this.$emit('delete', this.event);
     },
-  }
-}
+  },
+};
 </script>

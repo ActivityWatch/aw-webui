@@ -103,7 +103,8 @@ $border-color: #ddd;
 
 /* Flips the outer element once, then all direct children once,
    leaving the scrollbar in the first flipped yet the content correct */
-.scrollbar-flipped, .scrollbar-flipped > * {
+.scrollbar-flipped,
+.scrollbar-flipped > * {
   transform: rotateX(180deg);
   -ms-transform: rotateX(180deg); /* IE 9 */
   -webkit-transform: rotateX(180deg); /* Safari and Chrome */
@@ -111,16 +112,16 @@ $border-color: #ddd;
 </style>
 
 <script>
-import 'vue-awesome/icons/tags'
-import 'vue-awesome/icons/clock'
-import 'vue-awesome/icons/calendar'
+import 'vue-awesome/icons/tags';
+import 'vue-awesome/icons/clock';
+import 'vue-awesome/icons/calendar';
 
 import EventEditor from '~/components/EventEditor.vue';
 
 export default {
-  name: "EventList",
+  name: 'EventList',
   components: {
-    "event-editor": EventEditor,
+    'event-editor': EventEditor,
   },
   props: {
     bucket_id: String,
@@ -129,13 +130,13 @@ export default {
   data: function() {
     return {
       isListExpanded: false,
-    }
+    };
   },
   methods: {
     expandList: function() {
       this.isListExpanded = !this.isListExpanded;
-      console.log("List should be expanding: ", this.isListExpanded);
-    }
+      console.log('List should be expanding: ', this.isListExpanded);
+    },
   },
-}
+};
 </script>

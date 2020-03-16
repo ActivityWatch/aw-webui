@@ -43,33 +43,35 @@ export default {
     return {
       activityViews: [],
       info: {},
-    }
+    };
   },
 
   mounted: async function() {
     this.$aw.getInfo().then(
-      (info) => {
+      info => {
         this.info = info;
       },
-      (e) => {
-        console.error("Unable to connect: ", e)
+      e => {
+        console.error('Unable to connect: ', e);
         this.info = {};
       }
     );
-  }
-}
+  },
+};
 </script>
 
 <style lang="scss">
 $textcolor: #000;
 
-html, body, button {
+html,
+body,
+button {
   color: $textcolor;
   font-family: 'Varela Round', sans-serif !important;
 }
 
 body {
-  background-color: #EEE;
+  background-color: #eee;
 }
 
 .fa-icon {
@@ -80,8 +82,8 @@ body {
 }
 
 .aw-container {
-  background-color: #FFF;
-  border: 1px solid #CCC;
+  background-color: #fff;
+  border: 1px solid #ccc;
   border-radius: 5px 5px 5px 5px;
 }
 </style>

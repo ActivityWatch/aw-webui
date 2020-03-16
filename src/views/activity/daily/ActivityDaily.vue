@@ -105,12 +105,12 @@ $bordercolor: #ddd;
 import moment from 'moment';
 import { get_day_start_with_offset, get_today } from '~/util/time';
 
-import 'vue-awesome/icons/arrow-left'
-import 'vue-awesome/icons/arrow-right'
-import 'vue-awesome/icons/sync'
+import 'vue-awesome/icons/arrow-left';
+import 'vue-awesome/icons/arrow-right';
+import 'vue-awesome/icons/sync';
 
 export default {
-  name: "Activity",
+  name: 'Activity',
   props: {
     host: String,
     date: {
@@ -129,17 +129,24 @@ export default {
     };
   },
   computed: {
-    subview: function() { return this.$route.meta.subview; },
+    subview: function() {
+      return this.$route.meta.subview;
+    },
     categories: function() {
-      const cats = this.$store.getters["settings/all_categories"];
+      const cats = this.$store.getters['settings/all_categories'];
       console.log(cats);
-      const entries = cats.map(c => { return { text: c.join(" > "), value: c } });
-      return [{ text: "All", value: null}, { text: "Uncategorized", value: ["Uncategorized"]}].concat(entries);
+      const entries = cats.map(c => {
+        return { text: c.join(' > '), value: c };
+      });
+      return [
+        { text: 'All', value: null },
+        { text: 'Uncategorized', value: ['Uncategorized'] },
+      ].concat(entries);
     },
     filterCategories: function() {
       // TODO: Also return all child categories
-      if(this.filterCategory) {
-        const cats = this.$store.getters["settings/all_categories"];
+      if (this.filterCategory) {
+        const cats = this.$store.getters['settings/all_categories'];
         const isChild = p => c => c.length > p.length && _.isEqual(p, c.slice(0, p.length));
         const children = _.filter(cats, isChild(this.filterCategory));
         console.log(children);
@@ -148,24 +155,34 @@ export default {
         return null;
       }
     },
-    link_prefix: function() { return `/activity/${this.host}/${this.periodLength}` },
+    link_prefix: function() {
+      return `/activity/${this.host}/${this.periodLength}`;
+    },
     periodusage: function() {
-      return this.$store.getters['activity_daily/getActiveHistoryAroundTimeperiod'](this.timeperiod);
+      return this.$store.getters['activity_daily/getActiveHistoryAroundTimeperiod'](
+        this.timeperiod
+      );
     },
     timeperiod: function() {
       // TODO: Get start of day/week/month (depending on periodLength) with offset
       return { start: get_day_start_with_offset(this.date), length: [1, this.periodLength] };
     },
     dateformat: function() {
-      if(this.periodLength === 'day') { return "YYYY-MM-DD"; }
-      else if(this.periodLength === 'week') { return "YYYY[ W]WW"; }
-      else if(this.periodLength === 'month') { return "YYYY-MM"; }
-      else if(this.periodLength === 'year') { return "YYYY"; }
-      else {
-        return "YYYY-MM-DD";
+      if (this.periodLength === 'day') {
+        return 'YYYY-MM-DD';
+      } else if (this.periodLength === 'week') {
+        return 'YYYY[ W]WW';
+      } else if (this.periodLength === 'month') {
+        return 'YYYY-MM';
+      } else if (this.periodLength === 'year') {
+        return 'YYYY';
+      } else {
+        return 'YYYY-MM-DD';
       }
     },
-    periodReadable: function() { return moment(this.timeperiod.start).format(this.dateformat); },
+    periodReadable: function() {
+      return moment(this.timeperiod.start).format(this.dateformat);
+    },
   },
   watch: {
     timeperiod: function() {
@@ -182,20 +199,36 @@ export default {
   },
 
   methods: {
-    previousPeriod: function() { return moment(this.date).subtract(1, `${this.periodLength}s`).format("YYYY-MM-DD") },
-    nextPeriod: function() { return moment(this.date).add(1, `${this.periodLength}s`).format("YYYY-MM-DD") },
+    previousPeriod: function() {
+      return moment(this.date)
+        .subtract(1, `${this.periodLength}s`)
+        .format('YYYY-MM-DD');
+    },
+    nextPeriod: function() {
+      return moment(this.date)
+        .add(1, `${this.periodLength}s`)
+        .format('YYYY-MM-DD');
+    },
     setDate: function(date, periodLength) {
-      const new_date = moment(date).startOf(periodLength).format("YYYY-MM-DD");
+      const new_date = moment(date)
+        .startOf(periodLength)
+        .format('YYYY-MM-DD');
       this.$router.push(`/activity/${this.host}/${periodLength}/${new_date}`);
     },
 
     refresh: async function(force) {
-      await this.$store.dispatch("activity_daily/ensure_loaded", { timeperiod: this.timeperiod, host: this.host, force: force, filterAFK: true, filterCategories: this.filterCategories });
+      await this.$store.dispatch('activity_daily/ensure_loaded', {
+        timeperiod: this.timeperiod,
+        host: this.host,
+        force: force,
+        filterAFK: true,
+        filterCategories: this.filterCategories,
+      });
     },
 
     load_demo: async function() {
       await this.$store.dispatch('activity_daily/load_demo');
     },
   },
-}
+};
 </script>

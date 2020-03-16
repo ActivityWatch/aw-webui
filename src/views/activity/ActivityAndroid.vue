@@ -45,46 +45,48 @@ div
 
 </template>
 
-<style lang="scss">
-</style>
+<style lang="scss"></style>
 
 <script>
 import moment from 'moment';
 import _ from 'lodash';
-import 'vue-awesome/icons/arrow-left'
-import 'vue-awesome/icons/arrow-right'
-import 'vue-awesome/icons/angle-double-down'
-import 'vue-awesome/icons/sync'
+import 'vue-awesome/icons/arrow-left';
+import 'vue-awesome/icons/arrow-right';
+import 'vue-awesome/icons/angle-double-down';
+import 'vue-awesome/icons/sync';
 
 import query from '~/queries';
-import { get_day_period } from "~/util/time";
-
+import { get_day_period } from '~/util/time';
 
 export default {
-  name: "Activity",
+  name: 'Activity',
   data: () => {
     return {
-      today: moment().startOf('day').format("YYYY-MM-DD"),
+      today: moment()
+        .startOf('day')
+        .format('YYYY-MM-DD'),
 
       // Query variables
-      total_duration: "",
+      total_duration: '',
 
       daily_activity: [],
 
       top_apps: [],
       top_apps_count: 5,
-      top_apps_namefunc: (e) => e.data.app,
-      top_apps_colorfunc: (e) => e.data.app,
+      top_apps_namefunc: e => e.data.app,
+      top_apps_colorfunc: e => e.data.app,
 
-      appBucketId: "aw-watcher-android-test",
-    }
+      appBucketId: 'aw-watcher-android-test',
+    };
   },
 
   computed: {
-    dateShort: function() { return moment(this.date).format("YYYY-MM-DD") },
+    dateShort: function() {
+      return moment(this.date).format('YYYY-MM-DD');
+    },
   },
   watch: {
-    '$route': function() {
+    $route: function() {
       this.refresh();
     },
   },
@@ -95,9 +97,19 @@ export default {
   },
 
   methods: {
-    previousDay: function() { return moment(this.dateStart).subtract(1, 'days').format("YYYY-MM-DD") },
-    nextDay: function() { return moment(this.dateStart).add(1, 'days').format("YYYY-MM-DD") },
-    setDate: function(date) { this.$router.push('/activity/android/' + this.host + '/' + date); },
+    previousDay: function() {
+      return moment(this.dateStart)
+        .subtract(1, 'days')
+        .format('YYYY-MM-DD');
+    },
+    nextDay: function() {
+      return moment(this.dateStart)
+        .add(1, 'days')
+        .format('YYYY-MM-DD');
+    },
+    setDate: function(date) {
+      this.$router.push('/activity/android/' + this.host + '/' + date);
+    },
 
     refresh: function() {
       this.queryAll();
@@ -116,36 +128,38 @@ export default {
       const q = query.appQuery(this.appBucketId, this.top_apps_count);
       let data = await this.$aw.query(periods, q).catch(this.errorHandler);
       data = data[0];
-      this.top_apps = data["events"];
-      this.total_duration = data["total_duration"];
+      this.top_apps = data['events'];
+      this.total_duration = data['total_duration'];
     },
 
     queryDailyActivity: async function() {
       const timeperiods = [];
-      for (let i=-15; i<=15; i++) {
+      for (let i = -15; i <= 15; i++) {
         timeperiods.push(get_day_period(moment(this.date).add(i, 'days')));
       }
-      const dur_per_date = await this.$aw.query(timeperiods, query.dailyActivityQueryAndroid(this.appBucketId)).catch(this.errorHandler);
+      const dur_per_date = await this.$aw
+        .query(timeperiods, query.dailyActivityQueryAndroid(this.appBucketId))
+        .catch(this.errorHandler);
       // TODO: This is some nasty shit, aw-periodusage should really just accept an array with (timestamp, duration) tuples instead.
-      this.daily_activity = _.map(_.zip(timeperiods, dur_per_date), (t) => {
-        const timestamp = t[0].split("/")[0];
+      this.daily_activity = _.map(_.zip(timeperiods, dur_per_date), t => {
+        const timestamp = t[0].split('/')[0];
         const duration = t[1];
         return [
           {
-            "timestamp": timestamp,
-            "duration": duration,
-            "data": {
-              "status": "not-afk"
-            }
-          }
-        ]
-      })
+            timestamp: timestamp,
+            duration: duration,
+            data: {
+              status: 'not-afk',
+            },
+          },
+        ];
+      });
       console.log(this.daily_activity);
     },
 
     testError() {
       //throw 'error: some message';
-    }
+    },
   },
-}
+};
 </script>
