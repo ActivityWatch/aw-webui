@@ -212,7 +212,7 @@ const actions = {
           app: 'Firefox',
           title: 'Inbox - Gmail - Mozilla Firefox',
           url: 'https://mail.google.com',
-          $category: ['Work'],
+          $category: ['Comms', 'Email'],
         },
       },
       {
@@ -240,6 +240,39 @@ const actions = {
           title: 'Home / Twitter - Mozilla Firefox',
           url: 'https://twitter.com',
           $category: ['Media', 'Social Media'],
+        },
+      },
+      {
+        duration: 0.15 * 60 * 60,
+        data: {
+          app: 'Firefox',
+          title: 'Stack Overflow',
+          url: 'https://stackoverflow.com',
+          $category: ['Work', 'Programming'],
+        },
+      },
+      {
+        duration: 48.2 * 60,
+        data: {
+          app: 'Terminal',
+          title: 'vim ~/code/activitywatch/aw-server/aw-webui/src',
+          $category: ['Work', 'Programming', 'ActivityWatch'],
+        },
+      },
+      {
+        duration: 12.6 * 60,
+        data: {
+          app: 'Terminal',
+          title: 'bash ~/code/activitywatch',
+          $category: ['Work', 'Programming', 'ActivityWatch'],
+        },
+      },
+      {
+        duration: 58.1 * 60,
+        data: {
+          app: 'zoom',
+          title: 'Zoom Meeting',
+          $category: ['Comms', 'Video Conferencing'],
         },
       },
       {
