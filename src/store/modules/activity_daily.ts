@@ -216,7 +216,7 @@ const actions = {
         },
       },
       {
-        duration: 21.17 * 60,
+        duration: 0.2 * 60 * 60,
         data: {
           app: 'Firefox',
           title: 'reddit: the front page of the internet - Mozilla Firefox',
