@@ -1,4 +1,4 @@
-const AWClient = require('../../aw-client-js').AWClient;
+import { AWClient } from 'aw-client';
 
 let baseURL = '';
 

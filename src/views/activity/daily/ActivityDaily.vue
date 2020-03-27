@@ -62,7 +62,7 @@ div
           b-form-select(v-model="filterCategory", :options="categories")
 
     aw-devonly
-      b-btn(@click="load_demo")
+      b-btn(id="load-demo", @click="load_demo")
         | Load demo data
 </template>
 

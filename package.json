@@ -12,7 +12,8 @@
     "test:unit": "vue-cli-service test:unit",
     "test:e2e": "vue-cli-service test:e2e",
     "lint": "vue-cli-service lint",
-    "lint_old": "eslint --ignore-path=.gitignore --ext .vue,.js,.ts ."
+    "lint_old": "eslint --ignore-path=.gitignore --ext .vue,.js,.ts .",
+    "preinstall": "cd aw-client-js && npm install"
   },
   "devDependencies": {
     "@babel/cli": "^7.2.3",
@@ -88,6 +89,7 @@
     "@types/node": "^12.7.9",
     "ajv": "^6.5.0",
     "ajv-keywords": "^3.2.0",
+    "aw-client": "file:aw-client-js",
     "bootstrap": "^4.3.1",
     "bootstrap-vue": "^2.0.4",
     "chart.js": "^2.8.0",
