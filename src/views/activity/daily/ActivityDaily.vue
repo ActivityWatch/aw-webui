@@ -134,7 +134,6 @@ export default {
     },
     categories: function() {
       const cats = this.$store.getters['settings/all_categories'];
-      console.log(cats);
       const entries = cats.map(c => {
         return { text: c.join(' > '), value: c };
       });
@@ -149,7 +148,6 @@ export default {
         const cats = this.$store.getters['settings/all_categories'];
         const isChild = p => c => c.length > p.length && _.isEqual(p, c.slice(0, p.length));
         const children = _.filter(cats, isChild(this.filterCategory));
-        console.log(children);
         return [this.filterCategory].concat(children);
       } else {
         return null;
