@@ -104,6 +104,7 @@ const appnames = {
   ],
   opera: ['opera.exe', 'Opera'],
   brave: ['brave.exe'],
+  edge: ['msedge.exe'],
   vivaldi: ['Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe'],
 };
 
