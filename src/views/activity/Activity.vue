@@ -25,7 +25,7 @@ div
                @change="(periodLength) => setDate(date, periodLength)")
     div.p-1(v-if="periodLength === 'day'")
       input.form-control(id="date" type="date" :value="date" :max="today"
-                         @change="setDate($event.target.value)")
+                         @change="setDate($event.target.value, periodLength)")
 
     div.p-1.ml-auto
       b-button-group

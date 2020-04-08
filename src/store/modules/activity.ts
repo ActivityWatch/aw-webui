@@ -6,8 +6,6 @@ import queries from '~/queries';
 import { loadClassesForQuery } from '~/util/classes';
 import { get_day_start_with_offset } from '~/util/time';
 
-const default_limit = 100;
-
 interface TimePeriod {
   start: string;
   length: [number, string];
@@ -69,10 +67,15 @@ const _state = {
     history: {},
   },
 
+  android: {
+    available: false,
+  },
+
   query_options: {
     browser_buckets: 'all',
     editor_buckets: 'all',
   },
+
   buckets: {
     afk_buckets: [],
     window_buckets: [],
@@ -130,8 +133,12 @@ const actions = {
 
       if (state.window.available) {
         await dispatch('query_window', query_options);
+      } else if (state.android.available) {
+        await dispatch('query_android', query_options);
       } else {
-        console.log('Cannot call query_window as we are missing either an afk or window bucket');
+        console.log(
+          'Cannot query windows as we are missing either an afk/window bucket pair or an android bucket'
+        );
         await dispatch('query_window_empty', query_options);
       }
 
@@ -146,6 +153,8 @@ const actions = {
 
       if (state.active.available) {
         await dispatch('query_active_history', query_options);
+      } else if (state.android.available) {
+        await dispatch('query_active_history_android', query_options);
       } else {
         console.log('Cannot call query_active_history as we do not have an afk bucket');
         await dispatch('query_active_history_empty', query_options);
@@ -166,17 +175,25 @@ const actions = {
 
   async query_window({ state, commit }, { timeperiod, filterAFK, filterCategories }: QueryOptions) {
     const periods = [timeperiodToStr(timeperiod)];
+    const start = moment();
     const classes = loadClassesForQuery();
     const q = queries.windowQuery(
       state.buckets.window_buckets[0],
       state.buckets.afk_buckets[0],
-      default_limit, // this.top_apps_count,
-      default_limit, // this.top_windowtitles_count,
       filterAFK,
       classes,
       filterCategories
     );
     const data = await this._vm.$aw.query(periods, q);
+    commit('query_window_completed', data[0]);
+    console.info(`Completed window query in ${moment().diff(start)}ms`);
+  },
+
+  async query_android({ state, commit }, { timeperiod, filterCategories }: QueryOptions) {
+    const periods = [timeperiodToStr(timeperiod)];
+    const classes = loadClassesForQuery();
+    const q = queries.appQuery(state.buckets.window_buckets[0], classes, filterCategories);
+    const data = await this._vm.$aw.query(periods, q).catch(this.errorHandler);
     commit('query_window_completed', data[0]);
   },
 
@@ -197,7 +214,6 @@ const actions = {
       state.buckets.browser_buckets,
       state.buckets.window_buckets[0],
       state.buckets.afk_buckets[0],
-      default_limit, // this.top_web_count
       filterAFK
     );
     const data = await this._vm.$aw.query(periods, q);
@@ -215,7 +231,7 @@ const actions = {
 
   async query_editor({ state, commit }, { timeperiod }) {
     const periods = [timeperiodToStr(timeperiod)];
-    const q = queries.editorActivityQuery(state.buckets.editor_buckets, 100);
+    const q = queries.editorActivityQuery(state.buckets.editor_buckets);
     const data = await this._vm.$aw.query(periods, q);
     commit('query_editor_completed', data[0]);
   },
@@ -233,12 +249,30 @@ const actions = {
     const periods = timeperiodStrsAroundTimeperiod(timeperiod).filter(tp_str => {
       return !_.includes(state.active.history, tp_str);
     });
-    const bucket_id_afk = state.buckets.afk_buckets[0];
-    const data = await this._vm.$aw.query(periods, queries.dailyActivityQuery(bucket_id_afk));
+    const data = await this._vm.$aw.query(
+      periods,
+      queries.dailyActivityQuery(state.buckets.afk_buckets[0])
+    );
     const active_history = _.zipObject(
       periods,
       _.map(data, pair => _.filter(pair, e => e.data.status == 'not-afk'))
     );
+    console.log(active_history);
+    commit('query_active_history_completed', { active_history });
+  },
+
+  async query_active_history_android({ commit, state }, { timeperiod }: QueryOptions) {
+    const periods = timeperiodStrsAroundTimeperiod(timeperiod).filter(tp_str => {
+      return !_.includes(state.active.history, tp_str);
+    });
+    const data = await this._vm.$aw.query(
+      periods,
+      queries.dailyActivityQueryAndroid(state.buckets.window_buckets[0])
+    );
+    let active_history = _.zipObject(periods, data);
+    active_history = _.mapValues(active_history, (duration, key) => {
+      return [{ timestamp: key.split('/')[0], duration, data: { status: 'not-afk' } }];
+    });
     commit('query_active_history_completed', { active_history });
   },
 
@@ -256,11 +290,13 @@ const actions = {
       state.buckets.browser_buckets.length > 0;
     const active_available = state.buckets.afk_buckets.length > 0;
     const editor_available = state.buckets.editor_buckets.length > 0;
+    const android_available = state.buckets.window_buckets[0].includes('android');
     commit('set_available', {
       window_available: window_available,
       browser_available: browser_available,
       active_available: active_available,
       editor_available: editor_available,
+      android_available: android_available,
     });
   },
 
@@ -467,6 +503,7 @@ const mutations = {
     state.active.available = data['active_available'];
     state.editor.available = data['editor_available'];
     state.category.available = data['window_available'];
+    state.android.available = data['android_available'];
   },
 
   query_window_completed(state, data) {

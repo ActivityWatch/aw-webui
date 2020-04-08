@@ -23,6 +23,11 @@ import 'typeface-varela-round';
 // Loads all the filters
 import './util/filters.js';
 
+// Create an instance of AWClient as this.$aw
+import awclient from './util/awclient.js';
+console.log(awclient);
+Vue.prototype.$aw = awclient;
+
 // Sets up the routing and the base app (using vue-router)
 import router from './route.js';
 
@@ -53,10 +58,6 @@ Vue.component('aw-timeline-barchart', () => import('./visualizations/TimelineBar
 
 // A mixin to make async method errors propagate
 Vue.mixin(require('~/mixins/asyncErrorCaptured.js'));
-
-// Create an instance of AWClient as this.$aw
-import awclient from './util/awclient.js';
-Vue.prototype.$aw = awclient;
 
 // Set the PRODUCTION constant
 Vue.prototype.PRODUCTION = PRODUCTION;
