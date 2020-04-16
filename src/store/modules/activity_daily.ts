@@ -166,7 +166,6 @@ const actions = {
     const periods = timeperiodStrsAroundTimeperiod(timeperiod).filter(tp_str => {
       return !_.includes(state.active_history, tp_str);
     });
-    console.log(periods);
     const bucket_id_afk = 'aw-watcher-afk_' + host;
     const queryStart = moment();
     const data = await this._vm.$aw.query(periods, queries.dailyActivityQuery(bucket_id_afk));
@@ -330,6 +329,24 @@ const actions = {
       languages: [{ duration: 10, data: { language: 'python' } }],
       projects: [{ duration: 10, data: { project: 'aw-core' } }],
     });
+
+    function build_active_history() {
+      const active_history = {};
+      let current_day = moment(get_day_start_with_offset());
+      _.map(_.range(0, 30), () => {
+        const current_day_end = moment(current_day).add(1, 'day');
+        active_history[`${current_day.format()}/${current_day_end.format()}`] = [
+          {
+            timestamp: current_day.format(),
+            duration: 100 + 900 * Math.random(),
+            data: { status: 'not-afk' },
+          },
+        ];
+        current_day = current_day.add(-1, 'day');
+      });
+      return active_history;
+    }
+    commit('query_active_history_completed', { active_history: build_active_history() });
   },
 };
 
@@ -355,6 +372,8 @@ const mutations = {
     state.top_categories = null;
     state.active_duration = null;
     state.active_events = null;
+
+    state.active_history = {};
   },
 
   query_window_completed(state, data) {
@@ -364,7 +383,6 @@ const mutations = {
     state.active_duration = data['duration'];
     state.app_chunks = data['app_chunks'];
     state.active_events = data['active_events'];
-    console.log(state.active_events);
   },
 
   query_browser_completed(state, data) {
