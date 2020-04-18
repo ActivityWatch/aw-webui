@@ -181,6 +181,21 @@ export default {
     periodReadable: function() {
       return moment(this.timeperiod.start).format(this.dateformat);
     },
+    periodLengthMoment: function() {
+      if (this.periodLength === 'day') {
+        return 'day';
+      } else if (this.periodLength === 'week') {
+        /* This is necessary so the week starts on Monday instead of Sunday */
+        return 'isoWeek';
+      } else if (this.periodLength === 'month') {
+        return 'month';
+      } else if (this.periodLength === 'year') {
+        return 'year';
+      } else {
+        console.error('Invalid periodLength ${this.periodLength}, defaulting to "day"');
+        return 'day';
+      }
+    },
   },
   watch: {
     timeperiod: function() {
@@ -209,7 +224,7 @@ export default {
     },
     setDate: function(date, periodLength) {
       const new_date = moment(date)
-        .startOf(periodLength)
+        .startOf(this.periodLengthMoment)
         .format('YYYY-MM-DD');
       this.$router.push(`/activity/${this.host}/${periodLength}/${new_date}`);
     },
