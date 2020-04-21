@@ -63,7 +63,7 @@ export default {
 
   computed: {
     editorBuckets: function() {
-      return this.$store.state.activity_daily.editor_buckets_available;
+      return this.$store.state.activity_daily.buckets.editor_buckets;
     },
     dateEnd: function() {
       return moment(this.date)

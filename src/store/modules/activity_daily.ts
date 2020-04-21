@@ -56,8 +56,12 @@ const _state = {
     browser_buckets: 'all',
     editor_buckets: 'all',
   },
-  editor_buckets_available: [],
-  browser_buckets_available: [],
+  buckets: {
+    afk_buckets: [],
+    window_buckets: [],
+    editor_buckets: [],
+    browser_buckets: [],
+  },
 };
 
 function timeperiodsAroundTimeperiod(timeperiod: TimePeriod): TimePeriod[] {
@@ -100,13 +104,45 @@ const actions = {
       if (!query_options.timeperiod) {
         query_options.timeperiod = dateToTimeperiod(query_options.date);
       }
+
+      await dispatch('buckets/ensureBuckets', null, { root: true });
       await dispatch('get_buckets', query_options);
 
       // TODO: These queries can actually run in parallel, but since server won't process them in parallel anyway we won't.
-      await dispatch('query_window', query_options);
-      await dispatch('query_browser', query_options);
-      await dispatch('query_editor', query_options);
-      await dispatch('query_active_history', query_options);
+
+      if (state.buckets.afk_buckets.length > 0 && state.buckets.window_buckets.length > 0) {
+        await dispatch('query_window', query_options);
+      } else {
+        console.log('Cannot call query_window as we are missing either an afk or window bucket');
+        await dispatch('query_window_empty', query_options);
+      }
+
+      if (
+        state.buckets.afk_buckets.length > 0 &&
+        state.buckets.window_buckets.length > 0 &&
+        state.buckets.browser_buckets.length > 0
+      ) {
+        await dispatch('query_browser', query_options);
+      } else {
+        console.log(
+          'Cannot call query_browser as we are missing either an afk, window or browser bucket'
+        );
+        await dispatch('query_browser_empty', query_options);
+      }
+
+      if (state.buckets.afk_buckets.length > 0) {
+        await dispatch('query_active_history', query_options);
+      } else {
+        console.log('Cannot call query_active_history as we do not have an afk bucket');
+        await dispatch('query_active_history_empty', query_options);
+      }
+
+      if (state.buckets.editor_buckets.length > 0) {
+        await dispatch('query_editor', query_options);
+      } else {
+        console.log('Cannot call query_editor as we do not have any editor buckets');
+        await dispatch('query_editor_empty', query_options);
+      }
     } else {
       console.warn(
         'ensure_loaded called twice with same query_options but without query_options.force = true, skipping...'
@@ -114,15 +150,12 @@ const actions = {
     }
   },
 
-  async query_window({ commit }, { host, timeperiod, filterAFK, filterCategories }: QueryOptions) {
-    const start = moment();
+  async query_window({ state, commit }, { timeperiod, filterAFK, filterCategories }: QueryOptions) {
     const periods = [timeperiodToStr(timeperiod)];
     const classes = loadClassesForQuery();
-    const bucket_id_window = 'aw-watcher-window_' + host;
-    const bucket_id_afk = 'aw-watcher-afk_' + host;
     const q = queries.windowQuery(
-      bucket_id_window,
-      bucket_id_afk,
+      state.buckets.window_buckets[0],
+      state.buckets.afk_buckets[0],
       default_limit, // this.top_apps_count,
       default_limit, // this.top_windowtitles_count,
       filterAFK,
@@ -130,65 +163,85 @@ const actions = {
       filterCategories
     );
     const data = await this._vm.$aw.query(periods, q);
-    console.info(`Completed window query in ${moment().diff(start)}ms`);
     commit('query_window_completed', data[0]);
   },
 
-  async query_browser({ state, commit }, { host, timeperiod, filterAFK }: QueryOptions) {
-    const start = moment();
-    if (state.browser_buckets_available) {
-      const periods = [timeperiodToStr(timeperiod)];
-      const bucket_id_window = 'aw-watcher-window_' + host;
-      const bucket_id_afk = 'aw-watcher-afk_' + host;
-      const q = queries.browserSummaryQuery(
-        state.browser_buckets_available,
-        bucket_id_window,
-        bucket_id_afk,
-        default_limit, // this.top_web_count
-        filterAFK
-      );
-      const data = await this._vm.$aw.query(periods, q);
-      console.info(`Completed browser query in ${moment().diff(start)}ms`);
-      commit('query_browser_completed', data[0]);
-    }
+  async query_window_empty({ commit }) {
+    const data = {
+      app_events: [],
+      title_events: [],
+      cat_events: [],
+      duration: 0,
+      active_events: [],
+    };
+    commit('query_window_completed', data);
+  },
+
+  async query_browser({ state, commit }, { timeperiod, filterAFK }: QueryOptions) {
+    const periods = [timeperiodToStr(timeperiod)];
+    const q = queries.browserSummaryQuery(
+      state.buckets.browser_buckets,
+      state.buckets.window_buckets[0],
+      state.buckets.afk_buckets[0],
+      default_limit, // this.top_web_count
+      filterAFK
+    );
+    const data = await this._vm.$aw.query(periods, q);
+    commit('query_browser_completed', data[0]);
+  },
+
+  async query_browser_empty({ commit }) {
+    const data = {
+      domains: [],
+      urls: [],
+      duration: 0,
+    };
+    commit('query_browser_completed', data);
   },
 
   async query_editor({ state, commit }, { timeperiod }) {
-    if (state.editor_buckets_available) {
-      const periods = [timeperiodToStr(timeperiod)];
-      const q = queries.editorActivityQuery(state.editor_buckets_available, 100);
-      const data = await this._vm.$aw.query(periods, q).catch(this.errorHandler);
-      commit('query_editor_completed', data[0]);
-    }
+    const periods = [timeperiodToStr(timeperiod)];
+    const q = queries.editorActivityQuery(state.buckets.editor_buckets, 100);
+    const data = await this._vm.$aw.query(periods, q);
+    commit('query_editor_completed', data[0]);
   },
 
-  async query_active_history({ commit, state }, { host, timeperiod }: QueryOptions) {
+  async query_editor_empty({ commit }) {
+    const data = {
+      files: [],
+      projects: [],
+      languages: [],
+    };
+    commit('query_editor_completed', data);
+  },
+
+  async query_active_history({ commit, state }, { timeperiod }: QueryOptions) {
     const periods = timeperiodStrsAroundTimeperiod(timeperiod).filter(tp_str => {
       return !_.includes(state.active_history, tp_str);
     });
-    const bucket_id_afk = 'aw-watcher-afk_' + host;
-    const queryStart = moment();
+    const bucket_id_afk = state.buckets.afk_buckets[0];
     const data = await this._vm.$aw.query(periods, queries.dailyActivityQuery(bucket_id_afk));
     const active_history = _.zipObject(
       periods,
       _.map(data, pair => _.filter(pair, e => e.data.status == 'not-afk'))
     );
-    console.info(`Completed history query in ${moment().diff(queryStart)}ms`);
     commit('query_active_history_completed', { active_history });
   },
 
-  async get_buckets({ commit }) {
-    const buckets = await this._vm.$aw.getBuckets();
-    const browser_buckets = _.map(
-      _.filter(buckets, bucket => bucket['type'] === 'web.tab.current'),
-      bucket => bucket['id']
-    );
-    const editor_buckets = _.map(
-      _.filter(buckets, bucket => bucket['type'] === 'app.editor.activity'),
-      bucket => bucket['id']
-    );
-    commit('browser_buckets', browser_buckets);
-    commit('editor_buckets', editor_buckets);
+  async query_active_history_empty({ commit }) {
+    const data = [];
+    commit('query_active_history_completed', data);
+  },
+
+  async get_buckets({ commit, rootGetters }, { host }) {
+    const buckets = {
+      afk_buckets: rootGetters['buckets/afkBucketsByHost'](host),
+      window_buckets: rootGetters['buckets/windowBucketsByHost'](host),
+      browser_buckets: rootGetters['buckets/browserBuckets'],
+      editor_buckets: rootGetters['buckets/editorBuckets'],
+    };
+    console.log('Available buckets: ', buckets);
+    commit('buckets', buckets);
   },
 
   async load_demo({ commit }) {
@@ -409,12 +462,8 @@ const mutations = {
     };
   },
 
-  browser_buckets(state, data) {
-    state.browser_buckets_available = data;
-  },
-
-  editor_buckets(state, data) {
-    state.editor_buckets_available = data;
+  buckets(state, data) {
+    state.buckets = data;
   },
 };
 

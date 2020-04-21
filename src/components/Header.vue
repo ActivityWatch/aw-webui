@@ -103,7 +103,7 @@ export default {
     //console.log(types_by_host);
 
     _.each(types_by_host, (types, hostname) => {
-      if (types.afk && types.window) {
+      if (hostname != 'unknown') {
         this.activityViews.push({
           name: hostname,
           hostname: hostname,
