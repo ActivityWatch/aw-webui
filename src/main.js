@@ -37,6 +37,7 @@ Vue.component('error-boundary', () => import('./components/ErrorBoundary.vue'));
 Vue.component('input-timeinterval', () => import('./components/InputTimeInterval.vue'));
 Vue.component('aw-header', () => import('./components/Header.vue'));
 Vue.component('aw-devonly', () => import('./components/DevOnly.vue'));
+Vue.component('aw-selectable-vis', () => import('./components/SelectableVisualization.vue'));
 
 // Visualization components
 Vue.component('aw-summary', () => import('./visualizations/Summary.vue'));

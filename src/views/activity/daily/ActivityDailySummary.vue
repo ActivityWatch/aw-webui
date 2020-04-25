@@ -1,32 +1,8 @@
 <template lang="pug">
 div
   div.row.mb-4
-    div.col-md-4
-      h5 Top Applications
-      aw-summary(:fields="top_apps", :namefunc="e => e.data.app", :colorfunc="e => e.data.app", with_limit)
-
-    div.col-md-4
-      h5 Top Window Titles
-      aw-summary(:fields="top_titles", :namefunc="e => e.data.title", :colorfunc="e => e.data.app", with_limit)
-
-    div.col-md-4
-      h5 Top Browser Domains
-      aw-summary(:fields="top_domains", :namefunc="e => e.data.$domain", :colorfunc="e => e.data.$domain", with_limit)
-
-  div.row.mb-4
-    div.col-md-4
-      h5 Top categories
-      aw-summary(:fields="top_categories", :namefunc="e => e.data['$category'].join(' > ')", :colorfunc="e => e.data['$category'].join(' > ')", with_limit)
-
-    div.col-md-4
-      h5 Category Tree
-      div(v-if="top_categories")
-        aw-categorytree(:events="top_categories")
-
-    div.col-md-4
-      h5 Category Sunburst
-      div(v-if="top_categories")
-        aw-sunburst-categories(:data="top_categories_hierarchy", style="height: 20em")
+    div.col-md-4.padding(v-for="view, index in views")
+      aw-selectable-vis(:id="index" :type="view" @onTypeChange="onTypeChange")
 
   aw-devonly(v-if="periodLength === 'day'" reason="Not ready for production, still experimenting")
     div.row.mb-4
@@ -34,6 +10,12 @@ div
         aw-timeline-barchart(:height="100", :datasets="datasets")
 
 </template>
+
+<style scoped lang="scss">
+.padding {
+  padding-top: 1em;
+}
+</style>
 
 <script>
 import _ from 'lodash';
@@ -91,6 +73,11 @@ export default {
       default: 'day',
     },
   },
+  data: function() {
+    return {
+      views: this.loadSummaryFavoriteViews(),
+    };
+  },
   computed: {
     top_apps: function() {
       return this.$store.state.activity_daily.window.top_apps;
@@ -127,6 +114,35 @@ export default {
           data,
         },
       ];
+    },
+  },
+  methods: {
+    onTypeChange(id, type) {
+      this.views[id] = type;
+      // Needed to emit the change to the child component
+      this.$set(this.views, this.views);
+      this.saveSummaryFavoriteViews();
+    },
+
+    saveSummaryFavoriteViews() {
+      localStorage.activity_summary_favorite_views = JSON.stringify(this.views);
+      console.log('Saved summary favorite types', localStorage.activity_summary_favorite_views);
+    },
+
+    loadSummaryFavoriteViews() {
+      const favorite_views = localStorage.activity_summary_favorite_views;
+      if (favorite_views) {
+        return JSON.parse(favorite_views);
+      } else {
+        return [
+          'top_apps',
+          'top_titles',
+          'top_domains',
+          'top_categories',
+          'category_tree',
+          'category_sunburst',
+        ];
+      }
     },
   },
 };
