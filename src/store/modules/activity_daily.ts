@@ -36,22 +36,39 @@ interface QueryOptions {
 
 // initial state
 const _state = {
-  top_apps: [],
-  top_titles: [],
+  window: {
+    available: false,
+    top_apps: [],
+    top_titles: [],
+  },
 
-  browser_duration: [],
-  top_domains: [],
-  top_urls: [],
+  browser: {
+    available: false,
+    duration: [],
+    top_domains: [],
+    top_urls: [],
+  },
 
-  editor_duration: [],
-  top_editor_files: [],
-  top_editor_languages: [],
-  top_editor_projects: [],
+  editor: {
+    available: false,
+    duration: [],
+    top_files: [],
+    top_languages: [],
+    top_projects: [],
+  },
 
-  top_categories: [],
-  active_events: [],
-  active_duration: 0,
-  active_history: {},
+  category: {
+    available: false,
+    top: [],
+  },
+
+  active: {
+    available: false,
+    duration: 0,
+    events: [],
+    history: {},
+  },
+
   query_options: {
     browser_buckets: 'all',
     editor_buckets: 'all',
@@ -84,8 +101,8 @@ const getters = {
   getActiveHistoryAroundTimeperiod: state => (timeperiod: TimePeriod) => {
     const periods = timeperiodStrsAroundTimeperiod(timeperiod);
     const _history = periods.map(tp => {
-      if (_.has(state.active_history, tp)) {
-        return state.active_history[tp];
+      if (_.has(state.active.history, tp)) {
+        return state.active.history[tp];
       } else {
         // A zero-duration placeholder until new data has been fetched
         return [{ timestamp: moment(tp.split('/')[0]).format(), duration: 0, data: {} }];
@@ -109,19 +126,16 @@ const actions = {
       await dispatch('get_buckets', query_options);
 
       // TODO: These queries can actually run in parallel, but since server won't process them in parallel anyway we won't.
+      await dispatch('set_available', query_options);
 
-      if (state.buckets.afk_buckets.length > 0 && state.buckets.window_buckets.length > 0) {
+      if (state.window.available) {
         await dispatch('query_window', query_options);
       } else {
         console.log('Cannot call query_window as we are missing either an afk or window bucket');
         await dispatch('query_window_empty', query_options);
       }
 
-      if (
-        state.buckets.afk_buckets.length > 0 &&
-        state.buckets.window_buckets.length > 0 &&
-        state.buckets.browser_buckets.length > 0
-      ) {
+      if (state.browser.available) {
         await dispatch('query_browser', query_options);
       } else {
         console.log(
@@ -130,14 +144,14 @@ const actions = {
         await dispatch('query_browser_empty', query_options);
       }
 
-      if (state.buckets.afk_buckets.length > 0) {
+      if (state.active.available) {
         await dispatch('query_active_history', query_options);
       } else {
         console.log('Cannot call query_active_history as we do not have an afk bucket');
         await dispatch('query_active_history_empty', query_options);
       }
 
-      if (state.buckets.editor_buckets.length > 0) {
+      if (state.editor.available) {
         await dispatch('query_editor', query_options);
       } else {
         console.log('Cannot call query_editor as we do not have any editor buckets');
@@ -217,7 +231,7 @@ const actions = {
 
   async query_active_history({ commit, state }, { timeperiod }: QueryOptions) {
     const periods = timeperiodStrsAroundTimeperiod(timeperiod).filter(tp_str => {
-      return !_.includes(state.active_history, tp_str);
+      return !_.includes(state.active.history, tp_str);
     });
     const bucket_id_afk = state.buckets.afk_buckets[0];
     const data = await this._vm.$aw.query(periods, queries.dailyActivityQuery(bucket_id_afk));
@@ -231,6 +245,23 @@ const actions = {
   async query_active_history_empty({ commit }) {
     const data = [];
     commit('query_active_history_completed', data);
+  },
+
+  async set_available({ commit, state }) {
+    const window_available =
+      state.buckets.afk_buckets.length > 0 && state.buckets.window_buckets.length > 0;
+    const browser_available =
+      state.buckets.afk_buckets.length > 0 &&
+      state.buckets.window_buckets.length > 0 &&
+      state.buckets.browser_buckets.length > 0;
+    const active_available = state.buckets.afk_buckets.length > 0;
+    const editor_available = state.buckets.editor_buckets.length > 0;
+    commit('set_available', {
+      window_available: window_available,
+      browser_available: browser_available,
+      active_available: active_available,
+      editor_available: editor_available,
+    });
   },
 
   async get_buckets({ commit, rootGetters }, { host }) {
@@ -410,38 +441,46 @@ const mutations = {
     state.query_options = query_options;
 
     // Resets the store state while waiting for new query to finish
-    state.top_apps = null;
-    state.top_titles = null;
+    state.window.top_apps = null;
+    state.window.top_titles = null;
 
-    state.browser_duration = 0;
+    state.browser.duration = 0;
     state.top_domains = null;
     state.top_urls = null;
 
-    state.editor_duration = 0;
-    state.top_editor_files = null;
-    state.top_editor_languages = null;
-    state.top_editor_projects = null;
+    state.editor.duration = 0;
+    state.editor.top_files = null;
+    state.editor.top_languages = null;
+    state.editor.top_projects = null;
 
-    state.top_categories = null;
-    state.active_duration = null;
-    state.active_events = null;
+    state.category.top = null;
 
-    state.active_history = {};
+    state.active.duration = null;
+    state.active.events = null;
+
+    state.active.history = {};
+  },
+
+  set_available(state, data) {
+    state.window.available = data['window_available'];
+    state.browser.available = data['browser_available'];
+    state.active.available = data['active_available'];
+    state.editor.available = data['editor_available'];
+    state.category.available = data['window_available'];
   },
 
   query_window_completed(state, data) {
-    state.top_apps = data['app_events'];
-    state.top_titles = data['title_events'];
-    state.top_categories = data['cat_events'];
-    state.active_duration = data['duration'];
-    state.app_chunks = data['app_chunks'];
-    state.active_events = data['active_events'];
+    state.window.top_apps = data['app_events'];
+    state.window.top_titles = data['title_events'];
+    state.category.top = data['cat_events'];
+    state.active.duration = data['duration'];
+    state.active.events = data['active_events'];
   },
 
   query_browser_completed(state, data) {
-    state.top_domains = data['domains'];
-    state.top_urls = data['urls'];
-    state.browser_duration = data['duration'];
+    state.browser.top_domains = data['domains'];
+    state.browser.top_urls = data['urls'];
+    state.browser.duration = data['duration'];
 
     // FIXME: This one might take up a lot of size in the request, move it to a seperate request
     // (or remove entirely, since we have the other timeline now)
@@ -449,15 +488,15 @@ const mutations = {
   },
 
   query_editor_completed(state, data) {
-    state.editor_duration = data['duration'];
-    state.top_editor_files = data['files'];
-    state.top_editor_languages = data['languages'];
-    state.top_editor_projects = data['projects'];
+    state.editor.duration = data['duration'];
+    state.editor.top_files = data['files'];
+    state.editor.top_languages = data['languages'];
+    state.editor.top_projects = data['projects'];
   },
 
   query_active_history_completed(state, { active_history }) {
-    state.active_history = {
-      ...state.active_history,
+    state.active.history = {
+      ...state.active.history,
       ...active_history,
     };
   },
