@@ -5,23 +5,23 @@ div
     h6 No editor buckets available
     small Make sure you have an editor watcher installed to use this feature
   div(v-if="editorBuckets.length")
-    h6 Active editor time: {{ $store.state.activity_daily.editor_duration | friendlyduration }}
+    h6 Active editor time: {{ $store.state.activity_daily.editor.duration | friendlyduration }}
     div.row(style="padding-top: 0.5em;")
       div.col-md-4
         h5 Top file activity
-        aw-summary(:fields="$store.state.activity_daily.top_editor_files",
+        aw-summary(:fields="$store.state.activity_daily.editor.top_files",
                    :namefunc="top_editor_files_namefunc",
                    :colorfunc="top_editor_files_colorfunc", with_limit)
 
       div.col-md-4
         h5 Top language activity
-        aw-summary(:fields="$store.state.activity_daily.top_editor_languages",
+        aw-summary(:fields="$store.state.activity_daily.editor.top_languages",
                    :namefunc="top_editor_languages_namefunc",
                    :colorfunc="top_editor_languages_colorfunc", with_limit)
 
       div.col-md-4
         h5 Top project activity
-        aw-summary(:fields="$store.state.activity_daily.top_editor_projects",
+        aw-summary(:fields="$store.state.activity_daily.editor.top_projects",
                    :namefunc="top_editor_projects_namefunc",
                    :colorfunc="top_editor_projects_colorfunc", with_limit)
   br

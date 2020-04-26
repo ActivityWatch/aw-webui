@@ -93,20 +93,16 @@ export default {
   },
   computed: {
     top_apps: function() {
-      return this.$store.state.activity_daily.top_apps;
+      return this.$store.state.activity_daily.window.top_apps;
     },
     top_titles: function() {
-      return this.$store.state.activity_daily.top_titles;
+      return this.$store.state.activity_daily.window.top_titles;
     },
     top_categories: function() {
-      return this.$store.state.activity_daily.top_categories;
+      return this.$store.state.activity_daily.category.top;
     },
     top_domains: function() {
-      return this.$store.state.activity_daily.top_domains;
-    },
-    //top_urls: function() { return this.$store.state.activity_daily.top_urls },
-    browser_buckets: function() {
-      return this.$store.state.activity_daily.browser_buckets;
+      return this.$store.state.activity_daily.browser.top_domains;
     },
     top_categories_hierarchy: function() {
       if (this.top_categories) {
@@ -123,7 +119,7 @@ export default {
       }
     },
     datasets: function() {
-      const data = split_by_hour_into_data(this.$store.state.activity_daily.active_events);
+      const data = split_by_hour_into_data(this.$store.state.activity_daily.active.events);
       return [
         {
           label: 'Total time',

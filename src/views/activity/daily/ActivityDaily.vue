@@ -5,7 +5,7 @@ div
   p
     | Host: {{ host }}
     br
-    | Active time: {{ $store.state.activity_daily.active_duration | friendlyduration }}
+    | Active time: {{ $store.state.activity_daily.active.duration | friendlyduration }}
 
   div.d-flex
     div.p-1

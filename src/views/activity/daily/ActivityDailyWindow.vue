@@ -1,15 +1,15 @@
 <template lang="pug">
 div
-  div(v-if="periodLength == 'day'")
-    // This is commented out because it requires a special query return which can become huge for periodLength's that are not day.
-    // It's not very useful anymore anyway since we have the timeline now.
-    //div
-      b-form-checkbox(v-model="timelineShowAFK")
-        | Show AFK time
-      aw-timeline-inspect(:chunks="app_chunks", :show_afk='timelineShowAFK', :chunkfunc='e => e.data.app', :eventfunc='e => e.data.title')
-      hr
-    aw-sunburst-clock(:date="date", :afkBucketId="bucket_id_afk", :windowBucketId="bucket_id_window")
+  div.row.mb-6
+    div.col-md-6
+      h5 Top Applications
+      aw-summary(:fields="top_apps", :namefunc="e => e.data.app", :colorfunc="e => e.data.app", with_limit)
+    div.col-md-6
+      h5 Top Window Titles
+      aw-summary(:fields="top_titles", :namefunc="e => e.data.title", :colorfunc="e => e.data.app", with_limit)
 
+  div(v-if="periodLength == 'day'")
+    aw-sunburst-clock(:date="date", :afkBucketId="bucket_id_afk", :windowBucketId="bucket_id_window")
   div(v-else)
     | Nothing to show here for the current period length: {{ periodLength }}
 </template>
@@ -36,14 +36,17 @@ export default {
     };
   },
   computed: {
-    app_chunks: function() {
-      return this.$store.state.activity_daily.app_chunks;
+    top_apps: function() {
+      return this.$store.state.activity_daily.window.top_apps;
+    },
+    top_titles: function() {
+      return this.$store.state.activity_daily.window.top_titles;
     },
     bucket_id_window: function() {
-      return 'aw-watcher-window_' + this.host;
+      return this.$store.state.activity_daily.buckets.window_buckets[0];
     },
     bucket_id_afk: function() {
-      return 'aw-watcher-afk_' + this.host;
+      return this.$store.state.activity_daily.buckets.afk_buckets[0];
     },
   },
 };
