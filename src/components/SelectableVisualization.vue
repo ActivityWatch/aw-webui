@@ -22,17 +22,17 @@ div
                :colorfunc="e => e.data.$domain",
                with_limit)
   div(v-if="type == 'top_editor_files'")
-    aw-summary(:fields="$store.state.activity_daily.editor.top_files",
+    aw-summary(:fields="$store.state.activity.editor.top_files",
                :namefunc="top_editor_files_namefunc",
                :colorfunc="e => e.data.language",
                with_limit)
   div(v-if="type == 'top_editor_languages'")
-    aw-summary(:fields="$store.state.activity_daily.editor.top_languages",
+    aw-summary(:fields="$store.state.activity.editor.top_languages",
                :namefunc="e => e.data.language",
                :colorfunc="e => e.data.language",
                with_limit)
   div(v-if="type == 'top_editor_projects'")
-    aw-summary(:fields="$store.state.activity_daily.editor.top_projects",
+    aw-summary(:fields="$store.state.activity.editor.top_projects",
                :namefunc="top_editor_projects_namefunc",
                :colorfunc="e => e.data.language",
                with_limit)
@@ -110,19 +110,19 @@ export default {
   },
   computed: {
     top_apps: function() {
-      return this.$store.state.activity_daily.window.top_apps;
+      return this.$store.state.activity.window.top_apps;
     },
     top_titles: function() {
-      return this.$store.state.activity_daily.window.top_titles;
+      return this.$store.state.activity.window.top_titles;
     },
     top_domains: function() {
-      return this.$store.state.activity_daily.browser.top_domains;
+      return this.$store.state.activity.browser.top_domains;
     },
     top_urls: function() {
-      return this.$store.state.activity_daily.browser.top_urls;
+      return this.$store.state.activity.browser.top_urls;
     },
     top_categories: function() {
-      return this.$store.state.activity_daily.category.top;
+      return this.$store.state.activity.category.top;
     },
     top_categories_hierarchy: function() {
       if (this.top_categories) {
@@ -145,21 +145,21 @@ export default {
   methods: {
     get_type_available: function(type) {
       if (type === 'top_apps' || type === 'top_titles') {
-        return this.$store.state.activity_daily.window.available;
+        return this.$store.state.activity.window.available;
       } else if (type === 'top_domains' || type === 'top_urls') {
-        return this.$store.state.activity_daily.browser.available;
+        return this.$store.state.activity.browser.available;
       } else if (
         type === 'top_editor_files' ||
         type === 'top_editor_languages' ||
         type === 'top_editor_projects'
       ) {
-        return this.$store.state.activity_daily.editor.available;
+        return this.$store.state.activity.editor.available;
       } else if (
         type === 'top_categories' ||
         type === 'category_tree' ||
         type === 'category_sunburst'
       ) {
-        return this.$store.state.activity_daily.category.available;
+        return this.$store.state.activity.category.available;
       } else {
         console.error('Unknown type available: ', type);
         return false;

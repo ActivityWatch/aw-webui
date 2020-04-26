@@ -6,25 +6,25 @@ div
     small Make sure you have a browser watcher installed to use this feature
   div(v-if="browserBuckets.length > 0")
 
-    h6 Active browser time: {{ $store.state.activity_daily.browser.duration | friendlyduration }}
+    h6 Active browser time: {{ $store.state.activity.browser.duration | friendlyduration }}
 
     div.row
       div.col-md-6
         h5 Top Browser Domains
         div(v-if="browserBuckets")
-          aw-summary(:fields="$store.state.activity_daily.browser.top_domains", :namefunc="e => e.data.$domain", :colorfunc="e => e.data.$domain", with_limit)
+          aw-summary(:fields="$store.state.activity.browser.top_domains", :namefunc="e => e.data.$domain", :colorfunc="e => e.data.$domain", with_limit)
 
       div.col-md-6
         h5 Top Browser URLs
         div(v-if="browserBuckets")
-          aw-summary(:fields="$store.state.activity_daily.browser.top_urls", :namefunc="e => e.data.url", :colorfunc="e => e.data.$domain", with_limit)
+          aw-summary(:fields="$store.state.activity.browser.top_urls", :namefunc="e => e.data.url", :colorfunc="e => e.data.$domain", with_limit)
 
   //div(v-if="periodLength === 'day'")
     br
     hr
     b-form-checkbox(v-model="timelineShowAFK")
       | Show AFK time
-    aw-timeline-inspect(:chunks="$store.state.activity_daily.web_chunks", :show_afk='timelineShowAFK', :chunkfunc='e => e.data.$domain', :eventfunc='e => e.data.url')
+    aw-timeline-inspect(:chunks="$store.state.activity.web_chunks", :show_afk='timelineShowAFK', :chunkfunc='e => e.data.$domain', :eventfunc='e => e.data.url')
   br
 </template>
 
@@ -49,7 +49,7 @@ export default {
   },
   computed: {
     browserBuckets: function() {
-      return this.$store.state.activity_daily.buckets.browser_buckets;
+      return this.$store.state.activity.buckets.browser_buckets;
     },
   },
 };

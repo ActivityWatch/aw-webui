@@ -5,7 +5,7 @@ div
   p
     | Host: {{ host }}
     br
-    | Active time: {{ $store.state.activity_daily.active.duration | friendlyduration }}
+    | Active time: {{ $store.state.activity.active.duration | friendlyduration }}
 
   div.d-flex
     div.p-1
@@ -38,16 +38,16 @@ div
 
   ul.row.nav.nav-tabs.my-3.px-3
     li.nav-item
-      router-link.nav-link(:to="{ name: 'activity-daily-summary', params: $route.params }")
+      router-link.nav-link(:to="{ name: 'activity-summary', params: $route.params }")
         h5 Summary
     li.nav-item
-      router-link.nav-link(:to="{ name: 'activity-daily-window', params: $route.params }")
+      router-link.nav-link(:to="{ name: 'activity-window', params: $route.params }")
         h5 Window
     li.nav-item
-      router-link.nav-link(:to="{ name: 'activity-daily-browser', params: $route.params }")
+      router-link.nav-link(:to="{ name: 'activity-browser', params: $route.params }")
         h5 Browser
     li.nav-item
-      router-link.nav-link(:to="{ name: 'activity-daily-editor', params: $route.params }")
+      router-link.nav-link(:to="{ name: 'activity-editor', params: $route.params }")
         h5 Editor
 
   div
@@ -157,9 +157,7 @@ export default {
       return `/activity/${this.host}/${this.periodLength}`;
     },
     periodusage: function() {
-      return this.$store.getters['activity_daily/getActiveHistoryAroundTimeperiod'](
-        this.timeperiod
-      );
+      return this.$store.getters['activity/getActiveHistoryAroundTimeperiod'](this.timeperiod);
     },
     timeperiod: function() {
       // TODO: Get start of day/week/month (depending on periodLength) with offset
@@ -230,7 +228,7 @@ export default {
     },
 
     refresh: async function(force) {
-      await this.$store.dispatch('activity_daily/ensure_loaded', {
+      await this.$store.dispatch('activity/ensure_loaded', {
         timeperiod: this.timeperiod,
         host: this.host,
         force: force,
@@ -240,7 +238,7 @@ export default {
     },
 
     load_demo: async function() {
-      await this.$store.dispatch('activity_daily/load_demo');
+      await this.$store.dispatch('activity/load_demo');
     },
   },
 };

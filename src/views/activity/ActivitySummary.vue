@@ -80,16 +80,16 @@ export default {
   },
   computed: {
     top_apps: function() {
-      return this.$store.state.activity_daily.window.top_apps;
+      return this.$store.state.activity.window.top_apps;
     },
     top_titles: function() {
-      return this.$store.state.activity_daily.window.top_titles;
+      return this.$store.state.activity.window.top_titles;
     },
     top_categories: function() {
-      return this.$store.state.activity_daily.category.top;
+      return this.$store.state.activity.category.top;
     },
     top_domains: function() {
-      return this.$store.state.activity_daily.browser.top_domains;
+      return this.$store.state.activity.browser.top_domains;
     },
     top_categories_hierarchy: function() {
       if (this.top_categories) {
@@ -106,7 +106,7 @@ export default {
       }
     },
     datasets: function() {
-      const data = split_by_hour_into_data(this.$store.state.activity_daily.active.events);
+      const data = split_by_hour_into_data(this.$store.state.activity.active.events);
       return [
         {
           label: 'Total time',
