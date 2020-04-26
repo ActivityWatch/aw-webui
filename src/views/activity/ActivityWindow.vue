@@ -37,16 +37,16 @@ export default {
   },
   computed: {
     top_apps: function() {
-      return this.$store.state.activity_daily.window.top_apps;
+      return this.$store.state.activity.window.top_apps;
     },
     top_titles: function() {
-      return this.$store.state.activity_daily.window.top_titles;
+      return this.$store.state.activity.window.top_titles;
     },
     bucket_id_window: function() {
-      return this.$store.state.activity_daily.buckets.window_buckets[0];
+      return this.$store.state.activity.buckets.window_buckets[0];
     },
     bucket_id_afk: function() {
-      return this.$store.state.activity_daily.buckets.afk_buckets[0];
+      return this.$store.state.activity.buckets.afk_buckets[0];
     },
   },
 };

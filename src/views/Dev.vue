@@ -32,10 +32,10 @@ export default {
   },
   methods: {
     query_window_timing: async function() {
-      await this.$store.dispatch('activity_daily/query_window', this.queryOptions);
+      await this.$store.dispatch('activity/query_window', this.queryOptions);
     },
     query_browser_timing: async function() {
-      await this.$store.dispatch('activity_daily/query_browser', this.queryOptions);
+      await this.$store.dispatch('activity/query_browser', this.queryOptions);
     },
   },
 };
