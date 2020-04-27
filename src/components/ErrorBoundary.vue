@@ -18,17 +18,16 @@ export default {
     // console.error("Error captured!");
     // console.error(err, vm, info);
 
-    //default error message
-    let msg = (err.name && err.message) ? (err.name + ": " + err.message + ". See dev console (F12) and/or server logs for more info.") : err;
-
-    //use server error response if available
-    //err.isAxiosError doesn't help much here…
+    // fallback
+    let msg = err;
+    // use server error response if available; err.isAxiosError doesn't help much here…
     if (err.response && err.response.data && err.response.data.message) {
       msg = err.response.data.message;
+    } else if (err.name && err.message) {
+      msg = `${err.name}: ${err.message}.
+				See dev console (F12) and/or server logs for more info.`;
     }
 
-    //dedupe
-    if (this.errors.some(e => e.msg == msg)) return;
     this.errors.push({
       msg: msg,
       time: new Date().toISOString(),
