@@ -25,17 +25,19 @@ function get_buckets_by_host_and_type(buckets, host, type) {
 
 // getters
 const getters = {
-  afkBuckets(state) {
-    return get_buckets_by_type(state.buckets, 'afkstatus');
-  },
   afkBucketsByHost: state => host => {
     return get_buckets_by_host_and_type(state.buckets, host, 'afkstatus');
   },
-  windowBuckets(state) {
-    return get_buckets_by_type(state.buckets, 'currentwindow');
-  },
   windowBucketsByHost: state => host => {
-    return get_buckets_by_host_and_type(state.buckets, host, 'currentwindow');
+    return _.filter(
+      get_buckets_by_host_and_type(state.buckets, host, 'currentwindow'),
+      id => !id.startsWith('aw-watcher-android')
+    );
+  },
+  androidBucketsByHost: state => host => {
+    return _.filter(get_buckets_by_host_and_type(state.buckets, host, 'currentwindow'), id =>
+      id.startsWith('aw-watcher-android')
+    );
   },
   editorBuckets(state) {
     return get_buckets_by_type(state.buckets, 'app.editor.activity');

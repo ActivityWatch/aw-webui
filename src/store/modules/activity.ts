@@ -77,10 +77,11 @@ const _state = {
   },
 
   buckets: {
-    afk_buckets: [],
-    window_buckets: [],
-    editor_buckets: [],
-    browser_buckets: [],
+    afk: [],
+    window: [],
+    editor: [],
+    browser: [],
+    android: [],
   },
 };
 
@@ -178,8 +179,8 @@ const actions = {
     const start = moment();
     const classes = loadClassesForQuery();
     const q = queries.windowQuery(
-      state.buckets.window_buckets[0],
-      state.buckets.afk_buckets[0],
+      state.buckets.window[0],
+      state.buckets.afk[0],
       filterAFK,
       classes,
       filterCategories
@@ -192,7 +193,7 @@ const actions = {
   async query_android({ state, commit }, { timeperiod, filterCategories }: QueryOptions) {
     const periods = [timeperiodToStr(timeperiod)];
     const classes = loadClassesForQuery();
-    const q = queries.appQuery(state.buckets.window_buckets[0], classes, filterCategories);
+    const q = queries.appQuery(state.buckets.window[0], classes, filterCategories);
     const data = await this._vm.$aw.query(periods, q).catch(this.errorHandler);
     commit('query_window_completed', data[0]);
   },
@@ -211,9 +212,9 @@ const actions = {
   async query_browser({ state, commit }, { timeperiod, filterAFK }: QueryOptions) {
     const periods = [timeperiodToStr(timeperiod)];
     const q = queries.browserSummaryQuery(
-      state.buckets.browser_buckets,
-      state.buckets.window_buckets[0],
-      state.buckets.afk_buckets[0],
+      state.buckets.browser,
+      state.buckets.window[0],
+      state.buckets.afk[0],
       filterAFK
     );
     const data = await this._vm.$aw.query(periods, q);
@@ -231,7 +232,7 @@ const actions = {
 
   async query_editor({ state, commit }, { timeperiod }) {
     const periods = [timeperiodToStr(timeperiod)];
-    const q = queries.editorActivityQuery(state.buckets.editor_buckets);
+    const q = queries.editorActivityQuery(state.buckets.editor);
     const data = await this._vm.$aw.query(periods, q);
     commit('query_editor_completed', data[0]);
   },
@@ -251,7 +252,7 @@ const actions = {
     });
     const data = await this._vm.$aw.query(
       periods,
-      queries.dailyActivityQuery(state.buckets.afk_buckets[0])
+      queries.dailyActivityQuery(state.buckets.afk[0])
     );
     const active_history = _.zipObject(
       periods,
@@ -267,7 +268,7 @@ const actions = {
     });
     const data = await this._vm.$aw.query(
       periods,
-      queries.dailyActivityQueryAndroid(state.buckets.window_buckets[0])
+      queries.dailyActivityQueryAndroid(state.buckets.window[0])
     );
     let active_history = _.zipObject(periods, data);
     active_history = _.mapValues(active_history, (duration, key) => {
@@ -282,15 +283,14 @@ const actions = {
   },
 
   async set_available({ commit, state }) {
-    const window_available =
-      state.buckets.afk_buckets.length > 0 && state.buckets.window_buckets.length > 0;
+    const window_available = state.buckets.afk.length > 0 && state.buckets.window.length > 0;
     const browser_available =
-      state.buckets.afk_buckets.length > 0 &&
-      state.buckets.window_buckets.length > 0 &&
-      state.buckets.browser_buckets.length > 0;
-    const active_available = state.buckets.afk_buckets.length > 0;
-    const editor_available = state.buckets.editor_buckets.length > 0;
-    const android_available = state.buckets.window_buckets[0].includes('android');
+      state.buckets.afk.length > 0 &&
+      state.buckets.window.length > 0 &&
+      state.buckets.browser.length > 0;
+    const active_available = state.buckets.afk.length > 0;
+    const editor_available = state.buckets.editor.length > 0;
+    const android_available = state.buckets.android.length > 0;
     commit('set_available', {
       window_available: window_available,
       browser_available: browser_available,
@@ -302,10 +302,11 @@ const actions = {
 
   async get_buckets({ commit, rootGetters }, { host }) {
     const buckets = {
-      afk_buckets: rootGetters['buckets/afkBucketsByHost'](host),
-      window_buckets: rootGetters['buckets/windowBucketsByHost'](host),
-      browser_buckets: rootGetters['buckets/browserBuckets'],
-      editor_buckets: rootGetters['buckets/editorBuckets'],
+      afk: rootGetters['buckets/afkBucketsByHost'](host),
+      window: rootGetters['buckets/windowBucketsByHost'](host),
+      android: rootGetters['buckets/androidBucketsByHost'](host),
+      browser: rootGetters['buckets/browserBuckets'],
+      editor: rootGetters['buckets/editorBuckets'],
     };
     console.log('Available buckets: ', buckets);
     commit('buckets', buckets);
