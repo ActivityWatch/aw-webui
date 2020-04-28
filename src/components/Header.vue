@@ -87,6 +87,8 @@ export default {
   mounted: async function() {
     const buckets = await this.$aw.getBuckets();
     const types_by_host = {};
+
+    // TODO: Change to use same bucket detection logic as get_buckets/set_available in store/modules/activity.ts
     _.each(buckets, v => {
       types_by_host[v.hostname] = types_by_host[v.hostname] || {};
       // The '&& true;' is just to typecoerce into booleans
@@ -109,13 +111,6 @@ export default {
       if (types.android) {
         this.activityViews.push({
           name: `${hostname} (Android)`,
-          hostname: hostname,
-          type: 'android',
-          pathUrl: '/activity/android',
-          icon: 'mobile',
-        });
-        this.activityViews.push({
-          name: `${hostname} (Android, new)`,
           hostname: hostname,
           type: 'android',
           pathUrl: `/activity/${hostname}`,

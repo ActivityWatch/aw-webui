@@ -9,7 +9,6 @@ const ActivitySummary = () => import('./views/activity/ActivitySummary.vue');
 const ActivityWindow = () => import('./views/activity/ActivityWindow.vue');
 const ActivityBrowser = () => import('./views/activity/ActivityBrowser.vue');
 const ActivityEditor = () => import('./views/activity/ActivityEditor.vue');
-const ActivityAndroid = () => import('./views/activity/ActivityAndroid.vue');
 
 const Buckets = () => import('./views/Buckets.vue');
 const Bucket = () => import('./views/Bucket.vue');
@@ -25,8 +24,6 @@ Vue.use(VueRouter);
 const router = new VueRouter({
   routes: [
     { path: '/', component: Home },
-    // Must be before general activity view such that it matches first
-    { path: '/activity/android/:host/:date?', component: ActivityAndroid, props: true },
     {
       path: '/activity/:host/:periodLength?/:date?',
       component: Activity,
