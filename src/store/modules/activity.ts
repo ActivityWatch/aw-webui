@@ -508,7 +508,7 @@ const mutations = {
     state.browser.available = data['browser_available'];
     state.active.available = data['active_available'];
     state.editor.available = data['editor_available'];
-    state.category.available = data['window_available'];
+    state.category.available = data['window_available'] || data['android_available'];
     state.android.available = data['android_available'];
   },
 
