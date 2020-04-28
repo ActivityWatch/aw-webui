@@ -11,7 +11,7 @@ div
         span(v-if="cls.rule.type === 'regex'") Rule ({{cls.rule.type}}): #[code {{cls.rule.regex}}]
         span(v-else, style="color: #888") No rule
       span.float-right
-        b-btn.ml-1(size="sm", variant="outline-secondary", @click="showEditModal($event)" style="border: 0;" pill)
+        b-btn.ml-1(size="sm", variant="outline-secondary", @click="showEditModal()" style="border: 0;" pill)
           icon(name="edit")
         b-btn.ml-1(size="sm", variant="outline-success", @click="addSubclass(cls)" style="border: 0;" pill)
           icon(name="plus")
@@ -103,7 +103,7 @@ export default {
       // TODO: Move button to edit modal?
       this.$store.commit('settings/removeClass', cls);
     },
-    showEditModal(event) {
+    showEditModal() {
       this.$refs.edit.show();
     },
     checkFormValidity() {
