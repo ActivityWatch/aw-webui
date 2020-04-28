@@ -3,33 +3,41 @@ const state = {
   buckets: [],
 };
 
+// TODO: Remove the bucket['id'].includes(testing) check (only needed because I had an old bucket laying around)
 function get_buckets_by_type(buckets, type) {
   return _.map(
-    _.filter(buckets, bucket => bucket['type'] === type),
+    _.filter(buckets, bucket => bucket['type'] === type && !bucket['id'].includes('testing')),
     bucket => bucket['id']
   );
 }
 
+// TODO: Remove the bucket['id'].includes(testing) check (only needed because I had an old bucket laying around)
 function get_buckets_by_host_and_type(buckets, host, type) {
   return _.map(
-    _.filter(buckets, bucket => bucket['type'] === type && bucket['hostname'] == host),
+    _.filter(
+      buckets,
+      bucket =>
+        bucket['type'] === type && bucket['hostname'] == host && !bucket['id'].includes('testing')
+    ),
     bucket => bucket['id']
   );
 }
 
 // getters
 const getters = {
-  afkBuckets(state) {
-    return get_buckets_by_type(state.buckets, 'afkstatus');
-  },
   afkBucketsByHost: state => host => {
     return get_buckets_by_host_and_type(state.buckets, host, 'afkstatus');
   },
-  windowBuckets(state) {
-    return get_buckets_by_type(state.buckets, 'currentwindow');
-  },
   windowBucketsByHost: state => host => {
-    return get_buckets_by_host_and_type(state.buckets, host, 'currentwindow');
+    return _.filter(
+      get_buckets_by_host_and_type(state.buckets, host, 'currentwindow'),
+      id => !id.startsWith('aw-watcher-android')
+    );
+  },
+  androidBucketsByHost: state => host => {
+    return _.filter(get_buckets_by_host_and_type(state.buckets, host, 'currentwindow'), id =>
+      id.startsWith('aw-watcher-android')
+    );
   },
   editorBuckets(state) {
     return get_buckets_by_type(state.buckets, 'app.editor.activity');

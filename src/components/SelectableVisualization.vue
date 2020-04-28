@@ -1,23 +1,30 @@
 <template lang="pug">
 div
-  h5 {{ type_title }}
+  h5 {{ visualizations[type].title }}
+  div
+    b-dropdown.vis-style-dropdown-btn(size="sm" variant="outline-secondary")
+      template(v-slot:button-content)
+        icon(name="cog")
+      b-dropdown-item(v-for="t in types" :key="t" variant="outline-secondary" @click="$emit('onTypeChange', id, t)" v-bind:disabled="!visualizations[t].available")
+        | {{ visualizations[t].title }}
+
   div(v-if="type == 'top_apps'")
-    aw-summary(:fields="top_apps",
+    aw-summary(:fields="$store.state.activity.window.top_apps",
                :namefunc="e => e.data.app",
                :colorfunc="e => e.data.app",
                with_limit)
   div(v-if="type == 'top_titles'")
-    aw-summary(:fields="top_titles",
+    aw-summary(:fields="$store.state.activity.window.top_titles",
                :namefunc="e => e.data.title",
                :colorfunc="e => e.data.app",
                with_limit)
   div(v-if="type == 'top_domains'")
-    aw-summary(:fields="top_domains",
+    aw-summary(:fields="$store.state.activity.browser.top_domains",
                :namefunc="e => e.data.$domain",
                :colorfunc="e => e.data.$domain",
                with_limit)
   div(v-if="type == 'top_urls'")
-    aw-summary(:fields="top_urls",
+    aw-summary(:fields="$store.state.activity.browser.top_urls",
                :namefunc="e => e.data.url",
                :colorfunc="e => e.data.$domain",
                with_limit)
@@ -37,29 +44,26 @@ div
                :colorfunc="e => e.data.language",
                with_limit)
   div(v-if="type == 'top_categories'")
-    aw-summary(:fields="top_categories",
+    aw-summary(:fields="$store.state.activity.category.top",
                :namefunc="e => e.data['$category'].join(' > ')",
                :colorfunc="e => e.data['$category'].join(' > ')",
                with_limit)
   div(v-if="type == 'category_tree'")
-    aw-categorytree(:events="top_categories")
+    aw-categorytree(:events="$store.state.activity.category.top")
   div(v-if="type == 'category_sunburst'")
     aw-sunburst-categories(:data="top_categories_hierarchy", style="height: 20em")
 
-  b-dropdown.vis-style-dropdown-btn(size="sm" variant="outline-secondary")
-    template(v-slot:button-content)
-      icon(name="cog")
-    b-dropdown-item(v-for="t in types" :key="t" variant="outline-secondary" @click="$emit('onTypeChange', id, t)" v-bind:disabled="!get_type_available(t)")
-      | {{ get_type_title(t) }}
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .vis-style-dropdown-btn {
   position: absolute;
-  bottom: 0;
-  right: 0.5em;
+  top: 0.8em;
+  right: 1em;
 
-  background-color: #fff;
+  > .btn {
+    border: 0px;
+  }
 }
 </style>
 
@@ -109,24 +113,56 @@ export default {
     };
   },
   computed: {
-    top_apps: function() {
-      return this.$store.state.activity.window.top_apps;
-    },
-    top_titles: function() {
-      return this.$store.state.activity.window.top_titles;
-    },
-    top_domains: function() {
-      return this.$store.state.activity.browser.top_domains;
-    },
-    top_urls: function() {
-      return this.$store.state.activity.browser.top_urls;
-    },
-    top_categories: function() {
-      return this.$store.state.activity.category.top;
+    visualizations: function() {
+      return {
+        top_apps: {
+          title: 'Top Applications',
+          available:
+            this.$store.state.activity.window.available ||
+            this.$store.state.activity.android.available,
+        },
+        top_titles: {
+          title: 'Top Window Titles',
+          available: this.$store.state.activity.window.available,
+        },
+        top_domains: {
+          title: 'Top Browser Domains',
+          available: this.$store.state.activity.browser.available,
+        },
+        top_urls: {
+          title: 'Top Browser URLs',
+          available: this.$store.state.activity.browser.available,
+        },
+        top_editor_files: {
+          title: 'Top Editor Files',
+          available: this.$store.state.activity.editor.available,
+        },
+        top_editor_languages: {
+          title: 'Top Editor Languages',
+          available: this.$store.state.activity.editor.available,
+        },
+        top_editor_projects: {
+          title: 'Top Editor Projects',
+          available: this.$store.state.activity.editor.available,
+        },
+        top_categories: {
+          title: 'Top Categories',
+          available: this.$store.state.activity.category.available,
+        },
+        category_tree: {
+          title: 'Category Tree',
+          available: this.$store.state.activity.category.available,
+        },
+        category_sunburst: {
+          title: 'Category Sunburst',
+          available: this.$store.state.activity.category.available,
+        },
+      };
     },
     top_categories_hierarchy: function() {
-      if (this.top_categories) {
-        const categories = this.top_categories.map(c => {
+      const top_categories = this.$store.state.activity.category.top;
+      if (top_categories) {
+        const categories = top_categories.map(c => {
           return { name: c.data.$category, size: c.duration };
         });
 
@@ -136,59 +172,6 @@ export default {
         };
       } else {
         return null;
-      }
-    },
-    type_title: function() {
-      return this.get_type_title(this.type);
-    },
-  },
-  methods: {
-    get_type_available: function(type) {
-      if (type === 'top_apps' || type === 'top_titles') {
-        return this.$store.state.activity.window.available;
-      } else if (type === 'top_domains' || type === 'top_urls') {
-        return this.$store.state.activity.browser.available;
-      } else if (
-        type === 'top_editor_files' ||
-        type === 'top_editor_languages' ||
-        type === 'top_editor_projects'
-      ) {
-        return this.$store.state.activity.editor.available;
-      } else if (
-        type === 'top_categories' ||
-        type === 'category_tree' ||
-        type === 'category_sunburst'
-      ) {
-        return this.$store.state.activity.category.available;
-      } else {
-        console.error('Unknown type available: ', type);
-        return false;
-      }
-    },
-    get_type_title: function(type) {
-      if (type === 'top_apps') {
-        return 'Top Applications';
-      } else if (type === 'top_titles') {
-        return 'Top Window Titles';
-      } else if (type === 'top_domains') {
-        return 'Top Browser Domains';
-      } else if (type === 'top_urls') {
-        return 'Top Browser URLs';
-      } else if (type === 'top_editor_files') {
-        return 'Top Editor Files';
-      } else if (type === 'top_editor_languages') {
-        return 'Top Editor Languages';
-      } else if (type === 'top_editor_projects') {
-        return 'Top Editor Projects';
-      } else if (type === 'top_categories') {
-        return 'Top Categories';
-      } else if (type === 'category_tree') {
-        return 'Category Tree';
-      } else if (type === 'category_sunburst') {
-        return 'Category Sunburst';
-      } else {
-        console.error('Unknown type: ', type);
-        return 'Unknown';
       }
     },
   },

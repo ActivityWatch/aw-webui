@@ -9,18 +9,26 @@ function querystr_to_array(querystr: string): string[] {
     .map(l => l + ';');
 }
 
-interface QueryParams {
-  bid_window: string;
-  bid_afk: string;
-  bid_browsers?: string[];
+interface BaseQueryParams {
   filter_afk: boolean;
   include_audible?: boolean;
   classes: Record<string, any>;
 }
 
+interface DesktopQueryParams extends BaseQueryParams {
+  bid_window: string;
+  bid_afk: string;
+  bid_browsers?: string[];
+}
+
+interface AndroidQueryParams extends BaseQueryParams {
+  bid_android: string;
+  bid_browsers?: string[];
+}
+
 // Constructs a query that returns a fully-detailed list of events from the merging of several sources (window, afk, web).
 // Puts it's results in `not_afk` and `events`.
-function canonicalEvents(params: QueryParams): string {
+function canonicalEvents(params: DesktopQueryParams): string {
   return `
     events  = flood(query_bucket("${params.bid_window}"));
     not_afk = flood(query_bucket("${params.bid_afk}"));
@@ -29,18 +37,18 @@ function canonicalEvents(params: QueryParams): string {
   `;
 }
 
+const default_limit = 100; // Hardcoded limit per group
+
 export function windowQuery(
   windowbucket,
   afkbucket,
-  appcount,
-  titlecount,
   filterAFK,
   classes,
   filterCategories: string[][]
 ): string[] {
   windowbucket = windowbucket.replace('"', '\\"');
   afkbucket = afkbucket.replace('"', '\\"');
-  const params: QueryParams = {
+  const params: DesktopQueryParams = {
     bid_window: windowbucket,
     bid_afk: afkbucket,
     classes: classes,
@@ -60,22 +68,34 @@ export function windowQuery(
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
 
     events = sort_by_timestamp(events);
-    app_events  = limit_events(app_events, ${appcount});
-    title_events  = limit_events(title_events, ${titlecount});
+    app_events  = limit_events(app_events, ${default_limit});
+    title_events  = limit_events(title_events, ${default_limit});
     duration = sum_durations(events);
     RETURN  = {"app_events": app_events, "title_events": title_events, "cat_events": cat_events, "duration": duration, "active_events": not_afk};`;
   return querystr_to_array(code);
 }
 
-export function appQuery(appbucket: string, limit = 5): string[] {
+export function appQuery(appbucket: string, classes, filterAFK): string[] {
   appbucket = appbucket.replace('"', '\\"');
+  const params: AndroidQueryParams = {
+    bid_android: appbucket,
+    classes: classes,
+    filter_afk: filterAFK,
+  };
   const code = `
-    events  = query_bucket("${appbucket}");
-    events  = merge_events_by_keys(events, ["app"]);
-    events  = sort_by_duration(events);
-    events  = limit_events(events, ${limit});
-    total_duration = sum_durations(events);
-    RETURN  = {"events": events, "total_duration": total_duration};
+    events = query_bucket("${params.bid_android}");
+    events = merge_events_by_keys(events, ["app"]);
+    events = categorize(events, ${JSON.stringify(params.classes)});
+
+    title_events = sort_by_duration(merge_events_by_keys(events, ["app", "classname"]));
+    app_events   = sort_by_duration(merge_events_by_keys(title_events, ["app"]));
+    cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
+
+    events = sort_by_timestamp(events);
+    app_events  = limit_events(app_events, ${default_limit});
+    title_events  = limit_events(title_events, ${default_limit});
+    duration = sum_durations(events);
+    RETURN  = {"app_events": app_events, "title_events": title_events, "cat_events": cat_events, "duration": duration, "active_events": app_events};
   `;
   return querystr_to_array(code);
 }
@@ -122,7 +142,7 @@ function browsersWithBuckets(browserbuckets: string[]): [string, string][] {
 }
 
 // Returns a list of active browser events (where the browser was the active window) from all browser buckets
-function browserEvents(params: QueryParams): string {
+function browserEvents(params: DesktopQueryParams): string {
   // If multiple browser buckets were found
   // AFK filtered later in the process
   let code = `
@@ -151,7 +171,6 @@ export function browserSummaryQuery(
   browserbuckets: string[],
   windowbucket: string,
   afkbucket: string,
-  limit = 5,
   filterAFK = true
 ): string[] {
   // Escape `"`
@@ -160,7 +179,7 @@ export function browserSummaryQuery(
   afkbucket = afkbucket.replace('"', '\\"');
 
   // TODO: Get classes
-  const params: QueryParams = {
+  const params: DesktopQueryParams = {
     bid_window: windowbucket,
     bid_afk: afkbucket,
     bid_browsers: browserbuckets,
@@ -172,17 +191,17 @@ export function browserSummaryQuery(
     `${browserEvents(params)}
     urls = merge_events_by_keys(events, ["url"]);
     urls = sort_by_duration(urls);
-    urls = limit_events(urls, ${limit});
+    urls = limit_events(urls, ${default_limit});
     domains = split_url_events(events);
     domains = merge_events_by_keys(domains, ["$domain"]);
     domains = sort_by_duration(domains);
-    domains = limit_events(domains, ${limit});
+    domains = limit_events(domains, ${default_limit});
     duration = sum_durations(events);
     RETURN = {"domains": domains, "urls": urls, "duration": duration};`
   );
 }
 
-export function editorActivityQuery(editorbuckets: string[], limit): string[] {
+export function editorActivityQuery(editorbuckets: string[]): string[] {
   let q = ['events = [];'];
   for (let editorbucket of editorbuckets) {
     editorbucket = editorbucket.replace('"', '\\"');
@@ -190,11 +209,11 @@ export function editorActivityQuery(editorbuckets: string[], limit): string[] {
   }
   q = q.concat([
     'files = sort_by_duration(merge_events_by_keys(events, ["file", "language"]));',
-    'files = limit_events(files, ' + limit + ');',
+    `files = limit_events(files, ${default_limit});`,
     'languages = sort_by_duration(merge_events_by_keys(events, ["language"]));',
-    'languages = limit_events(languages, ' + limit + ');',
+    `languages = limit_events(languages, ${default_limit});`,
     'projects = sort_by_duration(merge_events_by_keys(events, ["project"]));',
-    'projects = limit_events(projects, ' + limit + ');',
+    `projects = limit_events(projects, ${default_limit});`,
     'duration = sum_durations(events);',
     'RETURN = {"files": files, "languages": languages, "projects": projects, "duration": duration};',
   ]);
