@@ -59,7 +59,7 @@ div
 .vis-style-dropdown-btn {
   position: absolute;
   top: 0.8em;
-  right: 1em;
+  right: 0.8em;
 
   > .btn {
     border: 0px;
