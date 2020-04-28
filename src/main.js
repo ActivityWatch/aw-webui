@@ -25,7 +25,6 @@ import './util/filters.js';
 
 // Create an instance of AWClient as this.$aw
 import awclient from './util/awclient.js';
-console.log(awclient);
 Vue.prototype.$aw = awclient;
 
 // Sets up the routing and the base app (using vue-router)

@@ -258,7 +258,6 @@ const actions = {
       periods,
       _.map(data, pair => _.filter(pair, e => e.data.status == 'not-afk'))
     );
-    console.log(active_history);
     commit('query_active_history_completed', { active_history });
   },
 
