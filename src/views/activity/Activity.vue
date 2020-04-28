@@ -25,7 +25,7 @@ div
                @change="(periodLength) => setDate(date, periodLength)")
     div.p-1(v-if="periodLength === 'day'")
       input.form-control(id="date" type="date" :value="date" :max="today"
-                         @change="setDate($event.target.value)")
+                         @change="setDate($event.target.value, periodLength)")
 
     div.p-1.ml-auto
       b-button-group
@@ -180,19 +180,7 @@ export default {
       return moment(this.timeperiod.start).format(this.dateformat);
     },
     periodLengthMoment: function() {
-      if (this.periodLength === 'day') {
-        return 'day';
-      } else if (this.periodLength === 'week') {
-        /* This is necessary so the week starts on Monday instead of Sunday */
-        return 'isoWeek';
-      } else if (this.periodLength === 'month') {
-        return 'month';
-      } else if (this.periodLength === 'year') {
-        return 'year';
-      } else {
-        console.error('Invalid periodLength ${this.periodLength}, defaulting to "day"');
-        return 'day';
-      }
+      return this.periodLengthConvertMoment(this.periodLength);
     },
   },
   watch: {
@@ -220,10 +208,27 @@ export default {
         .add(1, `${this.periodLength}s`)
         .format('YYYY-MM-DD');
     },
+    periodLengthConvertMoment(periodLength) {
+      if (periodLength === 'day') {
+        return 'day';
+      } else if (periodLength === 'week') {
+        /* This is necessary so the week starts on Monday instead of Sunday */
+        return 'isoWeek';
+      } else if (periodLength === 'month') {
+        return 'month';
+      } else if (periodLength === 'year') {
+        return 'year';
+      } else {
+        console.error('Invalid periodLength ${periodLength}, defaulting to "day"');
+        return 'day';
+      }
+    },
     setDate: function(date, periodLength) {
+      const new_period_length_moment = this.periodLengthConvertMoment(periodLength);
       const new_date = moment(date)
-        .startOf(this.periodLengthMoment)
+        .startOf(new_period_length_moment)
         .format('YYYY-MM-DD');
+      console.log(new_date, periodLength);
       this.$router.push(`/activity/${this.host}/${periodLength}/${new_date}`);
     },
 
