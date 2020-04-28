@@ -193,7 +193,7 @@ const actions = {
   async query_android({ state, commit }, { timeperiod, filterCategories }: QueryOptions) {
     const periods = [timeperiodToStr(timeperiod)];
     const classes = loadClassesForQuery();
-    const q = queries.appQuery(state.buckets.window[0], classes, filterCategories);
+    const q = queries.appQuery(state.buckets.android[0], classes, filterCategories);
     const data = await this._vm.$aw.query(periods, q).catch(this.errorHandler);
     commit('query_window_completed', data[0]);
   },
@@ -268,7 +268,7 @@ const actions = {
     });
     const data = await this._vm.$aw.query(
       periods,
-      queries.dailyActivityQueryAndroid(state.buckets.window[0])
+      queries.dailyActivityQueryAndroid(state.buckets.android[0])
     );
     let active_history = _.zipObject(periods, data);
     active_history = _.mapValues(active_history, (duration, key) => {
