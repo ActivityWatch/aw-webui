@@ -495,7 +495,12 @@ const mutations = {
     state.active.duration = null;
     state.active.events = null;
 
-    state.active.history = {};
+    // Ensures that active history isn't being fully reloaded on every date change
+    // (see caching done in query_active_history and query_active_history_android)
+    // FIXME: Better detection of when to actually clear (such as on force reload, hostname change)
+    if (Object.keys(state.active.history).length === 0) {
+      state.active.history = {};
+    }
   },
 
   set_available(state, data) {
