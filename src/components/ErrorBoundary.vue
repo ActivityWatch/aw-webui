@@ -11,10 +11,10 @@ export default {
   name: 'ErrorBoundary',
   data() {
     return {
-      errors: []
+      errors: [],
     };
   },
-  errorCaptured(err, vm, info) {
+  errorCaptured(err, _vm, _info) {
     // console.error("Error captured!");
     // console.error(err, vm, info);
 
