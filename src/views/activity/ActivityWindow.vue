@@ -1,5 +1,5 @@
 <template lang="pug">
-div
+div.mt-3
   div.row.mb-6
     div.col-md-6
       h5 Top Applications

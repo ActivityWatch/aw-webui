@@ -1,37 +1,37 @@
 <template lang="pug">
 div
-  h2 Activity for {{ periodReadable }}
+  h3 Activity for {{ periodReadable }}
 
-  p
+  div.mb-2
     | Host: {{ host }}
     br
     | Active time: {{ $store.state.activity.active.duration | friendlyduration }}
 
-  div.d-flex
-    div.p-1
+  div.mb-2.d-flex
+    div
       b-input-group
         b-input-group-prepend
-          b-button(:to="link_prefix + '/' + previousPeriod() + '/' + subview",
+          b-button.px-2(:to="link_prefix + '/' + previousPeriod() + '/' + subview",
                    variant="outline-dark")
             icon(name="arrow-left")
             //span.d-none.d-md-inline
             //  |  Previous
-        b-select(:value="periodLength", :options="['day', 'week', 'month']",
+        b-select.px-2(:value="periodLength", :options="['day', 'week', 'month']",
                  @change="(periodLength) => setDate(date, periodLength)")
         b-input-group-append
-          b-button(:to="link_prefix + '/' + nextPeriod() + '/' + subview",
+          b-button.px-2(:to="link_prefix + '/' + nextPeriod() + '/' + subview",
                    :disabled="nextPeriod() > today", variant="outline-dark")
             //span.d-none.d-md-inline
             //  |  Next
             icon(name="arrow-right")
 
-    div.p-1(v-if="periodLength === 'day'")
-      input.form-control(id="date" type="date" :value="date" :max="today"
+    div.mx-1(v-if="periodLength === 'day'")
+      input.form-control.px-2(id="date" type="date" :value="date" :max="today"
                          @change="setDate($event.target.value, periodLength)")
 
-    div.p-1.ml-auto
+    div.ml-auto
       b-button-group
-        b-button(@click="refresh(true)", variant="outline-dark")
+        b-button.px-2(@click="refresh(true)", variant="outline-dark")
           icon(name="sync")
           span.d-none.d-md-inline
             |  Refresh

@@ -1,11 +1,13 @@
 <template lang="pug">
-div
+div.mt-3
   // TODO: Add back option to select a specific browser bucket
   div(v-if="browserBuckets.length <= 0")
     h6 No browser buckets available
-    small Make sure you have a browser watcher installed to use this feature
-  div(v-if="browserBuckets.length > 0")
+    small
+      | This feature requires a browser watcher.
+      | You can find a list of all watchers in #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") the documentation].
 
+  div(v-if="browserBuckets.length > 0")
     h6 Active browser time: {{ $store.state.activity.browser.duration | friendlyduration }}
 
     div.row
