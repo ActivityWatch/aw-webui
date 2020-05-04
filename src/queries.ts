@@ -75,18 +75,27 @@ export function windowQuery(
   return querystr_to_array(code);
 }
 
-export function appQuery(appbucket: string, classes, filterAFK): string[] {
+export function appQuery(
+  appbucket: string,
+  classes,
+  filterAFK: boolean,
+  filterCategories: string[][]
+): string[] {
   appbucket = appbucket.replace('"', '\\"');
   const params: AndroidQueryParams = {
     bid_android: appbucket,
     classes: classes,
     filter_afk: filterAFK,
   };
-  const code = `
+  const code =
+    `
     events = query_bucket("${params.bid_android}");
     events = merge_events_by_keys(events, ["app"]);
-    events = categorize(events, ${JSON.stringify(params.classes)});
-
+    events = categorize(events, ${JSON.stringify(params.classes)});` +
+    (filterCategories
+      ? `events = filter_keyvals(events, "$category", ${JSON.stringify(filterCategories)});`
+      : '') +
+    `
     title_events = sort_by_duration(merge_events_by_keys(events, ["app", "classname"]));
     app_events   = sort_by_duration(merge_events_by_keys(title_events, ["app"]));
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
