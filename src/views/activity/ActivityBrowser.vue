@@ -41,15 +41,13 @@ export default {
     return {
       filterAFK: true,
       timelineShowAFK: true,
-
       // browserBucketSelected: 'all',
-
       top_web_count: 5,
     };
   },
   computed: {
     browserBuckets: function() {
-      return this.$store.state.activity.buckets.browser_buckets;
+      return this.$store.state.activity.buckets.browser;
     },
   },
 };
