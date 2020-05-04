@@ -1,11 +1,13 @@
 <template lang="pug">
 div
-  h3 Activity for {{ periodReadable }}
+  h3.mb-0 Activity for {{ periodReadable }}
 
   div.mb-2
-    | Host: {{ host }}
-    br
-    | Active time: {{ $store.state.activity.active.duration | friendlyduration }}
+    ul.list-group.list-group-horizontal-md.mb-3(style="font-size: 0.9em; opacity: 0.7")
+      li.list-group-item.pl-0.pr-3.py-0(style="border: 0")
+        | #[b Host:] {{ host }}
+      li.list-group-item.pl-0.pr-3.py-0(style="border: 0")
+        | #[b Time active:] {{ $store.state.activity.active.duration | friendlyduration }}
 
   div.mb-2.d-flex
     div
@@ -14,18 +16,14 @@ div
           b-button.px-2(:to="link_prefix + '/' + previousPeriod() + '/' + subview",
                    variant="outline-dark")
             icon(name="arrow-left")
-            //span.d-none.d-md-inline
-            //  |  Previous
         b-select.px-2(:value="periodLength", :options="['day', 'week', 'month']",
                  @change="(periodLength) => setDate(date, periodLength)")
         b-input-group-append
           b-button.px-2(:to="link_prefix + '/' + nextPeriod() + '/' + subview",
                    :disabled="nextPeriod() > today", variant="outline-dark")
-            //span.d-none.d-md-inline
-            //  |  Next
             icon(name="arrow-right")
 
-    div.mx-1(v-if="periodLength === 'day'")
+    div.mx-2(v-if="periodLength === 'day'")
       input.form-control.px-2(id="date" type="date" :value="date" :max="today"
                          @change="setDate($event.target.value, periodLength)")
 
@@ -39,7 +37,6 @@ div
   aw-periodusage(:periodusage_arr="periodusage", :link_prefix="link_prefix")
 
   ul.row.nav.nav-tabs.mt-3.pl-3
-    //.flex-column.flex-sm-row
     li.nav-item
       router-link.nav-link(:to="{ name: 'activity-summary', params: $route.params }")
         h6 Summary
