@@ -1,21 +1,14 @@
 <template lang="pug">
 div
   div.row.mb-4
-    div.col-md-4.padding(v-for="view, index in views")
+    div.col-md-6.col-lg-4.p-3(v-for="view, index in views")
       aw-selectable-vis(:id="index" :type="view" @onTypeChange="onTypeChange")
 
   aw-devonly(v-if="periodLength === 'day'" reason="Not ready for production, still experimenting")
     div.row.mb-4
       div.col-md-12
         aw-timeline-barchart(:height="100", :datasets="datasets")
-
 </template>
-
-<style scoped lang="scss">
-.padding {
-  padding-top: 1em;
-}
-</style>
 
 <script>
 import _ from 'lodash';

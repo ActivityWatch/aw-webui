@@ -1,5 +1,5 @@
 <template lang="pug">
-div
+div.mt-3
   div.row.mb-6
     div.col-md-6
       h5 Top Applications
@@ -43,10 +43,10 @@ export default {
       return this.$store.state.activity.window.top_titles;
     },
     bucket_id_window: function() {
-      return this.$store.state.activity.buckets.window_buckets[0];
+      return this.$store.state.activity.buckets.window[0];
     },
     bucket_id_afk: function() {
-      return this.$store.state.activity.buckets.afk_buckets[0];
+      return this.$store.state.activity.buckets.afk[0];
     },
   },
 };

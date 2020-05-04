@@ -1,54 +1,54 @@
 <template lang="pug">
 div
-  h2 Activity for {{ periodReadable }}
+  h3.mb-0 Activity for {{ periodReadable }}
 
-  p
-    | Host: {{ host }}
-    br
-    | Active time: {{ $store.state.activity.active.duration | friendlyduration }}
+  div.mb-2
+    ul.list-group.list-group-horizontal-md.mb-3(style="font-size: 0.9em; opacity: 0.7")
+      li.list-group-item.pl-0.pr-3.py-0(style="border: 0")
+        | #[b Host:] {{ host }}
+      li.list-group-item.pl-0.pr-3.py-0(style="border: 0")
+        | #[b Time active:] {{ $store.state.activity.active.duration | friendlyduration }}
 
-  div.d-flex
-    div.p-1
-      b-button-group
-        b-button(:to="link_prefix + '/' + previousPeriod() + '/' + subview",
-                 variant="outline-dark")
-          icon(name="arrow-left")
-          span.d-none.d-md-inline
-            |  Previous
-        b-button(:to="link_prefix + '/' + nextPeriod() + '/' + subview",
-                 :disabled="nextPeriod() > today", variant="outline-dark")
-          span.d-none.d-md-inline
-            |  Next
-          icon(name="arrow-right")
-    div.p-1
-      b-select(:value="periodLength", :options="['day', 'week', 'month']",
-               @change="(periodLength) => setDate(date, periodLength)")
-    div.p-1(v-if="periodLength === 'day'")
-      input.form-control(id="date" type="date" :value="date" :max="today"
+  div.mb-2.d-flex
+    div
+      b-input-group
+        b-input-group-prepend
+          b-button.px-2(:to="link_prefix + '/' + previousPeriod() + '/' + subview",
+                   variant="outline-dark")
+            icon(name="arrow-left")
+        b-select.px-2(:value="periodLength", :options="['day', 'week', 'month']",
+                 @change="(periodLength) => setDate(date, periodLength)")
+        b-input-group-append
+          b-button.px-2(:to="link_prefix + '/' + nextPeriod() + '/' + subview",
+                   :disabled="nextPeriod() > today", variant="outline-dark")
+            icon(name="arrow-right")
+
+    div.mx-2(v-if="periodLength === 'day'")
+      input.form-control.px-2(id="date" type="date" :value="date" :max="today"
                          @change="setDate($event.target.value, periodLength)")
 
-    div.p-1.ml-auto
+    div.ml-auto
       b-button-group
-        b-button(@click="refresh(true)", variant="outline-dark")
+        b-button.px-2(@click="refresh(true)", variant="outline-dark")
           icon(name="sync")
           span.d-none.d-md-inline
             |  Refresh
 
   aw-periodusage(:periodusage_arr="periodusage", :link_prefix="link_prefix")
 
-  ul.row.nav.nav-tabs.my-3.px-3
+  ul.row.nav.nav-tabs.mt-3.pl-3
     li.nav-item
       router-link.nav-link(:to="{ name: 'activity-summary', params: $route.params }")
-        h5 Summary
+        h6 Summary
     li.nav-item
       router-link.nav-link(:to="{ name: 'activity-window', params: $route.params }")
-        h5 Window
+        h6 Window
     li.nav-item
       router-link.nav-link(:to="{ name: 'activity-browser', params: $route.params }")
-        h5 Browser
+        h6 Browser
     li.nav-item
       router-link.nav-link(:to="{ name: 'activity-editor', params: $route.params }")
-        h5 Editor
+        h6 Editor
 
   div
     router-view
@@ -79,6 +79,7 @@ $bordercolor: #ddd;
     .nav-link {
       background-color: $buttoncolor;
       margin: 0 0.2em 0 0.2em;
+      padding: 0.4em 0.5em 0.1em 0.5em;
       border: 2px solid $bordercolor;
       border-bottom: none;
       border-radius: 0.5rem 0.5rem 0 0;

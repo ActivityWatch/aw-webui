@@ -1,9 +1,12 @@
 <template lang="pug">
-div
+div.mt-3
   // TODO: Add back option to choose a specific editor bucket
   div(v-if="editorBuckets.length <= 0")
     h6 No editor buckets available
-    small Make sure you have an editor watcher installed to use this feature
+    small
+      | This feature requires a editor watcher.
+      | You can find a list of editor watchers in #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") the documentation].
+
   div(v-if="editorBuckets.length")
     h6 Active editor time: {{ $store.state.activity.editor.duration | friendlyduration }}
     div.row(style="padding-top: 0.5em;")
@@ -63,7 +66,7 @@ export default {
 
   computed: {
     editorBuckets: function() {
-      return this.$store.state.activity.buckets.editor_buckets;
+      return this.$store.state.activity.buckets.editor;
     },
     dateEnd: function() {
       return moment(this.date)
