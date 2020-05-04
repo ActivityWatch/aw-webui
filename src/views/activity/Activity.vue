@@ -9,20 +9,22 @@ div
 
   div.d-flex
     div.p-1
-      b-button-group
-        b-button(:to="link_prefix + '/' + previousPeriod() + '/' + subview",
-                 variant="outline-dark")
-          icon(name="arrow-left")
-          span.d-none.d-md-inline
-            |  Previous
-        b-button(:to="link_prefix + '/' + nextPeriod() + '/' + subview",
-                 :disabled="nextPeriod() > today", variant="outline-dark")
-          span.d-none.d-md-inline
-            |  Next
-          icon(name="arrow-right")
-    div.p-1
-      b-select(:value="periodLength", :options="['day', 'week', 'month']",
-               @change="(periodLength) => setDate(date, periodLength)")
+      b-input-group
+        b-input-group-prepend
+          b-button(:to="link_prefix + '/' + previousPeriod() + '/' + subview",
+                   variant="outline-dark")
+            icon(name="arrow-left")
+            //span.d-none.d-md-inline
+            //  |  Previous
+        b-select(:value="periodLength", :options="['day', 'week', 'month']",
+                 @change="(periodLength) => setDate(date, periodLength)")
+        b-input-group-append
+          b-button(:to="link_prefix + '/' + nextPeriod() + '/' + subview",
+                   :disabled="nextPeriod() > today", variant="outline-dark")
+            //span.d-none.d-md-inline
+            //  |  Next
+            icon(name="arrow-right")
+
     div.p-1(v-if="periodLength === 'day'")
       input.form-control(id="date" type="date" :value="date" :max="today"
                          @change="setDate($event.target.value, periodLength)")
@@ -36,19 +38,20 @@ div
 
   aw-periodusage(:periodusage_arr="periodusage", :link_prefix="link_prefix")
 
-  ul.row.nav.nav-tabs.my-3.px-3
+  ul.row.nav.nav-tabs.mt-3.pl-3
+    //.flex-column.flex-sm-row
     li.nav-item
       router-link.nav-link(:to="{ name: 'activity-summary', params: $route.params }")
-        h5 Summary
+        h6 Summary
     li.nav-item
       router-link.nav-link(:to="{ name: 'activity-window', params: $route.params }")
-        h5 Window
+        h6 Window
     li.nav-item
       router-link.nav-link(:to="{ name: 'activity-browser', params: $route.params }")
-        h5 Browser
+        h6 Browser
     li.nav-item
       router-link.nav-link(:to="{ name: 'activity-editor', params: $route.params }")
-        h5 Editor
+        h6 Editor
 
   div
     router-view
@@ -79,6 +82,7 @@ $bordercolor: #ddd;
     .nav-link {
       background-color: $buttoncolor;
       margin: 0 0.2em 0 0.2em;
+      padding: 0.4em 0.5em 0.1em 0.5em;
       border: 2px solid $bordercolor;
       border-bottom: none;
       border-radius: 0.5rem 0.5rem 0 0;
