@@ -481,8 +481,8 @@ const mutations = {
     state.window.top_titles = null;
 
     state.browser.duration = 0;
-    state.top_domains = null;
-    state.top_urls = null;
+    state.browser.top_domains = null;
+    state.browser.top_urls = null;
 
     state.editor.duration = 0;
     state.editor.top_files = null;
