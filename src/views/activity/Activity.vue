@@ -34,7 +34,7 @@ div
           span.d-none.d-md-inline
             |  Refresh
 
-  aw-periodusage(:periodusage_arr="periodusage", :link_prefix="link_prefix")
+  aw-periodusage(:periodusage_arr="periodusage", @update="setDate")
 
   ul.row.nav.nav-tabs.mt-3.pl-3
     li.nav-item
@@ -224,13 +224,18 @@ export default {
         return 'day';
       }
     },
+
     setDate: function(date, periodLength) {
+      // periodLength is an optional argument, default to this.periodLength
+      if (!periodLength) {
+        periodLength = this.periodLength;
+      }
       const new_period_length_moment = this.periodLengthConvertMoment(periodLength);
       const new_date = moment(date)
         .startOf(new_period_length_moment)
         .format('YYYY-MM-DD');
       console.log(new_date, periodLength);
-      this.$router.push(`/activity/${this.host}/${periodLength}/${new_date}`);
+      this.$router.push(`/activity/${this.host}/${periodLength}/${new_date}/${this.subview}`);
     },
 
     refresh: async function(force) {
