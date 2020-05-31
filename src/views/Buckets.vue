@@ -13,8 +13,12 @@ div
       small
         | {{ data.item.hostname }}
     template(v-slot:cell(last_updated)="data")
+      // aw-server-python
       small(v-if="data.item.last_updated")
         | {{ data.item.last_updated | friendlytime }}
+      // aw-server-rust
+      small(v-if="data.item.metadata.end")
+        | {{ data.item.metadata.end | friendlytime }}
     template(v-slot:cell(actions)="data")
       b-button-toolbar.float-right
         b-button-group(size="sm", class="mx-1")
