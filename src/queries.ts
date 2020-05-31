@@ -39,42 +39,6 @@ function canonicalEvents(params: DesktopQueryParams): string {
 
 const default_limit = 100; // Hardcoded limit per group
 
-export function windowQuery(
-  windowbucket,
-  afkbucket,
-  filterAFK,
-  classes,
-  filterCategories: string[][]
-): string[] {
-  windowbucket = windowbucket.replace('"', '\\"');
-  afkbucket = afkbucket.replace('"', '\\"');
-  const params: DesktopQueryParams = {
-    bid_window: windowbucket,
-    bid_afk: afkbucket,
-    classes: classes,
-    filter_afk: filterAFK,
-  };
-  const code =
-    `
-      ${canonicalEvents(params)}
-      events = categorize(events, ${JSON.stringify(params.classes)});
-    ` +
-    (filterCategories
-      ? `events = filter_keyvals(events, "$category", ${JSON.stringify(filterCategories)});`
-      : '') +
-    `
-    title_events = sort_by_duration(merge_events_by_keys(events, ["app", "title"]));
-    app_events   = sort_by_duration(merge_events_by_keys(title_events, ["app"]));
-    cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
-
-    events = sort_by_timestamp(events);
-    app_events  = limit_events(app_events, ${default_limit});
-    title_events  = limit_events(title_events, ${default_limit});
-    duration = sum_durations(events);
-    RETURN  = {"app_events": app_events, "title_events": title_events, "cat_events": cat_events, "duration": duration, "active_events": not_afk};`;
-  return querystr_to_array(code);
-}
-
 export function appQuery(
   appbucket: string,
   classes,
@@ -109,7 +73,7 @@ export function appQuery(
   return querystr_to_array(code);
 }
 
-const appnames = {
+const browser_appnames = {
   chrome: [
     'Google-chrome',
     'chrome.exe',
@@ -140,7 +104,7 @@ const appnames = {
 // Returns a list of (browserName, bucketId) pairs for found browser buckets
 function browsersWithBuckets(browserbuckets: string[]): [string, string][] {
   const browsername_to_bucketid: [string, string | undefined][] = _.map(
-    Object.keys(appnames),
+    Object.keys(browser_appnames),
     browserName => {
       const bucketId = _.find(browserbuckets, bucket_id => _.includes(bucket_id, browserName));
       return [browserName, bucketId];
@@ -152,35 +116,28 @@ function browsersWithBuckets(browserbuckets: string[]): [string, string][] {
 
 // Returns a list of active browser events (where the browser was the active window) from all browser buckets
 function browserEvents(params: DesktopQueryParams): string {
-  // If multiple browser buckets were found
-  // AFK filtered later in the process
   let code = `
-    ${canonicalEvents({ ...params, filter_afk: false })}
-    window = events;
-    events = [];
+    browser_events = [];
   `;
 
   _.each(browsersWithBuckets(params.bid_browsers), ([browserName, bucketId]) => {
-    const appnames_str = JSON.stringify(appnames[browserName]);
+    const browser_appnames_str = JSON.stringify(browser_appnames[browserName]);
     code += `events_${browserName} = flood(query_bucket("${bucketId}"));
-       window_${browserName} = filter_keyvals(window, "app", ${appnames_str});
-       ${
-         params.filter_afk
-           ? `window_${browserName} = filter_period_intersect(window_${browserName}, not_afk);`
-           : ''
-       }
+       window_${browserName} = filter_keyvals(events, "app", ${browser_appnames_str});
        events_${browserName} = filter_period_intersect(events_${browserName}, window_${browserName});
        events_${browserName} = split_url_events(events_${browserName});
-       events = sort_by_timestamp(concat(events, events_${browserName}));`;
+       browser_events = sort_by_timestamp(concat(browser_events, events_${browserName}));`;
   });
   return code;
 }
 
-export function browserSummaryQuery(
+export function fullDesktopQuery(
   browserbuckets: string[],
   windowbucket: string,
   afkbucket: string,
-  filterAFK = true
+  filterAFK = true,
+  classes,
+  filterCategories: string[][]
 ): string[] {
   // Escape `"`
   browserbuckets = _.map(browserbuckets, b => b.replace('"', '\\"'));
@@ -192,21 +149,51 @@ export function browserSummaryQuery(
     bid_window: windowbucket,
     bid_afk: afkbucket,
     bid_browsers: browserbuckets,
-    classes: {},
+    classes: classes,
     filter_afk: filterAFK,
   };
 
   return querystr_to_array(
-    `${browserEvents(params)}
-    urls = merge_events_by_keys(events, ["url"]);
-    urls = sort_by_duration(urls);
-    urls = limit_events(urls, ${default_limit});
-    domains = split_url_events(events);
-    domains = merge_events_by_keys(domains, ["$domain"]);
-    domains = sort_by_duration(domains);
-    domains = limit_events(domains, ${default_limit});
+    `
+    ${canonicalEvents(params)}
+    events = categorize(events, ${JSON.stringify(params.classes)});
+    ` +
+    (filterCategories
+      ? `events = filter_keyvals(events, "$category", ${JSON.stringify(filterCategories)});`
+      : '') +
+    `
+    title_events = sort_by_duration(merge_events_by_keys(events, ["app", "title"]));
+    app_events   = sort_by_duration(merge_events_by_keys(title_events, ["app"]));
+    cat_events = [];
+    cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
+
+    app_events  = limit_events(app_events, ${default_limit});
+    title_events  = limit_events(title_events, ${default_limit});
     duration = sum_durations(events);
-    RETURN = {"domains": domains, "urls": urls, "duration": duration};`
+
+    ${browserEvents(params)}
+    browser_events = split_url_events(browser_events);
+    browser_urls = merge_events_by_keys(browser_events, ["url"]);
+    browser_urls = sort_by_duration(browser_urls);
+    browser_urls = limit_events(browser_urls, ${default_limit});
+    browser_domains = merge_events_by_keys(browser_events, ["$domain"]);
+    browser_domains = sort_by_duration(browser_domains);
+    browser_domains = limit_events(browser_domains, ${default_limit});
+    browser_duration = sum_durations(browser_events);
+
+    RETURN = {
+        "window": {
+            "app_events": app_events,
+            "title_events": title_events,
+            "cat_events": cat_events,
+            "duration": duration
+        },
+        "browser": {
+            "domains": browser_domains,
+            "urls": browser_urls,
+            "duration": browser_duration
+        }
+    };`
   );
 }
 
@@ -234,6 +221,7 @@ export function dailyActivityQuery(afkbucket: string): string[] {
   return [
     'afkbucket = "' + afkbucket + '";',
     'not_afk = flood(query_bucket(afkbucket));',
+    'not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);',
     'not_afk = merge_events_by_keys(not_afk, ["status"]);',
     'RETURN = not_afk;',
   ];
@@ -245,8 +233,7 @@ export function dailyActivityQueryAndroid(androidbucket: string): string[] {
 }
 
 export default {
-  windowQuery,
-  browserSummaryQuery,
+  fullDesktopQuery,
   appQuery,
   dailyActivityQuery,
   dailyActivityQueryAndroid,
