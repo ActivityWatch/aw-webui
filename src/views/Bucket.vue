@@ -15,6 +15,11 @@ div
     tr
       td Created:
       td {{ bucket.created | iso8601 }}
+    tr(v-if="bucket.metadata")
+      td First/last event:
+      td
+        | {{ bucket.metadata.start}} /
+        | {{ bucket.metadata.end }}
     tr
       td Eventcount:
       td {{ eventcount }}
