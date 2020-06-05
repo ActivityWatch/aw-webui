@@ -128,6 +128,7 @@ const appnames = {
     'firefox.exe',
     'Firefox Developer Edition',
     'firefoxdeveloperedition',
+    'Firefox-esr',
     'Firefox Beta',
     'Nightly',
   ],
