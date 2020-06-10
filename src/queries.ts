@@ -51,11 +51,15 @@ export function appQuery(
     classes: classes,
     filter_afk: filterAFK,
   };
+
+  // Needs escaping for regex patterns like '\w' to work (JSON.stringify adds extra unecessary escaping)
+  const classes_str = JSON.stringify(params.classes).replace('\\\\', '\\');
+
   const code =
     `
     events = query_bucket("${params.bid_android}");
     events = merge_events_by_keys(events, ["app"]);
-    events = categorize(events, ${JSON.stringify(params.classes)});` +
+    events = categorize(events, ${classes_str});` +
     (filterCategories
       ? `events = filter_keyvals(events, "$category", ${JSON.stringify(filterCategories)});`
       : '') +
@@ -153,10 +157,13 @@ export function fullDesktopQuery(
     filter_afk: filterAFK,
   };
 
+  // Needs escaping for regex patterns like '\w' to work (JSON.stringify adds extra unecessary escaping)
+  const classes_str = JSON.stringify(params.classes).replace('\\\\', '\\');
+
   return querystr_to_array(
     `
     ${canonicalEvents(params)}
-    events = categorize(events, ${JSON.stringify(params.classes)});
+    events = categorize(events, ${classes_str});
     ` +
     (filterCategories
       ? `events = filter_keyvals(events, "$category", ${JSON.stringify(filterCategories)});`
