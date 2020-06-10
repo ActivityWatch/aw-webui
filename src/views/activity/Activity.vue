@@ -17,14 +17,14 @@ div
                    variant="outline-dark")
             icon(name="arrow-left")
         b-select.px-2(:value="periodLength", :options="['day', 'week', 'month']",
-                 @change="(periodLength) => setDate(date, periodLength)")
+                 @change="(periodLength) => setDate(_date, periodLength)")
         b-input-group-append
           b-button.px-2(:to="link_prefix + '/' + nextPeriod() + '/' + subview",
                    :disabled="nextPeriod() > today", variant="outline-dark")
             icon(name="arrow-right")
 
     div.mx-2(v-if="periodLength === 'day'")
-      input.form-control.px-2(id="date" type="date" :value="date" :max="today"
+      input.form-control.px-2(id="date" type="date" :value="_date" :max="today"
                          @change="setDate($event.target.value, periodLength)")
 
     div.ml-auto
@@ -116,7 +116,11 @@ export default {
     host: String,
     date: {
       type: String,
-      default: get_today(),
+      // NOTE: This does not work as you'd might expect since the default is set on
+      // initialization, which would lead to the same date always being returned,
+      // even if the day has changed.
+      // Instead, use the computed _date.
+      //default: get_today(),
     },
     periodLength: {
       type: String,
@@ -130,6 +134,9 @@ export default {
     };
   },
   computed: {
+    _date: function() {
+      return this.date || get_today();
+    },
     subview: function() {
       return this.$route.meta.subview;
     },
@@ -144,7 +151,6 @@ export default {
       ].concat(entries);
     },
     filterCategories: function() {
-      // TODO: Also return all child categories
       if (this.filterCategory) {
         const cats = this.$store.getters['settings/all_categories'];
         const isChild = p => c => c.length > p.length && _.isEqual(p, c.slice(0, p.length));
@@ -161,8 +167,7 @@ export default {
       return this.$store.getters['activity/getActiveHistoryAroundTimeperiod'](this.timeperiod);
     },
     timeperiod: function() {
-      // TODO: Get start of day/week/month (depending on periodLength) with offset
-      return { start: get_day_start_with_offset(this.date), length: [1, this.periodLength] };
+      return { start: get_day_start_with_offset(this._date), length: [1, this.periodLength] };
     },
     dateformat: function() {
       if (this.periodLength === 'day') {
@@ -200,12 +205,12 @@ export default {
 
   methods: {
     previousPeriod: function() {
-      return moment(this.date)
+      return moment(this._date)
         .subtract(1, `${this.periodLength}s`)
         .format('YYYY-MM-DD');
     },
     nextPeriod: function() {
-      return moment(this.date)
+      return moment(this._date)
         .add(1, `${this.periodLength}s`)
         .format('YYYY-MM-DD');
     },
