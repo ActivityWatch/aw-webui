@@ -63,7 +63,9 @@ const _state = {
   active: {
     available: false,
     duration: 0,
+    // non-afk events (no detail data) for the current period
     events: [],
+    // Aggregated events for current and past periods
     history: {},
   },
 
@@ -133,7 +135,7 @@ const actions = {
       await dispatch('set_available', query_options);
 
       if (state.window.available) {
-        await dispatch('query_window', query_options);
+        await dispatch('query_desktop_full', query_options);
       } else if (state.android.available) {
         await dispatch('query_android', query_options);
       } else {
@@ -141,14 +143,6 @@ const actions = {
           'Cannot query windows as we are missing either an afk/window bucket pair or an android bucket'
         );
         await dispatch('query_window_empty', query_options);
-      }
-
-      if (state.browser.available) {
-        await dispatch('query_browser', query_options);
-      } else {
-        console.log(
-          'Cannot call query_browser as we are missing either an afk, window or browser bucket'
-        );
         await dispatch('query_browser_empty', query_options);
       }
 
@@ -174,22 +168,6 @@ const actions = {
     }
   },
 
-  async query_window({ state, commit }, { timeperiod, filterAFK, filterCategories }: QueryOptions) {
-    const periods = [timeperiodToStr(timeperiod)];
-    const start = moment();
-    const classes = loadClassesForQuery();
-    const q = queries.windowQuery(
-      state.buckets.window[0],
-      state.buckets.afk[0],
-      filterAFK,
-      classes,
-      filterCategories
-    );
-    const data = await this._vm.$aw.query(periods, q);
-    commit('query_window_completed', data[0]);
-    console.info(`Completed window query in ${moment().diff(start)}ms`);
-  },
-
   async query_android({ state, commit }, { timeperiod, filterCategories }: QueryOptions) {
     const periods = [timeperiodToStr(timeperiod)];
     const classes = loadClassesForQuery();
@@ -203,22 +181,29 @@ const actions = {
       app_events: [],
       title_events: [],
       cat_events: [],
-      duration: 0,
       active_events: [],
+      duration: 0,
     };
     commit('query_window_completed', data);
   },
 
-  async query_browser({ state, commit }, { timeperiod, filterAFK }: QueryOptions) {
+  async query_desktop_full(
+    { state, commit },
+    { timeperiod, filterCategories, filterAFK }: QueryOptions
+  ) {
     const periods = [timeperiodToStr(timeperiod)];
-    const q = queries.browserSummaryQuery(
+    const classes = loadClassesForQuery();
+    const q = queries.fullDesktopQuery(
       state.buckets.browser,
       state.buckets.window[0],
       state.buckets.afk[0],
-      filterAFK
+      filterAFK,
+      classes,
+      filterCategories
     );
     const data = await this._vm.$aw.query(periods, q);
-    commit('query_browser_completed', data[0]);
+    commit('query_browser_completed', data[0].browser);
+    commit('query_window_completed', data[0].window);
   },
 
   async query_browser_empty({ commit }) {
@@ -492,7 +477,6 @@ const mutations = {
     state.category.top = null;
 
     state.active.duration = null;
-    state.active.events = null;
 
     // Ensures that active history isn't being fully reloaded on every date change
     // (see caching done in query_active_history and query_active_history_android)
@@ -520,9 +504,9 @@ const mutations = {
   },
 
   query_browser_completed(state, data) {
-    state.browser.top_domains = data['domains'];
-    state.browser.top_urls = data['urls'];
-    state.browser.duration = data['duration'];
+    state.browser.top_domains = data.domains;
+    state.browser.top_urls = data.urls;
+    state.browser.duration = data.duration;
 
     // FIXME: This one might take up a lot of size in the request, move it to a seperate request
     // (or remove entirely, since we have the other timeline now)
