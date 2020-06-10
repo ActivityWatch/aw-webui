@@ -63,6 +63,9 @@ const _state = {
   active: {
     available: false,
     duration: 0,
+    // non-afk events (no detail data) for the current period
+    events: [],
+    // Aggregated events for current and past periods
     history: {},
   },
 
@@ -178,6 +181,7 @@ const actions = {
       app_events: [],
       title_events: [],
       cat_events: [],
+      active_events: [],
       duration: 0,
     };
     commit('query_window_completed', data);
@@ -185,8 +189,8 @@ const actions = {
 
   async query_desktop_full(
     { state, commit },
-    { timeperiod, filterCategories, filterAFK }: QueryOptions)
-  {
+    { timeperiod, filterCategories, filterAFK }: QueryOptions
+  ) {
     const periods = [timeperiodToStr(timeperiod)];
     const classes = loadClassesForQuery();
     const q = queries.fullDesktopQuery(
@@ -411,6 +415,9 @@ const actions = {
       app_events,
       title_events,
       cat_events,
+      active_events: [
+        { timestamp: new Date().toISOString(), duration: 1.5 * 60 * 60, data: { afk: 'not-afk' } },
+      ],
     });
 
     commit('browser_buckets', ['aw-watcher-firefox']);
@@ -493,6 +500,7 @@ const mutations = {
     state.window.top_titles = data['title_events'];
     state.category.top = data['cat_events'];
     state.active.duration = data['duration'];
+    state.active.events = data['active_events'];
   },
 
   query_browser_completed(state, data) {

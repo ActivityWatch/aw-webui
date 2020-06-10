@@ -165,13 +165,12 @@ export function fullDesktopQuery(
     ${canonicalEvents(params)}
     events = categorize(events, ${classes_str});
     ` +
-    (filterCategories
-      ? `events = filter_keyvals(events, "$category", ${JSON.stringify(filterCategories)});`
-      : '') +
-    `
+      (filterCategories
+        ? `events = filter_keyvals(events, "$category", ${JSON.stringify(filterCategories)});`
+        : '') +
+      `
     title_events = sort_by_duration(merge_events_by_keys(events, ["app", "title"]));
     app_events   = sort_by_duration(merge_events_by_keys(title_events, ["app"]));
-    cat_events = [];
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
 
     app_events  = limit_events(app_events, ${default_limit});
@@ -193,6 +192,7 @@ export function fullDesktopQuery(
             "app_events": app_events,
             "title_events": title_events,
             "cat_events": cat_events,
+            "active_events": not_afk,
             "duration": duration
         },
         "browser": {
