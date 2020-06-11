@@ -4,24 +4,24 @@ div
   h3 {{ id }}
   table
     tr
-      td Type:
+      th Type:
       td {{ bucket.type }}
     tr
-      td Client:
+      th Client:
       td {{ bucket.client }}
     tr
-      td Hostname:
+      th Hostname:
       td {{ bucket.hostname }}
     tr
-      td Created:
+      th Created:
       td {{ bucket.created | iso8601 }}
     tr(v-if="bucket.metadata")
-      td First/last event:
+      th First/last event:
       td
         | {{ bucket.metadata.start}} /
         | {{ bucket.metadata.end }}
     tr
-      td Eventcount:
+      th Eventcount:
       td {{ eventcount }}
 
   input-timeinterval(v-model="daterange")

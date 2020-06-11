@@ -3,14 +3,14 @@ div
   div
     table
       tr
-        td.pr-2
+        th.pr-2
           label(for="mode") Interval mode:
         td
           select(id="mode" v-model="mode")
             option(value='last_duration') Last duration
             option(value='range') Date range
       tr(v-if="mode == 'last_duration'")
-        td.pr-2
+        th.pr-2
           label(for="duration") Show last:
         td
           select(id="duration" :value="duration", @change="valueChanged")
@@ -23,7 +23,7 @@ div
             option(:value="12*60*60") 12h
             option(:value="24*60*60") 24h
       tr(v-if="mode == 'range'")
-        td.pr-2 Range:
+        th.pr-2 Range:
         td
           input(type="date", v-model="start", @input="valueChanged")
           input(type="date", v-model="end", @input="valueChanged")
