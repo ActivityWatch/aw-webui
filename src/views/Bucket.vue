@@ -26,7 +26,7 @@ div
 
   input-timeinterval(v-model="daterange")
 
-  vis-timeline(:buckets="[bucket_with_events]", showRowLabels='false')
+  vis-timeline(:buckets="[bucket_with_events]", :showRowLabels="false")
 
   aw-eventlist(:bucket_id="id", @save="updateEvent", :events="events")
 </template>

@@ -11,7 +11,7 @@ div
       div(style="float: right; color: #999")
         | Drag to pan and scroll to zoom.
     div(style="clear: both")
-    vis-timeline(:buckets="buckets", showRowLabels=true, :queriedInterval="daterange")
+    vis-timeline(:buckets="buckets", :showRowLabels='true', :queriedInterval="daterange")
   div(v-show="!(buckets !== null && num_events)")
     h1 Loading...
 </template>

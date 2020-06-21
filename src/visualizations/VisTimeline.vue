@@ -92,7 +92,7 @@ export default {
 
       // Build groups
       const groups = _.map(this.buckets, (bucket, bidx) => {
-        return { id: bidx, content: this.showRowLabels ? '' : bucket.id };
+        return { id: bidx, content: this.showRowLabels ? bucket.id : '' };
       });
 
       // Build items
