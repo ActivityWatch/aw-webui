@@ -1,3 +1,5 @@
+const _ = require('lodash');
+
 // initial state
 const state = {
   buckets: [],
@@ -64,7 +66,7 @@ const actions = {
 
   async getBucketWithEvents({ getters, dispatch }, { id, start, end }) {
     await dispatch('ensureBuckets');
-    const bucket = getters.getBucket(id);
+    const bucket = _.cloneDeep(getters.getBucket(id));
     bucket.events = await this._vm.$aw.getEvents(bucket.id, {
       start,
       end,
