@@ -17,7 +17,12 @@ import timeline from './timeline.js';
 
 export default {
   name: 'aw-timeline',
-  props: ['chunks', 'show_afk', 'chunkfunc', 'eventfunc'],
+  props: {
+    chunks: { type: Object },
+    show_afk: { type: boolean },
+    chunkfunc: { type: Function },
+    eventfunc: { type: Function },
+  },
   watch: {
     chunks: function() {
       this.update();

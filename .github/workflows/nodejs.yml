@@ -31,6 +31,8 @@ jobs:
       run: npm run build
     - name: Run tests
       run: npm test
+    - name: Run linting
+      run: make lint
     - name: Serve webui
       run: npm run serve &
     - name: Run e2e tests with testcafe

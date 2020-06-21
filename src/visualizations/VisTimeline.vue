@@ -33,7 +33,12 @@ import { Timeline } from 'vis-timeline/esnext';
 import 'vis-timeline/styles/vis-timeline-graph2d.css';
 
 export default {
-  props: ['buckets', 'showRowLabels', 'queriedInterval', 'showQueriedInterval'],
+  props: {
+    buckets: { type: Object },
+    showRowLabels: { type: boolean },
+    queriedInterval: { type: Array },
+    showQueriedInterval: { type: boolean },
+  },
   data() {
     return {
       timeline: null,
