@@ -19,7 +19,7 @@ export default {
   name: 'aw-timeline',
   props: {
     chunks: { type: Object },
-    show_afk: { type: boolean },
+    show_afk: { type: Boolean },
     chunkfunc: { type: Function },
     eventfunc: { type: Function },
   },

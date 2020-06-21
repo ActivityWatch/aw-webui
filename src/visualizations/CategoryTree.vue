@@ -22,7 +22,7 @@ const classes = require('~/util/classes.ts');
 export default {
   name: 'aw-categorytree',
   props: {
-    events: { type: Object },
+    events: { type: Array },
   },
   computed: {
     category_hierarchy: function() {

@@ -23,7 +23,7 @@ div#visualization {
 }
 </style>
 
-<script>
+<script lang="ts">
 import _ from 'lodash';
 import moment from 'moment';
 import { buildTooltip } from '../util/tooltip.js';
@@ -34,10 +34,10 @@ import 'vis-timeline/styles/vis-timeline-graph2d.css';
 
 export default {
   props: {
-    buckets: { type: Object },
-    showRowLabels: { type: boolean },
+    buckets: { type: Array },
+    showRowLabels: { type: Boolean },
     queriedInterval: { type: Array },
-    showQueriedInterval: { type: boolean },
+    showQueriedInterval: { type: Boolean },
   },
   data() {
     return {
