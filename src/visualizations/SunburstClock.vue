@@ -112,7 +112,11 @@ import _ from 'lodash';
 
 export default {
   name: 'aw-sunburst-clock',
-  props: ['date', 'afkBucketId', 'windowBucketId'],
+  props: {
+    date: { type: Date },
+    afkBucketId: { type: String },
+    windowBucketId: { type: String },
+  },
 
   data: () => {
     return {

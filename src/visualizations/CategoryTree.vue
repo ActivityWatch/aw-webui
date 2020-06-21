@@ -19,17 +19,11 @@ svg {
 const _ = require('lodash');
 const classes = require('~/util/classes.ts');
 
-function get_parent_cats(cat) {
-  const parents = [];
-  for (let i = 1; i <= cat.length; i++) {
-    parents.push(cat.slice(0, i));
-  }
-  return parents;
-}
-
 export default {
   name: 'aw-categorytree',
-  props: ['events'],
+  props: {
+    events: { type: Object },
+  },
   computed: {
     category_hierarchy: function() {
       const events = JSON.parse(JSON.stringify(this.events));
