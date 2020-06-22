@@ -74,7 +74,11 @@ export default {
             getTitleAttr(bucket, e),
             buildTooltip(bucket, e),
             new Date(e.timestamp),
-            new Date(moment(e.timestamp).add(e.duration, 'seconds')),
+            new Date(
+              moment(e.timestamp)
+                .add(e.duration, 'seconds')
+                .valueOf()
+            ),
             getColorFromString(getTitleAttr(bucket, e)),
           ]);
         });
@@ -98,7 +102,7 @@ export default {
       // Build items
       const items = _.map(this.chartData, (row, i) => {
         return {
-          id: i,
+          id: String(i),
           group: row[0],
           content: row[1],
           title: row[2],
@@ -111,9 +115,9 @@ export default {
       if (groups.length > 0 && items.length > 0) {
         if (this.queriedInterval && this.showQueriedInterval) {
           const duration = this.queriedInterval[1].diff(this.queriedInterval[0], 'seconds');
-          groups.push({ id: groups.length, content: 'queried interval' });
+          groups.push({ id: String(groups.length), content: 'queried interval' });
           items.push({
-            id: items.length + 1,
+            id: String(items.length + 1),
             group: groups.length - 1,
             title: buildTooltip(
               { type: 'test' },
