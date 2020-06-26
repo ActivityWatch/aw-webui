@@ -17,7 +17,7 @@ div
       small(v-if="data.item.last_updated")
         | {{ data.item.last_updated | friendlytime }}
       // aw-server-rust
-      small(v-if="data.item.metadata.end")
+      small(v-if="data.item.metadata && data.item.metadata.end")
         | {{ data.item.metadata.end | friendlytime }}
     template(v-slot:cell(actions)="data")
       b-button-toolbar.float-right
