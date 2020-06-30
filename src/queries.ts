@@ -10,14 +10,15 @@ function querystr_to_array(querystr: string): string[] {
 }
 
 interface BaseQueryParams {
-  filter_afk: boolean;
   include_audible?: boolean;
   classes: Record<string, any>;
+  filter_classes: string[][];
 }
 
 interface DesktopQueryParams extends BaseQueryParams {
   bid_window: string;
   bid_afk: string;
+  filter_afk: boolean;
   bid_browsers?: string[];
 }
 
@@ -26,44 +27,63 @@ interface AndroidQueryParams extends BaseQueryParams {
   bid_browsers?: string[];
 }
 
+function isDesktopParams(object: any): object is DesktopQueryParams {
+  return 'bid_window' in object;
+}
+
+function isAndroidParams(object: any): object is AndroidQueryParams {
+  return 'bid_android' in object;
+}
+
 // Constructs a query that returns a fully-detailed list of events from the merging of several sources (window, afk, web).
-// Puts it's results in `not_afk` and `events`.
-function canonicalEvents(params: DesktopQueryParams): string {
+// Performs:
+//  - AFK filtering (if filter_afk is true)
+//  - Categorization (if classes specified)
+//  - Filters by category (if filter_classes set)
+// Puts it's results in `events` and `not_afk` (if not_afk available for platform).
+function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams): string {
+  // Needs escaping for regex patterns like '\w' to work (JSON.stringify adds extra unecessary escaping)
+  const classes_str = JSON.stringify(params.classes).replace('\\\\', '\\');
+  const cat_filter_str = JSON.stringify(params.filter_classes);
+  const bid_window = isDesktopParams(params) ? params.bid_window : params.bid_android;
+
   return `
-    events  = flood(query_bucket("${params.bid_window}"));
-    not_afk = flood(query_bucket("${params.bid_afk}"));
-    not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);
-    ${params.filter_afk ? 'events  = filter_period_intersect(events, not_afk);' : ''}
+    events = flood(query_bucket("${bid_window}"));
+    ${
+      isDesktopParams(params)
+        ? `not_afk = flood(query_bucket("${params.bid_afk}"));
+           not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);`
+        : ''
+    }
+    ${isAndroidParams(params) ? 'events = merge_events_by_keys(events, ["app"]);' : ''}
+
+    ${
+      isDesktopParams(params) && params.filter_afk
+        ? 'events = filter_period_intersect(events, not_afk);'
+        : ''
+    }
+    ${params.classes ? `events = categorize(events, ${classes_str});` : ''}
+    ${
+      params.filter_classes
+        ? `events = filter_keyvals(events, "$category", ${cat_filter_str});`
+        : ''
+    }
   `;
 }
 
 const default_limit = 100; // Hardcoded limit per group
 
-export function appQuery(
-  appbucket: string,
-  classes,
-  filterAFK: boolean,
-  filterCategories: string[][]
-): string[] {
+export function appQuery(appbucket: string, classes, filterCategories: string[][]): string[] {
   appbucket = appbucket.replace('"', '\\"');
   const params: AndroidQueryParams = {
     bid_android: appbucket,
     classes: classes,
-    filter_afk: filterAFK,
+    filter_classes: filterCategories,
   };
 
-  // Needs escaping for regex patterns like '\w' to work (JSON.stringify adds extra unecessary escaping)
-  const classes_str = JSON.stringify(params.classes).replace('\\\\', '\\');
+  const code = `
+    ${canonicalEvents(params)}
 
-  const code =
-    `
-    events = query_bucket("${params.bid_android}");
-    events = merge_events_by_keys(events, ["app"]);
-    events = categorize(events, ${classes_str});` +
-    (filterCategories
-      ? `events = filter_keyvals(events, "$category", ${JSON.stringify(filterCategories)});`
-      : '') +
-    `
     title_events = sort_by_duration(merge_events_by_keys(events, ["app", "classname"]));
     app_events   = sort_by_duration(merge_events_by_keys(title_events, ["app"]));
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
@@ -155,21 +175,13 @@ export function fullDesktopQuery(
     bid_afk: afkbucket,
     bid_browsers: browserbuckets,
     classes: classes,
+    filter_classes: filterCategories,
     filter_afk: filterAFK,
   };
-
-  // Needs escaping for regex patterns like '\w' to work (JSON.stringify adds extra unecessary escaping)
-  const classes_str = JSON.stringify(params.classes).replace('\\\\', '\\');
 
   return querystr_to_array(
     `
     ${canonicalEvents(params)}
-    events = categorize(events, ${classes_str});
-    ` +
-      (filterCategories
-        ? `events = filter_keyvals(events, "$category", ${JSON.stringify(filterCategories)});`
-        : '') +
-      `
     title_events = sort_by_duration(merge_events_by_keys(events, ["app", "title"]));
     app_events   = sort_by_duration(merge_events_by_keys(title_events, ["app"]));
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));

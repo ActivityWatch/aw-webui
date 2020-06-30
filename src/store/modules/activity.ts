@@ -171,7 +171,7 @@ const actions = {
   async query_android({ state, commit }, { timeperiod, filterCategories }: QueryOptions) {
     const periods = [timeperiodToStr(timeperiod)];
     const classes = loadClassesForQuery();
-    const q = queries.appQuery(state.buckets.android[0], classes, true, filterCategories);
+    const q = queries.appQuery(state.buckets.android[0], classes, filterCategories);
     const data = await this._vm.$aw.query(periods, q).catch(this.errorHandler);
     commit('query_window_completed', data[0]);
   },
