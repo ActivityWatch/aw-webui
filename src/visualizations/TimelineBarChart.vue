@@ -1,13 +1,17 @@
 <script lang="ts">
 import _ from 'lodash';
-import Vue from 'vue';
+import { ChartOptions } from 'chart.js';
 import { Bar } from 'vue-chartjs';
-import { Component, Prop, Watch } from 'vue-property-decorator';
+import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 
 @Component({
   extends: Bar, // this is important to add the functionality to your component
 })
 export default class ChartTimelineBars extends Vue<Bar> {
+  constructor() {
+    super();
+  }
+
   @Prop({
     default: [
       {
@@ -53,7 +57,7 @@ export default class ChartTimelineBars extends Vue<Bar> {
               stepSize: 0.25,
               min: 0,
               max: 1,
-              callback: function(value) {
+              callback: function(value: number) {
                 if (value == 1) {
                   return '1h';
                 } else {
@@ -64,7 +68,7 @@ export default class ChartTimelineBars extends Vue<Bar> {
           },
         ],
       },
-    };
+    } as ChartOptions;
     this.renderChart(data, options);
   }
 }
