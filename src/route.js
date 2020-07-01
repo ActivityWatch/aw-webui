@@ -3,14 +3,13 @@ import VueRouter from 'vue-router';
 
 const Home = () => import('./views/Home.vue');
 
-// Daily activity views for desktop
-const ActivityDaily = () => import('./views/activity/daily/ActivityDaily.vue');
-const ActivityDailySummary = () => import('./views/activity/daily/ActivityDailySummary.vue');
-const ActivityDailyWindow = () => import('./views/activity/daily/ActivityDailyWindow.vue');
-const ActivityDailyBrowser = () => import('./views/activity/daily/ActivityDailyBrowser.vue');
-const ActivityDailyEditor = () => import('./views/activity/daily/ActivityDailyEditor.vue');
+// Activity views for desktop
+const Activity = () => import('./views/activity/Activity.vue');
+const ActivitySummary = () => import('./views/activity/ActivitySummary.vue');
+const ActivityWindow = () => import('./views/activity/ActivityWindow.vue');
+const ActivityBrowser = () => import('./views/activity/ActivityBrowser.vue');
+const ActivityEditor = () => import('./views/activity/ActivityEditor.vue');
 
-const ActivityAndroid = () => import('./views/activity/ActivityAndroid.vue');
 const Buckets = () => import('./views/Buckets.vue');
 const Bucket = () => import('./views/Bucket.vue');
 const QueryExplorer = () => import('./views/QueryExplorer.vue');
@@ -25,38 +24,36 @@ Vue.use(VueRouter);
 const router = new VueRouter({
   routes: [
     { path: '/', component: Home },
-    // Must be before general activity view such that it matches first
-    { path: '/activity/android/:host/:date?', component: ActivityAndroid, props: true },
     {
       path: '/activity/:host/:periodLength?/:date?',
-      component: ActivityDaily,
+      component: Activity,
       props: true,
       children: [
         {
           path: 'summary',
           meta: { subview: 'summary' },
-          name: 'activity-daily-summary',
-          component: ActivityDailySummary,
+          name: 'activity-summary',
+          component: ActivitySummary,
           props: true,
         },
         {
           path: 'window',
           meta: { subview: 'window' },
-          name: 'activity-daily-window',
-          component: ActivityDailyWindow,
+          name: 'activity-window',
+          component: ActivityWindow,
           props: true,
         },
         {
           path: 'browser',
           meta: { subview: 'browser' },
-          name: 'activity-daily-browser',
-          component: ActivityDailyBrowser,
+          name: 'activity-browser',
+          component: ActivityBrowser,
         },
         {
           path: 'editor',
           meta: { subview: 'editor' },
-          name: 'activity-daily-editor',
-          component: ActivityDailyEditor,
+          name: 'activity-editor',
+          component: ActivityEditor,
         },
         // Unspecified should redirect to summary view is the summary view
         // (needs to be last since otherwise it'll always match first)

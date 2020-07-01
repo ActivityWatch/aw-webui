@@ -1,12 +1,12 @@
-.PHONY: install build dev test clean aw-client-js
+.PHONY: install build dev test clean
 
 .FORCE: ;
 
 build: install
 	npm run build
 
-install: aw-client-js
-	npm install
+install:
+	npm ci
 
 uninstall:
 	rm -r node_modules/
@@ -17,11 +17,14 @@ dev:
 test:
 	npm test
 
+test-e2e:
+	testcafe firefox test/e2e/
+
 clean:
 	rm -rf node_modules dist
 
 lint:
-	npx eslint --ext=js,vue src/
+	npx eslint --ext=js,ts,vue src/
 
-aw-client-js:
-	make --directory=aw-client-js build
+lint-fix:
+	npx eslint --ext=js,ts,vue --fix src/

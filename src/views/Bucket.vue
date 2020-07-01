@@ -4,42 +4,48 @@ div
   h3 {{ id }}
   table
     tr
-      td Type:
+      th Type:
       td {{ bucket.type }}
     tr
-      td Client:
+      th Client:
       td {{ bucket.client }}
     tr
-      td Hostname:
+      th Hostname:
       td {{ bucket.hostname }}
     tr
-      td Created:
+      th Created:
       td {{ bucket.created | iso8601 }}
+    tr(v-if="bucket.metadata")
+      th First/last event:
+      td
+        | {{ bucket.metadata.start}} /
+        | {{ bucket.metadata.end }}
     tr
-      td Eventcount:
+      th Eventcount:
       td {{ eventcount }}
 
   input-timeinterval(v-model="daterange")
 
-  vis-timeline(:buckets="[bucket_with_events]", showRowLabels='false')
+  vis-timeline(:buckets="[bucket_with_events]", :showRowLabels="false")
 
-  aw-eventlist(:events="bucket_with_events.events")
+  aw-eventlist(:bucket_id="id", @save="updateEvent", :events="events")
 </template>
 
 <script>
-import moment from 'moment'
+import moment from 'moment';
 
 export default {
-  name: "Bucket",
+  name: 'Bucket',
   props: {
     id: String,
   },
   data: () => {
     return {
       bucket_with_events: { events: [] },
-      eventcount: "?",
-      daterange: [moment().subtract(1, "hour"), moment()],
-    }
+      events: [],
+      eventcount: '?',
+      daterange: [moment().subtract(1, 'hour'), moment()],
+    };
   },
   computed: {
     bucket() {
@@ -47,9 +53,9 @@ export default {
     },
   },
   watch: {
-    daterange: function() {
-      this.getEvents(this.id);
-    }
+    daterange: async function() {
+      await this.getEvents(this.id);
+    },
   },
   mounted: async function() {
     await this.$store.dispatch('buckets/ensureBuckets');
@@ -63,10 +69,21 @@ export default {
         start: this.daterange[0].format(),
         end: this.daterange[1].format(),
       });
+      this.events = this.bucket_with_events.events;
     },
     getEventCount: async function(bucket_id) {
       this.eventcount = (await this.$aw.countEvents(bucket_id)).data;
     },
+    updateEvent: function(event) {
+      const i = this.events.findIndex(e => e.id == event.id);
+      if (i != -1) {
+        // This is needed instead of this.events[i] because insides of arrays
+        // are not reactive in Vue.
+        this.$set(this.events, i, event);
+      } else {
+        console.error(':(');
+      }
+    },
   },
-}
+};
 </script>

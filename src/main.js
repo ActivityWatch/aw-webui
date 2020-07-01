@@ -8,6 +8,10 @@ import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue/dist/bootstrap-vue.css';
 Vue.use(BootstrapVue);
 
+import { Datetime } from 'vue-datetime';
+import 'vue-datetime/dist/vue-datetime.css';
+Vue.component('datetime', Datetime);
+
 // Setup default settings
 if (!('startOfDay' in localStorage)) {
   localStorage.startOfDay = '04:00';
@@ -18,6 +22,10 @@ import 'typeface-varela-round';
 
 // Loads all the filters
 import './util/filters.js';
+
+// Create an instance of AWClient as this.$aw
+import awclient from './util/awclient.js';
+Vue.prototype.$aw = awclient;
 
 // Sets up the routing and the base app (using vue-router)
 import router from './route.js';
@@ -33,6 +41,7 @@ Vue.component('error-boundary', () => import('./components/ErrorBoundary.vue'));
 Vue.component('input-timeinterval', () => import('./components/InputTimeInterval.vue'));
 Vue.component('aw-header', () => import('./components/Header.vue'));
 Vue.component('aw-devonly', () => import('./components/DevOnly.vue'));
+Vue.component('aw-selectable-vis', () => import('./components/SelectableVisualization.vue'));
 
 // Visualization components
 Vue.component('aw-summary', () => import('./visualizations/Summary.vue'));
@@ -48,10 +57,6 @@ Vue.component('aw-timeline-barchart', () => import('./visualizations/TimelineBar
 
 // A mixin to make async method errors propagate
 Vue.mixin(require('~/mixins/asyncErrorCaptured.js'));
-
-// Create an instance of AWClient as this.$aw
-import awclient from './util/awclient.js';
-Vue.prototype.$aw = awclient;
 
 // Set the PRODUCTION constant
 Vue.prototype.PRODUCTION = PRODUCTION;

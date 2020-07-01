@@ -11,7 +11,7 @@
     "plugin:@typescript-eslint/eslint-recommended"
   ],
   "rules": {
-    "prettier/prettier": "off",
+    "prettier/prettier": "warn",
     "vue/require-default-prop": "off",
     "vue/prop-name-casing": "off",
     "vue/name-property-casing": "off",
@@ -20,7 +20,14 @@
     "@typescript-eslint/no-var-requires": ["off"],
     "@typescript-eslint/no-explicit-any": ["off"],
     "@typescript-eslint/no-use-before-define": "warn",
-    "@typescript-eslint/no-this-alias": "warn",
+    "@typescript-eslint/no-unused-vars": ["warn", {"argsIgnorePattern": "^_"}],
+    "@typescript-eslint/no-this-alias": [
+      "warn",
+      {
+        "allowDestructuring": true,
+        "allowedNames": ["that"]
+      }
+    ],
     "prefer-rest-params": "warn",
     "no-shadow": [
       "warn",

@@ -16,7 +16,7 @@ div
 
 <style lang="scss">
 .panel-default {
-  border-color: #BBB;
+  border-color: #bbb;
   border-radius: 4px;
 
   .panel-heading {
@@ -37,26 +37,25 @@ div
     }
   }
 }
-
 </style>
 
 <script>
 export default {
-  name: "Log",
+  name: 'Log',
   data: () => {
     return {
       logs: [],
-    }
+    };
   },
   mounted: function() {
     this.getLog();
   },
   methods: {
     getLog: function() {
-      $Log.get().then((response) => {
+      $Log.get().then(response => {
         this.logs = response.json();
       });
     },
-  }
-}
+  },
+};
 </script>

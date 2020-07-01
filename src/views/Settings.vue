@@ -16,6 +16,23 @@ div
 
   hr
 
+  div.row
+    div.col-sm-9
+      h5.mb-0 Duration default value
+      small
+        | The default duration used for 'show last' in the timeline view
+    div.col-sm-3
+      select(id="durationDefaultValue" :value="durationDefaultValue", @change="setDurationDefault($event.target.value)")
+            option(:value="15*60") 15min
+            option(:value="30*60") 30min
+            option(:value="60*60") 1h
+            option(:value="2*60*60") 2h
+            option(:value="4*60*60") 4h
+            option(:value="6*60*60") 6h
+            option(:value="12*60*60") 12h
+            option(:value="24*60*60") 24h
+  hr
+
   h5.d-inline-block
     div Categorization
   div.float-right
@@ -49,18 +66,19 @@ import CategoryEditTree from '~/components/CategoryEditTree.vue';
 import { mapState, mapGetters } from 'vuex';
 
 export default {
-  name: "Settings",
+  name: 'Settings',
   components: {
     CategoryEditTree,
   },
   data: () => {
     return {
       startOfDay: '',
-    }
+      durationDefaultValue: localStorage.durationDefault || 60 * 60,
+    };
   },
   computed: {
     ...mapGetters('settings', ['classes_hierarchy']),
-    ...mapState('settings', ['classes_unsaved_changes'])
+    ...mapState('settings', ['classes_unsaved_changes']),
   },
   mounted() {
     this.startOfDay = localStorage.startOfDay;
@@ -71,7 +89,10 @@ export default {
       localStorage.startOfDay = time_minutes;
     },
     addClass: function() {
-      this.$store.commit('settings/addClass', {name: ["New class"], rule: {type: "regex", regex: "FILL ME"}});
+      this.$store.commit('settings/addClass', {
+        name: ['New class'],
+        rule: { type: 'regex', regex: 'FILL ME' },
+      });
     },
     saveClasses: async function() {
       await this.$store.dispatch('settings/save');
@@ -82,6 +103,9 @@ export default {
     restoreDefaultClasses: async function() {
       await this.$store.commit('settings/restoreDefaultClasses');
     },
-  }
-}
+    setDurationDefault: function(duration) {
+      localStorage.durationDefault = duration;
+    },
+  },
+};
 </script>

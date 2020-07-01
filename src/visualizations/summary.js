@@ -36,13 +36,6 @@ function set_status(container, msg) {
     .attr('fill', 'black');
 }
 
-function updateSummedEvents(container, summedEvents, titleKeyFunc, colorKeyFunc) {
-  const apps = _.map(summedEvents, e => {
-    return { name: titleKeyFunc(e), duration: e.duration, colorKey: colorKeyFunc(e) };
-  });
-  update(container, apps);
-}
-
 function update(container, apps) {
   // No apps, sets status to "No data"
   if (apps.length <= 0) {
@@ -123,6 +116,13 @@ function update(container, apps) {
   svg.attr('height', curr_y);
 
   return container;
+}
+
+function updateSummedEvents(container, summedEvents, titleKeyFunc, colorKeyFunc) {
+  const apps = _.map(summedEvents, e => {
+    return { name: titleKeyFunc(e), duration: e.duration, colorKey: colorKeyFunc(e) };
+  });
+  update(container, apps);
 }
 
 export default {
