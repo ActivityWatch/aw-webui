@@ -103,6 +103,7 @@ export default {
         data: {
           running: true,
           label: label,
+          tags: '',
         },
       });
       this.events.unshift(event);
