@@ -32,10 +32,16 @@ div
 
   hr
 
+  div.float-left
+    b-button.mx-1(@click="delete_(); $emit('close');" variant="danger")
+      icon.mx-1(name="trash")
+      | Delete
   div.float-right
     b-button.mx-1(@click="$emit('close');")
+      icon.mx-1(name="times")
       | Cancel
     b-button.mx-1(@click="save(); $emit('close');", variant="primary")
+      icon.mx-1(name="save")
       | Save
 </template>
 
@@ -43,6 +49,10 @@ div
 
 <script>
 import moment from 'moment';
+
+import 'vue-awesome/icons/times';
+import 'vue-awesome/icons/save';
+import 'vue-awesome/icons/trash';
 
 export default {
   name: 'EventEditor',
@@ -81,6 +91,11 @@ export default {
       // This emit needs to be called first, otherwise it won't occur for some reason
       this.$emit('save', this.editedEvent);
       await this.$aw.replaceEvent(this.bucket_id, this.editedEvent);
+    },
+    async delete_() {
+      // This emit needs to be called first, otherwise it won't occur for some reason
+      this.$emit('delete', this.editedEvent);
+      await this.$aw.deleteEvent(this.bucket_id, this.editedEvent.id);
     },
   },
 };

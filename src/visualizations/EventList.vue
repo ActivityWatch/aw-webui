@@ -31,7 +31,7 @@ div
 
           // TODO: Refactor modal into event-editor component?
           b-modal(:id="'edit-modal-' + event.id", ref="eventEditModal", title="Edit event", centered, hide-footer)
-            event-editor(:event="event", :bucket_id="bucket_id", @save="(e) => $emit('save', e)", @close="$bvModal.hide('edit-modal-' + event.id)")
+            event-editor(:event="event", :bucket_id="bucket_id", @save="(e) => $emit('save', e)", @delete="removeEvent" @close="$bvModal.hide('edit-modal-' + event.id)")
 </template>
 
 <style scoped lang="scss">
@@ -136,6 +136,9 @@ export default {
     expandList: function() {
       this.isListExpanded = !this.isListExpanded;
       console.log('List should be expanding: ', this.isListExpanded);
+    },
+    removeEvent: function(event) {
+      this.events = _.filter(this.events, e => e.id != event.id);
     },
   },
 };
