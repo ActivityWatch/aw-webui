@@ -61,12 +61,12 @@ export default {
       new_event.data.running = false;
       new_event.duration = (moment() - moment(new_event.timestamp)) / 1000;
       // Convert the string to a list of tags
-      if(this.event.data.tags){
-        this.event.data.tags = this.event.data.tags.split(',')
-        this.event.data.tags = this.event.data.tags.map(tag => tag.trim())
+      if (this.event.data.tags) {
+        this.event.data.tags = this.event.data.tags.split(',');
+        this.event.data.tags = this.event.data.tags.map(tag => tag.trim());
       }
-      else{
-        this.event.data.tags = []
+      else {
+        this.event.data.tags = [];
       }
       new_event = await this.$aw.replaceEvent(this.bucket_id, new_event);
       this.$emit('update', new_event);
