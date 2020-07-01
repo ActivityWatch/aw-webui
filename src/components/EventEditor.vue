@@ -1,5 +1,5 @@
 <template lang="pug">
-div
+b-modal(:id="'edit-modal-' + event.id", ref="eventEditModal", title="Edit event", centered, hide-footer)
   table(style="width: 100%")
     tr
       th Bucket
@@ -33,14 +33,14 @@ div
   hr
 
   div.float-left
-    b-button.mx-1(@click="delete_(); $emit('close');" variant="danger")
+    b-button.mx-1(@click="delete_(); close();" variant="danger")
       icon.mx-1(name="trash")
       | Delete
   div.float-right
-    b-button.mx-1(@click="$emit('close');")
+    b-button.mx-1(@click="close")
       icon.mx-1(name="times")
       | Cancel
-    b-button.mx-1(@click="save(); $emit('close');", variant="primary")
+    b-button.mx-1(@click="save(); close();", variant="primary")
       icon.mx-1(name="save")
       | Save
 </template>
@@ -94,8 +94,12 @@ export default {
     },
     async delete_() {
       // This emit needs to be called first, otherwise it won't occur for some reason
-      this.$emit('delete', this.editedEvent);
-      await this.$aw.deleteEvent(this.bucket_id, this.editedEvent.id);
+      this.$emit('delete', this.event);
+      await this.$aw.deleteEvent(this.bucket_id, this.event.id);
+    },
+    close() {
+      this.$refs.eventEditModal.hide();
+      this.$emit('close', this.event);
     },
   },
 };

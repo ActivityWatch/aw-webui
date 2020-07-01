@@ -20,8 +20,7 @@ div
       b-button.mx-1(v-b-modal="'edit-modal-' + event.id", variant="outline-dark", size="sm")
         icon.ml-0.mr-1(name="edit")
         | Edit
-  b-modal(:id="'edit-modal-' + event.id", ref="eventEditModal", title="Edit event", centered, hide-footer)
-    event-editor(:event="event", :bucket_id="bucket_id", @save="save", @delete="delete_", @close="$refs.eventEditModal.hide()")
+  event-editor(:event="event", :bucket_id="bucket_id", @save="save", @delete="delete_")
 </template>
 
 <style scoped lang="scss">
