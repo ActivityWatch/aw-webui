@@ -60,21 +60,20 @@ export default {
       let new_event = JSON.parse(JSON.stringify(this.event));
       new_event.data.running = false;
       new_event.duration = (moment() - moment(new_event.timestamp)) / 1000;
-      // Convert the string to a list of tags
-      if (new_event.data.tags) {
-        new_event.data.tags = new_event.data.tags.split(',');
-        new_event.data.tags = new_event.data.tags.map(tag => tag.trim());
-      } else {
-        new_event.data.tags = [];
-      }
+      new_event.data.tags = this.editTags(new_event.data.tags);
       new_event = await this.$aw.replaceEvent(this.bucket_id, new_event);
       this.$emit('update', new_event);
     },
     save: async function(new_event) {
+      new_event.data.tags = this.editTags(new_event.data.tags);
       this.$emit('update', new_event);
     },
     delete_: async function() {
       this.$emit('delete', this.event);
+    },
+    editTags: function(tags) {
+      // trim spaces around comma and at the ends
+      return tags ? tags.replace(/\s*,\s*/g, ',').trim() : '';
     },
   },
 };

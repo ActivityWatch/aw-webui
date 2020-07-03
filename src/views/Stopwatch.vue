@@ -10,7 +10,7 @@ div
   b-input-group(size="lg")
     b-input(v-model="label" placeholder="What are you working on?")
     b-input-group-append
-      b-button(@click="startTimer(label)", variant="success")
+      b-button(@click="startTimer(label, '')", variant="success")
         icon(name="play")
         | Start
 
@@ -34,7 +34,7 @@ div
           h5.mt-2.mb-1 {{ k }}
           div(v-for="e in timersByDate[k]")
             stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
-              @delete="deleteTimer", @update="updateTimer", @new="startTimer(e.data.label)")
+              @delete="deleteTimer", @update="updateTimer", @new="startTimer(e.data.label, e.data.tags)")
             hr(style="margin: 0")
       div(v-else)
         span(style="color: #555") No history to show
@@ -97,13 +97,17 @@ export default {
     setInterval(() => (this.now = moment()), 1000);
   },
   methods: {
-    startTimer: async function(label) {
+    startTimer: async function(label, tags) {
+      // backward compatibility with events w/o tags
+      if (tags == null) {
+        tags = '';
+      }
       const event = await this.$aw.insertEvent(this.bucket_id, {
         timestamp: new Date(),
         data: {
           running: true,
           label: label,
-          tags: '',
+          tags: tags,
         },
       });
       this.events.unshift(event);
