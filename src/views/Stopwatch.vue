@@ -22,7 +22,7 @@ div
         h3 Running
         div(v-for="e in runningTimers")
           stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
-            @delete="deleteTimer", @update="updateTimer")
+            @delete="removeTimer", @update="updateTimer")
           hr(style="margin: 0")
       div(v-else)
         span(style="color: #555") No stopwatch running
@@ -34,7 +34,7 @@ div
           h5.mt-2.mb-1 {{ k }}
           div(v-for="e in timersByDate[k]")
             stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
-              @delete="deleteTimer", @update="updateTimer", @new="startTimer(e.data.label, e.data.tags)")
+              @delete="removeTimer", @update="updateTimer", @new="startTimer(e.data.label, e.data.tags)")
             hr(style="margin: 0")
       div(v-else)
         span(style="color: #555") No history to show
@@ -124,8 +124,7 @@ export default {
       }
     },
 
-    deleteTimer: async function(event) {
-      await this.$aw.deleteEvent(this.bucket_id, event.id);
+    removeTimer: function(event) {
       this.events = _.filter(this.events, e => e.id != event.id);
     },
 

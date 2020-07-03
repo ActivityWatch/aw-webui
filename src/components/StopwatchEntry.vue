@@ -20,11 +20,7 @@ div
       b-button.mx-1(v-b-modal="'edit-modal-' + event.id", variant="outline-dark", size="sm")
         icon.ml-0.mr-1(name="edit")
         | Edit
-      b-button.mx-1(@click="delete_", variant="outline-danger", size="sm")
-        icon.mx-0(name="trash")
-        //| Delete
-  b-modal(:id="'edit-modal-' + event.id", ref="eventEditModal", title="Edit event", centered, hide-footer)
-    event-editor(:event="event", :bucket_id="bucket_id", @save="save", @close="$refs.eventEditModal.hide()")
+  event-editor(:event="event", :bucket_id="bucket_id", @save="save", @delete="delete_")
 </template>
 
 <style scoped lang="scss">
@@ -38,7 +34,6 @@ import moment from 'moment';
 import 'vue-awesome/icons/edit';
 import 'vue-awesome/icons/stop';
 import 'vue-awesome/icons/play';
-import 'vue-awesome/icons/trash';
 
 import EventEditor from './EventEditor.vue';
 
@@ -68,8 +63,8 @@ export default {
       new_event.data.tags = this.editTags(new_event.data.tags);
       this.$emit('update', new_event);
     },
-    delete_: async function() {
-      this.$emit('delete', this.event);
+    delete_: async function(new_event) {
+      this.$emit('delete', new_event);
     },
     editTags: function(tags) {
       // trim spaces around comma and at the ends
