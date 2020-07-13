@@ -79,7 +79,7 @@ function update(container, apps) {
         eg.select('rect').style('fill', appcolor);
       });
 
-    eg.append('title').text(app.name + '\n' + seconds_to_duration(app.duration));
+    eg.append('title').text(app.hovertext + '\n' + seconds_to_duration(app.duration));
 
     // Color box background
     eg.append('rect')
@@ -118,9 +118,17 @@ function update(container, apps) {
   return container;
 }
 
-function updateSummedEvents(container, summedEvents, titleKeyFunc, colorKeyFunc) {
+function updateSummedEvents(container, summedEvents, titleKeyFunc, hoverKeyFunc, colorKeyFunc) {
+  if (hoverKeyFunc == null) {
+    hoverKeyFunc = titleKeyFunc;
+  }
   const apps = _.map(summedEvents, e => {
-    return { name: titleKeyFunc(e), duration: e.duration, colorKey: colorKeyFunc(e) };
+    return {
+      name: titleKeyFunc(e),
+      hovertext: hoverKeyFunc(e),
+      duration: e.duration,
+      colorKey: colorKeyFunc(e),
+    };
   });
   update(container, apps);
 }

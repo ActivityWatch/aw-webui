@@ -25,6 +25,10 @@ export default {
   props: {
     fields: Array,
     namefunc: Function,
+    hoverfunc: {
+      type: Function,
+      default: null, // If not set we will default to namefunc
+    },
     colorfunc: Function,
     limit: {
       type: Number,
@@ -59,6 +63,7 @@ export default {
           el,
           this.fields.slice(0, this.limit_),
           this.namefunc,
+          this.hoverfunc,
           this.colorfunc
         );
       } else {
