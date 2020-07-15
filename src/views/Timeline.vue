@@ -2,7 +2,7 @@
 div
   h2 Timeline
 
-  input-timeinterval(v-model="daterange", v-bind:duration="timeintervalDefaultDuration")
+  input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", @update-timeline="getBuckets")
 
   div(v-show="buckets !== null")
     div
@@ -25,7 +25,7 @@ export default {
   data: () => {
     return {
       buckets: null,
-      daterange: [moment().subtract(1, 'hour'), moment()],
+      daterange: null,
       timeintervalDefaultDuration: localStorage.durationDefault,
     };
   },
@@ -34,16 +34,13 @@ export default {
       return _.sumBy(this.buckets, 'events.length');
     },
   },
-  watch: {
-    daterange() {
-      this.getBuckets();
-    },
-  },
   mounted: function() {
-    this.getBuckets();
+    this.daterange = [moment().subtract(this.timeintervalDefaultDuration, "seconds"), moment()],
+    this.getBuckets(this.daterange);
   },
   methods: {
-    getBuckets: async function() {
+    getBuckets: async function(daterange) {
+      this.daterange = daterange;
       this.buckets = await this.$store.dispatch('buckets/getBucketsWithEvents', {
         start: this.daterange[0].format(),
         end: this.daterange[1].format(),
