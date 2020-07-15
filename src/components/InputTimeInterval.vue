@@ -1,36 +1,44 @@
 <template lang="pug">
 div
   div
-    table
-      tr
-        th.pr-2
-          label(for="mode") Interval mode:
-        td
-          select(id="mode" v-model="mode")
-            option(value='last_duration') Last duration
-            option(value='range') Date range
-      tr(v-if="mode == 'last_duration'")
-        th.pr-2
-          label(for="duration") Show last:
-        td
-          select(id="duration" :value="duration", @change="valueChanged")
-            option(:value="15*60") 15min
-            option(:value="30*60") 30min
-            option(:value="60*60") 1h
-            option(:value="2*60*60") 2h
-            option(:value="4*60*60") 4h
-            option(:value="6*60*60") 6h
-            option(:value="12*60*60") 12h
-            option(:value="24*60*60") 24h
-      tr(v-if="mode == 'range'")
-        th.pr-2 Range:
-        td
-          input(type="date", v-model="start", @input="valueChanged")
-          input(type="date", v-model="end", @input="valueChanged")
+    div(class="settings-bar")
+      div
+        label(for="mode") Interval mode:
+        select(id="mode" v-model="mode")
+          option(value='last_duration') Last duration
+          option(value='range') Date range
+      div(v-if="mode == 'last_duration'")
+        label(for="duration") Show last:
+        select(id="duration" :value="duration" @change="changeDuration")
+          option(:value="15*60") 15min
+          option(:value="30*60") 30min
+          option(:value="60*60") 1h
+          option(:value="2*60*60") 2h
+          option(:value="4*60*60") 4h
+          option(:value="6*60*60") 6h
+          option(:value="12*60*60") 12h
+          option(:value="24*60*60") 24h
+      div(v-if="mode == 'range'")
+        | Range:
+        input(type="date", v-model="start")
+        input(type="date", v-model="end")
+      div
+        button.btn.btn-outline-dark(
+          type="button", 
+          :disabled="invalidDaterange || emptyDaterange",
+          @click="showTimeline"
+        ) Show Timeline
+    div(:style="{ color: 'red', visibility: invalidDaterange ? 'visible' : 'hidden' }")
+      | The selected date range is invalid.
 
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.settings-bar {
+  display: flex;
+  justify-content: space-between;
+}
+</style>
 
 <script>
 import moment from 'moment';
@@ -38,43 +46,46 @@ import moment from 'moment';
 export default {
   name: 'input-timeinterval',
   props: {
-    duration: {
+    defaultDuration: {
       type: Number,
       default: 60 * 60,
     },
   },
   data: () => {
     return {
-      now: moment(),
       mode: 'last_duration',
+      duration: null,
       start: null,
       end: null,
     };
+  },  
+  mounted: function() {
+    this.duration = this.defaultDuration;
   },
   computed: {
-    value: {
+    daterange: {
       get() {
         if (this.mode == 'range' && this.start && this.end) {
           return [moment(this.start), moment(this.end)];
         } else {
-          return [moment(this.now).subtract(this.duration, 'seconds'), moment(this.now)];
-        }
-      },
-      set(newValue) {
-        if (!isNaN(newValue)) {
-          // Set new now and duration
-          this.now = moment();
-          this.duration = newValue;
-        } else {
-          // Not required for mode='range', start and end set directly through v-model
+          return [moment().subtract(this.duration, 'seconds'), moment()];
         }
       },
     },
+    emptyDaterange() {
+      return this.mode == 'range' && !(this.start && this.end);
+    },
+    invalidDaterange() {
+      return this.mode == 'range' && moment(this.start) >= moment(this.end);
+    },
   },
   methods: {
-    valueChanged(e) {
-      this.value = e.target.value;
-      this.$emit('input', this.value);
+    showTimeline() {
+      this.$emit('update-timeline', this.daterange);
+    },
+    changeDuration(e) {
+      // This is only for last_duration, range mode changes daterange automatically
+      this.duration = e.target.value;
     },
   },
 };

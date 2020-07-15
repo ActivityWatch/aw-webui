@@ -24,7 +24,7 @@ div
       th Eventcount:
       td {{ eventcount }}
 
-  input-timeinterval(v-model="daterange")
+  input-timeinterval(v-model="daterange", @update-timeline="updateTimeline")
 
   vis-timeline(:buckets="[bucket_with_events]", :showRowLabels="false")
 
@@ -84,6 +84,10 @@ export default {
         console.error(':(');
       }
     },
+    updateTimeline: async function(daterange) {
+      this.daterange = daterange;
+      await this.getEvents(this.id);
+    }
   },
 };
 </script>
