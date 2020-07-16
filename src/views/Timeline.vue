@@ -39,11 +39,11 @@ export default {
       this.getBuckets();
     },
   },
-  mounted: function() {
+  mounted: function () {
     this.getBuckets();
   },
   methods: {
-    getBuckets: async function() {
+    getBuckets: async function () {
       this.buckets = await this.$store.dispatch('buckets/getBucketsWithEvents', {
         start: this.daterange[0].format(),
         end: this.daterange[1].format(),

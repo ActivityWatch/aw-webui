@@ -71,15 +71,13 @@ export default {
   },
 
   computed: {
-    editorBuckets: function() {
+    editorBuckets: function () {
       return this.$store.state.activity.buckets.editor;
     },
-    dateEnd: function() {
-      return moment(this.date)
-        .add(1, 'days')
-        .format();
+    dateEnd: function () {
+      return moment(this.date).add(1, 'days').format();
     },
-    dateShort: function() {
+    dateShort: function () {
       return moment(this.date).format('YYYY-MM-DD');
     },
   },

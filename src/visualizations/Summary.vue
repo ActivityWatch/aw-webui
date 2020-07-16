@@ -39,24 +39,24 @@ export default {
       default: false,
     },
   },
-  data: function() {
+  data: function () {
     return { limit_: this.limit };
   },
   watch: {
-    fields: function() {
+    fields: function () {
       this.update();
     },
-    limit_: function() {
+    limit_: function () {
       this.update();
     },
   },
-  mounted: function() {
+  mounted: function () {
     const el = this.$el.children[0];
     summary.create(el);
     this.update();
   },
   methods: {
-    update: function() {
+    update: function () {
       const el = this.$el.children[0];
       if (this.fields !== null) {
         summary.updateSummedEvents(

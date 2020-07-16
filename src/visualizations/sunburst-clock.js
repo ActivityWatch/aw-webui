@@ -56,7 +56,7 @@ function drawLegend() {
     .data(d3.entries(legendData))
     .enter()
     .append('svg:g')
-    .attr('transform', function(d, i) {
+    .attr('transform', function (d, i) {
       return 'translate(0,' + i * (li.h + li.s) + ')';
     });
 
@@ -65,7 +65,7 @@ function drawLegend() {
     .attr('ry', li.r)
     .attr('width', li.w)
     .attr('height', li.h)
-    .style('fill', function(d) {
+    .style('fill', function (d) {
       return d.value;
     });
 
@@ -74,7 +74,7 @@ function drawLegend() {
     .attr('y', li.h / 2)
     .attr('dy', '0.35em')
     .attr('text-anchor', 'middle')
-    .text(function(d) {
+    .text(function (d) {
       return d.key;
     });
 }
@@ -148,7 +148,7 @@ function mouseover(d) {
   // FIXME: This currently makes all other svg paths on the page faded as well
   rootEl
     .selectAll('path')
-    .filter(function(node) {
+    .filter(function (node) {
       return sequenceArray.indexOf(node) >= 0;
     })
     .style('opacity', 1);
@@ -165,7 +165,7 @@ function mouseleave() {
     .transition()
     .duration(100)
     .style('opacity', 1)
-    .on('end', function() {
+    .on('end', function () {
       d3.select(this).on('mouseover', mouseover);
     });
 
@@ -182,10 +182,7 @@ function initializeBreadcrumbTrail() {
     .attr('height', 50)
     .attr('id', 'trail');
   // Add the label at the end, for the percentage.
-  trail
-    .append('svg:text')
-    .attr('id', 'endlabel')
-    .style('fill', '#000');
+  trail.append('svg:text').attr('id', 'endlabel').style('fill', '#000');
 }
 
 function create(el) {
@@ -207,16 +204,16 @@ function create(el) {
 
   arc = d3
     .arc()
-    .startAngle(function(d) {
+    .startAngle(function (d) {
       return d.x0;
     })
-    .endAngle(function(d) {
+    .endAngle(function (d) {
       return d.x1;
     })
-    .innerRadius(function(d) {
+    .innerRadius(function (d) {
       return Math.sqrt(d.y0);
     })
-    .outerRadius(function(d) {
+    .outerRadius(function (d) {
       return Math.sqrt(d.y1);
     });
 }
@@ -230,10 +227,7 @@ function update(el, json) {
 
   // Bounding circle underneath the sunburst, to make it easier to detect
   // when the mouse leaves the parent g.
-  vis
-    .append('svg:circle')
-    .attr('r', radius)
-    .style('opacity', 0);
+  vis.append('svg:circle').attr('r', radius).style('opacity', 0);
 
   // Turn the data into a d3 hierarchy and calculate the sums.
   let root = d3.hierarchy(json);
@@ -261,7 +255,7 @@ function update(el, json) {
     }
 
     nodes = nodes
-      .each(function(d) {
+      .each(function (d) {
         const loc_start_sec = moment(d.data.timestamp).diff(root_start, 'seconds', true);
         const loc_end_sec = moment(d.data.timestamp)
           .add(d.data.duration, 'seconds')
@@ -282,7 +276,7 @@ function update(el, json) {
   }
 
   // For efficiency, filter nodes to keep only those large enough to see.
-  nodes = nodes.filter(function(d) {
+  nodes = nodes.filter(function (d) {
     // 0.005 radians = 0.29 degrees
     // If show_whole_day:
     //   0.0044 rad = 1min
@@ -297,12 +291,12 @@ function update(el, json) {
     .data(nodes)
     .enter()
     .append('svg:path')
-    .attr('display', function(d) {
+    .attr('display', function (d) {
       return d.depth ? null : 'none';
     })
     .attr('d', arc)
     .attr('fill-rule', 'evenodd')
-    .style('fill', function(d) {
+    .style('fill', function (d) {
       return color.getColorFromString(d.data.data.status || d.data.data.app);
     })
     .style('opacity', 1)

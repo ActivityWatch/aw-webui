@@ -19,7 +19,7 @@ export default {
     this.startOfDay = localStorage.startOfDay;
   },
   methods: {
-    setStartOfDay: function(time_minutes) {
+    setStartOfDay: function (time_minutes) {
       localStorage.startOfDay = time_minutes;
       console.log('Set start of day to ' + time_minutes);
     },

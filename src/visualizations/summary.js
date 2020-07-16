@@ -14,10 +14,7 @@ function create(container) {
 
   // Create svg canvas
   const svg = d3.select(container).append('svg');
-  svg
-    .attr('width', '100%')
-    .attr('height', '100px')
-    .attr('class', 'appsummary');
+  svg.attr('width', '100%').attr('height', '100px').attr('class', 'appsummary');
 }
 
 function set_status(container, msg) {
@@ -48,13 +45,13 @@ function update(container, apps) {
   const svg = d3.select(svg_elem);
 
   // Remove apps without a duration from list
-  apps = apps.filter(function(app) {
+  apps = apps.filter(function (app) {
     return app.duration !== undefined;
   });
 
   let curr_y = 0;
   const longest_duration = apps[0].duration;
-  _.each(apps, function(app, i) {
+  _.each(apps, function (app, i) {
     // TODO: Expand on click and list titles
 
     // Variables
@@ -62,20 +59,16 @@ function update(container, apps) {
     const barHeight = 50;
     const textSize = 15;
     const baseappcolor = getColorFromString(app.colorKey || app.name);
-    const appcolor = Color(baseappcolor)
-      .lighten(0.1)
-      .hex();
-    const hovercolor = Color(baseappcolor)
-      .darken(0.1)
-      .hex();
+    const appcolor = Color(baseappcolor).lighten(0.1).hex();
+    const hovercolor = Color(baseappcolor).darken(0.1).hex();
 
     // The group representing an application in the barchart
     const eg = svg.append('g');
     eg.attr('id', 'summary_app_' + i)
-      .on('mouseover', function() {
+      .on('mouseover', function () {
         eg.select('rect').style('fill', hovercolor);
       })
-      .on('mouseout', function() {
+      .on('mouseout', function () {
         eg.select('rect').style('fill', appcolor);
       });
 

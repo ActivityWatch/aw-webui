@@ -105,6 +105,7 @@ $bordercolor: #ddd;
 <script>
 import moment from 'moment';
 import { get_day_start_with_offset, get_today } from '~/util/time';
+import _ from 'lodash';
 
 import 'vue-awesome/icons/arrow-left';
 import 'vue-awesome/icons/arrow-right';
@@ -127,20 +128,20 @@ export default {
       default: 'day',
     },
   },
-  data: function() {
+  data: function () {
     return {
       today: get_today(),
       filterCategory: null,
     };
   },
   computed: {
-    _date: function() {
+    _date: function () {
       return this.date || get_today();
     },
-    subview: function() {
+    subview: function () {
       return this.$route.meta.subview;
     },
-    categories: function() {
+    categories: function () {
       const cats = this.$store.getters['settings/all_categories'];
       const entries = cats.map(c => {
         return { text: c.join(' > '), value: c };
@@ -150,7 +151,7 @@ export default {
         { text: 'Uncategorized', value: ['Uncategorized'] },
       ].concat(entries);
     },
-    filterCategories: function() {
+    filterCategories: function () {
       if (this.filterCategory) {
         const cats = this.$store.getters['settings/all_categories'];
         const isChild = p => c => c.length > p.length && _.isEqual(p, c.slice(0, p.length));
@@ -160,16 +161,16 @@ export default {
         return null;
       }
     },
-    link_prefix: function() {
+    link_prefix: function () {
       return `/activity/${this.host}/${this.periodLength}`;
     },
-    periodusage: function() {
+    periodusage: function () {
       return this.$store.getters['activity/getActiveHistoryAroundTimeperiod'](this.timeperiod);
     },
-    timeperiod: function() {
+    timeperiod: function () {
       return { start: get_day_start_with_offset(this._date), length: [1, this.periodLength] };
     },
-    dateformat: function() {
+    dateformat: function () {
       if (this.periodLength === 'day') {
         return 'YYYY-MM-DD';
       } else if (this.periodLength === 'week') {
@@ -182,37 +183,33 @@ export default {
         return 'YYYY-MM-DD';
       }
     },
-    periodReadable: function() {
+    periodReadable: function () {
       return moment(this.timeperiod.start).format(this.dateformat);
     },
-    periodLengthMoment: function() {
+    periodLengthMoment: function () {
       return this.periodLengthConvertMoment(this.periodLength);
     },
   },
   watch: {
-    timeperiod: function() {
+    timeperiod: function () {
       this.refresh();
     },
-    filterCategory: function() {
+    filterCategory: function () {
       this.refresh();
     },
   },
 
-  mounted: async function() {
+  mounted: async function () {
     this.$store.dispatch('settings/load');
     await this.refresh();
   },
 
   methods: {
-    previousPeriod: function() {
-      return moment(this._date)
-        .subtract(1, `${this.periodLength}s`)
-        .format('YYYY-MM-DD');
+    previousPeriod: function () {
+      return moment(this._date).subtract(1, `${this.periodLength}s`).format('YYYY-MM-DD');
     },
-    nextPeriod: function() {
-      return moment(this._date)
-        .add(1, `${this.periodLength}s`)
-        .format('YYYY-MM-DD');
+    nextPeriod: function () {
+      return moment(this._date).add(1, `${this.periodLength}s`).format('YYYY-MM-DD');
     },
     periodLengthConvertMoment(periodLength) {
       if (periodLength === 'day') {
@@ -230,20 +227,18 @@ export default {
       }
     },
 
-    setDate: function(date, periodLength) {
+    setDate: function (date, periodLength) {
       // periodLength is an optional argument, default to this.periodLength
       if (!periodLength) {
         periodLength = this.periodLength;
       }
       const new_period_length_moment = this.periodLengthConvertMoment(periodLength);
-      const new_date = moment(date)
-        .startOf(new_period_length_moment)
-        .format('YYYY-MM-DD');
+      const new_date = moment(date).startOf(new_period_length_moment).format('YYYY-MM-DD');
       console.log(new_date, periodLength);
       this.$router.push(`/activity/${this.host}/${periodLength}/${new_date}/${this.subview}`);
     },
 
-    refresh: async function(force) {
+    refresh: async function (force) {
       await this.$store.dispatch('activity/ensure_loaded', {
         timeperiod: this.timeperiod,
         host: this.host,
@@ -253,7 +248,7 @@ export default {
       });
     },
 
-    load_demo: async function() {
+    load_demo: async function () {
       await this.$store.dispatch('activity/load_demo');
     },
   },

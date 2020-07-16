@@ -84,7 +84,7 @@ export default {
       activityViews: [],
     };
   },
-  mounted: async function() {
+  mounted: async function () {
     const buckets = await this.$aw.getBuckets();
     const types_by_host = {};
 

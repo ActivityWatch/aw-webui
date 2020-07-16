@@ -74,11 +74,7 @@ export default {
             getTitleAttr(bucket, e),
             buildTooltip(bucket, e),
             new Date(e.timestamp),
-            new Date(
-              moment(e.timestamp)
-                .add(e.duration, 'seconds')
-                .valueOf()
-            ),
+            new Date(moment(e.timestamp).add(e.duration, 'seconds').valueOf()),
             getColorFromString(getTitleAttr(bucket, e)),
           ]);
         });

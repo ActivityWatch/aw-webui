@@ -44,19 +44,19 @@ export default {
     this.$store.dispatch('settings/load');
   },
   methods: {
-    addClass: function() {
+    addClass: function () {
       this.$store.commit('settings/addClass', {
         name: ['New class'],
         rule: { type: 'regex', regex: 'FILL ME' },
       });
     },
-    saveClasses: async function() {
+    saveClasses: async function () {
       await this.$store.dispatch('settings/save');
     },
-    resetClasses: async function() {
+    resetClasses: async function () {
       await this.$store.dispatch('settings/load');
     },
-    restoreDefaultClasses: async function() {
+    restoreDefaultClasses: async function () {
       await this.$store.commit('settings/restoreDefaultClasses');
     },
   },

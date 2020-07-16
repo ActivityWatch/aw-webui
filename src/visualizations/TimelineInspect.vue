@@ -24,19 +24,19 @@ export default {
     eventfunc: { type: Function },
   },
   watch: {
-    chunks: function() {
+    chunks: function () {
       this.update();
     },
-    show_afk: function() {
+    show_afk: function () {
       this.update();
     },
   },
-  mounted: function() {
+  mounted: function () {
     timeline.create(this.$el);
     this.update();
   },
   methods: {
-    update: function() {
+    update: function () {
       if (this.chunks === null) {
         timeline.set_status(this.$el, 'Loading...');
       } else {

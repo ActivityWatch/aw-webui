@@ -27,7 +27,7 @@ export default {
     this.startOfDay = localStorage.startOfDay;
   },
   methods: {
-    setDurationDefault: function(duration) {
+    setDurationDefault: function (duration) {
       localStorage.durationDefault = duration;
       console.log('Set default timeline duration to ' + duration);
     },
