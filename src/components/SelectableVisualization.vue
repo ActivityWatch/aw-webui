@@ -31,6 +31,7 @@ div
   div(v-if="type == 'top_editor_files'")
     aw-summary(:fields="$store.state.activity.editor.top_files",
                :namefunc="top_editor_files_namefunc",
+               :hoverfunc="top_editor_files_hoverfunc",
                :colorfunc="e => e.data.language",
                with_limit)
   div(v-if="type == 'top_editor_languages'")
@@ -41,6 +42,7 @@ div
   div(v-if="type == 'top_editor_projects'")
     aw-summary(:fields="$store.state.activity.editor.top_projects",
                :namefunc="top_editor_projects_namefunc",
+               :hoverfunc="top_editor_projects_hoverfunc",
                :colorfunc="e => e.data.language",
                with_limit)
   div(v-if="type == 'top_categories'")
@@ -103,6 +105,9 @@ export default {
         f = f[f.length - 1];
         return f;
       },
+      top_editor_files_hoverfunc: e => {
+        return 'file: ' + e.data.file + '\n' + 'project: ' + e.data.project;
+      },
       // TODO: Move this function somewhere else
       top_editor_projects_namefunc: e => {
         let f = e.data.project || '';
@@ -110,6 +115,7 @@ export default {
         f = f[f.length - 1];
         return f;
       },
+      top_editor_projects_hoverfunc: e => e.data.project,
     };
   },
   computed: {
