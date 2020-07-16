@@ -15,7 +15,7 @@ const Bucket = () => import('./views/Bucket.vue');
 const QueryExplorer = () => import('./views/QueryExplorer.vue');
 const Timeline = () => import('./views/Timeline.vue');
 const Log = () => import('./views/Log.vue');
-const Settings = () => import('./views/Settings.vue');
+const Settings = () => import('./views/settings/Settings.vue');
 const Stopwatch = () => import('./views/Stopwatch.vue');
 const Dev = () => import('./views/Dev.vue');
 
