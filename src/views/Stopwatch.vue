@@ -84,7 +84,7 @@ export default {
       return _.groupBy(this.stoppedTimers, e => moment(e.timestamp).format('YYYY-MM-DD'));
     },
   },
-  mounted: function() {
+  mounted: function () {
     // TODO: List all possible timer buckets
     //this.getBuckets();
 
@@ -97,7 +97,7 @@ export default {
     setInterval(() => (this.now = moment()), 1000);
   },
   methods: {
-    startTimer: async function(label) {
+    startTimer: async function (label) {
       const event = await this.$aw.insertEvent(this.bucket_id, {
         timestamp: new Date(),
         data: {
@@ -108,7 +108,7 @@ export default {
       this.events.unshift(event);
     },
 
-    updateTimer: async function(new_event) {
+    updateTimer: async function (new_event) {
       const i = this.events.findIndex(e => e.id == new_event.id);
       if (i != -1) {
         // This is needed instead of this.events[i] because insides of arrays
@@ -119,11 +119,11 @@ export default {
       }
     },
 
-    removeTimer: function(event) {
+    removeTimer: function (event) {
       this.events = _.filter(this.events, e => e.id != event.id);
     },
 
-    getEvents: async function() {
+    getEvents: async function () {
       this.events = await this.$aw.getEvents(this.bucket_id, { limit: 100 });
     },
   },

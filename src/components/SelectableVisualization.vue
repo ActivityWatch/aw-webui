@@ -84,7 +84,7 @@ export default {
     id: Number,
     type: String,
   },
-  data: function() {
+  data: function () {
     return {
       types: [
         'top_apps',
@@ -119,7 +119,7 @@ export default {
     };
   },
   computed: {
-    visualizations: function() {
+    visualizations: function () {
       return {
         top_apps: {
           title: 'Top Applications',
@@ -165,7 +165,7 @@ export default {
         },
       };
     },
-    top_categories_hierarchy: function() {
+    top_categories_hierarchy: function () {
       const top_categories = this.$store.state.activity.category.top;
       if (top_categories) {
         const categories = top_categories.map(c => {

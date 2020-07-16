@@ -67,21 +67,21 @@ export default {
   },
   computed: {
     start: {
-      get: function() {
+      get: function () {
         return moment(this.editedEvent.timestamp).format();
       },
-      set: function(dt) {
+      set: function (dt) {
         // Duration needs to be set first since otherwise the computed for end will use the new timestamp
         this.editedEvent.duration = moment(this.end).diff(dt, 'seconds');
         this.editedEvent.timestamp = new Date(dt);
       },
     },
     end: {
-      get: function() {
+      get: function () {
         const end = moment(this.editedEvent.timestamp).add(this.editedEvent.duration, 'seconds');
         return end.format();
       },
-      set: function(dt) {
+      set: function (dt) {
         this.editedEvent.duration = moment(dt).diff(this.editedEvent.timestamp, 'seconds');
       },
     },

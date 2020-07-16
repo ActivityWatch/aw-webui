@@ -66,25 +66,25 @@ export default {
       default: 'day',
     },
   },
-  data: function() {
+  data: function () {
     return {
       views: this.loadSummaryFavoriteViews(),
     };
   },
   computed: {
-    top_apps: function() {
+    top_apps: function () {
       return this.$store.state.activity.window.top_apps;
     },
-    top_titles: function() {
+    top_titles: function () {
       return this.$store.state.activity.window.top_titles;
     },
-    top_categories: function() {
+    top_categories: function () {
       return this.$store.state.activity.category.top;
     },
-    top_domains: function() {
+    top_domains: function () {
       return this.$store.state.activity.browser.top_domains;
     },
-    top_categories_hierarchy: function() {
+    top_categories_hierarchy: function () {
       if (this.top_categories) {
         const categories = this.top_categories.map(c => {
           return { name: c.data.$category, size: c.duration };
@@ -98,7 +98,7 @@ export default {
         return null;
       }
     },
-    datasets: function() {
+    datasets: function () {
       const data = split_by_hour_into_data(this.$store.state.activity.active.events);
       return [
         {

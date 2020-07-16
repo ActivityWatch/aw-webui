@@ -14,18 +14,18 @@ function handleError(error, vm, info) {
 }
 
 export default {
-  beforeCreate: function() {
+  beforeCreate: function () {
     const that = this;
     const methods = this.$options.methods || {};
     for (const key in methods) {
       const original = methods[key];
-      methods[key] = function(...args) {
+      methods[key] = function (...args) {
         try {
           const result = original.apply(this, args);
           // let's analyse what is returned from the method
           if (result && typeof result.then === 'function' && typeof result.catch === 'function') {
             // this looks like a Promise. let's handle it's errors:
-            return result.catch(function(err) {
+            return result.catch(function (err) {
               handleError(err, that, key);
             });
           } else return result;

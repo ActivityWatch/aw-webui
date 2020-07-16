@@ -14,7 +14,6 @@ const Buckets = () => import('./views/Buckets.vue');
 const Bucket = () => import('./views/Bucket.vue');
 const QueryExplorer = () => import('./views/QueryExplorer.vue');
 const Timeline = () => import('./views/Timeline.vue');
-const Log = () => import('./views/Log.vue');
 const Settings = () => import('./views/settings/Settings.vue');
 const Stopwatch = () => import('./views/Stopwatch.vue');
 const Dev = () => import('./views/Dev.vue');
@@ -67,7 +66,6 @@ const router = new VueRouter({
     { path: '/buckets/:id', component: Bucket, props: true },
     { path: '/timeline', component: Timeline },
     { path: '/query', component: QueryExplorer },
-    { path: '/log', component: Log },
     { path: '/settings', component: Settings },
     { path: '/stopwatch', component: Stopwatch },
     { path: '/dev', component: Dev },

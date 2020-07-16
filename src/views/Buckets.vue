@@ -121,12 +121,12 @@ export default {
     };
   },
   computed: {
-    buckets: function() {
+    buckets: function () {
       return _.orderBy(this.$store.state.buckets.buckets, [b => b.id], ['asc']);
     },
   },
   watch: {
-    import_file: async function(_new_value, _old_value) {
+    import_file: async function (_new_value, _old_value) {
       if (this.import_file != null) {
         console.log('Importing file');
         try {
@@ -145,19 +145,19 @@ export default {
       }
     },
   },
-  mounted: async function() {
+  mounted: async function () {
     await this.$store.dispatch('buckets/ensureBuckets');
   },
   methods: {
-    openDeleteBucketModal: function(bucketId) {
+    openDeleteBucketModal: function (bucketId) {
       this.delete_bucket_selected = bucketId;
       this.$root.$emit('bv::show::modal', 'delete-modal');
     },
-    deleteBucket: async function(bucketId) {
+    deleteBucket: async function (bucketId) {
       await this.$store.dispatch('buckets/deleteBucket', { bucketId });
       this.$root.$emit('bv::hide::modal', 'delete-modal');
     },
-    importBuckets: async function(importFile) {
+    importBuckets: async function (importFile) {
       const formData = new FormData();
       formData.append('buckets.json', importFile);
       const headers = { 'Content-Type': 'multipart/form-data' };

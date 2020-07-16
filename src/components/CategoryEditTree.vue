@@ -54,6 +54,8 @@ import 'vue-awesome/icons/trash';
 import 'vue-awesome/icons/plus';
 import 'vue-awesome/icons/edit';
 
+import _ from 'lodash';
+
 export default {
   name: 'CategoryEditTree',
   props: {
@@ -75,14 +77,14 @@ export default {
     };
   },
   computed: {
-    allCategories: function() {
+    allCategories: function () {
       const categories = this.$store.getters['settings/all_categories'];
       const entries = categories.map(c => {
         return { text: c.join('->'), value: c };
       });
       return [{ value: [], text: 'None' }].concat(entries);
     },
-    allRuleTypes: function() {
+    allRuleTypes: function () {
       return [
         { value: null, text: 'None' },
         { value: 'regex', text: 'Regular Expression' },
@@ -91,13 +93,13 @@ export default {
     },
   },
   methods: {
-    addSubclass: function(parent) {
+    addSubclass: function (parent) {
       this.$store.commit('settings/addClass', {
         name: parent.name.concat(['New class']),
         rule: { type: 'regex', regex: 'FILL ME' },
       });
     },
-    removeClass: function(_class) {
+    removeClass: function (_class) {
       // TODO: Show a confirmation dialog
       // TODO: Remove children as well?
       // TODO: Move button to edit modal?
