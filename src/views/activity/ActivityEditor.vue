@@ -14,6 +14,7 @@ div.mt-3
         h5 Top file activity
         aw-summary(:fields="$store.state.activity.editor.top_files",
                    :namefunc="top_editor_files_namefunc",
+                   :hoverfunc="top_editor_files_hoverfunc",
                    :colorfunc="top_editor_files_colorfunc", with_limit)
 
       div.col-md-4
@@ -26,6 +27,7 @@ div.mt-3
         h5 Top project activity
         aw-summary(:fields="$store.state.activity.editor.top_projects",
                    :namefunc="top_editor_projects_namefunc",
+                   :hoverfunc="top_editor_projects_hoverfunc",
                    :colorfunc="top_editor_projects_colorfunc", with_limit)
   br
 </template>
@@ -49,6 +51,9 @@ export default {
         f = f[f.length - 1];
         return f;
       },
+      top_editor_files_hoverfunc: e => {
+        return 'file: ' + e.data.file + '\n' + 'project: ' + e.data.project;
+      },
       top_editor_files_colorfunc: e => e.data.language,
 
       top_editor_languages_namefunc: e => e.data.language,
@@ -60,20 +65,19 @@ export default {
         f = f[f.length - 1];
         return f;
       },
+      top_editor_projects_hoverfunc: e => e.data.project,
       top_editor_projects_colorfunc: e => e.data.project,
     };
   },
 
   computed: {
-    editorBuckets: function() {
+    editorBuckets: function () {
       return this.$store.state.activity.buckets.editor;
     },
-    dateEnd: function() {
-      return moment(this.date)
-        .add(1, 'days')
-        .format();
+    dateEnd: function () {
+      return moment(this.date).add(1, 'days').format();
     },
-    dateShort: function() {
+    dateShort: function () {
       return moment(this.date).format('YYYY-MM-DD');
     },
   },

@@ -36,16 +36,16 @@ export default {
     };
   },
   computed: {
-    top_apps: function() {
+    top_apps: function () {
       return this.$store.state.activity.window.top_apps;
     },
-    top_titles: function() {
+    top_titles: function () {
       return this.$store.state.activity.window.top_titles;
     },
-    bucket_id_window: function() {
+    bucket_id_window: function () {
       return this.$store.state.activity.buckets.window[0];
     },
-    bucket_id_afk: function() {
+    bucket_id_afk: function () {
       return this.$store.state.activity.buckets.afk[0];
     },
   },

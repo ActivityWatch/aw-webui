@@ -14,9 +14,7 @@ function create(svg_el) {
   svg_el.innerHTML = '';
 
   // svg for the colored timeline
-  d3.select(svg_el)
-    .attr('viewBox', '0 0 100 4')
-    .attr('width', '100%');
+  d3.select(svg_el).attr('viewBox', '0 0 100 4').attr('width', '100%');
 }
 
 function set_status(svg_el, text) {
@@ -54,14 +52,12 @@ function update(svg_el, events, event_type) {
   console.log('Duration: ' + total_duration);
 
   // Iterate over each event and create interval boxes
-  _.each(events, function(e, i) {
+  _.each(events, function (e, i) {
     const id = 'timeline_event_' + i;
     const timestamp = moment(e.timestamp);
 
     const color_base = getColorFromString(getTitleAttr({ type: event_type }, e));
-    const color_hover = Color(color_base)
-      .darken(0.4)
-      .hex();
+    const color_hover = Color(color_base).darken(0.4).hex();
 
     const x = (timestamp - m_first) / 1000 / total_duration;
     const width = (100 * e.duration) / total_duration;
@@ -76,11 +72,11 @@ function update(svg_el, events, event_type) {
       .attr('width', width)
       .attr('height', 4)
       .style('fill', color_base)
-      .on('mouseover', function(d, j, n) {
+      .on('mouseover', function (d, j, n) {
         const elem = n[j];
         elem.style.fill = color_hover;
       })
-      .on('mouseout', function(d, j, n) {
+      .on('mouseout', function (d, j, n) {
         const elem = n[j];
         elem.style.fill = color_base;
       });

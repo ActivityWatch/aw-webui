@@ -109,7 +109,7 @@ function update(svg_elem, usage_arr, onPeriodClicked) {
         const a = n[j];
         rect.style('fill', a.getAttribute('color'));
       })
-      .on('click', function() {
+      .on('click', function () {
         onPeriodClicked(date);
       });
     rect

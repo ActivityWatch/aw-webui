@@ -128,18 +128,18 @@ export default {
     bucket_id: String,
     events: Array,
   },
-  data: function() {
+  data: function () {
     return {
       isListExpanded: false,
     };
   },
   methods: {
-    expandList: function() {
+    expandList: function () {
       this.isListExpanded = !this.isListExpanded;
       console.log('List should be expanding: ', this.isListExpanded);
     },
-    removeEvent: function(event) {
-      this.events = _.filter(this.events, e => e.id != event.id);
+    removeEvent: function (event) {
+      this.events = this.events.filter(e => e.id != event.id);
     },
   },
 };

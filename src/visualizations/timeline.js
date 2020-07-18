@@ -32,10 +32,7 @@ function create(container) {
     .attr('width', '100%');
 
   // Hidden svg image that stores all titleinfo for each timeperiod
-  d3.select(container)
-    .append('div')
-    .attr('class', 'titleinfo-list')
-    .attr('display', 'none');
+  d3.select(container).append('div').attr('class', 'titleinfo-list').attr('display', 'none');
 
   // Container for titleinfo that has a fixed size and a overflow scroll
   const titleinfo_container = document.createElement('div');
@@ -92,7 +89,7 @@ function update(container, events, showAFK, chunkfunc, eventfunc) {
 
   // Iterate over each app timeperiod
   let curr_x = 0;
-  _.each(events, function(e, i) {
+  _.each(events, function (e, i) {
     // Timeline rect
 
     let eventX, eventWidth;
@@ -107,9 +104,7 @@ function update(container, events, showAFK, chunkfunc, eventfunc) {
     }
 
     const appcolor = getColorFromString(chunkfunc(e));
-    const hovercolor = Color(appcolor)
-      .darken(0.4)
-      .hex();
+    const hovercolor = Color(appcolor).darken(0.4).hex();
 
     const eg = timeline.append('g').attr('id', 'timeline_event_' + i);
 
@@ -146,23 +141,16 @@ function update(container, events, showAFK, chunkfunc, eventfunc) {
 
     // Titleinfo
     const infolist = infobox.append('table');
-    _.each(e.data.subevents, function(t) {
+    _.each(e.data.subevents, function (t) {
       const inforow = infolist.append('tr');
       // Clocktime
       const clocktime = moment(t.timestamp).format('HH:mm:ss');
       inforow.append('td').text(clocktime);
       // Duration
       const duration = seconds_to_duration(t.duration);
-      inforow
-        .append('td')
-        .text(duration)
-        .style('padding-left', '1em')
-        .style('text-align', 'right');
+      inforow.append('td').text(duration).style('padding-left', '1em').style('text-align', 'right');
       // Title
-      inforow
-        .append('td')
-        .text(eventfunc(t))
-        .style('padding-left', '1em');
+      inforow.append('td').text(eventfunc(t)).style('padding-left', '1em');
     });
 
     curr_x += eventWidth;

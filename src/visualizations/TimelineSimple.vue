@@ -23,11 +23,11 @@ export default {
     events: Array,
   },
   watch: {
-    events: function() {
+    events: function () {
       timeline_simple.update(this.$el, this.events, this.event_type);
     },
   },
-  mounted: function() {
+  mounted: function () {
     timeline_simple.create(this.$el);
   },
 };

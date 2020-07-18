@@ -39,14 +39,14 @@ import 'vue-awesome/icons/brands/twitter';
 import 'vue-awesome/icons/brands/github';
 
 export default {
-  data: function() {
+  data: function () {
     return {
       activityViews: [],
       info: {},
     };
   },
 
-  mounted: async function() {
+  mounted: async function () {
     this.$aw.getInfo().then(
       info => {
         this.info = info;

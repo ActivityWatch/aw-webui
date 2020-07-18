@@ -25,7 +25,7 @@ export default {
     events: { type: Array },
   },
   computed: {
-    category_hierarchy: function() {
+    category_hierarchy: function () {
       const events = JSON.parse(JSON.stringify(this.events));
 
       const hier = classes.build_category_hierarchy(

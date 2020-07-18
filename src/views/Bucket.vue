@@ -53,17 +53,17 @@ export default {
     },
   },
   watch: {
-    daterange: async function() {
+    daterange: async function () {
       await this.getEvents(this.id);
     },
   },
-  mounted: async function() {
+  mounted: async function () {
     await this.$store.dispatch('buckets/ensureBuckets');
     await this.getEvents(this.id);
     await this.getEventCount(this.id);
   },
   methods: {
-    getEvents: async function(bucket_id) {
+    getEvents: async function (bucket_id) {
       this.bucket_with_events = await this.$store.dispatch('buckets/getBucketWithEvents', {
         id: bucket_id,
         start: this.daterange[0].format(),
@@ -71,10 +71,10 @@ export default {
       });
       this.events = this.bucket_with_events.events;
     },
-    getEventCount: async function(bucket_id) {
+    getEventCount: async function (bucket_id) {
       this.eventcount = (await this.$aw.countEvents(bucket_id)).data;
     },
-    updateEvent: function(event) {
+    updateEvent: function (event) {
       const i = this.events.findIndex(e => e.id == event.id);
       if (i != -1) {
         // This is needed instead of this.events[i] because insides of arrays
