@@ -9,8 +9,9 @@ div
 
   b-input-group(size="lg")
     b-input(v-model="label" placeholder="What are you working on?")
+    b-input(v-model="tags" placeholder="Tags")
     b-input-group-append
-      b-button(@click="startTimer(label, '')", variant="success")
+      b-button(@click="startTimer(label, tags)", variant="success")
         icon(name="play")
         | Start
 
@@ -99,7 +100,7 @@ export default {
   methods: {
     startTimer: async function (label, tags) {
       // backward compatibility with events w/o tags
-      if (tags == null) {
+      if (tags == undefined) {
         tags = '';
       }
       const event = await this.$aw.insertEvent(this.bucket_id, {
