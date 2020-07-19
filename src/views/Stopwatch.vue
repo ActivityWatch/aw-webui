@@ -7,11 +7,15 @@ div
   b-alert(show)
     | This is an early experiment, an important missing feature is the ability to set start/end times manually.
 
+  p Create a task by choosing from the dropdown or create one from scratch.
+  b-form-select(v-model="dropdownTimer" :options="uniqueTimersByName" size="lg")
+  br
+  br
   b-input-group(size="lg")
-    b-input(v-model="label" placeholder="What are you working on?")
-    b-input(v-model="tags" placeholder="Tags")
+    b-input(v-model="newTimer.label" placeholder="Task")
+    b-input(v-model="newTimer.tags" placeholder="Tags")
     b-input-group-append
-      b-button(@click="startTimer(label, tags)", variant="success")
+      b-button(@click="startTimer(newTimer.label, newTimer.tags)", variant="success")
         icon(name="play")
         | Start
 
@@ -72,6 +76,11 @@ export default {
       events: [],
       label: '',
       now: moment(),
+      dropdownTimer: '',
+      newTimer: {
+        label: '',
+        tags: '',
+      },
     };
   },
   computed: {
@@ -83,6 +92,27 @@ export default {
     },
     timersByDate() {
       return _.groupBy(this.stoppedTimers, e => moment(e.timestamp).format('YYYY-MM-DD'));
+    },
+    uniqueTimersByName() {
+      // sort events from newest to most recent, then only save the ones which
+      // have a unique label. Sorting first ensures that the distinct timers only
+      // store the most recent tag list applied on them. At the end, sort alphabetically
+      const sortedPastEv = _.orderBy(this.stoppedTimers, [e => e.timestamp], ['desc']);
+      const uniqSortedPastEv = _.uniqBy(sortedPastEv, 'data.label');
+      const pastEvRightFormat = _.map(uniqSortedPastEv, e => {
+        return { value: e.data.label, tags: e.data.tags ? e.data.tags : '', text: e.data.label };
+      });
+      const sortedByAlphab = _.orderBy(pastEvRightFormat, [e => e.value]);
+      sortedByAlphab.unshift({ value: '', tags: '', text: 'New Event' });
+      return sortedByAlphab;
+    },
+  },
+  watch: {
+    dropdownTimer: function (newValue) {
+      const index = _.findIndex(this.uniqueTimersByName, e => e.value == newValue);
+      const timerAtIndex = this.uniqueTimersByName[index];
+      this.newTimer.label = timerAtIndex.value;
+      this.newTimer.tags = timerAtIndex.tags;
     },
   },
   mounted: function () {
