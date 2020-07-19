@@ -14,10 +14,10 @@ div
   b-input-group(size="lg")
     b-input(v-model="newTimer.label" placeholder="Task")
     b-input(v-model="newTimer.tags" placeholder="Tags")
-    b-input-group-append
-      b-button(@click="startTimer(newTimer.label, newTimer.tags)", variant="success")
-        icon(name="play")
-        | Start
+  br
+  b-button(@click="startTimer(newTimer.label, newTimer.tags)", variant="success" size="lg")
+    icon(name="play")
+    | Start
 
   hr
 
