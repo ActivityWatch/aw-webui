@@ -34,16 +34,13 @@ export default {
       return _.sumBy(this.buckets, 'events.length');
     },
   },
-  watch: {
-    daterange() {
-      this.getBuckets();
-    },
-  },
-  mounted: function () {
-    this.getBuckets();
+  mounted: function() {
+    this.daterange = [moment().subtract(this.timeintervalDefaultDuration, "seconds"), moment()],
+    this.getBuckets(this.daterange);
   },
   methods: {
-    getBuckets: async function () {
+    getBuckets: async function(daterange) {
+      this.daterange = daterange;
       this.buckets = await this.$store.dispatch('buckets/getBucketsWithEvents', {
         start: this.daterange[0].format(),
         end: this.daterange[1].format(),

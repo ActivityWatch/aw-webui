@@ -52,12 +52,7 @@ export default {
       return this.$store.getters['buckets/getBucket'](this.id) || {};
     },
   },
-  watch: {
-    daterange: async function () {
-      await this.getEvents(this.id);
-    },
-  },
-  mounted: async function () {
+  mounted: async function() {
     await this.$store.dispatch('buckets/ensureBuckets');
     await this.getEvents(this.id);
     await this.getEventCount(this.id);
