@@ -18,7 +18,7 @@ div
         th.pr-2
           label(for="duration") Show last:
         td
-          select(id="duration" :value="duration" @change="valueChanged")
+          select(id="duration" v-model="duration" @change="valueChanged")
             option(:value="15*60") 15min
             option(:value="30*60") 30min
             option(:value="60*60") 1h
@@ -74,14 +74,6 @@ export default {
           return [moment().subtract(this.duration, 'seconds'), moment()];
         }
       },
-      set(newValue) {
-        if (!isNaN(newValue) && newValue != '') {
-          // Set new duration
-          this.duration = newValue;
-        } else {
-          // Not required for mode='range', start and end set directly through v-model
-        }
-      },
     },
     emptyDaterange() {
       return !(this.start && this.end);
@@ -94,14 +86,11 @@ export default {
     },
   },
   methods: {
-    valueChanged(e) {
-      console.log('valueChanged');
+    valueChanged() {
       if (
         this.mode == 'last_duration' ||
         (!this.emptyDaterange && !this.invalidDaterange && !this.daterangeTooLong)
       ) {
-        console.log('entered if');
-        this.value = e.target.value;
         this.$emit('input', this.value);
       }
     },
