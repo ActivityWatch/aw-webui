@@ -40,8 +40,8 @@ export default {
     },
   },
   mounted: function () {
-    this.daterange = [moment().subtract(this.timeintervalDefaultDuration, 'seconds'), moment()],
-    this.getBuckets(this.daterange);
+    (this.daterange = [moment().subtract(this.timeintervalDefaultDuration, 'seconds'), moment()]),
+      this.getBuckets(this.daterange);
   },
   methods: {
     getBuckets: async function () {

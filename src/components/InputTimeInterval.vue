@@ -95,12 +95,12 @@ export default {
   },
   methods: {
     valueChanged(e) {
-      console.log("valueChanged");
+      console.log('valueChanged');
       if (
         this.mode == 'last_duration' ||
         (!this.emptyDaterange && !this.invalidDaterange && !this.daterangeTooLong)
       ) {
-        console.log("entered if");
+        console.log('entered if');
         this.value = e.target.value;
         this.$emit('input', this.value);
       }
