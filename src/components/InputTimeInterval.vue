@@ -1,48 +1,50 @@
 <template lang="pug">
 div
   div
-    div(class="settings-bar")
-      div
-        label(for="mode") Interval mode:
-        select(id="mode" v-model="mode")
-          option(value='last_duration') Last duration
-          option(value='range') Date range
-      div(v-if="mode == 'last_duration'")
-        label(for="duration") Show last:
-        select(id="duration" :value="duration" @change="changeDuration")
-          option(:value="15*60") 15min
-          option(:value="30*60") 30min
-          option(:value="60*60") 1h
-          option(:value="2*60*60") 2h
-          option(:value="4*60*60") 4h
-          option(:value="6*60*60") 6h
-          option(:value="12*60*60") 12h
-          option(:value="24*60*60") 24h
-      div(v-if="mode == 'range'")
-        | Range:
-        input(type="date", v-model="start")
-        input(type="date", v-model="end")
-      div
-        button.btn.btn-outline-dark(
-          type="button", 
-          :disabled="invalidDaterange || emptyDaterange",
-          @click="showTimeline"
-        ) Show Timeline
-    div(:style="{ color: 'red', visibility: invalidDaterange ? 'visible' : 'hidden' }")
-      | The selected date range is invalid.
+    b-alert(v-if="mode == 'range' && invalidDaterange" variant="warning" show)
+      | The selected date range is invalid. The second date must be greater than the first date.
+    b-alert(v-if="mode == 'range' && daterangeTooLong" variant="warning" show)
+      | The selected date range is too long. The maximum is {{ maxDuration/(24*60*60) }} days.
+
+    table
+      tr
+        th.pr-2
+          label(for="mode") Interval mode:
+        td
+          select(id="mode" v-model="mode")
+            option(value='last_duration') Last duration
+            option(value='range') Date range
+      tr(v-if="mode == 'last_duration'")
+        th.pr-2
+          label(for="duration") Show last:
+        td
+          select(id="duration" :value="duration" @change="valueChanged")
+            option(:value="15*60") 15min
+            option(:value="30*60") 30min
+            option(:value="60*60") 1h
+            option(:value="2*60*60") 2h
+            option(:value="4*60*60") 4h
+            option(:value="6*60*60") 6h
+            option(:value="12*60*60") 12h
+            option(:value="24*60*60") 24h
+      tr(v-if="mode == 'range'")
+        th.pr-2 Range:
+        td
+          input(type="date" v-model="start")
+          input(type="date" v-model="end")
+          button(
+            class="btn btn-outline-dark btn-sm",
+            type="button", 
+            :disabled="mode == 'range' && (invalidDaterange || emptyDaterange || daterangeTooLong)",
+            @click="valueChanged"
+          ) Update
 
 </template>
 
-<style scoped lang="scss">
-.settings-bar {
-  display: flex;
-  justify-content: space-between;
-}
-</style>
+<style scoped lang="scss"></style>
 
 <script>
 import moment from 'moment';
-
 export default {
   name: 'input-timeinterval',
   props: {
@@ -50,20 +52,21 @@ export default {
       type: Number,
       default: 60 * 60,
     },
+    maxDuration: {
+      type: Number,
+      default: null,
+    },
   },
-  data: () => {
+  data() {
     return {
+      duration: JSON.parse(JSON.stringify(this.defaultDuration)), // Make a copy of defaultDuration
       mode: 'last_duration',
-      duration: null,
       start: null,
       end: null,
     };
-  },  
-  mounted: function() {
-    this.duration = this.defaultDuration;
   },
   computed: {
-    daterange: {
+    value: {
       get() {
         if (this.mode == 'range' && this.start && this.end) {
           return [moment(this.start), moment(this.end)];
@@ -71,21 +74,36 @@ export default {
           return [moment().subtract(this.duration, 'seconds'), moment()];
         }
       },
+      set(newValue) {
+        if (!isNaN(newValue) && newValue != '') {
+          // Set new duration
+          this.duration = newValue;
+        } else {
+          // Not required for mode='range', start and end set directly through v-model
+        }
+      },
     },
     emptyDaterange() {
-      return this.mode == 'range' && !(this.start && this.end);
+      return !(this.start && this.end);
     },
     invalidDaterange() {
-      return this.mode == 'range' && moment(this.start) >= moment(this.end);
+      return moment(this.start) >= moment(this.end);
+    },
+    daterangeTooLong() {
+      return moment(this.start).add(this.maxDuration, 'seconds').isBefore(moment(this.end));
     },
   },
   methods: {
-    showTimeline() {
-      this.$emit('update-timeline', this.daterange);
-    },
-    changeDuration(e) {
-      // This is only for last_duration, range mode changes daterange automatically
-      this.duration = e.target.value;
+    valueChanged(e) {
+      console.log("valueChanged");
+      if (
+        this.mode == 'last_duration' ||
+        (!this.emptyDaterange && !this.invalidDaterange && !this.daterangeTooLong)
+      ) {
+        console.log("entered if");
+        this.value = e.target.value;
+        this.$emit('input', this.value);
+      }
     },
   },
 };

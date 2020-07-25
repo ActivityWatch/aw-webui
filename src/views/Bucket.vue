@@ -24,7 +24,7 @@ div
       th Eventcount:
       td {{ eventcount }}
 
-  input-timeinterval(v-model="daterange", @update-timeline="updateTimeline")
+  input-timeinterval(v-model="daterange", :maxDuration="maxDuration")
 
   vis-timeline(:buckets="[bucket_with_events]", :showRowLabels="false")
 
@@ -33,7 +33,6 @@ div
 
 <script>
 import moment from 'moment';
-
 export default {
   name: 'Bucket',
   props: {
@@ -45,6 +44,7 @@ export default {
       events: [],
       eventcount: '?',
       daterange: [moment().subtract(1, 'hour'), moment()],
+      maxDuration: 31 * 24 * 60 * 60,
     };
   },
   computed: {
@@ -52,7 +52,12 @@ export default {
       return this.$store.getters['buckets/getBucket'](this.id) || {};
     },
   },
-  mounted: async function() {
+  watch: {
+    daterange: async function () {
+      await this.getEvents(this.id);
+    },
+  },
+  mounted: async function () {
     await this.$store.dispatch('buckets/ensureBuckets');
     await this.getEvents(this.id);
     await this.getEventCount(this.id);
@@ -79,10 +84,6 @@ export default {
         console.error(':(');
       }
     },
-    updateTimeline: async function(daterange) {
-      this.daterange = daterange;
-      await this.getEvents(this.id);
-    }
   },
 };
 </script>
