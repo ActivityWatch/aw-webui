@@ -1,9 +1,9 @@
 <template lang="pug">
 div
   div
-    b-alert(v-if="mode == 'range' && invalidDaterange" variant="warning" show)
+    b-alert(v-if="mode == 'range' && invalidDaterange", variant="warning", show)
       | The selected date range is invalid. The second date must be greater than the first date.
-    b-alert(v-if="mode == 'range' && daterangeTooLong" variant="warning" show)
+    b-alert(v-if="mode == 'range' && daterangeTooLong", variant="warning", show)
       | The selected date range is too long. The maximum is {{ maxDuration/(24*60*60) }} days.
 
     table
@@ -11,14 +11,14 @@ div
         th.pr-2
           label(for="mode") Interval mode:
         td
-          select(id="mode" v-model="mode")
+          select(id="mode", v-model="mode")
             option(value='last_duration') Last duration
             option(value='range') Date range
       tr(v-if="mode == 'last_duration'")
         th.pr-2
           label(for="duration") Show last:
         td
-          select(id="duration" v-model="duration" @change="valueChanged")
+          select(id="duration", v-model="duration", @change="valueChanged")
             option(:value="15*60") 15min
             option(:value="30*60") 30min
             option(:value="60*60") 1h
@@ -30,8 +30,8 @@ div
       tr(v-if="mode == 'range'")
         th.pr-2 Range:
         td
-          input(type="date" v-model="start")
-          input(type="date" v-model="end")
+          input(type="date", v-model="start")
+          input(type="date", v-model="end")
           button(
             class="btn btn-outline-dark btn-sm",
             type="button", 
@@ -84,6 +84,9 @@ export default {
     daterangeTooLong() {
       return moment(this.start).add(this.maxDuration, 'seconds').isBefore(moment(this.end));
     },
+  },
+  mounted() {
+    this.valueChanged();
   },
   methods: {
     valueChanged() {

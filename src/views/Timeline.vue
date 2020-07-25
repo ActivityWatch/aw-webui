@@ -2,7 +2,7 @@
 div
   h2 Timeline
 
-  input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration" :maxDuration="maxDuration")
+  input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration")
 
   div(v-show="buckets !== null")
     div
@@ -17,11 +17,10 @@ div
 </template>
 
 <script>
-import moment from 'moment';
 import _ from 'lodash';
 export default {
   name: 'Timeline',
-  data: () => {
+  data() {
     return {
       buckets: null,
       daterange: null,
@@ -38,10 +37,6 @@ export default {
     daterange() {
       this.getBuckets();
     },
-  },
-  mounted: function () {
-    (this.daterange = [moment().subtract(this.timeintervalDefaultDuration, 'seconds'), moment()]),
-      this.getBuckets(this.daterange);
   },
   methods: {
     getBuckets: async function () {

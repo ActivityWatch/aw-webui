@@ -32,7 +32,6 @@ div
 </template>
 
 <script>
-import moment from 'moment';
 export default {
   name: 'Bucket',
   props: {
@@ -43,7 +42,7 @@ export default {
       bucket_with_events: { events: [] },
       events: [],
       eventcount: '?',
-      daterange: [moment().subtract(1, 'hour'), moment()],
+      daterange: null,
       maxDuration: 31 * 24 * 60 * 60,
     };
   },
@@ -59,7 +58,6 @@ export default {
   },
   mounted: async function () {
     await this.$store.dispatch('buckets/ensureBuckets');
-    await this.getEvents(this.id);
     await this.getEventCount(this.id);
   },
   methods: {
