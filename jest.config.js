@@ -12,7 +12,8 @@ module.exports = {
         '^.+\\.js$': 'babel-jest',
         '^.+\\.vue$': 'vue-jest'
       },
-      testMatch: ['**/test/**/*.test.js?(x)']
+      testMatch: ['**/test/**/*.test.js?(x)'],
+      modulePathIgnorePatterns: ["test/e2e/screenshot.test.js"] // Don't run this file in npm test
     },
     {
       displayName: 'node',
