@@ -36,13 +36,17 @@ export default {
       currentVersion: null,
       latestVersion: null,
       latestVersionDate: null,
+      // The following constants can be used in other files, such as ReleaseNotificationSettings.vue
+      SHORT_BACKOFF_PERIOD: SHORT_BACKOFF_PERIOD,
+      LONG_BACKOFF_PERIOD: LONG_BACKOFF_PERIOD,
     };
   },
   async mounted() {
     this.retrieveData();
     if (this.data && (!this.data.isEnabled || moment() < moment(this.data.nextCheckTime))) return;
 
-    await this.retreiveReleases();
+    await this.retrieveCurrentVersion();
+    await this.retrieveLatestVersion();
     this.isVisible = this.getHasNewRelease() && this.getReleaseIsReady();
 
     if (this.isVisible && this.data) {
@@ -71,28 +75,30 @@ export default {
       if (localStorage.getItem('newReleaseCheckData')) {
         try {
           this.data = JSON.parse(localStorage.getItem('newReleaseCheckData'));
-        } catch (e) {
+        } catch (err) {
+          console.error('newReleaseCheckData not found in localStorage: ', err);
           localStorage.removeItem('newReleaseCheckData');
         }
       }
     },
-    retreiveReleases() {
-      return Promise.all([
-        this.$aw.getInfo(),
-        axios.get('https://api.github.com/repos/ActivityWatch/activitywatch/releases/latest'),
-      ])
-        .then(responses => {
-          this.currentVersion = this.cleanVersionTag(responses[0].version);
-          this.latestVersion = this.cleanVersionTag(responses[1].data.tag_name);
-          this.latestVersionDate = moment(responses[1].data.published_at);
-        })
-        .catch(err => {
-          // Should not display alert if failed, e.g. when user isn't connected to the internet
-          console.error('Check for new releases is unable to connect: ', err);
-          this.currentVersion = null;
-          this.latestVersion = null;
-          this.latestVersionDate = null;
-        });
+    async retrieveCurrentVersion() {
+      try {
+        const response = await this.$aw.getInfo();
+        this.currentVersion = this.cleanVersionTag(response.version);
+      } catch (err) {
+        console.error('unable to connect to aw-server: ', err);
+      }
+    },
+    async retrieveLatestVersion() {
+      try {
+        const response = await axios.get(
+          'https://api.github.com/repos/ActivityWatch/activitywatch/releases/latest'
+        );
+        this.latestVersion = this.cleanVersionTag(response.data.tag_name);
+        this.latestVersionDate = moment(response.data.published_at);
+      } catch (err) {
+        console.error('unable to connect to GitHub API to check for latest version: ', err);
+      }
     },
     cleanVersionTag(tag) {
       tag = tag.trim();

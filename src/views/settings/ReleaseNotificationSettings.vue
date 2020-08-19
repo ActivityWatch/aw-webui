@@ -12,10 +12,9 @@ div.row
 
 <script>
 import moment from 'moment';
+import NewReleaseNotification from '~/components/NewReleaseNotification.vue';
 
-const SHORT_BACKOFF_PERIOD = 24 * 60 * 60;
-// The following may be used for testing, roughly 10s
-// const SHORT_BACKOFF_PERIOD = 10;
+const SHORT_BACKOFF_PERIOD = NewReleaseNotification.SHORT_BACKOFF_PERIOD;
 
 export default {
   data() {
@@ -37,6 +36,7 @@ export default {
         try {
           this.data = JSON.parse(localStorage.getItem('newReleaseCheckData'));
         } catch (e) {
+          console.error('newReleaseCheckData not found in localStorage');
           localStorage.removeItem('newReleaseCheckData');
         }
       }

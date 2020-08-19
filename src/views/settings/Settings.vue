@@ -14,9 +14,9 @@ div
 
   hr
 
-  ReleaseNotificationSettings(v-if="isNewReleaseCheckEnabled")
-
-  hr(v-if="isNewReleaseCheckEnabled")
+  div(v-if="isNewReleaseCheckEnabled")
+    ReleaseNotificationSettings
+    hr
 
   CategorizationSettings
 
