@@ -1,5 +1,5 @@
 import { shallowMount } from '@vue/test-utils';
-import NewReleaseNotification from '../../src/components/NewReleaseNotification';
+import NewReleaseNotification from '~/components/NewReleaseNotification';
 
 describe('hasNewRelease method', () => {
   const wrapper = shallowMount(NewReleaseNotification, {

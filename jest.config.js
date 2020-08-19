@@ -13,13 +13,19 @@ module.exports = {
         '^.+\\.vue$': 'vue-jest'
       },
       testMatch: ['**/test/**/*.test.js?(x)'],
-      modulePathIgnorePatterns: ["test/e2e/screenshot.test.js"] // Don't run this file in npm test
+      moduleNameMapper: {
+        '^~/(.+)$': '<rootDir>/src/$1',
+      },
+      modulePathIgnorePatterns: ['test/e2e/screenshot.test.js'] // Don't run this file in npm test
     },
     {
       displayName: 'node',
       preset: 'ts-jest',
       testEnvironment: 'node',
       testMatch: ['**/test/**/*.test.node.js?(x)'],
+      moduleNameMapper: {
+        '^~/(.+)$': '<rootDir>/src/$1',
+      }
     }
-  ],
+  ]
 };
