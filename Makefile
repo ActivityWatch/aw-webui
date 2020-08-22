@@ -2,8 +2,17 @@
 
 .FORCE: ;
 
+# This is to disable check for new release in aw-webui for aw-android
+ifdef ON_ANDROID
+# The following flag will pass --android as a command line argument to vue-cli-service
+# https://docs.npmjs.com/cli/run-script
+androidflag := -- --os=android
+else
+androidflag :=
+endif
+
 build: install
-	npm run build
+	npm run build ${androidflag}
 
 install:
 	npm ci
@@ -12,7 +21,7 @@ uninstall:
 	rm -r node_modules/
 
 dev:
-	npm run serve
+	npm run serve ${androidflag}
 
 test:
 	npm test

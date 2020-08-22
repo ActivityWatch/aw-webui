@@ -1,4 +1,4 @@
-const classes = require('./classes');
+const classes = require('~/util/classes');
 
 const testClasses = [
   { name: ['Test', 'Subtest'], rule: { type: 'regex', pattern: 'test' } },

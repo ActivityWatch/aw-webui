@@ -4,6 +4,7 @@ div#wrapper
 
   div.container.aw-container.my-3.py-3
     error-boundary
+      new-release-notification(v-if="isNewReleaseCheckEnabled")
       router-view
 
   div.container(style="color: #555")
@@ -43,6 +44,7 @@ export default {
     return {
       activityViews: [],
       info: {},
+      isNewReleaseCheckEnabled: !process.env.VUE_APP_ON_ANDROID,
     };
   },
 

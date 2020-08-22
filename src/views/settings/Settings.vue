@@ -14,6 +14,10 @@ div
 
   hr
 
+  div(v-if="isNewReleaseCheckEnabled")
+    ReleaseNotificationSettings
+    hr
+
   CategorizationSettings
 
 </template>
@@ -21,6 +25,7 @@ div
 <script>
 import DaystartSettings from '~/views/settings/DaystartSettings.vue';
 import TimelineDurationSettings from '~/views/settings/TimelineDurationSettings.vue';
+import ReleaseNotificationSettings from '~/views/settings/ReleaseNotificationSettings.vue';
 import CategorizationSettings from '~/views/settings/CategorizationSettings.vue';
 
 export default {
@@ -28,7 +33,13 @@ export default {
   components: {
     DaystartSettings,
     TimelineDurationSettings,
+    ReleaseNotificationSettings,
     CategorizationSettings,
+  },
+  data() {
+    return {
+      isNewReleaseCheckEnabled: !process.env.VUE_APP_ON_ANDROID,
+    };
   },
 };
 </script>
