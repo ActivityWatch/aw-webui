@@ -16,7 +16,7 @@ console.log(moment);
 export default {
   name: 'aw-dev',
 
-  data: function() {
+  data: function () {
     return {
       queryOptions: {
         aw_client: this.$aw,
@@ -31,10 +31,10 @@ export default {
     console.log(this.$store);
   },
   methods: {
-    query_window_timing: async function() {
+    query_window_timing: async function () {
       await this.$store.dispatch('activity/query_window', this.queryOptions);
     },
-    query_browser_timing: async function() {
+    query_browser_timing: async function () {
       await this.$store.dispatch('activity/query_browser', this.queryOptions);
     },
   },

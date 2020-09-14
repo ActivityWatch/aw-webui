@@ -27,16 +27,16 @@ export default {
     },
   },
   watch: {
-    periodusage_arr: function() {
+    periodusage_arr: function () {
       periodusage.update(this.$el, this.periodusage_arr, this.onPeriodClicked);
     },
   },
-  mounted: function() {
+  mounted: function () {
     periodusage.create(this.$el);
     periodusage.set_status(this.$el, 'Loading...');
   },
   methods: {
-    onPeriodClicked: function(period) {
+    onPeriodClicked: function (period) {
       this.$emit('update', period);
     },
   },

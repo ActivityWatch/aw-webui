@@ -1,21 +1,15 @@
 <template lang="pug">
 div
   div(v-for="cat in category_hierarchy", style="padding: 0.1em 0 0.1em 0")
-    span(:style="'padding-left: ' + cat.depth + 'em'")
-      span(v-if="cat.depth > 0") ⮡&nbsp;
+    span(:style="'padding-left: ' + (1.4 * cat.depth - 1) + 'em'")
+      span(v-if="cat.depth > 0", style="opacity: 0.7") #[icon.mr-1(name="caret-right")]
       | {{cat.subname}}
     span(style="float: right")
       | {{cat.duration | friendlyduration}}
 </template>
 
-<style scoped lang="scss">
-svg {
-  border: 1px solid #999;
-  border-radius: 0.5em;
-}
-</style>
-
 <script>
+import 'vue-awesome/icons/caret-right';
 const _ = require('lodash');
 const classes = require('~/util/classes.ts');
 
@@ -25,7 +19,7 @@ export default {
     events: { type: Array },
   },
   computed: {
-    category_hierarchy: function() {
+    category_hierarchy: function () {
       const events = JSON.parse(JSON.stringify(this.events));
 
       const hier = classes.build_category_hierarchy(

@@ -127,13 +127,13 @@ export default {
   },
 
   watch: {
-    date: function(to) {
+    date: function (to) {
       this.starttime = moment(to);
       this.endtime = moment(this.starttime).add(1, 'days');
       this.visualize();
     },
   },
-  mounted: function() {
+  mounted: function () {
     sunburst.create(this.$el);
     this.starttime = moment(this.date);
     this.endtime = moment(this.date).add(1, 'days');
@@ -141,7 +141,7 @@ export default {
   },
 
   methods: {
-    todaysEvents: function(bucket_id) {
+    todaysEvents: function (bucket_id) {
       return this.$aw.getEvents(bucket_id, {
         limit: -1,
         start: this.starttime.format(),
@@ -149,7 +149,7 @@ export default {
       });
     },
 
-    visualize: function() {
+    visualize: function () {
       function buildHierarchy(parents, children) {
         parents = _.sortBy(parents, 'timestamp', 'desc');
         children = _.sortBy(children, 'timestamp', 'desc');

@@ -4,6 +4,7 @@ div#wrapper
 
   div.container.aw-container.my-3.py-3
     error-boundary
+      new-release-notification(v-if="isNewReleaseCheckEnabled")
       router-view
 
   div.container(style="color: #555")
@@ -39,14 +40,15 @@ import 'vue-awesome/icons/brands/twitter';
 import 'vue-awesome/icons/brands/github';
 
 export default {
-  data: function() {
+  data: function () {
     return {
       activityViews: [],
       info: {},
+      isNewReleaseCheckEnabled: !process.env.VUE_APP_ON_ANDROID,
     };
   },
 
-  mounted: async function() {
+  mounted: async function () {
     this.$aw.getInfo().then(
       info => {
         this.info = info;

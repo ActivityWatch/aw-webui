@@ -72,6 +72,8 @@ export function getTitleAttr(bucket, e) {
     return e.data.status;
   } else if (bucket.type.startsWith('app.editor')) {
     return _.last(e.data.file.split('/'));
+  } else if (bucket.type.startsWith('general.stopwatch')) {
+    return e.data.label;
   } else {
     return e.data.title;
   }

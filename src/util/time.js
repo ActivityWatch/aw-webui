@@ -29,16 +29,11 @@ export function get_day_start_with_offset(dateParam) {
   const start_of_day = localStorage.startOfDay;
   const start_of_day_hours = parseInt(start_of_day.split(':')[0]);
   const start_of_day_minutes = parseInt(start_of_day.split(':')[1]);
-  return dateMoment
-    .hour(start_of_day_hours)
-    .minute(start_of_day_minutes)
-    .format();
+  return dateMoment.hour(start_of_day_hours).minute(start_of_day_minutes).format();
 }
 
 export function get_day_end_with_offset(date) {
-  return moment(get_day_start_with_offset(date))
-    .add(1, 'days')
-    .format();
+  return moment(get_day_start_with_offset(date)).add(1, 'days').format();
 }
 
 export function get_day_period(date) {
@@ -61,8 +56,5 @@ export function get_offset() {
 
 export function get_today() {
   // Gets "today" in an offset-aware way
-  return moment()
-    .subtract(get_offset())
-    .startOf('day')
-    .format('YYYY-MM-DD');
+  return moment().subtract(get_offset()).startOf('day').format('YYYY-MM-DD');
 }

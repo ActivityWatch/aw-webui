@@ -48,7 +48,7 @@ export default {
     };
   },
   computed: {
-    browserBuckets: function() {
+    browserBuckets: function () {
       return this.$store.state.activity.buckets.browser;
     },
   },

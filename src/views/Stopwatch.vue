@@ -22,7 +22,7 @@ div
         h3 Running
         div(v-for="e in runningTimers")
           stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
-            @delete="deleteTimer", @update="updateTimer")
+            @delete="removeTimer", @update="updateTimer")
           hr(style="margin: 0")
       div(v-else)
         span(style="color: #555") No stopwatch running
@@ -34,7 +34,7 @@ div
           h5.mt-2.mb-1 {{ k }}
           div(v-for="e in timersByDate[k]")
             stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
-              @delete="deleteTimer", @update="updateTimer", @new="startTimer(e.data.label)")
+              @delete="removeTimer", @update="updateTimer", @new="startTimer(e.data.label)")
             hr(style="margin: 0")
       div(v-else)
         span(style="color: #555") No history to show
@@ -84,7 +84,7 @@ export default {
       return _.groupBy(this.stoppedTimers, e => moment(e.timestamp).format('YYYY-MM-DD'));
     },
   },
-  mounted: function() {
+  mounted: function () {
     // TODO: List all possible timer buckets
     //this.getBuckets();
 
@@ -97,7 +97,7 @@ export default {
     setInterval(() => (this.now = moment()), 1000);
   },
   methods: {
-    startTimer: async function(label) {
+    startTimer: async function (label) {
       const event = await this.$aw.insertEvent(this.bucket_id, {
         timestamp: new Date(),
         data: {
@@ -108,7 +108,7 @@ export default {
       this.events.unshift(event);
     },
 
-    updateTimer: async function(new_event) {
+    updateTimer: async function (new_event) {
       const i = this.events.findIndex(e => e.id == new_event.id);
       if (i != -1) {
         // This is needed instead of this.events[i] because insides of arrays
@@ -119,12 +119,11 @@ export default {
       }
     },
 
-    deleteTimer: async function(event) {
-      await this.$aw.deleteEvent(this.bucket_id, event.id);
+    removeTimer: function (event) {
       this.events = _.filter(this.events, e => e.id != event.id);
     },
 
-    getEvents: async function() {
+    getEvents: async function () {
       this.events = await this.$aw.getEvents(this.bucket_id, { limit: 100 });
     },
   },

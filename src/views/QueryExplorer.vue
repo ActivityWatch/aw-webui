@@ -81,17 +81,17 @@ RETURN = sort_by_duration(merged_events);`,
     };
   },
   computed: {
-    eventcount_str: function() {
+    eventcount_str: function () {
       if (Array.isArray(this.events)) return 'Number of events: ' + this.events.length;
       else return '';
     },
   },
-  mounted: function() {
+  mounted: function () {
     this.colorfunc = this.summaryKeyFunc;
     this.namefunc = this.summaryKeyFunc;
   },
   methods: {
-    query: async function() {
+    query: async function () {
       const query = this.query_code.split(';').map(s => s.trim() + ';');
       const timeperiods = [moment(this.startdate).format() + '/' + moment(this.enddate).format()];
       try {
@@ -102,7 +102,7 @@ RETURN = sort_by_duration(merged_events);`,
         this.error = e.response.data.message;
       }
     },
-    summaryKeyFunc: function(e) {
+    summaryKeyFunc: function (e) {
       return e.data[this.summaryKey];
     },
   },

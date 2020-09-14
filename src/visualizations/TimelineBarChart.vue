@@ -23,6 +23,9 @@ export default class ChartTimelineBars extends Vue<Bar> {
   })
   datasets: Record<string, any>[];
 
+  @Prop({ default: 'day' })
+  resolution: 'day' | 'week';
+
   mounted() {
     this.renderData();
   }
@@ -57,7 +60,7 @@ export default class ChartTimelineBars extends Vue<Bar> {
               stepSize: 0.25,
               min: 0,
               max: 1,
-              callback: function(value: number) {
+              callback: function (value: number) {
                 if (value == 1) {
                   return '1h';
                 } else {

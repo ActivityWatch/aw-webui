@@ -1,6 +1,7 @@
 const path = require('path');
 const webpack = require('webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const { argv } = require('yargs');
 
 module.exports = {
   pages: {
@@ -9,6 +10,12 @@ module.exports = {
       template: './src/index.html',
     },
   },
+  chainWebpack: config => {
+    config.plugin('define').tap(options => {
+        options[0]['process.env'].VUE_APP_ON_ANDROID = argv.os == 'android';
+        return options;
+    })
+ },
   configureWebpack: {
     resolve: {
       alias: {

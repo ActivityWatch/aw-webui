@@ -25,6 +25,10 @@ export function buildTooltip(bucket, e) {
       <tr><th>Path:</th><td>${sanitize(e.data.file)}</td></tr>
       <tr><th>Language:</th><td>${sanitize(e.data.language)}</td></tr>
       `;
+  } else if (bucket.type.startsWith('general.stopwatch')) {
+    inner = `
+      <tr><th>Label:</th><td>${sanitize(e.data.label)}</td></tr>
+      `;
   } else {
     inner = `
       <tr><td>Data:</td><td>${sanitize(JSON.stringify(e.data))}</td></tr>

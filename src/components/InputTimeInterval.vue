@@ -1,19 +1,24 @@
 <template lang="pug">
 div
   div
+    b-alert(v-if="mode == 'range' && invalidDaterange", variant="warning", show)
+      | The selected date range is invalid. The second date must be greater than the first date.
+    b-alert(v-if="mode == 'range' && daterangeTooLong", variant="warning", show)
+      | The selected date range is too long. The maximum is {{ maxDuration/(24*60*60) }} days.
+
     table
       tr
         th.pr-2
           label(for="mode") Interval mode:
         td
-          select(id="mode" v-model="mode")
+          select(id="mode", v-model="mode")
             option(value='last_duration') Last duration
             option(value='range') Date range
       tr(v-if="mode == 'last_duration'")
         th.pr-2
           label(for="duration") Show last:
         td
-          select(id="duration" :value="duration", @change="valueChanged")
+          select(id="duration", v-model="duration", @change="valueChanged")
             option(:value="15*60") 15min
             option(:value="30*60") 30min
             option(:value="60*60") 1h
@@ -25,8 +30,14 @@ div
       tr(v-if="mode == 'range'")
         th.pr-2 Range:
         td
-          input(type="date", v-model="start", @input="valueChanged")
-          input(type="date", v-model="end", @input="valueChanged")
+          input(type="date", v-model="start")
+          input(type="date", v-model="end")
+          button(
+            class="btn btn-outline-dark btn-sm",
+            type="button", 
+            :disabled="mode == 'range' && (invalidDaterange || emptyDaterange || daterangeTooLong)",
+            @click="valueChanged"
+          ) Update
 
 </template>
 
@@ -34,18 +45,21 @@ div
 
 <script>
 import moment from 'moment';
-
 export default {
   name: 'input-timeinterval',
   props: {
-    duration: {
+    defaultDuration: {
       type: Number,
       default: 60 * 60,
     },
+    maxDuration: {
+      type: Number,
+      default: null,
+    },
   },
-  data: () => {
+  data() {
     return {
-      now: moment(),
+      duration: JSON.parse(JSON.stringify(this.defaultDuration)), // Make a copy of defaultDuration
       mode: 'last_duration',
       start: null,
       end: null,
@@ -57,24 +71,31 @@ export default {
         if (this.mode == 'range' && this.start && this.end) {
           return [moment(this.start), moment(this.end)];
         } else {
-          return [moment(this.now).subtract(this.duration, 'seconds'), moment(this.now)];
-        }
-      },
-      set(newValue) {
-        if (!isNaN(newValue)) {
-          // Set new now and duration
-          this.now = moment();
-          this.duration = newValue;
-        } else {
-          // Not required for mode='range', start and end set directly through v-model
+          return [moment().subtract(this.duration, 'seconds'), moment()];
         }
       },
     },
+    emptyDaterange() {
+      return !(this.start && this.end);
+    },
+    invalidDaterange() {
+      return moment(this.start) >= moment(this.end);
+    },
+    daterangeTooLong() {
+      return moment(this.start).add(this.maxDuration, 'seconds').isBefore(moment(this.end));
+    },
+  },
+  mounted() {
+    this.valueChanged();
   },
   methods: {
-    valueChanged(e) {
-      this.value = e.target.value;
-      this.$emit('input', this.value);
+    valueChanged() {
+      if (
+        this.mode == 'last_duration' ||
+        (!this.emptyDaterange && !this.invalidDaterange && !this.daterangeTooLong)
+      ) {
+        this.$emit('input', this.value);
+      }
     },
   },
 };
