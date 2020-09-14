@@ -1,3 +1,7 @@
+/* global fixture */
+/* eslint jest/no-test-callback: "off" */
+/* eslint jest/expect-expect: "off" */
+
 import { Selector } from 'testcafe';
 
 fixture(`My fixture`).page(`http://localhost:27180/#/activity/erb-main2-arch`);
