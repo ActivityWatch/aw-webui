@@ -5,9 +5,12 @@ describe('hasNewRelease method', () => {
   const wrapper = shallowMount(NewReleaseNotification, {
     mocks: {
       $aw: {
-        getInfo() {} // Provide dummy function because it won't find vm.$aw during test
-      }
-    }
+        // Provide dummy function because it won't find vm.$aw during test
+        getInfo() {
+          return;
+        },
+      },
+    },
   });
   const vm = wrapper.vm;
 
