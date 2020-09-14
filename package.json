@@ -83,6 +83,8 @@
   "dependencies": {
     "@babel/polyfill": "^7.10.4",
     "@egjs/hammerjs": "^2.0.17",
+    "@fullcalendar/timegrid": "^5.1.0",
+    "@fullcalendar/vue": "^5.1.0",
     "@types/chart.js": "^2.9.23",
     "@types/chrome": "0.0.89",
     "@types/jest": "^24.9.1",

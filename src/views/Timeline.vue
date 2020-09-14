@@ -12,6 +12,9 @@ div
         | Drag to pan and scroll to zoom.
     div(style="clear: both")
     vis-timeline(:buckets="buckets", :showRowLabels='true', :queriedInterval="daterange")
+
+    aw-devonly(reason="Not ready for production, still experimenting")
+      aw-calendar(:buckets="buckets")
   div(v-show="!(buckets !== null && num_events)")
     h1 Loading...
 </template>
