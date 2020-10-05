@@ -64,12 +64,12 @@ import moment from 'moment';
 
 const NUM_OPTIONS = 10;
 // INITIAL_WAIT_PERIOD is how long to wait from initialTimestamp to the first time that the poll shows up
-const INITIAL_WAIT_PERIOD = 30 * 24 * 60 * 60;
+// const INITIAL_WAIT_PERIOD = 30 * 24 * 60 * 60;
 // BACKOFF_PERIOD is how many seconds to wait to show the poll again if the user closed it
-const BACKOFF_PERIOD = 24 * 60 * 60;
+// const BACKOFF_PERIOD = 24 * 60 * 60;
 // The following may be used for testing
-// const INITIAL_WAIT_PERIOD = 1;
-// const BACKOFF_PERIOD = 1;
+const INITIAL_WAIT_PERIOD = 1;
+const BACKOFF_PERIOD = 1;
 
 export default {
   name: 'user-satisfaction-poll',
@@ -86,12 +86,12 @@ export default {
   },
   mounted() {
     // Check if initialTimestamp (first time that the user runs the web app) exists
-    if (!localStorage.initialTimestamp) {
-      const initialTimestamp = moment();
+    var initialTimestamp = moment();
+    if (localStorage.initialTimestamp) {
+      initialTimestamp = moment(localStorage.initialTimestamp);
+    } else {
       localStorage.initialTimestamp = initialTimestamp;
-      return;
     }
-    const initialTimestamp = moment(localStorage.initialTimestamp);
 
     // Get the rest of the data
     this.retrieveData();
@@ -102,7 +102,6 @@ export default {
         timesPollIsShown: 0,
       };
       this.saveData();
-      return;
     }
 
     if (!this.data.isEnabled) {
@@ -110,13 +109,14 @@ export default {
     }
 
     // Show poll if enough time has passed
-    if (moment() > moment(this.data.nextPollTime)) {
+    if (moment() >= moment(this.data.nextPollTime)) {
       this.data.timesPollIsShown = this.data.timesPollIsShown + 1;
       this.isPollVisible = true;
       this.data.nextPollTime = moment().add(BACKOFF_PERIOD, 'seconds');
     }
 
-    if (this.timesPollIsShown > 4) {
+    // Show the poll a maximum of 3 times
+    if (this.data.timesPollIsShown > 2) {
       this.data.isEnabled = false;
     }
 
