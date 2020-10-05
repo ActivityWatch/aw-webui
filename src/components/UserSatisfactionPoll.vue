@@ -11,6 +11,9 @@
             br
             label(:for="'option' + i", style="display: block")
               | {{ i }}
+      div(style="display: flex; justify-content: space-between")
+        a(@click="dontShowAgain" href="#")
+          | Don't show again
         input(type="submit" value="Submit" @click="submit")
 
     b-alert(v-if="isPosFollowUpVisible", variant="info" show)
@@ -64,12 +67,12 @@ import moment from 'moment';
 
 const NUM_OPTIONS = 10;
 // INITIAL_WAIT_PERIOD is how long to wait from initialTimestamp to the first time that the poll shows up
-// const INITIAL_WAIT_PERIOD = 30 * 24 * 60 * 60;
+const INITIAL_WAIT_PERIOD = 30 * 24 * 60 * 60;
 // BACKOFF_PERIOD is how many seconds to wait to show the poll again if the user closed it
-// const BACKOFF_PERIOD = 24 * 60 * 60;
+const BACKOFF_PERIOD = 24 * 60 * 60;
 // The following may be used for testing
-const INITIAL_WAIT_PERIOD = 1;
-const BACKOFF_PERIOD = 1;
+// const INITIAL_WAIT_PERIOD = 1;
+// const BACKOFF_PERIOD = 1;
 
 export default {
   name: 'user-satisfaction-poll',
@@ -86,7 +89,7 @@ export default {
   },
   mounted() {
     // Check if initialTimestamp (first time that the user runs the web app) exists
-    var initialTimestamp = moment();
+    let initialTimestamp = moment();
     if (localStorage.initialTimestamp) {
       initialTimestamp = moment(localStorage.initialTimestamp);
     } else {
@@ -146,6 +149,11 @@ export default {
       } else {
         this.isNegFollowUpVisible = true;
       }
+    },
+    dontShowAgain() {
+      this.isPollVisible = false;
+      this.data.isEnabled = false;
+      this.saveData();
     },
   },
 };
