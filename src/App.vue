@@ -4,6 +4,7 @@ div#wrapper
 
   div.container.aw-container.my-3.py-3
     error-boundary
+      user-satisfaction-poll
       new-release-notification(v-if="isNewReleaseCheckEnabled")
       router-view
 
