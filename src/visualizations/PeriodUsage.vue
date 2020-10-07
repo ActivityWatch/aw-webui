@@ -14,7 +14,7 @@ svg {
 </style>
 
 <script>
-// NOTE: This is just a Vue.js component wrapper for summary.js
+// NOTE: This is just a Vue.js component wrapper for periodusage.js
 //       Code should generally go in the framework-independent file.
 
 import periodusage from './periodusage.js';
