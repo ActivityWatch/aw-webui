@@ -43,6 +43,7 @@ Vue.component('aw-header', () => import('./components/Header.vue'));
 Vue.component('aw-devonly', () => import('./components/DevOnly.vue'));
 Vue.component('aw-selectable-vis', () => import('./components/SelectableVisualization.vue'));
 Vue.component('new-release-notification', () => import('./components/NewReleaseNotification.vue'));
+Vue.component('user-satisfaction-poll', () => import('./components/UserSatisfactionPoll.vue'));
 
 // Visualization components
 Vue.component('aw-summary', () => import('./visualizations/Summary.vue'));

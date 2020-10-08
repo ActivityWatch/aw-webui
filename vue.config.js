@@ -12,10 +12,10 @@ module.exports = {
   },
   chainWebpack: config => {
     config.plugin('define').tap(options => {
-        options[0]['process.env'].VUE_APP_ON_ANDROID = argv.os == 'android';
-        return options;
-    })
- },
+      options[0]['process.env'].VUE_APP_ON_ANDROID = argv.os == 'android';
+      return options;
+    });
+  },
   configureWebpack: {
     resolve: {
       alias: {
