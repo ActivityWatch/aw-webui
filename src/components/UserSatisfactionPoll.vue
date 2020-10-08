@@ -21,25 +21,25 @@
       | We're really happy to hear you are enjoying ActivityWatch, but we think we can do even better! To help us help you, here are a few things you can do:
       ul
         li
-          | Support us on #[a(href="https://www.patreon.com/erikbjare") Patreon] or #[a(href="https://opencollective.com/activitywatch") Open Collective]
-        li 
-          | If you're using ActivityWatch in the workplace, consider asking your employer to support us!
-        li 
-          | Tell your friends and coworkers! Post about it on social media, we are on #[a(href="https://twitter.com/ActivityWatchIt") Twitter] and #[a(href="https://www.facebook.com/ActivityWatch") Facebook]
-        li 
+          | Support us on #[a(href="https://www.patreon.com/erikbjare") Patreon] or #[a(href="https://opencollective.com/activitywatch") Open Collective] (or by #[a(href="https://activitywatch.net/donate/") other donation methods])
+        li
+          | Using ActivityWatch at work? Consider asking your employer to support us!
+        li
+          | Post about it on social media and tell your friends and colleagues! We are on #[a(href="https://twitter.com/ActivityWatchIt") Twitter] and #[a(href="https://www.facebook.com/ActivityWatch") Facebook]
+        //li
           | Sign up for the newsletter
-        li 
+        li
           | Vote for new features on the #[a(href="https://forum.activitywatch.net/c/features") forum]
-        li 
+        //li
           | Fill out the #[a(href="https://forms.gle/q2N9K5RoERBV8kqPA") feedback form]
-        li 
-          | Rate us on #[a(href="https://alternativeto.net/software/activitywatch/") AlternativeTo]
-        li 
-          | Star us on #[a(href="https://github.com/ActivityWatch/activitywatch") GitHub]
+        li
+          | Rate us on #[a(href="https://alternativeto.net/software/activitywatch/") AlternativeTo] and #[a(href="https://play.google.com/store/apps/details?id=net.activitywatch.android") Google Play Store].
+        li
+          | Join our #[a(https://discord.gg/vDskV9q) Discord server].
 
     b-alert(v-if="isNegFollowUpVisible", variant="info" show)
       button(type="button", class="close", @click="isNegFollowUpVisible=false") &times;
-      | We are sorry to hear that you did not enjoy using ActivityWatch, but we want to improve! We would be vary thankful if you help us by:
+      | We are sorry to hear that you did not like ActivityWatch, but we want to improve! We would be very thankful if you help us by:
       ul
         li
           | Fill out the #[a(href="https://forms.gle/q2N9K5RoERBV8kqPA") feedback form]
@@ -63,13 +63,14 @@ ul {
 </style>
 
 <script>
+import { range } from 'lodash/fp';
 import moment from 'moment';
 
 const NUM_OPTIONS = 10;
 // INITIAL_WAIT_PERIOD is how long to wait from initialTimestamp to the first time that the poll shows up
-const INITIAL_WAIT_PERIOD = 30 * 24 * 60 * 60;
+const INITIAL_WAIT_PERIOD = 7 * 24 * 60 * 60;
 // BACKOFF_PERIOD is how many seconds to wait to show the poll again if the user closed it
-const BACKOFF_PERIOD = 24 * 60 * 60;
+const BACKOFF_PERIOD = 7 * 24 * 60 * 60;
 // The following may be used for testing
 // const INITIAL_WAIT_PERIOD = 1;
 // const BACKOFF_PERIOD = 1;
@@ -82,7 +83,7 @@ export default {
       isPosFollowUpVisible: false,
       isNegFollowUpVisible: false,
       // options is an array of [1, ..., NUM_OPTIONS]
-      options: Array.from({ length: NUM_OPTIONS }, (_, i) => i + 1),
+      options: range(1, NUM_OPTIONS + 1),
       rating: null,
       data: null,
     };
