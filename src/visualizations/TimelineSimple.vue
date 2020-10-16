@@ -4,8 +4,8 @@ svg
 
 <style scoped lang="scss">
 svg {
-    border: 1px solid #999;
-    border-radius: 0.5em;
+  border: 1px solid #999;
+  border-radius: 0.5em;
 }
 </style>
 
@@ -16,19 +16,19 @@ svg {
 import timeline_simple from './timeline-simple.js';
 
 export default {
-  name: "aw-timeline",
+  name: 'aw-timeline',
   props: {
     type: String,
     event_type: String,
     events: Array,
   },
   watch: {
-    "events": function() {
-      timeline_simple.update(this.$el, this.events, this.event_type)
-    }
+    events: function () {
+      timeline_simple.update(this.$el, this.events, this.event_type);
+    },
   },
-  mounted: function() {
+  mounted: function () {
     timeline_simple.create(this.$el);
-  }
-}
+  },
+};
 </script>

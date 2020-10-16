@@ -6,23 +6,23 @@ import { seconds_to_duration, friendlydate } from './time.js';
 
 import moment from 'moment';
 
-Vue.filter('shortdate', function(timestamp) {
+Vue.filter('shortdate', function (timestamp) {
   return moment(timestamp).format('YYYY-MM-DD');
 });
 
-Vue.filter('shorttime', function(timestamp) {
+Vue.filter('shorttime', function (timestamp) {
   return moment(timestamp).format('HH:mm');
 });
 
-Vue.filter('friendlytime', function(timestamp) {
+Vue.filter('friendlytime', function (timestamp) {
   return friendlydate(timestamp);
 });
 
-Vue.filter('iso8601', function(timestamp) {
+Vue.filter('iso8601', function (timestamp) {
   return moment.parseZone(timestamp).format();
 });
 
-Vue.filter('friendlyduration', function(seconds) {
+Vue.filter('friendlyduration', function (seconds) {
   return seconds_to_duration(seconds);
 });
 

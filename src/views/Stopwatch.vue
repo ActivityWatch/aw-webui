@@ -22,7 +22,7 @@ div
         h3 Running
         div(v-for="e in runningTimers")
           stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
-            @delete="deleteTimer", @update="updateTimer")
+            @delete="removeTimer", @update="updateTimer")
           hr(style="margin: 0")
       div(v-else)
         span(style="color: #555") No stopwatch running
@@ -34,7 +34,7 @@ div
           h5.mt-2.mb-1 {{ k }}
           div(v-for="e in timersByDate[k]")
             stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
-              @delete="deleteTimer", @update="updateTimer", @new="startTimer(e.data.label)")
+              @delete="removeTimer", @update="updateTimer", @new="startTimer(e.data.label)")
             hr(style="margin: 0")
       div(v-else)
         span(style="color: #555") No history to show
@@ -61,72 +61,71 @@ import 'vue-awesome/icons/play';
 import 'vue-awesome/icons/trash';
 
 export default {
-  name: "Stopwatch",
+  name: 'Stopwatch',
   components: {
-    "stopwatch-entry": StopwatchEntry
+    'stopwatch-entry': StopwatchEntry,
   },
   data: () => {
     return {
-      bucket_id: "aw-stopwatch",
+      bucket_id: 'aw-stopwatch',
       events: [],
-      label: "",
+      label: '',
       now: moment(),
-    }
+    };
   },
   computed: {
     runningTimers() {
-      return _.filter(this.events, (e) => (e.data.running))
+      return _.filter(this.events, e => e.data.running);
     },
     stoppedTimers() {
-      return _.filter(this.events, (e) => (!e.data.running))
+      return _.filter(this.events, e => !e.data.running);
     },
     timersByDate() {
-      return _.groupBy(this.stoppedTimers, (e) => (moment(e.timestamp).format("YYYY-MM-DD")));
+      return _.groupBy(this.stoppedTimers, e => moment(e.timestamp).format('YYYY-MM-DD'));
     },
   },
-  mounted: function() {
+  mounted: function () {
     // TODO: List all possible timer buckets
     //this.getBuckets();
 
     // Create default timer bucket
-    this.$aw.ensureBucket(this.bucket_id, "general.stopwatch", "unknown");
+    this.$aw.ensureBucket(this.bucket_id, 'general.stopwatch', 'unknown');
 
     // TODO: Get all timer events
-    this.getEvents()
+    this.getEvents();
 
-    setInterval(() => this.now = moment(), 1000);
+    setInterval(() => (this.now = moment()), 1000);
   },
   methods: {
-    startTimer: async function(label) {
+    startTimer: async function (label) {
       const event = await this.$aw.insertEvent(this.bucket_id, {
         timestamp: new Date(),
         data: {
           running: true,
-          label: label
-        }
+          label: label,
+        },
       });
       this.events.unshift(event);
     },
 
-    updateTimer: async function(new_event) {
-      const i = this.events.findIndex((e) => e.id == new_event.id);
+    updateTimer: async function (new_event) {
+      const i = this.events.findIndex(e => e.id == new_event.id);
       if (i != -1) {
         // This is needed instead of this.events[i] because insides of arrays
         // are not reactive in Vue
         this.$set(this.events, i, new_event);
       } else {
-        console.error(":(");
+        console.error(':(');
       }
     },
 
-    deleteTimer: async function(event) {
-      await this.$aw.deleteEvent(this.bucket_id, event.id);
-      this.events = _.filter(this.events, (e) => e.id != event.id);
+    removeTimer: function (event) {
+      this.events = _.filter(this.events, e => e.id != event.id);
     },
 
-    getEvents: async function() {
-      this.events = await this.$aw.getEvents(this.bucket_id, {limit: 100});
-    }
-  }
-}
+    getEvents: async function () {
+      this.events = await this.$aw.getEvents(this.bucket_id, { limit: 100 });
+    },
+  },
+};
 </script>

@@ -1,23 +1,23 @@
 <template lang="pug">
 div
-  div.row.py-2.cls
+  div.row.py-2.class
     div.col-8.col-md-4
       span(:style="{ marginLeft: (2 * depth) + 'em'}")
-        //| {{ cls.name.join(" ➤ ")}}
-      | #[span(v-if="depth > 0") ⮡] {{ cls.name.slice(depth).join(" ➤ ")}}
+        //| {{ _class.name.join(" ➤ ")}}
+      | #[span(v-if="depth > 0") ⮡] {{ _class.name.slice(depth).join(" ➤ ")}}
     div.col-4.col-md-8
       //span.d-none.d-sm-inline.d-md-none(:style="{ marginLeft: (2 * depth) + 'em'}")
       span.d-none.d-md-inline
-        span(v-if="cls.rule.type === 'regex'") Rule ({{cls.rule.type}}): #[code {{cls.rule.regex}}]
+        span(v-if="_class.rule.type === 'regex'") Rule ({{_class.rule.type}}): #[code {{_class.rule.regex}}]
         span(v-else, style="color: #888") No rule
       span.float-right
-        b-btn.ml-1(size="sm", variant="outline-secondary", @click="showEditModal($event)" style="border: 0;" pill)
+        b-btn.ml-1(size="sm", variant="outline-secondary", @click="showEditModal()" style="border: 0;" pill)
           icon(name="edit")
-        b-btn.ml-1(size="sm", variant="outline-success", @click="addSubclass(cls)" style="border: 0;" pill)
+        b-btn.ml-1(size="sm", variant="outline-success", @click="addSubclass(_class)" style="border: 0;" pill)
           icon(name="plus")
   div
-    div.pa-2(v-for="child in cls.children", style="background: rgba(0, 0, 0, 0);", v-show="expanded")
-      CategoryEditTree(:cls="child", :depth="depth+1")
+    div.pa-2(v-for="child in _class.children", style="background: rgba(0, 0, 0, 0);", v-show="expanded")
+      CategoryEditTree(:_class="child", :depth="depth+1")
 
   b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="resetModal" @ok="handleOk")
     div.my-1
@@ -41,7 +41,7 @@ div
     hr
 
     div.my-1
-      b-btn(variant="danger", @click="removeClass(cls); $refs.edit.hide()")
+      b-btn(variant="danger", @click="removeClass(_class); $refs.edit.hide()")
         icon(name="trash")
         | Remove category
 </template>
@@ -54,14 +54,16 @@ import 'vue-awesome/icons/trash';
 import 'vue-awesome/icons/plus';
 import 'vue-awesome/icons/edit';
 
+import _ from 'lodash';
+
 export default {
-  name: "CategoryEditTree",
+  name: 'CategoryEditTree',
   props: {
-    cls: Object,
+    _class: Object,
     depth: {
       type: Number,
       default: 0,
-    }
+    },
   },
   data: () => {
     return {
@@ -75,31 +77,36 @@ export default {
     };
   },
   computed: {
-    allCategories: function() {
-      const categories = this.$store.getters["settings/all_categories"];
-      const entries = categories.map(c => { return { text: c.join("->"), value: c } });
-      return [{ value: [], text: 'None'}].concat(entries);
+    allCategories: function () {
+      const categories = this.$store.getters['settings/all_categories'];
+      const entries = categories.map(c => {
+        return { text: c.join('->'), value: c };
+      });
+      return [{ value: [], text: 'None' }].concat(entries);
     },
-    allRuleTypes: function() {
+    allRuleTypes: function () {
       return [
         { value: null, text: 'None' },
         { value: 'regex', text: 'Regular Expression' },
         //{ value: 'glob', text: 'Glob pattern' },
-      ]
+      ];
     },
   },
   methods: {
-    addSubclass: function(parent) {
-      this.$store.commit('settings/addClass', {name: parent.name.concat(["New class"]), rule: {type: "regex", regex: "FILL ME"}});
+    addSubclass: function (parent) {
+      this.$store.commit('settings/addClass', {
+        name: parent.name.concat(['New class']),
+        rule: { type: 'regex', regex: 'FILL ME' },
+      });
     },
-    removeClass: function(cls) {
+    removeClass: function (_class) {
       // TODO: Show a confirmation dialog
       // TODO: Remove children as well?
       // TODO: Move button to edit modal?
-      this.$store.commit('settings/removeClass', cls);
+      this.$store.commit('settings/removeClass', _class);
     },
-    showEditModal(event) {
-      this.$refs.edit.show()
+    showEditModal() {
+      this.$refs.edit.show();
     },
     checkFormValidity() {
       // FIXME
@@ -107,14 +114,14 @@ export default {
     },
     handleOk(event) {
       // Prevent modal from closing
-      event.preventDefault()
+      event.preventDefault();
       // Trigger submit handler
-      this.handleSubmit()
+      this.handleSubmit();
     },
     handleSubmit() {
       // Exit when the form isn't valid
       if (!this.checkFormValidity()) {
-        return
+        return;
       }
 
       // Save the category
@@ -123,29 +130,29 @@ export default {
         name: this.editing.parent.concat(this.editing.name),
         rule: this.editing.rule.type !== null ? this.editing.rule : { type: null },
       };
-      this.$store.commit("settings/updateClass", new_class);
+      this.$store.commit('settings/updateClass', new_class);
 
       // Hide the modal manually
       this.$nextTick(() => {
-        this.$refs.edit.hide()
-      })
+        this.$refs.edit.hide();
+      });
     },
     resetModal() {
       this.editing = {
-        id: this.cls.id,
-        name: this.cls.subname,
-        rule: _.cloneDeep(this.cls.rule),
-        parent: this.cls.parent ? this.cls.parent : [],
+        id: this._class.id,
+        name: this._class.subname,
+        rule: _.cloneDeep(this._class.rule),
+        parent: this._class.parent ? this._class.parent : [],
       };
       //console.log(this.editing);
     },
-  }
-}
+  },
+};
 </script>
 
 <style scoped lang="scss">
-.row.cls:hover {
-  background-color: #EEE;
+.row.class:hover {
+  background-color: #eee;
   boder-radius: 5px;
 }
 </style>

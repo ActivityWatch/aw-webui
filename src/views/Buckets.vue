@@ -13,8 +13,12 @@ div
       small
         | {{ data.item.hostname }}
     template(v-slot:cell(last_updated)="data")
+      // aw-server-python
       small(v-if="data.item.last_updated")
         | {{ data.item.last_updated | friendlytime }}
+      // aw-server-rust
+      small(v-if="data.item.metadata && data.item.metadata.end")
+        | {{ data.item.metadata.end | friendlytime }}
     template(v-slot:cell(actions)="data")
       b-button-toolbar.float-right
         b-button-group(size="sm", class="mx-1")
@@ -22,7 +26,7 @@ div
             icon(name="folder-open").d-none.d-md-inline-block
             | Open
           b-dropdown(variant="outline-secondary", size="sm", text="More")
-            b-dropdown-item-button(
+            b-dropdown-item(
                        :href="$aw.baseURL + '/api/0/buckets/' + data.item.id + '/export'",
                        :download="'aw-bucket-export-' + data.item.id + '.json'",
                        title="Export bucket to JSON",
@@ -51,9 +55,13 @@ div
 
   b-card-group.deck
     b-card(header="Import buckets")
-      form(method="post", :action="$aw.baseURL + '/api/0/import'", enctype="multipart/form-data")
-        input(type="file", name="buckets.json")
-        input(type="submit", value="Import")
+      b-alert(v-if="import_error" show variant="danger" dismissable)
+        | {{ import_error }}
+      b-form-file(v-model="import_file"
+                  placeholder="Choose a file or drop file here..."
+                  drop-placeholder="Drop file here...")
+      // TODO: This spinner could be placed in a more suitable place
+      div(v-if="import_file" class="spinner-border" role="status")
       span
         | A valid file to import is a JSON file from either an export of a single bucket or an export from multiple buckets.
         | If there are buckets with the same name the import will fail
@@ -70,7 +78,8 @@ div
 <style lang="scss">
 // This won't work if scoped
 .bucket-card {
-  .card-header, .card-footer {
+  .card-header,
+  .card-footer {
     padding: 0.5em 0.75em 0.5em 0.75em;
   }
 
@@ -86,7 +95,7 @@ div
 }
 
 .bucket-last-updated {
-    color: #666;
+  color: #666;
 }
 </style>
 
@@ -97,9 +106,11 @@ import 'vue-awesome/icons/folder-open';
 import _ from 'lodash';
 
 export default {
-  name: "Buckets",
+  name: 'Buckets',
   data() {
     return {
+      import_file: null,
+      import_error: null,
       delete_bucket_selected: null,
       fields: [
         { key: 'id', label: 'Bucket ID', sortable: true },
@@ -107,25 +118,51 @@ export default {
         { key: 'last_updated', label: 'Updated', sortable: true },
         { key: 'actions', label: '' },
       ],
-    }
+    };
   },
   computed: {
-    buckets: function() {
-      return _.orderBy(this.$store.state.buckets.buckets, [(b) => b.id], ["asc"]);
+    buckets: function () {
+      return _.orderBy(this.$store.state.buckets.buckets, [b => b.id], ['asc']);
     },
   },
-  mounted: async function() {
-    await this.$store.dispatch("buckets/ensureBuckets");
+  watch: {
+    import_file: async function (_new_value, _old_value) {
+      if (this.import_file != null) {
+        console.log('Importing file');
+        try {
+          await this.importBuckets(this.import_file);
+          console.log('Import successful');
+          this.import_error = null;
+        } catch (err) {
+          console.log('Import failed');
+          // TODO: Make aw-server report error message so it can be shown in the web-ui
+          this.import_error = 'Import failed, see aw-server logs for more info';
+        }
+        // We need to reload buckets even if we fail because imports can be partial
+        // (first bucket succeeds, second fails for example when importing multiple)
+        await this.$store.dispatch('buckets/loadBuckets');
+        this.import_file = null;
+      }
+    },
+  },
+  mounted: async function () {
+    await this.$store.dispatch('buckets/ensureBuckets');
   },
   methods: {
-    openDeleteBucketModal: function(bucketId) {
+    openDeleteBucketModal: function (bucketId) {
       this.delete_bucket_selected = bucketId;
-      this.$root.$emit('bv::show::modal','delete-modal')
+      this.$root.$emit('bv::show::modal', 'delete-modal');
     },
-    deleteBucket: async function(bucketId) {
-      await this.$store.dispatch("buckets/deleteBucket", { bucketId });
-      this.$root.$emit('bv::hide::modal','delete-modal')
-    }
-  }
-}
+    deleteBucket: async function (bucketId) {
+      await this.$store.dispatch('buckets/deleteBucket', { bucketId });
+      this.$root.$emit('bv::hide::modal', 'delete-modal');
+    },
+    importBuckets: async function (importFile) {
+      const formData = new FormData();
+      formData.append('buckets.json', importFile);
+      const headers = { 'Content-Type': 'multipart/form-data' };
+      return this.$aw.req.post('/0/import', formData, { headers });
+    },
+  },
+};
 </script>

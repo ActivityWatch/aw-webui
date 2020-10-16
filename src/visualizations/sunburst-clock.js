@@ -36,36 +36,46 @@ let vis; // The root SVG node of the graph as a d3 object
 let partition;
 let arc;
 
-function create(el) {
-  // Clear the svg in case we are redrawing
-  rootEl = d3.select('.chart');
-  rootEl.selectAll('svg').remove();
+function drawLegend() {
+  // Dimensions of legend item: width, height, spacing, radius of rounded rect.
+  const li = {
+    w: 75,
+    h: 30,
+    s: 3,
+    r: 3,
+  };
 
-  vis = rootEl
+  const legend = d3
+    .select('.legend')
     .append('svg:svg')
-    .attr('width', width)
-    .attr('height', height)
+    .attr('width', li.w)
+    .attr('height', d3.keys(legendData).length * (li.h + li.s));
+
+  const g = legend
+    .selectAll('g')
+    .data(d3.entries(legendData))
+    .enter()
     .append('svg:g')
-    .attr('id', 'container')
-    .attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')');
+    .attr('transform', function (d, i) {
+      return 'translate(0,' + i * (li.h + li.s) + ')';
+    });
 
-  drawLegend(el);
+  g.append('svg:rect')
+    .attr('rx', li.r)
+    .attr('ry', li.r)
+    .attr('width', li.w)
+    .attr('height', li.h)
+    .style('fill', function (d) {
+      return d.value;
+    });
 
-  partition = d3.partition().size([2 * Math.PI, radius * radius]);
-
-  arc = d3
-    .arc()
-    .startAngle(function(d) {
-      return d.x0;
-    })
-    .endAngle(function(d) {
-      return d.x1;
-    })
-    .innerRadius(function(d) {
-      return Math.sqrt(d.y0);
-    })
-    .outerRadius(function(d) {
-      return Math.sqrt(d.y1);
+  g.append('svg:text')
+    .attr('x', li.w / 2)
+    .attr('y', li.h / 2)
+    .attr('dy', '0.35em')
+    .attr('text-anchor', 'middle')
+    .text(function (d) {
+      return d.key;
     });
 }
 
@@ -99,98 +109,6 @@ function drawClock(h, m, text) {
     .style('fill', '#999')
     .attr('x', 130 * xn)
     .attr('y', 5 + 140 * yn);
-}
-
-// Main function to draw and set up the visualization, once we have the data.
-function update(el, json) {
-  // Basic setup of page elements.
-  initializeBreadcrumbTrail();
-
-  el.querySelector('#container').innerHTML = '';
-
-  // Bounding circle underneath the sunburst, to make it easier to detect
-  // when the mouse leaves the parent g.
-  vis
-    .append('svg:circle')
-    .attr('r', radius)
-    .style('opacity', 0);
-
-  // Turn the data into a d3 hierarchy and calculate the sums.
-  let root = d3.hierarchy(json);
-  let nodes = partition(root);
-
-  const mode_clock = true;
-  if (mode_clock) {
-    // TODO: Make this a checkbox in the UI
-    const show_whole_day = true;
-
-    let root_start = moment(json.timestamp);
-    let root_end = moment(json.timestamp).add(json.duration, 'seconds');
-    if (show_whole_day) {
-      root_start = root_start.startOf('day');
-      root_end = root_start.clone().endOf('day');
-
-      drawClock(0, 0);
-      drawClock(6, 0);
-      drawClock(12, 0);
-      drawClock(18, 0);
-
-      // TODO: Draw only if showing today
-      const now = moment();
-      drawClock(now.hour(), now.minute(), 'Now');
-    }
-
-    nodes = nodes
-      .each(function(d) {
-        const loc_start_sec = moment(d.data.timestamp).diff(root_start, 'seconds', true);
-        const loc_end_sec = moment(d.data.timestamp)
-          .add(d.data.duration, 'seconds')
-          .diff(root_start, 'seconds', true);
-
-        const loc_start = Math.max(0, loc_start_sec / ((root_end - root_start) / 1000));
-        const loc_end = Math.min(1, loc_end_sec / ((root_end - root_start) / 1000));
-
-        d.x0 = 2 * Math.PI * loc_start;
-        d.x1 = 2 * Math.PI * loc_end;
-      })
-      .descendants();
-  } else {
-    root = root
-      .sum(d => d.duration)
-      .sort((a, b) => JSON.stringify(a.data.data).localeCompare(JSON.stringify(b.data.data)));
-    nodes = nodes.descendants();
-  }
-
-  // For efficiency, filter nodes to keep only those large enough to see.
-  nodes = nodes.filter(function(d) {
-    // 0.005 radians = 0.29 degrees
-    // If show_whole_day:
-    //   0.0044 rad = 1min
-    //   0.0011 rad = 15s
-    const threshold = 0.001;
-    return d.x1 - d.x0 > threshold;
-  });
-
-  vis
-    .data([json])
-    .selectAll('path')
-    .data(nodes)
-    .enter()
-    .append('svg:path')
-    .attr('display', function(d) {
-      return d.depth ? null : 'none';
-    })
-    .attr('d', arc)
-    .attr('fill-rule', 'evenodd')
-    .style('fill', function(d) {
-      return color.getColorFromString(d.data.data.status || d.data.data.app);
-    })
-    .style('opacity', 1)
-    .on('mouseover', mouseover)
-    .on('click', mouseclick);
-
-  // Add the mouseleave handler to the bounding circle.
-  d3.select('#container').on('mouseleave', mouseleave);
 }
 
 function mouseclick(d) {
@@ -230,7 +148,7 @@ function mouseover(d) {
   // FIXME: This currently makes all other svg paths on the page faded as well
   rootEl
     .selectAll('path')
-    .filter(function(node) {
+    .filter(function (node) {
       return sequenceArray.indexOf(node) >= 0;
     })
     .style('opacity', 1);
@@ -247,7 +165,7 @@ function mouseleave() {
     .transition()
     .duration(100)
     .style('opacity', 1)
-    .on('end', function() {
+    .on('end', function () {
       d3.select(this).on('mouseover', mouseover);
     });
 
@@ -264,53 +182,129 @@ function initializeBreadcrumbTrail() {
     .attr('height', 50)
     .attr('id', 'trail');
   // Add the label at the end, for the percentage.
-  trail
-    .append('svg:text')
-    .attr('id', 'endlabel')
-    .style('fill', '#000');
+  trail.append('svg:text').attr('id', 'endlabel').style('fill', '#000');
 }
 
-function drawLegend() {
-  // Dimensions of legend item: width, height, spacing, radius of rounded rect.
-  const li = {
-    w: 75,
-    h: 30,
-    s: 3,
-    r: 3,
-  };
+function create(el) {
+  // Clear the svg in case we are redrawing
+  rootEl = d3.select('.chart');
+  rootEl.selectAll('svg').remove();
 
-  const legend = d3
-    .select('.legend')
+  vis = rootEl
     .append('svg:svg')
-    .attr('width', li.w)
-    .attr('height', d3.keys(legendData).length * (li.h + li.s));
-
-  const g = legend
-    .selectAll('g')
-    .data(d3.entries(legendData))
-    .enter()
+    .attr('width', width)
+    .attr('height', height)
     .append('svg:g')
-    .attr('transform', function(d, i) {
-      return 'translate(0,' + i * (li.h + li.s) + ')';
-    });
+    .attr('id', 'container')
+    .attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')');
 
-  g.append('svg:rect')
-    .attr('rx', li.r)
-    .attr('ry', li.r)
-    .attr('width', li.w)
-    .attr('height', li.h)
-    .style('fill', function(d) {
-      return d.value;
-    });
+  drawLegend(el);
 
-  g.append('svg:text')
-    .attr('x', li.w / 2)
-    .attr('y', li.h / 2)
-    .attr('dy', '0.35em')
-    .attr('text-anchor', 'middle')
-    .text(function(d) {
-      return d.key;
+  partition = d3.partition().size([2 * Math.PI, radius * radius]);
+
+  arc = d3
+    .arc()
+    .startAngle(function (d) {
+      return d.x0;
+    })
+    .endAngle(function (d) {
+      return d.x1;
+    })
+    .innerRadius(function (d) {
+      return Math.sqrt(d.y0);
+    })
+    .outerRadius(function (d) {
+      return Math.sqrt(d.y1);
     });
+}
+
+// Main function to draw and set up the visualization, once we have the data.
+function update(el, json) {
+  // Basic setup of page elements.
+  initializeBreadcrumbTrail();
+
+  el.querySelector('#container').innerHTML = '';
+
+  // Bounding circle underneath the sunburst, to make it easier to detect
+  // when the mouse leaves the parent g.
+  vis.append('svg:circle').attr('r', radius).style('opacity', 0);
+
+  // Turn the data into a d3 hierarchy and calculate the sums.
+  let root = d3.hierarchy(json);
+  let nodes = partition(root);
+
+  const mode_clock = true;
+  if (mode_clock) {
+    // TODO: Make this a checkbox in the UI
+    const show_whole_day = true;
+
+    let root_start = moment(json.timestamp);
+    let root_end = moment(json.timestamp).add(json.duration, 'seconds');
+    if (show_whole_day) {
+      root_start = root_start.startOf('day');
+      root_end = root_start.clone().endOf('day');
+
+      drawClock(0, 0);
+      drawClock(6, 0);
+      drawClock(12, 0);
+      drawClock(18, 0);
+
+      // TODO: Draw only if showing today
+      const now = moment();
+      drawClock(now.hour(), now.minute(), 'Now');
+    }
+
+    nodes = nodes
+      .each(function (d) {
+        const loc_start_sec = moment(d.data.timestamp).diff(root_start, 'seconds', true);
+        const loc_end_sec = moment(d.data.timestamp)
+          .add(d.data.duration, 'seconds')
+          .diff(root_start, 'seconds', true);
+
+        const loc_start = Math.max(0, loc_start_sec / ((root_end - root_start) / 1000));
+        const loc_end = Math.min(1, loc_end_sec / ((root_end - root_start) / 1000));
+
+        d.x0 = 2 * Math.PI * loc_start;
+        d.x1 = 2 * Math.PI * loc_end;
+      })
+      .descendants();
+  } else {
+    root = root
+      .sum(d => d.duration)
+      .sort((a, b) => JSON.stringify(a.data.data).localeCompare(JSON.stringify(b.data.data)));
+    nodes = nodes.descendants();
+  }
+
+  // For efficiency, filter nodes to keep only those large enough to see.
+  nodes = nodes.filter(function (d) {
+    // 0.005 radians = 0.29 degrees
+    // If show_whole_day:
+    //   0.0044 rad = 1min
+    //   0.0011 rad = 15s
+    const threshold = 0.001;
+    return d.x1 - d.x0 > threshold;
+  });
+
+  vis
+    .data([json])
+    .selectAll('path')
+    .data(nodes)
+    .enter()
+    .append('svg:path')
+    .attr('display', function (d) {
+      return d.depth ? null : 'none';
+    })
+    .attr('d', arc)
+    .attr('fill-rule', 'evenodd')
+    .style('fill', function (d) {
+      return color.getColorFromString(d.data.data.status || d.data.data.app);
+    })
+    .style('opacity', 1)
+    .on('mouseover', mouseover)
+    .on('click', mouseclick);
+
+  // Add the mouseleave handler to the bounding circle.
+  d3.select('#container').on('mouseleave', mouseleave);
 }
 
 // NOTE: The original version of this sunburst contained a buildHierarchy

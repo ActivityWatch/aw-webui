@@ -8,8 +8,8 @@ div
 
 <style scoped lang="scss">
 .aw-summary-container > svg {
-    border: 1px solid #999;
-    border-radius: 0.5em;
+  border: 1px solid #999;
+  border-radius: 0.5em;
 }
 </style>
 
@@ -18,13 +18,17 @@ div
 //       Code should generally go in the framework-independent file.
 
 import summary from './summary.js';
-import 'vue-awesome/icons/angle-double-down'
+import 'vue-awesome/icons/angle-double-down';
 
 export default {
-  name: "aw-summary",
+  name: 'aw-summary',
   props: {
     fields: Array,
     namefunc: Function,
+    hoverfunc: {
+      type: Function,
+      default: null, // If not set we will default to namefunc
+    },
     colorfunc: Function,
     limit: {
       type: Number,
@@ -33,33 +37,39 @@ export default {
     with_limit: {
       type: Boolean,
       default: false,
-    }
+    },
   },
-  data: function() {
-    return { limit_: this.limit }
+  data: function () {
+    return { limit_: this.limit };
   },
   watch: {
-    fields: function() {
+    fields: function () {
       this.update();
     },
-    limit_: function() {
+    limit_: function () {
       this.update();
     },
   },
-  mounted: function() {
+  mounted: function () {
     const el = this.$el.children[0];
     summary.create(el);
     this.update();
   },
   methods: {
-    update: function() {
+    update: function () {
       const el = this.$el.children[0];
-      if(this.fields !== null) {
-        summary.updateSummedEvents(el, this.fields.slice(0, this.limit_), this.namefunc, this.colorfunc)
+      if (this.fields !== null) {
+        summary.updateSummedEvents(
+          el,
+          this.fields.slice(0, this.limit_),
+          this.namefunc,
+          this.hoverfunc,
+          this.colorfunc
+        );
       } else {
-        summary.set_status(el, "Loading...");
+        summary.set_status(el, 'Loading...');
       }
     },
   },
-}
+};
 </script>

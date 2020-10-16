@@ -28,34 +28,32 @@ import {
   highlightOnHover,
   nodeInfoDisplayer,
   sunburst,
-  zoomOnClick
+  zoomOnClick,
 } from 'vue-d3-sunburst';
-import "vue-d3-sunburst/dist/vue-d3-sunburst.css";
+import 'vue-d3-sunburst/dist/vue-d3-sunburst.css';
 
 const example_data = {
-  "name": "flare",
-  "children": [
+  name: 'flare',
+  children: [
     {
-      "name": "analytics",
-      "children": [
+      name: 'analytics',
+      children: [
         {
-          "name": "cluster",
-          "children": [
-            { "name": "AgglomerativeCluster", "size": 3938 },
-            { "name": "CommunityStructure", "size": 3812 },
-            { "name": "HierarchicalCluster", "size": 6714 },
-            { "name": "MergeEdge", "size": 743 }
-          ]
+          name: 'cluster',
+          children: [
+            { name: 'AgglomerativeCluster', size: 3938 },
+            { name: 'CommunityStructure', size: 3812 },
+            { name: 'HierarchicalCluster', size: 6714 },
+            { name: 'MergeEdge', size: 743 },
+          ],
         },
         {
-          "name": "optimization",
-          "children": [
-            { "name": "AspectRatioBanker", "size": 7074 }
-          ]
-        }
-      ]
-    }
-  ]
+          name: 'optimization',
+          children: [{ name: 'AspectRatioBanker', size: 7074 }],
+        },
+      ],
+    },
+  ],
 };
 
 export default {
@@ -64,15 +62,15 @@ export default {
     highlightOnHover,
     nodeInfoDisplayer,
     sunburst,
-    zoomOnClick
+    zoomOnClick,
   },
   props: {
     data: {
       type: Object,
       default: () => example_data,
-    }
+    },
   },
-}
+};
 </script>
 
 <style lang="scss" scoped>

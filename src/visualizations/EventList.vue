@@ -29,9 +29,10 @@ div
               b-btn(v-b-modal="'edit-modal-' + event.id", variant="outline-dark" size="sm")
                 | Edit
 
-          // TODO: Refactor modal into event-editor component?
-          b-modal(:id="'edit-modal-' + event.id", ref="eventEditModal", title="Edit event", centered, hide-footer)
-            event-editor(:event="event", :bucket_id="bucket_id", @save="(e) => $emit('save', e)", @close="$bvModal.hide('edit-modal-' + event.id)")
+          event-editor(
+            :event="event", :bucket_id="bucket_id",
+            @save="(e) => $emit('save', e)", @delete="removeEvent"
+          )
 </template>
 
 <style scoped lang="scss">
@@ -103,7 +104,8 @@ $border-color: #ddd;
 
 /* Flips the outer element once, then all direct children once,
    leaving the scrollbar in the first flipped yet the content correct */
-.scrollbar-flipped, .scrollbar-flipped > * {
+.scrollbar-flipped,
+.scrollbar-flipped > * {
   transform: rotateX(180deg);
   -ms-transform: rotateX(180deg); /* IE 9 */
   -webkit-transform: rotateX(180deg); /* Safari and Chrome */
@@ -111,31 +113,34 @@ $border-color: #ddd;
 </style>
 
 <script>
-import 'vue-awesome/icons/tags'
-import 'vue-awesome/icons/clock'
-import 'vue-awesome/icons/calendar'
+import 'vue-awesome/icons/tags';
+import 'vue-awesome/icons/clock';
+import 'vue-awesome/icons/calendar';
 
 import EventEditor from '~/components/EventEditor.vue';
 
 export default {
-  name: "EventList",
+  name: 'EventList',
   components: {
-    "event-editor": EventEditor,
+    'event-editor': EventEditor,
   },
   props: {
     bucket_id: String,
     events: Array,
   },
-  data: function() {
+  data: function () {
     return {
       isListExpanded: false,
-    }
+    };
   },
   methods: {
-    expandList: function() {
+    expandList: function () {
       this.isListExpanded = !this.isListExpanded;
-      console.log("List should be expanding: ", this.isListExpanded);
-    }
+      console.log('List should be expanding: ', this.isListExpanded);
+    },
+    removeEvent: function (event) {
+      this.events = this.events.filter(e => e.id != event.id);
+    },
   },
-}
+};
 </script>

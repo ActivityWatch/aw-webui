@@ -20,16 +20,12 @@ div
       b-button.mx-1(v-b-modal="'edit-modal-' + event.id", variant="outline-dark", size="sm")
         icon.ml-0.mr-1(name="edit")
         | Edit
-      b-button.mx-1(@click="delete_", variant="outline-danger", size="sm")
-        icon.mx-0(name="trash")
-        //| Delete
-  b-modal(:id="'edit-modal-' + event.id", ref="eventEditModal", title="Edit event", centered, hide-footer)
-    event-editor(:event="event", :bucket_id="bucket_id", @save="save", @close="$refs.eventEditModal.hide()")
+  event-editor(:event="event", :bucket_id="bucket_id", @save="save", @delete="delete_")
 </template>
 
 <style scoped lang="scss">
 #root:hover {
-  background-color: #EEE;
+  background-color: #eee;
 }
 </style>
 
@@ -38,37 +34,36 @@ import moment from 'moment';
 import 'vue-awesome/icons/edit';
 import 'vue-awesome/icons/stop';
 import 'vue-awesome/icons/play';
-import 'vue-awesome/icons/trash';
 
 import EventEditor from './EventEditor.vue';
 
 export default {
-  name: "StopwatchEntry",
+  name: 'StopwatchEntry',
   components: {
-    "event-editor": EventEditor,
+    'event-editor': EventEditor,
   },
   props: {
     event: Object,
     bucket_id: String,
     now: {
       type: moment,
-      default: moment()
-    }
+      default: moment(),
+    },
   },
   methods: {
-    stop: async function() {
+    stop: async function () {
       let new_event = JSON.parse(JSON.stringify(this.event));
       new_event.data.running = false;
       new_event.duration = (moment() - moment(new_event.timestamp)) / 1000;
       new_event = await this.$aw.replaceEvent(this.bucket_id, new_event);
       this.$emit('update', new_event);
     },
-    save: async function(new_event) {
+    save: async function (new_event) {
       this.$emit('update', new_event);
     },
-    delete_: async function() {
-      this.$emit('delete', this.event);
+    delete_: async function (new_event) {
+      this.$emit('delete', new_event);
     },
-  }
-}
+  },
+};
 </script>

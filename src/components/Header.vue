@@ -63,7 +63,6 @@ div.aw-navbar
 </template>
 
 <script>
-
 // only import the icons you use to reduce bundle size
 import 'vue-awesome/icons/calendar-day';
 import 'vue-awesome/icons/calendar-week';
@@ -78,62 +77,60 @@ import 'vue-awesome/icons/desktop';
 
 import _ from 'lodash';
 
-// Set this to true to test Android behavior when on a desktop
-const testingAndroid = false;
-
 export default {
   name: 'Header',
   data() {
     return {
       activityViews: [],
-      isAndroidApp: testingAndroid || navigator.userAgent.includes("Android") && navigator.userAgent.includes("wv"), // Checks for Android and WebView
     };
   },
-  mounted: async function() {
+  mounted: async function () {
     const buckets = await this.$aw.getBuckets();
     const types_by_host = {};
-    _.each(buckets, (v) => {
-        types_by_host[v.hostname] = types_by_host[v.hostname] || {};
-        // The '&& true;' is just to typecoerce into booleans
-        types_by_host[v.hostname].afk |= v.type == "afkstatus";
-        types_by_host[v.hostname].window |= v.type == "currentwindow";
-        types_by_host[v.hostname].android |= v.type == "currentwindow" && this.isAndroidApp;  // Use other bucket type ID in the future
-    })
+
+    // TODO: Change to use same bucket detection logic as get_buckets/set_available in store/modules/activity.ts
+    _.each(buckets, v => {
+      types_by_host[v.hostname] = types_by_host[v.hostname] || {};
+      // The '&& true;' is just to typecoerce into booleans
+      types_by_host[v.hostname].afk |= v.type == 'afkstatus';
+      types_by_host[v.hostname].window |= v.type == 'currentwindow';
+      types_by_host[v.hostname].android |= v.type == 'currentwindow' && v.id.includes('android'); // Use other bucket type ID in the future
+    });
     //console.log(types_by_host);
 
     _.each(types_by_host, (types, hostname) => {
-        if(types.afk && types.window) {
-          this.activityViews.push({
-            name: hostname,
-            hostname: hostname,
-            type: "default",
-            pathUrl: `/activity/${hostname}`,
-            icon: 'desktop'
-          });
-        }
-        if(testingAndroid || types.android) {
-          this.activityViews.push({
-            name: `${hostname} (Android)`,
-            hostname: hostname,
-            type: "android",
-            pathUrl: '/activity/android',
-            icon: 'mobile'
-          });
-        }
-    })
-  }
-}
+      if (hostname != 'unknown') {
+        this.activityViews.push({
+          name: hostname,
+          hostname: hostname,
+          type: 'default',
+          pathUrl: `/activity/${hostname}`,
+          icon: 'desktop',
+        });
+      }
+      if (types.android) {
+        this.activityViews.push({
+          name: `${hostname} (Android)`,
+          hostname: hostname,
+          type: 'android',
+          pathUrl: `/activity/${hostname}`,
+          icon: 'mobile',
+        });
+      }
+    });
+  },
+};
 </script>
 
 <style lang="scss" scoped>
 .aw-navbar {
-  background-color: #FFF;
-  border: solid #CCC;
+  background-color: #fff;
+  border: solid #ccc;
   border-width: 0 0 1px 0;
 }
 
 .active {
-  background-color: #DDD;
+  background-color: #ddd;
   border-radius: 0.5em;
 }
 
@@ -145,14 +142,14 @@ export default {
   border-radius: 0.5em;
 
   &:hover {
-    background-color: #DDD;
+    background-color: #ddd;
   }
 }
 
 .abs-center {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 </style>
 

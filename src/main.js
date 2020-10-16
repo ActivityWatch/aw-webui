@@ -23,6 +23,10 @@ import 'typeface-varela-round';
 // Loads all the filters
 import './util/filters.js';
 
+// Create an instance of AWClient as this.$aw
+import awclient from './util/awclient.js';
+Vue.prototype.$aw = awclient;
+
 // Sets up the routing and the base app (using vue-router)
 import router from './route.js';
 
@@ -37,6 +41,9 @@ Vue.component('error-boundary', () => import('./components/ErrorBoundary.vue'));
 Vue.component('input-timeinterval', () => import('./components/InputTimeInterval.vue'));
 Vue.component('aw-header', () => import('./components/Header.vue'));
 Vue.component('aw-devonly', () => import('./components/DevOnly.vue'));
+Vue.component('aw-selectable-vis', () => import('./components/SelectableVisualization.vue'));
+Vue.component('new-release-notification', () => import('./components/NewReleaseNotification.vue'));
+Vue.component('user-satisfaction-poll', () => import('./components/UserSatisfactionPoll.vue'));
 
 // Visualization components
 Vue.component('aw-summary', () => import('./visualizations/Summary.vue'));
@@ -49,13 +56,10 @@ Vue.component('aw-timeline', () => import('./visualizations/TimelineSimple.vue')
 Vue.component('vis-timeline', () => import('./visualizations/VisTimeline.vue'));
 Vue.component('aw-categorytree', () => import('./visualizations/CategoryTree.vue'));
 Vue.component('aw-timeline-barchart', () => import('./visualizations/TimelineBarChart.vue'));
+Vue.component('aw-calendar', () => import('./visualizations/Calendar.vue'));
 
 // A mixin to make async method errors propagate
 Vue.mixin(require('~/mixins/asyncErrorCaptured.js'));
-
-// Create an instance of AWClient as this.$aw
-import awclient from './util/awclient.js';
-Vue.prototype.$aw = awclient;
 
 // Set the PRODUCTION constant
 Vue.prototype.PRODUCTION = PRODUCTION;

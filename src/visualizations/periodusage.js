@@ -30,16 +30,16 @@ const diagramcolor = '#aaa';
 const diagramcolor_selected = '#fc5';
 const diagramcolor_focused = '#adf';
 
-function update(svg_elem, usage_arr, link_prefix) {
+function update(svg_elem, usage_arr, onPeriodClicked) {
   const dateformat = 'YYYY-MM-DD';
 
   // No apps, sets status to "No data"
   if (usage_arr.length <= 0) {
     set_status(svg_elem, 'No data');
-    return svg;
+    return;
   }
   svg_elem.innerHTML = '';
-  var svg = d3.select(svg_elem);
+  const svg = d3.select(svg_elem);
 
   function get_usage_time(day_events) {
     const day_event = _.head(_.filter(day_events, e => e.data.status == 'not-afk'));
@@ -101,7 +101,6 @@ function update(svg_elem, usage_arr, link_prefix) {
       .attr('height', height + offset + '%')
       .attr('color', color)
       .attr('date', date)
-      .attr('data', link_prefix)
       .style('fill', color)
       .on('mouseover', () => {
         rect.style('fill', diagramcolor_focused);
@@ -110,14 +109,8 @@ function update(svg_elem, usage_arr, link_prefix) {
         const a = n[j];
         rect.style('fill', a.getAttribute('color'));
       })
-      .on('click', function(d, j, n) {
-        const me = n[j];
-        const date = d3.select(me).attr('date');
-        const link_prefix = d3.select(me).attr('data');
-        const url = `/#${link_prefix}/${date}`;
-        /* Not the vue-way, but works */
-        window.location.assign(url);
-        /* Hardcoding click behavior also isn't optimal I guess */
+      .on('click', function () {
+        onPeriodClicked(date);
       });
     rect
       .append('title')

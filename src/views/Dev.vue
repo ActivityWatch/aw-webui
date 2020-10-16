@@ -14,16 +14,16 @@ import moment from 'moment';
 console.log(moment);
 
 export default {
-  name: "aw-dev",
+  name: 'aw-dev',
 
-  data: function() {
+  data: function () {
     return {
       queryOptions: {
         aw_client: this.$aw,
         date: moment().format('YYYY-MM-DD'),
         host: 'erb-laptop2-arch',
         filterAFK: true,
-        browserBuckets: ["aw-watcher-web-firefox-imported-2019-10-03T1"],
+        browserBuckets: ['aw-watcher-web-firefox-imported-2019-10-03T1'],
       },
     };
   },
@@ -31,12 +31,12 @@ export default {
     console.log(this.$store);
   },
   methods: {
-    query_window_timing: async function() {
-      await this.$store.dispatch('activity_daily/query_window', this.queryOptions);
+    query_window_timing: async function () {
+      await this.$store.dispatch('activity/query_window', this.queryOptions);
     },
-    query_browser_timing: async function() {
-      await this.$store.dispatch('activity_daily/query_browser', this.queryOptions);
-    }
-  }
-}
+    query_browser_timing: async function () {
+      await this.$store.dispatch('activity/query_browser', this.queryOptions);
+    },
+  },
+};
 </script>

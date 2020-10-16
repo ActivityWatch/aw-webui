@@ -4,6 +4,8 @@ div#wrapper
 
   div.container.aw-container.my-3.py-3
     error-boundary
+      user-satisfaction-poll
+      new-release-notification(v-if="isNewReleaseCheckEnabled")
       router-view
 
   div.container(style="color: #555")
@@ -39,37 +41,40 @@ import 'vue-awesome/icons/brands/twitter';
 import 'vue-awesome/icons/brands/github';
 
 export default {
-  data: function() {
+  data: function () {
     return {
       activityViews: [],
       info: {},
-    }
+      isNewReleaseCheckEnabled: !process.env.VUE_APP_ON_ANDROID,
+    };
   },
 
-  mounted: async function() {
+  mounted: async function () {
     this.$aw.getInfo().then(
-      (info) => {
+      info => {
         this.info = info;
       },
-      (e) => {
-        console.error("Unable to connect: ", e)
+      e => {
+        console.error('Unable to connect: ', e);
         this.info = {};
       }
     );
-  }
-}
+  },
+};
 </script>
 
 <style lang="scss">
 $textcolor: #000;
 
-html, body, button {
+html,
+body,
+button {
   color: $textcolor;
   font-family: 'Varela Round', sans-serif !important;
 }
 
 body {
-  background-color: #EEE;
+  background-color: #eee;
 }
 
 .fa-icon {
@@ -80,8 +85,8 @@ body {
 }
 
 .aw-container {
-  background-color: #FFF;
-  border: 1px solid #CCC;
+  background-color: #fff;
+  border: 1px solid #ccc;
   border-radius: 5px 5px 5px 5px;
 }
 </style>

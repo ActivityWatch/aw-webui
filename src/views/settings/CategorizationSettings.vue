@@ -1,21 +1,5 @@
 <template lang="pug">
 div
-  h3 Settings
-
-  b-alert(variant="warning", show) #[b Note:] These settings are only saved in your browser and will not remain if you switch browser. We are working on getting this fixed.
-
-  hr
-
-  div.row
-    div.col-sm-9
-      h5.mb-0 Start of day
-      small
-        | The time at which days "start", since humans don't always go to bed before midnight. Set to 04:00 by default.
-    div.col-sm-3
-      input.form-control(type="time" :value="startOfDay" @change="setStartOfDay($event.target.value)")
-
-  hr
-
   h5.d-inline-block
     div Categorization
   div.float-right
@@ -32,8 +16,8 @@ div
           | Save
         b-btn.ml-2(@click="resetClasses", variant="warning" size="sm")
           | Discard
-    div(v-for="cls in classes_hierarchy")
-      CategoryEditTree(:cls="cls")
+    div(v-for="_class in classes_hierarchy")
+      CategoryEditTree(:_class="_class")
 
   div.row
     div.col-sm-12
@@ -43,45 +27,38 @@ div
       b-btn.float-right(@click="saveClasses", variant="success" :disabled="!classes_unsaved_changes")
         | Save
 </template>
-
 <script>
-import CategoryEditTree from '~/components/CategoryEditTree.vue';
 import { mapState, mapGetters } from 'vuex';
+import CategoryEditTree from '~/components/CategoryEditTree.vue';
 
 export default {
-  name: "Settings",
+  name: 'CategorizationSettings',
   components: {
     CategoryEditTree,
   },
-  data: () => {
-    return {
-      startOfDay: '',
-    }
-  },
   computed: {
     ...mapGetters('settings', ['classes_hierarchy']),
-    ...mapState('settings', ['classes_unsaved_changes'])
+    ...mapState('settings', ['classes_unsaved_changes']),
   },
   mounted() {
-    this.startOfDay = localStorage.startOfDay;
     this.$store.dispatch('settings/load');
   },
   methods: {
-    setStartOfDay: function(time_minutes) {
-      localStorage.startOfDay = time_minutes;
+    addClass: function () {
+      this.$store.commit('settings/addClass', {
+        name: ['New class'],
+        rule: { type: 'regex', regex: 'FILL ME' },
+      });
     },
-    addClass: function() {
-      this.$store.commit('settings/addClass', {name: ["New class"], rule: {type: "regex", regex: "FILL ME"}});
-    },
-    saveClasses: async function() {
+    saveClasses: async function () {
       await this.$store.dispatch('settings/save');
     },
-    resetClasses: async function() {
+    resetClasses: async function () {
       await this.$store.dispatch('settings/load');
     },
-    restoreDefaultClasses: async function() {
+    restoreDefaultClasses: async function () {
       await this.$store.commit('settings/restoreDefaultClasses');
     },
-  }
-}
+  },
+};
 </script>
