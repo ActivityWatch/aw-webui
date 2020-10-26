@@ -45,9 +45,10 @@ div
       h4 Resources
       p
         ul
-          li #[a(href="http://activitywatch.net/") Website]
+          li #[a(href="https://activitywatch.net/") Website]
           li #[a(href="https://activitywatch.readthedocs.org/") Documentation]
           li #[a(href="https://forum.activitywatch.net/") Forum]
+          li #[a(href="https://discord.gg/vDskV9q") Discord]
           li #[a(href="https://github.com/ActivityWatch/activitywatch") GitHub]
           li #[a(href="/api/") API Browser]
 
