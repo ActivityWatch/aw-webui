@@ -4,7 +4,7 @@
       button(type="button", class="close", @click="isPollVisible=false") &times;
       form
         p
-          | Hey there! You've been using ActivityWatch for a while. How likely are you to recommend it to a friend/colleague (10 being most likely)?
+          | Hey there! You've been using ActivityWatch for a while. How likely are you to recommend it to a friend/colleague on a scale 1-10? (with 10 being the most likely)
         div(class="radio-options")
           div(v-for="i in options", class="option-group")
             input(type="radio", :id="'option' + i", name="rating", :value="i", v-model="rating")
@@ -35,7 +35,7 @@
         li
           | Rate us on #[a(href="https://alternativeto.net/software/activitywatch/") AlternativeTo] and #[a(href="https://play.google.com/store/apps/details?id=net.activitywatch.android") Google Play Store].
         li
-          | Join our #[a(https://discord.gg/vDskV9q) Discord server].
+          | Join our #[a(href="https://discord.gg/vDskV9q") Discord server].
 
     b-alert(v-if="isNegFollowUpVisible", variant="info" show)
       button(type="button", class="close", @click="isNegFollowUpVisible=false") &times;
