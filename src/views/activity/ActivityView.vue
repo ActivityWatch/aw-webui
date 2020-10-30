@@ -30,7 +30,9 @@ export default {
   },
   methods: {
     addVisualization: function () {
-      alert('not implemented');
+      const view_id =
+        this.view_id == 'default' ? this.$store.state.settings.views[0].id : this.view_id;
+      this.$store.commit('settings/addVisualization', { view_id, type: 'top_apps' });
     },
     async onTypeChange(id, type) {
       const view_id =

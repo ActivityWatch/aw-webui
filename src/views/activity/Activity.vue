@@ -209,7 +209,10 @@ export default {
 
   methods: {
     addView: function () {
-      alert('Not implemented yet');
+      // TODO: Open modal to ask for options like id, and name
+      this.$store.commit('settings/addView', {
+        view_id: this.$store.state.settings.views.length + 1,
+      });
     },
     previousPeriod: function () {
       return moment(this._date).subtract(1, `${this.periodLength}s`).format('YYYY-MM-DD');

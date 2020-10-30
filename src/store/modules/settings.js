@@ -90,10 +90,16 @@ const mutations = {
     }
     console.log('Loaded views:', state.views);
   },
+  addView(state, { view_id }) {
+    state.views.push({ id: view_id, name: view_id, elements: [] });
+  },
   editView(state, { view_id, el_id, type }) {
     console.log(view_id, el_id, type);
     console.log(state.views);
     state.views.find(v => v.id == view_id).elements[el_id].type = type;
+  },
+  addVisualization(state, { view_id, type }) {
+    state.views.find(v => v.id == view_id).elements.push({ type: type });
   },
   loadClasses(state, classes) {
     let i = 0;
