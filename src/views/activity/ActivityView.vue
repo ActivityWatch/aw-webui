@@ -1,10 +1,10 @@
 <template lang="pug">
-div
+div(v-if="view")
   div.row.mb-4
     div.col-md-6.col-lg-4.p-3(v-for="el, index in view.elements")
       aw-selectable-vis(:id="index" :type="el.type" @onTypeChange="onTypeChange")
 
-  div
+  b-button(@click="addVisualization")
     icon(name="plus")
     span Add visualization to view
 </template>
@@ -29,12 +29,13 @@ export default {
     },
   },
   methods: {
-    onTypeChange(id, type) {
-      // TODO: Use vuex store
-      console.log(this.$store.state.settings.views);
-      //this.elements[id] = type;
-      // Needed to emit the change to the child component
-      //this.$set(this.elements, this.elements);
+    addVisualization: function () {
+      alert('not implemented');
+    },
+    async onTypeChange(id, type) {
+      const view_id =
+        this.view_id == 'default' ? this.$store.state.settings.views[0].id : this.view_id;
+      await this.$store.commit('settings/editView', { view_id: view_id, el_id: id, type });
     },
   },
 };

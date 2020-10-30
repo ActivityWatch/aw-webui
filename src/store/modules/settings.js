@@ -90,6 +90,11 @@ const mutations = {
     }
     console.log('Loaded views:', state.views);
   },
+  editView(state, { view_id, el_id, type }) {
+    console.log(view_id, el_id, type);
+    console.log(state.views);
+    state.views.find(v => v.id == view_id).elements[el_id].type = type;
+  },
   loadClasses(state, classes) {
     let i = 0;
     state.classes = classes.map(c => Object.assign(c, { id: i++ }));

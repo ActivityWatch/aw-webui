@@ -6,9 +6,6 @@ const Home = () => import('./views/Home.vue');
 // Activity views for desktop
 const Activity = () => import('./views/activity/Activity.vue');
 const ActivityView = () => import('./views/activity/ActivityView.vue');
-const ActivitySummary = () => import('./views/activity/ActivitySummary.vue');
-const ActivityWindow = () => import('./views/activity/ActivityWindow.vue');
-const ActivityBrowser = () => import('./views/activity/ActivityBrowser.vue');
 const ActivityEditor = () => import('./views/activity/ActivityEditor.vue');
 
 const Buckets = () => import('./views/Buckets.vue');
@@ -35,26 +32,6 @@ const router = new VueRouter({
           name: 'activity-view',
           component: ActivityView,
           props: true,
-        },
-        {
-          path: 'summary',
-          meta: { subview: 'summary' },
-          name: 'activity-summary',
-          component: ActivitySummary,
-          props: true,
-        },
-        {
-          path: 'window',
-          meta: { subview: 'window' },
-          name: 'activity-window',
-          component: ActivityWindow,
-          props: true,
-        },
-        {
-          path: 'browser',
-          meta: { subview: 'browser' },
-          name: 'activity-browser',
-          component: ActivityBrowser,
         },
         {
           path: 'editor',

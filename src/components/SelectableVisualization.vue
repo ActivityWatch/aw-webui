@@ -172,6 +172,7 @@ export default {
         timeline_barchart: {
           title: 'Timeline (barchart)',
           // TODO
+          available: true,
           //available: this.$store.state.activity.category.available,
         },
       };
