@@ -36,19 +36,18 @@ div
 
   aw-periodusage(:periodusage_arr="periodusage", @update="setDate")
 
-  ul.row.nav.nav-tabs.mt-3.pl-3
-    li.nav-item
-      router-link.nav-link(:to="{ name: 'activity-summary', params: $route.params }")
-        h6 Summary
-    li.nav-item
-      router-link.nav-link(:to="{ name: 'activity-window', params: $route.params }")
-        h6 Window
-    li.nav-item
-      router-link.nav-link(:to="{ name: 'activity-browser', params: $route.params }")
-        h6 Browser
+  ul.row.nav.nav-tabs.mt-3.px-3
+    li.nav-item(v-for="view in views")
+      router-link.nav-link(:to="{ name: 'activity-view', params: {...$route.params, view_id: view.id}}")
+        h6 {{view.name}}
     li.nav-item
       router-link.nav-link(:to="{ name: 'activity-editor', params: $route.params }")
         h6 Editor
+    li.nav-item(style="margin-left: auto")
+      a.nav-link(@click="addView")
+        h6
+          icon(name="plus")
+          span New view
 
   div
     router-view
@@ -110,6 +109,7 @@ import _ from 'lodash';
 import 'vue-awesome/icons/arrow-left';
 import 'vue-awesome/icons/arrow-right';
 import 'vue-awesome/icons/sync';
+import 'vue-awesome/icons/plus';
 
 export default {
   name: 'Activity',
@@ -135,6 +135,9 @@ export default {
     };
   },
   computed: {
+    views: function () {
+      return this.$store.state.settings.views;
+    },
     _date: function () {
       return this.date || get_today();
     },
@@ -205,6 +208,9 @@ export default {
   },
 
   methods: {
+    addView: function () {
+      alert('Not implemented yet');
+    },
     previousPeriod: function () {
       return moment(this._date).subtract(1, `${this.periodLength}s`).format('YYYY-MM-DD');
     },

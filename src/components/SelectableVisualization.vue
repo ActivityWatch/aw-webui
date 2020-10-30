@@ -54,6 +54,8 @@ div
     aw-categorytree(:events="$store.state.activity.category.top")
   div(v-if="type == 'category_sunburst'")
     aw-sunburst-categories(:data="top_categories_hierarchy", style="height: 20em")
+  div(v-if="type == 'timeline_barchart'")
+    aw-timeline-barchart(:datasets="datasets", style="height: 100")
 
 </template>
 
@@ -70,8 +72,11 @@ div
 </style>
 
 <script>
+import { split_by_hour_into_data } from '~/util/transforms';
+
 // TODO: Move this somewhere else
 import { build_category_hierarchy } from '~/util/classes';
+
 function pick_subname_as_name(c) {
   c.name = c.subname;
   c.children = c.children.map(pick_subname_as_name);
@@ -97,6 +102,7 @@ export default {
         'top_editor_files',
         'top_editor_languages',
         'top_editor_projects',
+        'timeline_barchart',
       ],
       // TODO: Move this function somewhere else
       top_editor_files_namefunc: e => {
@@ -163,6 +169,11 @@ export default {
           title: 'Category Sunburst',
           available: this.$store.state.activity.category.available,
         },
+        timeline_barchart: {
+          title: 'Timeline (barchart)',
+          // TODO
+          //available: this.$store.state.activity.category.available,
+        },
       };
     },
     top_categories_hierarchy: function () {
@@ -179,6 +190,17 @@ export default {
       } else {
         return null;
       }
+    },
+    datasets: function () {
+      // TODO: Move elsewhere
+      const data = split_by_hour_into_data(this.$store.state.activity.active.events);
+      return [
+        {
+          label: 'Total time',
+          backgroundColor: '#6699ff',
+          data,
+        },
+      ];
     },
   },
 };

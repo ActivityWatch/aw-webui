@@ -5,6 +5,7 @@ const Home = () => import('./views/Home.vue');
 
 // Activity views for desktop
 const Activity = () => import('./views/activity/Activity.vue');
+const ActivityView = () => import('./views/activity/ActivityView.vue');
 const ActivitySummary = () => import('./views/activity/ActivitySummary.vue');
 const ActivityWindow = () => import('./views/activity/ActivityWindow.vue');
 const ActivityBrowser = () => import('./views/activity/ActivityBrowser.vue');
@@ -28,6 +29,13 @@ const router = new VueRouter({
       component: Activity,
       props: true,
       children: [
+        {
+          path: 'view/:view_id?',
+          meta: { subview: 'view' },
+          name: 'activity-view',
+          component: ActivityView,
+          props: true,
+        },
         {
           path: 'summary',
           meta: { subview: 'summary' },
@@ -58,7 +66,7 @@ const router = new VueRouter({
         // (needs to be last since otherwise it'll always match first)
         {
           path: '',
-          redirect: 'summary',
+          redirect: 'view/',
         },
       ],
     },

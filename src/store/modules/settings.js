@@ -6,8 +6,40 @@ import {
   build_category_hierarchy,
 } from '~/util/classes';
 
+const defaultViews = [
+  {
+    id: 'summary',
+    name: 'Summary',
+    elements: [
+      { type: 'top_apps', size: 3 },
+      { type: 'top_titles', size: 3 },
+      { type: 'top_domains', size: 3 },
+      { type: 'top_categories', size: 3 },
+      { type: 'category_tree', size: 3 },
+      { type: 'category_sunburst', size: 3 },
+    ],
+  },
+  {
+    id: 'window',
+    name: 'Window',
+    elements: [
+      { type: 'top_apps', size: 3 },
+      { type: 'top_titles', size: 3 },
+    ],
+  },
+  {
+    id: 'browser',
+    name: 'Browser',
+    elements: [
+      { type: 'top_domains', size: 3 },
+      { type: 'top_urls', size: 3 },
+    ],
+  },
+];
+
 // initial state
 const _state = {
+  views: [],
   classes: [],
   classes_unsaved_changes: false,
 };
@@ -37,6 +69,7 @@ const getters = {
 // actions
 const actions = {
   async load({ commit }) {
+    commit('loadViews');
     commit('loadClasses', await loadClasses());
   },
   async save({ state, commit }) {
@@ -48,6 +81,15 @@ const actions = {
 
 // mutations
 const mutations = {
+  loadViews(state) {
+    const views_json = localStorage.views;
+    if (views_json && views_json.length >= 1) {
+      state.views = JSON.parse(views_json);
+    } else {
+      state.views = defaultViews;
+    }
+    console.log('Loaded views:', state.views);
+  },
   loadClasses(state, classes) {
     let i = 0;
     state.classes = classes.map(c => Object.assign(c, { id: i++ }));
