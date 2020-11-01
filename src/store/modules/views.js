@@ -67,8 +67,16 @@ const mutations = {
     }
     console.log('Loaded views:', state.views);
   },
+  restoreDefaults(state) {
+    state.views = defaultViews;
+  },
   addView(state, { view_id }) {
     state.views.push({ id: view_id, name: view_id, elements: [] });
+  },
+  removeView(state, { view_id }) {
+    const idx = state.views.map(v => v.id).indexOf(view_id);
+    console.log(idx);
+    state.views.splice(idx, 1);
   },
   editView(state, { view_id, el_id, type }) {
     console.log(view_id, el_id, type);

@@ -4,6 +4,7 @@ div
     div Categorization
   div.float-right
     b-btn.ml-1(@click="restoreDefaultClasses", variant="outline-warning" size="sm")
+      icon(name="undo")
       | Restore defaults
   div
     | Rules for categorizing events. An event can only have one category. If several categories match, the deepest one will be chosen.
@@ -30,6 +31,7 @@ div
 <script>
 import { mapState, mapGetters } from 'vuex';
 import CategoryEditTree from '~/components/CategoryEditTree.vue';
+import 'vue-awesome/icons/undo';
 
 export default {
   name: 'CategorizationSettings',
