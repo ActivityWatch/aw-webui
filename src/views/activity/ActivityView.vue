@@ -44,9 +44,9 @@ export default {
   computed: {
     view: function () {
       if (this.view_id == 'default') {
-        return this.$store.state.settings.views[0];
+        return this.$store.state.views.views[0];
       } else {
-        return this.$store.state.settings.views.find(v => v.id == this.view_id);
+        return this.$store.state.views.views.find(v => v.id == this.view_id);
       }
     },
   },
@@ -59,19 +59,19 @@ export default {
     },
     addVisualization: function () {
       const view_id =
-        this.view_id == 'default' ? this.$store.state.settings.views[0].id : this.view_id;
-      this.$store.commit('settings/addVisualization', { view_id, type: 'top_apps' });
+        this.view_id == 'default' ? this.$store.state.views.views[0].id : this.view_id;
+      this.$store.commit('views/addVisualization', { view_id, type: 'top_apps' });
     },
     async onTypeChange(id, type) {
       const view_id =
-        this.view_id == 'default' ? this.$store.state.settings.views[0].id : this.view_id;
-      await this.$store.commit('settings/editView', { view_id: view_id, el_id: id, type });
+        this.view_id == 'default' ? this.$store.state.views.views[0].id : this.view_id;
+      await this.$store.commit('views/editView', { view_id: view_id, el_id: id, type });
     },
     async onRemove(id) {
       console.log('rem');
       const view_id =
-        this.view_id == 'default' ? this.$store.state.settings.views[0].id : this.view_id;
-      await this.$store.commit('settings/removeVisualization', { view_id: view_id, el_id: id });
+        this.view_id == 'default' ? this.$store.state.views.views[0].id : this.view_id;
+      await this.$store.commit('views/removeVisualization', { view_id: view_id, el_id: id });
     },
   },
 };

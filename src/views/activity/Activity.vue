@@ -139,7 +139,7 @@ export default {
   },
   computed: {
     views: function () {
-      return this.$store.state.settings.views;
+      return this.$store.state.views.views;
     },
     currentView: function () {
       return this.views.find(v => v.id == this.$route.params.view_id) || this.views[0];
@@ -151,7 +151,7 @@ export default {
       return this.$route.meta.subview;
     },
     categories: function () {
-      const cats = this.$store.getters['settings/all_categories'];
+      const cats = this.$store.getters['categories/all_categories'];
       const entries = cats.map(c => {
         return { text: c.join(' > '), value: c };
       });
@@ -162,7 +162,7 @@ export default {
     },
     filterCategories: function () {
       if (this.filterCategory) {
-        const cats = this.$store.getters['settings/all_categories'];
+        const cats = this.$store.getters['categories/all_categories'];
         const isChild = p => c => c.length > p.length && _.isEqual(p, c.slice(0, p.length));
         const children = _.filter(cats, isChild(this.filterCategory));
         return [this.filterCategory].concat(children);
@@ -209,7 +209,8 @@ export default {
   },
 
   mounted: async function () {
-    this.$store.dispatch('settings/load');
+    this.$store.dispatch('views/load');
+    this.$store.dispatch('categories/load');
     await this.refresh();
   },
 
@@ -217,8 +218,8 @@ export default {
     addView: function () {
       // TODO: Open modal to ask for options like id, and name
       // FIXME: view_id is not guaranteed to be unique
-      this.$store.commit('settings/addView', {
-        view_id: this.$store.state.settings.views.length + 1,
+      this.$store.commit('views/addView', {
+        view_id: this.$store.state.views.views.length + 1,
       });
     },
     previousPeriod: function () {
