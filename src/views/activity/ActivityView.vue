@@ -17,7 +17,7 @@ div(v-if="view")
       b-button(variant="success" @click="save(); editing = !editing;")
         icon(name="save")
         span Save
-      b-button.ml-2(variant="outline-dark" @click="cancel(); editing = !editing;")
+      b-button.ml-2(variant="outline-dark" @click="discard(); editing = !editing;")
         icon(name="times")
         span Cancel
     b-button(v-else variant="outline-dark" size="sm" @click="editing = !editing")
@@ -52,10 +52,10 @@ export default {
   },
   methods: {
     save() {
-      alert('Not implemented');
+      this.$store.dispatch('views/save');
     },
-    cancel() {
-      alert('Not implemented');
+    discard() {
+      this.$store.dispatch('views/load');
     },
     addVisualization: function () {
       const view_id =

@@ -49,10 +49,11 @@ const actions = {
   async load({ commit }) {
     commit('loadViews');
   },
-  // TODO
-  //async save({ state, commit }) {
-  //  ...
-  //},
+  async save({ state, commit }) {
+    localStorage.views = JSON.stringify(state.views);
+    // After save, reload views
+    commit('loadViews');
+  },
 };
 
 // mutations
