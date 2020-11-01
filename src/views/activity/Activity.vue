@@ -38,26 +38,26 @@ div
 
   ul.row.nav.nav-tabs.mt-3.px-3
     li.nav-item(v-for="view in views")
-      router-link.nav-link(:to="{ name: 'activity-view', params: {...$route.params, view_id: view.id}}")
+      router-link.nav-link(:to="{ name: 'activity-view', params: {...$route.params, view_id: view.id}}" :class="{'router-link-exact-active': currentView.id == view.id}")
         h6 {{view.name}}
-    li.nav-item
-      router-link.nav-link(:to="{ name: 'activity-editor', params: $route.params }")
-        h6 Editor
+
     li.nav-item(style="margin-left: auto")
       a.nav-link(@click="addView")
         h6
           icon(name="plus")
-          span New view
+          span.d-none.d-md-inline
+            | New view
 
   div
     router-view
 
   div
+    hr
     h5 Options
 
     div.row
       div.col-md-6
-        b-form-group(label="Show category" label-cols="5" label-cols-lg="4")
+        b-form-group(label="Show/filter category" label-cols="5" label-cols-lg="4")
           b-form-select(v-model="filterCategory", :options="categories")
 
     aw-devonly
@@ -110,6 +110,9 @@ import 'vue-awesome/icons/arrow-left';
 import 'vue-awesome/icons/arrow-right';
 import 'vue-awesome/icons/sync';
 import 'vue-awesome/icons/plus';
+import 'vue-awesome/icons/edit';
+import 'vue-awesome/icons/times';
+import 'vue-awesome/icons/save';
 
 export default {
   name: 'Activity',
@@ -137,6 +140,9 @@ export default {
   computed: {
     views: function () {
       return this.$store.state.settings.views;
+    },
+    currentView: function () {
+      return this.views.find(v => v.id == this.$route.params.view_id) || this.views[0];
     },
     _date: function () {
       return this.date || get_today();
@@ -210,6 +216,7 @@ export default {
   methods: {
     addView: function () {
       // TODO: Open modal to ask for options like id, and name
+      // FIXME: view_id is not guaranteed to be unique
       this.$store.commit('settings/addView', {
         view_id: this.$store.state.settings.views.length + 1,
       });

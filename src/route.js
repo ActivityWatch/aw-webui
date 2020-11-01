@@ -6,7 +6,6 @@ const Home = () => import('./views/Home.vue');
 // Activity views for desktop
 const Activity = () => import('./views/activity/Activity.vue');
 const ActivityView = () => import('./views/activity/ActivityView.vue');
-const ActivityEditor = () => import('./views/activity/ActivityEditor.vue');
 
 const Buckets = () => import('./views/Buckets.vue');
 const Bucket = () => import('./views/Bucket.vue');
@@ -32,12 +31,6 @@ const router = new VueRouter({
           name: 'activity-view',
           component: ActivityView,
           props: true,
-        },
-        {
-          path: 'editor',
-          meta: { subview: 'editor' },
-          name: 'activity-editor',
-          component: ActivityEditor,
         },
         // Unspecified should redirect to summary view is the summary view
         // (needs to be last since otherwise it'll always match first)

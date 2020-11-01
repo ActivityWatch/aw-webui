@@ -1,12 +1,14 @@
 <template lang="pug">
 div
   h5 {{ visualizations[type].title }}
-  div
-    b-dropdown.vis-style-dropdown-btn(size="sm" variant="outline-secondary")
+  div(v-if="editable").vis-style-dropdown-btn
+    b-dropdown.mr-1(size="sm" variant="outline-secondary")
       template(v-slot:button-content)
         icon(name="cog")
       b-dropdown-item(v-for="t in types" :key="t" variant="outline-secondary" @click="$emit('onTypeChange', id, t)" v-bind:disabled="!visualizations[t].available")
         | {{ visualizations[t].title }}
+    b-button.p-0(size="sm", variant="outline-danger" @click="$emit('onRemove', id)")
+      icon(name="times")
 
   div(v-if="type == 'top_apps'")
     aw-summary(:fields="$store.state.activity.window.top_apps",
@@ -65,13 +67,16 @@ div
   top: 0.8em;
   right: 0.8em;
 
-  > .btn {
+  .btn {
     border: 0px;
   }
 }
 </style>
 
 <script>
+import 'vue-awesome/icons/cog';
+import 'vue-awesome/icons/times';
+
 import { split_by_hour_into_data } from '~/util/transforms';
 
 // TODO: Move this somewhere else
@@ -88,6 +93,7 @@ export default {
   props: {
     id: Number,
     type: String,
+    editable: { type: Boolean, default: true },
   },
   data: function () {
     return {

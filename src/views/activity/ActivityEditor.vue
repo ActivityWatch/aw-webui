@@ -36,7 +36,7 @@ div.mt-3
 import moment from 'moment';
 
 export default {
-  name: 'Activity',
+  name: 'ActivityEditor',
   props: {
     periodLength: {
       type: String,

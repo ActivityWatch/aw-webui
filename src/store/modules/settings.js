@@ -35,6 +35,13 @@ const defaultViews = [
       { type: 'top_urls', size: 3 },
     ],
   },
+  {
+    id: 'editor',
+    name: 'Editor',
+    elements: [
+      // TODO: Migrate ActivityEditor to ActivityView
+    ],
+  },
 ];
 
 // initial state
@@ -100,6 +107,9 @@ const mutations = {
   },
   addVisualization(state, { view_id, type }) {
     state.views.find(v => v.id == view_id).elements.push({ type: type });
+  },
+  removeVisualization(state, { view_id, el_id }) {
+    state.views.find(v => v.id == view_id).elements.splice(el_id, 1);
   },
   loadClasses(state, classes) {
     let i = 0;
