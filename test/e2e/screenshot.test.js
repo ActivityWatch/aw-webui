@@ -14,10 +14,13 @@ test('Take a screenshot of the activity view', async t => {
     // The resolution is the one used by the testcafe-action:
     //   https://github.com/DevExpress/testcafe-action/blob/0989d5f8ad852d71298ce3b770442cdec309d479/index.js#L59-L60
     //.resizeWindow(1280, 720)
-    .click('#load-demo')
-    // TODO: Figure out how to click all hide-devonly buttons instead of hardcoding number of clicks
-    .click('.hide-devonly')
-    .click('.hide-devonly');
+    .click('#load-demo');
+
+  // Hide all devonly-elements
+  const $hidedevonly = Selector('.hide-devonly');
+  for (let i = 0; i < $hidedevonly.count; i++) {
+    await t.click($hidedevonly.nth(i));
+  }
 
   // Closes the 'Network Error' message if running without aw-server
   const $close = Selector('.close');
