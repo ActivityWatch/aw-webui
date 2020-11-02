@@ -5,10 +5,7 @@ const Home = () => import('./views/Home.vue');
 
 // Activity views for desktop
 const Activity = () => import('./views/activity/Activity.vue');
-const ActivitySummary = () => import('./views/activity/ActivitySummary.vue');
-const ActivityWindow = () => import('./views/activity/ActivityWindow.vue');
-const ActivityBrowser = () => import('./views/activity/ActivityBrowser.vue');
-const ActivityEditor = () => import('./views/activity/ActivityEditor.vue');
+const ActivityView = () => import('./views/activity/ActivityView.vue');
 
 const Buckets = () => import('./views/Buckets.vue');
 const Bucket = () => import('./views/Bucket.vue');
@@ -29,36 +26,17 @@ const router = new VueRouter({
       props: true,
       children: [
         {
-          path: 'summary',
-          meta: { subview: 'summary' },
-          name: 'activity-summary',
-          component: ActivitySummary,
+          path: 'view/:view_id?',
+          meta: { subview: 'view' },
+          name: 'activity-view',
+          component: ActivityView,
           props: true,
-        },
-        {
-          path: 'window',
-          meta: { subview: 'window' },
-          name: 'activity-window',
-          component: ActivityWindow,
-          props: true,
-        },
-        {
-          path: 'browser',
-          meta: { subview: 'browser' },
-          name: 'activity-browser',
-          component: ActivityBrowser,
-        },
-        {
-          path: 'editor',
-          meta: { subview: 'editor' },
-          name: 'activity-editor',
-          component: ActivityEditor,
         },
         // Unspecified should redirect to summary view is the summary view
         // (needs to be last since otherwise it'll always match first)
         {
           path: '',
-          redirect: 'summary',
+          redirect: 'view/',
         },
       ],
     },

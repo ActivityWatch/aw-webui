@@ -36,29 +36,35 @@ div
 
   aw-periodusage(:periodusage_arr="periodusage", @update="setDate")
 
-  ul.row.nav.nav-tabs.mt-3.pl-3
-    li.nav-item
-      router-link.nav-link(:to="{ name: 'activity-summary', params: $route.params }")
-        h6 Summary
-    li.nav-item
-      router-link.nav-link(:to="{ name: 'activity-window', params: $route.params }")
-        h6 Window
-    li.nav-item
-      router-link.nav-link(:to="{ name: 'activity-browser', params: $route.params }")
-        h6 Browser
-    li.nav-item
-      router-link.nav-link(:to="{ name: 'activity-editor', params: $route.params }")
-        h6 Editor
+  ul.row.nav.nav-tabs.mt-3.px-3
+    li.nav-item(v-for="view in views")
+      router-link.nav-link(:to="{ name: 'activity-view', params: {...$route.params, view_id: view.id}}" :class="{'router-link-exact-active': currentView.id == view.id}")
+        h6 {{view.name}}
+
+    li.nav-item(style="margin-left: auto")
+      a.nav-link(@click="$refs.new_view.show()")
+        h6
+          icon(name="plus")
+          span.d-none.d-md-inline
+            | New view
+
+  b-modal(id="new_view" ref="new_view" title="New view" @show="resetModal" @hidden="resetModal" @ok="handleOk")
+    div.my-1
+      b-input-group.my-1(prepend="ID")
+        b-form-input(v-model="new_view.id")
+      b-input-group.my-1(prepend="Name")
+        b-form-input(v-model="new_view.name")
 
   div
     router-view
 
   div
+    hr
     h5 Options
 
     div.row
       div.col-md-6
-        b-form-group(label="Show category" label-cols="5" label-cols-lg="4")
+        b-form-group(label="Show/filter category" label-cols="5" label-cols-lg="4")
           b-form-select(v-model="filterCategory", :options="categories")
 
     aw-devonly
@@ -84,6 +90,7 @@ $bordercolor: #ddd;
       border-bottom: none;
       border-radius: 0.5rem 0.5rem 0 0;
       color: #111 !important;
+      cursor: pointer;
 
       &:hover {
         background-color: #f8f8f8;
@@ -110,6 +117,10 @@ import _ from 'lodash';
 import 'vue-awesome/icons/arrow-left';
 import 'vue-awesome/icons/arrow-right';
 import 'vue-awesome/icons/sync';
+import 'vue-awesome/icons/plus';
+import 'vue-awesome/icons/edit';
+import 'vue-awesome/icons/times';
+import 'vue-awesome/icons/save';
 
 export default {
   name: 'Activity',
@@ -132,9 +143,16 @@ export default {
     return {
       today: get_today(),
       filterCategory: null,
+      new_view: {},
     };
   },
   computed: {
+    views: function () {
+      return this.$store.state.views.views;
+    },
+    currentView: function () {
+      return this.views.find(v => v.id == this.$route.params.view_id) || this.views[0];
+    },
     _date: function () {
       return this.date || get_today();
     },
@@ -142,7 +160,7 @@ export default {
       return this.$route.meta.subview;
     },
     categories: function () {
-      const cats = this.$store.getters['settings/all_categories'];
+      const cats = this.$store.getters['categories/all_categories'];
       const entries = cats.map(c => {
         return { text: c.join(' > '), value: c };
       });
@@ -153,7 +171,7 @@ export default {
     },
     filterCategories: function () {
       if (this.filterCategory) {
-        const cats = this.$store.getters['settings/all_categories'];
+        const cats = this.$store.getters['categories/all_categories'];
         const isChild = p => c => c.length > p.length && _.isEqual(p, c.slice(0, p.length));
         const children = _.filter(cats, isChild(this.filterCategory));
         return [this.filterCategory].concat(children);
@@ -200,7 +218,8 @@ export default {
   },
 
   mounted: async function () {
-    this.$store.dispatch('settings/load');
+    this.$store.dispatch('views/load');
+    this.$store.dispatch('categories/load');
     await this.refresh();
   },
 
@@ -250,6 +269,52 @@ export default {
 
     load_demo: async function () {
       await this.$store.dispatch('activity/load_demo');
+    },
+
+    checkFormValidity() {
+      // All checks must be false for check to pass
+      const checks = {
+        // Check if view id is unique
+        'ID is not unique': this.$store.state.views.views.map(v => v.id).includes(this.new_view.id),
+        'Missing name': this.new_view.name === '',
+      };
+      const errors = Object.entries(checks)
+        .filter(([_k, v]) => v)
+        .map(([k, _v]) => k);
+      const valid = errors.length == 0;
+      if (!valid) {
+        alert(`Invalid form input: ${errors}`);
+      }
+      return valid;
+    },
+
+    handleOk(event) {
+      // Prevent modal from closing
+      event.preventDefault();
+      // Trigger submit handler
+      this.handleSubmit();
+    },
+
+    handleSubmit() {
+      // Exit when the form isn't valid
+      const valid = this.checkFormValidity();
+      if (!valid) {
+        return;
+      }
+
+      this.$store.commit('views/addView', { id: this.new_view.id, name: this.new_view.name });
+
+      // Hide the modal manually
+      this.$nextTick(() => {
+        this.$refs.new_view.hide();
+      });
+    },
+
+    resetModal() {
+      this.new_view = {
+        id: '',
+        name: '',
+      };
     },
   },
 };

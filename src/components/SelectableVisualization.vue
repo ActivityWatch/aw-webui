@@ -1,12 +1,20 @@
 <template lang="pug">
 div
   h5 {{ visualizations[type].title }}
-  div
-    b-dropdown.vis-style-dropdown-btn(size="sm" variant="outline-secondary")
+  div(v-if="editable").vis-style-dropdown-btn
+    b-dropdown.mr-1(size="sm" variant="outline-secondary")
       template(v-slot:button-content)
         icon(name="cog")
-      b-dropdown-item(v-for="t in types" :key="t" variant="outline-secondary" @click="$emit('onTypeChange', id, t)" v-bind:disabled="!visualizations[t].available")
-        | {{ visualizations[t].title }}
+      b-dropdown-item(v-for="t in types" :key="t" variant="outline-secondary" @click="$emit('onTypeChange', id, t)")
+        | {{ visualizations[t].title }} #[span.small(v-if="!visualizations[t].available" style="color: #A50") (no data)]
+    b-button.p-0(size="sm", variant="outline-danger" @click="$emit('onRemove', id)")
+      icon(name="times")
+
+  // Check data prerequisites
+  div(v-if="!has_prerequisites")
+    b-alert.small.px-2.py-1(show variant="warning")
+      | This feature is missing data from a required watcher.
+      | You can find a list of all watchers in #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") the documentation].
 
   div(v-if="type == 'top_apps'")
     aw-summary(:fields="$store.state.activity.window.top_apps",
@@ -54,7 +62,11 @@ div
     aw-categorytree(:events="$store.state.activity.category.top")
   div(v-if="type == 'category_sunburst'")
     aw-sunburst-categories(:data="top_categories_hierarchy", style="height: 20em")
-
+  div(v-if="type == 'timeline_barchart'")
+    aw-timeline-barchart(:datasets="datasets", style="height: 100")
+  // TODO: Broke when we switched to customizable views (since it doesn't use vuex to request data)
+  //div(v-if="type == 'sunburst_clock'")
+    aw-sunburst-clock(:date="date", :afkBucketId="bucket_id_afk", :windowBucketId="bucket_id_window")
 </template>
 
 <style lang="scss">
@@ -63,15 +75,21 @@ div
   top: 0.8em;
   right: 0.8em;
 
-  > .btn {
+  .btn {
     border: 0px;
   }
 }
 </style>
 
 <script>
+import 'vue-awesome/icons/cog';
+import 'vue-awesome/icons/times';
+
+import { split_by_hour_into_data } from '~/util/transforms';
+
 // TODO: Move this somewhere else
 import { build_category_hierarchy } from '~/util/classes';
+
 function pick_subname_as_name(c) {
   c.name = c.subname;
   c.children = c.children.map(pick_subname_as_name);
@@ -83,6 +101,7 @@ export default {
   props: {
     id: Number,
     type: String,
+    editable: { type: Boolean, default: true },
   },
   data: function () {
     return {
@@ -97,6 +116,7 @@ export default {
         'top_editor_files',
         'top_editor_languages',
         'top_editor_projects',
+        'timeline_barchart',
       ],
       // TODO: Move this function somewhere else
       top_editor_files_namefunc: e => {
@@ -163,7 +183,22 @@ export default {
           title: 'Category Sunburst',
           available: this.$store.state.activity.category.available,
         },
+        timeline_barchart: {
+          title: 'Timeline (barchart)',
+          // TODO
+          available: true,
+        },
+        /*
+        sunburst_clock: {
+          title: 'Sunburst clock',
+          // TODO
+          available: true,
+        },
+        */
       };
+    },
+    has_prerequisites() {
+      return this.visualizations[this.type].available;
     },
     top_categories_hierarchy: function () {
       const top_categories = this.$store.state.activity.category.top;
@@ -179,6 +214,17 @@ export default {
       } else {
         return null;
       }
+    },
+    datasets: function () {
+      // TODO: Move elsewhere
+      const data = split_by_hour_into_data(this.$store.state.activity.active.events);
+      return [
+        {
+          label: 'Total time',
+          backgroundColor: '#6699ff',
+          data,
+        },
+      ];
     },
   },
 };

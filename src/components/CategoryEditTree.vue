@@ -78,7 +78,7 @@ export default {
   },
   computed: {
     allCategories: function () {
-      const categories = this.$store.getters['settings/all_categories'];
+      const categories = this.$store.getters['categories/all_categories'];
       const entries = categories.map(c => {
         return { text: c.join('->'), value: c };
       });
@@ -94,7 +94,7 @@ export default {
   },
   methods: {
     addSubclass: function (parent) {
-      this.$store.commit('settings/addClass', {
+      this.$store.commit('categories/addClass', {
         name: parent.name.concat(['New class']),
         rule: { type: 'regex', regex: 'FILL ME' },
       });
@@ -103,7 +103,7 @@ export default {
       // TODO: Show a confirmation dialog
       // TODO: Remove children as well?
       // TODO: Move button to edit modal?
-      this.$store.commit('settings/removeClass', _class);
+      this.$store.commit('categories/removeClass', _class);
     },
     showEditModal() {
       this.$refs.edit.show();
@@ -130,7 +130,7 @@ export default {
         name: this.editing.parent.concat(this.editing.name),
         rule: this.editing.rule.type !== null ? this.editing.rule : { type: null },
       };
-      this.$store.commit('settings/updateClass', new_class);
+      this.$store.commit('categories/updateClass', new_class);
 
       // Hide the modal manually
       this.$nextTick(() => {
