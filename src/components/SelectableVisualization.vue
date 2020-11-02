@@ -64,7 +64,9 @@ div
     aw-sunburst-categories(:data="top_categories_hierarchy", style="height: 20em")
   div(v-if="type == 'timeline_barchart'")
     aw-timeline-barchart(:datasets="datasets", style="height: 100")
-
+  // TODO: Broke when we switched to customizable views (since it doesn't use vuex to request data)
+  //div(v-if="type == 'sunburst_clock'")
+    aw-sunburst-clock(:date="date", :afkBucketId="bucket_id_afk", :windowBucketId="bucket_id_window")
 </template>
 
 <style lang="scss">
@@ -185,8 +187,14 @@ export default {
           title: 'Timeline (barchart)',
           // TODO
           available: true,
-          //available: this.$store.state.activity.category.available,
         },
+        /*
+        sunburst_clock: {
+          title: 'Sunburst clock',
+          // TODO
+          available: true,
+        },
+        */
       };
     },
     has_prerequisites() {
