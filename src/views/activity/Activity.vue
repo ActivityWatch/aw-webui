@@ -42,11 +42,18 @@ div
         h6 {{view.name}}
 
     li.nav-item(style="margin-left: auto")
-      a.nav-link(@click="addView")
+      a.nav-link(@click="$refs.new_view.show()")
         h6
           icon(name="plus")
           span.d-none.d-md-inline
             | New view
+
+  b-modal(id="new_view" ref="new_view" title="New view" @show="resetModal" @hidden="resetModal" @ok="handleOk")
+    div.my-1
+      b-input-group.my-1(prepend="ID")
+        b-form-input(v-model="new_view.id")
+      b-input-group.my-1(prepend="Name")
+        b-form-input(v-model="new_view.name")
 
   div
     router-view
@@ -83,6 +90,7 @@ $bordercolor: #ddd;
       border-bottom: none;
       border-radius: 0.5rem 0.5rem 0 0;
       color: #111 !important;
+      cursor: pointer;
 
       &:hover {
         background-color: #f8f8f8;
@@ -135,6 +143,7 @@ export default {
     return {
       today: get_today(),
       filterCategory: null,
+      new_view: {},
     };
   },
   computed: {
@@ -215,13 +224,6 @@ export default {
   },
 
   methods: {
-    addView: function () {
-      // TODO: Open modal to ask for options like id, and name
-      // FIXME: view_id is not guaranteed to be unique
-      this.$store.commit('views/addView', {
-        view_id: this.$store.state.views.views.length + 1,
-      });
-    },
     previousPeriod: function () {
       return moment(this._date).subtract(1, `${this.periodLength}s`).format('YYYY-MM-DD');
     },
@@ -267,6 +269,52 @@ export default {
 
     load_demo: async function () {
       await this.$store.dispatch('activity/load_demo');
+    },
+
+    checkFormValidity() {
+      // All checks must be false for check to pass
+      const checks = {
+        // Check if view id is unique
+        'ID is not unique': this.$store.state.views.views.map(v => v.id).includes(this.new_view.id),
+        'Missing name': this.new_view.name === '',
+      };
+      const errors = Object.entries(checks)
+        .filter(([_k, v]) => v)
+        .map(([k, _v]) => k);
+      const valid = errors.length == 0;
+      if (!valid) {
+        alert(`Invalid form input: ${errors}`);
+      }
+      return valid;
+    },
+
+    handleOk(event) {
+      // Prevent modal from closing
+      event.preventDefault();
+      // Trigger submit handler
+      this.handleSubmit();
+    },
+
+    handleSubmit() {
+      // Exit when the form isn't valid
+      const valid = this.checkFormValidity();
+      if (!valid) {
+        return;
+      }
+
+      this.$store.commit('views/addView', { id: this.new_view.id, name: this.new_view.name });
+
+      // Hide the modal manually
+      this.$nextTick(() => {
+        this.$refs.new_view.hide();
+      });
+    },
+
+    resetModal() {
+      this.new_view = {
+        id: '',
+        name: '',
+      };
     },
   },
 };

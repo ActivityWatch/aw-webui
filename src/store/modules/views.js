@@ -70,8 +70,8 @@ const mutations = {
   restoreDefaults(state) {
     state.views = defaultViews;
   },
-  addView(state, { view_id }) {
-    state.views.push({ id: view_id, name: view_id, elements: [] });
+  addView(state, view) {
+    state.views.push({ ...view, elements: [] });
   },
   removeView(state, { view_id }) {
     const idx = state.views.map(v => v.id).indexOf(view_id);
