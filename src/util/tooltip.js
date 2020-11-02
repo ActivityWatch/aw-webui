@@ -34,9 +34,11 @@ export function buildTooltip(bucket, e) {
       <tr><td>Data:</td><td>${sanitize(JSON.stringify(e.data))}</td></tr>
       `;
   }
-  return `<table>${inner}
+  return `<table>
     <tr></tr>
-    <tr><th>Time:</th><td>${moment(e.timestamp).format()}</td></tr>
+    <tr><th>Start:</th><td>${moment(e.timestamp).format()}</td></tr>
+    <tr><th>Stop:</th><td>${moment(e.timestamp).add(e.duration, 'seconds').format()}</td></tr>
     <tr><th>Duration:</th><td>${seconds_to_duration(e.duration)}</td></tr>
+    ${inner}
     </table>`;
 }
