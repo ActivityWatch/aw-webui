@@ -31,7 +31,9 @@ const defaultViews = [
     id: 'editor',
     name: 'Editor',
     elements: [
-      // TODO: Migrate ActivityEditor to ActivityView
+      { type: 'top_editor_files', size: 3 },
+      { type: 'top_editor_projects', size: 3 },
+      { type: 'top_editor_languages', size: 3 },
     ],
   },
 ];

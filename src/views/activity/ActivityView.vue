@@ -1,8 +1,5 @@
 <template lang="pug">
 div(v-if="view")
-  div(v-if="view.id == 'editor'")
-    ActivityEditor
-
   div.row
     div.col-md-6.col-lg-4.p-3(v-for="el, index in view.elements")
       aw-selectable-vis(:id="index" :type="el.type" @onTypeChange="onTypeChange" @onRemove="onRemove" :editable="editing")
@@ -39,11 +36,8 @@ import 'vue-awesome/icons/times';
 import 'vue-awesome/icons/trash';
 import 'vue-awesome/icons/undo';
 
-import ActivityEditor from '~/views/activity/ActivityEditor';
-
 export default {
   name: 'ActivityView',
-  components: { ActivityEditor: ActivityEditor },
   props: {
     view_id: { type: String, default: 'default' },
     periodLength: {

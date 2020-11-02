@@ -5,10 +5,16 @@ div
     b-dropdown.mr-1(size="sm" variant="outline-secondary")
       template(v-slot:button-content)
         icon(name="cog")
-      b-dropdown-item(v-for="t in types" :key="t" variant="outline-secondary" @click="$emit('onTypeChange', id, t)" v-bind:disabled="!visualizations[t].available")
-        | {{ visualizations[t].title }}
+      b-dropdown-item(v-for="t in types" :key="t" variant="outline-secondary" @click="$emit('onTypeChange', id, t)")
+        | {{ visualizations[t].title }} #[span.small(v-if="!visualizations[t].available" style="color: #A50") (no data)]
     b-button.p-0(size="sm", variant="outline-danger" @click="$emit('onRemove', id)")
       icon(name="times")
+
+  // Check data prerequisites
+  div(v-if="!has_prerequisites")
+    b-alert.small.px-2.py-1(show variant="warning")
+      | This feature is missing data from a required watcher.
+      | You can find a list of all watchers in #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") the documentation].
 
   div(v-if="type == 'top_apps'")
     aw-summary(:fields="$store.state.activity.window.top_apps",
@@ -182,6 +188,9 @@ export default {
           //available: this.$store.state.activity.category.available,
         },
       };
+    },
+    has_prerequisites() {
+      return this.visualizations[this.type].available;
     },
     top_categories_hierarchy: function () {
       const top_categories = this.$store.state.activity.category.top;
