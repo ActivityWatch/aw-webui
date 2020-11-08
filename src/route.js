@@ -42,7 +42,7 @@ const router = new VueRouter({
     },
     { path: '/buckets', component: Buckets },
     { path: '/buckets/:id', component: Bucket, props: true },
-    { path: '/timeline', component: Timeline },
+    { path: '/timeline', component: Timeline, meta: { fullContainer: true } },
     { path: '/query', component: QueryExplorer },
     { path: '/settings', component: Settings },
     { path: '/stopwatch', component: Stopwatch },
