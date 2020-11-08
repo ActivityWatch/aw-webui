@@ -16,7 +16,6 @@ div#visualization {
     }
 
     .timeline-item {
-      border-color: rgba(0, 0, 0, 0.075);
       border-radius: 2px;
     }
   }
@@ -26,6 +25,7 @@ div#visualization {
 <script lang="ts">
 import _ from 'lodash';
 import moment from 'moment';
+import Color from 'color';
 import { buildTooltip } from '../util/tooltip.js';
 import { getColorFromString, getTitleAttr } from '../util/color.js';
 
@@ -97,6 +97,8 @@ export default {
 
       // Build items
       const items = _.map(this.chartData, (row, i) => {
+        const bgColor = row[5];
+        const borderColor = Color(bgColor).darken(0.3);
         return {
           id: String(i),
           group: row[0],
@@ -104,7 +106,7 @@ export default {
           title: row[2],
           start: moment(row[3]),
           end: moment(row[4]),
-          style: `background-color: ${row[5]}`,
+          style: `background-color: ${bgColor}; border-color: ${borderColor}`,
         };
       });
 
