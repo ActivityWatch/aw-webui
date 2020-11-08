@@ -1,0 +1,23 @@
+@import 'globalvars';
+@import 'container';
+
+$textcolor: #000;
+
+html,
+body,
+button {
+  color: $textcolor;
+  font-family: 'Varela Round', sans-serif !important;
+}
+
+body {
+  background-color: #eee;
+}
+
+// To make icons a little less crowded
+.fa-icon {
+  margin-top: -0.125em;
+  margin-left: 4px;
+  margin-right: 4px;
+  vertical-align: middle;
+}

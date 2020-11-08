@@ -20,6 +20,8 @@ if (!('startOfDay' in localStorage)) {
 // Load the Varela Round font
 import 'typeface-varela-round';
 
+import './style/style.scss';
+
 // Loads all the filters
 import './util/filters.js';
 

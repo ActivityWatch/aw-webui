@@ -2,11 +2,12 @@
 div#wrapper
   aw-header
 
-  div.container.aw-container.my-3.py-3
-    error-boundary
-      user-satisfaction-poll
-      new-release-notification(v-if="isNewReleaseCheckEnabled")
-      router-view
+  div(:class="{'container': !fullContainer, 'container-fluid': fullContainer}")
+    div.aw-container.my-3.p-3
+      error-boundary
+        user-satisfaction-poll
+        new-release-notification(v-if="isNewReleaseCheckEnabled")
+        router-view
 
   div.container(style="color: #555")
     div(style="float: left")
@@ -49,6 +50,12 @@ export default {
     };
   },
 
+  computed: {
+    fullContainer() {
+      return this.$route.meta.fullContainer;
+    },
+  },
+
   mounted: async function () {
     this.$aw.getInfo().then(
       info => {
@@ -62,31 +69,3 @@ export default {
   },
 };
 </script>
-
-<style lang="scss">
-$textcolor: #000;
-
-html,
-body,
-button {
-  color: $textcolor;
-  font-family: 'Varela Round', sans-serif !important;
-}
-
-body {
-  background-color: #eee;
-}
-
-.fa-icon {
-  margin-top: -0.125em;
-  margin-left: 4px;
-  margin-right: 4px;
-  vertical-align: middle;
-}
-
-.aw-container {
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 5px 5px 5px 5px;
-}
-</style>
