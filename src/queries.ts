@@ -99,14 +99,22 @@ export function appQuery(appbucket: string, classes, filterCategories: string[][
 
 const browser_appnames = {
   chrome: [
+    // Chrome
+    'Google Chrome',
     'Google-chrome',
     'chrome.exe',
+
+    // Chromium
     'Chromium',
-    'Google Chrome',
     'Chromium-browser',
     'Chromium-browser-chromium',
+    'chromium.exe',
+
+    // Pre-releases
     'Google-chrome-beta',
     'Google-chrome-unstable',
+
+    // Brave (should this be merged with the brave entry?)
     'Brave-browser',
   ],
   firefox: [
