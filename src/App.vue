@@ -22,7 +22,7 @@ div#wrapper
           | Twitter
 
     div(style="float: right; text-align: right;")
-      | Found a bug? #[a(href="https://github.com/ActivityWatch/activitywatch/issues/new") File an issue]
+      | Found a bug? #[a(href="https://github.com/ActivityWatch/activitywatch/issues/new/choose") File an issue]
       br
       | Need help? #[a(href="https://forum.activitywatch.net/c/support") Ask on the forum]
       br
