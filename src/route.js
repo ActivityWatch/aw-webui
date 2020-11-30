@@ -13,6 +13,7 @@ const QueryExplorer = () => import('./views/QueryExplorer.vue');
 const Timeline = () => import('./views/Timeline.vue');
 const Settings = () => import('./views/settings/Settings.vue');
 const Stopwatch = () => import('./views/Stopwatch.vue');
+const Search = () => import('./views/Search.vue');
 const Dev = () => import('./views/Dev.vue');
 
 Vue.use(VueRouter);
@@ -46,6 +47,7 @@ const router = new VueRouter({
     { path: '/query', component: QueryExplorer },
     { path: '/settings', component: Settings },
     { path: '/stopwatch', component: Stopwatch },
+    { path: '/search', component: Search },
     { path: '/dev', component: Dev },
   ],
 });
