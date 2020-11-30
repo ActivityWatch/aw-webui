@@ -130,7 +130,10 @@ const browser_appnames = {
   ],
   opera: ['opera.exe', 'Opera'],
   brave: ['brave.exe'],
-  edge: ['msedge.exe'],
+  edge: [
+    'msedge.exe', // Windows
+    'Microsoft Edge', // macOS
+  ],
   vivaldi: ['Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe'],
 };
 
