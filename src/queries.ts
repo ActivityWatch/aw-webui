@@ -9,6 +9,10 @@ function querystr_to_array(querystr: string): string[] {
     .map(l => l + ';');
 }
 
+function escape_doublequote(s: string) {
+  return s.replace(/"/g, '\\"');
+}
+
 interface BaseQueryParams {
   include_audible?: boolean;
   classes: Record<string, any>;
@@ -43,7 +47,7 @@ function isAndroidParams(object: any): object is AndroidQueryParams {
 // Puts it's results in `events` and `not_afk` (if not_afk available for platform).
 function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams): string {
   // Needs escaping for regex patterns like '\w' to work (JSON.stringify adds extra unecessary escaping)
-  const classes_str = JSON.stringify(params.classes).replace('\\\\', '\\');
+  const classes_str = JSON.stringify(params.classes).replace(/\\\\/g, '\\');
   const cat_filter_str = JSON.stringify(params.filter_classes);
   const bid_window = isDesktopParams(params) ? params.bid_window : params.bid_android;
 
@@ -74,7 +78,7 @@ function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams): strin
 const default_limit = 100; // Hardcoded limit per group
 
 export function appQuery(appbucket: string, classes, filterCategories: string[][]): string[] {
-  appbucket = appbucket.replace('"', '\\"');
+  appbucket = escape_doublequote(appbucket);
   const params: AndroidQueryParams = {
     bid_android: appbucket,
     classes: classes,
@@ -176,9 +180,9 @@ export function fullDesktopQuery(
   filterCategories: string[][]
 ): string[] {
   // Escape `"`
-  browserbuckets = _.map(browserbuckets, b => b.replace('"', '\\"'));
-  windowbucket = windowbucket.replace('"', '\\"');
-  afkbucket = afkbucket.replace('"', '\\"');
+  browserbuckets = _.map(browserbuckets, escape_doublequote);
+  windowbucket = escape_doublequote(windowbucket);
+  afkbucket = escape_doublequote(afkbucket);
 
   // TODO: Get classes
   const params: DesktopQueryParams = {
@@ -231,7 +235,7 @@ export function fullDesktopQuery(
 export function editorActivityQuery(editorbuckets: string[]): string[] {
   let q = ['events = [];'];
   for (let editorbucket of editorbuckets) {
-    editorbucket = editorbucket.replace('"', '\\"');
+    editorbucket = escape_doublequote(editorbucket);
     q.push('events = concat(events, flood(query_bucket("' + editorbucket + '")));');
   }
   q = q.concat([
@@ -248,7 +252,7 @@ export function editorActivityQuery(editorbuckets: string[]): string[] {
 }
 
 export function dailyActivityQuery(afkbucket: string): string[] {
-  afkbucket = afkbucket.replace('"', '\\"');
+  afkbucket = escape_doublequote(afkbucket);
   return [
     'afkbucket = "' + afkbucket + '";',
     'not_afk = flood(query_bucket(afkbucket));',
@@ -259,7 +263,7 @@ export function dailyActivityQuery(afkbucket: string): string[] {
 }
 
 export function dailyActivityQueryAndroid(androidbucket: string): string[] {
-  androidbucket = androidbucket.replace('"', '\\"');
+  androidbucket = escape_doublequote(androidbucket);
   return [`events = query_bucket("${androidbucket}");`, 'RETURN = sum_durations(events);'];
 }
 
