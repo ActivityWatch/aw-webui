@@ -37,6 +37,11 @@ jobs:
       uses: DevExpress/testcafe-action@latest
       with:
         args: "chrome test/e2e/"
+    - name: Upload build
+      uses: actions/upload-artifact@v2-preview
+      with:
+        name: build
+        path: dist/*
     - name: Upload screenshots
       uses: actions/upload-artifact@v2-preview
       with:
