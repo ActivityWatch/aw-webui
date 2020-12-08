@@ -3,6 +3,8 @@
 // File names that end with .test.node.js will be run in the node testEnvironment
 
 module.exports = {
+  collectCoverage: true,
+  collectCoverageFrom: ['src/**/*.{js,ts}'],
   projects: [
     {
       displayName: 'jsdom',

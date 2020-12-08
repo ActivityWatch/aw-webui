@@ -30,7 +30,9 @@ jobs:
     - name: Build
       run: npm run build
     - name: Run tests
-      run: npm test
+      run: |
+        npm test
+        bash <(curl -s https://codecov.io/bash)
     - name: Serve webui
       run: npm run serve &
     - name: Run e2e tests with testcafe
