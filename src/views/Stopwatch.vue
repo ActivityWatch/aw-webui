@@ -20,7 +20,7 @@ div
     div.col-md-12
       div(v-if="runningTimers.length > 0")
         h3 Running
-        div(v-for="e in runningTimers")
+        div(v-for="e in runningTimers" :key="e.id")
           stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
             @delete="removeTimer", @update="updateTimer")
           hr(style="margin: 0")
@@ -32,7 +32,7 @@ div
         h3.mt-4.mb-4 History
         div(v-for="k in Object.keys(timersByDate).sort().reverse()")
           h5.mt-2.mb-1 {{ k }}
-          div(v-for="e in timersByDate[k]")
+          div(v-for="e in timersByDate[k]" :key="e.id")
             stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
               @delete="removeTimer", @update="updateTimer", @new="startTimer(e.data.label)")
             hr(style="margin: 0")
