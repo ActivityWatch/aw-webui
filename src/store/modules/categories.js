@@ -68,7 +68,10 @@ const mutations = {
     // When a parent category is renamed, we also need to rename the children
     const parent_depth = old_class.name.length;
     _.map(state.classes, c => {
-      if (_.isEqual(old_class.name, c.name.slice(0, parent_depth))) {
+      if (
+        _.isEqual(old_class.name, c.name.slice(0, parent_depth)) &&
+        c.name.length > parent_depth
+      ) {
         c.name = new_class.name.concat(c.name.slice(parent_depth));
         console.log('Renamed child:', c.name);
       }
