@@ -38,7 +38,7 @@ jobs:
     - name: Run e2e tests with testcafe
       uses: DevExpress/testcafe-action@latest
       with:
-        args: "chrome test/e2e/"
+        args: "chrome tests/e2e-testcafe/"
     - name: Upload build
       uses: actions/upload-artifact@v2-preview
       with:
