@@ -69,6 +69,9 @@ const mutations = {
     }
     console.log('Loaded views:', state.views);
   },
+  setElements(state, { view_id, elements }) {
+    state.views.find(v => v.id == view_id).elements = elements;
+  },
   restoreDefaults(state) {
     state.views = defaultViews;
   },

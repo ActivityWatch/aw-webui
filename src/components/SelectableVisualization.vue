@@ -1,6 +1,8 @@
 <template lang="pug">
 div
-  h5 {{ visualizations[type].title }}
+  h5
+    icon.handle(name="bars" v-if="editable" style="opacity: 0.6; cursor: grab;")
+    | {{ visualizations[type].title }}
   div(v-if="editable").vis-style-dropdown-btn
     b-dropdown.mr-1(size="sm" variant="outline-secondary")
       template(v-slot:button-content)
@@ -89,6 +91,7 @@ div
 import _ from 'lodash';
 import 'vue-awesome/icons/cog';
 import 'vue-awesome/icons/times';
+import 'vue-awesome/icons/bars';
 
 import { split_by_hour_into_data } from '~/util/transforms';
 
