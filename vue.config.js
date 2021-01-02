@@ -3,6 +3,11 @@ const webpack = require('webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const { argv } = require('yargs');
 
+//const log = require('why-is-node-running');
+//setTimeout(function () {
+//  log(); // logs out active handles that are keeping node running after 100sec
+//}, 100000);
+
 module.exports = {
   pages: {
     index: {

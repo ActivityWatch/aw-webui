@@ -6,8 +6,8 @@ describe('hasNewRelease method', () => {
     mocks: {
       $aw: {
         // Provide dummy function because it won't find vm.$aw during test
-        getInfo() {
-          return;
+        async getInfo() {
+          return { version: 'v0.9.0' };
         },
       },
     },

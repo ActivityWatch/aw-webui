@@ -27,7 +27,8 @@ test:
 	npm test
 
 test-e2e:
-	testcafe firefox test/e2e/
+	testcafe firefox tests/e2e-testcafe
+	npm run test:e2e
 
 clean:
 	rm -rf node_modules dist

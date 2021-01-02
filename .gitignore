@@ -2,10 +2,13 @@
 node_modules/
 dist/
 npm-debug.log
-selenium-debug.log
-test/unit/coverage
-test/e2e/reports
-coverage
 *.swp
 __pycache__
+
+# tests and coverage
+tests/unit/coverage
+tests/e2e/reports
+coverage*
 screenshots
+.nyc_output
+selenium-debug.log
