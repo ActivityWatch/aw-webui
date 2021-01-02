@@ -1,8 +1,8 @@
 <template lang="pug">
 div(v-if="view")
-  div.row
+  draggable.row(v-model="elements" handle=".handle")
     // TODO: Handle large/variable sized visualizations better
-    div.col-md-6.col-lg-4.p-3(v-for="el, index in view.elements", :class="{'col-md-12': isVisLarge(el), 'col-lg-8': isVisLarge(el)}")
+    div.col-md-6.col-lg-4.p-3(v-for="el, index in elements", :key="index", :class="{'col-md-12': isVisLarge(el), 'col-lg-8': isVisLarge(el)}")
       aw-selectable-vis(:id="index" :type="el.type" @onTypeChange="onTypeChange" @onRemove="onRemove" :editable="editing")
 
     div.col-md-6.col-lg-4.p-3(v-if="editing")
@@ -36,9 +36,13 @@ import 'vue-awesome/icons/save';
 import 'vue-awesome/icons/times';
 import 'vue-awesome/icons/trash';
 import 'vue-awesome/icons/undo';
+import draggable from 'vuedraggable';
 
 export default {
   name: 'ActivityView',
+  components: {
+    draggable: draggable,
+  },
   props: {
     view_id: { type: String, default: 'default' },
     periodLength: {
@@ -56,6 +60,14 @@ export default {
       } else {
         return this.$store.state.views.views.find(v => v.id == this.view_id);
       }
+    },
+    elements: {
+      get() {
+        return this.view.elements;
+      },
+      set(elements) {
+        this.$store.commit('views/setElements', { view_id: this.view.id, elements });
+      },
     },
   },
   methods: {
