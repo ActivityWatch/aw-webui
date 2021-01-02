@@ -4,7 +4,7 @@ div
     span(slot="header")
       h4.card-title Events
       span.pagination-header
-        | Showing {{ events.length }} events
+        | Showing {{ displayed_events.length }} events #[span(v-if="events.length > displayed_events.length") (out of {{ events.length }})]
       b-button(@click="expandList", size="sm", style="float: right;")
         span(v-if="!isListExpanded")
           | Expand list
@@ -12,7 +12,7 @@ div
           | Condense list
 
     ul.event-list(:class="{ 'expand': isListExpanded }")
-      li(v-for="event in events")
+      li(v-for="event in displayed_events")
           span.event
             span.field(:title="event.timestamp")
               icon(name="calendar")
@@ -136,7 +136,13 @@ export default {
   data: function () {
     return {
       isListExpanded: false,
+      limit: 100,
     };
+  },
+  computed: {
+    displayed_events: function () {
+      return this.events.slice(0, this.limit);
+    },
   },
   methods: {
     expandList: function () {
