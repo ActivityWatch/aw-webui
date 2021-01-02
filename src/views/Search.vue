@@ -53,22 +53,7 @@ div
   div(v-if="events != null")
     hr
 
-    div.form-group
-      select.form-control(v-model="vis_method")
-        option(value="eventlist") Event List
-        option(value="timeline") Timeline
-        option(value="summary") Summary
-        option(value="raw") Raw JSON
-
-    div(v-if="vis_method == 'timeline'")
-      aw-timeline(type="simple", :event_type="event_type", :events="events")
-    div(v-if="vis_method == 'eventlist'")
-      aw-eventlist(:events="events")
-    div(v-if="vis_method == 'summary'")
-      input.form-control(type="text" v-model.lazy.trim="summaryKey" placeholder="data key" style="margin-bottom: 1em;")
-      aw-summary(:fields="events", :colorfunc="colorfunc", :namefunc="namefunc")
-    div(v-if="vis_method == 'raw'")
-      pre {{ events }}
+    aw-selectable-eventview(:events="events")
 
     div
       | Didn't find what you were looking for?
@@ -107,16 +92,9 @@ export default {
       filter_afk: true,
       start: moment().subtract(1, 'day'),
       stop: moment().add(1, 'day'),
-
-      /* Summary props */
-      summaryKey: 'title',
-      colorfunc: null,
-      namefunc: null,
     };
   },
   mounted: async function () {
-    this.colorfunc = this.summaryKeyFunc;
-    this.namefunc = this.summaryKeyFunc;
     await this.$store.dispatch('buckets/ensureBuckets');
     this.hostname = Object.keys(this.$store.getters['buckets/bucketsByHostname'])[0];
   },
@@ -144,9 +122,6 @@ export default {
       } finally {
         this.status = null;
       }
-    },
-    summaryKeyFunc: function (e) {
-      return e.data[this.summaryKey];
     },
   },
 };
