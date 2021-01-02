@@ -1,7 +1,8 @@
 <template lang="pug">
 div(v-if="view")
   div.row
-    div.col-md-6.col-lg-4.p-3(v-for="el, index in view.elements")
+    // TODO: Handle large/variable sized visualizations better
+    div.col-md-6.col-lg-4.p-3(v-for="el, index in view.elements", :class="{'col-md-12': isVisLarge(el), 'col-lg-8': isVisLarge(el)}")
       aw-selectable-vis(:id="index" :type="el.type" @onTypeChange="onTypeChange" @onRemove="onRemove" :editable="editing")
 
     div.col-md-6.col-lg-4.p-3(v-if="editing")
@@ -89,6 +90,9 @@ export default {
     },
     async onRemove(id) {
       await this.$store.commit('views/removeVisualization', { view_id: this.view.id, el_id: id });
+    },
+    isVisLarge(el) {
+      return el.type == 'sunburst_clock';
     },
   },
 };

@@ -34,6 +34,9 @@ interface QueryOptions {
 
 // initial state
 const _state = {
+  // set to true once loading has started
+  loaded: false,
+
   window: {
     available: false,
     top_apps: [],
@@ -79,6 +82,7 @@ const _state = {
   },
 
   buckets: {
+    loaded: false,
     afk: [],
     window: [],
     editor: [],
@@ -529,6 +533,7 @@ const mutations = {
 
   buckets(state, data) {
     state.buckets = data;
+    state.buckets.loaded = true;
   },
 };
 
