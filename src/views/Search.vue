@@ -1,9 +1,11 @@
 <template lang="pug">
-
 div
   h3 Search
 
-  div.alert.alert-danger(v-if="error")
+  b-alert(style="warning" show)
+    | This feature is still in early development.
+
+  b-alert(v-if="error" show variant="danger")
     | {{error}}
 
   b-input-group(size="lg")
