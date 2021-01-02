@@ -27,13 +27,14 @@ test:
 	npm test
 
 test-e2e:
-	testcafe firefox test/e2e/
+	testcafe firefox tests/e2e-testcafe
+	npm run test:e2e
 
 clean:
 	rm -rf node_modules dist
 
 lint:
-	npx eslint --ext=js,ts,vue --max-warnings=0 src/ test/
+	npx eslint --ext=js,ts,vue --max-warnings=0 src/ tests/
 
 lint-fix:
-	npx eslint --ext=js,ts,vue --fix src/ test/
+	npx eslint --ext=js,ts,vue --fix src/ tests/
