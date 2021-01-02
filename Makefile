@@ -34,7 +34,7 @@ clean:
 	rm -rf node_modules dist
 
 lint:
-	npx eslint --ext=js,ts,vue --max-warnings=0 src/ test/
+	npx eslint --ext=js,ts,vue --max-warnings=0 src/ tests/
 
 lint-fix:
-	npx eslint --ext=js,ts,vue --fix src/ test/
+	npx eslint --ext=js,ts,vue --fix src/ tests/

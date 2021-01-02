@@ -1,4 +1,5 @@
-/// <reference types="cypress" />
+/* eslint-disable jest/expect-expect */
+
 describe('Home', () => {
   beforeEach(() => {
     cy.visit('/');
