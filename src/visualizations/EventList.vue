@@ -1,5 +1,4 @@
 <template lang="pug">
-
 div
   b-card.event-container(no-block=true)
     span(slot="header")
@@ -25,8 +24,9 @@ div
               icon(name="tags")
               // TODO: Add some kind of highlighting to key
               | {{ key }}: {{ val }}
-            span.field.float-right
-              b-btn(v-b-modal="'edit-modal-' + event.id", variant="outline-dark" size="sm")
+            span(v-if="editable")
+              b-btn.field(v-b-modal="'edit-modal-' + event.id", variant="outline-dark" size="sm" style="padding: 0 0.2em 0 0.2em")
+                icon(name="edit")
                 | Edit
 
           event-editor(
@@ -113,6 +113,7 @@ $border-color: #ddd;
 </style>
 
 <script>
+import 'vue-awesome/icons/edit';
 import 'vue-awesome/icons/tags';
 import 'vue-awesome/icons/clock';
 import 'vue-awesome/icons/calendar';
@@ -127,6 +128,10 @@ export default {
   props: {
     bucket_id: String,
     events: Array,
+    editable: {
+      default: false,
+      type: Boolean,
+    },
   },
   data: function () {
     return {
