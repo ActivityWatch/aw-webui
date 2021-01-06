@@ -1,4 +1,4 @@
-const defaultViews = [
+const desktopViews = [
   {
     id: 'summary',
     name: 'Summary',
@@ -37,6 +37,23 @@ const defaultViews = [
     ],
   },
 ];
+
+const androidViews = [
+  {
+    id: 'summary',
+    name: 'Summary',
+    elements: [
+      { type: 'top_apps', size: 3 },
+      { type: 'top_categories', size: 3 },
+      { type: 'timeline_barchart', size: 3 },
+      { type: 'category_tree', size: 3 },
+      { type: 'category_sunburst', size: 3 },
+    ],
+  },
+];
+
+// FIXME: Decide depending on what kind of device is being viewed, not from which device it is being viewed.
+const defaultViews = !process.env.VUE_APP_ON_ANDROID ? desktopViews : androidViews;
 
 // initial state
 const _state = {
@@ -80,7 +97,6 @@ const mutations = {
   },
   removeView(state, { view_id }) {
     const idx = state.views.map(v => v.id).indexOf(view_id);
-    console.log(idx);
     state.views.splice(idx, 1);
   },
   editView(state, { view_id, el_id, type }) {
