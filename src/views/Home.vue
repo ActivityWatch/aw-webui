@@ -1,8 +1,11 @@
 <template lang="pug">
 div
+  b-alert(v-if="isAndroid" show)
+    | #[b Note:] ActivityWatch on Android is in a very early stage of development. There will be bugs, but we hope you bear with us as we refine things and get it on par with the desktop version of ActivityWatch (which you should try!).
+
   h3 Hello early user,
   p
-    | It's still early days for ActivityWatch. We've come a long way but we need users (like you!)
+    | It's still early days for ActivityWatch #[span(v-if="isAndroid") (especially on Android!)]. We've come a long way but we need users (like you!)
     | to provide feedback and help us turn ActivityWatch into a successful project.
     | Early users like you mean a lot to us, and we hope you'll reach out to us with any ideas you have for improvements!
   p
@@ -57,12 +60,22 @@ div
       p
         | Check out the #[a(href="https://forum.activitywatch.net/c/news") development updates]!
 
-</template>
+  hr
 
-<style scoped lang="scss"></style>
+  p
+    small
+      i
+        | You can change which page opens when you open ActivityWatch (instead of this page) in the #[router-link(to="/settings") settings].
+
+</template>
 
 <script>
 export default {
   name: 'Home',
+  data() {
+    return {
+      isAndroid: process.env.VUE_APP_ON_ANDROID,
+    };
+  },
 };
 </script>
