@@ -27,7 +27,7 @@ export default {
     return {
       buckets: null,
       daterange: null,
-      timeintervalDefaultDuration: Number.parseInt(localStorage.durationDefault),
+      timeintervalDefaultDuration: Number.parseInt(localStorage.durationDefault) || 60 * 60,
       maxDuration: 31 * 24 * 60 * 60,
     };
   },
