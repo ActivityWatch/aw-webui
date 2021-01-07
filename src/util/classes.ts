@@ -1,7 +1,5 @@
 const _ = require('lodash');
 
-const level_sep = '>';
-
 interface Rule {
   type: string;
   regex?: string;
@@ -9,86 +7,93 @@ interface Rule {
 }
 
 interface Category {
-  id?: number;
+  id: number;
+  parent_id?: number;
   name: string[];
-  name_pretty?: string;
   subname?: string;
   rule: Rule;
   depth?: number;
-  parent?: string[];
+  // parent?: string[];
   children?: Category[];
 }
 
 export const defaultCategories: Category[] = [
-  { name: ['Work'], rule: { type: 'regex', regex: 'Google Docs|libreoffice|ReText' } },
+  { id: 0, name: ['Work'], rule: { type: 'regex', regex: 'Google Docs|libreoffice|ReText' } },
   {
+    id: 1,
+    parent_id: 0,
     name: ['Work', 'Programming'],
     rule: { type: 'regex', regex: 'GitHub|Stack Overflow|BitBucket|Gitlab|vim|Spyder|kate' },
   },
   {
+    id: 2,
+    parent_id: 1,
     name: ['Work', 'Programming', 'ActivityWatch'],
     rule: { type: 'regex', regex: 'ActivityWatch|aw-', ignore_case: true },
   },
-  { name: ['Media', 'Games'], rule: { type: 'regex', regex: 'Minecraft|RimWorld' } },
-  { name: ['Media', 'Video'], rule: { type: 'regex', regex: 'YouTube|Plex|VLC' } },
+  { name: ['Media'], rule: { type: null }, id: 3 },
   {
+    id: 4,
+    parent_id: 3,
+    name: ['Media', 'Games'],
+    rule: { type: 'regex', regex: 'Minecraft|RimWorld' },
+  },
+  {
+    id: 5,
+    parent_id: 3,
+    name: ['Media', 'Video'],
+    rule: { type: 'regex', regex: 'YouTube|Plex|VLC' },
+  },
+  {
+    id: 6,
+    parent_id: 3,
     name: ['Media', 'Social Media'],
     rule: { type: 'regex', regex: 'reddit|Facebook|Twitter|Instagram|devRant', ignore_case: true },
   },
-  { name: ['Media', 'Music'], rule: { type: 'regex', regex: 'Spotify|Deezer', ignore_case: true } },
   {
+    id: 7,
+    parent_id: 3,
+    name: ['Media', 'Music'],
+    rule: { type: 'regex', regex: 'Spotify|Deezer', ignore_case: true },
+  },
+  { id: 8, name: ['Comms'], rule: { type: null } },
+  {
+    id: 9,
+    parent_id: 8,
     name: ['Comms', 'IM'],
     rule: { type: 'regex', regex: 'Messenger|Telegram|Signal|WhatsApp|Rambox|Slack|Riot|Discord' },
   },
-  { name: ['Comms', 'Email'], rule: { type: 'regex', regex: 'Gmail|Thunderbird|mutt|alpine' } },
+  {
+    id: 10,
+    parent_id: 8,
+    name: ['Comms', 'Email'],
+    rule: { type: 'regex', regex: 'Gmail|Thunderbird|mutt|alpine' },
+  },
 ];
 
 export function build_category_hierarchy(classes: Category[]): Category[] {
   function annotate(c: Category) {
     const ch = c.name;
-    c.name_pretty = ch.join(level_sep);
+    // Use -1 as id for root
+    c.parent_id = c.parent_id !== undefined ? c.parent_id : -1;
     c.subname = ch.slice(-1)[0];
-    c.parent = ch.length > 1 ? ch.slice(0, -1) : null;
     c.depth = ch.length - 1;
     return c;
   }
 
-  const new_classes = classes.slice().map(c => annotate(c));
-
-  // Insert dangling/undefined parents
-  const all_full_names = new Set(new_classes.map(c => c.name.join(level_sep)));
-
-  function createMissingParents(children) {
-    children
-      .map(c => c.parent)
-      .filter(p => !!p)
-      .map(p => {
-        const name = p.join(level_sep);
-        if (p && !all_full_names.has(name)) {
-          const new_parent = annotate({ name: p, rule: { type: null } });
-          classes.push(new_parent);
-          all_full_names.add(name);
-          // New parent might not be top-level, so we need to recurse
-          createMissingParents([new_parent]);
-        }
-      });
-  }
-
-  createMissingParents(new_classes);
+  classes.map(c => annotate(c));
 
   function assignChildren(classes_at_level: Category[]) {
     return classes_at_level.map(cls => {
       cls.children = classes.filter(child => {
-        return child.parent && cls.name
-          ? JSON.stringify(child.parent) == JSON.stringify(cls.name)
-          : false;
+        return child.parent_id == cls.id;
       });
       assignChildren(cls.children);
       return cls;
     });
   }
 
-  return assignChildren(classes.filter(c => !c.parent));
+  return assignChildren(classes.filter(c => c.parent_id === -1));
 }
 
 export function flatten_category_hierarchy(hier: Category[]): Category[] {

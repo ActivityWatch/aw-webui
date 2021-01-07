@@ -24,7 +24,7 @@ div
       b-input-group.my-1(prepend="Name")
         b-form-input(v-model="editing.name")
       b-input-group(prepend="Parent")
-        b-select(v-model="editing.parent", :options="allCategories")
+        b-select(v-model="editing.parent_id", :options="allOtherCategories")
 
     hr
 
@@ -69,20 +69,33 @@ export default {
     return {
       expanded: true,
       editing: {
-        id: 0, // FIXME: Use ID assigned to category in vuex store, in order for saves to be uniquely targeted
+        id: null,
         name: null,
         rule: {},
-        parent: [],
+        parent_id: null,
       },
     };
   },
   computed: {
-    allCategories: function () {
+    // This should be all nodes except one's children and oneself
+    allOtherCategories: function () {
       const categories = this.$store.getters['categories/all_categories'];
       const entries = categories.map(c => {
-        return { text: c.join('->'), value: c };
+        return { text: c.name.join('->'), value: c.id };
       });
-      return [{ value: [], text: 'None' }].concat(entries);
+
+      const subtreeIds = [];
+      function findSubtree(node) {
+        subtreeIds.push(node.id);
+        if (node.children) {
+          node.children.forEach(c => findSubtree(c));
+        }
+      }
+      findSubtree(this._class);
+
+      return [{ value: -1, text: 'None' }].concat(
+        entries.filter(c => !subtreeIds.includes(c.value))
+      );
     },
     allRuleTypes: function () {
       return [
@@ -96,6 +109,7 @@ export default {
     addSubclass: function (parent) {
       this.$store.commit('categories/addClass', {
         name: parent.name.concat(['New class']),
+        parent_id: parent.id,
         rule: { type: 'regex', regex: 'FILL ME' },
       });
     },
@@ -125,10 +139,15 @@ export default {
       }
 
       // Save the category
+      const getCategoryById = this.$store.getters['categories/get_category_by_id'];
+      const parent_class = getCategoryById(this.editing.parent_id);
+
       const new_class = {
         id: this.editing.id,
-        name: this.editing.parent.concat(this.editing.name),
+        parent_id: this.editing.parent_id,
+        name: parent_class ? parent_class.name.concat(this.editing.name) : [this.editing.name],
         rule: this.editing.rule.type !== null ? this.editing.rule : { type: null },
+        depth: parent_class ? parent_class.name.length + 1 : 0,
       };
       this.$store.commit('categories/updateClass', new_class);
 
@@ -142,9 +161,8 @@ export default {
         id: this._class.id,
         name: this._class.subname,
         rule: _.cloneDeep(this._class.rule),
-        parent: this._class.parent ? this._class.parent : [],
+        parent_id: this._class.parent_id,
       };
-      //console.log(this.editing);
     },
   },
 };
@@ -153,6 +171,6 @@ export default {
 <style scoped lang="scss">
 .row.class:hover {
   background-color: #eee;
-  boder-radius: 5px;
+  border-radius: 5px;
 }
 </style>

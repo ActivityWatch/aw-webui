@@ -15,22 +15,18 @@ const _state = {
 // getters
 const getters = {
   classes_hierarchy: state => {
-    const hier = build_category_hierarchy(_.cloneDeep(state.classes));
+    const hier = build_category_hierarchy(state.classes);
     return _.sortBy(hier, [c => c.id || 0]);
   },
   all_categories: state => {
-    return _.uniqBy(
-      _.flatten(
-        state.classes.map(c => {
-          const l = [];
-          for (let i = 1; i <= c.name.length; i++) {
-            l.push(c.name.slice(0, i));
-          }
-          return l;
-        })
-      ),
-      v => v.join('>>>>') // Can be any separator that doesn't appear in the category names themselves
-    );
+    return state.classes.map(c => {
+      return { id: c.id, name: c.name };
+    });
+  },
+  get_category_by_id: state => id => {
+    console.log(state.classes);
+    const res = state.classes.filter(c => c.id === id);
+    return res.length > 0 ? res[0] : null;
   },
 };
 
@@ -51,32 +47,25 @@ const mutations = {
   loadClasses(state, classes) {
     let i = 0;
     state.classes = classes.map(c => Object.assign(c, { id: i++ }));
-    console.log('Loaded classes:', state.classes);
     state.classes_unsaved_changes = false;
   },
   updateClass(state, new_class) {
-    console.log('Updating class:', new_class);
-
-    const old_class = _.cloneDeep(state.classes[new_class.id]);
-    if (new_class.id === undefined || new_class.id === null) {
-      new_class.id = _.max(_.map(state.classes, 'id')) + 1;
-      state.classes.push(new_class);
-    } else {
-      Object.assign(state.classes[new_class.id], new_class);
-    }
+    const cls = state.classes.filter(c => c.id === new_class.id)[0];
+    Object.assign(cls, new_class);
 
     // When a parent category is renamed, we also need to rename the children
-    const parent_depth = old_class.name.length;
-    _.map(state.classes, c => {
-      if (
-        _.isEqual(old_class.name, c.name.slice(0, parent_depth)) &&
-        c.name.length > parent_depth
-      ) {
-        c.name = new_class.name.concat(c.name.slice(parent_depth));
-        console.log('Renamed child:', c.name);
+    function updateChildren(node, depth) {
+      if (node.children) {
+        node.children.forEach(c => {
+          console.log('renamed child: ' + c.name + ' to ' + node.name.concat(c.subname));
+          c.name = node.name.concat(c.subname);
+          c.depth = depth + 1;
+          updateChildren(c, depth + 1);
+        });
       }
-    });
+    }
 
+    updateChildren(cls, cls.depth);
     state.classes_unsaved_changes = true;
   },
   addClass(state, new_class) {
@@ -89,8 +78,7 @@ const mutations = {
     state.classes_unsaved_changes = true;
   },
   restoreDefaultClasses(state) {
-    let i = 0;
-    state.classes = defaultCategories.map(c => Object.assign(c, { id: i++ }));
+    state.classes = defaultCategories;
     state.classes_unsaved_changes = true;
   },
   saveCompleted(state) {
