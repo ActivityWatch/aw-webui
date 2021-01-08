@@ -1,6 +1,6 @@
 <template lang="pug">
-div.aw-navbar
-  b-navbar(toggleable="lg")
+div(:class="{'fixed-top-padding': fixedTopMenu}")
+  b-navbar.aw-navbar(toggleable="lg" :fixed="fixedTopMenu ? 'top' : null")
     // Brand on mobile
     b-navbar-nav.d-block.d-lg-none
       b-navbar-brand(to="/" style="background-color: transparent;")
@@ -70,6 +70,12 @@ div.aw-navbar
             | Settings
 </template>
 
+<style lang="scss" scoped>
+.fixed-top-padding {
+  padding-bottom: 3.5em;
+}
+</style>
+
 <script>
 // only import the icons you use to reduce bundle size
 import 'vue-awesome/icons/calendar-day';
@@ -92,6 +98,8 @@ export default {
   data() {
     return {
       activityViews: [],
+      // Make configurable?
+      fixedTopMenu: this.$isAndroid,
     };
   },
   mounted: async function () {

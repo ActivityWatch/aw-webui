@@ -65,7 +65,11 @@ Vue.component('aw-calendar', () => import('./visualizations/Calendar.vue'));
 Vue.mixin(require('~/mixins/asyncErrorCaptured.js'));
 
 // Set the PRODUCTION constant
+// FIXME: Thould follow Vue convention and start with a $.
 Vue.prototype.PRODUCTION = PRODUCTION;
+
+// Set the $isAndroid constant
+Vue.prototype.$isAndroid = process.env.VUE_APP_ON_ANDROID;
 
 // Setup Vue app
 import App from './App';

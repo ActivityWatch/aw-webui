@@ -18,7 +18,7 @@ div
 
   hr
 
-  div(v-if="!isAndroid")
+  div(v-if="!$isAndroid")
     ReleaseNotificationSettings
     hr
 
@@ -41,11 +41,6 @@ export default {
     ReleaseNotificationSettings,
     CategorizationSettings,
     LandingPageSettings,
-  },
-  data() {
-    return {
-      isAndroid: process.env.VUE_APP_ON_ANDROID,
-    };
   },
 };
 </script>
