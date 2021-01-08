@@ -4,7 +4,7 @@ div
     icon.handle(name="bars" v-if="editable" style="opacity: 0.6; cursor: grab;")
     | {{ visualizations[type].title }}
   div(v-if="editable").vis-style-dropdown-btn
-    b-dropdown.mr-1(size="sm" variant="outline-secondary")
+    b-dropdown.mr-1(size="sm" variant="outline-secondary" right)
       template(v-slot:button-content)
         icon(name="cog")
       b-dropdown-item(v-for="t in types" :key="t" variant="outline-secondary" @click="$emit('onTypeChange', id, t)")
