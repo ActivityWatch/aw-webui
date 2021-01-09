@@ -12,6 +12,23 @@ const _state = {
   classes_unsaved_changes: false,
 };
 
+// helper functions
+function findSubtree(state, id) {
+  const subtreeIds = [];
+  const filtered = state.classes.filter(c => c.id == id);
+  const root = filtered ? filtered[0] : null;
+
+  function dfs(node) {
+    if (node) {
+      subtreeIds.push(node.id);
+      node.children.forEach(c => dfs(c));
+    }
+  }
+
+  dfs(root);
+  return subtreeIds;
+}
+
 // getters
 const getters = {
   classes_hierarchy: state => {
@@ -24,9 +41,11 @@ const getters = {
     });
   },
   get_category_by_id: state => id => {
-    console.log(state.classes);
     const res = state.classes.filter(c => c.id === id);
     return res.length > 0 ? res[0] : null;
+  },
+  find_subtree: state => id => {
+    return findSubtree(state, id);
   },
 };
 
@@ -57,7 +76,6 @@ const mutations = {
     function updateChildren(node, depth) {
       if (node.children) {
         node.children.forEach(c => {
-          console.log('renamed child: ' + c.name + ' to ' + node.name.concat(c.subname));
           c.name = node.name.concat(c.subname);
           c.depth = depth + 1;
           updateChildren(c, depth + 1);
@@ -74,7 +92,9 @@ const mutations = {
     state.classes_unsaved_changes = true;
   },
   removeClass(state, cls) {
-    state.classes = state.classes.filter(c => c.id !== cls.id);
+    // Remove class and all of its descendents
+    const subtreeIds = findSubtree(state, cls.id);
+    state.classes = state.classes.filter(c => !subtreeIds.includes(c.id));
     state.classes_unsaved_changes = true;
   },
   restoreDefaultClasses(state) {

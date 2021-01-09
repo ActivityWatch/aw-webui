@@ -24,7 +24,7 @@ div
       b-input-group.my-1(prepend="Name")
         b-form-input(v-model="editing.name")
       b-input-group(prepend="Parent")
-        b-select(v-model="editing.parent_id", :options="allOtherCategories")
+        b-select(v-model="editing.parentId", :options="allOtherCategories")
 
     hr
 
@@ -72,7 +72,7 @@ export default {
         id: null,
         name: null,
         rule: {},
-        parent_id: null,
+        parentId: null,
       },
     };
   },
@@ -84,14 +84,8 @@ export default {
         return { text: c.name.join('->'), value: c.id };
       });
 
-      const subtreeIds = [];
-      function findSubtree(node) {
-        subtreeIds.push(node.id);
-        if (node.children) {
-          node.children.forEach(c => findSubtree(c));
-        }
-      }
-      findSubtree(this._class);
+      const findSubtree = this.$store.getters['categories/find_subtree'];
+      const subtreeIds = findSubtree(this._class.id);
 
       return [{ value: -1, text: 'None' }].concat(
         entries.filter(c => !subtreeIds.includes(c.value))
@@ -109,7 +103,7 @@ export default {
     addSubclass: function (parent) {
       this.$store.commit('categories/addClass', {
         name: parent.name.concat(['New class']),
-        parent_id: parent.id,
+        parentId: parent.id,
         rule: { type: 'regex', regex: 'FILL ME' },
       });
     },
@@ -140,16 +134,16 @@ export default {
 
       // Save the category
       const getCategoryById = this.$store.getters['categories/get_category_by_id'];
-      const parent_class = getCategoryById(this.editing.parent_id);
+      const parent_cat = getCategoryById(this.editing.parentId);
 
-      const new_class = {
+      const new_cat = {
         id: this.editing.id,
-        parent_id: this.editing.parent_id,
-        name: parent_class ? parent_class.name.concat(this.editing.name) : [this.editing.name],
+        parentId: this.editing.parentId,
+        name: parent_cat ? parent_cat.name.concat(this.editing.name) : [this.editing.name],
         rule: this.editing.rule.type !== null ? this.editing.rule : { type: null },
-        depth: parent_class ? parent_class.name.length + 1 : 0,
+        depth: parent_cat ? parent_cat.name.length + 1 : 0,
       };
-      this.$store.commit('categories/updateClass', new_class);
+      this.$store.commit('categories/updateClass', new_cat);
 
       // Hide the modal manually
       this.$nextTick(() => {
@@ -161,7 +155,7 @@ export default {
         id: this._class.id,
         name: this._class.subname,
         rule: _.cloneDeep(this._class.rule),
-        parent_id: this._class.parent_id,
+        parentId: this._class.parentId,
       };
     },
   },
