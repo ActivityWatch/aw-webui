@@ -11,6 +11,8 @@ div
         span(v-if="_class.rule.type === 'regex'") Rule ({{_class.rule.type}}): #[code {{_class.rule.regex}}]
         span(v-else, style="color: #888") No rule
       span.float-right
+        b-btn.ml-1(size="sm", variant="outline-danger", @click="showDeleteModal()" style="border: 0;" pill)
+          icon(name="trash")
         b-btn.ml-1(size="sm", variant="outline-secondary", @click="showEditModal()" style="border: 0;" pill)
           icon(name="edit")
         b-btn.ml-1(size="sm", variant="outline-success", @click="addSubclass(_class)" style="border: 0;" pill)
@@ -19,7 +21,7 @@ div
     div.pa-2(v-for="child in _class.children", style="background: rgba(0, 0, 0, 0);", v-show="expanded")
       CategoryEditTree(:_class="child", :depth="depth+1")
 
-  b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="resetModal" @ok="handleOk")
+  b-modal(id="edit" ref="edit" title="Edit category" @show="resetData" @hidden="resetData" @ok="handleOk")
     div.my-1
       b-input-group.my-1(prepend="Name")
         b-form-input(v-model="editing.name")
@@ -38,12 +40,17 @@ div
         b-form-checkbox(v-model="editing.rule.ignore_case" switch)
           | Ignore case
 
+  b-modal(id="delete" ref="delete" title="Danger!" @show="resetData"  centered hide-footer)
+    | Are you sure you want to delete the category "{{_class.name[0]}}" and all of its subcategories?
+    br
+    br
+    b This is permanent and cannot be undone!
     hr
-
-    div.my-1
-      b-btn(variant="danger", @click="removeClass(_class); $refs.edit.hide()")
-        icon(name="trash")
-        | Remove category
+    div.float-right
+      b-button.mx-2(@click="$root.$emit('bv::hide::modal','delete')")
+        | Cancel
+      b-button(@click="removeClass(_class)", variant="danger")
+        | Confirm
 </template>
 
 <script>
@@ -108,13 +115,19 @@ export default {
       });
     },
     removeClass: function (_class) {
-      // TODO: Show a confirmation dialog
-      // TODO: Remove children as well?
       // TODO: Move button to edit modal?
       this.$store.commit('categories/removeClass', _class);
+
+      // Hide the modal manually
+      this.$nextTick(() => {
+        this.$refs.delete.hide();
+      });
     },
     showEditModal() {
       this.$refs.edit.show();
+    },
+    showDeleteModal() {
+      this.$refs.delete.show();
     },
     checkFormValidity() {
       // FIXME
@@ -150,7 +163,7 @@ export default {
         this.$refs.edit.hide();
       });
     },
-    resetModal() {
+    resetData() {
       this.editing = {
         id: this._class.id,
         name: this._class.subname,
