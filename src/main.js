@@ -44,6 +44,7 @@ Vue.component('input-timeinterval', () => import('./components/InputTimeInterval
 Vue.component('aw-header', () => import('./components/Header.vue'));
 Vue.component('aw-devonly', () => import('./components/DevOnly.vue'));
 Vue.component('aw-selectable-vis', () => import('./components/SelectableVisualization.vue'));
+Vue.component('aw-selectable-eventview', () => import('./components/SelectableEventView.vue'));
 Vue.component('new-release-notification', () => import('./components/NewReleaseNotification.vue'));
 Vue.component('user-satisfaction-poll', () => import('./components/UserSatisfactionPoll.vue'));
 
@@ -64,7 +65,11 @@ Vue.component('aw-calendar', () => import('./visualizations/Calendar.vue'));
 Vue.mixin(require('~/mixins/asyncErrorCaptured.js'));
 
 // Set the PRODUCTION constant
+// FIXME: Thould follow Vue convention and start with a $.
 Vue.prototype.PRODUCTION = PRODUCTION;
+
+// Set the $isAndroid constant
+Vue.prototype.$isAndroid = process.env.VUE_APP_ON_ANDROID;
 
 // Setup Vue app
 import App from './App';

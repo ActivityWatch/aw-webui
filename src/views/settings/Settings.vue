@@ -14,7 +14,11 @@ div
 
   hr
 
-  div(v-if="isNewReleaseCheckEnabled")
+  LandingPageSettings
+
+  hr
+
+  div(v-if="!$isAndroid")
     ReleaseNotificationSettings
     hr
 
@@ -27,6 +31,7 @@ import DaystartSettings from '~/views/settings/DaystartSettings.vue';
 import TimelineDurationSettings from '~/views/settings/TimelineDurationSettings.vue';
 import ReleaseNotificationSettings from '~/views/settings/ReleaseNotificationSettings.vue';
 import CategorizationSettings from '~/views/settings/CategorizationSettings.vue';
+import LandingPageSettings from '~/views/settings/LandingPageSettings.vue';
 
 export default {
   name: 'Settings',
@@ -35,11 +40,7 @@ export default {
     TimelineDurationSettings,
     ReleaseNotificationSettings,
     CategorizationSettings,
-  },
-  data() {
-    return {
-      isNewReleaseCheckEnabled: !process.env.VUE_APP_ON_ANDROID,
-    };
+    LandingPageSettings,
   },
 };
 </script>

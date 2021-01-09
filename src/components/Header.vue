@@ -1,6 +1,6 @@
 <template lang="pug">
-div.aw-navbar
-  b-navbar(toggleable="lg")
+div(:class="{'fixed-top-padding': fixedTopMenu}")
+  b-navbar.aw-navbar(toggleable="lg" :fixed="fixedTopMenu ? 'top' : null")
     // Brand on mobile
     b-navbar-nav.d-block.d-lg-none
       b-navbar-brand(to="/" style="background-color: transparent;")
@@ -48,10 +48,18 @@ div.aw-navbar
           span.ml-2.align-middle(style="font-size: 1.0em; color: #000;") ActivityWatch
 
       b-navbar-nav.ml-auto
-        b-nav-item(to="/query", active-class="aw-active")
-          div.px-2.px-lg-1
+        b-nav-item-dropdown
+          template(slot="button-content")
+            div.d-inline.px-2.px-lg-1
+              icon(name="tools")
+              | Tools
+          b-dropdown-item(to="/search")
             icon(name="search")
+            | Search
+          b-dropdown-item(to="/query")
+            icon(name="code")
             | Query
+
         b-nav-item(to="/buckets")
           div.px-2.px-lg-1
             icon(name="database")
@@ -62,6 +70,12 @@ div.aw-navbar
             | Settings
 </template>
 
+<style lang="scss" scoped>
+.fixed-top-padding {
+  padding-bottom: 3.5em;
+}
+</style>
+
 <script>
 // only import the icons you use to reduce bundle size
 import 'vue-awesome/icons/calendar-day';
@@ -69,8 +83,10 @@ import 'vue-awesome/icons/calendar-week';
 import 'vue-awesome/icons/stream';
 import 'vue-awesome/icons/database';
 import 'vue-awesome/icons/search';
+import 'vue-awesome/icons/code';
 import 'vue-awesome/icons/stopwatch';
 import 'vue-awesome/icons/cog';
+import 'vue-awesome/icons/tools';
 
 import 'vue-awesome/icons/mobile';
 import 'vue-awesome/icons/desktop';
@@ -82,6 +98,8 @@ export default {
   data() {
     return {
       activityViews: [],
+      // Make configurable?
+      fixedTopMenu: this.$isAndroid,
     };
   },
   mounted: async function () {
@@ -127,11 +145,6 @@ export default {
   background-color: #fff;
   border: solid #ccc;
   border-width: 0 0 1px 0;
-}
-
-.active {
-  background-color: #ddd;
-  border-radius: 0.5em;
 }
 
 .nav-item {

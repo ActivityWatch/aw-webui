@@ -13,13 +13,21 @@ const QueryExplorer = () => import('./views/QueryExplorer.vue');
 const Timeline = () => import('./views/Timeline.vue');
 const Settings = () => import('./views/settings/Settings.vue');
 const Stopwatch = () => import('./views/Stopwatch.vue');
+const Search = () => import('./views/Search.vue');
 const Dev = () => import('./views/Dev.vue');
+const NotFound = () => import('./views/NotFound.vue');
 
 Vue.use(VueRouter);
 
 const router = new VueRouter({
   routes: [
-    { path: '/', component: Home },
+    {
+      path: '/',
+      redirect: _to => {
+        return localStorage.landingpage || '/home';
+      },
+    },
+    { path: '/home', component: Home },
     {
       path: '/activity/:host/:periodLength?/:date?',
       component: Activity,
@@ -46,7 +54,13 @@ const router = new VueRouter({
     { path: '/query', component: QueryExplorer },
     { path: '/settings', component: Settings },
     { path: '/stopwatch', component: Stopwatch },
+    { path: '/search', component: Search },
     { path: '/dev', component: Dev },
+    // NOTE: Will break with Vue 3: https://stackoverflow.com/questions/40193634/vue-router-redirect-on-page-not-found-404/64186073#64186073
+    {
+      path: '*',
+      component: NotFound,
+    },
   ],
 });
 

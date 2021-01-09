@@ -32,7 +32,7 @@ div.sunburst
   }
 
   .sidebar {
-    float: right;
+    float: left;
     height: 0;
     width: 100px;
   }
@@ -141,12 +141,13 @@ export default {
   },
 
   methods: {
-    todaysEvents: function (bucket_id) {
-      return this.$aw.getEvents(bucket_id, {
-        limit: -1,
-        start: this.starttime.format(),
-        end: this.endtime.format(),
-      });
+    todaysEvents: async function (bucket_id) {
+      const querystr = [`RETURN = flood(query_bucket("${bucket_id}"));`];
+      const data = await this.$aw.query(
+        [`${this.starttime.format()}/${this.endtime.format()}`],
+        querystr
+      );
+      return data[0];
     },
 
     visualize: function () {

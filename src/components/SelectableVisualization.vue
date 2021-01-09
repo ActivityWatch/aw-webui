@@ -1,8 +1,10 @@
 <template lang="pug">
 div
-  h5 {{ visualizations[type].title }}
+  h5
+    icon.handle(name="bars" v-if="editable" style="opacity: 0.6; cursor: grab;")
+    | {{ visualizations[type].title }}
   div(v-if="editable").vis-style-dropdown-btn
-    b-dropdown.mr-1(size="sm" variant="outline-secondary")
+    b-dropdown.mr-1(size="sm" variant="outline-secondary" right)
       template(v-slot:button-content)
         icon(name="cog")
       b-dropdown-item(v-for="t in types" :key="t" variant="outline-secondary" @click="$emit('onTypeChange', id, t)")
@@ -10,63 +12,67 @@ div
     b-button.p-0(size="sm", variant="outline-danger" @click="$emit('onRemove', id)")
       icon(name="times")
 
-  // Check data prerequisites
-  div(v-if="!has_prerequisites")
+  div(v-if="!supports_period")
     b-alert.small.px-2.py-1(show variant="warning")
-      | This feature is missing data from a required watcher.
-      | You can find a list of all watchers in #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") the documentation].
+      | This feature doesn't support the current time period.
 
-  div(v-if="type == 'top_apps'")
-    aw-summary(:fields="$store.state.activity.window.top_apps",
-               :namefunc="e => e.data.app",
-               :colorfunc="e => e.data.app",
-               with_limit)
-  div(v-if="type == 'top_titles'")
-    aw-summary(:fields="$store.state.activity.window.top_titles",
-               :namefunc="e => e.data.title",
-               :colorfunc="e => e.data.app",
-               with_limit)
-  div(v-if="type == 'top_domains'")
-    aw-summary(:fields="$store.state.activity.browser.top_domains",
-               :namefunc="e => e.data.$domain",
-               :colorfunc="e => e.data.$domain",
-               with_limit)
-  div(v-if="type == 'top_urls'")
-    aw-summary(:fields="$store.state.activity.browser.top_urls",
-               :namefunc="e => e.data.url",
-               :colorfunc="e => e.data.$domain",
-               with_limit)
-  div(v-if="type == 'top_editor_files'")
-    aw-summary(:fields="$store.state.activity.editor.top_files",
-               :namefunc="top_editor_files_namefunc",
-               :hoverfunc="top_editor_files_hoverfunc",
-               :colorfunc="e => e.data.language",
-               with_limit)
-  div(v-if="type == 'top_editor_languages'")
-    aw-summary(:fields="$store.state.activity.editor.top_languages",
-               :namefunc="e => e.data.language",
-               :colorfunc="e => e.data.language",
-               with_limit)
-  div(v-if="type == 'top_editor_projects'")
-    aw-summary(:fields="$store.state.activity.editor.top_projects",
-               :namefunc="top_editor_projects_namefunc",
-               :hoverfunc="top_editor_projects_hoverfunc",
-               :colorfunc="e => e.data.language",
-               with_limit)
-  div(v-if="type == 'top_categories'")
-    aw-summary(:fields="$store.state.activity.category.top",
-               :namefunc="e => e.data['$category'].join(' > ')",
-               :colorfunc="e => e.data['$category'].join(' > ')",
-               with_limit)
-  div(v-if="type == 'category_tree'")
-    aw-categorytree(:events="$store.state.activity.category.top")
-  div(v-if="type == 'category_sunburst'")
-    aw-sunburst-categories(:data="top_categories_hierarchy", style="height: 20em")
-  div(v-if="type == 'timeline_barchart'")
-    aw-timeline-barchart(:datasets="datasets", style="height: 100")
-  // TODO: Broke when we switched to customizable views (since it doesn't use vuex to request data)
-  //div(v-if="type == 'sunburst_clock'")
-    aw-sunburst-clock(:date="date", :afkBucketId="bucket_id_afk", :windowBucketId="bucket_id_window")
+  div(v-if="$store.state.activity.buckets.loaded")
+    // Check data prerequisites
+    div(v-if="!has_prerequisites")
+      b-alert.small.px-2.py-1(show variant="warning")
+        | This feature is missing data from a required watcher.
+        | You can find a list of all watchers in #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") the documentation].
+
+    div(v-if="type == 'top_apps'")
+      aw-summary(:fields="$store.state.activity.window.top_apps",
+                 :namefunc="e => e.data.app",
+                 :colorfunc="e => e.data.app",
+                 with_limit)
+    div(v-if="type == 'top_titles'")
+      aw-summary(:fields="$store.state.activity.window.top_titles",
+                 :namefunc="e => e.data.title",
+                 :colorfunc="e => e.data.app",
+                 with_limit)
+    div(v-if="type == 'top_domains'")
+      aw-summary(:fields="$store.state.activity.browser.top_domains",
+                 :namefunc="e => e.data.$domain",
+                 :colorfunc="e => e.data.$domain",
+                 with_limit)
+    div(v-if="type == 'top_urls'")
+      aw-summary(:fields="$store.state.activity.browser.top_urls",
+                 :namefunc="e => e.data.url",
+                 :colorfunc="e => e.data.$domain",
+                 with_limit)
+    div(v-if="type == 'top_editor_files'")
+      aw-summary(:fields="$store.state.activity.editor.top_files",
+                 :namefunc="top_editor_files_namefunc",
+                 :hoverfunc="top_editor_files_hoverfunc",
+                 :colorfunc="e => e.data.language",
+                 with_limit)
+    div(v-if="type == 'top_editor_languages'")
+      aw-summary(:fields="$store.state.activity.editor.top_languages",
+                 :namefunc="e => e.data.language",
+                 :colorfunc="e => e.data.language",
+                 with_limit)
+    div(v-if="type == 'top_editor_projects'")
+      aw-summary(:fields="$store.state.activity.editor.top_projects",
+                 :namefunc="top_editor_projects_namefunc",
+                 :hoverfunc="top_editor_projects_hoverfunc",
+                 :colorfunc="e => e.data.language",
+                 with_limit)
+    div(v-if="type == 'top_categories'")
+      aw-summary(:fields="$store.state.activity.category.top",
+                 :namefunc="e => e.data['$category'].join(' > ')",
+                 :colorfunc="e => e.data['$category'].join(' > ')",
+                 with_limit)
+    div(v-if="type == 'category_tree'")
+      aw-categorytree(:events="$store.state.activity.category.top")
+    div(v-if="type == 'category_sunburst'")
+      aw-sunburst-categories(:data="top_categories_hierarchy", style="height: 20em")
+    div(v-if="type == 'timeline_barchart'")
+      aw-timeline-barchart(:datasets="datasets", style="height: 100")
+    div(v-if="type == 'sunburst_clock'")
+      aw-sunburst-clock(:date="date", :afkBucketId="$store.state.activity.buckets.afk[0]", :windowBucketId="$store.state.activity.buckets.window[0]")
 </template>
 
 <style lang="scss">
@@ -82,8 +88,10 @@ div
 </style>
 
 <script>
+import _ from 'lodash';
 import 'vue-awesome/icons/cog';
 import 'vue-awesome/icons/times';
+import 'vue-awesome/icons/bars';
 
 import { split_by_hour_into_data } from '~/util/transforms';
 
@@ -117,6 +125,7 @@ export default {
         'top_editor_languages',
         'top_editor_projects',
         'timeline_barchart',
+        'sunburst_clock',
       ],
       // TODO: Move this function somewhere else
       top_editor_files_namefunc: e => {
@@ -185,20 +194,24 @@ export default {
         },
         timeline_barchart: {
           title: 'Timeline (barchart)',
-          // TODO
           available: true,
         },
-        /*
         sunburst_clock: {
           title: 'Sunburst clock',
-          // TODO
-          available: true,
+          available:
+            this.$store.state.activity.window.available &&
+            this.$store.state.activity.active.available,
         },
-        */
       };
     },
     has_prerequisites() {
       return this.visualizations[this.type].available;
+    },
+    supports_period: function () {
+      if (this.type == 'sunburst_clock' || this.type == 'timeline_barchart') {
+        return this.isSingleDay;
+      }
+      return true;
     },
     top_categories_hierarchy: function () {
       const top_categories = this.$store.state.activity.category.top;
@@ -225,6 +238,16 @@ export default {
           data,
         },
       ];
+    },
+    date: function () {
+      let date = this.$store.state.activity.query_options.date;
+      if (!date) {
+        date = this.$store.state.activity.query_options.timeperiod.start;
+      }
+      return date;
+    },
+    isSingleDay: function () {
+      return _.isEqual(this.$store.state.activity.query_options.timeperiod.length, [1, 'day']);
     },
   },
 };

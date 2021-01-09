@@ -1,11 +1,10 @@
 <template lang="pug">
-
 div
   b-card.event-container(no-block=true)
     span(slot="header")
       h4.card-title Events
       span.pagination-header
-        | Showing {{ events.length }} events
+        | Showing {{ displayed_events.length }} events #[span(v-if="events.length > displayed_events.length") (out of {{ events.length }})]
       b-button(@click="expandList", size="sm", style="float: right;")
         span(v-if="!isListExpanded")
           | Expand list
@@ -13,7 +12,7 @@ div
           | Condense list
 
     ul.event-list(:class="{ 'expand': isListExpanded }")
-      li(v-for="event in events")
+      li(v-for="event in displayed_events")
           span.event
             span.field(:title="event.timestamp")
               icon(name="calendar")
@@ -25,8 +24,9 @@ div
               icon(name="tags")
               // TODO: Add some kind of highlighting to key
               | {{ key }}: {{ val }}
-            span.field.float-right
-              b-btn(v-b-modal="'edit-modal-' + event.id", variant="outline-dark" size="sm")
+            span(v-if="editable")
+              b-btn.field(v-b-modal="'edit-modal-' + event.id", variant="outline-dark" size="sm" style="padding: 0 0.2em 0 0.2em")
+                icon(name="edit")
                 | Edit
 
           event-editor(
@@ -113,6 +113,7 @@ $border-color: #ddd;
 </style>
 
 <script>
+import 'vue-awesome/icons/edit';
 import 'vue-awesome/icons/tags';
 import 'vue-awesome/icons/clock';
 import 'vue-awesome/icons/calendar';
@@ -127,11 +128,21 @@ export default {
   props: {
     bucket_id: String,
     events: Array,
+    editable: {
+      default: false,
+      type: Boolean,
+    },
   },
   data: function () {
     return {
       isListExpanded: false,
+      limit: 100,
     };
+  },
+  computed: {
+    displayed_events: function () {
+      return this.events.slice(0, this.limit);
+    },
   },
   methods: {
     expandList: function () {

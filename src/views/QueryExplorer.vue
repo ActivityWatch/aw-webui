@@ -3,7 +3,7 @@
 div
   h3 Query Explorer
 
-  | See #[a(href="https://activitywatch.readthedocs.io/en/latest/querying-data.html") the documentation] for help on how to write queries.
+  | See #[a(href="https://docs.activitywatch.net/en/latest/examples/querying-data.html") the documentation] for help on how to write queries.
 
   hr
 
@@ -29,23 +29,7 @@ div
 
   hr
 
-  div.form-group
-    select.form-control(v-model="vis_method")
-      option(value="eventlist") Event List
-      option(value="timeline") Timeline
-      option(value="summary") Summary
-      option(value="raw") Raw JSON
-
-  div(v-if="vis_method == 'timeline'")
-    aw-timeline(type="simple", :event_type="event_type", :events="events")
-  div(v-if="vis_method == 'eventlist'")
-    aw-eventlist(:events="events")
-  div(v-if="vis_method == 'summary'")
-    input.form-control(type="text" v-model.lazy.trim="summaryKey" placeholder="data key" style="margin-bottom: 1em;")
-    aw-summary(:fields="events", :colorfunc="colorfunc", :namefunc="namefunc")
-  div(v-if="vis_method == 'raw'")
-    pre {{ events }}
-
+  aw-selectable-eventview(:events="events", :event_type="event_type")
 </template>
 
 <style scoped lang="scss"></style>
@@ -65,7 +49,6 @@ window_events = query_bucket(find_bucket("aw-watcher-window_"));
 window_events = filter_period_intersect(window_events, filter_keyvals(afk_events, "status", ["not-afk"]));
 merged_events = merge_events_by_keys(window_events, ["app", "title"]);
 RETURN = sort_by_duration(merged_events);`,
-      vis_method: 'eventlist',
       event_type: 'currentwindow',
       events: [],
       today: today.format(),
@@ -73,11 +56,6 @@ RETURN = sort_by_duration(merged_events);`,
       error: '',
       startdate: today.format('YYYY-MM-DD'),
       enddate: tomorrow.format('YYYY-MM-DD'),
-
-      /* Summary props */
-      summaryKey: '',
-      colorfunc: null,
-      namefunc: null,
     };
   },
   computed: {
@@ -85,10 +63,6 @@ RETURN = sort_by_duration(merged_events);`,
       if (Array.isArray(this.events)) return 'Number of events: ' + this.events.length;
       else return '';
     },
-  },
-  mounted: function () {
-    this.colorfunc = this.summaryKeyFunc;
-    this.namefunc = this.summaryKeyFunc;
   },
   methods: {
     query: async function () {
@@ -101,9 +75,6 @@ RETURN = sort_by_duration(merged_events);`,
       } catch (e) {
         this.error = e.response.data.message;
       }
-    },
-    summaryKeyFunc: function (e) {
-      return e.data[this.summaryKey];
     },
   },
 };
