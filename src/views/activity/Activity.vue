@@ -162,18 +162,17 @@ export default {
     categories: function () {
       const cats = this.$store.getters['categories/all_categories'];
       const entries = cats.map(c => {
-        return { text: c.join(' > '), value: c };
+        return { text: c.name.join(' > '), value: c.id };
       });
       return [
         { text: 'All', value: null },
-        { text: 'Uncategorized', value: ['Uncategorized'] },
+        { text: 'Uncategorized', value: -2 },
       ].concat(entries);
     },
     filterCategories: function () {
       if (this.filterCategory) {
         const cats = this.$store.getters['categories/all_categories'];
-        const isChild = p => c => c.length > p.length && _.isEqual(p, c.slice(0, p.length));
-        const children = _.filter(cats, isChild(this.filterCategory));
+        const children = _.filter(cats, c => c.parentId === this.filterCategory.id);
         return [this.filterCategory].concat(children);
       } else {
         return null;
