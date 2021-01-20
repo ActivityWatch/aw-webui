@@ -21,17 +21,17 @@
       | We're really happy to hear you are enjoying ActivityWatch, but we think we can do even better! To help us help you, here are a few things you can do:
       ul
         li
-          | Support us on #[a(href="https://www.patreon.com/erikbjare") Patreon] or #[a(href="https://opencollective.com/activitywatch") Open Collective] (or by #[a(href="https://activitywatch.net/donate/") other donation methods])
+          | Support us on #[a(href="https://www.patreon.com/erikbjare") Patreon] or #[a(href="https://opencollective.com/activitywatch") Open Collective] (or by #[a(href="https://activitywatch.net/donate/") other donation methods]).
         li
           | Using ActivityWatch at work? Consider asking your employer to support us!
         li
-          | Post about it on social media and tell your friends and colleagues! We are on #[a(href="https://twitter.com/ActivityWatchIt") Twitter] and #[a(href="https://www.facebook.com/ActivityWatch") Facebook]
+          | Post about it on social media and tell your friends and colleagues! We are on #[a(href="https://twitter.com/ActivityWatchIt") Twitter] and #[a(href="https://www.facebook.com/ActivityWatch") Facebook].
         //li
-          | Sign up for the newsletter
+          | Sign up for the newsletter.
         li
-          | Vote for new features on the #[a(href="https://forum.activitywatch.net/c/features") forum]
+          | Vote for new features on the #[a(href="https://forum.activitywatch.net/c/features") forum].
         //li
-          | Fill out the #[a(href="https://forms.gle/q2N9K5RoERBV8kqPA") feedback form]
+          | Fill out the #[a(href="https://forms.gle/q2N9K5RoERBV8kqPA") feedback form].
         li
           | Rate us on #[a(href="https://alternativeto.net/software/activitywatch/") AlternativeTo] and #[a(href="https://play.google.com/store/apps/details?id=net.activitywatch.android") Google Play Store].
         li
@@ -39,12 +39,12 @@
 
     b-alert(v-if="isNegFollowUpVisible", variant="info" show)
       button(type="button", class="close", @click="isNegFollowUpVisible=false") &times;
-      | We are sorry to hear that you did not like ActivityWatch, but we want to improve! We would be very thankful if you help us by:
+      | We are sorry to hear that you did not like ActivityWatch, but we want to improve! We would be very thankful if you helped us by:
       ul
         li
-          | Fill out the #[a(href="https://forms.gle/q2N9K5RoERBV8kqPA") feedback form]
+          | Fill out the #[a(href="https://forms.gle/q2N9K5RoERBV8kqPA") feedback form].
         li
-          | Vote for new features on the #[a(href="https://forum.activitywatch.net/c/features") forum]
+          | Vote for new features on the #[a(href="https://forum.activitywatch.net/c/features") forum].
 </template>
 
 <style scoped>
