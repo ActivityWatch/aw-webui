@@ -17,7 +17,7 @@ div
       span.float-right
         b-btn.ml-1(size="sm", variant="outline-secondary", @click="showEditModal()" style="border: 0;" pill)
           icon(name="edit")
-        b-btn.ml-1(size="sm", variant="outline-success", @click="addSubclass(_class)" style="border: 0;" pill)
+        b-btn.ml-1(size="sm", variant="outline-success", @click="addSubclass(_class); expanded = true" style="border: 0;" pill)
           icon(name="plus")
   div
     div.pa-2(v-for="child in _class.children", style="background: rgba(0, 0, 0, 0);", v-show="expanded")
