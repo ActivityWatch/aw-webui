@@ -2,11 +2,15 @@
 div
   div.row.py-2.class
     div.col-8.col-md-4
-      span(:style="{ marginLeft: (2 * depth) + 'em'}")
-        //| {{ _class.name.join(" ➤ ")}}
-      | #[span(v-if="depth > 0") ⮡] {{ _class.name.slice(depth).join(" ➤ ")}}
+      span(:style="{ marginLeft: (1.5 * depth) + 'em', cursor: _class.children.length > 0 ? 'pointer' : null}" @click="expanded = !expanded")
+        span(v-if="_class.children.length > 0" style="opacity: 0.8")
+          icon(:name="expanded ? 'regular/minus-square' : 'regular/plus-square'" scale="0.8")
+        span(v-else style="opacity: 0.6")
+          icon(name="circle" scale="0.4" style="margin-left: 1em; margin-right: 1.22em;")
+        | {{ _class.name.slice(depth).join(" ➤ ")}}
+        span.ml-1(v-if="_class.children.length > 0" style="opacity: 0.5") ({{totalChildren}})
+
     div.col-4.col-md-8
-      //span.d-none.d-sm-inline.d-md-none(:style="{ marginLeft: (2 * depth) + 'em'}")
       span.d-none.d-md-inline
         span(v-if="_class.rule.type === 'regex'") Rule ({{_class.rule.type}}): #[code {{_class.rule.regex}}]
         span(v-else, style="color: #888") No rule
@@ -47,8 +51,9 @@ div
 </template>
 
 <script>
-import 'vue-awesome/icons/plus-square';
-import 'vue-awesome/icons/minus-square';
+import 'vue-awesome/icons/regular/plus-square';
+import 'vue-awesome/icons/regular/minus-square';
+import 'vue-awesome/icons/circle';
 import 'vue-awesome/icons/caret-right';
 import 'vue-awesome/icons/trash';
 import 'vue-awesome/icons/plus';
@@ -65,9 +70,9 @@ export default {
       default: 0,
     },
   },
-  data: () => {
+  data: function () {
     return {
-      expanded: true,
+      expanded: this.depth < 1,
       editing: {
         id: 0, // FIXME: Use ID assigned to category in vuex store, in order for saves to be uniquely targeted
         name: null,
@@ -90,6 +95,12 @@ export default {
         { value: 'regex', text: 'Regular Expression' },
         //{ value: 'glob', text: 'Glob pattern' },
       ];
+    },
+    totalChildren: function () {
+      function countChildren(node) {
+        return node.children.length + _.sum(_.map(node.children, countChildren));
+      }
+      return countChildren(this._class);
     },
   },
   methods: {
