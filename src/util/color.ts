@@ -61,6 +61,7 @@ export function getColorFromString(appname) {
 
 // TODO: Move into vuex?
 export function getColorFromCategory(c: Category, allCats: Category[]): string {
+  // Returns the color for a certain category, falling back to parents if none set
   if (c && c.data && c.data.color) {
     return c.data.color;
   } else if (c && c.name.slice(0, -1).length > 0) {

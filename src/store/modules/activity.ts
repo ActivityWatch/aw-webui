@@ -2,7 +2,9 @@ import moment from 'moment';
 import { unitOfTime } from 'moment';
 import * as _ from 'lodash';
 import { map, filter, values, groupBy, sortBy, flow, reverse } from 'lodash/fp';
+
 import queries from '~/queries';
+import { getColorFromCategory } from '~/util/color';
 import { loadClassesForQuery } from '~/util/classes';
 import { get_day_start_with_offset } from '~/util/time';
 
@@ -192,7 +194,7 @@ const actions = {
   },
 
   async query_desktop_full(
-    { state, commit },
+    { state, commit, rootState, rootGetters },
     { timeperiod, filterCategories, filterAFK }: QueryOptions
   ) {
     const periods = [timeperiodToStr(timeperiod)];
@@ -206,8 +208,19 @@ const actions = {
       filterCategories
     );
     const data = await this._vm.$aw.query(periods, q);
-    commit('query_browser_completed', data[0].browser);
-    commit('query_window_completed', data[0].window);
+
+    const data_window = data[0].window;
+    const data_browser = data[0].browser;
+
+    // Set $color for categories
+    data_window.cat_events = data[0].window['cat_events'].map(e => {
+      const cat = rootGetters['categories/get_category'](e.data['$category']);
+      e.data['$color'] = getColorFromCategory(cat, rootState.categories.classes);
+      return e;
+    });
+
+    commit('query_window_completed', data_window);
+    commit('query_browser_completed', data_browser);
   },
 
   async query_browser_empty({ commit }) {
