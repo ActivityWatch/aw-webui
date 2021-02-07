@@ -14,13 +14,18 @@ interface Category {
   name_pretty?: string;
   subname?: string;
   rule: Rule;
+  data?: object;
   depth?: number;
   parent?: string[];
   children?: Category[];
 }
 
 export const defaultCategories: Category[] = [
-  { name: ['Work'], rule: { type: 'regex', regex: 'Google Docs|libreoffice|ReText' } },
+  {
+    name: ['Work'],
+    rule: { type: 'regex', regex: 'Google Docs|libreoffice|ReText' },
+    data: { productivity: 5, color: '#0F0' },
+  },
   {
     name: ['Work', 'Programming'],
     rule: { type: 'regex', regex: 'GitHub|Stack Overflow|BitBucket|Gitlab|vim|Spyder|kate' },
@@ -29,7 +34,11 @@ export const defaultCategories: Category[] = [
     name: ['Work', 'Programming', 'ActivityWatch'],
     rule: { type: 'regex', regex: 'ActivityWatch|aw-', ignore_case: true },
   },
-  { name: ['Media', 'Games'], rule: { type: 'regex', regex: 'Minecraft|RimWorld' } },
+  {
+    name: ['Media', 'Games'],
+    rule: { type: 'regex', regex: 'Minecraft|RimWorld' },
+    data: { color: '#0FF' },
+  },
   { name: ['Media', 'Video'], rule: { type: 'regex', regex: 'YouTube|Plex|VLC' } },
   {
     name: ['Media', 'Social Media'],
@@ -121,4 +130,17 @@ export function loadClassesForQuery(): [string[], Rule][] {
     .map(c => {
       return [c.name, c.rule];
     });
+}
+
+export function matchString(str: string): Category | null {
+  console.log(loadClasses());
+  const matchingCats = loadClasses()
+    .filter(c => c.rule.type == 'regex')
+    .filter(c => {
+      const re = RegExp(c.rule.regex, c.rule.ignore_case ? 'i' : '');
+      return re.test(str);
+    });
+  // TODO: Pick deepest
+  if (matchingCats.length > 0) return matchingCats[0];
+  return null;
 }

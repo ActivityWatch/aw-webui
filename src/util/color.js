@@ -1,6 +1,7 @@
 'use strict';
 
 import _ from 'lodash';
+import { matchString, loadClasses } from './classes';
 const Color = require('color');
 const d3 = require('d3');
 
@@ -57,6 +58,31 @@ export function getColorFromString(appname) {
   appname = appname || '';
   appname = appname.toLowerCase();
   return customColors[appname] || scale(Math.abs(hashcode(appname) % 20));
+}
+
+function getColorFromCategory(c, allCats) {
+  if (c.data && c.data.color) {
+    return c.data.color;
+  } else if (c.name.slice(0, -1).length > 0) {
+    // If no color is set on category, traverse parents until one is found
+    const parent = c.name.slice(0, -1);
+    const parentCat = allCats.find(cc => _.isEqual(cc.name, parent));
+    return getColorFromCategory(parentCat);
+  } else {
+    // TODO: Fix reasonable fallback
+    return '#F0F';
+  }
+}
+
+export function getCategoryColorFromString(str) {
+  // TODO: Don't load classes on every call
+  const allCats = loadClasses();
+  const c = matchString(str);
+  if (c !== null) {
+    return getColorFromCategory(c, allCats);
+  } else {
+    return getColorFromString(str);
+  }
 }
 
 export function getTitleAttr(bucket, e) {

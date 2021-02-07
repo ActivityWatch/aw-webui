@@ -8,6 +8,7 @@ div
         span(v-else style="opacity: 0.6")
           icon(name="circle" scale="0.4" style="margin-left: 1em; margin-right: 1.22em;")
         | {{ _class.name.slice(depth).join(" ➤ ")}}
+        icon.ml-1(v-if="_class.data && _class.data.color" name="circle" :style="'color: ' + _class.data.color")
         span.ml-1(v-if="_class.children.length > 0" style="opacity: 0.5") ({{totalChildren}})
 
     div.col-4.col-md-8
@@ -45,6 +46,25 @@ div
     hr
 
     div.my-1
+      b Color
+
+      b-form-checkbox(v-model="editing.inherit_color" switch)
+        | Inherit parent color
+      b-input-group.my-1(prepend="Color" v-if="!editing.inherit_color")
+        b-form-input(v-model="editing.color", placeholder="#FF0")
+        icon.mt-1.ml-2(name="circle" scale="1.8" :style="{'color': editing.color}")
+        b-btn.px-1(@click="randomColor()" style="border: 0" variant="outline-dark" title="Randomize")
+          icon(name="sync" scale="1.5")
+
+    //
+      div.my-1
+        b Productivity score
+        b-input-group.my-1(prepend="Points")
+          b-form-input(v-model="editing.productivity")
+
+    hr
+
+    div.my-1
       b-btn(variant="danger", @click="removeClass(_class); $refs.edit.hide()")
         icon(name="trash")
         | Remove category
@@ -58,6 +78,7 @@ import 'vue-awesome/icons/caret-right';
 import 'vue-awesome/icons/trash';
 import 'vue-awesome/icons/plus';
 import 'vue-awesome/icons/edit';
+import 'vue-awesome/icons/sync';
 
 import _ from 'lodash';
 
@@ -78,6 +99,8 @@ export default {
         name: null,
         rule: {},
         parent: [],
+        inherit_color: true,
+        color: null,
       },
     };
   },
@@ -140,6 +163,7 @@ export default {
         id: this.editing.id,
         name: this.editing.parent.concat(this.editing.name),
         rule: this.editing.rule.type !== null ? this.editing.rule : { type: null },
+        data: { color: this.editing.inherit_color === true ? undefined : this.editing.color },
       };
       this.$store.commit('categories/updateClass', new_class);
 
@@ -149,13 +173,20 @@ export default {
       });
     },
     resetModal() {
+      const color = this._class.data ? this._class.data.color : undefined;
+      const inherit_color = !color;
       this.editing = {
         id: this._class.id,
         name: this._class.subname,
         rule: _.cloneDeep(this._class.rule),
+        color,
+        inherit_color,
         parent: this._class.parent ? this._class.parent : [],
       };
       //console.log(this.editing);
+    },
+    randomColor() {
+      this.editing.color = '#' + (0x1000000 + Math.random() * 0xffffff).toString(16).substr(1, 6);
     },
   },
 };
