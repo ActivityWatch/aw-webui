@@ -27,7 +27,7 @@ import _ from 'lodash';
 import moment from 'moment';
 import Color from 'color';
 import { buildTooltip } from '../util/tooltip.js';
-import { getColorFromString, getTitleAttr } from '../util/color.js';
+import { getColorFromString, getTitleAttr } from '../util/color';
 
 import { Timeline } from 'vis-timeline/esnext';
 import 'vis-timeline/styles/vis-timeline-graph2d.css';

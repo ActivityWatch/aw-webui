@@ -1,8 +1,8 @@
 const classes = require('~/util/classes');
 
 const testClasses = [
-  { name: ['Test', 'Subtest'], rule: { type: 'regex', pattern: 'test' } },
-  { name: ['Test', 'Subtest', 'Subsubtest'], rule: { type: 'regex', pattern: 'test' } },
+  { name: ['Test', 'Subtest'], rule: { type: 'regex', pattern: 'subtest' } },
+  { name: ['Test', 'Subtest', 'Subsubtest'], rule: { type: 'regex', pattern: 'subsubtest' } },
 ];
 
 test('correctly builds hierarchy', () => {
@@ -17,4 +17,9 @@ test('correctly builds hierarchy', () => {
 test('correctly flatten hierarchy', () => {
   const result = classes.flatten_category_hierarchy(classes.build_category_hierarchy(testClasses));
   expect(result).toHaveLength(3);
+});
+
+test('matches string to category', () => {
+  const cat = classes.matchString('subsubtest', testClasses);
+  expect(cat).toEqual(testClasses[1]);
 });

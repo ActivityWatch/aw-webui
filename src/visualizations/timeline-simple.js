@@ -5,7 +5,7 @@ const Color = require('color');
 const _ = require('lodash');
 const moment = require('moment');
 
-import { getTitleAttr, getColorFromString } from '../util/color.js';
+import { getTitleAttr, getColorFromString } from '../util/color';
 
 const time = require('../util/time.js');
 

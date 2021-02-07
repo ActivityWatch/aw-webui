@@ -4,7 +4,7 @@ const d3 = require('d3');
 const Color = require('color');
 const _ = require('lodash');
 
-import { getCategoryColorFromString } from '../util/color.js';
+import { getCategoryColorFromString } from '../util/color';
 
 import { seconds_to_duration } from '../util/time.js';
 
@@ -58,9 +58,8 @@ function update(container, apps) {
     const width = (app.duration / longest_duration) * 100 + '%';
     const barHeight = 50;
     const textSize = 15;
-    const baseappcolor = app.color || getCategoryColorFromString(app.colorKey || app.name);
-    const appcolor = Color(baseappcolor).lighten(0.1).hex();
-    const hovercolor = Color(baseappcolor).darken(0.1).hex();
+    const appcolor = app.color || getCategoryColorFromString(app.colorKey || app.name);
+    const hovercolor = Color(appcolor).darken(0.1).hex();
 
     // The group representing an application in the barchart
     const eg = svg.append('g');

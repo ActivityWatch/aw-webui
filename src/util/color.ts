@@ -1,7 +1,5 @@
-'use strict';
-
 import _ from 'lodash';
-import { matchString, loadClasses } from './classes';
+import { Category, matchString, loadClasses } from './classes';
 const Color = require('color');
 const d3 = require('d3');
 
@@ -9,6 +7,7 @@ const d3 = require('d3');
 //   https://bl.ocks.org/pstuffa/3393ff2711a53975040077b7453781a9
 
 const scale = d3.scaleOrdinal(['#90CAF9', '#FFE082', '#EF9A9A', '#A5D6A7']);
+const uncatColor = '#AAA';
 
 // Needed to prewarm the color table
 scale.domain([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
@@ -60,28 +59,31 @@ export function getColorFromString(appname) {
   return customColors[appname] || scale(Math.abs(hashcode(appname) % 20));
 }
 
-function getColorFromCategory(c, allCats) {
-  if (c.data && c.data.color) {
+// TODO: Move into vuex?
+export function getColorFromCategory(c: Category, allCats: Category[]): string {
+  if (c && c.data && c.data.color) {
     return c.data.color;
-  } else if (c.name.slice(0, -1).length > 0) {
+  } else if (c && c.name.slice(0, -1).length > 0) {
     // If no color is set on category, traverse parents until one is found
     const parent = c.name.slice(0, -1);
     const parentCat = allCats.find(cc => _.isEqual(cc.name, parent));
-    return getColorFromCategory(parentCat);
+    return getColorFromCategory(parentCat, allCats);
   } else {
     // TODO: Fix reasonable fallback
-    return '#F0F';
+    return uncatColor;
   }
 }
 
-export function getCategoryColorFromString(str) {
+// TODO: Move into vuex?
+export function getCategoryColorFromString(str: string): string {
   // TODO: Don't load classes on every call
   const allCats = loadClasses();
-  const c = matchString(str);
+  const c = matchString(str, allCats);
   if (c !== null) {
     return getColorFromCategory(c, allCats);
   } else {
-    return getColorFromString(str);
+    // TODO: Fix reasonable fallback
+    return uncatColor;
   }
 }
 
