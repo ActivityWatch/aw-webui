@@ -4,7 +4,7 @@ const d3 = require('d3');
 const Color = require('color');
 const _ = require('lodash');
 
-import { getColorFromString } from '../util/color.js';
+import { getCategoryColorFromString } from '../util/color.js';
 
 import { seconds_to_duration } from '../util/time.js';
 
@@ -58,7 +58,7 @@ function update(container, apps) {
     const width = (app.duration / longest_duration) * 100 + '%';
     const barHeight = 50;
     const textSize = 15;
-    const baseappcolor = getColorFromString(app.colorKey || app.name);
+    const baseappcolor = app.color || getCategoryColorFromString(app.colorKey || app.name);
     const appcolor = Color(baseappcolor).lighten(0.1).hex();
     const hovercolor = Color(baseappcolor).darken(0.1).hex();
 
@@ -120,6 +120,7 @@ function updateSummedEvents(container, summedEvents, titleKeyFunc, hoverKeyFunc,
       name: titleKeyFunc(e),
       hovertext: hoverKeyFunc(e),
       duration: e.duration,
+      color: e.data['$color'],
       colorKey: colorKeyFunc(e),
     };
   });
