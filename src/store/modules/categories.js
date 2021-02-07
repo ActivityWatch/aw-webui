@@ -32,6 +32,9 @@ const getters = {
       v => v.join('>>>>') // Can be any separator that doesn't appear in the category names themselves
     );
   },
+  get_category: state => category_arr => {
+    return state.classes.find(c => _.isEqual(c.name, category_arr));
+  },
 };
 
 // actions

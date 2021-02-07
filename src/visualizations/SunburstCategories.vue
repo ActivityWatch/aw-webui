@@ -2,7 +2,7 @@
 // We want to use another colorscheme than the default 'schemeAccent',
 // unfortunately it seems like the color-scheme prop is broken.
 // See this issue: https://github.com/David-Desmaisons/Vue.D3.sunburst/issues/11
-sunburst(:data="data")
+sunburst(:data="data", :colorScale="(s) => colorfunc(s)", :getCategoryForColor="categoryForColor", :colorScheme="null")
   // Add behaviors
   template(slot-scope="{ on, actions }")
     highlightOnHover(v-bind="{ on, actions }")
@@ -31,6 +31,7 @@ import {
   zoomOnClick,
 } from 'vue-d3-sunburst';
 import 'vue-d3-sunburst/dist/vue-d3-sunburst.css';
+import { getColorFromCategory } from '~/util/color';
 
 const example_data = {
   name: 'flare',
@@ -56,6 +57,8 @@ const example_data = {
   ],
 };
 
+const SEP = '>';
+
 export default {
   components: {
     breadcrumbTrail,
@@ -68,6 +71,19 @@ export default {
     data: {
       type: Object,
       default: () => example_data,
+    },
+  },
+  methods: {
+    categoryForColor: function (d) {
+      const category = d.parent ? d.parent.concat([d.name]) : [d.name];
+      return category.join(SEP);
+    },
+    colorfunc: function (s) {
+      if (s == 'All') return '#FFF';
+      const cat = this.$store.getters['categories/get_category'](s.split(SEP));
+      const allCats = this.$store.state.categories.classes;
+      const color = getColorFromCategory(cat, allCats);
+      return color;
     },
   },
 };

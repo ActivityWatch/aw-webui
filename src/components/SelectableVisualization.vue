@@ -31,7 +31,7 @@ div
     div(v-if="type == 'top_titles'")
       aw-summary(:fields="$store.state.activity.window.top_titles",
                  :namefunc="e => e.data.title",
-                 :colorfunc="e => e.data.app",
+                 :colorfunc="e => e.data.title",
                  with_limit)
     div(v-if="type == 'top_domains'")
       aw-summary(:fields="$store.state.activity.browser.top_domains",

@@ -8,13 +8,13 @@ interface Rule {
   ignore_case?: boolean;
 }
 
-interface Category {
+export interface Category {
   id?: number;
   name: string[];
   name_pretty?: string;
   subname?: string;
   rule: Rule;
-  data?: object;
+  data?: any;
   depth?: number;
   parent?: string[];
   children?: Category[];
@@ -50,6 +50,7 @@ export const defaultCategories: Category[] = [
     rule: { type: 'regex', regex: 'Messenger|Telegram|Signal|WhatsApp|Rambox|Slack|Riot|Discord' },
   },
   { name: ['Comms', 'Email'], rule: { type: 'regex', regex: 'Gmail|Thunderbird|mutt|alpine' } },
+  { name: ['Uncategorized'], rule: { type: null }, data: { color: '#ccc' } },
 ];
 
 export function build_category_hierarchy(classes: Category[]): Category[] {
@@ -132,15 +133,23 @@ export function loadClassesForQuery(): [string[], Rule][] {
     });
 }
 
-export function matchString(str: string): Category | null {
-  console.log(loadClasses());
-  const matchingCats = loadClasses()
+function pickDeepest(categories: Category[]) {
+  return _.maxBy(categories, c => c.name.length);
+}
+
+export function matchString(str: string, categories: Category[] | null): Category | null {
+  if (!categories) {
+    console.log(
+      'Categories not passed, loading... (if you see this outside of a test, you should probably pass them)'
+    );
+    categories = loadClasses();
+  }
+  const matchingCats = categories
     .filter(c => c.rule.type == 'regex')
     .filter(c => {
       const re = RegExp(c.rule.regex, c.rule.ignore_case ? 'i' : '');
       return re.test(str);
     });
-  // TODO: Pick deepest
-  if (matchingCats.length > 0) return matchingCats[0];
+  if (matchingCats.length > 0) return pickDeepest(matchingCats);
   return null;
 }

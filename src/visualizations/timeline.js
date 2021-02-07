@@ -9,7 +9,7 @@ const Color = require('color');
 const _ = require('lodash');
 const moment = require('moment');
 
-import { getColorFromString } from '../util/color.js';
+import { getColorFromString } from '../util/color';
 
 import { seconds_to_duration } from '../util/time.js';
 
