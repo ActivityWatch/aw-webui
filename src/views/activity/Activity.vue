@@ -23,16 +23,25 @@ div
                    :disabled="nextPeriod() > today", variant="outline-dark")
             icon(name="arrow-right")
 
+
     div.mx-2(v-if="periodLength === 'day'")
       input.form-control.px-2(id="date" type="date" :value="_date" :max="today"
                          @change="setDate($event.target.value, periodLength)")
 
     div.ml-auto
       b-button-group
-        b-button.px-2(@click="refresh(true)", variant="outline-dark")
-          icon(name="sync")
+        b-tooltip(:triggers="autorefresh ? 'hover' : ''" target="refresh-button") Autorefresh is on (30s)
+        // :spin="autorefresh" :variant="autorefresh ? 'success' : 'outline-dark'"
+        b-button#refresh-button.px-2(@click="refresh(true)" variant="outline-dark")
+          icon(name="sync" style="animation-duration: 3s;", :class="{'green': autorefresh}")
           span.d-none.d-md-inline
             |  Refresh
+        b-dropdown(right, variant="outline-dark", style="margin-left: -0.5px;")
+          b-dropdown-form.p-0
+            // TODO: Actually implement autorefresh functionality
+            b-checkbox(v-model="autorefresh" switch style="padding-left: 2rem; padding-right; 2rem")
+              //icon(name="sync")
+              | Autorefresh
 
   aw-periodusage(:periodusage_arr="periodusage", @update="setDate")
 
@@ -75,6 +84,10 @@ div
 <style lang="scss" scoped>
 $buttoncolor: #ddd;
 $bordercolor: #ddd;
+
+.green {
+  color: #0a0;
+}
 
 .nav {
   border-bottom: 2px solid $bordercolor;
@@ -144,6 +157,7 @@ export default {
       today: get_today(),
       filterCategory: null,
       new_view: {},
+      autorefresh: false,
     };
   },
   computed: {
