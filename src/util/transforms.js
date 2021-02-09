@@ -1,11 +1,14 @@
 import _ from 'lodash';
 import moment from 'moment';
+import { get_hour_offset } from '~/util/time';
 
 // TODO: Move somewhere else, possibly turn into a serverside transform
 export function split_by_hour_into_data(events) {
   if (events === undefined || events === null || events.length == 0) return [];
   const d = moment(events[0].timestamp).startOf('day');
+  const hoursOffset = get_hour_offset();
   return _.range(0, 24).map(h => {
+    h += hoursOffset;
     let duration = 0;
     const d_start = d.clone().hour(h);
     const d_end = d.clone().hour(h + 1);

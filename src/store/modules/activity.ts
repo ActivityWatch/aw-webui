@@ -3,6 +3,7 @@ import { unitOfTime } from 'moment';
 import * as _ from 'lodash';
 import { map, filter, values, groupBy, sortBy, flow, reverse } from 'lodash/fp';
 
+import { window_events } from '~/util/fakedata';
 import queries from '~/queries';
 import { getColorFromCategory } from '~/util/color';
 import { loadClassesForQuery } from '~/util/classes';
@@ -13,8 +14,8 @@ interface TimePeriod {
   length: [number, string];
 }
 
-function dateToTimeperiod(date: string): TimePeriod {
-  return { start: get_day_start_with_offset(date), length: [1, 'day'] };
+function dateToTimeperiod(date: string, duration?: [number, string]): TimePeriod {
+  return { start: get_day_start_with_offset(date), length: duration || [1, 'day'] };
 }
 
 function timeperiodToStr(tp: TimePeriod): string {
@@ -62,6 +63,7 @@ const _state = {
 
   category: {
     available: false,
+    by_hour: [],
     top: [],
   },
 
@@ -104,6 +106,23 @@ function timeperiodsAroundTimeperiod(timeperiod: TimePeriod): TimePeriod[] {
   return periods;
 }
 
+function timeperiodsHoursOfDay(timeperiod: TimePeriod): TimePeriod[] {
+  const periods = [];
+  const _length: [number, string] = [1, 'hour'];
+  for (let i = 0; i < 24; i++) {
+    const start = moment(timeperiod.start)
+      .add(i * _length[0], _length[1] as moment.unitOfTime.DurationConstructor)
+      .format();
+    periods.push({ start, length: _length });
+  }
+  // const periods = _.range(24).map(i => [TimePeriod(moment(i * 1 + dayOffset), [1, 'hour'])]);
+  return periods;
+}
+
+function timeperiodsStrsHoursOfDay(timeperiod: TimePeriod): string[] {
+  return timeperiodsHoursOfDay(timeperiod).map(timeperiodToStr);
+}
+
 function timeperiodStrsAroundTimeperiod(timeperiod: TimePeriod): string[] {
   return timeperiodsAroundTimeperiod(timeperiod).map(timeperiodToStr);
 }
@@ -142,6 +161,7 @@ const actions = {
 
       if (state.window.available) {
         await dispatch('query_desktop_full', query_options);
+        await dispatch('query_category_time_by_hour', query_options);
       } else if (state.android.available) {
         await dispatch('query_android', query_options);
       } else {
@@ -263,6 +283,32 @@ const actions = {
     commit('query_active_history_completed', { active_history });
   },
 
+  async query_category_time_by_hour(
+    { commit, state },
+    { timeperiod, filterCategories, filterAFK }: QueryOptions
+  ) {
+    // TODO: Only works for the 1 day timeperiod
+    // TODO: Needs to be adapted for Android
+    const periods = timeperiodsStrsHoursOfDay(timeperiod);
+    const classes = loadClassesForQuery();
+    const data = await this._vm.$aw.query(
+      periods,
+      // TODO: Clean up call, pass QueryParams in fullDesktopQuery as well
+      // TODO: Unify QueryOptions and QueryParams
+      queries.hourlyCategoryQuery({
+        bid_afk: state.buckets.afk[0],
+        bid_window: state.buckets.window[0],
+        bid_browsers: state.buckets.browser,
+        // bid_android: state.buckets.android,
+        classes: classes,
+        filter_afk: filterAFK,
+        filter_classes: filterCategories,
+      })
+    );
+    const category_time_by_hour = _.zipObject(periods, data);
+    commit('query_category_time_by_hour_completed', { category_time_by_hour });
+  },
+
   async query_active_history_android({ commit, state }, { timeperiod }: QueryOptions) {
     const periods = timeperiodStrsAroundTimeperiod(timeperiod).filter(tp_str => {
       return !_.includes(state.active.history, tp_str);
@@ -316,95 +362,6 @@ const actions = {
   async load_demo({ commit }) {
     // A function to load some demo data (for screenshots and stuff)
     commit('start_loading', {});
-
-    const window_events = [
-      {
-        duration: 32.1 * 60,
-        data: {
-          app: 'Firefox',
-          title: 'ActivityWatch/activitywatch: Track how you spend your time - Mozilla Firefox',
-          url: 'https://github.com/ActivityWatch/activitywatch',
-          $category: ['Work', 'Programming', 'ActivityWatch'],
-        },
-      },
-      {
-        duration: 14.6 * 60,
-        data: {
-          app: 'Firefox',
-          title: 'Inbox - Gmail - Mozilla Firefox',
-          url: 'https://mail.google.com',
-          $category: ['Comms', 'Email'],
-        },
-      },
-      {
-        duration: 0.2 * 60 * 60,
-        data: {
-          app: 'Firefox',
-          title: 'reddit: the front page of the internet - Mozilla Firefox',
-          url: 'https://reddit.com',
-          $category: ['Media', 'Social Media'],
-        },
-      },
-      {
-        duration: 0.2 * 60 * 60,
-        data: {
-          app: 'Firefox',
-          title: 'YouTube - Mozilla Firefox',
-          url: 'https://youtube.com',
-          $category: ['Media', 'Video'],
-        },
-      },
-      {
-        duration: 0.15 * 60 * 60,
-        data: {
-          app: 'Firefox',
-          title: 'Home / Twitter - Mozilla Firefox',
-          url: 'https://twitter.com',
-          $category: ['Media', 'Social Media'],
-        },
-      },
-      {
-        duration: 0.15 * 60 * 60,
-        data: {
-          app: 'Firefox',
-          title: 'Stack Overflow',
-          url: 'https://stackoverflow.com',
-          $category: ['Work', 'Programming'],
-        },
-      },
-      {
-        duration: 48.2 * 60,
-        data: {
-          app: 'Terminal',
-          title: 'vim ~/code/activitywatch/aw-server/aw-webui/src',
-          $category: ['Work', 'Programming', 'ActivityWatch'],
-        },
-      },
-      {
-        duration: 12.6 * 60,
-        data: {
-          app: 'Terminal',
-          title: 'bash ~/code/activitywatch',
-          $category: ['Work', 'Programming', 'ActivityWatch'],
-        },
-      },
-      {
-        duration: 58.1 * 60,
-        data: {
-          app: 'zoom',
-          title: 'Zoom Meeting',
-          $category: ['Comms', 'Video Conferencing'],
-        },
-      },
-      {
-        duration: 0.4 * 60 * 60,
-        data: { app: 'Minecraft', title: 'Minecraft', $category: ['Media', 'Games'] },
-      },
-      {
-        duration: 3.15 * 60,
-        data: { app: 'Spotify', title: 'Spotify', $category: ['Media', 'Music'] },
-      },
-    ];
 
     function groupSumEventsBy(events, key, f) {
       return flow(
@@ -542,6 +499,10 @@ const mutations = {
       ...state.active.history,
       ...active_history,
     };
+  },
+
+  query_category_time_by_hour_completed(state, { category_time_by_hour }) {
+    state.category.by_hour = category_time_by_hour;
   },
 
   buckets(state, data) {

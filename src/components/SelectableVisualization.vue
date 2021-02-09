@@ -97,6 +97,7 @@ import { split_by_hour_into_data } from '~/util/transforms';
 
 // TODO: Move this somewhere else
 import { build_category_hierarchy } from '~/util/classes';
+import { getColorFromCategory } from '~/util/color';
 
 function pick_subname_as_name(c) {
   c.name = c.subname;
@@ -229,15 +230,51 @@ export default {
       }
     },
     datasets: function () {
-      // TODO: Move elsewhere
-      const data = split_by_hour_into_data(this.$store.state.activity.active.events);
-      return [
-        {
-          label: 'Total time',
-          backgroundColor: '#6699ff',
-          data,
-        },
-      ];
+      const METHOD_CATEGORY = 'category';
+      const METHOD_ACTIVITY = 'activity';
+      const method = METHOD_CATEGORY;
+      if (method == METHOD_CATEGORY) {
+        const SEP = '>>>';
+        const data = this.$store.state.activity.category.by_hour;
+        if (data) {
+          const categories = new Set(
+            Object.values(data)
+              .map(result => {
+                return result.cat_events.map(e => e.data['$category'].join(SEP));
+              })
+              .flat()
+          );
+          const ds = [...categories].map(c_ => {
+            const c = this.$store.getters['categories/get_category'](c_.split(SEP));
+            if (c) {
+              return {
+                label: c.name.join(' > '),
+                backgroundColor: getColorFromCategory(c, this.$store.state.categories.classes),
+                data: Object.values(data).map(results => {
+                  const cat = results.cat_events.find(e => _.isEqual(e.data['$category'], c.name));
+                  if (cat) return Math.round((cat.duration / (60 * 60)) * 1000) / 1000;
+                  else return null;
+                }),
+              };
+            } else {
+              console.log('missing c');
+            }
+          });
+          return ds;
+        } else {
+          return [];
+        }
+      } else if (method == METHOD_ACTIVITY) {
+        const data = split_by_hour_into_data(this.$store.state.activity.active.events);
+        return [
+          {
+            label: 'Total time',
+            backgroundColor: '#6699ff',
+            data,
+          },
+        ];
+      }
+      return [];
     },
     date: function () {
       let date = this.$store.state.activity.query_options.date;
