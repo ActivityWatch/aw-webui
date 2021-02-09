@@ -3,6 +3,7 @@ import _ from 'lodash';
 import { ChartOptions } from 'chart.js';
 import { Bar } from 'vue-chartjs';
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
+import { get_hour_offset } from '~/util/time';
 
 @Component({
   extends: Bar, // this is important to add the functionality to your component
@@ -37,8 +38,9 @@ export default class ChartTimelineBars extends Vue<Bar> {
 
   renderData() {
     // Overwriting base render method with actual data.
+    const hourOffset = get_hour_offset();
     const data = {
-      labels: _.range(0, 24).map(h => `${h}`),
+      labels: _.range(0, 24).map(h => `${(h + hourOffset) % 24}`),
       datasets: this.datasets,
       title: {
         display: true,
@@ -48,14 +50,19 @@ export default class ChartTimelineBars extends Vue<Bar> {
       maintainAspectRatio: false,
     };
     const options = {
+      skipNull: true,
       tooltips: {
-        mode: 'index',
+        mode: 'point',
         intersect: false,
+      },
+      legend: {
+        display: false,
       },
       scales: {
         xAxes: [{ stacked: true }],
         yAxes: [
           {
+            stacked: true,
             ticks: {
               stepSize: 0.25,
               min: 0,

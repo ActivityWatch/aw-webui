@@ -32,6 +32,14 @@ export function get_day_start_with_offset(dateParam) {
   return dateMoment.hour(start_of_day_hours).minute(start_of_day_minutes).format();
 }
 
+// Return the startOfDay offset as a number of hours
+export function get_hour_offset() {
+  const start_of_day = localStorage.startOfDay;
+  const start_of_day_hours = parseInt(start_of_day.split(':')[0]);
+  const start_of_day_minutes = parseInt(start_of_day.split(':')[1]);
+  return start_of_day_hours + start_of_day_minutes / 60;
+}
+
 export function get_day_end_with_offset(date) {
   return moment(get_day_start_with_offset(date)).add(1, 'days').format();
 }

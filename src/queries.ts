@@ -256,6 +256,15 @@ export function editorActivityQuery(editorbuckets: string[]): string[] {
   return q;
 }
 
+export function hourlyCategoryQuery(params: DesktopQueryParams) {
+  const q = `
+    ${canonicalEvents(params)}
+    cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
+    RETURN = { "cat_events": cat_events };
+  `;
+  return querystr_to_array(q);
+}
+
 export function dailyActivityQuery(afkbucket: string): string[] {
   afkbucket = escape_doublequote(afkbucket);
   return [
@@ -276,6 +285,7 @@ export default {
   fullDesktopQuery,
   appQuery,
   dailyActivityQuery,
+  hourlyCategoryQuery,
   dailyActivityQueryAndroid,
   editorActivityQuery,
 };
