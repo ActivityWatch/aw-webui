@@ -16,12 +16,19 @@ jobs:
     strategy:
       matrix:
         node-version: [12.x]
+        aw-version: ["v0.10.0"]
+        aw-server: ["aw-server", "aw-server-rust"]
 
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: 'recursive'
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Install and run ActivityWatch
+      run: |
+        wget -O activitywatch.zip https://github.com/ActivityWatch/activitywatch/releases/download/${{ matrix.aw-version }}/activitywatch-${{ matrix.aw-version }}-linux-x86_64.zip
+        unzip activitywatch.zip
+        ./activitywatch/${{ matrix.aw-server }}/${{ matrix.aw-server }} &
+    - name: Setup Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
