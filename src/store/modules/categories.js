@@ -67,16 +67,27 @@ const mutations = {
     } else {
       Object.assign(state.classes[new_class.id], new_class);
     }
+    let name_is_different;
+    if (old_class) {
+      name_is_different = !(
+        old_class.name.length == new_class.name.length &&
+        old_class.name.every((element, index) => element === new_class.name[index])
+      );
+    } else {
+      name_is_different = false;
+    }
+    console.log('category was renamed: ', name_is_different);
 
-    // When a parent category is renamed, we also need to rename the children
-    const parent_depth = old_class.name.length;
-    _.map(state.classes, c => {
-      if (_.isEqual(old_class.name, c.name.slice(0, parent_depth))) {
-        c.name = new_class.name.concat(c.name.slice(parent_depth));
-        console.log('Renamed child:', c.name);
-      }
-    });
-
+    if (name_is_different) {
+      // When a parent category is renamed, we also need to rename the children
+      const parent_depth = old_class.name.length;
+      _.map(state.classes, c => {
+        if (_.isEqual(old_class.name, c.name.slice(0, parent_depth))) {
+          c.name = new_class.name.concat(c.name.slice(parent_depth));
+          console.log('Renamed child:', c.name);
+        }
+      });
+    }
     state.classes_unsaved_changes = true;
   },
   addClass(state, new_class) {
