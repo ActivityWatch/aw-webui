@@ -52,13 +52,13 @@ export const defaultCategories: Category[] = [
       ignore_case: true,
     },
   },
-  { 
-    name: ['Media', 'Music'], 
+  {
+    name: ['Media', 'Music'],
     rule: {
       type: 'regex',
       regex: 'Spotify|Deezer|Audacity',
       ignore_case: true,
-    } 
+    },
   },
   {
     name: ['Comms', 'IM'],
