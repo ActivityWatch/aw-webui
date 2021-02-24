@@ -28,7 +28,7 @@ export const defaultCategories: Category[] = [
   },
   {
     name: ['Work', 'Programming'],
-    rule: { 
+    rule: {
       type: 'regex', 
       regex: 'GitHub|Stack Overflow|BitBucket|Gitlab|vim|Spyder|kate|Ghidra|Scite' 
     },
@@ -46,7 +46,7 @@ export const defaultCategories: Category[] = [
   { name: ['Media', 'Image'], rule: { type: 'regex', regex: 'Gimp|Inkscape' } },
   {
     name: ['Media', 'Social Media'],
-    rule: { 
+    rule: {
       type: 'regex', 
       regex: 'reddit|Facebook|Twitter|Instagram|devRant', 
       ignore_case: true 
@@ -54,7 +54,7 @@ export const defaultCategories: Category[] = [
   },
   { 
     name: ['Media', 'Music'], 
-    rule: { 
+    rule: {
       type: 'regex', 
       regex: 'Spotify|Deezer|Audacity', 
       ignore_case: true 
