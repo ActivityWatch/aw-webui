@@ -30,7 +30,7 @@ export const defaultCategories: Category[] = [
     name: ['Work', 'Programming'],
     rule: {
       type: 'regex',
-      regex: 'GitHub|Stack Overflow|BitBucket|Gitlab|vim|Spyder|kate|Ghidra|Scite'
+      regex: 'GitHub|Stack Overflow|BitBucket|Gitlab|vim|Spyder|kate|Ghidra|Scite',
     },
   },
   {
@@ -49,7 +49,7 @@ export const defaultCategories: Category[] = [
     rule: {
       type: 'regex',
       regex: 'reddit|Facebook|Twitter|Instagram|devRant',
-      ignore_case: true
+      ignore_case: true,
     },
   },
   { 
@@ -57,14 +57,14 @@ export const defaultCategories: Category[] = [
     rule: {
       type: 'regex',
       regex: 'Spotify|Deezer|Audacity',
-      ignore_case: true
+      ignore_case: true,
     } 
   },
   {
     name: ['Comms', 'IM'],
     rule: {
       type: 'regex',
-      regex: 'Messenger|Telegram|Signal|WhatsApp|Rambox|Slack|Riot|Discord|Nheko'
+      regex: 'Messenger|Telegram|Signal|WhatsApp|Rambox|Slack|Riot|Discord|Nheko',
     },
   },
   { name: ['Comms', 'Email'], rule: { type: 'regex', regex: 'Gmail|Thunderbird|mutt|alpine' } },
