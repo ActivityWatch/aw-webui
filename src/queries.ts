@@ -69,12 +69,13 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
       : '',
     // Fetch browser events
     params.bid_browsers
-      ? browserEvents(params) +
-        // Include focused and audible browser events as indications of not-afk
-        (params.include_audible
-          ? `audible_events = filter_keyvals(browser_events, "audible", [true]);
+      ? isDesktopParams(params) &&
+        browserEvents(params) +
+          // Include focused and audible browser events as indications of not-afk
+          (params.include_audible
+            ? `audible_events = filter_keyvals(browser_events, "audible", [true]);
              not_afk = period_union(not_afk, audible_events);`
-          : '')
+            : '')
       : '',
     // Filter out window events when the user was afk
     isDesktopParams(params) && params.filter_afk
@@ -190,7 +191,8 @@ export function fullDesktopQuery(
   afkbucket: string,
   filterAFK = true,
   classes,
-  filterCategories: string[][]
+  filterCategories: string[][],
+  include_audible: boolean
 ): string[] {
   // Escape `"`
   browserbuckets = _.map(browserbuckets, escape_doublequote);
@@ -205,6 +207,7 @@ export function fullDesktopQuery(
     classes: classes,
     filter_classes: filterCategories,
     filter_afk: filterAFK,
+    include_audible,
   };
 
   return querystr_to_array(

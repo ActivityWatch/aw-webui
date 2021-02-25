@@ -31,6 +31,7 @@ interface QueryOptions {
   date?: string;
   timeperiod?: TimePeriod;
   filterAFK?: boolean;
+  includeAudible?: boolean;
   filterCategories?: string[][];
   force?: boolean;
 }
@@ -215,7 +216,7 @@ const actions = {
 
   async query_desktop_full(
     { state, commit, rootState, rootGetters },
-    { timeperiod, filterCategories, filterAFK }: QueryOptions
+    { timeperiod, filterCategories, filterAFK, includeAudible }: QueryOptions
   ) {
     const periods = [timeperiodToStr(timeperiod)];
     const classes = loadClassesForQuery();
@@ -225,7 +226,8 @@ const actions = {
       state.buckets.afk[0],
       filterAFK,
       classes,
-      filterCategories
+      filterCategories,
+      includeAudible
     );
     const data = await this._vm.$aw.query(periods, q);
 
