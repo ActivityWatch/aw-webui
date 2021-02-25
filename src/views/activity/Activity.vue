@@ -67,6 +67,14 @@ div
         b-form-group(label="Show/filter category" label-cols="5" label-cols-lg="4")
           b-form-select(v-model="filterCategory", :options="categories")
 
+    div.row
+      div.col-md-12
+        b-form-group(label="Filter AFK" label-cols="11")
+          b-form-checkbox(v-model="filterAFK")
+      div.col-md-12
+        b-form-group(label="Browser audible as active" label-cols="11")
+          b-form-checkbox(v-model="includeAudible")
+
     aw-devonly
       b-btn(id="load-demo", @click="load_demo")
         | Load demo data
@@ -143,6 +151,8 @@ export default {
     return {
       today: get_today(),
       filterCategory: null,
+      includeAudible: true,
+      filterAFK: true,
       new_view: {},
     };
   },
@@ -262,7 +272,8 @@ export default {
         timeperiod: this.timeperiod,
         host: this.host,
         force: force,
-        filterAFK: true,
+        filterAFK: this.filterAFK,
+        includeAudible: this.includeAudible,
         filterCategories: this.filterCategories,
       });
     },
