@@ -22,18 +22,17 @@ interface BaseQueryParams {
   include_audible?: boolean;
   classes: [string[], Rule][];
   filter_classes: string[][];
+  bid_browsers?: string[];
 }
 
 interface DesktopQueryParams extends BaseQueryParams {
   bid_window: string;
   bid_afk: string;
   filter_afk: boolean;
-  bid_browsers?: string[];
 }
 
 interface AndroidQueryParams extends BaseQueryParams {
   bid_android: string;
-  bid_browsers?: string[];
 }
 
 function isDesktopParams(object: any): object is DesktopQueryParams {
@@ -54,30 +53,38 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
   // Needs escaping for regex patterns like '\w' to work (JSON.stringify adds extra unecessary escaping)
   const classes_str = JSON.stringify(params.classes).replace(/\\\\/g, '\\');
   const cat_filter_str = JSON.stringify(params.filter_classes);
+
+  // For simplicity, we assume that bid_window and bid_android are exchangeable (note however it needs special treatment)
   const bid_window = isDesktopParams(params) ? params.bid_window : params.bid_android;
 
-  return `
-    events = flood(query_bucket("${bid_window}"));
-    ${
-      isDesktopParams(params)
-        ? `not_afk = flood(query_bucket("${params.bid_afk}"));
-           not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);`
-        : ''
-    }
-    ${isAndroidParams(params) ? 'events = merge_events_by_keys(events, ["app"]);' : ''}
-
-    ${
-      isDesktopParams(params) && params.filter_afk
-        ? 'events = filter_period_intersect(events, not_afk);'
-        : ''
-    }
-    ${params.classes ? `events = categorize(events, ${classes_str});` : ''}
-    ${
-      params.filter_classes
-        ? `events = filter_keyvals(events, "$category", ${cat_filter_str});`
-        : ''
-    }
-  `;
+  return [
+    // Fetch window/app events
+    `events = flood(query_bucket("${bid_window}"));`,
+    // On Android, merge events to avoid overload of events
+    isAndroidParams(params) ? 'events = merge_events_by_keys(events, ["app"]);' : '',
+    // Fetch not-afk events
+    isDesktopParams(params)
+      ? `not_afk = flood(query_bucket("${params.bid_afk}"));
+         not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);`
+      : '',
+    // Fetch browser events
+    params.bid_browsers
+      ? browserEvents(params) +
+        // Include focused and audible browser events as indications of not-afk
+        (params.include_audible
+          ? `audible_events = filter_keyvals(browser_events, "audible", [true]);
+             not_afk = period_union(not_afk, audible_events);`
+          : '')
+      : '',
+    // Filter out window events when the user was afk
+    isDesktopParams(params) && params.filter_afk
+      ? 'events = filter_period_intersect(events, not_afk);'
+      : '',
+    // Categorize
+    params.classes ? `events = categorize(events, ${classes_str});` : '',
+    // Filter out selected categories
+    params.filter_classes ? `events = filter_keyvals(events, "$category", ${cat_filter_str});` : '',
+  ].join('\n');
 }
 
 const default_limit = 100; // Hardcoded limit per group
@@ -171,7 +178,8 @@ function browserEvents(params: DesktopQueryParams): string {
        window_${browserName} = filter_keyvals(events, "app", ${browser_appnames_str});
        events_${browserName} = filter_period_intersect(events_${browserName}, window_${browserName});
        events_${browserName} = split_url_events(events_${browserName});
-       browser_events = sort_by_timestamp(concat(browser_events, events_${browserName}));`;
+       browser_events = concat(browser_events, events_${browserName});
+       browser_events = sort_by_timestamp(browser_events);`;
   });
   return code;
 }
@@ -209,8 +217,8 @@ export function fullDesktopQuery(
     app_events  = limit_events(app_events, ${default_limit});
     title_events  = limit_events(title_events, ${default_limit});
     duration = sum_durations(events);
-
-    ${browserEvents(params)}
+    ` + // Browser events are retrieved in canonicalQuery
+      `
     browser_events = split_url_events(browser_events);
     browser_urls = merge_events_by_keys(browser_events, ["url"]);
     browser_urls = sort_by_duration(browser_urls);
