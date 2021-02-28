@@ -69,11 +69,11 @@ div
 
     div.row
       div.col-md-12
-        b-form-group(label="Filter AFK" label-cols="11")
-          b-form-checkbox(v-model="filterAFK")
+        b-form-checkbox(v-model="filterAFK")
+          | Filter AFK
       div.col-md-12
-        b-form-group(label="Browser audible as active" label-cols="11")
-          b-form-checkbox(v-model="includeAudible")
+        b-form-checkbox(v-model="includeAudible")
+          | Count audible browser tab as active
 
     aw-devonly
       b-btn(id="load-demo", @click="load_demo")
@@ -171,9 +171,11 @@ export default {
     },
     categories: function () {
       const cats = this.$store.getters['categories/all_categories'];
-      const entries = cats.map(c => {
-        return { text: c.join(' > '), value: c };
-      });
+      const entries = cats
+        .map(c => {
+          return { text: c.join(' > '), value: c };
+        })
+        .sort((a, b) => a.text > b.text);
       return [
         { text: 'All', value: null },
         { text: 'Uncategorized', value: ['Uncategorized'] },
