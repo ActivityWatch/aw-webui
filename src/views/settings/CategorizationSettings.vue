@@ -11,8 +11,10 @@ div
       input(type="file" @change="importCategories" hidden)
     b-btn.ml-1(@click="exportClasses", variant="outline-primary" size="sm")
       | Export
-  div
+  p
     | Rules for categorizing events. An event can only have one category. If several categories match, the deepest one will be chosen.
+  p
+    | For help on how to write categorization rules, see #[a(href="https://docs.activitywatch.net/en/latest/features/categorization.html") the documentation].
 
   div.my-4
     b-alert(variant="warning" :show="classes_unsaved_changes")
