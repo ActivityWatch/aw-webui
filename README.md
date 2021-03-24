@@ -53,6 +53,8 @@ The assets are stored in the following directories (relative to your installatio
  - aw-server-python: `activitywatch/aw-server/aw_server/static/`
  - aw-server-rust: `activitywatch/aw-server-rust/static/`
 
+Once you've put the files in the directories, you may have to do a hard refresh in your browser to invalidate any stale caches.
+
 ## Tests
 
 Tests can be run with:
