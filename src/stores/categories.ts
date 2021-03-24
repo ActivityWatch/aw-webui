@@ -18,6 +18,21 @@ interface State {
   classes_unsaved_changes: boolean;
 }
 
+function getScoreFromCategory(c: Category, allCats: Category[]): number {
+  // Returns the score for a certain category, falling back to parents if none set
+  // Very similar to getColorFromCategory
+  if (c && c.data && c.data.score) {
+    return c.data.score;
+  } else if (c && c.name.slice(0, -1).length > 0) {
+    // If no color is set on category, traverse parents until one is found
+    const parent = c.name.slice(0, -1);
+    const parentCat = allCats.find(cc => _.isEqual(cc.name, parent));
+    return getScoreFromCategory(parentCat, allCats);
+  } else {
+    return 0;
+  }
+}
+
 export const useCategoryStore = defineStore('categories', {
   state: (): State => ({
     classes: [],
@@ -83,8 +98,13 @@ export const useCategoryStore = defineStore('categories', {
       };
     },
     get_category_color() {
-      return (cat: string[]) => {
+      return (cat: string[]): string => {
         return getColorFromCategory(this.get_category(cat), this.classes);
+      };
+    },
+    get_category_score() {
+      return (cat: string[]): number => {
+        return getScoreFromCategory(this.get_category(cat), this.classes);
       };
     },
     category_select() {

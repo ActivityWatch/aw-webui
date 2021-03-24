@@ -78,6 +78,8 @@ export default {
         parent: [],
         inherit_color: true,
         color: null,
+        inherit_score: true,
+        score: null,
       },
     };
   },
@@ -148,7 +150,10 @@ export default {
         id: this.editing.id,
         name: this.editing.parent.concat(this.editing.name),
         rule: this.editing.rule.type !== 'none' ? this.editing.rule : { type: 'none' },
-        data: { color: this.editing.inherit_color === true ? undefined : this.editing.color },
+        data: {
+          color: this.editing.inherit_color === true ? undefined : this.editing.color,
+          score: this.editing.inherit_score === true ? undefined : this.editing.score,
+        },
       };
       this.categoryStore.updateClass(new_class);
 
