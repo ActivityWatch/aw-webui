@@ -1,9 +1,10 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import {
   saveClasses,
   loadClasses,
   defaultCategories,
   build_category_hierarchy,
+  createMissingParents,
 } from '~/util/classes';
 
 // initial state
@@ -19,6 +20,7 @@ const getters = {
     return _.sortBy(hier, [c => c.id || 0]);
   },
   all_categories: state => {
+    // Returns a list of category names (a list of list of strings)
     return _.uniqBy(
       _.flatten(
         state.classes.map(c => {
@@ -52,6 +54,8 @@ const actions = {
 // mutations
 const mutations = {
   loadClasses(state, classes) {
+    classes = createMissingParents(classes);
+
     let i = 0;
     state.classes = classes.map(c => Object.assign(c, { id: i++ }));
     console.log('Loaded classes:', state.classes);
@@ -66,8 +70,8 @@ const mutations = {
   },
   updateClass(state, new_class) {
     console.log('Updating class:', new_class);
-
     const old_class = _.cloneDeep(state.classes[new_class.id]);
+
     if (new_class.id === undefined || new_class.id === null) {
       new_class.id = _.max(_.map(state.classes, 'id')) + 1;
       state.classes.push(new_class);
@@ -97,7 +101,11 @@ const mutations = {
   },
   restoreDefaultClasses(state) {
     let i = 0;
-    state.classes = defaultCategories.map(c => Object.assign(c, { id: i++ }));
+    state.classes = createMissingParents(defaultCategories).map(c => Object.assign(c, { id: i++ }));
+    state.classes_unsaved_changes = true;
+  },
+  clearAll(state) {
+    state.classes = [];
     state.classes_unsaved_changes = true;
   },
   saveCompleted(state) {
