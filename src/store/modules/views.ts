@@ -1,4 +1,15 @@
-const desktopViews = [
+interface Element {
+  type: string;
+  size?: number;
+}
+
+interface View {
+  id: string;
+  name: string;
+  elements: Element[];
+}
+
+const desktopViews: View[] = [
   {
     id: 'summary',
     name: 'Summary',
@@ -55,8 +66,12 @@ const androidViews = [
 // FIXME: Decide depending on what kind of device is being viewed, not from which device it is being viewed.
 const defaultViews = !process.env.VUE_APP_ON_ANDROID ? desktopViews : androidViews;
 
+interface State {
+  views: View[];
+}
+
 // initial state
-const _state = {
+const _state: State = {
   views: [],
 };
 
@@ -66,48 +81,56 @@ const getters = {};
 // actions
 const actions = {
   async load({ commit }) {
-    commit('loadViews');
+    let views: View[];
+    if (typeof localStorage !== 'undefined') {
+      const views_json = localStorage.views;
+      if (views_json && views_json.length >= 1) {
+        views = JSON.parse(views_json);
+      }
+    }
+    if (!views) {
+      views = defaultViews;
+    }
+    commit('loadViews', views);
   },
-  async save({ state, commit }) {
+  async save({ state, dispatch }) {
     localStorage.views = JSON.stringify(state.views);
-    // After save, reload views
-    commit('loadViews');
+    // After save, reload views from localStorage
+    await dispatch('load');
   },
 };
 
 // mutations
 const mutations = {
-  loadViews(state) {
-    const views_json = localStorage.views;
-    if (views_json && views_json.length >= 1) {
-      state.views = JSON.parse(views_json);
-    } else {
-      state.views = defaultViews;
-    }
+  loadViews(state: State, views: View[]) {
+    state.views = views;
     console.log('Loaded views:', state.views);
   },
-  setElements(state, { view_id, elements }) {
+  clearViews(state: State) {
+    state.views = [];
+  },
+  setElements(state: State, { view_id, elements }) {
     state.views.find(v => v.id == view_id).elements = elements;
   },
-  restoreDefaults(state) {
+  restoreDefaults(state: State) {
     state.views = defaultViews;
   },
-  addView(state, view) {
+  addView(state: State, view: View) {
     state.views.push({ ...view, elements: [] });
   },
-  removeView(state, { view_id }) {
+  removeView(state: State, { view_id }) {
     const idx = state.views.map(v => v.id).indexOf(view_id);
     state.views.splice(idx, 1);
   },
-  editView(state, { view_id, el_id, type }) {
+  editView(state: State, { view_id, el_id, type }) {
     console.log(view_id, el_id, type);
     console.log(state.views);
     state.views.find(v => v.id == view_id).elements[el_id].type = type;
   },
-  addVisualization(state, { view_id, type }) {
+  addVisualization(state: State, { view_id, type }) {
     state.views.find(v => v.id == view_id).elements.push({ type: type });
   },
-  removeVisualization(state, { view_id, el_id }) {
+  removeVisualization(state: State, { view_id, el_id }) {
     state.views.find(v => v.id == view_id).elements.splice(el_id, 1);
   },
 };
