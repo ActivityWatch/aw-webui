@@ -24,7 +24,7 @@ module.exports = {
       displayName: 'node',
       preset: 'ts-jest',
       testEnvironment: 'node',
-      testMatch: ['**/test/**/*.test.node.js?(x)'],
+      testMatch: ['**/test/**/*.test.node.{js,ts}?(x)'],
       transform: {
         '^.+\\.js$': 'babel-jest',
         '^.+\\.vue$': 'vue-jest',
