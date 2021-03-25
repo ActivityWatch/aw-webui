@@ -1,4 +1,4 @@
-const _ = require('lodash');
+import _ from 'lodash';
 
 const level_sep = '>';
 
@@ -20,6 +20,8 @@ export interface Category {
   children?: Category[];
 }
 
+// The default categories
+// Should be run through createMissingParents before being used in most cases.
 export const defaultCategories: Category[] = [
   {
     name: ['Work'],
@@ -53,22 +55,22 @@ export const defaultCategories: Category[] = [
   { name: ['Uncategorized'], rule: { type: null }, data: { color: '#ccc' } },
 ];
 
-export function build_category_hierarchy(classes: Category[]): Category[] {
-  function annotate(c: Category) {
-    const ch = c.name;
-    c.name_pretty = ch.join(level_sep);
-    c.subname = ch.slice(-1)[0];
-    c.parent = ch.length > 1 ? ch.slice(0, -1) : null;
-    c.depth = ch.length - 1;
-    return c;
-  }
+function annotate(c: Category) {
+  const ch = c.name;
+  c.name_pretty = ch.join(level_sep);
+  c.subname = ch.slice(-1)[0];
+  c.parent = ch.length > 1 ? ch.slice(0, -1) : null;
+  c.depth = ch.length - 1;
+  return c;
+}
 
-  const new_classes = classes.slice().map(c => annotate(c));
+export function createMissingParents(classes: Category[]): Category[] {
+  // Creates parents for categories that are missing theirs (implicit parents)
+  classes = _.cloneDeep(classes);
+  classes = classes.slice().map(c => annotate(c));
+  const all_full_names = new Set(classes.map(c => c.name.join(level_sep)));
 
-  // Insert dangling/undefined parents
-  const all_full_names = new Set(new_classes.map(c => c.name.join(level_sep)));
-
-  function createMissingParents(children) {
+  function _createMissing(children: Category[]) {
     children
       .map(c => c.parent)
       .filter(p => !!p)
@@ -76,15 +78,21 @@ export function build_category_hierarchy(classes: Category[]): Category[] {
         const name = p.join(level_sep);
         if (p && !all_full_names.has(name)) {
           const new_parent = annotate({ name: p, rule: { type: null } });
+          //console.log('Creating missing parent:', new_parent);
           classes.push(new_parent);
           all_full_names.add(name);
           // New parent might not be top-level, so we need to recurse
-          createMissingParents([new_parent]);
+          _createMissing([new_parent]);
         }
       });
   }
 
-  createMissingParents(new_classes);
+  _createMissing(classes);
+  return classes;
+}
+
+export function build_category_hierarchy(classes: Category[]): Category[] {
+  classes = createMissingParents(classes);
 
   function assignChildren(classes_at_level: Category[]) {
     return classes_at_level.map(cls => {
