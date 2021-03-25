@@ -20,6 +20,8 @@ export interface Category {
   children?: Category[];
 }
 
+const COLOR_UNCAT = '#CCC';
+
 // The default categories
 // Should be run through createMissingParents before being used in most cases.
 export const defaultCategories: Category[] = [
@@ -52,7 +54,7 @@ export const defaultCategories: Category[] = [
     rule: { type: 'regex', regex: 'Messenger|Telegram|Signal|WhatsApp|Rambox|Slack|Riot|Discord' },
   },
   { name: ['Comms', 'Email'], rule: { type: 'regex', regex: 'Gmail|Thunderbird|mutt|alpine' } },
-  { name: ['Uncategorized'], rule: { type: null }, data: { color: '#ccc' } },
+  { name: ['Uncategorized'], rule: { type: null }, data: { color: COLOR_UNCAT } },
 ];
 
 function annotate(c: Category) {

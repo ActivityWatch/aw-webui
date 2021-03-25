@@ -50,11 +50,8 @@ div
 
       b-form-checkbox(v-model="editing.inherit_color" switch)
         | Inherit parent color
-      b-input-group.my-1(prepend="Color" v-if="!editing.inherit_color")
-        b-form-input(v-model="editing.color", placeholder="#FF0")
-        icon.mt-1.ml-2(name="circle" scale="1.8" :style="{'color': editing.color}")
-        b-btn.px-1(@click="randomColor()" style="border: 0" variant="outline-dark" title="Randomize")
-          icon(name="sync" scale="1.5")
+      div.mt-1(v-show="!editing.inherit_color")
+        color-picker(v-model="editing.color")
 
     //
       div.my-1
@@ -78,12 +75,16 @@ import 'vue-awesome/icons/caret-right';
 import 'vue-awesome/icons/trash';
 import 'vue-awesome/icons/plus';
 import 'vue-awesome/icons/edit';
-import 'vue-awesome/icons/sync';
+
+import ColorPicker from '~/components/ColorPicker';
 
 import _ from 'lodash';
 
 export default {
   name: 'CategoryEditTree',
+  components: {
+    'color-picker': ColorPicker,
+  },
   props: {
     _class: Object,
     depth: {
@@ -94,6 +95,7 @@ export default {
   data: function () {
     return {
       expanded: this.depth < 1,
+      color_focused: false,
       editing: {
         id: 0, // FIXME: Use ID assigned to category in vuex store, in order for saves to be uniquely targeted
         name: null,
@@ -184,9 +186,6 @@ export default {
         parent: this._class.parent ? this._class.parent : [],
       };
       //console.log(this.editing);
-    },
-    randomColor() {
-      this.editing.color = '#' + (0x1000000 + Math.random() * 0xffffff).toString(16).substr(1, 6);
     },
   },
 };

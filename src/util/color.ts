@@ -3,11 +3,25 @@ import { Category, matchString, loadClasses } from './classes';
 const Color = require('color');
 const d3 = require('d3');
 
+// TODO: Move elsewhere
+interface Event {
+  timestamp: string;
+  duration: number;
+  data: any;
+}
+
+interface Bucket {
+  name: string;
+  type: string;
+}
+
 // See here for examples:
 //   https://bl.ocks.org/pstuffa/3393ff2711a53975040077b7453781a9
+//
+
+const COLOR_UNCAT = '#CCC';
 
 const scale = d3.scaleOrdinal(['#90CAF9', '#FFE082', '#EF9A9A', '#A5D6A7']);
-const uncatColor = '#AAA';
 
 // Needed to prewarm the color table
 scale.domain([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
@@ -40,7 +54,7 @@ const customColors = {
   'facebook.com': Color('#3b5998').lighten(0.5),
 };
 
-function hashcode(str) {
+function hashcode(str: string) {
   let hash = 0;
   if (str.length === 0) {
     return hash;
@@ -53,7 +67,7 @@ function hashcode(str) {
   return hash;
 }
 
-export function getColorFromString(appname) {
+export function getColorFromString(appname: string) {
   appname = appname || '';
   appname = appname.toLowerCase();
   return customColors[appname] || scale(Math.abs(hashcode(appname) % 20));
@@ -71,7 +85,7 @@ export function getColorFromCategory(c: Category, allCats: Category[]): string {
     return getColorFromCategory(parentCat, allCats);
   } else {
     // TODO: Fix reasonable fallback
-    return uncatColor;
+    return COLOR_UNCAT;
   }
 }
 
@@ -84,11 +98,11 @@ export function getCategoryColorFromString(str: string): string {
     return getColorFromCategory(c, allCats);
   } else {
     // TODO: Fix reasonable fallback
-    return uncatColor;
+    return COLOR_UNCAT;
   }
 }
 
-export function getTitleAttr(bucket, e) {
+export function getTitleAttr(bucket: Bucket, e: Event) {
   if (bucket.type == 'currentwindow') {
     return e.data.app;
   } else if (bucket.type == 'web.tab.current') {
