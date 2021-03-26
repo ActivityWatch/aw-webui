@@ -219,10 +219,19 @@ export default {
     },
   },
   watch: {
+    host: function () {
+      this.refresh();
+    },
     timeperiod: function () {
       this.refresh();
     },
     filterCategory: function () {
+      this.refresh();
+    },
+    filterAFK: function () {
+      this.refresh();
+    },
+    includeAudible: function () {
       this.refresh();
     },
   },
