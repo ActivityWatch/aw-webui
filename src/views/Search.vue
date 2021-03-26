@@ -100,6 +100,7 @@ export default {
   },
   methods: {
     search: async function () {
+      // TODO: Refactor to share code with the Timeline view
       let query = canonicalEvents({
         bid_window: 'aw-watcher-window_' + this.hostname,
         bid_afk: 'aw-watcher-afk_' + this.hostname,

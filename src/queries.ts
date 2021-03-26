@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import { Rule } from '~/util/classes';
 
 // TODO: Sanitize string input of buckets
 
@@ -13,14 +14,11 @@ function escape_doublequote(s: string) {
   return s.replace(/"/g, '\\"');
 }
 
-interface Rule {
-  type: string;
-  regex?: string;
-}
+type CategoryTuple = [string[], Rule];
 
 interface BaseQueryParams {
   include_audible?: boolean;
-  classes: [string[], Rule][];
+  classes: CategoryTuple[];
   filter_classes: string[][];
   bid_browsers?: string[];
 }
@@ -90,7 +88,11 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
 
 const default_limit = 100; // Hardcoded limit per group
 
-export function appQuery(appbucket: string, classes, filterCategories: string[][]): string[] {
+export function appQuery(
+  appbucket: string,
+  classes: CategoryTuple[],
+  filterCategories: string[][]
+): string[] {
   appbucket = escape_doublequote(appbucket);
   const params: AndroidQueryParams = {
     bid_android: appbucket,
@@ -190,7 +192,7 @@ export function fullDesktopQuery(
   windowbucket: string,
   afkbucket: string,
   filterAFK = true,
-  classes,
+  classes: CategoryTuple[],
   filterCategories: string[][],
   include_audible: boolean
 ): string[] {
@@ -220,7 +222,7 @@ export function fullDesktopQuery(
     app_events  = limit_events(app_events, ${default_limit});
     title_events  = limit_events(title_events, ${default_limit});
     duration = sum_durations(events);
-    ` + // Browser events are retrieved in canonicalQuery
+    ` + // Browser events are retrieved in canonicalEvents
       `
     browser_events = split_url_events(browser_events);
     browser_urls = merge_events_by_keys(browser_events, ["url"]);

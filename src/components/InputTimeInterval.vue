@@ -11,14 +11,14 @@ div
         th.pr-2
           label(for="mode") Interval mode:
         td
-          select(id="mode", v-model="mode")
+          b-select(id="mode", v-model="mode" size="sm")
             option(value='last_duration') Last duration
             option(value='range') Date range
       tr(v-if="mode == 'last_duration'")
         th.pr-2
           label(for="duration") Show last:
         td
-          select(id="duration", v-model="duration", @change="valueChanged")
+          b-select(id="duration", v-model="duration", @change="valueChanged" size="sm")
             option(:value="15*60") 15min
             option(:value="30*60") 30min
             option(:value="60*60") 1h
@@ -34,7 +34,7 @@ div
           input(type="date", v-model="end")
           button(
             class="btn btn-outline-dark btn-sm",
-            type="button", 
+            type="button",
             :disabled="mode == 'range' && (invalidDaterange || emptyDaterange || daterangeTooLong)",
             @click="valueChanged"
           ) Update
