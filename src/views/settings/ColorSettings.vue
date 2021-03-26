@@ -16,10 +16,10 @@ export default {
       useColorFallback: localStorage.useColorFallback || true,
     };
   },
-  methods: {
-    set: function (useColorFallback) {
-      localStorage.useColorFallback = useColorFallback;
-      console.log('Set useColorFallback to ' + useColorFallback);
+  watch: {
+    useColorFallback(val) {
+      localStorage.useColorFallback = val;
+      console.log('Set useColorFallback to ' + val);
     },
   },
 };

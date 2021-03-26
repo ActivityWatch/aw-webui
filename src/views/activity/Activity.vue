@@ -63,17 +63,15 @@ div
     h5 Options
 
     div.row
-      div.col-md-6
-        b-form-group(label="Show/filter category" label-cols="5" label-cols-lg="4")
-          b-form-select(v-model="filterCategory", :options="categories")
-
-    div.row
-      div.col-md-12
+      div.col-lg-6
         b-form-checkbox(v-model="filterAFK")
           | Filter AFK
-      div.col-md-12
         b-form-checkbox(v-model="includeAudible")
           | Count audible browser tab as active
+
+      div.col-lg-6
+        b-form-group(label="Show/filter category" label-cols="5" label-cols-lg="4")
+          b-form-select(v-model="filterCategory", :options="categories")
 
     aw-devonly
       b-btn(id="load-demo", @click="load_demo")

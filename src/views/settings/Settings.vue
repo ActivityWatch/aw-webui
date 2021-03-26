@@ -22,8 +22,9 @@ div
     ReleaseNotificationSettings
     hr
 
-  //ColorSettings
-  //hr
+  ColorSettings
+
+  hr
 
   CategorizationSettings
 

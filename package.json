@@ -86,6 +86,8 @@
     "@fullcalendar/vue": "^5.1.0",
     "@types/chart.js": "^2.9.23",
     "@types/chrome": "0.0.89",
+    "@types/color": "^3.0.1",
+    "@types/d3": "^6.3.0",
     "@types/jest": "^24.9.1",
     "@types/lodash": "^4.14.157",
     "@types/node": "^12.12.50",
