@@ -1,11 +1,13 @@
 <template lang="pug">
-div.row
-  div.col-sm-9
-    h5.mb-0 Start of day
-    small
-      | The time at which days "start", since humans don't always go to bed before midnight. Set to 04:00 by default.
-  div.col-sm-3
-    input.form-control(type="time" :value="startOfDay" @change="setStartOfDay($event.target.value)")
+div
+  div.d-sm-flex.justify-content-between
+    div
+      h5.mt-1.mb-2.mb-sm-0 Start of day
+    div
+      b-input(type="time" size="sm" :value="startOfDay" @change="setStartOfDay($event.target.value)")
+  small
+    | The time at which days "start", since humans don't always go to bed before midnight.
+    | Set to 04:00 by default.
 </template>
 <script>
 export default {

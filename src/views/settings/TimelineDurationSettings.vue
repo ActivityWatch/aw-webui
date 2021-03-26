@@ -1,11 +1,10 @@
 <template lang="pug">
-div.row
-  div.col-sm-9
-    h5.mb-0 Duration default value
-    small
-      | The default duration used for 'show last' in the timeline view
-  div.col-sm-3
-    select(id="durationDefaultValue" :value="durationDefaultValue", @change="setDurationDefault($event.target.value)")
+div
+  div.d-sm-flex.justify-content-between
+    div
+      h5.mb-2.mb-sm-0 Duration default value
+    div
+      b-select(size="sm" :value="durationDefaultValue", @change="setDurationDefault($event.target.value)")
           option(:value="15*60") 15min
           option(:value="30*60") 30min
           option(:value="60*60") 1h
@@ -14,6 +13,8 @@ div.row
           option(:value="6*60*60") 6h
           option(:value="12*60*60") 12h
           option(:value="24*60*60") 24h
+  small
+    | The default duration used for 'show last' in the timeline view.
 </template>
 <script>
 export default {

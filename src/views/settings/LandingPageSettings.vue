@@ -1,16 +1,17 @@
 <template lang="pug">
-div.row
-  div.col-sm-9
-    h5.mb-0 Landing page
-    small
-      | The page to open when opening ActivityWatch, or clicking the logo in the top menu.
-  div.col-sm-3
-    select(v-if="loaded", id="landingpage" :value="landingpage", @change="set($event.target.value)")
-      option(value="/home") Home
-      option(:value="'/activity/' + hostname + '/view/'" v-for="hostname in hostnames") Activity ({{hostname}})
-      option(value="/timeline") Timeline
-    span(v-else)
-      | Loading...
+div
+  div.d-sm-flex.justify-content-between
+    div
+      h5.mt-1.mb-2.mb-sm-0 Landing page
+    div
+      b-select.landingpage(v-if="loaded" size="sm" :value="landingpage", @change="set($event.target.value)")
+        option(value="/home") Home
+        option(:value="'/activity/' + hostname + '/view/'" v-for="hostname in hostnames") Activity ({{hostname}})
+        option(value="/timeline") Timeline
+      span(v-else)
+        | Loading...
+  small
+    | The page to open when opening ActivityWatch, or clicking the logo in the top menu.
 </template>
 <script>
 export default {

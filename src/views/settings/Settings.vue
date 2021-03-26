@@ -22,6 +22,9 @@ div
     ReleaseNotificationSettings
     hr
 
+  //ColorSettings
+  //hr
+
   CategorizationSettings
 
 </template>
@@ -32,6 +35,7 @@ import TimelineDurationSettings from '~/views/settings/TimelineDurationSettings.
 import ReleaseNotificationSettings from '~/views/settings/ReleaseNotificationSettings.vue';
 import CategorizationSettings from '~/views/settings/CategorizationSettings.vue';
 import LandingPageSettings from '~/views/settings/LandingPageSettings.vue';
+import ColorSettings from '~/views/settings/ColorSettings.vue';
 
 export default {
   name: 'Settings',
@@ -41,6 +45,7 @@ export default {
     ReleaseNotificationSettings,
     CategorizationSettings,
     LandingPageSettings,
+    ColorSettings,
   },
 };
 </script>
