@@ -4,7 +4,7 @@ div
     div
       h5.mb-0 New release notification
     div
-      b-form-checkbox(v-model="data.isEnabled" @change="saveData", switch)
+      b-form-checkbox(v-model="data.isEnabled" switch)
   small
     | We will send you a notification if there is a new release available for download, this check will happen at most once per day.
 </template>
@@ -25,6 +25,14 @@ export default {
         timesChecked: 0,
       },
     };
+  },
+  watch: {
+    data: {
+      handler() {
+        this.saveData();
+      },
+      deep: true,
+    },
   },
   created() {
     this.retrieveData();

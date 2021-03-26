@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { Category, matchString, loadClasses } from './classes';
-const Color = require('color');
-const d3 = require('d3');
+import Color from 'color';
+import * as d3 from 'd3';
 
 // TODO: Move elsewhere
 interface Event {
@@ -24,7 +24,9 @@ const COLOR_UNCAT = '#CCC';
 const scale = d3.scaleOrdinal(['#90CAF9', '#FFE082', '#EF9A9A', '#A5D6A7']);
 
 // Needed to prewarm the color table
-scale.domain([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
+scale.domain(
+  '0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20'.split(/, /)
+);
 
 const customColors = {
   afk: '#EEE',
@@ -52,9 +54,12 @@ const customColors = {
   // Social media sites
   'messenger.com': Color('#3b5998').lighten(0.5),
   'facebook.com': Color('#3b5998').lighten(0.5),
+
+  // Categories
+  uncategorized: COLOR_UNCAT,
 };
 
-function hashcode(str: string) {
+function hashcode(str: string): number {
   let hash = 0;
   if (str.length === 0) {
     return hash;
@@ -70,7 +75,7 @@ function hashcode(str: string) {
 export function getColorFromString(appname: string) {
   appname = appname || '';
   appname = appname.toLowerCase();
-  return customColors[appname] || scale(Math.abs(hashcode(appname) % 20));
+  return customColors[appname] || scale(Math.abs(hashcode(appname) % 20).toString());
 }
 
 // TODO: Move into vuex?
@@ -84,7 +89,6 @@ export function getColorFromCategory(c: Category, allCats: Category[]): string {
     const parentCat = allCats.find(cc => _.isEqual(cc.name, parent));
     return getColorFromCategory(parentCat, allCats);
   } else {
-    // TODO: Fix reasonable fallback
     return COLOR_UNCAT;
   }
 }
@@ -97,7 +101,17 @@ export function getCategoryColorFromString(str: string): string {
   if (c !== null) {
     return getColorFromCategory(c, allCats);
   } else {
-    // TODO: Fix reasonable fallback
+    return fallbackColor(str);
+  }
+}
+
+function fallbackColor(str: string): string {
+  // Get fallback color
+  // TODO: Fetch setting from somewhere better, where defaults are respected
+  const useColorFallback = localStorage !== undefined ? localStorage.useColorFallback : true;
+  if (useColorFallback) {
+    return getColorFromString(str);
+  } else {
     return COLOR_UNCAT;
   }
 }
