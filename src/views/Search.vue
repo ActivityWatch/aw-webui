@@ -9,7 +9,7 @@ div
     | {{error}}
 
   b-input-group(size="lg")
-    b-input(v-model="pattern" placeholder="Regex pattern to search for")
+    b-input(v-model="pattern" v-on:keyup.enter="search()" placeholder="Regex pattern to search for")
     b-input-group-append
       b-button(type="button", @click="search()" variant="success")
         icon(name="search")
