@@ -120,6 +120,7 @@ const browser_appnames = {
     'Google Chrome',
     'Google-chrome',
     'chrome.exe',
+    'google-chrome-stable',
 
     // Chromium
     'Chromium',
