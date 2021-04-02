@@ -2,7 +2,7 @@ import _ from 'lodash';
 
 const level_sep = '>';
 
-interface Rule {
+export interface Rule {
   type: string;
   regex?: string;
   ignore_case?: boolean;

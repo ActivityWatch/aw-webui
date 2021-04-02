@@ -130,6 +130,7 @@ export default {
   },
   methods: {
     addSubclass: function (parent) {
+      // TODO: Open modal when category added
       this.$store.commit('categories/addClass', {
         name: parent.name.concat(['New class']),
         rule: { type: 'regex', regex: 'FILL ME' },
@@ -138,7 +139,6 @@ export default {
     removeClass: function (_class) {
       // TODO: Show a confirmation dialog
       // TODO: Remove children as well?
-      // TODO: Move button to edit modal?
       this.$store.commit('categories/removeClass', _class);
     },
     showEditModal() {
@@ -185,7 +185,6 @@ export default {
         inherit_color,
         parent: this._class.parent ? this._class.parent : [],
       };
-      //console.log(this.editing);
     },
   },
 };

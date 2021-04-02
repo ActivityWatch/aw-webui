@@ -21,9 +21,9 @@ export function buildTooltip(bucket, e) {
       `;
   } else if (bucket.type.startsWith('app.editor')) {
     inner = `
-      <tr><th>Filename:</th><td>${sanitize(_.last(e.data.file.split('/')))}</td></tr>
-      <tr><th>Path:</th><td>${sanitize(e.data.file)}</td></tr>
-      <tr><th>Language:</th><td>${sanitize(e.data.language)}</td></tr>
+      <tr><td>Filename:</td><td>${sanitize(_.last(e.data.file.split('/')))}</td></tr>
+      <tr><td>Path:</td><td>${sanitize(e.data.file)}</td></tr>
+      <tr><td>Language:</td><td>${sanitize(e.data.language)}</td></tr>
       `;
   } else if (bucket.type.startsWith('general.stopwatch')) {
     inner = `
@@ -34,7 +34,7 @@ export function buildTooltip(bucket, e) {
       <tr><td>Data:</td><td>${sanitize(JSON.stringify(e.data))}</td></tr>
       `;
   }
-  return `<table>
+  return `<table style="font-family: sans-serif">
     <tr></tr>
     <tr><th>Start:</th><td>${moment(e.timestamp).format()}</td></tr>
     <tr><th>Stop:</th><td>${moment(e.timestamp).add(e.duration, 'seconds').format()}</td></tr>

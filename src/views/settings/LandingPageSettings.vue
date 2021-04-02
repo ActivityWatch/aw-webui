@@ -6,7 +6,7 @@ div
     div
       b-select.landingpage(v-if="loaded" size="sm" :value="landingpage", @change="set($event.target.value)")
         option(value="/home") Home
-        option(:value="'/activity/' + hostname + '/view/'" v-for="hostname in hostnames") Activity ({{hostname}})
+        option(:value="'/activity/' + hostname + '/view/'" v-for="hostname in $store.getters['buckets/hostnames']") Activity ({{hostname}})
         option(value="/timeline") Timeline
       span(v-else)
         | Loading...
@@ -21,11 +21,6 @@ export default {
       landingpage: localStorage.landingpage || '/home',
       loaded: false,
     };
-  },
-  computed: {
-    hostnames() {
-      return Object.keys(this.$store.getters['buckets/bucketsByHostname']);
-    },
   },
   async mounted() {
     this.landingpage = localStorage.landingpage || '/home';

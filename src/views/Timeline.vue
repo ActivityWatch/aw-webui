@@ -4,6 +4,16 @@ div
 
   input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration")
 
+  b-form-group
+    b-checkbox#showCategory(v-model="showCategory")
+    b-label(for="showCategory")
+
+  b-form-group
+    label(for="type") Type
+    b-select#type(v-model="type")
+      option(value='all') All buckets
+      option(:value='"host:" + host' v-for="host in $store.getters['buckets/hostnames']") {{host}}
+
   div(v-show="buckets !== null")
     div
       div(style="float: left")
@@ -21,14 +31,18 @@ div
 
 <script>
 import _ from 'lodash';
+import { canonicalEvents } from '~/queries';
+
 export default {
   name: 'Timeline',
   data() {
     return {
+      type: 'all',
       buckets: null,
       daterange: null,
       timeintervalDefaultDuration: Number.parseInt(localStorage.durationDefault) || 60 * 60,
       maxDuration: 31 * 24 * 60 * 60,
+      showCategory: false,
     };
   },
   computed: {
@@ -40,13 +54,67 @@ export default {
     daterange() {
       this.getBuckets();
     },
+    type() {
+      this.getBuckets();
+    },
   },
   methods: {
     getBuckets: async function () {
-      this.buckets = await this.$store.dispatch('buckets/getBucketsWithEvents', {
-        start: this.daterange[0].format(),
-        end: this.daterange[1].format(),
+      const start = this.daterange[0].format();
+      const end = this.daterange[1].format();
+
+      if (this.type === 'all') {
+        this.buckets = await this.$store.dispatch('buckets/getBucketsWithEvents', {
+          start,
+          end,
+        });
+      } else if (this.type.startsWith('host:')) {
+        const host = this.type.replace('host:', '');
+        this.getCanonicalEvents(host, start, end);
+      } else {
+        console.error('unsupported');
+      }
+    },
+    getCanonicalEvents: async function (hostname, start, end) {
+      // TODO: Refactor to share code with Search view
+      let query = canonicalEvents({
+        bid_window: 'aw-watcher-window_' + hostname,
+        bid_afk: 'aw-watcher-afk_' + hostname,
+        filter_afk: this.filter_afk,
+        // TODO: Use classes
+        classes: [],
+        //filter_classes: [],
       });
+      if (this.showCategory) {
+        // TODO: Merge adjacent events with the same category
+        /*
+        query += `;
+          events = ...;
+        `;
+        */
+      }
+      query += '; RETURN = events;';
+
+      const query_array = query.split(';').map(s => s.trim() + ';');
+      const timeperiods = [start + '/' + end];
+      try {
+        let data = await this.$aw.query(timeperiods, query_array)[0];
+        data = _.map(data, e => {
+          e.data = { $category: e.data['$category'] };
+          return e;
+        });
+        this.buckets = [
+          {
+            type: 'category',
+            hostname: hostname,
+            events: _.orderBy(data, ['timestamp'], ['asc']),
+          },
+        ];
+        this.error = '';
+      } catch (e) {
+        console.error(e);
+        this.error = e.response.data.message;
+      }
     },
   },
 };

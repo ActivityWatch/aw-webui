@@ -49,6 +49,7 @@ const getters = {
   },
   getBucket: state => id => _.filter(state.buckets, b => b.id === id)[0],
   bucketsByHostname: state => _.groupBy(state.buckets, 'hostname'),
+  hostnames: state => _.uniq(_.map(state.buckets, b => b.hostname)),
 };
 
 // actions
