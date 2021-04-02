@@ -5,6 +5,10 @@ div
   input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration")
 
   b-form-group
+    b-checkbox#showCategory(v-model="showCategory")
+    b-label(for="showCategory")
+
+  b-form-group
     label(for="type") Type
     b-select#type(v-model="type")
       option(value='all') All buckets
@@ -38,6 +42,7 @@ export default {
       daterange: null,
       timeintervalDefaultDuration: Number.parseInt(localStorage.durationDefault) || 60 * 60,
       maxDuration: 31 * 24 * 60 * 60,
+      showCategory: false,
     };
   },
   computed: {
@@ -80,17 +85,29 @@ export default {
         classes: [],
         //filter_classes: [],
       });
+      if (this.showCategory) {
+        // TODO: Merge adjacent events with the same category
+        /*
+        query += `;
+          events = ...;
+        `;
+        */
+      }
       query += '; RETURN = events;';
 
       const query_array = query.split(';').map(s => s.trim() + ';');
       const timeperiods = [start + '/' + end];
       try {
-        const data = await this.$aw.query(timeperiods, query_array);
+        let data = await this.$aw.query(timeperiods, query_array)[0];
+        data = _.map(data, e => {
+          e.data = { $category: e.data['$category'] };
+          return e;
+        });
         this.buckets = [
           {
+            type: 'category',
             hostname: hostname,
-            type: 'currentwindow',
-            events: _.orderBy(data[0], ['timestamp'], ['asc']),
+            events: _.orderBy(data, ['timestamp'], ['asc']),
           },
         ];
         this.error = '';
