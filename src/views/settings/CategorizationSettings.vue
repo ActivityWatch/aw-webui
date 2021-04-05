@@ -90,7 +90,7 @@ export default {
       console.log('Importing categories...');
 
       // Get file from upload
-      const file = elem.originalTarget.files[0];
+      const file = elem.target.files[0];
       if (file.type != 'application/json') {
         console.error('Only JSON files are possible to import');
         return;
