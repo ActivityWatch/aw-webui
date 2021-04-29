@@ -51,4 +51,8 @@ module.exports = {
       analyzerPort: 11000,
     },
   },
+  transpileDependencies: [
+    // can be string or regex
+    'vis-data',
+  ],
 };
