@@ -51,7 +51,7 @@ export const defaultCategories: Category[] = [
   { name: ['Media', 'Music'], rule: { type: 'regex', regex: 'Spotify|Deezer', ignore_case: true } },
   {
     name: ['Comms', 'IM'],
-    rule: { type: 'regex', regex: 'Messenger|Telegram|Signal|WhatsApp|Rambox|Slack|Riot|Discord' },
+    rule: { type: 'regex', regex: 'Messenger|Telegram|Signal|WhatsApp|Rambox|Slack|Element|Discord' },
   },
   { name: ['Comms', 'Email'], rule: { type: 'regex', regex: 'Gmail|Thunderbird|mutt|alpine' } },
   { name: ['Uncategorized'], rule: { type: null }, data: { color: COLOR_UNCAT } },
