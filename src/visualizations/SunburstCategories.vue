@@ -2,7 +2,7 @@
 // We want to use another colorscheme than the default 'schemeAccent',
 // unfortunately it seems like the color-scheme prop is broken.
 // See this issue: https://github.com/David-Desmaisons/Vue.D3.sunburst/issues/11
-sunburst(:data="data", :colorScale="colorfunc", :getCategoryForColor="categoryForColor", :colorScheme="null")
+sunburst(:data="data", :colorScale="colorfunc", :getCategoryForColor="categoryForColor", :colorScheme="null" showLabels="true")
   // Add behaviors
   template(slot-scope="{ on, actions }")
     highlightOnHover(v-bind="{ on, actions }")

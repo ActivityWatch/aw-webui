@@ -1,6 +1,6 @@
 <template lang="pug">
 div(style="font-size: 0.9em")
-  div(v-for="cat in category_hierarchy", style="padding: 0.1em 0 0.1em 0" @click="toggle(cat)" v-if="parents_expanded(cat)")
+  div.px-1(v-for="cat in category_hierarchy" @click="toggle(cat)" v-if="parents_expanded(cat)", :class="{'clickable': cat.children.length > 0}")
     span(:style="'padding-left: ' + (1.4 * cat.depth) + 'em'")
 
       // icon
@@ -25,6 +25,12 @@ div(style="font-size: 0.9em")
   // TODO: Make configurable in a cleaner way (figure out a way to configure visualizations generally)
   b-checkbox(v-model="show_perc" size="sm") Show percent
 </template>
+
+<style lang="scss" scoped>
+.clickable {
+  cursor: pointer;
+}
+</style>
 
 <script>
 import 'vue-awesome/icons/circle';
