@@ -17,6 +17,8 @@ module.exports = {
     });
   },
   configureWebpack: {
+    // sourcemaps are not enabled when `--watch` is used https://github.com/vuejs/vue-cli/issues/1806#issuecomment-832111894
+    devtool: 'source-map',
     resolve: {
       alias: {
         '~': path.resolve(__dirname, './src'),
