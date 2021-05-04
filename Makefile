@@ -20,7 +20,7 @@ install:
 uninstall:
 	rm -r node_modules/
 
-dev:
+dev: install
 	npm run serve ${androidflag}
 
 test:
