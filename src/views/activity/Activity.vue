@@ -202,7 +202,7 @@ export default {
       if (this.periodLength === 'day') {
         return 'YYYY-MM-DD';
       } else if (this.periodLength === 'week') {
-        return 'YYYY[ W]WW';
+        return 'YYYY-MM-DD';
       } else if (this.periodLength === 'month') {
         return 'YYYY-MM';
       } else if (this.periodLength === 'year') {
@@ -212,7 +212,21 @@ export default {
       }
     },
     periodReadable: function () {
-      return moment(this.timeperiod.start).format(this.dateformat);
+      const periodStart = moment(this.timeperiod.start);
+      const dateFormatString = this.dateformat;
+
+      if (this.periodLength === 'week') {
+        // it's helpful to render a range for the week as opposed to just the start of the week
+        // or the number of the week so users can easily determine (a) if we are using monday/sunday as the week
+        // start and exactly when the week ends. The formatting code ends up being a bit more wonky, but it's
+        // worth the tradeoff.
+
+        const startOfWeek = periodStart.format(dateFormatString);
+        const endOfWeek = periodStart.add(1, 'week').format(dateFormatString);
+        return `${startOfWeek} — ${endOfWeek}`;
+      } else {
+        return periodStart.format(dateFormatString);
+      }
     },
     periodLengthMoment: function () {
       return this.periodLengthConvertMoment(this.periodLength);
