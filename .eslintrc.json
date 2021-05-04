@@ -50,7 +50,7 @@
   },
   "globals": {
     "PRODUCTION": false,
-    "AW_CLIENT_URL": false
+    "AW_SERVER_URL": false
   },
   "overrides": [
     {

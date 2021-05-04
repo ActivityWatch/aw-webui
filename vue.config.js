@@ -28,7 +28,7 @@ module.exports = {
     plugins: [
       new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
       new webpack.DefinePlugin({
-        AW_CLIENT_URL: process.env.AW_CLIENT_URL,
+        AW_SERVER_URL: process.env.AW_SERVER_URL,
         PRODUCTION: process.env.NODE_ENV === 'production',
       }),
       new CopyWebpackPlugin([{ from: 'static/', to: 'static' }]),

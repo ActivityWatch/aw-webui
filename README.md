@@ -55,12 +55,14 @@ The assets are stored in the following directories (relative to your installatio
  - aw-server-python: `activitywatch/aw-server/aw_server/static/`
  - aw-server-rust: `activitywatch/aw-server-rust/static/`
 
-`cd aw-server && make build` will copy the build assets from aw-webui for you. Once you've put the files in the directories, you may have to do a hard refresh in your browser to invalidate any stale caches.
+Either copy the assets manually, or run `make build` from the `aw-server` parent directory to rebuild and copy the assets for you.
+
+Once you've put the files in the directories, you may have to do a hard refresh in your browser to invalidate any stale caches.
 
 If you want to actively iterate on aw-webui with your local production data, you'll want to use a development build, automatically update it, and connect a aw-server running against production data. To do this, in one terminal window run:
 
 ```bash
-AW_CLIENT_URL="'http://localhost:5600'" npx vue-cli-service build --watch --dest=../aw_server/static
+AW_SERVER_URL="'http://localhost:5600'" npx vue-cli-service build --watch --dest=../aw_server/static
 ```
 
 If you want to add `debugger` statements in your code and otherwise break linting rules, you'll need to add a `--skip-plugins=no-debugger` to that command. Then,  in another terminal (with your venv activated, assuming you are using python aw-server) run:
