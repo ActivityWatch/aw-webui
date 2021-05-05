@@ -34,7 +34,7 @@ div
 
   aw-periodusage(:periodusage_arr="periodusage", @update="setDate")
 
-  ul.row.nav.nav-tabs.mt-3.px-3
+  ul.row.nav.nav-tabs.mt-4
     li.nav-item(v-for="view in views")
       router-link.nav-link(:to="{ name: 'activity-view', params: {...$route.params, view_id: view.id}}" :class="{'router-link-exact-active': currentView.id == view.id}")
         h6 {{view.name}}
@@ -78,31 +78,35 @@ div
 
 <style lang="scss" scoped>
 $buttoncolor: #ddd;
-$bordercolor: #ddd;
+$bordercolor: rgb(235, 237, 243);
 
 .nav {
-  border-bottom: 2px solid $bordercolor;
+  border-bottom: 1px solid $bordercolor;
 
   .nav-item {
-    margin-bottom: -2px;
+    margin-bottom: 0px;
+
+    &:first-child {
+      margin-left: 0;
+    }
 
     .nav-link {
-      background-color: $buttoncolor;
-      margin: 0 0.2em 0 0.2em;
-      padding: 0.4em 0.5em 0.1em 0.5em;
-      border: 2px solid $bordercolor;
-      border-bottom: none;
-      border-radius: 0.5rem 0.5rem 0 0;
-      color: #111 !important;
+      // default bootstrap vertical padding was too high
+      padding: 0.25rem 1rem;
+
+      color: lighten(black, 40%);
       cursor: pointer;
+      border: none;
 
       &:hover {
-        background-color: #f8f8f8;
+        color: black;
       }
 
       &.router-link-exact-active {
-        background-color: #fff;
-        color: #333 !important;
+        color: rgb(84, 105, 212);
+        font-weight: bold;
+        border-bottom: 3px solid darken($bordercolor, 20%);
+        border-radius: 0;
 
         &:hover {
           background-color: #fff;
