@@ -157,20 +157,15 @@ export default {
   &:hover {
     background-color: #ddd;
   }
+
+  .nav-link {
+    color: #555;
+  }
 }
 
 .abs-center {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-}
-</style>
-
-<style lang="scss">
-// Needed because dropdown somehow doesn't properly work with scoping
-.nav-item {
-  .nav-link {
-    color: #555 !important;
-  }
 }
 </style>
