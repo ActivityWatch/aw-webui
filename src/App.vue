@@ -2,44 +2,32 @@
 div#wrapper
   aw-header
 
-  div(:class="{'container': !fullContainer, 'container-fluid': fullContainer}").px-0.px-md-3
+  div(:class="{'container': !fullContainer, 'container-fluid': fullContainer}").px-0.px-md-2
     div.aw-container.my-3.p-3
       error-boundary
         user-satisfaction-poll
         new-release-notification(v-if="isNewReleaseCheckEnabled")
         router-view
 
-  div.container(style="color: #555")
+  div.container(style="color: #555; font-size: 0.9em")
     div(style="float: left")
-      div.mb-1
-        | Made with ❤ by the #[a(href="http://activitywatch.net/contributors/") ActivityWatch developers]
+      | Made with ❤ by the #[a(href="http://activitywatch.net/contributors/") ActivityWatch developers]
       div
-        a.mr-2(href="https://github.com/ActivityWatch/activitywatch", target="_blank")
-          icon(name="brands/github")
-          | GitHub
-        a(href="https://twitter.com/ActivityWatchIt", target="_blank")
-          icon(name="brands/twitter")
-          | Twitter
-
-    div(style="float: right; text-align: right;")
-      | Found a bug? #[a(href="https://github.com/ActivityWatch/activitywatch/issues/new/choose") File an issue]
-      br
-      | Need help? #[a(href="https://forum.activitywatch.net/c/support") Ask on the forum]
-      br
-      | Missing a feature? #[a(href="https://forum.activitywatch.net/c/features") Vote on the forum]
-      br
-      | Built something cool? #[a(href="https://forum.activitywatch.net/c/projects") Share it on the forum]
-      br
-      span.mt-2(v-show="info", style="color: #888; font-size: 0.8em")
-        | Host: {{info.hostname}}
-        br
-        | Version: {{info.version}}
+        span.mt-2(v-show="info", style="color: #888; font-size: 0.8em")
+          | #[b Version:] {{info.version}}.
+          | #[b Host:] {{info.hostname}}
+    div(class="footer")
+      a(href="https://twitter.com/ActivityWatchIt", target="_blank")
+        icon(name="brands/twitter")
+        | Twitter
+      | #[a(href="https://github.com/ActivityWatch/activitywatch/issues/new/choose") File a bug]
+      | #[a(href="https://forum.activitywatch.net/c/support") Join the Forum]
+      | #[a(href="https://forum.activitywatch.net/c/features") Vote on the forum]
 </template>
 
 <script>
 // only import the icons you use to reduce bundle size
 import 'vue-awesome/icons/brands/twitter';
-import 'vue-awesome/icons/brands/github';
 
 export default {
   data: function () {
