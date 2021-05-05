@@ -16,7 +16,7 @@ div
           b-button.px-2(:to="link_prefix + '/' + previousPeriod() + '/' + subview",
                    variant="outline-dark")
             icon(name="arrow-left")
-        b-select.px-2(:value="periodLength", :options="['day', 'week', 'month']",
+        b-select.px-3(:value="periodLength", :options="['day', 'week', 'month']",
                  @change="(periodLength) => setDate(_date, periodLength)")
         b-input-group-append
           b-button.px-2(:to="link_prefix + '/' + nextPeriod() + '/' + subview",
