@@ -9,14 +9,14 @@ div#wrapper
         new-release-notification(v-if="isNewReleaseCheckEnabled")
         router-view
 
-  div.container(style="color: #555; font-size: 0.9em")
+  div.container(style="color: #555; font-size: 0.9em").px-0.px-md-2
     div(style="float: left")
       | Made with ❤ by the #[a(href="http://activitywatch.net/contributors/") ActivityWatch developers]
       div
         span.mt-2(v-show="info", style="color: #888; font-size: 0.8em")
           | #[b Version:] {{info.version}}.
           | #[b Host:] {{info.hostname}}
-    div(class="footer")
+    div.footer
       a(href="https://twitter.com/ActivityWatchIt", target="_blank")
         icon(name="brands/twitter")
         | Twitter
