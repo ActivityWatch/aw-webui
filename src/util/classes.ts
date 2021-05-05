@@ -37,13 +37,14 @@ export const defaultCategories: Category[] = [
     name: ['Work', 'Programming', 'ActivityWatch'],
     rule: { type: 'regex', regex: 'ActivityWatch|aw-', ignore_case: true },
   },
+  { name: ['Work', 'Image Editing'], rule: { type: 'regex', regex: 'Gimp|Inkscape' } },
+  { name: ['Work', 'Video Editing'], rule: { type: 'regex', regex: 'Kdenlive' } },
   {
     name: ['Media', 'Games'],
     rule: { type: 'regex', regex: 'Minecraft|RimWorld' },
     data: { color: '#0FF' },
   },
   { name: ['Media', 'Video'], rule: { type: 'regex', regex: 'YouTube|Plex|VLC' } },
-  { name: ['Media', 'Image'], rule: { type: 'regex', regex: 'Gimp|Inkscape' } },
   {
     name: ['Media', 'Social Media'],
     rule: {
