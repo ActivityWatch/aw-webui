@@ -9,6 +9,7 @@ export interface Rule {
   type: 'regex' | 'none';
   regex?: string;
   ignore_case?: boolean;
+  select_keys?: string[];
 }
 
 export interface Category {
@@ -23,26 +24,68 @@ export interface Category {
   children?: Category[];
 }
 
-const COLOR_UNCAT = '#CCC';
+// https://colorhunt.co/palette/4802
+const COLOR_GREEN = '#96cd39',
+  COLOR_SUPER_GREEN = '#54e346',
+  COLOR_BRIGHT_GREEN = '#A8FC00',
+  COLOR_UNCAT = '#CCC',
+  COLOR_SLIGHTLY_YELLOW = '#f5ff65',
+  COLOR_ORANGE = '#ffba47',
+  COLOR_RED = '#ff5b44';
 
 // The default categories
 // Should be run through createMissingParents before being used in most cases.
 export const defaultCategories: Category[] = [
   {
-    name: ['Work'],
-    rule: { type: 'regex', regex: 'Google Docs|libreoffice|ReText' },
-    data: { color: '#0F0' },
+    name: ['Work', 'Writing'],
+    rule: { type: 'regex', regex: 'Google Docs|Google Sheets|libreoffice|ReText' },
+    data: { color: COLOR_GREEN },
+  },
+  {
+    name: ['Work', 'Writing'],
+    rule: {
+      type: 'regex',
+      select_keys: ['app'],
+      regex: 'LibreOffice|TextEdit|MacDown|Obsidian|TextEdit',
+    },
+    data: { color: COLOR_GREEN },
+  },
+  {
+    name: ['Work', 'General'],
+    rule: {
+      type: 'regex',
+      regex: 'Preview|Finder|Todoist|1Password|Soulver|System Preferences|VNC Viewer|Streaks',
+      select_keys: ['app'],
+    },
+    data: { color: COLOR_SLIGHTLY_YELLOW },
   },
   {
     name: ['Work', 'Programming'],
     rule: {
       type: 'regex',
-      regex: 'GitHub|Stack Overflow|BitBucket|Gitlab|vim|Spyder|kate|Ghidra|Scite',
+      regex:
+        'GitHub|Stack Overflow|BitBucket|Gitlab|vim|Spyder|kate|iTerm|Hyper|Alacritty|Script Editor|Ghidra|Scite|jetbrains-idea|jetbrains-pycharm',
     },
+    data: { color: COLOR_SUPER_GREEN },
+  },
+  {
+    name: ['Work', 'Programming'],
+    rule: { type: 'regex', select_keys: ['url'], regex: 'github.com' },
+    data: { color: COLOR_SUPER_GREEN },
+  },
+  {
+    name: ['Work', 'Programming'],
+    rule: {
+      type: 'regex',
+      select_keys: ['app'],
+      regex: 'Code|Sublime Text|TextMate|iTerm|Script Editor|Base|Postico|Sequel Ace',
+    },
+    data: { color: COLOR_SUPER_GREEN },
   },
   {
     name: ['Work', 'Programming', 'ActivityWatch'],
     rule: { type: 'regex', regex: 'ActivityWatch|aw-', ignore_case: true },
+    data: { color: COLOR_SUPER_GREEN },
   },
   { name: ['Work', 'Image'], rule: { type: 'regex', regex: 'Gimp|Inkscape' } },
   { name: ['Work', 'Video'], rule: { type: 'regex', regex: 'Kdenlive' } },
@@ -51,30 +94,39 @@ export const defaultCategories: Category[] = [
   {
     name: ['Media', 'Games'],
     rule: { type: 'regex', regex: 'Minecraft|RimWorld' },
-    data: { color: '#F80' },
+    data: { color: COLOR_RED },
   },
   {
     name: ['Media', 'Video'],
     rule: { type: 'regex', regex: 'YouTube|Plex|VLC' },
-    data: { color: '#F33' },
+    data: { color: COLOR_RED },
   },
   {
     name: ['Media', 'Social Media'],
     rule: {
       type: 'regex',
-      regex: 'reddit|Facebook|Twitter|Instagram|devRant',
+      regex: 'reddit|Facebook|Twitter|Instagram|devRant|LinkedIn',
       ignore_case: true,
     },
-    data: { color: '#FCC400' },
+    data: { color: COLOR_RED },
+  },
+  {
+    name: ['Media', 'Podcasts'],
+    rule: {
+      type: 'regex',
+      regex: 'Podcasts',
+      select_keys: ['app'],
+    },
+    data: { color: COLOR_BRIGHT_GREEN },
   },
   {
     name: ['Media', 'Music'],
     rule: {
       type: 'regex',
-      regex: 'Spotify|Deezer',
+      regex: 'Spotify|Deezer|Amazon Music',
       ignore_case: true,
     },
-    data: { color: '#A8FC00' },
+    data: { color: COLOR_BRIGHT_GREEN },
   },
   {
     name: ['Comms'],
@@ -85,10 +137,29 @@ export const defaultCategories: Category[] = [
     name: ['Comms', 'IM'],
     rule: {
       type: 'regex',
-      regex: 'Messenger|Telegram|Signal|WhatsApp|Rambox|Slack|Riot|Element|Discord|Nheko',
+      regex:
+        'Messenger|Messages|Discord|Telegram|Signal|WhatsApp|Rambox|Slack|Riot|Element|Discord|Textual|Nheko|Texts',
+    },
+    data: { color: COLOR_ORANGE },
+  },
+  {
+    name: ['Comms', 'Email'],
+    rule: { type: 'regex', regex: 'Gmail|Thunderbird|mutt|alpine' },
+    data: { color: COLOR_ORANGE },
+  },
+  {
+    name: ['Comms', 'Meetings'],
+    rule: { type: 'regex', regex: 'Zoom|Calendar|Cron' },
+    data: { color: COLOR_SLIGHTLY_YELLOW },
+  },
+  {
+    name: ['Web Browsing'],
+    rule: {
+      type: 'regex',
+      regex: 'Chrome|Safari|FireFox|Brave',
+      select_keys: ['app'],
     },
   },
-  { name: ['Comms', 'Email'], rule: { type: 'regex', regex: 'Gmail|Thunderbird|mutt|alpine' } },
   { name: ['Uncategorized'], rule: { type: null }, data: { color: COLOR_UNCAT } },
 ];
 
@@ -197,6 +268,7 @@ function pickDeepest(categories: Category[]) {
   return _.maxBy(categories, c => c.name.length);
 }
 
+// TODO this is only used colorize the categories, all categorization is done on the backend
 export function matchString(str: string, categories: Category[] | null): Category | null {
   if (!categories) {
     console.log(
