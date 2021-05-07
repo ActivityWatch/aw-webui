@@ -32,6 +32,7 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
+    - uses: iterative/setup-cml@v1
 
     # Start aw-server, insert fake data
     - name: Install and run ActivityWatch
@@ -69,5 +70,12 @@ jobs:
       with:
         name: screenshots
         path: screenshots/*
+    - name: Post screenshots in commit comment
+      env:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        cat .github/commit_comment_template.md >> comment.md
+        cml-publish screenshots/activity.png --md >> comment.md
+        cml-send-comment comment.md
 
 
