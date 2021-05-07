@@ -14,6 +14,17 @@ async function hide_devonly(t) {
 
 fixture(`Home view`).page(`http://localhost:27180/`);
 
+// Log JS errors even if --skip-js-errors is given
+// From: https://stackoverflow.com/a/59856422/965332
+test.clientScripts({
+  content: `
+        window.addEventListener('error', function (e) {
+            console.error(e.message);
+        });`,
+})(`Skip error but log it`, async t => {
+  console.log(await t.getBrowserConsoleMessages());
+});
+
 test('Screenshot the home view', async t => {
   // TODO: Detect CI instead of never resizing
   // For resizeWindow to work tests needs to run with a ICCCM/EWMH-compliant window manager
