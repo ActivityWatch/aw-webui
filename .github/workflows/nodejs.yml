@@ -37,13 +37,13 @@ jobs:
     # Start aw-server, insert fake data
     - name: Install and run ActivityWatch
       run: |
-        wget -O activitywatch.zip https://github.com/ActivityWatch/activitywatch/releases/download/${{ matrix.aw-version }}/activitywatch-${{ matrix.aw-version }}-linux-x86_64.zip
+        wget --no-verbose -O activitywatch.zip https://github.com/ActivityWatch/activitywatch/releases/download/${{ matrix.aw-version }}/activitywatch-${{ matrix.aw-version }}-linux-x86_64.zip
         unzip activitywatch.zip
         ./activitywatch/${{ matrix.aw-server }}/${{ matrix.aw-server }} --testing &
     - name: Insert fake data into aw-server
       run: |
         pip install git+https://github.com/ActivityWatch/aw-client.git
-        wget -O fakedata.py https://github.com/ActivityWatch/aw-fakedata/raw/ca6047e6e2cdc6aee13bc441f4fd3c9f0e36eda9/aw-fakedata.py
+        wget --no-verbose -O fakedata.py https://github.com/ActivityWatch/aw-fakedata/raw/ca6047e6e2cdc6aee13bc441f4fd3c9f0e36eda9/aw-fakedata.py
         python3 fakedata.py
 
     - name: Install
