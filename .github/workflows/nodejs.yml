@@ -76,16 +76,17 @@ jobs:
     - name: Post screenshots in commit comment
       env:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
+        aw_server: ${{ matrix.aw-server }}
       run: |
         cat .github/commit_comment_template.md >> comment.md
-        echo '<details><summary>Screenshots (click to expand)</summary>' >> comment.md
+        echo "<details><summary>Screenshots using $aw_server (click to expand)</summary>" >> comment.md
         echo '<p float="left">' >> comment.md
-        cml-publish screenshots/activity.png  | sed -E 's/.+/<img width="400" src="\0"\/>/' >> comment.md
-        cml-publish screenshots/timeline.png  | sed -E 's/.+/<img width="400" src="\0"\/>/' >> comment.md
-        cml-publish screenshots/settings.png  | sed -E 's/.+/<img width="400" src="\0"\/>/' >> comment.md
-        cml-publish screenshots/home.png      | sed -E 's/.+/<img width="400" src="\0"\/>/' >> comment.md
-        cml-publish screenshots/buckets.png   | sed -E 's/.+/<img width="400" src="\0"\/>/' >> comment.md
-        cml-publish screenshots/stopwatch.png | sed -E 's/.+/<img width="400" src="\0"\/>/' >> comment.md
+        cml-publish screenshots/activity.png  | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+        cml-publish screenshots/timeline.png  | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+        cml-publish screenshots/settings.png  | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+        cml-publish screenshots/home.png      | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+        cml-publish screenshots/buckets.png   | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+        cml-publish screenshots/stopwatch.png | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
         echo '</p>' >> comment.md
         echo '</details>' >> comment.md
         cml-send-comment comment.md
