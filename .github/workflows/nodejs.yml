@@ -75,7 +75,12 @@ jobs:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
       run: |
         cat .github/commit_comment_template.md >> comment.md
-        cml-publish screenshots/activity.png --md >> comment.md
+        cml-publish screenshots/home.png      | sed -E 's/.+/<img width="20%" src="\0"\/>/' >> comment.md
+        cml-publish screenshots/timeline.png  | sed -E 's/.+/<img width="20%" src="\0"\/>/' >> comment.md
+        cml-publish screenshots/buckets.png   | sed -E 's/.+/<img width="20%" src="\0"\/>/' >> comment.md
+        cml-publish screenshots/stopwatch.png | sed -E 's/.+/<img width="20%" src="\0"\/>/' >> comment.md
+        cml-publish screenshots/settings.png  | sed -E 's/.+/<img width="20%" src="\0"\/>/' >> comment.md
+        cml-publish screenshots/activity.png --md |  >> comment.md
         cml-send-comment comment.md
 
 
