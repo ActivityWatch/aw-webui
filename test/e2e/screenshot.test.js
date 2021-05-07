@@ -44,7 +44,8 @@ fixture(`Activity view`).page(`http://localhost:27180/#/activity/fakedata`);
 
 test('Screenshot the activity view', async t => {
   // wait for a few seconds, since it can be slow to load
-  await t.wait(3000);
+  // It shouldn't take this long though (hopefully)
+  await t.wait(5000);
 
   await hide_devonly(t);
   await t.takeScreenshot({
@@ -58,6 +59,8 @@ test('Screenshot the activity view', async t => {
 fixture(`Timeline view`).page(`http://localhost:27180/#/timeline`);
 
 test('Screenshot the timeline view', async t => {
+  await t.wait(5000);
+
   await hide_devonly(t);
   await t.takeScreenshot({
     path: 'timeline.png',
@@ -68,6 +71,8 @@ test('Screenshot the timeline view', async t => {
 fixture(`Buckets view`).page(`http://localhost:27180/#/buckets/`);
 
 test('Screenshot the buckets view', async t => {
+  await t.wait(1000);
+
   await hide_devonly(t);
   await t.takeScreenshot({
     path: 'buckets.png',

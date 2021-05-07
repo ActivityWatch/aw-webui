@@ -39,7 +39,9 @@ jobs:
       run: |
         wget --no-verbose -O activitywatch.zip https://github.com/ActivityWatch/activitywatch/releases/download/${{ matrix.aw-version }}/activitywatch-${{ matrix.aw-version }}-linux-x86_64.zip
         unzip activitywatch.zip
+        ./.github/configure_server.sh
         ./activitywatch/${{ matrix.aw-server }}/${{ matrix.aw-server }} --testing &
+
     - name: Insert fake data into aw-server
       run: |
         pip install git+https://github.com/ActivityWatch/aw-client.git
