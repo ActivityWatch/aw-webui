@@ -16,7 +16,7 @@ const desktopViews: View[] = [
     elements: [
       { type: 'top_apps', size: 3 },
       { type: 'top_titles', size: 3 },
-      { type: 'top_domains', size: 3 },
+      { type: 'timeline_barchart', size: 3 },
       { type: 'top_categories', size: 3 },
       { type: 'category_tree', size: 3 },
       { type: 'category_sunburst', size: 3 },
