@@ -88,5 +88,5 @@ jobs:
         cml-publish screenshots/buckets.png   | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
         cml-publish screenshots/stopwatch.png | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
         echo '</p>' >> comment.md
-        echo '</details>' >> comment.md
+        echo -n '</details>' >> comment.md
         cml-send-comment comment.md
