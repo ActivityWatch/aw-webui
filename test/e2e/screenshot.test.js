@@ -32,11 +32,16 @@ test('Screenshot the home view', async t => {
 fixture(`Activity view`).page(`http://localhost:27180/#/activity/fakedata`);
 
 test('Screenshot the activity view', async t => {
+  // wait for a few seconds, since it can be slow to load
+  await t.wait(3000);
+
   await hide_devonly(t);
   await t.takeScreenshot({
     path: 'activity.png',
     fullPage: true,
   });
+
+  // TODO: resize to mobile size and take another screenshot
 });
 
 fixture(`Timeline view`).page(`http://localhost:27180/#/timeline`);
@@ -55,6 +60,16 @@ test('Screenshot the buckets view', async t => {
   await hide_devonly(t);
   await t.takeScreenshot({
     path: 'buckets.png',
+    fullPage: true,
+  });
+});
+
+fixture(`Setting view`).page(`http://localhost:27180/#/settings/`);
+
+test('Screenshot the settings view', async t => {
+  await hide_devonly(t);
+  await t.takeScreenshot({
+    path: 'settings.png',
     fullPage: true,
   });
 });
