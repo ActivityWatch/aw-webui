@@ -141,9 +141,11 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '../style/globals';
+
 .aw-navbar {
-  background-color: #fff;
-  border: solid #ccc;
+  background-color: white;
+  border: solid $lightBorderColor;
   border-width: 0 0 1px 0;
 }
 

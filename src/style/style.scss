@@ -1,3 +1,5 @@
+@import "globals";
+
 body,
 html,
 body,
@@ -26,7 +28,7 @@ body {
 
 .aw-container {
   background-color: #fff;
-  border: 1px solid rgb(235, 237, 243);
+  border: 1px solid $lightBorderColor;
   border-radius: 5px;
 }
 

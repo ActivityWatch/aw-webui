@@ -77,11 +77,11 @@ div
 </template>
 
 <style lang="scss" scoped>
-$buttoncolor: #ddd;
-$bordercolor: rgb(235, 237, 243);
+@import '../../style/globals';
+$lightPurpleHighlight: rgb(84, 105, 212);
 
 .nav {
-  border-bottom: 1px solid $bordercolor;
+  border-bottom: 1px solid $lightBorderColor;
 
   .nav-item {
     margin-bottom: 0px;
@@ -103,9 +103,9 @@ $bordercolor: rgb(235, 237, 243);
       }
 
       &.router-link-exact-active {
-        color: rgb(84, 105, 212);
+        color: $lightPurpleHighlight;
         font-weight: bold;
-        border-bottom: 3px solid darken($bordercolor, 20%);
+        border-bottom: 3px solid darken($lightBorderColor, 20%);
         border-radius: 0;
 
         &:hover {
