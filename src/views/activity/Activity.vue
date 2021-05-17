@@ -1,6 +1,7 @@
 <template lang="pug">
 div
-  h3.mb-0 Activity for {{ timeperiod | friendlyperiod }}
+  h3 Activity
+    span.text-secondary.aw-period-range  {{ timeperiod | friendlyperiod }}
 
   div.mb-2
     ul.list-group.list-group-horizontal-md.mb-3(style="font-size: 0.9em; opacity: 0.7")
@@ -127,6 +128,17 @@ div
     }
   }
 }
+
+@import 'bootstrap/scss/_functions';
+@import 'bootstrap/scss/_variables';
+@import 'bootstrap/scss/mixins/_breakpoints';
+
+@include media-breakpoint-down(sm) {
+  .aw-period-range {
+    display: block;
+    font-size: 0.75em;
+  }
+}
 </style>
 
 <script>
@@ -241,11 +253,11 @@ export default {
         // it's helpful to render a range for the week as opposed to just the start of the week
         // or the number of the week so users can easily determine (a) if we are using monday/sunday as the week
         // start and exactly when the week ends. The formatting code ends up being a bit more wonky, but it's
-        // worth the tradeoff.
+        // worth the tradeoff. https://github.com/ActivityWatch/aw-webui/pull/284
 
         const startOfWeek = periodStart.format(dateFormatString);
         const endOfWeek = periodStart.add(1, 'week').format(dateFormatString);
-        return `${startOfWeek} — ${endOfWeek}`;
+        return `${startOfWeek}—${endOfWeek}`;
       } else {
         return periodStart.format(dateFormatString);
       }
