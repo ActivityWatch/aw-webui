@@ -5,6 +5,8 @@ div
   div.mb-2
     ul.list-group.list-group-horizontal-md.mb-3(style="font-size: 0.9em; opacity: 0.7")
       li.list-group-item.pl-0.pr-3.py-0(style="border: 0")
+        | #[b Host:] {{ host }}
+      li.list-group-item.pl-0.pr-3.py-0(style="border: 0")
         | #[b Time active:] {{ $store.state.activity.active.duration | friendlyduration }}
 
   div.mb-2.d-flex
@@ -63,12 +65,12 @@ div
     div.row
       div.col-lg-6
         b-form-checkbox(v-model="filterAFK")
-          | Filter AFK
+          | Exclude time away from computer
         b-form-checkbox(v-model="includeAudible")
-          | Count audible browser tab as active
+          | Always treat browsers playing audio or video as active
 
       div.col-lg-6
-        b-form-group(label="Show/filter category" label-cols="5" label-cols-lg="4")
+        b-form-group(label="Show category:" label-cols="6" label-cols-lg="4")
           b-form-select(v-model="filterCategory", :options="categories")
 
     aw-devonly
