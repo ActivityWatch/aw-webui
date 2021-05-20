@@ -6,7 +6,7 @@ import { map, filter, values, groupBy, sortBy, flow, reverse } from 'lodash/fp';
 import { window_events } from '~/util/fakedata';
 import queries from '~/queries';
 import { getColorFromCategory } from '~/util/color';
-import { loadClassesForQuery } from '~/util/classes';
+import { loadClassesForQuery, Category } from '~/util/classes';
 import { get_day_start_with_offset } from '~/util/time';
 
 interface TimePeriod {
@@ -16,6 +16,21 @@ interface TimePeriod {
 
 function dateToTimeperiod(date: string, duration?: [number, string]): TimePeriod {
   return { start: get_day_start_with_offset(date), length: duration || [1, 'day'] };
+}
+
+function getScoreFromCategory(c: Category, allCats: Category[]): number {
+  // Returns the score for a certain category, falling back to parents if none set
+  // Very similar to getColorFromCategory
+  if (c && c.data && c.data.score) {
+    return c.data.score;
+  } else if (c && c.name.slice(0, -1).length > 0) {
+    // If no color is set on category, traverse parents until one is found
+    const parent = c.name.slice(0, -1);
+    const parentCat = allCats.find(cc => _.isEqual(cc.name, parent));
+    return getScoreFromCategory(parentCat, allCats);
+  } else {
+    return 0;
+  }
 }
 
 function timeperiodToStr(tp: TimePeriod): string {
@@ -234,10 +249,11 @@ const actions = {
     const data_window = data[0].window;
     const data_browser = data[0].browser;
 
-    // Set $color for categories
+    // Set $color and $score for categories
     data_window.cat_events = data[0].window['cat_events'].map(e => {
       const cat = rootGetters['categories/get_category'](e.data['$category']);
       e.data['$color'] = getColorFromCategory(cat, rootState.categories.classes);
+      e.data['$score'] = getScoreFromCategory(cat, rootState.categories.classes);
       return e;
     });
 

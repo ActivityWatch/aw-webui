@@ -73,6 +73,8 @@ div
       aw-timeline-barchart(:datasets="datasets", style="height: 100")
     div(v-if="type == 'sunburst_clock'")
       aw-sunburst-clock(:date="date", :afkBucketId="$store.state.activity.buckets.afk[0]", :windowBucketId="$store.state.activity.buckets.window[0]")
+    div(v-if="type == 'score'")
+      aw-score(:date="date")
 </template>
 
 <style lang="scss">
@@ -127,6 +129,7 @@ export default {
         'top_editor_projects',
         'timeline_barchart',
         'sunburst_clock',
+        'score',
       ],
       // TODO: Move this function somewhere else
       top_editor_files_namefunc: e => {
@@ -202,6 +205,10 @@ export default {
           available:
             this.$store.state.activity.window.available &&
             this.$store.state.activity.active.available,
+        },
+        score: {
+          title: 'Score',
+          available: this.$store.state.activity.category.available,
         },
       };
     },

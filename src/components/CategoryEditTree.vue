@@ -10,6 +10,9 @@ div
         | {{ _class.name.slice(depth).join(" ➤ ")}}
         icon.ml-1(v-if="_class.data && _class.data.color" name="circle" :style="'color: ' + _class.data.color")
         span.ml-1(v-if="_class.children.length > 0" style="opacity: 0.5") ({{totalChildren}})
+        span.d-none.d-md-inline
+          span(v-if="_class.data && _class.data.score !== undefined" :style="'color: ' + (_class.data.score > 0 ? 'green' : 'red')")
+            | &nbsp; {{ _class.data.score >= 0 ? '+' : '' }}{{ _class.data.score }}
 
     div.col-4.col-md-8
       span.d-none.d-md-inline
@@ -30,7 +33,6 @@ div
         b-form-input(v-model="editing.name")
       b-input-group(prepend="Parent")
         b-select(v-model="editing.parent", :options="allCategories")
-
     hr
 
     div.my-1
@@ -53,11 +55,14 @@ div
       div.mt-1(v-show="!editing.inherit_color")
         color-picker(v-model="editing.color")
 
-    //
-      div.my-1
-        b Productivity score
-        b-input-group.my-1(prepend="Points")
-          b-form-input(v-model="editing.productivity")
+    hr
+
+    div.my-1
+      b Productivity score
+      b-form-checkbox(v-model="editing.inherit_score" switch)
+        | Inherit parent score
+      b-input-group.my-1(prepend="Score" v-if="!editing.inherit_score")
+        b-form-input(v-model="editing.score")
 
     hr
 
@@ -101,8 +106,10 @@ export default {
         name: null,
         rule: {},
         parent: [],
-        inherit_color: true,
         color: null,
+        inherit_color: true,
+        score: null,
+        inherit_score: true,
       },
     };
   },
@@ -165,7 +172,10 @@ export default {
         id: this.editing.id,
         name: this.editing.parent.concat(this.editing.name),
         rule: this.editing.rule.type !== null ? this.editing.rule : { type: null },
-        data: { color: this.editing.inherit_color === true ? undefined : this.editing.color },
+        data: {
+          color: this.editing.inherit_color === true ? undefined : this.editing.color,
+          score: this.editing.inherit_score === true ? undefined : this.editing.score,
+        },
       };
       this.$store.commit('categories/updateClass', new_class);
 
@@ -177,13 +187,17 @@ export default {
     resetModal() {
       const color = this._class.data ? this._class.data.color : undefined;
       const inherit_color = !color;
+      const score = this._class.data ? this._class.data.score : undefined;
+      const inherit_score = !score;
       this.editing = {
         id: this._class.id,
         name: this._class.subname,
         rule: _.cloneDeep(this._class.rule),
+        parent: this._class.parent ? this._class.parent : [],
         color,
         inherit_color,
-        parent: this._class.parent ? this._class.parent : [],
+        score,
+        inherit_score,
       };
       //console.log(this.editing);
     },
