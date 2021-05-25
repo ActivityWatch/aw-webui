@@ -3,7 +3,7 @@ svg.mt-3.mb-1
 </template>
 
 <style scoped lang="scss">
-@import "../style/globals";
+@import '../style/globals';
 
 svg {
   width: 100%;
