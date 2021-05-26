@@ -1,0 +1,76 @@
+# NOTE: For screenshots to work in untrusted PRs we need to do the screenshot comment in a trusted job like this one.
+#       See this post for details: https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
+
+name: Comment
+
+on:
+  workflow_run:
+    workflows: ["Build"]
+    types:
+      - completed
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    if: >
+      ${{ github.event.workflow_run.conclusion == 'success' }}  # && github.event.workflow_run.event == 'pull_request'
+
+    steps:
+    - uses: iterative/setup-cml@v1
+
+    # Doesn't work for fetching artifacts from separate workflows
+    #- name: Download screenshots
+    #  uses: actions/download-artifact@v2
+    #  with:
+    #    name: screenshots
+    #    path: screenshots
+
+    - name: 'Download artifact'
+      uses: actions/github-script@v3.1.0
+      with:
+        script: |
+          var artifacts = await github.actions.listWorkflowRunArtifacts({
+             owner: context.repo.owner,
+             repo: context.repo.repo,
+             run_id: ${{ github.event.workflow_run.id }},
+          });
+          var matchArtifact = artifacts.data.artifacts.filter((artifact) => {
+            return artifact.name == "screenshots"
+          })[0];
+          var download = await github.actions.downloadArtifact({
+             owner: context.repo.owner,
+             repo: context.repo.repo,
+             artifact_id: matchArtifact.id,
+             archive_format: 'zip',
+          });
+          var fs = require('fs');
+          fs.writeFileSync('${{github.workspace}}/screenshots.zip', Buffer.from(download.data));
+
+    - run: unzip -d screenshots screenshots.zip
+
+    - name: Compose comment
+      env:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "Here are screenshots of this commit:" >> comment.md
+        echo "" >> comment.md  # just for the newline
+        for aw_server in screenshots/aw-*; do
+            for aw_version in screenshots/$aw_server/*; do
+                echo "<details><summary>Screenshots using $aw_server $aw_version (click to expand)</summary>" >> comment.md
+                echo '<p float="left">' >> comment.md
+                cml-publish screenshots/$aw_server/$aw_version/activity.png  | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+                cml-publish screenshots/$aw_server/$aw_version/timeline.png  | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+                cml-publish screenshots/$aw_server/$aw_version/settings.png  | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+                cml-publish screenshots/$aw_server/$aw_version/home.png      | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+                cml-publish screenshots/$aw_server/$aw_version/buckets.png   | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+                cml-publish screenshots/$aw_server/$aw_version/stopwatch.png | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+                echo '</p>' >> comment.md
+                echo -n '</details>' >> comment.md
+            done
+        done
+    - name: Post screenshots in commit comment
+      env:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        head_sha: ${{ github.event.workflow_run.head_sha }}
+      run: |
+        cml-send-comment --commit-sha $head_sha --repo https://github.com/ActivityWatch/aw-webui comment.md
