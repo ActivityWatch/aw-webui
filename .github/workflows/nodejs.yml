@@ -35,7 +35,6 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
-    - uses: iterative/setup-cml@v1
 
     # TODO: Refactor out getting ActivityWatch builds (both release and nightly) into an action
     - name: Install and run ActivityWatch

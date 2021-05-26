@@ -16,12 +16,15 @@ jobs:
       ${{ github.event.workflow_run.conclusion == 'success' }}  # && github.event.workflow_run.event == 'pull_request'
 
     steps:
+    - uses: iterative/setup-cml@v1
+
     # Doesn't work for fetching artifacts from separate workflows
     #- name: Download screenshots
     #  uses: actions/download-artifact@v2
     #  with:
     #    name: screenshots
     #    path: screenshots
+
     - name: 'Download artifact'
       uses: actions/github-script@v3.1.0
       with:
