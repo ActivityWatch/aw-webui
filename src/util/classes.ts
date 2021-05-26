@@ -32,12 +32,19 @@ export const defaultCategories: Category[] = [
   },
   {
     name: ['Work', 'Programming'],
-    rule: { type: 'regex', regex: 'GitHub|Stack Overflow|BitBucket|Gitlab|vim|Spyder|kate' },
+    rule: {
+      type: 'regex',
+      regex: 'GitHub|Stack Overflow|BitBucket|Gitlab|vim|Spyder|kate|Ghidra|Scite',
+    },
   },
   {
     name: ['Work', 'Programming', 'ActivityWatch'],
     rule: { type: 'regex', regex: 'ActivityWatch|aw-', ignore_case: true },
   },
+  { name: ['Work', 'Image'], rule: { type: 'regex', regex: 'Gimp|Inkscape' } },
+  { name: ['Work', 'Video'], rule: { type: 'regex', regex: 'Kdenlive' } },
+  { name: ['Work', 'Audio'], rule: { type: 'regex', regex: 'Audacity' } },
+  { name: ['Work', '3D'], rule: { type: 'regex', regex: 'Blender' } },
   {
     name: ['Media', 'Games'],
     rule: { type: 'regex', regex: 'Minecraft|RimWorld' },
@@ -46,12 +53,26 @@ export const defaultCategories: Category[] = [
   { name: ['Media', 'Video'], rule: { type: 'regex', regex: 'YouTube|Plex|VLC' } },
   {
     name: ['Media', 'Social Media'],
-    rule: { type: 'regex', regex: 'reddit|Facebook|Twitter|Instagram|devRant', ignore_case: true },
+    rule: {
+      type: 'regex',
+      regex: 'reddit|Facebook|Twitter|Instagram|devRant',
+      ignore_case: true,
+    },
   },
-  { name: ['Media', 'Music'], rule: { type: 'regex', regex: 'Spotify|Deezer', ignore_case: true } },
+  {
+    name: ['Media', 'Music'],
+    rule: {
+      type: 'regex',
+      regex: 'Spotify|Deezer',
+      ignore_case: true,
+    },
+  },
   {
     name: ['Comms', 'IM'],
-    rule: { type: 'regex', regex: 'Messenger|Telegram|Signal|WhatsApp|Rambox|Slack|Riot|Discord' },
+    rule: {
+      type: 'regex',
+      regex: 'Messenger|Telegram|Signal|WhatsApp|Rambox|Slack|Riot|Discord|Nheko',
+    },
   },
   { name: ['Comms', 'Email'], rule: { type: 'regex', regex: 'Gmail|Thunderbird|mutt|alpine' } },
   { name: ['Uncategorized'], rule: { type: null }, data: { color: COLOR_UNCAT } },
