@@ -37,8 +37,10 @@ export const defaultCategories: Category[] = [
     name: ['Work', 'Programming', 'ActivityWatch'],
     rule: { type: 'regex', regex: 'ActivityWatch|aw-', ignore_case: true },
   },
-  { name: ['Work', 'Image Editing'], rule: { type: 'regex', regex: 'Gimp|Inkscape' } },
-  { name: ['Work', 'Video Editing'], rule: { type: 'regex', regex: 'Kdenlive' } },
+  { name: ['Work', 'Image'], rule: { type: 'regex', regex: 'Gimp|Inkscape' } },
+  { name: ['Work', 'Video'], rule: { type: 'regex', regex: 'Kdenlive' } },
+  { name: ['Work', 'Audio'], rule: { type: 'regex', regex: 'Audacity' } },
+  { name: ['Work', '3D'], rule: { type: 'regex', regex: 'Blender' } },
   {
     name: ['Media', 'Games'],
     rule: { type: 'regex', regex: 'Minecraft|RimWorld' },
@@ -57,7 +59,7 @@ export const defaultCategories: Category[] = [
     name: ['Media', 'Music'],
     rule: {
       type: 'regex',
-      regex: 'Spotify|Deezer|Audacity',
+      regex: 'Spotify|Deezer',
       ignore_case: true,
     },
   },
