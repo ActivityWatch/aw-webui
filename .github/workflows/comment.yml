@@ -14,11 +14,34 @@ jobs:
       ${{ github.event.workflow_run.conclusion == 'success' }}  # && github.event.workflow_run.event == 'pull_request'
 
     steps:
-    - name: Download screenshots
-      uses: actions/download-artifact@v2
+    # Doesn't work for fetching artifacts from separate workflows
+    #- name: Download screenshots
+    #  uses: actions/download-artifact@v2
+    #  with:
+    #    name: screenshots
+    #    path: screenshots
+    - name: 'Download artifact'
+      uses: actions/github-script@v3.1.0
       with:
-        name: screenshots
-        path: screenshots
+        script: |
+          var artifacts = await github.actions.listWorkflowRunArtifacts({
+             owner: context.repo.owner,
+             repo: context.repo.repo,
+             run_id: ${{github.event.workflow_run.id }},
+          });
+          var matchArtifact = artifacts.data.artifacts.filter((artifact) => {
+            return artifact.name == "screenshots"
+          })[0];
+          var download = await github.actions.downloadArtifact({
+             owner: context.repo.owner,
+             repo: context.repo.repo,
+             artifact_id: matchArtifact.id,
+             archive_format: 'zip',
+          });
+          var fs = require('fs');
+          fs.writeFileSync('${{github.workspace}}/screenshots.zip', Buffer.from(download.data));
+
+    - run: unzip -d screenshots screenshots.zip
 
     - name: Compose comment
       env:
