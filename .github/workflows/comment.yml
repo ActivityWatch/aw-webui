@@ -52,9 +52,10 @@ jobs:
       env:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        echo "Here are screenshots of this commit:\n\n" >> comment.md
+        echo "Here are screenshots of this commit:" >> comment.md
+        echo "" >> comment.md  # just for the newline
         for aw_server in screenshots/aw-*; do
-            for aw_version in *; do
+            for aw_version in screenshots/$aw_server/*; do
                 echo "<details><summary>Screenshots using $aw_server $aw_version (click to expand)</summary>" >> comment.md
                 echo '<p float="left">' >> comment.md
                 cml-publish screenshots/$aw_server/$aw_version/activity.png  | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
