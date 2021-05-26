@@ -54,16 +54,18 @@ jobs:
       run: |
         echo "Here are screenshots of this commit:" >> comment.md
         echo "" >> comment.md  # just for the newline
-        for aw_server in screenshots/aw-*; do
-            for aw_version in screenshots/$aw_server/*; do
+        for aw_server_dir in screenshots/aw-*; do
+            for aw_version_dir in $aw_server_dir/*; do
+                aw_server=$(basename $aw_server_dir)
+                aw_version=$(basename $aw_version_dir)
                 echo "<details><summary>Screenshots using $aw_server $aw_version (click to expand)</summary>" >> comment.md
                 echo '<p float="left">' >> comment.md
-                cml-publish screenshots/$aw_server/$aw_version/activity.png  | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
-                cml-publish screenshots/$aw_server/$aw_version/timeline.png  | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
-                cml-publish screenshots/$aw_server/$aw_version/settings.png  | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
-                cml-publish screenshots/$aw_server/$aw_version/home.png      | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
-                cml-publish screenshots/$aw_server/$aw_version/buckets.png   | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
-                cml-publish screenshots/$aw_server/$aw_version/stopwatch.png | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+                cml-publish $aw_version_dir/activity.png  | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+                cml-publish $aw_version_dir/timeline.png  | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+                cml-publish $aw_version_dir/settings.png  | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+                cml-publish $aw_version_dir/home.png      | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+                cml-publish $aw_version_dir/buckets.png   | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+                cml-publish $aw_version_dir/stopwatch.png | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
                 echo '</p>' >> comment.md
                 echo -n '</details>' >> comment.md
             done
