@@ -1,0 +1,50 @@
+# NOTE: For screenshots to work in untrusted PRs we need to do the screenshot comment in a trusted job like this one.
+#       See this post for details: https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
+
+on:
+  workflow_run:
+    workflows: ["Build"]
+    types:
+      - completed
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    if: >
+      ${{ github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+    - name: Download screenshots
+      uses: actions/download-artifact@v2
+      with:
+        name: screenshots
+        path: screenshots
+
+    - name: Compose comment
+      env:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        cat .github/commit_comment_template.md >> comment.md
+        for aw_server in screenshots/aw-*; do
+            pushd $aw_server
+            for aw_version in *; do
+                pushd aw_version;
+                echo "<details><summary>Screenshots using $aw_server $aw_version (click to expand)</summary>" >> comment.md
+                echo '<p float="left">' >> comment.md
+                cml-publish activity.png  | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+                cml-publish timeline.png  | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+                cml-publish settings.png  | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+                cml-publish home.png      | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+                cml-publish buckets.png   | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+                cml-publish stopwatch.png | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+                echo '</p>' >> comment.md
+                echo -n '</details>' >> comment.md
+                popd
+            done
+            popd
+        done
+    - name: Post screenshots in commit comment
+      env:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        cml-send-comment comment.md
