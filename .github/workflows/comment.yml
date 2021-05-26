@@ -47,7 +47,7 @@ jobs:
       env:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        cat .github/commit_comment_template.md >> comment.md
+        echo "Here are screenshots of this commit:\n\n" >> comment.md
         for aw_server in screenshots/aw-*; do
             pushd $aw_server
             for aw_version in *; do
