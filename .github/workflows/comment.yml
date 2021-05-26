@@ -32,7 +32,7 @@ jobs:
           var artifacts = await github.actions.listWorkflowRunArtifacts({
              owner: context.repo.owner,
              repo: context.repo.repo,
-             run_id: ${{github.event.workflow_run.id }},
+             run_id: ${{ github.event.workflow_run.id }},
           });
           var matchArtifact = artifacts.data.artifacts.filter((artifact) => {
             return artifact.name == "screenshots"
@@ -70,5 +70,6 @@ jobs:
     - name: Post screenshots in commit comment
       env:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
+        head_sha: ${{ github.event.workflow_run.head_sha }}
       run: |
-        cml-send-comment comment.md
+        cml-send-comment --commit-sha $head_sha --repo https://github.com/ActivityWatch/aw-webui comment.md
