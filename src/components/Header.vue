@@ -141,9 +141,11 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '../style/globals';
+
 .aw-navbar {
-  background-color: #fff;
-  border: solid #ccc;
+  background-color: white;
+  border: solid $lightBorderColor;
   border-width: 0 0 1px 0;
 }
 
@@ -157,20 +159,15 @@ export default {
   &:hover {
     background-color: #ddd;
   }
+
+  .nav-link {
+    color: #555;
+  }
 }
 
 .abs-center {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-}
-</style>
-
-<style lang="scss">
-// Needed because dropdown somehow doesn't properly work with scoping
-.nav-item {
-  .nav-link {
-    color: #555 !important;
-  }
 }
 </style>

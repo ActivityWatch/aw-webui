@@ -16,7 +16,7 @@ div
           b-button.px-2(:to="link_prefix + '/' + previousPeriod() + '/' + subview",
                    variant="outline-dark")
             icon(name="arrow-left")
-        b-select.px-2(:value="periodLength", :options="['day', 'week', 'month']",
+        b-select.px-3(:value="periodLength", :options="['day', 'week', 'month']",
                  @change="(periodLength) => setDate(_date, periodLength)")
         b-input-group-append
           b-button.px-2(:to="link_prefix + '/' + nextPeriod() + '/' + subview",
@@ -36,7 +36,7 @@ div
 
   aw-periodusage(:periodusage_arr="periodusage", @update="setDate")
 
-  ul.row.nav.nav-tabs.mt-3.px-3
+  ul.row.nav.nav-tabs.mt-4
     li.nav-item(v-for="view in views")
       router-link.nav-link(:to="{ name: 'activity-view', params: {...$route.params, view_id: view.id}}" :class="{'router-link-exact-active': currentView.id == view.id}")
         h6 {{view.name}}
@@ -65,12 +65,12 @@ div
     div.row
       div.col-lg-6
         b-form-checkbox(v-model="filterAFK")
-          | Filter AFK
+          | Exclude time away from computer
         b-form-checkbox(v-model="includeAudible")
-          | Count audible browser tab as active
+          | Always treat browsers playing audio or video as active
 
       div.col-lg-6
-        b-form-group(label="Show/filter category" label-cols="5" label-cols-lg="4")
+        b-form-group(label="Show category:" label-cols="6" label-cols-lg="4")
           b-form-select(v-model="filterCategory", :options="categories")
 
     aw-devonly
@@ -79,32 +79,36 @@ div
 </template>
 
 <style lang="scss" scoped>
-$buttoncolor: #ddd;
-$bordercolor: #ddd;
+@import '../../style/globals';
+$lightPurpleHighlight: rgb(84, 105, 212);
 
 .nav {
-  border-bottom: 2px solid $bordercolor;
+  border-bottom: 1px solid $lightBorderColor;
 
   .nav-item {
-    margin-bottom: -2px;
+    margin-bottom: 0px;
+
+    &:first-child {
+      margin-left: 0;
+    }
 
     .nav-link {
-      background-color: $buttoncolor;
-      margin: 0 0.2em 0 0.2em;
-      padding: 0.4em 0.5em 0.1em 0.5em;
-      border: 2px solid $bordercolor;
-      border-bottom: none;
-      border-radius: 0.5rem 0.5rem 0 0;
-      color: #111 !important;
+      // default bootstrap vertical padding was too high
+      padding: 0.25rem 1rem;
+
+      color: lighten(black, 40%);
       cursor: pointer;
+      border: none;
 
       &:hover {
-        background-color: #f8f8f8;
+        color: black;
       }
 
       &.router-link-exact-active {
-        background-color: #fff;
-        color: #333 !important;
+        color: $lightPurpleHighlight;
+        font-weight: bold;
+        border-bottom: 3px solid darken($lightBorderColor, 20%);
+        border-radius: 0;
 
         &:hover {
           background-color: #fff;
