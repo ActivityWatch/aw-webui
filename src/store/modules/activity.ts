@@ -1,5 +1,4 @@
 import moment from 'moment';
-import { unitOfTime } from 'moment';
 import * as _ from 'lodash';
 import { map, filter, values, groupBy, sortBy, flow, reverse } from 'lodash/fp';
 
@@ -8,23 +7,14 @@ import queries from '~/queries';
 import { getColorFromCategory } from '~/util/color';
 import { loadClassesForQuery } from '~/util/classes';
 import { get_day_start_with_offset } from '~/util/time';
-
-interface TimePeriod {
-  start: string;
-  length: [number, string];
-}
-
-function dateToTimeperiod(date: string, duration?: [number, string]): TimePeriod {
-  return { start: get_day_start_with_offset(date), length: duration || [1, 'day'] };
-}
-
-function timeperiodToStr(tp: TimePeriod): string {
-  const start = moment(tp.start).format();
-  const end = moment(start)
-    .add(tp.length[0], tp.length[1] as moment.unitOfTime.DurationConstructor)
-    .format();
-  return [start, end].join('/');
-}
+import {
+  TimePeriod,
+  dateToTimeperiod,
+  timeperiodToStr,
+  timeperiodsHoursOfPeriod,
+  timeperiodsDaysOfPeriod,
+  timeperiodsAroundTimeperiod,
+} from '~/util/timeperiod';
 
 interface QueryOptions {
   host: string;
@@ -64,7 +54,7 @@ const _state = {
 
   category: {
     available: false,
-    by_hour: [],
+    by_period: [],
     top: [],
   },
 
@@ -96,32 +86,12 @@ const _state = {
   },
 };
 
-function timeperiodsAroundTimeperiod(timeperiod: TimePeriod): TimePeriod[] {
-  const periods = [];
-  for (let i = -15; i <= 15; i++) {
-    const start = moment(timeperiod.start)
-      .add(i * timeperiod.length[0], timeperiod.length[1] as moment.unitOfTime.DurationConstructor)
-      .format();
-    periods.push({ ...timeperiod, start });
-  }
-  return periods;
+function timeperiodsStrsHoursOfPeriod(timeperiod: TimePeriod): string[] {
+  return timeperiodsHoursOfPeriod(timeperiod).map(timeperiodToStr);
 }
 
-function timeperiodsHoursOfDay(timeperiod: TimePeriod): TimePeriod[] {
-  const periods = [];
-  const _length: [number, string] = [1, 'hour'];
-  for (let i = 0; i < 24; i++) {
-    const start = moment(timeperiod.start)
-      .add(i * _length[0], _length[1] as moment.unitOfTime.DurationConstructor)
-      .format();
-    periods.push({ start, length: _length });
-  }
-  // const periods = _.range(24).map(i => [TimePeriod(moment(i * 1 + dayOffset), [1, 'hour'])]);
-  return periods;
-}
-
-function timeperiodsStrsHoursOfDay(timeperiod: TimePeriod): string[] {
-  return timeperiodsHoursOfDay(timeperiod).map(timeperiodToStr);
+function timeperiodsStrsDaysOfPeriod(timeperiod: TimePeriod): string[] {
+  return timeperiodsDaysOfPeriod(timeperiod).map(timeperiodToStr);
 }
 
 function timeperiodStrsAroundTimeperiod(timeperiod: TimePeriod): string[] {
@@ -162,15 +132,15 @@ const actions = {
 
       if (state.window.available) {
         await dispatch('query_desktop_full', query_options);
-        await dispatch('query_category_time_by_hour', query_options);
+        await dispatch('query_category_time_by_period', query_options);
       } else if (state.android.available) {
         await dispatch('query_android', query_options);
       } else {
         console.log(
           'Cannot query windows as we are missing either an afk/window bucket pair or an android bucket'
         );
-        await dispatch('query_window_empty', query_options);
-        await dispatch('query_browser_empty', query_options);
+        await dispatch('reset_window');
+        await dispatch('reset_category');
       }
 
       if (state.active.available) {
@@ -186,7 +156,7 @@ const actions = {
         await dispatch('query_editor', query_options);
       } else {
         console.log('Cannot call query_editor as we do not have any editor buckets');
-        await dispatch('query_editor_empty', query_options);
+        await dispatch('reset_editor');
       }
     } else {
       console.warn(
@@ -203,7 +173,14 @@ const actions = {
     commit('query_window_completed', data[0]);
   },
 
-  async query_window_empty({ commit }) {
+  async reset({ dispatch }) {
+    await dispatch('reset_window');
+    await dispatch('reset_browser');
+    await dispatch('reset_editor');
+    await dispatch('reset_category');
+  },
+
+  async reset_window({ commit }) {
     const data = {
       app_events: [],
       title_events: [],
@@ -212,6 +189,32 @@ const actions = {
       duration: 0,
     };
     commit('query_window_completed', data);
+  },
+
+  async reset_browser({ commit }) {
+    const data = {
+      domains: [],
+      urls: [],
+      duration: 0,
+    };
+    commit('query_browser_completed', data);
+  },
+
+  async reset_editor({ commit }) {
+    const data = {
+      files: [],
+      projects: [],
+      languages: [],
+    };
+    commit('query_editor_completed', data);
+  },
+
+  async reset_category({ commit }) {
+    const data = {
+      by_period: [],
+    };
+
+    commit('query_category_time_by_period_completed', data);
   },
 
   async query_desktop_full(
@@ -245,29 +248,11 @@ const actions = {
     commit('query_browser_completed', data_browser);
   },
 
-  async query_browser_empty({ commit }) {
-    const data = {
-      domains: [],
-      urls: [],
-      duration: 0,
-    };
-    commit('query_browser_completed', data);
-  },
-
   async query_editor({ state, commit }, { timeperiod }) {
     const periods = [timeperiodToStr(timeperiod)];
     const q = queries.editorActivityQuery(state.buckets.editor);
     const data = await this._vm.$aw.query(periods, q);
     commit('query_editor_completed', data[0]);
-  },
-
-  async query_editor_empty({ commit }) {
-    const data = {
-      files: [],
-      projects: [],
-      languages: [],
-    };
-    commit('query_editor_completed', data);
   },
 
   async query_active_history({ commit, state }, { timeperiod }: QueryOptions) {
@@ -285,13 +270,20 @@ const actions = {
     commit('query_active_history_completed', { active_history });
   },
 
-  async query_category_time_by_hour(
+  async query_category_time_by_period(
     { commit, state },
     { timeperiod, filterCategories, filterAFK }: QueryOptions
   ) {
     // TODO: Only works for the 1 day timeperiod
     // TODO: Needs to be adapted for Android
-    const periods = timeperiodsStrsHoursOfDay(timeperiod);
+    let periods;
+    if (timeperiod.length[1] == 'day') {
+      periods = timeperiodsStrsHoursOfPeriod(timeperiod);
+    } else if (timeperiod.length[1] == 'week' || timeperiod.length[1] == 'month') {
+      periods = timeperiodsStrsDaysOfPeriod(timeperiod);
+    } else {
+      console.error('Unknown timeperiod');
+    }
     const classes = loadClassesForQuery();
     const data = await this._vm.$aw.query(
       periods,
@@ -307,8 +299,7 @@ const actions = {
         filter_classes: filterCategories,
       })
     );
-    const category_time_by_hour = _.zipObject(periods, data);
-    commit('query_category_time_by_hour_completed', { category_time_by_hour });
+    commit('query_category_time_by_period_completed', { by_period: _.zipObject(periods, data) });
   },
 
   async query_active_history_android({ commit, state }, { timeperiod }: QueryOptions) {
@@ -451,6 +442,7 @@ const mutations = {
     state.editor.top_projects = null;
 
     state.category.top = null;
+    state.category.by_period = null;
 
     state.active.duration = null;
 
@@ -503,8 +495,8 @@ const mutations = {
     };
   },
 
-  query_category_time_by_hour_completed(state, { category_time_by_hour }) {
-    state.category.by_hour = category_time_by_hour;
+  query_category_time_by_period_completed(state, { by_period }) {
+    state.category.by_period = by_period;
   },
 
   buckets(state, data) {

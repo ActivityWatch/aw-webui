@@ -25,7 +25,7 @@ export default class ChartTimelineBars extends Vue<Bar> {
   datasets: Record<string, any>[];
 
   @Prop({ default: 'day' })
-  resolution: 'day' | 'week';
+  resolution: 'day' | 'week' | 'month';
 
   mounted() {
     this.renderData();
@@ -36,11 +36,64 @@ export default class ChartTimelineBars extends Vue<Bar> {
     this.renderData();
   }
 
+  labels() {
+    const hourOffset = get_hour_offset();
+    if (this.resolution == 'day') {
+      return _.range(0, 24).map(h => `${(h + hourOffset) % 24}`);
+    } else if (this.resolution == 'week') {
+      return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    } else if (this.resolution == 'month') {
+      return ['1st', '2nd', '3rd'].concat(_.range(4, 31).map(d => `${d}th`));
+    } else {
+      console.error('Invalid resolution');
+    }
+  }
+
+  yAxes() {
+    if (this.resolution == 'day') {
+      return [
+        {
+          stacked: true,
+          ticks: {
+            stepSize: 0.25,
+            min: 0,
+            max: 1,
+            callback: function (value: number) {
+              if (value == 1) {
+                return '1h';
+              } else {
+                return Math.round(value * 60) + 'min';
+              }
+            },
+          },
+        },
+      ];
+    } else {
+      return [
+        {
+          stacked: true,
+          ticks: {
+            stepSize: 1,
+            min: 0,
+            callback: function (value: number) {
+              if (value == 1) {
+                return '1h';
+              } else {
+                return Math.round(value) + 'h';
+              }
+            },
+          },
+        },
+      ];
+    }
+  }
+
   renderData() {
     // Overwriting base render method with actual data.
-    const hourOffset = get_hour_offset();
+    // TODO: Use different x-axis depending on timeperiod
+    console.log(this.datasets);
     const data = {
-      labels: _.range(0, 24).map(h => `${(h + hourOffset) % 24}`),
+      labels: this.labels(),
       datasets: this.datasets,
       title: {
         display: true,
@@ -60,23 +113,7 @@ export default class ChartTimelineBars extends Vue<Bar> {
       },
       scales: {
         xAxes: [{ stacked: true }],
-        yAxes: [
-          {
-            stacked: true,
-            ticks: {
-              stepSize: 0.25,
-              min: 0,
-              max: 1,
-              callback: function (value: number) {
-                if (value == 1) {
-                  return '1h';
-                } else {
-                  return Math.round(value * 60) + 'min';
-                }
-              },
-            },
-          },
-        ],
+        yAxes: this.yAxes(),
       },
     } as ChartOptions;
     this.renderChart(data, options);

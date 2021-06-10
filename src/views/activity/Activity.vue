@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  h3.mb-0 Activity for {{ periodReadable }}
+  h3.mb-0 Activity for {{ timeperiod | friendlyperiod }}
 
   div.mb-2
     ul.list-group.list-group-horizontal-md.mb-3(style="font-size: 0.9em; opacity: 0.7")
@@ -129,6 +129,7 @@ div
 <script>
 import moment from 'moment';
 import { get_day_start_with_offset, get_today } from '~/util/time';
+import { periodLengthConvertMoment } from '~/util/timeperiod';
 import _ from 'lodash';
 
 import 'vue-awesome/icons/arrow-left';
@@ -210,24 +211,8 @@ export default {
     timeperiod: function () {
       return { start: get_day_start_with_offset(this._date), length: [1, this.periodLength] };
     },
-    dateformat: function () {
-      if (this.periodLength === 'day') {
-        return 'YYYY-MM-DD';
-      } else if (this.periodLength === 'week') {
-        return 'YYYY[ W]WW';
-      } else if (this.periodLength === 'month') {
-        return 'YYYY-MM';
-      } else if (this.periodLength === 'year') {
-        return 'YYYY';
-      } else {
-        return 'YYYY-MM-DD';
-      }
-    },
-    periodReadable: function () {
-      return moment(this.timeperiod.start).format(this.dateformat);
-    },
     periodLengthMoment: function () {
-      return this.periodLengthConvertMoment(this.periodLength);
+      return periodLengthConvertMoment(this.periodLength);
     },
   },
   watch: {
@@ -261,28 +246,13 @@ export default {
     nextPeriod: function () {
       return moment(this._date).add(1, `${this.periodLength}s`).format('YYYY-MM-DD');
     },
-    periodLengthConvertMoment(periodLength) {
-      if (periodLength === 'day') {
-        return 'day';
-      } else if (periodLength === 'week') {
-        /* This is necessary so the week starts on Monday instead of Sunday */
-        return 'isoWeek';
-      } else if (periodLength === 'month') {
-        return 'month';
-      } else if (periodLength === 'year') {
-        return 'year';
-      } else {
-        console.error('Invalid periodLength ${periodLength}, defaulting to "day"');
-        return 'day';
-      }
-    },
 
     setDate: function (date, periodLength) {
       // periodLength is an optional argument, default to this.periodLength
       if (!periodLength) {
         periodLength = this.periodLength;
       }
-      const new_period_length_moment = this.periodLengthConvertMoment(periodLength);
+      const new_period_length_moment = periodLengthConvertMoment(periodLength);
       const new_date = moment(date).startOf(new_period_length_moment).format('YYYY-MM-DD');
       console.log(new_date, periodLength);
       this.$router.push(`/activity/${this.host}/${periodLength}/${new_date}/${this.subview}`);
