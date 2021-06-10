@@ -10,7 +10,7 @@ button {
   text-rendering: optimizeLegibility;
 }
 
-h1, h2, h3, nav {
+h1, h2, h3, h4, h5, nav {
   font-family: 'Varela Round', sans-serif;
 }
 
@@ -30,14 +30,4 @@ body {
   background-color: #fff;
   border: 1px solid $lightBorderColor;
   border-radius: 5px;
-}
-
-// TODO pretty sure we can replace these styles with something bootstrap native
-.footer {
-  float: right;
-  text-align: right
-}
-
-.footer a {
-  margin-left: 13px;
 }
