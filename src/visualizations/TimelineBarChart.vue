@@ -5,6 +5,20 @@ import { Bar } from 'vue-chartjs';
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 import { get_hour_offset } from '~/util/time';
 
+function hourToTick(hours: number): string {
+  if (hours > 1) {
+    return `${hours}h`;
+  } else {
+    if (hours == 1) {
+      return '1h';
+    } else if (hours == 0) {
+      return '0';
+    } else {
+      return Math.round(hours * 60) + 'm';
+    }
+  }
+}
+
 @Component({
   extends: Bar, // this is important to add the functionality to your component
 })
@@ -60,13 +74,7 @@ export default class ChartTimelineBars extends Vue<Bar> {
             stepSize: 0.25,
             min: 0,
             max: 1,
-            callback: function (value: number) {
-              if (value == 1) {
-                return '1h';
-              } else {
-                return Math.round(value * 60) + 'min';
-              }
-            },
+            callback: hourToTick,
           },
         },
       ];
@@ -77,13 +85,7 @@ export default class ChartTimelineBars extends Vue<Bar> {
           ticks: {
             stepSize: 1,
             min: 0,
-            callback: function (value: number) {
-              if (value == 1) {
-                return '1h';
-              } else {
-                return Math.round(value) + 'h';
-              }
-            },
+            callback: hourToTick,
           },
         },
       ];
