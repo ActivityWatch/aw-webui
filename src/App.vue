@@ -11,8 +11,10 @@ div#wrapper
 
   div.container(style="color: #555; font-size: 0.9em")
     div.mb-2
-      // The heart emoji is red by default on most platforms, but not on all
-      | Made with #[span(style="color: red") ❤] by the #[a(href="http://activitywatch.net/contributors/") ActivityWatch developers]
+      | Made with
+      a(href="https://activitywatch.net/donate/", target="_blank")
+        icon(name="heart" scale=0.8 color="#E55")
+      | by the #[a(href="http://activitywatch.net/contributors/") ActivityWatch developers]
       div
         span.mt-2(v-show="info", style="color: #888; font-size: 0.8em")
           span.mr-2
@@ -53,6 +55,7 @@ import 'vue-awesome/icons/hand-holding-heart';
 import 'vue-awesome/icons/vote-yea';
 import 'vue-awesome/icons/question-circle';
 import 'vue-awesome/icons/bug';
+import 'vue-awesome/icons/heart';
 
 export default {
   data: function () {
