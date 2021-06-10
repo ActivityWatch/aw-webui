@@ -29,10 +29,32 @@ div
 
     div.ml-auto
       b-button-group
+        b-button.px-2(:pressed.sync="showOptions", variant="outline-dark")
+          icon(name="filter")
+          span.d-none.d-md-inline
+            |  Filters
         b-button.px-2(@click="refresh(true)", variant="outline-dark")
           icon(name="sync")
           span.d-none.d-md-inline
             |  Refresh
+
+  div.row(v-if="showOptions" style="background-color: #EEE;").my-3.py-3
+    div.col-md-12
+      h5 Filters
+    div.col-md-6
+      b-form-checkbox(v-model="filterAFK" size="sm")
+        | Exclude AFK time
+        icon#filterAFKHelp(name="question-circle" style="opacity: 0.4")
+        b-tooltip(target="filterAFKHelp" v-b-tooltip.hover title="Filter away time where the AFK watcher didn't detect any input.")
+      b-form-checkbox(v-model="includeAudible" :disabled="!filterAFK" size="sm")
+        | Count audible browser tab as active
+        icon#includeAudibleHelp(name="question-circle" style="opacity: 0.4")
+        b-tooltip(target="includeAudibleHelp" v-b-tooltip.hover title="If the active window is an audible browser tab, count as active. Requires a browser watcher.")
+
+    div.col-md-6.mt-2.mt-md-0
+      b-form-group(label="Show category" label-cols="5" label-cols-lg="4" style="font-size: 0.88em")
+        b-form-select(v-model="filterCategory", :options="categories" size="sm")
+
 
   aw-periodusage.mt-2(:periodusage_arr="periodusage", @update="setDate")
 
@@ -57,25 +79,6 @@ div
 
   div
     router-view
-
-  div
-    hr
-    h5 Options
-
-    div.row
-      div.col-md-6
-        b-form-checkbox(v-model="filterAFK" size="sm")
-          | Exclude AFK time
-          icon#filterAFKHelp(name="question-circle" style="opacity: 0.4")
-          b-tooltip(target="filterAFKHelp" v-b-tooltip.hover title="Filter away time where the AFK watcher didn't detect any input.")
-        b-form-checkbox(v-model="includeAudible" :disabled="!filterAFK" size="sm")
-          | Count audible browser tab as active
-          icon#includeAudibleHelp(name="question-circle" style="opacity: 0.4")
-          b-tooltip(target="includeAudibleHelp" v-b-tooltip.hover title="If the active window is an audible browser tab, count as active. Requires a browser watcher.")
-
-      div.col-md-6.mt-2.mt-md-0
-        b-form-group(label="Show category" label-cols="5" label-cols-lg="4" style="font-size: 0.88em")
-          b-form-select(v-model="filterCategory", :options="categories" size="sm")
 
     aw-devonly
       b-btn(id="load-demo", @click="load_demo")
@@ -140,6 +143,7 @@ import 'vue-awesome/icons/edit';
 import 'vue-awesome/icons/times';
 import 'vue-awesome/icons/save';
 import 'vue-awesome/icons/question-circle';
+import 'vue-awesome/icons/filter';
 
 export default {
   name: 'Activity',
@@ -161,6 +165,7 @@ export default {
   data: function () {
     return {
       today: get_today(),
+      showOptions: false,
       filterCategory: null,
       includeAudible: true,
       filterAFK: true,
