@@ -84,7 +84,6 @@ div
 
 <style lang="scss" scoped>
 @import '../../style/globals';
-$lightPurpleHighlight: rgb(84, 105, 212);
 
 .nav {
   border-bottom: 1px solid $lightBorderColor;
@@ -105,14 +104,18 @@ $lightPurpleHighlight: rgb(84, 105, 212);
       border: none;
 
       &:hover {
-        color: black;
+        color: black !important;
+        border-bottom: 3px solid lighten(black, 70%);
+        border-radius: 0;
       }
 
       &.router-link-exact-active {
-        color: $lightPurpleHighlight;
-        font-weight: bold;
-        border-bottom: 3px solid darken($lightBorderColor, 20%);
+        color: $activeHighlightColor !important;
+        border-bottom: 3px solid lighten($activeHighlightColor, 15%);
         border-radius: 0;
+
+        // Does nothing for Verala Round
+        font-weight: bold;
 
         &:hover {
           background-color: #fff;
