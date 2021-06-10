@@ -1,5 +1,5 @@
 <template lang="pug">
-svg.mt-3.mb-1
+svg
 </template>
 
 <style scoped lang="scss">

@@ -34,7 +34,7 @@ div
           span.d-none.d-md-inline
             |  Refresh
 
-  aw-periodusage(:periodusage_arr="periodusage", @update="setDate")
+  aw-periodusage.mt-2(:periodusage_arr="periodusage", @update="setDate")
 
   ul.row.nav.nav-tabs.mt-4
     li.nav-item(v-for="view in views")
@@ -67,7 +67,7 @@ div
         b-form-checkbox(v-model="filterAFK" size="sm")
           | Exclude AFK time
           icon#filterAFKHelp(name="question-circle" style="opacity: 0.4")
-          b-tooltip(target="filterAFKHelp" v-b-tooltip.hover title="Filter away time where the AFK watcher couldn't detect input.")
+          b-tooltip(target="filterAFKHelp" v-b-tooltip.hover title="Filter away time where the AFK watcher didn't detect any input.")
         b-form-checkbox(v-model="includeAudible" :disabled="!filterAFK" size="sm")
           | Count audible browser tab as active
           icon#includeAudibleHelp(name="question-circle" style="opacity: 0.4")
