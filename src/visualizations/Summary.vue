@@ -1,9 +1,12 @@
 <template lang="pug">
 div
   div.aw-summary-container
-  b-button.mt-1(v-if="fields && fields.length > 0 && with_limit && fields.length > limit_", size="sm", variant="outline-secondary", @click="limit_ += 5")
-    icon(name="angle-double-down")
-    | Show more
+  div(v-if="fields && fields.length > 0 && with_limit && fields.length > limit_")
+    b-button.mt-1(size="sm", variant="outline-secondary", @click="limit_ += 5")
+      icon(name="angle-double-down")
+      | Show more
+    b-button.ml-2.mt-1(v-if="limit_ != limit" size="sm", variant="outline-secondary", @click="limit_ = limit")
+      icon(name="angle-double-up")
 </template>
 
 <style scoped lang="scss">
@@ -19,6 +22,7 @@ div
 
 import summary from './summary.js';
 import 'vue-awesome/icons/angle-double-down';
+import 'vue-awesome/icons/angle-double-up';
 
 export default {
   name: 'aw-summary',
