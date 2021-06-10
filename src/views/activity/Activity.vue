@@ -65,9 +65,13 @@ div
     div.row
       div.col-lg-6
         b-form-checkbox(v-model="filterAFK")
-          | Exclude time away from computer
-        b-form-checkbox(v-model="includeAudible")
-          | Always treat browsers playing audio or video as active
+          | Exclude AFK time
+          icon#filterAFKHelp(name="question-circle" style="opacity: 0.4")
+          b-tooltip(target="filterAFKHelp" v-b-tooltip.hover title="Filter away time where the AFK watcher couldn't detect input.")
+        b-form-checkbox(v-model="includeAudible" :disabled="!filterAFK" )
+          | Count audible browser tab as active
+          icon#includeAudibleHelp(name="question-circle" style="opacity: 0.4")
+          b-tooltip(target="includeAudibleHelp" v-b-tooltip.hover title="If the active window is an audible browser tab, count as active. Requires a browser watcher.")
 
       div.col-lg-6
         b-form-group(label="Show category:" label-cols="6" label-cols-lg="4")
@@ -131,6 +135,7 @@ import 'vue-awesome/icons/plus';
 import 'vue-awesome/icons/edit';
 import 'vue-awesome/icons/times';
 import 'vue-awesome/icons/save';
+import 'vue-awesome/icons/question-circle';
 
 export default {
   name: 'Activity',
