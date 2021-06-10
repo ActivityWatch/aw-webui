@@ -3,12 +3,12 @@ svg
 </template>
 
 <style scoped lang="scss">
+@import '../style/globals';
+
 svg {
   width: 100%;
   height: 40pt;
-  border: 1px solid #999;
-  margin-top: 0.2em;
-  margin-bottom: 0.2em;
+  border: 1px solid $lightBorderColor;
   border-radius: 0.5em;
 }
 </style>

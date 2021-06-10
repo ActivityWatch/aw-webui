@@ -35,7 +35,7 @@ div
       label Use regex
       input(type="checkbox" v-model="use_regex")
     div
-      label Filter AFK
+      label Exclude time away from computer
       input(type="checkbox" v-model="filter_afk")
     //div.form-row
       div.form-group.col-md-6

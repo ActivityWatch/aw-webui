@@ -16,7 +16,7 @@ div
           b-button.px-2(:to="link_prefix + '/' + previousPeriod() + '/' + subview",
                    variant="outline-dark")
             icon(name="arrow-left")
-        b-select.px-2(:value="periodLength", :options="['day', 'week', 'month']",
+        b-select.pl-2.pr-3(:value="periodLength", :options="['day', 'week', 'month']",
                  @change="(periodLength) => setDate(_date, periodLength)")
         b-input-group-append
           b-button.px-2(:to="link_prefix + '/' + nextPeriod() + '/' + subview",
@@ -34,9 +34,9 @@ div
           span.d-none.d-md-inline
             |  Refresh
 
-  aw-periodusage(:periodusage_arr="periodusage", @update="setDate")
+  aw-periodusage.mt-2(:periodusage_arr="periodusage", @update="setDate")
 
-  ul.row.nav.nav-tabs.mt-3.px-3
+  ul.row.nav.nav-tabs.mt-4
     li.nav-item(v-for="view in views")
       router-link.nav-link(:to="{ name: 'activity-view', params: {...$route.params, view_id: view.id}}" :class="{'router-link-exact-active': currentView.id == view.id}")
         h6 {{view.name}}
@@ -63,15 +63,19 @@ div
     h5 Options
 
     div.row
-      div.col-lg-6
-        b-form-checkbox(v-model="filterAFK")
-          | Filter AFK
-        b-form-checkbox(v-model="includeAudible")
+      div.col-md-6
+        b-form-checkbox(v-model="filterAFK" size="sm")
+          | Exclude AFK time
+          icon#filterAFKHelp(name="question-circle" style="opacity: 0.4")
+          b-tooltip(target="filterAFKHelp" v-b-tooltip.hover title="Filter away time where the AFK watcher didn't detect any input.")
+        b-form-checkbox(v-model="includeAudible" :disabled="!filterAFK" size="sm")
           | Count audible browser tab as active
+          icon#includeAudibleHelp(name="question-circle" style="opacity: 0.4")
+          b-tooltip(target="includeAudibleHelp" v-b-tooltip.hover title="If the active window is an audible browser tab, count as active. Requires a browser watcher.")
 
-      div.col-lg-6
-        b-form-group(label="Show/filter category" label-cols="5" label-cols-lg="4")
-          b-form-select(v-model="filterCategory", :options="categories")
+      div.col-md-6.mt-2.mt-md-0
+        b-form-group(label="Show category" label-cols="5" label-cols-lg="4" style="font-size: 0.88em")
+          b-form-select(v-model="filterCategory", :options="categories" size="sm")
 
     aw-devonly
       b-btn(id="load-demo", @click="load_demo")
@@ -79,32 +83,39 @@ div
 </template>
 
 <style lang="scss" scoped>
-$buttoncolor: #ddd;
-$bordercolor: #ddd;
+@import '../../style/globals';
 
 .nav {
-  border-bottom: 2px solid $bordercolor;
+  border-bottom: 1px solid $lightBorderColor;
 
   .nav-item {
-    margin-bottom: -2px;
+    margin-bottom: 0px;
+
+    &:first-child {
+      margin-left: 0;
+    }
 
     .nav-link {
-      background-color: $buttoncolor;
-      margin: 0 0.2em 0 0.2em;
-      padding: 0.4em 0.5em 0.1em 0.5em;
-      border: 2px solid $bordercolor;
-      border-bottom: none;
-      border-radius: 0.5rem 0.5rem 0 0;
-      color: #111 !important;
+      // default bootstrap vertical padding was too high
+      padding: 0.25rem 1rem;
+
+      color: lighten(black, 40%);
       cursor: pointer;
+      border: none;
 
       &:hover {
-        background-color: #f8f8f8;
+        color: black !important;
+        border-bottom: 3px solid lighten(black, 70%);
+        border-radius: 0;
       }
 
       &.router-link-exact-active {
-        background-color: #fff;
-        color: #333 !important;
+        color: $activeHighlightColor !important;
+        border-bottom: 3px solid lighten($activeHighlightColor, 15%);
+        border-radius: 0;
+
+        // Does nothing for Verala Round
+        font-weight: bold;
 
         &:hover {
           background-color: #fff;
@@ -127,6 +138,7 @@ import 'vue-awesome/icons/plus';
 import 'vue-awesome/icons/edit';
 import 'vue-awesome/icons/times';
 import 'vue-awesome/icons/save';
+import 'vue-awesome/icons/question-circle';
 
 export default {
   name: 'Activity',
