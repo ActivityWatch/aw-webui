@@ -61,7 +61,6 @@ export default {
     },
   },
   mounted() {
-    console.log('setting color', this.value);
     this.setColor(this.value);
   },
   methods: {

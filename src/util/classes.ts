@@ -78,7 +78,7 @@ export const defaultCategories: Category[] = [
   { name: ['Uncategorized'], rule: { type: null }, data: { color: COLOR_UNCAT } },
 ];
 
-function annotate(c: Category) {
+export function annotate(c: Category) {
   const ch = c.name;
   c.name_pretty = ch.join(level_sep);
   c.subname = ch.slice(-1)[0];

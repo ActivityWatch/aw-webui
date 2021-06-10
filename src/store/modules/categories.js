@@ -5,6 +5,7 @@ import {
   defaultCategories,
   build_category_hierarchy,
   createMissingParents,
+  annotate,
 } from '~/util/classes';
 
 // initial state
@@ -36,6 +37,9 @@ const getters = {
   },
   get_category: state => category_arr => {
     return state.classes.find(c => _.isEqual(c.name, category_arr));
+  },
+  get_category_by_id: state => id => {
+    return annotate(_.cloneDeep(state.classes.find(c => c.id == id)));
   },
 };
 
@@ -95,8 +99,8 @@ const mutations = {
     state.classes.push(new_class);
     state.classes_unsaved_changes = true;
   },
-  removeClass(state, cls) {
-    state.classes = state.classes.filter(c => c.id !== cls.id);
+  removeClass(state, classId) {
+    state.classes = state.classes.filter(c => c.id !== classId);
     state.classes_unsaved_changes = true;
   },
   restoreDefaultClasses(state) {
