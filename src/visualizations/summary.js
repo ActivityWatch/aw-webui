@@ -8,6 +8,8 @@ import { getCategoryColorFromString } from '../util/color';
 
 import { seconds_to_duration } from '../util/time.js';
 
+const textColor = '#333';
+
 function create(container) {
   // Clear element
   container.innerHTML = '';
@@ -30,7 +32,7 @@ function set_status(container, msg) {
     .text(msg)
     .attr('font-family', 'sans-serif')
     .attr('font-size', '25px')
-    .attr('fill', 'black');
+    .attr('fill', textColor);
 }
 
 function update(container, apps) {
@@ -56,8 +58,8 @@ function update(container, apps) {
 
     // Variables
     const width = (app.duration / longest_duration) * 100 + '%';
-    const barHeight = 50;
-    const textSize = 15;
+    const barHeight = 46;
+    const textSize = 14;
     const appcolor = app.color || getCategoryColorFromString(app.colorKey || app.name);
     const hovercolor = Color(appcolor).darken(0.1).hex();
 
@@ -86,20 +88,20 @@ function update(container, apps) {
     // App name
     eg.append('text')
       .attr('x', 5)
-      .attr('y', curr_y + 5 + textSize)
+      .attr('y', curr_y + 1.4 * textSize)
       .text(app.name)
       .attr('font-family', 'sans-serif')
       .attr('font-size', textSize + 'px')
-      .attr('fill', 'black');
+      .attr('fill', textColor);
 
     // Duration
     eg.append('text')
       .attr('x', 5)
-      .attr('y', curr_y + 5 + textSize + 5 + textSize)
+      .attr('y', curr_y + 2.6 * textSize)
       .text(seconds_to_duration(app.duration))
       .attr('font-family', 'sans-serif')
-      .attr('font-size', textSize + 'px')
-      .attr('fill', 'black');
+      .attr('font-size', textSize - 3 + 'px')
+      .attr('fill', '#444');
 
     curr_y += barHeight + 5;
   });
