@@ -21,18 +21,19 @@ div#wrapper
           span
             b Version:
             | &nbsp; {{info.version}}
-    div.pb-3.pb-md-0.mb-3.mb-md-0(style="font-size: 0.9em; opacity: 0.9")
-      div.float-none.float-md-right.mb-3
-        a(href="https://github.com/ActivityWatch/activitywatch/issues/new/choose").mr-3
+
+    div(style="font-size: 0.9em; opacity: 0.8")
+      div.float-none.float-md-right.my-2
+        a(href="https://github.com/ActivityWatch/activitywatch/issues/new/choose", target="_blank").mr-3
           icon(name="bug")
           | Report a bug
-        a(href="https://forum.activitywatch.net/c/support").mr-3
+        a(href="https://forum.activitywatch.net/c/support", target="_blank").mr-3
           icon(name="question-circle")
           | Ask for help
-        a(href="https://forum.activitywatch.net/c/features")
+        a(href="https://forum.activitywatch.net/c/features", target="_blank")
           icon(name="vote-yea")
           | Vote on features
-      div.float-none.float-md-left
+      div.float-none.float-md-left.my-2
         a(href="https://twitter.com/ActivityWatchIt", target="_blank")
           icon(name="brands/twitter")
           | Twitter
