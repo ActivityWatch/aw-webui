@@ -92,11 +92,9 @@ export default class ChartTimelineBars extends Vue<Bar> {
 
   renderData() {
     // Overwriting base render method with actual data.
-    // TODO: Use different x-axis depending on timeperiod
-    console.log(this.datasets);
     const data = {
       labels: this.labels(),
-      datasets: this.datasets,
+      datasets: _.sortBy(this.datasets, d => d.label),
       title: {
         display: true,
         text: 'Timeline',
