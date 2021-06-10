@@ -43,7 +43,9 @@ export default class ChartTimelineBars extends Vue<Bar> {
     } else if (this.resolution == 'week') {
       return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     } else if (this.resolution == 'month') {
-      return ['1st', '2nd', '3rd'].concat(_.range(4, 31).map(d => `${d}th`));
+      // FIXME: Needs access to the timeperiod start to know which month
+      const daysInMonth = 31;
+      return ['1st', '2nd', '3rd'].concat(_.range(4, daysInMonth + 1).map(d => `${d}th`));
     } else {
       console.error('Invalid resolution');
     }
