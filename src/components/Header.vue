@@ -36,10 +36,10 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
             icon(name="stream")
             | Timeline
 
-        b-nav-item(to="/stopwatch")
+        b-nav-item(to="/trends")
           div.px-2.px-lg-1
-            icon(name="stopwatch")
-            | Stopwatch
+            icon(name="chart-bar")
+            | Trends
 
       // Brand on large screens (centered)
       b-navbar-nav.abs-center.d-none.d-lg-block
@@ -56,6 +56,9 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
           b-dropdown-item(to="/search")
             icon(name="search")
             | Search
+          b-nav-item(to="/stopwatch")
+            icon(name="stopwatch")
+            | Stopwatch
           b-dropdown-item(to="/query")
             icon(name="code")
             | Query
@@ -84,9 +87,12 @@ import 'vue-awesome/icons/stream';
 import 'vue-awesome/icons/database';
 import 'vue-awesome/icons/search';
 import 'vue-awesome/icons/code';
+import 'vue-awesome/icons/chart-bar';
 import 'vue-awesome/icons/stopwatch';
 import 'vue-awesome/icons/cog';
 import 'vue-awesome/icons/tools';
+
+import 'vue-awesome/icons/ellipsis-h';
 
 import 'vue-awesome/icons/mobile';
 import 'vue-awesome/icons/desktop';
