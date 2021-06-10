@@ -6,14 +6,18 @@
 
 <template lang="pug">
 div
-  h3.mb-0 Trends for {{ periodReadable }}
+  h3.mb-0 Trends for {{ timeperiod | friendlyperiod }}
 
   div.mb-2
     ul.list-group.list-group-horizontal-md.mb-3(style="font-size: 0.9em; opacity: 0.7")
       li.list-group-item.pl-0.pr-3.py-0(style="border: 0")
         | #[b Host:] {{ host }}
 
-  // TODO: Add chart
+  b-alert(style="warning" show)
+    | This feature is still in early development.
+
+  div
+    aw-timeline-barchart(:datasets="datasets" :height="100")
 
   div
     hr
@@ -30,8 +34,9 @@ div
 
 <script>
 import moment from 'moment';
-import { get_day_start_with_offset, get_today } from '~/util/time';
-import _ from 'lodash';
+import { get_today } from '~/util/time';
+
+import { buildBarchartDataset } from '~/util/datasets';
 
 export default {
   name: 'Trends',
@@ -39,9 +44,23 @@ export default {
     host: String,
   },
   data: function () {
+    const today = get_today();
+    const since = moment(today).subtract(7, 'days');
     return {
-      today: get_today(),
+      today,
+      timeperiod: { start: since, length: [7, 'days'] },
     };
+  },
+
+  computed: {
+    datasets: function () {
+      return buildBarchartDataset(
+        this.$store,
+        this.$store.state.activity.category.by_period,
+        this.$store.state.activity.active.events,
+        this.$store.state.categories.classes
+      );
+    },
   },
 
   mounted: async function () {
@@ -51,7 +70,7 @@ export default {
 
   methods: {
     refresh: async function (force) {
-      await this.$store.dispatch('activity/get_trend', {
+      await this.$store.dispatch('activity/query_category_time_by_period', {
         timeperiod: this.timeperiod,
         host: this.host,
         force: force,

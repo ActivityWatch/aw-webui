@@ -36,10 +36,10 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
             icon(name="stream")
             | Timeline
 
-        b-nav-item(to="/trends")
+        b-nav-item(to="/stopwatch")
           div.px-2.px-lg-1
-            icon(name="chart-bar")
-            | Trends
+            icon(name="stopwatch")
+            | Stopwatch
 
       // Brand on large screens (centered)
       b-navbar-nav.abs-center.d-none.d-lg-block
@@ -56,9 +56,9 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
           b-dropdown-item(to="/search")
             icon(name="search")
             | Search
-          b-nav-item(to="/stopwatch")
-            icon(name="stopwatch")
-            | Stopwatch
+          b-dropdown-item(to="/trends")
+            icon(name="chart-bar")
+            | Trends
           b-dropdown-item(to="/query")
             icon(name="code")
             | Query

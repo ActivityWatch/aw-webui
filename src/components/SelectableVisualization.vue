@@ -70,7 +70,7 @@ div
     div(v-if="type == 'category_sunburst'")
       aw-sunburst-categories(:data="top_categories_hierarchy", style="height: 20em")
     div(v-if="type == 'timeline_barchart'")
-      aw-timeline-barchart(:datasets="datasets", style="height: 100")
+      aw-timeline-barchart(:datasets="datasets", :resolution="$store.state.activity.query_options.timeperiod.length[1]", style="height: 100")
     div(v-if="type == 'sunburst_clock'")
       aw-sunburst-clock(:date="date", :afkBucketId="$store.state.activity.buckets.afk[0]", :windowBucketId="$store.state.activity.buckets.window[0]")
 </template>
@@ -93,11 +93,10 @@ import 'vue-awesome/icons/cog';
 import 'vue-awesome/icons/times';
 import 'vue-awesome/icons/bars';
 
-import { split_by_hour_into_data } from '~/util/transforms';
+import { buildBarchartDataset } from '~/util/datasets';
 
 // TODO: Move this somewhere else
 import { build_category_hierarchy } from '~/util/classes';
-import { getColorFromCategory } from '~/util/color';
 
 function pick_subname_as_name(c) {
   c.name = c.subname;
@@ -209,7 +208,7 @@ export default {
       return this.visualizations[this.type].available;
     },
     supports_period: function () {
-      if (this.type == 'sunburst_clock' || this.type == 'timeline_barchart') {
+      if (this.type == 'sunburst_clock') {
         return this.isSingleDay;
       }
       return true;
@@ -230,51 +229,12 @@ export default {
       }
     },
     datasets: function () {
-      const METHOD_CATEGORY = 'category';
-      const METHOD_ACTIVITY = 'activity';
-      const method = METHOD_CATEGORY;
-      if (method == METHOD_CATEGORY) {
-        const SEP = '>>>';
-        const data = this.$store.state.activity.category.by_hour;
-        if (data) {
-          const categories = new Set(
-            Object.values(data)
-              .map(result => {
-                return result.cat_events.map(e => e.data['$category'].join(SEP));
-              })
-              .flat()
-          );
-          const ds = [...categories].map(c_ => {
-            const c = this.$store.getters['categories/get_category'](c_.split(SEP));
-            if (c) {
-              return {
-                label: c.name.join(' > '),
-                backgroundColor: getColorFromCategory(c, this.$store.state.categories.classes),
-                data: Object.values(data).map(results => {
-                  const cat = results.cat_events.find(e => _.isEqual(e.data['$category'], c.name));
-                  if (cat) return Math.round((cat.duration / (60 * 60)) * 1000) / 1000;
-                  else return null;
-                }),
-              };
-            } else {
-              console.log('missing c');
-            }
-          });
-          return ds;
-        } else {
-          return [];
-        }
-      } else if (method == METHOD_ACTIVITY) {
-        const data = split_by_hour_into_data(this.$store.state.activity.active.events);
-        return [
-          {
-            label: 'Total time',
-            backgroundColor: '#6699ff',
-            data,
-          },
-        ];
-      }
-      return [];
+      return buildBarchartDataset(
+        this.$store,
+        this.$store.state.activity.category.by_period,
+        this.$store.state.activity.active.events,
+        this.$store.state.categories.classes
+      );
     },
     date: function () {
       let date = this.$store.state.activity.query_options.date;
