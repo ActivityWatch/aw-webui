@@ -16,7 +16,7 @@ div
           b-button.px-2(:to="link_prefix + '/' + previousPeriod() + '/' + subview",
                    variant="outline-dark")
             icon(name="arrow-left")
-        b-select.px-3(:value="periodLength", :options="['day', 'week', 'month']",
+        b-select.pl-2.pr-3(:value="periodLength", :options="['day', 'week', 'month']",
                  @change="(periodLength) => setDate(_date, periodLength)")
         b-input-group-append
           b-button.px-2(:to="link_prefix + '/' + nextPeriod() + '/' + subview",
@@ -63,19 +63,19 @@ div
     h5 Options
 
     div.row
-      div.col-lg-6
-        b-form-checkbox(v-model="filterAFK")
+      div.col-md-6
+        b-form-checkbox(v-model="filterAFK" size="sm")
           | Exclude AFK time
           icon#filterAFKHelp(name="question-circle" style="opacity: 0.4")
           b-tooltip(target="filterAFKHelp" v-b-tooltip.hover title="Filter away time where the AFK watcher couldn't detect input.")
-        b-form-checkbox(v-model="includeAudible" :disabled="!filterAFK" )
+        b-form-checkbox(v-model="includeAudible" :disabled="!filterAFK" size="sm")
           | Count audible browser tab as active
           icon#includeAudibleHelp(name="question-circle" style="opacity: 0.4")
           b-tooltip(target="includeAudibleHelp" v-b-tooltip.hover title="If the active window is an audible browser tab, count as active. Requires a browser watcher.")
 
-      div.col-lg-6
-        b-form-group(label="Show category:" label-cols="6" label-cols-lg="4")
-          b-form-select(v-model="filterCategory", :options="categories")
+      div.col-md-6.mt-2.mt-md-0
+        b-form-group(label="Show category" label-cols="5" label-cols-lg="4" style="font-size: 0.88em")
+          b-form-select(v-model="filterCategory", :options="categories" size="sm")
 
     aw-devonly
       b-btn(id="load-demo", @click="load_demo")
