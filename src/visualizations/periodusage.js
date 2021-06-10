@@ -18,12 +18,13 @@ function set_status(svg_elem, msg) {
 
   svg
     .append('text')
-    .attr('x', '5pt')
+    .attr('x', '50%')
     .attr('y', '25pt')
     .text(msg)
     .attr('font-family', 'sans-serif')
     .attr('font-size', '20pt')
-    .attr('fill', 'black');
+    .attr('text-anchor', 'middle')
+    .attr('fill', '#AAA');
 }
 
 const diagramcolor = '#aaa';

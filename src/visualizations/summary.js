@@ -31,8 +31,8 @@ function set_status(container, msg) {
     .attr('y', '25px')
     .text(msg)
     .attr('font-family', 'sans-serif')
-    .attr('font-size', '25px')
-    .attr('fill', textColor);
+    .attr('font-size', '20px')
+    .attr('fill', '#999');
 }
 
 function update(container, apps) {

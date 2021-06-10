@@ -1,7 +1,8 @@
 <template lang="pug">
 div
   div.aw-summary-container
-  div(v-if="fields && fields.length > 0 && with_limit && fields.length > limit_")
+  // Use visibility to make sure elements don't skip when data finishes loading
+  div(:style='{"visibility": visible ? "visible" : "hidden"}')
     b-button.mt-1(size="sm", variant="outline-secondary", @click="limit_ += 5")
       icon(name="angle-double-down")
       | Show more
@@ -45,6 +46,13 @@ export default {
   },
   data: function () {
     return { limit_: this.limit };
+  },
+  computed: {
+    visible() {
+      return (
+        this.fields && this.fields.length > 0 && this.with_limit && this.fields.length > this.limit_
+      );
+    },
   },
   watch: {
     fields: function () {
