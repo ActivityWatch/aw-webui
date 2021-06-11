@@ -108,7 +108,8 @@ export function getCategoryColorFromString(str: string): string {
 function fallbackColor(str: string): string {
   // Get fallback color
   // TODO: Fetch setting from somewhere better, where defaults are respected
-  const useColorFallback = localStorage !== undefined ? localStorage.useColorFallback : true;
+  const useColorFallback =
+    localStorage !== undefined ? localStorage.useColorFallback === 'true' : true;
   if (useColorFallback) {
     return getColorFromString(str);
   } else {

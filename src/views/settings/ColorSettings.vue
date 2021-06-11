@@ -13,7 +13,7 @@ export default {
   name: 'ColorSettings',
   data: () => {
     return {
-      useColorFallback: localStorage.useColorFallback || true,
+      useColorFallback: localStorage.useColorFallback === 'true',
     };
   },
   watch: {
