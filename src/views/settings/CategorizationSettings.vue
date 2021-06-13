@@ -14,6 +14,8 @@ div
   p
     | Rules for categorizing events. An event can only have one category. If several categories match, the deepest one will be chosen.
   p
+    | You can find and share categorization rule presets on #[a(href="https://forum.activitywatch.net/c/projects/category-rules") the forum].
+  p
     | For help on how to write categorization rules, see #[a(href="https://docs.activitywatch.net/en/latest/features/categorization.html") the documentation].
 
   div.my-4
