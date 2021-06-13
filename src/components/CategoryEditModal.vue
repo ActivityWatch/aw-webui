@@ -70,7 +70,7 @@ export default {
       const entries = categories.map(c => {
         return { text: c.join('->'), value: c };
       });
-      return [{ value: [], text: 'None' }].concat(entries);
+      return [{ value: [], text: 'None' }].concat(_.sortBy(entries, 'text'));
     },
     allRuleTypes: function () {
       return [
