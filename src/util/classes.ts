@@ -48,9 +48,13 @@ export const defaultCategories: Category[] = [
   {
     name: ['Media', 'Games'],
     rule: { type: 'regex', regex: 'Minecraft|RimWorld' },
-    data: { color: '#0FF' },
+    data: { color: '#F80' },
   },
-  { name: ['Media', 'Video'], rule: { type: 'regex', regex: 'YouTube|Plex|VLC' } },
+  {
+    name: ['Media', 'Video'],
+    rule: { type: 'regex', regex: 'YouTube|Plex|VLC' },
+    data: { color: '#F33' },
+  },
   {
     name: ['Media', 'Social Media'],
     rule: {
@@ -58,6 +62,7 @@ export const defaultCategories: Category[] = [
       regex: 'reddit|Facebook|Twitter|Instagram|devRant',
       ignore_case: true,
     },
+    data: { color: '#FCC400' },
   },
   {
     name: ['Media', 'Music'],
@@ -66,6 +71,12 @@ export const defaultCategories: Category[] = [
       regex: 'Spotify|Deezer',
       ignore_case: true,
     },
+    data: { color: '#A8FC00' },
+  },
+  {
+    name: ['Comms'],
+    rule: { type: null },
+    data: { color: '#9FF' },
   },
   {
     name: ['Comms', 'IM'],
