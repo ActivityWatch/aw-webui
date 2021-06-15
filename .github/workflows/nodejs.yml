@@ -74,8 +74,8 @@ jobs:
 
     - name: Insert fake data into aw-server
       run: |
-        pip install git+https://github.com/ActivityWatch/aw-client.git
-        wget --no-verbose -O fakedata.py https://github.com/ActivityWatch/aw-fakedata/raw/ca6047e6e2cdc6aee13bc441f4fd3c9f0e36eda9/aw-fakedata.py
+        pip install click git+https://github.com/ActivityWatch/aw-client.git
+        wget --no-verbose -O fakedata.py https://raw.githubusercontent.com/ActivityWatch/aw-fakedata/master/aw_fakedata.py
         python3 fakedata.py
 
     - name: Install
