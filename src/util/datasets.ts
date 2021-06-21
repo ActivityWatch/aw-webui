@@ -18,7 +18,7 @@ interface HourlyData {
 interface Dataset {
   label: string;
   backgroundColor: string;
-  data: object;
+  data: number[];
 }
 
 export function buildBarchartDataset(
@@ -36,22 +36,25 @@ export function buildBarchartDataset(
         })
         .flat()
     );
-    const ds = [...category_names]
+    const ds: Dataset[] = [...category_names]
       .map(c_ => {
         const c = $store.getters['categories/get_category'](c_.split(SEP));
         if (c) {
+          const values = Object.values(data).map(results => {
+            const cat = results.cat_events.find(e => _.isEqual(e.data['$category'], c.name));
+            if (cat) return Math.round((cat.duration / (60 * 60)) * 1000) / 1000;
+            else return null;
+          });
           return {
             label: c.name.join(' > '),
             backgroundColor: getColorFromCategory(c, classes),
-            data: Object.values(data).map(results => {
-              const cat = results.cat_events.find(e => _.isEqual(e.data['$category'], c.name));
-              if (cat) return Math.round((cat.duration / (60 * 60)) * 1000) / 1000;
-              else return null;
-            }),
-          };
+            data: values,
+          } as Dataset;
         } else {
           // FIXME: This shouldn't happen
-          console.log('missing c');
+          // This may for example happen if one doesn't have an 'Uncategorized' category,
+          // as can happen when one upgrades from an old version where there wasn't one in the default classes.
+          console.error('missing category:', c_);
         }
       })
       .filter(x => x);
