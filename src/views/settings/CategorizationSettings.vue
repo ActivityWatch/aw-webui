@@ -73,10 +73,14 @@ export default {
     exportClasses: function () {
       console.log('Exporting categories...');
 
+      if (localStorage.classes === undefined) {
+        alert('No classes saved, nothing to export!');
+      }
       const export_data = {
         categories: JSON.parse(localStorage.classes),
       };
-      const text = JSON.stringify(export_data);
+      // Pretty-format it for easier reading
+      const text = JSON.stringify(export_data, null, 2);
       const filename = 'aw-category-export.json';
 
       // Initiate downloading a file by creating a hidden button and clicking it
