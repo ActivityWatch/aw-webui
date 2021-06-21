@@ -36,7 +36,13 @@ const getters = {
     );
   },
   get_category: state => category_arr => {
-    return state.classes.find(c => _.isEqual(c.name, category_arr));
+    const match = state.classes.find(c => _.isEqual(c.name, category_arr));
+    if (!match) {
+      console.error("Couldn't find category: ", category_arr);
+      // fallback
+      return { name: ['Uncategorized'] };
+    }
+    return annotate(_.cloneDeep(match));
   },
   get_category_by_id: state => id => {
     return annotate(_.cloneDeep(state.classes.find(c => c.id == id)));
