@@ -87,6 +87,9 @@ export function getColorFromCategory(c: Category, allCats: Category[]): string {
     // If no color is set on category, traverse parents until one is found
     const parent = c.name.slice(0, -1);
     const parentCat = allCats.find(cc => _.isEqual(cc.name, parent));
+    if (parentCat === undefined) {
+      console.error("Couldn't find parent!", parent);
+    }
     return getColorFromCategory(parentCat, allCats);
   } else {
     return COLOR_UNCAT;

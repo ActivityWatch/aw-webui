@@ -1,0 +1,73 @@
+import _ from 'lodash';
+
+import { split_by_hour_into_data } from '~/util/transforms';
+import { getColorFromCategory } from '~/util/color';
+import { Category } from '~/util/classes';
+
+// TODO: Move elsewhere
+interface Event {
+  timestamp: string;
+  duration: number;
+  data: object;
+}
+
+interface HourlyData {
+  cat_events: Event[];
+}
+
+interface Dataset {
+  label: string;
+  backgroundColor: string;
+  data: object;
+}
+
+export function buildBarchartDataset(
+  $store: any,
+  data_by_hour: HourlyData[],
+  classes: Category[]
+): Dataset[] {
+  const SEP = '>>>';
+  const data = data_by_hour;
+  if (data) {
+    const category_names: Set<string> = new Set(
+      Object.values(data)
+        .map(result => {
+          return result.cat_events.map(e => e.data['$category'].join(SEP));
+        })
+        .flat()
+    );
+    const ds = [...category_names]
+      .map(c_ => {
+        const c = $store.getters['categories/get_category'](c_.split(SEP));
+        if (c) {
+          return {
+            label: c.name.join(' > '),
+            backgroundColor: getColorFromCategory(c, classes),
+            data: Object.values(data).map(results => {
+              const cat = results.cat_events.find(e => _.isEqual(e.data['$category'], c.name));
+              if (cat) return Math.round((cat.duration / (60 * 60)) * 1000) / 1000;
+              else return null;
+            }),
+          };
+        } else {
+          // FIXME: This shouldn't happen
+          console.log('missing c');
+        }
+      })
+      .filter(x => x);
+    return ds;
+  } else {
+    return [];
+  }
+}
+
+export function buildBarchartDatasetActive($store: any, events_active: Event[]) {
+  const data = split_by_hour_into_data(events_active);
+  return [
+    {
+      label: 'Total time',
+      backgroundColor: '#6699ff',
+      data,
+    },
+  ];
+}

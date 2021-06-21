@@ -232,7 +232,6 @@ export default {
       return buildBarchartDataset(
         this.$store,
         this.$store.state.activity.category.by_period,
-        this.$store.state.activity.active.events,
         this.$store.state.categories.classes
       );
     },
