@@ -16,7 +16,7 @@ jobs:
         node-version: [12.x]
         python-version: ['3.9']
         aw-server: ["aw-server", "aw-server-rust"]
-        aw-version: ["v0.10.0"]
+        aw-version: ["v0.11.0"]
         include:
         - node-version: '12.x'
           python-version: '3.9'
