@@ -274,7 +274,6 @@ const actions = {
     { commit, state },
     { timeperiod, filterCategories, filterAFK }: QueryOptions
   ) {
-    // TODO: Only works for the 1 day timeperiod
     // TODO: Needs to be adapted for Android
     let periods;
     if (timeperiod.length[1] == 'day') {
@@ -285,20 +284,25 @@ const actions = {
       console.error('Unknown timeperiod');
     }
     const classes = loadClassesForQuery();
-    const data = await this._vm.$aw.query(
-      periods,
-      // TODO: Clean up call, pass QueryParams in fullDesktopQuery as well
-      // TODO: Unify QueryOptions and QueryParams
-      queries.hourlyCategoryQuery({
-        bid_afk: state.buckets.afk[0],
-        bid_window: state.buckets.window[0],
-        bid_browsers: state.buckets.browser,
-        // bid_android: state.buckets.android,
-        classes: classes,
-        filter_afk: filterAFK,
-        filter_classes: filterCategories,
-      })
-    );
+    const data = [];
+    // Query one period at a time, to avoid timeout on slow queries
+    for (const period of periods) {
+      const result = await this._vm.$aw.query(
+        [period],
+        // TODO: Clean up call, pass QueryParams in fullDesktopQuery as well
+        // TODO: Unify QueryOptions and QueryParams
+        queries.hourlyCategoryQuery({
+          bid_afk: state.buckets.afk[0],
+          bid_window: state.buckets.window[0],
+          bid_browsers: state.buckets.browser,
+          // bid_android: state.buckets.android,
+          classes: classes,
+          filter_afk: filterAFK,
+          filter_classes: filterCategories,
+        })
+      );
+      data.push(result[0]);
+    }
     commit('query_category_time_by_period_completed', { by_period: _.zipObject(periods, data) });
   },
 
