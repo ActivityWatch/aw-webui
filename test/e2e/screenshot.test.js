@@ -7,9 +7,21 @@ import { Selector } from 'testcafe';
 async function hide_devonly(t) {
   // Hide all devonly-elements
   const $hidedevonly = Selector('.hide-devonly');
-  for (let i = 0; i < $hidedevonly.count; i++) {
+  for (let i = 0; i < (await $hidedevonly.count); i++) {
     await t.click($hidedevonly.nth(i));
   }
+}
+
+async function waitForLoading(t) {
+  let $loading;
+  console.log('Waiting for loading to disappear...');
+  do {
+    $loading = Selector('h1', { timeout: 100 }).withText(/.+[Ll]oading.+/g);
+    console.log(await $loading.count);
+    //$loading = Selector('.loading');
+    await t.wait(200);
+  } while ((await $loading.count) >= 1);
+  console.log('Loading is gone!');
 }
 
 fixture(`Home view`).page(`http://localhost:27180/`);
@@ -43,11 +55,9 @@ test('Screenshot the home view', async t => {
 fixture(`Activity view`).page(`http://localhost:27180/#/activity/fakedata`);
 
 test('Screenshot the activity view', async t => {
-  // wait for a few seconds, since it can be slow to load
-  // It shouldn't take this long though (hopefully)
-  await t.wait(5000);
-
   await hide_devonly(t);
+  await waitForLoading(t);
+
   await t.takeScreenshot({
     path: 'activity.png',
     fullPage: true,
@@ -58,10 +68,18 @@ test('Screenshot the activity view', async t => {
 
 fixture(`Timeline view`).page(`http://localhost:27180/#/timeline`);
 
-test('Screenshot the timeline view', async t => {
-  await t.wait(5000);
+const durationSelect = Selector('select#duration');
+const durationOption = durationSelect.find('option');
 
+test('Screenshot the timeline view', async t => {
   await hide_devonly(t);
+  await waitForLoading(t);
+  await t
+    .click(durationSelect)
+    .click(durationOption.withText('12h'))
+    .expect(durationSelect.value)
+    .eql('43200');
+
   await t.takeScreenshot({
     path: 'timeline.png',
     fullPage: true,
@@ -71,9 +89,8 @@ test('Screenshot the timeline view', async t => {
 fixture(`Buckets view`).page(`http://localhost:27180/#/buckets/`);
 
 test('Screenshot the buckets view', async t => {
-  await t.wait(1000);
-
   await hide_devonly(t);
+  await t.wait(1000);
   await t.takeScreenshot({
     path: 'buckets.png',
     fullPage: true,
