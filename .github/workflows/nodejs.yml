@@ -76,7 +76,9 @@ jobs:
       run: |
         pip install click git+https://github.com/ActivityWatch/aw-client.git
         wget --no-verbose -O fakedata.py https://raw.githubusercontent.com/ActivityWatch/aw-fakedata/master/aw_fakedata.py
-        python3 fakedata.py
+        GITDATE=$(git show -s --format | sed -r 's/ .+//g')
+        STARTDATE=$(date --date="${GITDATE} -30 day" +%Y-%m-%d)
+        python3 fakedata.py --since $STARTDATE --until $GITDATE
 
     - name: Install
       run: npm ci
