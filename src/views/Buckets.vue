@@ -66,12 +66,19 @@ div
         | A valid file to import is a JSON file from either an export of a single bucket or an export from multiple buckets.
         | If there are buckets with the same name the import will fail
     b-card(header="Export buckets")
-      b-button(:href="$aw.baseURL + '/api/0/export'",
-               :download="'aw-bucket-export.json'",
-               title="Export bucket to JSON",
-               variant="outline-secondary")
-        icon(name="download")
-        | Export all buckets as JSON
+      b-button-group(size="md")
+        b-button(:href="$aw.baseURL + '/api/0/export'",
+                :download="'aw-bucket-export.json'",
+                title="Export all buckets as JSON",
+                variant="outline-secondary")
+          icon(name="download")
+          | Export all buckets as JSON
+        b-button(:href="$aw.baseURL + '/api/0/export-espaceun'",
+                :download="'aw-bucket-export.json'",
+                title="Export all buckets to EspaceUn",
+                variant="outline-secondary")
+          icon(name="download")
+          | Export all buckets to EspaceUn
 
 </template>
 
