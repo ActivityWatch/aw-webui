@@ -51,6 +51,8 @@ export default {
           followMouse: true,
           overflowMethod: 'cap',
         },
+        horizontalScroll: true,
+        zoomKey: 'ctrlKey',
       },
     };
   },
