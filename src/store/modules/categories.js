@@ -12,6 +12,7 @@ const mapping = {
   mekl_sify_slug: 'name',
   mekl_wmxd_text: 'rule.regex',
   mekl_vjwx_text: 'data.color',
+  mekl_wofe_fk: 'parent',
 };
 
 // initial state
@@ -23,7 +24,8 @@ const _state = {
 // getters
 const getters = {
   classes_hierarchy: state => {
-    const hier = build_category_hierarchy(_.cloneDeep(state.classes));
+    // const hier = build_category_hierarchy(_.cloneDeep(state.classes));
+    const hier = _.cloneDeep(state.classes);
     return _.sortBy(hier, [c => c.id || 0]);
   },
   all_categories: state => {
@@ -80,24 +82,40 @@ const mutations = {
     // let i = 0;
     // state.classes = classes.map(c => Object.assign(c, { id: i++ }));
 
-    state.classes = classes.content?.map(c =>
+    function parseContent(cur, obj, sub = []) {
+      const mappingKey = mapping[obj.identifier];
+
+      if (!mappingKey) {
+        return cur;
+      }
+
+      cur = _.set(cur, mappingKey, obj.value);
+
+      if (mappingKey === 'name') {
+        cur.name_pretty = cur.name;
+        cur.name = [cur.name];
+      } else if (mappingKey === 'parent') {
+        cur.parent = obj.value.id;
+        cur.name = [obj.value.unicode, ...cur.name];
+      }
+
+      cur.children = sub ? sub.filter(sc => sc.parent == cur.id) : [];
+
+      return cur;
+    }
+
+    const subCategories = classes.sub?.content?.map(c =>
       c.fields.reduce(
-        (cur, obj) => {
-          const mappingKey = mapping[obj.identifier];
+        (cur, obj) => parseContent(cur, obj),
+        { depth: 0, rule: { ignore_case: true, regex: '', type: 'regex' } }
+      )
+    );
 
-          if (!mappingKey) {
-            return cur;
-          }
+    console.log(subCategories);
 
-          cur = _.set(cur, mappingKey, obj.value);
-
-          if (mappingKey === 'name') {
-            cur.name_pretty = cur.name;
-            cur.name = [cur.name];
-          }
-
-          return cur;
-        },
+    state.classes = classes.categories?.content?.map(c =>
+      c.fields.reduce(
+        (cur, obj) => parseContent(cur, obj, subCategories),
         { depth: 0, rule: { ignore_case: true, regex: '', type: 'regex' } }
       )
     );
