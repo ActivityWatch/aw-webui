@@ -172,9 +172,12 @@ const actions = {
     }
   },
 
-  async query_android({ state, commit }, { timeperiod, filterCategories }: QueryOptions) {
+  async query_android(
+    { state, commit, rootState },
+    { timeperiod, filterCategories }: QueryOptions
+  ) {
     const periods = [timeperiodToStr(timeperiod)];
-    const classes = loadClassesForQuery();
+    const classes = loadClassesForQuery(rootState.categories.classes);
     const q = queries.appQuery(state.buckets.android[0], classes, filterCategories);
     const data = await this._vm.$aw.query(periods, q).catch(this.errorHandler);
     commit('query_window_completed', data[0]);
@@ -192,11 +195,11 @@ const actions = {
   },
 
   async query_desktop_full(
-    { state, commit },
+    { rootState, state, commit },
     { timeperiod, filterCategories, filterAFK }: QueryOptions
   ) {
     const periods = [timeperiodToStr(timeperiod)];
-    const classes = loadClassesForQuery();
+    const classes = loadClassesForQuery(rootState.categories.classes);
     const q = queries.fullDesktopQuery(
       state.buckets.browser,
       state.buckets.window[0],

@@ -115,8 +115,8 @@ export function loadClasses(): Category[] {
   }
 }
 
-export function loadClassesForQuery(): [string[], Rule][] {
-  return loadClasses()
+export function loadClassesForQuery(classes: Category[]): [string[], Rule][] {
+  return classes
     .filter(c => c.rule.type !== null)
     .map(c => {
       return [c.name, c.rule];
