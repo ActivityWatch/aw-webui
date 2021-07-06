@@ -73,8 +73,7 @@ div
                 variant="outline-secondary")
           icon(name="download")
           | Export all buckets as JSON
-        b-button(:href="$aw.baseURL + '/api/0/export-espaceun'",
-                :download="'aw-bucket-export.json'",
+        b-button(@click="exportToEspaceUn()",
                 title="Export all buckets to EspaceUn",
                 variant="outline-secondary")
           icon(name="download")
@@ -170,6 +169,9 @@ export default {
       const headers = { 'Content-Type': 'multipart/form-data' };
       return this.$aw.req.post('/0/import', formData, { headers });
     },
+    exportToEspaceUn: async function () {
+      return this.$aw.req.get('/0/export-espaceun');
+    }
   },
 };
 </script>
