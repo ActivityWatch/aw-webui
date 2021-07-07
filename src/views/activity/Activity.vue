@@ -219,7 +219,7 @@ export default {
 
   mounted: async function () {
     this.$store.dispatch('views/load');
-    this.$store.dispatch('categories/load');
+    await this.$store.dispatch('categories/load');
     await this.refresh();
   },
 

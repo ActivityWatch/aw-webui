@@ -1,5 +1,5 @@
 <template lang="pug">
-div(v-if="view")
+div(v-if="view && classes")
   draggable.row(v-model="elements" handle=".handle")
     // TODO: Handle large/variable sized visualizations better
     div.col-md-6.col-lg-4.p-3(v-for="el, index in elements", :key="index", :class="{'col-md-12': isVisLarge(el), 'col-lg-8': isVisLarge(el)}")
@@ -54,6 +54,9 @@ export default {
     return { editing: false };
   },
   computed: {
+    classes: function () {
+      return this.$store.state.categories?.classes?.length ? this.$store.state.categories.classes : null;
+    },
     view: function () {
       if (this.view_id == 'default') {
         return this.$store.state.views.views[0];
