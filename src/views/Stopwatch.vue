@@ -7,12 +7,17 @@ div
   b-alert(show)
     | This is an early experiment, an important missing feature is the ability to set start/end times manually.
 
+  p Create a task by choosing from the dropdown or create one from scratch.
+  b-form-select(v-model="dropdownTimer" :options="uniqueTimersByName" size="lg")
+  br
+  br
   b-input-group(size="lg")
-    b-input(v-model="label" placeholder="What are you working on?")
-    b-input-group-append
-      b-button(@click="startTimer(label)", variant="success")
-        icon(name="play")
-        | Start
+    b-input(v-model="newTimer.label" placeholder="Task")
+    b-input(v-model="newTimer.tags" placeholder="Tags")
+  br
+  b-button(@click="startTimer(newTimer.label, newTimer.tags)", variant="success" size="lg")
+    icon(name="play")
+    | Start
 
   hr
 
@@ -34,7 +39,7 @@ div
           h5.mt-2.mb-1 {{ k }}
           div(v-for="e in timersByDate[k]" :key="e.id")
             stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
-              @delete="removeTimer", @update="updateTimer", @new="startTimer(e.data.label)")
+              @delete="removeTimer", @update="updateTimer", @new="startTimer(e.data.label, e.data.tags)")
             hr(style="margin: 0")
       div(v-else)
         span(style="color: #555") No history to show
@@ -71,6 +76,11 @@ export default {
       events: [],
       label: '',
       now: moment(),
+      dropdownTimer: '',
+      newTimer: {
+        label: '',
+        tags: '',
+      },
     };
   },
   computed: {
@@ -82,6 +92,27 @@ export default {
     },
     timersByDate() {
       return _.groupBy(this.stoppedTimers, e => moment(e.timestamp).format('YYYY-MM-DD'));
+    },
+    uniqueTimersByName() {
+      // sort events from newest to most recent, then only save the ones which
+      // have a unique label. Sorting first ensures that the distinct timers only
+      // store the most recent tag list applied on them. At the end, sort alphabetically
+      const sortedPastEv = _.orderBy(this.stoppedTimers, [e => e.timestamp], ['desc']);
+      const uniqSortedPastEv = _.uniqBy(sortedPastEv, 'data.label');
+      const pastEvRightFormat = _.map(uniqSortedPastEv, e => {
+        return { value: e.data.label, tags: e.data.tags ? e.data.tags : '', text: e.data.label };
+      });
+      const sortedByAlphab = _.orderBy(pastEvRightFormat, [e => e.value]);
+      sortedByAlphab.unshift({ value: '', tags: '', text: 'New Event' });
+      return sortedByAlphab;
+    },
+  },
+  watch: {
+    dropdownTimer: function (newValue) {
+      const index = _.findIndex(this.uniqueTimersByName, e => e.value == newValue);
+      const timerAtIndex = this.uniqueTimersByName[index];
+      this.newTimer.label = timerAtIndex.value;
+      this.newTimer.tags = timerAtIndex.tags;
     },
   },
   mounted: function () {
@@ -97,12 +128,17 @@ export default {
     setInterval(() => (this.now = moment()), 1000);
   },
   methods: {
-    startTimer: async function (label) {
+    startTimer: async function (label, tags) {
+      // backward compatibility with events w/o tags
+      if (tags == undefined) {
+        tags = '';
+      }
       const event = await this.$aw.insertEvent(this.bucket_id, {
         timestamp: new Date(),
         data: {
           running: true,
           label: label,
+          tags: tags,
         },
       });
       this.events.unshift(event);
