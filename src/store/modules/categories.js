@@ -24,8 +24,7 @@ const _state = {
 // getters
 const getters = {
   classes_hierarchy: state => {
-    // const hier = build_category_hierarchy(_.cloneDeep(state.classes));
-    const hier = _.cloneDeep(state.classes);
+    const hier = build_category_hierarchy(_.cloneDeep(state.classes));
     return _.sortBy(hier, [c => c.id || 0]);
   },
   all_categories: state => {
@@ -47,23 +46,6 @@ const getters = {
 // actions
 const actions = {
   async load({ commit }) {
-    // commit('loadClasses', loadClasses());
-
-    // let baseURL;
-    // if (!PRODUCTION) {
-    //   baseURL = AW_SERVER_URL || 'http://127.0.0.1:5666';
-    // }
-    // try {
-    //   // TODO: Don't think fetch is working in android, axios is available as dep
-    //   const response = await fetch(`${baseURL}/api/0/categories`);
-    //   console.log('response', response);
-    //   const data = await response.json();
-    //   commit('loadClasses', data);
-    // } catch (err) {
-    //   console.log(err);
-    //   commit('loadClasses', {});
-    // }
-
     const categories = await this._vm.$aw.getCategories();
     commit('loadClasses', categories);
   },
@@ -77,49 +59,34 @@ const actions = {
 // mutations
 const mutations = {
   loadClasses(state, classes) {
-    // classes = createMissingParents(classes);
-
-    // let i = 0;
-    // state.classes = classes.map(c => Object.assign(c, { id: i++ }));
-
-    function parseContent(cur, obj, sub = []) {
-      const mappingKey = mapping[obj.identifier];
-
-      if (!mappingKey) {
-        return cur;
-      }
-
-      cur = _.set(cur, mappingKey, obj.value);
-
-      if (mappingKey === 'name') {
-        cur.name_pretty = cur.name;
-        cur.name = [cur.name];
-      } else if (mappingKey === 'parent') {
-        cur.parent = obj.value.id;
-        cur.name = [obj.value.unicode, ...cur.name];
-      }
-
-      cur.id = +cur.id;
-      cur.children = sub ? sub.filter(sc => sc.parent == cur.id) : [];
-
-      return cur;
-    }
-
-    const subCategories = classes.sub?.content?.map(c =>
+    const allClasses = [].concat(classes.categories?.content, classes.sub?.content);
+    state.classes = allClasses.map(c =>
       c.fields.reduce(
-        (cur, obj) => parseContent(cur, obj),
+        (cur, obj) => {
+          const mappingKey = mapping[obj.identifier];
+
+          if (!mappingKey) {
+            return cur;
+          }
+
+          cur = _.set(cur, mappingKey, obj.value);
+
+          if (mappingKey === 'name') {
+            cur.name_pretty = cur.name;
+            cur.name = [cur.name];
+          } else if (mappingKey === 'parent') {
+            cur.parent = obj.value.id;
+            cur.name = [obj.value.unicode, ...cur.name];
+          }
+
+          cur.id = +cur.id;
+
+          return cur;
+        },
         { depth: 0, rule: { ignore_case: true, regex: '', type: 'regex' } }
       )
     );
-
-    console.log(subCategories);
-
-    state.classes = classes.categories?.content?.map(c =>
-      c.fields.reduce(
-        (cur, obj) => parseContent(cur, obj, subCategories),
-        { depth: 0, rule: { ignore_case: true, regex: '', type: 'regex' } }
-      )
-    );
+    state.classes = createMissingParents(state.classes);
     console.log('Loaded classes:', state.classes);
     state.classes_unsaved_changes = false;
   },
