@@ -25,13 +25,13 @@ div
     div(v-for="_class in classes_hierarchy")
       CategoryEditTree(:_class="_class")
 
-  div.row
-    div.col-sm-12
-      b-btn(@click="addClass")
-        icon.mr-2(name="plus")
-        | Add category
-      b-btn.float-right(@click="saveClasses", variant="success" :disabled="!classes_unsaved_changes")
-        | Save
+  //- div.row
+  //-   div.col-sm-12
+  //-     b-btn(@click="addClass")
+  //-       icon.mr-2(name="plus")
+  //-       | Add category
+  //-     b-btn.float-right(@click="saveClasses", variant="success" :disabled="!classes_unsaved_changes")
+  //-       | Save
 </template>
 <script>
 import { mapState, mapGetters } from 'vuex';
