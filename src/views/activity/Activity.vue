@@ -1,13 +1,13 @@
 <template lang="pug">
 div
-  h3.mb-0 Activity for {{ periodReadable }}
+  h3.mb-0 {{ $t('activityFor') }} {{ periodReadable }}
 
   div.mb-2
     ul.list-group.list-group-horizontal-md.mb-3(style="font-size: 0.9em; opacity: 0.7")
       li.list-group-item.pl-0.pr-3.py-0(style="border: 0")
-        | #[b Host:] {{ host }}
+        | #[b {{ $t('host') }}] {{ host }}
       li.list-group-item.pl-0.pr-3.py-0(style="border: 0")
-        | #[b Time active:] {{ $store.state.activity.active.duration | friendlyduration }}
+        | #[b {{ $t('timeActive') }}] {{ $store.state.activity.active.duration | friendlyduration }}
 
   div.mb-2.d-flex
     div
@@ -32,7 +32,7 @@ div
         b-button.px-2(@click="refresh(true)", variant="outline-dark")
           icon(name="sync")
           span.d-none.d-md-inline
-            |  Refresh
+            |  {{ $t('refresh') }}
 
   aw-periodusage(:periodusage_arr="periodusage", @update="setDate")
 
@@ -46,9 +46,9 @@ div
         h6
           icon(name="plus")
           span.d-none.d-md-inline
-            | New view
+            | {{ $t('newView') }}
 
-  b-modal(id="new_view" ref="new_view" title="New view" @show="resetModal" @hidden="resetModal" @ok="handleOk")
+  b-modal(id="new_view" ref="new_view" :title="$t('newView')" @show="resetModal" @hidden="resetModal" @ok="handleOk")
     div.my-1
       b-input-group.my-1(prepend="ID")
         b-form-input(v-model="new_view.id")

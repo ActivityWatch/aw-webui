@@ -5,21 +5,21 @@ div
       span #[b {{event.data.label || 'No label'}}]
       span(style="color: #888") &nbsp;|&nbsp;
       span(v-if="event.data.running")
-        | Running for #[span(:title="event.timestamp") {{event.data.running ? (now - event.timestamp) / 1000 : event.duration | friendlyduration}}]
-        | &nbsp;(Started {{ event.timestamp | shorttime }})
+        | {{ $t('runningFor') }} #[span(:title="event.timestamp") {{event.data.running ? (now - event.timestamp) / 1000 : event.duration | friendlyduration}}]
+        | &nbsp;({{ $t('started') }} {{ event.timestamp | shorttime }})
       span(v-else)
-        | Started #[span(:title="event.timestamp") {{event.timestamp | friendlytime}}]
+        | {{ $t('started') }} #[span(:title="event.timestamp") {{event.timestamp | friendlytime}}]
         | &nbsp;({{event.data.running ? (now - event.timestamp) / 1000 : event.duration | friendlyduration}})
     div
       b-button.mx-1(v-if="event.data.running", @click="stop", variant="outline-primary", size="sm")
         icon.ml-0.mr-1(name="stop")
-        | Stop
+        | {{ $t('stop') }}
       b-button.mx-1(v-if="!event.data.running", @click="$emit('new')", variant="outline-primary", size="sm")
         icon.ml-0.mr-1(name="play")
-        | Start new
+        | {{ $t('startNew') }}
       b-button.mx-1(v-b-modal="'edit-modal-' + event.id", variant="outline-dark", size="sm")
         icon.ml-0.mr-1(name="edit")
-        | Edit
+        | {{ $t('edit') }}
   event-editor(:event="event", :bucket_id="bucket_id", @save="save", @delete="delete_")
 </template>
 

@@ -1,16 +1,16 @@
 <template lang="pug">
 div.mx-3
   b-form
-    b-form-group(label="Bucket:")
+    b-form-group(:label="$t('bucket')")
       select(v-model="selectedBucket")
         option(v-for="bucket in buckets", :value="bucket.id") {{ bucket.id }}
-    b-form-group(label="Show:")
+    b-form-group(:label="$t('show')")
       select(v-model="view")
-        option(value="timeGridDay") Day
-        option(value="timeGridWeek") Week
+        option(value="timeGridDay") {{ $t('day') }}
+        option(value="timeGridWeek") {{ $t('week') }}
     b-form-group
       b-checkbox(v-model="fitToActive")
-        | Fit to active
+        | {{ $t('fitActive') }}
   FullCalendar(ref="fullCalendar", :options="calendarOptions")
 </template>
 

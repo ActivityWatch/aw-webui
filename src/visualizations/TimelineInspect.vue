@@ -38,7 +38,7 @@ export default {
   methods: {
     update: function () {
       if (this.chunks === null) {
-        timeline.set_status(this.$el, 'Loading...');
+        timeline.set_status(this.$el, this.$t('loading'));
       } else {
         timeline.update(this.$el, this.chunks, this.show_afk, this.chunkfunc, this.eventfunc);
       }

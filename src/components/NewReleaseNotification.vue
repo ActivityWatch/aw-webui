@@ -1,14 +1,14 @@
 <template lang="pug">
   div
     b-alert(v-if="isVisible", variant="info", show)
-      | A new release, v{{ latestVersion }}, is available for 
-      | #[a(href="https://activitywatch.net/downloads/" target="_blank" class="alert-link") download], 
+      | A new release, v{{ latestVersion }}, is available for
+      | #[a(href="https://activitywatch.net/downloads/" target="_blank" class="alert-link") download],
       | you can also #[a(href="javascript:void(0);" class="alert-link" @click="disableCheck") disable]
       | future reminders and checks for updates.
       button(type="button", class="close", @click="isVisible=false") &times;
 
     b-alert(v-if="isFollowUpVisible", variant="success", show)
-      | Checking for new releases is now disabled, you can re-enable it in the 
+      | Checking for new releases is now disabled, you can re-enable it in the
       | #[router-link(to="/settings" class="alert-link" @click.native="isFollowUpVisible=false") settings page].
       button(type="button", class="close", @click="isFollowUpVisible=false") &times;
 </template>

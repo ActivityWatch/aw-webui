@@ -8,27 +8,27 @@ div(v-if="view && classes")
     div.col-md-6.col-lg-4.p-3(v-if="editing")
       b-button(@click="addVisualization" variant="outline-dark" block size="lg")
         icon(name="plus")
-        span Add visualization
+        span {{ $t('addViz') }}
 
   div(v-if="editing").mt-2
     div.d-flex.flex-row-reverse
       b-button(variant="outline-dark" @click="discard(); editing = !editing;")
         icon(name="times")
-        span Cancel
+        span {{ $t('cancel') }}
       b-button.mr-2(variant="success" @click="save(); editing = !editing;")
         icon(name="save")
-        span Save
+        span {{ $t('save') }}
     div.mt-2.d-flex.flex-row-reverse
       b-button(variant="warning" size="sm" @click="restoreDefaults();")
         icon(name="undo")
-        span Restore defaults
+        span {{ $t('restore') }}
       b-button.mr-2(variant="danger" size="sm" @click="remove();")
         icon(name="trash")
-        span Remove
+        span {{ $t('remove') }}
   div(v-else).d-flex.flex-row-reverse.mt-2
     b-button(variant="outline-dark" size="sm" @click="editing = !editing")
       icon(name="edit")
-      span Edit view
+      span {{ $t('editView') }}
 </template>
 
 <script>
@@ -90,7 +90,7 @@ export default {
     restoreDefaults() {
       this.$store.commit('views/restoreDefaults');
       alert(
-        "All views have been restored to defaults. Changes won't be saved until you click 'Save'."
+        this.$t('restoreHelp')
       );
       // If we're on an URL that might become invalid, navigate to the main/default view
       if (!this.$route.path.includes('default')) {

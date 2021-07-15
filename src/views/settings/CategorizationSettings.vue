@@ -1,27 +1,31 @@
 <template lang="pug">
 div
   h5.d-inline-block
-    div Categorization
+    div {{ $t('categoriz') }}
   div.float-right
     //- b-btn.ml-1(@click="restoreDefaultClasses", variant="outline-warning" size="sm")
     //-   icon(name="undo")
     //-   | Restore defaults
     label.btn.btn-sm.ml-1.btn-outline-primary(style="margin: 0")
-      | Import
+      | {{ $t('import') }}
       input(type="file" @change="importCategories" hidden)
     b-btn.ml-1(@click="exportClasses", variant="outline-primary" size="sm")
-      | Export
+      | {{ $t('export') }}
   p
-    | Rules for categorizing events. An event can only have one category. If several categories match, the deepest one will be chosen.
+    | {{ $t('rulesHelp') }}
+  p
+    | {{ $t('presetHelp') }} #[a(href="https://forum.activitywatch.net/c/projects/category-rules") {{ $t('forum') }}].
+  p
+    | {{ $t('writeCat') }} #[a(href="https://docs.activitywatch.net/en/latest/features/categorization.html") {{ $t('documentation') }}].
 
   div.my-4
     b-alert(variant="warning" :show="classes_unsaved_changes")
-      | You have unsaved changes!
+      | {{ $t('unsaved') }}
       div.float-right(style="margin-top: -0.15em; margin-right: -0.6em")
         b-btn.ml-2(@click="saveClasses", variant="success" size="sm")
-          | Save
+          | {{ $t('save') }}
         b-btn.ml-2(@click="resetClasses", variant="warning" size="sm")
-          | Discard
+          | {{ $t('discard') }}
     div(v-for="_class in classes_hierarchy")
       CategoryEditTree(:_class="_class")
 

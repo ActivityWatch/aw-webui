@@ -1,8 +1,8 @@
 <template lang="pug">
 div
-  h3 Settings
+  h3 {{ $t('settings') }}
 
-  b-alert(variant="warning", show) #[b Note:] These settings are only saved in your browser and will not remain if you switch browser. We are working on getting this fixed.
+  b-alert(variant="warning", show) #[b Note:] {{ $t('settingsHelp') }}
 
   hr
 
@@ -18,9 +18,9 @@ div
 
   hr
 
-  div(v-if="!isAndroid")
-    ReleaseNotificationSettings
-    hr
+  //- div(v-if="!$isAndroid")
+  //-   ReleaseNotificationSettings
+  //-   hr
 
   CategorizationSettings
 
@@ -29,7 +29,7 @@ div
 <script>
 import DaystartSettings from '~/views/settings/DaystartSettings.vue';
 import TimelineDurationSettings from '~/views/settings/TimelineDurationSettings.vue';
-import ReleaseNotificationSettings from '~/views/settings/ReleaseNotificationSettings.vue';
+// import ReleaseNotificationSettings from '~/views/settings/ReleaseNotificationSettings.vue';
 import CategorizationSettings from '~/views/settings/CategorizationSettings.vue';
 import LandingPageSettings from '~/views/settings/LandingPageSettings.vue';
 
@@ -38,7 +38,7 @@ export default {
   components: {
     DaystartSettings,
     TimelineDurationSettings,
-    ReleaseNotificationSettings,
+    // ReleaseNotificationSettings,
     CategorizationSettings,
     LandingPageSettings,
   },

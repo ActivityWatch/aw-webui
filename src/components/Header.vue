@@ -15,18 +15,18 @@ div.aw-navbar
         b-nav-item(v-if="activityViews.length === 1", v-for="view in activityViews", :key="view.name", :to="view.pathUrl")
           div.px-2.px-lg-1
             icon(name="calendar-day")
-            | Activity
+            | {{ $t('activity') }}
 
         // If multiple (or no) activity views are available
         b-nav-item-dropdown(v-if="activityViews.length !== 1")
           template(slot="button-content")
             div.d-inline.px-2.px-lg-1
               icon(name="calendar-day")
-              | Activity
+              | {{ $t('activity') }}
           b-dropdown-item(v-if="activityViews.length <= 0", disabled)
-            | No activity reports available
+            | {{ $t('noActivity') }}
             br
-            small Make sure you have both an AFK and window watcher running
+            small {{ $t('noActivitySmall') }}
           b-dropdown-item(v-for="view in activityViews", :key="view.name", :to="view.pathUrl")
             icon(:name="view.icon")
             | {{ view.name }}
@@ -34,12 +34,12 @@ div.aw-navbar
         b-nav-item(to="/timeline" style="font-color: #000;")
           div.px-2.px-lg-1
             icon(name="stream")
-            | Timeline
+            | {{ $t('timeline') }}
 
         b-nav-item(to="/stopwatch")
           div.px-2.px-lg-1
             icon(name="stopwatch")
-            | Stopwatch
+            | {{ $t('stopwatch') }}
 
       // Brand on large screens (centered)
       b-navbar-nav.abs-center.d-none.d-lg-block
@@ -52,22 +52,25 @@ div.aw-navbar
           template(slot="button-content")
             div.d-inline.px-2.px-lg-1
               icon(name="tools")
-              | Tools
+              | {{ $t('tools') }}
           b-dropdown-item(to="/search")
             icon(name="search")
-            | Search
+            | {{ $t('search') }}
+          //- b-dropdown-item(to="/trends")
+          //-   icon(name="chart-bar")
+          //-   | {{ $t('trends') }}
           b-dropdown-item(to="/query")
             icon(name="code")
-            | Query
+            | {{ $t('query') }}
 
         b-nav-item(to="/buckets")
           div.px-2.px-lg-1
             icon(name="database")
-            | Raw Data
+            | {{ $t('rawData') }}
         b-nav-item(to="/settings")
           div.px-2.px-lg-1
             icon(name="cog")
-            | Settings
+            | {{ $t('settings') }}
 </template>
 
 <script>

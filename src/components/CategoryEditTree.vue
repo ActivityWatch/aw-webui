@@ -8,13 +8,8 @@ div
     div.col-4.col-md-8
       //span.d-none.d-sm-inline.d-md-none(:style="{ marginLeft: (2 * depth) + 'em'}")
       span.d-none.d-md-inline
-        span(v-if="_class.rule.type === 'regex'") Rule ({{_class.rule.type}}): #[code {{_class.rule.regex}}]
-        span(v-else, style="color: #888") No rule
-      span.float-right
-        b-btn.ml-1(size="sm", variant="outline-secondary", @click="showEditModal()" style="border: 0;" pill)
-          icon(name="edit")
-        b-btn.ml-1(size="sm", variant="outline-success", @click="addSubclass(_class)" style="border: 0;" pill)
-          icon(name="plus")
+        span(v-if="_class.rule.type === 'regex'") {{ $t('rule') }} ({{_class.rule.type}}): #[code {{_class.rule.regex}}]
+        span(v-else, style="color: #888") {{ $t('noRule') }}
   div
     div.pa-2(v-for="child in _class.children", style="background: rgba(0, 0, 0, 0);", v-show="expanded")
       CategoryEditTree(:_class="child", :depth="depth+1")

@@ -29,6 +29,57 @@ import './util/filters.js';
 import awclient from './util/awclient.js';
 Vue.prototype.$aw = awclient;
 
+// i18n
+import VueI18n from 'vue-i18n';
+import _default from './locale/en';
+Vue.use(VueI18n);
+
+export const i18n = new VueI18n({
+  locale: 'default',
+  fallbackLocale: 'default',
+  messages: {
+    default: _default,
+  },
+});
+
+const loadedLanguages = ['default'];
+
+function setI18nLanguage(lang) {
+  i18n.locale = lang;
+  document.querySelector('html').setAttribute('lang', lang);
+  return lang;
+}
+
+export function loadLanguageAsync(lang) {
+  // If the language was already loaded
+  if (loadedLanguages.includes(lang)) {
+    if (i18n.locale === lang) {
+      return Promise.resolve(setI18nLanguage(lang));
+    }
+  }
+
+  // If the language hasn't been loaded yet
+  return awclient.getTranslations(lang)
+    .then(response => {
+      const messages = response?.content?.reduce((cur, message) => {
+        const key = message?.fields?.find(field => field.identifier === 'emie_pjub_slug');
+        const en = message?.fields?.find(field => field.identifier === 'emie_ftsv_text');
+        const fr = message?.fields?.find(field => field.identifier === 'emie_xnep_text');
+        if (key && en && fr) {
+          cur.en[key.value] = en.value;
+          cur.fr[key.value] = fr.value;
+        }
+
+        return cur;
+      },
+      { en: {}, fr: {} });
+
+      loadedLanguages.push(lang);
+      i18n.setLocaleMessage(lang, messages[lang]);
+      setI18nLanguage(lang);
+    });
+}
+
 // Sets up the routing and the base app (using vue-router)
 import router from './route.js';
 
@@ -45,8 +96,8 @@ Vue.component('aw-header', () => import('./components/Header.vue'));
 Vue.component('aw-devonly', () => import('./components/DevOnly.vue'));
 Vue.component('aw-selectable-vis', () => import('./components/SelectableVisualization.vue'));
 Vue.component('aw-selectable-eventview', () => import('./components/SelectableEventView.vue'));
-Vue.component('new-release-notification', () => import('./components/NewReleaseNotification.vue'));
-Vue.component('user-satisfaction-poll', () => import('./components/UserSatisfactionPoll.vue'));
+// Vue.component('new-release-notification', () => import('./components/NewReleaseNotification.vue'));
+// Vue.component('user-satisfaction-poll', () => import('./components/UserSatisfactionPoll.vue'));
 
 // Visualization components
 Vue.component('aw-summary', () => import('./visualizations/Summary.vue'));
@@ -71,6 +122,7 @@ Vue.prototype.PRODUCTION = PRODUCTION;
 import App from './App';
 new Vue({
   el: '#app',
+  i18n,
   router: router,
   render: h => h(App),
   store,

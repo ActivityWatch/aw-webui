@@ -1,41 +1,41 @@
 <template lang="pug">
 div
-  h3 Search
+  h3 {{ $t('search') }}
 
   b-alert(style="warning" show)
-    | This feature is still in early development.
+    | {{ $t('searchHelp') }}
 
   b-alert(v-if="error" show variant="danger")
     | {{error}}
 
   b-input-group(size="lg")
-    b-input(v-model="pattern" placeholder="Regex pattern to search for")
+    b-input(v-model="pattern" v-on:keyup.enter="search()" :placeholder="$t('regex')")
     b-input-group-append
       b-button(type="button", @click="search()" variant="success")
         icon(name="search")
-        | Search
+        | {{ $t('search') }}
 
   div.d-flex.mt-1
-    span.mr-auto.small(style="color: #666") Hostname: {{hostname}}
+    span.mr-auto.small(style="color: #666") {{ $t('hostname') }} {{hostname}}
     b-button(size="sm", variant="outline-dark" style="border: 0" @click="show_options = !show_options")
       span(v-if="!show_options")
-        | #[icon(name="angle-double-down")] Show options
+        | #[icon(name="angle-double-down")] {{ $t('showOptions') }}
       span(v-else)
-        | #[icon(name="angle-double-up")] Hide options
+        | #[icon(name="angle-double-up")] {{ $t('hideOptions') }}
 
   div(v-if="show_options")
-    h4 Options
-    div Hostname
+    h4 {{ $t('options') }}
+    div {{ $t('hostname') }}
       select(v-model="hostname")
         option(v-for="hostname in Object.keys($store.getters['buckets/bucketsByHostname'])")
           | {{hostname}}
-    div Start: {{start.format()}}
-    div End: {{stop.format()}}
+    div {{ $t('start') }} {{start.format()}}
+    div {{ $t('end') }} {{stop.format()}}
     //div
       label Use regex
       input(type="checkbox" v-model="use_regex")
     div
-      label Filter AFK
+      label {{ $t('filterAfk') }}
       input(type="checkbox" v-model="filter_afk")
     //div.form-row
       div.form-group.col-md-6
@@ -48,7 +48,7 @@ div
     div.form-inline
 
   div(v-if="status == 'searching'")
-    div #[icon(name="spinner" pulse)] Searching...
+    div #[icon(name="spinner" pulse)] {{ $t('searching') }}
 
   div(v-if="events != null")
     hr
@@ -56,9 +56,9 @@ div
     aw-selectable-eventview(:events="events")
 
     div
-      | Didn't find what you were looking for?
+      | {{ $t('searchEmpty') }}
       br
-      | Add a week to the search: #[b-button(size="sm" variant="outline-dark" @click="start = start.subtract(1, 'week'); search()") +1 week]
+      | {{ $t('addWeek') }} #[b-button(size="sm" variant="outline-dark" @click="start = start.subtract(1, 'week'); search()") +1 week]
 
 </template>
 

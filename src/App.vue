@@ -9,31 +9,42 @@ div#wrapper
         new-release-notification(v-if="isNewReleaseCheckEnabled")
         router-view
 
-  div.container(style="color: #555")
-    div(style="float: left")
-      div.mb-1
-        | Made with ❤ by the #[a(href="http://activitywatch.net/contributors/") ActivityWatch developers]
+  div.container(style="color: #555; font-size: 0.9em")
+    div.mb-2
+      | {{ $t('madeWith') }}
+      a(href="https://activitywatch.net/donate/", target="_blank")
+        icon(name="heart" scale=0.8 color="#E55")
+      | {{ $t('madeBy') }} #[a(href="http://activitywatch.net/contributors/") {{ $t('devs') }}]
       div
-        a.mr-2(href="https://github.com/ActivityWatch/activitywatch", target="_blank")
-          icon(name="brands/github")
-          | GitHub
+        span.mt-2(v-show="info", style="color: #888; font-size: 0.8em")
+          span.mr-2
+            b {{ $t('host') }}
+            | &nbsp; {{info.hostname}}
+          span
+            b {{ $t('version') }}
+            | &nbsp; {{info.version}}
+
+    div(style="font-size: 0.9em; opacity: 0.8")
+      div.float-none.float-md-right.my-2
+        a(href="https://github.com/ActivityWatch/activitywatch/issues/new/choose", target="_blank").mr-3
+          icon(name="bug")
+          | {{ $t('report') }}
+        a(href="https://forum.activitywatch.net/c/support", target="_blank").mr-3
+          icon(name="question-circle")
+          | {{ $t('ask') }}
+        a(href="https://forum.activitywatch.net/c/features", target="_blank")
+          icon(name="vote-yea")
+          | {{ $t('vote') }}
+      div.float-none.float-md-left.my-2
         a(href="https://twitter.com/ActivityWatchIt", target="_blank")
           icon(name="brands/twitter")
           | Twitter
-
-    div(style="float: right; text-align: right;")
-      | Found a bug? #[a(href="https://github.com/ActivityWatch/activitywatch/issues/new/choose") File an issue]
-      br
-      | Need help? #[a(href="https://forum.activitywatch.net/c/support") Ask on the forum]
-      br
-      | Missing a feature? #[a(href="https://forum.activitywatch.net/c/features") Vote on the forum]
-      br
-      | Built something cool? #[a(href="https://forum.activitywatch.net/c/projects") Share it on the forum]
-      br
-      span.mt-2(v-show="info", style="color: #888; font-size: 0.8em")
-        | Host: {{info.hostname}}
-        br
-        | Version: {{info.version}}
+        a(href="https://github.com/ActivityWatch", target="_blank").ml-3
+          icon(name="brands/github")
+          | GitHub
+        a(href="https://activitywatch.net/donate/", target="_blank").ml-3
+          icon(name="hand-holding-heart")
+          | {{ $t('donate') }}
 </template>
 
 <script>

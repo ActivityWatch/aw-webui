@@ -1,22 +1,22 @@
 <template lang="pug">
 div
-  h2 Timeline
+  h2 {{ $t('timeline') }}
 
   input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration")
 
   div(v-show="buckets !== null")
     div
       div(style="float: left")
-        | Events shown:  {{ num_events }}
+        | {{ $t('eventsShown') }} {{ num_events }}
       div(style="float: right; color: #999")
-        | Drag to pan and scroll to zoom.
+        | {{ $t('controls') }}
     div(style="clear: both")
     vis-timeline(:buckets="buckets", :showRowLabels='true', :queriedInterval="daterange")
 
     aw-devonly(reason="Not ready for production, still experimenting")
       aw-calendar(:buckets="buckets")
   div(v-show="!(buckets !== null && num_events)")
-    h1 Loading...
+    h1 {{ $t('loading') }}
 </template>
 
 <script>

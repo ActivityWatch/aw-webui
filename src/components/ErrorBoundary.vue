@@ -25,7 +25,7 @@ export default {
       msg = err.response.data.message;
     } else if (err.name && err.message) {
       msg = `${err.name}: ${err.message}.
-				See dev console (F12) and/or server logs for more info.`;
+				${this.$t('devConsole')}`;
     }
 
     this.errors.push({

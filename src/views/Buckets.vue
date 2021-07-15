@@ -1,9 +1,9 @@
 <template lang="pug">
 div
-  h2 Buckets
+  h2 {{ $t('buckets') }}
 
   b-alert(show)
-    | Are you looking to collect more data? Check out #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") the docs] for more watchers.
+    | {{ $t('bucketsHelp') }} #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") {{ $t('documentation') }}] {{ $t('watchers') }}
 
   b-table(hover, small, :items="buckets", :fields="fields", responsive="md", sort-by="last_updated", :sort-desc="true")
     template(v-slot:cell(id)="data")
@@ -24,60 +24,60 @@ div
         b-button-group(size="sm", class="mx-1")
           b-button(variant="primary", :to="'/buckets/' + data.item.id")
             icon(name="folder-open").d-none.d-md-inline-block
-            | Open
+            | {{ $t('open') }}
           b-dropdown(variant="outline-secondary", size="sm", text="More")
             b-dropdown-item(
                        :href="$aw.baseURL + '/api/0/buckets/' + data.item.id + '/export'",
                        :download="'aw-bucket-export-' + data.item.id + '.json'",
-                       title="Export bucket to JSON",
+                       :title="$t('exportJson')",
                        variant="secondary")
                 icon(name="download")
-                | Export as JSON
+                | {{ $t('exportJson') }}
             b-dropdown-divider
             b-dropdown-item-button(@click="openDeleteBucketModal(data.item.id)",
-                     title="Delete this bucket permanently",
+                     :title="$t('deleteBucket')",
                      variant="danger")
-              | #[icon(name="trash")] Delete bucket
+              | #[icon(name="trash")] {{ $t('deleteBucket') }}
 
   b-modal(id="delete-modal", title="Danger!", centered, hide-footer)
-    | Are you sure you want to delete bucket "{{delete_bucket_selected}}"?
+    | {{ $t('deleteConf') }} "{{delete_bucket_selected}}"?
     br
     br
-    b This is permanent and cannot be undone!
+    b {{ $t('deletePerm') }}
     hr
     div.float-right
       b-button.mx-2(@click="$root.$emit('bv::hide::modal','delete-modal')")
-        | Cancel
+        | {{ $t('cancel') }}
       b-button(@click="deleteBucket(delete_bucket_selected)", variant="danger")
-        | Confirm
+        | {{ $t('confirm') }}
 
-  h3 Import and export buckets
+  h3 {{ $t('impExp') }}
 
   b-card-group.deck
-    b-card(header="Import buckets")
+    b-card(:header="$t('impBucket')")
       b-alert(v-if="import_error" show variant="danger" dismissable)
         | {{ import_error }}
       b-form-file(v-model="import_file"
-                  placeholder="Choose a file or drop file here..."
-                  drop-placeholder="Drop file here...")
+                  :placeholder="$t('chooseFile')"
+                  :drop-placeholder="$t('dropHere')")
       // TODO: This spinner could be placed in a more suitable place
       div(v-if="import_file" class="spinner-border" role="status")
       span
-        | A valid file to import is a JSON file from either an export of a single bucket or an export from multiple buckets.
-        | If there are buckets with the same name the import will fail
-    b-card(header="Export buckets")
+        | {{ $t('validFile') }}
+        | {{ $t('sameName') }}
+    b-card(:header="$t('expBuckets')")
       b-button-group(size="md")
         b-button(:href="$aw.baseURL + '/api/0/export'",
                 :download="'aw-bucket-export.json'",
-                title="Export all buckets as JSON",
+                :title="$t('expBucketsJson')",
                 variant="outline-secondary")
           icon(name="download")
-          | Export all buckets as JSON
+          | {{ $t('expBucketsJson') }}
         b-button(@click="exportToEspaceUn()",
-                title="Export all buckets to EspaceUn",
+                :title="$t('expEspace')",
                 variant="outline-secondary")
           icon(name="download")
-          | Export all buckets to EspaceUn
+          | {{ $t('expEspace') }}
 
 </template>
 
@@ -142,7 +142,7 @@ export default {
         } catch (err) {
           console.log('Import failed');
           // TODO: Make aw-server report error message so it can be shown in the web-ui
-          this.import_error = 'Import failed, see aw-server logs for more info';
+          this.import_error = this.$t('importError');
         }
         // We need to reload buckets even if we fail because imports can be partial
         // (first bucket succeeds, second fails for example when importing multiple)

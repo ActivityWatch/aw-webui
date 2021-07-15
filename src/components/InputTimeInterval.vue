@@ -2,21 +2,21 @@
 div
   div
     b-alert(v-if="mode == 'range' && invalidDaterange", variant="warning", show)
-      | The selected date range is invalid. The second date must be greater than the first date.
+      | {{ $t('invalidRange') }}
     b-alert(v-if="mode == 'range' && daterangeTooLong", variant="warning", show)
-      | The selected date range is too long. The maximum is {{ maxDuration/(24*60*60) }} days.
+      | {{ $t('rangeLong', [maxDuration/(24*60*60)]) }}
 
     table
       tr
         th.pr-2
-          label(for="mode") Interval mode:
+          label(for="mode") {{ $t('intervalMode') }}
         td
           select(id="mode", v-model="mode")
-            option(value='last_duration') Last duration
-            option(value='range') Date range
+            option(value='last_duration') {{ $t('lastDuration') }}
+            option(value='range') {{ $t('dateRange') }}
       tr(v-if="mode == 'last_duration'")
         th.pr-2
-          label(for="duration") Show last:
+          label(for="duration") {{ $t('showLast') }}
         td
           select(id="duration", v-model="duration", @change="valueChanged")
             option(:value="15*60") 15min
@@ -28,16 +28,16 @@ div
             option(:value="12*60*60") 12h
             option(:value="24*60*60") 24h
       tr(v-if="mode == 'range'")
-        th.pr-2 Range:
+        th.pr-2 {{ $t('range') }}
         td
           input(type="date", v-model="start")
           input(type="date", v-model="end")
           button(
             class="btn btn-outline-dark btn-sm",
-            type="button", 
+            type="button",
             :disabled="mode == 'range' && (invalidDaterange || emptyDaterange || daterangeTooLong)",
             @click="valueChanged"
-          ) Update
+          ) {{ $t('update') }}
 
 </template>
 

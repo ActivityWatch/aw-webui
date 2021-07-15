@@ -1,35 +1,35 @@
 <template lang="pug">
 div
-  h2 Stopwatch
+  h2 {{ $t('stopwatch') }}
   p
-    | Using bucket: {{bucket_id}}
+    | {{ $t('useBucket') }} {{bucket_id}}
 
   b-alert(show)
-    | This is an early experiment, an important missing feature is the ability to set start/end times manually.
+    | {{ $t('stopwatchHelp') }}
 
   b-input-group(size="lg")
-    b-input(v-model="label" placeholder="What are you working on?")
+    b-input(v-model="label" :placeholder="$t('workingOn')")
     b-input-group-append
       b-button(@click="startTimer(label)", variant="success")
         icon(name="play")
-        | Start
+        | {{ $t('start') }}
 
   hr
 
   div.row
     div.col-md-12
       div(v-if="runningTimers.length > 0")
-        h3 Running
+        h3 {{ $t('running') }}
         div(v-for="e in runningTimers" :key="e.id")
           stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
             @delete="removeTimer", @update="updateTimer")
           hr(style="margin: 0")
       div(v-else)
-        span(style="color: #555") No stopwatch running
+        span(style="color: #555") {{ $t('noStop') }}
         hr
 
       div(v-if="stoppedTimers.length > 0")
-        h3.mt-4.mb-4 History
+        h3.mt-4.mb-4 {{ $t('history') }}
         div(v-for="k in Object.keys(timersByDate).sort().reverse()")
           h5.mt-2.mb-1 {{ k }}
           div(v-for="e in timersByDate[k]" :key="e.id")
@@ -37,7 +37,7 @@ div
               @delete="removeTimer", @update="updateTimer", @new="startTimer(e.data.label)")
             hr(style="margin: 0")
       div(v-else)
-        span(style="color: #555") No history to show
+        span(style="color: #555") {{ $t('noHistory') }}
         hr
 </template>
 

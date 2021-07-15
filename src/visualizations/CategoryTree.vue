@@ -23,7 +23,7 @@ div(style="font-size: 0.9em")
         | {{cat.duration | friendlyduration}}
   hr
   // TODO: Make configurable in a cleaner way (figure out a way to configure visualizations generally)
-  b-checkbox(v-model="show_perc" size="sm") Show percent
+  b-checkbox(v-model="show_perc" size="sm") {{ $t('showPercent') }}
 </template>
 
 <script>

@@ -3,7 +3,7 @@ div
   div.aw-summary-container
   b-button.mt-1(v-if="fields && fields.length > 0 && with_limit && fields.length > limit_", size="sm", variant="outline-secondary", @click="limit_ += 5")
     icon(name="angle-double-down")
-    | Show more
+    | {{ $t('more') }}
 </template>
 
 <style scoped lang="scss">
@@ -67,7 +67,7 @@ export default {
           this.colorfunc
         );
       } else {
-        summary.set_status(el, 'Loading...');
+        summary.set_status(el, this.$t('loading'));
       }
     },
   },

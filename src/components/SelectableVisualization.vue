@@ -14,14 +14,14 @@ div
 
   div(v-if="!supports_period")
     b-alert.small.px-2.py-1(show variant="warning")
-      | This feature doesn't support the current time period.
+      | {{ $t('errorTime') }}
 
   div(v-if="$store.state.activity.buckets.loaded")
     // Check data prerequisites
     div(v-if="!has_prerequisites")
       b-alert.small.px-2.py-1(show variant="warning")
-        | This feature is missing data from a required watcher.
-        | You can find a list of all watchers in #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") the documentation].
+        | {{ $t('errorWatch') }}
+        | {{ $t('watchList') }} #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") {{ $t('documentation') }}].
 
     div(v-if="type == 'top_apps'")
       aw-summary(:fields="$store.state.activity.window.top_apps",
@@ -151,53 +151,53 @@ export default {
     visualizations: function () {
       return {
         top_apps: {
-          title: 'Top Applications',
+          title: this.$t('topApps'),
           available:
             this.$store.state.activity.window.available ||
             this.$store.state.activity.android.available,
         },
         top_titles: {
-          title: 'Top Window Titles',
+          title: this.$t('topWin'),
           available: this.$store.state.activity.window.available,
         },
         top_domains: {
-          title: 'Top Browser Domains',
+          title: this.$t('topDomains'),
           available: this.$store.state.activity.browser.available,
         },
         top_urls: {
-          title: 'Top Browser URLs',
+          title: this.$t('topUrls'),
           available: this.$store.state.activity.browser.available,
         },
         top_editor_files: {
-          title: 'Top Editor Files',
+          title: this.$t('topFiles'),
           available: this.$store.state.activity.editor.available,
         },
         top_editor_languages: {
-          title: 'Top Editor Languages',
+          title: this.$t('topLangs'),
           available: this.$store.state.activity.editor.available,
         },
         top_editor_projects: {
-          title: 'Top Editor Projects',
+          title: this.$t('topProjs'),
           available: this.$store.state.activity.editor.available,
         },
         top_categories: {
-          title: 'Top Categories',
+          title: this.$t('topCats'),
           available: this.$store.state.activity.category.available,
         },
         category_tree: {
-          title: 'Category Tree',
+          title: this.$t('catTree'),
           available: this.$store.state.activity.category.available,
         },
         category_sunburst: {
-          title: 'Category Sunburst',
+          title: this.$t('catSun'),
           available: this.$store.state.activity.category.available,
         },
         timeline_barchart: {
-          title: 'Timeline (barchart)',
+          title: this.$t('barcharts'),
           available: true,
         },
         sunburst_clock: {
-          title: 'Sunburst clock',
+          title: this.$t('sunClock'),
           available:
             this.$store.state.activity.window.available &&
             this.$store.state.activity.active.available,
