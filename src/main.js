@@ -31,7 +31,7 @@ Vue.prototype.$aw = awclient;
 
 // i18n
 import VueI18n from 'vue-i18n';
-import _default from './locale/en';
+import _default from './locale/default';
 Vue.use(VueI18n);
 
 export const i18n = new VueI18n({

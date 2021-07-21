@@ -5,8 +5,8 @@ div#wrapper
   div(:class="{'container': !fullContainer, 'container-fluid': fullContainer}").px-0.px-md-3
     div.aw-container.my-3.p-3
       error-boundary
-        user-satisfaction-poll
-        new-release-notification(v-if="isNewReleaseCheckEnabled")
+        //- user-satisfaction-poll
+        //- new-release-notification(v-if="isNewReleaseCheckEnabled")
         router-view
 
   div.container(style="color: #555; font-size: 0.9em")
