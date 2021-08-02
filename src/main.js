@@ -80,6 +80,11 @@ export function loadLanguageAsync(lang) {
     });
 }
 
+// ApexCharts
+import VueApexCharts from 'vue-apexcharts';
+Vue.use(VueApexCharts);
+Vue.component('apexchart', VueApexCharts);
+
 // Sets up the routing and the base app (using vue-router)
 import router from './route.js';
 
@@ -111,6 +116,7 @@ Vue.component('vis-timeline', () => import('./visualizations/VisTimeline.vue'));
 Vue.component('aw-categorytree', () => import('./visualizations/CategoryTree.vue'));
 Vue.component('aw-timeline-barchart', () => import('./visualizations/TimelineBarChart.vue'));
 Vue.component('aw-calendar', () => import('./visualizations/Calendar.vue'));
+Vue.component('aw-heatmap', () => import('./visualizations/Heatmap.vue'));
 
 // A mixin to make async method errors propagate
 Vue.mixin(require('~/mixins/asyncErrorCaptured.js'));
