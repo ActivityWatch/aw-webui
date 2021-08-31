@@ -1,6 +1,7 @@
 interface IElement {
   type: string;
   size?: number;
+  props?: Record<string, unknown>;
 }
 
 interface View {
@@ -122,10 +123,12 @@ const mutations = {
     const idx = state.views.map(v => v.id).indexOf(view_id);
     state.views.splice(idx, 1);
   },
-  editView(state: State, { view_id, el_id, type }) {
-    console.log(view_id, el_id, type);
+  editView(state: State, { view_id, el_id, type, props }) {
+    console.log(view_id, el_id, type, props);
     console.log(state.views);
-    state.views.find(v => v.id == view_id).elements[el_id].type = type;
+    const element = state.views.find(v => v.id == view_id).elements[el_id];
+    element.type = type;
+    element.props = props;
   },
   addVisualization(state: State, { view_id, type }) {
     state.views.find(v => v.id == view_id).elements.push({ type: type });
