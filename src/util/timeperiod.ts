@@ -10,12 +10,16 @@ export function dateToTimeperiod(date: string, duration?: [number, string]): Tim
   return { start: get_day_start_with_offset(date), length: duration || [1, 'day'] };
 }
 
-export function timeperiodToStr(tp: TimePeriod): string {
+export function timeperiodToStartAndEnd(tp: TimePeriod): [string, string] {
   const start = moment(tp.start).format();
   const end = moment(start)
     .add(tp.length[0], tp.length[1] as moment.unitOfTime.DurationConstructor)
     .format();
-  return [start, end].join('/');
+  return [start, end];
+}
+
+export function timeperiodToStr(tp: TimePeriod): string {
+  return timeperiodToStartAndEnd(tp).join('/');
 }
 
 export function dateformat(periodLength: string) {

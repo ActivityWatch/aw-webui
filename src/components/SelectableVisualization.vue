@@ -73,6 +73,9 @@ div
       aw-timeline-barchart(:datasets="datasets", :resolution="$store.state.activity.query_options.timeperiod.length[1]", style="height: 100")
     div(v-if="type == 'sunburst_clock'")
       aw-sunburst-clock(:date="date", :afkBucketId="$store.state.activity.buckets.afk[0]", :windowBucketId="$store.state.activity.buckets.window[0]")
+
+    div(v-if="type == 'custom_watcher_view'")
+      aw-custom-watcher(:fields="$store.state.activity.custom_watcher")
 </template>
 
 <style lang="scss">
@@ -126,6 +129,7 @@ export default {
         'top_editor_projects',
         'timeline_barchart',
         'sunburst_clock',
+        'custom_watcher_view',
       ],
       // TODO: Move this function somewhere else
       top_editor_files_namefunc: e => {
@@ -201,6 +205,10 @@ export default {
           available:
             this.$store.state.activity.window.available &&
             this.$store.state.activity.active.available,
+        },
+        custom_watcher_view: {
+          title: 'Custom Watcher View',
+          available: true, // TODO: Implement
         },
       };
     },
