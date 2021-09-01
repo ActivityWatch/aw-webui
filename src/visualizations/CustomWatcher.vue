@@ -1,8 +1,7 @@
 <template lang="pug">
 div
   div.aw-custom-watcher-container
-    span hello there!
-    pre {{ fields }}
+    iframe(:src='src', frameborder='0')
 </template>
 
 <style scoped lang="scss" />
@@ -11,24 +10,22 @@ div
 export default {
   name: 'aw-custom-watcher',
   props: {
-    fields: Array,
+    data: Array,
+    watcher: String,
+    view: String,
   },
-  data: function () {
-    return {};
-  },
-  watch: {
-    fields: function () {
-      this.update();
-    },
-  },
-  methods: {
-    update: function () {
-      const el = this.$el.children[0];
-      if (this.fields !== null) {
-        console.log(this.fields);
-      } else {
-        console.log('LOADING EL: ', el);
-      }
+  computed: {
+    src: function () {
+      return (
+        document.location.origin +
+        '/watcher/pages/' +
+        this.watcher +
+        '/?' +
+        new URLSearchParams({
+          data: JSON.stringify(this.data[this.watcher]),
+          view: this.view,
+        }).toString()
+      );
     },
   },
 };

@@ -75,7 +75,7 @@ div
       aw-sunburst-clock(:date="date", :afkBucketId="$store.state.activity.buckets.afk[0]", :windowBucketId="$store.state.activity.buckets.window[0]")
 
     div(v-if="type == 'custom_watcher_view'")
-      aw-custom-watcher(:fields="$store.state.activity.custom_watcher")
+      aw-custom-watcher(:data="$store.state.activity.custom_watcher.data" :watcher="props.watcher" :view="props.view")
 </template>
 
 <style lang="scss">
@@ -112,6 +112,7 @@ export default {
   props: {
     id: Number,
     type: String,
+    props: Object,
     editable: { type: Boolean, default: true },
   },
   data: function () {
