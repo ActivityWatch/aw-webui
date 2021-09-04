@@ -13,7 +13,8 @@ import {
   timeperiodToStr,
   timeperiodsHoursOfPeriod,
   timeperiodsDaysOfPeriod,
-  timeperiodsAroundTimeperiod, timeperiodToStartAndEnd,
+  timeperiodsAroundTimeperiod,
+  timeperiodToStartAndEnd,
 } from '~/util/timeperiod';
 
 interface QueryOptions {
