@@ -137,7 +137,6 @@ const actions = {
 
       if (state.window.available) {
         await dispatch('query_desktop_full', query_options);
-        await dispatch('query_category_time_by_period', query_options);
       } else if (state.android.available) {
         await dispatch('query_android', query_options);
       } else {
@@ -162,6 +161,11 @@ const actions = {
       } else {
         console.log('Cannot call query_editor as we do not have any editor buckets');
         await dispatch('reset_editor');
+      }
+
+      if (state.window.available) {
+        // Perform this last, as it takes the longest
+        await dispatch('query_category_time_by_period', query_options);
       }
     } else {
       console.warn(

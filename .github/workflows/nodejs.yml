@@ -16,7 +16,7 @@ jobs:
         node-version: [12.x]
         python-version: ['3.9']
         aw-server: ["aw-server", "aw-server-rust"]
-        aw-version: ["v0.10.0"]
+        aw-version: ["v0.11.0"]
         include:
         - node-version: '12.x'
           python-version: '3.9'
@@ -76,7 +76,9 @@ jobs:
       run: |
         pip install click git+https://github.com/ActivityWatch/aw-client.git
         wget --no-verbose -O fakedata.py https://raw.githubusercontent.com/ActivityWatch/aw-fakedata/master/aw_fakedata.py
-        python3 fakedata.py
+        GITDATE=$(git show -s --format=%ci HEAD | sed -r 's/ .+//g')
+        STARTDATE=$(date --date="${GITDATE} -30 day" +%Y-%m-%d)
+        python3 fakedata.py --since $STARTDATE --until $GITDATE
 
     - name: Install
       run: npm ci
