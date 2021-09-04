@@ -249,18 +249,24 @@ const actions = {
     const data_window = data[0].window;
     const data_browser = data[0].browser;
 
-    const [start, end] = timeperiodToStartAndEnd(timeperiod);
-    const data_custom_watcher_raw = await fetch('/watcher/api/get_data', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        start,
-        end,
-      }),
-    });
-    const data_custom_watcher = await data_custom_watcher_raw.json();
+    let data_custom_watcher = {};
+
+    try {
+      const [start, end] = timeperiodToStartAndEnd(timeperiod);
+      const data_custom_watcher_raw = await fetch('/watcher/api/get_data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          start,
+          end,
+        }),
+      });
+      data_custom_watcher = await data_custom_watcher_raw.json();
+    } catch (ex) {
+      console.warn('Custom data watcher request failed!', ex);
+    }
 
     // Set $color for categories
     data_window.cat_events = data[0].window['cat_events'].map(e => {
