@@ -16,15 +16,15 @@ export default {
   },
   computed: {
     src: function () {
+      const data = this.data[this.watcher];
+      const urlParams = new URLSearchParams({
+        view: this.view,
+      });
+      if (data) {
+        urlParams.set('data', JSON.stringify(data));
+      }
       return (
-        document.location.origin +
-        '/watcher/pages/' +
-        this.watcher +
-        '/?' +
-        new URLSearchParams({
-          data: JSON.stringify(this.data[this.watcher]),
-          view: this.view,
-        }).toString()
+        document.location.origin + '/watcher/pages/' + this.watcher + '/?' + urlParams.toString()
       );
     },
   },
