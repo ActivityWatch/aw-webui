@@ -98,14 +98,15 @@ export default {
   },
   methods: {
     startTimer: async function (label) {
-      const event = await this.$aw.insertEvent(this.bucket_id, {
+      const event = {
         timestamp: new Date(),
         data: {
           running: true,
           label: label,
         },
-      });
-      this.events.unshift(event);
+      };
+      await this.$aw.heartbeat(this.bucket_id, 1, event);
+      await this.getEvents();
     },
 
     updateTimer: async function (new_event) {

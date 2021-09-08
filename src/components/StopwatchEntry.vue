@@ -52,10 +52,10 @@ export default {
   },
   methods: {
     stop: async function () {
-      let new_event = JSON.parse(JSON.stringify(this.event));
+      const new_event = JSON.parse(JSON.stringify(this.event));
       new_event.data.running = false;
       new_event.duration = (moment() - moment(new_event.timestamp)) / 1000;
-      new_event = await this.$aw.replaceEvent(this.bucket_id, new_event);
+      await this.$aw.replaceEvent(this.bucket_id, new_event);
       this.$emit('update', new_event);
     },
     save: async function (new_event) {
