@@ -210,16 +210,7 @@ export default {
       return this.$route.meta.subview;
     },
     categories: function () {
-      const cats = this.$store.getters['categories/all_categories'];
-      const entries = cats
-        .map(c => {
-          return { text: c.join(' > '), value: c };
-        })
-        .sort((a, b) => a.text > b.text);
-      return [
-        { text: 'All', value: null },
-        { text: 'Uncategorized', value: ['Uncategorized'] },
-      ].concat(entries);
+      return this.$store.getters['categories/category_select'](true);
     },
     filterCategories: function () {
       if (this.filterCategory) {

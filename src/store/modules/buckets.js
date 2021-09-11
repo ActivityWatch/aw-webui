@@ -52,6 +52,7 @@ const getters = {
   },
   getBucket: state => id => _.filter(state.buckets, b => b.id === id)[0],
   bucketsByHostname: state => _.groupBy(state.buckets, 'hostname'),
+  getHostnames: state => _.map(state.buckets, 'hostname'),
 };
 
 // actions
