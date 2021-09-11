@@ -62,9 +62,12 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
           b-dropdown-item(to="/trends")
             icon(name="chart-line")
             | Trends
-          b-dropdown-item(to="/Report")
+          b-dropdown-item(to="/report")
             icon(name="chart-pie")
             | Report
+          b-dropdown-item(to="/alerts")
+            icon(name="chart-bar")
+            | Alerts
           b-dropdown-item(to="/query")
             icon(name="code")
             | Query

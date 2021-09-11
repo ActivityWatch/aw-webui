@@ -36,6 +36,9 @@ const getters = {
     );
   },
   get_category: state => category_arr => {
+    if (typeof category_arr === 'string' || category_arr instanceof String)
+      console.error('Passed category was string, expected array. Lookup will fail.');
+
     const match = state.classes.find(c => _.isEqual(c.name, category_arr));
     if (!match) {
       if (!_.equals(category_arr, ['Uncategorized']))
@@ -47,6 +50,22 @@ const getters = {
   },
   get_category_by_id: state => id => {
     return annotate(_.cloneDeep(state.classes.find(c => c.id == id)));
+  },
+  category_select: (state, getters) => insertMeta => {
+    // Useful for <select> elements enumerating categories
+    let cats = getters.all_categories;
+    cats = cats
+      .map(c => {
+        return { text: c.join(' > '), value: c };
+      })
+      .sort((a, b) => a.text > b.text);
+    if (insertMeta) {
+      cats = [
+        { text: 'All', value: null },
+        { text: 'Uncategorized', value: ['Uncategorized'] },
+      ].concat(cats);
+    }
+    return cats;
   },
 };
 
