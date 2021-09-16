@@ -92,7 +92,7 @@
     "@types/node": "^12.12.50",
     "ajv": "^6.12.3",
     "ajv-keywords": "^3.5.1",
-    "aw-client": "^0.2",
+    "aw-client": "^0.3",
     "bootstrap": "^4.5.0",
     "bootstrap-vue": "^2.15.0",
     "chart.js": "^2.9.3",
