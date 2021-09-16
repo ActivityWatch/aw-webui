@@ -8,11 +8,11 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
+    "test": "vue-cli-service test:unit",
     "test:unit": "vue-cli-service test:unit",
     "test:e2e": "vue-cli-service test:e2e",
     "lint": "vue-cli-service lint",
-    "lint_old": "eslint --ignore-path=.gitignore --ext .vue,.js,.ts .",
-    "test": "vue-cli-service test:unit"
+    "lint_old": "eslint --ignore-path=.gitignore --ext .vue,.js,.ts ."
   },
   "dependencies": {
     "@egjs/hammerjs": "^2.0.17",
@@ -71,15 +71,15 @@
     "@babel/plugin-transform-runtime": "^7.10.5",
     "@babel/preset-env": "^7.10.4",
     "@babel/runtime": "^7.10.5",
-    "@typescript-eslint/eslint-plugin": "^2.7",
-    "@typescript-eslint/parser": "^2.7",
+    "@typescript-eslint/eslint-plugin": "^4.31.1",
+    "@typescript-eslint/parser": "^4.31.1",
     "@vue/cli-plugin-babel": "^4.5.13",
     "@vue/cli-plugin-eslint": "^4.5.13",
     "@vue/cli-plugin-pwa": "^4.5.13",
     "@vue/cli-plugin-typescript": "^4.5.13",
     "@vue/cli-plugin-unit-jest": "^4.5.13",
     "@vue/cli-service": "^4.5.13",
-    "@vue/eslint-config-typescript": "^5.0",
+    "@vue/eslint-config-typescript": "^7.0.0",
     "@vue/test-utils": "^1.0.3",
     "babel-loader": "^8.1.0",
     "babel-plugin-lodash": "^3.3.4",
