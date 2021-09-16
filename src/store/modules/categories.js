@@ -86,7 +86,7 @@ const mutations = {
         { depth: 0, rule: { ignore_case: true, regex: '', type: 'regex' } }
       )
     );
-    state.classes = createMissingParents(state.classes);
+    // state.classes = createMissingParents(state.classes);
     console.log('Loaded classes:', state.classes);
     state.classes_unsaved_changes = false;
   },

@@ -124,6 +124,9 @@ Vue.mixin(require('~/mixins/asyncErrorCaptured.js'));
 // Set the PRODUCTION constant
 Vue.prototype.PRODUCTION = PRODUCTION;
 
+// Set the $isAndroid constant
+Vue.prototype.$isAndroid = process.env.VUE_APP_ON_ANDROID;
+
 // Setup Vue app
 import App from './App';
 new Vue({

@@ -23,7 +23,6 @@ div
 
 <script>
 import _ from 'lodash';
-import moment from 'moment';
 
 export default {
   name: 'Timeline',
@@ -31,7 +30,7 @@ export default {
     return {
       buckets: null,
       daterange: null,
-      timeintervalDefaultDuration: Number.parseInt(localStorage.durationDefault),
+      timeintervalDefaultDuration: Number.parseInt(localStorage.durationDefault) || 60 * 60,
       maxDuration: 31 * 24 * 60 * 60,
     };
   },
@@ -40,18 +39,17 @@ export default {
       return _.sumBy(this.buckets, 'events.length');
     },
   },
-  mounted: async function () {
-    await this.getBuckets();
+  watch: {
+    daterange() {
+      console.log('In watch daterange', JSON.stringify(this.daterange), this.timeintervalDefaultDuration);
+      this.getBuckets();
+    },
   },
   methods: {
     getBuckets: async function() {
-      const daterange = this.daterange ? this.daterange : [
-        moment().subtract(1, 'day'),
-        moment(),
-      ];
       this.buckets = await this.$store.dispatch('buckets/getBucketsWithEvents', {
-        start: daterange[0].format(),
-        end: daterange[1].format(),
+        start: this.daterange[0].format(),
+        end: this.daterange[1].format(),
       });
     },
   },

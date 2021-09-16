@@ -1,6 +1,6 @@
 <template lang="pug">
 div(style="overflow-x: scroll;", v-if="datasets !== null")
-  apexchart(type="heatmap", :options="options", :series="datasets")
+  apexchart(type="heatmap", :options="options", :series="datasets", :width="width")
 </template>
 
 <script>
@@ -17,6 +17,7 @@ export default {
     return {
       datasets: null,
       options: null,
+      width: this.$isAndroid ? 700 : undefined,
     }
   },
   watch: {
@@ -29,14 +30,15 @@ export default {
   },
   methods: {
     generate() {
-      if (this.buckets.length === undefined || !this.queriedInterval) {
+      if (this.buckets.length === undefined) {
         return;
       }
 
       // Build categories
       const nbSep = 30;
-      const duration = moment.duration(this.queriedInterval[1].diff(this.queriedInterval[0])).asMinutes() / nbSep;
-      const categories = Array.from({ length: nbSep }, (el, i) => this.queriedInterval[0].clone().add(duration * i, 'minutes'));
+      const queriedInterval = this.queriedInterval ? this.queriedInterval : [moment().subtract(60 * 60, 'seconds'), moment()];
+      const duration = moment.duration(queriedInterval[1].diff(queriedInterval[0])).asMinutes() / nbSep;
+      const categories = Array.from({ length: nbSep }, (el, i) => queriedInterval[0].clone().add(duration * i, 'minutes'));
 
       // Build data for xaxis
       const datasets = this.buckets
@@ -73,14 +75,16 @@ export default {
 
       this.options = {
         chart: {
-          width: "100%",
-          height: 350,
+          width: this.width,
           type: 'heatmap',
+        },
+        stroke: {
+          colors: ['#ccc'],
         },
         dataLabels: {
           enabled: false
         },
-        colors: ["#008FFB"],
+        colors: ['#008FFB'],
         toolbar: {
           show: false,
         },
