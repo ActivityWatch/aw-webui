@@ -13,12 +13,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [12.x]
+        node-version: [16]
         python-version: ['3.9']
         aw-server: ["aw-server", "aw-server-rust"]
         aw-version: ["v0.11.0"]
         include:
-        - node-version: '12.x'
+        - node-version: '16'
           python-version: '3.9'
           aw-server: "aw-server-rust"
           aw-version: "master"
