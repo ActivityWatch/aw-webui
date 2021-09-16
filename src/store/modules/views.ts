@@ -1,4 +1,4 @@
-interface Element {
+interface IElement {
   type: string;
   size?: number;
 }
@@ -6,7 +6,7 @@ interface Element {
 interface View {
   id: string;
   name: string;
-  elements: Element[];
+  elements: IElement[];
 }
 
 const desktopViews: View[] = [

@@ -2,13 +2,7 @@ import _ from 'lodash';
 import { Category, matchString, loadClasses } from './classes';
 import Color from 'color';
 import * as d3 from 'd3';
-
-// TODO: Move elsewhere
-interface Event {
-  timestamp: string;
-  duration: number;
-  data: any;
-}
+import { IEvent } from './interfaces';
 
 interface Bucket {
   name: string;
@@ -120,7 +114,7 @@ function fallbackColor(str: string): string {
   }
 }
 
-export function getTitleAttr(bucket: Bucket, e: Event) {
+export function getTitleAttr(bucket: Bucket, e: IEvent) {
   if (bucket.type == 'currentwindow') {
     return e.data.app;
   } else if (bucket.type == 'web.tab.current') {

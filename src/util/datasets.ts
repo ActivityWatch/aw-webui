@@ -3,13 +3,7 @@ import _ from 'lodash';
 import { split_by_hour_into_data } from '~/util/transforms';
 import { getColorFromCategory } from '~/util/color';
 import { Category } from '~/util/classes';
-
-// TODO: Move elsewhere
-interface IEvent {
-  timestamp: string;
-  duration: number;
-  data: Record<string, any>;
-}
+import { IEvent } from './interfaces';
 
 interface HourlyData {
   cat_events: IEvent[];
