@@ -5,14 +5,14 @@ import { getColorFromCategory } from '~/util/color';
 import { Category } from '~/util/classes';
 
 // TODO: Move elsewhere
-interface Event {
+interface IEvent {
   timestamp: string;
   duration: number;
-  data: object;
+  data: Record<string, any>;
 }
 
 interface HourlyData {
-  cat_events: Event[];
+  cat_events: IEvent[];
 }
 
 interface Dataset {
@@ -64,7 +64,7 @@ export function buildBarchartDataset(
   }
 }
 
-export function buildBarchartDatasetActive($store: any, events_active: Event[]) {
+export function buildBarchartDatasetActive($store: any, events_active: IEvent[]) {
   const data = split_by_hour_into_data(events_active);
   return [
     {
