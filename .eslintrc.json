@@ -28,6 +28,7 @@
         "allowedNames": ["that"]
       }
     ],
+    "@typescript-eslint/explicit-module-boundary-types": "off",
     "prefer-rest-params": "warn",
     "no-shadow": [
       "warn",
@@ -69,6 +70,12 @@
       "files": [".*\\.ts$"],
       "parserOptions": {
           "parser": "@typescript-eslint/parser"
+      }
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {
+        "@typescript-eslint/explicit-module-boundary-types": ["off"]
       }
     }
   ]

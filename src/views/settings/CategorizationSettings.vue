@@ -85,7 +85,10 @@ export default {
 
       // Initiate downloading a file by creating a hidden button and clicking it
       const element = document.createElement('a');
-      element.setAttribute('href', 'data:application/json;charset=utf-8,' + encodeURIComponent(text));
+      element.setAttribute(
+        'href',
+        'data:application/json;charset=utf-8,' + encodeURIComponent(text)
+      );
       element.setAttribute('download', filename);
       element.style.display = 'none';
       document.body.appendChild(element);
