@@ -7,6 +7,11 @@ div
 div#visualization {
   margin-top: 0.5em;
   margin-bottom: 0.5em;
+  overflow: visible;
+
+  .vis-timeline{
+    overflow: visible;
+  }
 
   .timeline-timeline {
     font-family: sans-serif !important;
