@@ -9,7 +9,7 @@ div#visualization {
   margin-bottom: 0.5em;
   overflow: visible;
 
-  .vis-timeline{
+  .vis-timeline {
     overflow: visible;
   }
 
