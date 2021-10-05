@@ -18,6 +18,10 @@ div
 
   hr
 
+  Theme
+
+  hr
+
   div(v-if="!$isAndroid")
     ReleaseNotificationSettings
     hr
@@ -36,6 +40,7 @@ import TimelineDurationSettings from '~/views/settings/TimelineDurationSettings.
 import ReleaseNotificationSettings from '~/views/settings/ReleaseNotificationSettings.vue';
 import CategorizationSettings from '~/views/settings/CategorizationSettings.vue';
 import LandingPageSettings from '~/views/settings/LandingPageSettings.vue';
+import Theme from '~/views/settings/Theme.vue';
 import ColorSettings from '~/views/settings/ColorSettings.vue';
 
 export default {
@@ -46,6 +51,7 @@ export default {
     ReleaseNotificationSettings,
     CategorizationSettings,
     LandingPageSettings,
+    Theme,
     ColorSettings,
   },
 };
