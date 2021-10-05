@@ -1,0 +1,197 @@
+/* Dark Theme Style That Override Web Application Colors & Some Layouts Related To Color Theme - Mohamed Salah (https://salahineo.github.io/salahineo/) */
+
+a, button, span, div, select {
+  outline: none;
+}
+
+body, button, html {
+  color: #e9ebf0 !important;
+}
+
+body {
+  background-color: #0f131a !important;
+}
+
+.aw-container {
+  background-color: #1a1d24 !important;
+  border-color: #282c32 !important;
+}
+
+.aw-navbar {
+  background-color: #1a1d24 !important;
+  border-color: #282c32 !important;
+}
+
+.nav-item a.nav-link {
+  color: #e9ebf0 !important;
+}
+
+.nav-item:hover {
+  background-color: #282c32 !important;
+}
+
+.navbar-brand span {
+  color: #e9ebf0 !important;
+}
+
+.dropdown-menu {
+  background-color: #1a1d24 !important;
+  border-color: #282c32 !important;
+}
+
+.dropdown-menu .dropdown-item {
+  color: #e9ebf0 !important;
+}
+
+.dropdown-menu .dropdown-item:hover {
+  background-color: #282c32 !important;
+}
+
+.custom-select, .form-control, select {
+  background-color: #1a1d24 !important;
+  border-color: #282c32 !important;
+  color: #e9ebf0 !important;
+}
+
+.btn-outline-warning:hover {
+  color: #212529 !important;
+}
+
+.row.class:hover {
+  background-color: #282c32 !important;
+}
+
+.btn-outline-secondary:hover {
+  background-color: #ffc107 !important;
+  color: #212529 !important;
+}
+
+.modal-content {
+  background-color: #1a1d24 !important;
+}
+
+.modal-content .modal-header,
+.modal-content .modal-footer {
+  border-color: #282c32 !important;
+}
+
+.vc-compact {
+  background-color: #0f131a !important;
+}
+
+.input-group-append button {
+  border-color: #282c32 !important;
+}
+
+.input-group-text {
+  border-color: #282c32 !important;
+  background-color: #0f131a !important;
+  color: #e9ebf0 !important;
+}
+
+.btn-warning {
+  color: #212529 !important;
+}
+
+[class*=table-responsive-] > .table {
+  color: #e9ebf0 !important;
+  background-color: #343a40 !important;
+}
+
+[class*=table-responsive-] > .table * {
+  border-color: #454d55 !important;
+}
+
+[class*=table-responsive-] > .table tr:hover:not(thead tr) {
+  color: #fff !important;
+  background-color: hsla(0, 0%, 100%, .075) !important;
+}
+
+[class*=table-responsive-] > .table .btn-outline-secondary {
+  background-color: #ffc107 !important;
+  color: #212529 !important;
+}
+
+.card {
+  background-color: #1a1d24 !important;
+  border-color: #282c32 !important;
+}
+
+.custom-file-label {
+  background-color: #282c32 !important;
+  border-color: #282c32 !important;
+  color: #e9ebf0 !important;
+}
+
+.card .custom-file {
+  margin-bottom: 15px !important;
+}
+
+.card .custom-file label:after {
+  border-color: #282c32 !important;
+  background-color: #0f131a !important;
+  color: #e9ebf0 !important;
+  cursor: pointer;
+}
+
+.field {
+  background-color: #282c32 !important;
+  border-color: #282c32 !important;
+}
+
+.event-list li {
+  border-color: #282c32 !important;
+}
+
+.list-group-item {
+  background-color: #282c32 !important;
+  border-color: #282c32 !important;
+  color: #e9ebf0 !important;
+  padding-left: 15px !important;
+}
+
+.vis-panel.vis-left *,
+.vis-time-axis.vis-foreground * {
+  color: #e9ebf0 !important;
+}
+
+#visualization *, svg,
+.nav.nav-tabs,
+.btn-outline-secondary {
+  border-color: #282c32 !important;
+}
+
+svg text {
+  fill: #e9ebf0 !important;
+}
+
+svg.appsummary g rect[style="fill: rgb(204, 204, 204);"] {
+  fill: #666666 !important;
+}
+
+svg path[style="fill: rgb(255, 255, 255);"] {
+  fill: #23272d !important;
+}
+
+ul.nav li.nav-item a.nav-link.router-link-exact-active:hover {
+  background-color: #282c32 !important;
+  color: #e9ebf0 !important;
+}
+
+ul.nav li.nav-item a.nav-link:hover,
+ul.nav li.nav-item a.nav-link:hover h6 {
+  color: #e9ebf0 !important;
+}
+
+.nav .nav-item .nav-link h6 {
+  margin-bottom: 0 !important;
+  padding: 5px 0 !important;
+}
+
+div[style="background-color: rgb(238, 238, 238);"] {
+  background-color: transparent !important;
+}
+
+div[style="color: rgb(85, 85, 85); font-size: 0.9em;"] {
+  color: #e9ebf0 !important;
+}
