@@ -74,9 +74,11 @@ div
           icon(name="download")
           | {{ $t('expBucketsJson') }}
         b-button(@click="exportToEspaceUn()",
+                :disabled="loading"
                 :title="$t('expEspace')",
                 variant="outline-secondary")
-          icon(name="download")
+          icon(name="download", v-if="!loading")
+          div(v-if="loading" class="spinner-border" role="status")
           | {{ $t('expEspace') }}
 
 </template>
@@ -109,6 +111,7 @@ div
 import 'vue-awesome/icons/trash';
 import 'vue-awesome/icons/download';
 import 'vue-awesome/icons/folder-open';
+import 'vue-awesome/icons/spinner';
 import _ from 'lodash';
 
 export default {
@@ -124,6 +127,7 @@ export default {
         { key: 'last_updated', label: 'Updated', sortable: true },
         { key: 'actions', label: '' },
       ],
+      loading: false,
     };
   },
   computed: {
@@ -170,8 +174,14 @@ export default {
       return this.$aw.req.post('/0/import', formData, { headers });
     },
     exportToEspaceUn: async function () {
-      return this.$aw.req.get('/0/export-espaceun');
-    }
+      this.loading = true;
+      try {
+        await this.$aw.req.get('/0/export-espaceun', { timeout: 300000 });
+      } catch (err) {
+        console.error(err);
+      }
+      this.loading = false;
+    },
   },
 };
 </script>
