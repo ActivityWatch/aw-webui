@@ -33,7 +33,7 @@
         //li
           | Fill out the #[a(href="https://forms.gle/q2N9K5RoERBV8kqPA") feedback form].
         li
-          | Rate us on #[a(href="https://alternativeto.net/software/activitywatch/") AlternativeTo] and #[a(href="https://play.google.com/store/apps/details?id=net.activitywatch.android") Google Play Store].
+          | Rate us on #[a(href="https://alternativeto.net/software/activitywatch/about/") AlternativeTo] and #[a(href="https://play.google.com/store/apps/details?id=net.activitywatch.android") Google Play Store].
         li
           | Join our #[a(href="https://discord.gg/vDskV9q") Discord server].
 
