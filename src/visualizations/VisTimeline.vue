@@ -55,6 +55,7 @@ export default {
         tooltip: {
           followMouse: true,
           overflowMethod: 'cap',
+          delay: 0,
         },
       },
     };
