@@ -106,7 +106,10 @@ test('modify a category after deleting another', () => {
   expect(video_2_cat.data.test).toBe(true);
 
   // Check that the category named "Video" no longer exists, and the category named "Video2" exists
-  const video_2s = store.getters['categories/all_categories'];
-  expect(store.getters['categories/all_categories'].filter(c => _.isEqual(c, ['Work', 'Video']))).toHaveLength(0);
-  expect(store.getters['categories/all_categories'].filter(c => _.isEqual(c, ['Work', 'Video2']))).toHaveLength(1);
+  expect(
+    store.getters['categories/all_categories'].filter(c => _.isEqual(c, ['Work', 'Video']))
+  ).toHaveLength(0);
+  expect(
+    store.getters['categories/all_categories'].filter(c => _.isEqual(c, ['Work', 'Video2']))
+  ).toHaveLength(1);
 });
