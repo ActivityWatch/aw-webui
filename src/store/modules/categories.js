@@ -80,19 +80,20 @@ const mutations = {
   },
   updateClass(state, new_class) {
     console.log('Updating class:', new_class);
-    const old_class = _.cloneDeep(state.classes[new_class.id]);
+    const old_class = state.classes.find(c => c.id === new_class.id);
+    const old_name = old_class.name;
+    const parent_depth = old_class.name.length;
 
     if (new_class.id === undefined || new_class.id === null) {
       new_class.id = _.max(_.map(state.classes, 'id')) + 1;
       state.classes.push(new_class);
     } else {
-      Object.assign(state.classes[new_class.id], new_class);
+      Object.assign(old_class, new_class);
     }
 
     // When a parent category is renamed, we also need to rename the children
-    const parent_depth = old_class.name.length;
     _.map(state.classes, c => {
-      if (_.isEqual(old_class.name, c.name.slice(0, parent_depth))) {
+      if (_.isEqual(old_name, c.name.slice(0, parent_depth))) {
         c.name = new_class.name.concat(c.name.slice(parent_depth));
         console.log('Renamed child:', c.name);
       }
