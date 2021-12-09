@@ -5,11 +5,17 @@ import { constants as fs_constants } from 'fs';
 import path from 'path';
 import { spawn, ChildProcess } from 'child_process';
 
+declare const __static: string;
+
 // TODO: Make configurable via better CLI
 const TESTING = process.argv.includes('--testing');
 if (TESTING) {
   console.log('Running in testing mode');
 }
+
+const AUTOSTART = process.argv.includes('--autostart')
+  ? process.argv[process.argv.indexOf('--autostart') + 1].split(',').filter(m => m !== '') || []
+  : [];
 
 /**
  * @param {string} exe executable name (without extension if on Windows)
@@ -36,14 +42,18 @@ async function findExecutable(exe: string): Promise<string | null> {
   }
 }
 
-class Module {
+type ModuleType = 'system' | 'bundled';
+
+export class Module {
   name: string;
   path: string;
   process: ChildProcess | null;
+  type: ModuleType;
 
-  constructor(name: string, _path: string) {
+  constructor(name: string, _path: string, type: ModuleType) {
     this.name = name;
     this.path = _path;
+    this.type = type;
   }
 
   start() {
@@ -98,19 +108,27 @@ export class Manager {
 
   async init(): Promise<void> {
     // Stuff that needs async init
-    this.modules = [].concat(
-      (
-        await Promise.all([
-          //this.discoverModules(path.join(__dirname, '../..')),
-          this.discoverModules('/opt/activitywatch'),
-        ])
-      ).flat()
-    );
+
+    // Init can only be called once
+    if (this.modules) {
+      console.error('Manager.init() can only be called once. Remove extra call.');
+      return;
+    }
+
+    console.log('Searching for modules in bundle');
+    const modulesBundled = await this.discoverBundledModules();
+    console.log('Searching for modules in PATH');
+    const modulesSystem = await this.discoverSystemModules();
+    this.modules = [...modulesBundled, ...modulesSystem];
   }
 
   async start(name: string): Promise<void> {
-    // Start a specific module, by name
-    const mod = this.modules.find(m => m.name == name);
+    // Start a specific module, by name.
+    // Will always prefer bundled modules.
+    // Look among all modules if none found in bundle
+    const mod =
+      this.modules.filter(m => m.type == 'bundled').find(m => m.name == name) ||
+      this.modules.find(m => m.name == name);
     if (mod) {
       await mod.start();
     } else {
@@ -120,6 +138,12 @@ export class Manager {
 
   async autostart(): Promise<void> {
     // Start modules that should autostart
+    //
+    // No modules to autostart?
+    if (this.to_autostart.length == 0) {
+      console.log('No modules to autostart');
+      return;
+    }
     console.log(`Autostarting modules: ${this.to_autostart}`);
 
     // Start servers first
@@ -141,14 +165,43 @@ export class Manager {
     );
   }
 
-  private async discoverModules(dir: string): Promise<Module[]> {
+  private async discoverBundledModules(): Promise<Module[]> {
+    const bundlepath = path.join(__static, '../modules');
+    const modules = await this.discoverModules(bundlepath, 'bundled');
+    console.log(`Found ${modules.length} modules in bundle: ${modules.map(m => m.name)}`);
+    return modules;
+  }
+
+  private async discoverSystemModules(): Promise<Module[]> {
+    // NOTE: Might not be possible to start system modules using AppImage due to isolation
+    const paths = process.env.PATH.split(path.delimiter);
+    //console.log(paths);
+    const modules = [];
+    await Promise.all(
+      paths.map(async p => {
+        const foundModules = await this.discoverModules(p, 'system');
+        foundModules.forEach((m, _) => {
+          // Only add module if one with same name not already found
+          if (!modules.map(mm => mm.name).includes(m.name)) {
+            modules.push(m);
+          }
+        });
+      })
+    );
+
+    console.log(modules.map(m => m.path));
+    console.log(`Found ${modules.length} modules in system: ${modules.map(m => m.name)}`);
+    return modules;
+  }
+
+  private async discoverModules(dir: string, type: ModuleType): Promise<Module[]> {
     // Check all files in directory, and return executables that look executable
     const modules: Module[] = [];
     try {
       const files = await fs.readdir(dir);
       await Promise.all(
         files
-          .filter(file => !file.includes('.so') && !file.includes('.jxa'))
+          .filter(file => file.match(/aw-(server|watcher)/))
           .map(async file => {
             const filepath = path.join(dir, file);
             const stat = await fs.stat(filepath);
@@ -159,22 +212,26 @@ export class Manager {
                 .catch(() => false);
 
               if (is_exec) {
-                console.log(`Found executable module ${file}`);
-                modules.push(new Module(file, filepath));
+                console.log(`Found module ${file}`);
+                modules.push(new Module(file, filepath, type));
               }
             } else if (stat.isDirectory()) {
               // Recurse
-              modules.push(...(await this.discoverModules(filepath)));
+              modules.push(...(await this.discoverModules(filepath, type)));
             } else {
               console.warn('Not a file, and not a dir?');
             }
           })
       );
     } catch (err) {
-      console.error('Could not list the directory.', err);
+      if (err && err.code === 'ENOENT') {
+        return [];
+      } else {
+        console.error('Could not list the directory due to unexpected error:', err);
+      }
     }
     return modules;
   }
 }
 
-export const manager = new Manager(['aw-server-rust', 'aw-watcher-window', 'aw-watcher-afk']);
+export const manager = new Manager(AUTOSTART);

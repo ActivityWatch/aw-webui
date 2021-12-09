@@ -6,6 +6,7 @@ extraResources:
 
 # module binaries go here?
 extraFiles:
+  - "modules"
 
 linux:
   # Is this the appropriate category?

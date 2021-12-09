@@ -10,5 +10,8 @@ coverage
 __pycache__
 screenshots
 
-#Electron-builder output
+# Put built modules here to distribute with Electron
+/modules
+
+# Electron-builder output
 /dist_electron

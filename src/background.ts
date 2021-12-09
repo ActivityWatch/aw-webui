@@ -8,6 +8,8 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 import { createTray } from './electron/tray';
 import { manager } from './electron/manager';
 
+const NO_UI = process.argv.includes('--no-ui');
+
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } },
@@ -76,7 +78,7 @@ app.on('ready', async () => {
   createTray();
 
   // TODO: Only show if not auto-started
-  createWindow();
+  if (!NO_UI) createWindow();
 });
 
 // Exit cleanly on request from parent process in development mode.
