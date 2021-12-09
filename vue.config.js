@@ -13,6 +13,11 @@ module.exports = {
   chainWebpack: config => {
     config.plugin('define').tap(options => {
       options[0]['process.env'].VUE_APP_ON_ANDROID = argv.os == 'android';
+      // vue-cli-plugin-electron-builder uses 'public' as the default static folder, we need this changed
+      // NOTE: This seems to have no effect in `tray.ts`
+      // NOTE: Seems to break `npm run electron:build`
+      // options[0].__static = path.join(JSON.parse(options[0].__static), '../static');
+      //console.log(options);
       return options;
     });
   },

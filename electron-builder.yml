@@ -1,0 +1,17 @@
+# https://www.electron.build/configuration/configuration
+appId: "net.activitywatch.ActivityWatchElectron"
+productName: ActivityWatch
+extraResources:
+  - "static"
+
+# module binaries go here?
+extraFiles:
+
+linux:
+  # Is this the appropriate category?
+  # https://specifications.freedesktop.org/menu-spec/latest/apas02.html
+  category: Monitor
+
+mac:
+
+win:

@@ -51,12 +51,14 @@ npm run build
 npm ci
 
 # Run in dev mode
-npm run electron:serve
+npm run electron:serve -- --testing
 
-# Build for production
+# Build for production, artifacts will be placed in ./dist_electron
 npm run electron:build
-```
 
+# Run built artifact (on Linux)
+./dist_electron/ActivityWatch-0.11.0.AppImage --testing
+```
 
 ### Using a pre-release with your main install
 

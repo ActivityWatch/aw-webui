@@ -5,12 +5,15 @@ import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
+import { createTray } from './electron/tray';
+import { manager } from './electron/manager';
+
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } },
 ]);
 
-async function createWindow() {
+export async function createWindow() {
   // Create the browser window.
   const win = new BrowserWindow({
     width: 800,
@@ -38,12 +41,13 @@ async function createWindow() {
   }
 }
 
-// Quit when all windows are closed.
+// ActivityWatch should not quit when last window is closed
+// A trayicon is used instead.
 app.on('window-all-closed', () => {
   // On macOS it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== 'darwin') {
-    app.quit();
+    //app.quit();
   }
 });
 
@@ -65,6 +69,13 @@ app.on('ready', async () => {
       console.error('Vue Devtools failed to install:', e.toString());
     }
   }
+
+  // Searches for modules
+  await manager.init();
+  await manager.autostart();
+  createTray();
+
+  // TODO: Only show if not auto-started
   createWindow();
 });
 
