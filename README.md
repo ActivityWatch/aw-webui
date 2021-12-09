@@ -44,6 +44,20 @@ npm ci
 npm run build
 ```
 
+## Building the Electron app
+
+```bash
+# Install dependencies
+npm ci
+
+# Run in dev mode
+npm run electron:serve
+
+# Build for production
+npm run electron:build
+```
+
+
 ### Using a pre-release with your main install
 
 **Note:** Running a development version of aw-webui with an old aw-server can lead to issues due to version incompatibilities.

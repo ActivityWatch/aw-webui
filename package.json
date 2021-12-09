@@ -1,6 +1,6 @@
 {
   "name": "aw-webui",
-  "version": "1.0.0",
+  "version": "0.11.0",
   "private": true,
   "description": "A webui for ActivityWatch built in Vue.js",
   "author": "ActivityWatch Developers",
@@ -20,6 +20,7 @@
   "main": "background.js",
   "dependencies": {
     "@egjs/hammerjs": "^2.0.17",
+    "@electron/remote": "^2.0.1",
     "@fullcalendar/timegrid": "^5.10.1",
     "@fullcalendar/vue": "^5.10.1",
     "@types/chart.js": "^2.9.23",
@@ -28,7 +29,7 @@
     "@types/d3": "^6.3.0",
     "@types/jest": "^24.9.1",
     "@types/lodash": "^4.14.178",
-    "@types/node": "^12.20.37",
+    "@types/node": "^14.14",
     "ajv": "^6.12.3",
     "ajv-keywords": "^3.5.1",
     "aw-client": "^0.3",
@@ -92,7 +93,7 @@
     "copy-webpack-plugin": "^5.1.1",
     "crypto-js": "^3.3.0",
     "css-loader": "^3.6.0",
-    "electron": "^13.0.0",
+    "electron": "^14.0.0",
     "electron-devtools-installer": "^3.1.0",
     "eslint": "^6.0",
     "eslint-config-prettier": "^6.11.0",
