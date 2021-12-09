@@ -4,16 +4,20 @@
   "private": true,
   "description": "A webui for ActivityWatch built in Vue.js",
   "author": "ActivityWatch Developers",
-  "license": "MPL-2.0",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "test": "vue-cli-service test:unit",
     "test:unit": "vue-cli-service test:unit",
     "test:e2e": "vue-cli-service test:e2e",
     "lint": "vue-cli-service lint",
-    "lint_old": "eslint --ignore-path=.gitignore --ext .vue,.js,.ts ."
+    "electron:build": "vue-cli-service electron:build",
+    "electron:serve": "vue-cli-service electron:serve",
+    "lint_old": "eslint --ignore-path=.gitignore --ext .vue,.js,.ts .",
+    "postinstall": "electron-builder install-app-deps",
+    "postuninstall": "electron-builder install-app-deps",
+    "test": "vue-cli-service test:unit"
   },
+  "main": "background.js",
   "dependencies": {
     "@egjs/hammerjs": "^2.0.17",
     "@fullcalendar/timegrid": "^5.10.1",
@@ -71,6 +75,7 @@
     "@babel/plugin-transform-runtime": "^7.16.4",
     "@babel/preset-env": "^7.16.4",
     "@babel/runtime": "^7.16.3",
+    "@types/electron-devtools-installer": "^2.2.0",
     "@typescript-eslint/eslint-plugin": "^4.31.1",
     "@typescript-eslint/parser": "^4.31.1",
     "@vue/cli-plugin-babel": "^4.5.15",
@@ -87,6 +92,8 @@
     "copy-webpack-plugin": "^5.1.1",
     "crypto-js": "^3.3.0",
     "css-loader": "^3.6.0",
+    "electron": "^13.0.0",
+    "electron-devtools-installer": "^3.1.0",
     "eslint": "^6.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-jest": "^23.18",
@@ -110,12 +117,14 @@
     "pug-plain-loader": "^1.0.0",
     "sass-loader": "^8.0.2",
     "shelljs": "^0.6.0",
+    "spectron": "15.0.0",
     "ts-jest": "^26.1.2",
     "ts-loader": "^8.0",
     "tslint": "^5.20.1",
     "typescript": "~4.1.5",
     "url-loader": "^1.1.0",
     "vue": "^2.6.11",
+    "vue-cli-plugin-electron-builder": "^2.1.1",
     "vue-cli-plugin-pug": "^2.0.0",
     "vue-cli-plugin-webpack-bundle-analyzer": "^4.0.0",
     "vue-eslint-parser": "^7.1",
@@ -128,5 +137,6 @@
     "webpack-dev-middleware": "^3.7.2",
     "webpack-hot-middleware": "^2.22.2",
     "webpack-merge": "^4.2.2"
-  }
+  },
+  "license": "MPL-2.0"
 }

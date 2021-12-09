@@ -9,3 +9,6 @@ coverage
 *.swp
 __pycache__
 screenshots
+
+#Electron-builder output
+/dist_electron
