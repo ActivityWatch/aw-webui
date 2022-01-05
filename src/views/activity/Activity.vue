@@ -13,13 +13,13 @@ div
     div
       b-input-group
         b-input-group-prepend
-          b-button.px-2(:to="link_prefix + '/' + previousPeriod() + '/' + subview",
+          b-button.px-2(:to="link_prefix + '/' + previousPeriod() + '/' + subview + '/' + currentViewId",
                    variant="outline-dark")
             icon(name="arrow-left")
         b-select.pl-2.pr-3(:value="periodLength", :options="['day', 'week', 'month']",
                  @change="(periodLength) => setDate(_date, periodLength)")
         b-input-group-append
-          b-button.px-2(:to="link_prefix + '/' + nextPeriod() + '/' + subview",
+          b-button.px-2(:to="link_prefix + '/' + nextPeriod() + '/' + subview + '/' + currentViewId",
                    :disabled="nextPeriod() > today", variant="outline-dark")
             icon(name="arrow-right")
 
@@ -179,6 +179,10 @@ export default {
     currentView: function () {
       return this.views.find(v => v.id == this.$route.params.view_id) || this.views[0];
     },
+    currentViewId: function () {
+      // If localStore is not yet initialized, then currentView can be undefined. In that case, we return an empty string (which should route to the default view)
+      return this.currentView !== undefined ? this.currentView.id : '';
+    },
     _date: function () {
       return this.date || get_today();
     },
@@ -260,7 +264,9 @@ export default {
       const new_period_length_moment = periodLengthConvertMoment(periodLength);
       const new_date = moment(date).startOf(new_period_length_moment).format('YYYY-MM-DD');
       console.log(new_date, periodLength);
-      this.$router.push(`/activity/${this.host}/${periodLength}/${new_date}/${this.subview}`);
+      this.$router.push(
+        `/activity/${this.host}/${periodLength}/${new_date}/${this.subview}/${this.currentViewId}`
+      );
     },
 
     refresh: async function (force) {
