@@ -1,0 +1,81 @@
+name: Build Electron
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [16]
+        python-version: ['3.9']
+        aw-server: ["aw-server-rust"]
+        aw-version: ["v0.11.0"]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+    - name: Setup Node.js
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    # TODO: Refactor out getting ActivityWatch builds (both release and nightly) into an action
+    - name: Install and run ActivityWatch
+      if: ${{ matrix.aw-version != 'master' }}
+      run: |
+        wget --no-verbose -O activitywatch.zip https://github.com/ActivityWatch/activitywatch/releases/download/${{ matrix.aw-version }}/activitywatch-${{ matrix.aw-version }}-linux-x86_64.zip
+        unzip activitywatch.zip
+        ./.github/configure_server.sh
+        ./activitywatch/${{ matrix.aw-server }}/${{ matrix.aw-server }} --testing &
+
+    - name: Download aw-server-rust nightly
+      if: ${{ matrix.aw-server == 'aw-server-rust' && matrix.aw-version == 'master' }}
+      uses: dawidd6/action-download-artifact@v2
+      with:
+        repo: ActivityWatch/aw-server-rust
+        # Required, workflow file name or ID
+        workflow: build.yml
+        # Optional, the status or conclusion of a completed workflow to search for
+        # Can be one of a workflow conclusion::
+        # "failure", "success", "neutral", "cancelled", "skipped", "timed_out", "action_required"
+        # Or a workflow status:
+        # "completed", "in_progress", "queued"
+        # Default: "completed,success"
+        workflow_conclusion: "completed"  # FIXME: Don't try to use builds that fail on Linux
+        branch: master
+        event: push
+        # Uploaded artifact name,
+        name: binaries-Linux  # NOTE: debug build
+        # Directory where to extract artifact
+        path: aw-server-rust
+
+    - name: Install and run aw-server-rust nightly
+      if: ${{ matrix.aw-server == 'aw-server-rust' && matrix.aw-version == 'master' }}
+      run: |
+        chmod +x ./aw-server-rust/debug/aw-server
+        ./aw-server-rust/debug/aw-server --testing &
+
+    - name: Insert fake data into aw-server
+      run: |
+        pip install click git+https://github.com/ActivityWatch/aw-client.git
+        wget --no-verbose -O fakedata.py https://raw.githubusercontent.com/ActivityWatch/aw-fakedata/master/aw_fakedata.py
+        GITDATE=$(git show -s --format=%ci HEAD | sed -r 's/ .+//g')
+        STARTDATE=$(date --date="${GITDATE} -30 day" +%Y-%m-%d)
+        python3 fakedata.py --since $STARTDATE --until $GITDATE
+
+    - name: Install
+      run: npm ci
+    - name: Build
+      run: npm run electron:build

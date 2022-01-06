@@ -9,3 +9,9 @@ coverage
 *.swp
 __pycache__
 screenshots
+
+# Put built modules here to distribute with Electron
+/modules
+
+# Electron-builder output
+/dist_electron

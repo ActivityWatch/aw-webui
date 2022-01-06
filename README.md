@@ -44,6 +44,22 @@ npm ci
 npm run build
 ```
 
+## Building the Electron app
+
+```bash
+# Install dependencies
+npm ci
+
+# Run in dev mode
+npm run electron:serve -- --testing
+
+# Build for production, artifacts will be placed in ./dist_electron
+npm run electron:build
+
+# Run built artifact (on Linux)
+./dist_electron/ActivityWatch-0.11.0.AppImage --testing
+```
+
 ### Using a pre-release with your main install
 
 **Note:** Running a development version of aw-webui with an old aw-server can lead to issues due to version incompatibilities.
