@@ -3,7 +3,7 @@ div(v-if="view")
   draggable.row(v-model="elements" handle=".handle")
     // TODO: Handle large/variable sized visualizations better
     div.col-md-6.col-lg-4.p-3(v-for="el, index in elements", :key="index", :class="{'col-md-12': isVisLarge(el), 'col-lg-8': isVisLarge(el)}")
-      aw-selectable-vis(:id="index" :type="el.type" @onTypeChange="onTypeChange" @onRemove="onRemove" :editable="editing")
+      aw-selectable-vis(:id="index" :type="el.type" :props="el.props" @onTypeChange="onTypeChange" @onRemove="onRemove" :editable="editing")
 
     div.col-md-6.col-lg-4.p-3(v-if="editing")
       b-button(@click="addVisualization" variant="outline-dark" block size="lg")
@@ -98,7 +98,22 @@ export default {
       this.$store.commit('views/addVisualization', { view_id: this.view.id, type: 'top_apps' });
     },
     async onTypeChange(id, type) {
-      await this.$store.commit('views/editView', { view_id: this.view.id, el_id: id, type });
+      let props = {};
+
+      if (type === 'custom_watcher_view') {
+        const watcher = prompt('Please enter the watcher name', 'aw-watcher-');
+        if (!watcher) return;
+
+        const view = prompt('Please enter the view name');
+        if (!view) return;
+
+        props = {
+          watcher,
+          view,
+        };
+      }
+
+      await this.$store.commit('views/editView', { view_id: this.view.id, el_id: id, type, props });
     },
     async onRemove(id) {
       await this.$store.commit('views/removeVisualization', { view_id: this.view.id, el_id: id });

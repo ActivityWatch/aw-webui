@@ -87,7 +87,8 @@ export default {
       const element = document.createElement('a');
       element.setAttribute(
         'href',
-        'data:application/json;charset=utf-8,' + encodeURIComponent(text)
+        'data:text/plain;charset=utf-8,'
+        + encodeURIComponent(text)
       );
       element.setAttribute('download', filename);
       element.style.display = 'none';

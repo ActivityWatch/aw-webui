@@ -14,6 +14,7 @@ import {
   timeperiodsHoursOfPeriod,
   timeperiodsDaysOfPeriod,
   timeperiodsAroundTimeperiod,
+  timeperiodToStartAndEnd,
 } from '~/util/timeperiod';
 
 interface QueryOptions {
@@ -50,6 +51,10 @@ const _state = {
     top_files: [],
     top_languages: [],
     top_projects: [],
+  },
+
+  custom_watcher: {
+    data: {},
   },
 
   category: {
@@ -182,6 +187,7 @@ const actions = {
     await dispatch('reset_browser');
     await dispatch('reset_editor');
     await dispatch('reset_category');
+    await dispatch('reset_custom_watcher');
   },
 
   async reset_window({ commit }) {
@@ -221,6 +227,12 @@ const actions = {
     commit('query_category_time_by_period_completed', data);
   },
 
+  async reset_custom_watcher({ commit }) {
+    commit('query_custom_watcher_completed', {
+      data: {},
+    });
+  },
+
   async query_desktop_full(
     { state, commit, rootState, rootGetters },
     { timeperiod, filterCategories, filterAFK, includeAudible }: QueryOptions
@@ -241,6 +253,25 @@ const actions = {
     const data_window = data[0].window;
     const data_browser = data[0].browser;
 
+    let data_custom_watcher = {};
+
+    try {
+      const [start, end] = timeperiodToStartAndEnd(timeperiod);
+      const data_custom_watcher_raw = await fetch('/watcher/api/get_data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          start,
+          end,
+        }),
+      });
+      data_custom_watcher = await data_custom_watcher_raw.json();
+    } catch (ex) {
+      console.warn('Custom data watcher request failed!', ex);
+    }
+
     // Set $color for categories
     data_window.cat_events = data[0].window['cat_events'].map(e => {
       const cat = rootGetters['categories/get_category'](e.data['$category']);
@@ -250,6 +281,7 @@ const actions = {
 
     commit('query_window_completed', data_window);
     commit('query_browser_completed', data_browser);
+    commit('query_custom_watcher_completed', data_custom_watcher);
   },
 
   async query_editor({ state, commit }, { timeperiod }) {
@@ -494,6 +526,10 @@ const mutations = {
     state.editor.top_files = data['files'];
     state.editor.top_languages = data['languages'];
     state.editor.top_projects = data['projects'];
+  },
+
+  query_custom_watcher_completed(state, data) {
+    state.custom_watcher = { data: data };
   },
 
   query_active_history_completed(state, { active_history }) {
