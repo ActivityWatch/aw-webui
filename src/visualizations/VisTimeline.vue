@@ -1,6 +1,8 @@
 <template lang="pug">
 div
   div#visualization
+  b-alert(v-if="true", variant="info", show)
+    | {{hiddenBucketCount}} buckets are hidden, because they had no events in the specified range
 </template>
 
 <style lang="scss">
@@ -40,6 +42,7 @@ import 'vis-timeline/styles/vis-timeline-graph2d.css';
 export default {
   props: {
     buckets: { type: Array },
+    // hiddenBuckets: { type: Array },
     showRowLabels: { type: Boolean },
     queriedInterval: { type: Array },
     showQueriedInterval: { type: Boolean },
@@ -87,6 +90,11 @@ export default {
       });
       return data;
     },
+    hiddenBucketCount() {
+      const eventCountPerBucket = _.map(this.buckets, bucket => bucket.events.length);
+      return _.sum(_.map(eventCountPerBucket, count => (count === 0 ? 1 : 0)));
+      // return _.filter(this.buckets, b => !b.events).length;
+    },
   },
   watch: {
     buckets() {
@@ -97,9 +105,25 @@ export default {
       }
 
       // Build groups
-      const groups = _.map(this.buckets, (bucket, bidx) => {
+      const groupsBefore = _.map(this.buckets, (bucket, bidx) => {
         return { id: bidx, content: this.showRowLabels ? bucket.id : '' };
       });
+
+      // filter out groups with no events
+      const groups = _.filter(groupsBefore, g => this.buckets[g.id].events.length > 0);
+      console.log('groups', groups);
+
+      // get the labels of the now hidden buckets
+      const hiddenBuckets = _.difference(groupsBefore, groups);
+      const hiddenBucketLabels = _.map(hiddenBuckets, g => this.buckets[g.id].id);
+
+      // print these to the console
+      console.log('hiddenBuckets', hiddenBucketLabels);
+
+      // if there are any, show an alert()
+      // if (hiddenBucketLabels.length > 0) {
+      //   alert(`The following buckets were hidden: ${hiddenBucketLabels.join(', ')}`);
+      // }
 
       // Build items
       const items = _.map(this.chartData, (row, i) => {
