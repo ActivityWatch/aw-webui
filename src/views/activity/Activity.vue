@@ -1,13 +1,21 @@
 <template lang="pug">
 div
-  h3.mb-0 Activity for {{ timeperiod | friendlyperiod }}
+  h3 Activity #[span.d-sm-inline.d-none for ]
+    span.text-muted.d-sm-inline-block.d-block  {{ timeperiod | friendlyperiod }}
 
   div.mb-2
-    ul.list-group.list-group-horizontal-md.mb-3(style="font-size: 0.9em; opacity: 0.7")
+    ul.list-group.list-group-horizontal-md
       li.list-group-item.pl-0.pr-3.py-0(style="border: 0")
-        | #[b Host:] {{ host }}
+        b.mr-1.text-dark Host:
+        span.text-muted {{ host }}
       li.list-group-item.pl-0.pr-3.py-0(style="border: 0")
-        | #[b Time active:] {{ $store.state.activity.active.duration | friendlyduration }}
+        b.mr-1.text-dark Time active:
+        span.text-muted {{ $store.state.activity.active.duration | friendlyduration }}
+    ul.list-group.list-group-horizontal-md(v-if="this.periodLength != 'day'")
+      li.list-group-item.pl-0.pr-3.py-0(style="border: 0")
+        b.mr-1.text-dark Query range:
+        span.text-muted {{ this.periodReadableRange }}
+
 
   div.mb-2.d-flex
     div
@@ -220,8 +228,31 @@ export default {
     timeperiod: function () {
       return { start: get_day_start_with_offset(this._date), length: [1, this.periodLength] };
     },
-    periodLengthMoment: function () {
-      return periodLengthConvertMoment(this.periodLength);
+    dateformat: function () {
+      if (this.periodLength === 'day') {
+        return 'YYYY-MM-DD';
+      } else if (this.periodLength === 'week') {
+        return 'YYYY[ W]WW';
+      } else if (this.periodLength === 'month') {
+        return 'YYYY-MM';
+      } else if (this.periodLength === 'year') {
+        return 'YYYY';
+      } else {
+        return 'YYYY-MM-DD';
+      }
+    },
+    periodReadableRange: function () {
+      const periodStart = moment(this.timeperiod.start);
+      const dateFormatString = 'YYYY-MM-DD';
+
+      // it's helpful to render a range for the week as opposed to just the start of the week
+      // or the number of the week so users can easily determine (a) if we are using monday/sunday as the week
+      // start and exactly when the week ends. The formatting code ends up being a bit more wonky, but it's
+      // worth the tradeoff. https://github.com/ActivityWatch/aw-webui/pull/284
+
+      const startOfWeek = periodStart.format(dateFormatString);
+      const endOfWeek = periodStart.add(1, this.periodLength).format(dateFormatString);
+      return `${startOfWeek}—${endOfWeek}`;
     },
   },
   watch: {
