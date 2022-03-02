@@ -45,14 +45,14 @@ import 'vis-timeline/styles/vis-timeline-graph2d.css';
 import EventEditor from '~/components/EventEditor.vue';
 
 export default {
+  components: {
+    EventEditor,
+  },
   props: {
     buckets: { type: Array },
     showRowLabels: { type: Boolean },
     queriedInterval: { type: Array },
     showQueriedInterval: { type: Boolean },
-  },
-  components: {
-    EventEditor,
   },
   data() {
     return {
@@ -176,6 +176,18 @@ export default {
       }
     },
   },
+  mounted() {
+    this.$nextTick(() => {
+      const el = this.$el.querySelector('#visualization');
+      this.timeline = new Timeline(el, [], [], this.options);
+      this.timeline.on('select', properties => {
+        // Sends both 'press' and 'tap' events, only one should trigger
+        if (properties.event.type == 'tap') {
+          this.onSelect(properties);
+        }
+      });
+    });
+  },
   methods: {
     openEditor: function () {
       const id = 'edit-modal-' + this.editingEvent.id;
@@ -201,18 +213,6 @@ export default {
         alert('selected multiple items: ' + JSON.stringify(properties.items));
       }
     },
-  },
-  mounted() {
-    this.$nextTick(() => {
-      const el = this.$el.querySelector('#visualization');
-      this.timeline = new Timeline(el, [], [], this.options);
-      this.timeline.on('select', properties => {
-        // Sends both 'press' and 'tap' events, only one should trigger
-        if (properties.event.type == 'tap') {
-          this.onSelect(properties);
-        }
-      });
-    });
   },
 };
 </script>

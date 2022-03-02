@@ -73,11 +73,6 @@ export default {
       editedEvent: JSON.parse(JSON.stringify(this.event)),
     };
   },
-  watch: {
-    event() {
-      this.editedEvent = JSON.parse(JSON.stringify(this.event));
-    },
-  },
   computed: {
     start: {
       get: function () {
@@ -97,6 +92,11 @@ export default {
       set: function (dt) {
         this.editedEvent.duration = moment(dt).diff(this.editedEvent.timestamp, 'seconds');
       },
+    },
+  },
+  watch: {
+    event() {
+      this.editedEvent = JSON.parse(JSON.stringify(this.event));
     },
   },
   methods: {
