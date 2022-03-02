@@ -34,7 +34,7 @@ div
           input(type="date", v-model="end")
           button(
             class="btn btn-outline-dark btn-sm",
-            type="button", 
+            type="button",
             :disabled="mode == 'range' && (invalidDaterange || emptyDaterange || daterangeTooLong)",
             @click="valueChanged"
           ) Update
@@ -92,7 +92,7 @@ export default {
     valueChanged() {
       if (
         this.mode == 'last_duration' ||
-        (!this.emptyDaterange && !this.invalidDaterange && !this.daterangeTooLong)
+        (!emptyDaterange && !this.invalidDaterange && !this.daterangeTooLong)
       ) {
         this.$emit('input', this.value);
       }

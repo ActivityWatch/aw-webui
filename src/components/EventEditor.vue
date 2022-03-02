@@ -23,7 +23,7 @@ b-modal(:id="'edit-modal-' + event.id", ref="eventEditModal", title="Edit event"
     tr
       th Key
       th Value
-    tr(v-for="(v, k) in event.data")
+    tr(v-for="(v, k) in editedEvent.data" :key="k")
       td
         b-input(disabled, :value="k", size="sm")
       td
@@ -48,6 +48,14 @@ b-modal(:id="'edit-modal-' + event.id", ref="eventEditModal", title="Edit event"
 <style lang="scss"></style>
 
 <script>
+// This EventEditor can be used to edit events in a specific bucket.
+//
+// It is used in:
+//  - Stopwatch
+//  - Bucket viewer
+//  - Timeline (on event-click)
+//  - Search (soon)
+
 import moment from 'moment';
 
 import 'vue-awesome/icons/times';
@@ -64,6 +72,11 @@ export default {
     return {
       editedEvent: JSON.parse(JSON.stringify(this.event)),
     };
+  },
+  watch: {
+    event() {
+      this.editedEvent = JSON.parse(JSON.stringify(this.event));
+    },
   },
   computed: {
     start: {
@@ -89,11 +102,13 @@ export default {
   methods: {
     async save() {
       // This emit needs to be called first, otherwise it won't occur for some reason
+      // FIXME: but what if the replace fails? Then UI will incorrectly think event was replaced?
       this.$emit('save', this.editedEvent);
       await this.$aw.replaceEvent(this.bucket_id, this.editedEvent);
     },
     async delete_() {
       // This emit needs to be called first, otherwise it won't occur for some reason
+      // FIXME: but what if the replace fails? Then UI will incorrectly think event was deleted?
       this.$emit('delete', this.event);
       await this.$aw.deleteEvent(this.bucket_id, this.event.id);
     },
