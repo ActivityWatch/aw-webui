@@ -92,7 +92,7 @@ export default {
     valueChanged() {
       if (
         this.mode == 'last_duration' ||
-        (!emptyDaterange && !this.invalidDaterange && !this.daterangeTooLong)
+        (!this.emptyDaterange && !this.invalidDaterange && !this.daterangeTooLong)
       ) {
         this.$emit('input', this.value);
       }
