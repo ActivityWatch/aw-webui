@@ -18,24 +18,25 @@
 
     b-alert(v-if="isPosFollowUpVisible", variant="info" show)
       button(type="button", class="close", @click="isPosFollowUpVisible=false") &times;
-      | We're really happy to hear you are enjoying ActivityWatch, but we think we can do even better! To help us help you, here are a few things you can do:
-      ul
+      p
+        | We're happy to hear you enjoy using ActivityWatch, but we can do better!
+        br
+        | To help us help you, here are a few things you can do:
+      ul.small
         li
           | Support us on #[a(href="https://www.patreon.com/erikbjare") Patreon] or #[a(href="https://opencollective.com/activitywatch") Open Collective] (or by #[a(href="https://activitywatch.net/donate/") other donation methods]).
         li
-          | Using ActivityWatch at work? Consider asking your employer to support us!
+          | Tell your friends and colleagues!
         li
-          | Post about it on social media and tell your friends and colleagues! We are on #[a(href="https://twitter.com/ActivityWatchIt") Twitter] and #[a(href="https://www.facebook.com/ActivityWatch") Facebook].
-        //li
-          | Sign up for the newsletter.
-        li
-          | Vote for new features on the #[a(href="https://forum.activitywatch.net/c/features") forum].
+          | Post about it on social media, we are on #[a(href="https://twitter.com/ActivityWatchIt") Twitter] and #[a(href="https://www.facebook.com/ActivityWatch") Facebook].
         //li
           | Fill out the #[a(href="https://forms.gle/q2N9K5RoERBV8kqPA") feedback form].
         li
           | Rate us on #[a(href="https://alternativeto.net/software/activitywatch/about/") AlternativeTo] and #[a(href="https://play.google.com/store/apps/details?id=net.activitywatch.android") Google Play Store].
         li
           | Join our #[a(href="https://discord.gg/vDskV9q") Discord server].
+        li
+          | Sign up for the #[a(href="http://eepurl.com/cTU6QX") newsletter] (we rarely send anything).
 
     b-alert(v-if="isNegFollowUpVisible", variant="info" show)
       button(type="button", class="close", @click="isNegFollowUpVisible=false") &times;
