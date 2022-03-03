@@ -166,6 +166,7 @@ export default {
 
         // Hide buckets with no events in the queried range
         const count = _.countBy(items, i => i.group);
+        console.log(count);
         groups = _.filter(groups, g => {
           return count[g.id] && count[g.id] > 0;
         });
@@ -193,17 +194,21 @@ export default {
       const id = 'edit-modal-' + this.editingEvent.id;
       this.$bvModal.show(id);
     },
-    onSelect: function (properties) {
+    onSelect: async function (properties) {
       if (properties.items.length == 0) {
         return;
       } else if (properties.items.length == 1) {
         const event = this.chartData[properties.items[0]][6];
         const groupId = this.items[properties.items[0]].group;
-        const bucketId = this.groups[groupId].content;
-        this.editingEvent = event;
+        const bucketId = _.find(this.groups, g => g.id == groupId).content;
+
+        // We retrieve the full event to ensure if's not cut-off by the query range
+        // See: https://github.com/ActivityWatch/aw-webui/pull/320#issuecomment-1056921587
+        this.editingEvent = await this.$aw.getEvent(bucketId, event.id);
         this.editingEventBucket = bucketId;
-        console.log('Editing event', event, ', in bucket', bucketId);
+
         this.$nextTick(() => {
+          console.log('Editing event', event, ', in bucket', bucketId);
           this.openEditor();
         });
         alert(

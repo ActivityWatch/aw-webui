@@ -29,7 +29,9 @@ div
                 icon(name="edit")
                 | Edit
 
+          // TODO: Don't create one event-editor per event
           event-editor(
+            v-if="editable"
             :event="event", :bucket_id="bucket_id",
             @save="(e) => $emit('save', e)", @delete="removeEvent"
           )
