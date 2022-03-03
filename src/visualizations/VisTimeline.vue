@@ -166,7 +166,6 @@ export default {
 
         // Hide buckets with no events in the queried range
         const count = _.countBy(items, i => i.group);
-        console.log(count);
         groups = _.filter(groups, g => {
           return count[g.id] && count[g.id] > 0;
         });

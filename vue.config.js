@@ -57,5 +57,6 @@ module.exports = {
   transpileDependencies: [
     // can be string or regex
     'vis-data',
+    'vis-timeline',
   ],
 };
