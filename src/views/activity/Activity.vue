@@ -327,6 +327,7 @@ export default {
       const checks = {
         // Check if view id is unique
         'ID is not unique': this.$store.state.views.views.map(v => v.id).includes(this.new_view.id),
+        'Missing ID': this.new_view.id === '',
         'Missing name': this.new_view.name === '',
       };
       const errors = Object.entries(checks)
