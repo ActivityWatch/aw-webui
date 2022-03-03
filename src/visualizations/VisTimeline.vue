@@ -1,8 +1,9 @@
 <template lang="pug">
 div
   div#visualization
-  b-alert(v-if="true", variant="info", show)
-    | {{hiddenBucketCount}} buckets are hidden, because they had no events in the specified range
+  b-alert(v-if="hiddenBucketCount > 0", variant="info", show)
+    | {{hiddenBucketCount}} {{hiddenBucketCount === 1 ? "bucket is" : "buckets are"}} hidden,
+    | because {{hiddenBucketCount === 1 ? "it" : "they"}} had no events in the specified time interval
 </template>
 
 <style lang="scss">
