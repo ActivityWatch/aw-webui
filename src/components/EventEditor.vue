@@ -1,53 +1,65 @@
 <template lang="pug">
 b-modal(:id="'edit-modal-' + event.id", ref="eventEditModal", title="Edit event", centered, hide-footer)
-  table(style="width: 100%")
-    tr
-      th Bucket
-      td {{ bucket_id }}
-    tr
-      th ID
-      td {{ event.id }}
-    tr
-      th Start
-      datetime(type="datetime" v-model="start")
-    tr
-      th End
-      datetime(type="datetime" v-model="end")
-    tr
-      th Duration
-      td {{ editedEvent.duration | friendlyduration }}
+  div(v-if="!editedEvent")
+    | Loading event...
 
-  hr
+  div(v-else)
+    table(style="width: 100%")
+      tr
+        th Bucket
+        td {{ bucket_id }}
+      tr
+        th ID
+        td {{ event.id }}
+      tr
+        th Start
+        datetime(type="datetime" v-model="start")
+      tr
+        th End
+        datetime(type="datetime" v-model="end")
+      tr
+        th Duration
+        td {{ editedEvent.duration | friendlyduration }}
 
-  table(style="width: 100%")
-    tr
-      th Key
-      th Value
-    tr(v-for="(v, k) in event.data")
-      td
-        b-input(disabled, :value="k", size="sm")
-      td
-        b-checkbox(v-if="typeof event.data[k] === typeof true", v-model="editedEvent.data[k]", style="margin: 0.25em")
-        b-input(v-if="typeof event.data[k] === typeof 'string'", v-model="editedEvent.data[k]", size="sm")
+    hr
 
-  hr
+    table(style="width: 100%")
+      tr
+        th Key
+        th Value
+      tr(v-for="(v, k) in editedEvent.data" :key="k")
+        td
+          b-input(disabled, :value="k", size="sm")
+        td
+          b-checkbox(v-if="typeof event.data[k] === typeof true", v-model="editedEvent.data[k]", style="margin: 0.25em")
+          b-input(v-if="typeof event.data[k] === typeof 'string'", v-model="editedEvent.data[k]", size="sm")
 
-  div.float-left
-    b-button.mx-1(@click="delete_(); close();" variant="danger")
-      icon.mx-1(name="trash")
-      | Delete
-  div.float-right
-    b-button.mx-1(@click="close")
-      icon.mx-1(name="times")
-      | Cancel
-    b-button.mx-1(@click="save(); close();", variant="primary")
-      icon.mx-1(name="save")
-      | Save
+    hr
+
+    div.float-left
+      b-button.mx-1(@click="delete_(); close();" variant="danger")
+        icon.mx-1(name="trash")
+        | Delete
+    div.float-right
+      b-button.mx-1(@click="close")
+        icon.mx-1(name="times")
+        | Cancel
+      b-button.mx-1(@click="save(); close();", variant="primary")
+        icon.mx-1(name="save")
+        | Save
 </template>
 
 <style lang="scss"></style>
 
 <script>
+// This EventEditor can be used to edit events in a specific bucket.
+//
+// It is used in:
+//  - Stopwatch
+//  - Bucket viewer
+//  - Timeline (on event-click)
+//  - Search (soon)
+
 import moment from 'moment';
 
 import 'vue-awesome/icons/times';
@@ -62,7 +74,7 @@ export default {
   },
   data() {
     return {
-      editedEvent: JSON.parse(JSON.stringify(this.event)),
+      editedEvent: null,
     };
   },
   computed: {
@@ -86,16 +98,33 @@ export default {
       },
     },
   },
+  watch: {
+    async event() {
+      await this.getEvent();
+    },
+  },
+  mounted: async function () {
+    await this.getEvent();
+  },
   methods: {
     async save() {
       // This emit needs to be called first, otherwise it won't occur for some reason
+      // FIXME: but what if the replace fails? Then UI will incorrectly think event was replaced?
       this.$emit('save', this.editedEvent);
       await this.$aw.replaceEvent(this.bucket_id, this.editedEvent);
     },
     async delete_() {
       // This emit needs to be called first, otherwise it won't occur for some reason
+      // FIXME: but what if the replace fails? Then UI will incorrectly think event was deleted?
       this.$emit('delete', this.event);
       await this.$aw.deleteEvent(this.bucket_id, this.event.id);
+    },
+    async getEvent() {
+      if (this.event.id) {
+        this.editedEvent = await this.$aw.getEvent(this.bucket_id, this.event.id);
+      } else {
+        this.editedEvent = null;
+      }
     },
     close() {
       this.$refs.eventEditModal.hide();

@@ -43,6 +43,7 @@ export default {
   },
   methods: {
     getBuckets: async function () {
+      if (this.daterange == null) return;
       this.buckets = await this.$store.dispatch('buckets/getBucketsWithEvents', {
         start: this.daterange[0].format(),
         end: this.daterange[1].format(),

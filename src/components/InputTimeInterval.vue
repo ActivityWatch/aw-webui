@@ -34,7 +34,7 @@ div
           input(type="date", v-model="end")
           button(
             class="btn btn-outline-dark btn-sm",
-            type="button", 
+            type="button",
             :disabled="mode == 'range' && (invalidDaterange || emptyDaterange || daterangeTooLong)",
             @click="valueChanged"
           ) Update
