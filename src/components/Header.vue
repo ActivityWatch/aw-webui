@@ -12,18 +12,21 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
     b-collapse#nav-collapse(is-nav)
       b-navbar-nav
         // If only a single view (the default) is available
-        b-nav-item(v-if="activityViews.length === 1", v-for="view in activityViews", :key="view.name", :to="view.pathUrl")
+        b-nav-item(v-if="activityViews && activityViews.length === 1", v-for="view in activityViews", :key="view.name", :to="view.pathUrl")
           div.px-2.px-lg-1
             icon(name="calendar-day")
             | Activity
 
         // If multiple (or no) activity views are available
-        b-nav-item-dropdown(v-if="activityViews.length !== 1")
+        b-nav-item-dropdown(v-if="!activityViews || activityViews.length !== 1")
           template(slot="button-content")
             div.d-inline.px-2.px-lg-1
               icon(name="calendar-day")
               | Activity
-          b-dropdown-item(v-if="activityViews.length <= 0", disabled)
+          b-dropdown-item(v-if="activityViews === null", disabled)
+            span.text-muted Loading...
+            br
+          b-dropdown-item(v-else-if="activityViews && activityViews.length <= 0", disabled)
             | No activity reports available
             br
             small Make sure you have both an AFK and window watcher running
@@ -103,7 +106,7 @@ export default {
   name: 'Header',
   data() {
     return {
-      activityViews: [],
+      activityViews: null,
       // Make configurable?
       fixedTopMenu: this.$isAndroid,
     };
@@ -111,6 +114,8 @@ export default {
   mounted: async function () {
     const buckets = await this.$aw.getBuckets();
     const types_by_host = {};
+
+    const activityViews = [];
 
     // TODO: Change to use same bucket detection logic as get_buckets/set_available in store/modules/activity.ts
     _.each(buckets, v => {
@@ -124,7 +129,7 @@ export default {
 
     _.each(types_by_host, (types, hostname) => {
       if (hostname != 'unknown') {
-        this.activityViews.push({
+        activityViews.push({
           name: hostname,
           hostname: hostname,
           type: 'default',
@@ -133,7 +138,7 @@ export default {
         });
       }
       if (types.android) {
-        this.activityViews.push({
+        activityViews.push({
           name: `${hostname} (Android)`,
           hostname: hostname,
           type: 'android',
@@ -142,6 +147,8 @@ export default {
         });
       }
     });
+
+    this.activityViews = activityViews;
   },
 };
 </script>
