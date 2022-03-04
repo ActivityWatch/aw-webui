@@ -77,7 +77,7 @@ export default {
   computed: {
     chartData() {
       const data = [];
-      _.each(this.buckets, (bucket, bidx) => {
+      _.each(this.buckets, bucket => {
         if (bucket.events === undefined) {
           return;
         }
