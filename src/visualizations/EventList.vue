@@ -1,5 +1,12 @@
 <template lang="pug">
 div
+  // TODO: Make event-editor a global component backed by a Vuex store
+  //       Currently, more than one event-editor on the same view can lead to multiple event-editors opening.
+  event-editor(
+    v-if="editable"
+    :event="editableEvent", :bucket_id="bucket_id",
+    @save="(e) => $emit('save', e)", @delete="removeEvent"
+  )
   b-card.event-container(no-block=true)
     span(slot="header")
       h4.card-title Events
@@ -25,16 +32,9 @@ div
               // TODO: Add some kind of highlighting to key
               | {{ key }}: {{ val }}
             span(v-if="editable")
-              b-btn.field(v-b-modal="'edit-modal-' + event.id", variant="outline-dark" size="sm" style="padding: 0 0.2em 0 0.2em")
+              b-btn.field(@click="() => {editEvent(event)}" variant="outline-dark" size="sm" style="padding: 0 0.2em 0 0.2em")
                 icon(name="edit")
                 | Edit
-
-          // TODO: Don't create one event-editor per event
-          event-editor(
-            v-if="editable"
-            :event="event", :bucket_id="bucket_id",
-            @save="(e) => $emit('save', e)", @delete="removeEvent"
-          )
 </template>
 
 <style scoped lang="scss">
@@ -139,6 +139,7 @@ export default {
     return {
       isListExpanded: false,
       limit: 100,
+      editableEvent: null,
     };
   },
   computed: {
@@ -147,6 +148,10 @@ export default {
     },
   },
   methods: {
+    editEvent: function (event) {
+      this.editableEvent = event;
+      this.$bvModal.show('edit-modal');
+    },
     expandList: function () {
       this.isListExpanded = !this.isListExpanded;
       console.log('List should be expanding: ', this.isListExpanded);

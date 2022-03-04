@@ -16,10 +16,12 @@ div
 
   hr
 
-  div.row
+  div(v-if="loading")
+    span.text-muted.center Loading...
+  div.row(v-else)
     div.col-md-12
+      h3 Running
       div(v-if="runningTimers.length > 0")
-        h3 Running
         div(v-for="e in runningTimers" :key="e.id")
           stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
             @delete="removeTimer", @update="updateTimer")
@@ -67,6 +69,7 @@ export default {
   },
   data: () => {
     return {
+      loading: true,
       bucket_id: 'aw-stopwatch',
       events: [],
       label: '',
@@ -126,6 +129,7 @@ export default {
 
     getEvents: async function () {
       this.events = await this.$aw.getEvents(this.bucket_id, { limit: 100 });
+      this.loading = false;
     },
   },
 };

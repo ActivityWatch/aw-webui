@@ -1,5 +1,5 @@
 <template lang="pug">
-b-modal(:id="'edit-modal-' + event.id", ref="eventEditModal", title="Edit event", centered, hide-footer)
+b-modal(id="edit-modal", ref="eventEditModal", title="Edit event", centered, hide-footer)
   div(v-if="!editedEvent")
     | Loading event...
 
@@ -69,8 +69,8 @@ import 'vue-awesome/icons/trash';
 export default {
   name: 'EventEditor',
   props: {
-    event: Object,
-    bucket_id: String,
+    event: { type: Object },
+    bucket_id: { type: String, required: true },
   },
   data() {
     return {
@@ -120,7 +120,7 @@ export default {
       await this.$aw.deleteEvent(this.bucket_id, this.event.id);
     },
     async getEvent() {
-      if (this.event.id) {
+      if (this.bucket_id && this.event && this.event.id) {
         this.editedEvent = await this.$aw.getEvent(this.bucket_id, this.event.id);
       } else {
         this.editedEvent = null;

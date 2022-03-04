@@ -3,18 +3,18 @@ div
   h3 Activity #[span.d-sm-inline.d-none for ]
     span.text-muted.d-sm-inline-block.d-block  {{ timeperiod | friendlyperiod }}
 
-  div.mb-2
+  div.mb-2.dim
     ul.list-group.list-group-horizontal-md
       li.list-group-item.pl-0.pr-3.py-0(style="border: 0")
-        b.mr-1.text-dark Host:
-        span.text-muted {{ host }}
+        b.mr-1 Host:
+        span {{ host }}
       li.list-group-item.pl-0.pr-3.py-0(style="border: 0")
-        b.mr-1.text-dark Time active:
-        span.text-muted {{ $store.state.activity.active.duration | friendlyduration }}
+        b.mr-1 Time active:
+        span {{ $store.state.activity.active.duration | friendlyduration }}
     ul.list-group.list-group-horizontal-md(v-if="this.periodLength != 'day'")
       li.list-group-item.pl-0.pr-3.py-0(style="border: 0")
-        b.mr-1.text-dark Query range:
-        span.text-muted {{ this.periodReadableRange }}
+        b.mr-1 Query range:
+        span {{ this.periodReadableRange }}
 
 
   div.mb-2.d-flex
@@ -95,6 +95,10 @@ div
 
 <style lang="scss" scoped>
 @import '../../style/globals';
+
+.dim {
+  opacity: 0.85;
+}
 
 .nav {
   border-bottom: 1px solid $lightBorderColor;
@@ -283,7 +287,19 @@ export default {
   mounted: async function () {
     this.$store.dispatch('views/load');
     this.$store.dispatch('categories/load');
-    await this.refresh();
+    try {
+      await this.refresh();
+    } catch (e) {
+      if (e.message !== 'canceled') {
+        console.error(e);
+        throw e;
+      }
+    }
+  },
+
+  beforeDestroy: async function () {
+    // Cancels pending requests and resets store
+    await this.$store.dispatch('activity/reset');
   },
 
   methods: {
@@ -301,7 +317,6 @@ export default {
       }
       const new_period_length_moment = periodLengthConvertMoment(periodLength);
       const new_date = moment(date).startOf(new_period_length_moment).format('YYYY-MM-DD');
-      console.log(new_date, periodLength);
       this.$router.push(
         `/activity/${this.host}/${periodLength}/${new_date}/${this.subview}/${this.currentViewId}`
       );

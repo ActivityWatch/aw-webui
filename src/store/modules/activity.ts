@@ -118,6 +118,9 @@ const getters = {
 const actions = {
   async ensure_loaded({ commit, state, dispatch }, query_options: QueryOptions) {
     console.info('Query options: ', query_options);
+    if (state.loaded) {
+      this._vm.$aw.abort();
+    }
     if (!state.loaded || state.query_options !== query_options || query_options.force) {
       commit('start_loading', query_options);
       if (!query_options.timeperiod) {
@@ -178,6 +181,7 @@ const actions = {
   },
 
   async reset({ dispatch }) {
+    this._vm.$aw.abort();
     await dispatch('reset_window');
     await dispatch('reset_browser');
     await dispatch('reset_editor');
@@ -288,9 +292,23 @@ const actions = {
       console.error('Unknown timeperiod');
     }
     const classes = loadClassesForQuery();
-    const data = [];
+
+    const signal = this._vm.$aw.controller.signal;
+    let cancelled = false;
+    signal.onabort = () => {
+      cancelled = true;
+      console.log('Request aborted');
+    };
+
     // Query one period at a time, to avoid timeout on slow queries
+    // TODO: Only query hours with known data
+    let data = [];
     for (const period of periods) {
+      // Not stable
+      //signal.throwIfAborted();
+      if (cancelled) {
+        throw signal.reason;
+      }
       const result = await this._vm.$aw.query(
         [period],
         // TODO: Clean up call, pass QueryParams in fullDesktopQuery as well
@@ -305,9 +323,14 @@ const actions = {
           filter_classes: filterCategories,
         })
       );
-      data.push(result[0]);
+      data = data.concat(result);
     }
-    commit('query_category_time_by_period_completed', { by_period: _.zipObject(periods, data) });
+
+    // Zip periods
+    let by_period = _.zipObject(periods, data);
+    // Filter out values that are undefined (no longer needed, only used when visualization was progressive (looks buggy))
+    by_period = _.fromPairs(_.toPairs(by_period).filter(o => o[1]));
+    commit('query_category_time_by_period_completed', { by_period });
   },
 
   async query_active_history_android({ commit, state }, { timeperiod }: QueryOptions) {
