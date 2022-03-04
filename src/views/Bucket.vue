@@ -1,5 +1,4 @@
 <template lang="pug">
-
 div
   h3 {{ id }}
   table

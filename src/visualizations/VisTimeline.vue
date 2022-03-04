@@ -90,7 +90,7 @@ export default {
         events = _.sortBy(events, e => e.timestamp);
         _.each(events, e => {
           data.push([
-            bidx,
+            bucket.id,
             getTitleAttr(bucket, e),
             buildTooltip(bucket, e),
             new Date(e.timestamp),
@@ -112,8 +112,8 @@ export default {
       }
 
       // Build groups
-      let groups = _.map(this.buckets, (bucket, bidx) => {
-        return { id: bidx, content: this.showRowLabels ? bucket.id : '' };
+      let groups = _.map(this.buckets, bucket => {
+        return { id: bucket.id, content: this.showRowLabels ? bucket.id : '' };
       });
 
       // Build items
@@ -190,8 +190,7 @@ export default {
   },
   methods: {
     openEditor: function () {
-      const id = 'edit-modal-' + this.editingEvent.id;
-      this.$bvModal.show(id);
+      this.$bvModal.show('edit-modal');
     },
     onSelect: async function (properties) {
       if (properties.items.length == 0) {
