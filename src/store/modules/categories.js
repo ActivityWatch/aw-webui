@@ -38,7 +38,8 @@ const getters = {
   get_category: state => category_arr => {
     const match = state.classes.find(c => _.isEqual(c.name, category_arr));
     if (!match) {
-      console.error("Couldn't find category: ", category_arr);
+      if (!_.equals(category_arr, ['Uncategorized']))
+        console.error("Couldn't find category: ", category_arr);
       // fallback
       return { name: ['Uncategorized'] };
     }
