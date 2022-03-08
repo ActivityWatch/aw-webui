@@ -100,16 +100,16 @@ export default {
     async onTypeChange(id, type) {
       let props = {};
 
-      if (type === 'custom_watcher_view') {
-        const watcher = prompt('Please enter the watcher name', 'aw-watcher-');
-        if (!watcher) return;
+      if (type === 'custom_vis') {
+        const visname = prompt('Please enter the watcher name', 'aw-watcher-');
+        if (!visname) return;
 
-        const view = prompt('Please enter the view name');
-        if (!view) return;
+        const title = prompt('Please enter the visualization title');
+        if (!title) return;
 
         props = {
-          watcher,
-          view,
+          visname,
+          title,
         };
       }
 

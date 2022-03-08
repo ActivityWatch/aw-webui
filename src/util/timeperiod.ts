@@ -36,7 +36,7 @@ export function periodReadable(timeperiod: TimePeriod) {
   return moment(timeperiod.start).format(dateformat(timeperiod.length[1]));
 }
 
-export function periodLengthConvertMoment(periodLength) {
+export function periodLengthConvertMoment(periodLength: string) {
   if (periodLength === 'day') {
     return 'day';
   } else if (periodLength === 'week') {
@@ -80,7 +80,7 @@ export function timeperiodsDaysOfPeriod(timeperiod: TimePeriod): TimePeriod[] {
   const periods = [];
   const _length: [number, string] = [1, 'day'];
 
-  let count;
+  let count: number;
   if (timeperiod.length[1] == 'week') {
     count = 7;
   } else if (timeperiod.length[1] == 'month') {
