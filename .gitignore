@@ -9,4 +9,4 @@ coverage
 *.swp
 __pycache__
 screenshots
-modules
+/modules
