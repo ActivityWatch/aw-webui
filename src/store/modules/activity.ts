@@ -13,6 +13,7 @@ import {
   timeperiodToStr,
   timeperiodsHoursOfPeriod,
   timeperiodsDaysOfPeriod,
+  timeperiodsMonthsOfPeriod,
   timeperiodsAroundTimeperiod,
 } from '~/util/timeperiod';
 
@@ -92,6 +93,10 @@ function timeperiodsStrsHoursOfPeriod(timeperiod: TimePeriod): string[] {
 
 function timeperiodsStrsDaysOfPeriod(timeperiod: TimePeriod): string[] {
   return timeperiodsDaysOfPeriod(timeperiod).map(timeperiodToStr);
+}
+
+function timeperiodsStrsMonthsOfPeriod(timeperiod: TimePeriod): string[] {
+  return timeperiodsMonthsOfPeriod(timeperiod).map(timeperiodToStr);
 }
 
 function timeperiodStrsAroundTimeperiod(timeperiod: TimePeriod): string[] {
@@ -288,6 +293,8 @@ const actions = {
       periods = timeperiodsStrsHoursOfPeriod(timeperiod);
     } else if (timeperiod.length[1] == 'week' || timeperiod.length[1] == 'month') {
       periods = timeperiodsStrsDaysOfPeriod(timeperiod);
+    } else if (timeperiod.length[1] == 'year') {
+      periods = timeperiodsStrsMonthsOfPeriod(timeperiod);
     } else {
       console.error('Unknown timeperiod');
     }
