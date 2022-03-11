@@ -291,7 +291,6 @@ const actions = {
     } else {
       console.error('Unknown timeperiod');
     }
-    const classes = loadClassesForQuery();
 
     const signal = this._vm.$aw.controller.signal;
     let cancelled = false;
@@ -300,8 +299,9 @@ const actions = {
       console.log('Request aborted');
     };
 
+    const classes = loadClassesForQuery();
+
     // Query one period at a time, to avoid timeout on slow queries
-    // TODO: Only query hours with known data
     let data = [];
     for (const period of periods) {
       // Not stable
@@ -309,6 +309,25 @@ const actions = {
       if (cancelled) {
         throw signal.reason;
       }
+
+      // Only query periods with known data from AFK bucket
+      const dontQueryInactive = true;
+      if (dontQueryInactive) {
+        const start = new Date(period.split('/')[0]);
+        const end = new Date(period.split('/')[1]);
+
+        // Retrieve active time in period
+        const period_activity = state.active.events.find(e => {
+          return start < new Date(e.timestamp) && new Date(e.timestamp) < end;
+        });
+
+        // Check if there was active time
+        if (!(period_activity && period_activity.duration > 0)) {
+          data = data.concat([{ cat_events: [] }]);
+          continue;
+        }
+      }
+
       const result = await this._vm.$aw.query(
         [period],
         // TODO: Clean up call, pass QueryParams in fullDesktopQuery as well
@@ -330,6 +349,7 @@ const actions = {
     let by_period = _.zipObject(periods, data);
     // Filter out values that are undefined (no longer needed, only used when visualization was progressive (looks buggy))
     by_period = _.fromPairs(_.toPairs(by_period).filter(o => o[1]));
+
     commit('query_category_time_by_period_completed', { by_period });
   },
 
