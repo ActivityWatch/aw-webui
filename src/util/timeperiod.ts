@@ -72,7 +72,6 @@ export function timeperiodsHoursOfPeriod(timeperiod: TimePeriod): TimePeriod[] {
       .format();
     periods.push({ start, length: _length });
   }
-  // const periods = _.range(24).map(i => [TimePeriod(moment(i * 1 + dayOffset), [1, 'hour'])]);
   return periods;
 }
 
@@ -93,6 +92,19 @@ export function timeperiodsDaysOfPeriod(timeperiod: TimePeriod): TimePeriod[] {
       .format();
     periods.push({ start, length: _length });
   }
-  // const periods = _.range(24).map(i => [TimePeriod(moment(i * 1 + dayOffset), [1, 'hour'])]);
+  return periods;
+}
+
+export function timeperiodsMonthsOfPeriod(timeperiod: TimePeriod): TimePeriod[] {
+  const periods = [];
+  const _length: [number, string] = [1, 'month'];
+
+  const count = 12;
+  for (let i = 0; i < count; i++) {
+    const start = moment(timeperiod.start)
+      .add(i * _length[0], _length[1] as moment.unitOfTime.DurationConstructor)
+      .format();
+    periods.push({ start, length: _length });
+  }
   return periods;
 }
