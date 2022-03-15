@@ -110,7 +110,7 @@
     "pug": "^3.0",
     "pug-plain-loader": "^1.0.0",
     "sass-loader": "^8.0.2",
-    "shelljs": "^0.6.0",
+    "shelljs": "^0.8.5",
     "ts-jest": "^27.0",
     "ts-loader": "^8.0",
     "tslint": "^5.20.1",
