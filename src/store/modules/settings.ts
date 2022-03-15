@@ -1,7 +1,8 @@
 import moment, { Moment } from 'moment';
-import NewReleaseNotification from '~/components/NewReleaseNotification.vue';
 
-const SHORT_BACKOFF_PERIOD = NewReleaseNotification.SHORT_BACKOFF_PERIOD;
+// Backoffs for NewReleaseNotification
+export const SHORT_BACKOFF_PERIOD = 24 * 60 * 60;
+export const LONG_BACKOFF_PERIOD = 5 * 24 * 60 * 60;
 
 interface State {
   // Timestamp when user was first seen (first time webapp is run)

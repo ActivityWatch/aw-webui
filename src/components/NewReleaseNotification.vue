@@ -18,13 +18,10 @@ import axios from 'axios';
 import moment from 'moment';
 import semver from 'semver';
 
-const SHORT_BACKOFF_PERIOD = 24 * 60 * 60;
-const LONG_BACKOFF_PERIOD = 5 * 24 * 60 * 60;
+import { LONG_BACKOFF_PERIOD, SHORT_BACKOFF_PERIOD } from '~/store/modules/settings.ts';
+
 // After reminding the user every SHORT_BACKOFF_PERIOD days for BACKOFF_THRESHOLD times, switch to LONG_BACKOFF_PERIOD
 const BACKOFF_THRESHOLD = 5;
-// The following may be used for testing, roughly 10s and 30s each
-// const SHORT_BACKOFF_PERIOD = 10;
-// const LONG_BACKOFF_PERIOD = 30;
 
 export default {
   name: 'new-release-notification',
