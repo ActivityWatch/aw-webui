@@ -59,7 +59,7 @@ export default {
   },
   data() {
     return {
-      duration: JSON.parse(JSON.stringify(this.defaultDuration)), // Make a copy of defaultDuration
+      duration: null,
       mode: 'last_duration',
       start: null,
       end: null,
@@ -86,6 +86,7 @@ export default {
     },
   },
   mounted() {
+    this.duration = this.defaultDuration;
     this.valueChanged();
   },
   methods: {

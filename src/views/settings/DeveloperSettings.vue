@@ -24,35 +24,16 @@ export default {
   data() {
     return {
       showSettings: false,
-      showYearly: false,
     };
   },
-  watch: {
+  computed: {
     showYearly: {
-      handler() {
-        this.saveData();
+      get() {
+        return this.$store.state.settings.showYearly;
       },
-    },
-  },
-  created() {
-    this.retrieveData();
-  },
-  methods: {
-    retrieveData() {
-      if (localStorage.showYearly && JSON.parse(localStorage.showYearly)) {
-        try {
-          this.showYearly = JSON.parse(localStorage.showYearly);
-        } catch (e) {
-          console.error('could not parse showYearly, deleting');
-          localStorage.removeItem('showYearly');
-        }
-      } else {
-        console.info('showYearly not found in localStorage');
-      }
-    },
-    saveData() {
-      const parsed = JSON.stringify(this.showYearly);
-      localStorage.showYearly = parsed;
+      set(value) {
+        this.$store.dispatch('settings/update', { showYearly: value });
+      },
     },
   },
 };

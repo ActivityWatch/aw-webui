@@ -17,7 +17,7 @@
 const d3 = require('d3');
 const moment = require('moment');
 
-import { seconds_to_duration } from '../util/time.js';
+import { seconds_to_duration } from '../util/time';
 const color = require('../util/color');
 
 // Dimensions of sunburst.

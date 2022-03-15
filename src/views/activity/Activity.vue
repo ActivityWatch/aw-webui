@@ -143,7 +143,7 @@ div
 
 <script>
 import moment from 'moment';
-import { get_day_start_with_offset, get_today } from '~/util/time';
+import { get_day_start_with_offset, get_today_with_offset } from '~/util/time';
 import { periodLengthConvertMoment } from '~/util/timeperiod';
 import _ from 'lodash';
 
@@ -176,7 +176,7 @@ export default {
   },
   data: function () {
     return {
-      today: get_today(),
+      today: null,
       showOptions: false,
       filterCategory: null,
       includeAudible: true,
@@ -203,7 +203,8 @@ export default {
       return this.currentView !== undefined ? this.currentView.id : '';
     },
     _date: function () {
-      return this.date || get_today();
+      const offset = this.$store.state.settings.startOfDay;
+      return this.date || get_today_with_offset(offset);
     },
     subview: function () {
       return this.$route.meta.subview;
@@ -237,7 +238,10 @@ export default {
       return this.$store.getters['activity/getActiveHistoryAroundTimeperiod'](this.timeperiod);
     },
     timeperiod: function () {
-      return { start: get_day_start_with_offset(this._date), length: [1, this.periodLength] };
+      return {
+        start: get_day_start_with_offset(this._date, this.$store.state.settings.startOfDay),
+        length: [1, this.periodLength],
+      };
     },
     dateformat: function () {
       if (this.periodLength === 'day') {
@@ -285,6 +289,7 @@ export default {
   },
 
   mounted: async function () {
+    this.$store.dispatch('settings/ensureLoaded');
     this.$store.dispatch('views/load');
     this.$store.dispatch('categories/load');
     try {

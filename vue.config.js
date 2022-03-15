@@ -28,7 +28,7 @@ module.exports = {
       },
     },
     plugins: [
-      new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
+      new webpack.IgnorePlugin({ resourceRegExp: /^\.\/locale$/, contextRegExp: /moment$/ }),
       new webpack.DefinePlugin({
         AW_SERVER_URL: process.env.AW_SERVER_URL,
         PRODUCTION: process.env.NODE_ENV === 'production',
@@ -37,23 +37,32 @@ module.exports = {
     ],
   },
   devServer: {
-    contentBase: path.join(__dirname, 'dist'),
     compress: true,
     port: 27180,
+    static: {
+      directory: path.join(__dirname, 'dist'),
+    },
   },
   pwa: {
     name: 'ActivityWatch',
     iconPaths: {
       favicon32: 'static/logo.png',
       favicon16: 'static/logo.png',
+      appleTouchIcon: 'static/logo.png',
+      //maskIcon: 'static/logo.png',
+      msTileImage: 'static/logo.png',
+    },
+    manifestOptions: {
+      icons: [
+        {
+          src: 'static/logo.png',
+          sizes: '512x512',
+          type: 'image/png',
+        },
+      ],
     },
   },
-  pluginOptions: {
-    webpackBundleAnalyzer: {
-      openAnalyzer: false,
-      analyzerPort: 11000,
-    },
-  },
+  pluginOptions: {},
   transpileDependencies: [
     // can be string or regex
     'vis-data',

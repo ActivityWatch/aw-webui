@@ -4,6 +4,8 @@
 
 import { Selector } from 'testcafe';
 
+const baseURL = 'http://127.0.0.1:27180';
+
 async function hide_devonly(t) {
   // Hide all devonly-elements
   const $hidedevonly = Selector('.hide-devonly');
@@ -16,15 +18,23 @@ async function waitForLoading(t) {
   let $loading;
   console.log('Waiting for loading to disappear...');
   do {
-    $loading = Selector('h1', { timeout: 100 }).withText(/.+[Ll]oading.+/g);
-    console.log(await $loading.count);
-    //$loading = Selector('.loading');
+    $loading = Selector('div', { timeout: 100 }).withText(/.+[Ll]oading.+/g);
     await t.wait(200);
   } while ((await $loading.count) >= 1);
   console.log('Loading is gone!');
 }
 
-fixture(`Home view`).page(`http://localhost:27180/`);
+async function checkNoError(t) {
+  const $error = Selector('div').withText(/.+[Ee]rror.+/g);
+  try {
+    await t.expect(await $error.count).eql(0);
+  } catch (e) {
+    console.log('Errors found: ' + $error);
+    throw e;
+  }
+}
+
+fixture(`Home view`).page(baseURL);
 
 // Log JS errors even if --skip-js-errors is given
 // From: https://stackoverflow.com/a/59856422/965332
@@ -52,12 +62,12 @@ test('Screenshot the home view', async t => {
   });
 });
 
-fixture(`Activity view`).page(`http://localhost:27180/#/activity/fakedata`);
+fixture(`Activity view`).page(`${baseURL}/#/activity/fakedata`);
 
 test('Screenshot the activity view', async t => {
   await hide_devonly(t);
   await waitForLoading(t);
-
+  await checkNoError(t);
   await t.takeScreenshot({
     path: 'activity.png',
     fullPage: true,
@@ -66,7 +76,7 @@ test('Screenshot the activity view', async t => {
   // TODO: resize to mobile size and take another screenshot
 });
 
-fixture(`Timeline view`).page(`http://localhost:27180/#/timeline`);
+fixture(`Timeline view`).page(`${baseURL}/#/timeline`);
 
 const durationSelect = Selector('select#duration');
 const durationOption = durationSelect.find('option');
@@ -74,6 +84,7 @@ const durationOption = durationSelect.find('option');
 test('Screenshot the timeline view', async t => {
   await hide_devonly(t);
   await waitForLoading(t);
+  await checkNoError(t);
   await t
     .click(durationSelect)
     .click(durationOption.withText('12h'))
@@ -86,31 +97,35 @@ test('Screenshot the timeline view', async t => {
   });
 });
 
-fixture(`Buckets view`).page(`http://localhost:27180/#/buckets/`);
+fixture(`Buckets view`).page(`${baseURL}/#/buckets/`);
 
 test('Screenshot the buckets view', async t => {
   await hide_devonly(t);
   await t.wait(1000);
+  await checkNoError(t);
   await t.takeScreenshot({
     path: 'buckets.png',
     fullPage: true,
   });
 });
 
-fixture(`Setting view`).page(`http://localhost:27180/#/settings/`);
+fixture(`Setting view`).page(`${baseURL}/#/settings/`);
 
 test('Screenshot the settings view', async t => {
   await hide_devonly(t);
+  await checkNoError(t);
   await t.takeScreenshot({
     path: 'settings.png',
     fullPage: true,
   });
 });
 
-fixture(`Stopwatch view`).page(`http://localhost:27180/#/stopwatch/`);
+fixture(`Stopwatch view`).page(`${baseURL}/#/stopwatch/`);
 
 test('Screenshot the stopwatch view', async t => {
   await hide_devonly(t);
+  await waitForLoading(t);
+  await checkNoError(t);
   await t.takeScreenshot({
     path: 'stopwatch.png',
     fullPage: true,

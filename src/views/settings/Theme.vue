@@ -4,7 +4,7 @@ div
     div
       h5.mt-1.mb-2.mb-sm-0 Theme
     div
-      b-select.landingpage(v-if="loaded" size="sm" :value="theme", @change="set($event)")
+      b-select.landingpage(v-if="loaded" size="sm" :value="theme", @change="theme = $event")
         option(value="light") Light
         option(value="dark") Dark
       span(v-else)
@@ -15,28 +15,30 @@ div
 <script>
 export default {
   name: 'Theme',
-  data: () => {
-    return {
-      theme: localStorage.theme || 'light',
-      loaded: false,
-    };
-  },
-  async mounted() {
-    this.theme = localStorage.theme || 'light';
-    this.loaded = true;
-  },
-  methods: {
-    set: function (theme) {
-      localStorage.theme = theme;
-      console.log('Set theme to ' + theme);
-      // Create Dark Theme Element
-      const themeLink = document.createElement('link');
-      themeLink.href = '/static/dark.css';
-      themeLink.rel = 'stylesheet';
-      // Append Dark Theme Element If Selected Mode Is Dark
-      theme === 'dark'
-        ? document.querySelector('head').appendChild(themeLink)
-        : document.querySelector('link[href="/static/dark.css"]').remove();
+  computed: {
+    loaded() {
+      return this.$store.state.settings._loaded;
+    },
+    theme: {
+      get() {
+        return this.$store.state.settings.theme;
+      },
+      set(value) {
+        console.log('Set theme to ' + value);
+        this.$store.dispatch('settings/update', {
+          theme: value,
+        });
+
+        // Apply newly set theme
+        // Create Dark Theme Element
+        const themeLink = document.createElement('link');
+        themeLink.href = '/static/dark.css';
+        themeLink.rel = 'stylesheet';
+        // Append Dark Theme Element If Selected Mode Is Dark
+        value === 'dark'
+          ? document.querySelector('head').appendChild(themeLink)
+          : document.querySelector('link[href="/static/dark.css"]').remove();
+      },
     },
   },
 };

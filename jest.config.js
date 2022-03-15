@@ -12,12 +12,14 @@ module.exports = {
       testEnvironment: 'jsdom',
       transform: {
         '^.+\\.js$': 'babel-jest',
-        '^.+\\.vue$': 'vue-jest',
+        '^.+\\.ts$': 'ts-jest',
+        '^.+\\.vue$': '@vue/vue2-jest',
       },
       testMatch: ['**/test/**/*.test.js?(x)'],
       moduleNameMapper: {
         '^~/(.+)$': '<rootDir>/src/$1',
       },
+      moduleFileExtensions: ['js', 'ts', 'vue', 'json'],
       modulePathIgnorePatterns: ['test/e2e/screenshot.test.js'], // Don't run this file in npm test
     },
     {
@@ -27,7 +29,8 @@ module.exports = {
       testMatch: ['**/test/**/*.test.node.{js,ts}?(x)'],
       transform: {
         '^.+\\.js$': 'babel-jest',
-        '^.+\\.vue$': 'vue-jest',
+        '^.+\\.ts$': 'ts-jest',
+        '^.+\\.vue$': '@vue/vue2-jest',
       },
       moduleNameMapper: {
         '^~/(.+)$': '<rootDir>/src/$1',

@@ -1,8 +1,10 @@
 import { shallowMount } from '@vue/test-utils';
 import NewReleaseNotification from '~/components/NewReleaseNotification';
+import store from '~/store';
 
 describe('hasNewRelease method', () => {
   const wrapper = shallowMount(NewReleaseNotification, {
+    store,
     mocks: {
       $aw: {
         // Provide dummy function because it won't find vm.$aw during test

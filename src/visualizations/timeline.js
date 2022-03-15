@@ -11,7 +11,7 @@ const moment = require('moment');
 
 import { getColorFromString } from '../util/color';
 
-import { seconds_to_duration } from '../util/time.js';
+import { seconds_to_duration } from '../util/time';
 
 function show_info(container, elem_id) {
   const title_event_box = container.querySelector('#' + elem_id);

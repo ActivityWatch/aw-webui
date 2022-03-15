@@ -4,7 +4,7 @@ div
     div
       h5.mb-2.mb-sm-0 Duration default value
     div
-      b-select(size="sm" :value="durationDefaultValue", @change="setDurationDefault($event)")
+      b-select(size="sm" :value="durationDefault", @change="durationDefault = $event")
           option(:value="15*60") 15min
           option(:value="30*60") 30min
           option(:value="60*60") 1h
@@ -19,18 +19,15 @@ div
 <script>
 export default {
   name: 'TimelineDurationSettings',
-  data: () => {
-    return {
-      durationDefaultValue: localStorage.durationDefault || 60 * 60,
-    };
-  },
-  mounted() {
-    this.startOfDay = localStorage.startOfDay;
-  },
-  methods: {
-    setDurationDefault: function (duration) {
-      localStorage.durationDefault = duration;
-      console.log('Set default timeline duration to ' + duration);
+  computed: {
+    durationDefault: {
+      get() {
+        return this.$store.state.settings.durationDefault;
+      },
+      set(value) {
+        console.log('Set default timeline duration to ' + value);
+        this.$store.dispatch('settings/update', { durationDefault: value });
+      },
     },
   },
 };

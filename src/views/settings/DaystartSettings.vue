@@ -4,7 +4,7 @@ div
     div
       h5.mt-1.mb-2.mb-sm-0 Start of day
     div
-      b-input(type="time" size="sm" :value="startOfDay" @change="setStartOfDay($event)")
+      b-input(type="time" size="sm" :value="startOfDay" @change="startOfDay = $event")
   small
     | The time at which days "start", since humans don't always go to bed before midnight.
     | Set to 04:00 by default.
@@ -12,18 +12,15 @@ div
 <script>
 export default {
   name: 'DaystartSettings',
-  data: () => {
-    return {
-      startOfDay: '',
-    };
-  },
-  mounted() {
-    this.startOfDay = localStorage.startOfDay;
-  },
-  methods: {
-    setStartOfDay: function (time_minutes) {
-      localStorage.startOfDay = time_minutes;
-      console.log('Set start of day to ' + time_minutes);
+  computed: {
+    startOfDay: {
+      get: function () {
+        return this.$store.state.settings.startOfDay;
+      },
+      set: function (value) {
+        console.log('Set start of day to ' + value);
+        this.$store.dispatch('settings/update', { startOfDay: value });
+      },
     },
   },
 };

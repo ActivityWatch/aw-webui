@@ -1,14 +1,14 @@
 <template lang="pug">
   div
     b-alert(v-if="isVisible", variant="info", show)
-      | A new release, v{{ latestVersion }}, is available for 
-      | #[a(href="https://activitywatch.net/downloads/" target="_blank" class="alert-link") download], 
+      | A new release, v{{ latestVersion }}, is available for
+      | #[a(href="https://activitywatch.net/downloads/" target="_blank" class="alert-link") download],
       | you can also #[a(href="javascript:void(0);" class="alert-link" @click="disableCheck") disable]
       | future reminders and checks for updates.
       button(type="button", class="close", @click="isVisible=false") &times;
 
     b-alert(v-if="isFollowUpVisible", variant="success", show)
-      | Checking for new releases is now disabled, you can re-enable it in the 
+      | Checking for new releases is now disabled, you can re-enable it in the
       | #[router-link(to="/settings" class="alert-link" @click.native="isFollowUpVisible=false") settings page].
       button(type="button", class="close", @click="isFollowUpVisible=false") &times;
 </template>
@@ -18,13 +18,10 @@ import axios from 'axios';
 import moment from 'moment';
 import semver from 'semver';
 
-const SHORT_BACKOFF_PERIOD = 24 * 60 * 60;
-const LONG_BACKOFF_PERIOD = 5 * 24 * 60 * 60;
+import { LONG_BACKOFF_PERIOD, SHORT_BACKOFF_PERIOD } from '~/store/modules/settings.ts';
+
 // After reminding the user every SHORT_BACKOFF_PERIOD days for BACKOFF_THRESHOLD times, switch to LONG_BACKOFF_PERIOD
 const BACKOFF_THRESHOLD = 5;
-// The following may be used for testing, roughly 10s and 30s each
-// const SHORT_BACKOFF_PERIOD = 10;
-// const LONG_BACKOFF_PERIOD = 30;
 
 export default {
   name: 'new-release-notification',
@@ -32,7 +29,6 @@ export default {
     return {
       isVisible: false,
       isFollowUpVisible: false,
-      data: null, // data should have isEnabled, nextCheckTime, howOftenToCheck, timesChecked
       currentVersion: null,
       latestVersion: null,
       latestVersionDate: null,
@@ -41,8 +37,18 @@ export default {
       LONG_BACKOFF_PERIOD: LONG_BACKOFF_PERIOD,
     };
   },
+  computed: {
+    data: {
+      get: function () {
+        return this.$store.state.settings.newReleaseCheckData;
+      },
+      set: function (data) {
+        this.$store.dispatch('settings/update', { newReleaseCheckData: data });
+      },
+    },
+  },
   async mounted() {
-    this.retrieveData();
+    await this.$store.dispatch('settings/ensureLoaded');
     if (this.data && (!this.data.isEnabled || moment() < moment(this.data.nextCheckTime))) return;
 
     await this.retrieveCurrentVersion();
@@ -67,20 +73,8 @@ export default {
         timesChecked: this.isVisible ? 1 : 0,
       };
     }
-
-    this.saveData();
   },
   methods: {
-    retrieveData() {
-      if (localStorage.getItem('newReleaseCheckData')) {
-        try {
-          this.data = JSON.parse(localStorage.getItem('newReleaseCheckData'));
-        } catch (err) {
-          console.error('newReleaseCheckData not found in localStorage: ', err);
-          localStorage.removeItem('newReleaseCheckData');
-        }
-      }
-    },
     async retrieveCurrentVersion() {
       try {
         const response = await this.$aw.getInfo();
@@ -122,10 +116,6 @@ export default {
       // Want to make sure that the latest release is out for a week to make sure it's well tested
       if (this.latestVersionDate) return moment() >= this.latestVersionDate.add(7, 'days');
       return false;
-    },
-    saveData() {
-      const parsed = JSON.stringify(this.data);
-      localStorage.setItem('newReleaseCheckData', parsed);
     },
     disableCheck() {
       this.isVisible = false;

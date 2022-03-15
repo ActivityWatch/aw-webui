@@ -59,5 +59,13 @@ export default {
     ColorSettings,
     DeveloperSettings,
   },
+  async created() {
+    await this.init();
+  },
+  methods: {
+    async init() {
+      return this.$store.dispatch('settings/load');
+    },
+  },
 };
 </script>
