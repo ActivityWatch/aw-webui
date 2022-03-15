@@ -118,7 +118,6 @@
     "url-loader": "^4.1",
     "vue": "^2.6.11",
     "vue-cli-plugin-pug": "^2.0.0",
-    "vue-cli-plugin-webpack-bundle-analyzer": "^4.0.0",
     "vue-eslint-parser": "^7.1",
     "vue-hot-reload-api": "^2.3.4",
     "vue-loader": "^15.9.3",

@@ -62,12 +62,7 @@ module.exports = {
       ],
     },
   },
-  pluginOptions: {
-    webpackBundleAnalyzer: {
-      openAnalyzer: false,
-      analyzerPort: 11000,
-    },
-  },
+  pluginOptions: {},
   transpileDependencies: [
     // can be string or regex
     'vis-data',
