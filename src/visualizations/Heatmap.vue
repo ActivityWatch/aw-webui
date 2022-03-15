@@ -4,7 +4,7 @@ div(style="overflow-x: scroll;", v-if="datasets !== null")
 </template>
 
 <script>
-import _ from 'lodash';
+// import _ from 'lodash';
 import moment from 'moment';
 
 export default {
@@ -13,12 +13,12 @@ export default {
     buckets: { type: Array },
     queriedInterval: { type: Array },
   },
-  data: function() {
+  data: function () {
     return {
       datasets: null,
       options: null,
-      width: this.$isAndroid ? 700 : undefined,
-    }
+      width: this.$isAndroid ? 700 : '100%',
+    };
   },
   watch: {
     buckets() {
@@ -36,9 +36,14 @@ export default {
 
       // Build categories
       const nbSep = 30;
-      const queriedInterval = this.queriedInterval ? this.queriedInterval : [moment().subtract(60 * 60, 'seconds'), moment()];
-      const duration = moment.duration(queriedInterval[1].diff(queriedInterval[0])).asMinutes() / nbSep;
-      const categories = Array.from({ length: nbSep }, (el, i) => queriedInterval[0].clone().add(duration * i, 'minutes'));
+      const queriedInterval = this.queriedInterval
+        ? this.queriedInterval
+        : [moment().subtract(60 * 60, 'seconds'), moment()];
+      const duration =
+        moment.duration(queriedInterval[1].diff(queriedInterval[0])).asMinutes() / nbSep;
+      const categories = Array.from({ length: nbSep }, (el, i) =>
+        queriedInterval[0].clone().add(duration * i, 'minutes')
+      );
 
       // Build data for xaxis
       const datasets = this.buckets
@@ -82,7 +87,7 @@ export default {
           colors: ['#ccc'],
         },
         dataLabels: {
-          enabled: false
+          enabled: false,
         },
         colors: ['#008FFB'],
         toolbar: {
@@ -90,11 +95,11 @@ export default {
         },
         xaxis: {
           categories: categories.map(c => c.format('HH:mm')),
-        }
+        },
       };
 
       this.datasets = Object.entries(datasets).map(([key, value]) => ({ name: key, data: value }));
     },
   },
-}
+};
 </script>
