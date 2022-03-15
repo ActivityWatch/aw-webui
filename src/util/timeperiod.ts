@@ -6,8 +6,12 @@ export interface TimePeriod {
   length: [number, string];
 }
 
-export function dateToTimeperiod(date: string, duration?: [number, string]): TimePeriod {
-  return { start: get_day_start_with_offset(date), length: duration || [1, 'day'] };
+export function dateToTimeperiod(
+  date: string,
+  offset: string,
+  duration?: [number, string]
+): TimePeriod {
+  return { start: get_day_start_with_offset(date, offset), length: duration || [1, 'day'] };
 }
 
 export function timeperiodToStr(tp: TimePeriod): string {

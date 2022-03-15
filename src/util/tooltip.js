@@ -1,5 +1,5 @@
 import moment from 'moment';
-import { seconds_to_duration } from './time.js';
+import { seconds_to_duration } from './time';
 import DOMPurify from 'dompurify';
 import _ from 'lodash';
 

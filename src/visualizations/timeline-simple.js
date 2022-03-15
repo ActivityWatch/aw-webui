@@ -7,7 +7,7 @@ const moment = require('moment');
 
 import { getTitleAttr, getColorFromString } from '../util/color';
 
-const time = require('../util/time.js');
+const time = require('../util/time');
 
 function create(svg_el) {
   // Clear element

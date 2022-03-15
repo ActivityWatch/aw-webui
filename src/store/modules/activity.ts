@@ -121,7 +121,10 @@ const getters = {
 
 // actions
 const actions = {
-  async ensure_loaded({ commit, state, dispatch }, query_options: QueryOptions) {
+  async ensure_loaded({ commit, state, rootState, dispatch }, query_options: QueryOptions) {
+    await dispatch('settings/ensureLoaded', null, { root: true });
+    const startOfDayOffset = rootState.settings.startOfDay;
+
     console.info('Query options: ', query_options);
     if (state.loaded) {
       this._vm.$aw.abort();
@@ -129,7 +132,7 @@ const actions = {
     if (!state.loaded || state.query_options !== query_options || query_options.force) {
       commit('start_loading', query_options);
       if (!query_options.timeperiod) {
-        query_options.timeperiod = dateToTimeperiod(query_options.date);
+        query_options.timeperiod = dateToTimeperiod(query_options.date, startOfDayOffset);
       }
 
       await dispatch('buckets/ensureBuckets', null, { root: true });
@@ -410,7 +413,7 @@ const actions = {
     commit('buckets', buckets);
   },
 
-  async load_demo({ commit }) {
+  async load_demo({ commit, rootState }) {
     // A function to load some demo data (for screenshots and stuff)
     commit('start_loading', {});
 
@@ -460,9 +463,13 @@ const actions = {
       projects: [{ duration: 10, data: { project: 'aw-core' } }],
     });
 
+    // Dispatch ensureLoaded and fetch startOfDay from settings store
+    await this._vm.$store.dispatch('settings/ensureLoaded', null, { root: true });
+    const startOfDay = rootState.settings.startOfDay;
+
     function build_active_history() {
       const active_history = {};
-      let current_day = moment(get_day_start_with_offset());
+      let current_day = moment(get_day_start_with_offset(null, startOfDay));
       _.map(_.range(0, 30), () => {
         const current_day_end = moment(current_day).add(1, 'day');
         active_history[`${current_day.format()}/${current_day_end.format()}`] = [

@@ -6,7 +6,7 @@ const _ = require('lodash');
 
 import { getCategoryColorFromString } from '../util/color';
 
-import { seconds_to_duration } from '../util/time.js';
+import { seconds_to_duration } from '../util/time';
 
 const textColor = '#333';
 

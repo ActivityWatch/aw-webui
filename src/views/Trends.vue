@@ -34,7 +34,7 @@ div
 
 <script>
 import moment from 'moment';
-import { get_today } from '~/util/time';
+import { get_today_with_offset } from '~/util/time';
 
 import { buildBarchartDataset } from '~/util/datasets';
 
@@ -44,7 +44,7 @@ export default {
     host: String,
   },
   data: function () {
-    const today = get_today();
+    const today = get_today_with_offset();
     const since = moment(today).subtract(7, 'days');
     return {
       today,
