@@ -156,8 +156,9 @@ export default {
       this.isListExpanded = !this.isListExpanded;
       console.log('List should be expanding: ', this.isListExpanded);
     },
-    removeEvent: function (event) {
-      this.events = this.events.filter(e => e.id != event.id);
+    removeEvent: function (_event) {
+      // FIXME: Illegal mutation of prop, need to propagate upwards or move into vuex.
+      //this.events = this.events.filter(e => e.id != event.id);
     },
   },
 };
