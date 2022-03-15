@@ -11,15 +11,14 @@ div.d-flex.justify-content-between
 <script>
 export default {
   name: 'ColorSettings',
-  data: () => {
-    return {
-      useColorFallback: localStorage.useColorFallback === 'true',
-    };
-  },
-  watch: {
-    useColorFallback(val) {
-      localStorage.useColorFallback = val;
-      console.log('Set useColorFallback to ' + val);
+  computed: {
+    useColorFallback: {
+      get: function () {
+        return this.$store.state.settings.useColorFallback;
+      },
+      set: function (val) {
+        this.$store.dispatch('settings/update', { useColorFallback: val });
+      },
     },
   },
 };

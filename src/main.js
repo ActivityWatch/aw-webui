@@ -13,11 +13,6 @@ import { Datetime } from 'vue-datetime';
 import 'vue-datetime/dist/vue-datetime.css';
 Vue.component('datetime', Datetime);
 
-// Setup default settings
-if (!('startOfDay' in localStorage)) {
-  localStorage.startOfDay = '04:00';
-}
-
 // Load the Varela Round font
 import 'typeface-varela-round';
 

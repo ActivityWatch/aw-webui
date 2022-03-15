@@ -27,11 +27,13 @@ export default {
     return {
       buckets: null,
       daterange: null,
-      timeintervalDefaultDuration: Number.parseInt(localStorage.durationDefault) || 60 * 60,
       maxDuration: 31 * 24 * 60 * 60,
     };
   },
   computed: {
+    timeintervalDefaultDuration() {
+      return Number(this.$store.state.settings.durationDefault);
+    },
     num_events() {
       return _.sumBy(this.buckets, 'events.length');
     },
@@ -40,6 +42,9 @@ export default {
     daterange() {
       this.getBuckets();
     },
+  },
+  async mounted() {
+    await this.$store.dispatch('settings/ensureLoaded');
   },
   methods: {
     getBuckets: async function () {

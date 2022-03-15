@@ -86,27 +86,34 @@ export default {
       // options is an array of [1, ..., NUM_OPTIONS]
       options: range(1, NUM_OPTIONS + 1),
       rating: null,
-      data: null,
     };
   },
-  mounted() {
-    // Check if initialTimestamp (first time that the user runs the web app) exists
-    let initialTimestamp = moment();
-    if (localStorage.initialTimestamp) {
-      initialTimestamp = moment(localStorage.initialTimestamp);
-    } else {
-      localStorage.initialTimestamp = initialTimestamp;
-    }
+  computed: {
+    data: {
+      get() {
+        return this.$store.state.settings.userSatisfactionPollData;
+      },
+      set(value) {
+        const data = this.$store.state.settings.userSatisfactionPollData;
+        this.$store.dispatch('settings/update', {
+          userSatisfactionPollData: { ...data, ...value },
+        });
+      },
+    },
+  },
+  async mounted() {
+    await this.$store.dispatch('settings/ensureLoaded');
 
     // Get the rest of the data
-    this.retrieveData();
     if (!this.data) {
       this.data = {
         isEnabled: true,
-        nextPollTime: initialTimestamp.add(INITIAL_WAIT_PERIOD, 'seconds'),
+        nextPollTime: this.$store.state.settings.initialTimestamp.add(
+          INITIAL_WAIT_PERIOD,
+          'seconds'
+        ),
         timesPollIsShown: 0,
       };
-      this.saveData();
     }
 
     if (!this.data.isEnabled) {
@@ -124,28 +131,14 @@ export default {
     if (this.data.timesPollIsShown > 2) {
       this.data.isEnabled = false;
     }
-
-    this.saveData();
   },
   methods: {
-    retrieveData() {
-      if (localStorage.getItem('userSatisfactionPollData')) {
-        try {
-          this.data = JSON.parse(localStorage.getItem('userSatisfactionPollData'));
-        } catch (err) {
-          console.error('userSatisfactionPollData not found in localStorage: ', err);
-          localStorage.removeItem('userSatisfactionPollData');
-        }
-      }
-    },
-    saveData() {
-      const parsed = JSON.stringify(this.data);
-      localStorage.setItem('userSatisfactionPollData', parsed);
-    },
     submit() {
       this.isPollVisible = false;
-      this.data.isEnabled = false;
-      this.saveData();
+      const data = this.data;
+      data.isEnabled = false;
+      this.data = data;
+
       if (parseInt(this.rating) >= 6) {
         this.isPosFollowUpVisible = true;
       } else {
@@ -154,8 +147,9 @@ export default {
     },
     dontShowAgain() {
       this.isPollVisible = false;
-      this.data.isEnabled = false;
-      this.saveData();
+      const data = this.data;
+      data.isEnabled = false;
+      this.data = data;
     },
   },
 };
