@@ -1,6 +1,9 @@
 import _ from 'lodash';
+import { IEvent } from './interfaces';
 
 const level_sep = '>';
+const CLASSIFY_KEYS = ['app', 'title'];
+const UNCATEGORIZED = ['Uncategorized'];
 
 interface Rule {
   type: string;
@@ -186,12 +189,45 @@ export function matchString(str: string, categories: Category[] | null): Categor
     );
     categories = loadClasses();
   }
-  const matchingCats = categories
+
+  // Compile regexes
+  const regexes: [Category, RegExp][] = categories
     .filter(c => c.rule.type == 'regex')
-    .filter(c => {
+    .map(c => {
       const re = RegExp(c.rule.regex, c.rule.ignore_case ? 'i' : '');
-      return re.test(str);
+      return [c, re];
     });
-  if (matchingCats.length > 0) return pickDeepest(matchingCats);
+
+  // Find the matching category.
+  // If several categories match the event, the deepest category will be chosen.
+  const matchingCats: [Category, RegExp][] = regexes.filter(c => c[1].test(str));
+  if (matchingCats.length > 0) {
+    return pickDeepest(matchingCats.map(c => c[0]));
+  }
   return null;
+}
+
+export function classifyEvents(events: IEvent[], categories: Category[]): IEvent[] {
+  // Compile regexes
+  const regexes: [Category, RegExp][] = categories
+    .filter(c => c.rule.type == 'regex')
+    .map(c => {
+      const re = RegExp(c.rule.regex, c.rule.ignore_case ? 'i' : '');
+      return [c, re];
+    });
+
+  // Classify events using compiled regexes.
+  // If several categories match the event, the deepest category will be chosen.
+  return events.map((e: IEvent) => {
+    const matchingCats: [Category, RegExp][] = regexes.filter(c => {
+      return _.map(CLASSIFY_KEYS, key => c[1].test(e.data[key])).some(x => x);
+    });
+    if (matchingCats.length > 0) {
+      const category = pickDeepest(matchingCats.map(c => c[0]));
+      e.data.$category = category.name;
+    } else {
+      e.data.$category = UNCATEGORIZED;
+    }
+    return e;
+  });
 }
