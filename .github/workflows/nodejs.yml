@@ -8,6 +8,37 @@ on:
 
 jobs:
   build:
+    name: Build (node-${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16]
+        python-version: ['3.9']
+        include:
+        - node-version: '16'
+          python-version: '3.9'
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+    - name: Setup Node.js
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: Install
+      run: npm ci
+    - name: Build
+      run: npm run build
+    - name: Upload build
+      uses: actions/upload-artifact@v2-preview
+      with:
+        name: build
+        path: dist/*
+
+  test:
+    name: Test (node-${{ matrix.node-version }}, py-${{ matrix.python-version }}, ${{ matrix.aw-server }} ${{ matrix.aw-version }})
     runs-on: ubuntu-latest
 
     strategy:
@@ -82,8 +113,6 @@ jobs:
 
     - name: Install
       run: npm ci
-    - name: Build
-      run: npm run build
     - name: Run tests
       run: |
         npm test
@@ -97,11 +126,6 @@ jobs:
       with:
         # NOTE: --skip-js-errors should be removed when things work properly
         args: "--skip-js-errors chrome test/e2e/"
-    - name: Upload build
-      uses: actions/upload-artifact@v2-preview
-      with:
-        name: build
-        path: dist/*
     - name: Move screenshots to subdir
       env:
         aw_server: ${{ matrix.aw-server }}
