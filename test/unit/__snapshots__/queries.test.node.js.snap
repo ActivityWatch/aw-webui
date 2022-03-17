@@ -1,0 +1,41 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`generate fullDesktopQuery 1`] = `
+"events = flood(query_bucket(\\"\\"));
+not_afk = flood(query_bucket(\\"\\"));
+not_afk = filter_keyvals(not_afk, \\"status\\", [\\"not-afk\\"]);
+browser_events = [];
+audible_events = filter_keyvals(browser_events, \\"audible\\", [true]);
+not_afk = period_union(not_afk, audible_events);
+events = filter_period_intersect(events, not_afk);
+events = categorize(events, []);
+events = filter_keyvals(events, \\"$category\\", true);
+title_events = sort_by_duration(merge_events_by_keys(events, [\\"app\\", \\"title\\"]));
+app_events   = sort_by_duration(merge_events_by_keys(title_events, [\\"app\\"]));
+cat_events   = sort_by_duration(merge_events_by_keys(events, [\\"$category\\"]));
+app_events  = limit_events(app_events, 100);
+title_events  = limit_events(title_events, 100);
+duration = sum_durations(events);
+browser_events = split_url_events(browser_events);
+browser_urls = merge_events_by_keys(browser_events, [\\"url\\"]);
+browser_urls = sort_by_duration(browser_urls);
+browser_urls = limit_events(browser_urls, 100);
+browser_domains = merge_events_by_keys(browser_events, [\\"$domain\\"]);
+browser_domains = sort_by_duration(browser_domains);
+browser_domains = limit_events(browser_domains, 100);
+browser_duration = sum_durations(browser_events);
+RETURN = {
+        \\"window\\": {
+            \\"app_events\\": app_events,
+            \\"title_events\\": title_events,
+            \\"cat_events\\": cat_events,
+            \\"active_events\\": not_afk,
+            \\"duration\\": duration
+        },
+        \\"browser\\": {
+            \\"domains\\": browser_domains,
+            \\"urls\\": browser_urls,
+            \\"duration\\": browser_duration
+        }
+    };"
+`;

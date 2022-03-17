@@ -5,8 +5,9 @@ import _ from 'lodash';
 function querystr_to_array(querystr: string): string[] {
   return querystr
     .split(';')
-    .filter(l => l)
-    .map(l => l + ';');
+    .map(s => s.trim())
+    .filter(s => s)
+    .map(s => s + ';');
 }
 
 function escape_doublequote(s: string) {
