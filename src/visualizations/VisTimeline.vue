@@ -113,6 +113,17 @@ export default {
 
       // Build groups
       let groups = _.map(this.buckets, bucket => {
+        // If bucket id is not set, then if only one bucket is given, assume result of a search/query and set a constant placeholder one.
+        // Otherwise, log a warning.
+        if (bucket.id === undefined) {
+          if (this.buckets.length === 1) {
+            bucket.id = 'search';
+          } else {
+            console.warn(
+              'Bucket id is not set, but there are multiple buckets. This is not supported.'
+            );
+          }
+        }
         return { id: bucket.id, content: this.showRowLabels ? bucket.id : '' };
       });
 
