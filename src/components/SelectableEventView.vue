@@ -8,7 +8,7 @@ div
       option(value="raw") Raw JSON
 
   div(v-if="vis_method == 'timeline'")
-    vis-timeline(:buckets="[{'type': 'search', 'events': events}]")
+    vis-timeline(:buckets="[{'id': 'search', 'type': 'search', 'events': events}]")
   div(v-if="vis_method == 'eventlist'")
     aw-eventlist(:events="events")
   div(v-if="vis_method == 'summary'")
