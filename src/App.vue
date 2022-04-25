@@ -87,6 +87,11 @@ export default {
   },
 
   mounted: async function () {
+    // Load settings
+    // TODO: Move fetch of server-side settings to after getInfo
+    await this.$store.dispatch('settings/ensureLoaded');
+
+    // Get info from server
     this.$aw.getInfo().then(
       info => {
         this.info = info;

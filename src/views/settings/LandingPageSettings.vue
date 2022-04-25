@@ -36,7 +36,6 @@ export default {
   },
   async mounted() {
     await this.$store.dispatch('buckets/ensureBuckets');
-    await this.$store.dispatch('settings/ensureLoaded');
     this.loaded = true;
   },
 };

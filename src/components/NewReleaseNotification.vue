@@ -48,7 +48,6 @@ export default {
     },
   },
   async mounted() {
-    await this.$store.dispatch('settings/ensureLoaded');
     if (this.data && (!this.data.isEnabled || moment() < moment(this.data.nextCheckTime))) return;
 
     await this.retrieveCurrentVersion();

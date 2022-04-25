@@ -15,6 +15,7 @@ const Trends = () => import('./views/Trends.vue');
 const Settings = () => import('./views/settings/Settings.vue');
 const Stopwatch = () => import('./views/Stopwatch.vue');
 const Search = () => import('./views/Search.vue');
+const Report = () => import('./views/Report.vue');
 const Dev = () => import('./views/Dev.vue');
 const NotFound = () => import('./views/NotFound.vue');
 
@@ -52,7 +53,8 @@ const router = new VueRouter({
     { path: '/buckets', component: Buckets },
     { path: '/buckets/:id', component: Bucket, props: true },
     { path: '/timeline', component: Timeline, meta: { fullContainer: true } },
-    { path: '/trends', component: Trends, meta: { fullContainer: true } },
+    { path: '/trends/:host', component: Trends, meta: { fullContainer: true } },
+    { path: '/report', component: Report },
     { path: '/query', component: QueryExplorer },
     { path: '/settings', component: Settings },
     { path: '/stopwatch', component: Stopwatch },

@@ -91,7 +91,11 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
 
 const default_limit = 100; // Hardcoded limit per group
 
-export function appQuery(appbucket: string, classes, filterCategories: string[][]): string[] {
+export function appQuery(
+  appbucket: string,
+  classes: [string[], Rule][],
+  filterCategories: string[][]
+): string[] {
   appbucket = escape_doublequote(appbucket);
   const params: AndroidQueryParams = {
     bid_android: appbucket,
@@ -192,7 +196,7 @@ export function fullDesktopQuery(
   windowbucket: string,
   afkbucket: string,
   filterAFK = true,
-  classes,
+  classes: [string[], Rule][] = [],
   filterCategories: string[][],
   include_audible: boolean
 ): string[] {
@@ -269,16 +273,9 @@ export function editorActivityQuery(editorbuckets: string[]): string[] {
   return q;
 }
 
-export function hourlyCategoryQuery(params: DesktopQueryParams) {
-  const q = `
-    ${canonicalEvents(params)}
-    cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
-    RETURN = { "cat_events": cat_events };
-  `;
-  return querystr_to_array(q);
-}
-
-export function dailyActivityQuery(afkbucket: string): string[] {
+// Returns a query that yields a single event with the duration set to
+// the sum of all non-afk time in the queried period
+export function activityQuery(afkbucket: string): string[] {
   afkbucket = escape_doublequote(afkbucket);
   return [
     'afkbucket = "' + afkbucket + '";',
@@ -289,16 +286,28 @@ export function dailyActivityQuery(afkbucket: string): string[] {
   ];
 }
 
-export function dailyActivityQueryAndroid(androidbucket: string): string[] {
+// Equivalent function to activityQuery, but for Android (which doesn't have an afk bucket)
+export function activityQueryAndroid(androidbucket: string): string[] {
   androidbucket = escape_doublequote(androidbucket);
   return [`events = query_bucket("${androidbucket}");`, 'RETURN = sum_durations(events);'];
+}
+
+// Returns a query that yields a dict with a key "cat_events" which is an
+// array of one event per category, with the duration of each event set to the sum of the category durations.
+export function categoryQuery(params: DesktopQueryParams): string[] {
+  const q = `
+    ${canonicalEvents(params)}
+    cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
+    RETURN = { "cat_events": cat_events };
+  `;
+  return querystr_to_array(q);
 }
 
 export default {
   fullDesktopQuery,
   appQuery,
-  dailyActivityQuery,
-  hourlyCategoryQuery,
-  dailyActivityQueryAndroid,
+  activityQuery,
+  activityQueryAndroid,
+  categoryQuery,
   editorActivityQuery,
 };

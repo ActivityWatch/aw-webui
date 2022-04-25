@@ -21,6 +21,15 @@ function get_buckets_by_host_and_type(buckets, host, type) {
 
 // getters
 const getters = {
+  hosts: state => {
+    // TODO: Include consideration of device_id UUID
+    return _.uniq(_.map(state.buckets, bucket => bucket['hostname']));
+  },
+  // Uses device_id instead of hostname
+  devices: state => {
+    // TODO: Include consideration of device_id UUID
+    return _.uniq(_.map(state.buckets, bucket => bucket['device_id']));
+  },
   afkBucketsByHost: state => host => {
     return get_buckets_by_host_and_type(state.buckets, host, 'afkstatus');
   },
