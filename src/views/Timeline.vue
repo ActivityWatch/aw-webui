@@ -43,9 +43,6 @@ export default {
       this.getBuckets();
     },
   },
-  async mounted() {
-    await this.$store.dispatch('settings/ensureLoaded');
-  },
   methods: {
     getBuckets: async function () {
       if (this.daterange == null) return;

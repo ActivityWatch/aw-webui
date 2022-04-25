@@ -112,7 +112,8 @@ export default {
     };
   },
   mounted: async function () {
-    const buckets = await this.$aw.getBuckets();
+    await this.$store.dispatch('buckets/ensureBuckets');
+    const buckets = this.$store.state.buckets.buckets;
     const types_by_host = {};
 
     const activityViews = [];

@@ -289,7 +289,6 @@ export default {
   },
 
   mounted: async function () {
-    this.$store.dispatch('settings/ensureLoaded');
     this.$store.dispatch('views/load');
     this.$store.dispatch('categories/load');
     try {

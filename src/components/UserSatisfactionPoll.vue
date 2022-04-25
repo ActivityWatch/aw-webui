@@ -102,8 +102,6 @@ export default {
     },
   },
   async mounted() {
-    await this.$store.dispatch('settings/ensureLoaded');
-
     // Get the rest of the data
     if (!this.data) {
       this.data = {

@@ -8,6 +8,14 @@
 div
   h3.mb-0 Trends for {{ timeperiod | friendlyperiod }}
 
+  // Select a hostname from the ones available in the store
+  b-input-group(size="sm")
+    b-form-select(
+      v-model="host"
+      label="Host"
+      :options="$store.getters['buckets/hosts']"
+      placeholder="Select a hostname")
+
   div.mb-2
     ul.list-group.list-group-horizontal-md.mb-3(style="font-size: 0.9em; opacity: 0.7")
       li.list-group-item.pl-0.pr-3.py-0(style="border: 0")
@@ -40,19 +48,22 @@ import { buildBarchartDataset } from '~/util/datasets';
 
 export default {
   name: 'Trends',
-  props: {
-    host: String,
-  },
+  props: {},
   data: function () {
-    const today = get_today_with_offset();
-    const since = moment(today).subtract(7, 'days');
+    const offset = this.$store.state.settings.startOfDay;
+    const today = get_today_with_offset(offset);
+    const n_days = 7;
+    const since = moment(today).subtract(n_days, 'days');
     return {
       today,
-      timeperiod: { start: since, length: [7, 'days'] },
+      timeperiod: { start: since, length: [n_days, 'day'] },
     };
   },
 
   computed: {
+    host() {
+      return this.$route.params.host;
+    },
     datasets: function () {
       return buildBarchartDataset(
         this.$store,
@@ -70,14 +81,17 @@ export default {
 
   methods: {
     refresh: async function (force) {
-      await this.$store.dispatch('activity/query_category_time_by_period', {
+      const queryParams = {
         timeperiod: this.timeperiod,
         host: this.host,
         force: force,
         filterAFK: this.filterAFK,
         includeAudible: this.includeAudible,
         filterCategories: this.filterCategories,
-      });
+        dontQueryInactive: false,
+      };
+      //await this.$store.dispatch('activity/ensure_loaded', queryParams);
+      await this.$store.dispatch('activity/query_category_time_by_period', queryParams);
     },
 
     load_demo: async function () {

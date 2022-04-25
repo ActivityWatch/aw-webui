@@ -275,10 +275,7 @@ const actions = {
     const periods = timeperiodStrsAroundTimeperiod(timeperiod).filter(tp_str => {
       return !_.includes(state.active.history, tp_str);
     });
-    const data = await this._vm.$aw.query(
-      periods,
-      queries.dailyActivityQuery(state.buckets.afk[0])
-    );
+    const data = await this._vm.$aw.query(periods, queries.activityQuery(state.buckets.afk[0]));
     const active_history = _.zipObject(
       periods,
       _.map(data, pair => _.filter(pair, e => e.data.status == 'not-afk'))
@@ -288,15 +285,23 @@ const actions = {
 
   async query_category_time_by_period(
     { commit, state },
-    { timeperiod, filterCategories, filterAFK }: QueryOptions
+    {
+      timeperiod,
+      filterCategories,
+      filterAFK,
+      dontQueryInactive,
+    }: QueryOptions & { dontQueryInactive: string }
   ) {
     // TODO: Needs to be adapted for Android
-    let periods;
-    if (timeperiod.length[1] == 'day') {
+    let periods: string[];
+    if (timeperiod.length[1].startsWith('day')) {
       periods = timeperiodsStrsHoursOfPeriod(timeperiod);
-    } else if (timeperiod.length[1] == 'week' || timeperiod.length[1] == 'month') {
+    } else if (
+      timeperiod.length[1].startsWith('week') ||
+      timeperiod.length[1].startsWith('month')
+    ) {
       periods = timeperiodsStrsDaysOfPeriod(timeperiod);
-    } else if (timeperiod.length[1] == 'year') {
+    } else if (timeperiod.length[1].startsWith('year')) {
       periods = timeperiodsStrsMonthsOfPeriod(timeperiod);
     } else {
       console.error('Unknown timeperiod');
@@ -321,7 +326,6 @@ const actions = {
       }
 
       // Only query periods with known data from AFK bucket
-      const dontQueryInactive = true;
       if (dontQueryInactive) {
         const start = new Date(period.split('/')[0]);
         const end = new Date(period.split('/')[1]);
@@ -342,7 +346,7 @@ const actions = {
         [period],
         // TODO: Clean up call, pass QueryParams in fullDesktopQuery as well
         // TODO: Unify QueryOptions and QueryParams
-        queries.hourlyCategoryQuery({
+        queries.categoryQuery({
           bid_afk: state.buckets.afk[0],
           bid_window: state.buckets.window[0],
           bid_browsers: state.buckets.browser,
@@ -369,7 +373,7 @@ const actions = {
     });
     const data = await this._vm.$aw.query(
       periods,
-      queries.dailyActivityQueryAndroid(state.buckets.android[0])
+      queries.activityQueryAndroid(state.buckets.android[0])
     );
     let active_history = _.zipObject(periods, data);
     active_history = _.mapValues(active_history, (duration, key) => {
@@ -463,8 +467,7 @@ const actions = {
       projects: [{ duration: 10, data: { project: 'aw-core' } }],
     });
 
-    // Dispatch ensureLoaded and fetch startOfDay from settings store
-    await this._vm.$store.dispatch('settings/ensureLoaded', null, { root: true });
+    // fetch startOfDay from settings store
     const startOfDay = rootState.settings.startOfDay;
 
     function build_active_history() {
