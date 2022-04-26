@@ -60,8 +60,11 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
             icon(name="search")
             | Search
           b-dropdown-item(to="/trends")
-            icon(name="chart-bar")
+            icon(name="chart-line")
             | Trends
+          b-dropdown-item(to="/Report")
+            icon(name="chart-pie")
+            | Report
           b-dropdown-item(to="/query")
             icon(name="code")
             | Query
@@ -90,7 +93,8 @@ import 'vue-awesome/icons/stream';
 import 'vue-awesome/icons/database';
 import 'vue-awesome/icons/search';
 import 'vue-awesome/icons/code';
-import 'vue-awesome/icons/chart-bar';
+import 'vue-awesome/icons/chart-line'; // TODO: switch to chart-column, when vue-awesome supports FA v6
+import 'vue-awesome/icons/chart-pie';
 import 'vue-awesome/icons/stopwatch';
 import 'vue-awesome/icons/cog';
 import 'vue-awesome/icons/tools';

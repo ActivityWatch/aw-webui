@@ -4,7 +4,7 @@ div
 
   | Generate a report of time spent on a certain category of device activity.
 
-  b-alert(style="warning" show)
+  b-alert.mt-2(style="warning" show)
     | This feature is still in early development.
 
   b-alert(v-if="error" show variant="danger")
@@ -18,15 +18,10 @@ div
       option(value="category") Use existing category
 
   // select which categories, by having a form select and a "plus" button to include them
-  b-input-group(v-if="mode == 'category'")
-    b-form-select(v-model="category")
+  b-input-group
+    b-form-select(v-if="mode == 'category'" v-model="category" placeholder="Select a category")
       b-form-select-option(v-for="category in categories" :key="category.id" :value="category.id")
-        | {{category.name}}
-    b-input-group-append
-      b-button(variant="success" @click="addCategory")
-        | +
-
-  b-input-group(size="lg")
+        | {{category.name.join(" > ")}}
     b-input(v-if="mode == 'custom'" v-model="pattern" v-on:keyup.enter="generate()" placeholder="Regex pattern to search for")
     b-input-group-append
       b-button(type="button", @click="generate()" variant="success")
@@ -96,6 +91,7 @@ export default {
   name: 'Report',
   data() {
     return {
+      mode: 'category',
       pattern: '',
       vis_method: 'eventlist',
       event_type: 'currentwindow',
@@ -114,10 +110,11 @@ export default {
   },
   computed: {
     categories: function () {
-      return this.$store.getters['categories/all_categories'];
+      return this.$store.state.categories.classes;
     },
   },
   mounted: async function () {
+    await this.$store.dispatch('categories/load');
     await this.$store.dispatch('buckets/ensureBuckets');
     this.hostname = Object.keys(this.$store.getters['buckets/bucketsByHostname'])[0];
   },
