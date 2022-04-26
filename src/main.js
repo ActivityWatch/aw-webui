@@ -38,6 +38,7 @@ Vue.component('icon', () => import('vue-awesome/components/Icon'));
 Vue.component('error-boundary', () => import('./components/ErrorBoundary.vue'));
 Vue.component('input-timeinterval', () => import('./components/InputTimeInterval.vue'));
 Vue.component('aw-header', () => import('./components/Header.vue'));
+Vue.component('aw-footer', () => import('./components/Footer.vue'));
 Vue.component('aw-devonly', () => import('./components/DevOnly.vue'));
 Vue.component('aw-selectable-vis', () => import('./components/SelectableVisualization.vue'));
 Vue.component('aw-selectable-eventview', () => import('./components/SelectableEventView.vue'));
