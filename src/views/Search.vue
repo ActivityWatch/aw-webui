@@ -16,36 +16,16 @@ div
         | Search
 
   div.d-flex.mt-1
-    span.mr-auto.small(style="color: #666") Hostname: {{hostname}}
+    span.mr-auto.small(style="color: #666") Hostname: {{queryOptions.hostname}}
     b-button(size="sm", variant="outline-dark" style="border: 0" @click="show_options = !show_options")
       span(v-if="!show_options")
         | #[icon(name="angle-double-down")] Show options
       span(v-else)
         | #[icon(name="angle-double-up")] Hide options
 
-  div(v-if="show_options")
+  div(v-show="show_options")
     h4 Options
-    div Hostname
-      select(v-model="hostname")
-        option(v-for="hostname in Object.keys($store.getters['buckets/bucketsByHostname'])")
-          | {{hostname}}
-    div Start: {{start.format()}}
-    div End: {{stop.format()}}
-    //div
-      label Use regex
-      input(type="checkbox" v-model="use_regex")
-    div
-      label Exclude time away from computer
-      input(type="checkbox" v-model="filter_afk")
-    //div.form-row
-      div.form-group.col-md-6
-        | Start
-        input.form-control(type="date", :max="today", v-model="startdate")
-      div.form-group.col-md-6
-        | End
-        input.form-control(type="date", :max="tomorrow", v-model="enddate")
-
-    div.form-inline
+    aw-query-options(v-model="queryOptions")
 
   div(v-if="status == 'searching'")
     div #[icon(name="spinner" pulse)] Searching...
@@ -59,10 +39,7 @@ div
       | Didn't find what you were looking for?
       br
       | Add a week to the search: #[b-button(size="sm" variant="outline-dark" @click="start = start.subtract(1, 'week'); search()") +1 week]
-
 </template>
-
-<style scoped lang="scss"></style>
 
 <script>
 import _ from 'lodash';
@@ -79,38 +56,34 @@ export default {
   data() {
     return {
       pattern: '',
-      vis_method: 'eventlist',
-      event_type: 'currentwindow',
       events: null,
-      error: '',
+
       status: null,
-      hostname: '',
+      error: '',
 
       // Options
       show_options: false,
-      use_regex: true,
-      filter_afk: true,
-      start: moment().subtract(1, 'day'),
-      stop: moment().add(1, 'day'),
+      queryOptions: {
+        start: moment().subtract(1, 'day'),
+        stop: moment().add(1, 'day'),
+      },
     };
-  },
-  mounted: async function () {
-    await this.$store.dispatch('buckets/ensureBuckets');
-    this.hostname = Object.keys(this.$store.getters['buckets/bucketsByHostname'])[0];
   },
   methods: {
     search: async function () {
       let query = canonicalEvents({
-        bid_window: 'aw-watcher-window_' + this.hostname,
-        bid_afk: 'aw-watcher-afk_' + this.hostname,
-        filter_afk: this.filter_afk,
+        bid_window: 'aw-watcher-window_' + this.queryOptions.hostname,
+        bid_afk: 'aw-watcher-afk_' + this.queryOptions.hostname,
+        filter_afk: this.queryOptions.filter_afk,
         classes: [[['searched'], { type: 'regex', regex: this.pattern }]],
         filter_classes: [['searched']],
       });
       query += '; RETURN = events;';
 
       const query_array = query.split(';').map(s => s.trim() + ';');
-      const timeperiods = [this.start.format() + '/' + this.stop.format()];
+      const timeperiods = [
+        moment(this.queryOptions.start).format() + '/' + moment(this.queryOptions.stop).format(),
+      ];
       try {
         this.status = 'searching';
         const data = await this.$aw.query(timeperiods, query_array);

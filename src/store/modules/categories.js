@@ -69,14 +69,12 @@ const mutations = {
 
     let i = 0;
     state.classes = classes.map(c => Object.assign(c, { id: i++ }));
-    console.log('Loaded classes:', state.classes);
     state.classes_unsaved_changes = false;
   },
   import(state, classes) {
     let i = 0;
     // overwrite id even if already set
     state.classes = classes.map(c => Object.assign(c, { id: i++ }));
-    console.log('Loaded classes:', state.classes);
     state.classes_unsaved_changes = true;
   },
   updateClass(state, new_class) {

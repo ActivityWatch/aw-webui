@@ -125,9 +125,9 @@ export function getTitleAttr(bucket: Bucket, e: IEvent) {
     }
   } else if (bucket.type == 'afkstatus') {
     return e.data.status;
-  } else if (bucket.type.startsWith('app.editor')) {
+  } else if (bucket.type?.startsWith('app.editor')) {
     return _.last(e.data.file.split('/'));
-  } else if (bucket.type.startsWith('general.stopwatch')) {
+  } else if (bucket.type?.startsWith('general.stopwatch')) {
     return e.data.label;
   } else {
     return e.data.title;

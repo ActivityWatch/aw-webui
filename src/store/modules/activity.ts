@@ -1,6 +1,7 @@
 import moment from 'moment';
 import * as _ from 'lodash';
 import { map, filter, values, groupBy, sortBy, flow, reverse } from 'lodash/fp';
+import { IEvent } from '~/util/interfaces';
 
 import { window_events } from '~/util/fakedata';
 import queries from '~/queries';
@@ -326,12 +327,12 @@ const actions = {
       }
 
       // Only query periods with known data from AFK bucket
-      if (dontQueryInactive) {
+      if (dontQueryInactive && state.active.events.length > 0) {
         const start = new Date(period.split('/')[0]);
         const end = new Date(period.split('/')[1]);
 
         // Retrieve active time in period
-        const period_activity = state.active.events.find(e => {
+        const period_activity = state.active.events.find((e: IEvent) => {
           return start < new Date(e.timestamp) && new Date(e.timestamp) < end;
         });
 
@@ -375,11 +376,11 @@ const actions = {
       periods,
       queries.activityQueryAndroid(state.buckets.android[0])
     );
-    let active_history = _.zipObject(periods, data);
-    active_history = _.mapValues(active_history, (duration, key) => {
+    const active_history = _.zipObject(periods, data);
+    const active_history_events = _.mapValues(active_history, (duration: number, key): [IEvent] => {
       return [{ timestamp: key.split('/')[0], duration, data: { status: 'not-afk' } }];
     });
-    commit('query_active_history_completed', { active_history });
+    commit('query_active_history_completed', { active_history: active_history_events });
   },
 
   async query_active_history_empty({ commit }) {
