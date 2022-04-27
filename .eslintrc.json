@@ -36,7 +36,7 @@
       "warn",
       {
         "builtinGlobals": true,
-        "allow": ["name", "Promise", "event", "parent", "state", "getters"]
+        "allow": ["name", "Promise", "event", "parent", "state", "getters", "stop"]
       }
     ],
     "no-console": ["off"],

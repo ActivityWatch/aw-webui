@@ -19,6 +19,9 @@ interface State {
   newReleaseCheckData: Record<string, any>;
   userSatisfactionPollData: Record<string, any>;
 
+  // Whether to show certain WIP features
+  devmode: boolean;
+
   // Set to true if settings loaded
   _loaded: boolean;
 }
@@ -38,12 +41,14 @@ const _state: State = {
     timesChecked: 0,
   },
   userSatisfactionPollData: {},
+  // PRODUCTION might be undefined (in tests, for example)
+  devmode: typeof PRODUCTION === 'undefined' ? true : !PRODUCTION,
   _loaded: false,
 };
 
 // getters
 const getters = {
-  loaded(state) {
+  loaded(state: State) {
     return state._loaded;
   },
 };
@@ -112,7 +117,7 @@ const actions = {
     await dispatch('load');
   },
   async update({ commit, dispatch }, new_state: Record<string, any>) {
-    console.log(`Updating state ${new_state}`);
+    console.log('Updating state', new_state);
     commit('setState', new_state);
     await dispatch('save');
   },
