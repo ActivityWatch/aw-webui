@@ -50,6 +50,7 @@ export default {
   },
   props: {
     buckets: { type: Array },
+    events: { type: Array },
     showRowLabels: { type: Boolean },
     queriedInterval: { type: Array },
     showQueriedInterval: { type: Boolean },
@@ -72,12 +73,31 @@ export default {
       },
       editingEvent: null,
       editingEventBucket: null,
+
+      updateHasRun: false,
     };
   },
   computed: {
+    bucketsFromEither() {
+      if (this.buckets) {
+        return this.buckets;
+      } else if (this.events) {
+        // If buckets not passed, check if events have been passed and generate a bucket from those events
+        return [
+          {
+            id: 'events',
+            type: 'search',
+            events: this.events,
+          },
+        ];
+      } else {
+        console.error('No buckets or events passed to timeline');
+        return [];
+      }
+    },
     chartData() {
       const data = [];
-      _.each(this.buckets, bucket => {
+      _.each(this.bucketsFromEither, bucket => {
         if (bucket.events === undefined) {
           return;
         }
@@ -86,6 +106,7 @@ export default {
         // TODO: Use flooding instead, preferably with some additional method of removing/simplifying short events for even greater performance
         if (this.filterShortEvents) {
           events = _.filter(events, e => e.duration > 1);
+          console.log(`Filtered ${bucket.events.length - events.length} events`);
         }
         events = _.sortBy(events, e => e.timestamp);
         _.each(events, e => {
@@ -111,13 +132,76 @@ export default {
         return;
       }
 
+      this.update();
+    },
+    events() {
+      if (this.events.length === undefined) {
+        return;
+      }
+
+      this.update();
+    },
+  },
+  mounted() {
+    this.$nextTick(() => {
+      const el = this.$el.querySelector('#visualization');
+      this.timeline = new Timeline(el, [], [], this.options);
+      this.timeline.on('select', properties => {
+        // Sends both 'press' and 'tap' events, only one should trigger
+        if (properties.event.type == 'tap') {
+          this.onSelect(properties);
+        }
+      });
+
+      this.ensureUpdate();
+    });
+  },
+  methods: {
+    openEditor: function () {
+      this.$bvModal.show('edit-modal');
+    },
+    onSelect: async function (properties) {
+      if (properties.items.length == 0) {
+        return;
+      } else if (properties.items.length == 1) {
+        const event = this.chartData[properties.items[0]][6];
+        const groupId = this.items[properties.items[0]].group;
+        const bucketId = _.find(this.groups, g => g.id == groupId).content;
+
+        // We retrieve the full event to ensure if's not cut-off by the query range
+        // See: https://github.com/ActivityWatch/aw-webui/pull/320#issuecomment-1056921587
+        this.editingEvent = await this.$aw.getEvent(bucketId, event.id);
+        this.editingEventBucket = bucketId;
+
+        this.$nextTick(() => {
+          console.log('Editing event', event, ', in bucket', bucketId);
+          this.openEditor();
+        });
+        alert(
+          "Note: Changes won't be reflected in the timeline until the page is refreshed. This will be improved in a future version."
+        );
+      } else {
+        alert('selected multiple items: ' + JSON.stringify(properties.items));
+      }
+    },
+    ensureUpdate() {
+      // Will only run update() if data available and never ran before
+      if (!this.updateHasRun) {
+        this.update();
+      }
+    },
+    update() {
+      // Used by unsureUpdate to check if ran
+      this.updateHasRun = true;
+
       // Build groups
-      let groups = _.map(this.buckets, bucket => {
+      const buckets = this.bucketsFromEither;
+      let groups = _.map(buckets, bucket => {
         // If bucket id is not set, then if only one bucket is given, assume result of a search/query and set a constant placeholder one.
         // Otherwise, log a warning.
         if (bucket.id === undefined) {
-          if (this.buckets.length === 1) {
-            bucket.id = 'search';
+          if (buckets.length === 1) {
+            bucket.id = 'events';
           } else {
             console.warn(
               'Bucket id is not set, but there are multiple buckets. This is not supported.'
@@ -184,47 +268,6 @@ export default {
 
         this.items = items;
         this.groups = groups;
-      }
-    },
-  },
-  mounted() {
-    this.$nextTick(() => {
-      const el = this.$el.querySelector('#visualization');
-      this.timeline = new Timeline(el, [], [], this.options);
-      this.timeline.on('select', properties => {
-        // Sends both 'press' and 'tap' events, only one should trigger
-        if (properties.event.type == 'tap') {
-          this.onSelect(properties);
-        }
-      });
-    });
-  },
-  methods: {
-    openEditor: function () {
-      this.$bvModal.show('edit-modal');
-    },
-    onSelect: async function (properties) {
-      if (properties.items.length == 0) {
-        return;
-      } else if (properties.items.length == 1) {
-        const event = this.chartData[properties.items[0]][6];
-        const groupId = this.items[properties.items[0]].group;
-        const bucketId = _.find(this.groups, g => g.id == groupId).content;
-
-        // We retrieve the full event to ensure if's not cut-off by the query range
-        // See: https://github.com/ActivityWatch/aw-webui/pull/320#issuecomment-1056921587
-        this.editingEvent = await this.$aw.getEvent(bucketId, event.id);
-        this.editingEventBucket = bucketId;
-
-        this.$nextTick(() => {
-          console.log('Editing event', event, ', in bucket', bucketId);
-          this.openEditor();
-        });
-        alert(
-          "Note: Changes won't be reflected in the timeline until the page is refreshed. This will be improved in a future version."
-        );
-      } else {
-        alert('selected multiple items: ' + JSON.stringify(properties.items));
       }
     },
   },
