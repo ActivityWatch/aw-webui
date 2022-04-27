@@ -54,6 +54,7 @@ const router = new VueRouter({
     { path: '/buckets', component: Buckets },
     { path: '/buckets/:id', component: Bucket, props: true },
     { path: '/timeline', component: Timeline, meta: { fullContainer: true } },
+    { path: '/trends', component: Trends, meta: { fullContainer: true } },
     { path: '/trends/:host', component: Trends, meta: { fullContainer: true } },
     { path: '/report', component: Report },
     { path: '/query', component: QueryExplorer },

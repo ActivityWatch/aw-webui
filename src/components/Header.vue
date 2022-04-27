@@ -59,14 +59,14 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
           b-dropdown-item(to="/search")
             icon(name="search")
             | Search
-          b-dropdown-item(to="/trends")
+          b-dropdown-item(to="/trends" v-if="devmode")
             icon(name="chart-line")
             | Trends
-          b-dropdown-item(to="/report")
+          b-dropdown-item(to="/report" v-if="devmode")
             icon(name="chart-pie")
             | Report
-          b-dropdown-item(to="/alerts")
-            icon(name="chart-bar")
+          b-dropdown-item(to="/alerts" v-if="devmode")
+            icon(name="flag-checkered")
             | Alerts
           b-dropdown-item(to="/query")
             icon(name="code")
@@ -98,6 +98,7 @@ import 'vue-awesome/icons/search';
 import 'vue-awesome/icons/code';
 import 'vue-awesome/icons/chart-line'; // TODO: switch to chart-column, when vue-awesome supports FA v6
 import 'vue-awesome/icons/chart-pie';
+import 'vue-awesome/icons/flag-checkered';
 import 'vue-awesome/icons/stopwatch';
 import 'vue-awesome/icons/cog';
 import 'vue-awesome/icons/tools';
@@ -117,6 +118,11 @@ export default {
       // Make configurable?
       fixedTopMenu: this.$isAndroid,
     };
+  },
+  computed: {
+    devmode() {
+      return this.$store.state.settings.devmode;
+    },
   },
   mounted: async function () {
     await this.$store.dispatch('buckets/ensureBuckets');

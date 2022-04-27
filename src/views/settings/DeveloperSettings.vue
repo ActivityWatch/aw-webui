@@ -10,13 +10,14 @@ div
         | Hide
   div(v-if="showSettings")
     p These settings are meant for developers who (hopefully) know what they are doing.
-    div.d-flex.justify-content-between
+
+    b-form-group(label="Force devmode" label-cols-md=3 description="Devmode enables some features that are still work-in-progress.")
       div
-        h5.mb-0 Show yearly time range
+        b-form-checkbox.float-right.ml-2(v-model="devmode" switch)
+
+    b-form-group(label="Show yearly time range" label-cols-md=3 description="Querying an entire year is a very heavy operation, and is likely to lead to timeouts. However, the query might be fast enough if you're running aw-server-rust.")
       div
-        b-form-checkbox(v-model="showYearly" switch)
-    small
-      | Querying an entire year is a very heavy operation, and is likely to lead to timeouts. However, the query might be fast enough if you're running aw-server-rust.
+        b-form-checkbox.float-right.ml-2(v-model="showYearly" switch)
 </template>
 
 <script>
@@ -27,6 +28,14 @@ export default {
     };
   },
   computed: {
+    devmode: {
+      get() {
+        return this.$store.state.settings.devmode;
+      },
+      set(value) {
+        this.$store.dispatch('settings/update', { devmode: value });
+      },
+    },
     showYearly: {
       get() {
         return this.$store.state.settings.showYearly;

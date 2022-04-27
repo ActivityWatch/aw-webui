@@ -13,8 +13,11 @@ div
   b-alert(v-if="error" show variant="danger")
     | {{error}}
 
-  b-card(v-for="alert in alerts")
-    div Name: {{ alert.name }}
+  b-card(v-for="alert in alerts", :key="alert.name")
+    b-button.float-right(@click="deleteAlert(alert.name)" size="sm" variant="outline-danger")
+      icon(name="trash")
+
+    div Goal name: {{ alert.name }}
     div Category: {{ alert.category.join(" > ") }}
     div Current: {{ alertTime(alert.category) | friendlyduration }} / {{alert.goal}} minutes
       span(v-if="alertTime(alert.category) >= alert.goal")
@@ -22,13 +25,10 @@ div
       span(v-else)
         icon(name="times" color="#555")
 
-  //div
-  //  | {{alert_times}}
-
-  div
-    b-btn(@click="check") Check
-    small
-      b-form-checkbox(v-model="autorefresh", @change="toggleAutoRefresh", switch) Toggle autorefresh every 10s
+  b-input-group.mt-3
+    b-btn(@click="check" variant="success") Check
+    b-input-group-append
+      b-form-checkbox.my-2.ml-3(v-model="autorefresh", @change="toggleAutoRefresh", switch) Toggle autorefresh every 10s
 
   small(v-if="last_updated")
     | Last updated: {{ last_updated }}
@@ -37,17 +37,17 @@ div
 
   div
     h4 New alert
-    | Name:
-    b-input(v-model="editing_alert.name")
-    | Category:
-    b-select(v-model="editing_alert.category")
-      option(v-for="category in categories" :value="category.value") {{ category.text }}
-    | Goal:
-    input(v-model="editing_alert.goal")
-    | minutes
+    b-form-group(label="Name" label-cols-md=2)
+      b-input(v-model="editing_alert.name")
+    b-form-group(label="Category" label-cols-md=2)
+      b-select(v-model="editing_alert.category")
+        option(v-for="category in categories" :value="category.value") {{ category.text }}
+    b-form-group(label="Goal" label-cols-md=2)
+      b-input-group(append="minutes")
+        b-input(v-model="editing_alert.goal" type="number")
 
     div
-      b-btn(@click="addAlert")
+      b-btn(@click="addAlert" variant="success")
         icon(name="plus")
         | Add alert
 </template>
@@ -63,12 +63,17 @@ import { loadClassesForQuery } from '~/util/classes';
 import 'vue-awesome/icons/plus';
 import 'vue-awesome/icons/check';
 import 'vue-awesome/icons/times';
+import 'vue-awesome/icons/trash';
 
 export default {
   name: 'Alerts',
   data() {
     return {
-      alerts: [{ name: 'Test', category: ['Work'], goal: 100 }],
+      // TODO: Support negative goals (avoid distractions)
+      alerts: [
+        { name: 'Work', category: ['Work'], goal: 100 },
+        { name: 'Media', category: ['Media'], goal: 10 },
+      ],
       editing_alert: {},
 
       alert_times: {},
@@ -76,7 +81,7 @@ export default {
       error: '',
 
       hostnames: [],
-      hostname: 'erb-main2-arch',
+      hostname: '',
 
       last_updated: null,
 
@@ -109,12 +114,15 @@ export default {
     await this.$store.dispatch('buckets/ensureBuckets');
     await this.$store.dispatch('categories/load');
     this.hostnames = this.$store.getters['buckets/getHostnames'];
+    this.hostname = this.hostnames[0];
   },
   methods: {
     addAlert: function () {
-      const new_alert = this.editing_alert;
-      this.alerts = this.alerts.concat(new_alert);
       // TODO: Persist to settings/localstorage
+      this.alerts = this.alerts.concat({ ...this.editing_alert });
+    },
+    deleteAlert: function (name) {
+      this.alerts = this.alerts.filter(a => a.name !== name);
     },
 
     toggleAutoRefresh: function () {
@@ -141,8 +149,6 @@ export default {
         return [cat.name, cat.rule];
       });
       */
-      const start = moment().subtract(1, 'day');
-      const stop = moment().add(1, 'day');
 
       const classes = loadClassesForQuery();
 
@@ -156,11 +162,15 @@ export default {
       query += '; RETURN = events;';
 
       const query_array = query.split(';').map(s => s.trim() + ';');
-      const timeperiods = [start.format() + '/' + stop.format()];
+
+      // Get start of today
+      const start = moment().subtract(1, 'days').startOf('day');
+      const end = moment(start).add(1, 'days');
+      const timeperiods = [start.format() + '/' + end.format()];
+
       try {
         this.status = 'searching';
         const data = await this.$aw.query(timeperiods, query_array);
-        console.log(data);
         this.events = data[0];
         this.error = '';
       } catch (e) {
@@ -171,7 +181,7 @@ export default {
         this.status = null;
       }
 
-      let grouped = _.groupBy(this.events, e => e.data.$category);
+      const grouped = _.groupBy(this.events, e => e.data.$category);
       const sumCats = Object.fromEntries(
         _.map(Object.entries(grouped), entry => {
           const [group, events] = entry;
