@@ -142,6 +142,7 @@ div
 </style>
 
 <script>
+import { mapState } from 'pinia';
 import moment from 'moment';
 import { get_day_start_with_offset, get_today_with_offset } from '~/util/time';
 import { periodLengthConvertMoment } from '~/util/timeperiod';
@@ -158,6 +159,7 @@ import 'vue-awesome/icons/question-circle';
 import 'vue-awesome/icons/filter';
 
 import { useSettingsStore } from '~/stores/settings';
+import { useViewsStore } from '~/stores/views';
 
 export default {
   name: 'Activity',
@@ -187,6 +189,7 @@ export default {
     };
   },
   computed: {
+    ...mapState(useViewsStore, ['views']),
     periodLengths: function () {
       const settingsStore = useSettingsStore();
       const periods = ['day', 'week', 'month'];
@@ -194,9 +197,6 @@ export default {
         periods.push('year');
       }
       return periods;
-    },
-    views: function () {
-      return this.$store.state.views.views;
     },
     currentView: function () {
       return this.views.find(v => v.id == this.$route.params.view_id) || this.views[0];
@@ -285,7 +285,8 @@ export default {
   },
 
   mounted: async function () {
-    this.$store.dispatch('views/load');
+    const viewsStore = useViewsStore();
+    viewsStore.load();
     this.$store.dispatch('categories/load');
     try {
       await this.refresh();
@@ -338,10 +339,12 @@ export default {
     },
 
     checkFormValidity() {
+      const viewsStore = useViewsStore();
+
       // All checks must be false for check to pass
       const checks = {
         // Check if view id is unique
-        'ID is not unique': this.$store.state.views.views.map(v => v.id).includes(this.new_view.id),
+        'ID is not unique': viewsStore.views.map(v => v.id).includes(this.new_view.id),
         'Missing ID': this.new_view.id === '',
         'Missing name': this.new_view.name === '',
       };
@@ -369,7 +372,8 @@ export default {
         return;
       }
 
-      this.$store.commit('views/addView', { id: this.new_view.id, name: this.new_view.name });
+      const viewsStore = useViewsStore();
+      viewsStore.addView({ id: this.new_view.id, name: this.new_view.name });
 
       // Hide the modal manually
       this.$nextTick(() => {

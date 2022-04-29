@@ -36,7 +36,11 @@ import 'vue-awesome/icons/save';
 import 'vue-awesome/icons/times';
 import 'vue-awesome/icons/trash';
 import 'vue-awesome/icons/undo';
+
+import { mapState } from 'pinia';
 import draggable from 'vuedraggable';
+
+import { useViewsStore } from '@/stores/views';
 
 export default {
   name: 'ActivityView',
@@ -54,11 +58,12 @@ export default {
     return { editing: false };
   },
   computed: {
+    ...mapState(useViewsStore, ['views']),
     view: function () {
       if (this.view_id == 'default') {
-        return this.$store.state.views.views[0];
+        return this.views[0];
       } else {
-        return this.$store.state.views.views.find(v => v.id == this.view_id);
+        return this.views.find(v => v.id == this.view_id);
       }
     },
     elements: {
@@ -66,26 +71,26 @@ export default {
         return this.view.elements;
       },
       set(elements) {
-        this.$store.commit('views/setElements', { view_id: this.view.id, elements });
+        useViewsStore().setElements({ view_id: this.view.id, elements });
       },
     },
   },
   methods: {
     save() {
-      this.$store.dispatch('views/save');
+      useViewsStore().save();
     },
     discard() {
-      this.$store.dispatch('views/load');
+      useViewsStore().load();
     },
     remove() {
-      this.$store.commit('views/removeView', { view_id: this.view.id });
+      useViewsStore().removeView({ view_id: this.view.id });
       // If we're on an URL that'll be invalid after removing the view, navigate to the main/default view
       if (!this.$route.path.includes('default')) {
         this.$router.replace('./default');
       }
     },
     restoreDefaults() {
-      this.$store.commit('views/restoreDefaults');
+      useViewsStore().restoreDefaults();
       alert(
         "All views have been restored to defaults. Changes won't be saved until you click 'Save'."
       );
@@ -95,7 +100,7 @@ export default {
       }
     },
     addVisualization: function () {
-      this.$store.commit('views/addVisualization', { view_id: this.view.id, type: 'top_apps' });
+      useViewsStore().addVisualization({ view_id: this.view.id, type: 'top_apps' });
     },
     async onTypeChange(id, type) {
       let props = {};
@@ -113,10 +118,10 @@ export default {
         };
       }
 
-      await this.$store.commit('views/editView', { view_id: this.view.id, el_id: id, type, props });
+      await useViewsStore().editView({ view_id: this.view.id, el_id: id, type, props });
     },
     async onRemove(id) {
-      await this.$store.commit('views/removeVisualization', { view_id: this.view.id, el_id: id });
+      await useViewsStore().removeVisualization({ view_id: this.view.id, el_id: id });
     },
     isVisLarge(el) {
       return el.type == 'sunburst_clock';
