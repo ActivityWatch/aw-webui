@@ -44,7 +44,10 @@ div
 import moment from 'moment';
 import { get_today_with_offset } from '~/util/time';
 import { buildBarchartDataset } from '~/util/datasets';
+
 import { useBucketsStore } from '~/stores/buckets';
+import { useCategoryStore } from '~/stores/categories';
+import { useActivityStore } from '~/stores/activity';
 
 export default {
   name: 'Trends',
@@ -55,6 +58,8 @@ export default {
     const since = moment(today).subtract(n_days, 'days');
     return {
       bucketsStore: useBucketsStore(),
+      categoryStore: useCategoryStore(),
+      activityStore: useActivityStore(),
 
       today,
       timeperiod: { start: since, length: [n_days, 'day'] },
@@ -83,7 +88,7 @@ export default {
       const queryParams = {
         timeperiod: this.timeperiod,
         host: this.host,
-        force: force,
+        force,
         filterAFK: this.filterAFK,
         includeAudible: this.includeAudible,
         filterCategories: this.filterCategories,

@@ -65,10 +65,16 @@ import 'vue-awesome/icons/check';
 import 'vue-awesome/icons/times';
 import 'vue-awesome/icons/trash';
 
+import { useBucketsStore } from '~/stores/buckets';
+import { useCategoryStore } from '~/stores/categories';
+
 export default {
   name: 'Alerts',
   data() {
     return {
+      bucketsStore: useBucketsStore(),
+      categoryStore: useCategoryStore(),
+
       // TODO: Support negative goals (avoid distractions)
       alerts: [
         { name: 'Work', category: ['Work'], goal: 100 },
