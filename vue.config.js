@@ -26,6 +26,9 @@ module.exports = {
         assets: path.resolve(__dirname, './src/assets'),
         components: path.resolve(__dirname, './src/components'),
       },
+      fallback: {
+        domain: require.resolve('domain-browser'),
+      },
     },
     plugins: [
       new webpack.IgnorePlugin({ resourceRegExp: /^\.\/locale$/, contextRegExp: /moment$/ }),
