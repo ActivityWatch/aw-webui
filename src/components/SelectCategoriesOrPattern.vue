@@ -17,6 +17,7 @@ div
 
 <script lang="ts">
 import Vue from 'vue';
+import { useCategoryStore } from '~/stores/categories';
 
 const SEP = ' > ';
 
@@ -37,7 +38,7 @@ export default Vue.extend({
   },
   computed: {
     categories: function () {
-      return this.$store.state.categories.classes;
+      return useCategoryStore().classes;
     },
 
     categoriesWithRules() {
@@ -77,7 +78,7 @@ export default Vue.extend({
     },
   },
   async mounted() {
-    await this.$store.dispatch('categories/load');
+    await useCategoryStore().load();
   },
 });
 </script>

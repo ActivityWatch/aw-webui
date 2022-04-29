@@ -2,12 +2,7 @@ import _ from 'lodash';
 import { Category, matchString, loadClasses } from './classes';
 import Color from 'color';
 import * as d3 from 'd3';
-import { IEvent } from './interfaces';
-
-interface Bucket {
-  name: string;
-  type: string;
-}
+import { IEvent, IBucket } from './interfaces';
 
 // See here for examples:
 //   https://bl.ocks.org/pstuffa/3393ff2711a53975040077b7453781a9
@@ -114,7 +109,7 @@ function fallbackColor(str: string): string {
   }
 }
 
-export function getTitleAttr(bucket: Bucket, e: IEvent) {
+export function getTitleAttr(bucket: IBucket, e: IEvent) {
   if (bucket.type == 'currentwindow') {
     return e.data.app;
   } else if (bucket.type == 'web.tab.current') {

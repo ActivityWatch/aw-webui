@@ -22,6 +22,7 @@ div
 <script>
 import _ from 'lodash';
 import { useSettingsStore } from '~/stores/settings';
+import { useBucketsStore } from '~/stores/buckets';
 
 export default {
   name: 'Timeline',
@@ -49,7 +50,7 @@ export default {
   methods: {
     getBuckets: async function () {
       if (this.daterange == null) return;
-      this.buckets = await this.$store.dispatch('buckets/getBucketsWithEvents', {
+      this.buckets = await useBucketsStore().getBucketsWithEvents({
         start: this.daterange[0].format(),
         end: this.daterange[1].format(),
       });

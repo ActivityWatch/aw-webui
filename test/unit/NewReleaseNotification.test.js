@@ -1,13 +1,11 @@
 import { shallowMount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 import NewReleaseNotification from '~/components/NewReleaseNotification';
-import store from '~/store';
 import { createClient } from '~/util/awclient';
 
 describe('hasNewRelease method', () => {
   createClient();
   const wrapper = shallowMount(NewReleaseNotification, {
-    store,
     global: {
       plugins: [createTestingPinia()],
     },

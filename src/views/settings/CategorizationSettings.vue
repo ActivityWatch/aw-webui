@@ -38,37 +38,42 @@ div
         | Save
 </template>
 <script>
-import { mapState, mapGetters } from 'vuex';
+import { mapState, mapGetters } from 'pinia';
 import CategoryEditTree from '~/components/CategoryEditTree.vue';
 import 'vue-awesome/icons/undo';
+
+import { useCategoryStore } from '~/stores/categories';
 
 export default {
   name: 'CategorizationSettings',
   components: {
     CategoryEditTree,
   },
+  data: () => ({
+    categoryStore: useCategoryStore(),
+  }),
   computed: {
-    ...mapGetters('categories', ['classes_hierarchy']),
-    ...mapState('categories', ['classes_unsaved_changes']),
+    ...mapState(useCategoryStore, ['classes_unsaved_changes']),
+    ...mapGetters(useCategoryStore, ['classes_hierarchy']),
   },
   mounted() {
-    this.$store.dispatch('categories/load');
+    this.categoryStore.load();
   },
   methods: {
     addClass: function () {
-      this.$store.commit('categories/addClass', {
+      this.categoryStore.addClass({
         name: ['New class'],
         rule: { type: 'regex', regex: 'FILL ME' },
       });
     },
     saveClasses: async function () {
-      await this.$store.dispatch('categories/save');
+      await this.categoryStore.save();
     },
     resetClasses: async function () {
-      await this.$store.dispatch('categories/load');
+      await this.categoryStore.load();
     },
     restoreDefaultClasses: async function () {
-      await this.$store.commit('categories/restoreDefaultClasses');
+      await this.categoryStore.restoreDefaultClasses();
     },
     exportClasses: function () {
       console.log('Exporting categories...');
@@ -110,7 +115,7 @@ export default {
       const import_obj = JSON.parse(text);
 
       // Set import to categories as unsaved changes
-      this.$store.commit('categories/import', import_obj.categories);
+      this.categoryStore.import(import_obj.categories);
     },
   },
 };

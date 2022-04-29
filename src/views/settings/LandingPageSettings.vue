@@ -16,11 +16,14 @@ div
 
 <script>
 import { useSettingsStore } from '~/stores/settings';
+import { useBucketsStore } from '~/stores/buckets';
 
 export default {
   name: 'LandingPageSettings',
   data: () => {
     return {
+      bucketsStore: useBucketsStore(),
+
       loaded: false,
     };
   },
@@ -36,11 +39,11 @@ export default {
       },
     },
     hostnames() {
-      return Object.keys(this.$store.getters['buckets/bucketsByHostname']);
+      return Object.keys(this.bucketsStore.bucketsByHostname);
     },
   },
   async mounted() {
-    await this.$store.dispatch('buckets/ensureBuckets');
+    await this.bucketsStore.ensureLoaded();
     this.loaded = true;
   },
 };

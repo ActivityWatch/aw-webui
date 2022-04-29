@@ -10,11 +10,11 @@ div
         span {{ host }}
       li.list-group-item.pl-0.pr-3.py-0(style="border: 0")
         b.mr-1 Time active:
-        span {{ $store.state.activity.active.duration | friendlyduration }}
-    ul.list-group.list-group-horizontal-md(v-if="this.periodLength != 'day'")
+        span {{ activityStore.active.duration | friendlyduration }}
+    ul.list-group.list-group-horizontal-md(v-if="periodLength != 'day'")
       li.list-group-item.pl-0.pr-3.py-0(style="border: 0")
         b.mr-1 Query range:
-        span {{ this.periodReadableRange }}
+        span {{ periodReadableRange }}
 
 
   div.mb-2.d-flex
@@ -61,7 +61,7 @@ div
 
     div.col-md-6.mt-2.mt-md-0
       b-form-group(label="Show category" label-cols="5" label-cols-lg="4" style="font-size: 0.88em")
-        b-form-select(v-model="filterCategory", :options="categories" size="sm")
+        b-form-select(v-model="filterCategory", :options="categoryStore.category_select(true)" size="sm")
 
 
   aw-periodusage.mt-2(:periodusage_arr="periodusage", @update="setDate")
@@ -159,6 +159,8 @@ import 'vue-awesome/icons/question-circle';
 import 'vue-awesome/icons/filter';
 
 import { useSettingsStore } from '~/stores/settings';
+import { useCategoryStore } from '~/stores/categories';
+import { useActivityStore } from '~/stores/activity';
 import { useViewsStore } from '~/stores/views';
 
 export default {
@@ -180,6 +182,11 @@ export default {
   },
   data: function () {
     return {
+      activityStore: useActivityStore(),
+      categoryStore: useCategoryStore(),
+      viewsStore: useViewsStore(),
+      settingsStore: useSettingsStore(),
+
       today: null,
       showOptions: false,
       filterCategory: null,
@@ -206,19 +213,15 @@ export default {
       return this.currentView !== undefined ? this.currentView.id : '';
     },
     _date: function () {
-      const settingsStore = useSettingsStore();
-      const offset = settingsStore.startOfDay;
+      const offset = this.settingsStore.startOfDay;
       return this.date || get_today_with_offset(offset);
     },
     subview: function () {
       return this.$route.meta.subview;
     },
-    categories: function () {
-      return this.$store.getters['categories/category_select'](true);
-    },
     filterCategories: function () {
       if (this.filterCategory) {
-        const cats = this.$store.getters['categories/all_categories'];
+        const cats = this.categories.all_categories;
         const isChild = p => c => c.length > p.length && _.isEqual(p, c.slice(0, p.length));
         const children = _.filter(cats, isChild(this.filterCategory));
         return [this.filterCategory].concat(children);
@@ -230,7 +233,7 @@ export default {
       return `/activity/${this.host}/${this.periodLength}`;
     },
     periodusage: function () {
-      return this.$store.getters['activity/getActiveHistoryAroundTimeperiod'](this.timeperiod);
+      return this.activityStore.getActiveHistoryAroundTimeperiod(this.timeperiod);
     },
     timeperiod: function () {
       const settingsStore = useSettingsStore();
@@ -285,9 +288,8 @@ export default {
   },
 
   mounted: async function () {
-    const viewsStore = useViewsStore();
-    viewsStore.load();
-    this.$store.dispatch('categories/load');
+    this.viewsStore.load();
+    this.categoryStore.load();
     try {
       await this.refresh();
     } catch (e) {
@@ -300,7 +302,7 @@ export default {
 
   beforeDestroy: async function () {
     // Cancels pending requests and resets store
-    await this.$store.dispatch('activity/reset');
+    await this.activityStore.reset();
   },
 
   methods: {
@@ -324,7 +326,7 @@ export default {
     },
 
     refresh: async function (force) {
-      await this.$store.dispatch('activity/ensure_loaded', {
+      await this.activityStore.ensure_loaded({
         timeperiod: this.timeperiod,
         host: this.host,
         force: force,
@@ -335,16 +337,14 @@ export default {
     },
 
     load_demo: async function () {
-      await this.$store.dispatch('activity/load_demo');
+      await this.activityStore.load_demo();
     },
 
     checkFormValidity() {
-      const viewsStore = useViewsStore();
-
       // All checks must be false for check to pass
       const checks = {
         // Check if view id is unique
-        'ID is not unique': viewsStore.views.map(v => v.id).includes(this.new_view.id),
+        'ID is not unique': this.viewsStore.views.map(v => v.id).includes(this.new_view.id),
         'Missing ID': this.new_view.id === '',
         'Missing name': this.new_view.name === '',
       };

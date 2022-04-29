@@ -28,6 +28,7 @@ b-form-tags#tags-component-select(
 
 <script lang="typescript">
 import Vue from 'vue';
+import { useCategoryStore } from '~/stores/categories';
 
 const SEP = " > ";
 
@@ -40,7 +41,7 @@ export default Vue.extend({
 
   computed: {
     options() {
-      const classes = this.$store.state.categories.classes;
+      const classes = useCategoryStore().classes;
       return classes.map(category => category.name.join(SEP));
     }
   },

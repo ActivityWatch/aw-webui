@@ -30,9 +30,6 @@ Vue.prototype.$aw = getClient();
 // Sets up the routing and the base app (using vue-router)
 import router from './route.js';
 
-// Sets up the vuex store
-import store from './store';
-
 // Sets up the pinia store
 import pinia from './stores';
 
@@ -85,6 +82,5 @@ new Vue({
   el: '#app',
   router: router,
   render: h => h(App),
-  store,
   pinia,
 });

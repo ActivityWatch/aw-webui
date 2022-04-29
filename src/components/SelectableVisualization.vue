@@ -16,7 +16,7 @@ div
     b-alert.small.px-2.py-1(show variant="warning")
       | This feature doesn't support the current time period.
 
-  div(v-if="$store.state.activity.buckets.loaded")
+  div(v-if="activityStore.buckets.loaded")
     // Check data prerequisites
     div(v-if="!has_prerequisites")
       b-alert.small.px-2.py-1(show variant="warning")
@@ -24,55 +24,55 @@ div
         | You can find a list of all watchers in #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") the documentation].
 
     div(v-if="type == 'top_apps'")
-      aw-summary(:fields="$store.state.activity.window.top_apps",
+      aw-summary(:fields="activityStore.window.top_apps",
                  :namefunc="e => e.data.app",
                  :colorfunc="e => e.data.app",
                  with_limit)
     div(v-if="type == 'top_titles'")
-      aw-summary(:fields="$store.state.activity.window.top_titles",
+      aw-summary(:fields="activityStore.window.top_titles",
                  :namefunc="e => e.data.title",
                  :colorfunc="e => e.data.title",
                  with_limit)
     div(v-if="type == 'top_domains'")
-      aw-summary(:fields="$store.state.activity.browser.top_domains",
+      aw-summary(:fields="activityStore.browser.top_domains",
                  :namefunc="e => e.data.$domain",
                  :colorfunc="e => e.data.$domain",
                  with_limit)
     div(v-if="type == 'top_urls'")
-      aw-summary(:fields="$store.state.activity.browser.top_urls",
+      aw-summary(:fields="activityStore.browser.top_urls",
                  :namefunc="e => e.data.url",
                  :colorfunc="e => e.data.$domain",
                  with_limit)
     div(v-if="type == 'top_editor_files'")
-      aw-summary(:fields="$store.state.activity.editor.top_files",
+      aw-summary(:fields="activityStore.editor.top_files",
                  :namefunc="top_editor_files_namefunc",
                  :hoverfunc="top_editor_files_hoverfunc",
                  :colorfunc="e => e.data.language",
                  with_limit)
     div(v-if="type == 'top_editor_languages'")
-      aw-summary(:fields="$store.state.activity.editor.top_languages",
+      aw-summary(:fields="activityStore.editor.top_languages",
                  :namefunc="e => e.data.language",
                  :colorfunc="e => e.data.language",
                  with_limit)
     div(v-if="type == 'top_editor_projects'")
-      aw-summary(:fields="$store.state.activity.editor.top_projects",
+      aw-summary(:fields="activityStore.editor.top_projects",
                  :namefunc="top_editor_projects_namefunc",
                  :hoverfunc="top_editor_projects_hoverfunc",
                  :colorfunc="e => e.data.language",
                  with_limit)
     div(v-if="type == 'top_categories'")
-      aw-summary(:fields="$store.state.activity.category.top",
+      aw-summary(:fields="activityStore.category.top",
                  :namefunc="e => e.data['$category'].join(' > ')",
                  :colorfunc="e => e.data['$category'].join(' > ')",
                  with_limit)
     div(v-if="type == 'category_tree'")
-      aw-categorytree(:events="$store.state.activity.category.top")
+      aw-categorytree(:events="activityStore.category.top")
     div(v-if="type == 'category_sunburst'")
       aw-sunburst-categories(:data="top_categories_hierarchy", style="height: 20em")
     div(v-if="type == 'timeline_barchart'")
-      aw-timeline-barchart(:datasets="datasets", :resolution="$store.state.activity.query_options.timeperiod.length[1]", style="height: 100")
+      aw-timeline-barchart(:datasets="datasets", :resolution="activityStore.query_options.timeperiod.length[1]", style="height: 100")
     div(v-if="type == 'sunburst_clock'")
-      aw-sunburst-clock(:date="date", :afkBucketId="$store.state.activity.buckets.afk[0]", :windowBucketId="$store.state.activity.buckets.window[0]")
+      aw-sunburst-clock(:date="date", :afkBucketId="activityStore.buckets.afk[0]", :windowBucketId="activityStore.buckets.window[0]")
     div(v-if="type == 'custom_vis'")
       aw-custom-vis(:visname="props.visname" :title="props.title")
 </template>
@@ -100,6 +100,9 @@ import { buildBarchartDataset } from '~/util/datasets';
 // TODO: Move this somewhere else
 import { build_category_hierarchy } from '~/util/classes';
 
+import { useActivityStore } from '~/stores/activity';
+import { useCategoryStore } from '~/stores/categories';
+
 function pick_subname_as_name(c) {
   c.name = c.subname;
   c.children = c.children.map(pick_subname_as_name);
@@ -116,6 +119,9 @@ export default {
   },
   data: function () {
     return {
+      activityStore: useActivityStore(),
+      categoryStore: useCategoryStore(),
+
       types: [
         'top_apps',
         'top_titles',
@@ -156,45 +162,43 @@ export default {
       return {
         top_apps: {
           title: 'Top Applications',
-          available:
-            this.$store.state.activity.window.available ||
-            this.$store.state.activity.android.available,
+          available: this.activityStore.window.available || this.activityStore.android.available,
         },
         top_titles: {
           title: 'Top Window Titles',
-          available: this.$store.state.activity.window.available,
+          available: this.activityStore.window.available,
         },
         top_domains: {
           title: 'Top Browser Domains',
-          available: this.$store.state.activity.browser.available,
+          available: this.activityStore.browser.available,
         },
         top_urls: {
           title: 'Top Browser URLs',
-          available: this.$store.state.activity.browser.available,
+          available: this.activityStore.browser.available,
         },
         top_editor_files: {
           title: 'Top Editor Files',
-          available: this.$store.state.activity.editor.available,
+          available: this.activityStore.editor.available,
         },
         top_editor_languages: {
           title: 'Top Editor Languages',
-          available: this.$store.state.activity.editor.available,
+          available: this.activityStore.editor.available,
         },
         top_editor_projects: {
           title: 'Top Editor Projects',
-          available: this.$store.state.activity.editor.available,
+          available: this.activityStore.editor.available,
         },
         top_categories: {
           title: 'Top Categories',
-          available: this.$store.state.activity.category.available,
+          available: this.activityStore.category.available,
         },
         category_tree: {
           title: 'Category Tree',
-          available: this.$store.state.activity.category.available,
+          available: this.activityStore.category.available,
         },
         category_sunburst: {
           title: 'Category Sunburst',
-          available: this.$store.state.activity.category.available,
+          available: this.activityStore.category.available,
         },
         timeline_barchart: {
           title: 'Timeline (barchart)',
@@ -202,9 +206,7 @@ export default {
         },
         sunburst_clock: {
           title: 'Sunburst clock',
-          available:
-            this.$store.state.activity.window.available &&
-            this.$store.state.activity.active.available,
+          available: this.activityStore.window.available && this.activityStore.active.available,
         },
         custom_vis: {
           title: 'Custom Visualization',
@@ -222,7 +224,7 @@ export default {
       return true;
     },
     top_categories_hierarchy: function () {
-      const top_categories = this.$store.state.activity.category.top;
+      const top_categories = this.activityStore.category.top;
       if (top_categories) {
         const categories = top_categories.map(c => {
           return { name: c.data.$category, size: c.duration };
@@ -238,20 +240,19 @@ export default {
     },
     datasets: function () {
       return buildBarchartDataset(
-        this.$store,
-        this.$store.state.activity.category.by_period,
-        this.$store.state.categories.classes
+        this.activityStore.category.by_period,
+        this.categoryStore.classes
       );
     },
     date: function () {
-      let date = this.$store.state.activity.query_options.date;
+      let date = this.activityStore.query_options.date;
       if (!date) {
-        date = this.$store.state.activity.query_options.timeperiod.start;
+        date = this.activityStore.query_options.timeperiod.start;
       }
       return date;
     },
     isSingleDay: function () {
-      return _.isEqual(this.$store.state.activity.query_options.timeperiod.length, [1, 'day']);
+      return _.isEqual(this.activityStore.query_options.timeperiod.length, [1, 'day']);
     },
   },
 };
