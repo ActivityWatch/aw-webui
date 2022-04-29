@@ -17,8 +17,9 @@
 import axios from 'axios';
 import moment from 'moment';
 import semver from 'semver';
+import { mapWritableState } from 'pinia';
 
-import { LONG_BACKOFF_PERIOD, SHORT_BACKOFF_PERIOD } from '~/store/modules/settings.ts';
+import { useSettingsStore, LONG_BACKOFF_PERIOD, SHORT_BACKOFF_PERIOD } from '~/stores/settings';
 
 // After reminding the user every SHORT_BACKOFF_PERIOD days for BACKOFF_THRESHOLD times, switch to LONG_BACKOFF_PERIOD
 const BACKOFF_THRESHOLD = 5;
@@ -38,14 +39,7 @@ export default {
     };
   },
   computed: {
-    data: {
-      get: function () {
-        return this.$store.state.settings.newReleaseCheckData;
-      },
-      set: function (data) {
-        this.$store.dispatch('settings/update', { newReleaseCheckData: data });
-      },
-    },
+    ...mapWritableState(useSettingsStore, { data: 'newReleaseNotification' }),
   },
   async mounted() {
     if (this.data && (!this.data.isEnabled || moment() < moment(this.data.nextCheckTime))) return;

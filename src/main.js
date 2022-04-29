@@ -81,7 +81,6 @@ Vue.prototype.$isAndroid = process.env.VUE_APP_ON_ANDROID;
 
 // Setup Vue app
 import App from './App';
-import { create } from 'domain';
 new Vue({
   el: '#app',
   router: router,

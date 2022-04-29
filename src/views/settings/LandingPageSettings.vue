@@ -13,7 +13,10 @@ div
   small
     | The page to open when opening ActivityWatch, or clicking the logo in the top menu.
 </template>
+
 <script>
+import { useSettingsStore } from '~/stores/settings';
+
 export default {
   name: 'LandingPageSettings',
   data: () => {
@@ -24,10 +27,12 @@ export default {
   computed: {
     landingpage: {
       get: function () {
-        return this.$store.state.settings.landingpage || '/home';
+        const settingsStore = useSettingsStore();
+        return settingsStore.landingpage || '/home';
       },
       set: function (val) {
-        this.$store.dispatch('settings/update', { landingpage: val });
+        const settingsStore = useSettingsStore();
+        settingsStore.update({ landingpage: val });
       },
     },
     hostnames() {

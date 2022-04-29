@@ -157,6 +157,8 @@ import 'vue-awesome/icons/save';
 import 'vue-awesome/icons/question-circle';
 import 'vue-awesome/icons/filter';
 
+import { useSettingsStore } from '~/stores/settings';
+
 export default {
   name: 'Activity',
   props: {
@@ -186,8 +188,9 @@ export default {
   },
   computed: {
     periodLengths: function () {
+      const settingsStore = useSettingsStore();
       const periods = ['day', 'week', 'month'];
-      if (localStorage.showYearly && JSON.parse(localStorage.showYearly)) {
+      if (settingsStore.showYearly) {
         periods.push('year');
       }
       return periods;
@@ -203,7 +206,8 @@ export default {
       return this.currentView !== undefined ? this.currentView.id : '';
     },
     _date: function () {
-      const offset = this.$store.state.settings.startOfDay;
+      const settingsStore = useSettingsStore();
+      const offset = settingsStore.startOfDay;
       return this.date || get_today_with_offset(offset);
     },
     subview: function () {
@@ -229,8 +233,9 @@ export default {
       return this.$store.getters['activity/getActiveHistoryAroundTimeperiod'](this.timeperiod);
     },
     timeperiod: function () {
+      const settingsStore = useSettingsStore();
       return {
-        start: get_day_start_with_offset(this._date, this.$store.state.settings.startOfDay),
+        start: get_day_start_with_offset(this._date, settingsStore.startOfDay),
         length: [1, this.periodLength],
       };
     },

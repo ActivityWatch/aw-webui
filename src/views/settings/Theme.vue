@@ -4,7 +4,7 @@ div
     div
       h5.mt-1.mb-2.mb-sm-0 Theme
     div
-      b-select.landingpage(v-if="loaded" size="sm" :value="theme", @change="theme = $event")
+      b-select.landingpage(v-if="_loaded" size="sm" :value="theme", @change="theme = $event")
         option(value="light") Light
         option(value="dark") Dark
       span(v-else)
@@ -12,20 +12,24 @@ div
   small
     | Change color theme of the application (you need to change categories colors manually to be suitable with dark mode).
 </template>
+
 <script>
+import { mapState } from 'pinia';
+import { useSettingsStore } from '~/stores/settings';
+
 export default {
   name: 'Theme',
   computed: {
-    loaded() {
-      return this.$store.state.settings._loaded;
-    },
+    ...mapState(useSettingsStore, ['_loaded']),
     theme: {
       get() {
-        return this.$store.state.settings.theme;
+        const settingsStore = useSettingsStore();
+        return settingsStore.theme;
       },
       set(value) {
         console.log('Set theme to ' + value);
-        this.$store.dispatch('settings/update', {
+        const settingsStore = useSettingsStore();
+        settingsStore.update({
           theme: value,
         });
 

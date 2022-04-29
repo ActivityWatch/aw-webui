@@ -43,15 +43,13 @@ div
 <script>
 import moment from 'moment';
 import { get_today_with_offset } from '~/util/time';
-
 import { buildBarchartDataset } from '~/util/datasets';
 
 export default {
   name: 'Trends',
   props: {},
   data: function () {
-    const offset = this.$store.state.settings.startOfDay;
-    const today = get_today_with_offset(offset);
+    const today = get_today_with_offset();
     const n_days = 7;
     const since = moment(today).subtract(n_days, 'days');
     return {

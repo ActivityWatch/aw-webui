@@ -67,6 +67,8 @@ ul {
 import { range } from 'lodash/fp';
 import moment from 'moment';
 
+import { useSettingsStore } from '~/stores/settings';
+
 const NUM_OPTIONS = 10;
 // INITIAL_WAIT_PERIOD is how long to wait from initialTimestamp to the first time that the poll shows up
 const INITIAL_WAIT_PERIOD = 7 * 24 * 60 * 60;
@@ -91,11 +93,13 @@ export default {
   computed: {
     data: {
       get() {
-        return this.$store.state.settings.userSatisfactionPollData;
+        const settingsStore = useSettingsStore();
+        return settingsStore.userSatisfactionPollData;
       },
       set(value) {
-        const data = this.$store.state.settings.userSatisfactionPollData;
-        this.$store.dispatch('settings/update', {
+        const settingsStore = useSettingsStore();
+        const data = settingsStore.userSatisfactionPollData;
+        settingsStore.update({
           userSatisfactionPollData: { ...data, ...value },
         });
       },
@@ -103,13 +107,11 @@ export default {
   },
   async mounted() {
     // Get the rest of the data
+    const settingsStore = useSettingsStore();
     if (!this.data) {
       this.data = {
         isEnabled: true,
-        nextPollTime: this.$store.state.settings.initialTimestamp.add(
-          INITIAL_WAIT_PERIOD,
-          'seconds'
-        ),
+        nextPollTime: settingsStore.initialTimestamp.add(INITIAL_WAIT_PERIOD, 'seconds'),
         timesPollIsShown: 0,
       };
     }

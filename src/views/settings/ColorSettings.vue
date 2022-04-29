@@ -9,15 +9,19 @@ div.d-flex.justify-content-between
 </template>
 
 <script>
+import { useSettingsStore } from '~/stores/settings';
+
 export default {
   name: 'ColorSettings',
   computed: {
     useColorFallback: {
       get: function () {
-        return this.$store.state.settings.useColorFallback;
+        const settingsStore = useSettingsStore();
+        return settingsStore.useColorFallback;
       },
       set: function (val) {
-        this.$store.dispatch('settings/update', { useColorFallback: val });
+        const settingsStore = useSettingsStore();
+        settingsStore.update({ useColorFallback: val });
       },
     },
   },

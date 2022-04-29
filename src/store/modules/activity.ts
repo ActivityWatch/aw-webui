@@ -18,6 +18,8 @@ import {
   timeperiodsAroundTimeperiod,
 } from '~/util/timeperiod';
 
+import { useSettingsStore } from '~/stores/settings';
+
 interface QueryOptions {
   host: string;
   date?: string;
@@ -122,9 +124,10 @@ const getters = {
 
 // actions
 const actions = {
-  async ensure_loaded({ commit, state, rootState, dispatch }, query_options: QueryOptions) {
-    await dispatch('settings/ensureLoaded', null, { root: true });
-    const startOfDayOffset = rootState.settings.startOfDay;
+  async ensure_loaded({ commit, state, dispatch }, query_options: QueryOptions) {
+    const settingsStore = useSettingsStore();
+    await settingsStore.ensureLoaded();
+    const startOfDayOffset = settingsStore.startOfDay;
 
     console.info('Query options: ', query_options);
     if (state.loaded) {
@@ -418,7 +421,9 @@ const actions = {
     commit('buckets', buckets);
   },
 
-  async load_demo({ commit, rootState }) {
+  async load_demo({ commit }) {
+    const settingsStore = useSettingsStore();
+
     // A function to load some demo data (for screenshots and stuff)
     commit('start_loading', {});
 
@@ -469,7 +474,7 @@ const actions = {
     });
 
     // fetch startOfDay from settings store
-    const startOfDay = rootState.settings.startOfDay;
+    const startOfDay = settingsStore.startOfDay;
 
     function build_active_history() {
       const active_history = {};

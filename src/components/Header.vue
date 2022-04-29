@@ -110,6 +110,9 @@ import 'vue-awesome/icons/desktop';
 
 import _ from 'lodash';
 
+import { mapState } from 'pinia';
+import { useSettingsStore } from '~/stores/settings';
+
 export default {
   name: 'Header',
   data() {
@@ -120,9 +123,7 @@ export default {
     };
   },
   computed: {
-    devmode() {
-      return this.$store.state.settings.devmode;
-    },
+    ...mapState(useSettingsStore, ['devmode']),
   },
   mounted: async function () {
     await this.$store.dispatch('buckets/ensureBuckets');

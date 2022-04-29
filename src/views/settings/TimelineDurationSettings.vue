@@ -17,16 +17,23 @@ div
     | The default duration used for 'show last' in the timeline view.
 </template>
 <script>
+import { useSettingsStore } from '~/stores/settings';
+
 export default {
   name: 'TimelineDurationSettings',
+  data() {
+    return {
+      settingsStore: useSettingsStore(),
+    };
+  },
   computed: {
     durationDefault: {
       get() {
-        return this.$store.state.settings.durationDefault;
+        return this.settingsStore.durationDefault;
       },
       set(value) {
         console.log('Set default timeline duration to ' + value);
-        this.$store.dispatch('settings/update', { durationDefault: value });
+        this.settingsStore.update({ durationDefault: value });
       },
     },
   },

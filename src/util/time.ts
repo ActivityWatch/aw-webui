@@ -1,4 +1,10 @@
 import moment, { Moment, Duration } from 'moment';
+import { useSettingsStore } from '~/stores/settings';
+
+function getStartOfDayOffset() {
+  const settingsStore = useSettingsStore();
+  return settingsStore.startOfDay;
+}
 
 export function seconds_to_duration(seconds: number) {
   // Returns a human-readable duration string
@@ -24,7 +30,10 @@ export function friendlydate(timestamp: string | Moment) {
   return sinceNow.humanize(true);
 }
 
-export function get_day_start_with_offset(dateParam: Moment | string, offset: string) {
+export function get_day_start_with_offset(dateParam: Moment | string, offset?: string) {
+  if (!offset) {
+    offset = getStartOfDayOffset();
+  }
   const dateMoment = dateParam ? moment(dateParam) : moment().startOf('day');
   const start_of_day_hours = parseInt(offset.split(':')[0]);
   const start_of_day_minutes = parseInt(offset.split(':')[1]);
@@ -32,17 +41,26 @@ export function get_day_start_with_offset(dateParam: Moment | string, offset: st
 }
 
 // Return the startOfDay offset as a number of hours
-export function get_hour_offset(offset: string) {
+export function get_hour_offset(offset?: string) {
+  if (!offset) {
+    offset = getStartOfDayOffset();
+  }
   const start_of_day_hours = parseInt(offset.split(':')[0]);
   const start_of_day_minutes = parseInt(offset.split(':')[1]);
   return start_of_day_hours + start_of_day_minutes / 60;
 }
 
-export function get_day_end_with_offset(date: Moment | string, offset: string) {
+export function get_day_end_with_offset(date: Moment | string, offset?: string) {
+  if (!offset) {
+    offset = getStartOfDayOffset();
+  }
   return moment(get_day_start_with_offset(date, offset)).add(1, 'days').format();
 }
 
-export function get_day_period(date: Moment | string, offset: string) {
+export function get_day_period(date: Moment | string, offset?: string) {
+  if (!offset) {
+    offset = getStartOfDayOffset();
+  }
   return get_day_start_with_offset(date, offset) + '/' + get_day_end_with_offset(date, offset);
 }
 
@@ -54,12 +72,18 @@ export function get_next_day(datestr: string) {
   return moment(datestr).add(1, 'days');
 }
 
-export function get_offset_duration(offset: string): Duration {
+export function get_offset_duration(offset?: string): Duration {
+  if (!offset) {
+    offset = getStartOfDayOffset();
+  }
   const [hours, minutes] = offset.split(':');
   return moment.duration({ hours: Number(hours), minutes: Number(minutes) });
 }
 
-export function get_today_with_offset(offset: string) {
+export function get_today_with_offset(offset?: string) {
+  if (!offset) {
+    offset = getStartOfDayOffset();
+  }
   // Gets "today" in an offset-aware way
   const offset_dur = get_offset_duration(offset);
   return moment().subtract(offset_dur).startOf('day').format('YYYY-MM-DD');

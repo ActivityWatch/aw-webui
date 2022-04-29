@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { getClient } from '~/util/awclient';
 
-interface Store {
+interface State {
   info?: {
     hostname: string;
     device_id: string;
@@ -11,7 +11,7 @@ interface Store {
 }
 
 export const useServerStore = defineStore('server', {
-  state: (): Store => ({
+  state: (): State => ({
     info: null,
   }),
 

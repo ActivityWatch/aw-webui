@@ -21,6 +21,8 @@ div
 
 <script>
 import _ from 'lodash';
+import { useSettingsStore } from '~/stores/settings';
+
 export default {
   name: 'Timeline',
   data() {
@@ -32,7 +34,8 @@ export default {
   },
   computed: {
     timeintervalDefaultDuration() {
-      return Number(this.$store.state.settings.durationDefault);
+      const settingsStore = useSettingsStore();
+      return Number(settingsStore.durationDefault);
     },
     num_events() {
       return _.sumBy(this.buckets, 'events.length');
