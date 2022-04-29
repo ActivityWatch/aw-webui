@@ -5,7 +5,6 @@ import buckets from './modules/buckets';
 import settings from './modules/settings';
 import categories from './modules/categories';
 import views from './modules/views';
-import server from './modules/server';
 //import createLogger from '../../../src/plugins/logger';
 
 Vue.use(Vuex);
@@ -19,7 +18,6 @@ export default new Vuex.Store({
     settings,
     categories,
     views,
-    server,
   },
   strict: debug,
   //  plugins: debug ? [createLogger()] : [],
