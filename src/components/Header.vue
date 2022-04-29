@@ -110,6 +110,10 @@ import 'vue-awesome/icons/desktop';
 
 import _ from 'lodash';
 
+import { mapState } from 'pinia';
+import { useSettingsStore } from '~/stores/settings';
+import { useBucketsStore } from '~/stores/buckets';
+
 export default {
   name: 'Header',
   data() {
@@ -120,13 +124,12 @@ export default {
     };
   },
   computed: {
-    devmode() {
-      return this.$store.state.settings.devmode;
-    },
+    ...mapState(useSettingsStore, ['devmode']),
   },
   mounted: async function () {
-    await this.$store.dispatch('buckets/ensureBuckets');
-    const buckets = this.$store.state.buckets.buckets;
+    const bucketStore = useBucketsStore();
+    await bucketStore.ensureLoaded();
+    const buckets = bucketStore.buckets;
     const types_by_host = {};
 
     const activityViews = [];

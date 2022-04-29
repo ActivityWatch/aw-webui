@@ -38,6 +38,8 @@ div
 </template>
 
 <script>
+import { useSettingsStore } from '~/stores/settings';
+
 import DaystartSettings from '~/views/settings/DaystartSettings.vue';
 import TimelineDurationSettings from '~/views/settings/TimelineDurationSettings.vue';
 import ReleaseNotificationSettings from '~/views/settings/ReleaseNotificationSettings.vue';
@@ -64,7 +66,8 @@ export default {
   },
   methods: {
     async init() {
-      return this.$store.dispatch('settings/load');
+      const settingsStore = useSettingsStore();
+      return settingsStore.load();
     },
   },
 };

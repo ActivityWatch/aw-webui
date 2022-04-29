@@ -1,5 +1,6 @@
 // We will disable the no-shadow eslint rule for the entire file:
 /* eslint-disable no-shadow */
 
-// Constant set at compile time
+// Constants set at compile time
 declare const PRODUCTION: boolean;
+declare const AW_SERVER_URL: string;

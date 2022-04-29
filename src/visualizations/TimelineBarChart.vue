@@ -53,7 +53,7 @@ export default class ChartTimelineBars extends Vue<Bar> {
   labels() {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const hourOffset = get_hour_offset(this.$store.state.settings.startOfDay);
+    const hourOffset = get_hour_offset();
     if (this.resolution == 'day') {
       return _.range(0, 24).map(h => `${(h + hourOffset) % 24}`);
     } else if (this.resolution == 'week') {

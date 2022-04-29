@@ -4,6 +4,7 @@ import { split_by_hour_into_data } from '~/util/transforms';
 import { getColorFromCategory } from '~/util/color';
 import { Category } from '~/util/classes';
 import { IEvent } from './interfaces';
+import { useCategoryStore } from '~/stores/categories';
 
 interface HourlyData {
   cat_events: IEvent[];
@@ -15,11 +16,7 @@ interface Dataset {
   data: number[];
 }
 
-export function buildBarchartDataset(
-  $store: any,
-  data_by_hour: HourlyData[],
-  classes: Category[]
-): Dataset[] {
+export function buildBarchartDataset(data_by_hour: HourlyData[], classes: Category[]): Dataset[] {
   const SEP = '>>>';
   const data = data_by_hour;
   if (data) {
@@ -32,7 +29,9 @@ export function buildBarchartDataset(
     );
     const ds: Dataset[] = [...category_names]
       .map(c_ => {
-        const c = $store.getters['categories/get_category'](c_.split(SEP));
+        const categoryStore = useCategoryStore();
+        const c = categoryStore.get_category(c_.split(SEP));
+
         if (c) {
           const values = Object.values(data).map(results => {
             const cat = results.cat_events.find(e => _.isEqual(e.data['$category'], c.name));
@@ -58,7 +57,7 @@ export function buildBarchartDataset(
   }
 }
 
-export function buildBarchartDatasetActive($store: any, events_active: IEvent[]) {
+export function buildBarchartDatasetActive(events_active: IEvent[]) {
   const data = split_by_hour_into_data(events_active);
   return [
     {

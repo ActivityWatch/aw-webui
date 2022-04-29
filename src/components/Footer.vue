@@ -47,12 +47,13 @@ import 'vue-awesome/icons/question-circle';
 import 'vue-awesome/icons/bug';
 import 'vue-awesome/icons/heart';
 
+import { mapState } from 'pinia';
+import { useServerStore } from '~/stores/server';
+
 export default {
   name: 'Footer',
   computed: {
-    info() {
-      return this.$store.state.server.info;
-    },
+    ...mapState(useServerStore, ['info']),
   },
 };
 </script>

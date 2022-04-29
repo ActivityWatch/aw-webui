@@ -22,14 +22,16 @@ import './style/style.scss';
 import './util/filters.js';
 
 // Create an instance of AWClient as this.$aw
-import awclient from './util/awclient.js';
-Vue.prototype.$aw = awclient;
+import { createClient, getClient } from './util/awclient';
+
+createClient();
+Vue.prototype.$aw = getClient();
 
 // Sets up the routing and the base app (using vue-router)
 import router from './route.js';
 
-// Sets up the vuex store
-import store from './store';
+// Sets up the pinia store
+import pinia from './stores';
 
 // Register Font Awesome icon component
 Vue.component('icon', () => import('vue-awesome/components/Icon'));
@@ -80,5 +82,5 @@ new Vue({
   el: '#app',
   router: router,
   render: h => h(App),
-  store,
+  pinia,
 });

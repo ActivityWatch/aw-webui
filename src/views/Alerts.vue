@@ -96,7 +96,7 @@ export default {
   },
   computed: {
     categories: function () {
-      return this.$store.getters['categories/category_select'](true);
+      return this.categoryStore.category_select(true);
     },
     alertTime: function () {
       return cat => {
@@ -111,9 +111,9 @@ export default {
     },
   },
   mounted: async function () {
-    await this.$store.dispatch('buckets/ensureBuckets');
-    await this.$store.dispatch('categories/load');
-    this.hostnames = this.$store.getters['buckets/getHostnames'];
+    await this.bucketsStore.ensureLoaded();
+    await this.categoryStore.load();
+    this.hostnames = this.bucketsStore.getHostnames;
     this.hostname = this.hostnames[0];
   },
   methods: {
@@ -140,16 +140,6 @@ export default {
 
     // Check current time of alert goals
     check: async function () {
-      /*
-      const test_class = [['test', 'alert'], { type: 'regex', regex: 'aw-' }];
-      // TODO: Add alert classes
-      console.log(this.alerts);
-      const cats = _.map(this.alerts, a => {
-        const cat = this.$store.getters['categories/get_category'](a.category);
-        return [cat.name, cat.rule];
-      });
-      */
-
       const classes = loadClassesForQuery();
 
       let query = canonicalEvents({

@@ -63,10 +63,20 @@ import 'vue-awesome/icons/spinner';
 import 'vue-awesome/icons/angle-double-down';
 import 'vue-awesome/icons/angle-double-up';
 
+import { useActivityStore } from '~/stores/activity';
+import { useCategoryStore } from '~/stores/categories';
+import { useBucketsStore } from '~/stores/buckets';
+
+import { getClient } from '~/util/awclient';
+
 export default {
   name: 'Report',
   data() {
     return {
+      activityStore: useActivityStore(),
+      categoryStore: useCategoryStore(),
+      bucketsStore: useBucketsStore(),
+
       events: null,
 
       status: null,
@@ -84,15 +94,13 @@ export default {
     },
     datasets: function () {
       return buildBarchartDataset(
-        this.$store,
-        this.$store.state.activity.category.by_period,
-        this.$store.state.activity.active.events,
-        this.$store.state.categories.classes
+        this.activityStore.category.by_period,
+        this.categoryStore.classes
       );
     },
   },
   mounted: async function () {
-    await this.$store.dispatch('buckets/ensureBuckets');
+    await this.bucketsStore.ensureLoaded();
   },
   methods: {
     generate: async function () {
@@ -112,7 +120,7 @@ export default {
       const timeperiods = [start + '/' + end];
       try {
         this.status = 'searching';
-        const data = await this.$aw.query(timeperiods, query_array);
+        const data = await getClient().query(timeperiods, query_array);
         this.events = _.orderBy(data[0], ['timestamp'], ['desc']);
         this.error = '';
       } catch (e) {

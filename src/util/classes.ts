@@ -6,7 +6,7 @@ const CLASSIFY_KEYS = ['app', 'title'];
 const UNCATEGORIZED = ['Uncategorized'];
 
 interface Rule {
-  type: string;
+  type: 'regex' | 'none';
   regex?: string;
   ignore_case?: boolean;
 }
@@ -17,7 +17,7 @@ export interface Category {
   name_pretty?: string;
   subname?: string;
   rule: Rule;
-  data?: any;
+  data?: Record<string, any>;
   depth?: number;
   parent?: string[];
   children?: Category[];

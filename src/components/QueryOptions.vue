@@ -16,6 +16,7 @@ div
 <script lang="ts">
 import Vue from 'vue';
 import moment from 'moment';
+import { useBucketsStore } from '~/stores/buckets';
 
 export default Vue.extend({
   name: 'QueryOptions',
@@ -26,6 +27,8 @@ export default Vue.extend({
   },
   data() {
     return {
+      bucketsStore: useBucketsStore(),
+
       queryOptionsData: {
         hostname: '',
         start: moment().subtract(1, 'day').format('YYYY-MM-DD'),
@@ -37,7 +40,7 @@ export default Vue.extend({
 
   computed: {
     hostnameChoices() {
-      return this.$store.getters['buckets/hosts'];
+      return this.bucketsStore.hosts;
     },
   },
 
@@ -51,7 +54,7 @@ export default Vue.extend({
   },
 
   async mounted() {
-    await this.$store.dispatch('buckets/ensureBuckets');
+    await this.bucketsStore.ensureLoaded();
     this.queryOptionsData = {
       ...this.queryOptionsData,
       hostname: this.hostnameChoices[0],

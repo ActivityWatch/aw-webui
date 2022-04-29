@@ -69,13 +69,13 @@ export default {
   },
   methods: {
     addSubclass: function (parent) {
-      this.$store.commit('categories/addClass', {
+      this.categoryStore.addClass({
         name: parent.name.concat(['New class']),
         rule: { type: 'regex', regex: 'FILL ME' },
       });
 
       // Find the category with the max ID, and open an editor for it
-      const lastId = _.max(_.map(this.$store.state.categories.classes, 'id'));
+      const lastId = _.max(_.map(this.categoryStore.classes, 'id'));
       this.editingId = lastId;
     },
     showEditModal: function () {

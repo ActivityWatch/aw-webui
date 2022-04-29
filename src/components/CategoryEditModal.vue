@@ -43,6 +43,7 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
 <script>
 import _ from 'lodash';
 import ColorPicker from '~/components/ColorPicker';
+import { useCategoryStore } from '~/stores/categories';
 
 export default {
   name: 'CategoryEditModal',
@@ -54,6 +55,8 @@ export default {
   },
   data: function () {
     return {
+      categoryStore: useCategoryStore(),
+
       editing: {
         id: 0, // FIXME: Use ID assigned to category in vuex store, in order for saves to be uniquely targeted
         name: null,
@@ -66,7 +69,7 @@ export default {
   },
   computed: {
     allCategories: function () {
-      const categories = this.$store.getters['categories/all_categories'];
+      const categories = this.categoryStore.all_categories;
       const entries = categories.map(c => {
         return { text: c.join('->'), value: c };
       });
@@ -102,7 +105,7 @@ export default {
     removeClass() {
       // TODO: Show a confirmation dialog
       // TODO: Remove children as well?
-      this.$store.commit('categories/removeClass', this.categoryId);
+      this.categoryStore.removeClass(this.categoryId);
     },
     checkFormValidity() {
       // FIXME
@@ -127,7 +130,7 @@ export default {
         rule: this.editing.rule.type !== null ? this.editing.rule : { type: null },
         data: { color: this.editing.inherit_color === true ? undefined : this.editing.color },
       };
-      this.$store.commit('categories/updateClass', new_class);
+      this.categoryStore.updateClass(new_class);
 
       // Hide the modal manually
       this.$nextTick(() => {
@@ -135,7 +138,7 @@ export default {
       });
     },
     resetModal() {
-      const cat = this.$store.getters['categories/get_category_by_id'](this.categoryId);
+      const cat = this.categoryStore.get_category_by_id(this.categoryId);
       const color = cat.data ? cat.data.color : undefined;
       const inherit_color = !color;
       this.editing = {

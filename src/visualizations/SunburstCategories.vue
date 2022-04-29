@@ -33,6 +33,8 @@ import {
 import 'vue-d3-sunburst/dist/vue-d3-sunburst.css';
 import { getColorFromCategory } from '~/util/color';
 
+import { useCategoryStore } from '~/stores/categories';
+
 const example_data = {
   name: 'flare',
   children: [
@@ -80,9 +82,9 @@ export default {
     },
     colorfunc: function (s) {
       if (s == 'All') return '#FFF';
-      const cat = this.$store.getters['categories/get_category'](s.split(SEP));
-      const allCats = this.$store.state.categories.classes;
-      const color = getColorFromCategory(cat, allCats);
+      const categoryStore = useCategoryStore();
+      const cat = categoryStore.get_category(s.split(SEP));
+      const color = getColorFromCategory(cat, categoryStore.classes);
       return color;
     },
   },

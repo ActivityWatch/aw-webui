@@ -13,6 +13,9 @@ div#wrapper
 </template>
 
 <script>
+import { useSettingsStore } from '~/stores/settings';
+import { useServerStore } from '~/stores/server';
+
 export default {
   data: function () {
     return {
@@ -44,8 +47,12 @@ export default {
   mounted: async function () {
     // Load settings
     // TODO: Move fetch of server-side settings to after getInfo
-    await this.$store.dispatch('settings/ensureLoaded');
-    await this.$store.dispatch('server/getInfo');
+
+    const settingsStore = useSettingsStore();
+    await settingsStore.ensureLoaded();
+
+    const serverStore = useServerStore();
+    await serverStore.getInfo();
   },
 };
 </script>

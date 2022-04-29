@@ -105,10 +105,14 @@ import 'vue-awesome/icons/download';
 import 'vue-awesome/icons/folder-open';
 import _ from 'lodash';
 
+import { useBucketsStore } from '~/stores/buckets';
+
 export default {
   name: 'Buckets',
   data() {
     return {
+      bucketsStore: useBucketsStore(),
+
       import_file: null,
       import_error: null,
       delete_bucket_selected: null,
@@ -122,7 +126,7 @@ export default {
   },
   computed: {
     buckets: function () {
-      return _.orderBy(this.$store.state.buckets.buckets, [b => b.id], ['asc']);
+      return _.orderBy(this.bucketsStore.buckets, [b => b.id], ['asc']);
     },
   },
   watch: {
@@ -140,13 +144,13 @@ export default {
         }
         // We need to reload buckets even if we fail because imports can be partial
         // (first bucket succeeds, second fails for example when importing multiple)
-        await this.$store.dispatch('buckets/loadBuckets');
+        await this.bucketsStore.loadBuckets();
         this.import_file = null;
       }
     },
   },
   mounted: async function () {
-    await this.$store.dispatch('buckets/ensureBuckets');
+    await this.bucketsStore.ensureLoaded();
   },
   methods: {
     openDeleteBucketModal: function (bucketId) {
@@ -154,7 +158,7 @@ export default {
       this.$root.$emit('bv::show::modal', 'delete-modal');
     },
     deleteBucket: async function (bucketId) {
-      await this.$store.dispatch('buckets/deleteBucket', { bucketId });
+      await this.bucketsStore.deleteBucket({ bucketId });
       this.$root.$emit('bv::hide::modal', 'delete-modal');
     },
     importBuckets: async function (importFile) {

@@ -13,7 +13,7 @@ div
     b-form-select(
       v-model="host"
       label="Host"
-      :options="$store.getters['buckets/hosts']"
+      :options="bucketsStore.hosts"
       placeholder="Select a hostname")
 
   div.mb-2
@@ -43,18 +43,19 @@ div
 <script>
 import moment from 'moment';
 import { get_today_with_offset } from '~/util/time';
-
 import { buildBarchartDataset } from '~/util/datasets';
+import { useBucketsStore } from '~/stores/buckets';
 
 export default {
   name: 'Trends',
   props: {},
   data: function () {
-    const offset = this.$store.state.settings.startOfDay;
-    const today = get_today_with_offset(offset);
+    const today = get_today_with_offset();
     const n_days = 7;
     const since = moment(today).subtract(n_days, 'days');
     return {
+      bucketsStore: useBucketsStore(),
+
       today,
       timeperiod: { start: since, length: [n_days, 'day'] },
     };
@@ -66,16 +67,14 @@ export default {
     },
     datasets: function () {
       return buildBarchartDataset(
-        this.$store,
-        this.$store.state.activity.category.by_period,
-        this.$store.state.activity.active.events,
-        this.$store.state.categories.classes
+        this.activityStore.category.by_period,
+        this.categoryStore.classes
       );
     },
   },
 
   mounted: async function () {
-    this.$store.dispatch('categories/load');
+    this.categoryStore.load();
     await this.refresh();
   },
 
@@ -90,8 +89,7 @@ export default {
         filterCategories: this.filterCategories,
         dontQueryInactive: false,
       };
-      //await this.$store.dispatch('activity/ensure_loaded', queryParams);
-      await this.$store.dispatch('activity/query_category_time_by_period', queryParams);
+      await this.activityStore.query_category_time_by_period(queryParams);
     },
 
     load_demo: async function () {

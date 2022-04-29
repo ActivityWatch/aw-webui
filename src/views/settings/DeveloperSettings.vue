@@ -21,6 +21,8 @@ div
 </template>
 
 <script>
+import { useSettingsStore } from '~/stores/settings';
+
 export default {
   data() {
     return {
@@ -30,18 +32,18 @@ export default {
   computed: {
     devmode: {
       get() {
-        return this.$store.state.settings.devmode;
+        return useSettingsStore().devmode;
       },
-      set(value) {
-        this.$store.dispatch('settings/update', { devmode: value });
+      set(devmode) {
+        useSettingsStore().update({ devmode });
       },
     },
     showYearly: {
       get() {
-        return this.$store.state.settings.showYearly;
+        return useSettingsStore().showYearly;
       },
-      set(value) {
-        this.$store.dispatch('settings/update', { showYearly: value });
+      set(showYearly) {
+        useSettingsStore().update({ showYearly });
       },
     },
   },

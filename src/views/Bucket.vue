@@ -31,6 +31,9 @@ div
 </template>
 
 <script>
+import { useBucketsStore } from '~/stores/buckets';
+import { getClient } from '~/util/awclient';
+
 export default {
   name: 'Bucket',
   props: {
@@ -38,6 +41,8 @@ export default {
   },
   data: () => {
     return {
+      bucketsStore: useBucketsStore(),
+
       bucket_with_events: { events: [] },
       events: [],
       eventcount: '?',
@@ -47,7 +52,7 @@ export default {
   },
   computed: {
     bucket() {
-      return this.$store.getters['buckets/getBucket'](this.id) || {};
+      return this.bucketsStore.getBucket(this.id) || {};
     },
   },
   watch: {
@@ -56,12 +61,12 @@ export default {
     },
   },
   mounted: async function () {
-    await this.$store.dispatch('buckets/ensureBuckets');
+    await this.bucketsStore.ensureLoaded();
     await this.getEventCount(this.id);
   },
   methods: {
     getEvents: async function (bucket_id) {
-      this.bucket_with_events = await this.$store.dispatch('buckets/getBucketWithEvents', {
+      this.bucket_with_events = await this.bucketsStore.getBucketWithEvents({
         id: bucket_id,
         start: this.daterange[0].format(),
         end: this.daterange[1].format(),
@@ -69,7 +74,7 @@ export default {
       this.events = this.bucket_with_events.events;
     },
     getEventCount: async function (bucket_id) {
-      this.eventcount = (await this.$aw.countEvents(bucket_id)).data;
+      this.eventcount = (await getClient().countEvents(bucket_id)).data;
     },
     updateEvent: function (event) {
       const i = this.events.findIndex(e => e.id == event.id);

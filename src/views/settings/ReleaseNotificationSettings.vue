@@ -10,15 +10,19 @@ div
 </template>
 
 <script>
+import { useSettingsStore } from '~/stores/settings';
+
 export default {
   computed: {
     isEnabled: {
       get() {
-        return this.$store.state.settings.newReleaseCheckData.isEnabled;
+        const settingsStore = useSettingsStore();
+        return settingsStore.newReleaseCheckData.isEnabled;
       },
       set(value) {
-        const data = this.$store.state.settings.newReleaseCheckData;
-        this.$store.dispatch('settings/update', {
+        const settingsStore = useSettingsStore();
+        const data = settingsStore.newReleaseCheckData;
+        settingsStore.update({
           newReleaseCheckData: { ...data, isEnabled: value },
         });
       },

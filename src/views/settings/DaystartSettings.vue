@@ -10,16 +10,23 @@ div
     | Set to 04:00 by default.
 </template>
 <script>
+import { useSettingsStore } from '~/stores/settings';
+
 export default {
   name: 'DaystartSettings',
+  data() {
+    return {
+      settingsStore: useSettingsStore(),
+    };
+  },
   computed: {
     startOfDay: {
       get: function () {
-        return this.$store.state.settings.startOfDay;
+        return this.settingsStore.startOfDay;
       },
       set: function (value) {
         console.log('Set start of day to ' + value);
-        this.$store.dispatch('settings/update', { startOfDay: value });
+        this.settingsStore.update({ startOfDay: value });
       },
     },
   },

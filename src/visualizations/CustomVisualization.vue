@@ -5,6 +5,7 @@ div
 
 <script lang="js">
 import moment from 'moment';
+import { useActivityStore } from '~/stores/activity';
 
 export default {
   name: 'aw-custom-watcher',
@@ -14,7 +15,7 @@ export default {
   },
   computed: {
     src: function () {
-      const options = this.$store.state.activity.query_options;
+      const options = useActivityStore().query_options;
       const start = options.timeperiod.start;
       const end = moment(start).add(...options.timeperiod.length).toISOString();
       const urlParams = new URLSearchParams({
