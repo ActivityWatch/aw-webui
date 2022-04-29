@@ -5,14 +5,17 @@ let _client: AWClient | null;
 export function createClient(): AWClient {
   let baseURL = '';
 
+  const production = typeof PRODUCTION !== 'undefined' && PRODUCTION;
+
   // If running with `npm node dev`, use testing server as origin.
   // Works since CORS is enabled by default when running `aw-server --testing`.
-  if (!PRODUCTION) {
-    baseURL = AW_SERVER_URL || 'http://127.0.0.1:5666';
+  if (!production) {
+    const aw_server_url = typeof AW_SERVER_URL !== 'undefined' && AW_SERVER_URL;
+    baseURL = aw_server_url || 'http://127.0.0.1:5666';
   }
 
   if (!_client) {
-    _client = new AWClient('aw-webui', { testing: !PRODUCTION, baseURL });
+    _client = new AWClient('aw-webui', { testing: !production, baseURL });
   } else {
     throw 'Tried to instantiate global AWClient twice!';
   }

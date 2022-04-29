@@ -103,14 +103,14 @@ export const useViewsStore = defineStore('views', {
       this.$patch({ views });
       console.log('Loaded views:', this.views);
     },
-    clearViews(state: State) {
-      state.views = [];
+    clearViews() {
+      this.views = [];
     },
-    setElements(state: State, { view_id, elements }) {
-      state.views.find(v => v.id == view_id).elements = elements;
+    setElements({ view_id, elements }) {
+      this.views.find(v => v.id == view_id).elements = elements;
     },
-    restoreDefaults(state: State) {
-      state.views = defaultViews;
+    restoreDefaults() {
+      this.views = defaultViews;
     },
     addView(view: View) {
       this.views.push({ ...view, elements: [] });
