@@ -1,14 +1,15 @@
 {
   "plugins": ["prettier", "vue", "jest", "@typescript-eslint"],
   "extends": [
-    "prettier",
     "plugin:vue/essential",
     "eslint:recommended",
     "plugin:vue/recommended",
     "@vue/typescript",
     "plugin:jest/recommended",
     "plugin:@typescript-eslint/recommended",
-    "plugin:@typescript-eslint/eslint-recommended"
+    "plugin:@typescript-eslint/eslint-recommended",
+    "prettier",
+    "prettier/vue"
   ],
   "rules": {
     "prettier/prettier": "warn",
