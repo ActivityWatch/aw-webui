@@ -108,7 +108,7 @@ export default {
           events = _.filter(events, e => e.duration > 1);
           console.log(`Filtered ${bucket.events.length - events.length} events`);
         }
-        events = _.sortBy(events, e => e.timestamp);
+        events.sort((a, b) => a.timestamp.valueOf() - b.timestamp.valueOf());
         _.each(events, e => {
           data.push([
             bucket.id,
