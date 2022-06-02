@@ -1,5 +1,9 @@
 /* Dark Theme Style That Override Web Application Colors & Some Layouts Related To Color Theme - Mohamed Salah (https://salahineo.github.io/salahineo/) */
 
+:root {
+  color-scheme: dark;
+}
+
 a, button, span, div, select {
   outline: none;
 }
