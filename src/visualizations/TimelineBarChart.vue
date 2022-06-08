@@ -1,5 +1,10 @@
-<template>
-  <bar :chart-data="chartData" :chart-options="chartOptions" />
+<template lang="pug">
+div(v-if="datasets && datasets.length > 0")
+  bar(:chart-data="chartData" :chart-options="chartOptions")
+div.small(v-else-if="datasets === null", style="font-size: 16pt; color: #aaa;")
+  | No data
+div.small(v-else, style="font-size: 16pt; color: #aaa;")
+  | Loading...
 </template>
 
 <script lang="ts">
@@ -45,7 +50,7 @@ export default {
   computed: {
     labels() {
       const hourOffset = get_hour_offset();
-      if (this.resolution == 'day') {
+      if (this.resolution === 'day') {
         return _.range(0, 24).map(h => `${(h + hourOffset) % 24}`);
       } else if (this.resolution == 'week') {
         // FIXME: In the future this will depend on a 'start of week' setting
@@ -90,7 +95,7 @@ export default {
           },
           y: {
             stacked: true,
-            suggestedMin: 0,
+            min: 0,
             suggestedMax: this.resolution === 'day' ? 1 : undefined,
             ticks: {
               callback: hourToTick,
