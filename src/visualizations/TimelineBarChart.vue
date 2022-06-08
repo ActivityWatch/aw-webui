@@ -61,28 +61,6 @@ export default {
         return [];
       }
     },
-    yAxis() {
-      if (this.resolution == 'day') {
-        return {
-          stacked: true,
-          ticks: {
-            stepSize: 0.25,
-            min: 0,
-            max: 1,
-            callback: hourToTick,
-          },
-        };
-      } else {
-        return {
-          stacked: true,
-          ticks: {
-            stepSize: 1,
-            min: 0,
-            callback: hourToTick,
-          },
-        };
-      }
-    },
     chartData() {
       return {
         labels: this.labels,
@@ -110,7 +88,15 @@ export default {
           x: {
             stacked: true,
           },
-          y: this.yAxes,
+          y: {
+            stacked: true,
+            suggestedMin: 0,
+            suggestedMax: this.resolution === 'day' ? 1 : undefined,
+            ticks: {
+              callback: hourToTick,
+              stepSize: this.resolution === 'day' ? 0.25 : 1,
+            },
+          },
         },
       };
     },
