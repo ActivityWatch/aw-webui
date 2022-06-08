@@ -111,7 +111,7 @@ export default {
         this.mode == 'last_duration' ||
         (!this.emptyDaterange && !this.invalidDaterange && !this.daterangeTooLong)
       ) {
-        this.lastUpdate=moment();
+        this.lastUpdate = moment();
         this.$emit('input', this.value);
       }
     },
