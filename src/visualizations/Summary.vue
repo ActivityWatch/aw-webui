@@ -2,11 +2,11 @@
 div
   div.aw-summary-container
   // Use visibility to make sure elements don't skip when data finishes loading
-  div(:style='{"visibility": visible ? "visible" : "hidden"}')
-    b-button.mt-1(size="sm", variant="outline-secondary", @click="limit_ += 5")
+  div(:style='{"visibility": visible_more ? "visible" : "hidden"}')
+    b-button.mt-1.mr-2(v-if="fields && (limit_ < fields.length)", size="sm", variant="outline-secondary", @click="limit_ += 5")
       icon(name="angle-double-down")
       | Show more
-    b-button.ml-2.mt-1(v-if="limit_ != limit" size="sm", variant="outline-secondary", @click="limit_ = limit")
+    b-button.mt-1(v-if="limit_ != limit" size="sm", variant="outline-secondary", @click="limit_ = limit")
       icon(name="angle-double-up")
 </template>
 
@@ -48,10 +48,8 @@ export default {
     return { limit_: this.limit };
   },
   computed: {
-    visible() {
-      return (
-        this.fields && this.fields.length > 0 && this.with_limit && this.fields.length > this.limit_
-      );
+    visible_more() {
+      return this.fields && this.fields.length > 0 && this.with_limit;
     },
   },
   watch: {

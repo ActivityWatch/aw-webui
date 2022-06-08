@@ -113,11 +113,9 @@ export function getTitleAttr(bucket: IBucket, e: IEvent) {
   if (bucket.type == 'currentwindow') {
     return e.data.app;
   } else if (bucket.type == 'web.tab.current') {
-    try {
-      return new URL(e.data.url).hostname.replace('www.', '');
-    } catch (err) {
-      return e.data.url;
-    }
+    const domainRegex = /^.+:\/\/(?:www.)?([^/]+)/;
+    const match = e.data.url.match(domainRegex);
+    return match ? match[1] : e.data.url;
   } else if (bucket.type == 'afkstatus') {
     return e.data.status;
   } else if (bucket.type?.startsWith('app.editor')) {

@@ -184,7 +184,7 @@ export const useActivityStore = defineStore('activity', {
 
         if (this.window.available) {
           // Perform this last, as it takes the longest
-          await this.query_category_time_by_period(query_options);
+          await this.query_category_time_by_period({ ...query_options, dontQueryInactive: true });
         }
       } else {
         console.warn(
@@ -305,7 +305,7 @@ export const useActivityStore = defineStore('activity', {
       filterCategories,
       filterAFK,
       dontQueryInactive,
-    }: QueryOptions & { dontQueryInactive: string }) {
+    }: QueryOptions & { dontQueryInactive: boolean }) {
       // TODO: Needs to be adapted for Android
       let periods: string[];
       if (timeperiod.length[1].startsWith('day')) {

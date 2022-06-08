@@ -221,7 +221,7 @@ export default {
     },
     filterCategories: function () {
       if (this.filterCategory) {
-        const cats = this.categories.all_categories;
+        const cats = this.categoryStore.all_categories;
         const isChild = p => c => c.length > p.length && _.isEqual(p, c.slice(0, p.length));
         const children = _.filter(cats, isChild(this.filterCategory));
         return [this.filterCategory].concat(children);

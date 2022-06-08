@@ -50,10 +50,12 @@ export default {
   methods: {
     getBuckets: async function () {
       if (this.daterange == null) return;
-      this.buckets = await useBucketsStore().getBucketsWithEvents({
-        start: this.daterange[0].format(),
-        end: this.daterange[1].format(),
-      });
+      this.buckets = Object.freeze(
+        await useBucketsStore().getBucketsWithEvents({
+          start: this.daterange[0].format(),
+          end: this.daterange[1].format(),
+        })
+      );
     },
   },
 };

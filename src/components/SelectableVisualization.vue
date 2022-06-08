@@ -239,10 +239,17 @@ export default {
       }
     },
     datasets: function () {
-      return buildBarchartDataset(
+      // Return empty array if not loaded
+      if (!this.activityStore.category.by_period) return [];
+
+      const datasets = buildBarchartDataset(
         this.activityStore.category.by_period,
         this.categoryStore.classes
       );
+
+      // Return dataset if data found, else return null (indicating no data)
+      if (datasets.length > 1) return datasets;
+      else return null;
     },
     date: function () {
       let date = this.activityStore.query_options.date;
