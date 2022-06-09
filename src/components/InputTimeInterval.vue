@@ -6,7 +6,8 @@ div
     b-alert(v-if="mode == 'range' && daterangeTooLong", variant="warning", show)
       | The selected date range is too long. The maximum is {{ maxDuration/(24*60*60) }} days.
 
-    table(style="float:left")
+  div.d-flex.justify-content-between.align-items-end
+    table
       tr
         th.pr-2
           label(for="mode") Interval mode:
@@ -39,15 +40,14 @@ div
             @click="valueChanged"
           ) Update
       
-    div(style="float:right;text-align:right" v-if="showUpdate && mode=='last_duration'")
-      b-button.px-2(@click="update()", variant="outline-dark")
+    div(style="text-align:right" v-if="showUpdate && mode=='last_duration'")
+      b-button.px-2(@click="update()", variant="outline-dark", size="sm")
         icon(name="sync")
         span.d-none.d-md-inline
           |  Update
-      div.mt-1(style="color: #999" v-if="lastUpdate")
+      div.mt-1.small(style="color: #999" v-if="lastUpdate")
         | Last update: {{lastUpdate.format("YYYY-MM-DD HH:mm:ss")}}
-      
-    div(style="clear:both")
+
 
 </template>
 
