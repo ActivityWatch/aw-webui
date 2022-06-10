@@ -6,6 +6,7 @@ div
     b-alert(v-if="mode == 'range' && daterangeTooLong", variant="warning", show)
       | The selected date range is too long. The maximum is {{ maxDuration/(24*60*60) }} days.
 
+  div.d-flex.justify-content-between.align-items-end
     table
       tr
         th.pr-2
@@ -38,6 +39,15 @@ div
             :disabled="mode == 'range' && (invalidDaterange || emptyDaterange || daterangeTooLong)",
             @click="valueChanged"
           ) Update
+      
+    div(style="text-align:right" v-if="showUpdate && mode=='last_duration'")
+      b-button.px-2(@click="update()", variant="outline-dark", size="sm")
+        icon(name="sync")
+        span.d-none.d-md-inline
+          |  Update
+      div.mt-1.small(style="color: #999" v-if="lastUpdate")
+        | Last update: {{lastUpdate.format("YYYY-MM-DD HH:mm:ss")}}
+
 
 </template>
 
@@ -45,6 +55,7 @@ div
 
 <script>
 import moment from 'moment';
+import 'vue-awesome/icons/sync';
 export default {
   name: 'input-timeinterval',
   props: {
@@ -56,6 +67,10 @@ export default {
       type: Number,
       default: null,
     },
+    showUpdate: {
+      type: Boolean,
+      default: true,
+    },
   },
   data() {
     return {
@@ -63,6 +78,7 @@ export default {
       mode: 'last_duration',
       start: null,
       end: null,
+      lastUpdate: null,
     };
   },
   computed: {
@@ -95,7 +111,15 @@ export default {
         this.mode == 'last_duration' ||
         (!this.emptyDaterange && !this.invalidDaterange && !this.daterangeTooLong)
       ) {
+        this.lastUpdate = moment();
         this.$emit('input', this.value);
+      }
+    },
+    update() {
+      if (this.mode == 'last_duration') {
+        this.mode = ''; // remove cache on v-model, see explanation: https://github.com/ActivityWatch/aw-webui/pull/344/files#r892982094
+        this.mode = 'last_duration';
+        this.valueChanged();
       }
     },
   },
