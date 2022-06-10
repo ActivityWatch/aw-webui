@@ -117,7 +117,7 @@ export default {
     },
     update() {
       if (this.mode == 'last_duration') {
-        this.mode = ''; // remove cache on v-model
+        this.mode = ''; // remove cache on v-model, see explanation: https://github.com/ActivityWatch/aw-webui/pull/344/files#r892982094
         this.mode = 'last_duration';
         this.valueChanged();
       }
