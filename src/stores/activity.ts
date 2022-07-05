@@ -271,7 +271,8 @@ export const useActivityStore = defineStore('activity', {
         );
       } else {
         q = queries.multideviceQuery(
-          ['erb-laptop2-arch', 'SHADOW-DEADGSK6'],
+          // TODO: Pass these hostnames in a better way (also consider using device IDs)
+          ['erb-laptop2-arch', 'steamdeck'],
           filterAFK,
           classes,
           filterCategories,
