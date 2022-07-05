@@ -87,7 +87,7 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
     params.classes ? `events = categorize(events, ${classes_str});` : '',
     // Filter out selected categories
     params.filter_classes ? `events = filter_keyvals(events, "$category", ${cat_filter_str});` : '',
-    // "Return" events by setting variable named with return_suffix if set
+    // "Return" events by setting variable named with return_variable if set
     params.return_variable ? `${params.return_variable} = events;` : '',
   ].join('\n');
 }
@@ -261,9 +261,9 @@ export function fullDesktopQuery(
 // Performs a query that combines data from multiple devices.
 // A multidevice-variant of fullDesktopQuery (with limitations).
 //
-// Works by constructing a query that fetches events from all devices (using canonicalEvents),
-// and then combines the results into a single series of events, which are then processed to
-// yield the final output statistics (like fullDesktopQuery).
+// 1. Performs one canonicalEvents query per device. 
+// 2. Combines the results into a single list of events using the transform union_no_overlap (which gives priority to events earlier in the list of devices). 
+// 3. Compute the statistics of interest.
 //
 // NOTE: Events from devices are picked in the order of the hostnames array, such that if overlaps are detected the conflict will be resolved by choosing events from the earlier device.
 // NOTE: Only supports desktop devices (for now)
