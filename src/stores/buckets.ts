@@ -102,7 +102,7 @@ export const useBucketsStore = defineStore('buckets', {
 
     async deleteBucket({ bucketId }) {
       console.log(`Deleting bucket ${bucketId}`);
-      await this._vm.$aw.deleteBucket(bucketId);
+      await getClient().deleteBucket(bucketId);
       await this.loadBuckets();
     },
 
