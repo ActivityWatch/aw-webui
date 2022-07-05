@@ -41,6 +41,16 @@ function timeperiodStrsAroundTimeperiod(timeperiod: TimePeriod): string[] {
   return timeperiodsAroundTimeperiod(timeperiod).map(timeperiodToStr);
 }
 
+function colorCategories(events: IEvent[]): IEvent[] {
+  // Set $color for categories
+  const categoryStore = useCategoryStore();
+  return events.map((e: IEvent) => {
+    const cat = categoryStore.get_category(e.data['$category']);
+    e.data['$color'] = getColorFromCategory(cat, categoryStore.classes);
+    return e;
+  });
+}
+
 interface QueryOptions {
   host: string;
   date?: string;
@@ -154,8 +164,20 @@ export const useActivityStore = defineStore('activity', {
         // TODO: These queries can actually run in parallel, but since server won't process them in parallel anyway we won't.
         await this.set_available(query_options);
 
+        // TODO: Move me
+        const multidevice = true;
+
         if (this.window.available) {
-          await this.query_desktop_full(query_options);
+          if (multidevice) {
+            const hostnames = bucketsStore.hosts.filter(
+              host =>
+                bucketsStore.windowBucketsByHost(host).length > 0 && !host.startsWith('fakedata')
+            );
+            console.info('Including hosts in multiquery: ', hostnames);
+            await this.query_multidevice_full(query_options, hostnames);
+          } else {
+            await this.query_desktop_full(query_options);
+          }
         } else if (this.android.available) {
           await this.query_android(query_options);
         } else {
@@ -246,56 +268,56 @@ export const useActivityStore = defineStore('activity', {
       this.query_category_time_by_period_completed(data);
     },
 
+    async query_multidevice_full(
+      { timeperiod, filterCategories, filterAFK }: QueryOptions,
+      hostnames: string[]
+    ) {
+      const periods = [timeperiodToStr(timeperiod)];
+      const classes = loadClassesForQuery();
+
+      const q = queries.multideviceQuery(
+        // TODO: Pass these hostnames in a better way (also consider using device IDs)
+        hostnames,
+        filterAFK,
+        classes,
+        filterCategories
+      );
+      const data = await getClient().query(periods, q);
+      const data_window = data[0].window;
+
+      // Set $color for categories
+      data_window.cat_events = colorCategories(data_window.cat_events);
+
+      this.query_window_completed(data_window);
+    },
+
     async query_desktop_full({
       timeperiod,
       filterCategories,
       filterAFK,
       includeAudible,
     }: QueryOptions) {
-      // TODO: Move this to a separate action?
-      const multidevice = true;
-
       const periods = [timeperiodToStr(timeperiod)];
       const classes = loadClassesForQuery();
 
-      let q: string[];
-      if (!multidevice) {
-        q = queries.fullDesktopQuery(
-          this.buckets.browser,
-          this.buckets.window[0],
-          this.buckets.afk[0],
-          filterAFK,
-          classes,
-          filterCategories,
-          includeAudible
-        );
-      } else {
-        q = queries.multideviceQuery(
-          // TODO: Pass these hostnames in a better way (also consider using device IDs)
-          ['erb-laptop2-arch', 'steamdeck'],
-          filterAFK,
-          classes,
-          filterCategories,
-          includeAudible
-        );
-      }
+      const q = queries.fullDesktopQuery(
+        this.buckets.browser,
+        this.buckets.window[0],
+        this.buckets.afk[0],
+        filterAFK,
+        classes,
+        filterCategories,
+        includeAudible
+      );
       const data = await getClient().query(periods, q);
       const data_window = data[0].window;
-
-      const categoryStore = useCategoryStore();
+      const data_browser = data[0].browser;
 
       // Set $color for categories
-      data_window.cat_events = data[0].window['cat_events'].map((e: IEvent) => {
-        const cat = categoryStore.get_category(e.data['$category']);
-        e.data['$color'] = getColorFromCategory(cat, categoryStore.classes);
-        return e;
-      });
+      data_window.cat_events = colorCategories(data_window.cat_events);
 
       this.query_window_completed(data_window);
-      if (!multidevice) {
-        const data_browser = data[0].browser;
-        this.query_browser_completed(data_browser);
-      }
+      this.query_browser_completed(data_browser);
     },
 
     async query_editor({ timeperiod }) {
@@ -422,6 +444,7 @@ export const useActivityStore = defineStore('activity', {
     },
 
     async set_available() {
+      // TODO: Move to bucketStore on a per-host basis?
       this.window.available = this.buckets.afk.length > 0 && this.buckets.window.length > 0;
       this.browser.available =
         this.buckets.afk.length > 0 &&
@@ -434,6 +457,7 @@ export const useActivityStore = defineStore('activity', {
     },
 
     async get_buckets({ host }) {
+      // TODO: Move to bucketStore on a per-host basis?
       const bucketsStore = useBucketsStore();
       this.buckets.afk = bucketsStore.afkBucketsByHost(host);
       this.buckets.window = bucketsStore.windowBucketsByHost(host);

@@ -33,11 +33,44 @@ export const useBucketsStore = defineStore('buckets', {
       // TODO: Include consideration of device_id UUID
       return _.uniq(_.map(this.buckets, bucket => bucket['device_id']));
     },
+
+    availableByHost(): (hostname: string) => {
+      window: boolean;
+      browser: boolean;
+      editor: boolean;
+    } {
+      // Returns a map of which kinds of buckets are available
+      //
+      // 'window' requires ((currentwindow + afkstatus) or android) buckets
+      // 'browser' requires (currentwindow + afk + browser) buckets
+      // 'editor' requires editor buckets
+      return hostname => {
+        const windowAvailable =
+          this.windowBucketsByHost(hostname).length > 0 &&
+          this.afkBucketsByHost(hostname).length > 0;
+
+        return {
+          window: windowAvailable,
+          browser: windowAvailable && this.browserBuckets(hostname).length > 0,
+          editor: this.editorBuckets(hostname).length > 0,
+        };
+      };
+    },
+
+    availablePerHost(): {
+      [hostname: string]: { window: boolean; browser: boolean; editor: boolean };
+    } {
+      // Returns a map {hostname: {[eg. window, browser, editor]: boolean}} that contains available bucket types for all hosts
+      // So we want to map over the hosts, and let the values be the result of the availableByHost function for each host.
+      return Object.assign({}, ...this.hosts().map(this.availableByHost()));
+    },
+
+    // These should be considered low-level, and should be used sparingly.
     afkBucketsByHost() {
-      return host => get_buckets_by_host_and_type(this.buckets, host, 'afkstatus');
+      return (host: string) => get_buckets_by_host_and_type(this.buckets, host, 'afkstatus');
     },
     windowBucketsByHost() {
-      return host =>
+      return (host: string) =>
         _.filter(
           get_buckets_by_host_and_type(this.buckets, host, 'currentwindow'),
           id => !id.startsWith('aw-watcher-android')
@@ -50,19 +83,24 @@ export const useBucketsStore = defineStore('buckets', {
         );
     },
     editorBuckets() {
-      return get_buckets_by_type(this.buckets, 'app.editor.activity');
+      // fallback to a bucket with 'unknown' host, if one exists.
+      // TODO: This needs a fix so we can get rid of this workaround.
+      return (host: string) =>
+        get_buckets_by_host_and_type(this.buckets, host, 'app.editor.activity') ||
+        get_buckets_by_host_and_type(this.buckets, 'unknown', 'app.editor.activity');
     },
     browserBuckets() {
-      return get_buckets_by_type(this.buckets, 'web.tab.current');
+      // fallback to a bucket with 'unknown' host, if one exists.
+      // TODO: This needs a fix so we can get rid of this workaround.
+      return (host: string) =>
+        get_buckets_by_host_and_type(this.buckets, host, 'web.tab.current') ||
+        get_buckets_by_host_and_type(this.buckets, 'unknown', 'web.tab.current');
     },
     getBucket() {
-      return id => _.filter(this.buckets, b => b.id === id)[0];
+      return (id: string) => _.filter(this.buckets, b => b.id === id)[0];
     },
     bucketsByHostname() {
       return _.groupBy(this.buckets, 'hostname');
-    },
-    getHostnames() {
-      return _.map(this.buckets, 'hostname');
     },
   },
 

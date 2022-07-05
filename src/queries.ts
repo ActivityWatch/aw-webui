@@ -259,20 +259,22 @@ export function fullDesktopQuery(
 }
 
 // Performs a query that combines data from multiple devices.
+// A multidevice-variant of fullDesktopQuery (with limitations).
 //
 // Works by constructing a query that fetches events from all devices (using canonicalEvents),
 // and then combines the results into a single series of events, which are then processed to
 // yield the final output statistics (like fullDesktopQuery).
+//
+// NOTE: Events from devices are picked in the order of the hostnames array, such that if overlaps are detected the conflict will be resolved by choosing events from the earlier device.
+// NOTE: Only supports desktop devices (for now)
+// NOTE: Doesn't support browser buckets (and therefore not browser audible detection either)
+//       This is due to the 'unknown' hostname of browser buckets (will hopefully be fixed soon).
 export function multideviceQuery(
   hostnames: string[],
   filterAFK = true,
   classes: [string[], Rule][] = [],
-  filterCategories: string[][],
-  include_audible: boolean
+  filterCategories: string[][]
 ): string[] {
-  // NOTE: Only supports desktop devices (and not browser events), for now.
-  // NOTE: Events from devices are picked in the order of the hostnames array, such that if overlaps are detected the conflict will be resolved by choosing events from the earlier device.
-
   function safeHostname(hostname: string): string {
     return hostname.replace(/[^a-zA-Z0-9_]/g, '');
   }
@@ -286,7 +288,6 @@ export function multideviceQuery(
       classes: classes,
       filter_classes: filterCategories,
       filter_afk: filterAFK,
-      include_audible,
       return_variable: 'events_' + safeHostname(hostname),
     };
 
