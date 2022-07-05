@@ -170,8 +170,12 @@ export const useActivityStore = defineStore('activity', {
         if (this.window.available) {
           if (multidevice) {
             const hostnames = bucketsStore.hosts.filter(
+              // require that the host has window buckets,
+              // and that the host is not a fakedata host,
+              // unless we're explicitly querying fakedata
               host =>
-                bucketsStore.windowBucketsByHost(host).length > 0 && !host.startsWith('fakedata')
+                bucketsStore.windowBucketsByHost(host).length > 0 &&
+                (!host.startsWith('fakedata') || query_options.host.startsWith('fakedata'))
             );
             console.info('Including hosts in multiquery: ', hostnames);
             await this.query_multidevice_full(query_options, hostnames);
