@@ -252,33 +252,49 @@ export const useActivityStore = defineStore('activity', {
       filterAFK,
       includeAudible,
     }: QueryOptions) {
+      // TODO: Move this to a separate action?
+      const multidevice = true;
+
       const periods = [timeperiodToStr(timeperiod)];
       const classes = loadClassesForQuery();
-      const q = queries.fullDesktopQuery(
-        this.buckets.browser,
-        this.buckets.window[0],
-        this.buckets.afk[0],
-        filterAFK,
-        classes,
-        filterCategories,
-        includeAudible
-      );
-      const data = await getClient().query(periods, q);
 
+      let q: string[];
+      if (!multidevice) {
+        q = queries.fullDesktopQuery(
+          this.buckets.browser,
+          this.buckets.window[0],
+          this.buckets.afk[0],
+          filterAFK,
+          classes,
+          filterCategories,
+          includeAudible
+        );
+      } else {
+        q = queries.multideviceQuery(
+          ['erb-laptop2-arch', 'SHADOW-DEADGSK6'],
+          filterAFK,
+          classes,
+          filterCategories,
+          includeAudible
+        );
+      }
+      const data = await getClient().query(periods, q);
       const data_window = data[0].window;
-      const data_browser = data[0].browser;
 
       const categoryStore = useCategoryStore();
 
       // Set $color for categories
-      data_window.cat_events = data[0].window['cat_events'].map(e => {
+      data_window.cat_events = data[0].window['cat_events'].map((e: IEvent) => {
         const cat = categoryStore.get_category(e.data['$category']);
         e.data['$color'] = getColorFromCategory(cat, categoryStore.classes);
         return e;
       });
 
       this.query_window_completed(data_window);
-      this.query_browser_completed(data_browser);
+      if (!multidevice) {
+        const data_browser = data[0].browser;
+        this.query_browser_completed(data_browser);
+      }
     },
 
     async query_editor({ timeperiod }) {

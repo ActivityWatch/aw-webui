@@ -24,6 +24,7 @@ interface BaseQueryParams {
   classes: [string[], Rule][];
   filter_classes: string[][];
   bid_browsers?: string[];
+  return_variable?: string;
 }
 
 interface DesktopQueryParams extends BaseQueryParams {
@@ -86,6 +87,8 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
     params.classes ? `events = categorize(events, ${classes_str});` : '',
     // Filter out selected categories
     params.filter_classes ? `events = filter_keyvals(events, "$category", ${cat_filter_str});` : '',
+    // "Return" events by setting variable named with return_suffix if set
+    params.return_variable ? `${params.return_variable} = events;` : '',
   ].join('\n');
 }
 
@@ -255,6 +258,75 @@ export function fullDesktopQuery(
   );
 }
 
+// Performs a query that combines data from multiple devices.
+//
+// Works by constructing a query that fetches events from all devices (using canonicalEvents),
+// and then combines the results into a single series of events, which are then processed to
+// yield the final output statistics (like fullDesktopQuery).
+export function multideviceQuery(
+  hostnames: string[],
+  filterAFK = true,
+  classes: [string[], Rule][] = [],
+  filterCategories: string[][],
+  include_audible: boolean
+): string[] {
+  // NOTE: Only supports desktop devices (and not browser events), for now.
+  // NOTE: Events from devices are picked in the order of the hostnames array, such that if overlaps are detected the conflict will be resolved by choosing events from the earlier device.
+
+  function safeHostname(hostname: string): string {
+    return hostname.replace(/[^a-zA-Z0-9_]/g, '');
+  }
+
+  // First, query each device individually
+  const queries: string[] = _.map(hostnames, hostname => {
+    const params: DesktopQueryParams = {
+      bid_window: 'aw-watcher-window_' + hostname,
+      bid_afk: 'aw-watcher-afk_' + hostname,
+      bid_browsers: [],
+      classes: classes,
+      filter_classes: filterCategories,
+      filter_afk: filterAFK,
+      include_audible,
+      return_variable: 'events_' + safeHostname(hostname),
+    };
+
+    return canonicalEvents(params);
+  });
+
+  // Now we need to combine the queries to get a single series of events.
+  // To do this, we can use the union_no_overlap function, which merges events
+  // but avoids overlaps by giving priority according to the order of `hostnames`.
+  let query = queries.join('\n');
+  if (queries.length > 1) {
+    query += 'events = [];';
+    for (let i = 0; i < queries.length; i++) {
+      query += `events = union_no_overlap(events, events_${safeHostname(hostnames[i])});`;
+    }
+  }
+
+  return querystr_to_array(
+    `
+    ${query}
+    title_events = sort_by_duration(merge_events_by_keys(events, ["app", "title"]));
+    app_events   = sort_by_duration(merge_events_by_keys(title_events, ["app"]));
+    cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
+
+    app_events  = limit_events(app_events, ${default_limit});
+    title_events  = limit_events(title_events, ${default_limit});
+    duration = sum_durations(events);
+
+    RETURN = {
+        "window": {
+            "app_events": app_events,
+            "title_events": title_events,
+            "cat_events": cat_events,
+            "active_events": not_afk,
+            "duration": duration
+        },
+    };`
+  );
+}
+
 export function editorActivityQuery(editorbuckets: string[]): string[] {
   let q = ['events = [];'];
   for (let editorbucket of editorbuckets) {
@@ -306,6 +378,7 @@ export function categoryQuery(params: DesktopQueryParams): string[] {
 
 export default {
   fullDesktopQuery,
+  multideviceQuery,
   appQuery,
   activityQuery,
   activityQueryAndroid,
