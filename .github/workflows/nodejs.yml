@@ -96,6 +96,8 @@ jobs:
         name: binaries-Linux  # NOTE: debug build
         # Directory where to extract artifact
         path: aw-server-rust
+        # Search for the last valid run with the desired artifact
+        search_artifacts: true
 
     - name: Install and run aw-server-rust nightly
       if: ${{ matrix.aw-server == 'aw-server-rust' && matrix.aw-version == 'master' }}
