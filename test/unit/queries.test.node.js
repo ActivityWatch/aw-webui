@@ -1,22 +1,22 @@
 const queries = require('~/queries');
 
 test('generate fullDesktopQuery', () => {
-  const browserbuckets = [];
-  const windowbucket = '';
-  const afkbucket = '';
-  const filterAFK = true;
-  const classes = [];
-  const filterCategories = true;
+  const bid_window = '';
+  const bid_afk = '';
+  const bid_browsers = [];
+  const filter_afk = true;
+  const categories = [];
+  const filter_categories = true;
   const include_audible = true;
-  const query_lines = queries.fullDesktopQuery(
-    browserbuckets,
-    windowbucket,
-    afkbucket,
-    filterAFK,
-    classes,
-    filterCategories,
-    include_audible
-  );
+  const query_lines = queries.fullDesktopQuery({
+    bid_window,
+    bid_afk,
+    bid_browsers,
+    filter_afk,
+    categories,
+    filter_categories,
+    include_audible,
+  });
 
   // join query lines into a single string
   const query = query_lines.join('\n');
