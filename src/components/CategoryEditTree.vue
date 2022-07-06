@@ -38,6 +38,7 @@ import 'vue-awesome/icons/plus';
 import 'vue-awesome/icons/edit';
 
 import CategoryEditModal from './CategoryEditModal.vue';
+import { useCategoryStore } from '~/stores/categories';
 
 import _ from 'lodash';
 
@@ -55,6 +56,8 @@ export default {
   },
   data: function () {
     return {
+      categoryStore: useCategoryStore(),
+
       expanded: this.depth < 1,
       editingId: null,
     };
