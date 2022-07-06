@@ -119,7 +119,7 @@ export default {
   mounted: async function () {
     await this.bucketsStore.ensureLoaded();
     await this.categoryStore.load();
-    this.hostnames = this.bucketsStore.getHostnames;
+    this.hostnames = this.bucketsStore.hosts;
     this.hostname = this.hostnames[0];
   },
   methods: {

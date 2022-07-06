@@ -41,13 +41,23 @@ function timeperiodStrsAroundTimeperiod(timeperiod: TimePeriod): string[] {
   return timeperiodsAroundTimeperiod(timeperiod).map(timeperiodToStr);
 }
 
+function colorCategories(events: IEvent[]): IEvent[] {
+  // Set $color for categories
+  const categoryStore = useCategoryStore();
+  return events.map((e: IEvent) => {
+    const cat = categoryStore.get_category(e.data['$category']);
+    e.data['$color'] = getColorFromCategory(cat, categoryStore.classes);
+    return e;
+  });
+}
+
 interface QueryOptions {
   host: string;
   date?: string;
   timeperiod?: TimePeriod;
-  filterAFK?: boolean;
-  includeAudible?: boolean;
-  filterCategories?: string[][];
+  filter_afk?: boolean;
+  include_audible?: boolean;
+  filter_categories?: string[][];
   force?: boolean;
 }
 
@@ -136,8 +146,6 @@ export const useActivityStore = defineStore('activity', {
 
       const bucketsStore = useBucketsStore();
 
-      const startOfDayOffset = settingsStore.startOfDay;
-
       console.info('Query options: ', query_options);
       if (this.loaded) {
         getClient().abort();
@@ -145,7 +153,7 @@ export const useActivityStore = defineStore('activity', {
       if (!this.loaded || this.query_options !== query_options || query_options.force) {
         this.start_loading(query_options);
         if (!query_options.timeperiod) {
-          query_options.timeperiod = dateToTimeperiod(query_options.date, startOfDayOffset);
+          query_options.timeperiod = dateToTimeperiod(query_options.date, settingsStore.startOfDay);
         }
 
         await bucketsStore.ensureLoaded();
@@ -155,7 +163,21 @@ export const useActivityStore = defineStore('activity', {
         await this.set_available(query_options);
 
         if (this.window.available) {
-          await this.query_desktop_full(query_options);
+          if (settingsStore.useMultidevice) {
+            const hostnames = bucketsStore.hosts.filter(
+              // require that the host has window buckets,
+              // and that the host is not a fakedata host,
+              // unless we're explicitly querying fakedata
+              host =>
+                host &&
+                bucketsStore.bucketsWindow(host).length > 0 &&
+                (!host.startsWith('fakedata') || query_options.host.startsWith('fakedata'))
+            );
+            console.info('Including hosts in multiquery: ', hostnames);
+            await this.query_multidevice_full(query_options, hostnames);
+          } else {
+            await this.query_desktop_full(query_options);
+          }
         } else if (this.android.available) {
           await this.query_android(query_options);
         } else {
@@ -193,10 +215,10 @@ export const useActivityStore = defineStore('activity', {
       }
     },
 
-    async query_android({ timeperiod, filterCategories }: QueryOptions) {
+    async query_android({ timeperiod, filter_categories }: QueryOptions) {
       const periods = [timeperiodToStr(timeperiod)];
       const classes = loadClassesForQuery();
-      const q = queries.appQuery(this.buckets.android[0], classes, filterCategories);
+      const q = queries.appQuery(this.buckets.android[0], classes, filter_categories);
       const data = await getClient().query(periods, q).catch(this.errorHandler);
       this.query_window_completed(data[0]);
     },
@@ -246,36 +268,53 @@ export const useActivityStore = defineStore('activity', {
       this.query_category_time_by_period_completed(data);
     },
 
+    async query_multidevice_full(
+      { timeperiod, filter_categories, filter_afk }: QueryOptions,
+      hosts: string[]
+    ) {
+      const periods = [timeperiodToStr(timeperiod)];
+      const categories = loadClassesForQuery();
+
+      const q = queries.multideviceQuery({
+        hosts,
+        filter_afk,
+        categories,
+        filter_categories,
+        host_params: {},
+      });
+      const data = await getClient().query(periods, q);
+      const data_window = data[0].window;
+
+      // Set $color for categories
+      data_window.cat_events = colorCategories(data_window.cat_events);
+
+      this.query_window_completed(data_window);
+    },
+
     async query_desktop_full({
       timeperiod,
-      filterCategories,
-      filterAFK,
-      includeAudible,
+      filter_categories,
+      filter_afk,
+      include_audible,
     }: QueryOptions) {
       const periods = [timeperiodToStr(timeperiod)];
-      const classes = loadClassesForQuery();
-      const q = queries.fullDesktopQuery(
-        this.buckets.browser,
-        this.buckets.window[0],
-        this.buckets.afk[0],
-        filterAFK,
-        classes,
-        filterCategories,
-        includeAudible
-      );
-      const data = await getClient().query(periods, q);
+      const categories = loadClassesForQuery();
 
+      const q = queries.fullDesktopQuery({
+        bid_window: this.buckets.window[0],
+        bid_afk: this.buckets.afk[0],
+        bid_browsers: this.buckets.browser,
+        filter_afk,
+        categories,
+        filter_categories,
+        include_audible,
+      });
+      const data = await getClient().query(periods, q);
       const data_window = data[0].window;
       const data_browser = data[0].browser;
 
-      const categoryStore = useCategoryStore();
-
       // Set $color for categories
-      data_window.cat_events = data[0].window['cat_events'].map(e => {
-        const cat = categoryStore.get_category(e.data['$category']);
-        e.data['$color'] = getColorFromCategory(cat, categoryStore.classes);
-        return e;
-      });
+      data_window.cat_events = colorCategories(data_window.cat_events);
 
       this.query_window_completed(data_window);
       this.query_browser_completed(data_browser);
@@ -302,8 +341,8 @@ export const useActivityStore = defineStore('activity', {
 
     async query_category_time_by_period({
       timeperiod,
-      filterCategories,
-      filterAFK,
+      filter_categories,
+      filter_afk,
       dontQueryInactive,
     }: QueryOptions & { dontQueryInactive: boolean }) {
       // TODO: Needs to be adapted for Android
@@ -327,8 +366,6 @@ export const useActivityStore = defineStore('activity', {
         cancelled = true;
         console.log('Request aborted');
       };
-
-      const classes = loadClassesForQuery();
 
       // Query one period at a time, to avoid timeout on slow queries
       let data = [];
@@ -356,6 +393,7 @@ export const useActivityStore = defineStore('activity', {
           }
         }
 
+        const categories = loadClassesForQuery();
         const result = await getClient().query(
           [period],
           // TODO: Clean up call, pass QueryParams in fullDesktopQuery as well
@@ -365,9 +403,9 @@ export const useActivityStore = defineStore('activity', {
             bid_window: this.buckets.window[0],
             bid_browsers: this.buckets.browser,
             // bid_android: this.buckets.android,
-            classes: classes,
-            filter_afk: filterAFK,
-            filter_classes: filterCategories,
+            categories,
+            filter_categories,
+            filter_afk,
           })
         );
         data = data.concat(result);
@@ -405,6 +443,7 @@ export const useActivityStore = defineStore('activity', {
     },
 
     async set_available() {
+      // TODO: Move to bucketStore on a per-host basis?
       this.window.available = this.buckets.afk.length > 0 && this.buckets.window.length > 0;
       this.browser.available =
         this.buckets.afk.length > 0 &&
@@ -417,20 +456,21 @@ export const useActivityStore = defineStore('activity', {
     },
 
     async get_buckets({ host }) {
+      // TODO: Move to bucketStore on a per-host basis?
       const bucketsStore = useBucketsStore();
-      this.buckets.afk = bucketsStore.afkBucketsByHost(host);
-      this.buckets.window = bucketsStore.windowBucketsByHost(host);
-      this.buckets.android = bucketsStore.androidBucketsByHost(host);
-      this.buckets.browser = bucketsStore.browserBuckets;
-      this.buckets.editor = bucketsStore.editorBuckets;
+      this.buckets.afk = bucketsStore.bucketsAFK(host);
+      this.buckets.window = bucketsStore.bucketsWindow(host);
+      this.buckets.android = bucketsStore.bucketsAndroid(host);
+      this.buckets.browser = bucketsStore.bucketsBrowser(host);
+      this.buckets.editor = bucketsStore.bucketsEditor(host);
+
       console.log('Available buckets: ', this.buckets);
       this.buckets.loaded = true;
     },
 
     async load_demo() {
-      const settingsStore = useSettingsStore();
-
       // A function to load some demo data (for screenshots and stuff)
+
       this.start_loading({});
 
       function groupSumEventsBy(events, key, f) {
@@ -486,6 +526,7 @@ export const useActivityStore = defineStore('activity', {
       this.buckets.loaded = true;
 
       // fetch startOfDay from settings store
+      const settingsStore = useSettingsStore();
       const startOfDay = settingsStore.startOfDay;
 
       function build_active_history() {

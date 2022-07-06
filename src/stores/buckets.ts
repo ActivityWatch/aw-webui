@@ -4,16 +4,12 @@ import { IBucket } from '~/util/interfaces';
 import { defineStore } from 'pinia';
 import { getClient } from '~/util/awclient';
 
-function get_buckets_by_type(buckets: IBucket[], type: string) {
+function select_buckets(buckets: IBucket[], { host, type }: { host?: string; type?: string }) {
   return _.map(
-    _.filter(buckets, bucket => bucket['type'] === type),
-    bucket => bucket['id']
-  );
-}
-
-function get_buckets_by_host_and_type(buckets: IBucket[], host: string, type: string) {
-  return _.map(
-    _.filter(buckets, bucket => bucket['type'] === type && bucket['hostname'] == host),
+    _.filter(
+      buckets,
+      bucket => (!type || bucket['type'] === type) && (!host || bucket['hostname'] == host)
+    ),
     bucket => bucket['id']
   );
 }
@@ -33,36 +29,73 @@ export const useBucketsStore = defineStore('buckets', {
       // TODO: Include consideration of device_id UUID
       return _.uniq(_.map(this.buckets, bucket => bucket['device_id']));
     },
-    afkBucketsByHost() {
-      return host => get_buckets_by_host_and_type(this.buckets, host, 'afkstatus');
+
+    available(): (hostname: string) => {
+      window: boolean;
+      browser: boolean;
+      editor: boolean;
+      android: boolean;
+      category: boolean;
+    } {
+      // Returns a map of which kinds of buckets are available
+      //
+      // 'window' requires ((currentwindow + afkstatus) or android) buckets
+      // 'browser' requires (currentwindow + afk + browser) buckets
+      // 'editor' requires editor buckets
+      return hostname => {
+        const windowAvail =
+          this.bucketsWindow(hostname).length > 0 && this.bucketsAFK(hostname).length > 0;
+        const androidAvail = this.bucketsAndroid(hostname).length > 0;
+
+        return {
+          window: windowAvail,
+          browser: window && this.bucketsBrowser(hostname).length > 0,
+          editor: this.bucketsEditor(hostname).length > 0,
+          android: androidAvail,
+          category: windowAvail || androidAvail,
+        };
+      };
     },
-    windowBucketsByHost() {
-      return host =>
+
+    // These should be considered low-level, and should be used sparingly.
+    bucketsAFK() {
+      return (host: string) => select_buckets(this.buckets, { host, type: 'afkstatus' });
+    },
+    bucketsWindow() {
+      return (host: string) =>
         _.filter(
-          get_buckets_by_host_and_type(this.buckets, host, 'currentwindow'),
+          select_buckets(this.buckets, { host, type: 'currentwindow' }),
           id => !id.startsWith('aw-watcher-android')
         );
     },
-    androidBucketsByHost() {
-      return host =>
-        _.filter(get_buckets_by_host_and_type(this.buckets, host, 'currentwindow'), id =>
+    bucketsAndroid() {
+      return (host: string) =>
+        _.filter(select_buckets(this.buckets, { host, type: 'currentwindow' }), id =>
           id.startsWith('aw-watcher-android')
         );
     },
-    editorBuckets() {
-      return get_buckets_by_type(this.buckets, 'app.editor.activity');
+    bucketsEditor() {
+      // fallback to a bucket with 'unknown' host, if one exists.
+      // TODO: This needs a fix so we can get rid of this workaround.
+      const type = 'app.editor.activity';
+      return (host: string) =>
+        select_buckets(this.buckets, { host, type }) ||
+        select_buckets(this.buckets, { host: 'unknown', type });
     },
-    browserBuckets() {
-      return get_buckets_by_type(this.buckets, 'web.tab.current');
+    bucketsBrowser() {
+      // fallback to a bucket with 'unknown' host, if one exists.
+      // TODO: This needs a fix so we can get rid of this workaround.
+      const type = 'web.tab.current';
+      return (host: string) =>
+        select_buckets(this.buckets, { host, type }) ||
+        select_buckets(this.buckets, { host: 'unknown', type });
     },
+
     getBucket() {
-      return id => _.filter(this.buckets, b => b.id === id)[0];
+      return (id: string) => _.filter(this.buckets, b => b.id === id)[0];
     },
     bucketsByHostname() {
       return _.groupBy(this.buckets, 'hostname');
-    },
-    getHostnames() {
-      return _.map(this.buckets, 'hostname');
     },
   },
 
