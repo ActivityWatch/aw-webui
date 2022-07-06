@@ -1,6 +1,7 @@
 <template lang="pug">
 div(v-if="datasets && datasets.length > 0")
-  bar(:chart-data="chartData" :chart-options="chartOptions")
+  // Height set here to avoid elements jumping when loading Activity view
+  bar(:chart-data="chartData" :chart-options="chartOptions" :height="330")
 div.small(v-else-if="datasets === null", style="font-size: 16pt; color: #aaa;")
   | No data
 div.small(v-else, style="font-size: 16pt; color: #aaa;")
