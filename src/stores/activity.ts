@@ -55,9 +55,9 @@ interface QueryOptions {
   host: string;
   date?: string;
   timeperiod?: TimePeriod;
-  filterAFK?: boolean;
-  includeAudible?: boolean;
-  filterCategories?: string[][];
+  filter_afk?: boolean;
+  include_audible?: boolean;
+  filter_categories?: string[][];
   force?: boolean;
 }
 
@@ -146,8 +146,6 @@ export const useActivityStore = defineStore('activity', {
 
       const bucketsStore = useBucketsStore();
 
-      const startOfDayOffset = settingsStore.startOfDay;
-
       console.info('Query options: ', query_options);
       if (this.loaded) {
         getClient().abort();
@@ -155,7 +153,7 @@ export const useActivityStore = defineStore('activity', {
       if (!this.loaded || this.query_options !== query_options || query_options.force) {
         this.start_loading(query_options);
         if (!query_options.timeperiod) {
-          query_options.timeperiod = dateToTimeperiod(query_options.date, startOfDayOffset);
+          query_options.timeperiod = dateToTimeperiod(query_options.date, settingsStore.startOfDay);
         }
 
         await bucketsStore.ensureLoaded();
@@ -217,10 +215,10 @@ export const useActivityStore = defineStore('activity', {
       }
     },
 
-    async query_android({ timeperiod, filterCategories }: QueryOptions) {
+    async query_android({ timeperiod, filter_categories }: QueryOptions) {
       const periods = [timeperiodToStr(timeperiod)];
       const classes = loadClassesForQuery();
-      const q = queries.appQuery(this.buckets.android[0], classes, filterCategories);
+      const q = queries.appQuery(this.buckets.android[0], classes, filter_categories);
       const data = await getClient().query(periods, q).catch(this.errorHandler);
       this.query_window_completed(data[0]);
     },
@@ -271,19 +269,19 @@ export const useActivityStore = defineStore('activity', {
     },
 
     async query_multidevice_full(
-      { timeperiod, filterCategories, filterAFK }: QueryOptions,
-      hostnames: string[]
+      { timeperiod, filter_categories, filter_afk }: QueryOptions,
+      hosts: string[]
     ) {
       const periods = [timeperiodToStr(timeperiod)];
-      const classes = loadClassesForQuery();
+      const categories = loadClassesForQuery();
 
-      const q = queries.multideviceQuery(
-        // TODO: Pass these hostnames in a better way (also consider using device IDs)
-        hostnames,
-        filterAFK,
-        classes,
-        filterCategories
-      );
+      const q = queries.multideviceQuery({
+        hosts,
+        filter_afk,
+        categories,
+        filter_categories,
+        host_params: {},
+      });
       const data = await getClient().query(periods, q);
       const data_window = data[0].window;
 
@@ -295,22 +293,22 @@ export const useActivityStore = defineStore('activity', {
 
     async query_desktop_full({
       timeperiod,
-      filterCategories,
-      filterAFK,
-      includeAudible,
+      filter_categories,
+      filter_afk,
+      include_audible,
     }: QueryOptions) {
       const periods = [timeperiodToStr(timeperiod)];
-      const classes = loadClassesForQuery();
+      const categories = loadClassesForQuery();
 
-      const q = queries.fullDesktopQuery(
-        this.buckets.browser,
-        this.buckets.window[0],
-        this.buckets.afk[0],
-        filterAFK,
-        classes,
-        filterCategories,
-        includeAudible
-      );
+      const q = queries.fullDesktopQuery({
+        bid_window: this.buckets.window[0],
+        bid_afk: this.buckets.afk[0],
+        bid_browsers: this.buckets.browser,
+        filter_afk,
+        categories,
+        filter_categories,
+        include_audible,
+      });
       const data = await getClient().query(periods, q);
       const data_window = data[0].window;
       const data_browser = data[0].browser;
@@ -343,8 +341,8 @@ export const useActivityStore = defineStore('activity', {
 
     async query_category_time_by_period({
       timeperiod,
-      filterCategories,
-      filterAFK,
+      filter_categories,
+      filter_afk,
       dontQueryInactive,
     }: QueryOptions & { dontQueryInactive: boolean }) {
       // TODO: Needs to be adapted for Android
@@ -368,8 +366,6 @@ export const useActivityStore = defineStore('activity', {
         cancelled = true;
         console.log('Request aborted');
       };
-
-      const classes = loadClassesForQuery();
 
       // Query one period at a time, to avoid timeout on slow queries
       let data = [];
@@ -397,6 +393,7 @@ export const useActivityStore = defineStore('activity', {
           }
         }
 
+        const categories = loadClassesForQuery();
         const result = await getClient().query(
           [period],
           // TODO: Clean up call, pass QueryParams in fullDesktopQuery as well
@@ -406,9 +403,9 @@ export const useActivityStore = defineStore('activity', {
             bid_window: this.buckets.window[0],
             bid_browsers: this.buckets.browser,
             // bid_android: this.buckets.android,
-            classes: classes,
-            filter_afk: filterAFK,
-            filter_classes: filterCategories,
+            categories,
+            filter_categories,
+            filter_afk,
           })
         );
         data = data.concat(result);
@@ -472,9 +469,8 @@ export const useActivityStore = defineStore('activity', {
     },
 
     async load_demo() {
-      const settingsStore = useSettingsStore();
-
       // A function to load some demo data (for screenshots and stuff)
+
       this.start_loading({});
 
       function groupSumEventsBy(events, key, f) {
@@ -530,6 +526,7 @@ export const useActivityStore = defineStore('activity', {
       this.buckets.loaded = true;
 
       // fetch startOfDay from settings store
+      const settingsStore = useSettingsStore();
       const startOfDay = settingsStore.startOfDay;
 
       function build_active_history() {
