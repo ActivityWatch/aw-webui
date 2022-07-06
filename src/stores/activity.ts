@@ -164,17 +164,15 @@ export const useActivityStore = defineStore('activity', {
         // TODO: These queries can actually run in parallel, but since server won't process them in parallel anyway we won't.
         await this.set_available(query_options);
 
-        // TODO: Move me
-        const multidevice = true;
-
         if (this.window.available) {
-          if (multidevice) {
+          if (settingsStore.useMultidevice) {
             const hostnames = bucketsStore.hosts.filter(
               // require that the host has window buckets,
               // and that the host is not a fakedata host,
               // unless we're explicitly querying fakedata
               host =>
-                bucketsStore.windowBucketsByHost(host).length > 0 &&
+                host &&
+                bucketsStore.bucketsWindow(host).length > 0 &&
                 (!host.startsWith('fakedata') || query_options.host.startsWith('fakedata'))
             );
             console.info('Including hosts in multiquery: ', hostnames);
@@ -463,11 +461,12 @@ export const useActivityStore = defineStore('activity', {
     async get_buckets({ host }) {
       // TODO: Move to bucketStore on a per-host basis?
       const bucketsStore = useBucketsStore();
-      this.buckets.afk = bucketsStore.afkBucketsByHost(host);
-      this.buckets.window = bucketsStore.windowBucketsByHost(host);
-      this.buckets.android = bucketsStore.androidBucketsByHost(host);
-      this.buckets.browser = bucketsStore.browserBuckets;
-      this.buckets.editor = bucketsStore.editorBuckets;
+      this.buckets.afk = bucketsStore.bucketsAFK(host);
+      this.buckets.window = bucketsStore.bucketsWindow(host);
+      this.buckets.android = bucketsStore.bucketsAndroid(host);
+      this.buckets.browser = bucketsStore.bucketsBrowser(host);
+      this.buckets.editor = bucketsStore.bucketsEditor(host);
+
       console.log('Available buckets: ', this.buckets);
       this.buckets.loaded = true;
     },

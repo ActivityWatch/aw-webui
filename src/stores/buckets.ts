@@ -4,16 +4,12 @@ import { IBucket } from '~/util/interfaces';
 import { defineStore } from 'pinia';
 import { getClient } from '~/util/awclient';
 
-function get_buckets_by_type(buckets: IBucket[], type: string) {
+function select_buckets(buckets: IBucket[], { host, type }: { host?: string; type?: string }) {
   return _.map(
-    _.filter(buckets, bucket => bucket['type'] === type),
-    bucket => bucket['id']
-  );
-}
-
-function get_buckets_by_host_and_type(buckets: IBucket[], host: string, type: string) {
-  return _.map(
-    _.filter(buckets, bucket => bucket['type'] === type && bucket['hostname'] == host),
+    _.filter(
+      buckets,
+      bucket => (!type || bucket['type'] === type) && (!host || bucket['hostname'] == host)
+    ),
     bucket => bucket['id']
   );
 }
@@ -34,10 +30,12 @@ export const useBucketsStore = defineStore('buckets', {
       return _.uniq(_.map(this.buckets, bucket => bucket['device_id']));
     },
 
-    availableByHost(): (hostname: string) => {
+    available(): (hostname: string) => {
       window: boolean;
       browser: boolean;
       editor: boolean;
+      android: boolean;
+      category: boolean;
     } {
       // Returns a map of which kinds of buckets are available
       //
@@ -45,57 +43,54 @@ export const useBucketsStore = defineStore('buckets', {
       // 'browser' requires (currentwindow + afk + browser) buckets
       // 'editor' requires editor buckets
       return hostname => {
-        const windowAvailable =
-          this.windowBucketsByHost(hostname).length > 0 &&
-          this.afkBucketsByHost(hostname).length > 0;
+        const windowAvail =
+          this.bucketsWindow(hostname).length > 0 && this.bucketsAFK(hostname).length > 0;
+        const androidAvail = this.bucketsAndroid(hostname).length > 0;
 
         return {
-          window: windowAvailable,
-          browser: windowAvailable && this.browserBuckets(hostname).length > 0,
-          editor: this.editorBuckets(hostname).length > 0,
+          window: windowAvail,
+          browser: window && this.bucketsBrowser(hostname).length > 0,
+          editor: this.bucketsEditor(hostname).length > 0,
+          android: androidAvail,
+          category: windowAvail || androidAvail,
         };
       };
     },
 
-    availablePerHost(): {
-      [hostname: string]: { window: boolean; browser: boolean; editor: boolean };
-    } {
-      // Returns a map {hostname: {[eg. window, browser, editor]: boolean}} that contains available bucket types for all hosts
-      // So we want to map over the hosts, and let the values be the result of the availableByHost function for each host.
-      return Object.assign({}, ...this.hosts().map(this.availableByHost()));
-    },
-
     // These should be considered low-level, and should be used sparingly.
-    afkBucketsByHost() {
-      return (host: string) => get_buckets_by_host_and_type(this.buckets, host, 'afkstatus');
+    bucketsAFK() {
+      return (host: string) => select_buckets(this.buckets, { host, type: 'afkstatus' });
     },
-    windowBucketsByHost() {
+    bucketsWindow() {
       return (host: string) =>
         _.filter(
-          get_buckets_by_host_and_type(this.buckets, host, 'currentwindow'),
+          select_buckets(this.buckets, { host, type: 'currentwindow' }),
           id => !id.startsWith('aw-watcher-android')
         );
     },
-    androidBucketsByHost() {
-      return host =>
-        _.filter(get_buckets_by_host_and_type(this.buckets, host, 'currentwindow'), id =>
+    bucketsAndroid() {
+      return (host: string) =>
+        _.filter(select_buckets(this.buckets, { host, type: 'currentwindow' }), id =>
           id.startsWith('aw-watcher-android')
         );
     },
-    editorBuckets() {
+    bucketsEditor() {
       // fallback to a bucket with 'unknown' host, if one exists.
       // TODO: This needs a fix so we can get rid of this workaround.
+      const type = 'app.editor.activity';
       return (host: string) =>
-        get_buckets_by_host_and_type(this.buckets, host, 'app.editor.activity') ||
-        get_buckets_by_host_and_type(this.buckets, 'unknown', 'app.editor.activity');
+        select_buckets(this.buckets, { host, type }) ||
+        select_buckets(this.buckets, { host: 'unknown', type });
     },
-    browserBuckets() {
+    bucketsBrowser() {
       // fallback to a bucket with 'unknown' host, if one exists.
       // TODO: This needs a fix so we can get rid of this workaround.
+      const type = 'web.tab.current';
       return (host: string) =>
-        get_buckets_by_host_and_type(this.buckets, host, 'web.tab.current') ||
-        get_buckets_by_host_and_type(this.buckets, 'unknown', 'web.tab.current');
+        select_buckets(this.buckets, { host, type }) ||
+        select_buckets(this.buckets, { host: 'unknown', type });
     },
+
     getBucket() {
       return (id: string) => _.filter(this.buckets, b => b.id === id)[0];
     },

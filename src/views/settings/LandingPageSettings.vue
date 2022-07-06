@@ -39,7 +39,7 @@ export default {
       },
     },
     hostnames() {
-      return Object.keys(this.bucketsStore.bucketsByHostname);
+      return this.bucketsStore.hosts;
     },
   },
   async mounted() {
