@@ -1,19 +1,19 @@
 <template lang="pug">
 div
-  h3 Activity #[span.d-sm-inline.d-none for ]
+  h3.mb-0 Activity #[span.d-sm-inline.d-none for ]
     span.text-muted.d-sm-inline-block.d-block  {{ timeperiod | friendlyperiod }}
 
-  div.mb-2.dim
+  div.mb-3.text-muted(style="font-size: 0.9em;")
     ul.list-group.list-group-horizontal-md
-      li.list-group-item.pl-0.pr-3.py-0(style="border: 0")
+      li.list-group-item.pl-0.pr-3.py-0.border-0
         b.mr-1 Host:
         span {{ host }}
-      li.list-group-item.pl-0.pr-3.py-0(style="border: 0")
+      li.list-group-item.pl-0.pr-3.py-0.border-0
         b.mr-1 Time active:
         span {{ activityStore.active.duration | friendlyduration }}
     ul.list-group.list-group-horizontal-md(v-if="periodLength != 'day'")
-      li.list-group-item.pl-0.pr-3.py-0(style="border: 0")
-        b.mr-1 Query range:
+      li.list-group-item.pl-0.pr-3.py-0.border-0
+        0.mr-1 Query range:
         span {{ periodReadableRange }}
 
 
@@ -95,10 +95,6 @@ div
 
 <style lang="scss" scoped>
 @import '../../style/globals';
-
-.dim {
-  opacity: 0.85;
-}
 
 .nav {
   border-bottom: 1px solid $lightBorderColor;

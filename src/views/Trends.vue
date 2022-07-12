@@ -18,7 +18,7 @@ div
 
   div.mb-2
     ul.list-group.list-group-horizontal-md.mb-3(style="font-size: 0.9em; opacity: 0.7")
-      li.list-group-item.pl-0.pr-3.py-0(style="border: 0")
+      li.list-group-item.pl-0.pr-3.py-0.border-0
         | #[b Host:] {{ host }}
 
   b-alert(style="warning" show)

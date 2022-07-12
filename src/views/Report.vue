@@ -18,7 +18,7 @@ div
 
   div.d-flex.mt-1
     span.mr-auto.small(style="color: #666") Hostname: {{queryOptions.hostname}}
-    b-button(size="sm", variant="outline-dark" style="border: 0" @click="show_options = !show_options")
+    b-button.border-0(size="sm", variant="outline-dark" @click="show_options = !show_options")
       span(v-if="!show_options")
         | #[icon(name="angle-double-down")] Show options
       span(v-else)
