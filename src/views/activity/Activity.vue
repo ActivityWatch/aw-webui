@@ -304,10 +304,14 @@ export default {
 
   methods: {
     previousPeriod: function () {
-      return moment(this._date).subtract(1, `${this.periodLength}s`).format('YYYY-MM-DD');
+      return moment(this._date)
+        .subtract(1, `${this.periodLength}s` as moment.unitOfTime.DurationConstructor)
+        .format('YYYY-MM-DD');
     },
     nextPeriod: function () {
-      return moment(this._date).add(1, `${this.periodLength}s`).format('YYYY-MM-DD');
+      return moment(this._date)
+        .add(1, `${this.periodLength}s` as moment.unitOfTime.DurationConstructor)
+        .format('YYYY-MM-DD');
     },
 
     setDate: function (date, periodLength) {
@@ -371,7 +375,7 @@ export default {
       }
 
       const viewsStore = useViewsStore();
-      viewsStore.addView({ id: this.new_view.id, name: this.new_view.name });
+      viewsStore.addView({ id: this.new_view.id, name: this.new_view.name, elements: [] });
 
       // Hide the modal manually
       this.$nextTick(() => {
