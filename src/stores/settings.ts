@@ -87,6 +87,8 @@ export const useSettingsStore = defineStore('settings', {
             } catch (e) {
               console.error('failed to parse', key, value);
             }
+          } else if (value === 'true' || value === 'false') {
+            storage[key] = value === 'true';
           } else {
             storage[key] = value;
           }
