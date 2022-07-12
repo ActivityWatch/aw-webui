@@ -31,7 +31,7 @@ interface BaseQueryParams {
   categories: Category[];
   filter_categories: string[][];
   bid_browsers?: string[];
-  return_variable?: string;
+  return_variable_suffix?: string;
 }
 
 interface DesktopQueryParams extends BaseQueryParams {
@@ -62,7 +62,7 @@ function get_params(
     bid_window: 'aw-watcher-window_' + host,
     bid_afk: 'aw-watcher-afk_' + host,
     bid_browsers: [],
-    return_variable: 'events_' + safeHostname(host),
+    return_variable_suffix: safeHostname(host),
   };
 
   const host_params = params.host_params[host];
@@ -117,14 +117,13 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
          not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);`
       : '',
     // Fetch browser events
-    params.bid_browsers
-      ? isDesktopParams(params) &&
-        browserEvents(params) +
-          // Include focused and audible browser events as indications of not-afk
-          (params.include_audible
-            ? `audible_events = filter_keyvals(browser_events, "audible", [true]);
+    isDesktopParams(params) && params.bid_browsers
+      ? browserEvents(params) +
+        // Include focused and audible browser events as indications of not-afk
+        (params.include_audible
+          ? `audible_events = filter_keyvals(browser_events, "audible", [true]);
              not_afk = period_union(not_afk, audible_events);`
-            : '')
+          : '')
       : '',
     // Filter out window events when the user was afk
     isDesktopParams(params) && params.filter_afk
@@ -137,7 +136,10 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
       ? `events = filter_keyvals(events, "$category", ${cat_filter_str});`
       : '',
     // "Return" events by setting variable named with return_variable if set
-    params.return_variable ? `${params.return_variable} = events;` : '',
+    params.return_variable_suffix
+      ? `events_${params.return_variable_suffix} = events;
+         not_afk_${params.return_variable_suffix} = not_afk;`
+      : '',
   ].join('\n');
 }
 
@@ -151,11 +153,13 @@ export function canonicalMultideviceEvents(params: MultiQueryParams): string {
   // To do this, we can use the union_no_overlap function, which merges events
   // but avoids overlaps by giving priority according to the order of hosts.
   let query = queries.join('\n');
-  if (queries.length > 1) {
-    query += 'events = [];';
-    for (let i = 0; i < queries.length; i++) {
-      query += `events = union_no_overlap(events, events_${safeHostname(params.hosts[i])});`;
-    }
+  query += 'events = [];';
+  query += 'not_afk = [];';
+  for (let i = 0; i < queries.length; i++) {
+    query += `
+    events = union_no_overlap(events, events_${safeHostname(params.hosts[i])});
+    not_afk = union_no_overlap(not_afk, not_afk_${safeHostname(params.hosts[i])});
+    `;
   }
 
   return query;

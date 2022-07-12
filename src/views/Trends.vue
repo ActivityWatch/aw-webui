@@ -40,14 +40,14 @@ div
 
 <style lang="scss" scoped></style>
 
-<script>
+<script lang="ts">
 import moment from 'moment';
 import { get_today_with_offset } from '~/util/time';
 import { buildBarchartDataset } from '~/util/datasets';
 
 import { useBucketsStore } from '~/stores/buckets';
 import { useCategoryStore } from '~/stores/categories';
-import { useActivityStore } from '~/stores/activity';
+import { useActivityStore, QueryOptions } from '~/stores/activity';
 
 export default {
   name: 'Trends',
@@ -85,14 +85,14 @@ export default {
 
   methods: {
     refresh: async function (force) {
-      const queryParams = {
+      const queryParams: QueryOptions = {
         timeperiod: this.timeperiod,
         host: this.host,
         force,
-        filterAFK: this.filterAFK,
-        includeAudible: this.includeAudible,
-        filterCategories: this.filterCategories,
-        dontQueryInactive: false,
+        filter_afk: this.filter_afk,
+        include_audible: this.include_audible,
+        filter_categories: this.filter_categories,
+        dont_query_inactive: false,
       };
       await this.activityStore.query_category_time_by_period(queryParams);
     },
