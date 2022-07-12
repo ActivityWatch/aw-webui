@@ -51,13 +51,14 @@ function colorCategories(events: IEvent[]): IEvent[] {
   });
 }
 
-interface QueryOptions {
+export interface QueryOptions {
   host: string;
   date?: string;
   timeperiod?: TimePeriod;
   filter_afk?: boolean;
   include_audible?: boolean;
   filter_categories?: string[][];
+  dont_query_inactive?: boolean;
   force?: boolean;
 }
 
@@ -209,7 +210,7 @@ export const useActivityStore = defineStore('activity', {
 
         if (this.window.available) {
           // Perform this last, as it takes the longest
-          await this.query_category_time_by_period({ ...query_options, dont_query_inactive: true });
+          await this.query_category_time_by_period({ ...query_options });
         }
       } else {
         console.warn(
