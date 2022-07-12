@@ -163,6 +163,9 @@ export const useActivityStore = defineStore('activity', {
         await this.set_available(query_options);
 
         if (this.window.available) {
+          console.info(
+            settingsStore.useMultidevice ? 'Querying multiple devices' : 'Querying a single device'
+          );
           if (settingsStore.useMultidevice) {
             const hostnames = bucketsStore.hosts.filter(
               // require that the host has window buckets,
