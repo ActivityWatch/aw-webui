@@ -16,9 +16,9 @@ div
         span(v-if="_class.rule.type === 'regex'") Rule ({{_class.rule.type}}): #[code {{_class.rule.regex}}]
         span(v-else, style="color: #888") No rule
       span.float-right
-        b-btn.ml-1(size="sm", variant="outline-secondary", @click="showEditModal(_class.id)" style="border: 0;" pill)
+        b-btn.ml-1.border-0(size="sm", variant="outline-secondary", @click="showEditModal(_class.id)" pill)
           icon(name="edit")
-        b-btn.ml-1(size="sm", variant="outline-success", @click="addSubclass(_class); expanded = true" style="border: 0;" pill)
+        b-btn.ml-1.border-0(size="sm", variant="outline-success", @click="addSubclass(_class); expanded = true" pill)
           icon(name="plus")
   div
     div.pa-2(v-for="child in _class.children", style="background: rgba(0, 0, 0, 0);", v-show="expanded")

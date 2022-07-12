@@ -39,16 +39,14 @@ div
             :disabled="mode == 'range' && (invalidDaterange || emptyDaterange || daterangeTooLong)",
             @click="valueChanged"
           ) Update
-      
+
     div(style="text-align:right" v-if="showUpdate && mode=='last_duration'")
       b-button.px-2(@click="update()", variant="outline-dark", size="sm")
         icon(name="sync")
         span.d-none.d-md-inline
           |  Update
-      div.mt-1.small(style="color: #999" v-if="lastUpdate")
-        | Last update: {{lastUpdate.format("YYYY-MM-DD HH:mm:ss")}}
-
-
+      div.mt-1.small.text-muted(v-if="lastUpdate")
+        | Last update: #[time(:datetime="lastUpdate.format()") {{lastUpdate | friendlytime}}]
 </template>
 
 <style scoped lang="scss"></style>
@@ -104,6 +102,17 @@ export default {
   mounted() {
     this.duration = this.defaultDuration;
     this.valueChanged();
+
+    // We want our lastUpdated text to update every ~3s
+    // We can do this by setting it to null and then the previous value.
+    this.lastUpdateTimer = setInterval(() => {
+      const _lastUpdate = this.lastUpdate;
+      this.lastUpdate = null;
+      this.lastUpdate = _lastUpdate;
+    }, 1000);
+  },
+  beforeDestroy() {
+    clearInterval(this.lastUpdateTimer);
   },
   methods: {
     valueChanged() {

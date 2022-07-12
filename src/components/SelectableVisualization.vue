@@ -84,7 +84,7 @@ div
   right: 0.8em;
 
   .btn {
-    border: 0px;
+    border: 0;
   }
 }
 </style>
