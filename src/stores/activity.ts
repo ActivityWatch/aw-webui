@@ -206,7 +206,7 @@ export const useActivityStore = defineStore('activity', {
 
         if (this.window.available) {
           // Perform this last, as it takes the longest
-          await this.query_category_time_by_period({ ...query_options, dontQueryInactive: true });
+          await this.query_category_time_by_period({ ...query_options, dont_query_inactive: true });
         }
       } else {
         console.warn(

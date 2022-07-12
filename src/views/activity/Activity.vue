@@ -50,18 +50,18 @@ div
     div.col-md-12
       h5 Filters
     div.col-md-6
-      b-form-checkbox(v-model="filterAFK" size="sm")
+      b-form-checkbox(v-model="filter_afk" size="sm")
         | Exclude AFK time
         icon#filterAFKHelp(name="question-circle" style="opacity: 0.4")
         b-tooltip(target="filterAFKHelp" v-b-tooltip.hover title="Filter away time where the AFK watcher didn't detect any input.")
-      b-form-checkbox(v-model="includeAudible" :disabled="!filterAFK" size="sm")
+      b-form-checkbox(v-model="include_audible" :disabled="!filter_afk" size="sm")
         | Count audible browser tab as active
         icon#includeAudibleHelp(name="question-circle" style="opacity: 0.4")
         b-tooltip(target="includeAudibleHelp" v-b-tooltip.hover title="If the active window is an audible browser tab, count as active. Requires a browser watcher.")
 
     div.col-md-6.mt-2.mt-md-0
       b-form-group(label="Show category" label-cols="5" label-cols-lg="4" style="font-size: 0.88em")
-        b-form-select(v-model="filterCategory", :options="categoryStore.category_select(true)" size="sm")
+        b-form-select(v-model="filter_category", :options="categoryStore.category_select(true)" size="sm")
 
 
   aw-periodusage.mt-2(:periodusage_arr="periodusage", @update="setDate")
@@ -137,7 +137,7 @@ div
 }
 </style>
 
-<script>
+<script lang="ts">
 import { mapState } from 'pinia';
 import moment from 'moment';
 import { get_day_start_with_offset, get_today_with_offset } from '~/util/time';
@@ -156,7 +156,7 @@ import 'vue-awesome/icons/filter';
 
 import { useSettingsStore } from '~/stores/settings';
 import { useCategoryStore } from '~/stores/categories';
-import { useActivityStore } from '~/stores/activity';
+import { useActivityStore, QueryOptions } from '~/stores/activity';
 import { useViewsStore } from '~/stores/views';
 
 export default {
@@ -185,9 +185,10 @@ export default {
 
       today: null,
       showOptions: false,
-      filterCategory: null,
-      includeAudible: true,
-      filterAFK: true,
+
+      filter_category: null,
+      include_audible: true,
+      filter_afk: true,
       new_view: {},
     };
   },
@@ -216,11 +217,11 @@ export default {
       return this.$route.meta.subview;
     },
     filterCategories: function () {
-      if (this.filterCategory) {
+      if (this.filter_category) {
         const cats = this.categoryStore.all_categories;
         const isChild = p => c => c.length > p.length && _.isEqual(p, c.slice(0, p.length));
-        const children = _.filter(cats, isChild(this.filterCategory));
-        return [this.filterCategory].concat(children);
+        const children = _.filter(cats, isChild(this.filter_category));
+        return [this.filter_category].concat(children);
       } else {
         return null;
       }
@@ -272,13 +273,13 @@ export default {
     timeperiod: function () {
       this.refresh();
     },
-    filterCategory: function () {
+    filter_category: function () {
       this.refresh();
     },
-    filterAFK: function () {
+    filter_afk: function () {
       this.refresh();
     },
-    includeAudible: function () {
+    include_audible: function () {
       this.refresh();
     },
   },
@@ -322,14 +323,15 @@ export default {
     },
 
     refresh: async function (force) {
-      await this.activityStore.ensure_loaded({
+      const queryOptions: QueryOptions = {
         timeperiod: this.timeperiod,
         host: this.host,
         force: force,
-        filterAFK: this.filterAFK,
-        includeAudible: this.includeAudible,
-        filterCategories: this.filterCategories,
-      });
+        filter_afk: this.filter_afk,
+        include_audible: this.include_audible,
+        filter_categories: this.filter_categories,
+      };
+      await this.activityStore.ensure_loaded(queryOptions);
     },
 
     load_demo: async function () {
