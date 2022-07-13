@@ -31,9 +31,30 @@ div
   div(v-if="status == 'searching'")
     div #[icon(name="spinner" pulse)] Searching...
 
+
   div(v-if="events != null")
-    vis-timeline(:events="events" filterShortEvents=true)
-    div {{ events.length }} events
+    hr
+
+    div.d-flex
+      div.flex-fill
+        | Found {{ events.length }} events in {{ queryTime / 1000 }} seconds
+      div
+        b-input-group(size="sm")
+          b-input-group-prepend
+            b-input-group-text
+              icon(name="save")
+              .mx-1 Export as:
+          b-input-group-append
+            b-button(type="button", @click="export_csv()" variant="outline-dark")
+              | CSV
+            b-button(type="button", @click="export_json()" variant="outline-dark")
+              | JSON
+
+    hr
+
+    vis-timeline(:events="events.slice(0, 500)" filterShortEvents=true)
+    div.small(v-if="events.length > 500")
+      | Too many events, will only show last 500 events.
 
     hr
 
@@ -42,6 +63,10 @@ div
     hr
 
     aw-selectable-eventview(:events="events")
+
+    hr
+
+    hr
 
     div
       | Didn't find what you were looking for?
@@ -52,16 +77,18 @@ div
 
 <style scoped lang="scss"></style>
 
-<script>
+<script lang="ts">
 import _ from 'lodash';
 import moment from 'moment';
-import { canonicalEvents } from '~/queries';
-import { buildBarchartDataset } from '~/util/datasets';
+import Papa from 'papaparse';
 
 import 'vue-awesome/icons/search';
 import 'vue-awesome/icons/spinner';
 import 'vue-awesome/icons/angle-double-down';
 import 'vue-awesome/icons/angle-double-up';
+
+import { canonicalEvents } from '~/queries';
+import { buildBarchartDataset } from '~/util/datasets';
 
 import { useActivityStore } from '~/stores/activity';
 import { useCategoryStore } from '~/stores/categories';
@@ -80,6 +107,7 @@ export default {
       events: null,
 
       status: null,
+      queryTime: null,
       error: '',
 
       // Options
@@ -109,8 +137,8 @@ export default {
         bid_window: 'aw-watcher-window_' + this.queryOptions.hostname,
         bid_afk: 'aw-watcher-afk_' + this.queryOptions.hostname,
         filter_afk: this.queryOptions.filter_afk,
-        classes: this.filterCategories,
-        filter_classes: this.filterCategories.map(c => c[0]),
+        categories: this.filterCategories,
+        filter_categories: this.filterCategories.map(c => c[0]),
       });
       query += '; RETURN = events;';
 
@@ -120,15 +148,44 @@ export default {
       const timeperiods = [start + '/' + end];
       try {
         this.status = 'searching';
+        const time = moment();
         const data = await getClient().query(timeperiods, query_array);
         this.events = _.orderBy(data[0], ['timestamp'], ['desc']);
         this.error = '';
+        this.queryTime = moment().diff(time);
       } catch (e) {
         console.error(e);
         this.error = e.response.data.message;
       } finally {
         this.status = null;
       }
+    },
+
+    export_json() {
+      const data = JSON.stringify(this.events, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'events.json';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    },
+
+    export_csv() {
+      const data = this.events.map(e => {
+        return [e.timestamp, e.duration, e.data['$category']];
+      });
+      const csv = Papa.unparse(data, { columns: ['timestamp', 'duration', 'category'] });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'events.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     },
   },
 };
