@@ -43,27 +43,42 @@ export default {
         },
       ],
     },
-    resolution: {
+    timeperiod_start: {
       type: String,
-      default: 'day',
+      default: () => null,
+    },
+    timeperiod_length: {
+      type: Array,
+      default: () => [1, 'day'],
     },
   },
   computed: {
     labels() {
-      const hourOffset = get_hour_offset();
-      if (this.resolution === 'day') {
+      const start = this.timeperiod_start;
+      const count = this.timeperiod_length[0];
+      const resolution = this.timeperiod_length[1];
+      if (resolution.startsWith('day') && count == 1) {
+        const hourOffset = get_hour_offset();
         return _.range(0, 24).map(h => `${(h + hourOffset) % 24}`);
-      } else if (this.resolution == 'week') {
-        // FIXME: In the future this will depend on a 'start of week' setting
-        return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      } else if (this.resolution == 'month') {
+      } else if (resolution.startsWith('day')) {
+        return _.range(count).map(d => `${d + 1}`);
+      } else if (resolution.startsWith('week')) {
+        // Look up days of the week from `start`
+        return _.range(7).map(d => {
+          const date = new Date(start);
+          date.setDate(date.getDate() + d);
+          return date.toLocaleDateString('en-US', { weekday: 'short' });
+        });
+      } else if (resolution.startsWith('month')) {
         // FIXME: Needs access to the timeperiod start to know which month
-        const daysInMonth = 31;
+        // How many days are in the given month?
+        const date = new Date(start);
+        const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
         return ['1st', '2nd', '3rd'].concat(_.range(4, daysInMonth + 1).map(d => `${d}th`));
-      } else if (this.resolution == 'year') {
+      } else if (resolution == 'year') {
         return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       } else {
-        console.error('Invalid resolution');
+        console.error(`Invalid resolution: ${resolution}`);
         return [];
       }
     },

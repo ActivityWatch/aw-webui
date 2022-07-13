@@ -10,6 +10,7 @@ interface State {
   initialTimestamp: Moment;
 
   startOfDay: string;
+  startOfWeek: string;
   durationDefault: number;
   useColorFallback: boolean;
   landingpage: string;
@@ -32,11 +33,15 @@ interface State {
 export const useSettingsStore = defineStore('settings', {
   state: (): State => ({
     initialTimestamp: moment(),
+
     startOfDay: '04:00',
+    startOfWeek: 'Monday',
     durationDefault: 4 * 60 * 60,
     useColorFallback: false,
     landingpage: '/home',
+
     theme: 'light',
+
     newReleaseCheckData: {
       isEnabled: true,
       nextCheckTime: moment().add(SHORT_BACKOFF_PERIOD, 'seconds'),

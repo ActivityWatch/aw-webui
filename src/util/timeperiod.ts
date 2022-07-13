@@ -1,5 +1,6 @@
 import moment from 'moment';
 import { get_day_start_with_offset } from '~/util/time';
+import { useSettingsStore } from '~/stores/settings';
 
 export interface TimePeriod {
   start: string;
@@ -41,17 +42,18 @@ export function periodReadable(timeperiod: TimePeriod) {
 }
 
 export function periodLengthConvertMoment(periodLength: string) {
+  const settingsStore = useSettingsStore();
   if (periodLength === 'day') {
     return 'day';
   } else if (periodLength === 'week') {
     /* This is necessary so the week starts on Monday instead of Sunday */
-    return 'isoWeek';
+    return settingsStore.startOfWeek == 'Monday' ? 'isoWeek' : 'week';
   } else if (periodLength === 'month') {
     return 'month';
   } else if (periodLength === 'year') {
     return 'year';
   } else {
-    console.error('Invalid periodLength ${periodLength}, defaulting to "day"');
+    console.error(`Invalid periodLength ${periodLength}, defaulting to "day"`);
     return 'day';
   }
 }
@@ -84,10 +86,14 @@ export function timeperiodsDaysOfPeriod(timeperiod: TimePeriod): TimePeriod[] {
   const _length: [number, string] = [1, 'day'];
 
   let count: number;
-  if (timeperiod.length[1] == 'week') {
+  if (timeperiod.length[1].startsWith('day')) {
+    count = timeperiod.length[0];
+  } else if (timeperiod.length[1].startsWith('week')) {
     count = 7;
-  } else if (timeperiod.length[1] == 'month') {
+  } else if (timeperiod.length[1].startsWith('month')) {
     count = moment(timeperiod.start).daysInMonth();
+  } else {
+    throw new Error(`Invalid periodLength ${timeperiod.length[1]}`);
   }
 
   for (let i = 0; i < count; i++) {
