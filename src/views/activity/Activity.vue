@@ -17,20 +17,17 @@ div
       li.list-group-item.pl-0.pr-3.py-0.border-0
         b.mr-1 Query range:
         span {{ periodReadableRange }}
-    div
-      | {{ timeperiod }}
-
 
   div.mb-2.d-flex
     div
       b-input-group
-        b-input-group-prepend(v-if='periodIsBrowseable')
+        b-input-group-prepend
           b-button.px-2(:to="link_prefix + '/' + previousPeriod() + '/' + subview + '/' + currentViewId",
                    variant="outline-dark")
             icon(name="arrow-left")
         b-select.pl-2.pr-3(:value="periodLength", :options="periodLengths",
                  @change="(periodLength) => setDate(_date, periodLength)")
-        b-input-group-append(v-if='periodIsBrowseable')
+        b-input-group-append
           b-button.px-2(:to="link_prefix + '/' + nextPeriod() + '/' + subview + '/' + currentViewId",
                         :disabled="nextPeriod() > today", variant="outline-dark")
             icon(name="arrow-right")
@@ -333,12 +330,18 @@ export default {
   methods: {
     previousPeriod: function () {
       return moment(this._date)
-        .subtract(1, `${this.periodLength}s` as moment.unitOfTime.DurationConstructor)
+        .subtract(
+          this.timeperiod.length[0],
+          this.timeperiod.length[1] as moment.unitOfTime.DurationConstructor
+        )
         .format('YYYY-MM-DD');
     },
     nextPeriod: function () {
       return moment(this._date)
-        .add(1, `${this.periodLength}s` as moment.unitOfTime.DurationConstructor)
+        .add(
+          this.timeperiod.length[0],
+          this.timeperiod.length[1] as moment.unitOfTime.DurationConstructor
+        )
         .format('YYYY-MM-DD');
     },
 
