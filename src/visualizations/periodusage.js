@@ -71,6 +71,7 @@ function update(svg_elem, usage_arr, onPeriodClicked) {
 
     const x = i * padding + i * width + 0.25 * width;
 
+    // FIXME: Doesn't work well, notably breaks on last7d and last30d
     if (moment(date).isSame(moment(), 'day')) {
       svg
         .append('line')

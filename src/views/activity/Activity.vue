@@ -1,7 +1,9 @@
 <template lang="pug">
 div
   h3.mb-0 Activity #[span.d-sm-inline.d-none for ]
-    span.text-muted.d-sm-inline-block.d-block  {{ timeperiod | friendlyperiod }}
+    span.text-muted.d-sm-inline-block.d-block
+      span(v-if="periodIsBrowseable") {{ timeperiod | friendlyperiod }}
+      span(v-else) {{ {"last7d": "last 7 days", "last30d": "last 30 days"}[periodLength] }}
 
   div.mb-3.text-muted(style="font-size: 0.9em;")
     ul.list-group.list-group-horizontal-md
@@ -13,22 +15,24 @@ div
         span {{ activityStore.active.duration | friendlyduration }}
     ul.list-group.list-group-horizontal-md(v-if="periodLength != 'day'")
       li.list-group-item.pl-0.pr-3.py-0.border-0
-        0.mr-1 Query range:
+        b.mr-1 Query range:
         span {{ periodReadableRange }}
+    div
+      | {{ timeperiod }}
 
 
   div.mb-2.d-flex
     div
       b-input-group
-        b-input-group-prepend
+        b-input-group-prepend(v-if='periodIsBrowseable')
           b-button.px-2(:to="link_prefix + '/' + previousPeriod() + '/' + subview + '/' + currentViewId",
                    variant="outline-dark")
             icon(name="arrow-left")
         b-select.pl-2.pr-3(:value="periodLength", :options="periodLengths",
                  @change="(periodLength) => setDate(_date, periodLength)")
-        b-input-group-append
+        b-input-group-append(v-if='periodIsBrowseable')
           b-button.px-2(:to="link_prefix + '/' + nextPeriod() + '/' + subview + '/' + currentViewId",
-                   :disabled="nextPeriod() > today", variant="outline-dark")
+                        :disabled="nextPeriod() > today", variant="outline-dark")
             icon(name="arrow-right")
 
     div.mx-2(v-if="periodLength === 'day'")
@@ -196,11 +200,23 @@ export default {
     ...mapState(useViewsStore, ['views']),
     periodLengths: function () {
       const settingsStore = useSettingsStore();
-      const periods = ['day', 'week', 'month'];
+      let periods: Record<string, string> = {
+        day: 'day',
+        week: 'week',
+        month: 'month',
+      };
       if (settingsStore.showYearly) {
-        periods.push('year');
+        periods['year'] = 'year';
       }
+      periods = {
+        ...periods,
+        last7d: '7 days',
+        last30d: '30 days',
+      };
       return periods;
+    },
+    periodIsBrowseable: function () {
+      return ['day', 'week', 'month', 'year'].includes(this.periodLength);
     },
     currentView: function () {
       return this.views.find(v => v.id == this.$route.params.view_id) || this.views[0];
@@ -234,22 +250,21 @@ export default {
     },
     timeperiod: function () {
       const settingsStore = useSettingsStore();
-      return {
-        start: get_day_start_with_offset(this._date, settingsStore.startOfDay),
-        length: [1, this.periodLength],
-      };
-    },
-    dateformat: function () {
-      if (this.periodLength === 'day') {
-        return 'YYYY-MM-DD';
-      } else if (this.periodLength === 'week') {
-        return 'YYYY[ W]WW';
-      } else if (this.periodLength === 'month') {
-        return 'YYYY-MM';
-      } else if (this.periodLength === 'year') {
-        return 'YYYY';
+
+      if (this.periodIsBrowseable) {
+        return {
+          start: get_day_start_with_offset(this._date, settingsStore.startOfDay),
+          length: [1, this.periodLength],
+        };
       } else {
-        return 'YYYY-MM-DD';
+        const len = { last7d: [7, 'days'], last30d: [30, 'days'] }[this.periodLength];
+        return {
+          start: get_day_start_with_offset(
+            moment(this._date).subtract(len[0] - 1, len[1]),
+            settingsStore.startOfDay
+          ),
+          length: len,
+        };
       }
     },
     periodReadableRange: function () {
@@ -261,9 +276,22 @@ export default {
       // start and exactly when the week ends. The formatting code ends up being a bit more wonky, but it's
       // worth the tradeoff. https://github.com/ActivityWatch/aw-webui/pull/284
 
-      const startOfWeek = periodStart.format(dateFormatString);
-      const endOfWeek = periodStart.add(1, this.periodLength).format(dateFormatString);
-      return `${startOfWeek}—${endOfWeek}`;
+      let periodLength;
+      if (this.periodIsBrowseable) {
+        periodLength = [1, this.periodLength];
+      } else {
+        if (this.periodLength === 'last7d') {
+          periodLength = [7, 'day'];
+        } else if (this.periodLength === 'last30d') {
+          periodLength = [30, 'day'];
+        } else {
+          throw 'unknown periodLength';
+        }
+      }
+
+      const startOfPeriod = periodStart.format(dateFormatString);
+      const endOfPeriod = periodStart.add(...periodLength).format(dateFormatString);
+      return `${startOfPeriod}—${endOfPeriod}`;
     },
   },
   watch: {
@@ -319,8 +347,18 @@ export default {
       if (!periodLength) {
         periodLength = this.periodLength;
       }
-      const new_period_length_moment = periodLengthConvertMoment(periodLength);
-      const new_date = moment(date).startOf(new_period_length_moment).format('YYYY-MM-DD');
+
+      let new_date;
+      if (periodLength == '7 days') {
+        periodLength = 'last7d';
+        new_date = moment(date).add(1, 'days').format('YYYY-MM-DD');
+      } else if (periodLength == '30 days') {
+        periodLength = 'last30d';
+        new_date = moment(date).add(1, 'days').format('YYYY-MM-DD');
+      } else {
+        const new_period_length_moment = periodLengthConvertMoment(periodLength);
+        new_date = moment(date).startOf(new_period_length_moment).format('YYYY-MM-DD');
+      }
       this.$router.push(
         `/activity/${this.host}/${periodLength}/${new_date}/${this.subview}/${this.currentViewId}`
       );

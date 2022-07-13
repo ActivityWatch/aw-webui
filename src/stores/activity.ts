@@ -351,24 +351,30 @@ export const useActivityStore = defineStore('activity', {
     }: QueryOptions & { dontQueryInactive: boolean }) {
       // TODO: Needs to be adapted for Android
       let periods: string[];
-      if (timeperiod.length[1].startsWith('day')) {
+      const count = timeperiod.length[0];
+      const res = timeperiod.length[1];
+      if (res.startsWith('day') && count == 1) {
+        // If timeperiod is a single day, we query the individual hours
         periods = timeperiodsStrsHoursOfPeriod(timeperiod);
       } else if (
-        timeperiod.length[1].startsWith('week') ||
-        timeperiod.length[1].startsWith('month')
+        res.startsWith('day') ||
+        (res.startsWith('week') && count == 1) ||
+        (res.startsWith('month') && count == 1)
       ) {
+        // If timeperiod is several days, or a single week/month, we query the individual days
         periods = timeperiodsStrsDaysOfPeriod(timeperiod);
-      } else if (timeperiod.length[1].startsWith('year')) {
+      } else if (timeperiod.length[1].startsWith('year') && timeperiod.length[0] == 1) {
+        // If timeperiod a single year, we query the individual months
         periods = timeperiodsStrsMonthsOfPeriod(timeperiod);
       } else {
-        console.error('Unknown timeperiod');
+        console.error(`Unknown timeperiod length: ${timeperiod.length}`);
       }
 
       const signal = getClient().controller.signal;
       let cancelled = false;
       signal.onabort = () => {
         cancelled = true;
-        console.log('Request aborted');
+        console.debug('Request aborted');
       };
 
       // Query one period at a time, to avoid timeout on slow queries

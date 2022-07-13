@@ -38,7 +38,17 @@ export function dateformat(periodLength: string) {
 }
 
 export function periodReadable(timeperiod: TimePeriod) {
-  return moment(timeperiod.start).format(dateformat(timeperiod.length[1]));
+  if (timeperiod.length[0] === 1) {
+    return moment(timeperiod.start).format(dateformat(timeperiod.length[1]));
+  } else {
+    return (
+      moment(timeperiod.start).format(dateformat(timeperiod.length[1])) +
+      ' to ' +
+      moment(timeperiod.start)
+        .add(timeperiod.length[0], timeperiod.length[1] as moment.unitOfTime.DurationConstructor)
+        .format(dateformat(timeperiod.length[1]))
+    );
+  }
 }
 
 export function periodLengthConvertMoment(periodLength: string) {

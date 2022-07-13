@@ -49,10 +49,6 @@ export default {
   },
   props: {
     view_id: { type: String, default: 'default' },
-    periodLength: {
-      type: String,
-      default: 'day',
-    },
   },
   data() {
     return { editing: false };
