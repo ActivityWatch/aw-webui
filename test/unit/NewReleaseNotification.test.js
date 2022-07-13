@@ -4,13 +4,13 @@ import NewReleaseNotification from '~/components/NewReleaseNotification';
 import { createClient } from '~/util/awclient';
 
 describe('hasNewRelease method', () => {
-  createClient();
   const wrapper = shallowMount(NewReleaseNotification, {
     global: {
       plugins: [createTestingPinia()],
     },
   });
   const vm = wrapper.vm;
+  createClient();
 
   test('should clean and compare version tags properly', () => {
     vm.currentVersion = vm.cleanVersionTag('v0.8.0');
