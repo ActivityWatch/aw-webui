@@ -21,12 +21,6 @@ import './style/style.scss';
 // Loads all the filters
 import './util/filters.js';
 
-// Create an instance of AWClient as this.$aw
-import { createClient, getClient } from './util/awclient';
-
-createClient();
-Vue.prototype.$aw = getClient();
-
 // Sets up the routing and the base app (using vue-router)
 import router from './route.js';
 
@@ -84,3 +78,9 @@ new Vue({
   render: h => h(App),
   pinia,
 });
+
+// Create an instance of AWClient as this.$aw
+import { createClient, getClient } from './util/awclient';
+
+createClient();
+Vue.prototype.$aw = getClient();

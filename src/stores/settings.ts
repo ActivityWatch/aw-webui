@@ -25,6 +25,7 @@ interface State {
   devmode: boolean;
   showYearly: boolean;
   useMultidevice: boolean;
+  requestTimeout: number;
 
   // Set to true if settings loaded
   _loaded: boolean;
@@ -55,6 +56,7 @@ export const useSettingsStore = defineStore('settings', {
     devmode: typeof PRODUCTION === 'undefined' ? true : !PRODUCTION,
     showYearly: false,
     useMultidevice: false,
+    requestTimeout: 30,
 
     _loaded: false,
   }),

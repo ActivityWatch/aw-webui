@@ -1,8 +1,10 @@
 import { AWClient } from 'aw-client';
 
+import { useSettingsStore } from '~/stores/settings';
+
 let _client: AWClient | null;
 
-export function createClient(): AWClient {
+export function createClient(force?: boolean): AWClient {
   let baseURL = '';
 
   const production = typeof PRODUCTION !== 'undefined' && PRODUCTION;
@@ -14,8 +16,12 @@ export function createClient(): AWClient {
     baseURL = aw_server_url || 'http://127.0.0.1:5666';
   }
 
-  if (!_client) {
-    _client = new AWClient('aw-webui', { testing: !production, baseURL });
+  if (!_client || force) {
+    _client = new AWClient('aw-webui', {
+      testing: !production,
+      baseURL,
+      timeout: 1000 * useSettingsStore().requestTimeout,
+    });
   } else {
     throw 'Tried to instantiate global AWClient twice!';
   }
