@@ -78,17 +78,23 @@ export const useBucketsStore = defineStore('buckets', {
       // fallback to a bucket with 'unknown' host, if one exists.
       // TODO: This needs a fix so we can get rid of this workaround.
       const type = 'app.editor.activity';
-      return (host: string) =>
-        select_buckets(this.buckets, { host, type }) ||
-        select_buckets(this.buckets, { host: 'unknown', type });
+      return (host: string) => {
+        const buckets = select_buckets(this.buckets, { host, type });
+        return buckets.length == 0
+          ? select_buckets(this.buckets, { host: 'unknown', type })
+          : buckets;
+      };
     },
     bucketsBrowser() {
       // fallback to a bucket with 'unknown' host, if one exists.
       // TODO: This needs a fix so we can get rid of this workaround.
       const type = 'web.tab.current';
-      return (host: string) =>
-        select_buckets(this.buckets, { host, type }) ||
-        select_buckets(this.buckets, { host: 'unknown', type });
+      return (host: string) => {
+        const buckets = select_buckets(this.buckets, { host, type });
+        return buckets.length == 0
+          ? select_buckets(this.buckets, { host: 'unknown', type })
+          : buckets;
+      };
     },
 
     getBucket() {
