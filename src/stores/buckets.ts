@@ -117,7 +117,17 @@ export const useBucketsStore = defineStore('buckets', {
       this.update_buckets(buckets);
     },
 
-    async getBucketWithEvents({ id, start, end, limit }) {
+    async getBucketWithEvents({
+      id,
+      start,
+      end,
+      limit,
+    }: {
+      id: string;
+      start?: Date;
+      end?: Date;
+      limit?: number;
+    }) {
       await this.ensureLoaded();
       const bucket = _.cloneDeep(this.getBucket(id));
       bucket.events = await getClient().getEvents(bucket.id, {
