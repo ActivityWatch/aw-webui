@@ -61,7 +61,6 @@ export default {
       // Constants
       const height = 500;
       const width = 500;
-      const nbSpirals = 2;
       const margin = 10;
 
       // Init d3
@@ -78,8 +77,7 @@ export default {
       const domain_start = moment(eventdomain[0]).startOf('day').valueOf();
       const domain_end = moment(eventdomain[1]).endOf('day').valueOf();
       const domain = [domain_start, domain_end];
-
-      //console.log('domain:', domain);
+      const nbSpirals = Math.ceil((domain_end - domain_start) / (24 * 60 * 60 * 1000));
 
       // TODO: Compute range from events
       const xScale = d3
@@ -95,7 +93,6 @@ export default {
       events.forEach((d, i) => {
         d.startAngle = xScale(new Date(d.timestamp));
         d.endAngle = xScale(new Date(d.timestamp).valueOf() + 1000 * d.duration);
-        //console.log('angles:', d.startAngle, d.endAngle);
       });
 
       const arcGen = d3
@@ -106,10 +103,10 @@ export default {
         .outerRadius(d => yScale(moment(events[d.data].timestamp).valueOf()) + 10)
         //.startAngle(0)
         //.endAngle(1.5 * Math.PI)
-        .cornerRadius(1);
+        .cornerRadius(3);
 
       events.forEach((d: IEvent & { index: number; startAngle: number; endAngle: number }, i) => {
-        console.log(i, d);
+        //console.log(i, d);
         const gradientArcs = d3
           .pie<number>()
           .sort(null)
@@ -119,7 +116,6 @@ export default {
             return moment(events[i].timestamp).valueOf();
           })([i])
           .map(item => ({ ...item, index: i + item.index }));
-        console.log('gradientArcs', gradientArcs);
 
         // TODO: Colors should come from events (retrievable by query), not generated here
 
@@ -129,7 +125,7 @@ export default {
           .data(gradientArcs)
           .join('path')
           .attr('d', arcGen as any)
-          .attr('stroke', '#55f')
+          .attr('stroke', 'none')
           .attr('fill', d.data.status == 'not-afk' ? '#0f0' : '#f00')
           .attr('opacity', 0.5);
       });

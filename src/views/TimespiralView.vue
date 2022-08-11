@@ -21,9 +21,7 @@ export default {
     const bucketStore = useBucketsStore();
     const bucket = await bucketStore.getBucketWithEvents({
       id: 'aw-watcher-afk_erb-laptop2-arch',
-      start: '1900-1-1',
-      end: '2100-1-1',
-      limit: 1000,
+      start: new Date('2022-08-08'),
     });
     this.events = bucket.events;
     console.log('Retrieved events:', this.events);
