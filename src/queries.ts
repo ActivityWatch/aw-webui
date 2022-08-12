@@ -226,6 +226,9 @@ const browser_appnames = {
     'Firefox-esr',
     'Firefox Beta',
     'Nightly',
+    // From: https://github.com/ActivityWatch/aw-watcher-web/issues/87
+    'firefox-aurora',
+    'firefox-trunk-dev',
   ],
   opera: ['opera.exe', 'Opera'],
   brave: ['brave.exe'],
