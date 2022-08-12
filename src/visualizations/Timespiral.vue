@@ -129,10 +129,10 @@ export default {
       const events = this.split_on_hour;
 
       // Constants
-      const height = 500;
-      const width = 500;
-      const margin = 20;
-      const thickness = 20;
+      const height = 600;
+      const width = 600;
+      const margin = 60;
+      const thickness = 30;
 
       // Init d3
       const svg = d3
@@ -164,7 +164,7 @@ export default {
       const yScale = d3
         .scaleTime()
         .domain(domain)
-        .range([(width - margin) / 2 - 30 * nbSpirals, (width - margin * 2) / 2]);
+        .range([(width - margin) / 2 - (thickness + 20) * nbSpirals, (width - margin * 2) / 2]);
 
       // We want to add some spacing at hour-boundaries,
       // to do this we compress the startAngle and endAngle of each hour-segment, around the hour-center, by 1%.
@@ -188,17 +188,31 @@ export default {
 
       // Events have been split by `split_on_hour` above.
 
+      // Computes the radius and spiral thickness for a particular event.
+      // Each inner spiral (previous day) should get progressively thinner.
+      function spiralThickness(e: IEvent): [number, number] {
+        const hourstart = moment(e.timestamp).startOf('hour').valueOf();
+        const angle = xScale(hourstart);
+        const radius = yScale(hourstart);
+        const spiralCount = angle / (2 * Math.PI); // the number of the spiral
+        const scaling = Math.pow(spiralCount / nbSpirals, 0.3); // the scaling factor for the thickness
+        console.log(`${e.timestamp} ${angle} ${radius} ${scaling}`);
+        return [radius, thickness * scaling]; // the thickness of the spiral
+      }
+
       const arcGen = d3
         .arc<PieArcDatum<number>>()
         // Compute the radius of each event, rounded to the hour in which the event occurs.
         .innerRadius(d => {
-          return yScale(moment(events[d.data].timestamp).startOf('hour').valueOf()) - thickness / 2;
+          const [radius, thick] = spiralThickness(events[d.data]);
+          return radius - thick / 2;
         })
-        .outerRadius(
-          d => yScale(moment(events[d.data].timestamp).endOf('hour').valueOf()) + thickness / 2
-        )
+        .outerRadius(d => {
+          const [radius, thick] = spiralThickness(events[d.data]);
+          return radius + thick / 2;
+        })
         // Makes corners round and pretty
-        .cornerRadius(3);
+        .cornerRadius(2);
 
       events.forEach((d: IEvent & { index: number; startAngle: number; endAngle: number }, i) => {
         //console.log(i, d);
@@ -221,9 +235,65 @@ export default {
           .attr('d', arcGen as any)
           .attr('stroke', 'none')
           // TODO: Colors should come from events (retrievable by query), not hardcoded
-          .attr('fill', d.data.status == 'not-afk' ? '#0f0' : '#f00')
-          .attr('opacity', 0.5);
+          .attr('fill', d.data.status == 'not-afk' ? '#0d0' : '#ccc')
+          .attr('opacity', 0.7);
       });
+
+      const tickColor = '#999';
+
+      // Draw clock ticks
+      // Modified from sunburst-clock.js
+      function drawClockTick(group, a, radius) {
+        const xn = Math.cos(a);
+        const yn = Math.sin(a);
+
+        // TODO: Use radius for the last event as a starting point,
+        //       not the radius as if the day was full of events.
+        //       Maybe even have the max radius be radius of the last event,
+        //       with radius matching the last event for a certain time.
+        group
+          .append('line')
+          .attr('x1', (radius - 5) * xn)
+          .attr('y1', (radius - 5) * yn)
+          .attr('x2', (radius + 5) * xn)
+          .attr('y2', (radius + 5) * yn)
+          .style('stroke', tickColor)
+          .style('stroke-width', 2);
+      }
+
+      function drawClock(group, h, m, text, radius) {
+        const a = 2 * Math.PI * (h / 24 + m / 24 / 60) - (1 / 2) * Math.PI;
+        drawClockTick(g, a, radius);
+
+        const xn = Math.cos(a);
+        const yn = Math.sin(a);
+
+        group
+          .append('text')
+          .text(text || moment({ hours: h }).format('HH:mm'))
+          // Fall back to middle,
+          // but should be right for 18:00 and left for 06:00.
+          .attr('text-anchor', h == 6 ? 'start' : h == 18 ? 'end' : 'middle')
+          .attr('dominant-baseline', 'middle')
+          .attr('font-size', '1em')
+          //.attr("font-weight", "bold")
+          .style('fill', tickColor)
+          .attr('x', (radius + 10) * xn)
+          .attr('y', (radius + 20) * yn);
+      }
+
+      const radius = yScale(domain_end);
+      drawClock(g, 0, 0, '00:00', radius);
+      drawClock(g, 3, 0, '', radius);
+      drawClock(g, 6, 0, '06:00', radius);
+      drawClock(g, 9, 0, '', radius);
+      drawClock(g, 12, 0, '12:00', radius);
+      drawClock(g, 15, 0, '', radius);
+      drawClock(g, 18, 0, '18:00', radius);
+      drawClock(g, 21, 0, '', radius);
+
+      const now = moment();
+      drawClock(g, now.hour(), now.minute(), 'Now', radius);
     },
   },
 };
