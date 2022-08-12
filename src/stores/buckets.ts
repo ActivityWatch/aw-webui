@@ -4,7 +4,10 @@ import { IBucket } from '~/util/interfaces';
 import { defineStore } from 'pinia';
 import { getClient } from '~/util/awclient';
 
-function select_buckets(buckets: IBucket[], { host, type }: { host?: string; type?: string }) {
+function select_buckets(
+  buckets: IBucket[],
+  { host, type }: { host?: string; type?: string }
+): string[] {
   return _.map(
     _.filter(
       buckets,
@@ -20,12 +23,12 @@ export const useBucketsStore = defineStore('buckets', {
   }),
 
   getters: {
-    hosts() {
+    hosts(): string[] {
       // TODO: Include consideration of device_id UUID
       return _.uniq(_.map(this.buckets, bucket => bucket['hostname']));
     },
     // Uses device_id instead of hostname
-    devices() {
+    devices(): string[] {
       // TODO: Include consideration of device_id UUID
       return _.uniq(_.map(this.buckets, bucket => bucket['device_id']));
     },
@@ -58,23 +61,23 @@ export const useBucketsStore = defineStore('buckets', {
     },
 
     // These should be considered low-level, and should be used sparingly.
-    bucketsAFK() {
-      return (host: string) => select_buckets(this.buckets, { host, type: 'afkstatus' });
+    bucketsAFK(): (host: string) => string[] {
+      return host => select_buckets(this.buckets, { host, type: 'afkstatus' });
     },
-    bucketsWindow() {
-      return (host: string) =>
+    bucketsWindow(): (host: string) => string[] {
+      return host =>
         _.filter(
           select_buckets(this.buckets, { host, type: 'currentwindow' }),
           id => !id.startsWith('aw-watcher-android')
         );
     },
-    bucketsAndroid() {
-      return (host: string) =>
+    bucketsAndroid(): (host: string) => string[] {
+      return host =>
         _.filter(select_buckets(this.buckets, { host, type: 'currentwindow' }), id =>
           id.startsWith('aw-watcher-android')
         );
     },
-    bucketsEditor() {
+    bucketsEditor(): (host: string) => string[] {
       // fallback to a bucket with 'unknown' host, if one exists.
       // TODO: This needs a fix so we can get rid of this workaround.
       const type = 'app.editor.activity';
@@ -85,7 +88,7 @@ export const useBucketsStore = defineStore('buckets', {
           : buckets;
       };
     },
-    bucketsBrowser() {
+    bucketsBrowser(): (host: string) => string[] {
       // fallback to a bucket with 'unknown' host, if one exists.
       // TODO: This needs a fix so we can get rid of this workaround.
       const type = 'web.tab.current';
@@ -97,10 +100,10 @@ export const useBucketsStore = defineStore('buckets', {
       };
     },
 
-    getBucket() {
-      return (id: string) => _.filter(this.buckets, b => b.id === id)[0];
+    getBucket(): (id: string) => IBucket {
+      return id => _.filter(this.buckets, b => b.id === id)[0];
     },
-    bucketsByHostname() {
+    bucketsByHostname(): Record<string, IBucket[]> {
       return _.groupBy(this.buckets, 'hostname');
     },
   },

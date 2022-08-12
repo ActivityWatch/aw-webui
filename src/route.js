@@ -17,6 +17,7 @@ const Stopwatch = () => import('./views/Stopwatch.vue');
 const Alerts = () => import('./views/Alerts.vue');
 const Search = () => import('./views/Search.vue');
 const Report = () => import('./views/Report.vue');
+const TimespiralView = () => import('./views/TimespiralView.vue');
 const Dev = () => import('./views/Dev.vue');
 const NotFound = () => import('./views/NotFound.vue');
 
@@ -59,6 +60,7 @@ const router = new VueRouter({
     { path: '/report', component: Report },
     { path: '/query', component: QueryExplorer },
     { path: '/alerts', component: Alerts },
+    { path: '/timespiral', component: TimespiralView },
     { path: '/settings', component: Settings },
     { path: '/stopwatch', component: Stopwatch },
     { path: '/search', component: Search },
