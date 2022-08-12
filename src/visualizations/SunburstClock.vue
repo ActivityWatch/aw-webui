@@ -101,12 +101,7 @@ div.sunburst
 </style>
 
 <script>
-// NOTE: This is just a Vue.js component wrapper for timeline-simple.js
-//       Code should generally go in the framework-independent file.
-
-// TODO: Sunburst requires a hierarchical data format
-
-import sunburst from './sunburst-clock.js';
+import sunburst from './sunburst-clock';
 import moment from 'moment';
 import _ from 'lodash';
 

@@ -17,6 +17,8 @@
 const d3 = require('d3');
 const moment = require('moment');
 
+import { IEvent } from '~/util/interfaces';
+
 import { seconds_to_duration } from '../util/time';
 const color = require('../util/color');
 
@@ -49,11 +51,15 @@ function drawLegend() {
     .select('.legend')
     .append('svg:svg')
     .attr('width', li.w)
-    .attr('height', d3.keys(legendData).length * (li.h + li.s));
+    .attr('height', Object.keys(legendData).length * (li.h + li.s));
 
   const g = legend
     .selectAll('g')
-    .data(d3.entries(legendData))
+    .data(
+      Object.entries(legendData).map(t => {
+        return { key: t[0], value: t[1] };
+      })
+    )
     .enter()
     .append('svg:g')
     .attr('transform', function (d, i) {
@@ -79,7 +85,7 @@ function drawLegend() {
     });
 }
 
-function drawClockTick(a) {
+function drawClockTick(a: number) {
   const xn = Math.cos(a);
   const yn = Math.sin(a);
 
@@ -93,7 +99,7 @@ function drawClockTick(a) {
     .style('stroke-width', 1);
 }
 
-function drawClock(h, m, text) {
+function drawClock(h: number, m: number, text?: string) {
   const a = 2 * Math.PI * (h / 24 + m / 24 / 60) - (1 / 2) * Math.PI;
   drawClockTick(a);
 
@@ -111,9 +117,8 @@ function drawClock(h, m, text) {
     .attr('y', 5 + 140 * yn);
 }
 
-function mouseclick(d) {
-  console.log('Clicked');
-  console.log(d);
+function mouseclick(_: Event, d) {
+  console.log('Clicked', d);
 }
 
 function showInfo(d) {
@@ -135,7 +140,7 @@ function showInfo(d) {
 }
 
 // Fade all but the current sequence, and show it in the breadcrumb trail.
-function mouseover(d) {
+function mouseover(_: Event, d) {
   showInfo(d);
 
   const sequenceArray = d.ancestors().reverse();
@@ -185,9 +190,9 @@ function initializeBreadcrumbTrail() {
   trail.append('svg:text').attr('id', 'endlabel').style('fill', '#000');
 }
 
-function create(el) {
+function create(el: HTMLElement) {
   // Clear the svg in case we are redrawing
-  rootEl = d3.select('.chart');
+  rootEl = d3.select(el);
   rootEl.selectAll('svg').remove();
 
   vis = rootEl
@@ -198,7 +203,7 @@ function create(el) {
     .attr('id', 'container')
     .attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')');
 
-  drawLegend(el);
+  drawLegend();
 
   partition = d3.partition().size([2 * Math.PI, radius * radius]);
 
@@ -219,7 +224,7 @@ function create(el) {
 }
 
 // Main function to draw and set up the visualization, once we have the data.
-function update(el, json) {
+function update(el: HTMLElement, root_event: IEvent & { children: IEvent[] }) {
   // Basic setup of page elements.
   initializeBreadcrumbTrail();
 
@@ -230,7 +235,7 @@ function update(el, json) {
   vis.append('svg:circle').attr('r', radius).style('opacity', 0);
 
   // Turn the data into a d3 hierarchy and calculate the sums.
-  let root = d3.hierarchy(json);
+  let root = d3.hierarchy(root_event);
   let nodes = partition(root);
 
   const mode_clock = true;
@@ -238,8 +243,8 @@ function update(el, json) {
     // TODO: Make this a checkbox in the UI
     const show_whole_day = true;
 
-    let root_start = moment(json.timestamp);
-    let root_end = moment(json.timestamp).add(json.duration, 'seconds');
+    let root_start = moment(root_event.timestamp);
+    let root_end = root_start.clone().add(root_event.duration, 'seconds');
     if (show_whole_day) {
       root_start = root_start.startOf('day');
       root_end = root_start.clone().endOf('day');
@@ -286,7 +291,7 @@ function update(el, json) {
   });
 
   vis
-    .data([json])
+    .data([root_event])
     .selectAll('path')
     .data(nodes)
     .enter()
