@@ -1,7 +1,5 @@
 <template lang="pug">
 div
-  div
-    | Events: {{ events.length }}
   svg#timespiral
 </template>
 
@@ -214,17 +212,32 @@ export default {
         // Makes corners round and pretty
         .cornerRadius(2);
 
-      events.forEach((d: IEvent & { index: number; startAngle: number; endAngle: number }, i) => {
+      events.forEach((e: IEvent & { startAngle: number; endAngle: number }, i) => {
         //console.log(i, d);
         const gradientArcs = d3
           .pie<number>()
           .sort(null)
-          .startAngle(d.startAngle)
-          .endAngle(d.endAngle)
-          .value(idx => {
-            return moment(events[idx].timestamp).valueOf();
-          })([i])
-          .map(item => ({ ...item, index: i + item.index }));
+          .startAngle(e.startAngle)
+          .endAngle(e.endAngle)
+          .value(moment(e.timestamp).valueOf())([i]);
+
+        // Can be used to draw a dot
+        /*
+        const hourstart = moment(e.timestamp).startOf('hour').add(30, 'minutes').valueOf();
+        const a = xScale(hourstart);
+        const r = yScale(hourstart);
+        const x = r * Math.cos(a);
+        const y = r * Math.sin(a);
+
+        g.selectAll('circle')
+          .data([[x, y]])
+          .enter()
+          .append('circle')
+          .attr('cx', d => d[0])
+          .attr('cy', d => d[1])
+          .attr('r', '8px')
+          .attr('fill', 'red');
+        */
 
         // Append the arc
         // TODO: Rotate arcs slightly so that arc ends are facing each other (is this even possible)
@@ -234,8 +247,10 @@ export default {
           .join('path')
           .attr('d', arcGen as any)
           .attr('stroke', 'none')
+          // NOTE: Attempted rotation around a pivot point, doesn't work
+          //.attr('transform', `rotate(-5 ${x} ${y})`)
           // TODO: Colors should come from events (retrievable by query), not hardcoded
-          .attr('fill', d.data.status == 'not-afk' ? '#0d0' : '#ccc')
+          .attr('fill', e.data.status == 'not-afk' ? '#0d0' : '#ccc')
           .attr('opacity', 0.7);
       });
 

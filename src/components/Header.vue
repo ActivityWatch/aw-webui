@@ -68,6 +68,9 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
           b-dropdown-item(to="/alerts" v-if="devmode")
             icon(name="flag-checkered")
             | Alerts
+          b-dropdown-item(to="/timespiral" v-if="devmode")
+            icon(name="history")
+            | Timespiral
           b-dropdown-item(to="/query")
             icon(name="code")
             | Query
@@ -102,6 +105,7 @@ import 'vue-awesome/icons/flag-checkered';
 import 'vue-awesome/icons/stopwatch';
 import 'vue-awesome/icons/cog';
 import 'vue-awesome/icons/tools';
+import 'vue-awesome/icons/history';
 
 import 'vue-awesome/icons/ellipsis-h';
 
