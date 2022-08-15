@@ -32,7 +32,13 @@ div
                        title="Export bucket to JSON",
                        variant="secondary")
                 icon(name="download")
-                | Export as JSON
+                | Export bucket as JSON
+            b-dropdown-item(
+                        @click="export_csv(data.item.id)",
+                       title="Export events to CSV",
+                       variant="secondary")
+                icon(name="download")
+                | Export events as CSV
             b-dropdown-divider
             b-dropdown-item-button(@click="openDeleteBucketModal(data.item.id)",
                      title="Delete this bucket permanently",
@@ -64,7 +70,7 @@ div
       div(v-if="import_file" class="spinner-border" role="status")
       span
         | A valid file to import is a JSON file from either an export of a single bucket or an export from multiple buckets.
-        | If there are buckets with the same name the import will fail
+        | If there are buckets with the same name the import will fail.
     b-card(header="Export buckets")
       b-button(:href="$aw.baseURL + '/api/0/export'",
                :download="'aw-bucket-export.json'",
@@ -99,11 +105,12 @@ div
 }
 </style>
 
-<script>
+<script lang="ts">
 import 'vue-awesome/icons/trash';
 import 'vue-awesome/icons/download';
 import 'vue-awesome/icons/folder-open';
 import _ from 'lodash';
+import Papa from 'papaparse';
 
 import { useBucketsStore } from '~/stores/buckets';
 
@@ -153,11 +160,11 @@ export default {
     await this.bucketsStore.ensureLoaded();
   },
   methods: {
-    openDeleteBucketModal: function (bucketId) {
+    openDeleteBucketModal: function (bucketId: string) {
       this.delete_bucket_selected = bucketId;
       this.$root.$emit('bv::show::modal', 'delete-modal');
     },
-    deleteBucket: async function (bucketId) {
+    deleteBucket: async function (bucketId: string) {
       await this.bucketsStore.deleteBucket({ bucketId });
       this.$root.$emit('bv::hide::modal', 'delete-modal');
     },
@@ -166,6 +173,30 @@ export default {
       formData.append('buckets.json', importFile);
       const headers = { 'Content-Type': 'multipart/form-data' };
       return this.$aw.req.post('/0/import', formData, { headers });
+    },
+
+    async export_csv(bucketId: string) {
+      const bucket = await this.bucketsStore.getBucketWithEvents({ id: bucketId });
+      const events = bucket.events;
+      const datakeys = Object.keys(events[0].data);
+      const columns = ['timestamp', 'duration'] + datakeys;
+      const data = events.map(e => {
+        return Object.assign(
+          { timestamp: e.timestamp, duration: e.duration },
+          Object.fromEntries(datakeys.map(k => [k, e.data[k]]))
+        );
+      });
+      const csv = Papa.unparse(data, { columns, header: true });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `aw-events-export-${bucketId}-${new Date()
+        .toISOString()
+        .substring(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     },
   },
 };
