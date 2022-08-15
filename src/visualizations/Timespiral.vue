@@ -124,13 +124,16 @@ export default {
       if (this.events.length == 0) return;
 
       // Gets a deepcopy of events
-      const events = this.split_on_hour;
+      let events = this.split_on_hour;
 
       // Constants
       const height = 600;
       const width = 600;
       const margin = 60;
-      const thickness = 30;
+      const max_days = 5; // the maximum number of days to show
+      const thickness = 250 / max_days; // thickness of spiral arms
+      const spacing = 20; // spacing between spiral arms
+      const min_radius = thickness + spacing + 20;
 
       // Init d3
       const svg = d3
@@ -143,12 +146,22 @@ export default {
       // The domain is the range of the data.
       // We need to stretch it such that it ranges all the days in events, from start of day to end of day.
       const eventdomain = d3.extent(events.map((e: IEvent) => e.timestamp));
-      const domain_start = moment(eventdomain[0]).startOf('day');
-      const domain_end = moment(eventdomain[1]).endOf('day');
-      const domain = [domain_start, domain_end];
+
+      const _domain_start = moment(eventdomain[0]).startOf('day');
+      const _domain_end = moment(eventdomain[1]).endOf('day');
+
+      // Limit the events to max_days
+      let domain;
+      if (_domain_end.clone().diff(_domain_start) / 1000 > max_days) {
+        domain = [_domain_end.clone().subtract(max_days, 'days'), _domain_end];
+      } else {
+        domain = [_domain_start, _domain_end];
+      }
       const nbSpirals = Math.ceil(
-        (domain_end.valueOf() - domain_start.valueOf()) / (24 * 60 * 60 * 1000)
+        (domain[1].valueOf() - domain[0].valueOf()) / (24 * 60 * 60 * 1000)
       );
+
+      events = events.filter(e => moment(e.timestamp).isAfter(domain[0]));
 
       // To generate a spiral, we need two scales. One for the angle, and one for the radius.
 
@@ -162,7 +175,16 @@ export default {
       const yScale = d3
         .scaleTime()
         .domain(domain)
-        .range([(width - margin) / 2 - (thickness + 20) * nbSpirals, (width - margin * 2) / 2]);
+        .range([
+          min_radius + (width - margin) / 2 - (thickness + spacing) * nbSpirals,
+          (width - margin * 2) / 2,
+        ]);
+
+      const thickScale = d3
+        .scalePow()
+        .exponent(2)
+        .domain(domain)
+        .range([thickness / (max_days - 1), thickness]);
 
       // We want to add some spacing at hour-boundaries,
       // to do this we compress the startAngle and endAngle of each hour-segment, around the hour-center, by 1%.
@@ -171,7 +193,7 @@ export default {
         d.endAngle = xScale(new Date(d.timestamp).valueOf() + 1000 * d.duration);
 
         // Compress the angles around the hour-center.
-        const gap = 0.04;
+        const gap = 0.05;
         const hour = moment(d.timestamp).startOf('hour');
 
         // This kinda works? But also kinda breaks as it seems to lead to overlap
@@ -188,32 +210,32 @@ export default {
 
       // Computes the radius and spiral thickness for a particular event.
       // Each inner spiral (previous day) should get progressively thinner.
-      function spiralThickness(e: IEvent): [number, number] {
-        const hourstart = moment(e.timestamp).startOf('hour').valueOf();
-        const angle = xScale(hourstart);
+      function spiralThickness(timestamp: string, staggered: boolean): [number, number] {
+        const hourstart = staggered
+          ? moment(timestamp).startOf('hour').valueOf()
+          : moment(timestamp).valueOf();
         const radius = yScale(hourstart);
-        const spiralCount = angle / (2 * Math.PI); // the number of the spiral
-        const scaling = Math.pow(spiralCount / nbSpirals, 0.3); // the scaling factor for the thickness
-        console.log(`${e.timestamp} ${angle} ${radius} ${scaling}`);
-        return [radius, thickness * scaling]; // the thickness of the spiral
+        const thickness = thickScale(hourstart);
+        return [radius, thickness]; // the radius and thickness of the spiral at timestamp
       }
 
       const arcGen = d3
         .arc<PieArcDatum<number>>()
         // Compute the radius of each event, rounded to the hour in which the event occurs.
         .innerRadius(d => {
-          const [radius, thick] = spiralThickness(events[d.data]);
+          const [radius, thick] = spiralThickness(events[d.data].timestamp, true);
           return radius - thick / 2;
         })
         .outerRadius(d => {
-          const [radius, thick] = spiralThickness(events[d.data]);
+          const [radius, thick] = spiralThickness(events[d.data].timestamp, true);
           return radius + thick / 2;
         })
         // Makes corners round and pretty
         .cornerRadius(2);
 
       events.forEach((e: IEvent & { startAngle: number; endAngle: number }, i) => {
-        //console.log(i, d);
+        // TODO: Draw as polygon-segments instead?
+        // Would give us control of start/end points so we can make them align prettily.
         const gradientArcs = d3
           .pie<number>()
           .sort(null)
@@ -254,11 +276,12 @@ export default {
           .attr('opacity', 0.7);
       });
 
-      const tickColor = '#999';
+      const labelColor = '#888';
+      const tickColor = '#ccc';
 
       // Draw clock ticks
       // Modified from sunburst-clock.js
-      function drawClockTick(group, a, radius) {
+      function drawClockTick(group, a, radius, inner: boolean) {
         const xn = Math.cos(a);
         const yn = Math.sin(a);
 
@@ -274,11 +297,21 @@ export default {
           .attr('y2', (radius + 5) * yn)
           .style('stroke', tickColor)
           .style('stroke-width', 2);
+
+        if (inner)
+          group
+            .append('line')
+            .attr('x1', 0)
+            .attr('y1', 0)
+            .attr('x2', (radius - 5) * xn)
+            .attr('y2', (radius - 5) * yn)
+            .style('stroke', '#fff')
+            .style('stroke-width', 2);
       }
 
-      function drawClock(group, h, m, text, radius) {
+      function drawClock(group, h, m, text, radius, inner: boolean) {
         const a = 2 * Math.PI * (h / 24 + m / 24 / 60) - (1 / 2) * Math.PI;
-        drawClockTick(g, a, radius);
+        drawClockTick(g, a, radius, inner);
 
         const xn = Math.cos(a);
         const yn = Math.sin(a);
@@ -292,23 +325,85 @@ export default {
           .attr('dominant-baseline', 'middle')
           .attr('font-size', '1em')
           //.attr("font-weight", "bold")
-          .style('fill', tickColor)
+          .style('fill', labelColor)
           .attr('x', (radius + 10) * xn)
           .attr('y', (radius + 20) * yn);
       }
 
-      const radius = yScale(domain_end);
-      drawClock(g, 0, 0, '00:00', radius);
+      const radius = yScale(domain[1]);
+      drawClock(g, 0, 0, '00:00', radius, true);
       drawClock(g, 3, 0, '', radius);
-      drawClock(g, 6, 0, '06:00', radius);
+      drawClock(g, 6, 0, '06:00', radius, true);
       drawClock(g, 9, 0, '', radius);
-      drawClock(g, 12, 0, '12:00', radius);
+      drawClock(g, 12, 0, '12:00', radius, true);
       drawClock(g, 15, 0, '', radius);
-      drawClock(g, 18, 0, '18:00', radius);
+      drawClock(g, 18, 0, '18:00', radius, true);
       drawClock(g, 21, 0, '', radius);
 
       const now = moment();
       drawClock(g, now.hour(), now.minute(), 'Now', radius);
+
+      // Draw date labels
+      // We want to draw date-labels at the start of the spiral for each day (at 00:00)
+
+      function drawDate(group, date) {
+        const radius = yScale(moment(date).add(8, 'hours'));
+        const radius_next_quad = yScale(moment(date).add(14, 'hours'));
+        const radius_diff = (radius_next_quad - radius) / 4;
+        const m = moment(date).startOf('day');
+
+        const pathid = `wavy${date.valueOf()}`;
+        const path = `M 2,-${radius} A ${radius + radius_diff},${
+          radius + radius_diff
+        } 0 0 1 ${radius_next_quad},0`;
+
+        group
+          .append('path')
+          .attr('id', pathid) //Unique id of the path
+          .attr('d', path) //SVG path
+          //.attr('d', 'M 0,-100 A 100,100 0 0 1 110,0') //SVG path
+          .style('fill', 'none')
+          .style('stroke', '#AAAAAA')
+          .style('stroke-width', 0);
+
+        group
+          .append('text')
+          .append('textPath')
+          .text(m.format('Y-M-D'))
+          .attr('xlink:href', `#${pathid}`)
+          .attr('text-anchor', 'left')
+          //.attr('dominant-baseline', 'middle')
+          .attr('font-size', `${1 * Math.max(thickScale(m) / thickness, 0.5)}em`)
+          //.attr('text-decoration', 'underline');
+          .style('fill', '#555');
+      }
+
+      const date_labels = d3.timeDays(...domain);
+      date_labels.forEach(d => drawDate(g, d));
+
+      // From: https://stackoverflow.com/a/49097025/965332
+      // Might serve as a base for later improvements
+      function makeSpiral(group, quarterTurns) {
+        const pointsPerQuarter = 90;
+        const points = [];
+
+        for (let i = 0; i < quarterTurns * pointsPerQuarter; i++) {
+          const angle = (i * Math.PI) / 2 / pointsPerQuarter;
+          const timestamp = xScale.invert(angle);
+          const [radius, thickness] = spiralThickness(timestamp);
+          const margin = thickness / 4;
+          points.push((radius - margin) * Math.cos(angle));
+          points.push((radius - margin) * Math.sin(angle));
+        }
+        group
+          .append('polyline')
+          .attr('points', points.join(' '))
+          .attr('stroke', '#ccc')
+          .attr('stroke-width', 1)
+          .attr('fill', 'none');
+      }
+
+      makeSpiral(g, nbSpirals * 4 - 1);
     },
   },
 };

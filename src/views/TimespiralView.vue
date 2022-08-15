@@ -25,6 +25,7 @@ export default {
   },
   async mounted() {
     const bucketStore = useBucketsStore();
+    await bucketStore.ensureLoaded();
     const buckets = bucketStore.bucketsAFK(bucketStore.hosts[0]);
     if (buckets.length == 0) {
       console.warn("Couldn't find suitable bucket");
