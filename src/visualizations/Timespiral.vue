@@ -214,9 +214,7 @@ export default {
         const hourstart = staggered
           ? moment(timestamp).startOf('hour').valueOf()
           : moment(timestamp).valueOf();
-        const radius = yScale(hourstart);
-        const thickness = thickScale(hourstart);
-        return [radius, thickness]; // the radius and thickness of the spiral at timestamp
+        return [yScale(hourstart), thickScale(hourstart)]; // the radius and thickness of the spiral at timestamp
       }
 
       const arcGen = d3
@@ -330,18 +328,18 @@ export default {
           .attr('y', (radius + 20) * yn);
       }
 
-      const radius = yScale(domain[1]);
-      drawClock(g, 0, 0, '00:00', radius, true);
-      drawClock(g, 3, 0, '', radius);
-      drawClock(g, 6, 0, '06:00', radius, true);
-      drawClock(g, 9, 0, '', radius);
-      drawClock(g, 12, 0, '12:00', radius, true);
-      drawClock(g, 15, 0, '', radius);
-      drawClock(g, 18, 0, '18:00', radius, true);
-      drawClock(g, 21, 0, '', radius);
+      const max_radius = yScale(domain[1]);
+      drawClock(g, 0, 0, '00:00', max_radius, true);
+      drawClock(g, 3, 0, '', max_radius);
+      drawClock(g, 6, 0, '06:00', max_radius, true);
+      drawClock(g, 9, 0, '', max_radius);
+      drawClock(g, 12, 0, '12:00', max_radius, true);
+      drawClock(g, 15, 0, '', max_radius);
+      drawClock(g, 18, 0, '18:00', max_radius, true);
+      drawClock(g, 21, 0, '', max_radius);
 
       const now = moment();
-      drawClock(g, now.hour(), now.minute(), 'Now', radius);
+      drawClock(g, now.hour(), now.minute(), 'Now', max_radius);
 
       // Draw date labels
       // We want to draw date-labels at the start of the spiral for each day (at 00:00)
@@ -390,10 +388,10 @@ export default {
         for (let i = 0; i < quarterTurns * pointsPerQuarter; i++) {
           const angle = (i * Math.PI) / 2 / pointsPerQuarter;
           const timestamp = xScale.invert(angle);
-          const [radius, thickness] = spiralThickness(timestamp);
-          const margin = thickness / 4;
-          points.push((radius - margin) * Math.cos(angle));
-          points.push((radius - margin) * Math.sin(angle));
+          const [radius, _thickness] = spiralThickness(timestamp);
+          const line_margin = _thickness / 4;
+          points.push((radius - line_margin) * Math.cos(angle));
+          points.push((radius - line_margin) * Math.sin(angle));
         }
         group
           .append('polyline')
