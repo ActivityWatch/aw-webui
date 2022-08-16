@@ -16,17 +16,22 @@ async function hide_devonly(t) {
 
 async function waitForLoading(t) {
   let $loading;
-  console.log('Waiting for loading to disappear...');
   do {
+    console.log('Waiting for loading to disappear...');
     await t.wait(500);
-    $loading = Selector('div', { timeout: 500 }).withText(/.+[Ll]oading.+/g);
+    $loading = Selector('div', { timeout: 500 }).withText(/Loading[.]{3}/g);
+    // Useful for debugging:
+    const matches = await $loading.count;
+    if (matches > 0) {
+      console.log(`Found loading element with contents: ${await $loading.innerText}`);
+    }
   } while ((await $loading.count) >= 1);
   await t.wait(500); // wait an extra 500ms, just in case a visualization is still rendering
   console.log('Loading is gone!');
 }
 
 async function checkNoError(t) {
-  const $error = Selector('div').withText(/.+[Ee]rror.+/g);
+  const $error = Selector('div').withText(/[Ee]rror/g);
   try {
     await t.expect(await $error.count).eql(0);
   } catch (e) {

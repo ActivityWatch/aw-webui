@@ -4,7 +4,7 @@ div
 
   input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration")
 
-  div(v-show="buckets !== null")
+  div(v-if="buckets !== null")
     div
       div(style="float: left")
         | Events shown:  {{ num_events }}
@@ -15,7 +15,7 @@ div
 
     aw-devonly(reason="Not ready for production, still experimenting")
       aw-calendar(:buckets="buckets")
-  div(v-show="!(buckets !== null && num_events)")
+  div(v-else)
     h1 Loading...
 </template>
 
