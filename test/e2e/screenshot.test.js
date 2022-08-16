@@ -18,9 +18,10 @@ async function waitForLoading(t) {
   let $loading;
   console.log('Waiting for loading to disappear...');
   do {
-    $loading = Selector('div', { timeout: 100 }).withText(/.+[Ll]oading.+/g);
-    await t.wait(200);
+    await t.wait(500);
+    $loading = Selector('div', { timeout: 500 }).withText(/.+[Ll]oading.+/g);
   } while ((await $loading.count) >= 1);
+  await t.wait(500); // wait an extra 500ms, just in case a visualization is still rendering
   console.log('Loading is gone!');
 }
 
