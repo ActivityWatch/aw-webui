@@ -14,9 +14,7 @@ interface State {
   durationDefault: number;
   useColorFallback: boolean;
   landingpage: string;
-
-  // light or dark
-  theme: string;
+  theme: 'light' | 'dark';
 
   newReleaseCheckData: Record<string, any>;
   userSatisfactionPollData: Record<string, any>;
