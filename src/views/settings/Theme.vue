@@ -8,7 +8,7 @@ div
         option(value="light") Light
         option(value="dark") Dark
       span(v-else)
-        | Loading...
+        .aw-loading Loading...
   small
     | Change color theme of the application (you need to change categories colors manually to be suitable with dark mode).
 </template>

@@ -15,17 +15,29 @@ async function hide_devonly(t) {
 }
 
 async function waitForLoading(t) {
+  // Waits for all "Loading..." texts to disappear from page.
+  // If it takes longer than 10s, it will fail.
   let $loading;
+  let matches = 1;
+
+  console.log('Waiting for loading to disappear...');
+  const start = new Date();
   do {
-    console.log('Waiting for loading to disappear...');
-    await t.wait(500);
-    $loading = Selector('div', { timeout: 500 }).withText(/Loading[.]{3}/g);
+    $loading = Selector('.aw-loading, text', { timeout: 500 }).withText(/Loading[.]{3}/g);
+
     // Useful for debugging:
-    const matches = await $loading.count;
+    matches = await $loading.count;
     if (matches > 0) {
-      console.log(`Found loading element with contents: ${await $loading.innerText}`);
+      console.log(`Found ${matches} loading element with contents`); //: ${await $loading.innerText}`);
+
+      // If taking >20s, throw an error
+      if (new Date() - start > 20000) {
+        throw new Error('Timeout while waiting for loading to disappear');
+      }
+      await t.wait(500);
     }
-  } while ((await $loading.count) >= 1);
+  } while (matches >= 1);
+
   await t.wait(500); // wait an extra 500ms, just in case a visualization is still rendering
   console.log('Loading is gone!');
 }

@@ -9,7 +9,7 @@ div
         option(:value="'/activity/' + hostname + '/view/'" v-for="hostname in hostnames") Activity ({{hostname}})
         option(value="/timeline") Timeline
       span(v-else)
-        | Loading...
+        .aw-loading Loading...
   small
     | The page to open when opening ActivityWatch, or clicking the logo in the top menu.
 </template>
