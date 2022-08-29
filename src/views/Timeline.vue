@@ -16,7 +16,7 @@ div
     aw-devonly(reason="Not ready for production, still experimenting")
       aw-calendar(:buckets="buckets")
   div(v-else)
-    h1 Loading...
+    h1.aw-loading Loading...
 </template>
 
 <script>

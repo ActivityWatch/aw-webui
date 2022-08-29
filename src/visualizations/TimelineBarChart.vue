@@ -5,7 +5,7 @@ div(v-if="datasets && datasets.length > 0")
 div.small(v-else-if="datasets === null", style="font-size: 16pt; color: #aaa;")
   | No data
 div.small(v-else, style="font-size: 16pt; color: #aaa;")
-  | Loading...
+  .aw-loading Loading...
 </template>
 
 <script lang="ts">

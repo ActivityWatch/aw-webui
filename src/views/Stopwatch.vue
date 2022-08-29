@@ -17,7 +17,7 @@ div
   hr
 
   div(v-if="loading")
-    span.text-muted.center Loading...
+    span.text-muted.center.aw-loading Loading...
   div.row(v-else)
     div.col-md-12
       h3 Running
@@ -87,15 +87,15 @@ export default {
       return _.groupBy(this.stoppedTimers, e => moment(e.timestamp).format('YYYY-MM-DD'));
     },
   },
-  mounted: function () {
+  mounted: async function () {
     // TODO: List all possible timer buckets
     //this.getBuckets();
 
     // Create default timer bucket
-    this.$aw.ensureBucket(this.bucket_id, 'general.stopwatch', 'unknown');
+    await this.$aw.ensureBucket(this.bucket_id, 'general.stopwatch', 'unknown');
 
     // TODO: Get all timer events
-    this.getEvents();
+    await this.getEvents();
 
     setInterval(() => (this.now = moment()), 1000);
   },
