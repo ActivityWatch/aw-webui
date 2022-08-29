@@ -34,6 +34,7 @@ import 'vue-d3-sunburst/dist/vue-d3-sunburst.css';
 import { getColorFromCategory } from '~/util/color';
 
 import { useCategoryStore } from '~/stores/categories';
+import { useSettingsStore } from '~/stores/settings';
 
 const example_data = {
   name: 'flare',
@@ -81,7 +82,10 @@ export default {
       return category.join(SEP);
     },
     colorfunc: function (s) {
-      if (s == 'All') return '#FFF';
+      // 'All' needs to be bright if light theme, and dark if dark theme
+      const settings = useSettingsStore();
+      if (s == 'All') return settings.theme == 'light' ? '#fff' : '#333';
+
       const categoryStore = useCategoryStore();
       const cat = categoryStore.get_category(s.split(SEP));
       const color = getColorFromCategory(cat, categoryStore.classes);
