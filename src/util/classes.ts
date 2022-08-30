@@ -85,7 +85,7 @@ export const defaultCategories: Category[] = [
     name: ['Comms', 'IM'],
     rule: {
       type: 'regex',
-      regex: 'Messenger|Telegram|Signal|WhatsApp|Rambox|Slack|Riot|Element|Discord|Nheko',
+      regex: 'Messenger|Telegram|Signal|WhatsApp|Rambox|Slack|Riot|Element|Discord|Nheko|Mattermost',
     },
   },
   { name: ['Comms', 'Email'], rule: { type: 'regex', regex: 'Gmail|Thunderbird|mutt|alpine' } },
