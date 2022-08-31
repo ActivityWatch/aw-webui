@@ -229,7 +229,7 @@ export default {
     subview: function () {
       return this.$route.meta.subview;
     },
-    filterCategories: function () {
+    filter_categories: function () {
       if (this.filter_category) {
         const cats = this.categoryStore.all_categories;
         const isChild = p => c => c.length > p.length && _.isEqual(p, c.slice(0, p.length));
