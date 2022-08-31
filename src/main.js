@@ -66,6 +66,7 @@ Vue.mixin(require('~/mixins/asyncErrorCaptured.js'));
 // Set the PRODUCTION constant
 // FIXME: Thould follow Vue convention and start with a $.
 Vue.prototype.PRODUCTION = PRODUCTION;
+Vue.prototype.COMMIT_HASH = COMMIT_HASH;
 
 // Set the $isAndroid constant
 Vue.prototype.$isAndroid = process.env.VUE_APP_ON_ANDROID;
