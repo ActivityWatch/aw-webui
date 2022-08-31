@@ -52,7 +52,7 @@ export const useBucketsStore = defineStore('buckets', {
 
         return {
           window: windowAvail,
-          browser: window && this.bucketsBrowser(hostname).length > 0,
+          browser: windowAvail && this.bucketsBrowser(hostname).length > 0,
           editor: this.bucketsEditor(hostname).length > 0,
           android: androidAvail,
           category: windowAvail || androidAvail,
@@ -94,9 +94,12 @@ export const useBucketsStore = defineStore('buckets', {
       const type = 'web.tab.current';
       return (host: string) => {
         const buckets = select_buckets(this.buckets, { host, type });
-        return buckets.length == 0
-          ? select_buckets(this.buckets, { host: 'unknown', type })
-          : buckets;
+        if (buckets.length > 0) {
+          return buckets;
+        } else {
+          console.log('fallback: ', select_buckets(this.buckets, { host: 'unknown', type }));
+          return select_buckets(this.buckets, { host: 'unknown', type });
+        }
       };
     },
 

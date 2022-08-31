@@ -150,7 +150,9 @@ export default {
   methods: {
     editEvent: function (event) {
       this.editableEvent = event;
-      this.$bvModal.show('edit-modal');
+      this.$nextTick(() => {
+        this.$bvModal.show('edit-modal-' + event.id);
+      });
     },
     expandList: function () {
       this.isListExpanded = !this.isListExpanded;
