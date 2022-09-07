@@ -62,9 +62,65 @@ export interface QueryOptions {
   force?: boolean;
 }
 
+interface State {
+  loaded: boolean;
+
+  window: {
+    available: boolean;
+    top_apps: IEvent[];
+    top_titles: IEvent[];
+  };
+
+  browser: {
+    available: boolean;
+    duration: number;
+    top_urls: IEvent[];
+    top_domains: IEvent[];
+  };
+
+  editor: {
+    available: boolean;
+    duration: number;
+    top_files: IEvent[];
+    top_projects: IEvent[];
+    top_languages: IEvent[];
+  };
+
+  category: {
+    available: boolean;
+    by_period: IEvent[];
+    top: IEvent[];
+  };
+
+  active: {
+    available: boolean;
+    duration: number;
+    // non-afk events (no detail data) for the current period
+    events: IEvent[];
+    // Aggregated events for current and past periods
+    history: Record<any, IEvent[]>;
+  };
+
+  android: {
+    available: boolean;
+  };
+
+  query_options?: QueryOptions;
+
+  // Can't this be handled in bucketStore?
+  buckets: {
+    loaded: boolean;
+    afk: string[];
+    window: string[];
+    editor: string[];
+    browser: string[];
+    android: string[];
+  };
+}
+
 export const useActivityStore = defineStore('activity', {
   // initial state
-  state: () => ({
+  state: (): State => ({
     // set to true once loading has started
     loaded: false,
 
@@ -76,14 +132,14 @@ export const useActivityStore = defineStore('activity', {
 
     browser: {
       available: false,
-      duration: [],
+      duration: 0,
       top_domains: [],
       top_urls: [],
     },
 
     editor: {
       available: false,
-      duration: [],
+      duration: 0,
       top_files: [],
       top_languages: [],
       top_projects: [],
@@ -108,10 +164,7 @@ export const useActivityStore = defineStore('activity', {
       available: false,
     },
 
-    query_options: {
-      browser_buckets: 'all',
-      editor_buckets: 'all',
-    },
+    query_options: null,
 
     buckets: {
       loaded: false,
@@ -124,8 +177,8 @@ export const useActivityStore = defineStore('activity', {
   }),
 
   getters: {
-    getActiveHistoryAroundTimeperiod() {
-      return (timeperiod: TimePeriod) => {
+    getActiveHistoryAroundTimeperiod(this: State) {
+      return (timeperiod: TimePeriod): IEvent[][] => {
         const periods = timeperiodStrsAroundTimeperiod(timeperiod);
         const _history = periods.map(tp => {
           if (_.has(this.active.history, tp)) {
@@ -161,7 +214,7 @@ export const useActivityStore = defineStore('activity', {
         await this.get_buckets(query_options);
 
         // TODO: These queries can actually run in parallel, but since server won't process them in parallel anyway we won't.
-        await this.set_available(query_options);
+        this.set_available();
 
         if (this.window.available) {
           console.info(
@@ -188,8 +241,8 @@ export const useActivityStore = defineStore('activity', {
           console.log(
             'Cannot query windows as we are missing either an afk/window bucket pair or an android bucket'
           );
-          await this.reset_window();
-          await this.reset_category();
+          this.query_window_completed();
+          this.query_category_time_by_period_completed();
         }
 
         if (this.active.available) {
@@ -198,14 +251,14 @@ export const useActivityStore = defineStore('activity', {
           await this.query_active_history_android(query_options);
         } else {
           console.log('Cannot call query_active_history as we do not have an afk bucket');
-          await this.query_active_history_empty(query_options);
+          await this.query_active_history_completed();
         }
 
         if (this.editor.available) {
           await this.query_editor(query_options);
         } else {
           console.log('Cannot call query_editor as we do not have any editor buckets');
-          await this.reset_editor();
+          await this.query_editor_completed();
         }
 
         if (this.window.available) {
@@ -229,47 +282,10 @@ export const useActivityStore = defineStore('activity', {
 
     async reset() {
       getClient().abort();
-      await this.reset_window();
-      await this.reset_browser();
-      await this.reset_editor();
-      await this.reset_category();
-    },
-
-    async reset_window() {
-      const data = {
-        app_events: [],
-        title_events: [],
-        cat_events: [],
-        active_events: [],
-        duration: 0,
-      };
-      this.query_window_completed(data);
-    },
-
-    async reset_browser() {
-      const data = {
-        domains: [],
-        urls: [],
-        duration: 0,
-      };
-      this.query_browser_completed(data);
-    },
-
-    async reset_editor() {
-      const data = {
-        files: [],
-        projects: [],
-        languages: [],
-      };
-      this.query_editor_completed(data);
-    },
-
-    async reset_category() {
-      const data = {
-        by_period: [],
-      };
-
-      this.query_category_time_by_period_completed(data);
+      this.query_window_completed({});
+      this.query_browser_completed({});
+      this.query_editor_completed({});
+      this.query_category_time_by_period_completed({});
     },
 
     async query_multidevice_full(
@@ -447,12 +463,7 @@ export const useActivityStore = defineStore('activity', {
       this.query_active_history_completed({ active_history: active_history_events });
     },
 
-    async query_active_history_empty() {
-      const data = [];
-      this.query_active_history_completed(data);
-    },
-
-    async set_available() {
+    set_available(this: State) {
       // TODO: Move to bucketStore on a per-host basis?
       this.window.available = this.buckets.afk.length > 0 && this.buckets.window.length > 0;
       this.browser.available =
@@ -465,7 +476,7 @@ export const useActivityStore = defineStore('activity', {
       this.category.available = this.window.available || this.android.available;
     },
 
-    async get_buckets({ host }) {
+    async get_buckets(this: State, { host }) {
       // TODO: Move to bucketStore on a per-host basis?
       const bucketsStore = useBucketsStore();
       this.buckets.afk = bucketsStore.bucketsAFK(host);
@@ -559,7 +570,7 @@ export const useActivityStore = defineStore('activity', {
     },
 
     // mutations
-    start_loading(query_options: QueryOptions) {
+    start_loading(this: State, query_options: QueryOptions) {
       this.loaded = true;
       this.query_options = query_options;
 
@@ -589,39 +600,41 @@ export const useActivityStore = defineStore('activity', {
       }
     },
 
-    query_window_completed(data) {
-      this.window.top_apps = data['app_events'];
-      this.window.top_titles = data['title_events'];
-      this.category.top = data['cat_events'];
-      this.active.duration = data['duration'];
-      this.active.events = data['active_events'];
+    query_window_completed(
+      this: State,
+      data = { app_events: [], title_events: [], cat_events: [], active_events: [], duration: 0 }
+    ) {
+      this.window.top_apps = data.app_events;
+      this.window.top_titles = data.title_events;
+      this.category.top = data.cat_events;
+      this.active.duration = data.duration;
+      this.active.events = data.active_events;
     },
 
-    query_browser_completed(data) {
+    query_browser_completed(this: State, data = { domains: [], urls: [], duration: 0 }) {
       this.browser.top_domains = data.domains;
       this.browser.top_urls = data.urls;
       this.browser.duration = data.duration;
-
-      // FIXME: This one might take up a lot of size in the request, move it to a seperate request
-      // (or remove entirely, since we have the other timeline now)
-      this.web_chunks = data['chunks'];
     },
 
-    query_editor_completed(data) {
-      this.editor.duration = data['duration'];
-      this.editor.top_files = data['files'];
-      this.editor.top_languages = data['languages'];
-      this.editor.top_projects = data['projects'];
+    query_editor_completed(
+      this: State,
+      data = { duration: 0, files: [], languages: [], projects: [] }
+    ) {
+      this.editor.duration = data.duration;
+      this.editor.top_files = data.files;
+      this.editor.top_languages = data.languages;
+      this.editor.top_projects = data.projects;
     },
 
-    query_active_history_completed({ active_history }) {
+    query_active_history_completed(this: State, { active_history } = { active_history: {} }) {
       this.active.history = {
         ...this.active.history,
         ...active_history,
       };
     },
 
-    query_category_time_by_period_completed({ by_period }) {
+    query_category_time_by_period_completed(this: State, { by_period } = { by_period: [] }) {
       this.category.by_period = by_period;
     },
   },
