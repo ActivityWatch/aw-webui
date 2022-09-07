@@ -2,6 +2,12 @@
 div#forcegraph
 </template>
 
+<style>
+#forcegraph > svg {
+  border: 1px solid #555;
+}
+</style>
+
 <script lang="ts">
 import * as d3 from 'd3';
 
@@ -13,23 +19,27 @@ export default {
       required: true,
     },
   },
-
+  data: () => ({
+    cancelPromise: null,
+  }),
   watch: {
     // Watch for changes in the data and update the graph
-    data: {
-      handler: function () {
-        this.drawGraph(this.data);
-      },
-      deep: true,
+    data() {
+      this.drawGraph(this.data);
     },
   },
-
+  mounted() {
+    this.drawGraph(this.data);
+  },
   methods: {
     drawGraph({ nodes, links }) {
       console.log('rendering...');
-      console.log(nodes, links);
-      const svgEl = ForceGraph({ nodes, links }, { nodeTitle: d => d.id });
-      console.log('appending...');
+      this.cancelPromise && this.cancelPromise();
+      const promise = new Promise(resolve => {
+        this.cancelPromise = resolve;
+      });
+
+      const svgEl = ForceGraph({ nodes, links }, { invalidation: promise });
       const svg = d3.select('#forcegraph');
       //clear
       svg.selectAll('*').remove();
@@ -57,7 +67,7 @@ function ForceGraph(
     nodeStroke = '#fff', // node stroke color
     nodeStrokeWidth = 1.5, // node stroke width, in pixels
     nodeStrokeOpacity = 1, // node stroke opacity
-    nodeRadius = 5, // node radius, in pixels
+    nodeRadius = 4, // node radius, in pixels
     nodeStrength,
     linkSource = ({ source }) => source, // given d in links, returns a node identifier string
     linkTarget = ({ target }) => target, // given d in links, returns a node identifier string
@@ -65,7 +75,15 @@ function ForceGraph(
     linkStrokeOpacity = 0.6, // link stroke opacity
     linkStrokeWidth = d => 1.5 * Math.sqrt(d.value), // given d in links, returns a stroke width in pixels
     linkStrokeLinecap = 'round', // link stroke linecap
-    linkStrength,
+    linkStrength = d => {
+      // if low value, link should push nodes apart
+      // if high value, link should pull nodes together
+      if (d.value < 10) {
+        return 0.01;
+      } else {
+        return Math.sqrt(1 / (2 + d.value));
+      }
+    }, // given d in links, returns a link strength
     colors = d3.schemeTableau10, // an array of color strings, for the node groups
     width = 640, // outer width, in pixels
     height = 400, // outer height, in pixels
@@ -83,8 +101,14 @@ function ForceGraph(
   const L = typeof linkStroke !== 'function' ? null : d3.map(links, linkStroke);
 
   // Replace the input nodes and links with mutable objects for the simulation.
-  nodes = d3.map(nodes, (_, i) => ({ id: N[i] }));
-  links = d3.map(links, (_, i) => ({ source: LS[i], target: LT[i] }));
+  nodes = d3.map(nodes, (node, i) => ({ id: N[i], color: node.color, value: node.value }));
+  links = d3.map(links, (link, i) => ({ source: LS[i], target: LT[i], value: link.value }));
+
+  // Scale so that the area of each node is ~proportional to the time value
+  nodes = nodes.map(d => {
+    d.radius = nodeRadius + 5 * Math.sqrt(d.value / 60 / 60);
+    return d;
+  });
 
   // Compute default domains.
   if (G && nodeGroups === undefined) nodeGroups = d3.sort(G);
@@ -103,6 +127,10 @@ function ForceGraph(
     .force('link', forceLink)
     .force('charge', forceNode)
     .force('center', d3.forceCenter())
+    .force(
+      'collision',
+      d3.forceCollide(d => d.radius)
+    )
     .on('tick', ticked);
 
   const svg = d3
@@ -131,12 +159,13 @@ function ForceGraph(
     .selectAll('circle')
     .data(nodes)
     .join('circle')
-    .attr('r', nodeRadius)
+    .attr('r', d => d.radius)
     .call(drag(simulation));
 
   if (W) link.attr('stroke-width', ({ index: i }) => W[i]);
   if (L) link.attr('stroke', ({ index: i }) => L[i]);
-  if (G) node.attr('fill', ({ index: i }) => color(G[i]));
+  //if (G) node.attr('fill', ({ index: i }) => color(G[i]));
+  node.attr('fill', ({ index: i }) => nodes[i].color);
   if (T) node.append('title').text(({ index: i }) => T[i]);
   if (invalidation != null) invalidation.then(() => simulation.stop());
 
@@ -154,9 +183,9 @@ function ForceGraph(
     node.attr('cx', d => d.x).attr('cy', d => d.y);
   }
 
-  function drag(simulation) {
+  function drag(_simulation) {
     function dragstarted(event) {
-      if (!event.active) simulation.alphaTarget(0.3).restart();
+      if (!event.active) _simulation.alphaTarget(0.3).restart();
       event.subject.fx = event.subject.x;
       event.subject.fy = event.subject.y;
     }
@@ -167,7 +196,7 @@ function ForceGraph(
     }
 
     function dragended(event) {
-      if (!event.active) simulation.alphaTarget(0);
+      if (!event.active) _simulation.alphaTarget(0);
       event.subject.fx = null;
       event.subject.fy = null;
     }

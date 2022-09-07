@@ -10,6 +10,7 @@ import {
   Category,
   Rule,
 } from '~/util/classes';
+import { getColorFromCategory } from '~/util/color';
 import { defineStore } from 'pinia';
 
 interface State {
@@ -72,6 +73,11 @@ export const useCategoryStore = defineStore('categories', {
     get_category_by_id(this: State) {
       return (id: number) => {
         return annotate(_.cloneDeep(this.classes.find((c: Category) => c.id == id)));
+      };
+    },
+    get_category_color() {
+      return (cat: string[]) => {
+        return getColorFromCategory(this.get_category(cat), this.classes);
       };
     },
     category_select() {

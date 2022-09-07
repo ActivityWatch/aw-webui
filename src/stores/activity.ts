@@ -6,7 +6,6 @@ import { IEvent } from '~/util/interfaces';
 
 import { window_events } from '~/util/fakedata';
 import queries from '~/queries';
-import { getColorFromCategory } from '~/util/color';
 import { get_day_start_with_offset } from '~/util/time';
 import {
   TimePeriod,
@@ -44,8 +43,7 @@ function colorCategories(events: IEvent[]): IEvent[] {
   // Set $color for categories
   const categoryStore = useCategoryStore();
   return events.map((e: IEvent) => {
-    const cat = categoryStore.get_category(e.data['$category']);
-    e.data['$color'] = getColorFromCategory(cat, categoryStore.classes);
+    e.data['$color'] = categoryStore.get_category_color(e.data['$category']);
     return e;
   });
 }

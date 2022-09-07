@@ -10,13 +10,19 @@ div
   b-alert(v-if="error" show variant="danger")
     | {{error}}
 
-  b-button(type="button", @click="generate()" variant="success")
-    icon(name="search")
-    | Generate
-
   // Specify max category depth
   b-form-group(label="Max category depth")
     b-form-input(v-model="maxDepth" type="number" min="1")
+
+  // Toggle to exclude uncategorized
+  b-form-group(label="Exclude uncategorized")
+    b-form-checkbox(v-model="excludeUncategorized")
+
+  div.d-flex
+    span.mr-auto
+    b-button(type="button", @click="generate()" variant="success")
+      icon(name="search")
+      | Generate
 
   div.d-flex.mt-1
     span.mr-auto.small(style="color: #666") Hostname: {{queryOptions.hostname}}
@@ -40,9 +46,9 @@ div
     div
         | Found {{ events.length }} events in {{ queryTime / 1000 }} seconds
 
-    hr
-
     aw-force-graph(:data="graphdata")
+
+    hr
 
     div
       | Didn't find what you were looking for?
@@ -63,9 +69,7 @@ import 'vue-awesome/icons/angle-double-up';
 
 import { canonicalEvents } from '~/queries';
 
-import { useActivityStore } from '~/stores/activity';
 import { useCategoryStore } from '~/stores/categories';
-import { useBucketsStore } from '~/stores/buckets';
 
 import { getClient } from '~/util/awclient';
 
@@ -76,41 +80,42 @@ export default {
   },
   data() {
     return {
-      activityStore: useActivityStore(),
       categoryStore: useCategoryStore(),
-      bucketsStore: useBucketsStore(),
 
       events: null,
-      graphdata: { nodes: [], links: [] },
-      maxDepth: 3,
+      graphdata: {},
 
       status: null,
       queryTime: null,
       error: '',
+
+      // Parameters
+      maxDepth: 3,
+      excludeUncategorized: false,
 
       // Options
       show_options: false,
       queryOptions: {},
     };
   },
-  watch: {
-    events() {
-      this.graphdata = this.generateGraphData();
-    },
-  },
   mounted: async function () {
     await this.categoryStore.load();
-    await this.bucketsStore.ensureLoaded();
   },
   methods: {
     generate: async function () {
+      this.events = await this.fetchEvents();
+      this.graphdata = this.generateGraphData(this.events);
+    },
+    fetchEvents: async function () {
       // TODO: use full query (one per day/timeperiod) instead of canonicalEvents
       let query = canonicalEvents({
         bid_window: 'aw-watcher-window_' + this.queryOptions.hostname,
         bid_afk: 'aw-watcher-afk_' + this.queryOptions.hostname,
         filter_afk: this.queryOptions.filter_afk,
         categories: this.categoryStore.classes_for_query,
-        filter_categories: null,
+        filter_categories: this.excludeUncategorized
+          ? this.categoryStore.classes_for_query.map(t => t[0])
+          : null,
       });
       query += '; RETURN = events;';
 
@@ -122,18 +127,19 @@ export default {
         this.status = 'searching';
         const time = moment();
         const data = await getClient().query(timeperiods, query_array);
-        this.events = _.orderBy(data[0], ['timestamp'], ['desc']);
         this.error = '';
         this.queryTime = moment().diff(time);
+        console.log('done fetching events!');
+        this.events = _.orderBy(data[0], ['timestamp'], ['desc']);
       } catch (e) {
         console.error(e);
         this.error = e.response.data.message;
       } finally {
         this.status = null;
       }
-      console.log('done fetching events!');
+      return this.events;
     },
-    generateGraphData() {
+    generateGraphData: function (events) {
       // generate graph data from events
       // iterate through events, and count the number of category transitions
       // for each category, add a node to the graphdata with the group of its parent category
@@ -141,13 +147,13 @@ export default {
       const SEP = '>';
 
       // copy all events, slice off category depth deeper than maxDepth
-      const events = this.events.map(e => {
+      events = events.map(e => {
         const $category = e.data.$category.slice(0, this.maxDepth);
         return { ...e, data: { ...e.data, $category } };
       });
 
       const allCategories = new Set(events.map(e => e.data.$category).map(c => c.join(SEP)));
-      const groups = {};
+      const groups = { Uncategorized: 0 };
 
       // Generate groups
       for (const category of allCategories) {
@@ -158,13 +164,19 @@ export default {
       }
 
       // Generate nodes
-      // TODO: Size nodes depending on time spent
       const nodes = [];
       for (const category of allCategories) {
         const rootcat = category.split(SEP)[0];
+        // Size nodes depending on time spent
+        const catTime = events
+          .filter(e => e.data.$category.join(SEP) == category)
+          .map(e => moment(e.timestamp).add(e.duration).diff(e.timestamp))
+          .reduce((a, b) => a + b, 0);
         nodes.push({
           id: category,
           group: groups[rootcat],
+          color: this.categoryStore.get_category_color(category.split(SEP)),
+          value: catTime,
         });
       }
 
