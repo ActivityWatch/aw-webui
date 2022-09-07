@@ -84,7 +84,7 @@ export const useViewsStore = defineStore('views', {
     async load() {
       let views: View[];
       if (typeof localStorage !== 'undefined') {
-        const views_json = localStorage.views;
+        const views_json: string = localStorage.views;
         if (views_json && views_json.length >= 1) {
           views = JSON.parse(views_json);
         }
@@ -103,33 +103,41 @@ export const useViewsStore = defineStore('views', {
       this.$patch({ views });
       console.log('Loaded views:', this.views);
     },
-    clearViews() {
+    clearViews(this: State) {
       this.views = [];
     },
-    setElements({ view_id, elements }) {
+    setElements(this: State, { view_id, elements }: { view_id: string; elements: IElement[] }) {
       this.views.find(v => v.id == view_id).elements = elements;
     },
-    restoreDefaults() {
+    restoreDefaults(this: State) {
       this.views = defaultViews;
     },
-    addView(view: View) {
+    addView(this: State, view: View) {
       this.views.push({ ...view, elements: [] });
     },
-    removeView({ view_id }) {
+    removeView(this: State, { view_id }) {
       const idx = this.views.map(v => v.id).indexOf(view_id);
       this.views.splice(idx, 1);
     },
-    editView({ view_id, el_id, type, props }) {
+    editView(
+      this: State,
+      {
+        view_id,
+        el_id,
+        type,
+        props,
+      }: { view_id: string; el_id: string; type: string; props: Record<string, unknown> }
+    ) {
       console.log(view_id, el_id, type, props);
       console.log(this.views);
       const element = this.views.find(v => v.id == view_id).elements[el_id];
       element.type = type;
       element.props = props;
     },
-    addVisualization({ view_id, type }) {
+    addVisualization(this: State, { view_id, type }) {
       this.views.find(v => v.id == view_id).elements.push({ type: type });
     },
-    removeVisualization({ view_id, el_id }) {
+    removeVisualization(this: State, { view_id, el_id }) {
       this.views.find(v => v.id == view_id).elements.splice(el_id, 1);
     },
   },

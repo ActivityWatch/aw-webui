@@ -42,7 +42,7 @@ export const useCategoryStore = defineStore('categories', {
         (v: string[]) => v.join('>>>>') // Can be any separator that doesn't appear in the category names themselves
       );
     },
-    get_category() {
+    get_category(this: State) {
       return (category_arr: string[]): Category => {
         if (typeof category_arr === 'string' || category_arr instanceof String)
           console.error('Passed category was string, expected array. Lookup will fail.');
@@ -57,7 +57,7 @@ export const useCategoryStore = defineStore('categories', {
         return annotate(_.cloneDeep(match));
       };
     },
-    get_category_by_id() {
+    get_category_by_id(this: State) {
       return (id: number) => {
         return annotate(_.cloneDeep(this.classes.find((c: Category) => c.id == id)));
       };
@@ -83,30 +83,30 @@ export const useCategoryStore = defineStore('categories', {
   },
 
   actions: {
-    async load() {
-      this.loadClasses(await loadClasses());
-    },
-    async save() {
-      const r = saveClasses(this.classes);
-      this.saveCompleted();
-      return r;
-    },
-
-    // mutations
-    loadClasses(classes: Category[]) {
+    load(this: State, classes: Category[] = null) {
+      if (classes === null) {
+        classes = loadClasses();
+      }
       classes = createMissingParents(classes);
 
       let i = 0;
       this.classes = classes.map(c => Object.assign(c, { id: i++ }));
       this.classes_unsaved_changes = false;
     },
-    import(classes: Category[]) {
+    save() {
+      const r = saveClasses(this.classes);
+      this.classes_unsaved_changes = false;
+      return r;
+    },
+
+    // mutations
+    import(this: State, classes: Category[]) {
       let i = 0;
       // overwrite id even if already set
       this.classes = classes.map(c => Object.assign(c, { id: i++ }));
       this.classes_unsaved_changes = true;
     },
-    updateClass(new_class: Category) {
+    updateClass(this: State, new_class: Category) {
       console.log('Updating class:', new_class);
       const old_class = this.classes.find((c: Category) => c.id === new_class.id);
       const old_name = old_class.name;
@@ -129,28 +129,25 @@ export const useCategoryStore = defineStore('categories', {
 
       this.classes_unsaved_changes = true;
     },
-    addClass(new_class: Category) {
+    addClass(this: State, new_class: Category) {
       new_class.id = _.max(_.map(this.classes, 'id')) + 1;
       this.classes.push(new_class);
       this.classes_unsaved_changes = true;
     },
-    removeClass(classId: number) {
+    removeClass(this: State, classId: number) {
       this.classes = this.classes.filter((c: Category) => c.id !== classId);
       this.classes_unsaved_changes = true;
     },
-    restoreDefaultClasses() {
+    restoreDefaultClasses(this: State) {
       let i = 0;
       this.classes = createMissingParents(defaultCategories).map(c =>
         Object.assign(c, { id: i++ })
       );
       this.classes_unsaved_changes = true;
     },
-    clearAll() {
+    clearAll(this: State) {
       this.classes = [];
       this.classes_unsaved_changes = true;
-    },
-    saveCompleted() {
-      this.classes_unsaved_changes = false;
     },
   },
 });

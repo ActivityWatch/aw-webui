@@ -11,3 +11,4 @@ __pycache__
 screenshots
 /modules
 .vscode
+coverage-ts

@@ -18,7 +18,7 @@ describe('categories store', () => {
     categoryStore.restoreDefaultClasses();
 
     expect(categoryStore.classes_unsaved_changes).toBeTruthy();
-    categoryStore.saveCompleted();
+    categoryStore.save();
 
     expect(categoryStore.classes_unsaved_changes).toBeFalsy();
     expect(categoryStore.classes).not.toHaveLength(0);
@@ -41,7 +41,7 @@ describe('categories store', () => {
 
   test('loads custom categories', () => {
     expect(categoryStore.classes).toHaveLength(0);
-    categoryStore.loadClasses([{ name: ['Test'], rule: { type: 'none' } }]);
+    categoryStore.load([{ name: ['Test'], rule: { type: 'none' } }]);
     expect(categoryStore.all_categories).toHaveLength(1);
   });
 

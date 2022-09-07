@@ -21,7 +21,7 @@ describe('activity store', () => {
     expect(categoryStore.classes).toHaveLength(0);
     categoryStore.restoreDefaultClasses();
     expect(categoryStore.classes_unsaved_changes).toBeTruthy();
-    categoryStore.saveCompleted();
+    categoryStore.save();
     expect(categoryStore.classes_unsaved_changes).toBeFalsy();
     expect(categoryStore.classes).not.toHaveLength(0);
 

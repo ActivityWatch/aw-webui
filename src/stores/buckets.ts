@@ -17,18 +17,22 @@ function select_buckets(
   );
 }
 
+interface State {
+  buckets: IBucket[];
+}
+
 export const useBucketsStore = defineStore('buckets', {
-  state: () => ({
+  state: (): State => ({
     buckets: [],
   }),
 
   getters: {
-    hosts(): string[] {
+    hosts(this: State): string[] {
       // TODO: Include consideration of device_id UUID
       return _.uniq(_.map(this.buckets, bucket => bucket['hostname']));
     },
     // Uses device_id instead of hostname
-    devices(): string[] {
+    devices(this: State): string[] {
       // TODO: Include consideration of device_id UUID
       return _.uniq(_.map(this.buckets, bucket => bucket['device_id']));
     },
@@ -61,23 +65,23 @@ export const useBucketsStore = defineStore('buckets', {
     },
 
     // These should be considered low-level, and should be used sparingly.
-    bucketsAFK(): (host: string) => string[] {
+    bucketsAFK(this: State): (host: string) => string[] {
       return host => select_buckets(this.buckets, { host, type: 'afkstatus' });
     },
-    bucketsWindow(): (host: string) => string[] {
+    bucketsWindow(this: State): (host: string) => string[] {
       return host =>
         _.filter(
           select_buckets(this.buckets, { host, type: 'currentwindow' }),
           id => !id.startsWith('aw-watcher-android')
         );
     },
-    bucketsAndroid(): (host: string) => string[] {
+    bucketsAndroid(this: State): (host: string) => string[] {
       return host =>
         _.filter(select_buckets(this.buckets, { host, type: 'currentwindow' }), id =>
           id.startsWith('aw-watcher-android')
         );
     },
-    bucketsEditor(): (host: string) => string[] {
+    bucketsEditor(this: State): (host: string) => string[] {
       // fallback to a bucket with 'unknown' host, if one exists.
       // TODO: This needs a fix so we can get rid of this workaround.
       const type = 'app.editor.activity';
@@ -88,7 +92,7 @@ export const useBucketsStore = defineStore('buckets', {
           : buckets;
       };
     },
-    bucketsBrowser(): (host: string) => string[] {
+    bucketsBrowser(this: State): (host: string) => string[] {
       // fallback to a bucket with 'unknown' host, if one exists.
       // TODO: This needs a fix so we can get rid of this workaround.
       const type = 'web.tab.current';
@@ -103,22 +107,22 @@ export const useBucketsStore = defineStore('buckets', {
       };
     },
 
-    getBucket(): (id: string) => IBucket {
+    getBucket(this: State): (id: string) => IBucket {
       return id => _.filter(this.buckets, b => b.id === id)[0];
     },
-    bucketsByHostname(): Record<string, IBucket[]> {
+    bucketsByHostname(this: State): Record<string, IBucket[]> {
       return _.groupBy(this.buckets, 'hostname');
     },
   },
 
   actions: {
-    async ensureLoaded() {
+    async ensureLoaded(): Promise<void> {
       if (this.buckets.length === 0) {
         await this.loadBuckets();
       }
     },
 
-    async loadBuckets() {
+    async loadBuckets(): Promise<void> {
       const buckets = await getClient().getBuckets();
       this.update_buckets(buckets);
     },
@@ -144,7 +148,7 @@ export const useBucketsStore = defineStore('buckets', {
       return bucket;
     },
 
-    async getBucketsWithEvents({ start, end }) {
+    async getBucketsWithEvents({ start, end }: { start?: Date; end?: Date }) {
       await this.ensureLoaded();
       const buckets = await Promise.all(
         _.map(
@@ -155,14 +159,14 @@ export const useBucketsStore = defineStore('buckets', {
       return _.orderBy(buckets, [b => b.id], ['asc']);
     },
 
-    async deleteBucket({ bucketId }) {
+    async deleteBucket({ bucketId }: { bucketId: string }) {
       console.log(`Deleting bucket ${bucketId}`);
       await getClient().deleteBucket(bucketId);
       await this.loadBuckets();
     },
 
     // mutations
-    update_buckets(buckets) {
+    update_buckets(this: State, buckets: IBucket[]): void {
       this.buckets = buckets;
     },
   },
