@@ -2,11 +2,13 @@ import _ from 'lodash';
 import {
   saveClasses,
   loadClasses,
+  cleanCategory,
   defaultCategories,
   build_category_hierarchy,
   createMissingParents,
   annotate,
   Category,
+  Rule,
 } from '~/util/classes';
 import { defineStore } from 'pinia';
 
@@ -23,9 +25,19 @@ export const useCategoryStore = defineStore('categories', {
 
   // getters
   getters: {
+    classes_clean(): Category[] {
+      return this.classes.map(cleanCategory);
+    },
     classes_hierarchy() {
       const hier = build_category_hierarchy(_.cloneDeep(this.classes));
       return _.sortBy(hier, [c => c.id || 0]);
+    },
+    classes_for_query(): [string[], Rule][] {
+      return this.classes
+        .filter(c => c.rule.type !== null)
+        .map(c => {
+          return [c.name, c.rule];
+        });
     },
     all_categories(): string[][] {
       // Returns a list of category names (a list of list of strings)
