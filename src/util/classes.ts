@@ -156,7 +156,15 @@ export function flatten_category_hierarchy(hier: Category[]): Category[] {
   );
 }
 
+function areWeTesting() {
+  return process.env.NODE_ENV === 'test';
+}
+
 export function saveClasses(classes: Category[]) {
+  if (areWeTesting()) {
+    console.log('Not saving classes in test mode');
+    return;
+  }
   localStorage.classes = JSON.stringify(classes);
   console.log('Saved classes', localStorage.classes);
 }
