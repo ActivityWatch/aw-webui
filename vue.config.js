@@ -57,6 +57,7 @@ module.exports = {
   pwa: {
     name: 'ActivityWatch',
     iconPaths: {
+      faviconSVG: null, // SVG won't render without needed fonts etc, so fall back to png
       favicon32: 'static/logo.png',
       favicon16: 'static/logo.png',
       appleTouchIcon: 'static/logo.png',
