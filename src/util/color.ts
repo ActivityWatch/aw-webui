@@ -61,7 +61,7 @@ function hashcode(str: string): number {
   return hash;
 }
 
-export function getColorFromString(appname: string) {
+export function getColorFromString(appname: string): string {
   appname = appname || '';
   appname = appname.toLowerCase();
   return customColors[appname] || scale(Math.abs(hashcode(appname) % 20).toString());
