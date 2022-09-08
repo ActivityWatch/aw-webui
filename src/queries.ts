@@ -31,6 +31,7 @@ interface BaseQueryParams {
   categories: Category[];
   filter_categories: string[][];
   bid_browsers?: string[];
+  bid_stopwatch?: string;
   return_variable_suffix?: string;
 }
 
@@ -128,6 +129,10 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
     // Filter out window events when the user was afk
     isDesktopParams(params) && params.filter_afk
       ? 'events = filter_period_intersect(events, not_afk);'
+      : '',
+    params.bid_stopwatch
+      ? `stopwatch_events = query_bucket("${params.bid_stopwatch}");
+         events = period_union(events, stopwatch_events);`
       : '',
     // Categorize
     params.categories ? `events = categorize(events, ${categories_str});` : '',

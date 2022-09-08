@@ -54,6 +54,7 @@ export interface QueryOptions {
   timeperiod?: TimePeriod;
   filter_afk?: boolean;
   include_audible?: boolean;
+  include_stopwatch?: boolean;
   filter_categories?: string[][];
   dont_query_inactive?: boolean;
   force?: boolean;
@@ -102,6 +103,10 @@ interface State {
     available: boolean;
   };
 
+  stopwatch: {
+    available: boolean;
+  };
+
   query_options?: QueryOptions;
 
   // Can't this be handled in bucketStore?
@@ -112,6 +117,7 @@ interface State {
     editor: string[];
     browser: string[];
     android: string[];
+    stopwatch: string[];
   };
 }
 
@@ -161,6 +167,10 @@ export const useActivityStore = defineStore('activity', {
       available: false,
     },
 
+    stopwatch: {
+      available: false,
+    },
+
     query_options: null,
 
     buckets: {
@@ -170,6 +180,7 @@ export const useActivityStore = defineStore('activity', {
       editor: [],
       browser: [],
       android: [],
+      stopwatch: [],
     },
   }),
 
@@ -317,6 +328,7 @@ export const useActivityStore = defineStore('activity', {
       filter_categories,
       filter_afk,
       include_audible,
+      include_stopwatch,
     }: QueryOptions) {
       const periods = [timeperiodToStr(timeperiod)];
       const categories = useCategoryStore().classes_for_query;
@@ -325,6 +337,10 @@ export const useActivityStore = defineStore('activity', {
         bid_window: this.buckets.window[0],
         bid_afk: this.buckets.afk[0],
         bid_browsers: this.buckets.browser,
+        bid_stopwatch:
+          include_stopwatch && this.buckets.stopwatch.length > 0
+            ? this.buckets.stopwatch[0]
+            : undefined,
         filter_afk,
         categories,
         filter_categories,
@@ -364,6 +380,7 @@ export const useActivityStore = defineStore('activity', {
       timeperiod,
       filter_categories,
       filter_afk,
+      include_stopwatch,
       dontQueryInactive,
     }: QueryOptions & { dontQueryInactive: boolean }) {
       // TODO: Needs to be adapted for Android
@@ -429,6 +446,10 @@ export const useActivityStore = defineStore('activity', {
             bid_afk: this.buckets.afk[0],
             bid_window: this.buckets.window[0],
             bid_browsers: this.buckets.browser,
+            bid_stopwatch:
+              include_stopwatch && this.buckets.stopwatch.length > 0
+                ? this.buckets.stopwatch[0]
+                : undefined,
             // bid_android: this.buckets.android,
             categories,
             filter_categories,
@@ -475,6 +496,7 @@ export const useActivityStore = defineStore('activity', {
       this.editor.available = this.buckets.editor.length > 0;
       this.android.available = this.buckets.android.length > 0;
       this.category.available = this.window.available || this.android.available;
+      this.stopwatch.available = this.buckets.stopwatch.length > 0;
     },
 
     async get_buckets(this: State, { host }) {
@@ -485,6 +507,7 @@ export const useActivityStore = defineStore('activity', {
       this.buckets.android = bucketsStore.bucketsAndroid(host);
       this.buckets.browser = bucketsStore.bucketsBrowser(host);
       this.buckets.editor = bucketsStore.bucketsEditor(host);
+      this.buckets.stopwatch = bucketsStore.bucketsStopwatch(host);
 
       console.log('Available buckets: ', this.buckets);
       this.buckets.loaded = true;

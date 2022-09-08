@@ -61,6 +61,12 @@ div
         icon#includeAudibleHelp(name="question-circle" style="opacity: 0.4")
         b-tooltip(target="includeAudibleHelp" v-b-tooltip.hover title="If the active window is an audible browser tab, count as active. Requires a browser watcher.")
 
+      b-form-checkbox(v-if="devmode" v-model="include_stopwatch" size="sm")
+        // WIP: https://github.com/ActivityWatch/aw-webui/pull/368
+        | Include manually logged events (stopwatch)
+        br
+        | #[b Note:] WIP, breaks aw-server-rust badly. Only shown in devmode.
+
     div.col-md-6.mt-2.mt-md-0
       b-form-group(label="Show category" label-cols="5" label-cols-lg="4" style="font-size: 0.88em")
         b-form-select(v-model="filter_category", :options="categoryStore.category_select(true)" size="sm")
@@ -189,12 +195,14 @@ export default {
       showOptions: false,
 
       include_audible: true,
+      include_stopwatch: false,
       filter_afk: true,
       new_view: {},
     };
   },
   computed: {
     ...mapState(useViewsStore, ['views']),
+    ...mapState(useSettingsStore, ['devmode']),
 
     // number of filters currently set (different from defaults)
     filters_set() {
@@ -396,6 +404,7 @@ export default {
         force: force,
         filter_afk: this.filter_afk,
         include_audible: this.include_audible,
+        include_stopwatch: this.include_stopwatch,
         filter_categories: this.filter_categories,
       };
       await this.activityStore.ensure_loaded(queryOptions);
