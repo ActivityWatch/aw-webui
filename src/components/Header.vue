@@ -74,6 +74,10 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
           b-dropdown-item(to="/query")
             icon(name="code")
             | Query
+          b-dropdown-item(to="/graph" v-if="devmode")
+            // TODO: use circle-nodes instead in the future
+            icon(name="project-diagram")
+            | Graph
 
         b-nav-item(to="/buckets")
           div.px-2.px-lg-1
@@ -106,6 +110,10 @@ import 'vue-awesome/icons/stopwatch';
 import 'vue-awesome/icons/cog';
 import 'vue-awesome/icons/tools';
 import 'vue-awesome/icons/history';
+
+// TODO: use circle-nodes instead in the future
+import 'vue-awesome/icons/project-diagram';
+//import 'vue-awesome/icons/cicle-nodes';
 
 import 'vue-awesome/icons/ellipsis-h';
 

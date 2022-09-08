@@ -6,8 +6,6 @@ import { IEvent } from '~/util/interfaces';
 
 import { window_events } from '~/util/fakedata';
 import queries from '~/queries';
-import { getColorFromCategory } from '~/util/color';
-import { loadClassesForQuery } from '~/util/classes';
 import { get_day_start_with_offset } from '~/util/time';
 import {
   TimePeriod,
@@ -45,8 +43,7 @@ function colorCategories(events: IEvent[]): IEvent[] {
   // Set $color for categories
   const categoryStore = useCategoryStore();
   return events.map((e: IEvent) => {
-    const cat = categoryStore.get_category(e.data['$category']);
-    e.data['$color'] = getColorFromCategory(cat, categoryStore.classes);
+    e.data['$color'] = categoryStore.get_category_color(e.data['$category']);
     return e;
   });
 }
@@ -274,8 +271,12 @@ export const useActivityStore = defineStore('activity', {
 
     async query_android({ timeperiod, filter_categories }: QueryOptions) {
       const periods = [timeperiodToStr(timeperiod)];
-      const classes = loadClassesForQuery();
-      const q = queries.appQuery(this.buckets.android[0], classes, filter_categories);
+      const categoryStore = useCategoryStore();
+      const q = queries.appQuery(
+        this.buckets.android[0],
+        categoryStore.classes_for_query,
+        filter_categories
+      );
       const data = await getClient().query(periods, q).catch(this.errorHandler);
       this.query_window_completed(data[0]);
     },
@@ -293,7 +294,7 @@ export const useActivityStore = defineStore('activity', {
       hosts: string[]
     ) {
       const periods = [timeperiodToStr(timeperiod)];
-      const categories = loadClassesForQuery();
+      const categories = useCategoryStore().classes_for_query;
 
       const q = queries.multideviceQuery({
         hosts,
@@ -318,7 +319,7 @@ export const useActivityStore = defineStore('activity', {
       include_audible,
     }: QueryOptions) {
       const periods = [timeperiodToStr(timeperiod)];
-      const categories = loadClassesForQuery();
+      const categories = useCategoryStore().classes_for_query;
 
       const q = queries.fullDesktopQuery({
         bid_window: this.buckets.window[0],
@@ -419,7 +420,7 @@ export const useActivityStore = defineStore('activity', {
           }
         }
 
-        const categories = loadClassesForQuery();
+        const categories = useCategoryStore().classes_for_query;
         const result = await getClient().query(
           [period],
           // TODO: Clean up call, pass QueryParams in fullDesktopQuery as well

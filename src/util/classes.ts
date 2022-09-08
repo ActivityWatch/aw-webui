@@ -5,7 +5,7 @@ const level_sep = '>';
 const CLASSIFY_KEYS = ['app', 'title'];
 const UNCATEGORIZED = ['Uncategorized'];
 
-interface Rule {
+export interface Rule {
   type: 'regex' | 'none';
   regex?: string;
   ignore_case?: boolean;
@@ -165,25 +165,27 @@ export function saveClasses(classes: Category[]) {
     console.log('Not saving classes in test mode');
     return;
   }
-  localStorage.classes = JSON.stringify(classes);
+  localStorage.classes = JSON.stringify(classes.map(cleanCategory));
   console.log('Saved classes', localStorage.classes);
+}
+
+export function cleanCategory(cat: Category): Category {
+  cat = _.cloneDeep(cat);
+  delete cat.children;
+  delete cat.parent;
+  delete cat.subname;
+  delete cat.name_pretty;
+  delete cat.depth;
+  return cat;
 }
 
 export function loadClasses(): Category[] {
   const classes_json = localStorage.classes;
   if (classes_json && classes_json.length >= 1) {
-    return JSON.parse(classes_json);
+    return JSON.parse(classes_json).map(cleanCategory);
   } else {
     return defaultCategories;
   }
-}
-
-export function loadClassesForQuery(): [string[], Rule][] {
-  return loadClasses()
-    .filter(c => c.rule.type !== null)
-    .map(c => {
-      return [c.name, c.rule];
-    });
 }
 
 function pickDeepest(categories: Category[]) {
