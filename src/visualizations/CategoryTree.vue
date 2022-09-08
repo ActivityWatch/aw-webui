@@ -74,6 +74,7 @@ export default {
       return _.sumBy(top_c, c => c.duration);
     },
     category_hierarchy: function () {
+      if (!this.events) return [];
       const events = JSON.parse(JSON.stringify(this.events));
 
       const hier = classes.build_category_hierarchy(
