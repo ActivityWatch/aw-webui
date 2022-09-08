@@ -249,7 +249,7 @@ export default {
       );
 
       // Return dataset if data found, else return null (indicating no data)
-      if (datasets.length > 1) return datasets;
+      if (datasets.length > 0) return datasets;
       else return null;
     },
     date: function () {
