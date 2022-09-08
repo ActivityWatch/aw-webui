@@ -42,6 +42,7 @@ div
           icon(name="filter")
           span.d-none.d-md-inline
             |  Filters
+            b-badge(pill, variant="secondary" v-if="filters_set > 0").ml-2 {{ filters_set }}
         b-button.px-2(@click="refresh(true)", variant="outline-dark")
           icon(name="sync")
           span.d-none.d-md-inline
@@ -69,7 +70,7 @@ div
 
   ul.row.nav.nav-tabs.mt-4
     li.nav-item(v-for="view in views")
-      router-link.nav-link(:to="{ name: 'activity-view', params: {...$route.params, view_id: view.id}}" :class="{'router-link-exact-active': currentView.id == view.id}")
+      router-link.nav-link(:to="{ name: 'activity-view', params: {...$route.params, view_id: view.id}, query: $route.query}" :class="{'router-link-exact-active': currentView.id == view.id}")
         h6 {{view.name}}
 
     li.nav-item(style="margin-left: auto")
@@ -187,7 +188,6 @@ export default {
       today: null,
       showOptions: false,
 
-      filter_category: null,
       include_audible: true,
       filter_afk: true,
       new_view: {},
@@ -195,6 +195,27 @@ export default {
   },
   computed: {
     ...mapState(useViewsStore, ['views']),
+
+    // number of filters currently set (different from defaults)
+    filters_set() {
+      return (this.filter_category ? 1 : 0) + (!this.filter_afk ? 1 : 0);
+    },
+
+    // getter and setter for filter_category, getting and setting $route.query
+    filter_category: {
+      get() {
+        if (!this.$route.query.category) return null;
+        return this.$route.query.category.split('>');
+      },
+      set(value) {
+        if (value == null) {
+          this.$router.push({ query: _.omit(this.$route.query, 'category') });
+        } else {
+          this.$router.push({ query: { ...this.$route.query, category: value.join('>') } });
+        }
+      },
+    },
+
     periodLengths: function () {
       const settingsStore = useSettingsStore();
       let periods: Record<string, string> = {
@@ -362,9 +383,10 @@ export default {
         const new_period_length_moment = periodLengthConvertMoment(periodLength);
         new_date = moment(date).startOf(new_period_length_moment).format('YYYY-MM-DD');
       }
-      this.$router.push(
-        `/activity/${this.host}/${periodLength}/${new_date}/${this.subview}/${this.currentViewId}`
-      );
+      this.$router.push({
+        path: `/activity/${this.host}/${periodLength}/${new_date}/${this.subview}/${this.currentViewId}`,
+        query: this.$route.query,
+      });
     },
 
     refresh: async function (force) {
