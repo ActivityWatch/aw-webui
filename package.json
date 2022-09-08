@@ -23,6 +23,7 @@
     "@types/chrome": "0.0.89",
     "@types/color": "^3.0.1",
     "@types/d3": "^6.3.0",
+    "@types/d3-hierarchy": "^3.1.0",
     "@types/jest": "^27",
     "@types/lodash": "^4.14.178",
     "@types/node": "^12.20.37",
