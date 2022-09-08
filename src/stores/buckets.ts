@@ -11,7 +11,7 @@ function select_buckets(
   return _.map(
     _.filter(
       buckets,
-      bucket => (!type || bucket['type'] === type) && (!host || bucket['hostname'] == host)
+      bucket => (!type || bucket.type === type) && (!host || bucket.hostname == host)
     ),
     bucket => bucket['id']
   );
@@ -29,12 +29,12 @@ export const useBucketsStore = defineStore('buckets', {
   getters: {
     hosts(this: State): string[] {
       // TODO: Include consideration of device_id UUID
-      return _.uniq(_.map(this.buckets, bucket => bucket['hostname']));
+      return _.uniq(_.map(this.buckets, bucket => bucket.hostname));
     },
     // Uses device_id instead of hostname
     devices(this: State): string[] {
       // TODO: Include consideration of device_id UUID
-      return _.uniq(_.map(this.buckets, bucket => bucket['device_id']));
+      return _.uniq(_.map(this.buckets, bucket => bucket.device_id));
     },
 
     available(): (hostname: string) => {
@@ -43,6 +43,7 @@ export const useBucketsStore = defineStore('buckets', {
       editor: boolean;
       android: boolean;
       category: boolean;
+      stopwatch: boolean;
     } {
       // Returns a map of which kinds of buckets are available
       //
@@ -60,51 +61,54 @@ export const useBucketsStore = defineStore('buckets', {
           editor: this.bucketsEditor(hostname).length > 0,
           android: androidAvail,
           category: windowAvail || androidAvail,
+          stopwatch: this.bucketsStopwatch(hostname).length > 0,
         };
       };
     },
 
-    // These should be considered low-level, and should be used sparingly.
-    bucketsAFK(this: State): (host: string) => string[] {
-      return host => select_buckets(this.buckets, { host, type: 'afkstatus' });
+    bucketsByType(
+      this: State
+    ): (host: string, type: string, fallback_unknown_host?: boolean) => string[] {
+      return (host, type, fallback_unknown_host) => {
+        let buckets = select_buckets(this.buckets, { host, type });
+        if (fallback_unknown_host && buckets.length == 0) {
+          buckets = select_buckets(this.buckets, { host: 'unknown', type });
+          //console.log('fallback: ', buckets);
+        }
+        return buckets;
+      };
     },
-    bucketsWindow(this: State): (host: string) => string[] {
+
+    // Convenience getters for bucketsByType
+    bucketsAFK(): (host: string) => string[] {
+      return host => this.bucketsByType(host, 'afkstatus');
+    },
+    bucketsWindow(): (host: string) => string[] {
       return host =>
-        _.filter(
-          select_buckets(this.buckets, { host, type: 'currentwindow' }),
-          id => !id.startsWith('aw-watcher-android')
+        this.bucketsByType(host, 'currentwindow').filter(
+          (id: string) => !id.startsWith('aw-watcher-android')
         );
     },
-    bucketsAndroid(this: State): (host: string) => string[] {
+    bucketsAndroid(): (host: string) => string[] {
       return host =>
-        _.filter(select_buckets(this.buckets, { host, type: 'currentwindow' }), id =>
+        this.bucketsByType(host, 'currentwindow').filter((id: string) =>
           id.startsWith('aw-watcher-android')
         );
     },
-    bucketsEditor(this: State): (host: string) => string[] {
+    bucketsEditor(): (host: string) => string[] {
       // fallback to a bucket with 'unknown' host, if one exists.
       // TODO: This needs a fix so we can get rid of this workaround.
-      const type = 'app.editor.activity';
-      return (host: string) => {
-        const buckets = select_buckets(this.buckets, { host, type });
-        return buckets.length == 0
-          ? select_buckets(this.buckets, { host: 'unknown', type })
-          : buckets;
-      };
+      return host => this.bucketsByType(host, 'app.editor.activity', true);
     },
-    bucketsBrowser(this: State): (host: string) => string[] {
+    bucketsBrowser(): (host: string) => string[] {
       // fallback to a bucket with 'unknown' host, if one exists.
       // TODO: This needs a fix so we can get rid of this workaround.
-      const type = 'web.tab.current';
-      return (host: string) => {
-        const buckets = select_buckets(this.buckets, { host, type });
-        if (buckets.length > 0) {
-          return buckets;
-        } else {
-          console.log('fallback: ', select_buckets(this.buckets, { host: 'unknown', type }));
-          return select_buckets(this.buckets, { host: 'unknown', type });
-        }
-      };
+      return host => this.bucketsByType(host, 'web.tab.current', true);
+    },
+    bucketsStopwatch(): (host: string) => string[] {
+      // fallback to a bucket with 'unknown' host, if one exists.
+      // TODO: This needs a fix so we can get rid of this workaround.
+      return (host: string) => this.bucketsByType(host, 'general.stopwatch', true);
     },
 
     getBucket(this: State): (id: string) => IBucket {

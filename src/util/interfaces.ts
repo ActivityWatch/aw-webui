@@ -7,6 +7,7 @@ export interface IEvent {
 export interface IBucket {
   id: string;
   hostname: string;
+  device_id: string;
   type: string;
   data: Record<string, any>;
 }
