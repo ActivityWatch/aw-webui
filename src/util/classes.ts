@@ -23,6 +23,11 @@ export interface Category {
   children?: Category[];
 }
 
+export type CategorySet = {
+  id: string;
+  categories: Category[];
+};
+
 const COLOR_UNCAT = '#CCC';
 
 // The default categories
@@ -92,7 +97,7 @@ export const defaultCategories: Category[] = [
   { name: ['Uncategorized'], rule: { type: null }, data: { color: COLOR_UNCAT } },
 ];
 
-export function annotate(c: Category) {
+export function annotate(c: Category): Category {
   const ch = c.name;
   c.name_pretty = ch.join(level_sep);
   c.subname = ch.slice(-1)[0];
@@ -160,13 +165,17 @@ function areWeTesting() {
   return process.env.NODE_ENV === 'test';
 }
 
-export function saveClasses(classes: Category[]) {
+export function saveClasses(set: CategorySet) {
   if (areWeTesting()) {
     console.log('Not saving classes in test mode');
     return;
   }
-  localStorage.classes = JSON.stringify(classes.map(cleanCategory));
-  console.log('Saved classes', localStorage.classes);
+  const key = 'classes.' + set.id;
+  localStorage[key] = JSON.stringify({
+    ...set,
+    categories: set.categories.map(cleanCategory),
+  });
+  console.log('Saved classes', localStorage[key]);
 }
 
 export function cleanCategory(cat: Category): Category {
@@ -179,13 +188,53 @@ export function cleanCategory(cat: Category): Category {
   return cat;
 }
 
-export function loadClasses(): Category[] {
-  const classes_json = localStorage.classes;
+export function loadClasses(name?: string): CategorySet {
+  const current_set = name || localStorage.current_set || 'default';
+  const key = 'classes.' + current_set;
+  const classes_json = localStorage[key];
+
+  let set: CategorySet = { id: current_set, categories: [] };
   if (classes_json && classes_json.length >= 1) {
-    return JSON.parse(classes_json).map(cleanCategory);
+    set = JSON.parse(classes_json);
+  } else if (current_set == 'default') {
+    if (localStorage.classes) {
+      // Fall back to
+      set.categories = JSON.parse(localStorage.classes);
+    } else {
+      set.categories = defaultCategories;
+    }
   } else {
-    return defaultCategories;
+    console.error('No classes found for category set', current_set);
   }
+
+  // Clean
+  set.categories = set.categories.map(cleanCategory);
+
+  // Assign IDs
+  let i = 0;
+  set.categories = set.categories.map(c => Object.assign(c, { id: i++ }));
+
+  return set;
+}
+
+export function loadSets(): CategorySet[] {
+  // Returns a list of category set IDs
+  // Always returns the current category as the first item
+  const setIDs = new Set(
+    [localStorage.current_set, 'default']
+      .filter(x => x)
+      .concat(
+        Object.keys(localStorage)
+          .filter(key => key.startsWith('classes.'))
+          .map(key => key.slice(8))
+      )
+  );
+  console.log(setIDs);
+  return Array.from(setIDs).map(id => loadClasses(id));
+}
+
+export function setCurrentSet(name: string) {
+  localStorage.current_set = name;
 }
 
 function pickDeepest(categories: Category[]) {
@@ -197,7 +246,7 @@ export function matchString(str: string, categories: Category[] | null): Categor
     console.log(
       'Categories not passed, loading... (if you see this outside of a test, you should probably pass them)'
     );
-    categories = loadClasses();
+    categories = loadClasses().categories;
   }
 
   // Compile regexes

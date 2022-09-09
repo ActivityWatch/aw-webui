@@ -88,7 +88,7 @@ export default {
 
       const categoryStore = useCategoryStore();
       const cat = categoryStore.get_category(s.split(SEP));
-      const color = getColorFromCategory(cat, categoryStore.classes);
+      const color = getColorFromCategory(cat, categoryStore.category_set.categories);
       return color;
     },
   },

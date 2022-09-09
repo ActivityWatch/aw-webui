@@ -18,12 +18,12 @@ describe('activity store', () => {
 
   test('loads demo data', () => {
     // Load
-    expect(categoryStore.classes).toHaveLength(0);
+    expect(categoryStore.category_set.categories).toHaveLength(0);
     categoryStore.restoreDefaultClasses();
-    expect(categoryStore.classes_unsaved_changes).toBeTruthy();
+    expect(categoryStore.unsaved_changes).toBeTruthy();
     categoryStore.save();
-    expect(categoryStore.classes_unsaved_changes).toBeFalsy();
-    expect(categoryStore.classes).not.toHaveLength(0);
+    expect(categoryStore.unsaved_changes).toBeFalsy();
+    expect(categoryStore.category_set.categories).not.toHaveLength(0);
 
     // Retrieve class
     let workCat = categoryStore.get_category(['Work']);

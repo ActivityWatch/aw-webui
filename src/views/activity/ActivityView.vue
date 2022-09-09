@@ -31,7 +31,7 @@ div(v-if="view")
       span Edit view
 </template>
 
-<script>
+<script lang="ts">
 import 'vue-awesome/icons/save';
 import 'vue-awesome/icons/times';
 import 'vue-awesome/icons/trash';

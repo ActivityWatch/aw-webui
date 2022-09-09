@@ -19,13 +19,24 @@ div
     | For help on how to write categorization rules, see #[a(href="https://docs.activitywatch.net/en/latest/features/categorization.html") the documentation].
 
   div.my-4
-    b-alert(variant="warning" :show="classes_unsaved_changes")
+    b-alert(variant="warning" :show="unsaved_changes")
       | You have unsaved changes!
       div.float-right(style="margin-top: -0.15em; margin-right: -0.6em")
         b-btn.ml-2(@click="saveClasses", variant="success" size="sm")
           | Save
         b-btn.ml-2(@click="resetClasses", variant="warning" size="sm")
           | Discard
+
+    div
+      | Category set
+      b-select(v-model="current_set" @change="setCurrentSet")
+        b-select-option(v-for="set_id in category_sets.map(s => s.id)" :key="set_id" :value="set_id")
+          | {{ set_id }}
+      b-btn.ml-1(@click="createSet" variant="outline-primary" size="sm")
+        | Create
+
+    hr
+
     div(v-for="_class in classes_hierarchy")
       CategoryEditTree(:_class="_class")
 
@@ -34,15 +45,17 @@ div
       b-btn(@click="addClass")
         icon.mr-2(name="plus")
         | Add category
-      b-btn.float-right(@click="saveClasses", variant="success" :disabled="!classes_unsaved_changes")
+      b-btn.float-right(@click="saveClasses", variant="success" :disabled="!unsaved_changes")
         | Save
 </template>
-<script>
+
+<script lang="ts">
 import { mapState, mapGetters } from 'pinia';
 import CategoryEditTree from '~/components/CategoryEditTree.vue';
 import 'vue-awesome/icons/undo';
 
 import { useCategoryStore } from '~/stores/categories';
+import { CategorySet } from '~/util/classes';
 
 export default {
   name: 'CategorizationSettings',
@@ -51,10 +64,20 @@ export default {
   },
   data: () => ({
     categoryStore: useCategoryStore(),
+
+    current_set: 'default',
   }),
   computed: {
-    ...mapState(useCategoryStore, ['classes_unsaved_changes']),
+    ...mapState(useCategoryStore, ['unsaved_changes']),
     ...mapGetters(useCategoryStore, ['classes_hierarchy']),
+    ...mapGetters(useCategoryStore, ['category_set', 'category_sets']),
+  },
+  watch: {
+    category_set: {
+      handler: function (newVal: CategorySet) {
+        this.current_set = newVal.id;
+      },
+    },
   },
   mounted() {
     this.categoryStore.load();
@@ -78,15 +101,12 @@ export default {
     exportClasses: function () {
       console.log('Exporting categories...');
 
-      if (localStorage.classes === undefined) {
-        alert('No classes saved, nothing to export!');
-      }
-      const export_data = {
-        categories: JSON.parse(localStorage.classes),
-      };
+      // TODO: Clean before export to remove annotations and such (since we no longer fetch directly from already-clean localStorage)
+      const export_data: CategorySet = this.category_set;
+
       // Pretty-format it for easier reading
       const text = JSON.stringify(export_data, null, 2);
-      const filename = 'aw-category-export.json';
+      const filename = `aw-category-export-${this.category_set.id}.json`;
 
       // Initiate downloading a file by creating a hidden button and clicking it
       const element = document.createElement('a');
@@ -116,6 +136,16 @@ export default {
 
       // Set import to categories as unsaved changes
       this.categoryStore.import(import_obj.categories);
+    },
+    createSet: function () {
+      const name = prompt('Name of new category set');
+      if (name === null) {
+        return;
+      }
+      this.categoryStore.createSet(name);
+    },
+    setCurrentSet: function (set_id) {
+      this.categoryStore.setCurrentSet(set_id);
     },
   },
 };
