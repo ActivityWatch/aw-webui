@@ -222,18 +222,28 @@ const browser_appnames = {
     'Brave-browser',
   ],
   firefox: [
+    // Firefox
     'Firefox',
     'Firefox.exe',
     'firefox',
     'firefox.exe',
+
+    // Firefox Developer
     'Firefox Developer Edition',
     'firefoxdeveloperedition',
+
+    // Pre-releases https://github.com/ActivityWatch/aw-watcher-web/issues/87
     'Firefox-esr',
     'Firefox Beta',
     'Nightly',
-    // From: https://github.com/ActivityWatch/aw-watcher-web/issues/87
     'firefox-aurora',
     'firefox-trunk-dev',
+
+    // Waterfox
+    'Waterfox',
+    'Waterfox.exe',
+    'waterfox',
+    'waterfox.exe',
   ],
   opera: ['opera.exe', 'Opera'],
   brave: ['brave.exe'],
@@ -243,6 +253,7 @@ const browser_appnames = {
     'Microsoft-Edge-Stable', // Arch Linux: https://github.com/ActivityWatch/activitywatch/issues/753
   ],
   vivaldi: ['Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe'],
+  orion: ['Orion'],
 };
 
 // Returns a list of (browserName, bucketId) pairs for found browser buckets
