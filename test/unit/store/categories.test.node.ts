@@ -14,14 +14,14 @@ describe('categories store', () => {
 
   test('loads default categories', () => {
     // Load categories
-    expect(categoryStore.classes).toHaveLength(0);
+    expect(categoryStore.category_set.categories).toHaveLength(0);
     categoryStore.restoreDefaultClasses();
 
-    expect(categoryStore.classes_unsaved_changes).toBeTruthy();
+    expect(categoryStore.unsaved_changes).toBeTruthy();
     categoryStore.save();
 
-    expect(categoryStore.classes_unsaved_changes).toBeFalsy();
-    expect(categoryStore.classes).not.toHaveLength(0);
+    expect(categoryStore.unsaved_changes).toBeFalsy();
+    expect(categoryStore.category_set.categories).not.toHaveLength(0);
 
     // Retrieve class
     let workCat = categoryStore.get_category(['Work']);
@@ -40,8 +40,8 @@ describe('categories store', () => {
   });
 
   test('loads custom categories', () => {
-    expect(categoryStore.classes).toHaveLength(0);
-    categoryStore.load([{ name: ['Test'], rule: { type: 'none' } }]);
+    expect(categoryStore.category_set.categories).toHaveLength(0);
+    categoryStore.load({ id: 'default', categories: [{ name: ['Test'], rule: { type: 'none' } }] });
     expect(categoryStore.all_categories).toHaveLength(1);
   });
 

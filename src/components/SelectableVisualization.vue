@@ -245,7 +245,7 @@ export default {
 
       const datasets = buildBarchartDataset(
         this.activityStore.category.by_period,
-        this.categoryStore.classes
+        this.categoryStore.category_set.categories
       );
 
       // Return dataset if data found, else return null (indicating no data)

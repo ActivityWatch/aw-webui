@@ -88,7 +88,7 @@ export function getColorFromCategory(c: Category, allCats: Category[]): string {
 // TODO: Move into vuex?
 export function getCategoryColorFromString(str: string): string {
   // TODO: Don't load classes on every call
-  const allCats = loadClasses();
+  const allCats = loadClasses().categories;
   const c = matchString(str, allCats);
   if (c !== null) {
     return getColorFromCategory(c, allCats);
