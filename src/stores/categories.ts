@@ -34,18 +34,18 @@ export const useCategoryStore = defineStore('categories', {
 
   // getters
   getters: {
-    classes_hierarchy() {
+    classes_hierarchy(this: State) {
       const hier = build_category_hierarchy(_.cloneDeep(this.category_set.categories));
       return _.sortBy(hier, [c => c.id || 0]);
     },
-    classes_for_query(): [string[], Rule][] {
+    classes_for_query(this: State): [string[], Rule][] {
       return this.category_set.categories
-        .filter((c: Category) => c.rule.type !== null)
-        .map((c: Category) => {
+        .filter(c => c.rule.type !== null)
+        .map(c => {
           return [c.name, c.rule];
         });
     },
-    all_categories(): string[][] {
+    all_categories(this: State): string[][] {
       // Returns a list of category names (a list of list of strings)
       return _.uniqBy(
         _.flatten(
@@ -119,7 +119,7 @@ export const useCategoryStore = defineStore('categories', {
       }
       this.unsaved_changes = false;
     },
-    save() {
+    save(this: State) {
       const r = saveClasses(this.category_set);
       this.unsaved_changes = false;
       return r;
