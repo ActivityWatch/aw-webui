@@ -36,6 +36,8 @@ div
 
 <script>
 import moment from 'moment';
+import _ from 'lodash';
+import { loadClassesForQuery } from '~/util/classes';
 
 const today = moment().startOf('day');
 const tomorrow = moment(today).add(24, 'hours');
@@ -66,8 +68,19 @@ RETURN = sort_by_duration(merged_events);`,
   },
   methods: {
     query: async function () {
-      const query = this.query_code.split(';').map(s => s.trim() + ';');
+      let query = this.query_code
+
+      // replace magic string `__CATEGORIES__` in query text with latest category rule
+      if(_.includes(query, '__CATEGORIES__')) {
+        const categoryRules = loadClassesForQuery();
+        // const classes_str = JSON.stringify(params.classes).replace(/\\\\/g, '\\');
+        query = query.replace('__CATEGORIES__', JSON.stringify(categoryRules));
+      }
+
+      // the aw-client expects an array of commands with whitespace cleaned up
+      query = query.split(';').map(s => s.trim() + ';');
       const timeperiods = [moment(this.startdate).format() + '/' + moment(this.enddate).format()];
+
       try {
         const data = await this.$aw.query(timeperiods, query);
         this.events = data[0];
