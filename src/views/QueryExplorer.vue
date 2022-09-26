@@ -20,7 +20,7 @@ div
         input.form-control(type="date", :max="tomorrow", v-model="enddate")
 
     div.form-group
-      textarea.form-control(v-model="query_code", @keypress.ctrl.enter="query()" style="font-family: monospace", rows=4)
+      textarea.form-control(v-model="query_code", @keypress.ctrl.enter="query()" style="font-family: monospace", rows=10)
     div.form-inline
       div.form-group
         button.btn.btn-success(type="button", @click="query()") Query
