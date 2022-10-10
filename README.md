@@ -53,7 +53,7 @@ You can run a development version of aw-webui with your main version of Activity
 The assets are stored in the following directories (relative to your installation directory), depending on if you use aw-server-python (default) or aw-server-rust:
 
  - aw-server-python: `activitywatch/aw-server/aw_server/static/`
- - aw-server-rust: `activitywatch/aw-server-rust/static/`
+ - aw-server-rust: `activitywatch/aw-server-rust/aw-webui/dist/`
 
 Either copy the assets manually, or run `make build` from the `aw-server` parent directory to rebuild and copy the assets for you.
 
