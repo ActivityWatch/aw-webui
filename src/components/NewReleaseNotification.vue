@@ -40,7 +40,7 @@ export default {
     };
   },
   computed: {
-    ...mapWritableState(useSettingsStore, { data: 'newReleaseNotification' }),
+    ...mapWritableState(useSettingsStore, { data: 'newReleaseCheckData' }),
   },
   async mounted() {
     await useSettingsStore().ensureLoaded();
