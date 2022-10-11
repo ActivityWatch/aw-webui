@@ -29,6 +29,10 @@ div
   ColorSettings
 
   hr
+  
+  NeverAfkFilterSettings
+
+  hr
 
   CategorizationSettings
 
@@ -48,6 +52,7 @@ import LandingPageSettings from '~/views/settings/LandingPageSettings.vue';
 import DeveloperSettings from '~/views/settings/DeveloperSettings.vue';
 import Theme from '~/views/settings/Theme.vue';
 import ColorSettings from '~/views/settings/ColorSettings.vue';
+import NeverAfkFilterSettings from '~/views/settings/NeverAfkFilterSettings.vue';
 
 export default {
   name: 'Settings',
@@ -60,6 +65,7 @@ export default {
     Theme,
     ColorSettings,
     DeveloperSettings,
+    NeverAfkFilterSettings,
   },
   async created() {
     await this.init();
