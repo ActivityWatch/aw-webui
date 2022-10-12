@@ -314,7 +314,7 @@ export const useActivityStore = defineStore('activity', {
         categories,
         filter_categories,
         host_params: {},
-        neverTreatAsAfkFilter
+        neverTreatAsAfkFilter,
       });
       const data = await getClient().query(periods, q);
       const data_window = data[0].window;
@@ -459,7 +459,7 @@ export const useActivityStore = defineStore('activity', {
             categories,
             filter_categories,
             filter_afk,
-            neverTreatAsAfkFilter
+            neverTreatAsAfkFilter,
           })
         );
         data = data.concat(result);

@@ -27,7 +27,7 @@ export default {
       },
       set(value) {
         console.log('Setting NeverAfkFilterSetting to ' + value);
-        this.settingsStore.update({ ActivityData : { neverTreatAsAfkFilter: value }});
+        this.settingsStore.update({ ActivityData: { neverTreatAsAfkFilter: value } });
       },
     },
   },
