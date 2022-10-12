@@ -203,7 +203,7 @@ export default {
   computed: {
     ...mapState(useViewsStore, ['views']),
     ...mapState(useSettingsStore, ['devmode']),
-    ...mapState(useSettingsStore, ['ActivityData']),
+    ...mapState(useSettingsStore, ['always_active_pattern']),
 
     // number of filters currently set (different from defaults)
     filters_set() {
@@ -407,7 +407,7 @@ export default {
         include_audible: this.include_audible,
         include_stopwatch: this.include_stopwatch,
         filter_categories: this.filter_categories,
-        always_active_pattern: this.ActivityData.always_active_pattern,
+        always_active_pattern: this.always_active_pattern,
       };
       await this.activityStore.ensure_loaded(queryOptions);
     },
