@@ -105,7 +105,7 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
   // Needs escaping for regex patterns like '\w' to work (JSON.stringify adds extra unecessary escaping)
   const categories_str = JSON.stringify(params.categories).replace(/\\\\/g, '\\');
   const neverTreatAsAfkFilter_str = isDesktopParams(params)
-    ? JSON.stringify(params.neverTreatAsAfkFilter).replace(/\\\\/g, '\\')
+    ? params.neverTreatAsAfkFilter.replace(/\\\\/g, '\\')
     : undefined;
   const cat_filter_str = JSON.stringify(params.filter_categories);
 
@@ -122,9 +122,9 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
       ? `not_afk = flood(query_bucket("${params.bid_afk}"));
          not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);` +
         (neverTreatAsAfkFilter_str
-          ? `not_treat_as_afk = filter_keyvals_regex(events, "app", ${neverTreatAsAfkFilter_str});
+          ? `not_treat_as_afk = filter_keyvals_regex(events, "app", "${neverTreatAsAfkFilter_str}");
              not_afk = period_union(not_afk, not_treat_as_afk);
-             not_treat_as_afk = filter_keyvals_regex(events, "title", ${neverTreatAsAfkFilter_str});
+             not_treat_as_afk = filter_keyvals_regex(events, "title", "${neverTreatAsAfkFilter_str}");
              not_afk = period_union(not_afk, not_treat_as_afk);`
           : '')
       : '',
