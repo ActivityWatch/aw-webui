@@ -51,7 +51,7 @@ export const useSettingsStore = defineStore('settings', {
     userSatisfactionPollData: {},
 
     ActivityData: {
-      neverTreatAsAfkFilter: '',
+      always_active_pattern: '',
     },
 
     // Developer settings

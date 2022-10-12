@@ -407,7 +407,7 @@ export default {
         include_audible: this.include_audible,
         include_stopwatch: this.include_stopwatch,
         filter_categories: this.filter_categories,
-        neverTreatAsAfkFilter: this.ActivityData.neverTreatAsAfkFilter,
+        always_active_pattern: this.ActivityData.always_active_pattern,
       };
       await this.activityStore.ensure_loaded(queryOptions);
     },
