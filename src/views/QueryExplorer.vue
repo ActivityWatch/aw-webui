@@ -68,10 +68,10 @@ RETURN = sort_by_duration(merged_events);`,
   },
   methods: {
     query: async function () {
-      let query = this.query_code
+      let query = this.query_code;
 
       // replace magic string `__CATEGORIES__` in query text with latest category rule
-      if(_.includes(query, '__CATEGORIES__')) {
+      if (_.includes(query, '__CATEGORIES__')) {
         const categoryRules = loadClassesForQuery();
         // const classes_str = JSON.stringify(params.classes).replace(/\\\\/g, '\\');
         query = query.replace('__CATEGORIES__', JSON.stringify(categoryRules));
