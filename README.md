@@ -49,7 +49,6 @@ npm run build
 **Note:** Running a development version of aw-webui with an old aw-server can lead to issues due to version incompatibilities.
 
 ### By copying the web-assets to your main install
----
 
 You can run a development version of aw-webui with your main version of ActivityWatch by building it (or fetching the latest build from CI) and replacing placing the contents of the `static` directory of your aw-server (or aw-server-rust) installation. For simplicity, back up the original directory for easier switching back.
 
@@ -63,7 +62,6 @@ You can copy the assets manually from your `make build` or `npm run build` outpu
 Once you've put the files in the directories, you may have to do a hard refresh in your browser to invalidate any stale caches.
 
 ### Using your main install's data
----
 
 If you want to actively iterate on `aw-webui` with your local production data (with your production server running), you'll want to use a development build, automatically update it, and connect to your production data. To do this, in `aw-webui` soruce directory, in one terminal window run:
 
@@ -75,7 +73,7 @@ If you want to add `debugger` statements in your code and otherwise break lintin
 Then, in another terminal (with your venv activated) run:
 
 ```shell
-serve -l tcp://localhost:27180 -d ../aw-server/static
+python3 -m http.server --bind 127.0.0.1 27180 --directory ../aw-server/static
 ```
 
 ## Tests
