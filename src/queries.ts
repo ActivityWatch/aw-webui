@@ -39,6 +39,7 @@ interface DesktopQueryParams extends BaseQueryParams {
   bid_window: string;
   bid_afk: string;
   filter_afk: boolean;
+  always_active_pattern: string;
 }
 
 interface AndroidQueryParams extends BaseQueryParams {
@@ -48,6 +49,7 @@ interface AndroidQueryParams extends BaseQueryParams {
 interface MultiQueryParams extends BaseQueryParams {
   hosts: string[];
   filter_afk: boolean;
+  always_active_pattern: string;
   // This can be used to override params on a per-host basis
   host_params: { [host: string]: DesktopQueryParams | AndroidQueryParams };
 }
@@ -102,6 +104,9 @@ function isMultiParams(object: any): object is MultiQueryParams {
 export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams): string {
   // Needs escaping for regex patterns like '\w' to work (JSON.stringify adds extra unecessary escaping)
   const categories_str = JSON.stringify(params.categories).replace(/\\\\/g, '\\');
+  const always_active_pattern_str = isDesktopParams(params)
+    ? params.always_active_pattern.replace(/\\\\/g, '\\')
+    : undefined;
   const cat_filter_str = JSON.stringify(params.filter_categories);
 
   // For simplicity, we assume that bid_window and bid_android are exchangeable (note however it needs special treatment)
@@ -115,7 +120,13 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
     // Fetch not-afk events
     isDesktopParams(params)
       ? `not_afk = flood(query_bucket("${params.bid_afk}"));
-         not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);`
+         not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);` +
+        (always_active_pattern_str
+          ? `not_treat_as_afk = filter_keyvals_regex(events, "app", "${always_active_pattern_str}");
+             not_afk = period_union(not_afk, not_treat_as_afk);
+             not_treat_as_afk = filter_keyvals_regex(events, "title", "${always_active_pattern_str}");
+             not_afk = period_union(not_afk, not_treat_as_afk);`
+          : '')
       : '',
     // Fetch browser events
     isDesktopParams(params) && params.bid_browsers

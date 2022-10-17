@@ -8,6 +8,7 @@ test('generate fullDesktopQuery', () => {
   const categories = [];
   const filter_categories = true;
   const include_audible = true;
+  const always_active_pattern = 'meow|nyaan';
   const query_lines = queries.fullDesktopQuery({
     bid_window,
     bid_afk,
@@ -16,6 +17,7 @@ test('generate fullDesktopQuery', () => {
     categories,
     filter_categories,
     include_audible,
+    always_active_pattern,
   });
 
   // join query lines into a single string

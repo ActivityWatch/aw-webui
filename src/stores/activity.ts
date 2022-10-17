@@ -58,6 +58,7 @@ export interface QueryOptions {
   filter_categories?: string[][];
   dont_query_inactive?: boolean;
   force?: boolean;
+  always_active_pattern?: string;
 }
 
 interface State {
@@ -301,7 +302,7 @@ export const useActivityStore = defineStore('activity', {
     },
 
     async query_multidevice_full(
-      { timeperiod, filter_categories, filter_afk }: QueryOptions,
+      { timeperiod, filter_categories, filter_afk, always_active_pattern }: QueryOptions,
       hosts: string[]
     ) {
       const periods = [timeperiodToStr(timeperiod)];
@@ -313,6 +314,7 @@ export const useActivityStore = defineStore('activity', {
         categories,
         filter_categories,
         host_params: {},
+        always_active_pattern,
       });
       const data = await getClient().query(periods, q);
       const data_window = data[0].window;
@@ -329,6 +331,7 @@ export const useActivityStore = defineStore('activity', {
       filter_afk,
       include_audible,
       include_stopwatch,
+      always_active_pattern,
     }: QueryOptions) {
       const periods = [timeperiodToStr(timeperiod)];
       const categories = useCategoryStore().classes_for_query;
@@ -345,6 +348,7 @@ export const useActivityStore = defineStore('activity', {
         categories,
         filter_categories,
         include_audible,
+        always_active_pattern,
       });
       const data = await getClient().query(periods, q);
       const data_window = data[0].window;
@@ -382,6 +386,7 @@ export const useActivityStore = defineStore('activity', {
       filter_afk,
       include_stopwatch,
       dontQueryInactive,
+      always_active_pattern,
     }: QueryOptions & { dontQueryInactive: boolean }) {
       // TODO: Needs to be adapted for Android
       let periods: string[];
@@ -454,6 +459,7 @@ export const useActivityStore = defineStore('activity', {
             categories,
             filter_categories,
             filter_afk,
+            always_active_pattern,
           })
         );
         data = data.concat(result);

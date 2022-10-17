@@ -30,6 +30,10 @@ div
 
   hr
 
+  ActivePatternSettings
+
+  hr
+
   CategorizationSettings
 
   hr
@@ -48,6 +52,7 @@ import LandingPageSettings from '~/views/settings/LandingPageSettings.vue';
 import DeveloperSettings from '~/views/settings/DeveloperSettings.vue';
 import Theme from '~/views/settings/Theme.vue';
 import ColorSettings from '~/views/settings/ColorSettings.vue';
+import ActivePatternSettings from '~/views/settings/ActivePatternSettings.vue';
 
 export default {
   name: 'Settings',
@@ -60,6 +65,7 @@ export default {
     Theme,
     ColorSettings,
     DeveloperSettings,
+    ActivePatternSettings,
   },
   async created() {
     await this.init();
