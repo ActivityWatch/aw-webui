@@ -13,11 +13,12 @@ div
         code(style="background-color: rgba(200, 200, 200, 0.3); padding: 2px; border-radius: 2px;")
           | Zoom Meeting|Google Meet|Microsoft Teams
     div
-      b-form-input(size="sm" v-model="always_active_pattern")
+      b-form-input(size="sm" v-model="always_active_pattern_editing" :state="(enabled || null) && valid")
       small.text-right
-        div(v-if="enabled" style="color: #0A0") Enabled
+        div(v-if="enabled && valid" style="color: #0A0") Enabled
+        div(v-else-if="enabled" style="color: #A00") Invalid pattern
         div(v-else, style="color: gray") Disabled
-        div(v-if="enabled && broad_pattern" style="color: #A00") Pattern too broad
+        div(v-if="enabled && valid && broad_pattern" style="color: #A00") Pattern too broad
 
 </template>
 
@@ -29,16 +30,17 @@ export default {
   data() {
     return {
       settingsStore: useSettingsStore(),
+      always_active_pattern_editing: '',
     };
   },
   computed: {
     enabled: function () {
-      return this.settingsStore.always_active_pattern != '';
+      return this.always_active_pattern_editing != '';
     },
     broad_pattern: function () {
       // Check if the pattern matches random strings that we don't expect it to
       // like the alphabet
-      const pattern = this.settingsStore.always_active_pattern;
+      const pattern = this.always_active_pattern_editing;
       if (pattern == '') {
         return false;
       }
@@ -49,17 +51,36 @@ export default {
         'THIS STRING SHOULD PROBABLY NOT MATCH: ' + alphabet + alphabet.toUpperCase() + numbers
       );
     },
+    valid: function () {
+      try {
+        new RegExp(this.always_active_pattern_editing);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    },
     always_active_pattern: {
       get() {
         return this.settingsStore.always_active_pattern;
       },
       set(value) {
-        if (value.trim().length != 0 || this.settingsStore.always_active_pattern.length != 0) {
-          console.log('Setting always_active_pattern to ' + value);
-          this.settingsStore.update({ always_active_pattern: value });
-        }
+        console.log('Setting always_active_pattern to ' + value);
+        this.settingsStore.update({ always_active_pattern: value });
       },
     },
+  },
+  watch: {
+    always_active_pattern_editing: function (value) {
+      if (
+        (value != '' && this.valid) ||
+        (value == '' && this.settingsStore.always_active_pattern.length != 0)
+      ) {
+        this.always_active_pattern = value;
+      }
+    },
+  },
+  mounted() {
+    this.always_active_pattern_editing = this.settingsStore.always_active_pattern;
   },
 };
 </script>

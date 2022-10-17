@@ -105,7 +105,7 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
   // Needs escaping for regex patterns like '\w' to work (JSON.stringify adds extra unecessary escaping)
   const categories_str = JSON.stringify(params.categories).replace(/\\\\/g, '\\');
   const always_active_pattern_str = isDesktopParams(params)
-    ? params.always_active_pattern.replace(/\\\\/g, '\\')
+    ? params.always_active_pattern
     : undefined;
   const cat_filter_str = JSON.stringify(params.filter_categories);
 

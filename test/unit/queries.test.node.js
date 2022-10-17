@@ -8,7 +8,7 @@ test('generate fullDesktopQuery', () => {
   const categories = [];
   const filter_categories = true;
   const include_audible = true;
-  const always_active_pattern = 'meow|nyaan';
+  const always_active_pattern = /meow|nyaan|specials: \w(\\)/.toString().substring(1).slice(0, -1);
   const query_lines = queries.fullDesktopQuery({
     bid_window,
     bid_afk,
