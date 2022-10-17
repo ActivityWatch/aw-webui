@@ -74,6 +74,8 @@ div
 
   aw-periodusage.mt-2(:periodusage_arr="periodusage", @update="setDate")
 
+  aw-uncategorized-notification()
+
   ul.row.nav.nav-tabs.mt-4
     li.nav-item(v-for="view in views")
       router-link.nav-link(:to="{ name: 'activity-view', params: {...$route.params, view_id: view.id}, query: $route.query}" :class="{'router-link-exact-active': currentView.id == view.id}")
@@ -169,6 +171,9 @@ import { useViewsStore } from '~/stores/views';
 
 export default {
   name: 'Activity',
+  components: {
+    'aw-uncategorized-notification': () => import('~/components/UncategorizedNotification.vue'),
+  },
   props: {
     host: String,
     date: {

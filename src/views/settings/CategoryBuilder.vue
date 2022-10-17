@@ -52,7 +52,7 @@ import { useCategoryStore } from '~/stores/categories';
 import moment from 'moment';
 
 export default {
-  name: 'CategoryBuilder',
+  name: 'aw-category-builder',
   components: {},
   props: {},
   data() {
