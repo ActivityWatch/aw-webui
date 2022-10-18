@@ -47,7 +47,7 @@ export default {
     // allow queries to be saved in a URL parameter
     let queryCode = this.$route.query.q;
 
-    if(_.isEmpty(this.$route.query.q)) {
+    if (_.isEmpty(this.$route.query.q)) {
       queryCode = `
 afk_events = query_bucket(find_bucket("aw-watcher-afk_"));
 window_events = query_bucket(find_bucket("aw-watcher-window_"));
