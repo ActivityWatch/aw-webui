@@ -6,6 +6,7 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
       b-form-input(v-model="editing.name")
     b-input-group(prepend="Parent")
       b-select(v-model="editing.parent", :options="allCategories")
+    //| ID: {{editing.id}}
 
   hr
   div.my-1
@@ -44,6 +45,9 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
 import _ from 'lodash';
 import ColorPicker from '~/components/ColorPicker';
 import { useCategoryStore } from '~/stores/categories';
+import { mapState } from 'pinia';
+
+import 'vue-awesome/icons/trash';
 
 export default {
   name: 'CategoryEditModal',
@@ -58,7 +62,7 @@ export default {
       categoryStore: useCategoryStore(),
 
       editing: {
-        id: 0, // FIXME: Use ID assigned to category in vuex store, in order for saves to be uniquely targeted
+        id: 0, // FIXME: Use ID assigned to category in store, in order for saves to be uniquely targeted
         name: null,
         rule: {},
         parent: [],
@@ -68,13 +72,9 @@ export default {
     };
   },
   computed: {
-    allCategories: function () {
-      const categories = this.categoryStore.all_categories;
-      const entries = categories.map(c => {
-        return { text: c.join('->'), value: c };
-      });
-      return [{ value: [], text: 'None' }].concat(_.sortBy(entries, 'text'));
-    },
+    ...mapState(useCategoryStore, {
+      allCategories: state => state.allCategoriesSelect,
+    }),
     allRuleTypes: function () {
       return [
         { value: null, text: 'None' },
@@ -116,6 +116,7 @@ export default {
       event.preventDefault();
       // Trigger submit handler
       this.handleSubmit();
+      this.$emit('ok');
     },
     handleSubmit() {
       // Exit when the form isn't valid

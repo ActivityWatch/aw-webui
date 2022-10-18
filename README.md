@@ -44,9 +44,11 @@ npm ci
 npm run build
 ```
 
-### Using a pre-release with your main install
+## Using a pre-release with your main install
 
 **Note:** Running a development version of aw-webui with an old aw-server can lead to issues due to version incompatibilities.
+
+### By copying the web-assets to your main install
 
 You can run a development version of aw-webui with your main version of ActivityWatch by building it (or fetching the latest build from CI) and replacing placing the contents of the `static` directory of your aw-server (or aw-server-rust) installation. For simplicity, back up the original directory for easier switching back.
 
@@ -55,21 +57,23 @@ The assets are stored in the following directories (relative to your installatio
  - aw-server-python: `activitywatch/aw-server/aw_server/static/`
  - aw-server-rust: `activitywatch/aw-server-rust/static/`
 
-Either copy the assets manually, or run `make build` from the `aw-server` parent directory to rebuild and copy the assets for you.
+You can copy the assets manually from your `make build` or `npm run build` output to the above locations.
 
 Once you've put the files in the directories, you may have to do a hard refresh in your browser to invalidate any stale caches.
 
-If you want to actively iterate on aw-webui with your local production data, you'll want to use a development build, automatically update it, and connect a aw-server running against production data. To do this, in one terminal window run:
+### Using your main install's data
+
+If you want to actively iterate on `aw-webui` with your local production data (with your production server running), you'll want to use a development build, automatically update it, and connect to your production data. To do this, in `aw-webui` soruce directory, in one terminal window run:
 
 ```bash
-AW_SERVER_URL="'http://localhost:5600'" npx vue-cli-service build --watch --dest=../aw_server/static
+AW_SERVER_URL="'http://localhost:5600'" npx vue-cli-service build --watch --dest=../aw-server/static
 ```
 
-If you want to add `debugger` statements in your code and otherwise break linting rules, you'll need to add a `--skip-plugins=no-debugger` to that command. Then,  in another terminal (with your venv activated, assuming you are using python aw-server) run:
+If you want to add `debugger` statements in your code and otherwise break linting rules, you'll need to add a `--skip-plugins=no-debugger` to that command. 
+Then, in another terminal (with your venv activated) run:
 
 ```shell
-poetry install
-aw-server
+python3 -m http.server --bind 127.0.0.1 27180 --directory ../aw-server/static
 ```
 
 ## Tests
@@ -90,10 +94,8 @@ make test-e2e
 
 ### CORS
 
-For development, you'll also have to add/change CORS configuration in the
-aw-server configs by adding `cors_origins = http://localhost:27180` to your
-configuration file `~/.config/activitywatch/aw-server/aw-server.ini` under the
-`server-testing` section.
+For development, you'll also have to add/change CORS configuration in the `aw-server` configs by adding `cors_origins = http://localhost:27180` to your
+configuration file `/activitywatch/aw-server/aw-server.toml` under respective sections (`server-testing` section when running server in testing mode).
 
 ### Code structure
 

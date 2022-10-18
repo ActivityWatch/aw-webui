@@ -12,8 +12,8 @@ on:
 jobs:
   comment:
     runs-on: ubuntu-latest
-    if: >
-      ${{ github.event.workflow_run.conclusion == 'success' }}  # && github.event.workflow_run.event == 'pull_request'
+    if: github.event.workflow_run.conclusion == 'success'  
+    # TODO: Maybe add `github.event.workflow_run.event == 'pull_request'` to avoid spam?
 
     steps:
     - uses: iterative/setup-cml@v1

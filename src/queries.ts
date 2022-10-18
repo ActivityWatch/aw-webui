@@ -39,6 +39,7 @@ interface DesktopQueryParams extends BaseQueryParams {
   bid_window: string;
   bid_afk: string;
   filter_afk: boolean;
+  always_active_pattern: string;
 }
 
 interface AndroidQueryParams extends BaseQueryParams {
@@ -48,6 +49,7 @@ interface AndroidQueryParams extends BaseQueryParams {
 interface MultiQueryParams extends BaseQueryParams {
   hosts: string[];
   filter_afk: boolean;
+  always_active_pattern: string;
   // This can be used to override params on a per-host basis
   host_params: { [host: string]: DesktopQueryParams | AndroidQueryParams };
 }
@@ -101,7 +103,12 @@ function isMultiParams(object: any): object is MultiQueryParams {
 // Puts it's results in `events` and `not_afk` (if not_afk available for platform).
 export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams): string {
   // Needs escaping for regex patterns like '\w' to work (JSON.stringify adds extra unecessary escaping)
-  const categories_str = JSON.stringify(params.categories).replace(/\\\\/g, '\\');
+  const categories_str = params.categories
+    ? JSON.stringify(params.categories).replace(/\\\\/g, '\\')
+    : '';
+  const always_active_pattern_str = isDesktopParams(params)
+    ? params.always_active_pattern
+    : undefined;
   const cat_filter_str = JSON.stringify(params.filter_categories);
 
   // For simplicity, we assume that bid_window and bid_android are exchangeable (note however it needs special treatment)
@@ -115,7 +122,13 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
     // Fetch not-afk events
     isDesktopParams(params)
       ? `not_afk = flood(query_bucket("${params.bid_afk}"));
-         not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);`
+         not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);` +
+        (always_active_pattern_str
+          ? `not_treat_as_afk = filter_keyvals_regex(events, "app", "${always_active_pattern_str}");
+             not_afk = period_union(not_afk, not_treat_as_afk);
+             not_treat_as_afk = filter_keyvals_regex(events, "title", "${always_active_pattern_str}");
+             not_afk = period_union(not_afk, not_treat_as_afk);`
+          : '')
       : '',
     // Fetch browser events
     isDesktopParams(params) && params.bid_browsers
@@ -222,18 +235,28 @@ const browser_appnames = {
     'Brave-browser',
   ],
   firefox: [
+    // Firefox
     'Firefox',
     'Firefox.exe',
     'firefox',
     'firefox.exe',
+
+    // Firefox Developer
     'Firefox Developer Edition',
     'firefoxdeveloperedition',
+
+    // Pre-releases https://github.com/ActivityWatch/aw-watcher-web/issues/87
     'Firefox-esr',
     'Firefox Beta',
     'Nightly',
-    // From: https://github.com/ActivityWatch/aw-watcher-web/issues/87
     'firefox-aurora',
     'firefox-trunk-dev',
+
+    // Waterfox
+    'Waterfox',
+    'Waterfox.exe',
+    'waterfox',
+    'waterfox.exe',
   ],
   opera: ['opera.exe', 'Opera'],
   brave: ['brave.exe'],
@@ -243,6 +266,7 @@ const browser_appnames = {
     'Microsoft-Edge-Stable', // Arch Linux: https://github.com/ActivityWatch/activitywatch/issues/753
   ],
   vivaldi: ['Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe'],
+  orion: ['Orion'],
 };
 
 // Returns a list of (browserName, bucketId) pairs for found browser buckets
