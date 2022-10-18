@@ -37,7 +37,7 @@ div
 <script>
 import moment from 'moment';
 import _ from 'lodash';
-import { loadClassesForQuery } from '~/util/classes';
+import { useCategoryStore } from '~/stores/categories';
 
 const today = moment().startOf('day');
 const tomorrow = moment(today).add(24, 'hours');
@@ -54,9 +54,9 @@ afk_events = query_bucket(find_bucket("aw-watcher-afk_"));
 window_events = query_bucket(find_bucket("aw-watcher-window_"));
 window_events = filter_period_intersect(window_events, filter_keyvals(afk_events, "status", ["not-afk"]));
 merged_events = merge_events_by_keys(window_events, ["app", "title"]);
-merged_events = categorize(events, __CATEGORIES__);
+merged_events = categorize(merged_events, __CATEGORIES__);
 RETURN = sort_by_duration(merged_events);
-`;
+`.trim();
     }
 
     return {
@@ -82,7 +82,7 @@ RETURN = sort_by_duration(merged_events);
 
       // replace magic string `__CATEGORIES__` in query text with latest category rule
       if (_.includes(query, '__CATEGORIES__')) {
-        const categoryRules = loadClassesForQuery();
+        const categoryRules = useCategoryStore().classes_for_query;
         // const classes_str = JSON.stringify(params.classes).replace(/\\\\/g, '\\');
         query = query.replace('__CATEGORIES__', JSON.stringify(categoryRules));
       }
