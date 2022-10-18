@@ -45,7 +45,7 @@ import _ from 'lodash';
 export default {
   name: 'CategoryEditTree',
   components: {
-    CategoryEditModal: CategoryEditModal,
+    CategoryEditModal,
   },
   props: {
     _class: Object,

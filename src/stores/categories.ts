@@ -55,6 +55,13 @@ export const useCategoryStore = defineStore('categories', {
         (v: string[]) => v.join('>>>>') // Can be any separator that doesn't appear in the category names themselves
       );
     },
+    allCategoriesSelect(): { value: string[]; text: string }[] {
+      const categories = this.all_categories;
+      const entries = categories.map(c => {
+        return { text: c.join(' > '), value: c, id: c.id };
+      });
+      return [{ value: [], text: 'None' }].concat(_.sortBy(entries, 'text'));
+    },
     get_category(this: State) {
       return (category_arr: string[]): Category => {
         if (typeof category_arr === 'string' || category_arr instanceof String)
@@ -154,6 +161,12 @@ export const useCategoryStore = defineStore('categories', {
     },
     removeClass(this: State, classId: number) {
       this.classes = this.classes.filter((c: Category) => c.id !== classId);
+      this.classes_unsaved_changes = true;
+    },
+    appendClassRule(this: State, classId: number, pattern: string) {
+      const cat = this.classes.find((c: Category) => c.id === classId);
+      if (cat.rule.type === 'none') cat.rule = { type: 'regex', regex: '' };
+      cat.rule.regex += '|' + pattern;
       this.classes_unsaved_changes = true;
     },
     restoreDefaultClasses(this: State) {

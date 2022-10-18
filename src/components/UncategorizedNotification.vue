@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  // TODO: Add some way to disable this notification
+  // TODO: Add some way to disable this notification, probably by making the ratio threshold configurable
   b-alert.my-2(v-if="isVisible", variant="info", show)
     p.mb-0
       | #[b High uncategorized time]
@@ -25,7 +25,7 @@ export default {
         : 0;
     },
     isVisible() {
-      return this.ratio > 0.01;
+      return this.ratio > 0.2;
     },
   },
 };
