@@ -200,6 +200,21 @@ export const useActivityStore = defineStore('activity', {
         return _history;
       };
     },
+    uncategorizedDuration(this: State): [number, number] | null {
+      // Returns the uncategorized duration and the total duration
+      if (!this.category.top) {
+        return null;
+      }
+      console.log(this.category.top);
+      const uncategorized = this.category.top.filter(e => {
+        return _.isEqual(e.data['$category'], ['Uncategorized']);
+      });
+      const uncategorized_duration = uncategorized.length > 0 ? uncategorized[0].duration : 0;
+      const total_duration = this.category.top.reduce((acc, e) => {
+        return acc + e.duration;
+      }, 0);
+      return [uncategorized_duration, total_duration];
+    },
   },
 
   actions: {
