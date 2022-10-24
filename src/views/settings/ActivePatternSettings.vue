@@ -62,6 +62,10 @@ export default {
   },
   watch: {
     always_active_pattern_editing: function (value) {
+      if (value == this.always_active_pattern) {
+        return;
+      }
+
       if (
         (value != '' && this.valid) ||
         (value == '' && this.settingsStore.always_active_pattern.length != 0)
