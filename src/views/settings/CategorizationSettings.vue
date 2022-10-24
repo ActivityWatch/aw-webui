@@ -41,8 +41,11 @@ div
 import { mapState, mapGetters } from 'pinia';
 import CategoryEditTree from '~/components/CategoryEditTree.vue';
 import 'vue-awesome/icons/undo';
+import router from '~/route';
 
 import { useCategoryStore } from '~/stores/categories';
+
+const confirmationMessage = 'Your categories have unsaved changes, are you sure you want to leave?';
 
 export default {
   name: 'CategorizationSettings',
@@ -58,6 +61,33 @@ export default {
   },
   mounted() {
     this.categoryStore.load();
+
+    // uses beforeunload event to warn user if they have
+    // unsaved changes and are about to leave the page
+    // also needs to be hooked into the router using the
+    // beforeEach hook
+    window.addEventListener('beforeunload', this.beforeUnload);
+
+    // TODO: How to remove this listener?
+    router.beforeEach((to, from, next) => {
+      try {
+        if (this.classes_unsaved_changes) {
+          if (confirm(confirmationMessage)) {
+            next();
+          } else {
+            next(false);
+          }
+        } else {
+          next();
+        }
+      } catch (e) {
+        console.error('Error in router.beforeEach: ', e);
+        next();
+      }
+    });
+  },
+  beforeDestroy() {
+    window.removeEventListener('beforeunload', this.beforeUnload);
   },
   methods: {
     addClass: function () {
@@ -116,6 +146,14 @@ export default {
 
       // Set import to categories as unsaved changes
       this.categoryStore.import(import_obj.categories);
+    },
+    beforeUnload: function (e) {
+      if (this.classes_unsaved_changes) {
+        e = e || window.event;
+        e.preventDefault();
+        e.returnValue = confirmationMessage;
+        return confirmationMessage;
+      }
     },
   },
 };

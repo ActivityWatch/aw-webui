@@ -23,6 +23,7 @@ div
 </template>
 
 <script>
+import { isRegexBroad, validateRegex } from '~/util/validate';
 import { useSettingsStore } from '~/stores/settings';
 
 export default {
@@ -37,6 +38,9 @@ export default {
     enabled: function () {
       return this.always_active_pattern_editing != '';
     },
+    valid: function () {
+      return validateRegex(this.always_active_pattern_editing);
+    },
     broad_pattern: function () {
       // Check if the pattern matches random strings that we don't expect it to
       // like the alphabet
@@ -44,20 +48,7 @@ export default {
       if (pattern == '') {
         return false;
       }
-      const re = new RegExp(pattern);
-      const alphabet = 'abcdefghijklmnopqrstuvwxyz';
-      const numbers = '0123456789';
-      return re.test(
-        'THIS STRING SHOULD PROBABLY NOT MATCH: ' + alphabet + alphabet.toUpperCase() + numbers
-      );
-    },
-    valid: function () {
-      try {
-        new RegExp(this.always_active_pattern_editing);
-        return true;
-      } catch (e) {
-        return false;
-      }
+      return isRegexBroad(pattern);
     },
     always_active_pattern: {
       get() {
