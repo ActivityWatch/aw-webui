@@ -60,7 +60,7 @@ export const useCategoryStore = defineStore('categories', {
       const entries = categories.map(c => {
         return { text: c.join(' > '), value: c, id: c.id };
       });
-      return [{ value: [], text: 'None' }].concat(_.sortBy(entries, 'text'));
+      return _.sortBy(entries, 'text');
     },
     get_category(this: State) {
       return (category_arr: string[]): Category => {
@@ -165,8 +165,12 @@ export const useCategoryStore = defineStore('categories', {
     },
     appendClassRule(this: State, classId: number, pattern: string) {
       const cat = this.classes.find((c: Category) => c.id === classId);
-      if (cat.rule.type === 'none') cat.rule = { type: 'regex', regex: '' };
-      cat.rule.regex += '|' + pattern;
+      if (cat.rule.type === 'none' || cat.rule.type === null) {
+        cat.rule.type = 'regex';
+        cat.rule.regex = pattern;
+      } else if (cat.rule.type === 'regex') {
+        cat.rule.regex += '|' + pattern;
+      }
       this.classes_unsaved_changes = true;
     },
     restoreDefaultClasses(this: State) {

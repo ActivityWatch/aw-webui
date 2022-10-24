@@ -78,12 +78,21 @@ div
                       @ok="createRuleOk()"
                       @hidden="createRuleCancel()")
 
-  b-modal(id="appendRule" title="Append rule" @ok="appendRuleOk")
-    b-form-group(label="Rule")
-      b-form-select(v-model="append.category")
-        b-form-select-option(v-for="cat in allCategoriesSelect" :value="cat.value" :key="cat.id") {{ cat.text }}
-    b-form-group(label="Word")
-      b-form-input(v-model="append.word")
+  b-modal(id="appendRule" title="Append rule" @ok="handleOk" :ok-disabled="!valid")
+    b-form(ref="form" @submit.stop.prevent="handleSubmit")
+      b-form-group(label="Rule"
+                   label-for="append-category"
+                   invalid-feedback="Category is required"
+                   :state="validCategory"
+                   required)
+        b-form-select#append-category(v-model="append.category")
+          b-form-select-option(v-for="cat in allCategoriesSelect" :value="cat.value" :key="cat.id") {{ cat.text }}
+      b-form-group(label="Word")
+        b-form-input(v-model="append.word")
+        small
+          div(v-if="validPattern" style="color: green") Valid
+          div(v-else style="color: red") Invalid pattern
+          div(v-if="validPattern && broad_pattern" style="color: orange") Pattern too broad
 </template>
 
 <style>
@@ -103,6 +112,7 @@ import { useBucketsStore } from '~/stores/buckets';
 import { canonicalEvents } from '~/queries';
 import { getClient } from '~/util/awclient';
 import CategoryEditModal from '~/components/CategoryEditModal.vue';
+import { isRegexBroad, validateRegex } from '~/util/validate';
 
 export default {
   name: 'aw-category-builder',
@@ -132,9 +142,10 @@ export default {
 
       append: {
         word: '',
-        category: {},
+        category: [],
       },
       create: {
+        word: '',
         categoryId: null,
       },
     };
@@ -145,6 +156,18 @@ export default {
       return Object.values(this.words)
         .sort((a, b) => b.duration - a.duration)
         .filter(word => word.duration > 60);
+    },
+    valid: function () {
+      return this.validPattern && this.validCategory;
+    },
+    validPattern: function () {
+      return validateRegex(this.append.word);
+    },
+    validCategory: function () {
+      return this.append.category.length > 0;
+    },
+    broad_pattern: function () {
+      return isRegexBroad(this.append.word);
     },
   },
   watch: {
@@ -253,7 +276,7 @@ export default {
       console.log('Opening modal for creating rule with word: ' + word);
       this.categoryStore.addClass({
         name: [word],
-        rule: { type: 'regex', regex: word },
+        rule: { type: 'regex', regex: _.escapeRegExp(word) },
       });
 
       // Find the category with the max ID, and open an editor for it
@@ -273,7 +296,7 @@ export default {
     },
     appendRule(word) {
       console.log('Opening modal to append rule with word: ' + word);
-      this.append.word = word;
+      this.append.word = _.escapeRegExp(word);
       this.$bvModal.show('appendRule');
     },
     async appendRuleOk() {
@@ -282,6 +305,28 @@ export default {
       this.categoryStore.appendClassRule(cat.id, this.append.word);
       await this.categoryStore.save();
       this.fetchWords();
+    },
+    handleOk(bvModalEvent) {
+      // Prevent modal from closing (to be closed later in handleSubmit, if validation passes)
+      bvModalEvent.preventDefault();
+
+      // Trigger submit handler
+      this.handleSubmit(bvModalEvent);
+    },
+    handleSubmit(e) {
+      // Exit when the form isn't valid
+      if (!this.valid) {
+        //console.log(e);
+        e.preventDefault();
+        return;
+      }
+
+      // Hide the modal manually
+      this.$nextTick(() => {
+        this.$bvModal.hide('appendRule');
+      });
+
+      this.appendRuleOk();
     },
   },
 };

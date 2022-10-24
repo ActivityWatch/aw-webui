@@ -176,6 +176,11 @@ export function cleanCategory(cat: Category): Category {
   delete cat.subname;
   delete cat.name_pretty;
   delete cat.depth;
+  // in an older version, type could be null (which is not allowed)
+  // we also want to strip any excess properties that may have belonged to another rule type
+  if (cat.rule && (cat.rule.type === null || cat.rule.type === 'none')) {
+    cat.rule = { type: 'none' };
+  }
   return cat;
 }
 

@@ -16,8 +16,15 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
     div(v-if="editing.rule.type === 'regex'")
       b-input-group.my-1(prepend="Pattern")
         b-form-input(v-model="editing.rule.regex")
-      b-form-checkbox(v-model="editing.rule.ignore_case" switch)
-        | Ignore case
+      div.d-flex
+        div.flex-grow-1
+          b-form-checkbox(v-model="editing.rule.ignore_case" switch)
+            | Ignore case
+        div.flex-grow-1
+          small.text-right
+            //div(v-if="valid" style="color: green") Valid
+            div(v-if="!validPattern" style="color: red") Invalid pattern
+            div(v-if="validPattern && broad_pattern" style="color: orange") Pattern too broad
 
   hr
   div.my-1
@@ -46,6 +53,7 @@ import _ from 'lodash';
 import ColorPicker from '~/components/ColorPicker';
 import { useCategoryStore } from '~/stores/categories';
 import { mapState } from 'pinia';
+import { validateRegex, isRegexBroad } from '~/util/validate';
 
 import 'vue-awesome/icons/trash';
 
@@ -73,14 +81,23 @@ export default {
   },
   computed: {
     ...mapState(useCategoryStore, {
-      allCategories: state => state.allCategoriesSelect,
+      allCategories: state => [{ value: [], text: 'None' }].concat(state.allCategoriesSelect),
     }),
     allRuleTypes: function () {
       return [
-        { value: null, text: 'None' },
+        { value: 'none', text: 'None' },
         { value: 'regex', text: 'Regular Expression' },
         //{ value: 'glob', text: 'Glob pattern' },
       ];
+    },
+    valid: function () {
+      return this.editing.rule.type !== 'none' && this.validPattern;
+    },
+    validPattern: function () {
+      return this.editing.rule.type === 'regex' && validateRegex(this.editing.rule.regex || '');
+    },
+    broad_pattern: function () {
+      return this.editing.rule.type === 'regex' && isRegexBroad(this.editing.rule.regex || '');
     },
   },
   watch: {
@@ -128,7 +145,7 @@ export default {
       const new_class = {
         id: this.editing.id,
         name: this.editing.parent.concat(this.editing.name),
-        rule: this.editing.rule.type !== null ? this.editing.rule : { type: null },
+        rule: this.editing.rule.type !== 'none' ? this.editing.rule : { type: 'none' },
         data: { color: this.editing.inherit_color === true ? undefined : this.editing.color },
       };
       this.categoryStore.updateClass(new_class);
