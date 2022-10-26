@@ -11,8 +11,12 @@ else
 androidflag :=
 endif
 
-build: install
+build: install static/logo.png static/logo.svg
 	npm run build ${androidflag}
+
+static/logo.%: media/logo/logo.%
+	@mkdir -p static
+	cp $< $@
 
 install:
 	npm ci

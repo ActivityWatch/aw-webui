@@ -1,0 +1,3 @@
+[submodule "media"]
+	path = media
+	url = https://github.com/ActivityWatch/media.git
