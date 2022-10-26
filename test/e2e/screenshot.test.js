@@ -43,11 +43,11 @@ async function waitForLoading(t) {
 }
 
 async function checkNoError(t) {
-  const $error = Selector('div').withText(/[Ee]rror/g);
+  const $error = Selector('div.alert').withText(/[Ee]rror/g);
   try {
     await t.expect(await $error.count).eql(0);
   } catch (e) {
-    console.log('Errors found: ' + $error);
+    console.log('Errors found: ' + (await $error.textContent));
     throw e;
   }
 }
