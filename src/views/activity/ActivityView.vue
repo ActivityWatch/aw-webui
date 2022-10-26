@@ -2,7 +2,7 @@
 div(v-if="view")
   draggable.row(v-model="elements" handle=".handle")
     // TODO: Handle large/variable sized visualizations better
-    div.col-md-6.col-lg-4.p-3(v-for="el, index in elements", :key="index", :class="{'col-md-12': isVisLarge(el), 'col-lg-8': isVisLarge(el)}")
+    div.col-md-6.col-lg-4.p-3(v-for="el, index in elements", :key="index", :class="{'col-md-12': isVisLarge(el), 'col-lg-12': isVisLarge(el)}")
       aw-selectable-vis(:id="index" :type="el.type" :props="el.props" @onTypeChange="onTypeChange" @onRemove="onRemove" :editable="editing")
 
     div.col-md-6.col-lg-4.p-3(v-if="editing")
@@ -120,7 +120,7 @@ export default {
       await useViewsStore().removeVisualization({ view_id: this.view.id, el_id: id });
     },
     isVisLarge(el) {
-      return el.type == 'sunburst_clock';
+      return el.type == 'sunburst_clock' || el.type == 'vis_timeline';
     },
   },
 };
