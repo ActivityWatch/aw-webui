@@ -85,11 +85,11 @@ fixture(`Activity view`).page(`${baseURL}/#/activity/fakedata`);
 test('Screenshot the activity view', async t => {
   await hide_devonly(t);
   await waitForLoading(t);
-  await checkNoError(t);
   await t.takeScreenshot({
     path: 'activity.png',
     fullPage: true,
   });
+  await checkNoError(t);
 
   // TODO: resize to mobile size and take another screenshot
 });
@@ -102,7 +102,6 @@ const durationOption = durationSelect.find('option');
 test('Screenshot the timeline view', async t => {
   await hide_devonly(t);
   await waitForLoading(t);
-  await checkNoError(t);
   await t
     .click(durationSelect)
     .click(durationOption.withText('12h'))
@@ -113,6 +112,7 @@ test('Screenshot the timeline view', async t => {
     path: 'timeline.png',
     fullPage: true,
   });
+  await checkNoError(t);
 });
 
 fixture(`Buckets view`).page(`${baseURL}/#/buckets/`);
@@ -120,22 +120,22 @@ fixture(`Buckets view`).page(`${baseURL}/#/buckets/`);
 test('Screenshot the buckets view', async t => {
   await hide_devonly(t);
   await t.wait(1000);
-  await checkNoError(t);
   await t.takeScreenshot({
     path: 'buckets.png',
     fullPage: true,
   });
+  await checkNoError(t);
 });
 
 fixture(`Setting view`).page(`${baseURL}/#/settings/`);
 
 test('Screenshot the settings view', async t => {
   await hide_devonly(t);
-  await checkNoError(t);
   await t.takeScreenshot({
     path: 'settings.png',
     fullPage: true,
   });
+  await checkNoError(t);
 });
 
 fixture(`Stopwatch view`).page(`${baseURL}/#/stopwatch/`);
@@ -143,9 +143,9 @@ fixture(`Stopwatch view`).page(`${baseURL}/#/stopwatch/`);
 test('Screenshot the stopwatch view', async t => {
   await hide_devonly(t);
   await waitForLoading(t);
-  await checkNoError(t);
   await t.takeScreenshot({
     path: 'stopwatch.png',
     fullPage: true,
   });
+  await checkNoError(t);
 });
