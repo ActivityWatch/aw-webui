@@ -124,11 +124,14 @@ jobs:
           npm run serve &
           sleep 3  # give a few seconds
     - name: Run e2e tests with testcafe
+      id: e2e
       uses: DevExpress/testcafe-action@latest
       with:
         # NOTE: --skip-js-errors should be removed when things work properly
         args: "--skip-js-errors chrome test/e2e/"
     - name: Move screenshots to subdir
+      # Run this step even if e2e tests flag failure
+      if: ${{ success() || steps.e2e.conclusion == 'failure'}}
       env:
         aw_server: ${{ matrix.aw-server }}
         aw_version: ${{ matrix.aw-version }}
@@ -136,6 +139,7 @@ jobs:
         mkdir -p screenshots/dist/$aw_server/$aw_version
         mv screenshots/*.png screenshots/dist/$aw_server/$aw_version
     - name: Upload screenshots
+      if: ${{ success() || steps.e2e.conclusion == 'failure'}}
       uses: actions/upload-artifact@v2-preview
       with:
         name: screenshots
