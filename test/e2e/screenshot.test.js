@@ -44,6 +44,32 @@ async function waitForLoading(t) {
   console.log('Loading is gone!');
 }
 
+async function waitIndefinitelyForLoading(t) {
+  // Waits for all "Loading..." texts to disappear from page, indefinitely
+  let $loading;
+  let matches = 1;
+
+  console.log('Waiting indefinitely for loading to disappear...');
+  const start = new Date();
+  do {
+    $loading = Selector('.aw-loading, text', { timeout: 500 }).withText(/Loading[.]{3}/g);
+
+    // Useful for debugging:
+    matches = await $loading.count;
+    if (matches > 0) {
+      // console.log(
+      //   `Found ${matches} loading element with contents - "${await $loading.textContent}"`
+      // );
+      process.stdout.write('.');
+      await t.wait(500);
+    }
+  } while (matches >= 1);
+  const end = new Date();
+
+  await t.wait(500); // wait an extra 500ms, just in case a visualization is still rendering
+  console.log(`Loading is gone! Total wait time = ${(end - start).toString()}ms`);
+}
+
 async function checkNoError(t) {
   const $error = Selector('div.alert').withText(/[Ee]rror/g);
   try {
@@ -107,7 +133,7 @@ test('Screenshot the timeline view', async t => {
     path: 'timeline-initial.png',
     fullPage: true,
   });
-  await waitForLoading(t);
+  await waitIndefinitelyForLoading(t);
   await t
     .click(durationSelect)
     .click(durationOption.withText('12h'))
