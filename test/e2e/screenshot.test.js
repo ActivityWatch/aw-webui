@@ -51,27 +51,6 @@ async function waitForLoading(t) {
   console.log('Loading is gone!');
 }
 
-/* async function waitIndefinitelyForLoading(t) {
-  // Waits for all "Loading..." texts to disappear from page, indefinitely
-  let $loading;
-
-  console.log('Waiting indefinitely for loading to disappear...');
-  const start = new Date();
-  do {
-    $loading = await Selector('.aw-loading, text', { timeout: 500 }).withText(/Loading[.]{3}/g)();
-
-    // Useful for debugging:
-    if ($loading) {
-      process.stdout.write('.');
-      await t.wait(500);
-    }
-  } while ($loading);
-  const end = new Date();
-
-  await t.wait(500); // wait an extra 500ms, just in case a visualization is still rendering
-  console.log(`Loading is gone! Total wait time = ${(end - start).toString()}ms`);
-} */
-
 async function checkNoError(t) {
   const $error = Selector('div.alert').withText(/[Ee]rror/g);
   try {
@@ -110,7 +89,7 @@ test('Screenshot the home view', async t => {
   });
 });
 
-fixture(`Activity view`).page(`${baseURL}/#/activity/fakedata`);
+fixture(`Activity view`).page(`${baseURL}/#/activity/fakedata`).requestHooks(HTTPLogger);
 
 test('Screenshot the activity view', async t => {
   await hide_devonly(t);
@@ -149,7 +128,7 @@ test('Screenshot the timeline view', async t => {
   await checkNoError(t);
 });
 
-fixture(`Buckets view`).page(`${baseURL}/#/buckets/`);
+fixture(`Buckets view`).page(`${baseURL}/#/buckets/`).requestHooks(HTTPLogger);
 
 test('Screenshot the buckets view', async t => {
   await hide_devonly(t);
@@ -161,7 +140,7 @@ test('Screenshot the buckets view', async t => {
   await checkNoError(t);
 });
 
-fixture(`Setting view`).page(`${baseURL}/#/settings/`);
+fixture(`Setting view`).page(`${baseURL}/#/settings/`).requestHooks(HTTPLogger);
 
 test('Screenshot the settings view', async t => {
   await hide_devonly(t);
@@ -172,7 +151,7 @@ test('Screenshot the settings view', async t => {
   await checkNoError(t);
 });
 
-fixture(`Stopwatch view`).page(`${baseURL}/#/stopwatch/`);
+fixture(`Stopwatch view`).page(`${baseURL}/#/stopwatch/`).requestHooks(HTTPLogger);
 
 test('Screenshot the stopwatch view', async t => {
   await hide_devonly(t);
