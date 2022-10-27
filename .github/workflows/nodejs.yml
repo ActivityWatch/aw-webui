@@ -130,6 +130,13 @@ jobs:
       with:
         # NOTE: --skip-js-errors should be removed when things work properly
         args: "--skip-js-errors chrome test/e2e/"
+    - name: Print server logs to console
+      if: ${{ always() }}
+      enc:
+        aw_server: ${{ matrix.aw-server }}
+      bash:
+        cat ~/.cache/activitywatch/log/*
+    
     - name: Move screenshots to subdir
       # Run this step even if e2e tests flag failure
       if: ${{ success() || steps.e2e.conclusion == 'failure'}}
