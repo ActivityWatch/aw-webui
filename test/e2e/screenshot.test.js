@@ -18,17 +18,15 @@ async function waitForLoading(t) {
   // Waits for all "Loading..." texts to disappear from page.
   // If it takes longer than 10s, it will fail.
   let $loading;
-  let matches = 1;
 
   console.log('Waiting for loading to disappear...');
   const start = new Date();
   do {
-    $loading = await Selector('.aw-loading, text', { timeout: 500 }).withText(/Loading[.]{3}/g);
+    $loading = await Selector('.aw-loading, text', { timeout: 500 }).withText(/Loading[.]{3}/g)();
 
     // Useful for debugging:
-    matches = $loading.count;
-    if (matches > 0) {
-      console.log(`Found ${matches} loading element with contents - "${$loading.textContent}"`); //: ${await $loading.innerText}`);
+    if ($loading) {
+      console.log(`Found loading element with contents - "${$loading.textContent}"`);
 
       // If taking >20s, throw an error
       if (new Date() - start > 20000) {
@@ -36,7 +34,7 @@ async function waitForLoading(t) {
       }
       await t.wait(500);
     }
-  } while (matches >= 1);
+  } while ($loading);
 
   await t.wait(500); // wait an extra 500ms, just in case a visualization is still rendering
   console.log('Loading is gone!');
@@ -45,23 +43,18 @@ async function waitForLoading(t) {
 async function waitIndefinitelyForLoading(t) {
   // Waits for all "Loading..." texts to disappear from page, indefinitely
   let $loading;
-  let matches = 1;
 
   console.log('Waiting indefinitely for loading to disappear...');
   const start = new Date();
   do {
-    $loading = await Selector('.aw-loading, text', { timeout: 500 }).withText(/Loading[.]{3}/g);
+    $loading = await Selector('.aw-loading, text', { timeout: 500 }).withText(/Loading[.]{3}/g)();
 
     // Useful for debugging:
-    matches = $loading.count;
-    if (matches > 0) {
-      // console.log(
-      //   `Found ${matches} loading element with contents - "${await $loading.textContent}"`
-      // );
+    if ($loading) {
       process.stdout.write('.');
       await t.wait(500);
     }
-  } while (matches >= 1);
+  } while ($loading);
   const end = new Date();
 
   await t.wait(500); // wait an extra 500ms, just in case a visualization is still rendering
