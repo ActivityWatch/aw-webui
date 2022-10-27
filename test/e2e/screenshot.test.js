@@ -23,14 +23,12 @@ async function waitForLoading(t) {
   console.log('Waiting for loading to disappear...');
   const start = new Date();
   do {
-    $loading = Selector('.aw-loading, text', { timeout: 500 }).withText(/Loading[.]{3}/g);
+    $loading = await Selector('.aw-loading, text', { timeout: 500 }).withText(/Loading[.]{3}/g);
 
     // Useful for debugging:
-    matches = await $loading.count;
+    matches = $loading.count;
     if (matches > 0) {
-      console.log(
-        `Found ${matches} loading element with contents - "${await $loading.textContent}"`
-      ); //: ${await $loading.innerText}`);
+      console.log(`Found ${matches} loading element with contents - "${$loading.textContent}"`); //: ${await $loading.innerText}`);
 
       // If taking >20s, throw an error
       if (new Date() - start > 20000) {
@@ -52,10 +50,10 @@ async function waitIndefinitelyForLoading(t) {
   console.log('Waiting indefinitely for loading to disappear...');
   const start = new Date();
   do {
-    $loading = Selector('.aw-loading, text', { timeout: 500 }).withText(/Loading[.]{3}/g);
+    $loading = await Selector('.aw-loading, text', { timeout: 500 }).withText(/Loading[.]{3}/g);
 
     // Useful for debugging:
-    matches = await $loading.count;
+    matches = $loading.count;
     if (matches > 0) {
       // console.log(
       //   `Found ${matches} loading element with contents - "${await $loading.textContent}"`
