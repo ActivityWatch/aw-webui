@@ -5,6 +5,10 @@
 import { Selector } from 'testcafe';
 import { RequestLogger } from 'testcafe';
 
+const MAX_REFRESH = 2; // the max number of times to refresh if "Loading..." dosent go away
+const REFRESH_TIMEPERIOD = 5000; //ms - refresh page after waiting for this amount of ms for "Loading..." to dissapear
+const MAX_WAIT_TIME = 20000; //ms - max time to wait for "Loading..." to dissapear after all refreshes
+
 const baseURL = 'http://127.0.0.1:27180';
 const HTTPLogger = RequestLogger(/^(?:(?!\.js|\.css|\.png|\.woff2).)+$/, {
   logRequestHeaders: true,
@@ -26,10 +30,11 @@ async function hide_devonly(t) {
 async function waitForLoading(t) {
   // Waits for all "Loading..." texts to disappear from page.
   // If it takes longer than 10s, it will fail.
-  let $loading;
+  let $loading,
+    refresh_count = 0;
 
   console.log('Waiting for loading to disappear...');
-  const start = new Date();
+  let start = new Date();
   do {
     $loading = await Selector('.aw-loading, text', { timeout: 500 }).withText(/Loading[.]{3}/g)();
 
@@ -37,13 +42,15 @@ async function waitForLoading(t) {
     if ($loading) {
       console.log(`Found loading element with contents - "${$loading.textContent}"`);
 
-      if (new Date() - start > 10000) {
+      if (new Date() - start > REFRESH_TIMEPERIOD && refresh_count < MAX_REFRESH) {
         console.log('Refreshing page....');
         await t.eval(() => location.reload(true));
+        refresh_count++;
+        start = new Date();
       }
 
       // If taking >20s, throw an error
-      if (new Date() - start > 20000) {
+      if (new Date() - start > MAX_WAIT_TIME && refresh_count >= MAX_REFRESH) {
         console.log(await t.getBrowserConsoleMessages());
         console.log(JSON.stringify(HTTPLogger.requests, null, '\t'));
         throw new Error('Timeout while waiting for loading to disappear');
