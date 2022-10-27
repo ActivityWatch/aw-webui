@@ -37,6 +37,11 @@ async function waitForLoading(t) {
     if ($loading) {
       console.log(`Found loading element with contents - "${$loading.textContent}"`);
 
+      if (new Date() - start > 10000) {
+        console.log('Refreshing page....');
+        await t.eval(() => location.reload(true));
+      }
+
       // If taking >20s, throw an error
       if (new Date() - start > 20000) {
         console.log(await t.getBrowserConsoleMessages());
@@ -93,7 +98,9 @@ test('Screenshot the home view', async t => {
 
 fixture(`Activity view`).page(`${baseURL}/#/activity/fakedata`).requestHooks(HTTPLogger);
 
-test('Screenshot the activity view', async t => {
+test.clientScripts({
+  content: logJsErrorCode,
+})('Screenshot the activity view', async t => {
   await hide_devonly(t);
   await waitForLoading(t);
   await t.takeScreenshot({
@@ -132,13 +139,15 @@ test.clientScripts({
   await checkNoError(t);
 
   // Debugging
-  console.log(await t.getBrowserConsoleMessages());
-  console.log(JSON.stringify(HTTPLogger.requests, null, '\t'));
+  // console.log(await t.getBrowserConsoleMessages());
+  // console.log(JSON.stringify(HTTPLogger.requests, null, '\t'));
 });
 
 fixture(`Buckets view`).page(`${baseURL}/#/buckets/`).requestHooks(HTTPLogger);
 
-test('Screenshot the buckets view', async t => {
+test.clientScripts({
+  content: logJsErrorCode,
+})('Screenshot the buckets view', async t => {
   await hide_devonly(t);
   await t.wait(1000);
   await t.takeScreenshot({
@@ -150,7 +159,9 @@ test('Screenshot the buckets view', async t => {
 
 fixture(`Setting view`).page(`${baseURL}/#/settings/`).requestHooks(HTTPLogger);
 
-test('Screenshot the settings view', async t => {
+test.clientScripts({
+  content: logJsErrorCode,
+})('Screenshot the settings view', async t => {
   await hide_devonly(t);
   await t.takeScreenshot({
     path: 'settings.png',
@@ -161,7 +172,9 @@ test('Screenshot the settings view', async t => {
 
 fixture(`Stopwatch view`).page(`${baseURL}/#/stopwatch/`).requestHooks(HTTPLogger);
 
-test('Screenshot the stopwatch view', async t => {
+test.clientScripts({
+  content: logJsErrorCode,
+})('Screenshot the stopwatch view', async t => {
   await hide_devonly(t);
   await waitForLoading(t);
   await t.takeScreenshot({
