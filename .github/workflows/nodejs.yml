@@ -131,14 +131,6 @@ jobs:
       with:
         # NOTE: --skip-js-errors should be removed when things work properly
         args: "--skip-js-errors chrome test/e2e/"
-    - name: Print server logs to console
-      if: ${{ always() }}
-      # env:
-      #   aw_server: ${{ matrix.aw-server }}
-      shell: bash
-      run:
-        for file in ~/.cache/activitywatch/log/*/*.log; do echo $file; cat $file; echo; done
-    
     - name: Move screenshots to subdir
       # Run this step even if e2e tests flag failure
       if: ${{ success() || steps.e2e.conclusion == 'failure'}}
@@ -154,3 +146,25 @@ jobs:
       with:
         name: screenshots
         path: screenshots/dist/*
+    - name: Print server logs to console
+      if: ${{ always() }}
+      # env:
+      #   aw_server: ${{ matrix.aw-server }}
+      shell: bash
+      run:
+        for file in ~/.cache/activitywatch/log/*/*.log; do echo $file; cat $file; echo; done
+    - name: Move logs to subdir
+      # Run this step even if e2e tests flag failure
+      if: ${{ always() }}
+      env:
+        aw_server: ${{ matrix.aw-server }}
+        aw_version: ${{ matrix.aw-version }}
+      run: |
+        mkdir -p logs/dist/$aw_server/$aw_version
+        mv ~/.cache/activitywatch/log/*/*.log logs/dist/$aw_server/$aw_version
+    - name: Upload logs
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v2-preview
+      with:
+        name: logs
+        path: logs/dist/*
