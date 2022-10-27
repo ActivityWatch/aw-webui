@@ -122,7 +122,7 @@ test('Screenshot the timeline view', async t => {
     .eql('43200');
 
   await t.takeScreenshot({
-    path: 'timeline-12h.png',
+    path: 'timeline.png',
     fullPage: true,
   });
   await checkNoError(t);
