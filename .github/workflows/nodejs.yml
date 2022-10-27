@@ -102,9 +102,8 @@ jobs:
     - name: Install and run aw-server-rust nightly
       if: ${{ matrix.aw-server == 'aw-server-rust' && matrix.aw-version == 'master' }}
       run: |
-        chmod +x ./aw-server-rust/debug/aw-server
-        set LOG_LEVEL=debug
-        ./aw-server-rust/debug/aw-server --testing &
+        chmod +x ./aw-server-rust/debug/aw-server        
+        LOG_LEVEL=debug ./aw-server-rust/debug/aw-server --testing &
 
     - name: Insert fake data into aw-server
       run: |
