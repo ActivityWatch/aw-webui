@@ -126,6 +126,10 @@ test('Screenshot the timeline view', async t => {
     fullPage: true,
   });
   await checkNoError(t);
+
+  // Debugging
+  console.log(await t.getBrowserConsoleMessages());
+  console.log(JSON.stringify(HTTPLogger.requests, null, '\t'));
 });
 
 fixture(`Buckets view`).page(`${baseURL}/#/buckets/`).requestHooks(HTTPLogger);
