@@ -3,8 +3,17 @@
 /* eslint jest/expect-expect: "off" */
 
 import { Selector } from 'testcafe';
+import { RequestLogger } from 'testcafe';
 
 const baseURL = 'http://127.0.0.1:27180';
+const HTTPLogger = RequestLogger(/^(?:(?!\.js|\.css|\.png|\.woff2).)+$/, {
+  logRequestHeaders: true,
+  logResponseHeaders: true,
+  logRequestBody: true,
+  logResponseBody: true,
+  stringifyRequestBody: true,
+  stringifyResponseBody: true,
+});
 
 async function hide_devonly(t) {
   // Hide all devonly-elements
@@ -30,6 +39,8 @@ async function waitForLoading(t) {
 
       // If taking >20s, throw an error
       if (new Date() - start > 20000) {
+        console.log(await t.getBrowserConsoleMessages());
+        console.log(JSON.stringify(HTTPLogger.requests, null, '\t'));
         throw new Error('Timeout while waiting for loading to disappear');
       }
       await t.wait(500);
@@ -40,7 +51,7 @@ async function waitForLoading(t) {
   console.log('Loading is gone!');
 }
 
-async function waitIndefinitelyForLoading(t) {
+/* async function waitIndefinitelyForLoading(t) {
   // Waits for all "Loading..." texts to disappear from page, indefinitely
   let $loading;
 
@@ -59,7 +70,7 @@ async function waitIndefinitelyForLoading(t) {
 
   await t.wait(500); // wait an extra 500ms, just in case a visualization is still rendering
   console.log(`Loading is gone! Total wait time = ${(end - start).toString()}ms`);
-}
+} */
 
 async function checkNoError(t) {
   const $error = Selector('div.alert').withText(/[Ee]rror/g);
@@ -113,7 +124,7 @@ test('Screenshot the activity view', async t => {
   // TODO: resize to mobile size and take another screenshot
 });
 
-fixture(`Timeline view`).page(`${baseURL}/#/timeline`);
+fixture(`Timeline view`).page(`${baseURL}/#/timeline`).requestHooks(HTTPLogger);
 
 const durationSelect = Selector('select#duration');
 const durationOption = durationSelect.find('option');
@@ -124,7 +135,7 @@ test('Screenshot the timeline view', async t => {
     path: 'timeline-initial.png',
     fullPage: true,
   });
-  await waitIndefinitelyForLoading(t);
+  await waitForLoading(t);
   await t
     .click(durationSelect)
     .click(durationOption.withText('12h'))
