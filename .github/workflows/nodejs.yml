@@ -132,9 +132,10 @@ jobs:
         args: "--skip-js-errors chrome test/e2e/"
     - name: Print server logs to console
       if: ${{ always() }}
-      enc:
-        aw_server: ${{ matrix.aw-server }}
-      bash:
+      # env:
+      #   aw_server: ${{ matrix.aw-server }}
+      shell: bash
+      run:
         cat ~/.cache/activitywatch/log/*
     
     - name: Move screenshots to subdir
