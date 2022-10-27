@@ -61,15 +61,17 @@ async function checkNoError(t) {
   }
 }
 
+const logJsErrorCode = `
+  window.addEventListener('error', function (e) {
+      console.error(e.message);
+  });`;
+
 fixture(`Home view`).page(baseURL);
 
 // Log JS errors even if --skip-js-errors is given
 // From: https://stackoverflow.com/a/59856422/965332
 test.clientScripts({
-  content: `
-        window.addEventListener('error', function (e) {
-            console.error(e.message);
-        });`,
+  content: logJsErrorCode,
 })(`Skip error but log it`, async t => {
   console.log(await t.getBrowserConsoleMessages());
 });
@@ -108,7 +110,9 @@ fixture(`Timeline view`).page(`${baseURL}/#/timeline`).requestHooks(HTTPLogger);
 const durationSelect = Selector('select#duration');
 const durationOption = durationSelect.find('option');
 
-test('Screenshot the timeline view', async t => {
+test.clientScripts({
+  content: logJsErrorCode,
+})('Screenshot the timeline view', async t => {
   await hide_devonly(t);
   await t.takeScreenshot({
     path: 'timeline-initial.png',
