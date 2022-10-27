@@ -28,7 +28,9 @@ async function waitForLoading(t) {
     // Useful for debugging:
     matches = await $loading.count;
     if (matches > 0) {
-      console.log(`Found ${matches} loading element with contents`); //: ${await $loading.innerText}`);
+      console.log(
+        `Found ${matches} loading element with contents - "${await $loading.textContent}"`
+      ); //: ${await $loading.innerText}`);
 
       // If taking >20s, throw an error
       if (new Date() - start > 20000) {
@@ -101,6 +103,10 @@ const durationOption = durationSelect.find('option');
 
 test('Screenshot the timeline view', async t => {
   await hide_devonly(t);
+  await t.takeScreenshot({
+    path: 'timeline-initial.png',
+    fullPage: true,
+  });
   await waitForLoading(t);
   await t
     .click(durationSelect)
@@ -109,7 +115,7 @@ test('Screenshot the timeline view', async t => {
     .eql('43200');
 
   await t.takeScreenshot({
-    path: 'timeline.png',
+    path: 'timeline-12h.png',
     fullPage: true,
   });
   await checkNoError(t);
