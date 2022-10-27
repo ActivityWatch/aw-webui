@@ -33,7 +33,7 @@ async function waitForLoading(t) {
       ); //: ${await $loading.innerText}`);
 
       // If taking >20s, throw an error
-      if (new Date() - start > 20000) {
+      if (new Date() - start > 40000) {
         throw new Error('Timeout while waiting for loading to disappear');
       }
       await t.wait(500);
