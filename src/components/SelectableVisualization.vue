@@ -287,9 +287,14 @@ export default {
     timeline_daterange: async function () {
       await this.getTimelineBuckets();
     },
+    type: async function (newType) {
+      if (newType == 'vis_timeline') await this.getTimelineBuckets();
+    },
   },
   mounted: async function () {
-    await this.getTimelineBuckets();
+    if (this.type == 'vis_timeline') {
+      await this.getTimelineBuckets();
+    }
   },
   methods: {
     getTimelineBuckets: async function () {
