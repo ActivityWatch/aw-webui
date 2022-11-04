@@ -31,7 +31,7 @@ test:
 	npm test
 
 test-e2e:
-	npx testcafe firefox test/e2e/ -s takeOnFails=true
+	npx testcafe chrome test/e2e/ -s takeOnFails=true
 
 typing-coverage:
 	npx typescript-coverage-report
