@@ -36,15 +36,15 @@ div
 
   hr
 
+  h5 Common words in "{{category.join(" > ")}}" events
   div(v-if="loading")
     | Loading...
   div(v-else)
-    div(v-if="words.length == 0")
-      | No events found.
+    div(v-if="words_by_duration.length == 0")
+      | No words with significant duration. You're good to go!
     div(v-else)
-      h5 Common words in "{{category.join(" > ")}}"
       div.row(v-for="word in words_by_duration")
-        div.col(v-if="!ignored_words.includes(word.word)").hover-highlight
+        div.col.hover-highlight
           div.d-flex.flex-row.py-2
             div.flex-grow-1
               | {{ word.word }} ({{ Math.round(word.duration) }}s)
@@ -155,7 +155,8 @@ export default {
     words_by_duration: function () {
       return Object.values(this.words)
         .sort((a, b) => b.duration - a.duration)
-        .filter(word => word.duration > 60);
+        .filter(word => word.duration > 60)
+        .filter(word => !this.ignored_words.includes(word.word));
     },
     valid: function () {
       return this.validPattern && this.validCategory;
