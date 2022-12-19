@@ -24,14 +24,14 @@ export interface Category {
   children?: Category[];
 }
 
-// https://colorhunt.co/palette/4802
-const COLOR_GREEN = '#96cd39',
+const COLOR_GREEN = '#0F0',
   COLOR_SUPER_GREEN = '#54e346',
   COLOR_BRIGHT_GREEN = '#A8FC00',
   COLOR_UNCAT = '#CCC',
+  COLOR_YELLOW = '#FCC400',
   COLOR_SLIGHTLY_YELLOW = '#f5ff65',
   COLOR_ORANGE = '#ffba47',
-  COLOR_RED = '#ff5b44';
+  COLOR_RED = '#F80';
 
 // The default categories
 // Should be run through createMissingParents before being used in most cases.
@@ -108,7 +108,7 @@ export const defaultCategories: Category[] = [
       regex: 'reddit|Facebook|Twitter|Instagram|devRant|LinkedIn',
       ignore_case: true,
     },
-    data: { color: COLOR_RED },
+    data: { color: COLOR_YELLOW },
   },
   {
     name: ['Media', 'Podcasts'],
