@@ -84,7 +84,7 @@ RETURN = sort_by_duration(merged_events);
       if (_.includes(query, '__CATEGORIES__')) {
         const categoryRules = useCategoryStore().classes_for_query;
 
-        if(useCategoryStore().classes_for_query.length === 0) {
+        if (useCategoryStore().classes_for_query.length === 0) {
           this.error = '__CATEGORIES__ was used in query but no categories have been defined yet.';
           return;
         }
