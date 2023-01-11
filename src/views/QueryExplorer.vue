@@ -83,7 +83,12 @@ RETURN = sort_by_duration(merged_events);
       // replace magic string `__CATEGORIES__` in query text with latest category rule
       if (_.includes(query, '__CATEGORIES__')) {
         const categoryRules = useCategoryStore().classes_for_query;
-        // const classes_str = JSON.stringify(params.classes).replace(/\\\\/g, '\\');
+
+        if (useCategoryStore().classes_for_query.length === 0) {
+          this.error = '__CATEGORIES__ was used in query but no categories have been defined yet.';
+          return;
+        }
+
         query = query.replace('__CATEGORIES__', JSON.stringify(categoryRules));
       }
 
