@@ -18,6 +18,11 @@ export default {
     // console.error("Error captured!");
     // console.error(err, vm, info);
 
+    // Ignore request cancellation errors
+    if (err.code === 'ERR_CANCELED') {
+      return;
+    }
+
     // fallback
     let msg = err;
     // use server error response if available; err.isAxiosError doesn't help much here…
