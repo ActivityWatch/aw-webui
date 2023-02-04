@@ -264,6 +264,7 @@ const browser_appnames = {
     'msedge.exe', // Windows
     'Microsoft Edge', // macOS
     'Microsoft-Edge-Stable', // Arch Linux: https://github.com/ActivityWatch/activitywatch/issues/753
+    'Microsoft-edge',
   ],
   vivaldi: ['Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe'],
   orion: ['Orion'],
