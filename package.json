@@ -105,7 +105,7 @@
     "function-bind": "^1.0.2",
     "html-loader": "^0.5.5",
     "html-webpack-plugin": "^5.5.0",
-    "http-proxy-middleware": "^0.18.0",
+    "http-proxy-middleware": "^2.0.6",
     "json-loader": "^0.5.7",
     "lodash": "^4.17.19",
     "moment": "^2.29.4",
