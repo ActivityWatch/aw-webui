@@ -8,7 +8,7 @@ A web-based UI for ActivityWatch, built with Vue.js
 
 ## Getting started
 
-Getting started with setting up the development environment is pretty straight forward:
+Getting started with setting up the development environment is pretty straightforward:
 
 ```bash
 # Start an instance of aw-server running in testing mode (on port 5666, with a separate database),
@@ -63,7 +63,7 @@ Once you've put the files in the directories, you may have to do a hard refresh 
 
 ### Using your main install's data
 
-If you want to actively iterate on `aw-webui` with your local production data (with your production server running), you'll want to use a development build, automatically update it, and connect to your production data. To do this, in `aw-webui` soruce directory, in one terminal window run:
+If you want to actively iterate on `aw-webui` with your local production data (with your production server running), you'll want to use a development build, automatically update it, and connect to your production data. To do this, in `aw-webui` source directory, in one terminal window run:
 
 ```bash
 AW_SERVER_URL="'http://localhost:5600'" npx vue-cli-service build --watch --dest=../aw-server/static
