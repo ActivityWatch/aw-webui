@@ -92,7 +92,7 @@
     "babel-plugin-lodash": "^3.3.4",
     "connect-history-api-fallback": "^1.5.0",
     "copy-webpack-plugin": "^5.1.1",
-    "crypto-js": "^3.3.0",
+    "crypto-js": "^4.1.1",
     "css-loader": "^3.6.0",
     "eslint": "^7.0",
     "eslint-config-prettier": "^6.11.0",
