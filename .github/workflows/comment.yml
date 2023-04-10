@@ -76,4 +76,4 @@ jobs:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         head_sha: ${{ github.event.workflow_run.head_sha }}
       run: |
-        cml-send-comment --commit-sha $head_sha --repo https://github.com/ActivityWatch/aw-webui comment.md
+        cml-send-comment --target=commit/$head_sha --repo https://github.com/ActivityWatch/aw-webui comment.md
