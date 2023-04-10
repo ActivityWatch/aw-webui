@@ -16,6 +16,7 @@ jobs:
     # TODO: Maybe add `github.event.workflow_run.event == 'pull_request'` to avoid spam?
 
     steps:
+    - uses: actions/checkout@v2
     - uses: iterative/setup-cml@v1
 
     # Doesn't work for fetching artifacts from separate workflows
@@ -75,4 +76,4 @@ jobs:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         head_sha: ${{ github.event.workflow_run.head_sha }}
       run: |
-        cml-send-comment --commit-sha $head_sha --repo https://github.com/ActivityWatch/aw-webui comment.md
+        cml-send-comment --target=commit/$head_sha --repo https://github.com/ActivityWatch/aw-webui comment.md
