@@ -25,7 +25,9 @@ export default {
         : 0;
     },
     isVisible() {
-      return this.ratio > 0.2;
+      // if ratio is > 0.3, show it   // TODO: make configurable
+      // if there's a category filter (url has category query param), don't show it
+      return this.ratio > 0.3 && !this.$route.query.category;
     },
   },
 };
