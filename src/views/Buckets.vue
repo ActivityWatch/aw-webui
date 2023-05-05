@@ -26,6 +26,7 @@ div
             icon(name="folder-open").d-none.d-md-inline-block
             | Open
           b-dropdown(variant="outline-secondary", size="sm", text="More")
+            // FIXME: These also exist as almost-copies in the Bucket view, can maybe be shared/reused instead.
             b-dropdown-item(
                        :href="$aw.baseURL + '/api/0/buckets/' + data.item.id + '/export'",
                        :download="'aw-bucket-export-' + data.item.id + '.json'",
@@ -64,7 +65,7 @@ div
       b-alert(v-if="import_error" show variant="danger" dismissable)
         | {{ import_error }}
       b-form-file(v-model="import_file"
-                  placeholder="Choose a file or drop file here..."
+                  placeholder="Choose or drop a file here..."
                   drop-placeholder="Drop file here...")
       // TODO: This spinner could be placed in a more suitable place
       div(v-if="import_file" class="spinner-border" role="status")
@@ -79,6 +80,9 @@ div
         icon(name="download")
         | Export all buckets as JSON
 
+  hr
+
+  aw-bucket-merge
 </template>
 
 <style lang="scss">
@@ -116,6 +120,9 @@ import { useBucketsStore } from '~/stores/buckets';
 
 export default {
   name: 'Buckets',
+  components: {
+    'aw-bucket-merge': () => import('~/components/BucketMerge.vue'),
+  },
   data() {
     return {
       bucketsStore: useBucketsStore(),
