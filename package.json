@@ -123,7 +123,7 @@
     "url-loader": "^4.1",
     "vue": "^2.7",
     "vue-cli-plugin-pug": "^2.0.0",
-    "vue-eslint-parser": "^7.1",
+    "vue-eslint-parser": "^9.2",
     "vue-hot-reload-api": "^2.3.4",
     "vue-loader": "^17.0",
     "vue-router": "^3.5.3",
