@@ -153,7 +153,8 @@ export default {
   computed: {
     ...mapState(useCategoryStore, ['allCategoriesSelect']),
     words_by_duration: function () {
-      return Object.values(this.words)
+      const words: { [key: string]: { word: string; duration: number } } = this.words;
+      return Object.values(words)
         .sort((a, b) => b.duration - a.duration)
         .filter(word => word.duration > 60)
         .filter(word => !this.ignored_words.includes(word.word));
@@ -282,7 +283,7 @@ export default {
 
       // Find the category with the max ID, and open an editor for it
       const lastId = _.max(_.map(this.categoryStore.classes, 'id'));
-      this.create.word = word.word;
+      this.create.word = word;
       this.create.categoryId = lastId;
     },
     async createRuleOk() {

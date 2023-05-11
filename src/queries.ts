@@ -39,7 +39,7 @@ interface DesktopQueryParams extends BaseQueryParams {
   bid_window: string;
   bid_afk: string;
   filter_afk: boolean;
-  always_active_pattern: string;
+  always_active_pattern?: string;
 }
 
 interface AndroidQueryParams extends BaseQueryParams {
