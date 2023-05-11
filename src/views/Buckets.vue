@@ -82,7 +82,8 @@ div
 
   hr
 
-  aw-bucket-merge
+  aw-devonly(reason="This component is still under development")
+    aw-bucket-merge.p-2
 </template>
 
 <style lang="scss">
