@@ -14,7 +14,7 @@ div
       p.small
         | Select the bucket from which you want to merge the events.
         | This bucket will be deleted after the merge.
-      p(v-if="events_from !== null")
+      p.small(v-if="events_from !== null")
         | Events: {{ events_from.length }}
     b-col
       h4 Bucket to
@@ -22,19 +22,19 @@ div
       p.small
         | Select the bucket to which you want to merge the events.
         | This bucket will remain after the merge.
-      p(v-if="events_to !== null")
+      p.small(v-if="events_to !== null")
         | Events: {{ events_to.length }}
 
   // TODO: check for overlapping events
-  div(v-if="overlappingEvents.length > 0")
+  div(v-if="overlappingEvents !== null && overlappingEvents.length > 0")
     h3 Overlapping events
     p
-      | The following events are overlapping:
+      | The following {{ overlappingEvents.length }} events are overlapping:
       ul
         li(v-for="event in overlappingEvents")
-          | {{ event.from.start }} - {{ event.from.end }} ({{ event.from.id }}) 
+          | {{ event.from.start }} - {{ event.from.end }} ({{ event.from.event.id }}) 
           | overlaps with 
-          | {{ event.to.start }} - {{ event.to.end }} ({{ event.to.id }})
+          | {{ event.to.start }} - {{ event.to.end }} ({{ event.to.event.id }})
 
   // TODO: confirm dialog
   b-button(variant="success" :disabled="!validate" @click="merge()") Merge
@@ -60,29 +60,42 @@ export default {
     validate() {
       const set = this.bucket_from !== null && this.bucket_to !== null;
       const not_same = this.bucket_from !== this.bucket_to;
-      const not_overlapping = this.overlappingEvents.length === 0;
+      const not_overlapping =
+        this.overlappingEvents !== null && this.overlappingEvents.length === 0;
       return set && not_same && not_overlapping;
     },
     overlappingEvents() {
       if (this.events_from === null || this.events_to === null) {
-        return [];
+        return null;
       }
       // check for overlapping events
       const overlapping = [];
       console.log('events_from', this.events_from);
       console.log('events_to', this.events_to);
       for (const event_from of this.events_from) {
-        event_from.start = new Date(event_from.timestamp);
-        event_from.end = new Date(event_from.timestamp + event_from.duration);
+        const from = {
+          start: new Date(event_from.timestamp),
+          end: new Date(event_from.timestamp + event_from.duration),
+          event: event_from,
+        };
         for (const event_to of this.events_to) {
-          event_to.start = new Date(event_to.timestamp);
-          event_to.end = new Date(event_to.timestamp + event_to.duration);
-          if (event_from.start < event_to.end && event_from.end > event_to.start) {
-            overlapping.push({ from: event_from, to: event_to });
+          const to = {
+            start: new Date(event_to.timestamp),
+            end: new Date(event_to.timestamp + event_to.duration),
+            event: event_to,
+          };
+          // Check for overlap
+          if (
+            // `from` start is within `to`
+            (from.start > to.start && from.start < to.end) ||
+            // `from` end is within `to`
+            (from.end > to.start && from.end < to.end)
+          ) {
+            overlapping.push({ from, to });
           }
         }
       }
-      if (overlapping.length >= 0) {
+      if (overlapping.length > 0) {
         console.warn('Overlapping events found', overlapping);
       }
       return overlapping;
@@ -104,7 +117,7 @@ export default {
       const client = getClient();
       const events = this.events_from;
       const bucket_id = this.bucket_to;
-      const result = await client.createEvents(bucket_id, events);
+      const result = await client.insertEvents(bucket_id, events);
       console.log('result', result);
     },
     getBuckets: async function () {
