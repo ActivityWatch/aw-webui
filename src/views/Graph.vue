@@ -155,7 +155,9 @@ export default {
         return { ...e, data: { ...e.data, $category } };
       });
 
-      const allCategories = new Set(events.map(e => e.data.$category).map(c => c.join(SEP)));
+      const allCategories: Set<string> = new Set(
+        events.map(e => e.data.$category).map(c => c.join(SEP))
+      );
       const groups = { Uncategorized: 0 };
 
       // Generate groups

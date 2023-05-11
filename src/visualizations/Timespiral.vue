@@ -151,11 +151,11 @@ export default {
       const _domain_end = moment(eventdomain[1]).endOf('day');
 
       // Limit the events to max_days
-      let domain;
+      let domain: [Date, Date];
       if (_domain_end.clone().diff(_domain_start) / 1000 > max_days) {
-        domain = [_domain_end.clone().subtract(max_days, 'days'), _domain_end];
+        domain = [_domain_end.clone().subtract(max_days, 'days').toDate(), _domain_end.toDate()];
       } else {
-        domain = [_domain_start, _domain_end];
+        domain = [_domain_start.toDate(), _domain_end.toDate()];
       }
       const nbSpirals = Math.ceil(
         (domain[1].valueOf() - domain[0].valueOf()) / (24 * 60 * 60 * 1000)
@@ -210,7 +210,7 @@ export default {
 
       // Computes the radius and spiral thickness for a particular event.
       // Each inner spiral (previous day) should get progressively thinner.
-      function spiralThickness(timestamp: string, staggered: boolean): [number, number] {
+      function spiralThickness(timestamp: Date, staggered = false): [number, number] {
         const hourstart = staggered
           ? moment(timestamp).startOf('hour').valueOf()
           : moment(timestamp).valueOf();
@@ -279,7 +279,7 @@ export default {
 
       // Draw clock ticks
       // Modified from sunburst-clock.js
-      function drawClockTick(group, a, radius, inner: boolean) {
+      function drawClockTick(group, a, radius, inner = false) {
         const xn = Math.cos(a);
         const yn = Math.sin(a);
 
@@ -307,7 +307,7 @@ export default {
             .style('stroke-width', 2);
       }
 
-      function drawClock(group, h, m, text, radius, inner: boolean) {
+      function drawClock(group, h, m, text, radius, inner = false) {
         const a = 2 * Math.PI * (h / 24 + m / 24 / 60) - (1 / 2) * Math.PI;
         drawClockTick(g, a, radius, inner);
 

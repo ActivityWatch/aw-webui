@@ -187,7 +187,7 @@ export default {
       const bucket = await this.bucketsStore.getBucketWithEvents({ id: bucketId });
       const events = bucket.events;
       const datakeys = Object.keys(events[0].data);
-      const columns = ['timestamp', 'duration'] + datakeys;
+      const columns = ['timestamp', 'duration'].concat(datakeys);
       const data = events.map(e => {
         return Object.assign(
           { timestamp: e.timestamp, duration: e.duration },
