@@ -22,6 +22,9 @@ div
     tr
       th Eventcount:
       td {{ eventcount }}
+    tr
+      th Data:
+      td {{ bucket.data }}
 
   input-timeinterval(v-model="daterange", :maxDuration="maxDuration")
 
