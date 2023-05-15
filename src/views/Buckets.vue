@@ -82,7 +82,15 @@ div
 
   hr
 
-  aw-devonly(reason="This component is still under development")
+  aw-devonly(reason="This section is still under development")
+    h2.p-2 Tools
+
+    hr
+
+    aw-bucket-validate.p-2
+
+    hr
+
     aw-bucket-merge.p-2
 </template>
 
@@ -123,6 +131,7 @@ export default {
   name: 'Buckets',
   components: {
     'aw-bucket-merge': () => import('~/components/BucketMerge.vue'),
+    'aw-bucket-validate': () => import('~/components/BucketValidate.vue'),
   },
   data() {
     return {

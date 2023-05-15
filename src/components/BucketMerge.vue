@@ -32,9 +32,9 @@ div
       | The following {{ overlappingEvents.length }} events are overlapping:
       ul
         li(v-for="event in overlappingEvents")
-          | {{ event.from.start }} - {{ event.from.end }} ({{ event.from.event.id }}) 
+          | {{ event[0].start }} - {{ event[0].end }} ({{ event[0].event.id }}) 
           | overlaps with 
-          | {{ event.to.start }} - {{ event.to.end }} ({{ event.to.event.id }})
+          | {{ event[1].start }} - {{ event[1].end }} ({{ event[1].event.id }})
 
   // TODO: confirm dialog
   b-button(variant="success" :disabled="!validate" @click="merge()") Merge
@@ -44,6 +44,7 @@ div
 
 <script lang="ts">
 import { getClient } from '~/util/awclient';
+import { overlappingEvents } from '~/util/transforms';
 
 export default {
   name: 'aw-bucket-merge',
@@ -68,37 +69,7 @@ export default {
       if (this.events_from === null || this.events_to === null) {
         return null;
       }
-      // check for overlapping events
-      const overlapping = [];
-      console.log('events_from', this.events_from);
-      console.log('events_to', this.events_to);
-      for (const event_from of this.events_from) {
-        const from = {
-          start: new Date(event_from.timestamp),
-          end: new Date(event_from.timestamp + event_from.duration),
-          event: event_from,
-        };
-        for (const event_to of this.events_to) {
-          const to = {
-            start: new Date(event_to.timestamp),
-            end: new Date(event_to.timestamp + event_to.duration),
-            event: event_to,
-          };
-          // Check for overlap
-          if (
-            // `from` start is within `to`
-            (from.start > to.start && from.start < to.end) ||
-            // `from` end is within `to`
-            (from.end > to.start && from.end < to.end)
-          ) {
-            overlapping.push({ from, to });
-          }
-        }
-      }
-      if (overlapping.length > 0) {
-        console.warn('Overlapping events found', overlapping);
-      }
-      return overlapping;
+      return overlappingEvents(this.events_from, this.events_to);
     },
   },
   watch: {
@@ -123,7 +94,6 @@ export default {
     getBuckets: async function () {
       const client = getClient();
       const buckets = await client.getBuckets();
-      console.log('buckets', buckets);
       this.buckets = Object.keys(buckets).map(bucket_id => {
         return { value: bucket_id, text: bucket_id };
       });
