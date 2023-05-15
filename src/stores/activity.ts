@@ -48,6 +48,15 @@ function colorCategories(events: IEvent[]): IEvent[] {
   });
 }
 
+function scoreCategories(events: IEvent[]): IEvent[] {
+  // Set $score for categories
+  const categoryStore = useCategoryStore();
+  return events.map((e: IEvent) => {
+    e.data['$score'] = categoryStore.get_category_score(e.data['$category']);
+    return e;
+  });
+}
+
 export interface QueryOptions {
   host: string;
   date?: string;
@@ -334,8 +343,9 @@ export const useActivityStore = defineStore('activity', {
       const data = await getClient().query(periods, q);
       const data_window = data[0].window;
 
-      // Set $color for categories
+      // Set $color and $score for categories
       data_window.cat_events = colorCategories(data_window.cat_events);
+      data_window.cat_events = scoreCategories(data_window.cat_events);
 
       this.query_window_completed(data_window);
     },
@@ -369,8 +379,9 @@ export const useActivityStore = defineStore('activity', {
       const data_window = data[0].window;
       const data_browser = data[0].browser;
 
-      // Set $color for categories
+      // Set $color and $score for categories
       data_window.cat_events = colorCategories(data_window.cat_events);
+      data_window.cat_events = scoreCategories(data_window.cat_events);
 
       this.query_window_completed(data_window);
       this.query_browser_completed(data_browser);

@@ -78,6 +78,8 @@ div
       aw-custom-vis(:visname="props.visname" :title="props.title")
     div(v-if="type == 'vis_timeline' && isSingleDay")
       vis-timeline(:buckets="timeline_buckets", :showRowLabels='true', :queriedInterval="timeline_daterange")
+    div(v-if="type == 'score'")
+      aw-score(:date="date")
 </template>
 
 <style lang="scss">
@@ -143,6 +145,7 @@ export default {
         'sunburst_clock',
         'custom_vis',
         'vis_timeline',
+        'score',
       ],
       // TODO: Move this function somewhere else
       top_editor_files_namefunc: e => {
@@ -223,6 +226,10 @@ export default {
         custom_vis: {
           title: 'Custom Visualization',
           available: true, // TODO: Implement
+        },
+        score: {
+          title: 'Score',
+          available: this.activityStore.category.available,
         },
       };
     },

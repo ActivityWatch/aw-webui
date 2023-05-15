@@ -31,7 +31,7 @@ export const defaultCategories: Category[] = [
   {
     name: ['Work'],
     rule: { type: 'regex', regex: 'Google Docs|libreoffice|ReText' },
-    data: { color: '#0F0' },
+    data: { color: '#0F0', score: 10 },
   },
   {
     name: ['Work', 'Programming'],
