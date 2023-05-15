@@ -252,6 +252,12 @@ const browser_appnames = {
     'firefox-aurora',
     'firefox-trunk-dev',
 
+    // Librewolf
+    'Librewolf',
+    'Librewolf.exe',
+    'librewolf',
+    'librewolf.exe',
+
     // Waterfox
     'Waterfox',
     'Waterfox.exe',
