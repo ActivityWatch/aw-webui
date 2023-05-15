@@ -92,7 +92,7 @@
     "connect-history-api-fallback": "^2.0.0",
     "copy-webpack-plugin": "^5.1.1",
     "crypto-js": "^4.1.1",
-    "css-loader": "^3.6.0",
+    "css-loader": "^6.7.3",
     "eslint": "^7.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-jest": "^23.18",
