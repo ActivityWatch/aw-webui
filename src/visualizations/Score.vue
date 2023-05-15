@@ -4,6 +4,8 @@ div
     | Your total score today is:
     div(:style="'font-size: 2em; color: ' + (score >= 0 ? '#0A0' : '#F00')")
       | {{score >= 0 ? '+' : ''}}{{ (Math.round(score * 10) / 10).toFixed(1) }}
+    div.small.text-muted
+      | ({{score_productive_percent.toFixed(1)}}% productive)
   hr
   div
     b Top productive:
@@ -54,6 +56,15 @@ export default {
     },
     score: function () {
       return _.sum(_.map(this.categories_with_score, cat => cat.data.$total_score));
+    },
+    score_productive_percent() {
+      // Compute the percentage of time spent on productive activities (score > 0)
+      const total_time = _.sumBy(this.categories_with_score, cat => cat.duration);
+      const productive_time = _.sumBy(
+        _.filter(this.categories_with_score, cat => cat.data.$total_score > 0),
+        cat => cat.duration
+      );
+      return (productive_time / total_time) * 100;
     },
     top_productive: function () {
       return _.sortBy(
