@@ -2,7 +2,7 @@
 div
   div
     b-alert(v-if="mode == 'range' && invalidDaterange", variant="warning", show)
-      | The selected date range is invalid. The second date must be greater than the first date.
+      | The selected date range is invalid. The second date must be greater or equal to the first date.
     b-alert(v-if="mode == 'range' && daterangeTooLong", variant="warning", show)
       | The selected date range is too long. The maximum is {{ maxDuration/(24*60*60) }} days.
 
@@ -83,7 +83,7 @@ export default {
     value: {
       get() {
         if (this.mode == 'range' && this.start && this.end) {
-          return [moment(this.start), moment(this.end)];
+          return [moment(this.start), moment(this.end).add(1, 'day')];
         } else {
           return [moment().subtract(this.duration, 'seconds'), moment()];
         }
@@ -93,7 +93,7 @@ export default {
       return !(this.start && this.end);
     },
     invalidDaterange() {
-      return moment(this.start) >= moment(this.end);
+      return moment(this.start) > moment(this.end);
     },
     daterangeTooLong() {
       return moment(this.start).add(this.maxDuration, 'seconds').isBefore(moment(this.end));

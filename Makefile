@@ -11,8 +11,12 @@ else
 androidflag :=
 endif
 
-build: install
+build: install static/logo.png static/logo.svg
 	npm run build ${androidflag}
+
+static/logo.%: media/logo/logo.%
+	@mkdir -p static
+	cp $< $@
 
 install:
 	npm ci
@@ -27,7 +31,10 @@ test:
 	npm test
 
 test-e2e:
-	npx testcafe firefox test/e2e/ -s takeOnFails=true
+	npx testcafe chrome test/e2e/ -s takeOnFails=true
+
+typing-coverage:
+	npx typescript-coverage-report
 
 clean:
 	rm -rf node_modules dist

@@ -18,6 +18,7 @@ interface State {
 
   newReleaseCheckData: Record<string, any>;
   userSatisfactionPollData: Record<string, any>;
+  always_active_pattern: string;
 
   // Whether to show certain WIP features
   devmode: boolean;
@@ -48,6 +49,8 @@ export const useSettingsStore = defineStore('settings', {
       timesChecked: 0,
     },
     userSatisfactionPollData: {},
+
+    always_active_pattern: '',
 
     // Developer settings
     // NOTE: PRODUCTION might be undefined (in tests, for example)

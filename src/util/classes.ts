@@ -5,7 +5,7 @@ const level_sep = '>';
 const CLASSIFY_KEYS = ['app', 'title'];
 const UNCATEGORIZED = ['Uncategorized'];
 
-interface Rule {
+export interface Rule {
   type: 'regex' | 'none';
   regex?: string;
   ignore_case?: boolean;
@@ -31,7 +31,7 @@ export const defaultCategories: Category[] = [
   {
     name: ['Work'],
     rule: { type: 'regex', regex: 'Google Docs|libreoffice|ReText' },
-    data: { color: '#0F0' },
+    data: { color: '#0F0', score: 10 },
   },
   {
     name: ['Work', 'Programming'],
@@ -85,7 +85,7 @@ export const defaultCategories: Category[] = [
     name: ['Comms', 'IM'],
     rule: {
       type: 'regex',
-      regex: 'Messenger|Telegram|Signal|WhatsApp|Rambox|Slack|Riot|Element|Discord|Nheko|Mattermost',
+      regex: 'Messenger|Telegram|Signal|WhatsApp|Rambox|Slack|Riot|Element|Discord|Nheko|NeoChat|Mattermost',
     },
   },
   { name: ['Comms', 'Email'], rule: { type: 'regex', regex: 'Gmail|Thunderbird|mutt|alpine' } },
@@ -156,26 +156,41 @@ export function flatten_category_hierarchy(hier: Category[]): Category[] {
   );
 }
 
+function areWeTesting() {
+  return process.env.NODE_ENV === 'test';
+}
+
 export function saveClasses(classes: Category[]) {
-  localStorage.classes = JSON.stringify(classes);
+  if (areWeTesting()) {
+    console.log('Not saving classes in test mode');
+    return;
+  }
+  localStorage.classes = JSON.stringify(classes.map(cleanCategory));
   console.log('Saved classes', localStorage.classes);
+}
+
+export function cleanCategory(cat: Category): Category {
+  cat = _.cloneDeep(cat);
+  delete cat.children;
+  delete cat.parent;
+  delete cat.subname;
+  delete cat.name_pretty;
+  delete cat.depth;
+  // in an older version, type could be null (which is not allowed)
+  // we also want to strip any excess properties that may have belonged to another rule type
+  if (cat.rule && (cat.rule.type === null || cat.rule.type === 'none')) {
+    cat.rule = { type: 'none' };
+  }
+  return cat;
 }
 
 export function loadClasses(): Category[] {
   const classes_json = localStorage.classes;
   if (classes_json && classes_json.length >= 1) {
-    return JSON.parse(classes_json);
+    return JSON.parse(classes_json).map(cleanCategory);
   } else {
     return defaultCategories;
   }
-}
-
-export function loadClassesForQuery(): [string[], Rule][] {
-  return loadClasses()
-    .filter(c => c.rule.type !== null)
-    .map(c => {
-      return [c.name, c.rule];
-    });
 }
 
 function pickDeepest(categories: Category[]) {

@@ -1,13 +1,27 @@
-.DS_Store
 node_modules/
 dist*/
+/modules
+
+# logs
 npm-debug.log
 selenium-debug.log
+
+# copied from media
+static/logo*
+
+# outputs
+coverage
+coverage-ts
+screenshots
 test/unit/coverage
 test/e2e/reports
-coverage
+
+# platform-specific trash
+.DS_Store
+
+# editor-specific
 *.swp
-__pycache__
-screenshots
-/modules
 .vscode
+
+# python
+__pycache__

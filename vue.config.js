@@ -3,6 +3,13 @@ const webpack = require('webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const { argv } = require('yargs');
 
+// get git info from command line
+const _COMMIT_HASH = require('child_process')
+  .execSync('git rev-parse --short HEAD')
+  .toString()
+  .trim();
+console.info('Commit hash:', _COMMIT_HASH);
+
 module.exports = {
   pages: {
     index: {
@@ -35,6 +42,7 @@ module.exports = {
       new webpack.DefinePlugin({
         AW_SERVER_URL: process.env.AW_SERVER_URL,
         PRODUCTION: process.env.NODE_ENV === 'production',
+        COMMIT_HASH: JSON.stringify(_COMMIT_HASH),
       }),
       new CopyWebpackPlugin([{ from: 'static/', to: 'static' }]),
     ],
@@ -49,6 +57,7 @@ module.exports = {
   pwa: {
     name: 'ActivityWatch',
     iconPaths: {
+      faviconSVG: null, // SVG won't render without needed fonts etc, so fall back to png
       favicon32: 'static/logo.png',
       favicon16: 'static/logo.png',
       appleTouchIcon: 'static/logo.png',

@@ -4,3 +4,4 @@
 // Constants set at compile time
 declare const PRODUCTION: boolean;
 declare const AW_SERVER_URL: string;
+declare const COMMIT_HASH: string;

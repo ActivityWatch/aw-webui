@@ -158,7 +158,7 @@ export default {
   },
   methods: {
     openEditor: function () {
-      this.$bvModal.show('edit-modal');
+      this.$bvModal.show('edit-modal-' + this.editingEvent.id);
     },
     onSelect: async function (properties) {
       if (properties.items.length == 0) {

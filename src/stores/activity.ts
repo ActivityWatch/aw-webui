@@ -6,8 +6,6 @@ import { IEvent } from '~/util/interfaces';
 
 import { window_events } from '~/util/fakedata';
 import queries from '~/queries';
-import { getColorFromCategory } from '~/util/color';
-import { loadClassesForQuery } from '~/util/classes';
 import { get_day_start_with_offset } from '~/util/time';
 import {
   TimePeriod,
@@ -45,8 +43,16 @@ function colorCategories(events: IEvent[]): IEvent[] {
   // Set $color for categories
   const categoryStore = useCategoryStore();
   return events.map((e: IEvent) => {
-    const cat = categoryStore.get_category(e.data['$category']);
-    e.data['$color'] = getColorFromCategory(cat, categoryStore.classes);
+    e.data['$color'] = categoryStore.get_category_color(e.data['$category']);
+    return e;
+  });
+}
+
+function scoreCategories(events: IEvent[]): IEvent[] {
+  // Set $score for categories
+  const categoryStore = useCategoryStore();
+  return events.map((e: IEvent) => {
+    e.data['$score'] = categoryStore.get_category_score(e.data['$category']);
     return e;
   });
 }
@@ -57,14 +63,77 @@ export interface QueryOptions {
   timeperiod?: TimePeriod;
   filter_afk?: boolean;
   include_audible?: boolean;
+  include_stopwatch?: boolean;
   filter_categories?: string[][];
   dont_query_inactive?: boolean;
   force?: boolean;
+  always_active_pattern?: string;
+}
+
+interface State {
+  loaded: boolean;
+
+  window: {
+    available: boolean;
+    top_apps: IEvent[];
+    top_titles: IEvent[];
+  };
+
+  browser: {
+    available: boolean;
+    duration: number;
+    top_urls: IEvent[];
+    top_domains: IEvent[];
+  };
+
+  editor: {
+    available: boolean;
+    duration: number;
+    top_files: IEvent[];
+    top_projects: IEvent[];
+    top_languages: IEvent[];
+  };
+
+  category: {
+    available: boolean;
+    by_period: IEvent[];
+    top: IEvent[];
+  };
+
+  active: {
+    available: boolean;
+    duration: number;
+    // non-afk events (no detail data) for the current period
+    events: IEvent[];
+    // Aggregated events for current and past periods
+    history: Record<any, IEvent[]>;
+  };
+
+  android: {
+    available: boolean;
+  };
+
+  stopwatch: {
+    available: boolean;
+  };
+
+  query_options?: QueryOptions;
+
+  // Can't this be handled in bucketStore?
+  buckets: {
+    loaded: boolean;
+    afk: string[];
+    window: string[];
+    editor: string[];
+    browser: string[];
+    android: string[];
+    stopwatch: string[];
+  };
 }
 
 export const useActivityStore = defineStore('activity', {
   // initial state
-  state: () => ({
+  state: (): State => ({
     // set to true once loading has started
     loaded: false,
 
@@ -76,14 +145,14 @@ export const useActivityStore = defineStore('activity', {
 
     browser: {
       available: false,
-      duration: [],
+      duration: 0,
       top_domains: [],
       top_urls: [],
     },
 
     editor: {
       available: false,
-      duration: [],
+      duration: 0,
       top_files: [],
       top_languages: [],
       top_projects: [],
@@ -108,10 +177,11 @@ export const useActivityStore = defineStore('activity', {
       available: false,
     },
 
-    query_options: {
-      browser_buckets: 'all',
-      editor_buckets: 'all',
+    stopwatch: {
+      available: false,
     },
+
+    query_options: null,
 
     buckets: {
       loaded: false,
@@ -120,12 +190,13 @@ export const useActivityStore = defineStore('activity', {
       editor: [],
       browser: [],
       android: [],
+      stopwatch: [],
     },
   }),
 
   getters: {
-    getActiveHistoryAroundTimeperiod() {
-      return (timeperiod: TimePeriod) => {
+    getActiveHistoryAroundTimeperiod(this: State) {
+      return (timeperiod: TimePeriod): IEvent[][] => {
         const periods = timeperiodStrsAroundTimeperiod(timeperiod);
         const _history = periods.map(tp => {
           if (_.has(this.active.history, tp)) {
@@ -137,6 +208,21 @@ export const useActivityStore = defineStore('activity', {
         });
         return _history;
       };
+    },
+    uncategorizedDuration(this: State): [number, number] | null {
+      // Returns the uncategorized duration and the total duration
+      if (!this.category.top) {
+        return null;
+      }
+      console.log(this.category.top);
+      const uncategorized = this.category.top.filter(e => {
+        return _.isEqual(e.data['$category'], ['Uncategorized']);
+      });
+      const uncategorized_duration = uncategorized.length > 0 ? uncategorized[0].duration : 0;
+      const total_duration = this.category.top.reduce((acc, e) => {
+        return acc + e.duration;
+      }, 0);
+      return [uncategorized_duration, total_duration];
     },
   },
 
@@ -161,7 +247,7 @@ export const useActivityStore = defineStore('activity', {
         await this.get_buckets(query_options);
 
         // TODO: These queries can actually run in parallel, but since server won't process them in parallel anyway we won't.
-        await this.set_available(query_options);
+        this.set_available();
 
         if (this.window.available) {
           console.info(
@@ -188,8 +274,8 @@ export const useActivityStore = defineStore('activity', {
           console.log(
             'Cannot query windows as we are missing either an afk/window bucket pair or an android bucket'
           );
-          await this.reset_window();
-          await this.reset_category();
+          this.query_window_completed();
+          this.query_category_time_by_period_completed();
         }
 
         if (this.active.available) {
@@ -198,14 +284,14 @@ export const useActivityStore = defineStore('activity', {
           await this.query_active_history_android(query_options);
         } else {
           console.log('Cannot call query_active_history as we do not have an afk bucket');
-          await this.query_active_history_empty(query_options);
+          await this.query_active_history_completed();
         }
 
         if (this.editor.available) {
           await this.query_editor(query_options);
         } else {
           console.log('Cannot call query_editor as we do not have any editor buckets');
-          await this.reset_editor();
+          await this.query_editor_completed();
         }
 
         if (this.window.available) {
@@ -221,63 +307,30 @@ export const useActivityStore = defineStore('activity', {
 
     async query_android({ timeperiod, filter_categories }: QueryOptions) {
       const periods = [timeperiodToStr(timeperiod)];
-      const classes = loadClassesForQuery();
-      const q = queries.appQuery(this.buckets.android[0], classes, filter_categories);
+      const categoryStore = useCategoryStore();
+      const q = queries.appQuery(
+        this.buckets.android[0],
+        categoryStore.classes_for_query,
+        filter_categories
+      );
       const data = await getClient().query(periods, q).catch(this.errorHandler);
       this.query_window_completed(data[0]);
     },
 
     async reset() {
       getClient().abort();
-      await this.reset_window();
-      await this.reset_browser();
-      await this.reset_editor();
-      await this.reset_category();
-    },
-
-    async reset_window() {
-      const data = {
-        app_events: [],
-        title_events: [],
-        cat_events: [],
-        active_events: [],
-        duration: 0,
-      };
-      this.query_window_completed(data);
-    },
-
-    async reset_browser() {
-      const data = {
-        domains: [],
-        urls: [],
-        duration: 0,
-      };
-      this.query_browser_completed(data);
-    },
-
-    async reset_editor() {
-      const data = {
-        files: [],
-        projects: [],
-        languages: [],
-      };
-      this.query_editor_completed(data);
-    },
-
-    async reset_category() {
-      const data = {
-        by_period: [],
-      };
-
-      this.query_category_time_by_period_completed(data);
+      this.query_window_completed({});
+      this.query_browser_completed({});
+      this.query_editor_completed({});
+      this.query_category_time_by_period_completed({});
     },
 
     async query_multidevice_full(
-      { timeperiod, filter_categories, filter_afk }: QueryOptions,
+      { timeperiod, filter_categories, filter_afk, always_active_pattern }: QueryOptions,
       hosts: string[]
     ) {
       const periods = [timeperiodToStr(timeperiod)];
-      const categories = loadClassesForQuery();
+      const categories = useCategoryStore().classes_for_query;
 
       const q = queries.multideviceQuery({
         hosts,
@@ -285,12 +338,14 @@ export const useActivityStore = defineStore('activity', {
         categories,
         filter_categories,
         host_params: {},
+        always_active_pattern,
       });
       const data = await getClient().query(periods, q);
       const data_window = data[0].window;
 
-      // Set $color for categories
+      // Set $color and $score for categories
       data_window.cat_events = colorCategories(data_window.cat_events);
+      data_window.cat_events = scoreCategories(data_window.cat_events);
 
       this.query_window_completed(data_window);
     },
@@ -300,25 +355,33 @@ export const useActivityStore = defineStore('activity', {
       filter_categories,
       filter_afk,
       include_audible,
+      include_stopwatch,
+      always_active_pattern,
     }: QueryOptions) {
       const periods = [timeperiodToStr(timeperiod)];
-      const categories = loadClassesForQuery();
+      const categories = useCategoryStore().classes_for_query;
 
       const q = queries.fullDesktopQuery({
         bid_window: this.buckets.window[0],
         bid_afk: this.buckets.afk[0],
         bid_browsers: this.buckets.browser,
+        bid_stopwatch:
+          include_stopwatch && this.buckets.stopwatch.length > 0
+            ? this.buckets.stopwatch[0]
+            : undefined,
         filter_afk,
         categories,
         filter_categories,
         include_audible,
+        always_active_pattern,
       });
       const data = await getClient().query(periods, q);
       const data_window = data[0].window;
       const data_browser = data[0].browser;
 
-      // Set $color for categories
+      // Set $color and $score for categories
       data_window.cat_events = colorCategories(data_window.cat_events);
+      data_window.cat_events = scoreCategories(data_window.cat_events);
 
       this.query_window_completed(data_window);
       this.query_browser_completed(data_browser);
@@ -347,7 +410,9 @@ export const useActivityStore = defineStore('activity', {
       timeperiod,
       filter_categories,
       filter_afk,
+      include_stopwatch,
       dontQueryInactive,
+      always_active_pattern,
     }: QueryOptions & { dontQueryInactive: boolean }) {
       // TODO: Needs to be adapted for Android
       let periods: string[];
@@ -403,7 +468,7 @@ export const useActivityStore = defineStore('activity', {
           }
         }
 
-        const categories = loadClassesForQuery();
+        const categories = useCategoryStore().classes_for_query;
         const result = await getClient().query(
           [period],
           // TODO: Clean up call, pass QueryParams in fullDesktopQuery as well
@@ -412,10 +477,15 @@ export const useActivityStore = defineStore('activity', {
             bid_afk: this.buckets.afk[0],
             bid_window: this.buckets.window[0],
             bid_browsers: this.buckets.browser,
+            bid_stopwatch:
+              include_stopwatch && this.buckets.stopwatch.length > 0
+                ? this.buckets.stopwatch[0]
+                : undefined,
             // bid_android: this.buckets.android,
             categories,
             filter_categories,
             filter_afk,
+            always_active_pattern,
           })
         );
         data = data.concat(result);
@@ -447,12 +517,7 @@ export const useActivityStore = defineStore('activity', {
       this.query_active_history_completed({ active_history: active_history_events });
     },
 
-    async query_active_history_empty() {
-      const data = [];
-      this.query_active_history_completed(data);
-    },
-
-    async set_available() {
+    set_available(this: State) {
       // TODO: Move to bucketStore on a per-host basis?
       this.window.available = this.buckets.afk.length > 0 && this.buckets.window.length > 0;
       this.browser.available =
@@ -463,9 +528,10 @@ export const useActivityStore = defineStore('activity', {
       this.editor.available = this.buckets.editor.length > 0;
       this.android.available = this.buckets.android.length > 0;
       this.category.available = this.window.available || this.android.available;
+      this.stopwatch.available = this.buckets.stopwatch.length > 0;
     },
 
-    async get_buckets({ host }) {
+    async get_buckets(this: State, { host }) {
       // TODO: Move to bucketStore on a per-host basis?
       const bucketsStore = useBucketsStore();
       this.buckets.afk = bucketsStore.bucketsAFK(host);
@@ -473,6 +539,7 @@ export const useActivityStore = defineStore('activity', {
       this.buckets.android = bucketsStore.bucketsAndroid(host);
       this.buckets.browser = bucketsStore.bucketsBrowser(host);
       this.buckets.editor = bucketsStore.bucketsEditor(host);
+      this.buckets.stopwatch = bucketsStore.bucketsStopwatch(host);
 
       console.log('Available buckets: ', this.buckets);
       this.buckets.loaded = true;
@@ -559,7 +626,7 @@ export const useActivityStore = defineStore('activity', {
     },
 
     // mutations
-    start_loading(query_options: QueryOptions) {
+    start_loading(this: State, query_options: QueryOptions) {
       this.loaded = true;
       this.query_options = query_options;
 
@@ -589,39 +656,41 @@ export const useActivityStore = defineStore('activity', {
       }
     },
 
-    query_window_completed(data) {
-      this.window.top_apps = data['app_events'];
-      this.window.top_titles = data['title_events'];
-      this.category.top = data['cat_events'];
-      this.active.duration = data['duration'];
-      this.active.events = data['active_events'];
+    query_window_completed(
+      this: State,
+      data = { app_events: [], title_events: [], cat_events: [], active_events: [], duration: 0 }
+    ) {
+      this.window.top_apps = data.app_events;
+      this.window.top_titles = data.title_events;
+      this.category.top = data.cat_events;
+      this.active.duration = data.duration;
+      this.active.events = data.active_events;
     },
 
-    query_browser_completed(data) {
+    query_browser_completed(this: State, data = { domains: [], urls: [], duration: 0 }) {
       this.browser.top_domains = data.domains;
       this.browser.top_urls = data.urls;
       this.browser.duration = data.duration;
-
-      // FIXME: This one might take up a lot of size in the request, move it to a seperate request
-      // (or remove entirely, since we have the other timeline now)
-      this.web_chunks = data['chunks'];
     },
 
-    query_editor_completed(data) {
-      this.editor.duration = data['duration'];
-      this.editor.top_files = data['files'];
-      this.editor.top_languages = data['languages'];
-      this.editor.top_projects = data['projects'];
+    query_editor_completed(
+      this: State,
+      data = { duration: 0, files: [], languages: [], projects: [] }
+    ) {
+      this.editor.duration = data.duration;
+      this.editor.top_files = data.files;
+      this.editor.top_languages = data.languages;
+      this.editor.top_projects = data.projects;
     },
 
-    query_active_history_completed({ active_history }) {
+    query_active_history_completed(this: State, { active_history } = { active_history: {} }) {
       this.active.history = {
         ...this.active.history,
         ...active_history,
       };
     },
 
-    query_category_time_by_period_completed({ by_period }) {
+    query_category_time_by_period_completed(this: State, { by_period } = { by_period: [] }) {
       this.category.by_period = by_period;
     },
   },

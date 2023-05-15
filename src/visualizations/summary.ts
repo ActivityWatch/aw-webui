@@ -1,16 +1,16 @@
 'use strict';
 
-const d3 = require('d3');
-const Color = require('color');
-const _ = require('lodash');
+import * as d3 from 'd3';
+import Color from 'color';
+import _ from 'lodash';
 
-import { getCategoryColorFromString } from '../util/color';
-
-import { seconds_to_duration } from '../util/time';
+import { getCategoryColorFromString } from '~/util/color';
+import { seconds_to_duration } from '~/util/time';
+import { IEvent } from '~/util/interfaces';
 
 const textColor = '#333';
 
-function create(container) {
+function create(container: HTMLElement) {
   // Clear element
   container.innerHTML = '';
 
@@ -19,7 +19,7 @@ function create(container) {
   svg.attr('width', '100%').attr('height', '100px').attr('class', 'appsummary');
 }
 
-function set_status(container, msg) {
+function set_status(container: HTMLElement, msg: string) {
   // Select svg canvas
   const svg_elem = container.querySelector('.appsummary');
   const svg = d3.select(svg_elem);
@@ -35,7 +35,16 @@ function set_status(container, msg) {
     .attr('fill', '#999');
 }
 
-function update(container, apps) {
+interface Entry {
+  name: string;
+  hovertext: string;
+  duration: number;
+  color?: string;
+  colorKey?: string;
+  link?: string;
+}
+
+function update(container: HTMLElement, apps: Entry[]) {
   // No apps, sets status to "No data"
   if (apps.length <= 0) {
     set_status(container, 'No data');
@@ -63,9 +72,12 @@ function update(container, apps) {
     const appcolor = app.color || getCategoryColorFromString(app.colorKey || app.name);
     const hovercolor = Color(appcolor).darken(0.1).hex();
 
-    // The group representing an application in the barchart
-    const eg = svg.append('g');
-    eg.attr('id', 'summary_app_' + i)
+    // Add a parent <a> element if link is set
+    const a = app.link ? svg.append('a').attr('href', app.link) : svg;
+
+    // The group representing an entry in the barchart
+    const eg = a.append('g');
+    eg.attr('id', 'summary_' + i)
       .on('mouseover', function () {
         eg.select('rect').style('fill', hovercolor);
       })
@@ -112,7 +124,14 @@ function update(container, apps) {
   return container;
 }
 
-function updateSummedEvents(container, summedEvents, titleKeyFunc, hoverKeyFunc, colorKeyFunc) {
+function updateSummedEvents(
+  container: HTMLElement,
+  summedEvents: IEvent[],
+  titleKeyFunc: (event: IEvent) => string,
+  hoverKeyFunc: (event: IEvent) => string,
+  colorKeyFunc: (event: IEvent) => string,
+  linkKeyFunc: (event: IEvent) => string = () => null
+) {
   if (hoverKeyFunc == null) {
     hoverKeyFunc = titleKeyFunc;
   }
@@ -123,7 +142,8 @@ function updateSummedEvents(container, summedEvents, titleKeyFunc, hoverKeyFunc,
       duration: e.duration,
       color: e.data['$color'],
       colorKey: colorKeyFunc(e),
-    };
+      link: linkKeyFunc(e),
+    } as Entry;
   });
   update(container, apps);
 }

@@ -14,29 +14,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const d3 = require('d3');
-const moment = require('moment');
+import * as d3 from 'd3';
+import moment from 'moment';
 
 import { IEvent } from '~/util/interfaces';
 
 import { seconds_to_duration } from '../util/time';
-const color = require('../util/color');
+import { getColorFromString } from '~/util/color';
 
 // Dimensions of sunburst.
 const width = 750;
 const height = 600;
 const radius = Math.min(width, height) / 2;
 
-const legendData = {
-  afk: color.getColorFromString('afk'),
-  'not-afk': color.getColorFromString('not-afk'),
-  hibernating: color.getColorFromString('hibernating'),
+const legendData: Record<string, string> = {
+  afk: getColorFromString('afk'),
+  'not-afk': getColorFromString('not-afk'),
+  hibernating: getColorFromString('hibernating'),
 };
 
-let rootEl; // The root DOM node of the graph as a d3 object
-let vis; // The root SVG node of the graph as a d3 object
-let partition;
-let arc;
+interface ArcObject extends d3.DefaultArcObject, d3.HierarchyRectangularNode<IEvent> {}
+
+let rootEl: d3.Selection<HTMLElement, any, null, any>; // The root DOM node of the graph as a d3 object
+let vis: d3.Selection<SVGElement, any, HTMLElement, any>; // The root SVG node of the graph as a d3 object
+let partition_layout: d3.PartitionLayout<IEvent>; // The partition layout
+let arc: d3.Arc<any, ArcObject>;
 
 function drawLegend() {
   // Dimensions of legend item: width, height, spacing, radius of rounded rect.
@@ -117,30 +119,31 @@ function drawClock(h: number, m: number, text?: string) {
     .attr('y', 5 + 140 * yn);
 }
 
-function mouseclick(_: Event, d) {
+function mouseclick(_: Event, d: d3.HierarchyRectangularNode<IEvent>) {
   console.log('Clicked', d);
 }
 
-function showInfo(d) {
+function showInfo(d: d3.HierarchyRectangularNode<IEvent>) {
   const hoverEl = d3.select('.explanation > .hover');
 
-  const m = moment(d.data.timestamp);
+  const e: IEvent = d.data;
+  const m = moment(e.timestamp);
   hoverEl.select('.date').text(m.format('YYYY-MM-DD'));
   hoverEl.select('.time').text(m.format('HH:mm:ss'));
 
-  const durationString = seconds_to_duration(d.data.duration);
+  const durationString = seconds_to_duration(e.duration);
   hoverEl.select('.duration').text(durationString);
 
-  hoverEl.select('.title').text(d.data.data.app || d.data.data.status);
+  hoverEl.select('.title').text(e.data.app || e.data.status);
 
-  hoverEl.select('.data').text(d.data.data.title || '');
+  hoverEl.select('.data').text(e.data.title || '');
 
   d3.select('.explanation > .base').style('display', 'none');
   hoverEl.style('visibility', '');
 }
 
 // Fade all but the current sequence, and show it in the breadcrumb trail.
-function mouseover(_: Event, d) {
+function mouseover(_: Event, d: d3.HierarchyRectangularNode<IEvent>) {
   showInfo(d);
 
   const sequenceArray = d.ancestors().reverse();
@@ -153,7 +156,7 @@ function mouseover(_: Event, d) {
   // FIXME: This currently makes all other svg paths on the page faded as well
   rootEl
     .selectAll('path')
-    .filter(function (node) {
+    .filter(function (node: any) {
       return sequenceArray.indexOf(node) >= 0;
     })
     .style('opacity', 1);
@@ -201,24 +204,29 @@ function create(el: HTMLElement) {
     .attr('height', height)
     .append('svg:g')
     .attr('id', 'container')
-    .attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')');
+    .attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')') as d3.Selection<
+    SVGGElement,
+    unknown,
+    null,
+    undefined
+  >;
 
   drawLegend();
 
-  partition = d3.partition().size([2 * Math.PI, radius * radius]);
+  partition_layout = d3.partition<IEvent>().size([2 * Math.PI, radius * radius]);
 
   arc = d3
-    .arc()
-    .startAngle(function (d) {
+    .arc<ArcObject>()
+    .startAngle(function (d: ArcObject) {
       return d.x0;
     })
-    .endAngle(function (d) {
+    .endAngle(function (d: ArcObject) {
       return d.x1;
     })
-    .innerRadius(function (d) {
+    .innerRadius(function (d: ArcObject) {
       return Math.sqrt(d.y0);
     })
-    .outerRadius(function (d) {
+    .outerRadius(function (d: ArcObject) {
       return Math.sqrt(d.y1);
     });
 }
@@ -235,10 +243,11 @@ function update(el: HTMLElement, root_event: IEvent & { children: IEvent[] }) {
   vis.append('svg:circle').attr('r', radius).style('opacity', 0);
 
   // Turn the data into a d3 hierarchy and calculate the sums.
-  let root = d3.hierarchy(root_event);
-  let nodes = partition(root);
+  let root: d3.HierarchyNode<IEvent> = d3.hierarchy<IEvent>(root_event);
+  const root_node: d3.HierarchyRectangularNode<IEvent> = partition_layout(root);
 
   const mode_clock = true;
+  let nodes;
   if (mode_clock) {
     // TODO: Make this a checkbox in the UI
     const show_whole_day = true;
@@ -259,15 +268,21 @@ function update(el: HTMLElement, root_event: IEvent & { children: IEvent[] }) {
       drawClock(now.hour(), now.minute(), 'Now');
     }
 
-    nodes = nodes
-      .each(function (d) {
+    nodes = root_node
+      .each(function (d: d3.HierarchyRectangularNode<IEvent>) {
         const loc_start_sec = moment(d.data.timestamp).diff(root_start, 'seconds', true);
         const loc_end_sec = moment(d.data.timestamp)
           .add(d.data.duration, 'seconds')
           .diff(root_start, 'seconds', true);
 
-        const loc_start = Math.max(0, loc_start_sec / ((root_end - root_start) / 1000));
-        const loc_end = Math.min(1, loc_end_sec / ((root_end - root_start) / 1000));
+        const loc_start = Math.max(
+          0,
+          loc_start_sec / ((root_end.valueOf() - root_start.valueOf()) / 1000)
+        );
+        const loc_end = Math.min(
+          1,
+          loc_end_sec / ((root_end.valueOf() - root_start.valueOf()) / 1000)
+        );
 
         d.x0 = 2 * Math.PI * loc_start;
         d.x1 = 2 * Math.PI * loc_end;
@@ -277,11 +292,11 @@ function update(el: HTMLElement, root_event: IEvent & { children: IEvent[] }) {
     root = root
       .sum(d => d.duration)
       .sort((a, b) => JSON.stringify(a.data.data).localeCompare(JSON.stringify(b.data.data)));
-    nodes = nodes.descendants();
+    nodes = root_node.descendants();
   }
 
   // For efficiency, filter nodes to keep only those large enough to see.
-  nodes = nodes.filter(function (d) {
+  nodes = nodes.filter(function (d: d3.HierarchyRectangularNode<IEvent>) {
     // 0.005 radians = 0.29 degrees
     // If show_whole_day:
     //   0.0044 rad = 1min
@@ -296,13 +311,14 @@ function update(el: HTMLElement, root_event: IEvent & { children: IEvent[] }) {
     .data(nodes)
     .enter()
     .append('svg:path')
-    .attr('display', function (d) {
+    .attr('display', function (d: d3.HierarchyNode<IEvent>) {
       return d.depth ? null : 'none';
     })
     .attr('d', arc)
     .attr('fill-rule', 'evenodd')
-    .style('fill', function (d) {
-      return color.getColorFromString(d.data.data.status || d.data.data.app);
+    .style('fill', function (d: d3.HierarchyNode<IEvent>) {
+      const e: IEvent = d.data;
+      return getColorFromString(e.data.status || e.data.app);
     })
     .style('opacity', 1)
     .on('mouseover', mouseover)

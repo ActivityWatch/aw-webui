@@ -22,6 +22,9 @@ div
     tr
       th Eventcount:
       td {{ eventcount }}
+    tr
+      th Data:
+      td {{ bucket.data }}
 
   input-timeinterval(v-model="daterange", :maxDuration="maxDuration")
 
@@ -43,7 +46,6 @@ export default {
     return {
       bucketsStore: useBucketsStore(),
 
-      bucket_with_events: { events: [] },
       events: [],
       eventcount: '?',
       daterange: null,
@@ -52,7 +54,14 @@ export default {
   },
   computed: {
     bucket() {
-      return this.bucketsStore.getBucket(this.id) || {};
+      return this.bucketsStore.getBucket(this.id) || { id: this.id };
+    },
+    bucket_with_events() {
+      console.log(this.bucket);
+      return {
+        ...this.bucket,
+        events: this.events,
+      };
     },
   },
   watch: {
@@ -66,12 +75,12 @@ export default {
   },
   methods: {
     getEvents: async function (bucket_id) {
-      this.bucket_with_events = await this.bucketsStore.getBucketWithEvents({
+      const bucket = await this.bucketsStore.getBucketWithEvents({
         id: bucket_id,
         start: this.daterange[0].format(),
         end: this.daterange[1].format(),
       });
-      this.events = this.bucket_with_events.events;
+      this.events = bucket.events;
     },
     getEventCount: async function (bucket_id) {
       this.eventcount = (await getClient().countEvents(bucket_id)).data;

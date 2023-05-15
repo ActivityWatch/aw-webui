@@ -58,7 +58,6 @@ div
 import _ from 'lodash';
 import moment from 'moment';
 import { canonicalEvents } from '~/queries';
-import { loadClassesForQuery } from '~/util/classes';
 
 import 'vue-awesome/icons/plus';
 import 'vue-awesome/icons/check';
@@ -146,13 +145,11 @@ export default {
 
     // Check current time of alert goals
     check: async function () {
-      const classes = loadClassesForQuery();
-
       let query = canonicalEvents({
         bid_window: 'aw-watcher-window_' + this.hostname,
         bid_afk: 'aw-watcher-afk_' + this.hostname,
         filter_afk: this.filter_afk,
-        classes: classes,
+        classes: useCategoryStore().classes_for_query,
         filter_classes: null, // classes.map(c => c[0]),
       });
       query += '; RETURN = events;';

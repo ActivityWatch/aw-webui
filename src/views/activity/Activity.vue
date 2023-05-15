@@ -42,6 +42,7 @@ div
           icon(name="filter")
           span.d-none.d-md-inline
             |  Filters
+            b-badge(pill, variant="secondary" v-if="filters_set > 0").ml-2 {{ filters_set }}
         b-button.px-2(@click="refresh(true)", variant="outline-dark")
           icon(name="sync")
           span.d-none.d-md-inline
@@ -60,6 +61,12 @@ div
         icon#includeAudibleHelp(name="question-circle" style="opacity: 0.4")
         b-tooltip(target="includeAudibleHelp" v-b-tooltip.hover title="If the active window is an audible browser tab, count as active. Requires a browser watcher.")
 
+      b-form-checkbox(v-if="devmode" v-model="include_stopwatch" size="sm")
+        // WIP: https://github.com/ActivityWatch/aw-webui/pull/368
+        | Include manually logged events (stopwatch)
+        br
+        | #[b Note:] WIP, breaks aw-server-rust badly. Only shown in devmode.
+
     div.col-md-6.mt-2.mt-md-0
       b-form-group(label="Show category" label-cols="5" label-cols-lg="4" style="font-size: 0.88em")
         b-form-select(v-model="filter_category", :options="categoryStore.category_select(true)" size="sm")
@@ -67,9 +74,11 @@ div
 
   aw-periodusage.mt-2(:periodusage_arr="periodusage", @update="setDate")
 
+  aw-uncategorized-notification()
+
   ul.row.nav.nav-tabs.mt-4
     li.nav-item(v-for="view in views")
-      router-link.nav-link(:to="{ name: 'activity-view', params: {...$route.params, view_id: view.id}}" :class="{'router-link-exact-active': currentView.id == view.id}")
+      router-link.nav-link(:to="{ name: 'activity-view', params: {...$route.params, view_id: view.id}, query: $route.query}" :class="{'router-link-exact-active': currentView.id == view.id}")
         h6 {{view.name}}
 
     li.nav-item(style="margin-left: auto")
@@ -162,6 +171,9 @@ import { useViewsStore } from '~/stores/views';
 
 export default {
   name: 'Activity',
+  components: {
+    'aw-uncategorized-notification': () => import('~/components/UncategorizedNotification.vue'),
+  },
   props: {
     host: String,
     date: {
@@ -187,14 +199,37 @@ export default {
       today: null,
       showOptions: false,
 
-      filter_category: null,
       include_audible: true,
+      include_stopwatch: false,
       filter_afk: true,
       new_view: {},
     };
   },
   computed: {
     ...mapState(useViewsStore, ['views']),
+    ...mapState(useSettingsStore, ['devmode']),
+    ...mapState(useSettingsStore, ['always_active_pattern']),
+
+    // number of filters currently set (different from defaults)
+    filters_set() {
+      return (this.filter_category ? 1 : 0) + (!this.filter_afk ? 1 : 0);
+    },
+
+    // getter and setter for filter_category, getting and setting $route.query
+    filter_category: {
+      get() {
+        if (!this.$route.query.category) return null;
+        return this.$route.query.category.split('>');
+      },
+      set(value) {
+        if (value == null) {
+          this.$router.push({ query: _.omit(this.$route.query, 'category') });
+        } else {
+          this.$router.push({ query: { ...this.$route.query, category: value.join('>') } });
+        }
+      },
+    },
+
     periodLengths: function () {
       const settingsStore = useSettingsStore();
       let periods: Record<string, string> = {
@@ -229,7 +264,7 @@ export default {
     subview: function () {
       return this.$route.meta.subview;
     },
-    filterCategories: function () {
+    filter_categories: function () {
       if (this.filter_category) {
         const cats = this.categoryStore.all_categories;
         const isChild = p => c => c.length > p.length && _.isEqual(p, c.slice(0, p.length));
@@ -362,9 +397,10 @@ export default {
         const new_period_length_moment = periodLengthConvertMoment(periodLength);
         new_date = moment(date).startOf(new_period_length_moment).format('YYYY-MM-DD');
       }
-      this.$router.push(
-        `/activity/${this.host}/${periodLength}/${new_date}/${this.subview}/${this.currentViewId}`
-      );
+      this.$router.push({
+        path: `/activity/${this.host}/${periodLength}/${new_date}/${this.subview}/${this.currentViewId}`,
+        query: this.$route.query,
+      });
     },
 
     refresh: async function (force) {
@@ -374,7 +410,9 @@ export default {
         force: force,
         filter_afk: this.filter_afk,
         include_audible: this.include_audible,
+        include_stopwatch: this.include_stopwatch,
         filter_categories: this.filter_categories,
+        always_active_pattern: this.always_active_pattern,
       };
       await this.activityStore.ensure_loaded(queryOptions);
     },

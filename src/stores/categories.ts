@@ -2,17 +2,35 @@ import _ from 'lodash';
 import {
   saveClasses,
   loadClasses,
+  cleanCategory,
   defaultCategories,
   build_category_hierarchy,
   createMissingParents,
   annotate,
   Category,
+  Rule,
 } from '~/util/classes';
+import { getColorFromCategory } from '~/util/color';
 import { defineStore } from 'pinia';
 
 interface State {
   classes: Category[];
   classes_unsaved_changes: boolean;
+}
+
+function getScoreFromCategory(c: Category, allCats: Category[]): number {
+  // Returns the score for a certain category, falling back to parents if none set
+  // Very similar to getColorFromCategory
+  if (c && c.data && c.data.score) {
+    return c.data.score;
+  } else if (c && c.name.slice(0, -1).length > 0) {
+    // If no color is set on category, traverse parents until one is found
+    const parent = c.name.slice(0, -1);
+    const parentCat = allCats.find(cc => _.isEqual(cc.name, parent));
+    return getScoreFromCategory(parentCat, allCats);
+  } else {
+    return 0;
+  }
 }
 
 export const useCategoryStore = defineStore('categories', {
@@ -23,9 +41,19 @@ export const useCategoryStore = defineStore('categories', {
 
   // getters
   getters: {
+    classes_clean(): Category[] {
+      return this.classes.map(cleanCategory);
+    },
     classes_hierarchy() {
       const hier = build_category_hierarchy(_.cloneDeep(this.classes));
       return _.sortBy(hier, [c => c.id || 0]);
+    },
+    classes_for_query(): [string[], Rule][] {
+      return this.classes
+        .filter(c => c.rule.type !== null)
+        .map(c => {
+          return [c.name, c.rule];
+        });
     },
     all_categories(): string[][] {
       // Returns a list of category names (a list of list of strings)
@@ -42,7 +70,14 @@ export const useCategoryStore = defineStore('categories', {
         (v: string[]) => v.join('>>>>') // Can be any separator that doesn't appear in the category names themselves
       );
     },
-    get_category() {
+    allCategoriesSelect(): { value: string[]; text: string }[] {
+      const categories = this.all_categories;
+      const entries = categories.map(c => {
+        return { text: c.join(' > '), value: c, id: c.id };
+      });
+      return _.sortBy(entries, 'text');
+    },
+    get_category(this: State) {
       return (category_arr: string[]): Category => {
         if (typeof category_arr === 'string' || category_arr instanceof String)
           console.error('Passed category was string, expected array. Lookup will fail.');
@@ -57,9 +92,19 @@ export const useCategoryStore = defineStore('categories', {
         return annotate(_.cloneDeep(match));
       };
     },
-    get_category_by_id() {
+    get_category_by_id(this: State) {
       return (id: number) => {
         return annotate(_.cloneDeep(this.classes.find((c: Category) => c.id == id)));
+      };
+    },
+    get_category_color() {
+      return (cat: string[]): string => {
+        return getColorFromCategory(this.get_category(cat), this.classes);
+      };
+    },
+    get_category_score() {
+      return (cat: string[]): number => {
+        return getScoreFromCategory(this.get_category(cat), this.classes);
       };
     },
     category_select() {
@@ -83,30 +128,30 @@ export const useCategoryStore = defineStore('categories', {
   },
 
   actions: {
-    async load() {
-      this.loadClasses(await loadClasses());
-    },
-    async save() {
-      const r = saveClasses(this.classes);
-      this.saveCompleted();
-      return r;
-    },
-
-    // mutations
-    loadClasses(classes: Category[]) {
+    load(this: State, classes: Category[] = null) {
+      if (classes === null) {
+        classes = loadClasses();
+      }
       classes = createMissingParents(classes);
 
       let i = 0;
       this.classes = classes.map(c => Object.assign(c, { id: i++ }));
       this.classes_unsaved_changes = false;
     },
-    import(classes: Category[]) {
+    save() {
+      const r = saveClasses(this.classes);
+      this.classes_unsaved_changes = false;
+      return r;
+    },
+
+    // mutations
+    import(this: State, classes: Category[]) {
       let i = 0;
       // overwrite id even if already set
       this.classes = classes.map(c => Object.assign(c, { id: i++ }));
       this.classes_unsaved_changes = true;
     },
-    updateClass(new_class: Category) {
+    updateClass(this: State, new_class: Category) {
       console.log('Updating class:', new_class);
       const old_class = this.classes.find((c: Category) => c.id === new_class.id);
       const old_name = old_class.name;
@@ -129,28 +174,35 @@ export const useCategoryStore = defineStore('categories', {
 
       this.classes_unsaved_changes = true;
     },
-    addClass(new_class: Category) {
+    addClass(this: State, new_class: Category) {
       new_class.id = _.max(_.map(this.classes, 'id')) + 1;
       this.classes.push(new_class);
       this.classes_unsaved_changes = true;
     },
-    removeClass(classId: number) {
+    removeClass(this: State, classId: number) {
       this.classes = this.classes.filter((c: Category) => c.id !== classId);
       this.classes_unsaved_changes = true;
     },
-    restoreDefaultClasses() {
+    appendClassRule(this: State, classId: number, pattern: string) {
+      const cat = this.classes.find((c: Category) => c.id === classId);
+      if (cat.rule.type === 'none' || cat.rule.type === null) {
+        cat.rule.type = 'regex';
+        cat.rule.regex = pattern;
+      } else if (cat.rule.type === 'regex') {
+        cat.rule.regex += '|' + pattern;
+      }
+      this.classes_unsaved_changes = true;
+    },
+    restoreDefaultClasses(this: State) {
       let i = 0;
       this.classes = createMissingParents(defaultCategories).map(c =>
         Object.assign(c, { id: i++ })
       );
       this.classes_unsaved_changes = true;
     },
-    clearAll() {
+    clearAll(this: State) {
       this.classes = [];
       this.classes_unsaved_changes = true;
-    },
-    saveCompleted() {
-      this.classes_unsaved_changes = false;
     },
   },
 });

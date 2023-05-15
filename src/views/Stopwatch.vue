@@ -5,7 +5,7 @@ div
     | Using bucket: {{bucket_id}}
 
   b-alert(show)
-    | This is an early experiment, an important missing feature is the ability to set start/end times manually.
+    | This is an early experiment. Data entered here is not shown in the Activity view, yet.
 
   b-input-group(size="lg")
     b-input(v-model="label" placeholder="What are you working on?")

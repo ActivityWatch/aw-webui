@@ -18,6 +18,9 @@ div
   b-form-group(label="Request timeout" label-cols-md=3 description="The maximum amount of time a server request can take before timing out. Setting this to a high value can be useful for large queries. Note that you need to reload the web UI for it to apply.")
     div
       b-input.float-right.ml-2(v-model="requestTimeout" type="number")
+
+  div
+    | Web UI commit hash: {{ COMMIT_HASH }}
 </template>
 
 <script>

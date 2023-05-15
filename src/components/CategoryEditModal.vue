@@ -6,6 +6,7 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
       b-form-input(v-model="editing.name")
     b-input-group(prepend="Parent")
       b-select(v-model="editing.parent", :options="allCategories")
+    //| ID: {{editing.id}}
 
   hr
   div.my-1
@@ -15,8 +16,15 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
     div(v-if="editing.rule.type === 'regex'")
       b-input-group.my-1(prepend="Pattern")
         b-form-input(v-model="editing.rule.regex")
-      b-form-checkbox(v-model="editing.rule.ignore_case" switch)
-        | Ignore case
+      div.d-flex
+        div.flex-grow-1
+          b-form-checkbox(v-model="editing.rule.ignore_case" switch)
+            | Ignore case
+        div.flex-grow-1
+          small.text-right
+            //div(v-if="valid" style="color: green") Valid
+            div(v-if="!validPattern" style="color: red") Invalid pattern
+            div(v-if="validPattern && broad_pattern" style="color: orange") Pattern too broad
 
   hr
   div.my-1
@@ -26,12 +34,14 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
       | Inherit parent color
     div.mt-1(v-show="!editing.inherit_color")
       color-picker(v-model="editing.color")
-
-  //
-    div.my-1
-      b Productivity score
-      b-input-group.my-1(prepend="Points")
-        b-form-input(v-model="editing.productivity")
+  
+  hr
+  div.my-1
+    b Productivity score
+    b-form-checkbox(v-model="editing.inherit_score" switch)
+      | Inherit parent score
+    b-input-group.my-1(prepend="Score" v-if="!editing.inherit_score")
+      b-form-input(v-model="editing.score")
 
   hr
   div.my-1
@@ -44,6 +54,10 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
 import _ from 'lodash';
 import ColorPicker from '~/components/ColorPicker';
 import { useCategoryStore } from '~/stores/categories';
+import { mapState } from 'pinia';
+import { validateRegex, isRegexBroad } from '~/util/validate';
+
+import 'vue-awesome/icons/trash';
 
 export default {
   name: 'CategoryEditModal',
@@ -58,29 +72,36 @@ export default {
       categoryStore: useCategoryStore(),
 
       editing: {
-        id: 0, // FIXME: Use ID assigned to category in vuex store, in order for saves to be uniquely targeted
+        id: 0, // FIXME: Use ID assigned to category in store, in order for saves to be uniquely targeted
         name: null,
         rule: {},
         parent: [],
         inherit_color: true,
         color: null,
+        inherit_score: true,
+        score: null,
       },
     };
   },
   computed: {
-    allCategories: function () {
-      const categories = this.categoryStore.all_categories;
-      const entries = categories.map(c => {
-        return { text: c.join('->'), value: c };
-      });
-      return [{ value: [], text: 'None' }].concat(_.sortBy(entries, 'text'));
-    },
+    ...mapState(useCategoryStore, {
+      allCategories: state => [{ value: [], text: 'None' }].concat(state.allCategoriesSelect),
+    }),
     allRuleTypes: function () {
       return [
-        { value: null, text: 'None' },
+        { value: 'none', text: 'None' },
         { value: 'regex', text: 'Regular Expression' },
         //{ value: 'glob', text: 'Glob pattern' },
       ];
+    },
+    valid: function () {
+      return this.editing.rule.type !== 'none' && this.validPattern;
+    },
+    validPattern: function () {
+      return this.editing.rule.type === 'regex' && validateRegex(this.editing.rule.regex || '');
+    },
+    broad_pattern: function () {
+      return this.editing.rule.type === 'regex' && isRegexBroad(this.editing.rule.regex || '');
     },
   },
   watch: {
@@ -116,6 +137,7 @@ export default {
       event.preventDefault();
       // Trigger submit handler
       this.handleSubmit();
+      this.$emit('ok');
     },
     handleSubmit() {
       // Exit when the form isn't valid
@@ -127,8 +149,11 @@ export default {
       const new_class = {
         id: this.editing.id,
         name: this.editing.parent.concat(this.editing.name),
-        rule: this.editing.rule.type !== null ? this.editing.rule : { type: null },
-        data: { color: this.editing.inherit_color === true ? undefined : this.editing.color },
+        rule: this.editing.rule.type !== 'none' ? this.editing.rule : { type: 'none' },
+        data: {
+          color: this.editing.inherit_color === true ? undefined : this.editing.color,
+          score: this.editing.inherit_score === true ? undefined : this.editing.score,
+        },
       };
       this.categoryStore.updateClass(new_class);
 
@@ -141,13 +166,17 @@ export default {
       const cat = this.categoryStore.get_category_by_id(this.categoryId);
       const color = cat.data ? cat.data.color : undefined;
       const inherit_color = !color;
+      const score = cat.data ? cat.data.score : undefined;
+      const inherit_score = !score;
       this.editing = {
         id: cat.id,
         name: cat.subname,
         rule: _.cloneDeep(cat.rule),
+        parent: cat.parent ? cat.parent : [],
         color,
         inherit_color,
-        parent: cat.parent ? cat.parent : [],
+        score,
+        inherit_score,
       };
     },
   },

@@ -26,6 +26,7 @@ div
             icon(name="folder-open").d-none.d-md-inline-block
             | Open
           b-dropdown(variant="outline-secondary", size="sm", text="More")
+            // FIXME: These also exist as almost-copies in the Bucket view, can maybe be shared/reused instead.
             b-dropdown-item(
                        :href="$aw.baseURL + '/api/0/buckets/' + data.item.id + '/export'",
                        :download="'aw-bucket-export-' + data.item.id + '.json'",
@@ -64,7 +65,7 @@ div
       b-alert(v-if="import_error" show variant="danger" dismissable)
         | {{ import_error }}
       b-form-file(v-model="import_file"
-                  placeholder="Choose a file or drop file here..."
+                  placeholder="Choose or drop a file here..."
                   drop-placeholder="Drop file here...")
       // TODO: This spinner could be placed in a more suitable place
       div(v-if="import_file" class="spinner-border" role="status")
@@ -79,6 +80,18 @@ div
         icon(name="download")
         | Export all buckets as JSON
 
+  hr
+
+  aw-devonly(reason="This section is still under development")
+    h2.p-2 Tools
+
+    hr
+
+    aw-bucket-validate.p-2
+
+    hr
+
+    aw-bucket-merge.p-2
 </template>
 
 <style lang="scss">
@@ -116,6 +129,10 @@ import { useBucketsStore } from '~/stores/buckets';
 
 export default {
   name: 'Buckets',
+  components: {
+    'aw-bucket-merge': () => import('~/components/BucketMerge.vue'),
+    'aw-bucket-validate': () => import('~/components/BucketValidate.vue'),
+  },
   data() {
     return {
       bucketsStore: useBucketsStore(),
@@ -179,7 +196,7 @@ export default {
       const bucket = await this.bucketsStore.getBucketWithEvents({ id: bucketId });
       const events = bucket.events;
       const datakeys = Object.keys(events[0].data);
-      const columns = ['timestamp', 'duration'] + datakeys;
+      const columns = ['timestamp', 'duration'].concat(datakeys);
       const data = events.map(e => {
         return Object.assign(
           { timestamp: e.timestamp, duration: e.duration },

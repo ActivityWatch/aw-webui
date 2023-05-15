@@ -18,6 +18,7 @@ module.exports = {
       testMatch: ['**/test/**/*.test.js?(x)'],
       moduleNameMapper: {
         '^~/(.+)$': '<rootDir>/src/$1',
+        '^d3$': '<rootDir>/node_modules/d3/dist/d3.min.js',
       },
       moduleFileExtensions: ['js', 'ts', 'vue', 'json'],
       modulePathIgnorePatterns: ['test/e2e/screenshot.test.js'], // Don't run this file in npm test
@@ -34,6 +35,7 @@ module.exports = {
       },
       moduleNameMapper: {
         '^~/(.+)$': '<rootDir>/src/$1',
+        '^d3$': '<rootDir>/node_modules/d3/dist/d3.min',
       },
     },
   ],

@@ -59,6 +59,7 @@ Vue.component('aw-categorytree', () => import('./visualizations/CategoryTree.vue
 Vue.component('aw-timeline-barchart', () => import('./visualizations/TimelineBarChart.vue'));
 Vue.component('aw-calendar', () => import('./visualizations/Calendar.vue'));
 Vue.component('aw-custom-vis', () => import('./visualizations/CustomVisualization.vue'));
+Vue.component('aw-score', () => import('./visualizations/Score.vue'));
 
 // A mixin to make async method errors propagate
 Vue.mixin(require('~/mixins/asyncErrorCaptured.js'));
@@ -66,6 +67,7 @@ Vue.mixin(require('~/mixins/asyncErrorCaptured.js'));
 // Set the PRODUCTION constant
 // FIXME: Thould follow Vue convention and start with a $.
 Vue.prototype.PRODUCTION = PRODUCTION;
+Vue.prototype.COMMIT_HASH = COMMIT_HASH;
 
 // Set the $isAndroid constant
 Vue.prototype.$isAndroid = process.env.VUE_APP_ON_ANDROID;

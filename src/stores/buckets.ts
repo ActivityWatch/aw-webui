@@ -11,26 +11,30 @@ function select_buckets(
   return _.map(
     _.filter(
       buckets,
-      bucket => (!type || bucket['type'] === type) && (!host || bucket['hostname'] == host)
+      bucket => (!type || bucket.type === type) && (!host || bucket.hostname == host)
     ),
     bucket => bucket['id']
   );
 }
 
+interface State {
+  buckets: IBucket[];
+}
+
 export const useBucketsStore = defineStore('buckets', {
-  state: () => ({
+  state: (): State => ({
     buckets: [],
   }),
 
   getters: {
-    hosts(): string[] {
+    hosts(this: State): string[] {
       // TODO: Include consideration of device_id UUID
-      return _.uniq(_.map(this.buckets, bucket => bucket['hostname']));
+      return _.uniq(_.map(this.buckets, bucket => bucket.hostname));
     },
     // Uses device_id instead of hostname
-    devices(): string[] {
+    devices(this: State): string[] {
       // TODO: Include consideration of device_id UUID
-      return _.uniq(_.map(this.buckets, bucket => bucket['device_id']));
+      return _.uniq(_.map(this.buckets, bucket => bucket.device_id));
     },
 
     available(): (hostname: string) => {
@@ -39,6 +43,7 @@ export const useBucketsStore = defineStore('buckets', {
       editor: boolean;
       android: boolean;
       category: boolean;
+      stopwatch: boolean;
     } {
       // Returns a map of which kinds of buckets are available
       //
@@ -52,70 +57,76 @@ export const useBucketsStore = defineStore('buckets', {
 
         return {
           window: windowAvail,
-          browser: window && this.bucketsBrowser(hostname).length > 0,
+          browser: windowAvail && this.bucketsBrowser(hostname).length > 0,
           editor: this.bucketsEditor(hostname).length > 0,
           android: androidAvail,
           category: windowAvail || androidAvail,
+          stopwatch: this.bucketsStopwatch(hostname).length > 0,
         };
       };
     },
 
-    // These should be considered low-level, and should be used sparingly.
+    bucketsByType(
+      this: State
+    ): (host: string, type: string, fallback_unknown_host?: boolean) => string[] {
+      return (host, type, fallback_unknown_host) => {
+        let buckets = select_buckets(this.buckets, { host, type });
+        if (fallback_unknown_host && buckets.length == 0) {
+          buckets = select_buckets(this.buckets, { host: 'unknown', type });
+          //console.log('fallback: ', buckets);
+        }
+        return buckets;
+      };
+    },
+
+    // Convenience getters for bucketsByType
     bucketsAFK(): (host: string) => string[] {
-      return host => select_buckets(this.buckets, { host, type: 'afkstatus' });
+      return host => this.bucketsByType(host, 'afkstatus');
     },
     bucketsWindow(): (host: string) => string[] {
       return host =>
-        _.filter(
-          select_buckets(this.buckets, { host, type: 'currentwindow' }),
-          id => !id.startsWith('aw-watcher-android')
+        this.bucketsByType(host, 'currentwindow').filter(
+          (id: string) => !id.startsWith('aw-watcher-android')
         );
     },
     bucketsAndroid(): (host: string) => string[] {
       return host =>
-        _.filter(select_buckets(this.buckets, { host, type: 'currentwindow' }), id =>
+        this.bucketsByType(host, 'currentwindow').filter((id: string) =>
           id.startsWith('aw-watcher-android')
         );
     },
     bucketsEditor(): (host: string) => string[] {
       // fallback to a bucket with 'unknown' host, if one exists.
       // TODO: This needs a fix so we can get rid of this workaround.
-      const type = 'app.editor.activity';
-      return (host: string) => {
-        const buckets = select_buckets(this.buckets, { host, type });
-        return buckets.length == 0
-          ? select_buckets(this.buckets, { host: 'unknown', type })
-          : buckets;
-      };
+      return host => this.bucketsByType(host, 'app.editor.activity', true);
     },
     bucketsBrowser(): (host: string) => string[] {
       // fallback to a bucket with 'unknown' host, if one exists.
       // TODO: This needs a fix so we can get rid of this workaround.
-      const type = 'web.tab.current';
-      return (host: string) => {
-        const buckets = select_buckets(this.buckets, { host, type });
-        return buckets.length == 0
-          ? select_buckets(this.buckets, { host: 'unknown', type })
-          : buckets;
-      };
+      return host => this.bucketsByType(host, 'web.tab.current', true);
+    },
+    bucketsStopwatch(): (host: string) => string[] {
+      // fallback to a bucket with 'unknown' host, if one exists.
+      // TODO: This needs a fix so we can get rid of this workaround.
+      return (host: string) => this.bucketsByType(host, 'general.stopwatch', true);
     },
 
-    getBucket(): (id: string) => IBucket {
+    getBucket(this: State): (id: string) => IBucket {
       return id => _.filter(this.buckets, b => b.id === id)[0];
     },
-    bucketsByHostname(): Record<string, IBucket[]> {
+    bucketsByHostname(this: State): Record<string, IBucket[]> {
       return _.groupBy(this.buckets, 'hostname');
     },
   },
 
   actions: {
-    async ensureLoaded() {
+    async ensureLoaded(): Promise<void> {
       if (this.buckets.length === 0) {
         await this.loadBuckets();
       }
     },
 
-    async loadBuckets() {
+    async loadBuckets(): Promise<void> {
       const buckets = await getClient().getBuckets();
       this.update_buckets(buckets);
     },
@@ -141,7 +152,7 @@ export const useBucketsStore = defineStore('buckets', {
       return bucket;
     },
 
-    async getBucketsWithEvents({ start, end }) {
+    async getBucketsWithEvents({ start, end }: { start?: Date; end?: Date }) {
       await this.ensureLoaded();
       const buckets = await Promise.all(
         _.map(
@@ -152,14 +163,14 @@ export const useBucketsStore = defineStore('buckets', {
       return _.orderBy(buckets, [b => b.id], ['asc']);
     },
 
-    async deleteBucket({ bucketId }) {
+    async deleteBucket({ bucketId }: { bucketId: string }) {
       console.log(`Deleting bucket ${bucketId}`);
       await getClient().deleteBucket(bucketId);
       await this.loadBuckets();
     },
 
     // mutations
-    update_buckets(buckets) {
+    update_buckets(this: State, buckets: IBucket[]): void {
       this.buckets = buckets;
     },
   },

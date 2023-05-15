@@ -18,10 +18,10 @@ div
 </style>
 
 <script>
-// NOTE: This is just a Vue.js component wrapper for summary.js
+// NOTE: This is just a Vue.js component wrapper for summary.ts
 //       Code should generally go in the framework-independent file.
 
-import summary from './summary.js';
+import summary from './summary';
 import 'vue-awesome/icons/angle-double-down';
 import 'vue-awesome/icons/angle-double-up';
 
@@ -35,6 +35,10 @@ export default {
       default: null, // If not set we will default to namefunc
     },
     colorfunc: Function,
+    linkfunc: {
+      type: Function,
+      default: () => null,
+    },
     limit: {
       type: Number,
       default: 5,
@@ -68,13 +72,14 @@ export default {
   methods: {
     update: function () {
       const el = this.$el.children[0];
-      if (this.fields !== null) {
+      if (this.fields) {
         summary.updateSummedEvents(
           el,
           this.fields.slice(0, this.limit_),
           this.namefunc,
           this.hoverfunc,
-          this.colorfunc
+          this.colorfunc,
+          this.linkfunc
         );
       } else {
         summary.set_status(el, 'Loading...');

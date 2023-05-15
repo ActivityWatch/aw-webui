@@ -47,7 +47,7 @@ jobs:
         node-version: [16]
         python-version: ['3.9']
         aw-server: ["aw-server", "aw-server-rust"]
-        aw-version: ["v0.12.0b2"]
+        aw-version: ["v0.12.1"]
         include:
         - node-version: '16'
           python-version: '3.9'
@@ -103,7 +103,7 @@ jobs:
       if: ${{ matrix.aw-server == 'aw-server-rust' && matrix.aw-version == 'master' }}
       run: |
         chmod +x ./aw-server-rust/debug/aw-server
-        ./aw-server-rust/debug/aw-server --testing &
+        LOG_LEVEL=debug ./aw-server-rust/debug/aw-server --testing &
 
     - name: Insert fake data into aw-server
       run: |
@@ -111,7 +111,8 @@ jobs:
         wget --no-verbose -O fakedata.py https://raw.githubusercontent.com/ActivityWatch/aw-fakedata/master/aw_fakedata.py
         GITDATE=$(git show -s --format=%ci HEAD | sed -r 's/ .+//g')
         STARTDATE=$(date --date="${GITDATE} -30 day" +%Y-%m-%d)
-        python3 fakedata.py --since $STARTDATE --until $GITDATE
+        ENDDATE=$(date --date="${GITDATE} +1 day" +%Y-%m-%d)
+        python3 fakedata.py --since $STARTDATE --until $ENDDATE
 
     - name: Install
       run: npm ci
@@ -124,11 +125,14 @@ jobs:
           npm run serve &
           sleep 3  # give a few seconds
     - name: Run e2e tests with testcafe
+      id: e2e
       uses: DevExpress/testcafe-action@latest
       with:
         # NOTE: --skip-js-errors should be removed when things work properly
         args: "--skip-js-errors chrome test/e2e/"
     - name: Move screenshots to subdir
+      # Run this step even if e2e tests flag failure
+      if: ${{ success() || steps.e2e.conclusion == 'failure'}}
       env:
         aw_server: ${{ matrix.aw-server }}
         aw_version: ${{ matrix.aw-version }}
@@ -136,7 +140,28 @@ jobs:
         mkdir -p screenshots/dist/$aw_server/$aw_version
         mv screenshots/*.png screenshots/dist/$aw_server/$aw_version
     - name: Upload screenshots
+      if: ${{ success() || steps.e2e.conclusion == 'failure'}}
       uses: actions/upload-artifact@v2-preview
       with:
         name: screenshots
         path: screenshots/dist/*
+    - name: Print server logs to console
+      if: ${{ always() }}
+      shell: bash
+      run:
+        for file in ~/.cache/activitywatch/log/*/*.log; do echo $file; cat $file; echo; done
+    - name: Move logs to subdir
+      # Run this step even if e2e tests flag failure
+      if: ${{ always() }}
+      env:
+        aw_server: ${{ matrix.aw-server }}
+        aw_version: ${{ matrix.aw-version }}
+      run: |
+        mkdir -p logs/dist/$aw_server/$aw_version
+        mv ~/.cache/activitywatch/log/*/*.log logs/dist/$aw_server/$aw_version
+    - name: Upload logs
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v2-preview
+      with:
+        name: logs
+        path: logs/dist/*

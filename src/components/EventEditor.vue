@@ -1,5 +1,5 @@
 <template lang="pug">
-b-modal(id="edit-modal", ref="eventEditModal", title="Edit event", centered, hide-footer)
+b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEditModal", title="Edit event", centered, hide-footer)
   div(v-if="!editedEvent")
     | Loading event...
 

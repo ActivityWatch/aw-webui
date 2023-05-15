@@ -64,6 +64,7 @@ div
       aw-summary(:fields="activityStore.category.top",
                  :namefunc="e => e.data['$category'].join(' > ')",
                  :colorfunc="e => e.data['$category'].join(' > ')",
+                 :linkfunc="e => '#' + $route.path + '?category=' + e.data['$category'].join('>')",
                  with_limit)
     div(v-if="type == 'category_tree'")
       aw-categorytree(:events="activityStore.category.top")
@@ -75,6 +76,10 @@ div
       aw-sunburst-clock(:date="date", :afkBucketId="activityStore.buckets.afk[0]", :windowBucketId="activityStore.buckets.window[0]")
     div(v-if="type == 'custom_vis'")
       aw-custom-vis(:visname="props.visname" :title="props.title")
+    div(v-if="type == 'vis_timeline' && isSingleDay")
+      vis-timeline(:buckets="timeline_buckets", :showRowLabels='true', :queriedInterval="timeline_daterange")
+    div(v-if="type == 'score'")
+      aw-score(:date="date")
 </template>
 
 <style lang="scss">
@@ -102,6 +107,9 @@ import { build_category_hierarchy } from '~/util/classes';
 
 import { useActivityStore } from '~/stores/activity';
 import { useCategoryStore } from '~/stores/categories';
+import { useBucketsStore } from '~/stores/buckets';
+
+import moment from 'moment';
 
 function pick_subname_as_name(c) {
   c.name = c.subname;
@@ -136,6 +144,8 @@ export default {
         'timeline_barchart',
         'sunburst_clock',
         'custom_vis',
+        'vis_timeline',
+        'score',
       ],
       // TODO: Move this function somewhere else
       top_editor_files_namefunc: e => {
@@ -155,6 +165,7 @@ export default {
         return f;
       },
       top_editor_projects_hoverfunc: e => e.data.project,
+      timeline_buckets: null,
     };
   },
   computed: {
@@ -208,9 +219,17 @@ export default {
           title: 'Sunburst clock',
           available: this.activityStore.window.available && this.activityStore.active.available,
         },
+        vis_timeline: {
+          title: 'Daily Timeline (Chronological)',
+          available: true,
+        },
         custom_vis: {
           title: 'Custom Visualization',
           available: true, // TODO: Implement
+        },
+        score: {
+          title: 'Score',
+          available: this.activityStore.category.available,
         },
       };
     },
@@ -218,7 +237,7 @@ export default {
       return this.visualizations[this.type].available;
     },
     supports_period: function () {
-      if (this.type == 'sunburst_clock') {
+      if (this.type == 'sunburst_clock' || this.type == 'vis_timeline') {
         return this.isSingleDay;
       }
       return true;
@@ -248,7 +267,7 @@ export default {
       );
 
       // Return dataset if data found, else return null (indicating no data)
-      if (datasets.length > 1) return datasets;
+      if (datasets.length > 0) return datasets;
       else return null;
     },
     date: function () {
@@ -258,8 +277,43 @@ export default {
       }
       return date;
     },
+    timeline_daterange: function () {
+      let date = this.activityStore.query_options.date;
+      if (!date) {
+        date = this.activityStore.query_options.timeperiod.start;
+      }
+
+      // Get events data from CurrentData ± 1 Day so that there is some continuity
+      return [moment(date).subtract(1, 'day'), moment(date).add(1, 'day')];
+    },
     isSingleDay: function () {
       return _.isEqual(this.activityStore.query_options.timeperiod.length, [1, 'day']);
+    },
+  },
+  watch: {
+    timeline_daterange: async function () {
+      await this.getTimelineBuckets();
+    },
+    type: async function (newType) {
+      if (newType == 'vis_timeline') await this.getTimelineBuckets();
+    },
+  },
+  mounted: async function () {
+    if (this.type == 'vis_timeline') {
+      await this.getTimelineBuckets();
+    }
+  },
+  methods: {
+    getTimelineBuckets: async function () {
+      if (!this.timeline_daterange) return;
+
+      await useBucketsStore().ensureLoaded();
+      this.timeline_buckets = Object.freeze(
+        await useBucketsStore().getBucketsWithEvents({
+          start: this.timeline_daterange[0].format(),
+          end: this.timeline_daterange[1].format(),
+        })
+      );
     },
   },
 };
