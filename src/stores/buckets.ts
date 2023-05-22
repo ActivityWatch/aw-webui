@@ -136,8 +136,8 @@ export const useBucketsStore = defineStore('buckets', {
             device_ids,
             hostname: hostnames[0],
             hostnames,
-            first_seen: _.min(_.map(d, b => b.metadata.start)),
-            last_updated: _.max(_.map(d, b => b.metadata.end)),
+            first_seen: _.min(_.map(d, b => b.first_seen)),
+            last_updated: _.max(_.map(d, b => b.last_updated)),
           };
         }
       );
@@ -220,10 +220,10 @@ export const useBucketsStore = defineStore('buckets', {
     update_buckets(this: State, buckets: IBucket[]): void {
       this.buckets = _.orderBy(buckets, [b => b.id], ['asc']).map(b => {
         // Some harmonization as aw-server-rust and aw-server-python APIs diverge slightly
-        if (!b.last_updated && b.metadata.end) {
+        if (!b.last_updated && b.metadata && b.metadata.end) {
           b.last_updated = b.metadata.end;
         }
-        if (!b.first_seen && b.metadata.start) {
+        if (!b.first_seen && b.metadata && b.metadata.start) {
           b.first_seen = b.metadata.start;
         }
         return b;
