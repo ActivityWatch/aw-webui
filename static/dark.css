@@ -16,6 +16,10 @@ body {
   background-color: #0f131a !important;
 }
 
+hr {
+  border-color: #282c32;
+}
+
 .aw-container {
   background-color: #1a1d24 !important;
   border-color: #282c32 !important;
@@ -99,7 +103,6 @@ body {
 
 [class*=table-responsive-] > .table {
   color: #e9ebf0 !important;
-  background-color: #343a40 !important;
 }
 
 [class*=table-responsive-] > .table * {

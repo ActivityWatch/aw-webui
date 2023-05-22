@@ -10,4 +10,7 @@ export interface IBucket {
   device_id: string;
   type: string;
   data: Record<string, any>;
+  metadata?: { start: Date; end: Date };
+  last_updated?: Date;
+  first_seen?: Date;
 }

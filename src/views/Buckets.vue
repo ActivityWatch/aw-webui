@@ -5,46 +5,73 @@ div
   b-alert(show)
     | Are you looking to collect more data? Check out #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") the docs] for more watchers.
 
-  b-table(hover, small, :items="buckets", :fields="fields", responsive="md", sort-by="last_updated", :sort-desc="true")
-    template(v-slot:cell(id)="data")
-      small
-        | {{ data.item.id }}
-    template(v-slot:cell(hostname)="data")
-      small
-        | {{ data.item.hostname }}
-    template(v-slot:cell(last_updated)="data")
-      // aw-server-python
-      small(v-if="data.item.last_updated")
-        | {{ data.item.last_updated | friendlytime }}
-      // aw-server-rust
-      small(v-if="data.item.metadata && data.item.metadata.end")
-        | {{ data.item.metadata.end | friendlytime }}
-    template(v-slot:cell(actions)="data")
-      b-button-toolbar.float-right
-        b-button-group(size="sm", class="mx-1")
-          b-button(variant="primary", :to="'/buckets/' + data.item.id")
-            icon(name="folder-open").d-none.d-md-inline-block
-            | Open
-          b-dropdown(variant="outline-secondary", size="sm", text="More")
-            // FIXME: These also exist as almost-copies in the Bucket view, can maybe be shared/reused instead.
-            b-dropdown-item(
-                       :href="$aw.baseURL + '/api/0/buckets/' + data.item.id + '/export'",
-                       :download="'aw-bucket-export-' + data.item.id + '.json'",
-                       title="Export bucket to JSON",
-                       variant="secondary")
-                icon(name="download")
-                | Export bucket as JSON
-            b-dropdown-item(
-                        @click="export_csv(data.item.id)",
-                       title="Export events to CSV",
-                       variant="secondary")
-                icon(name="download")
-                | Export events as CSV
-            b-dropdown-divider
-            b-dropdown-item-button(@click="openDeleteBucketModal(data.item.id)",
-                     title="Delete this bucket permanently",
-                     variant="danger")
-              | #[icon(name="trash")] Delete bucket
+  // By device
+  b-card.mb-3(v-for="device in bucketsStore.bucketsByDevice", :key="device.hostname || device.device_id")
+    div.mb-3
+      div.d-flex
+        div
+          icon(v-if="device.hostname === 'unknown'" name="question")
+          // TODO: detect device type somewhere else (should unify with store logic)
+          icon(v-else, name="desktop")
+          | &nbsp;
+        div
+          b {{ device.hostname }}
+          span.small.ml-2(v-if="serverStore.info.hostname == device.hostname")
+            | (the current device)
+          div.small
+            div(v-if="device.hostname !== device.device_id", style="color: #666")
+              | ID: {{ device.id }}
+            div
+              | Last updated:&nbsp;
+              time(:style="{'color': isRecent(device.last_updated) ? 'green' : 'inherit'}",
+                   :datetime="device.last_updated",
+                   :title="device.last_updated")
+                | {{ device.last_updated | friendlytime }}
+            div
+              | First seen:&nbsp;
+              time(:datetime="device.first_seen",
+                   :title="device.first_seen")
+                | {{ device.first_seen | friendlytime }}
+
+    b-row
+      b-col
+        b-table.mb-0(small, hover, :items="device.buckets", :fields="fields", responsive="md")
+          template(v-slot:cell(last_updated)="data")
+            small(v-if="data.item.last_updated", :style="{'color': isRecent(data.item.last_updated) ? 'green' : 'inherit'}")
+              | {{ data.item.last_updated | friendlytime }}
+          template(v-slot:cell(actions)="data")
+            b-button-toolbar.float-right
+              b-button-group(size="sm", class="mx-1")
+                b-button(variant="primary", :to="'/buckets/' + data.item.id")
+                  icon(name="folder-open").d-none.d-md-inline-block
+                  | Open
+                b-dropdown(variant="outline-secondary", size="sm", text="More")
+                  // FIXME: These also exist as almost-copies in the Bucket view, can maybe be shared/reused instead.
+                  b-dropdown-item(
+                             :href="$aw.baseURL + '/api/0/buckets/' + data.item.id + '/export'",
+                             :download="'aw-bucket-export-' + data.item.id + '.json'",
+                             title="Export bucket to JSON",
+                             variant="secondary")
+                      icon(name="download")
+                      | Export bucket as JSON
+                  b-dropdown-item(
+                              @click="export_csv(data.item.id)",
+                             title="Export events to CSV",
+                             variant="secondary")
+                      icon(name="download")
+                      | Export events as CSV
+                  b-dropdown-divider
+                  b-dropdown-item-button(@click="openDeleteBucketModal(data.item.id)",
+                           title="Delete this bucket permanently",
+                           variant="danger")
+                    | #[icon(name="trash")] Delete bucket
+
+    // Checks
+    hr.mt-1(v-if="runChecks(device).length > 0")
+    div.small.text-muted(v-for="msg in runChecks(device)", style="color: #333")
+      icon(name="exclamation-triangle")
+      | &nbsp;
+      | {{ msg }}
 
   b-modal(id="delete-modal", title="Danger!", centered, hide-footer)
     | Are you sure you want to delete bucket "{{delete_bucket_selected}}"?
@@ -122,9 +149,16 @@ div
 import 'vue-awesome/icons/trash';
 import 'vue-awesome/icons/download';
 import 'vue-awesome/icons/folder-open';
+import 'vue-awesome/icons/desktop';
+import 'vue-awesome/icons/mobile';
+import 'vue-awesome/icons/question';
+import 'vue-awesome/icons/exclamation-triangle';
+
 import _ from 'lodash';
 import Papa from 'papaparse';
+import moment from 'moment';
 
+import { useServerStore } from '~/stores/server';
 import { useBucketsStore } from '~/stores/buckets';
 
 export default {
@@ -135,7 +169,9 @@ export default {
   },
   data() {
     return {
+      moment,
       bucketsStore: useBucketsStore(),
+      serverStore: useServerStore(),
 
       import_file: null,
       import_error: null,
@@ -147,11 +183,6 @@ export default {
         { key: 'actions', label: '' },
       ],
     };
-  },
-  computed: {
-    buckets: function () {
-      return _.orderBy(this.bucketsStore.buckets, [b => b.id], ['asc']);
-    },
   },
   watch: {
     import_file: async function (_new_value, _old_value) {
@@ -177,6 +208,37 @@ export default {
     await this.bucketsStore.ensureLoaded();
   },
   methods: {
+    isRecent: function (date) {
+      return moment().diff(date) / 1000 < 120;
+    },
+    runChecks: function (device) {
+      const checks = [
+        {
+          msg: () => {
+            return `Device known by several hostnames: ${device.hostnames}`;
+          },
+          failed: () => device.hostnames.length > 1,
+        },
+        {
+          msg: () => {
+            return `Device known by several IDs: ${device.device_ids}`;
+          },
+          failed: () => device.device_ids.length > 1,
+        },
+        {
+          msg: () => {
+            return `Device is a special device, unattributed to a hostname, or not assigned a device ID.`;
+          },
+          failed: () => _.isEqual(device.hostnames, ['unknown']),
+        },
+        //{
+        //  msg: () => 'just a test',
+        //  failed: () => true,
+        //},
+      ];
+      const failedChecks = _.filter(checks, c => c.failed());
+      return _.map(failedChecks, c => c.msg());
+    },
     openDeleteBucketModal: function (bucketId: string) {
       this.delete_bucket_selected = bucketId;
       this.$root.$emit('bv::show::modal', 'delete-modal');

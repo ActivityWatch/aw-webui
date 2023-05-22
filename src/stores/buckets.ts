@@ -3,6 +3,7 @@ import _ from 'lodash';
 import { IBucket } from '~/util/interfaces';
 import { defineStore } from 'pinia';
 import { getClient } from '~/util/awclient';
+import { useServerStore } from '~/stores/server';
 
 function select_buckets(
   buckets: IBucket[],
@@ -29,12 +30,12 @@ export const useBucketsStore = defineStore('buckets', {
   getters: {
     hosts(this: State): string[] {
       // TODO: Include consideration of device_id UUID
-      return _.uniq(_.map(this.buckets, bucket => bucket.hostname));
+      return _.uniq(_.map(this.buckets, bucket => bucket.hostname || bucket.data.hostname));
     },
     // Uses device_id instead of hostname
     devices(this: State): string[] {
       // TODO: Include consideration of device_id UUID
-      return _.uniq(_.map(this.buckets, bucket => bucket.device_id));
+      return _.uniq(_.map(this.buckets, bucket => bucket.device_id || bucket.data.device_id));
     },
 
     available(): (hostname: string) => {
@@ -117,6 +118,52 @@ export const useBucketsStore = defineStore('buckets', {
     bucketsByHostname(this: State): Record<string, IBucket[]> {
       return _.groupBy(this.buckets, 'hostname');
     },
+
+    // Group all buckets by their device.
+    // Returns a dict with buckets by device/host (hostname or device_id)
+    //
+    // First element will be the current hostname/device, if present.
+    // Others sorted by last_updated.
+    bucketsByDevice: function () {
+      let devices = _.mapValues(
+        _.groupBy(this.buckets, b => b.hostname || b.device_id),
+        d => {
+          const hostnames = _.uniq(_.map(d, b => b.hostname || b.data.hostname));
+          const device_ids = _.uniq(_.map(d, b => b.data.device_id || b.hostname));
+          return {
+            buckets: d,
+            device_id: device_ids[0],
+            device_ids,
+            hostname: hostnames[0],
+            hostnames,
+            first_seen: _.min(_.map(d, b => b.metadata.start)),
+            last_updated: _.max(_.map(d, b => b.metadata.end)),
+          };
+        }
+      );
+
+      // Sort by last_updated
+      const sortObjectByUpdated = _.flow([
+        _.toPairs,
+        pairs => _.orderBy(pairs, pair => pair[1].last_updated, ['desc']),
+        _.fromPairs,
+      ]);
+      devices = sortObjectByUpdated(devices);
+
+      // find self-device and put first
+      const serverStore = useServerStore();
+      const hostname = serverStore.info && serverStore.info.hostname;
+      const currentDevice = Object.prototype.hasOwnProperty.call(devices, hostname)
+        ? devices[hostname]
+        : null;
+      if (currentDevice) {
+        // remove self from list
+        delete devices[hostname];
+        // add self-device back to the top;
+        devices = { [hostname]: currentDevice, ...devices };
+      }
+      return devices;
+    },
   },
 
   actions: {
@@ -171,7 +218,16 @@ export const useBucketsStore = defineStore('buckets', {
 
     // mutations
     update_buckets(this: State, buckets: IBucket[]): void {
-      this.buckets = buckets;
+      this.buckets = _.orderBy(buckets, [b => b.id], ['asc']).map(b => {
+        // Some harmonization as aw-server-rust and aw-server-python APIs diverge slightly
+        if (!b.last_updated && b.metadata.end) {
+          b.last_updated = b.metadata.end;
+        }
+        if (!b.first_seen && b.metadata.start) {
+          b.first_seen = b.metadata.start;
+        }
+        return b;
+      });
     },
   },
 });
