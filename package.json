@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@egjs/hammerjs": "^2.0.17",
-    "@fullcalendar/timegrid": "^5.10.1",
+    "@fullcalendar/timegrid": "^6.1.8",
     "@fullcalendar/vue": "^5.10.1",
     "@pinia/testing": "^0.0.16",
     "@types/chart.js": "^2.9.23",
