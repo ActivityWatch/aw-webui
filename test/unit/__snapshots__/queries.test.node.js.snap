@@ -1,8 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`generate fullDesktopQuery 1`] = `
-"events = flood(query_bucket(""));
-not_afk = flood(query_bucket(""));
+"events = flood(query_bucket(find_bucket("")));
+not_afk = flood(query_bucket(find_bucket("")));
 not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);
 not_treat_as_afk = filter_keyvals_regex(events, "app", "meow|nyaan|specials: \\w(\\\\)");
 not_afk = period_union(not_afk, not_treat_as_afk);
