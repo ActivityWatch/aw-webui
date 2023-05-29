@@ -394,11 +394,30 @@ export const useActivityStore = defineStore('activity', {
       this.query_editor_completed(data[0]);
     },
 
-    async query_active_history({ timeperiod }: QueryOptions) {
+    async query_active_history({ timeperiod, ...query_options }: QueryOptions) {
+      const settingsStore = useSettingsStore();
+      const bucketsStore = useBucketsStore();
       const periods = timeperiodStrsAroundTimeperiod(timeperiod).filter(tp_str => {
         return !_.includes(this.active.history, tp_str);
       });
-      const data = await getClient().query(periods, queries.activityQuery(this.buckets.afk[0]));
+      let afk_buckets = [];
+      if (settingsStore.useMultidevice) {
+        // get all hostnames that qualify for the multidevice query
+        const hostnames = bucketsStore.hosts.filter(
+          // require that the host has afk buckets,
+          // and that the host is not a fakedata host,
+          // unless we're explicitly querying fakedata
+          host =>
+            host &&
+            bucketsStore.bucketsAFK(host).length > 0 &&
+            (!host.startsWith('fakedata') || query_options.host.startsWith('fakedata'))
+        );
+        // get all afk buckets for all hosts
+        afk_buckets = _.flatten(hostnames.map(bucketsStore.bucketsAFK));
+      } else {
+        afk_buckets = this.buckets.afk[0];
+      }
+      const data = await getClient().query(periods, queries.activityQuery(afk_buckets));
       const active_history = _.zipObject(
         periods,
         _.map(data, pair => _.filter(pair, e => e.data.status == 'not-afk'))
