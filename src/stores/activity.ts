@@ -400,7 +400,7 @@ export const useActivityStore = defineStore('activity', {
       const periods = timeperiodStrsAroundTimeperiod(timeperiod).filter(tp_str => {
         return !_.includes(this.active.history, tp_str);
       });
-      let afk_buckets = [];
+      let afk_buckets: string[] = [];
       if (settingsStore.useMultidevice) {
         // get all hostnames that qualify for the multidevice query
         const hostnames = bucketsStore.hosts.filter(
@@ -415,7 +415,7 @@ export const useActivityStore = defineStore('activity', {
         // get all afk buckets for all hosts
         afk_buckets = _.flatten(hostnames.map(bucketsStore.bucketsAFK));
       } else {
-        afk_buckets = this.buckets.afk[0];
+        afk_buckets = [this.buckets.afk[0]];
       }
       const data = await getClient().query(periods, queries.activityQuery(afk_buckets));
       const active_history = _.zipObject(

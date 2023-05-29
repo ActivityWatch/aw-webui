@@ -407,21 +407,14 @@ export function editorActivityQuery(editorbuckets: string[]): string[] {
 
 // Returns a query that yields a single event with the duration set to
 // the sum of all non-afk time in the queried period
-export function activityQuery(afkbuckets: string | string[]): string[] {
+// TODO: Would ideally account for `filter_afk` and `always_active_pattern`
+export function activityQuery(afkbuckets: string[]): string[] {
   let q = ['not_afk = [];'];
-  if (Array.isArray(afkbuckets)) {
-    for (const afkbucket of afkbuckets) {
-      q = q.concat([
-        `not_afk_curr = query_bucket("${escape_doublequote(afkbucket)}");`,
-        `not_afk_curr = filter_keyvals(not_afk_curr, "status", ["not-afk"]);`,
-        `not_afk = union_no_overlap(not_afk, not_afk_curr);`,
-      ]);
-    }
-  } else {
-    const afkbucket: string = afkbuckets;
+  for (const afkbucket of afkbuckets) {
     q = q.concat([
-      `not_afk = union_no_overlap(not_afk, query_bucket("${escape_doublequote(afkbucket)}");`,
-      'not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);',
+      `not_afk_curr = query_bucket("${escape_doublequote(afkbucket)}");`,
+      `not_afk_curr = filter_keyvals(not_afk_curr, "status", ["not-afk"]);`,
+      `not_afk = union_no_overlap(not_afk, not_afk_curr);`,
     ]);
   }
   q = q.concat(['not_afk = merge_events_by_keys(not_afk, ["status"]);', 'RETURN = not_afk;']);
