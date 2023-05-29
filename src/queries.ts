@@ -116,12 +116,12 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
 
   return [
     // Fetch window/app events
-    `events = flood(query_bucket("${bid_window}"));`,
+    `events = flood(query_bucket(find_bucket("${bid_window}")));`,
     // On Android, merge events to avoid overload of events
     isAndroidParams(params) ? 'events = merge_events_by_keys(events, ["app"]);' : '',
     // Fetch not-afk events
     isDesktopParams(params)
-      ? `not_afk = flood(query_bucket("${params.bid_afk}"));
+      ? `not_afk = flood(query_bucket(find_bucket("${params.bid_afk}")));
          not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);` +
         (always_active_pattern_str
           ? `not_treat_as_afk = filter_keyvals_regex(events, "app", "${always_active_pattern_str}");
@@ -382,16 +382,15 @@ export function multideviceQuery(params: MultiQueryParams): string[] {
             "cat_events": cat_events,
             "active_events": not_afk,
             "duration": duration
-        },
+        }
     };`
   );
 }
 
 export function editorActivityQuery(editorbuckets: string[]): string[] {
   let q = ['events = [];'];
-  for (let editorbucket of editorbuckets) {
-    editorbucket = escape_doublequote(editorbucket);
-    q.push('events = concat(events, flood(query_bucket("' + editorbucket + '")));');
+  for (const editorbucket of editorbuckets) {
+    q.push(`events = concat(events, flood(query_bucket("${escape_doublequote(editorbucket)}")));`);
   }
   q = q.concat([
     'files = sort_by_duration(merge_events_by_keys(events, ["file", "language"]));',
@@ -408,15 +407,18 @@ export function editorActivityQuery(editorbuckets: string[]): string[] {
 
 // Returns a query that yields a single event with the duration set to
 // the sum of all non-afk time in the queried period
-export function activityQuery(afkbucket: string): string[] {
-  afkbucket = escape_doublequote(afkbucket);
-  return [
-    'afkbucket = "' + afkbucket + '";',
-    'not_afk = flood(query_bucket(afkbucket));',
-    'not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);',
-    'not_afk = merge_events_by_keys(not_afk, ["status"]);',
-    'RETURN = not_afk;',
-  ];
+// TODO: Would ideally account for `filter_afk` and `always_active_pattern`
+export function activityQuery(afkbuckets: string[]): string[] {
+  let q = ['not_afk = [];'];
+  for (const afkbucket of afkbuckets) {
+    q = q.concat([
+      `not_afk_curr = query_bucket("${escape_doublequote(afkbucket)}");`,
+      `not_afk_curr = filter_keyvals(not_afk_curr, "status", ["not-afk"]);`,
+      `not_afk = union_no_overlap(not_afk, not_afk_curr);`,
+    ]);
+  }
+  q = q.concat(['not_afk = merge_events_by_keys(not_afk, ["status"]);', 'RETURN = not_afk;']);
+  return q;
 }
 
 // Equivalent function to activityQuery, but for Android (which doesn't have an afk bucket)
