@@ -2,7 +2,7 @@
 div
   h3 Settings
 
-  b-alert(variant="warning", show) #[b Note:] These settings are only saved in your browser and will not remain if you switch browser. We are working on getting this fixed.
+  b-alert(variant="warning", show) #[b Note:] These settings are only saved in your browser and will not remain if you switch browser. We are working on getting this fixed, see #[a(href="https://github.com/ActivityWatch/aw-server-rust/issues/394", target="_blank") issue #394].
 
   hr
 
