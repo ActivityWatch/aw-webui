@@ -169,7 +169,8 @@ hr {
 }
 
 svg text {
-  fill: #e9ebf0 !important;
+  fill: #fff !important;
+  text-shadow: #000 0.5px 0.5px 0.5px;
 }
 
 svg.appsummary g rect[style="fill: rgb(204, 204, 204);"] {
