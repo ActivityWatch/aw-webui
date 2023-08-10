@@ -397,10 +397,13 @@ export default {
         const new_period_length_moment = periodLengthConvertMoment(periodLength);
         new_date = moment(date).startOf(new_period_length_moment).format('YYYY-MM-DD');
       }
-      this.$router.push({
-        path: `/activity/${this.host}/${periodLength}/${new_date}/${this.subview}/${this.currentViewId}`,
-        query: this.$route.query,
-      });
+      const path = `/activity/${this.host}/${periodLength}/${new_date}/${this.subview}/${this.currentViewId}`;
+      if (this.$route.path !== path) {
+        this.$router.push({
+          path,
+          query: this.$route.query,
+        });
+      }
     },
 
     refresh: async function (force) {

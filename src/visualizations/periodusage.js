@@ -4,7 +4,7 @@ const d3 = require('d3');
 const _ = require('lodash');
 const moment = require('moment');
 
-import { seconds_to_duration } from '../util/time';
+import { seconds_to_duration, get_hour_offset } from '../util/time';
 
 function create(svg_elem) {
   // Clear element
@@ -64,7 +64,7 @@ function update(svg_elem, usage_arr, onPeriodClicked) {
     let date = '';
     if (events.length > 0) {
       // slice off so it's only the day
-      date = moment(usage_arr[i][0].timestamp).format(dateformat);
+      date = moment(events[0].timestamp).subtract(get_hour_offset(), 'hours').format(dateformat);
     }
     const color = i == center_elem ? diagramcolor_selected : diagramcolor;
     const offset = 50;
@@ -113,9 +113,7 @@ function update(svg_elem, usage_arr, onPeriodClicked) {
       .on('click', function () {
         onPeriodClicked(date);
       });
-    rect
-      .append('title')
-      .text(moment(date).format(dateformat) + '\n' + seconds_to_duration(usage_time));
+    rect.append('title').text(date + '\n' + seconds_to_duration(usage_time));
   });
 }
 

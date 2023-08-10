@@ -55,8 +55,7 @@ export default {
   computed: {
     labels() {
       const start = this.timeperiod_start;
-      const count = this.timeperiod_length[0];
-      const resolution = this.timeperiod_length[1];
+      const [count, resolution] = this.timeperiod_length;
       if (resolution.startsWith('day') && count == 1) {
         const hourOffset = get_hour_offset();
         return _.range(0, 24).map(h => `${(h + hourOffset) % 24}`);
@@ -95,6 +94,7 @@ export default {
       };
     },
     chartOptions(): ChartOptions {
+      const resolution = this.timeperiod_length[1];
       return {
         plugins: {
           tooltip: {
@@ -112,10 +112,10 @@ export default {
           y: {
             stacked: true,
             min: 0,
-            suggestedMax: this.resolution === 'day' ? 1 : undefined,
+            suggestedMax: resolution.startsWith('day') ? 1 : undefined,
             ticks: {
               callback: hourToTick,
-              stepSize: this.resolution === 'day' ? 0.25 : 1,
+              stepSize: resolution.startsWith('day') ? 0.25 : 1,
             },
           },
         },
