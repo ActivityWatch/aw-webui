@@ -272,6 +272,9 @@ const browser_appnames = {
     'Microsoft-Edge-Stable', // Arch Linux: https://github.com/ActivityWatch/activitywatch/issues/753
     'Microsoft-edge',
   ],
+  arc: [
+    "Arc" // macOS
+  ],
   vivaldi: ['Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe'],
   orion: ['Orion'],
 };
