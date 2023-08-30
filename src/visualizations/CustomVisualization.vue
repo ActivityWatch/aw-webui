@@ -22,6 +22,7 @@ export default {
         hostname: options.host,
         start,
         end,
+        title: this.title,
       });
       let _origin = document.location.origin;
       if(document.location.port == "27180") {
