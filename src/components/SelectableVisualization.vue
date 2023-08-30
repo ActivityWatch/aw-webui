@@ -283,8 +283,7 @@ export default {
         date = this.activityStore.query_options.timeperiod.start;
       }
 
-      // Get events data from CurrentData ± 1 Day so that there is some continuity
-      return [moment(date).subtract(1, 'day'), moment(date).add(1, 'day')];
+      return [moment(date), moment(date).add(1, 'day')];
     },
     isSingleDay: function () {
       return _.isEqual(this.activityStore.query_options.timeperiod.length, [1, 'day']);
