@@ -2,6 +2,8 @@
 /* eslint jest/no-test-callback: "off" */
 /* eslint jest/expect-expect: "off" */
 
+/* added comments */
+
 import { Selector } from 'testcafe';
 import { RequestLogger } from 'testcafe';
 
@@ -103,7 +105,9 @@ test('Screenshot the home view', async t => {
   });
 });
 
-fixture(`Activity view`).page(`${baseURL}/#/activity/fakedata`).requestHooks(HTTPLogger);
+fixture(`Activity view`)
+  .page(`${baseURL}/#/activity/fakedata`)
+  .requestHooks(HTTPLogger);
 
 test.clientScripts({
   content: logJsErrorCode,
@@ -119,7 +123,9 @@ test.clientScripts({
   // TODO: resize to mobile size and take another screenshot
 });
 
-fixture(`Timeline view`).page(`${baseURL}/#/timeline`).requestHooks(HTTPLogger);
+fixture(`Timeline view`)
+  .page(`${baseURL}/#/timeline`)
+  .requestHooks(HTTPLogger);
 
 const durationSelect = Selector('select#duration');
 const durationOption = durationSelect.find('option');
@@ -150,7 +156,9 @@ test.clientScripts({
   // console.log(JSON.stringify(HTTPLogger.requests, null, '\t'));
 });
 
-fixture(`Buckets view`).page(`${baseURL}/#/buckets/`).requestHooks(HTTPLogger);
+fixture(`Buckets view`)
+  .page(`${baseURL}/#/buckets/`)
+  .requestHooks(HTTPLogger);
 
 test.clientScripts({
   content: logJsErrorCode,
@@ -164,7 +172,9 @@ test.clientScripts({
   await checkNoError(t);
 });
 
-fixture(`Setting view`).page(`${baseURL}/#/settings/`).requestHooks(HTTPLogger);
+fixture(`Setting view`)
+  .page(`${baseURL}/#/settings/`)
+  .requestHooks(HTTPLogger);
 
 test.clientScripts({
   content: logJsErrorCode,
@@ -177,7 +187,9 @@ test.clientScripts({
   await checkNoError(t);
 });
 
-fixture(`Stopwatch view`).page(`${baseURL}/#/stopwatch/`).requestHooks(HTTPLogger);
+fixture(`Stopwatch view`)
+  .page(`${baseURL}/#/stopwatch/`)
+  .requestHooks(HTTPLogger);
 
 test.clientScripts({
   content: logJsErrorCode,
