@@ -19,7 +19,7 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
       div.d-flex
         div.flex-grow-1
           b-form-checkbox(v-model="editing.rule.ignore_case" switch)
-            | Ignore case
+            | Case Insensitive
         div.flex-grow-1
           small.text-right
             //div(v-if="valid" style="color: green") Valid
