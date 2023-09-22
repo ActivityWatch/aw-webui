@@ -44,7 +44,7 @@ export const defaultCategories: Category[] = [
     name: ['Work', 'Programming', 'ActivityWatch'],
     rule: { type: 'regex', regex: 'ActivityWatch|aw-', ignore_case: true },
   },
-  { name: ['Work', 'Image'], rule: { type: 'regex', regex: 'Gimp|Inkscape' } },
+  { name: ['Work', 'Image'], rule: { type: 'regex', regex: 'GIMP|Inkscape' } },
   { name: ['Work', 'Video'], rule: { type: 'regex', regex: 'Kdenlive' } },
   { name: ['Work', 'Audio'], rule: { type: 'regex', regex: 'Audacity' } },
   { name: ['Work', '3D'], rule: { type: 'regex', regex: 'Blender' } },
