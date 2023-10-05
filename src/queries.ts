@@ -124,6 +124,7 @@ const browser_appnames = {
   brave: ['brave.exe'],
   edge: ['msedge.exe'],
   vivaldi: ['Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe'],
+  yandex: ['Yandex']
 };
 
 // Returns a list of (browserName, bucketId) pairs for found browser buckets
