@@ -24,10 +24,18 @@ export default {
         ? this.uncategorizedDuration[0] / this.uncategorizedDuration[1]
         : 0;
     },
+    total() {
+      return this.uncategorizedDuration ? this.uncategorizedDuration[1] : 0;
+    },
     isVisible() {
-      // if ratio is > 0.3, show it   // TODO: make configurable
+      // TODO: make configurable?
+      // if total duration is less than 1 hour, don't show it
+      const overTotal = this.total > 60 * 60 * 1000;
+      // if ratio is > 0.3, show it
+      const overRatio = this.ratio > 0.3;
       // if there's a category filter (url has category query param), don't show it
-      return this.ratio > 0.3 && !this.$route.query.category;
+      const hasCategoryFilter = this.$route.query.category;
+      return overTotal && overRatio && !hasCategoryFilter;
     },
   },
 };
