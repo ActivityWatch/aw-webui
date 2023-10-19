@@ -278,6 +278,8 @@ export default {
       return date;
     },
     timeline_daterange: function () {
+      if (this.activityStore.query_options === null) return null;
+
       let date = this.activityStore.query_options.date;
       if (!date) {
         date = this.activityStore.query_options.timeperiod.start;

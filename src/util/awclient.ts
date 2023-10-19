@@ -20,12 +20,16 @@ export function createClient(force?: boolean): AWClient {
     _client = new AWClient('aw-webui', {
       testing: !production,
       baseURL,
-      timeout: 1000 * useSettingsStore().requestTimeout,
     });
   } else {
     throw 'Tried to instantiate global AWClient twice!';
   }
   return _client;
+}
+
+export function configureClient(): void {
+  const settings = useSettingsStore();
+  _client.req.defaults.timeout = 1000 * settings.requestTimeout;
 }
 
 export function getClient(): AWClient {

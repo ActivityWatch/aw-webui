@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import moment, { Moment } from 'moment';
+import { getClient } from '~/util/awclient';
 
 // Backoffs for NewReleaseNotification
 export const SHORT_BACKOFF_PERIOD = 24 * 60 * 60;
@@ -74,63 +75,85 @@ export const useSettingsStore = defineStore('settings', {
         await this.load();
       }
     },
-    async load() {
+    async load({ save }: { save?: boolean } = {}) {
       if (typeof localStorage === 'undefined') {
         console.error('localStorage is not supported');
         return;
       }
-      // Fetch from localStorage first, if exists
-      const storage = {};
-      for (const key in localStorage) {
-        // Skip built-in properties like length, setItem, etc.
-        // Also skip keys starting with underscore, as they are local to the vuex store.
-        if (Object.prototype.hasOwnProperty.call(localStorage, key) && !key.startsWith('_')) {
-          const value = localStorage.getItem(key);
-          //console.log(`${key}: ${value}`);
+      const client = getClient();
 
-          // Keys ending with 'Data' are JSON-serialized objects
-          if (key.includes('Data')) {
-            try {
-              storage[key] = JSON.parse(value);
-            } catch (e) {
-              console.error('failed to parse', key, value);
-            }
-          } else if (value === 'true' || value === 'false') {
-            storage[key] = value === 'true';
-          } else {
-            storage[key] = value;
+      // Fetch from server, fall back to localStorage
+      const server_settings = await client.get_settings();
+
+      const all_keys = [
+        ...Object.keys(localStorage).filter(key => {
+          // Skip built-in properties like length, setItem, etc.
+          return Object.prototype.hasOwnProperty.call(localStorage, key);
+        }),
+        ...Object.keys(server_settings),
+      ].filter(key => {
+        // Skip keys starting with underscore, as they are local to the vuex store.
+        return !key.startsWith('_');
+      });
+      console.log('all_keys', all_keys);
+
+      const storage = {};
+      for (const key of all_keys) {
+        // If key is set in server, use that value, otherwise use localStorage
+        const set_in_server = server_settings[key] !== undefined;
+        const value = set_in_server ? server_settings[key] : localStorage.getItem(key);
+        const locstr = set_in_server ? '[server]' : '[localStorage]';
+        console.log(`${locstr} ${key}:`, value);
+
+        // Keys ending with 'Data' are JSON-serialized objects
+        if (key.includes('Data') && !set_in_server) {
+          try {
+            storage[key] = JSON.parse(value);
+          } catch (e) {
+            console.error('failed to parse', key, value);
           }
+        } else if (value === 'true' || value === 'false') {
+          storage[key] = value === 'true';
+        } else {
+          storage[key] = value;
         }
       }
       this.$patch({ ...storage, _loaded: true });
 
-      // TODO: Then fetch from server
-      //const getSettingsFromServer = async () => {
-      //  const { data } = await this.$aw._get('/0/settings');
-      //  return data;
-      //};
+      if (save) {
+        await this.save();
+      }
     },
     async save() {
-      // First save to localStorage
+      // We want to avoid saving to localStorage to not accidentally mess up pre-migration data
+      // For example, if the user is using several browsers, and opened in their non-main browser on first run after upgrade.
+      const saveToLocalStorage = false;
+
+      // Save to localStorage and backend
+      // NOTE: localStorage deprecated, will be removed in future
+      const client = getClient();
       for (const key of Object.keys(this.$state)) {
         const value = this.$state[key];
-        if (typeof value === 'object') {
-          localStorage.setItem(key, JSON.stringify(value));
-        } else {
-          localStorage.setItem(key, value);
+
+        // Save to localStorage
+        if (saveToLocalStorage) {
+          if (typeof value === 'object') {
+            localStorage.setItem(key, JSON.stringify(value));
+          } else {
+            localStorage.setItem(key, value);
+          }
         }
+
+        // Save to backend
+        await client.req.post('/0/settings/' + key, value, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
       }
 
-      // TODO: Save to backend
-      //const updateSettingOnServer = async (key: string, value: string) => {
-      //  console.log({ key, value });
-      //  const headers = { 'Content-Type': 'application/json' };
-      //  const { data } = await this.$aw._post('/0/settings', { key, value }, headers);
-      //  return data;
-      //};
-
-      // After save, reload from localStorage
-      await this.load();
+      // After save, reload
+      await this.load({ save: false });
     },
     async update(new_state: Record<string, any>) {
       console.log('Updating state', new_state);
