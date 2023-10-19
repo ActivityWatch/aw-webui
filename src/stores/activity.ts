@@ -214,7 +214,6 @@ export const useActivityStore = defineStore('activity', {
       if (!this.category.top) {
         return null;
       }
-      console.log(this.category.top);
       const uncategorized = this.category.top.filter(e => {
         return _.isEqual(e.data['$category'], ['Uncategorized']);
       });

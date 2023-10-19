@@ -411,6 +411,8 @@ export function editorActivityQuery(editorbuckets: string[]): string[] {
 // Returns a query that yields a single event with the duration set to
 // the sum of all non-afk time in the queried period
 // TODO: Would ideally account for `filter_afk` and `always_active_pattern`
+// TODO: rename to something like `activeDurationQuery`
+// FIXME: Doesn't respect audible-as-active and always-active-pattern
 export function activityQuery(afkbuckets: string[]): string[] {
   let q = ['not_afk = [];'];
   for (const afkbucket of afkbuckets) {

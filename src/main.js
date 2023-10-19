@@ -72,6 +72,12 @@ Vue.prototype.COMMIT_HASH = COMMIT_HASH;
 // Set the $isAndroid constant
 Vue.prototype.$isAndroid = process.env.VUE_APP_ON_ANDROID;
 
+// Create an instance of AWClient as this.$aw
+// NOTE: needs to be created before the Vue app is created,
+//       since stores rely on it having been run.
+import { createClient, getClient, configureClient } from './util/awclient';
+createClient();
+
 // Setup Vue app
 import App from './App';
 new Vue({
@@ -81,8 +87,8 @@ new Vue({
   pinia,
 });
 
-// Create an instance of AWClient as this.$aw
-import { createClient, getClient } from './util/awclient';
-
-createClient();
+// Set the $aw global
 Vue.prototype.$aw = getClient();
+
+// Must be run after vue init since it relies on the settings store
+configureClient();
