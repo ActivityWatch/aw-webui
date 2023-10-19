@@ -1,5 +1,5 @@
 <template lang="pug">
-div#wrapper
+div#wrapper(v-if="loaded")
   aw-header
 
   div(:class="{'container': !fullContainer, 'container-fluid': fullContainer}").px-0.px-md-2
@@ -21,6 +21,7 @@ export default {
     return {
       activityViews: [],
       isNewReleaseCheckEnabled: !process.env.VUE_APP_ON_ANDROID,
+      loaded: false,
     };
   },
 
@@ -30,9 +31,11 @@ export default {
     },
   },
 
-  beforeCreate() {
+  async beforeCreate() {
     // Get Theme From LocalStorage
-    const theme = localStorage.getItem('theme');
+    const settingsStore = useSettingsStore();
+    await settingsStore.ensureLoaded();
+    const theme = settingsStore.theme;
     // Check Application Mode (Light | Dark)
     if (theme !== null && theme === 'dark') {
       // Create Dark Theme Element
@@ -42,15 +45,10 @@ export default {
       // Append Dark Theme Element If Selected Mode Is Dark
       theme === 'dark' ? document.querySelector('head').appendChild(themeLink) : '';
     }
+    this.loaded = true;
   },
 
   mounted: async function () {
-    // Load settings
-    // TODO: Move fetch of server-side settings to after getInfo
-
-    const settingsStore = useSettingsStore();
-    await settingsStore.ensureLoaded();
-
     const serverStore = useServerStore();
     await serverStore.getInfo();
   },
