@@ -273,7 +273,7 @@ const browser_appnames = {
     'Microsoft-edge',
   ],
   arc: [
-    "Arc" // macOS
+    'Arc', // macOS
   ],
   vivaldi: ['Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe'],
   orion: ['Orion'],
