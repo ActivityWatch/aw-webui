@@ -253,6 +253,8 @@ const browser_appnames = {
     'firefox-trunk-dev',
 
     // Librewolf
+    'LibreWolf',
+    'LibreWolf.exe',
     'Librewolf',
     'Librewolf.exe',
     'librewolf',
