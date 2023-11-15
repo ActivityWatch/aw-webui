@@ -306,6 +306,7 @@ export default {
   },
   methods: {
     getTimelineBuckets: async function () {
+      if (this.type != 'vis_timeline') return;
       if (!this.timeline_daterange) return;
 
       await useBucketsStore().ensureLoaded();
