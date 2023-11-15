@@ -120,6 +120,10 @@ export const useSettingsStore = defineStore('settings', {
       }
       this.$patch({ ...storage, _loaded: true });
 
+      // Since `requestTimeout` is used to initialize the client, we need to set it again
+      // https://github.com/ActivityWatch/activitywatch/issues/979
+      client.req.defaults.timeout = this.requestTimeout * 1000;
+
       if (save) {
         await this.save();
       }
