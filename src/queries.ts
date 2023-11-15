@@ -274,6 +274,9 @@ const browser_appnames = {
     'Microsoft Edge', // macOS
     'Microsoft-Edge-Stable', // Arch Linux: https://github.com/ActivityWatch/activitywatch/issues/753
     'Microsoft-edge',
+    'microsoft-edge', // linux
+    'microsoft-edge-beta', // linux beta
+    'microsoft-edge-dev', // linux dev
   ],
   arc: [
     'Arc', // macOS
