@@ -339,7 +339,7 @@ export const useActivityStore = defineStore('activity', {
         host_params: {},
         always_active_pattern,
       });
-      const data = await getClient().query(periods, q);
+      const data = await getClient().query(periods, q, { name: 'multidevice', verbose: true });
       const data_window = data[0].window;
 
       // Set $color and $score for categories
@@ -374,7 +374,10 @@ export const useActivityStore = defineStore('activity', {
         include_audible,
         always_active_pattern,
       });
-      const data = await getClient().query(periods, q);
+      const data = await getClient().query(periods, q, {
+        name: 'fullDesktopQuery',
+        verbose: true,
+      });
       const data_window = data[0].window;
       const data_browser = data[0].browser;
 
@@ -389,15 +392,21 @@ export const useActivityStore = defineStore('activity', {
     async query_editor({ timeperiod }) {
       const periods = [timeperiodToStr(timeperiod)];
       const q = queries.editorActivityQuery(this.buckets.editor);
-      const data = await getClient().query(periods, q);
+      const data = await getClient().query(periods, q, {
+        name: 'editorActivityQuery',
+        verbose: true,
+      });
       this.query_editor_completed(data[0]);
     },
 
     async query_active_history({ timeperiod, ...query_options }: QueryOptions) {
       const settingsStore = useSettingsStore();
       const bucketsStore = useBucketsStore();
+      // Filter out periods that are already in the history, and that are in the future
       const periods = timeperiodStrsAroundTimeperiod(timeperiod).filter(tp_str => {
-        return !_.includes(this.active.history, tp_str);
+        return (
+          !_.includes(this.active.history, tp_str) && new Date(tp_str.split('/')[0]) < new Date()
+        );
       });
       let afk_buckets: string[] = [];
       if (settingsStore.useMultidevice) {
@@ -416,7 +425,11 @@ export const useActivityStore = defineStore('activity', {
       } else {
         afk_buckets = [this.buckets.afk[0]];
       }
-      const data = await getClient().query(periods, queries.activityQuery(afk_buckets));
+      const query = queries.activityQuery(afk_buckets);
+      const data = await getClient().query(periods, query, {
+        name: 'activityQuery',
+        verbose: true,
+      });
       const active_history = _.zipObject(
         periods,
         _.map(data, pair => _.filter(pair, e => e.data.status == 'not-afk'))
@@ -453,6 +466,9 @@ export const useActivityStore = defineStore('activity', {
         console.error(`Unknown timeperiod length: ${timeperiod.length}`);
       }
 
+      // Filter out periods that start in the future
+      periods = periods.filter(period => new Date(period.split('/')[0]) < new Date());
+
       const signal = getClient().controller.signal;
       let cancelled = false;
       signal.onabort = () => {
@@ -487,25 +503,26 @@ export const useActivityStore = defineStore('activity', {
         }
 
         const categories = useCategoryStore().classes_for_query;
-        const result = await getClient().query(
-          [period],
-          // TODO: Clean up call, pass QueryParams in fullDesktopQuery as well
-          // TODO: Unify QueryOptions and QueryParams
-          queries.categoryQuery({
-            bid_afk: this.buckets.afk[0],
-            bid_window: this.buckets.window[0],
-            bid_browsers: this.buckets.browser,
-            bid_stopwatch:
-              include_stopwatch && this.buckets.stopwatch.length > 0
-                ? this.buckets.stopwatch[0]
-                : undefined,
-            // bid_android: this.buckets.android,
-            categories,
-            filter_categories,
-            filter_afk,
-            always_active_pattern,
-          })
-        );
+        // TODO: Clean up call, pass QueryParams in fullDesktopQuery as well
+        // TODO: Unify QueryOptions and QueryParams
+        const query = queries.categoryQuery({
+          bid_afk: this.buckets.afk[0],
+          bid_window: this.buckets.window[0],
+          bid_browsers: this.buckets.browser,
+          bid_stopwatch:
+            include_stopwatch && this.buckets.stopwatch.length > 0
+              ? this.buckets.stopwatch[0]
+              : undefined,
+          // bid_android: this.buckets.android,
+          categories,
+          filter_categories,
+          filter_afk,
+          always_active_pattern,
+        });
+        const result = await getClient().query([period], query, {
+          verbose: true,
+          name: 'categoryQuery',
+        });
         data = data.concat(result);
       }
 

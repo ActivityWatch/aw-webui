@@ -29,7 +29,7 @@
     "@types/node": "^12.20.37",
     "ajv": "^8.12.0",
     "ajv-keywords": "^5.1.0",
-    "aw-client": "^0.3.2",
+    "aw-client": "^0.3.7",
     "bootstrap": "^4.6.1",
     "bootstrap-vue": "^2.15.0",
     "chart.js": "^3.8.0",
