@@ -71,7 +71,7 @@ export default {
     },
     filter_client() {
       this.getBuckets();
-    }
+    },
   },
   methods: {
     getBuckets: async function () {
@@ -91,10 +91,14 @@ export default {
         .map(a => a.client)
         .filter((value, index, array) => array.indexOf(value) === index);
       this.buckets = this.all_buckets;
-      this.buckets = _.filter(this.buckets, 
-        b => this.filter_hostname == null || b.hostname == this.filter_hostname);
-      this.buckets = _.filter(this.buckets, 
-        b => this.filter_client == null || b.client == this.filter_client);
+      this.buckets = _.filter(
+        this.buckets,
+        b => this.filter_hostname == null || b.hostname == this.filter_hostname
+      );
+      this.buckets = _.filter(
+        this.buckets,
+        b => this.filter_client == null || b.client == this.filter_client
+      );
     },
   },
 };
