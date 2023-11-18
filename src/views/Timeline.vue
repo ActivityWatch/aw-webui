@@ -9,13 +9,13 @@ div
           label Host filter:
         td
             select(v-model="filter_hostname")
-              option(value='*') *
+              option(:value='null') *
               option(v-for="host in hosts", :value="host") {{ host }}
         th.pr-2
           label Client filter:
         td
           select(v-model="filter_client")
-            option(value='*') *
+            option(:value='null') *
             option(v-for="client in clients", :value="client") {{ client }}
 
   input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration")
@@ -49,8 +49,8 @@ export default {
       buckets: null,
       daterange: null,
       maxDuration: 31 * 24 * 60 * 60,
-      filter_hostname: '*',
-      filter_client: '*',
+      filter_hostname: null,
+      filter_client: null,
     };
   },
   computed: {
@@ -84,13 +84,17 @@ export default {
         })
       );
 
-      this.hosts = this.all_buckets.map(a => a.hostname).filter((value, index, array) => array.indexOf(value) === index);
-      this.clients = this.all_buckets.map(a => a.client).filter((value, index, array) => array.indexOf(value) === index);
-      console.log(this.clients);
-      console.log(this.all_buckets);
+      this.hosts = this.all_buckets
+        .map(a => a.hostname)
+        .filter((value, index, array) => array.indexOf(value) === index);
+      this.clients = this.all_buckets
+        .map(a => a.client)
+        .filter((value, index, array) => array.indexOf(value) === index);
       this.buckets = this.all_buckets;
-      this.buckets = _.filter(this.buckets, b => this.filter_hostname == '*' || b.hostname == this.filter_hostname);
-      this.buckets = _.filter(this.buckets, b => this.filter_client == '*' || b.client == this.filter_client);
+      this.buckets = _.filter(this.buckets, 
+        b => this.filter_hostname == null || b.hostname == this.filter_hostname);
+      this.buckets = _.filter(this.buckets, 
+        b => this.filter_client == null || b.client == this.filter_client);
     },
   },
 };
