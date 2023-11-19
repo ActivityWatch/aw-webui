@@ -192,7 +192,12 @@ export default {
       this.loading = true;
       if (!this.queryOptions.hostname) {
         // FIXME: This is a hack to ensure that the hostname is set (otherwise isn't due to some race condition)
-        this.queryOptions.hostname = useBucketsStore().hosts[0];
+        // Don't ever return the "unknown" hostname
+        // TODO: ideally, only choose a hostname that has the right buckets
+        this.queryOptions.hostname = _.filter(
+          useBucketsStore().hosts,
+          host => host !== 'unknown'
+        )[0];
       }
       await this.categoryStore.load();
       const awclient = getClient();
