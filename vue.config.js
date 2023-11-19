@@ -15,6 +15,9 @@ module.exports = {
     index: {
       entry: './src/main.js',
       template: './src/index.html',
+      templateParameters: {
+        cspDefaultSrc: process.env.NODE_ENV === 'production' ? '' : '*:5600 *:5666 ws://*:27180',
+      },
     },
   },
   chainWebpack: config => {
@@ -40,8 +43,8 @@ module.exports = {
     plugins: [
       new webpack.IgnorePlugin({ resourceRegExp: /^\.\/locale$/, contextRegExp: /moment$/ }),
       new webpack.DefinePlugin({
-        AW_SERVER_URL: process.env.AW_SERVER_URL,
         PRODUCTION: process.env.NODE_ENV === 'production',
+        AW_SERVER_URL: process.env.AW_SERVER_URL,
         COMMIT_HASH: JSON.stringify(_COMMIT_HASH),
       }),
       new CopyWebpackPlugin([{ from: 'static/', to: 'static' }]),
