@@ -16,8 +16,7 @@ module.exports = {
       entry: './src/main.js',
       template: './src/index.html',
       templateParameters: {
-        cspDefaultSrc:
-          "'self'" + (process.env.NODE_ENV === 'production' ? '' : '*:5600 *:5666 ws://*:27180'),
+        cspDefaultSrc: process.env.NODE_ENV === 'production' ? '' : '*:5600 *:5666 ws://*:27180',
       },
     },
   },
