@@ -28,9 +28,16 @@ export const useBucketsStore = defineStore('buckets', {
   }),
 
   getters: {
-    hosts(this: State): string[] {
+    hosts(state: State): string[] {
       // TODO: Include consideration of device_id UUID
-      return _.uniq(_.map(this.buckets, bucket => bucket.hostname || bucket.data.hostname));
+      let hosts = _.uniq(_.map(state.buckets, bucket => bucket.hostname || bucket.data.hostname));
+      // sort by last_updated, such that the most recently updated host is first (likely the current host)
+      hosts = _.orderBy(
+        hosts,
+        host => _.max(_.map(this.bucketsByHostname[host], b => b.last_updated)),
+        ['desc']
+      );
+      return hosts;
     },
     // Uses device_id instead of hostname
     devices(this: State): string[] {
