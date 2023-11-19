@@ -10,16 +10,13 @@ const _COMMIT_HASH = require('child_process')
   .trim();
 console.info('Commit hash:', _COMMIT_HASH);
 
-const _PRODUCTION = process.env.NODE_ENV === 'production';
-const _AW_SERVER_URL = process.env.AW_SERVER_URL || 'http://localhost:5600';
-
 module.exports = {
   pages: {
     index: {
       entry: './src/main.js',
       template: './src/index.html',
       templateParameters: {
-        cspDefaultSrc: _PRODUCTION ? "'self'" : "'self' ws://*:27180",
+        cspDefaultSrc: process.env.NODE_ENV === 'production' ? "'self'" : "'self' ws://*:27180",
       },
     },
   },
@@ -46,8 +43,8 @@ module.exports = {
     plugins: [
       new webpack.IgnorePlugin({ resourceRegExp: /^\.\/locale$/, contextRegExp: /moment$/ }),
       new webpack.DefinePlugin({
-        AW_SERVER_URL: _AW_SERVER_URL,
-        PRODUCTION: _PRODUCTION,
+        PRODUCTION: process.env.NODE_ENV === 'production',
+        AW_SERVER_URL: process.env.AW_SERVER_URL,
         COMMIT_HASH: JSON.stringify(_COMMIT_HASH),
       }),
       new CopyWebpackPlugin([{ from: 'static/', to: 'static' }]),
