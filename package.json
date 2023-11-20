@@ -121,7 +121,7 @@
     "ts-jest": "^29",
     "ts-loader": "^9.0",
     "tslint": "^5.20.1",
-    "typescript": "^4.5",
+    "typescript": "^5.2",
     "url-loader": "^4.1",
     "vue": "^2.7",
     "vue-cli-plugin-pug": "^2.0.0",
