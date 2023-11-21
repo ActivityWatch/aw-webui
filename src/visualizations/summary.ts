@@ -30,7 +30,7 @@ function set_status(container: HTMLElement, msg: string) {
     .attr('x', '0px')
     .attr('y', '25px')
     .text(msg)
-    .attr('font-family', 'sans-serif')
+    .attr('font-family', 'var(--canvas-font)')
     .attr('font-size', '20px')
     .attr('fill', '#999');
 }
@@ -102,7 +102,7 @@ function update(container: HTMLElement, apps: Entry[]) {
       .attr('x', 5)
       .attr('y', curr_y + 1.4 * textSize)
       .text(app.name)
-      .attr('font-family', 'sans-serif')
+      .attr('font-family', 'var(--canvas-font)')
       .attr('font-size', textSize + 'px')
       .attr('fill', textColor);
 
@@ -111,7 +111,7 @@ function update(container: HTMLElement, apps: Entry[]) {
       .attr('x', 5)
       .attr('y', curr_y + 2.6 * textSize)
       .text(seconds_to_duration(app.duration))
-      .attr('font-family', 'sans-serif')
+      .attr('font-family', 'var(--canvas-font)')
       .attr('font-size', textSize - 3 + 'px')
       .attr('fill', '#444');
 
