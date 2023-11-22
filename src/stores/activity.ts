@@ -293,9 +293,9 @@ export const useActivityStore = defineStore('activity', {
           await this.query_editor_completed();
         }
 
-        if (this.window.available) {
-          // Perform this last, as it takes the longest
-          await this.query_category_time_by_period({ ...query_options });
+        // Perform this last, as it takes the longest
+        if (this.window.available || this.android.available) {
+          await this.query_category_time_by_period(query_options);
         }
       } else {
         console.warn(
@@ -502,22 +502,28 @@ export const useActivityStore = defineStore('activity', {
           }
         }
 
+        const isAndroid = this.buckets.android[0] !== undefined;
         const categories = useCategoryStore().classes_for_query;
         // TODO: Clean up call, pass QueryParams in fullDesktopQuery as well
         // TODO: Unify QueryOptions and QueryParams
         const query = queries.categoryQuery({
-          bid_afk: this.buckets.afk[0],
-          bid_window: this.buckets.window[0],
           bid_browsers: this.buckets.browser,
           bid_stopwatch:
             include_stopwatch && this.buckets.stopwatch.length > 0
               ? this.buckets.stopwatch[0]
               : undefined,
-          // bid_android: this.buckets.android,
           categories,
           filter_categories,
           filter_afk,
           always_active_pattern,
+          ...(isAndroid
+            ? {
+                bid_android: this.buckets.android[0],
+              }
+            : {
+                bid_afk: this.buckets.afk[0],
+                bid_window: this.buckets.window[0],
+              }),
         });
         const result = await getClient().query([period], query, {
           verbose: true,

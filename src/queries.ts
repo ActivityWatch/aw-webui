@@ -441,7 +441,9 @@ export function activityQueryAndroid(androidbucket: string): string[] {
 
 // Returns a query that yields a dict with a key "cat_events" which is an
 // array of one event per category, with the duration of each event set to the sum of the category durations.
-export function categoryQuery(params: MultiQueryParams | DesktopQueryParams): string[] {
+export function categoryQuery(
+  params: MultiQueryParams | DesktopQueryParams | AndroidQueryParams
+): string[] {
   const q = `
   ${isMultiParams(params) ? canonicalMultideviceEvents(params) : canonicalEvents(params)}
   cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
