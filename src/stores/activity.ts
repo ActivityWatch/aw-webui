@@ -340,13 +340,7 @@ export const useActivityStore = defineStore('activity', {
         always_active_pattern,
       });
       const data = await getClient().query(periods, q, { name: 'multidevice', verbose: true });
-      const data_window = data[0].window;
-
-      // Set $color and $score for categories
-      data_window.cat_events = colorCategories(data_window.cat_events);
-      data_window.cat_events = scoreCategories(data_window.cat_events);
-
-      this.query_window_completed(data_window);
+      this.query_window_completed(data[0].window);
     },
 
     async query_desktop_full({
@@ -378,15 +372,8 @@ export const useActivityStore = defineStore('activity', {
         name: 'fullDesktopQuery',
         verbose: true,
       });
-      const data_window = data[0].window;
-      const data_browser = data[0].browser;
-
-      // Set $color and $score for categories
-      data_window.cat_events = colorCategories(data_window.cat_events);
-      data_window.cat_events = scoreCategories(data_window.cat_events);
-
-      this.query_window_completed(data_window);
-      this.query_browser_completed(data_browser);
+      this.query_window_completed(data[0].window);
+      this.query_browser_completed(data[0].browser);
     },
 
     async query_editor({ timeperiod }) {
@@ -701,6 +688,12 @@ export const useActivityStore = defineStore('activity', {
       this: State,
       data = { app_events: [], title_events: [], cat_events: [], active_events: [], duration: 0 }
     ) {
+      // Set $color and $score for categories
+      if (data.cat_events) {
+        data.cat_events = colorCategories(data.cat_events);
+        data.cat_events = scoreCategories(data.cat_events);
+      }
+
       this.window.top_apps = data.app_events;
       this.window.top_titles = data.title_events;
       this.category.top = data.cat_events;

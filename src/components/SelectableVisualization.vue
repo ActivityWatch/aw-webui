@@ -79,7 +79,7 @@ div
     div(v-if="type == 'vis_timeline' && isSingleDay")
       vis-timeline(:buckets="timeline_buckets", :showRowLabels='true', :queriedInterval="timeline_daterange")
     div(v-if="type == 'score'")
-      aw-score(:date="date")
+      aw-score()
 </template>
 
 <style lang="scss">

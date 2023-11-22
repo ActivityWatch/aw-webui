@@ -42,9 +42,6 @@ import { useActivityStore } from '~/stores/activity';
 
 export default {
   name: 'aw-score',
-  props: {
-    fields: Array,
-  },
   computed: {
     categories_with_score: function () {
       // FIXME: Does this get all category time? Or just top ones?
