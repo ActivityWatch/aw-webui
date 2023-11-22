@@ -95,15 +95,14 @@ export const useSettingsStore = defineStore('settings', {
         // Skip keys starting with underscore, as they are local to the vuex store.
         return !key.startsWith('_');
       });
-      console.log('all_keys', all_keys);
 
       const storage = {};
       for (const key of all_keys) {
         // If key is set in server, use that value, otherwise use localStorage
         const set_in_server = server_settings[key] !== undefined;
         const value = set_in_server ? server_settings[key] : localStorage.getItem(key);
-        const locstr = set_in_server ? '[server]' : '[localStorage]';
-        console.log(`${locstr} ${key}:`, value);
+        //const locstr = set_in_server ? '[server]' : '[localStorage]';
+        //console.debug(`${locstr} ${key}:`, value);
 
         // Keys ending with 'Data' are JSON-serialized objects
         if (key.includes('Data') && !set_in_server) {

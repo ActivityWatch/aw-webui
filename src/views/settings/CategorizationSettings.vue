@@ -28,6 +28,8 @@ div
           | Discard
     div(v-for="_class in classes_hierarchy")
       CategoryEditTree(:_class="_class")
+    div(v-if="editingId !== null")
+      CategoryEditModal(:categoryId='editingId', @hidden="hideEditModal()")
 
   div.row
     div.col-sm-12
@@ -40,10 +42,13 @@ div
 <script>
 import { mapState, mapGetters } from 'pinia';
 import CategoryEditTree from '~/components/CategoryEditTree.vue';
+import CategoryEditModal from '~/components/CategoryEditModal.vue';
 import 'vue-awesome/icons/undo';
 import router from '~/route';
 
 import { useCategoryStore } from '~/stores/categories';
+
+import _ from 'lodash';
 
 const confirmationMessage = 'Your categories have unsaved changes, are you sure you want to leave?';
 
@@ -51,9 +56,11 @@ export default {
   name: 'CategorizationSettings',
   components: {
     CategoryEditTree,
+    CategoryEditModal,
   },
   data: () => ({
     categoryStore: useCategoryStore(),
+    editingId: null,
   }),
   computed: {
     ...mapState(useCategoryStore, ['classes_unsaved_changes']),
@@ -95,6 +102,10 @@ export default {
         name: ['New class'],
         rule: { type: 'regex', regex: 'FILL ME' },
       });
+
+      // Find the category with the max ID, and open an editor for it
+      const lastId = _.max(_.map(this.categoryStore.classes, 'id'));
+      this.editingId = lastId;
     },
     saveClasses: async function () {
       await this.categoryStore.save();
@@ -104,6 +115,9 @@ export default {
     },
     restoreDefaultClasses: async function () {
       await this.categoryStore.restoreDefaultClasses();
+    },
+    hideEditModal: function () {
+      this.editingId = null;
     },
     exportClasses: function () {
       console.log('Exporting categories...');
