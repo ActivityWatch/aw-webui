@@ -233,6 +233,10 @@ export const useBucketsStore = defineStore('buckets', {
         if (!b.first_seen && b.metadata && b.metadata.start) {
           b.first_seen = b.metadata.start;
         }
+        if (!b.first_seen && b.created) {
+          b.first_seen = b.created;
+        }
+
         return b;
       });
     },

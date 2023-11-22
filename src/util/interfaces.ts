@@ -13,4 +13,5 @@ export interface IBucket {
   metadata?: { start: Date; end: Date };
   last_updated?: Date;
   first_seen?: Date;
+  created?: Date;
 }
