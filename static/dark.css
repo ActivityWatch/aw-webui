@@ -42,6 +42,10 @@ hr {
   color: #e9ebf0 !important;
 }
 
+.navbar-toggler-icon {
+  filter: invert(1);
+}
+
 .dropdown-menu {
   background-color: #1a1d24 !important;
   border-color: #282c32 !important;
