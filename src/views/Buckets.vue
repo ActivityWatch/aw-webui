@@ -205,7 +205,8 @@ export default {
     },
   },
   mounted: async function () {
-    await this.bucketsStore.ensureLoaded();
+    // load or reload buckets on mount
+    await this.bucketsStore.loadBuckets();
   },
   methods: {
     isRecent: function (date) {
