@@ -460,4 +460,5 @@ export default {
   activityQueryAndroid,
   categoryQuery,
   editorActivityQuery,
+  canonicalEvents,
 };
