@@ -281,7 +281,7 @@ const browser_appnames = {
   arc: [
     'Arc', // macOS
   ],
-  vivaldi: ['Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe'],
+  vivaldi: ['Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe', 'Vivaldi'],
   orion: ['Orion'],
   yandex: ['Yandex'],
 };
