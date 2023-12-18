@@ -32,7 +32,7 @@ jobs:
     - name: Build
       run: npm run build
     - name: Upload build
-      uses: actions/upload-artifact@v3.1.2
+      uses: actions/upload-artifact@v4.0.0
       with:
         name: build
         path: dist/*
@@ -141,7 +141,7 @@ jobs:
         mv screenshots/*.png screenshots/dist/$aw_server/$aw_version
     - name: Upload screenshots
       if: ${{ success() || steps.e2e.conclusion == 'failure'}}
-      uses: actions/upload-artifact@v3.1.2
+      uses: actions/upload-artifact@v4.0.0
       with:
         name: screenshots
         path: screenshots/dist/*
@@ -161,7 +161,7 @@ jobs:
         mv ~/.cache/activitywatch/log/*/*.log logs/dist/$aw_server/$aw_version
     - name: Upload logs
       if: ${{ always() }}
-      uses: actions/upload-artifact@v3.1.2
+      uses: actions/upload-artifact@v4.0.0
       with:
         name: logs
         path: logs/dist/*
