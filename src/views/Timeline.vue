@@ -5,9 +5,17 @@ div
   input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration").mb-3
 
   // blocks
+  div.d-inline-block.border.rounded.p-2.mr-2
+    | Events shown:  {{ num_events }}
+  div.d-inline-block.border.rounded.p-2.mr-2
+    | Swimlanes:  
+    select(v-model="swimlane")
+      option(value='null') None
+      option(value='category') Categories
+      option(value='bucketType') Bucket Specific
   details.d-inline-block.bg-light.small.border.rounded.mr-2.px-2
     summary.p-2
-      b Filters
+      b Filters: {{ filter_summary }}
     div.p-2.bg-light
       table
         tr
@@ -29,11 +37,29 @@ div
   b-alert.d-inline-block.p-2.mb-0.mt-2(v-if="num_events === 0", variant="warning", show)
     | No events match selected criteria. Timeline is not updated.
   div.float-right.small.text-muted.pt-3
+        tr
+          th.pt-2.pr-3
+            label Duration:
+          td
+            select(v-model="filter_duration")
+              option(value='null') All
+              option(value='2') 2+ secs
+              option(value='5') 5+ secs
+              option(value='10') 10+ secs
+              option(value='30') 30+ sec
+              option(value='60') 1+ mins
+              option(value='120') 2+ mins
+              option(value='180') 3+ mins
+              option(value='600') 10+ mins
+              option(value='1800') 30+ mins
+              option(value='3600') 1+ hrs
+              option(value='7200') 2+ hrs
+  div(style="float: right; color: #999").d-inline-block.pt-3
     | Drag to pan and scroll to zoom
 
   div(v-if="buckets !== null")
     div(style="clear: both")
-    vis-timeline(:buckets="buckets", :showRowLabels='true', :queriedInterval="daterange")
+    vis-timeline(:buckets="buckets", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane")
 
     aw-devonly(reason="Not ready for production, still experimenting")
       aw-calendar(:buckets="buckets")
@@ -45,6 +71,7 @@ div
 import _ from 'lodash';
 import { useSettingsStore } from '~/stores/settings';
 import { useBucketsStore } from '~/stores/buckets';
+import { seconds_to_duration } from '~/util/time';
 
 export default {
   name: 'Timeline',
@@ -58,6 +85,8 @@ export default {
       maxDuration: 31 * 24 * 60 * 60,
       filter_hostname: null,
       filter_client: null,
+      filter_duration: null,
+      swimlane: null,
     };
   },
   computed: {
@@ -69,6 +98,23 @@ export default {
     num_events() {
       return _.sumBy(this.buckets, 'events.length');
     },
+    filter_summary() {
+      let desc = [];
+      if (this.filter_hostname) {
+        desc.push(this.filter_hostname);
+      }
+      if (this.filter_client) {
+        desc.push(this.filter_client);
+      }
+      if (this.filter_duration > 0) {
+        desc.push(seconds_to_duration(this.filter_duration));
+      } 
+
+      if (desc.length > 0) {
+        return desc.join(", ");
+      }
+      return "none"
+    }
   },
   watch: {
     daterange() {
@@ -78,6 +124,12 @@ export default {
       this.getBuckets();
     },
     filter_client() {
+      this.getBuckets();
+    },
+    filter_duration() {
+      this.getBuckets();
+    },
+    swimlane() {
       this.getBuckets();
     },
   },
@@ -106,6 +158,13 @@ export default {
       if (this.filter_client) {
         buckets = _.filter(buckets, b => b.client == this.filter_client);
       }
+      
+      if (this.filter_duration > 0) {
+        for (const bucket of buckets) {
+          bucket.events = _.filter(bucket.events, e => e.duration >= this.filter_duration);
+        }
+      }
+
       this.buckets = buckets;
     },
   },
