@@ -39,6 +39,7 @@ import moment from 'moment';
 import Color from 'color';
 import { buildTooltip } from '../util/tooltip.js';
 import { getColorFromString, getTitleAttr } from '../util/color';
+import { getSwimlane } from '../util/swimlane.js';
 
 import { Timeline } from 'vis-timeline/esnext';
 import 'vis-timeline/styles/vis-timeline-graph2d.css';
@@ -54,6 +55,7 @@ export default {
     showRowLabels: { type: Boolean },
     queriedInterval: { type: Array },
     showQueriedInterval: { type: Boolean },
+    swimlane: { type: String },
   },
   data() {
     return {
@@ -110,13 +112,15 @@ export default {
         }
         events.sort((a, b) => a.timestamp.valueOf() - b.timestamp.valueOf());
         _.each(events, e => {
+          let color = getColorFromString(getTitleAttr(bucket, e));
           data.push([
             bucket.id,
             getTitleAttr(bucket, e),
             buildTooltip(bucket, e),
             new Date(e.timestamp),
             new Date(moment(e.timestamp).add(e.duration, 'seconds').valueOf()),
-            getColorFromString(getTitleAttr(bucket, e)),
+            color,
+            getSwimlane(bucket, color, this.swimlane, e),
             e,
           ]);
         });
@@ -223,6 +227,7 @@ export default {
           start: moment(row[3]),
           end: moment(row[4]),
           style: `background-color: ${bgColor}; border-color: ${borderColor}`,
+          subgroup: row[6],
         };
       });
 
@@ -245,6 +250,7 @@ export default {
             start: this.queriedInterval[0],
             end: this.queriedInterval[1],
             style: 'background-color: #aaa; height: 10px',
+            subgroup: ``,
           });
         }
 
