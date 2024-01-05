@@ -267,16 +267,25 @@ export default {
         );
       });
       const csv = Papa.unparse(data, { columns, header: true });
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `aw-events-export-${bucketId}-${new Date()
+      const filename = `aw-events-export-${bucketId}-${new Date()
         .toISOString()
         .substring(0, 10)}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+
+      // Check if the Android interface is available
+      if (window.Android) {
+        // Send the CSV data to the Android code
+        window.Android.downloadCSV(csv, filename);
+      } else {
+        // Fall back to the original method
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
     },
   },
 };
