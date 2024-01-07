@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 
-import { useSettingsStore } from '@/store/settings';
+import { useSettingsStore } from '~/stores/settings';
 
 const Home = () => import('./views/Home.vue');
 
