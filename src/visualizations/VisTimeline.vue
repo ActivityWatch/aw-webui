@@ -112,7 +112,7 @@ export default {
         }
         events.sort((a, b) => a.timestamp.valueOf() - b.timestamp.valueOf());
         _.each(events, e => {
-          let color = getColorFromString(getTitleAttr(bucket, e));
+          const color = getColorFromString(getTitleAttr(bucket, e));
           data.push([
             bucket.id,
             getTitleAttr(bucket, e),

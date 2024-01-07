@@ -93,7 +93,7 @@ export default {
       return _.sumBy(this.buckets, 'events.length');
     },
     filter_summary() {
-      let desc = [];
+      const desc = [];
       if (this.filter_hostname) {
         desc.push(this.filter_hostname);
       }
@@ -102,13 +102,13 @@ export default {
       }
       if (this.filter_duration > 0) {
         desc.push(seconds_to_duration(this.filter_duration));
-      } 
+      }
 
       if (desc.length > 0) {
-        return desc.join(", ");
+        return desc.join(', ');
       }
-      return "none"
-    }
+      return 'none'
+    },
   },
   watch: {
     daterange() {
@@ -152,7 +152,7 @@ export default {
       if (this.filter_client) {
         buckets = _.filter(buckets, b => b.client == this.filter_client);
       }
-      
+
       if (this.filter_duration > 0) {
         for (const bucket of buckets) {
           bucket.events = _.filter(bucket.events, e => e.duration >= this.filter_duration);
