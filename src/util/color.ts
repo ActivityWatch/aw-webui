@@ -3,6 +3,7 @@ import { Category, matchString, loadClasses } from './classes';
 import Color from 'color';
 import * as d3 from 'd3';
 import { IEvent, IBucket } from './interfaces';
+import { useSettingsStore } from '~/stores/settings';
 
 // See here for examples:
 //   https://bl.ocks.org/pstuffa/3393ff2711a53975040077b7453781a9
@@ -99,10 +100,8 @@ export function getCategoryColorFromString(str: string): string {
 
 function fallbackColor(str: string): string {
   // Get fallback color
-  // TODO: Fetch setting from somewhere better, where defaults are respected
-  const useColorFallback =
-    localStorage !== undefined ? localStorage.useColorFallback === 'true' : true;
-  if (useColorFallback) {
+  const settings = useSettingsStore();
+  if (settings.useColorFallback) {
     return getColorFromString(str);
   } else {
     return COLOR_UNCAT;
