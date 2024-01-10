@@ -1,17 +1,37 @@
 @import "globals";
 
+
+
+
+
+$default-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", "Ubuntu", sans-serif;
+$header-font-family: 'Varela Round', sans-serif;
+$canvas-font-family: sans-serif;
+
+:root {
+  --app-font: #{$default-font-family};
+  --header-font: #{$header-font-family};
+  --canvas-font: #{$canvas-font-family};
+}
+
 body,
 html,
 body,
 button {
   color: $textColor;
-  font-family: -apple-system , BlinkMacSystemFont , "Segoe UI" , "Roboto" , "Helvetica Neue" , "Ubuntu" , sans-serif;
+  font-family: var(--app-font, $default-font-family);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-h1, h2, h3, h4, h5, h6, nav {
-  font-family: 'Varela Round', sans-serif;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+nav {
+  font-family: var(--header-font, $header-font-family);
 }
 
 body {

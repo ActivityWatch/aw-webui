@@ -21,7 +21,7 @@ function set_status(svg_elem, msg) {
     .attr('x', '50%')
     .attr('y', '25pt')
     .text(msg)
-    .attr('font-family', 'sans-serif')
+    .attr('font-family', 'var(--header-font)')
     .attr('font-size', '20pt')
     .attr('text-anchor', 'middle')
     .attr('fill', '#AAA');
