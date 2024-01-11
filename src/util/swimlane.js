@@ -13,7 +13,7 @@ export function getSwimlane(bucket, color, groupBy, e) {
     if (bucket.type == 'currentwindow') {
       subgroup = sanitize(e.data.app);
     } else if (bucket.type == 'web.tab.current') {
-      subgroup = sanitize((new URL(e.data.url)).hostname.replace('www.', ''));
+      subgroup = sanitize(new URL(e.data.url).hostname.replace('www.', ''));
     } else if (bucket.type.startsWith('app.editor')) {
       subgroup = sanitize(e.data.language);
     } else if (bucket.type.startsWith('general.stopwatch')) {

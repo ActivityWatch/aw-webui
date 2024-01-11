@@ -107,7 +107,7 @@ export default {
       if (desc.length > 0) {
         return desc.join(', ');
       }
-      return 'none'
+      return 'none';
     },
   },
   watch: {
