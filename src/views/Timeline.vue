@@ -10,7 +10,7 @@ div
   div.d-inline-block.border.rounded.p-2.mr-2
     | Swimlanes:  
     select(v-model="swimlane")
-      option(value='null') None
+      option(:value='null') None
       option(value='category') Categories
       option(value='bucketType') Bucket Specific
   details.d-inline-block.bg-light.small.border.rounded.mr-2.px-2
@@ -42,18 +42,18 @@ div
             label Duration:
           td
             select(v-model="filter_duration")
-              option(value='null') All
-              option(value='2') 2+ secs
-              option(value='5') 5+ secs
-              option(value='10') 10+ secs
-              option(value='30') 30+ sec
-              option(value='60') 1+ mins
-              option(value='120') 2+ mins
-              option(value='180') 3+ mins
-              option(value='600') 10+ mins
-              option(value='1800') 30+ mins
-              option(value='3600') 1+ hrs
-              option(value='7200') 2+ hrs
+              option(:value='null') All
+              option(:value='2') 2+ secs
+              option(:value='5') 5+ secs
+              option(:value='10') 10+ secs
+              option(:value='30') 30+ sec
+              option(:value='1 * 60') 1+ mins
+              option(:value='2 * 60') 2+ mins
+              option(:value='3 * 60') 3+ mins
+              option(:value='10 * 60') 10+ mins
+              option(:value='30 * 60') 30+ mins
+              option(:value='1 * 60 * 60') 1+ hrs
+              option(:value='2 * 60 * 60') 2+ hrs
   div(style="float: right; color: #999").d-inline-block.pt-3
     | Drag to pan and scroll to zoom
 
