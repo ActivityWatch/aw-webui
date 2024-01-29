@@ -12,7 +12,7 @@ div
         th.pr-2
           label(for="mode") Interval mode:
         td
-          select(id="mode", v-model="mode")
+          select(id="mode", v-model="mode", @change="valueChanged")
             option(value='last_duration') Last duration
             option(value='range') Date range
       tr(v-if="mode == 'last_duration'")
