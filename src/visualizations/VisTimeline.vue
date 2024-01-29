@@ -275,6 +275,18 @@ export default {
         this.items = items;
         this.groups = groups;
       }
+      else {
+        // update the timeline range
+        this.options.min = this.queriedInterval[0];
+        this.options.max = this.queriedInterval[1];
+        this.timeline.setOptions(this.options);
+        this.timeline.setWindow(this.queriedInterval[0], this.queriedInterval[1]);
+
+        // clear the data 
+        this.timeline.setData({ groups: [], items: [] });
+        this.items = [];
+        this.groups = [];
+      }
     },
   },
 };
