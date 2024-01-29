@@ -44,6 +44,7 @@ import { getSwimlane } from '../util/swimlane.js';
 import { Timeline } from 'vis-timeline/esnext';
 import 'vis-timeline/styles/vis-timeline-graph2d.css';
 import EventEditor from '~/components/EventEditor.vue';
+import { Console } from 'console';
 
 export default {
   components: {
@@ -56,6 +57,7 @@ export default {
     queriedInterval: { type: Array },
     showQueriedInterval: { type: Boolean },
     swimlane: { type: String },
+    updateTimelineWindow: { type: Boolean },
   },
   data() {
     return {
@@ -254,16 +256,19 @@ export default {
           });
         }
 
-        const start =
-          (this.queriedInterval && this.queriedInterval[0]) ||
-          _.min(_.map(items, item => item.start));
-        const end =
-          (this.queriedInterval && this.queriedInterval[1]) ||
-          _.max(_.map(items, item => item.end));
-        this.options.min = start;
-        this.options.max = end;
-        this.timeline.setOptions(this.options);
-        this.timeline.setWindow(start, end);
+        if (this.updateTimelineWindow)
+        {
+          const start =
+            (this.queriedInterval && this.queriedInterval[0]) ||
+            _.min(_.map(items, item => item.start));
+          const end =
+            (this.queriedInterval && this.queriedInterval[1]) ||
+            _.max(_.map(items, item => item.end));
+          this.options.min = start;
+          this.options.max = end;
+          this.timeline.setOptions(this.options);
+          this.timeline.setWindow(start, end);
+        }
 
         // Hide buckets with no events in the queried range
         const count = _.countBy(items, i => i.group);

@@ -54,7 +54,7 @@ div
 
   div(v-if="buckets !== null")
     div(style="clear: both")
-    vis-timeline(:buckets="buckets", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane")
+    vis-timeline(:buckets="buckets", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane", :updateTimelineWindow='updateTimelineWindow')
 
     aw-devonly(reason="Not ready for production, still experimenting")
       aw-calendar(:buckets="buckets")
@@ -82,6 +82,7 @@ export default {
       filter_client: null,
       filter_duration: null,
       swimlane: null,
+      updateTimelineWindow: true,
     };
   },
   computed: {
@@ -112,18 +113,23 @@ export default {
   },
   watch: {
     daterange() {
+      this.updateTimelineWindow = true;
       this.getBuckets();
     },
     filter_hostname() {
+      this.updateTimelineWindow = false;
       this.getBuckets();
     },
     filter_client() {
+      this.updateTimelineWindow = false;
       this.getBuckets();
     },
     filter_duration() {
+      this.updateTimelineWindow = false;
       this.getBuckets();
     },
     swimlane() {
+      this.updateTimelineWindow = false;
       this.getBuckets();
     },
   },
