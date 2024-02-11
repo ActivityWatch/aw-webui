@@ -66,14 +66,14 @@ Once you've put the files in the directories, you may have to do a hard refresh 
 If you want to actively iterate on `aw-webui` with your local production data (with your production server running), you'll want to use a development build, automatically update it, and connect to your production data. To do this, in `aw-webui` source directory, in one terminal window run:
 
 ```bash
-AW_SERVER_URL="'http://localhost:5600'" npx vue-cli-service build --watch --dest=../aw-server/static
+AW_SERVER_URL="'http://localhost:5600'" npx vue-cli-service build --watch --dest=../aw_server/static
 ```
 
 If you want to add `debugger` statements in your code and otherwise break linting rules, you'll need to add a `--skip-plugins=no-debugger` to that command. 
 Then, in another terminal (with your venv activated) run:
 
 ```shell
-python3 -m http.server --bind 127.0.0.1 27180 --directory ../aw-server/static
+python3 -m http.server --bind 127.0.0.1 27180 --directory ../aw_server/static
 ```
 
 ## Tests
