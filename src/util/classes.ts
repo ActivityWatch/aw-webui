@@ -30,14 +30,18 @@ const COLOR_UNCAT = '#CCC';
 export const defaultCategories: Category[] = [
   {
     name: ['Work'],
-    rule: { type: 'regex', regex: 'Google Docs|libreoffice|ReText' },
+    rule: {
+      type: 'regex',
+      regex: 'Google Docs|Google Sheets|libreoffice|TextEdit|Pages|ReText|Obsidian',
+    },
     data: { color: '#0F0', score: 10 },
   },
   {
     name: ['Work', 'Programming'],
     rule: {
       type: 'regex',
-      regex: 'GitHub|Stack Overflow|BitBucket|Gitlab|vim|Spyder|kate|Ghidra|Scite',
+      regex:
+        'GitHub|Stack Overflow|BitBucket|Gitlab|vim|iTerm|Visual Studio Code|Spyder|kate|Ghidra|Scite',
     },
   },
   {
@@ -62,7 +66,7 @@ export const defaultCategories: Category[] = [
     name: ['Media', 'Social Media'],
     rule: {
       type: 'regex',
-      regex: 'reddit|Facebook|Twitter|Instagram|devRant',
+      regex: 'reddit|Facebook|Twitter|Instagram|devRant|LinkedIn|Hacker News',
       ignore_case: true,
     },
     data: { color: '#FCC400' },
@@ -71,7 +75,7 @@ export const defaultCategories: Category[] = [
     name: ['Media', 'Music'],
     rule: {
       type: 'regex',
-      regex: 'Spotify|Deezer',
+      regex: 'Spotify|Deezer|Amazon Music',
       ignore_case: true,
     },
     data: { color: '#A8FC00' },
@@ -86,10 +90,16 @@ export const defaultCategories: Category[] = [
     rule: {
       type: 'regex',
       regex:
-        'Messenger|Telegram|Signal|WhatsApp|Rambox|Slack|Riot|Element|Discord|Nheko|NeoChat|Mattermost',
+        'Messenger|Texts|Telegram|Signal|WhatsApp|Rambox|Slack|Riot|Element|Discord|Nheko|NeoChat|Mattermost',
     },
   },
-  { name: ['Comms', 'Email'], rule: { type: 'regex', regex: 'Gmail|Thunderbird|mutt|alpine' } },
+  {
+    name: ['Comms', 'Email'],
+    rule: {
+      type: 'regex',
+      regex: 'Gmail|Superhuman|Thunderbird|mutt|alpine',
+    },
+  },
   { name: ['Uncategorized'], rule: { type: null }, data: { color: COLOR_UNCAT } },
 ];
 
