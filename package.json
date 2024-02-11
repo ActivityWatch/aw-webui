@@ -111,7 +111,7 @@
     "json-loader": "^0.5.7",
     "lodash": "^4.17.19",
     "moment": "^2.29.4",
-    "moment-range": "^3.1.1",
+    "moment-range": "^4.0.2",
     "ora": "^7.0.1",
     "prettier": "^2.5.1",
     "pug": "^3.0",
