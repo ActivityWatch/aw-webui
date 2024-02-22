@@ -207,3 +207,7 @@ div[style="background-color: rgb(238, 238, 238);"] {
 div[style="color: rgb(85, 85, 85); font-size: 0.9em;"] {
   color: #e9ebf0 !important;
 }
+
+#root.stopwatch-entry:hover{
+  background-color: #282c32 !important;
+}
