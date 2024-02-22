@@ -211,3 +211,7 @@ div[style="color: rgb(85, 85, 85); font-size: 0.9em;"] {
 #root.stopwatch-entry:hover{
   background-color: #282c32 !important;
 }
+
+.bg-light {
+  background-color: #1a1d24 !important;
+}
