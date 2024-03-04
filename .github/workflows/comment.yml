@@ -17,7 +17,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - uses: iterative/setup-cml@v1
+    - uses: iterative/setup-cml@v3
 
     # Doesn't work for fetching artifacts from separate workflows
     #- name: Download screenshots
