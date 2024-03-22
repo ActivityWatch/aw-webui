@@ -131,7 +131,7 @@
     "vue-router": "^3.5.3",
     "vue-style-loader": "^4.1.0",
     "webpack": "^5.0",
-    "webpack-dev-middleware": "^3.7.2",
+    "webpack-dev-middleware": "^5.3.4",
     "webpack-hot-middleware": "^2.22.2",
     "webpack-merge": "^5.8.0"
   },
