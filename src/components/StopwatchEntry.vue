@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  div.row.px-3.py-2#root
+  div.row.px-3.py-2.stopwatch-entry#root
     div.flex-fill
       span #[b {{event.data.label || 'No label'}}]
       span(style="color: #888") &nbsp;|&nbsp;
