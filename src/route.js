@@ -1,8 +1,6 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 
-import { useSettingsStore } from '~/stores/settings';
-
 const Home = () => import('./views/Home.vue');
 
 // Activity views for desktop
@@ -32,8 +30,7 @@ const router = new VueRouter({
     {
       path: '/',
       redirect: _to => {
-        const settings = useSettingsStore();
-        return settings.landingpage || '/home';
+        return localStorage.landingpage || '/home';
       },
     },
     { path: '/home', component: Home },
