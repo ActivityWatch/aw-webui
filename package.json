@@ -99,7 +99,7 @@
     "eslint-plugin-prettier": "^3.1",
     "eslint-plugin-vue": "^8.0",
     "eventsource-polyfill": "^0.9.6",
-    "express": "^4.16.3",
+    "express": "^4.19.2",
     "file-loader": "^6.2",
     "function-bind": "^1.0.2",
     "html-loader": "^0.5.5",
