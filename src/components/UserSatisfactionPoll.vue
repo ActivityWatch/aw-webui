@@ -63,7 +63,7 @@ ul {
 }
 </style>
 
-<script>
+<script lang="ts">
 import { range } from 'lodash/fp';
 import moment from 'moment';
 

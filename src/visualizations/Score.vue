@@ -34,16 +34,17 @@ div
             | {{ (Math.round(cat.data.$total_score * 10) / 10).toFixed(1) }}
 </template>
 
-<script>
+<script lang="ts">
 import _ from 'lodash';
 import { useActivityStore } from '~/stores/activity';
+import { IEvent } from '~/util/interfaces';
 
 // TODO: Maybe add a "Category Tree"-style visualization?
 
 export default {
   name: 'aw-score',
   computed: {
-    categories_with_score: function () {
+    categories_with_score: function (): IEvent[] {
       // FIXME: Does this get all category time? Or just top ones?
       const top_categories = useActivityStore().category.top;
       return _.map(top_categories, cat => {
@@ -51,12 +52,12 @@ export default {
         return cat;
       });
     },
-    score: function () {
+    score: function (): number {
       return _.sum(_.map(this.categories_with_score, cat => cat.data.$total_score));
     },
     score_productive_percent() {
       // Compute the percentage of time spent on productive activities (score > 0)
-      const total_time = _.sumBy(this.categories_with_score, cat => cat.duration);
+      const total_time = _.sumBy(this.categories_with_score as IEvent[], cat => cat.duration);
       const productive_time = _.sumBy(
         _.filter(this.categories_with_score, cat => cat.data.$total_score > 0),
         cat => cat.duration

@@ -51,7 +51,7 @@ div
 
 <style scoped lang="scss"></style>
 
-<script>
+<script lang="ts">
 import moment from 'moment';
 import 'vue-awesome/icons/sync';
 export default {

@@ -5,7 +5,7 @@ div
 	slot
 </template>
 
-<script>
+<script lang="ts">
 // Based on: https://medium.com/@dillonchanis/handling-errors-in-vue-with-error-boundaries-91f6ead0093b
 export default {
   name: 'ErrorBoundary',

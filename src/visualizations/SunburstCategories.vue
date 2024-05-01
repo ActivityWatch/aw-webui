@@ -22,7 +22,7 @@ sunburst(:data="data", :colorScale="colorfunc", :getCategoryForColor="categoryFo
   //breadcrumbTrail(slot="legend" slot-scope="{ nodes, colorGetter, width }" :current="nodes.mouseOver" :root="nodes.root" :colorGetter="colorGetter" :from="nodes.clicked" :width="width" :item-width="100" :order="0")
 </template>
 
-<script>
+<script lang="ts">
 import {
   breadcrumbTrail,
   highlightOnHover,

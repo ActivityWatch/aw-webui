@@ -8,7 +8,7 @@ div(v-if="show", style="border: 1px solid #aaa; border-radius: 5px")
   slot
 </template>
 
-<script>
+<script lang="ts">
 export default {
   props: {
     note: {

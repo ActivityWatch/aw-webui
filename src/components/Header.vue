@@ -95,7 +95,7 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
 }
 </style>
 
-<script>
+<script lang="ts">
 // only import the icons you use to reduce bundle size
 import 'vue-awesome/icons/calendar-day';
 import 'vue-awesome/icons/calendar-week';
@@ -125,6 +125,7 @@ import _ from 'lodash';
 import { mapState } from 'pinia';
 import { useSettingsStore } from '~/stores/settings';
 import { useBucketsStore } from '~/stores/buckets';
+import { IBucket } from '~/util/interfaces';
 
 export default {
   name: 'Header',
@@ -141,7 +142,7 @@ export default {
   mounted: async function () {
     const bucketStore = useBucketsStore();
     await bucketStore.ensureLoaded();
-    const buckets = bucketStore.buckets;
+    const buckets: IBucket[] = bucketStore.buckets;
     const types_by_host = {};
 
     const activityViews = [];
@@ -149,10 +150,10 @@ export default {
     // TODO: Change to use same bucket detection logic as get_buckets/set_available in store/modules/activity.ts
     _.each(buckets, v => {
       types_by_host[v.hostname] = types_by_host[v.hostname] || {};
-      // The '&& true;' is just to typecoerce into booleans
-      types_by_host[v.hostname].afk |= v.type == 'afkstatus';
-      types_by_host[v.hostname].window |= v.type == 'currentwindow';
-      types_by_host[v.hostname].android |= v.type == 'currentwindow' && v.id.includes('android'); // Use other bucket type ID in the future
+      types_by_host[v.hostname].afk ||= v.type == 'afkstatus';
+      types_by_host[v.hostname].window ||= v.type == 'currentwindow';
+      // TODO: Use other bucket type ID in the future
+      types_by_host[v.hostname].android ||= v.type == 'currentwindow' && v.id.includes('android');
     });
     //console.log(types_by_host);
 
@@ -166,7 +167,7 @@ export default {
           icon: 'desktop',
         });
       }
-      if (types.android) {
+      if (types['android']) {
         activityViews.push({
           name: `${hostname} (Android)`,
           hostname: hostname,

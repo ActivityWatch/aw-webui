@@ -31,7 +31,7 @@ div
     CategoryEditModal(:categoryId='editingId', @hidden="hideEditModal()")
 </template>
 
-<script>
+<script lang="ts">
 import 'vue-awesome/icons/regular/plus-square';
 import 'vue-awesome/icons/regular/minus-square';
 import 'vue-awesome/icons/circle';
