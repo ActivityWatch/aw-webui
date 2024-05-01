@@ -41,7 +41,7 @@ div
       | Add a week to the search: #[b-button(size="sm" variant="outline-dark" @click="start = start.subtract(1, 'week'); search()") +1 week]
 </template>
 
-<script>
+<script lang="ts">
 import _ from 'lodash';
 import moment from 'moment';
 import { canonicalEvents } from '~/queries';
@@ -75,8 +75,8 @@ export default {
         bid_window: 'aw-watcher-window_' + this.queryOptions.hostname,
         bid_afk: 'aw-watcher-afk_' + this.queryOptions.hostname,
         filter_afk: this.queryOptions.filter_afk,
-        classes: [[['searched'], { type: 'regex', regex: this.pattern }]],
-        filter_classes: [['searched']],
+        categories: [[['searched'], { type: 'regex', regex: this.pattern }]],
+        filter_categories: [['searched']],
       });
       query += '; RETURN = events;';
 
