@@ -13,10 +13,10 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [16]
+        node-version: [20]
         python-version: ['3.9']
         include:
-        - node-version: '16'
+        - node-version: '20'
           python-version: '3.9'
 
     steps:
@@ -44,12 +44,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [16]
+        node-version: [20]
         python-version: ['3.9']
         aw-server: ["aw-server", "aw-server-rust"]
         aw-version: ["v0.12.3b11"]
         include:
-        - node-version: '16'
+        - node-version: '20'
           python-version: '3.9'
           aw-server: "aw-server-rust"
           aw-version: "master"
