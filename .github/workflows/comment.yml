@@ -12,7 +12,7 @@ on:
 jobs:
   comment:
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success'  
+    if: github.event.workflow_run.conclusion == 'success'
     # TODO: Maybe add `github.event.workflow_run.event == 'pull_request'` to avoid spam?
 
     steps:
@@ -61,12 +61,12 @@ jobs:
                 aw_version=$(basename $aw_version_dir)
                 echo "<details><summary>Screenshots using $aw_server $aw_version (click to expand)</summary>" >> comment.md
                 echo '<p float="left">' >> comment.md
-                cml-publish $aw_version_dir/activity.png  | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
-                cml-publish $aw_version_dir/timeline.png  | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
-                cml-publish $aw_version_dir/settings.png  | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
-                cml-publish $aw_version_dir/home.png      | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
-                cml-publish $aw_version_dir/buckets.png   | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
-                cml-publish $aw_version_dir/stopwatch.png | sed -E 's/.+/<img width="45%" src="\0"\/>/' >> comment.md
+                echo "<img width=\"45%\" src=\"$aw_version_dir/activity.png\"/>" >> comment.md
+                echo "<img width=\"45%\" src=\"$aw_version_dir/timeline.png\"/>" >> comment.md
+                echo "<img width=\"45%\" src=\"$aw_version_dir/settings.png\"/>" >> comment.md
+                echo "<img width=\"45%\" src=\"$aw_version_dir/home.png\"/>" >> comment.md
+                echo "<img width=\"45%\" src=\"$aw_version_dir/buckets.png\"/>" >> comment.md
+                echo "<img width=\"45%\" src=\"$aw_version_dir/stopwatch.png\"/>" >> comment.md
                 echo '</p>' >> comment.md
                 echo -n '</details>' >> comment.md
             done
@@ -76,4 +76,4 @@ jobs:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         head_sha: ${{ github.event.workflow_run.head_sha }}
       run: |
-        cml-send-comment --target=commit/$head_sha --repo https://github.com/ActivityWatch/aw-webui comment.md
+        cml comment create --target=commit/$head_sha --repo https://github.com/ActivityWatch/aw-webui comment.md
