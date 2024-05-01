@@ -54,7 +54,7 @@ div
 
 <style scoped lang="scss"></style>
 
-<script>
+<script lang="ts">
 import _ from 'lodash';
 import moment from 'moment';
 import { canonicalEvents } from '~/queries';
@@ -108,7 +108,7 @@ export default {
         let time = 0;
         _.map(Object.entries(this.alert_times), ([c, t]) => {
           if (c.startsWith(cat.join(','))) {
-            time += t;
+            if (typeof t === 'number') time += t;
           }
         });
         return time;
@@ -149,8 +149,8 @@ export default {
         bid_window: 'aw-watcher-window_' + this.hostname,
         bid_afk: 'aw-watcher-afk_' + this.hostname,
         filter_afk: this.filter_afk,
-        classes: useCategoryStore().classes_for_query,
-        filter_classes: null, // classes.map(c => c[0]),
+        categories: useCategoryStore().classes_for_query,
+        filter_categories: null, // classes.map(c => c[0]),
       });
       query += '; RETURN = events;';
 

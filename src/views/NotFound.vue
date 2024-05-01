@@ -5,7 +5,7 @@ div
     | Try navigating back where you came from.
 </template>
 
-<script>
+<script lang="ts">
 export default {
   name: 'NotFound',
 };

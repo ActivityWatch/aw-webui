@@ -8,7 +8,7 @@ div.d-flex.justify-content-between
     b-form-checkbox(v-model="useColorFallback", switch)
 </template>
 
-<script>
+<script lang="ts">
 import { useSettingsStore } from '~/stores/settings';
 
 export default {

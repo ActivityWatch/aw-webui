@@ -41,7 +41,7 @@ div
       | Add a week to the search: #[b-button(size="sm" variant="outline-dark" @click="start = start.subtract(1, 'week'); search()") +1 week]
 </template>
 
-<script>
+<script lang="ts">
 import _ from 'lodash';
 import moment from 'moment';
 import { canonicalEvents } from '~/queries';

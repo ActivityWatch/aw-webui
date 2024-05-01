@@ -39,7 +39,7 @@ div
   DeveloperSettings
 </template>
 
-<script>
+<script lang="ts">
 import { useSettingsStore } from '~/stores/settings';
 
 import DaystartSettings from '~/views/settings/DaystartSettings.vue';

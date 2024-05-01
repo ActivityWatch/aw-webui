@@ -54,7 +54,7 @@ div
 }
 </style>
 
-<script>
+<script lang="ts">
 import _ from 'lodash';
 import moment from 'moment';
 

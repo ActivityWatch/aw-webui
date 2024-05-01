@@ -17,7 +17,7 @@ div
   small
     | The weekday which starts a new week.
 </template>
-<script>
+<script lang="ts">
 import { useSettingsStore } from '~/stores/settings';
 
 export default {

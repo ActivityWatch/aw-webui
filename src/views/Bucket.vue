@@ -33,7 +33,7 @@ div
   aw-eventlist(:bucket_id="id", @save="updateEvent", :events="events" editable=true)
 </template>
 
-<script>
+<script lang="ts">
 import { useBucketsStore } from '~/stores/buckets';
 import { getClient } from '~/util/awclient';
 

@@ -14,7 +14,7 @@ div
     | The page to open when opening ActivityWatch, or clicking the logo in the top menu.
 </template>
 
-<script>
+<script lang="ts">
 import { useSettingsStore } from '~/stores/settings';
 import { useBucketsStore } from '~/stores/buckets';
 
