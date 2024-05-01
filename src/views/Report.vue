@@ -175,9 +175,11 @@ export default {
 
     export_csv() {
       const data = this.events.map(e => {
-        return [e.timestamp, e.duration, e.data['$category']];
+        return [e.timestamp, e.duration, e.data['$category'], e.data['app'], e.data['title']];
       });
-      const csv = Papa.unparse(data, { columns: ['timestamp', 'duration', 'category'] });
+      const csv = Papa.unparse(data, {
+        columns: ['timestamp', 'duration', 'category', 'app', 'title'],
+      });
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
