@@ -34,7 +34,7 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
       | Inherit parent color
     div.mt-1(v-show="!editing.inherit_color")
       color-picker(v-model="editing.color")
-  
+
   hr
   div.my-1
     b Productivity score
@@ -50,9 +50,9 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
       | Remove category
 </template>
 
-<script>
+<script lang="ts">
 import _ from 'lodash';
-import ColorPicker from '~/components/ColorPicker';
+import ColorPicker from '~/components/ColorPicker.vue';
 import { useCategoryStore } from '~/stores/categories';
 import { mapState } from 'pinia';
 import { validateRegex, isRegexBroad } from '~/util/validate';

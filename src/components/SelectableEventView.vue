@@ -18,7 +18,7 @@ div
     pre {{ events }}
 </template>
 
-<script>
+<script lang="ts">
 export default {
   name: 'aw-selectable-eventview',
   props: {

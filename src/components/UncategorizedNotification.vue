@@ -10,7 +10,7 @@ div
       | You can address this by using the #[router-link(:to="{ path: '/settings/category-builder' }") Category Builder].
 </template>
 
-<script>
+<script lang="ts">
 import { mapState } from 'pinia';
 import { useActivityStore } from '~/stores/activity';
 

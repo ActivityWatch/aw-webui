@@ -37,7 +37,7 @@ div.container(style="color: #555; font-size: 0.9em")
         | Donate
 </template>
 
-<script>
+<script lang="ts">
 // only import the icons you use to reduce bundle size
 import 'vue-awesome/icons/brands/twitter';
 import 'vue-awesome/icons/brands/github';

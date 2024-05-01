@@ -32,7 +32,7 @@ div(style="font-size: 0.9em")
 }
 </style>
 
-<script>
+<script lang="ts">
 import 'vue-awesome/icons/circle';
 import 'vue-awesome/icons/regular/plus-square';
 import 'vue-awesome/icons/regular/minus-square';

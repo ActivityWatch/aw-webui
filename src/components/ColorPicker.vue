@@ -32,7 +32,7 @@ div
 }
 </style>
 
-<script>
+<script lang="ts">
 // Based on https://codepen.io/Brownsugar/pen/NaGPKy
 import 'vue-awesome/icons/sync';
 

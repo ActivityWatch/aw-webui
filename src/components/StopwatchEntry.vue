@@ -29,7 +29,7 @@ div
 }
 </style>
 
-<script>
+<script lang="ts">
 import moment from 'moment';
 import 'vue-awesome/icons/edit';
 import 'vue-awesome/icons/stop';
@@ -54,7 +54,7 @@ export default {
     stop: async function () {
       const new_event = JSON.parse(JSON.stringify(this.event));
       new_event.data.running = false;
-      new_event.duration = (moment() - moment(new_event.timestamp)) / 1000;
+      new_event.duration = moment().diff(moment(new_event.timestamp)) / 1000;
       await this.$aw.replaceEvent(this.bucket_id, new_event);
       this.$emit('update', new_event);
     },

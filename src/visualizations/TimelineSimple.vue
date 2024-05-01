@@ -9,7 +9,7 @@ svg {
 }
 </style>
 
-<script>
+<script lang="ts">
 // NOTE: This is just a Vue.js component wrapper for timeline-simple.js
 //       Code should generally go in the framework-independent file.
 

@@ -13,7 +13,7 @@
       button(type="button", class="close", @click="isFollowUpVisible=false") &times;
 </template>
 
-<script>
+<script lang="ts">
 import axios from 'axios';
 import moment from 'moment';
 import semver from 'semver';
