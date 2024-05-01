@@ -386,16 +386,21 @@ export default {
         periodLength = this.periodLength;
       }
 
+      const momentJsDate = moment(date);
+      if (!momentJsDate.isValid()) {
+        return;
+      }
+
       let new_date;
       if (periodLength == '7 days') {
         periodLength = 'last7d';
-        new_date = moment(date).add(1, 'days').format('YYYY-MM-DD');
+        new_date = momentJsDate.add(1, 'days').format('YYYY-MM-DD');
       } else if (periodLength == '30 days') {
         periodLength = 'last30d';
-        new_date = moment(date).add(1, 'days').format('YYYY-MM-DD');
+        new_date = momentJsDate.add(1, 'days').format('YYYY-MM-DD');
       } else {
         const new_period_length_moment = periodLengthConvertMoment(periodLength);
-        new_date = moment(date).startOf(new_period_length_moment).format('YYYY-MM-DD');
+        new_date = momentJsDate.startOf(new_period_length_moment).format('YYYY-MM-DD');
       }
       const path = `/activity/${this.host}/${periodLength}/${new_date}/${this.subview}/${this.currentViewId}`;
       if (this.$route.path !== path) {
