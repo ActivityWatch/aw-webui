@@ -62,7 +62,8 @@ Vue.component('aw-custom-vis', () => import('./visualizations/CustomVisualizatio
 Vue.component('aw-score', () => import('./visualizations/Score.vue'));
 
 // A mixin to make async method errors propagate
-Vue.mixin(require('~/mixins/asyncErrorCaptured.js'));
+import asyncErrorCapturedMixin from './mixins/asyncErrorCaptured.js';
+Vue.mixin(asyncErrorCapturedMixin);
 
 // Set the PRODUCTION constant
 // FIXME: Thould follow Vue convention and start with a $.
