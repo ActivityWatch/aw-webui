@@ -61,12 +61,9 @@ jobs:
                 aw_version=$(basename $aw_version_dir)
                 echo "<details><summary>Screenshots using $aw_server $aw_version (click to expand)</summary>" >> comment.md
                 echo '<p float="left">' >> comment.md
-                echo "<img width=\"45%\" src=\"$aw_version_dir/activity.png\"/>" >> comment.md
-                echo "<img width=\"45%\" src=\"$aw_version_dir/timeline.png\"/>" >> comment.md
-                echo "<img width=\"45%\" src=\"$aw_version_dir/settings.png\"/>" >> comment.md
-                echo "<img width=\"45%\" src=\"$aw_version_dir/home.png\"/>" >> comment.md
-                echo "<img width=\"45%\" src=\"$aw_version_dir/buckets.png\"/>" >> comment.md
-                echo "<img width=\"45%\" src=\"$aw_version_dir/stopwatch.png\"/>" >> comment.md
+                for screenshot in $aw_version_dir/*.png; do
+                    echo "<img width=\"45%\" src=\"$(cml publish $screenshot)\"/>" >> comment.md
+                done
                 echo '</p>' >> comment.md
                 echo -n '</details>' >> comment.md
             done
