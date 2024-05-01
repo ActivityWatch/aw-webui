@@ -39,7 +39,7 @@ div
       b-btn.float-right(@click="saveClasses", variant="success" :disabled="!classes_unsaved_changes")
         | Save
 </template>
-<script>
+<script lang="ts">
 import { mapState, mapGetters } from 'pinia';
 import CategoryEditTree from '~/components/CategoryEditTree.vue';
 import CategoryEditModal from '~/components/CategoryEditModal.vue';

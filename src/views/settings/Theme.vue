@@ -13,7 +13,7 @@ div
     | Change color theme of the application (you need to change categories colors manually to be suitable with dark mode).
 </template>
 
-<script>
+<script lang="ts">
 import { mapState } from 'pinia';
 import { useSettingsStore } from '~/stores/settings';
 

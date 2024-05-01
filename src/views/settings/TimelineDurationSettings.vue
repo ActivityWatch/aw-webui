@@ -16,7 +16,7 @@ div
   small
     | The default duration used for 'show last' in the timeline view.
 </template>
-<script>
+<script lang="ts">
 import { useSettingsStore } from '~/stores/settings';
 
 export default {

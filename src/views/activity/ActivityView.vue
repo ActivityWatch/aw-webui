@@ -31,7 +31,7 @@ div(v-if="view")
       span Edit view
 </template>
 
-<script>
+<script lang="ts">
 import 'vue-awesome/icons/save';
 import 'vue-awesome/icons/times';
 import 'vue-awesome/icons/trash';
@@ -40,7 +40,7 @@ import 'vue-awesome/icons/undo';
 import { mapState } from 'pinia';
 import draggable from 'vuedraggable';
 
-import { useViewsStore } from '@/stores/views';
+import { useViewsStore } from '~/stores/views';
 
 export default {
   name: 'ActivityView',

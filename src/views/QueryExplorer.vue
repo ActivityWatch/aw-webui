@@ -34,7 +34,7 @@ div
 
 <style scoped lang="scss"></style>
 
-<script>
+<script lang="ts">
 import moment from 'moment';
 import _ from 'lodash';
 import { useCategoryStore } from '~/stores/categories';

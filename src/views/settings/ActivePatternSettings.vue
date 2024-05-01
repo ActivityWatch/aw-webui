@@ -22,7 +22,7 @@ div
 
 </template>
 
-<script>
+<script lang="ts">
 import { isRegexBroad, validateRegex } from '~/util/validate';
 import { useSettingsStore } from '~/stores/settings';
 

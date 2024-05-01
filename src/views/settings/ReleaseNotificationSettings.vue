@@ -9,7 +9,7 @@ div
     | We will send you a notification if there is a new release available for download, this check will happen at most once per day.
 </template>
 
-<script>
+<script lang="ts">
 import { useSettingsStore } from '~/stores/settings';
 
 export default {

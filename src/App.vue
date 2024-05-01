@@ -12,7 +12,7 @@ div#wrapper(v-if="loaded")
   aw-footer
 </template>
 
-<script>
+<script lang="ts">
 import { useSettingsStore } from '~/stores/settings';
 import { useServerStore } from '~/stores/server';
 

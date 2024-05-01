@@ -23,7 +23,7 @@ div
     | Web UI commit hash: {{ COMMIT_HASH }}
 </template>
 
-<script>
+<script lang="ts">
 import { useSettingsStore } from '~/stores/settings';
 
 export default {

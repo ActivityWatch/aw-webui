@@ -39,7 +39,7 @@ div
     h1.aw-loading Loading...
 </template>
 
-<script>
+<script lang="ts">
 import _ from 'lodash';
 import { useSettingsStore } from '~/stores/settings';
 import { useBucketsStore } from '~/stores/buckets';
