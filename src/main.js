@@ -28,7 +28,7 @@ import router from './route.js';
 import pinia from './stores';
 
 // Register Font Awesome icon component
-//Vue.component('icon', () => import('vue-awesome/components/Icon'));
+Vue.component('icon', () => import('vue-awesome/components/Icon'));
 
 // General components
 Vue.component('error-boundary', () => import('./components/ErrorBoundary.vue'));
