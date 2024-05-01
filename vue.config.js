@@ -1,20 +1,22 @@
-const path = require('path');
-const webpack = require('webpack');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
-const { argv } = require('yargs');
+import path from 'path';
+import webpack from 'webpack';
+import CopyWebpackPlugin from 'copy-webpack-plugin';
+import argv from 'yargs';
+import child_process from 'child_process';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
+const __dirname = path.dirname(__filename); // get the name of the directory
 
 // get git info from command line
-const _COMMIT_HASH = require('child_process')
-  .execSync('git rev-parse --short HEAD')
-  .toString()
-  .trim();
+const _COMMIT_HASH = child_process.execSync('git rev-parse --short HEAD').toString().trim();
 console.info('Commit hash:', _COMMIT_HASH);
 
-module.exports = {
+export default {
   pages: {
     index: {
       entry: './src/main.js',
-      template: './src/index.html',
+      template: './index.html',
       templateParameters: {
         cspDefaultSrc: process.env.NODE_ENV === 'production' ? '' : '*:5600 *:5666 ws://*:27180',
       },
@@ -37,7 +39,7 @@ module.exports = {
         components: path.resolve(__dirname, './src/components'),
       },
       fallback: {
-        domain: require.resolve('domain-browser'),
+        domain: import.meta.resolve('domain-browser'),
       },
     },
     plugins: [
