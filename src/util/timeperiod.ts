@@ -1,5 +1,5 @@
 import moment from 'moment';
-import { get_day_start_with_offset } from '~/util/time';
+import { get_day_start_with_offset } from './time';
 import { useSettingsStore } from '~/stores/settings';
 
 export interface TimePeriod {

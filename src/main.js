@@ -28,7 +28,7 @@ import router from './route.js';
 import pinia from './stores';
 
 // Register Font Awesome icon component
-Vue.component('icon', () => import('vue-awesome/components/Icon'));
+Vue.component('icon', () => import('vue-awesome/components/Icon.vue'));
 
 // General components
 Vue.component('error-boundary', () => import('./components/ErrorBoundary.vue'));
@@ -80,7 +80,7 @@ import { createClient, getClient, configureClient } from './util/awclient';
 createClient();
 
 // Setup Vue app
-import App from './App';
+import App from './App.vue';
 new Vue({
   el: '#app',
   router: router,
