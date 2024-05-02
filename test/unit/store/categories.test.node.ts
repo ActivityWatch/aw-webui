@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import { isEqual } from 'lodash';
 import { setActivePinia, createPinia } from 'pinia';
 
 import { useCategoryStore } from '~/stores/categories';
@@ -120,10 +120,8 @@ describe('categories store', () => {
     expect(video_2_cat.data.test).toBe(true);
 
     // Check that the category named "Video" no longer exists, and the category named "Video2" exists
-    expect(categoryStore.all_categories.filter(c => _.isEqual(c, ['Work', 'Video']))).toHaveLength(
-      0
-    );
-    expect(categoryStore.all_categories.filter(c => _.isEqual(c, ['Work', 'Video2']))).toHaveLength(
+    expect(categoryStore.all_categories.filter(c => isEqual(c, ['Work', 'Video']))).toHaveLength(0);
+    expect(categoryStore.all_categories.filter(c => isEqual(c, ['Work', 'Video2']))).toHaveLength(
       1
     );
   });
