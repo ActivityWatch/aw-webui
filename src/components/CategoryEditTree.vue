@@ -97,6 +97,6 @@ export default {
 <style scoped lang="scss">
 .row.class:hover {
   background-color: #eee;
-  boder-radius: 5px;
+  border-radius: 5px;
 }
 </style>

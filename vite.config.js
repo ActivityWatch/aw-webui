@@ -8,9 +8,10 @@ export default defineConfig(({ mode }) => {
   return {
     server: {
       port: 27180,
-      headers: {
-        'Content-Security-Policy': PRODUCTION ? "default-src 'self'" : "default-src 'self' *:5666",
-      },
+      // This breaks a bunch of style-related stuff (at least):
+      //headers: {
+      //  'Content-Security-Policy': PRODUCTION ? "default-src 'self'" : "default-src 'self' *:5666",
+      //},
     },
     plugins: [vue()],
     publicDir: './static',

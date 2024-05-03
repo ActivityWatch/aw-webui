@@ -1,10 +1,8 @@
-'use strict';
+import * as d3 from 'd3';
+import _ from 'lodash';
+import moment from 'moment';
 
-const d3 = require('d3');
-const _ = require('lodash');
-const moment = require('moment');
-
-import { seconds_to_duration, get_hour_offset } from '../util/time';
+import { seconds_to_duration, get_hour_offset } from '../util/time.ts';
 
 function create(svg_elem) {
   // Clear element

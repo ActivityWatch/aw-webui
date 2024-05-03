@@ -16,6 +16,7 @@ Vue.component('datetime', Datetime);
 // Load the Varela Round font
 import 'typeface-varela-round';
 
+// Load the main style
 import './style/style.scss';
 
 // Loads all the filters

@@ -14,6 +14,12 @@ endif
 build: install static/logo.png static/logo.svg
 	npm run build ${androidflag}
 
+vite-build:
+	npx vite build
+
+vite-dev:
+	npx vite
+
 static/logo.%: media/logo/logo.%
 	@mkdir -p static
 	cp $< $@

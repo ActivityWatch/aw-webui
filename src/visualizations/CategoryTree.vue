@@ -36,8 +36,9 @@ div(style="font-size: 0.9em")
 import 'vue-awesome/icons/circle';
 import 'vue-awesome/icons/regular/plus-square';
 import 'vue-awesome/icons/regular/minus-square';
-const _ = require('lodash');
-const classes = require('~/util/classes.ts');
+import _ from 'lodash';
+import { build_category_hierarchy, flatten_category_hierarchy } from '../util/classes.ts';
+import { IEvent } from '../util/interfaces.ts';
 
 function _get_child_cats(cat, all_cats) {
   return _.filter(all_cats, c => _.isEqual(c.parent, cat.name));
@@ -75,16 +76,16 @@ export default {
     },
     category_hierarchy: function () {
       if (!this.events) return [];
-      const events = JSON.parse(JSON.stringify(this.events));
+      const events: IEvent[] = JSON.parse(JSON.stringify(this.events)) as IEvent[];
 
-      const hier = classes.build_category_hierarchy(
+      const hier = build_category_hierarchy(
         _.map(events, e => {
-          return { name: e.data['$category'] };
+          return { name: e.data['$category'], rule: { type: 'none' } };
         })
       );
 
-      let cats = classes.flatten_category_hierarchy(hier).map(c => {
-        c.duration = _.sumBy(
+      let cats = flatten_category_hierarchy(hier).map(c => {
+        c['duration'] = _.sumBy(
           events.filter(e => {
             const pcat = e.data['$category'].slice(0, c.name.length);
             return _.isEqual(c.name, pcat);
@@ -96,7 +97,7 @@ export default {
 
       const cats_with_depth0 = _.sortBy(
         _.filter(cats, c => c.depth == 0),
-        c => -c.duration
+        c => -c['duration']
       );
       _.map(cats_with_depth0, c => _assign_children(c, cats));
 
