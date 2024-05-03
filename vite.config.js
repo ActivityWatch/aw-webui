@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue2';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(({ mode }) => {
   const PRODUCTION = mode === 'production';
@@ -23,7 +24,28 @@ export default defineConfig(({ mode }) => {
 
   // Return the configuration
   return {
-    plugins: [setCsp(), vue()],
+    plugins: [
+      setCsp(),
+      vue(),
+      VitePWA({
+        devOptions: {
+          enabled: true,
+        },
+        manifest: {
+          name: 'ActivityWatch',
+          short_name: 'ActivityWatch',
+          description: 'Automatically track your computer usage',
+          theme_color: '#ffffff',
+          icons: [
+            {
+              src: 'logo.png',
+              sizes: '512x512',
+              type: 'image/png',
+            },
+          ],
+        },
+      }),
+    ],
     server: {
       port: 27180,
       // TODO: Fix this.
