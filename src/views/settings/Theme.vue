@@ -36,12 +36,12 @@ export default {
         // Apply newly set theme
         // Create Dark Theme Element
         const themeLink = document.createElement('link');
-        themeLink.href = '/static/dark.css';
+        themeLink.href = '/dark.css';
         themeLink.rel = 'stylesheet';
         // Append Dark Theme Element If Selected Mode Is Dark
         value === 'dark'
           ? document.querySelector('head').appendChild(themeLink)
-          : document.querySelector('link[href="/static/dark.css"]').remove();
+          : document.querySelector(`link[href="${themeLink.href}"]`).remove();
       },
     },
   },
