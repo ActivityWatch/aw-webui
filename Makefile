@@ -1,4 +1,4 @@
-.PHONY: install build dev test clean
+.PHONY: build dev test clean
 
 .FORCE: ;
 
@@ -11,7 +11,7 @@ else
 androidflag :=
 endif
 
-prebuild: install static/logo.png static/logo.svg
+prebuild: node_modules/ static/logo.png static/logo.svg
 
 build: prebuild
 	npm run build ${androidflag}
@@ -29,7 +29,7 @@ static/logo.%: media/logo/logo.%
 	@mkdir -p static
 	cp $< $@
 
-install:
+node_modules/: package-lock.json
 	npm ci
 
 uninstall:
