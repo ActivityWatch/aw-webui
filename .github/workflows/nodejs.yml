@@ -7,17 +7,15 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
-    name: Build (node-${{ matrix.node-version }})
+  build-webpack:
+    name: Build webpack (node-${{ matrix.node-version }})
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
         node-version: [20]
-        python-version: ['3.9']
         include:
         - node-version: '20'
-          python-version: '3.9'
 
     steps:
     - uses: actions/checkout@v4
@@ -30,11 +28,39 @@ jobs:
     - name: Install
       run: npm ci
     - name: Build
-      run: npm run build
+      run: make build
     - name: Upload build
       uses: actions/upload-artifact@v3.1.2
       with:
-        name: build
+        name: build-webpack
+        path: dist/*
+
+  build-vite:
+    name: Build vite (node-${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20]
+        include:
+        - node-version: '20'
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: Install
+      run: npm ci
+    - name: Build
+      run: make build-vite
+    - name: Upload build
+      uses: actions/upload-artifact@v3.1.2
+      with:
+        name: build-vite
         path: dist/*
 
   test:
