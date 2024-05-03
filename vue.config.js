@@ -49,7 +49,7 @@ export default {
         AW_SERVER_URL: process.env.AW_SERVER_URL,
         COMMIT_HASH: JSON.stringify(_COMMIT_HASH),
       }),
-      new CopyWebpackPlugin([{ from: 'static/', to: 'static' }]),
+      new CopyWebpackPlugin([{ from: 'static/', to: '' }]),
     ],
   },
   devServer: {
@@ -63,16 +63,16 @@ export default {
     name: 'ActivityWatch',
     iconPaths: {
       faviconSVG: null, // SVG won't render without needed fonts etc, so fall back to png
-      favicon32: 'static/logo.png',
-      favicon16: 'static/logo.png',
-      appleTouchIcon: 'static/logo.png',
-      //maskIcon: 'static/logo.png',
-      msTileImage: 'static/logo.png',
+      favicon32: 'logo.png',
+      favicon16: 'logo.png',
+      appleTouchIcon: 'logo.png',
+      //maskIcon: 'logo.png',
+      msTileImage: 'logo.png',
     },
     manifestOptions: {
       icons: [
         {
-          src: 'static/logo.png',
+          src: 'logo.png',
           sizes: '512x512',
           type: 'image/png',
         },
