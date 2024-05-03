@@ -11,13 +11,18 @@ else
 androidflag :=
 endif
 
-build: install static/logo.png static/logo.svg
+prebuild: install static/logo.png static/logo.svg
+
+build: prebuild
 	npm run build ${androidflag}
 
-vite-build:
+dev: prebuild
+	npm run serve ${androidflag}
+
+build-vite: prebuild
 	npx vite build
 
-vite-dev:
+dev-vite: prebuild
 	npx vite
 
 static/logo.%: media/logo/logo.%
@@ -29,9 +34,6 @@ install:
 
 uninstall:
 	rm -r node_modules/
-
-dev:
-	npm run serve ${androidflag}
 
 test:
 	npm test
