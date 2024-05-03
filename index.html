@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <!-- Verify with https://csp-evaluator.withgoogle.com/ -->
     <!-- TODO: fix CSP (should depend on prod/dev mode, as pre-vite )-->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' *:5666 ws://*:27180 https://api.github.com/repos/ActivityWatch/activitywatch/releases/latest; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; object-src 'none'; script-src 'self' 'unsafe-eval'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' <%= htmlWebpackPlugin.options.templateParameters.cspDefaultSrc %> https://api.github.com/repos/ActivityWatch/activitywatch/releases/latest; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; object-src 'none'; script-src 'self' 'unsafe-eval'">
   </head>
   <body>
     <noscript>
