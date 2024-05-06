@@ -230,9 +230,6 @@ const browser_appnames = {
     // Pre-releases
     'Google-chrome-beta',
     'Google-chrome-unstable',
-
-    // Brave (should this be merged with the brave entry?)
-    'Brave-browser',
   ],
   firefox: [
     // Firefox
@@ -268,7 +265,7 @@ const browser_appnames = {
     'waterfox.exe',
   ],
   opera: ['opera.exe', 'Opera'],
-  brave: ['brave.exe'],
+  brave: ['Brave-browser', 'Brave Browser', 'brave.exe'],
   edge: [
     'msedge.exe', // Windows
     'Microsoft Edge', // macOS
