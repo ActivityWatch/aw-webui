@@ -222,9 +222,6 @@ const browser_appnames = {
 
     // Chromium
     /chromium\w?(browser)?(-chromium)?(.exe)?/i,
-
-    // Brave (should this be merged with the brave entry?)
-    'Brave-browser',
   ],
   firefox: [
     // Firefox
@@ -245,7 +242,7 @@ const browser_appnames = {
     /Waterfox(.exe)?/i,
   ],
   opera: [/opera(.exe)?/i],
-  brave: [/brave(.exe)?/i],
+  brave: [/brave\w?(browser)?(.exe)?/i],
   edge: [
     'msedge.exe', // Windows
     /microsoft edge/i, // macOS
