@@ -238,7 +238,8 @@ const browser_appnames = {
     'Nightly',
 
     // Librewolf
-    /LibreWolf(-Portable)?(.exe)?/i,
+    // Sometimes "librewolf-default" (https://discord.com/channels/755040852727955476/755334543891759194/1237102962241704038)
+    /LibreWolf(-Portable|-default)?(.exe)?/i,
 
     // Waterfox
     /Waterfox(.exe)?/i,
