@@ -41,7 +41,7 @@ export default {
         // Append Dark Theme Element If Selected Mode Is Dark
         value === 'dark'
           ? document.querySelector('head').appendChild(themeLink)
-          : document.querySelector(`link[href="${themeLink.href}"]`).remove();
+          : document.querySelector(`link[href="${new URL(themeLink.href).pathname}"]`).remove();
       },
     },
   },
