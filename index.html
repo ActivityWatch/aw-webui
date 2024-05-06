@@ -6,7 +6,6 @@
     <link rel="icon" type="image/png" href="/logo.png">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <!-- Verify with https://csp-evaluator.withgoogle.com/ -->
-    <!-- TODO: fix CSP (should depend on prod/dev mode, as pre-vite )-->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' <%= htmlWebpackPlugin.options.templateParameters.cspDefaultSrc %> https://api.github.com/repos/ActivityWatch/activitywatch/releases/latest; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; object-src 'none'; script-src 'self' 'unsafe-eval'">
   </head>
   <body>
@@ -14,6 +13,7 @@
       <strong>We're sorry but the ActivityWatch Web UI doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
     </noscript>
     <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
+    <!-- We can build the app with either Vite or Webpack, they inject in different ways -->
+    <!-- Vite will auto-inject here: VITE_AUTOINJECT -->
   </body>
 </html>
