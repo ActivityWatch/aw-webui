@@ -213,75 +213,47 @@ export function appQuery(
   return querystr_to_array(code);
 }
 
+// To see actual app names as discovered by users, see older pre-regex commits.
 const browser_appnames = {
   chrome: [
     // Chrome
-    'Google Chrome',
-    'Google-chrome',
+    /google\w?chrome(-beta|-stable|-unstable)?/i,
     'chrome.exe',
-    'google-chrome-stable',
 
     // Chromium
-    'Chromium',
-    'Chromium-browser',
-    'Chromium-browser-chromium',
-    'chromium.exe',
-
-    // Pre-releases
-    'Google-chrome-beta',
-    'Google-chrome-unstable',
+    /chromium\w?(browser)?(-chromium)?(.exe)?/i,
 
     // Brave (should this be merged with the brave entry?)
     'Brave-browser',
   ],
   firefox: [
     // Firefox
-    'Firefox',
-    'Firefox.exe',
-    'firefox',
-    'firefox.exe',
+    /firefox(.exe)?/i,
 
     // Firefox Developer
-    'Firefox Developer Edition',
-    'firefoxdeveloperedition',
+    /firefox\w?developer\w?edition/i,
 
     // Pre-releases https://github.com/ActivityWatch/aw-watcher-web/issues/87
-    'Firefox-esr',
-    'Firefox Beta',
+    /firefox\w?(beta|esr|aurora|trunk-dev)?/i,
     'Nightly',
-    'firefox-aurora',
-    'firefox-trunk-dev',
 
     // Librewolf
-    'LibreWolf-Portable.exe',
-    'LibreWolf',
-    'LibreWolf.exe',
-    'Librewolf',
-    'Librewolf.exe',
-    'librewolf',
-    'librewolf.exe',
+    /LibreWolf(-Portable)?(.exe)?/i,
 
     // Waterfox
-    'Waterfox',
-    'Waterfox.exe',
-    'waterfox',
-    'waterfox.exe',
+    /Waterfox(.exe)?/i,
   ],
-  opera: ['opera.exe', 'Opera'],
-  brave: ['brave.exe'],
+  opera: [/opera(.exe)?/i],
+  brave: [/brave(.exe)?/i],
   edge: [
     'msedge.exe', // Windows
-    'Microsoft Edge', // macOS
-    'Microsoft-Edge-Stable', // Arch Linux: https://github.com/ActivityWatch/activitywatch/issues/753
-    'Microsoft-edge',
-    'microsoft-edge', // linux
-    'microsoft-edge-beta', // linux beta
-    'microsoft-edge-dev', // linux dev
+    /microsoft edge/i, // macOS
+    /microsoft\wedge\w?(stable|beta|dev)?/i, // linux, Arch Linux: https://github.com/ActivityWatch/activitywatch/issues/753
   ],
   arc: [
     'Arc', // macOS
   ],
-  vivaldi: ['Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe', 'Vivaldi'],
+  vivaldi: [/Vivaldi\w?(stable|snapshot)?(.exe)?/i],
   orion: ['Orion'],
   yandex: ['Yandex'],
 };
