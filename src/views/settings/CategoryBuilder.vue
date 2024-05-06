@@ -114,6 +114,83 @@ import { getClient } from '~/util/awclient';
 import CategoryEditModal from '~/components/CategoryEditModal.vue';
 import { isRegexBroad, validateRegex } from '~/util/validate';
 
+function findCommonPhrases(events, ignored_words) {
+  // finds common phrases in event titles
+  //
+  // Works by building a word duration dictionary and a bigram duration dictionary,
+  // then checking if any bigram occurs more than 50% of the time for any word,
+  // and if so, adds the bigram to the word's list of common phrases,
+  // and subtracts the bigram's duration from the constituent word's duration
+  // (such that we don't get, for example: "Mozilla", "Firefox", and "Mozilla Firefox" with the same duration).
+  const words = {};
+  const bigrams = {};
+
+  // Step 1: Create a word frequency dictionary
+  for (const event of events) {
+    const words_in_event = event.data.title.split(/[\s\-,:()[\]/]/);
+    for (const word of words_in_event) {
+      console.log(word);
+      if (word.length <= 2 || ignored_words.includes(word)) {
+        continue;
+      }
+      if (word in words) {
+        console.log(word in words, word, words);
+        words[word].duration += event.duration;
+        words[word].events.push(event);
+      } else {
+        words[word] = {
+          word: word,
+          duration: event.duration,
+          events: [event],
+        };
+      }
+    }
+  }
+
+  // Step 2: Create bigrams and count co-occurrences
+  for (const event of events) {
+    const words_in_event = event.data.title.split(/[\s\-,:()[\]/]/);
+    // Generate bigrams for each event
+    for (let i = 0; i < words_in_event.length - 1; i++) {
+      const bigram = words_in_event[i] + ' ' + words_in_event[i + 1];
+      if (bigram in bigrams) {
+        bigrams[bigram].duration += event.duration;
+        bigrams[bigram].events.push(event);
+      } else {
+        bigrams[bigram] = {
+          bigram: bigram,
+          duration: event.duration,
+          events: [event],
+        };
+      }
+    }
+  }
+
+  // Step 3: Check for overlap
+  for (const bigram in bigrams) {
+    const words_in_bigram = bigram.split(' ');
+    const word1 = words_in_bigram[0];
+    const word2 = words_in_bigram[1];
+    if (!(word1 in words) || !(word2 in words)) {
+      continue;
+    }
+
+    const word1_duration = words[word1].duration;
+    const word2_duration = words[word2].duration;
+    const bigram_duration = bigrams[bigram].duration;
+
+    // Check if bigram occurs more than 50% for each word
+    if (bigram_duration / word1_duration > 0.5 && bigram_duration / word2_duration > 0.5) {
+      // Replace words with bigram in words dictionary
+      words[bigram] = bigrams[bigram];
+      words[word1].duration -= bigram_duration;
+      words[word2].duration -= bigram_duration;
+    }
+  }
+
+  return words;
+}
+
 export default {
   name: 'aw-category-builder',
   components: { CategoryEditModal },
@@ -220,25 +297,7 @@ export default {
       );
 
       const events = data[0];
-      const words = {};
-      for (const event of events) {
-        const words_in_event = event.data.title.split(/[\s\-,:()[\]/]/);
-        for (const word of words_in_event) {
-          if (word.length <= 2 || this.ignored_words.includes(word)) {
-            continue;
-          }
-          if (word in words) {
-            words[word].duration += event.duration;
-            words[word].events.push(event);
-          } else {
-            words[word] = {
-              word: word,
-              duration: event.duration,
-              events: [event],
-            };
-          }
-        }
-      }
+      const words = findCommonPhrases(events, this.ignored_words);
       this.words = words;
       this.loading = false;
     },
