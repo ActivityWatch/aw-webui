@@ -220,7 +220,7 @@ export default {
       );
 
       const events = data[0];
-      const words = {};
+      const words = new Map<string, { word: string; duration: number; events: any[] }>();
       for (const event of events) {
         const words_in_event = event.data.title.split(/[\s\-,:()[\]/]/);
         for (const word of words_in_event) {
