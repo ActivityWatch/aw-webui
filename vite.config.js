@@ -26,16 +26,19 @@ export default defineConfig(({ mode }) => {
   const autoInject = () => {
     return {
       name: 'html-transform',
-      transformIndexHtml(html) {
-        const pattern = /<!--.*VITE_AUTOINJECT.*-->/;
-        // check if the pattern exists in the html, if not, throw error
-        if (!pattern.test(html)) {
-          throw new Error(`Could not find pattern ${pattern} in the html file`);
-        }
-        return html.replace(
-          pattern,
-          '<!-- Vite injected: --><script type="module" src="/src/main.js"></script>'
-        );
+      transformIndexHtml: {
+        order: 'pre',
+        handler(html) {
+          const pattern = /<!--.*VITE_AUTOINJECT.*-->/;
+          // check if the pattern exists in the html, if not, throw error
+          if (!pattern.test(html)) {
+            throw new Error(`Could not find pattern ${pattern} in the html file`);
+          }
+          return html.replace(
+            pattern,
+            '<!-- Vite injected! --><script type="module" src="/src/main.js"></script>'
+          );
+        },
       },
     };
   };
