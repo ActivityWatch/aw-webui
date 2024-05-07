@@ -257,6 +257,7 @@ const browser_appnames = {
     'Librewolf.exe',
     'librewolf',
     'librewolf.exe',
+    'librewolf-default',
 
     // Waterfox
     'Waterfox',
