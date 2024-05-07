@@ -227,15 +227,15 @@ export default {
           if (word.length <= 2 || this.ignored_words.includes(word)) {
             continue;
           }
-          if (word in words) {
-            words[word].duration += event.duration;
-            words[word].events.push(event);
+          if (words.has(word)) {
+            words.get(word).duration += event.duration;
+            words.get(word).events.push(event);
           } else {
-            words[word] = {
+            words.set(word, {
               word: word,
               duration: event.duration,
               events: [event],
-            };
+            });
           }
         }
       }
