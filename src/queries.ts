@@ -277,6 +277,7 @@ const browser_appnames = {
     'microsoft-edge-dev', // linux dev
   ],
   arc: [
+    'Arc.exe', // Windows
     'Arc', // macOS
   ],
   vivaldi: ['Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe', 'Vivaldi'],
