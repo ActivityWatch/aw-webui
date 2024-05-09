@@ -153,8 +153,8 @@ export default {
   computed: {
     ...mapState(useCategoryStore, ['allCategoriesSelect']),
     words_by_duration: function () {
-      const words: { [key: string]: { word: string; duration: number } } = this.words;
-      return Object.values(words)
+      const words: { word: string; duration: number }[] = [...this.words.values()];
+      return words
         .sort((a, b) => b.duration - a.duration)
         .filter(word => word.duration > 60)
         .filter(word => !this.ignored_words.includes(word.word));
