@@ -30,7 +30,7 @@ export default {
     isVisible() {
       // TODO: make configurable?
       // if total duration is less than 1 hour, don't show it
-      const overTotal = this.total > 60 * 60 * 1000;
+      const overTotal = this.total > 60 * 60;
       // if ratio is > 0.3, show it
       const overRatio = this.ratio > 0.3;
       // if there's a category filter (url has category query param), don't show it
