@@ -43,7 +43,7 @@ div
     div(v-if="words_by_duration.length == 0")
       | No words with significant duration. You're good to go!
     div(v-else)
-      div.row(v-for="word in words_by_duration")
+      div.row.category-builder-word(v-for="word in words_by_duration")
         div.col.hover-highlight
           div.d-flex.flex-row.py-2
             div.flex-grow-1
