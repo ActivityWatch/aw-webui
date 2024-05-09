@@ -8,7 +8,7 @@ a, button, span, div, select {
   outline: none;
 }
 
-body, button, html {
+body, button, html, table {
   color: #e9ebf0 !important;
 }
 
@@ -208,8 +208,14 @@ div[style="color: rgb(85, 85, 85); font-size: 0.9em;"] {
   color: #e9ebf0 !important;
 }
 
-#root.stopwatch-entry:hover{
+#root.stopwatch-entry:hover,
+.category-builder-word:hover>* {
   background-color: #282c32 !important;
+}
+
+.category-builder-word .table td,
+.category-builder-word .table th {
+  border-color: #3d444d;
 }
 
 .bg-light {
