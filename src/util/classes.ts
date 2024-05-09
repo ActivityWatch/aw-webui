@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import { IEvent } from './interfaces';
+import { useSettingsStore } from '~/stores/settings';
 
 const level_sep = '>';
 const CLASSIFY_KEYS = ['app', 'title'];
@@ -163,11 +164,13 @@ function areWeTesting() {
 
 export function saveClasses(classes: Category[]) {
   if (areWeTesting()) {
+    // TODO: move this into settings store?
     console.log('Not saving classes in test mode');
     return;
   }
-  localStorage.classes = JSON.stringify(classes.map(cleanCategory));
-  console.log('Saved classes', localStorage.classes);
+  const settingsStore = useSettingsStore();
+  settingsStore.update({ classes: classes.map(cleanCategory) });
+  console.log('Saved classes', settingsStore.classes);
 }
 
 export function cleanCategory(cat: Category): Category {
@@ -186,12 +189,8 @@ export function cleanCategory(cat: Category): Category {
 }
 
 export function loadClasses(): Category[] {
-  const classes_json = localStorage.classes;
-  if (classes_json && classes_json.length >= 1) {
-    return JSON.parse(classes_json).map(cleanCategory);
-  } else {
-    return defaultCategories;
-  }
+  const settingsStore = useSettingsStore();
+  return settingsStore.classes;
 }
 
 function pickDeepest(categories: Category[]) {

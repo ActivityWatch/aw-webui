@@ -463,6 +463,7 @@ export default {
 
       const viewsStore = useViewsStore();
       viewsStore.addView({ id: this.new_view.id, name: this.new_view.name, elements: [] });
+      viewsStore.save();
 
       // Hide the modal manually
       this.$nextTick(() => {

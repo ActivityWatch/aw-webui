@@ -122,11 +122,11 @@ export default {
     exportClasses: function () {
       console.log('Exporting categories...');
 
-      if (localStorage.classes === undefined) {
+      if (this.categoryStore.classes === undefined) {
         alert('No classes saved, nothing to export!');
       }
       const export_data = {
-        categories: JSON.parse(localStorage.classes),
+        categories: this.categoryStore.classes,
       };
       // Pretty-format it for easier reading
       const text = JSON.stringify(export_data, null, 2);

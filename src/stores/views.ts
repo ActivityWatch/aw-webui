@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { useSettingsStore } from './settings';
 
 interface IElement {
   type: string;
@@ -6,7 +7,7 @@ interface IElement {
   props?: Record<string, unknown>;
 }
 
-interface View {
+export interface View {
   id: string;
   name: string;
   elements: IElement[];
@@ -66,8 +67,8 @@ const androidViews = [
   },
 ];
 
-// FIXME: Decide depending on what kind of device is being viewed, not from which device it is being viewed.
-const defaultViews = !process.env.VUE_APP_ON_ANDROID ? desktopViews : androidViews;
+// FIXME: Decide depending on what kind of device is being viewed, not from which device it is being viewed from.
+export const defaultViews = !process.env.VUE_APP_ON_ANDROID ? desktopViews : androidViews;
 
 interface State {
   views: View[];
@@ -82,21 +83,14 @@ export const useViewsStore = defineStore('views', {
   },
   actions: {
     async load() {
-      let views: View[];
-      if (typeof localStorage !== 'undefined') {
-        const views_json: string = localStorage.views;
-        if (views_json && views_json.length >= 1) {
-          views = JSON.parse(views_json);
-        }
-      }
-      if (!views) {
-        views = defaultViews;
-      }
+      const settingsStore = useSettingsStore();
+      await settingsStore.ensureLoaded();
+      const views = settingsStore.views;
       this.loadViews(views);
     },
     async save() {
-      localStorage.views = JSON.stringify(this.views);
-      // After save, reload views from localStorage
+      const settingsStore = useSettingsStore();
+      settingsStore.update({ views: this.views });
       await this.load();
     },
     loadViews(views: View[]) {
