@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
 import moment, { Moment } from 'moment';
 import { getClient } from '~/util/awclient';
+import { Category, defaultCategories } from '~/util/classes';
+import { View, defaultViews } from '~/stores/views';
 
 // Backoffs for NewReleaseNotification
 export const SHORT_BACKOFF_PERIOD = 24 * 60 * 60;
@@ -20,6 +22,8 @@ interface State {
   newReleaseCheckData: Record<string, any>;
   userSatisfactionPollData: Record<string, any>;
   always_active_pattern: string;
+  classes: Category[];
+  views: View[];
 
   // Whether to show certain WIP features
   devmode: boolean;
@@ -52,6 +56,8 @@ export const useSettingsStore = defineStore('settings', {
     userSatisfactionPollData: {},
 
     always_active_pattern: '',
+    classes: defaultCategories,
+    views: defaultViews,
 
     // Developer settings
     // NOTE: PRODUCTION might be undefined (in tests, for example)
