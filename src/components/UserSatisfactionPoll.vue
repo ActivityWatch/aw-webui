@@ -70,8 +70,6 @@ import moment from 'moment';
 import { useSettingsStore } from '~/stores/settings';
 
 const NUM_OPTIONS = 10;
-// INITIAL_WAIT_PERIOD is how long to wait from initialTimestamp to the first time that the poll shows up
-const INITIAL_WAIT_PERIOD = 7 * 24 * 60 * 60;
 // BACKOFF_PERIOD is how many seconds to wait to show the poll again if the user closed it
 const BACKOFF_PERIOD = 7 * 24 * 60 * 60;
 // The following may be used for testing
@@ -106,16 +104,6 @@ export default {
     },
   },
   async mounted() {
-    // Get the rest of the data
-    const settingsStore = useSettingsStore();
-    if (!this.data) {
-      this.data = {
-        isEnabled: true,
-        nextPollTime: settingsStore.initialTimestamp.add(INITIAL_WAIT_PERIOD, 'seconds'),
-        timesPollIsShown: 0,
-      };
-    }
-
     if (!this.data.isEnabled) {
       return;
     }
@@ -135,9 +123,7 @@ export default {
   methods: {
     submit() {
       this.isPollVisible = false;
-      const data = this.data;
-      data.isEnabled = false;
-      this.data = data;
+      this.data = { ...this.data, isEnabled: false };
 
       if (parseInt(this.rating) >= 6) {
         this.isPosFollowUpVisible = true;
@@ -147,9 +133,7 @@ export default {
     },
     dontShowAgain() {
       this.isPollVisible = false;
-      const data = this.data;
-      data.isEnabled = false;
-      this.data = data;
+      this.data = { ...this.data, isEnabled: false };
     },
   },
 };
