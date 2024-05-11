@@ -3,10 +3,20 @@ import moment, { Moment } from 'moment';
 import { getClient } from '~/util/awclient';
 import { Category, defaultCategories } from '~/util/classes';
 import { View, defaultViews } from '~/stores/views';
+import { isEqual } from 'lodash';
+
+function jsonEq(a: any, b: any) {
+  const jsonA = JSON.parse(JSON.stringify(a));
+  const jsonB = JSON.parse(JSON.stringify(b));
+  return isEqual(jsonA, jsonB);
+}
 
 // Backoffs for NewReleaseNotification
 export const SHORT_BACKOFF_PERIOD = 24 * 60 * 60;
 export const LONG_BACKOFF_PERIOD = 5 * 24 * 60 * 60;
+
+// Initial wait period for UserSatisfactionPoll
+export const INITIAL_WAIT_PERIOD = 7 * 24 * 60 * 60;
 
 interface State {
   // Timestamp when user was first seen (first time webapp is run)
@@ -20,7 +30,11 @@ interface State {
   theme: 'light' | 'dark';
 
   newReleaseCheckData: Record<string, any>;
-  userSatisfactionPollData: Record<string, any>;
+  userSatisfactionPollData: {
+    isEnabled: boolean;
+    nextPollTime: Moment;
+    timesPollIsShown: number;
+  };
   always_active_pattern: string;
   classes: Category[];
   views: View[];
@@ -53,7 +67,11 @@ export const useSettingsStore = defineStore('settings', {
       howOftenToCheck: SHORT_BACKOFF_PERIOD,
       timesChecked: 0,
     },
-    userSatisfactionPollData: {},
+    userSatisfactionPollData: {
+      isEnabled: true,
+      nextPollTime: moment().add(INITIAL_WAIT_PERIOD, 'seconds'),
+      timesPollIsShown: 0,
+    },
 
     always_active_pattern: '',
     classes: defaultCategories,
@@ -110,8 +128,8 @@ export const useSettingsStore = defineStore('settings', {
         //const locstr = set_in_server ? '[server]' : '[localStorage]';
         //console.debug(`${locstr} ${key}:`, value);
 
-        // Keys ending with 'Data' are JSON-serialized objects
-        if (key.includes('Data') && !set_in_server) {
+        // Keys ending with 'Data' are JSON-serialized objects in localStorage
+        if (key.endsWith('Data') && !set_in_server) {
           try {
             storage[key] = JSON.parse(value);
           } catch (e) {
@@ -134,6 +152,11 @@ export const useSettingsStore = defineStore('settings', {
       }
     },
     async save() {
+      // Important check, to avoid saving settings before they are loaded (potentially overwriting them with defaults)
+      if (!this.loaded) {
+        console.error('Settings not loaded, not saving');
+        return;
+      }
       // We want to avoid saving to localStorage to not accidentally mess up pre-migration data
       // For example, if the user is using several browsers, and opened in their non-main browser on first run after upgrade.
       const saveToLocalStorage = false;
@@ -141,11 +164,22 @@ export const useSettingsStore = defineStore('settings', {
       // Save to localStorage and backend
       // NOTE: localStorage deprecated, will be removed in future
       const client = getClient();
+
+      // Fetch current settings from server
+      const server_settings = await client.get_settings();
+
+      // Save settings
       for (const key of Object.keys(this.$state)) {
+        // Skip keys starting with underscore, as they are local to the vuex store.
+        if (key.startsWith('_')) {
+          continue;
+        }
+
         const value = this.$state[key];
 
         // Save to localStorage
-        if (saveToLocalStorage) {
+        // NOTE: we always save the theme and landingpage to localStorage, since they are used before the settings are loaded
+        if (saveToLocalStorage || key == 'theme' || key == 'landingpage') {
           if (typeof value === 'object') {
             localStorage.setItem(key, JSON.stringify(value));
           } else {
@@ -153,12 +187,21 @@ export const useSettingsStore = defineStore('settings', {
           }
         }
 
-        // Save to backend
-        await client.req.post('/0/settings/' + key, value, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        // Save changed settings to backend
+        if (server_settings[key] === undefined || !jsonEq(server_settings[key], value)) {
+          if (server_settings[key] === undefined && value === false) {
+            // Skip saving settings that are set to false and not already saved on the server
+            continue;
+          }
+          console.log('Saving', { [key]: value });
+          //console.log('Was:', server_settings[key]);
+          //console.log('Now:', value);
+          await client.req.post('/0/settings/' + key, value, {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+        }
       }
 
       // After save, reload
