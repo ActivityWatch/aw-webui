@@ -122,9 +122,6 @@ export default {
     exportClasses: function () {
       console.log('Exporting categories...');
 
-      if (this.categoryStore.classes === undefined) {
-        alert('No classes saved, nothing to export!');
-      }
       const export_data = {
         categories: this.categoryStore.classes,
       };
