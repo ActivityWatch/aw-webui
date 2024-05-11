@@ -30,6 +30,8 @@ jobs:
       uses: actions/github-script@v7
       with:
         script: |
+          var fs = require('fs');
+          var child_process = require('child_process');
           var artifacts = await github.rest.actions.listWorkflowRunArtifacts({
              owner: context.repo.owner,
              repo: context.repo.repo,
@@ -46,11 +48,12 @@ jobs:
                artifact_id: artifact.id,
                archive_format: 'zip',
             });
-            var fs = require('fs');
             fs.writeFileSync(`${{github.workspace}}/${artifact.name}.zip`, Buffer.from(download.data));
+            // Unzip the artifact
+            child_process.execSync(`unzip -d screenshots ${artifact.name}.zip`, {cwd: process.env.GITHUB_WORKSPACE});
+            // Remove the zip file
+            fs.unlinkSync(`${{github.workspace}}/${artifact.name}.zip`);
           }
-
-    - run: unzip -d screenshots screenshots.zip
 
     - name: Compose comment
       env:
