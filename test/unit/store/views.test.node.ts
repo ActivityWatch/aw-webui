@@ -9,9 +9,9 @@ describe('views store', () => {
     viewsStore.clearViews();
   });
 
-  test('load default views', () => {
+  test('load default views', async () => {
     expect(viewsStore.views).toHaveLength(0);
-    viewsStore.load();
+    await viewsStore.load();
     expect(viewsStore.views).not.toHaveLength(0);
   });
 
