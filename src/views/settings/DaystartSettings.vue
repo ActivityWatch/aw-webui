@@ -13,7 +13,7 @@ div
     div
       h5.mt-1.mb-2.mb-sm-0 Start of week
     div
-      b-form-select(:text="startOfWeek", size="sm" v-model="startOfWeek" variant="outline-dark" :options="['Sunday', 'Monday']")
+      b-form-select(:text="startOfWeek", size="sm" v-model="startOfWeek" variant="outline-dark" :options="['Saturday', 'Sunday', 'Monday']")
   small
     | The weekday which starts a new week.
 </template>
