@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import moment, { Moment } from 'moment';
 import { getClient } from '~/util/awclient';
-import { Category, defaultCategories } from '~/util/classes';
+import { Category, defaultCategories, cleanCategory } from '~/util/classes';
 import { View, defaultViews } from '~/stores/views';
 import { isEqual } from 'lodash';
 
@@ -109,31 +109,32 @@ export const useSettingsStore = defineStore('settings', {
       // Fetch from server, fall back to localStorage
       const server_settings = await client.get_settings();
 
-      const all_keys = [
-        ...Object.keys(localStorage).filter(key => {
-          // Skip built-in properties like length, setItem, etc.
-          return Object.prototype.hasOwnProperty.call(localStorage, key);
-        }),
-        ...Object.keys(server_settings),
-      ].filter(key => {
-        // Skip keys starting with underscore, as they are local to the vuex store.
-        return !key.startsWith('_');
-      });
+      const all_keys = [...Object.keys(localStorage), ...Object.keys(server_settings)].filter(
+        key => {
+          // Skip keys starting with underscore, as they are local to the vuex store.
+          return !key.startsWith('_');
+        }
+      );
 
       const storage = {};
       for (const key of all_keys) {
         // If key is set in server, use that value, otherwise use localStorage
         const set_in_server = server_settings[key] !== undefined;
-        const value = set_in_server ? server_settings[key] : localStorage.getItem(key);
+        let value = set_in_server ? server_settings[key] : localStorage.getItem(key);
         //const locstr = set_in_server ? '[server]' : '[localStorage]';
         //console.debug(`${locstr} ${key}:`, value);
 
         // Keys ending with 'Data' are JSON-serialized objects in localStorage
-        if (key.endsWith('Data') && !set_in_server) {
+        if ((key.endsWith('Data') || key == 'views' || key == 'classes') && !set_in_server) {
           try {
-            storage[key] = JSON.parse(value);
+            value = JSON.parse(value);
+            // Needed due to https://github.com/ActivityWatch/activitywatch/issues/1067
+            if (key == 'classes') {
+              value = value.map(cleanCategory);
+            }
+            storage[key] = value;
           } catch (e) {
-            console.error('failed to parse', key, value);
+            console.error('failed to parse', key, value, e);
           }
         } else if (value === 'true' || value === 'false') {
           storage[key] = value === 'true';
