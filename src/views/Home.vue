@@ -5,7 +5,7 @@ div
 
   h3 Hello early user,
   p
-    | It's still early days for ActivityWatch #[span(v-if="$isAndroid") (especially on Android!)]. We've come a long way but we need users (like you!)
+    | It's still early days for ActivityWatch#[span(v-if="$isAndroid") (especially on Android!)]. We've come a long way but we need users (like you!)
     | to provide feedback and help us turn ActivityWatch into a successful project.
     | Early users like you mean a lot to us, and we hope you'll reach out to us with any ideas you have for improvements!
   p
