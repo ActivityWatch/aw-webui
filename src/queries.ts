@@ -270,6 +270,7 @@ const browser_appnames = {
   edge: [
     'msedge.exe', // Windows
     'Microsoft Edge', // macOS
+    'Microsoft Edge Beta', // macOS beta
     'Microsoft-Edge-Stable', // Arch Linux: https://github.com/ActivityWatch/activitywatch/issues/753
     'Microsoft-edge',
     'microsoft-edge', // linux
