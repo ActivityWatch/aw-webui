@@ -51,7 +51,7 @@ export const defaultCategories: Category[] = [
   { name: ['Work', '3D'], rule: { type: 'regex', regex: 'Blender' } },
   {
     name: ['Media'],
-    rule: { type: null },
+    rule: { type: 'none' },
     data: { color: '#F33' },
   },
   {
@@ -84,7 +84,7 @@ export const defaultCategories: Category[] = [
   },
   {
     name: ['Comms'],
-    rule: { type: null },
+    rule: { type: 'none' },
     data: { color: '#9FF' },
   },
   {
