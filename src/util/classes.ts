@@ -50,6 +50,11 @@ export const defaultCategories: Category[] = [
   { name: ['Work', 'Audio'], rule: { type: 'regex', regex: 'Audacity' } },
   { name: ['Work', '3D'], rule: { type: 'regex', regex: 'Blender' } },
   {
+    name: ['Media'],
+    rule: { type: null },
+    data: { color: '#F33' },
+  },
+  {
     name: ['Media', 'Games'],
     rule: { type: 'regex', regex: 'Minecraft|RimWorld' },
     data: { color: '#F80' },
