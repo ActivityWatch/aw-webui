@@ -39,10 +39,12 @@ import moment from 'moment';
 import Color from 'color';
 import { buildTooltip } from '../util/tooltip.js';
 import { getColorFromString, getTitleAttr } from '../util/color';
+import { getSwimlane } from '../util/swimlane.js';
 
 import { Timeline } from 'vis-timeline/esnext';
 import 'vis-timeline/styles/vis-timeline-graph2d.css';
 import EventEditor from '~/components/EventEditor.vue';
+import { Console } from 'console';
 
 export default {
   components: {
@@ -54,6 +56,8 @@ export default {
     showRowLabels: { type: Boolean },
     queriedInterval: { type: Array },
     showQueriedInterval: { type: Boolean },
+    swimlane: { type: String },
+    updateTimelineWindow: { type: Boolean },
   },
   data() {
     return {
@@ -110,13 +114,15 @@ export default {
         }
         events.sort((a, b) => a.timestamp.valueOf() - b.timestamp.valueOf());
         _.each(events, e => {
+          const color = getColorFromString(getTitleAttr(bucket, e));
           data.push([
             bucket.id,
             getTitleAttr(bucket, e),
             buildTooltip(bucket, e),
             new Date(e.timestamp),
             new Date(moment(e.timestamp).add(e.duration, 'seconds').valueOf()),
-            getColorFromString(getTitleAttr(bucket, e)),
+            color,
+            getSwimlane(bucket, color, this.swimlane, e),
             e,
           ]);
         });
@@ -223,6 +229,7 @@ export default {
           start: moment(row[3]),
           end: moment(row[4]),
           style: `background-color: ${bgColor}; border-color: ${borderColor}`,
+          subgroup: row[6],
         };
       });
 
@@ -245,19 +252,23 @@ export default {
             start: this.queriedInterval[0],
             end: this.queriedInterval[1],
             style: 'background-color: #aaa; height: 10px',
+            subgroup: ``,
           });
         }
 
-        const start =
-          (this.queriedInterval && this.queriedInterval[0]) ||
-          _.min(_.map(items, item => item.start));
-        const end =
-          (this.queriedInterval && this.queriedInterval[1]) ||
-          _.max(_.map(items, item => item.end));
-        this.options.min = start;
-        this.options.max = end;
-        this.timeline.setOptions(this.options);
-        this.timeline.setWindow(start, end);
+        if (this.updateTimelineWindow)
+        {
+          const start =
+            (this.queriedInterval && this.queriedInterval[0]) ||
+            _.min(_.map(items, item => item.start));
+          const end =
+            (this.queriedInterval && this.queriedInterval[1]) ||
+            _.max(_.map(items, item => item.end));
+          this.options.min = start;
+          this.options.max = end;
+          this.timeline.setOptions(this.options);
+          this.timeline.setWindow(start, end);
+        }
 
         // Hide buckets with no events in the queried range
         const count = _.countBy(items, i => i.group);
@@ -268,6 +279,18 @@ export default {
 
         this.items = items;
         this.groups = groups;
+      }
+      else {
+        // update the timeline range
+        this.options.min = this.queriedInterval[0];
+        this.options.max = this.queriedInterval[1];
+        this.timeline.setOptions(this.options);
+        this.timeline.setWindow(this.queriedInterval[0], this.queriedInterval[1]);
+
+        // clear the data 
+        this.timeline.setData({ groups: [], items: [] });
+        this.items = [];
+        this.groups = [];
       }
     },
   },
