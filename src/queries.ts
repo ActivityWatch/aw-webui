@@ -246,6 +246,7 @@ const browser_appnames = {
     'Firefox-esr',
     'Firefox Beta',
     'Nightly',
+    'firefox-nightly',
     'firefox-aurora',
     'firefox-trunk-dev',
 
