@@ -88,11 +88,14 @@ export function getColorFromCategory(c: Category, allCats: Category[]): string {
 // TODO: Move into vuex?
 export function getCategoryColorFromString(str: string): string {
   // TODO: Don't load classes on every call
+  console.log("getCategoryColorFromString", str)
   const allCats = loadClasses();
   const c = matchString(str, allCats);
   if (c !== null) {
+    console.log("found category", c);
     return getColorFromCategory(c, allCats);
   } else {
+    console.log("Uncategorized");
     return fallbackColor(str);
   }
 }
@@ -128,6 +131,7 @@ export function getTitleAttr(bucket: IBucket, e: IEvent) {
 }
 
 export function getStringForCategorization(bucket: IBucket, e: IEvent) {
+  console.log("get string for categorization:", bucket, e.data)
   if (bucket.type == 'currentwindow') {
     return e.data.app + " " + e.data.title;
   } else if (bucket.type == 'web.tab.current') {
