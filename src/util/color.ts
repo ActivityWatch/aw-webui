@@ -126,3 +126,19 @@ export function getTitleAttr(bucket: IBucket, e: IEvent) {
     return e.data.title;
   }
 }
+
+export function getStringForCategorization(bucket: IBucket, e: IEvent) {
+  if (bucket.type == 'currentwindow') {
+    return e.data.app + " " + e.data.title;
+  } else if (bucket.type == 'web.tab.current') {
+    return e.data.title + " " + e.data.url;
+  } else if (bucket.type == 'afkstatus') {
+    return e.data.status;
+  } else if (bucket.type?.startsWith('app.editor')) {
+    return e.data.file;
+  } else if (bucket.type?.startsWith('general.stopwatch')) {
+    return e.data.label;
+  } else {
+    return e.data.title;
+  }
+}
