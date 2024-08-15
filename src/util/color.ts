@@ -146,3 +146,19 @@ export function getStringForCategorization(bucket: IBucket, e: IEvent) {
     return e.data.title;
   }
 }
+
+export function getCategoryColorFromEvent(bucket: IBucket, e: IEvent) {
+  if (bucket.type == 'currentwindow') {
+    return getCategoryColorFromString(e.data.app + " " + e.data.title);
+  } else if (bucket.type == 'web.tab.current') {
+    return getCategoryColorFromString(e.data.title + " " + e.data.url);
+  } else if (bucket.type == 'afkstatus') {
+    return getColorFromString(e.data.status);
+  } else if (bucket.type?.startsWith('app.editor')) {
+    return getCategoryColorFromString(e.data.file);
+  } else if (bucket.type?.startsWith('general.stopwatch')) {
+    return getCategoryColorFromString(e.data.label);
+  } else {
+    return getCategoryColorFromString(e.data.title);
+  }
+}
