@@ -38,7 +38,7 @@ import _ from 'lodash';
 import moment from 'moment';
 import Color from 'color';
 import { buildTooltip } from '../util/tooltip.js';
-import { getColorFromString, getTitleAttr } from '../util/color';
+import { getTitleAttr, getCategoryColorFromEvent } from '../util/color';
 
 import { Timeline } from 'vis-timeline/esnext';
 import 'vis-timeline/styles/vis-timeline-graph2d.css';
@@ -116,7 +116,7 @@ export default {
             buildTooltip(bucket, e),
             new Date(e.timestamp),
             new Date(moment(e.timestamp).add(e.duration, 'seconds').valueOf()),
-            getColorFromString(getTitleAttr(bucket, e)),
+            getCategoryColorFromEvent(bucket, e),
             e,
           ]);
         });
