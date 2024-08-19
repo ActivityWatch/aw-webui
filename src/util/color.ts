@@ -129,8 +129,10 @@ export function getTitleAttr(bucket: IBucket, e: IEvent) {
 
 export function getCategoryColorFromEvent(bucket: IBucket, e: IEvent) {
   if (bucket.type == 'currentwindow') {
+    // NOTE: this will not work/break category rules which reference `$` or `^`
     return getCategoryColorFromString(e.data.app + ' ' + e.data.title);
   } else if (bucket.type == 'web.tab.current') {
+    // NOTE: same as above
     return getCategoryColorFromString(e.data.title + ' ' + e.data.url);
   } else if (bucket.type == 'afkstatus') {
     return getColorFromString(e.data.status);
