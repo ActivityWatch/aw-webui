@@ -2,7 +2,7 @@
 div
   h2 Timeline
 
-  input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration").mb-2
+  input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration").mb-3
 
   // blocks
   div.d-inline-block.border.rounded.p-2.mr-2

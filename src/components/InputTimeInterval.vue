@@ -1,55 +1,64 @@
 <template lang="pug">
 div
   div
-    b-alert(v-if="mode == 'range' && invalidDaterange", variant="warning", show)
+    b-alert(v-if="invalidDaterange", variant="warning", show)
       | The selected date range is invalid. The second date must be greater or equal to the first date.
-    b-alert(v-if="mode == 'range' && daterangeTooLong", variant="warning", show)
+    b-alert(v-if="daterangeTooLong", variant="warning", show)
       | The selected date range is too long. The maximum is {{ maxDuration/(24*60*60) }} days.
 
-  div.d-flex.justify-content-between.align-items-end
-    table
-      tr
-        th.pr-2
-          label(for="mode") Interval mode:
-        td
-          select(id="mode", v-model="mode")
-            option(value='last_duration') Last duration
-            option(value='range') Date range
-      tr(v-if="mode == 'last_duration'")
-        th.pr-2
-          label(for="duration") Show last:
-        td
-          select(id="duration", v-model="duration", @change="valueChanged")
-            option(:value="15*60") 15min
-            option(:value="30*60") 30min
-            option(:value="60*60") 1h
-            option(:value="2*60*60") 2h
-            option(:value="4*60*60") 4h
-            option(:value="6*60*60") 6h
-            option(:value="12*60*60") 12h
-            option(:value="24*60*60") 24h
-      tr(v-if="mode == 'range'")
-        th.pr-2 Range:
-        td
-          input(type="date", v-model="start")
-          input(type="date", v-model="end")
-          button(
-            class="btn btn-outline-dark btn-sm",
-            type="button",
-            :disabled="mode == 'range' && (invalidDaterange || emptyDaterange || daterangeTooLong)",
-            @click="valueChanged"
-          ) Update
+  table
+    tr
+      td.pr-2
+        label.col-form-label Show last:
+      td(colspan=2)
+        .btn-group(role="group")
+            input(type="radio", id="dur1", :value="15*60", v-model="duration", @change="applyLastDuration").sr-only
+            label(for="dur1").btn.btn-light.rounded-left &frac14;h
+            input(type="radio", id="dur2", :value="30*60", v-model="duration", @change="applyLastDuration").sr-only
+            label(for="dur2").btn.btn-light &frac12;h
+            input(type="radio", id="dur3", :value="1*60*60", v-model="duration", @change="applyLastDuration").sr-only
+            label(for="dur3").btn.btn-light 1h
+            input(type="radio", id="dur4", :value="2*60*60", v-model="duration", @change="applyLastDuration").sr-only
+            label(for="dur4").btn.btn-light 2h
+            input(type="radio", id="dur5", :value="3*60*60", v-model="duration", @change="applyLastDuration").sr-only
+            label(for="dur5").btn.btn-light 3h
+            input(type="radio", id="dur6", :value="4*60*60", v-model="duration", @change="applyLastDuration").sr-only
+            label(for="dur6").btn.btn-light 4h
+            input(type="radio", id="dur7", :value="6*60*60", v-model="duration", @change="applyLastDuration").sr-only
+            label(for="dur7").btn.btn-light 6h
+            input(type="radio", id="dur8", :value="12*60*60", v-model="duration", @change="applyLastDuration").sr-only
+            label(for="dur8").btn.btn-light 12h
+            input(type="radio", id="dur9", :value="24*60*60", v-model="duration", @change="applyLastDuration").sr-only
+            label(for="dur9").btn.btn-light 24h
+            input(type="radio", id="dur10", :value="48*60*60", v-model="duration", @change="applyLastDuration").sr-only
+            label(for="dur10").btn.btn-light 48h
 
-    div(style="text-align:right" v-if="showUpdate && mode=='last_duration'")
-      b-button.px-2(@click="update()", variant="outline-dark", size="sm")
-        icon(name="sync")
-        span.d-none.d-md-inline
-          |  Update
-      div.mt-1.small.text-muted(v-if="lastUpdate")
-        | Last update: #[time(:datetime="lastUpdate.format()") {{lastUpdate | friendlytime}}]
+    tr
+      td.pr-2
+        label.col-form-label Show from:
+      td
+        input.form-control.d-inline-block.p-1(type="date", v-model="start", style="height: auto; width: auto;")
+        label.col-form-label.pr-1.pl-2 to:
+        input.form-control.d-inline.p-1(type="date", v-model="end", style="height: auto; width: auto")
+      td.text-right
+        button(
+          class="btn btn-outline-dark btn-sm",
+          type="button",
+          :disabled="invalidDaterange || emptyDaterange || daterangeTooLong",
+          @click="applyRange"
+        ) Apply
+
+  div.mt-1.small.text-muted(v-if="lastUpdate", v-bind:title="lastUpdate")
+    | Last update: #[time(:datetime="lastUpdate.format()") {{lastUpdate | friendlytime}}]
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.btn-group {
+  input[type='radio']:checked + label {
+    background-color: #aaa;
+  }
+}
+</style>
 
 <script lang="ts">
 import moment from 'moment';
@@ -109,7 +118,7 @@ export default {
       const _lastUpdate = this.lastUpdate;
       this.lastUpdate = null;
       this.lastUpdate = _lastUpdate;
-    }, 1000);
+    }, 3000);
   },
   beforeDestroy() {
     clearInterval(this.lastUpdateTimer);
@@ -124,12 +133,14 @@ export default {
         this.$emit('input', this.value);
       }
     },
-    update() {
-      if (this.mode == 'last_duration') {
-        this.mode = ''; // remove cache on v-model, see explanation: https://github.com/ActivityWatch/aw-webui/pull/344/files#r892982094
-        this.mode = 'last_duration';
-        this.valueChanged();
-      }
+    applyRange() {
+      this.mode = 'range';
+      this.duration = 0;
+      this.valueChanged();
+    },
+    applyLastDuration() {
+      this.mode = 'last_duration';
+      this.valueChanged();
     },
   },
 };
