@@ -5,8 +5,6 @@ div
   input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration").mb-3
 
   // blocks
-  div.d-inline-block.border.rounded.p-2.mr-2
-    | Events shown:  {{ num_events }}
   details.d-inline-block.bg-light.small.border.rounded.mr-2.px-2
     summary.p-2
       b Filters
@@ -26,7 +24,11 @@ div
             select(v-model="filter_client")
               option(:value='null') All
               option(v-for="client in clients", :value="client") {{ client }}
-  div(style="float: right; color: #999").d-inline-block.pt-3
+  div.d-inline-block.border.rounded.p-2.mr-2(v-if="num_events !== 0")
+    | Events shown: {{ num_events }}
+  b-alert.d-inline-block.p-2.mb-0(v-if="num_events === 0", variant="warning", show)
+    | No events match selected criteria. Timeline is not updated.
+  div.float-right.small.text-muted.pt-3
     | Drag to pan and scroll to zoom
 
   div(v-if="buckets !== null")
@@ -63,6 +65,8 @@ export default {
       const settingsStore = useSettingsStore();
       return Number(settingsStore.durationDefault);
     },
+    // TODO this does not match the actual vis-timeline.chartData which is rendered in the timeline.
+    //  chartData excludes short events.
     num_events() {
       return _.sumBy(this.buckets, 'events.length');
     },
