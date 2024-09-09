@@ -112,13 +112,13 @@ export default {
     this.duration = this.defaultDuration;
     this.valueChanged();
 
-    // We want our lastUpdated text to update every ~3s
+    // We want our lastUpdated text to update every ~500ms
     // We can do this by setting it to null and then the previous value.
     this.lastUpdateTimer = setInterval(() => {
       const _lastUpdate = this.lastUpdate;
       this.lastUpdate = null;
       this.lastUpdate = _lastUpdate;
-    }, 3000);
+    }, 500);
   },
   beforeDestroy() {
     clearInterval(this.lastUpdateTimer);
