@@ -26,7 +26,7 @@ div
               option(v-for="client in clients", :value="client") {{ client }}
   div.d-inline-block.border.rounded.p-2.mr-2(v-if="num_events !== 0")
     | Events shown: {{ num_events }}
-  b-alert.d-inline-block.p-2.mb-0(v-if="num_events === 0", variant="warning", show)
+  b-alert.d-inline-block.p-2.mb-0.mt-2(v-if="num_events === 0", variant="warning", show)
     | No events match selected criteria. Timeline is not updated.
   div.float-right.small.text-muted.pt-3
     | Drag to pan and scroll to zoom
