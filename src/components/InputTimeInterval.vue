@@ -12,26 +12,15 @@ div
         label.col-form-label Show last:
       td(colspan=2)
         .btn-group(role="group")
-            input(type="radio", id="dur1", :value="15*60", v-model="duration", @change="applyLastDuration").sr-only
-            label(for="dur1").btn.btn-light.rounded-left &frac14;h
-            input(type="radio", id="dur2", :value="30*60", v-model="duration", @change="applyLastDuration").sr-only
-            label(for="dur2").btn.btn-light &frac12;h
-            input(type="radio", id="dur3", :value="1*60*60", v-model="duration", @change="applyLastDuration").sr-only
-            label(for="dur3").btn.btn-light 1h
-            input(type="radio", id="dur4", :value="2*60*60", v-model="duration", @change="applyLastDuration").sr-only
-            label(for="dur4").btn.btn-light 2h
-            input(type="radio", id="dur5", :value="3*60*60", v-model="duration", @change="applyLastDuration").sr-only
-            label(for="dur5").btn.btn-light 3h
-            input(type="radio", id="dur6", :value="4*60*60", v-model="duration", @change="applyLastDuration").sr-only
-            label(for="dur6").btn.btn-light 4h
-            input(type="radio", id="dur7", :value="6*60*60", v-model="duration", @change="applyLastDuration").sr-only
-            label(for="dur7").btn.btn-light 6h
-            input(type="radio", id="dur8", :value="12*60*60", v-model="duration", @change="applyLastDuration").sr-only
-            label(for="dur8").btn.btn-light 12h
-            input(type="radio", id="dur9", :value="24*60*60", v-model="duration", @change="applyLastDuration").sr-only
-            label(for="dur9").btn.btn-light 24h
-            input(type="radio", id="dur10", :value="48*60*60", v-model="duration", @change="applyLastDuration").sr-only
-            label(for="dur10").btn.btn-light 48h
+          template(v-for="(dur, idx) in durations")
+            input(
+              type="radio"
+              :id="'dur' + idx"
+              :value="dur.seconds"
+              v-model="duration"
+              @change="applyLastDuration"
+            ).d-none
+            label(:for="'dur' + idx" v-html="dur.label").btn.btn-light
 
     tr
       td.pr-2
@@ -86,6 +75,18 @@ export default {
       start: null,
       end: null,
       lastUpdate: null,
+      durations: [
+        { seconds: 0.25 * 60 * 60, label: '&frac14;h' },
+        { seconds: 0.5 * 60 * 60, label: '&frac12;h' },
+        { seconds: 60 * 60, label: '1h' },
+        { seconds: 2 * 60 * 60, label: '2h' },
+        { seconds: 3 * 60 * 60, label: '3h' },
+        { seconds: 4 * 60 * 60, label: '4h' },
+        { seconds: 6 * 60 * 60, label: '6h' },
+        { seconds: 12 * 60 * 60, label: '12h' },
+        { seconds: 24 * 60 * 60, label: '24h' },
+        { seconds: 48 * 60 * 60, label: '48h' },
+      ],
     };
   },
   computed: {
