@@ -37,8 +37,15 @@ div
           @click="applyRange"
         ) Apply
 
-  div.mt-1.small.text-muted(v-if="lastUpdate", v-bind:title="lastUpdate")
-    | Last update: #[time(:datetime="lastUpdate.format()") {{lastUpdate | friendlytime}}]
+  div.mt-1
+    div.d-inline-block.mr-2(v-if="showUpdate")
+      b-button.px-2(@click="update()", variant="outline-dark", size="sm")
+        icon(name="sync")
+        span.d-none.d-md-inline
+          |  Reload
+
+    div.d-inline-block.small.text-muted(v-if="lastUpdate", v-bind:title="lastUpdate")
+      | Last update: #[time(:datetime="lastUpdate.format()") {{lastUpdate | friendlytime}}]
 </template>
 
 <style scoped lang="scss">
@@ -133,6 +140,12 @@ export default {
         this.lastUpdate = moment();
         this.$emit('input', this.value);
       }
+    },
+    update() {
+      const tmpMode = this.mode;
+      this.mode = '';
+      this.mode = tmpMode;
+      this.valueChanged();
     },
     applyRange() {
       this.mode = 'range';
