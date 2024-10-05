@@ -65,8 +65,7 @@ export default {
       const settingsStore = useSettingsStore();
       return Number(settingsStore.durationDefault);
     },
-    // TODO this does not match the actual vis-timeline.chartData which is rendered in the timeline.
-    //  chartData excludes short events.
+    // This does not match the chartData which is rendered in the timeline, as chartData excludes short events.
     num_events() {
       return _.sumBy(this.buckets, 'events.length');
     },
