@@ -121,9 +121,6 @@ test.clientScripts({
 
 fixture(`Timeline view`).page(`${baseURL}/#/timeline`).requestHooks(HTTPLogger);
 
-const durationSelect = Selector('select#duration');
-const durationOption = durationSelect.find('option');
-
 test.clientScripts({
   content: logJsErrorCode,
 })('Screenshot the timeline view', async t => {
@@ -134,10 +131,9 @@ test.clientScripts({
   });
   await waitForLoading(t);
   await t
-    .click(durationSelect)
-    .click(durationOption.withText('12h'))
-    .expect(durationSelect.value)
-    .eql('43200');
+    .click(Selector('label').withText('12h'))
+    .expect(Selector('input[value="43200"]').checked)
+    .eql(true);
 
   await t.takeScreenshot({
     path: 'timeline.png',

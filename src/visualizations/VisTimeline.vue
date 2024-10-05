@@ -2,7 +2,7 @@
 div
   div#visualization
 
-  div.small.my-2(v-if="bucketsFromEither.length != 1")
+  div.small.text-muted.my-2(v-if="bucketsFromEither.length != 1")
     i Buckets with no events in the queried range will be hidden.
 
   div(v-if="editingEvent")
