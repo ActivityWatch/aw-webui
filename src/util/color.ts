@@ -141,6 +141,6 @@ export function getCategoryColorFromEvent(bucket: IBucket, e: IEvent) {
   } else if (bucket.type?.startsWith('general.stopwatch')) {
     return getCategoryColorFromString(e.data.label);
   } else {
-    return getCategoryColorFromString(e.data.title);
+    return getColorFromString(getTitleAttr(bucket, e));
   }
 }
