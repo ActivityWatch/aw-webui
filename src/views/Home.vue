@@ -53,7 +53,7 @@ div
           li #[a(href="https://forum.activitywatch.net/") Forum]
           li #[a(href="https://discord.gg/vDskV9q") Discord]
           li #[a(href="https://github.com/ActivityWatch/activitywatch") GitHub]
-          li #[a(href="/api/") API Browser]
+          li(v-if="!info.version.includes('rust')" ) #[a(href="/api/") API Browser]
 
     div.col-md-6
       h4 Want to know what we're working on?
@@ -70,7 +70,13 @@ div
 </template>
 
 <script lang="ts">
+import { mapState } from 'pinia';
+import { useServerStore } from '~/stores/server';
+
 export default {
   name: 'Home',
+  computed: {
+    ...mapState(useServerStore, ['info']),
+  },
 };
 </script>
