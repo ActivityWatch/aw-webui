@@ -288,9 +288,16 @@ const browser_appnames = {
 
 // Returns a list of (browserName, bucketId) pairs for found browser buckets
 function browsersWithBuckets(browserbuckets: string[]): [string, string][] {
+  // Special case: Arc browser uses Chrome's bucket
+  const chrome_bucket = _.find(browserbuckets, bucket_id => _.includes(bucket_id, 'chrome'));
+  
   const browsername_to_bucketid: [string, string | undefined][] = _.map(
     Object.keys(browser_appnames),
     browserName => {
+      // If it's Arc and we found a Chrome bucket, use that
+      if (browserName ==='arc' && chrome_bucket) {
+        return [browserName, chrome_bucket];
+      }
       const bucketId = _.find(browserbuckets, bucket_id => _.includes(bucket_id, browserName));
       return [browserName, bucketId];
     }
