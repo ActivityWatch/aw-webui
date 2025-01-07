@@ -271,17 +271,8 @@ const browser_appnames = {
     'waterfox.exe',
     'net.waterfox.waterfox',
   ],
-  opera: [
-    'opera.exe',
-    'Opera',
-    'com.opera.Opera',
-  ],
-  brave: [
-    'Brave-browser',
-    'Brave Browser',
-    'brave.exe',
-    'com.brave.Browser',
-  ],
+  opera: ['opera.exe', 'Opera', 'com.opera.Opera'],
+  brave: ['Brave-browser', 'Brave Browser', 'brave.exe', 'com.brave.Browser'],
   edge: [
     'msedge.exe', // Windows
     'Microsoft Edge', // macOS
@@ -298,20 +289,9 @@ const browser_appnames = {
     'Arc.exe', // Windows
     'Arc', // macOS
   ],
-  vivaldi: [
-    'Vivaldi-stable',
-    'Vivaldi-snapshot',
-    'vivaldi.exe',
-    'Vivaldi',
-    'com.vivaldi.Vivaldi',
-  ],
-  orion: [
-    'Orion',
-  ],
-  yandex: [
-    'Yandex',
-    'ru.yandex.Browser',
-  ],
+  vivaldi: ['Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe', 'Vivaldi', 'com.vivaldi.Vivaldi'],
+  orion: ['Orion'],
+  yandex: ['Yandex', 'ru.yandex.Browser'],
 };
 
 // Returns a list of (browserName, bucketId) pairs for found browser buckets
