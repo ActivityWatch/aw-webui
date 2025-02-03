@@ -224,6 +224,7 @@ const browser_appnames = {
     // Chromium
     'Chromium',
     'Chromium-browser',
+    'chromium-browser',
     'Chromium-browser-chromium',
     'chromium.exe',
 
