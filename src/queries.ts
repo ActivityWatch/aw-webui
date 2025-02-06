@@ -220,6 +220,7 @@ const browser_appnames = {
     'Google-chrome',
     'chrome.exe',
     'google-chrome-stable',
+    'com.google.Chrome',
 
     // Chromium
     'Chromium',
@@ -227,10 +228,12 @@ const browser_appnames = {
     'chromium-browser',
     'Chromium-browser-chromium',
     'chromium.exe',
+    'org.chromium.Chromium',
 
     // Pre-releases
     'Google-chrome-beta',
     'Google-chrome-unstable',
+    'com.google.ChromeDev',
   ],
   firefox: [
     // Firefox
@@ -238,6 +241,7 @@ const browser_appnames = {
     'Firefox.exe',
     'firefox',
     'firefox.exe',
+    'org.mozilla.firefox',
 
     // Firefox Developer
     'Firefox Developer Edition',
@@ -259,15 +263,17 @@ const browser_appnames = {
     'librewolf',
     'librewolf.exe',
     'librewolf-default',
+    'io.gitlab.librewolf-community',
 
     // Waterfox
     'Waterfox',
     'Waterfox.exe',
     'waterfox',
     'waterfox.exe',
+    'net.waterfox.waterfox',
   ],
-  opera: ['opera.exe', 'Opera'],
-  brave: ['Brave-browser', 'Brave Browser', 'brave.exe'],
+  opera: ['opera.exe', 'Opera', 'com.opera.Opera'],
+  brave: ['Brave-browser', 'Brave Browser', 'brave.exe', 'com.brave.Browser'],
   edge: [
     'msedge.exe', // Windows
     'Microsoft Edge', // macOS
@@ -277,14 +283,16 @@ const browser_appnames = {
     'microsoft-edge', // linux
     'microsoft-edge-beta', // linux beta
     'microsoft-edge-dev', // linux dev
+    'com.microsoft.Edge',
+    'com.microsoft.EdgeDev',
   ],
   arc: [
     'Arc.exe', // Windows
     'Arc', // macOS
   ],
-  vivaldi: ['Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe', 'Vivaldi'],
+  vivaldi: ['Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe', 'Vivaldi', 'com.vivaldi.Vivaldi'],
   orion: ['Orion'],
-  yandex: ['Yandex'],
+  yandex: ['Yandex', 'ru.yandex.Browser'],
 };
 
 // Returns a list of (browserName, bucketId) pairs for found browser buckets
