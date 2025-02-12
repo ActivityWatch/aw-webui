@@ -673,7 +673,7 @@ export const useActivityStore = defineStore('activity', {
       this.browser.duration = 0;
       this.browser.top_domains = null;
       this.browser.top_urls = null;
-      this.browser.top_domains = null;
+      this.browser.top_titles = null;
 
       this.editor.duration = 0;
       this.editor.top_files = null;
