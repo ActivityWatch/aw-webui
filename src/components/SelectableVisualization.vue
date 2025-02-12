@@ -43,6 +43,11 @@ div
                  :namefunc="e => e.data.url",
                  :colorfunc="e => e.data.$domain",
                  with_limit)
+    div(v-if="type == 'top_browser_titles'")
+      aw-summary(:fields="activityStore.browser.top_titles",
+                 :namefunc="e => e.data.title",
+                 :colorfunc="e => e.data.$domain",
+                 with_limit)
     div(v-if="type == 'top_editor_files'")
       aw-summary(:fields="activityStore.editor.top_files",
                  :namefunc="top_editor_files_namefunc",
@@ -135,6 +140,7 @@ export default {
         'top_titles',
         'top_domains',
         'top_urls',
+        'top_browser_titles',
         'top_categories',
         'category_tree',
         'category_sunburst',
@@ -185,6 +191,10 @@ export default {
         },
         top_urls: {
           title: 'Top Browser URLs',
+          available: this.activityStore.browser.available,
+        },
+        top_browser_titles: {
+          title: 'Top Browser Titles',
           available: this.activityStore.browser.available,
         },
         top_editor_files: {

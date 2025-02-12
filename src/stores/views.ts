@@ -40,6 +40,7 @@ const desktopViews: View[] = [
     elements: [
       { type: 'top_domains', size: 3 },
       { type: 'top_urls', size: 3 },
+      { type: 'top_browser_titles', size: 3 },
     ],
   },
   {
