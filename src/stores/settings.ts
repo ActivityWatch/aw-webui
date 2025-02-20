@@ -11,6 +11,13 @@ function jsonEq(a: any, b: any) {
   return isEqual(jsonA, jsonB);
 }
 
+export function detectPreferredTheme(): 'light' | 'dark' {
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    return 'dark';
+  }
+  return 'light';
+}
+
 // Backoffs for NewReleaseNotification
 export const SHORT_BACKOFF_PERIOD = 24 * 60 * 60;
 export const LONG_BACKOFF_PERIOD = 5 * 24 * 60 * 60;
@@ -59,7 +66,7 @@ export const useSettingsStore = defineStore('settings', {
     useColorFallback: false,
     landingpage: '/home',
 
-    theme: 'light',
+    theme: detectPreferredTheme(),
 
     newReleaseCheckData: {
       isEnabled: true,
