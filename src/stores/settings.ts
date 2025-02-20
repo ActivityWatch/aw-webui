@@ -27,7 +27,7 @@ interface State {
   durationDefault: number;
   useColorFallback: boolean;
   landingpage: string;
-  theme: 'light' | 'dark';
+  theme: 'light' | 'dark' | 'auto';
 
   newReleaseCheckData: Record<string, any>;
   userSatisfactionPollData: {
@@ -59,7 +59,7 @@ export const useSettingsStore = defineStore('settings', {
     useColorFallback: false,
     landingpage: '/home',
 
-    theme: 'light',
+    theme: 'auto',
 
     newReleaseCheckData: {
       isEnabled: true,
