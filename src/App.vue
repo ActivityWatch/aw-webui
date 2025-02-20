@@ -42,7 +42,7 @@ export default {
     const theme = settingsStore.theme;
     const detectedTheme = theme === 'auto' ? detectPreferredTheme() : theme;
 
-    // Apply the preferred theme (Light | Dark)
+    // Apply the dark theme if detected
     if (detectedTheme === 'dark') {
       const method: 'link' | 'style' = 'link';
 
@@ -52,8 +52,8 @@ export default {
         const themeLink = document.createElement('link');
         themeLink.href = '/dark.css'; // darkCssUrl
         themeLink.rel = 'stylesheet';
-        // Append Dark Theme Element if dark theme should be applied
-        detectedTheme === 'dark' ? document.querySelector('head').appendChild(themeLink) : '';
+        // Append Dark Theme Element
+        document.querySelector('head').appendChild(themeLink);
       } else {
         // Not supported for Webpack due to not supporting ?inline import in a cross-compatible way (afaik)
         // Method 2: Create <style> Element
