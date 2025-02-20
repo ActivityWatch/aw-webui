@@ -5,6 +5,7 @@ div
       h5.mt-1.mb-2.mb-sm-0 Theme
     div
       b-select.landingpage(v-if="_loaded" size="sm" :value="theme", @change="theme = $event")
+        option(value="auto") Auto (System)
         option(value="light") Light
         option(value="dark") Dark
       span(v-else)
@@ -16,6 +17,7 @@ div
 <script lang="ts">
 import { mapState } from 'pinia';
 import { useSettingsStore } from '~/stores/settings';
+import { detectPreferredTheme } from '~/util/theme';
 
 export default {
   name: 'Theme',
@@ -33,15 +35,22 @@ export default {
           theme: value,
         });
 
+        // Determine the actual theme to apply
+        const detectedTheme = value === 'auto' ? detectPreferredTheme() : value;
+
         // Apply newly set theme
         // Create Dark Theme Element
         const themeLink = document.createElement('link');
         themeLink.href = '/dark.css';
         themeLink.rel = 'stylesheet';
-        // Append Dark Theme Element If Selected Mode Is Dark
-        value === 'dark'
-          ? document.querySelector('head').appendChild(themeLink)
-          : document.querySelector(`link[href="${new URL(themeLink.href).pathname}"]`).remove();
+
+        // Remove existing theme link if present
+        document.querySelector(`link[href="${new URL(themeLink.href).pathname}"]`)?.remove();
+
+        // Append Dark Theme Element if dark theme should be applied
+        if (detectedTheme === 'dark') {
+          document.querySelector('head').appendChild(themeLink);
+        }
       },
     },
   },
