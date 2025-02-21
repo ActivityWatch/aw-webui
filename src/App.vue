@@ -15,6 +15,7 @@ div#wrapper(v-if="loaded")
 <script lang="ts">
 import { useSettingsStore } from '~/stores/settings';
 import { useServerStore } from '~/stores/server';
+import { detectPreferredTheme } from '~/util/theme';
 // if vite is used, you can import css file as module
 //import darkCssUrl from '../static/dark.css?url';
 //import darkCssContent from '../static/dark.css?inline';
@@ -39,8 +40,10 @@ export default {
     const settingsStore = useSettingsStore();
     await settingsStore.ensureLoaded();
     const theme = settingsStore.theme;
-    // Check Application Mode (Light | Dark)
-    if (theme !== null && theme === 'dark') {
+    const detectedTheme = theme === 'auto' ? detectPreferredTheme() : theme;
+
+    // Apply the dark theme if detected
+    if (detectedTheme === 'dark') {
       const method: 'link' | 'style' = 'link';
 
       if (method === 'link') {
@@ -49,8 +52,8 @@ export default {
         const themeLink = document.createElement('link');
         themeLink.href = '/dark.css'; // darkCssUrl
         themeLink.rel = 'stylesheet';
-        // Append Dark Theme Element If Selected Mode Is Dark
-        theme === 'dark' ? document.querySelector('head').appendChild(themeLink) : '';
+        // Append Dark Theme Element
+        document.querySelector('head').appendChild(themeLink);
       } else {
         // Not supported for Webpack due to not supporting ?inline import in a cross-compatible way (afaik)
         // Method 2: Create <style> Element
