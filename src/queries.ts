@@ -352,6 +352,9 @@ export function fullDesktopQuery(params: DesktopQueryParams): string[] {
     browser_domains = merge_events_by_keys(browser_events, ["$domain"]);
     browser_domains = sort_by_duration(browser_domains);
     browser_domains = limit_events(browser_domains, ${default_limit});
+    browser_titles = merge_events_by_keys(browser_events, ["title"]);
+    browser_titles = sort_by_duration(browser_titles);
+    browser_titles = limit_events(browser_titles, ${default_limit});
     browser_duration = sum_durations(browser_events);
 
     RETURN = {
@@ -365,6 +368,7 @@ export function fullDesktopQuery(params: DesktopQueryParams): string[] {
         "browser": {
             "domains": browser_domains,
             "urls": browser_urls,
+            "titles": browser_titles,
             "duration": browser_duration
         }
     };`

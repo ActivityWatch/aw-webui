@@ -84,6 +84,7 @@ interface State {
     duration: number;
     top_urls: IEvent[];
     top_domains: IEvent[];
+    top_titles: IEvent[];
   };
 
   editor: {
@@ -148,6 +149,7 @@ export const useActivityStore = defineStore('activity', {
       duration: 0,
       top_domains: [],
       top_urls: [],
+      top_titles: [],
     },
 
     editor: {
@@ -598,6 +600,11 @@ export const useActivityStore = defineStore('activity', {
       const domain_events = groupSumEventsBy(window_events, '$domain', (e: any) =>
         e.data.url === undefined ? '' : new URL(e.data.url).host
       );
+      const browser_title_events = groupSumEventsBy(
+        window_events.filter((e: any) => e.data.url),
+        'title',
+        (e: any) => e.data.title
+      );
 
       this.query_window_completed({
         duration: _.sumBy(window_events, 'duration'),
@@ -618,6 +625,7 @@ export const useActivityStore = defineStore('activity', {
         duration: _.sumBy(url_events, 'duration'),
         domains: domain_events,
         urls: url_events,
+        titles: browser_title_events,
       });
 
       this.buckets.editor = ['aw-watcher-vim'];
@@ -665,6 +673,7 @@ export const useActivityStore = defineStore('activity', {
       this.browser.duration = 0;
       this.browser.top_domains = null;
       this.browser.top_urls = null;
+      this.browser.top_titles = null;
 
       this.editor.duration = 0;
       this.editor.top_files = null;
@@ -701,9 +710,13 @@ export const useActivityStore = defineStore('activity', {
       this.active.events = data.active_events;
     },
 
-    query_browser_completed(this: State, data = { domains: [], urls: [], duration: 0 }) {
+    query_browser_completed(
+      this: State,
+      data = { domains: [], urls: [], titles: [], duration: 0 }
+    ) {
       this.browser.top_domains = data.domains;
       this.browser.top_urls = data.urls;
+      this.browser.top_titles = data.titles;
       this.browser.duration = data.duration;
     },
 
