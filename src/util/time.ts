@@ -12,9 +12,15 @@ export function seconds_to_duration(seconds: number) {
   const min = Math.floor((seconds / 60) % 60);
   const sec = Math.floor(seconds % 60);
   const l = [];
-  if (hrs != 0) l.push(hrs + 'h');
-  if (min != 0) l.push(min + 'm');
-  if (sec != 0 || l.length == 0) l.push(sec + 's');
+
+  if (hrs > 0) {
+    l.push(hrs + 'h');
+    l.push(min + 'm');
+  } else if (min > 0) {
+    l.push(min + 'm');
+  }
+  l.push(sec + 's');
+
   return l.join(' ');
 }
 
