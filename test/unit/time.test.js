@@ -10,7 +10,7 @@ describe('seconds_to_duration', () => {
   });
 
   test('should format 3600 seconds as "1h 0m 0s"', () => {
-    expect(seconds_to_duration(3630)).toBe('1h 0m 0s');
+    expect(seconds_to_duration(3600)).toBe('1h 0m 0s');
   });
 
   test('should format 1830 seconds as "30m 30s"', () => {
