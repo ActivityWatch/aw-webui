@@ -1,26 +1,24 @@
-'use strict';
-
 /*
  * Creates a colored timeline where you can hover for more info.
  */
 
-const d3 = require('d3');
-const Color = require('color');
-const _ = require('lodash');
-const moment = require('moment');
+import * as d3 from 'd3';
+import Color from 'color';
+import _ from 'lodash';
+import moment from 'moment';
 
 import { getColorFromString } from '../util/color';
-
 import { seconds_to_duration } from '../util/time';
+import { IEvent } from '../util/interfaces';
 
-function show_info(container, elem_id) {
-  const title_event_box = container.querySelector('#' + elem_id);
-  const titleinfo = container.querySelector('.titleinfo-container');
+function show_info(container: HTMLElement, elem_id: string): void {
+  const title_event_box = container.querySelector('#' + elem_id) as HTMLElement;
+  const titleinfo = container.querySelector('.titleinfo-container') as HTMLElement;
   titleinfo.innerHTML = title_event_box.innerHTML;
-  titleinfo.style.height = title_event_box.getAttribute('height');
+  titleinfo.style.height = title_event_box.getAttribute('height') || '';
 }
 
-function create(container) {
+function create(container: HTMLElement): void {
   // Clear element
   container.innerHTML = '';
 
@@ -32,7 +30,7 @@ function create(container) {
     .attr('width', '100%');
 
   // Hidden svg image that stores all titleinfo for each timeperiod
-  d3.select(container).append('div').attr('class', 'titleinfo-list').attr('display', 'none');
+  d3.select(container).append('div').attr('class', 'titleinfo-list').style('display', 'none');
 
   // Container for titleinfo that has a fixed size and a overflow scroll
   const titleinfo_container = document.createElement('div');
@@ -44,14 +42,14 @@ function create(container) {
   // Titleinfo box that changes content depending on what was timeperiod was last recently hovered on
   d3.select(titleinfo_container)
     .append('div')
-    .attr('width', '100%')
+    .style('width', '100%')
     .attr('class', 'titleinfo-container');
 }
 
-function set_status(container, text) {
-  const timeline_elem = container.querySelector('.apptimeline');
-  const titleinfo_list_elem = container.querySelector('.titleinfo-list');
-  const titleinfo_container_elem = container.querySelector('.titleinfo-container');
+function set_status(container: HTMLElement, text: string): void {
+  const timeline_elem = container.querySelector('.apptimeline') as HTMLElement;
+  const titleinfo_list_elem = container.querySelector('.titleinfo-list') as HTMLElement;
+  const titleinfo_container_elem = container.querySelector('.titleinfo-container') as HTMLElement;
 
   const timeline = d3.select(timeline_elem);
   timeline_elem.innerHTML = '';
@@ -68,14 +66,20 @@ function set_status(container, text) {
     .attr('fill', 'black');
 }
 
-function update(container, events, showAFK, chunkfunc, eventfunc) {
+function update(
+  container: HTMLElement,
+  events: IEvent[],
+  showAFK: boolean,
+  chunkfunc: (event: IEvent) => string,
+  eventfunc: (subevent: IEvent) => string
+): HTMLElement {
   const timeline = d3.select(container.querySelector('.apptimeline')).html(null);
   const titleinfo_list = d3.select(container.querySelector('.titleinfo-list')).html(null);
   d3.select(container.querySelector('.titleinfo-container')).html(null);
 
   if (events.length <= 0) {
     set_status(container, 'No data');
-    return;
+    return container;
   }
 
   const firstEvent = events[0];
@@ -92,12 +96,12 @@ function update(container, events, showAFK, chunkfunc, eventfunc) {
   _.each(events, function (e, i) {
     // Timeline rect
 
-    let eventX, eventWidth;
+    let eventX: string | number, eventWidth: number;
     if (showAFK) {
       const eventBegin = moment(e.timestamp);
       eventX = eventBegin.diff(timeStart, 'seconds', true) / secSinceStart;
       eventX = eventX * 100 + '%';
-      eventWidth = (e.duration / secSinceStart) * 100 + '%';
+      eventWidth = (e.duration / secSinceStart) * 100;
     } else {
       eventX = curr_x;
       eventWidth = (e.duration / totalDuration) * 100;
@@ -112,7 +116,7 @@ function update(container, events, showAFK, chunkfunc, eventfunc) {
       .append('rect')
       .attr('x', eventX)
       .attr('y', 0)
-      .attr('width', eventWidth)
+      .attr('width', eventWidth + '%')
       .attr('height', 10)
       .style('fill', appcolor)
       .on('mouseover', () => {
@@ -141,7 +145,7 @@ function update(container, events, showAFK, chunkfunc, eventfunc) {
 
     // Titleinfo
     const infolist = infobox.append('table');
-    _.each(e.data.subevents, function (t) {
+    _.each(e.data.subevents, function (t: IEvent) {
       const inforow = infolist.append('tr');
       // Clocktime
       const clocktime = moment(t.timestamp).format('HH:mm:ss');
@@ -160,7 +164,7 @@ function update(container, events, showAFK, chunkfunc, eventfunc) {
 }
 
 export default {
-  create: create,
-  update: update,
-  set_status: set_status,
+  create,
+  update,
+  set_status,
 };
