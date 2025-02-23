@@ -12,6 +12,7 @@ browser_events = [];
 audible_events = filter_keyvals(browser_events, "audible", [true]);
 not_afk = period_union(not_afk, audible_events);
 events = filter_period_intersect(events, not_afk);
+stopwatch_events = [];
 events = categorize(events, []);
 events = filter_keyvals(events, "$category", true);
 title_events = sort_by_duration(merge_events_by_keys(events, ["app", "title"]));
@@ -31,6 +32,9 @@ browser_titles = merge_events_by_keys(browser_events, ["title"]);
 browser_titles = sort_by_duration(browser_titles);
 browser_titles = limit_events(browser_titles, 100);
 browser_duration = sum_durations(browser_events);
+stopwatch_events = merge_events_by_keys(stopwatch_events, ["label"]);
+stopwatch_events = sort_by_duration(stopwatch_events);
+stopwatch_events = limit_events(stopwatch_events, 100);
 RETURN = {
         "window": {
             "app_events": app_events,
@@ -44,6 +48,9 @@ RETURN = {
             "urls": browser_urls,
             "titles": browser_titles,
             "duration": browser_duration
+        },
+        "stopwatch": {
+            "stopwatch_events": stopwatch_events
         }
     };"
 `;
