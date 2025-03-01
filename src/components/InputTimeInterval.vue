@@ -208,9 +208,9 @@ export default {
       this.duration = 0;
       this.valueChanged();
     },
-    shiftDay(days:number) {
-      let currentStart = this.start ? moment(this.start, 'YYYY-MM-DD') : moment();
-      let currentEnd = this.end ? moment(this.end, 'YYYY-MM-DD') : moment();
+    shiftDay(days: number) {
+      const currentStart = this.start ? moment(this.start, 'YYYY-MM-DD') : moment();
+      const currentEnd = this.end ? moment(this.end, 'YYYY-MM-DD') : moment();
       const newStart = currentStart.add(days, 'days').format('YYYY-MM-DD');
       const newEnd = currentEnd.add(days, 'days').format('YYYY-MM-DD');
       this.start = newStart;
