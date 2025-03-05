@@ -273,7 +273,7 @@ const browser_appnames = {
     'net.waterfox.waterfox',
   ],
   opera: ['opera.exe', 'Opera', 'com.opera.Opera'],
-  brave: ['Brave-browser', 'Brave Browser', 'brave.exe', 'com.brave.Browser'],
+  brave: ['Brave-browser', 'brave-browser', 'Brave Browser', 'brave.exe', 'com.brave.Browser'],
   edge: [
     'msedge.exe', // Windows
     'Microsoft Edge', // macOS
