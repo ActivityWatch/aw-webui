@@ -97,6 +97,16 @@ export function getCategoryColorFromString(str: string): string {
   }
 }
 
+export function getCategoryColor(category_name: string[]): string {
+  // TODO: Don't load classes on every call
+  const allCats = loadClasses();
+  const c = allCats.find(cat => _.isEqual(cat.name, category_name));
+  if (c !== undefined) {
+    return getColorFromCategory(c, allCats);
+  }
+  return fallbackColor(category_name.join(' > '));
+}
+
 function fallbackColor(str: string): string {
   // Get fallback color
   // TODO: Fetch setting from somewhere better, where defaults are respected

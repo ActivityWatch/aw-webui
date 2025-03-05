@@ -4,7 +4,7 @@ import * as d3 from 'd3';
 import Color from 'color';
 import _ from 'lodash';
 
-import { getCategoryColorFromString } from '~/util/color';
+import { getCategoryColor, getCategoryColorFromString } from '~/util/color';
 import { seconds_to_duration } from '~/util/time';
 import { IEvent } from '~/util/interfaces';
 
@@ -42,6 +42,7 @@ interface Entry {
   color?: string;
   colorKey?: string;
   link?: string;
+  category?: string;
 }
 
 function update(container: HTMLElement, apps: Entry[]) {
@@ -69,7 +70,14 @@ function update(container: HTMLElement, apps: Entry[]) {
     const width = (app.duration / longest_duration) * 100 + '%';
     const barHeight = 46;
     const textSize = 14;
-    const appcolor = app.color || getCategoryColorFromString(app.colorKey || app.name);
+
+    let appcolor: string;
+    if (Array.isArray(app.colorKey)) {
+      appcolor = getCategoryColor(app.colorKey);
+    } else {
+      appcolor = app.color || getCategoryColorFromString(app.colorKey || app.name);
+    }
+
     const hovercolor = Color(appcolor).darken(0.1).hex();
 
     // Add a parent <a> element if link is set
@@ -143,6 +151,7 @@ function updateSummedEvents(
       color: e.data['$color'],
       colorKey: colorKeyFunc(e),
       link: linkKeyFunc(e),
+      category: e.data['$category'],
     } as Entry;
   });
   update(container, apps);
