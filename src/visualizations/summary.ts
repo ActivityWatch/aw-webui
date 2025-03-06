@@ -4,7 +4,8 @@ import * as d3 from 'd3';
 import Color from 'color';
 import _ from 'lodash';
 
-import { getCategoryColor, getCategoryColorFromString } from '~/util/color';
+import { useCategoryStore } from '~/stores/categories';
+import { getCategoryColorFromString } from '~/util/color';
 import { seconds_to_duration } from '~/util/time';
 import { IEvent } from '~/util/interfaces';
 
@@ -73,7 +74,8 @@ function update(container: HTMLElement, apps: Entry[]) {
 
     let appcolor: string;
     if (Array.isArray(app.colorKey)) {
-      appcolor = getCategoryColor(app.colorKey);
+      const categoryStore = useCategoryStore();
+      appcolor = categoryStore.get_category_color(app.colorKey);
     } else {
       appcolor = app.color || getCategoryColorFromString(app.colorKey || app.name);
     }
