@@ -31,7 +31,7 @@ div
     div(v-if="type == 'top_titles'")
       aw-summary(:fields="activityStore.window.top_titles",
                  :namefunc="e => e.data.title",
-                 :colorfunc="e => e.data.title",
+                 :colorfunc="e => e.data['$category']",
                  with_limit)
     div(v-if="type == 'top_domains'")
       aw-summary(:fields="activityStore.browser.top_domains",
@@ -68,7 +68,7 @@ div
     div(v-if="type == 'top_categories'")
       aw-summary(:fields="activityStore.category.top",
                  :namefunc="e => e.data['$category'].join(' > ')",
-                 :colorfunc="e => e.data['$category'].join(' > ')",
+                 :colorfunc="e => e.data['$category']",
                  :linkfunc="e => '#' + $route.path + '?category=' + encodeURIComponent(e.data['$category'].join('>'))",
                  with_limit)
     div(v-if="type == 'category_tree'")
