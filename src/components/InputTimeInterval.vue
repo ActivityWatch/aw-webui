@@ -27,15 +27,54 @@ div
         td.pr-2
           label.col-form-label.col-form-label-sm Show from
         td
-          input.form-control.form-control-sm.d-inline-block.p-1(type="date", v-model="start", style="height: auto; width: auto;")
+          input.form-control.form-control-sm.d-inline-block.p-1(
+            type="date", 
+            v-model="start", 
+            style="height: auto; width: auto;"
+          )
           label.col-form-label.col-form-label-sm.px-2 to
-          input.form-control.form-control-sm.d-inline.p-1(type="date", v-model="end", style="height: auto; width: auto")
+          input.form-control.form-control-sm.d-inline.p-1(
+            type="date", 
+            v-model="end", 
+            style="height: auto; width: auto"
+          )
         td.text-right
           button.ml-2.btn.btn-outline-dark.btn-sm(
             type="button",
             :disabled="invalidDaterange || emptyDaterange || daterangeTooLong",
             @click="applyRange"
           ) Apply
+
+      tr
+        td.pr-2
+          label.col-form-label.col-form-label-sm Shift date
+        td
+          .btn-group.show-day-group(role="group")
+            input.btn.btn-light.btn-sm(
+              type="button",
+              value="-1w",
+              @click="shiftDay(-7); $event.target.blur()"
+            )
+            input.btn.btn-light.btn-sm(
+              type="button",
+              value="-1d",
+              @click="shiftDay(-1); $event.target.blur()"
+            )
+            input.btn.btn-light.btn-sm(
+              type="button",
+              value="Today",
+              @click="setToday(); $event.target.blur()"
+            )
+            input.btn.btn-light.btn-sm(
+              type="button",
+              value="+1d",
+              @click="shiftDay(1); $event.target.blur()"
+            )
+            input.btn.btn-light.btn-sm(
+              type="button",
+              value="+1w",
+              @click="shiftDay(7); $event.target.blur()"
+            )
 
     div.text-muted.d-none.d-md-block(style="text-align:right" v-if="showUpdate")
       b-button.mt-2.px-2(@click="refresh()", variant="outline-dark", size="sm", style="opacity: 0.7")
@@ -114,6 +153,13 @@ export default {
       return moment(this.start).add(this.maxDuration, 'seconds').isBefore(moment(this.end));
     },
   },
+  watch: {
+    start(newStart) {
+      if (!this.end) {
+        this.end = newStart;
+      }
+    },
+  },
   mounted() {
     this.duration = this.defaultDuration;
     this.valueChanged();
@@ -152,6 +198,25 @@ export default {
     },
     applyLastDuration() {
       this.mode = 'last_duration';
+      this.valueChanged();
+    },
+    setToday() {
+      const today = moment().format('YYYY-MM-DD');
+      this.start = today;
+      this.end = today;
+      this.mode = 'range';
+      this.duration = 0;
+      this.valueChanged();
+    },
+    shiftDay(days: number) {
+      const currentStart = this.start ? moment(this.start, 'YYYY-MM-DD') : moment();
+      const currentEnd = this.end ? moment(this.end, 'YYYY-MM-DD') : moment();
+      const newStart = currentStart.add(days, 'days').format('YYYY-MM-DD');
+      const newEnd = currentEnd.add(days, 'days').format('YYYY-MM-DD');
+      this.start = newStart;
+      this.end = newEnd;
+      this.mode = 'range';
+      this.duration = 0;
       this.valueChanged();
     },
   },
