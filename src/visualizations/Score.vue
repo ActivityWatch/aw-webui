@@ -1,7 +1,7 @@
 <template lang="pug">
 div
   div(style="text-align: center")
-    | Your total score today is:
+    | Your total score {{selected_timeperiod}} is:
     div(:style="'font-size: 2em; color: ' + (score >= 0 ? '#0A0' : '#F00')")
       | {{score >= 0 ? '+' : ''}}{{ (Math.round(score * 10) / 10).toFixed(1) }}
     div.small.text-muted
@@ -75,6 +75,45 @@ export default {
         _.filter(this.categories_with_score, cat => cat.data.$total_score < -0.1),
         c => c.data.$total_score
       );
+    },
+    selected_timeperiod: function () {
+      const [duration, span] = useActivityStore().query_options.timeperiod.length;
+      let relative_period = "";
+
+      // Default case, keep the existing behaviour
+      if (span.startsWith("day")) {
+        if (duration > 1) {
+          relative_period = `${duration} days`;
+        } else {
+          return "today";
+        }
+      }
+
+      if (span.startsWith("week")) {
+        if (duration > 1) {
+          relative_period = `${duration} weeks`;
+        } else {
+          return "this week";
+        }
+      }
+
+      if (span.startsWith("month")) {
+        if (duration > 1) {
+          relative_period = `${duration} months`;
+        } else {
+          return "this month";
+        }
+      }
+
+      if (span.startsWith("year")) {
+        if (duration > 1) {
+          relative_period = `${duration} years`;
+        } else {
+          return "this year";
+        }
+      }
+
+      return `in the past ${relative_period}`
     },
   },
 };
