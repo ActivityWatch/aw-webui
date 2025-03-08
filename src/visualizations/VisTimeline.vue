@@ -165,8 +165,7 @@ export default {
         return;
       } else if (properties.items.length == 1) {
         const event = this.chartData[properties.items[0]][6];
-        const groupId = this.items[properties.items[0]].group;
-        const bucketId = _.find(this.groups, g => g.id == groupId).content;
+        const bucketId = this.items[properties.items[0]].group;
 
         // We retrieve the full event to ensure if's not cut-off by the query range
         // See: https://github.com/ActivityWatch/aw-webui/pull/320#issuecomment-1056921587
