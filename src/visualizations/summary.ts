@@ -41,7 +41,7 @@ interface Entry {
   hovertext: string;
   duration: number;
   color?: string;
-  colorKey?: string;
+  colorKey?: string | string[];
   link?: string;
   category?: string;
 }
