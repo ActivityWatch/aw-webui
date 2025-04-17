@@ -61,6 +61,7 @@ export default {
   data: () => ({
     categoryStore: useCategoryStore(),
     editingId: null,
+    routerGuardRemover: null,
   }),
   computed: {
     ...mapState(useCategoryStore, ['classes_unsaved_changes']),
@@ -75,8 +76,7 @@ export default {
     // beforeEach hook
     window.addEventListener('beforeunload', this.beforeUnload);
 
-    // TODO: How to remove this listener?
-    router.beforeEach((to, from, next) => {
+    this.routerGuardRemover = router.beforeEach((to, from, next) => {
       try {
         if (this.classes_unsaved_changes) {
           if (confirm(confirmationMessage)) {
@@ -95,6 +95,9 @@ export default {
   },
   beforeDestroy() {
     window.removeEventListener('beforeunload', this.beforeUnload);
+    if (this.routerGuardRemover) {
+      this.routerGuardRemover();
+    }
   },
   methods: {
     addClass: function () {
