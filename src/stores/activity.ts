@@ -116,6 +116,7 @@ interface State {
 
   stopwatch: {
     available: boolean;
+    top_stopwatches: IEvent[];
   };
 
   query_options?: QueryOptions;
@@ -181,6 +182,7 @@ export const useActivityStore = defineStore('activity', {
 
     stopwatch: {
       available: false,
+      top_stopwatches: [],
     },
 
     query_options: null,
@@ -376,6 +378,9 @@ export const useActivityStore = defineStore('activity', {
       });
       this.query_window_completed(data[0].window);
       this.query_browser_completed(data[0].browser);
+      if (include_stopwatch) {
+        this.query_stopwatch_completed(data[0].stopwatch);
+      }
     },
 
     async query_editor({ timeperiod }) {
@@ -718,6 +723,10 @@ export const useActivityStore = defineStore('activity', {
       this.browser.top_urls = data.urls;
       this.browser.top_titles = data.titles;
       this.browser.duration = data.duration;
+    },
+
+    query_stopwatch_completed(this: State, data = { stopwatch_events: [] }) {
+      this.stopwatch.top_stopwatches = data.stopwatch_events;
     },
 
     query_editor_completed(

@@ -85,6 +85,11 @@ div
       vis-timeline(:buckets="timeline_buckets", :showRowLabels='true', :queriedInterval="timeline_daterange")
     div(v-if="type == 'score'")
       aw-score()
+    div(v-if="type == 'top_stopwatches'")
+      aw-summary(:fields="activityStore.stopwatch.top_stopwatches",
+                 :namefunc="e => e.data.label",
+                 :colorfunc="e => e.data.label",
+                 with_limit)
 </template>
 
 <style lang="scss">
@@ -152,6 +157,7 @@ export default {
         'custom_vis',
         'vis_timeline',
         'score',
+        'top_stopwatches',
       ],
       // TODO: Move this function somewhere else
       top_editor_files_namefunc: e => {
@@ -240,6 +246,10 @@ export default {
         score: {
           title: 'Score',
           available: this.activityStore.category.available,
+        },
+        top_stopwatches: {
+          title: 'Top Stopwatch Events',
+          available: this.activityStore.stopwatch.available,
         },
       };
     },
