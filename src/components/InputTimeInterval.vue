@@ -27,17 +27,9 @@ div
         td.pr-2
           label.col-form-label.col-form-label-sm Show from
         td
-          input.form-control.form-control-sm.d-inline-block.p-1(
-            type="date", 
-            v-model="start", 
-            style="height: auto; width: auto;"
-          )
+          input.form-control.form-control-sm.d-inline-block.p-1(type="date", v-model="start", style="height: auto; width: auto;")
           label.col-form-label.col-form-label-sm.px-2 to
-          input.form-control.form-control-sm.d-inline.p-1(
-            type="date", 
-            v-model="end", 
-            style="height: auto; width: auto"
-          )
+          input.form-control.form-control-sm.d-inline.p-1(type="date", v-model="end", style="height: auto; width: auto")
         td.text-right
           button.ml-2.btn.btn-outline-dark.btn-sm(
             type="button",
@@ -151,13 +143,6 @@ export default {
     },
     daterangeTooLong() {
       return moment(this.start).add(this.maxDuration, 'seconds').isBefore(moment(this.end));
-    },
-  },
-  watch: {
-    start(newStart) {
-      if (!this.end) {
-        this.end = newStart;
-      }
     },
   },
   mounted() {
