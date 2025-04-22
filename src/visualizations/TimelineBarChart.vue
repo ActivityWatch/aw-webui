@@ -100,6 +100,15 @@ export default {
           tooltip: {
             mode: 'point',
             intersect: false,
+            callbacks: {
+              label: function(context) {
+                let value = context.parsed.y
+                let hours = Math.floor(value)
+                let minutes = Math.round((value - hours) * 60)
+                let minutes_str = minutes.toString().padStart(2, "0")
+                return `${hours}:${minutes_str}`
+              }
+            }
           },
           legend: {
             display: false,
