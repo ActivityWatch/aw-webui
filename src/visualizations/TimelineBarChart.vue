@@ -69,11 +69,25 @@ export default {
           return date.toLocaleDateString('en-US', { weekday: 'short' });
         });
       } else if (resolution.startsWith('month')) {
-        // FIXME: Needs access to the timeperiod start to know which month
-        // How many days are in the given month?
         const date = new Date(start);
         const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-        return ['1st', '2nd', '3rd'].concat(_.range(4, daysInMonth + 1).map(d => `${d}th`));
+        const ordinalsEnUS = {
+          one: 'st',
+          two: 'nd',
+          few: 'rd',
+          many: 'th',
+          zero: 'th',
+          other: 'th',
+        };
+        const toOrdinalSuffix = (num: number, locale = 'en-US', ordinals = ordinalsEnUS) => {
+          const pluralRules = new Intl.PluralRules(locale, { type: 'ordinal' });
+          return `${num}${ordinals[pluralRules.select(num)]}`;
+        };
+        // FIXME: Needs access to the timeperiod start to know which month
+        // How many days are in the given month?
+        return _.range(1, daysInMonth + 1).map(d => toOrdinalSuffix(d));
+
+
       } else if (resolution == 'year') {
         return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       } else {
