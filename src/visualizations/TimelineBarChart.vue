@@ -69,6 +69,8 @@ export default {
           return date.toLocaleDateString('en-US', { weekday: 'short' });
         });
       } else if (resolution.startsWith('month')) {
+        // FIXME: Needs access to the timeperiod start to know which month
+        // How many days are in the given month?
         const date = new Date(start);
         const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
         const ordinalsEnUS = {
@@ -83,11 +85,7 @@ export default {
           const pluralRules = new Intl.PluralRules(locale, { type: 'ordinal' });
           return `${num}${ordinals[pluralRules.select(num)]}`;
         };
-        // FIXME: Needs access to the timeperiod start to know which month
-        // How many days are in the given month?
         return _.range(1, daysInMonth + 1).map(d => toOrdinalSuffix(d));
-
-
       } else if (resolution == 'year') {
         return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       } else {
@@ -115,12 +113,16 @@ export default {
             mode: 'point',
             intersect: false,
             callbacks: {
-              label: function(context) {
-                let value = context.parsed.y
-                let hours = Math.floor(value)
-                let minutes = Math.round((value - hours) * 60)
-                let minutes_str = minutes.toString().padStart(2, "0")
-                return `${hours}:${minutes_str}`
+              label: function (context) {
+                let value = context.parsed.y;
+                let hours = Math.floor(value);
+                let minutes = Math.round((value - hours) * 60);
+                if (minutes == 60) {
+                  minutes = 0;
+                  hours += 1;
+                }
+                let minutes_str = minutes.toString().padStart(2, "0");
+                return `${hours}:${minutes_str}`;
               }
             }
           },
