@@ -293,7 +293,7 @@ const browser_appnames = {
   vivaldi: ['Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe', 'Vivaldi', 'com.vivaldi.Vivaldi'],
   orion: ['Orion'],
   yandex: ['Yandex', 'ru.yandex.Browser'],
-  zen: ['Zen Browser', 'zen browser', 'zen.exe', 'app.zen_browser.zen'],
+  zen: ['Zen', 'Zen Browser', 'zen', 'zen browser', 'zen.exe', 'app.zen_browser.zen'],
 };
 
 // Returns a list of (browserName, bucketId) pairs for found browser buckets
