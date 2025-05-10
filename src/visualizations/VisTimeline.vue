@@ -163,10 +163,10 @@ export default {
     });
   },
   methods: {
-    openEditor: function() {
+    openEditor: function () {
       this.$bvModal.show('edit-modal-' + this.editingEvent.id);
     },
-    onSelect: async function(properties) {
+    onSelect: async function (properties) {
       if (properties.items.length == 0) {
         return;
       } else if (properties.items.length == 1) {
@@ -185,7 +185,7 @@ export default {
         });
         if (!isAlertWarningShown) {
           alert(
-            'Note: Changes won\'t be reflected in the timeline until the page is refreshed. This will be improved in a future version.',
+            "Note: Changes won't be reflected in the timeline until the page is refreshed. This will be improved in a future version."
           );
           isAlertWarningShown = true;
         }
@@ -213,7 +213,7 @@ export default {
             bucket.id = 'events';
           } else {
             console.warn(
-              'Bucket id is not set, but there are multiple buckets. This is not supported.',
+              'Bucket id is not set, but there are multiple buckets. This is not supported.'
             );
           }
         }
@@ -249,7 +249,7 @@ export default {
                 timestamp: this.queriedInterval[0],
                 duration: duration,
                 data: { title: 'test' },
-              },
+              }
             ),
             content: 'query',
             start: this.queriedInterval[0],
