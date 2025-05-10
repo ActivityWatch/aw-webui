@@ -13,7 +13,7 @@ svg {
 // NOTE: This is just a Vue.js component wrapper for timeline-simple.js
 //       Code should generally go in the framework-independent file.
 
-import timeline_simple from './timeline-simple.js';
+import timeline_simple from './timeline-simple';
 
 export default {
   name: 'aw-timeline',

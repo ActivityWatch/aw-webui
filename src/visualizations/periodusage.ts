@@ -4,12 +4,12 @@ import moment from 'moment';
 
 import { seconds_to_duration, get_hour_offset } from '../util/time.ts';
 
-function create(svg_elem) {
+function create(svg_elem: SVGElement) {
   // Clear element
   svg_elem.innerHTML = '';
 }
 
-function set_status(svg_elem, msg) {
+function set_status(svg_elem: SVGElement, msg: string) {
   // Select svg canvas
   svg_elem.innerHTML = '';
   const svg = d3.select(svg_elem);
@@ -29,7 +29,7 @@ const diagramcolor = '#aaa';
 const diagramcolor_selected = '#fc5';
 const diagramcolor_focused = '#adf';
 
-function update(svg_elem, usage_arr, onPeriodClicked) {
+function update(svg_elem: SVGElement, usage_arr, onPeriodClicked) {
   const dateformat = 'YYYY-MM-DD';
 
   // No apps, sets status to "No data"
@@ -56,7 +56,7 @@ function update(svg_elem, usage_arr, onPeriodClicked) {
   const width = 100 / usage_arr.length - padding;
   const center_elem = Math.floor(usage_arr.length / 2);
 
-  _.each(usage_arr, (events, i) => {
+  _.each(usage_arr, (events, i: number) => {
     const usage_time = get_usage_time(events);
     const height = 85 * (usage_time / longest_usage);
     let date = '';
@@ -64,7 +64,7 @@ function update(svg_elem, usage_arr, onPeriodClicked) {
       // slice off so it's only the day
       date = moment(events[0].timestamp).subtract(get_hour_offset(), 'hours').format(dateformat);
     }
-    const color = i == center_elem ? diagramcolor_selected : diagramcolor;
+    const color = i === center_elem ? diagramcolor_selected : diagramcolor;
     const offset = 50;
 
     const x = i * padding + i * width + 0.25 * width;
@@ -95,7 +95,7 @@ function update(svg_elem, usage_arr, onPeriodClicked) {
       .attr('ry', 3)
       .attr(
         'style',
-        i == center_elem ? 'stroke: black; stroke-width: 1;' : 'stroke: #222; stroke-width: 1;'
+        i === center_elem ? 'stroke: black; stroke-width: 1;' : 'stroke: #222; stroke-width: 1;'
       )
       .attr('width', width + '%')
       .attr('height', height + offset + '%')

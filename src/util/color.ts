@@ -109,7 +109,7 @@ function fallbackColor(str: string): string {
   }
 }
 
-export function getTitleAttr(bucket: IBucket, e: IEvent) {
+export function getTitleAttr(bucket: { type?: string }, e: IEvent) {
   if (bucket.type == 'currentwindow') {
     return e.data.app;
   } else if (bucket.type == 'web.tab.current') {
