@@ -1,12 +1,12 @@
 <template lang="pug">
-div
-  div#visualization
+  div
+    div#visualization
 
-  div.small.text-muted.my-2(v-if="bucketsFromEither.length != 1")
-    i Buckets with no events in the queried range will be hidden.
+    div.small.text-muted.my-2(v-if="bucketsFromEither.length != 1")
+      i Buckets with no events in the queried range will be hidden.
 
-  div(v-if="editingEvent")
-    EventEditor(:event="editingEvent" :bucket_id="editingEventBucket")
+    div(v-if="editingEvent")
+      EventEditor(:event="editingEvent" :bucket_id="editingEventBucket")
 </template>
 
 <style lang="scss">
@@ -38,12 +38,14 @@ import _ from 'lodash';
 import moment from 'moment';
 import Color from 'color';
 import { buildTooltip } from '../util/tooltip.js';
-import { getTitleAttr, getCategoryColorFromEvent } from '../util/color';
+import { getCategoryColorFromEvent, getTitleAttr } from '../util/color';
+import { getSwimlane } from '../util/swimlane.js';
 
 import { Timeline } from 'vis-timeline/esnext';
 import 'vis-timeline/styles/vis-timeline-graph2d.css';
 import EventEditor from '~/components/EventEditor.vue';
 
+let isAlertWarningShown = false;
 export default {
   components: {
     EventEditor,
@@ -54,6 +56,8 @@ export default {
     showRowLabels: { type: Boolean },
     queriedInterval: { type: Array },
     showQueriedInterval: { type: Boolean },
+    swimlane: { type: String },
+    updateTimelineWindow: { type: Boolean },
   },
   data() {
     return {
@@ -110,13 +114,15 @@ export default {
         }
         events.sort((a, b) => a.timestamp.valueOf() - b.timestamp.valueOf());
         _.each(events, e => {
+          const color = getCategoryColorFromEvent(bucket, e);
           data.push([
             bucket.id,
             getTitleAttr(bucket, e),
             buildTooltip(bucket, e),
             new Date(e.timestamp),
             new Date(moment(e.timestamp).add(e.duration, 'seconds').valueOf()),
-            getCategoryColorFromEvent(bucket, e),
+            color,
+            getSwimlane(bucket, color, this.swimlane, e),
             e,
           ]);
         });
@@ -164,7 +170,7 @@ export default {
       if (properties.items.length == 0) {
         return;
       } else if (properties.items.length == 1) {
-        const event = this.chartData[properties.items[0]][6];
+        const event = this.chartData[properties.items[0]][7];
         const groupId = this.items[properties.items[0]].group;
         const bucketId = _.find(this.groups, g => g.id == groupId).content;
 
@@ -177,9 +183,12 @@ export default {
           console.log('Editing event', event, ', in bucket', bucketId);
           this.openEditor();
         });
-        alert(
-          "Note: Changes won't be reflected in the timeline until the page is refreshed. This will be improved in a future version."
-        );
+        if (!isAlertWarningShown) {
+          alert(
+            "Note: Changes won't be reflected in the timeline until the page is refreshed. This will be improved in a future version."
+          );
+          isAlertWarningShown = true;
+        }
       } else {
         alert('selected multiple items: ' + JSON.stringify(properties.items));
       }
@@ -223,6 +232,7 @@ export default {
           start: moment(row[3]),
           end: moment(row[4]),
           style: `background-color: ${bgColor}; border-color: ${borderColor}`,
+          subgroup: row[6],
         };
       });
 
@@ -245,19 +255,22 @@ export default {
             start: this.queriedInterval[0],
             end: this.queriedInterval[1],
             style: 'background-color: #aaa; height: 10px',
+            subgroup: ``,
           });
         }
 
-        const start =
-          (this.queriedInterval && this.queriedInterval[0]) ||
-          _.min(_.map(items, item => item.start));
-        const end =
-          (this.queriedInterval && this.queriedInterval[1]) ||
-          _.max(_.map(items, item => item.end));
-        this.options.min = start;
-        this.options.max = end;
-        this.timeline.setOptions(this.options);
-        this.timeline.setWindow(start, end);
+        if (this.updateTimelineWindow) {
+          const start =
+            (this.queriedInterval && this.queriedInterval[0]) ||
+            _.min(_.map(items, item => item.start));
+          const end =
+            (this.queriedInterval && this.queriedInterval[1]) ||
+            _.max(_.map(items, item => item.end));
+          this.options.min = start;
+          this.options.max = end;
+          this.timeline.setOptions(this.options);
+          this.timeline.setWindow(start, end);
+        }
 
         // Hide buckets with no events in the queried range
         const count = _.countBy(items, i => i.group);
@@ -268,6 +281,17 @@ export default {
 
         this.items = items;
         this.groups = groups;
+      } else {
+        // update the timeline range
+        this.options.min = this.queriedInterval[0];
+        this.options.max = this.queriedInterval[1];
+        this.timeline.setOptions(this.options);
+        this.timeline.setWindow(this.queriedInterval[0], this.queriedInterval[1]);
+
+        // clear the data
+        this.timeline.setData({ groups: [], items: [] });
+        this.items = [];
+        this.groups = [];
       }
     },
   },
