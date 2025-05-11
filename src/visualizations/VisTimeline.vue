@@ -40,12 +40,24 @@ import Color from 'color';
 import { buildTooltip } from '../util/tooltip.js';
 import { getCategoryColorFromEvent, getTitleAttr } from '../util/color';
 import { getSwimlane } from '../util/swimlane.js';
+import { IEvent } from '../util/interfaces';
 
 import { Timeline } from 'vis-timeline/esnext';
 import 'vis-timeline/styles/vis-timeline-graph2d.css';
 import EventEditor from '~/components/EventEditor.vue';
 
 let isAlertWarningShown = false;
+
+interface IChartDataItem {
+  bucketId: string;
+  title: string;
+  tooltip: string;
+  start: Date;
+  end: Date;
+  color: string;
+  event: IEvent;
+  swimlane: string;
+}
 export default {
   components: {
     EventEditor,
@@ -99,8 +111,8 @@ export default {
         return [];
       }
     },
-    chartData() {
-      const data = [];
+    chartData(): IChartDataItem[] {
+      const data: IChartDataItem[] = [];
       _.each(this.bucketsFromEither, bucket => {
         if (bucket.events === undefined) {
           return;
@@ -114,17 +126,16 @@ export default {
         }
         events.sort((a, b) => a.timestamp.valueOf() - b.timestamp.valueOf());
         _.each(events, e => {
-          const color = getCategoryColorFromEvent(bucket, e);
-          data.push([
-            bucket.id,
-            getTitleAttr(bucket, e),
-            buildTooltip(bucket, e),
-            new Date(e.timestamp),
-            new Date(moment(e.timestamp).add(e.duration, 'seconds').valueOf()),
-            color,
-            getSwimlane(bucket, color, this.swimlane, e),
-            e,
-          ]);
+          data.push({
+            bucketId: bucket.id,
+            title: getTitleAttr(bucket, e),
+            tooltip: buildTooltip(bucket, e),
+            start: new Date(e.timestamp),
+            end: new Date(moment(e.timestamp).add(e.duration, 'seconds').valueOf()),
+            color: getCategoryColorFromEvent(bucket, e),
+            event: e,
+            swimlane: getSwimlane(bucket, e.color, this.swimlane, e),
+          });
         });
       });
       return data;
@@ -170,7 +181,7 @@ export default {
       if (properties.items.length == 0) {
         return;
       } else if (properties.items.length == 1) {
-        const event = this.chartData[properties.items[0]][7];
+        const event = this.chartData[properties.items[0]].event;
         const groupId = this.items[properties.items[0]].group;
         const bucketId = _.find(this.groups, g => g.id == groupId).content;
 
@@ -221,18 +232,18 @@ export default {
       });
 
       // Build items
-      const items = _.map(this.chartData, (row, i) => {
-        const bgColor = row[5];
+      const items = _.map(this.chartData, (item, i) => {
+        const bgColor = item.color;
         const borderColor = Color(bgColor).darken(0.3);
         return {
           id: String(i),
-          group: row[0],
-          content: row[1],
-          title: row[2],
-          start: moment(row[3]),
-          end: moment(row[4]),
+          group: item.bucketId,
+          content: item.title,
+          title: item.tooltip,
+          start: moment(item.start),
+          end: moment(item.end),
           style: `background-color: ${bgColor}; border-color: ${borderColor}`,
-          subgroup: row[6],
+          subgroup: item.swimlane,
         };
       });
 

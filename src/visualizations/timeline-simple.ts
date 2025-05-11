@@ -31,7 +31,7 @@ function set_status(svg_el, text) {
     .attr('fill', 'black');
 }
 
-function update(svg_el, events, event_type) {
+function update(svg_el, events, event_type: string) {
   const timeline = d3.select(svg_el);
   timeline.selectAll('*').remove();
 
