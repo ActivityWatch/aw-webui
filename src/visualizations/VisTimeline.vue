@@ -86,6 +86,7 @@ export default {
           overflowMethod: 'cap',
           delay: 0,
         },
+        horizontalScroll: true
       },
       editingEvent: null,
       editingEventBucket: null,
