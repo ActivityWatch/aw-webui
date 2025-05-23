@@ -294,6 +294,7 @@ const browser_appnames = {
   orion: ['Orion'],
   yandex: ['Yandex', 'ru.yandex.Browser'],
   zen: ['Zen Browser', 'zen browser', 'zen.exe', 'app.zen_browser.zen'],
+  floorp: ['Floorp', 'floorp.exe', 'floorp', 'one.ablaze.floorp'],
 };
 
 // Returns a list of (browserName, bucketId) pairs for found browser buckets
