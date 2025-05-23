@@ -145,8 +145,8 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
       : '',
     params.bid_stopwatch
       ? `stopwatch_events = query_bucket("${params.bid_stopwatch}");
-         events = period_union(events, stopwatch_events);`
-      : '',
+         events = union_no_overlap(stopwatch_events, events);`
+      : 'stopwatch_events = [];',
     // Categorize
     params.categories ? `events = categorize(events, ${categories_str});` : '',
     // Filter out selected categories
@@ -273,7 +273,7 @@ const browser_appnames = {
     'net.waterfox.waterfox',
   ],
   opera: ['opera.exe', 'Opera', 'com.opera.Opera'],
-  brave: ['Brave-browser', 'Brave Browser', 'brave.exe', 'com.brave.Browser'],
+  brave: ['Brave-browser', 'brave-browser', 'Brave Browser', 'brave.exe', 'com.brave.Browser'],
   edge: [
     'msedge.exe', // Windows
     'Microsoft Edge', // macOS
@@ -293,7 +293,7 @@ const browser_appnames = {
   vivaldi: ['Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe', 'Vivaldi', 'com.vivaldi.Vivaldi'],
   orion: ['Orion'],
   yandex: ['Yandex', 'ru.yandex.Browser'],
-  zen: ['Zen Browser', 'zen browser', 'zen.exe', 'app.zen_browser.zen'],
+  zen: ['Zen', 'Zen Browser', 'zen', 'zen browser', 'zen.exe', 'app.zen_browser.zen'],
   floorp: ['Floorp', 'floorp.exe', 'floorp', 'one.ablaze.floorp'],
 };
 
@@ -358,6 +358,9 @@ export function fullDesktopQuery(params: DesktopQueryParams): string[] {
     browser_titles = sort_by_duration(browser_titles);
     browser_titles = limit_events(browser_titles, ${default_limit});
     browser_duration = sum_durations(browser_events);
+    stopwatch_events = merge_events_by_keys(stopwatch_events, ["label"]);
+    stopwatch_events = sort_by_duration(stopwatch_events);
+    stopwatch_events = limit_events(stopwatch_events, ${default_limit});
 
     RETURN = {
         "window": {
@@ -372,6 +375,9 @@ export function fullDesktopQuery(params: DesktopQueryParams): string[] {
             "urls": browser_urls,
             "titles": browser_titles,
             "duration": browser_duration
+        },
+        "stopwatch": {
+            "stopwatch_events": stopwatch_events
         }
     };`
   );

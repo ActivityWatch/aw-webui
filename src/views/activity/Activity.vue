@@ -65,7 +65,7 @@ div
         // WIP: https://github.com/ActivityWatch/aw-webui/pull/368
         | Include manually logged events (stopwatch)
         br
-        | #[b Note:] WIP, breaks aw-server-rust badly. Only shown in devmode.
+        | #[b Note:] WIP. Stopwatch events shadow other events, when overlapping with them. Only shown in devmode.
 
     div.col-md-6.mt-2.mt-md-0
       b-form-group(label="Show category" label-cols="5" label-cols-lg="4" style="font-size: 0.88em")

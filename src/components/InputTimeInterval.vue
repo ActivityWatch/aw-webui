@@ -27,11 +27,29 @@ div
         td.pr-2
           label.col-form-label.col-form-label-sm Show from
         td
-          input.form-control.form-control-sm.d-inline-block.p-1(type="date", v-model="start", style="height: auto; width: auto;")
-          label.col-form-label.col-form-label-sm.px-2 to
-          input.form-control.form-control-sm.d-inline.p-1(type="date", v-model="end", style="height: auto; width: auto")
-        td.text-right
-          button.ml-2.btn.btn-outline-dark.btn-sm(
+          select(id="mode", v-model="mode", @change="valueChanged")
+            option(value='last_duration') Last duration
+            option(value='range') Date range
+      tr(v-if="mode == 'last_duration'")
+        th.pr-2
+          label(for="duration") Show last:
+        td
+          select(id="duration", v-model="duration", @change="valueChanged")
+            option(:value="15*60") 15min
+            option(:value="30*60") 30min
+            option(:value="60*60") 1h
+            option(:value="2*60*60") 2h
+            option(:value="4*60*60") 4h
+            option(:value="6*60*60") 6h
+            option(:value="12*60*60") 12h
+            option(:value="24*60*60") 24h
+      tr(v-if="mode == 'range'")
+        th.pr-2 Range:
+        td
+          input(type="date", v-model="start")
+          input(type="date", v-model="end")
+          button(
+            class="btn btn-outline-dark btn-sm",
             type="button",
             :disabled="invalidDaterange || emptyDaterange || daterangeTooLong",
             @click="applyRange"

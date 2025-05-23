@@ -10,10 +10,10 @@ svg {
 </style>
 
 <script lang="ts">
-// NOTE: This is just a Vue.js component wrapper for timeline.js
+// NOTE: This is just a Vue.js component wrapper for timeline.ts
 //       Code should generally go in the framework-independent file.
 
-import timeline from './timeline.js';
+import timeline from './timeline';
 
 export default {
   name: 'aw-timeline',
