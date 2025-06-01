@@ -301,7 +301,7 @@ const browser_appnames = {
     'zen browser',
     'zen-browser',
     'zen.exe',
-    'app.zen_browser.zen'
+    'app.zen_browser.zen',
   ],
 };
 
