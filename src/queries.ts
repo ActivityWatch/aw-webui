@@ -293,7 +293,16 @@ const browser_appnames = {
   vivaldi: ['Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe', 'Vivaldi', 'com.vivaldi.Vivaldi'],
   orion: ['Orion'],
   yandex: ['Yandex', 'ru.yandex.Browser'],
-  zen: ['Zen', 'Zen Browser', 'zen', 'zen browser', 'zen.exe', 'app.zen_browser.zen'],
+  zen: [
+    'Zen',
+    'Zen Browser',
+    'Zen-browser',
+    'zen',
+    'zen browser',
+    'zen-browser',
+    'zen.exe',
+    'app.zen_browser.zen',
+  ],
   floorp: ['Floorp', 'floorp.exe', 'floorp', 'one.ablaze.floorp'],
 };
 

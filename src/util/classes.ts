@@ -214,7 +214,8 @@ export function matchString(str: string, categories: Category[] | null): Categor
   const regexes: [Category, RegExp][] = categories
     .filter(c => c.rule.type == 'regex')
     .map(c => {
-      const re = RegExp(c.rule.regex, c.rule.ignore_case ? 'i' : '');
+      // using 'm' flag to make `$` and `^` in rules work
+      const re = RegExp(c.rule.regex, (c.rule.ignore_case ? 'i' : '') + 'm');
       return [c, re];
     });
 
@@ -227,6 +228,7 @@ export function matchString(str: string, categories: Category[] | null): Categor
   return null;
 }
 
+// this is used only in tests
 export function classifyEvents(events: IEvent[], categories: Category[]): IEvent[] {
   // Compile regexes
   const regexes: [Category, RegExp][] = categories
