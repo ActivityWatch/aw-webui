@@ -105,7 +105,7 @@ jobs:
 
     - name: Download aw-server-rust nightly
       if: ${{ matrix.aw-server == 'aw-server-rust' && matrix.aw-version == 'master' }}
-      uses: dawidd6/action-download-artifact@v8
+      uses: dawidd6/action-download-artifact@v10
       with:
         repo: ActivityWatch/aw-server-rust
         # Required, workflow file name or ID
