@@ -22,13 +22,13 @@ div
     div
       b-input-group
         b-input-group-prepend
-          b-button.px-2(:to="link_prefix + '/' + previousPeriod() + '/' + subview + '/' + currentViewId",
+          b-button.px-2(:to="{ path: link_prefix + '/' + previousPeriod() + '/' + subview + '/' + currentViewId, query: $route.query }"
                    variant="outline-dark")
             icon(name="arrow-left")
         b-select.pl-2.pr-3(:value="periodLength", :options="periodLengths",
                  @change="(periodLength) => setDate(_date, periodLength)")
         b-input-group-append
-          b-button.px-2(:to="link_prefix + '/' + nextPeriod() + '/' + subview + '/' + currentViewId",
+          b-button.px-2(:to="{ path: link_prefix + '/' + nextPeriod() + '/' + subview + '/' + currentViewId, query: $route.query }"
                         :disabled="nextPeriod() > today", variant="outline-dark")
             icon(name="arrow-right")
 
