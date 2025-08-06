@@ -281,7 +281,7 @@ const browser_appnames = {
     'Brave Browser',
     'brave.exe',
     'Brave.exe',
-    'com.brave.Browser'
+    'com.brave.Browser',
   ],
   edge: [
     'msedge.exe', // Windows
@@ -306,7 +306,7 @@ const browser_appnames = {
     'vivaldi.exe',
     'Vivaldi.exe',
     'Vivaldi',
-    'com.vivaldi.Vivaldi'
+    'com.vivaldi.Vivaldi',
   ],
   orion: ['Orion'],
   yandex: ['Yandex', 'ru.yandex.Browser'],
