@@ -275,7 +275,14 @@ const browser_appnames = {
     'net.waterfox.waterfox',
   ],
   opera: ['opera.exe', 'Opera.exe', 'Opera', 'com.opera.Opera'],
-  brave: ['Brave-browser', 'brave-browser', 'Brave Browser', 'brave.exe', 'Brave.exe', 'com.brave.Browser'],
+  brave: [
+    'Brave-browser',
+    'brave-browser',
+    'Brave Browser',
+    'brave.exe',
+    'Brave.exe',
+    'com.brave.Browser'
+  ],
   edge: [
     'msedge.exe', // Windows
     'Microsoft Edge', // macOS
@@ -293,7 +300,14 @@ const browser_appnames = {
     'Arc.exe', // Windows
     'Arc', // macOS
   ],
-  vivaldi: ['Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe', 'Vivaldi.exe', 'Vivaldi', 'com.vivaldi.Vivaldi'],
+  vivaldi: [
+    'Vivaldi-stable',
+    'Vivaldi-snapshot',
+    'vivaldi.exe',
+    'Vivaldi.exe',
+    'Vivaldi',
+    'com.vivaldi.Vivaldi'
+  ],
   orion: ['Orion'],
   yandex: ['Yandex', 'ru.yandex.Browser'],
   zen: [
