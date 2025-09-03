@@ -170,7 +170,7 @@ hr {
   background-color: #282c32 !important;
 }
 
-#visualization *:not([style*=border]), svg,
+#visualization *:not([style*="border:"]):not([style*="border-color:"]), svg,
 .nav.nav-tabs,
 .btn-outline-secondary {
   border-color: #282c32 !important;
