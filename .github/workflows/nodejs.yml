@@ -30,7 +30,7 @@ jobs:
     - name: Build
       run: make build
     - name: Upload build
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: build-webpack
         path: dist/*
@@ -58,7 +58,7 @@ jobs:
     - name: Build
       run: make build-vite
     - name: Upload build
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: build-vite
         path: dist/*
@@ -172,7 +172,7 @@ jobs:
         mv screenshots/*.png screenshots/dist/$aw_server/$aw_version
     - name: Upload screenshots
       if: ${{ success() || steps.e2e.conclusion == 'failure'}}
-      uses: actions/upload-artifact@v4.3.6
+      uses: actions/upload-artifact@v5
       with:
         name: screenshots-${{ matrix.aw-server }}-${{ matrix.aw-version }}
         path: screenshots/dist/*
@@ -192,7 +192,7 @@ jobs:
         mv ~/.cache/activitywatch/log/*/*.log logs/dist/$aw_server/$aw_version
     - name: Upload logs
       if: ${{ always() }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: logs-${{ matrix.aw-server }}-${{ matrix.aw-version }}
         path: logs/dist/*
