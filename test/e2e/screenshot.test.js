@@ -6,8 +6,8 @@ import { Selector } from 'testcafe';
 import { RequestLogger } from 'testcafe';
 
 const MAX_REFRESH = 2; // the max number of times to refresh if "Loading..." dosent go away
-const REFRESH_TIMEPERIOD = 5000; //ms - refresh page after waiting for this amount of ms for "Loading..." to dissapear
-const MAX_WAIT_TIME = 20000; //ms - max time to wait for "Loading..." to dissapear after all refreshes
+const REFRESH_TIMEPERIOD = 5000; //ms - refresh page after waiting for this amount of ms for "Loading..." to disappear
+const MAX_WAIT_TIME = 20000; //ms - max time to wait for "Loading..." to disappear after all refreshes
 
 const baseURL = 'http://127.0.0.1:27180';
 const HTTPLogger = RequestLogger(/^(?:(?!\.js|\.css|\.png|\.woff2).)+$/, {
