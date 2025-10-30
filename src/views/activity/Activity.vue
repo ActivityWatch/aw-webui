@@ -233,6 +233,7 @@ export default {
     periodLengths: function () {
       const settingsStore = useSettingsStore();
       let periods: Record<string, string> = {
+        hour: 'hour',
         day: 'day',
         week: 'week',
         month: 'month',
