@@ -35,6 +35,18 @@ div
     div.mx-2(v-if="periodLength === 'day'")
       input.form-control.px-2(id="date" type="date" :value="_date" :max="today"
                          @change="setDate($event.target.value, periodLength)")
+    
+    div.mx-2(v-if="periodLength === 'hour'")
+      input.form-control.px-2(id="date" type="date" :value="_date" :max="today"
+                     @change="setDate($event.target.value, periodLength)")
+    div.mx-2(v-if="periodLength === 'hour'")
+      b-input-group
+        input.form-control.px-2(type="time" :value="startTime" 
+                       @change="setStartTime($event.target.value)")
+        b-input-group-text.px-2 to
+        input.form-control.px-2(type="time" :value="endTime"
+                       @change="setEndTime($event.target.value)")
+
 
     div.ml-auto
       b-button-group
@@ -196,6 +208,8 @@ export default {
       viewsStore: useViewsStore(),
       settingsStore: useSettingsStore(),
 
+      startTime: '13:00',
+      endTime: '14:00',
       today: null,
       showOptions: false,
 
@@ -249,7 +263,7 @@ export default {
       return periods;
     },
     periodIsBrowseable: function () {
-      return ['day', 'week', 'month', 'year'].includes(this.periodLength);
+      return ['hour', 'day', 'week', 'month', 'year'].includes(this.periodLength);
     },
     currentView: function () {
       return this.views.find(v => v.id == this.$route.params.view_id) || this.views[0];
@@ -284,7 +298,18 @@ export default {
     timeperiod: function () {
       const settingsStore = useSettingsStore();
 
-      if (this.periodIsBrowseable) {
+          if (this.periodIsBrowseable) {
+                if (this.periodLength === 'hour') {
+                const startDateTime = moment(`${this._date} ${this.startTime}`, 'YYYY-MM-DD HH:mm');
+                const endDateTime = moment(`${this._date} ${this.endTime}`, 'YYYY-MM-DD HH:mm');
+                const durationHours = endDateTime.diff(startDateTime, 'hours', true);
+                
+                return {
+                  start: startDateTime,
+                  length: [durationHours, 'hours'],
+                };
+          }
+
         return {
           start: get_day_start_with_offset(this._date, settingsStore.startOfDay),
           length: [1, this.periodLength],
@@ -478,6 +503,15 @@ export default {
         name: '',
       };
     },
+  setStartTime: function(time) {
+    this.startTime = time;
+    this.refresh();
+  },
+  
+  setEndTime: function(time) {
+    this.endTime = time;
+    this.refresh();
+  }
   },
 };
 </script>
