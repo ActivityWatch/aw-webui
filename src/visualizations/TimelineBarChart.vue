@@ -56,7 +56,13 @@ export default {
     labels() {
       const start = this.timeperiod_start;
       const [count, resolution] = this.timeperiod_length;
-      if (resolution.startsWith('day') && count == 1) {
+      if (resolution.startsWith('hour') && count == 1) {
+        // For a single hour, just show the hour label
+        const date = new Date(start);
+        const hour = date.getHours();
+        const minute = date.getMinutes();
+        return [`${hour}:${minute.toString().padStart(2, '0')}`];
+      } else if (resolution.startsWith('day') && count == 1) {
         const hourOffset = get_hour_offset();
         return _.range(0, 24).map(h => `${(h + hourOffset) % 24}`);
       } else if (resolution.startsWith('day')) {

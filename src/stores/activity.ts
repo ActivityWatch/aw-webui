@@ -443,7 +443,12 @@ export const useActivityStore = defineStore('activity', {
       let periods: string[];
       const count = timeperiod.length[0];
       const res = timeperiod.length[1];
-      if (res.startsWith('day') && count == 1) {
+      
+      // ADDED: Handle hourly timeperiods
+      if (res.startsWith('hour') && count == 1) {
+        // If timeperiod is a single hour, just query that hour (no breakdown)
+        periods = [timeperiodToStr(timeperiod)];
+      } else if (res.startsWith('day') && count == 1) {
         // If timeperiod is a single day, we query the individual hours
         periods = timeperiodsStrsHoursOfPeriod(timeperiod);
       } else if (

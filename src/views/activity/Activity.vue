@@ -305,7 +305,7 @@ export default {
                 const durationHours = endDateTime.diff(startDateTime, 'hours', true);
                 
                 return {
-                  start: startDateTime,
+                  start: startDateTime.format(),
                   length: [durationHours, 'hours'],
                 };
           }
