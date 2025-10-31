@@ -56,12 +56,23 @@ export default {
     labels() {
       const start = this.timeperiod_start;
       const [count, resolution] = this.timeperiod_length;
-      if (resolution.startsWith('hour') && count == 1) {
-        // For a single hour, just show the hour label
-        const date = new Date(start);
-        const hour = date.getHours();
-        const minute = date.getMinutes();
-        return [`${hour}:${minute.toString().padStart(2, '0')}`];
+      
+      // Handle custom hour ranges (including fractional hours like 1.5)
+      if (resolution.startsWith('hour')) {
+        // For custom hour ranges, show start time and end time
+        const startDate = new Date(start);
+        const startHour = startDate.getHours();
+        const startMin = startDate.getMinutes();
+        
+        // Calculate end time
+        const endDate = new Date(startDate.getTime() + count * 60 * 60 * 1000);
+        const endHour = endDate.getHours();
+        const endMin = endDate.getMinutes();
+        
+        const formatTime = (h, m) => `${h}:${m.toString().padStart(2, '0')}`;
+        
+        // Return a single label showing the time range
+        return [`${formatTime(startHour, startMin)} - ${formatTime(endHour, endMin)}`];
       } else if (resolution.startsWith('day') && count == 1) {
         const hourOffset = get_hour_offset();
         return _.range(0, 24).map(h => `${(h + hourOffset) % 24}`);
@@ -101,6 +112,22 @@ export default {
     },
     chartOptions(): ChartOptions {
       const resolution = this.timeperiod_length[1];
+      const count = this.timeperiod_length[0];
+      
+      // For custom hour ranges, set appropriate y-axis max
+      let suggestedMax = undefined;
+      let stepSize = 1;
+      
+      if (resolution.startsWith('hour')) {
+        // For hour ranges, max should be the duration
+        suggestedMax = count;
+        // Use smaller step size for fractional hours
+        stepSize = count < 2 ? 0.25 : 0.5;
+      } else if (resolution.startsWith('day')) {
+        suggestedMax = 1;
+        stepSize = 0.25;
+      }
+      
       return {
         plugins: {
           tooltip: {
@@ -118,10 +145,10 @@ export default {
           y: {
             stacked: true,
             min: 0,
-            suggestedMax: resolution.startsWith('day') ? 1 : undefined,
+            suggestedMax: suggestedMax,
             ticks: {
               callback: hourToTick,
-              stepSize: resolution.startsWith('day') ? 0.25 : 1,
+              stepSize: stepSize,
             },
           },
         },

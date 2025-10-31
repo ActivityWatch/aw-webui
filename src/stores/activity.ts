@@ -432,112 +432,108 @@ export const useActivityStore = defineStore('activity', {
     },
 
     async query_category_time_by_period({
-      timeperiod,
-      filter_categories,
-      filter_afk,
-      include_stopwatch,
-      dontQueryInactive,
-      always_active_pattern,
-    }: QueryOptions & { dontQueryInactive: boolean }) {
-      // TODO: Needs to be adapted for Android
-      let periods: string[];
-      const count = timeperiod.length[0];
-      const res = timeperiod.length[1];
-      
-      // ADDED: Handle hourly timeperiods
-      if (res.startsWith('hour') && count == 1) {
-        // If timeperiod is a single hour, just query that hour (no breakdown)
-        periods = [timeperiodToStr(timeperiod)];
-      } else if (res.startsWith('day') && count == 1) {
-        // If timeperiod is a single day, we query the individual hours
-        periods = timeperiodsStrsHoursOfPeriod(timeperiod);
-      } else if (
-        res.startsWith('day') ||
-        (res.startsWith('week') && count == 1) ||
-        (res.startsWith('month') && count == 1)
-      ) {
-        // If timeperiod is several days, or a single week/month, we query the individual days
-        periods = timeperiodsStrsDaysOfPeriod(timeperiod);
-      } else if (timeperiod.length[1].startsWith('year') && timeperiod.length[0] == 1) {
-        // If timeperiod a single year, we query the individual months
-        periods = timeperiodsStrsMonthsOfPeriod(timeperiod);
-      } else {
-        console.error(`Unknown timeperiod length: ${timeperiod.length}`);
+    timeperiod,
+    filter_categories,
+    filter_afk,
+    include_stopwatch,
+    dontQueryInactive,
+    always_active_pattern,
+  }: QueryOptions & { dontQueryInactive: boolean }) {
+    let periods: string[];
+    const count = timeperiod.length[0];
+    const res = timeperiod.length[1];
+    
+    // Handle hourly timeperiods
+    if (res.startsWith('hour')) {
+      // For hour periods (including custom ranges like 1.5 hours), 
+      // just query the exact timeperiod as a single period
+      periods = [timeperiodToStr(timeperiod)];
+    } else if (res.startsWith('day') && count == 1) {
+      // If timeperiod is a single day, we query the individual hours
+      periods = timeperiodsStrsHoursOfPeriod(timeperiod);
+    } else if (
+      res.startsWith('day') ||
+      (res.startsWith('week') && count == 1) ||
+      (res.startsWith('month') && count == 1)
+    ) {
+      // If timeperiod is several days, or a single week/month, we query the individual days
+      periods = timeperiodsStrsDaysOfPeriod(timeperiod);
+    } else if (timeperiod.length[1].startsWith('year') && timeperiod.length[0] == 1) {
+      // If timeperiod a single year, we query the individual months
+      periods = timeperiodsStrsMonthsOfPeriod(timeperiod);
+    } else {
+      console.error(`Unknown timeperiod length: ${timeperiod.length}`);
+    }
+
+    // Filter out periods that start in the future
+    periods = periods.filter(period => new Date(period.split('/')[0]) < new Date());
+
+    const signal = getClient().controller.signal;
+    let cancelled = false;
+    signal.onabort = () => {
+      cancelled = true;
+      console.debug('Request aborted');
+    };
+
+    // Query one period at a time, to avoid timeout on slow queries
+    let data = [];
+    for (const period of periods) {
+      if (cancelled) {
+        throw signal['reason'] || 'unknown reason';
       }
 
-      // Filter out periods that start in the future
-      periods = periods.filter(period => new Date(period.split('/')[0]) < new Date());
+      // Only query periods with known data from AFK bucket
+      if (dontQueryInactive && this.active.events.length > 0) {
+        const start = new Date(period.split('/')[0]);
+        const end = new Date(period.split('/')[1]);
 
-      const signal = getClient().controller.signal;
-      let cancelled = false;
-      signal.onabort = () => {
-        cancelled = true;
-        console.debug('Request aborted');
-      };
-
-      // Query one period at a time, to avoid timeout on slow queries
-      let data = [];
-      for (const period of periods) {
-        // Not stable
-        //signal.throwIfAborted();
-        if (cancelled) {
-          throw signal['reason'] || 'unknown reason';
-        }
-
-        // Only query periods with known data from AFK bucket
-        if (dontQueryInactive && this.active.events.length > 0) {
-          const start = new Date(period.split('/')[0]);
-          const end = new Date(period.split('/')[1]);
-
-          // Retrieve active time in period
-          const period_activity = this.active.events.find((e: IEvent) => {
-            return start < new Date(e.timestamp) && new Date(e.timestamp) < end;
-          });
-
-          // Check if there was active time
-          if (!(period_activity && period_activity.duration > 0)) {
-            data = data.concat([{ cat_events: [] }]);
-            continue;
-          }
-        }
-
-        const isAndroid = this.buckets.android[0] !== undefined;
-        const categories = useCategoryStore().classes_for_query;
-        // TODO: Clean up call, pass QueryParams in fullDesktopQuery as well
-        // TODO: Unify QueryOptions and QueryParams
-        const query = queries.categoryQuery({
-          bid_browsers: this.buckets.browser,
-          bid_stopwatch:
-            include_stopwatch && this.buckets.stopwatch.length > 0
-              ? this.buckets.stopwatch[0]
-              : undefined,
-          categories,
-          filter_categories,
-          filter_afk,
-          always_active_pattern,
-          ...(isAndroid
-            ? {
-                bid_android: this.buckets.android[0],
-              }
-            : {
-                bid_afk: this.buckets.afk[0],
-                bid_window: this.buckets.window[0],
-              }),
+        // Retrieve active time in period
+        const period_activity = this.active.events.find((e: IEvent) => {
+          return start < new Date(e.timestamp) && new Date(e.timestamp) < end;
         });
-        const result = await getClient().query([period], query, {
-          verbose: true,
-          name: 'categoryQuery',
-        });
-        data = data.concat(result);
+
+        // Check if there was active time
+        if (!(period_activity && period_activity.duration > 0)) {
+          data = data.concat([{ cat_events: [] }]);
+          continue;
+        }
       }
 
-      // Zip periods
-      let by_period = _.zipObject(periods, data);
-      // Filter out values that are undefined (no longer needed, only used when visualization was progressive (looks buggy))
-      by_period = _.fromPairs(_.toPairs(by_period).filter(o => o[1]));
+      const isAndroid = this.buckets.android[0] !== undefined;
+      const categories = useCategoryStore().classes_for_query;
+      const query = queries.categoryQuery({
+        bid_browsers: this.buckets.browser,
+        bid_stopwatch:
+          include_stopwatch && this.buckets.stopwatch.length > 0
+            ? this.buckets.stopwatch[0]
+            : undefined,
+        categories,
+        filter_categories,
+        filter_afk,
+        always_active_pattern,
+        ...(isAndroid
+          ? {
+              bid_android: this.buckets.android[0],
+            }
+          : {
+              bid_afk: this.buckets.afk[0],
+              bid_window: this.buckets.window[0],
+            }),
+      });
+      const result = await getClient().query([period], query, {
+        verbose: true,
+        name: 'categoryQuery',
+      });
+      data = data.concat(result);
+    }
 
-      this.query_category_time_by_period_completed({ by_period });
-    },
+    // Zip periods
+    let by_period = _.zipObject(periods, data);
+    // Filter out values that are undefined
+    by_period = _.fromPairs(_.toPairs(by_period).filter(o => o[1]));
+
+    this.query_category_time_by_period_completed({ by_period });
+  },
 
     async query_active_history_android({ timeperiod }: QueryOptions) {
       const periods = timeperiodStrsAroundTimeperiod(timeperiod).filter(tp_str => {
