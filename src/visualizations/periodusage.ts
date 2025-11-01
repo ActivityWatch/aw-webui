@@ -56,6 +56,9 @@ function update(svg_elem: SVGElement, usage_arr, onPeriodClicked) {
   const width = 100 / usage_arr.length - padding;
   const center_elem = Math.floor(usage_arr.length / 2);
 
+  const today = moment();
+  let todayMarkerShown = false;
+
   _.each(usage_arr, (events, i: number) => {
     const usage_time = get_usage_time(events);
     const height = 85 * (usage_time / longest_usage);
@@ -70,7 +73,8 @@ function update(svg_elem: SVGElement, usage_arr, onPeriodClicked) {
     const x = i * padding + i * width + 0.25 * width;
 
     // FIXME: Doesn't work well, notably breaks on last7d and last30d
-    if (moment(date).isSame(moment(), 'day')) {
+    const isToday = date !== '' && moment(date).isSame(today, 'day');
+    if (isToday && !todayMarkerShown) {
       svg
         .append('line')
         .attr('x1', x + width / 2 + '%')
@@ -85,6 +89,7 @@ function update(svg_elem: SVGElement, usage_arr, onPeriodClicked) {
         .attr('x', x + 1.5 * width + '%')
         .attr('y', '30')
         .text('Today');
+      todayMarkerShown = true;
     }
 
     const rect = svg
