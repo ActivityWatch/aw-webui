@@ -447,7 +447,7 @@ export const useActivityStore = defineStore('activity', {
     if (res.startsWith('hour')) {
       // For hour periods (including custom ranges like 1.5 hours), 
       // just query the exact timeperiod as a single period
-      periods = [timeperiodToStr(timeperiod)];
+      periods = timeperiodsStrsHoursOfPeriod(timeperiod);
     } else if (res.startsWith('day') && count == 1) {
       // If timeperiod is a single day, we query the individual hours
       periods = timeperiodsStrsHoursOfPeriod(timeperiod);

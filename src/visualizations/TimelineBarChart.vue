@@ -57,22 +57,23 @@ export default {
       const start = this.timeperiod_start;
       const [count, resolution] = this.timeperiod_length;
       
-      // Handle custom hour ranges (including fractional hours like 1.5)
+      // Handle hour ranges - show individual hour labels
       if (resolution.startsWith('hour')) {
-        // For custom hour ranges, show start time and end time
         const startDate = new Date(start);
-        const startHour = startDate.getHours();
-        const startMin = startDate.getMinutes();
+        const numHours = Math.ceil(count);
         
-        // Calculate end time
-        const endDate = new Date(startDate.getTime() + count * 60 * 60 * 1000);
-        const endHour = endDate.getHours();
-        const endMin = endDate.getMinutes();
-        
-        const formatTime = (h, m) => `${h}:${m.toString().padStart(2, '0')}`;
-        
-        // Return a single label showing the time range
-        return [`${formatTime(startHour, startMin)} - ${formatTime(endHour, endMin)}`];
+        return _.range(numHours).map(h => {
+          const hourDate = new Date(startDate.getTime() + h * 60 * 60 * 1000);
+          const hours = hourDate.getHours();
+          const minutes = hourDate.getMinutes();
+          
+          // Format as HH:MM if there are minutes, otherwise just HH:00
+          if (minutes === 0) {
+            return `${hours}:00`;
+          } else {
+            return `${hours}:${minutes.toString().padStart(2, '0')}`;
+          }
+        });
       } else if (resolution.startsWith('day') && count == 1) {
         const hourOffset = get_hour_offset();
         return _.range(0, 24).map(h => `${(h + hourOffset) % 24}`);
@@ -114,15 +115,14 @@ export default {
       const resolution = this.timeperiod_length[1];
       const count = this.timeperiod_length[0];
       
-      // For custom hour ranges, set appropriate y-axis max
+      // Set appropriate y-axis max based on resolution
       let suggestedMax = undefined;
       let stepSize = 1;
       
       if (resolution.startsWith('hour')) {
-        // For hour ranges, max should be the duration
-        suggestedMax = count;
-        // Use smaller step size for fractional hours
-        stepSize = count < 2 ? 0.25 : 0.5;
+        // For hour ranges, each bar represents 1 hour max
+        suggestedMax = 1;
+        stepSize = 0.25;  // 15-minute increments
       } else if (resolution.startsWith('day')) {
         suggestedMax = 1;
         stepSize = 0.25;
