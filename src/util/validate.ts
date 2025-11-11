@@ -4,7 +4,7 @@ export function validateRegex(re: string) {
   if (re === '') return false;
  
   // semicolons are valid regex, but they break aw-server
-  if (/[;]/.test(re)) return false;
+  if (re.includes(';')) return false;
 
   try {
     new RegExp(re);
