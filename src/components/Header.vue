@@ -158,15 +158,6 @@ export default {
     //console.log(types_by_host);
 
     _.each(types_by_host, (types, hostname) => {
-      if (hostname != 'unknown') {
-        activityViews.push({
-          name: hostname,
-          hostname: hostname,
-          type: 'default',
-          pathUrl: `/activity/${hostname}`,
-          icon: 'desktop',
-        });
-      }
       if (types['android']) {
         activityViews.push({
           name: `${hostname} (Android)`,
@@ -174,6 +165,14 @@ export default {
           type: 'android',
           pathUrl: `/activity/${hostname}`,
           icon: 'mobile',
+        });
+      } else if (hostname != 'unknown') {
+        activityViews.push({
+          name: hostname,
+          hostname: hostname,
+          type: 'default',
+          pathUrl: `/activity/${hostname}`,
+          icon: 'desktop',
         });
       }
     });
