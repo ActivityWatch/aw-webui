@@ -16,7 +16,7 @@ jobs:
     # TODO: Maybe add `github.event.workflow_run.event == 'pull_request'` to avoid spam?
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - uses: iterative/setup-cml@v3
 
     # Doesn't work for fetching artifacts from separate workflows
