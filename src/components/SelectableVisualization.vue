@@ -90,6 +90,13 @@ div
                  :namefunc="e => e.data.label",
                  :colorfunc="e => e.data.label",
                  with_limit)
+    div(v-if="type == 'watcher_columns'")
+      aw-watcher-columns(
+        :initialBucketId="props ? props.bucketId : ''",
+        :initialField="props ? props.field : ''",
+        :initialCustomField="props ? props.customField : ''",
+        @update-props="onWatcherPropsChange"
+      )
 </template>
 
 <style lang="scss">
@@ -118,6 +125,7 @@ import { build_category_hierarchy } from '~/util/classes';
 import { useActivityStore } from '~/stores/activity';
 import { useCategoryStore } from '~/stores/categories';
 import { useBucketsStore } from '~/stores/buckets';
+import { useViewsStore } from '~/stores/views';
 
 import moment from 'moment';
 
@@ -133,6 +141,7 @@ export default {
     id: Number,
     type: String,
     props: Object,
+    viewId: { type: String, default: '' },
     editable: { type: Boolean, default: true },
   },
   data: function () {
@@ -158,6 +167,7 @@ export default {
         'vis_timeline',
         'score',
         'top_stopwatches',
+        'watcher_columns'
       ],
       // TODO: Move this function somewhere else
       top_editor_files_namefunc: e => {
@@ -251,6 +261,10 @@ export default {
           title: 'Top Stopwatch Events',
           available: this.activityStore.stopwatch.available,
         },
+        watcher_columns: {
+          title: 'Watcher Columns',
+          available: true,
+        },
       };
     },
     has_prerequisites() {
@@ -325,6 +339,16 @@ export default {
     }
   },
   methods: {
+      onWatcherPropsChange(newProps) {
+      if (!this.viewId) return;
+      const mergedProps = { ...(this.props || {}), ...newProps };
+      useViewsStore().editView({
+        view_id: this.viewId,
+        el_id: this.id,
+        type: this.type,
+        props: mergedProps,
+      });
+    },
     getTimelineBuckets: async function () {
       if (this.type != 'vis_timeline') return;
       if (!this.timeline_daterange) return;
