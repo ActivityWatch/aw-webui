@@ -167,7 +167,7 @@ export default {
         'vis_timeline',
         'score',
         'top_stopwatches',
-        'watcher_columns'
+        'watcher_columns',
       ],
       // TODO: Move this function somewhere else
       top_editor_files_namefunc: e => {
@@ -339,7 +339,7 @@ export default {
     }
   },
   methods: {
-      onWatcherPropsChange(newProps) {
+    onWatcherPropsChange(newProps) {
       if (!this.viewId) return;
       const mergedProps = { ...(this.props || {}), ...newProps };
       useViewsStore().editView({
