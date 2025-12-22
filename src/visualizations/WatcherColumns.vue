@@ -196,13 +196,12 @@ export default {
       return Array.from(keys).sort();
     },
     aggregate() {
-      if (!this.selectedFieldValue) {
+      const fieldValue = (this.selectedFieldValue || '').trim();
+      if (!fieldValue) {
         this.aggregated = [];
         return;
       }
-      const path = this.selectedFieldValue.startsWith('data.')
-        ? this.selectedFieldValue
-        : `data.${this.selectedFieldValue}`;
+      const path = fieldValue.startsWith('data.') ? fieldValue : `data.${fieldValue}`;
       const grouped = new Map<string, AggregatedEvent>();
       this.events.forEach(e => {
         const value = _.get(e, path);
