@@ -218,6 +218,7 @@ const browser_appnames = {
     // Chrome
     'Google Chrome',
     'Google-chrome',
+    'Chrome.exe',
     'chrome.exe',
     'google-chrome-stable',
     'com.google.Chrome',
@@ -227,6 +228,7 @@ const browser_appnames = {
     'Chromium-browser',
     'chromium-browser',
     'Chromium-browser-chromium',
+    'Chromium.exe',
     'chromium.exe',
     'org.chromium.Chromium',
 
@@ -272,8 +274,15 @@ const browser_appnames = {
     'waterfox.exe',
     'net.waterfox.waterfox',
   ],
-  opera: ['opera.exe', 'Opera', 'com.opera.Opera'],
-  brave: ['Brave-browser', 'brave-browser', 'Brave Browser', 'brave.exe', 'com.brave.Browser'],
+  opera: ['opera.exe', 'Opera.exe', 'Opera', 'com.opera.Opera'],
+  brave: [
+    'Brave-browser',
+    'brave-browser',
+    'Brave Browser',
+    'brave.exe',
+    'Brave.exe',
+    'com.brave.Browser',
+  ],
   edge: [
     'msedge.exe', // Windows
     'Microsoft Edge', // macOS
@@ -287,10 +296,18 @@ const browser_appnames = {
     'com.microsoft.EdgeDev',
   ],
   arc: [
+    'arc.exe',
     'Arc.exe', // Windows
     'Arc', // macOS
   ],
-  vivaldi: ['Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe', 'Vivaldi', 'com.vivaldi.Vivaldi'],
+  vivaldi: [
+    'Vivaldi-stable',
+    'Vivaldi-snapshot',
+    'vivaldi.exe',
+    'Vivaldi.exe',
+    'Vivaldi',
+    'com.vivaldi.Vivaldi',
+  ],
   orion: ['Orion'],
   yandex: ['Yandex', 'ru.yandex.Browser'],
   zen: [
@@ -301,9 +318,10 @@ const browser_appnames = {
     'zen browser',
     'zen-browser',
     'zen.exe',
+    'Zen.exe',
     'app.zen_browser.zen',
   ],
-  floorp: ['Floorp', 'floorp.exe', 'floorp', 'one.ablaze.floorp'],
+  floorp: ['Floorp', 'floorp.exe', 'Floorp.exe', 'floorp', 'one.ablaze.floorp'],
 };
 
 // Returns a list of (browserName, bucketId) pairs for found browser buckets
