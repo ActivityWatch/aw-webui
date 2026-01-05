@@ -8,7 +8,7 @@ a, button, span, div, select {
   outline: none;
 }
 
-body, button, html, table {
+body, button, html, table, pre, code {
   color: #e9ebf0 !important;
 }
 
