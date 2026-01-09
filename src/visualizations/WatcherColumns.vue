@@ -213,7 +213,7 @@ export default {
             data: { display, raw: value, colorKey: display },
           });
         }
-        const entry = grouped.get(key);
+        const entry = grouped.get(key)!;
         entry.duration += e.duration || 0;
       });
       this.aggregated = Array.from(grouped.values()).sort((a, b) => b.duration - a.duration);
