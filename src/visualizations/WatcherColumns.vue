@@ -135,11 +135,8 @@ export default {
         this.aggregate();
       }
     },
-    timeRange: {
-      handler() {
-        this.loadEvents();
-      },
-      deep: true,
+    timeRange() {
+      this.loadEvents();
     },
   },
   async mounted() {
