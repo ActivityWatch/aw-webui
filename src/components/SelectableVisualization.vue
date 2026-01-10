@@ -90,8 +90,8 @@ div
                  :namefunc="e => e.data.label",
                  :colorfunc="e => e.data.label",
                  with_limit)
-    div(v-if="type == 'watcher_columns'")
-      aw-watcher-columns(
+    div(v-if="type == 'top_bucket_data'")
+      aw-top-bucket-data(
         :initialBucketId="props ? props.bucketId : ''",
         :initialField="props ? props.field : ''",
         :initialCustomField="props ? props.customField : ''",
@@ -167,7 +167,7 @@ export default {
         'vis_timeline',
         'score',
         'top_stopwatches',
-        'watcher_columns',
+        'top_bucket_data',
       ],
       // TODO: Move this function somewhere else
       top_editor_files_namefunc: e => {
@@ -261,8 +261,8 @@ export default {
           title: 'Top Stopwatch Events',
           available: this.activityStore.stopwatch.available,
         },
-        watcher_columns: {
-          title: 'Watcher Columns',
+        top_bucket_data: {
+          title: 'Top Bucket Data',
           available: true,
         },
       };

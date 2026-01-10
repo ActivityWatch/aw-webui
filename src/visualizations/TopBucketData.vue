@@ -2,7 +2,7 @@
 div
   b-row
     b-col(cols="12", md="6").mb-2
-      b-form-group(label="Watcher (bucket)")
+      b-form-group(label="Bucket")
         b-form-select(
           v-model="selectedBucketId",
           :options="bucketOptions",
@@ -65,7 +65,7 @@ function formatValue(value: unknown): string {
   return String(value);
 }
 export default {
-  name: 'aw-watcher-columns',
+  name: 'aw-top-bucket-data',
   props: {
     initialBucketId: { type: String, default: '' },
     initialField: { type: String, default: '' },
@@ -198,6 +198,8 @@ export default {
         this.aggregated = [];
         return;
       }
+      // Even though the user should start the manual data fields with "data", we want
+      // to gracefully let it pass. Chances are there are no nested data.data.title. 
       const path = fieldValue.startsWith('data.') ? fieldValue : `data.${fieldValue}`;
       const grouped = new Map<string, AggregatedEvent>();
       this.events.forEach(e => {
