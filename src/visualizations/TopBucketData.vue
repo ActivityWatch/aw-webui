@@ -199,7 +199,7 @@ export default {
         return;
       }
       // Even though the user should start the manual data fields with "data", we want
-      // to gracefully let it pass. Chances are there are no nested data.data.title. 
+      // to gracefully let it pass. Chances are there are no nested data.data.title.
       const path = fieldValue.startsWith('data.') ? fieldValue : `data.${fieldValue}`;
       const grouped = new Map<string, AggregatedEvent>();
       this.events.forEach(e => {
@@ -212,7 +212,7 @@ export default {
             data: { display, raw: value, colorKey: display },
           });
         }
-        const entry = grouped.get(key)!;
+        const entry = grouped.get(key);
         entry.duration += e.duration || 0;
       });
       this.aggregated = Array.from(grouped.values()).sort((a, b) => b.duration - a.duration);
