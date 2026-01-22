@@ -317,6 +317,39 @@ export const useActivityStore = defineStore('activity', {
         filter_categories
       );
       const data = await getClient().query(periods, q).catch(this.errorHandler);
+
+      // Post-process for iOS compatibility (swap app <-> title)
+      const androidBucket = this.buckets.android[0];
+      const isIos = androidBucket && androidBucket.startsWith('aw-import-screentime');
+
+      if (isIos && data && data[0] && data[0].title_events) {
+        data[0].title_events.forEach((e: IEvent) => {
+          // iOS events have 'app' (bundleID) and 'title'. We swap them.
+          // Check if title exists to avoid overwriting with undefined
+          if (e.data.title) {
+            const originalApp = e.data.app;
+            e.data.classname = originalApp; // Bundle ID (e.g. com.google.ios.youtube)
+            e.data.app = e.data.title; // Human Name (e.g. YouTube)
+          }
+        });
+
+        // Re-aggregate app_events from the modified title_events
+        const new_app_events_map: Record<string, IEvent> = {};
+        data[0].title_events.forEach((e: IEvent) => {
+          const app = e.data.app;
+          if (!new_app_events_map[app]) {
+            // Clone event to avoid reference issues
+            new_app_events_map[app] = { ...e, duration: 0, data: { ...e.data } };
+            // Ensure we only keep the 'app' key for app_events to match standard structure
+            new_app_events_map[app].data = { app: app, $category: e.data.$category };
+          }
+          new_app_events_map[app].duration += e.duration;
+        });
+
+        // Sort by duration desc
+        data[0].app_events = _.orderBy(_.values(new_app_events_map), ['duration'], ['desc']);
+      }
+
       this.query_window_completed(data[0]);
     },
 
