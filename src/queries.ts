@@ -118,7 +118,7 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
     // Fetch window/app events
     `events = flood(query_bucket(find_bucket("${bid_window}")));`,
     // On Android, merge events to avoid overload of events
-    isAndroidParams(params) ? 'events = merge_events_by_keys(events, ["app"]);' : '',
+    isAndroidParams(params) ? 'events = merge_events_by_keys(events, ["app", "title"]);' : '',
     // Fetch not-afk events
     isDesktopParams(params)
       ? `not_afk = flood(query_bucket(find_bucket("${params.bid_afk}")));
@@ -200,7 +200,7 @@ export function appQuery(
   const code = `
     ${canonicalEvents(params)}
 
-    title_events = sort_by_duration(merge_events_by_keys(events, ["app", "classname"]));
+    title_events = sort_by_duration(merge_events_by_keys(events, ["app", "classname", "title"]));
     app_events   = sort_by_duration(merge_events_by_keys(title_events, ["app"]));
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
 
