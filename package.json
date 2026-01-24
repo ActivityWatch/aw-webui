@@ -113,7 +113,7 @@
     "jest-environment-jsdom": "^29",
     "jest-environment-node": "^29",
     "json-loader": "^0.5.7",
-    "lodash": "^4.17.19",
+    "lodash": "^4.17.23",
     "moment": "^2.29.4",
     "moment-range": "^4.0.2",
     "ora": "^7.0.1",
