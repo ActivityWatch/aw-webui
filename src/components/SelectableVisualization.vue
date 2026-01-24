@@ -28,7 +28,7 @@ div
                  :namefunc="e => e.data.app",
                  :colorfunc="e => e.data.app",
                  with_limit)
-    div(v-if="type == 'top_titles'")
+    div(v-if="type == 'top_titles' && !activityStore.android.available")
       aw-summary(:fields="activityStore.window.top_titles",
                  :namefunc="e => e.data.title",
                  :colorfunc="e => e.data['$category']",
