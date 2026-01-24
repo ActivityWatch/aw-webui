@@ -73,7 +73,19 @@ export default {
         // How many days are in the given month?
         const date = new Date(start);
         const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-        return ['1st', '2nd', '3rd'].concat(_.range(4, daysInMonth + 1).map(d => `${d}th`));
+        const ordinalsEnUS = {
+          one: 'st',
+          two: 'nd',
+          few: 'rd',
+          many: 'th',
+          zero: 'th',
+          other: 'th',
+        };
+        const toOrdinalSuffix = (num: number, locale = 'en-US', ordinals = ordinalsEnUS) => {
+          const pluralRules = new Intl.PluralRules(locale, { type: 'ordinal' });
+          return `${num}${ordinals[pluralRules.select(num)]}`;
+        };
+        return _.range(1, daysInMonth + 1).map(d => toOrdinalSuffix(d));
       } else if (resolution == 'year') {
         return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       } else {
@@ -100,6 +112,19 @@ export default {
           tooltip: {
             mode: 'point',
             intersect: false,
+            callbacks: {
+              label: function (context) {
+                let value = context.parsed.y;
+                let hours = Math.floor(value);
+                let minutes = Math.round((value - hours) * 60);
+                if (minutes == 60) {
+                  minutes = 0;
+                  hours += 1;
+                }
+                let minutes_str = minutes.toString().padStart(2, "0");
+                return `${hours}:${minutes_str}`;
+              }
+            }
           },
           legend: {
             display: false,
