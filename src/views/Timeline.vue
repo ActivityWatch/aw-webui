@@ -8,7 +8,7 @@ div
   div.d-inline-block.border.rounded.p-2.mr-2
     | Events shown:  {{ num_events }}
   div.d-inline-block.border.rounded.p-2.mr-2
-    | Swimlanes:  
+    | Swimlanes:
     select(v-model="swimlane")
       option(:value='null') None
       option(value='category') Categories

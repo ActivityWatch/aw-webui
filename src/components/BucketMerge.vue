@@ -2,8 +2,8 @@
 div
   h3 Merge buckets
   p.small
-    | Sometimes, you might want to merge the events of two buckets together into one. 
-    | This is commonly useful to address the case where your hostname might have changed, 
+    | Sometimes, you might want to merge the events of two buckets together into one.
+    | This is commonly useful to address the case where your hostname might have changed,
     | creating two buckets for the same watcher and host, which you want to combine together again.
 
   // TODO: select which buckets to merge
@@ -32,8 +32,8 @@ div
       | The following {{ overlappingEvents.length }} events are overlapping:
       ul
         li(v-for="event in overlappingEvents")
-          | {{ event[0].start }} - {{ event[0].end }} ({{ event[0].event.id }}) 
-          | overlaps with 
+          | {{ event[0].start }} - {{ event[0].end }} ({{ event[0].event.id }})
+          | overlaps with
           | {{ event[1].start }} - {{ event[1].end }} ({{ event[1].event.id }})
 
   // TODO: confirm dialog

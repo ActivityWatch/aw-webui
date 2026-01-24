@@ -69,7 +69,7 @@ If you want to actively iterate on `aw-webui` with your local production data (w
 AW_SERVER_URL="'http://localhost:5600'" npx vue-cli-service build --watch --dest=../aw-server/static
 ```
 
-If you want to add `debugger` statements in your code and otherwise break linting rules, you'll need to add a `--skip-plugins=no-debugger` to that command. 
+If you want to add `debugger` statements in your code and otherwise break linting rules, you'll need to add a `--skip-plugins=no-debugger` to that command.
 Then, in another terminal (with your venv activated) run:
 
 ```shell
