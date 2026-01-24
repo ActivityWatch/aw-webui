@@ -33,7 +33,7 @@ div
                  :namefunc="e => e.data.title",
                  :colorfunc="e => e.data.title",
                  with_limit)
-    div(v-if="type == 'top_bundle_ids'")
+    div(v-if="type == 'top_bundle_ids' && activityStore.android.available")
       aw-summary(:fields="activityStore.window.top_titles",
                  :namefunc="e => e.data.classname",
                  :colorfunc="e => e.data.app",
