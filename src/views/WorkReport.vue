@@ -96,14 +96,14 @@ export default {
       categoryStore: useCategoryStore(),
       settingsStore: useSettingsStore(),
       bucketsStore: useBucketsStore(),
-      
-      selectedHosts: [],  // Will be populated on mount
-      selectedCategories: [JSON.stringify(['Work'])],  // Default to 'Work' category
+
+      selectedHosts: [], // Will be populated on mount
+      selectedCategories: [JSON.stringify(['Work'])], // Default to 'Work' category
       breakTime: 5,
       dateRange: 'last7d',
       customStart: null,
       customEnd: null,
-      
+
       loading: false,
       dailyData: [] as DailyData[],
       rawData: {},
@@ -114,23 +114,23 @@ export default {
       // Get available hosts from window watcher buckets
       const allBuckets = this.bucketsStore.buckets || [];
       const windowBuckets = allBuckets.filter(b => b.type === 'currentwindow');
-      
+
       const hosts = windowBuckets.map(b => {
         // Extract hostname from bucket ID (format: aw-watcher-window_hostname)
         return b.id.replace('aw-watcher-window_', '');
       });
-      
+
       return hosts.map(host => ({
         value: host,
         text: host,
       }));
     },
-    
+
     categoryOptions() {
       // Get all categories (not just those with rules) for the filter
       const cats = this.categoryStore.all_categories || [];
       return cats.map(cat => ({
-        value: JSON.stringify(cat),  // Store as JSON string to preserve array structure
+        value: JSON.stringify(cat), // Store as JSON string to preserve array structure
         text: cat.join(' > '),
       }));
     },
@@ -159,7 +159,7 @@ export default {
   async mounted() {
     this.categoryStore.load();
     await this.bucketsStore.ensureLoaded();
-    
+
     // Auto-select all available hosts
     if (this.hostOptions.length > 0) {
       this.selectedHosts = this.hostOptions.map(opt => opt.value);
@@ -170,66 +170,68 @@ export default {
       this.loading = true;
       try {
         const client = getClient();
-        
+
         if (this.selectedHosts.length === 0) {
           alert('Please select at least one host');
           this.loading = false;
           return;
         }
-        
+
         // Get date range
         const timeperiods = this.getTimeperiods();
-        
+
         // Build query with flooding
         const breakTimeSeconds = this.breakTime * 60;
         // Parse categories back from JSON strings
         const categoriesFilter = this.selectedCategories.map(c => JSON.parse(c));
-        
+
         // Get categories for query
         const categories = this.categoryStore.classes_for_query;
         const categoriesStr = JSON.stringify(categories).replace(/\\\\/g, '\\');
-        
+
         // Build multi-device query with custom flooding
         let query = '';
-        
+
         // Query each host with custom flooding
         for (const hostname of this.selectedHosts) {
           const safeHost = hostname.replace(/[^a-zA-Z0-9_]/g, '');
           query += `
             events_${safeHost} = flood(query_bucket(find_bucket("aw-watcher-window_${hostname}")), ${breakTimeSeconds});
             events_${safeHost} = categorize(events_${safeHost}, ${categoriesStr});
-            events_${safeHost} = filter_keyvals(events_${safeHost}, "$category", ${JSON.stringify(categoriesFilter)});
+            events_${safeHost} = filter_keyvals(events_${safeHost}, "$category", ${JSON.stringify(
+            categoriesFilter
+          )});
           `;
         }
-        
+
         // Combine events from all hosts using union_no_overlap
         query += '\nevents = [];';
         for (const hostname of this.selectedHosts) {
           const safeHost = hostname.replace(/[^a-zA-Z0-9_]/g, '');
           query += `\nevents = union_no_overlap(events, events_${safeHost});`;
         }
-        
+
         query += `
           duration = sum_durations(events);
           RETURN = {"events": events, "duration": duration};
         `;
-        
+
         // Debug: log the query
         console.log('Query being sent:', query);
         console.log('Query length:', query.length);
-        
+
         // Query for each day
         const results = await client.query(timeperiods, [query]);
-        
+
         // Process results into daily data
         this.dailyData = timeperiods.map((tp, i) => {
           const result = results[i];
           const events = result.events || [];
           const duration = result.duration || 0;
-          
+
           // tp is a string like "2025-01-01T00:00:00Z/2025-01-02T00:00:00Z"
           const startDate = tp.split('/')[0];
-          
+
           return {
             date: moment(startDate).format('YYYY-MM-DD'),
             duration,
@@ -238,7 +240,7 @@ export default {
             events,
           };
         });
-        
+
         this.rawData = results;
       } catch (error) {
         console.error('Error loading work time data:', error);
@@ -247,12 +249,12 @@ export default {
         this.loading = false;
       }
     },
-    
+
     getTimeperiods() {
       const offset = this.settingsStore.startOfDay;
-      
+
       const timeperiods = [];
-      
+
       if (this.dateRange === 'last7d') {
         for (let i = 6; i >= 0; i--) {
           const start = moment().subtract(i, 'days').startOf('day').add(offset);
@@ -267,17 +269,17 @@ export default {
         }
       }
       // TODO: Add other date ranges
-      
+
       return timeperiods;
     },
-    
+
     formatDuration(seconds: number): string {
       if (!seconds) return '0:00';
       const hours = Math.floor(seconds / 3600);
       const minutes = Math.floor((seconds % 3600) / 60);
       return `${hours}:${minutes.toString().padStart(2, '0')}`;
     },
-    
+
     exportCSV() {
       const headers = ['Date', 'Duration (hours)', 'Sessions', 'Avg Session (minutes)'];
       const rows = this.dailyData.map(day => [
@@ -286,17 +288,19 @@ export default {
         day.sessions,
         (day.avgSession / 60).toFixed(1),
       ]);
-      
+
       const csv = [
         headers.join(','),
         ...rows.map(row => row.join(',')),
         '',
-        `Total,${(this.totalDuration / 3600).toFixed(2)},${this.totalSessions},${(this.avgSessionLength / 60).toFixed(1)}`,
+        `Total,${(this.totalDuration / 3600).toFixed(2)},${this.totalSessions},${(
+          this.avgSessionLength / 60
+        ).toFixed(1)}`,
       ].join('\n');
-      
+
       this.downloadFile(csv, 'work_time_report.csv', 'text/csv');
     },
-    
+
     exportJSON() {
       const data = {
         parameters: {
@@ -312,11 +316,11 @@ export default {
         daily: this.dailyData,
         rawEvents: this.rawData,
       };
-      
+
       const json = JSON.stringify(data, null, 2);
       this.downloadFile(json, 'work_time_report.json', 'application/json');
     },
-    
+
     downloadFile(content: string, filename: string, mimeType: string) {
       const blob = new Blob([content], { type: mimeType });
       const url = URL.createObjectURL(blob);
