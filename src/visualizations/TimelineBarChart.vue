@@ -114,17 +114,17 @@ export default {
             intersect: false,
             callbacks: {
               label: function (context) {
-                let value = context.parsed.y;
+                const value = context.parsed.y;
                 let hours = Math.floor(value);
                 let minutes = Math.round((value - hours) * 60);
                 if (minutes == 60) {
                   minutes = 0;
                   hours += 1;
                 }
-                let minutes_str = minutes.toString().padStart(2, "0");
+                const minutes_str = minutes.toString().padStart(2, '0');
                 return `${hours}:${minutes_str}`;
-              }
-            }
+              },
+            },
           },
           legend: {
             display: false,
