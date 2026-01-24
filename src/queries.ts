@@ -102,7 +102,7 @@ function isMultiParams(object: any): object is MultiQueryParams {
 //  - Filters by category (if filter_categories set)
 // Puts it's results in `events` and `not_afk` (if not_afk available for platform).
 export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams): string {
-  // Needs escaping for regex patterns like '\w' to work (JSON.stringify adds extra unecessary escaping)
+  // Needs escaping for regex patterns like '\w' to work (JSON.stringify adds extra unnecessary escaping)
   const categories_str = params.categories
     ? JSON.stringify(params.categories).replace(/\\\\/g, '\\')
     : '';
