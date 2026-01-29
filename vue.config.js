@@ -9,7 +9,12 @@ const __filename = fileURLToPath(import.meta.url); // get the resolved path to t
 const __dirname = path.dirname(__filename); // get the name of the directory
 
 // get git info from command line
-const _COMMIT_HASH = child_process.execSync('git rev-parse --short HEAD').toString().trim();
+let _COMMIT_HASH = 'unknown';
+try {
+  _COMMIT_HASH = child_process.execSync('git rev-parse --short HEAD').toString().trim();
+} catch (e) {
+  console.warn('Could not get git commit hash, defaulting to "unknown"');
+}
 console.info('Commit hash:', _COMMIT_HASH);
 
 export default {
