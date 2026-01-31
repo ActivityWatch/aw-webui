@@ -74,7 +74,7 @@ div
 
   aw-periodusage.mt-2(:periodusage_arr="periodusage", @update="setDate")
 
-  aw-uncategorized-notification()
+  aw-uncategorized-notification(:periodLength="periodLength")
 
   ul.row.nav.nav-tabs.mt-4
     li.nav-item(v-for="view in views")

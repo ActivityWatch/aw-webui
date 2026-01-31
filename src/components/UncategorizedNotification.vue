@@ -6,7 +6,7 @@ div
       | #[b High uncategorized time]
       br
       | You have a total of {{ uncategorizedDuration[0] | friendlyduration }} uncategorized time,
-      | that's {{ Math.round(100 * uncategorizedDuration[0] / uncategorizedDuration[1]) }}% of all time today.
+      | that's {{ Math.round(100 * uncategorizedDuration[0] / uncategorizedDuration[1]) }}% of all time {{ periodText }}.
       | You can address this by using the #[router-link(:to="{ path: '/settings/category-builder' }") Category Builder].
 </template>
 
@@ -16,6 +16,12 @@ import { useActivityStore } from '~/stores/activity';
 
 export default {
   name: 'aw-uncategorized-notification',
+  props: {
+    periodLength: {
+      type: String,
+      default: 'day',
+    },
+  },
   computed: {
     ...mapState(useActivityStore, ['uncategorizedDuration']),
     ratio() {
@@ -26,6 +32,17 @@ export default {
     },
     total() {
       return this.uncategorizedDuration ? this.uncategorizedDuration[1] : 0;
+    },
+    periodText() {
+      const periodMap: Record<string, string> = {
+        day: 'today',
+        week: 'this week',
+        month: 'this month',
+        year: 'this year',
+        last7d: 'the last 7 days',
+        last30d: 'the last 30 days',
+      };
+      return periodMap[this.periodLength] || 'today';
     },
     isVisible() {
       // TODO: make configurable?
