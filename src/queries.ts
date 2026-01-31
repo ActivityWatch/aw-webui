@@ -322,6 +322,7 @@ const browser_appnames = {
     'app.zen_browser.zen',
   ],
   floorp: ['Floorp', 'floorp.exe', 'Floorp.exe', 'floorp', 'one.ablaze.floorp'],
+  helium: ['Helium', 'Helium.app', 'helium', 'helium.exe', 'Helium.exe', 'net.imput.helium'],
 };
 
 // Returns a list of (browserName, bucketId) pairs for found browser buckets
