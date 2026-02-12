@@ -59,6 +59,9 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
           b-dropdown-item(to="/search")
             icon(name="search")
             | Search
+          b-dropdown-item(to="/work-report")
+            icon(name="briefcase")
+            | Work Report
           b-dropdown-item(to="/trends" v-if="devmode")
             icon(name="chart-line")
             | Trends
@@ -98,6 +101,7 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
 <script lang="ts">
 // only import the icons you use to reduce bundle size
 import 'vue-awesome/icons/calendar-day';
+import 'vue-awesome/icons/briefcase';
 import 'vue-awesome/icons/calendar-week';
 import 'vue-awesome/icons/stream';
 import 'vue-awesome/icons/database';
