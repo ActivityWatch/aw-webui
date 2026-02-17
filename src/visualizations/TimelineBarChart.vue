@@ -137,7 +137,7 @@ export default {
           y: {
             stacked: true,
             min: 0,
-            suggestedMax: resolution.startsWith('day') ? 1 : undefined,
+            max: resolution.startsWith('day') ? 1 : undefined,
             ticks: {
               callback: hourToTick,
               stepSize: resolution.startsWith('day') ? 0.25 : 1,
