@@ -213,115 +213,45 @@ export function appQuery(
   return querystr_to_array(code);
 }
 
+// Browser names for bucket ID mapping (keys used by browsersWithBuckets).
+// For app name matching in queries, see browser_appname_regex below.
 const browser_appnames = {
-  chrome: [
-    // Chrome
-    'Google Chrome',
-    'Google-chrome',
-    'Chrome.exe',
-    'chrome.exe',
-    'google-chrome-stable',
-    'com.google.Chrome',
-
-    // Chromium
-    'Chromium',
-    'Chromium-browser',
-    'chromium-browser',
-    'Chromium-browser-chromium',
-    'Chromium.exe',
-    'chromium.exe',
-    'org.chromium.Chromium',
-
-    // Pre-releases
-    'Google-chrome-beta',
-    'Google-chrome-unstable',
-    'com.google.ChromeDev',
-  ],
-  firefox: [
-    // Firefox
-    'Firefox',
-    'Firefox.exe',
-    'firefox',
-    'firefox.exe',
-    'org.mozilla.firefox',
-
-    // Firefox Developer
-    'Firefox Developer Edition',
-    'firefoxdeveloperedition',
-
-    // Pre-releases https://github.com/ActivityWatch/aw-watcher-web/issues/87
-    'Firefox-esr',
-    'Firefox Beta',
-    'Nightly',
-    'firefox-aurora',
-    'firefox-trunk-dev',
-
-    // Librewolf
-    'LibreWolf-Portable.exe',
-    'LibreWolf',
-    'LibreWolf.exe',
-    'Librewolf',
-    'Librewolf.exe',
-    'librewolf',
-    'librewolf.exe',
-    'librewolf-default',
-    'io.gitlab.librewolf-community',
-
-    // Waterfox
-    'Waterfox',
-    'Waterfox.exe',
-    'waterfox',
-    'waterfox.exe',
-    'net.waterfox.waterfox',
-  ],
-  opera: ['opera.exe', 'Opera.exe', 'Opera', 'com.opera.Opera'],
-  brave: [
-    'Brave-browser',
-    'brave-browser',
-    'Brave Browser',
-    'brave.exe',
-    'Brave.exe',
-    'com.brave.Browser',
-  ],
-  edge: [
-    'msedge.exe', // Windows
-    'Microsoft Edge', // macOS
-    'Microsoft Edge Beta', // macOS beta
-    'Microsoft-Edge-Stable', // Arch Linux: https://github.com/ActivityWatch/activitywatch/issues/753
-    'Microsoft-edge',
-    'microsoft-edge', // linux
-    'microsoft-edge-beta', // linux beta
-    'microsoft-edge-dev', // linux dev
-    'com.microsoft.Edge',
-    'com.microsoft.EdgeDev',
-  ],
-  arc: [
-    'arc.exe',
-    'Arc.exe', // Windows
-    'Arc', // macOS
-  ],
-  vivaldi: [
-    'Vivaldi-stable',
-    'Vivaldi-snapshot',
-    'vivaldi.exe',
-    'Vivaldi.exe',
-    'Vivaldi',
-    'com.vivaldi.Vivaldi',
-  ],
+  chrome: ['Google Chrome', 'Chromium'],
+  firefox: ['Firefox', 'Nightly'],
+  opera: ['Opera'],
+  brave: ['Brave Browser'],
+  edge: ['Microsoft Edge'],
+  arc: ['Arc'],
+  vivaldi: ['Vivaldi'],
   orion: ['Orion'],
-  yandex: ['Yandex', 'ru.yandex.Browser'],
-  zen: [
-    'Zen',
-    'Zen Browser',
-    'Zen-browser',
-    'zen',
-    'zen browser',
-    'zen-browser',
-    'zen.exe',
-    'Zen.exe',
-    'app.zen_browser.zen',
-  ],
-  floorp: ['Floorp', 'floorp.exe', 'Floorp.exe', 'floorp', 'one.ablaze.floorp'],
+  yandex: ['Yandex'],
+  zen: ['Zen Browser'],
+  floorp: ['Floorp'],
+};
+
+// Case-insensitive regex patterns for matching browser app names.
+// Uses filter_keyvals_regex (partial match), so patterns like "(?i)chrome"
+// will match "Google Chrome", "chrome.exe", "google-chrome-stable", etc.
+// Short names (arc, zen, orion) use anchors to avoid false positives.
+const browser_appname_regex: Record<string, string> = {
+  // Covers: Google Chrome, google-chrome-stable, Chrome.exe, Chromium-browser, etc.
+  chrome: '(?i)(google[. ]?chrome|chrom(e|ium))',
+  // Covers: Firefox, firefox-esr, firefox-esr-esr140, Librewolf, Waterfox, Nightly, etc.
+  // See: https://github.com/ActivityWatch/aw-webui/issues/749
+  firefox: '(?i)(firefox|librewolf|waterfox|nightly|firefox-aurora|firefox-trunk)',
+  opera: '(?i)opera',
+  brave: '(?i)brave',
+  // Covers: msedge.exe, Microsoft Edge, Microsoft-Edge-Stable, microsoft-edge-dev, etc.
+  edge: '(?i)(msedge|microsoft[. -]?edge)',
+  // Short name — anchored to avoid matching "search", "archive", etc.
+  arc: '(?i)^arc(\\.exe)?$',
+  vivaldi: '(?i)vivaldi',
+  // Short name — anchored
+  orion: '(?i)^orion$',
+  yandex: '(?i)yandex',
+  // Short name — anchored with alternation for compound forms
+  zen: '(?i)(^zen(\\.exe)?$|zen[. -]?browser|app\\.zen_browser)',
+  floorp: '(?i)floorp',
 };
 
 // Returns a list of (browserName, bucketId) pairs for found browser buckets
@@ -344,9 +274,22 @@ function browserEvents(params: DesktopQueryParams): string {
   `;
 
   _.each(browsersWithBuckets(params.bid_browsers), ([browserName, bucketId]) => {
-    const browser_appnames_str = JSON.stringify(browser_appnames[browserName]);
-    code += `events_${browserName} = flood(query_bucket("${bucketId}"));
-       window_${browserName} = filter_keyvals(events, "app", ${browser_appnames_str});
+    const regex_pattern = browser_appname_regex[browserName];
+    code += `events_${browserName} = flood(query_bucket("${bucketId}"));`;
+
+    if (regex_pattern) {
+      // Use regex matching (case-insensitive, covers all platform/case variants)
+      const patternStr = JSON.stringify(regex_pattern);
+      code += `
+       window_${browserName} = filter_keyvals_regex(events, "app", ${patternStr});`;
+    } else {
+      // Fallback to exact matching for browsers without regex patterns
+      const browser_appnames_str = JSON.stringify(browser_appnames[browserName]);
+      code += `
+       window_${browserName} = filter_keyvals(events, "app", ${browser_appnames_str});`;
+    }
+
+    code += `
        events_${browserName} = filter_period_intersect(events_${browserName}, window_${browserName});
        events_${browserName} = split_url_events(events_${browserName});
        browser_events = concat(browser_events, events_${browserName});
