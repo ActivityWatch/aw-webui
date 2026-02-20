@@ -191,13 +191,16 @@ export default {
     async fetchWords() {
       this.loading = true;
       if (!this.queryOptions.hostname) {
-        // FIXME: This is a hack to ensure that the hostname is set (otherwise isn't due to some race condition)
+        // Try to resolve hostname from loaded buckets
         // Don't ever return the "unknown" hostname
-        // TODO: ideally, only choose a hostname that has the right buckets
-        this.queryOptions.hostname = _.filter(
-          useBucketsStore().hosts,
-          host => host !== 'unknown'
-        )[0];
+        const hosts = useBucketsStore().hosts;
+        if (hosts && hosts.length > 0) {
+          this.queryOptions.hostname = _.filter(hosts, host => host !== 'unknown')[0];
+        }
+        // If still no valid hostname, bail out and wait for QueryOptions to provide one
+        if (!this.queryOptions.hostname) {
+          return;
+        }
       }
       await this.categoryStore.load();
       const awclient = getClient();
