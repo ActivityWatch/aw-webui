@@ -213,118 +213,21 @@ export function appQuery(
   return querystr_to_array(code);
 }
 
-const browser_appnames = {
-  chrome: [
-    // Chrome
-    'Google Chrome',
-    'Google-chrome',
-    'Chrome.exe',
-    'chrome.exe',
-    'google-chrome-stable',
-    'com.google.Chrome',
-
-    // Chromium
-    'Chromium',
-    'Chromium-browser',
-    'chromium-browser',
-    'Chromium-browser-chromium',
-    'Chromium.exe',
-    'chromium.exe',
-    'org.chromium.Chromium',
-
-    // Pre-releases
-    'Google-chrome-beta',
-    'Google-chrome-unstable',
-    'com.google.ChromeDev',
-  ],
-  firefox: [
-    // Firefox
-    'Firefox',
-    'Firefox.exe',
-    'firefox',
-    'firefox.exe',
-    'org.mozilla.firefox',
-
-    // Firefox Developer
-    'Firefox Developer Edition',
-    'firefoxdeveloperedition',
-
-    // Firefox ESR
-    'Firefox-esr',
-    'firefox-esr',
-
-    // Pre-releases https://github.com/ActivityWatch/aw-watcher-web/issues/87
-    'Firefox Beta',
-    'Nightly',
-    'firefox-aurora',
-    'firefox-trunk-dev',
-
-    // Librewolf
-    'LibreWolf-Portable.exe',
-    'LibreWolf',
-    'LibreWolf.exe',
-    'Librewolf',
-    'Librewolf.exe',
-    'librewolf',
-    'librewolf.exe',
-    'librewolf-default',
-    'io.gitlab.librewolf-community',
-
-    // Waterfox
-    'Waterfox',
-    'Waterfox.exe',
-    'waterfox',
-    'waterfox.exe',
-    'net.waterfox.waterfox',
-  ],
-  opera: ['opera.exe', 'Opera.exe', 'Opera', 'com.opera.Opera'],
-  brave: [
-    'Brave-browser',
-    'brave-browser',
-    'Brave Browser',
-    'brave.exe',
-    'Brave.exe',
-    'com.brave.Browser',
-  ],
-  edge: [
-    'msedge.exe', // Windows
-    'Microsoft Edge', // macOS
-    'Microsoft Edge Beta', // macOS beta
-    'Microsoft-Edge-Stable', // Arch Linux: https://github.com/ActivityWatch/activitywatch/issues/753
-    'Microsoft-edge',
-    'microsoft-edge', // linux
-    'microsoft-edge-beta', // linux beta
-    'microsoft-edge-dev', // linux dev
-    'com.microsoft.Edge',
-    'com.microsoft.EdgeDev',
-  ],
-  arc: [
-    'arc.exe',
-    'Arc.exe', // Windows
-    'Arc', // macOS
-  ],
-  vivaldi: [
-    'Vivaldi-stable',
-    'Vivaldi-snapshot',
-    'vivaldi.exe',
-    'Vivaldi.exe',
-    'Vivaldi',
-    'com.vivaldi.Vivaldi',
-  ],
+// Exact app names used for bucket discovery and as a fallback for bundle IDs
+// that don't match the regex patterns below. Process name variants (upper/lowercase,
+// spacing, .exe suffix) are handled by browser_appname_regex using (?i) flag.
+const browser_appnames: Record<string, string[]> = {
+  chrome: ['com.google.Chrome', 'com.google.ChromeDev', 'org.chromium.Chromium'],
+  firefox: ['org.mozilla.firefox', 'io.gitlab.librewolf-community', 'net.waterfox.waterfox'],
+  opera: ['com.opera.Opera'],
+  brave: ['com.brave.Browser'],
+  edge: ['com.microsoft.Edge', 'com.microsoft.EdgeDev'],
+  arc: [],
+  vivaldi: ['com.vivaldi.Vivaldi'],
   orion: ['Orion'],
-  yandex: ['Yandex', 'ru.yandex.Browser'],
-  zen: [
-    'Zen',
-    'Zen Browser',
-    'Zen-browser',
-    'zen',
-    'zen browser',
-    'zen-browser',
-    'zen.exe',
-    'Zen.exe',
-    'app.zen_browser.zen',
-  ],
-  floorp: ['Floorp', 'floorp.exe', 'Floorp.exe', 'floorp', 'one.ablaze.floorp'],
+  yandex: ['ru.yandex.Browser'],
+  zen: ['app.zen_browser.zen'],
+  floorp: ['one.ablaze.floorp'],
 };
 
 // Returns a list of (browserName, bucketId) pairs for found browser buckets
@@ -340,12 +243,22 @@ function browsersWithBuckets(browserbuckets: string[]): [string, string][] {
   return _.filter(browsername_to_bucketid, ([, bucketId]) => bucketId !== undefined);
 }
 
-// Regex patterns for versioned app names that can't be exhaustively enumerated.
-// These are matched in addition to the exact names in browser_appnames.
+// Case-insensitive regex patterns covering all OS/platform process name variants
+// (Windows .exe, Linux lowercase, macOS capitalized, versioned names like firefox-esr-esr140).
+// Used with filter_keyvals_regex in addition to the exact names in browser_appnames.
 // See: https://github.com/ActivityWatch/aw-webui/issues/749
-const browser_appname_regex: Partial<Record<string, string>> = {
-  // Match versioned Firefox ESR binaries (e.g., firefox-esr-esr140, firefox-esr-esr128)
-  firefox: 'firefox-esr-esr\\d+',
+const browser_appname_regex: Record<string, string> = {
+  chrome: '(?i)(google.?chrome|chrome|chromium)',
+  firefox: '(?i)(firefox|librewolf|waterfox|nightly)',
+  opera: '(?i)(opera)',
+  brave: '(?i)(brave)',
+  edge: '(?i)(microsoft.?edge|msedge)',
+  arc: '(?i)(arc)',
+  vivaldi: '(?i)(vivaldi)',
+  orion: '(?i)(orion)',
+  yandex: '(?i)(yandex)',
+  zen: '(?i)(zen)',
+  floorp: '(?i)(floorp)',
 };
 
 // Returns a list of active browser events (where the browser was the active window) from all browser buckets
@@ -359,7 +272,7 @@ function browserEvents(params: DesktopQueryParams): string {
     code += `events_${browserName} = flood(query_bucket("${bucketId}"));
        window_${browserName} = filter_keyvals(events, "app", ${browser_appnames_str});`;
 
-    // Add regex-based matching for versioned app names (e.g., firefox-esr-esr140)
+    // Add regex-based matching to cover case/spacing/versioning variants (e.g., Firefox.exe, firefox-esr-esr140)
     const pattern = browser_appname_regex[browserName];
     if (pattern) {
       code += `
