@@ -249,8 +249,11 @@ const browser_appnames = {
     'Firefox Developer Edition',
     'firefoxdeveloperedition',
 
-    // Pre-releases https://github.com/ActivityWatch/aw-watcher-web/issues/87
+    // Firefox ESR
     'Firefox-esr',
+    'firefox-esr',
+
+    // Pre-releases https://github.com/ActivityWatch/aw-watcher-web/issues/87
     'Firefox Beta',
     'Nightly',
     'firefox-aurora',
@@ -337,6 +340,14 @@ function browsersWithBuckets(browserbuckets: string[]): [string, string][] {
   return _.filter(browsername_to_bucketid, ([, bucketId]) => bucketId !== undefined);
 }
 
+// Regex patterns for versioned app names that can't be exhaustively enumerated.
+// These are matched in addition to the exact names in browser_appnames.
+// See: https://github.com/ActivityWatch/aw-webui/issues/749
+const browser_appname_regex: Partial<Record<string, string>> = {
+  // Match versioned Firefox ESR binaries (e.g., firefox-esr-esr140, firefox-esr-esr128)
+  firefox: 'firefox-esr-esr\\d+',
+};
+
 // Returns a list of active browser events (where the browser was the active window) from all browser buckets
 function browserEvents(params: DesktopQueryParams): string {
   let code = `
@@ -346,7 +357,17 @@ function browserEvents(params: DesktopQueryParams): string {
   _.each(browsersWithBuckets(params.bid_browsers), ([browserName, bucketId]) => {
     const browser_appnames_str = JSON.stringify(browser_appnames[browserName]);
     code += `events_${browserName} = flood(query_bucket("${bucketId}"));
-       window_${browserName} = filter_keyvals(events, "app", ${browser_appnames_str});
+       window_${browserName} = filter_keyvals(events, "app", ${browser_appnames_str});`;
+
+    // Add regex-based matching for versioned app names (e.g., firefox-esr-esr140)
+    const pattern = browser_appname_regex[browserName];
+    if (pattern) {
+      code += `
+       window_${browserName}_re = filter_keyvals_regex(events, "app", ${JSON.stringify(pattern)});
+       window_${browserName} = sort_by_timestamp(concat(window_${browserName}, window_${browserName}_re));`;
+    }
+
+    code += `
        events_${browserName} = filter_period_intersect(events_${browserName}, window_${browserName});
        events_${browserName} = split_url_events(events_${browserName});
        browser_events = concat(browser_events, events_${browserName});
