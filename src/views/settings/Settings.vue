@@ -41,6 +41,7 @@ div
 
 <script lang="ts">
 import { useSettingsStore } from '~/stores/settings';
+import { useCategoryStore } from '~/stores/categories';
 
 import DaystartSettings from '~/views/settings/DaystartSettings.vue';
 import TimelineDurationSettings from '~/views/settings/TimelineDurationSettings.vue';
@@ -64,6 +65,18 @@ export default {
     ColorSettings,
     DeveloperSettings,
     ActivePatternSettings,
+  },
+  beforeRouteLeave(to, from, next) {
+    const categoryStore = useCategoryStore();
+    if (categoryStore.classes_unsaved_changes) {
+      if (confirm('Your categories have unsaved changes, are you sure you want to leave?')) {
+        next();
+      } else {
+        next(false);
+      }
+    } else {
+      next();
+    }
   },
   async created() {
     await this.init();

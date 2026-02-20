@@ -44,7 +44,6 @@ import { mapState, mapGetters } from 'pinia';
 import CategoryEditTree from '~/components/CategoryEditTree.vue';
 import CategoryEditModal from '~/components/CategoryEditModal.vue';
 import 'vue-awesome/icons/undo';
-import router from '~/route';
 
 import { useCategoryStore } from '~/stores/categories';
 
@@ -61,7 +60,6 @@ export default {
   data: () => ({
     categoryStore: useCategoryStore(),
     editingId: null,
-    routerGuardRemover: null,
   }),
   computed: {
     ...mapState(useCategoryStore, ['classes_unsaved_changes']),
@@ -70,34 +68,13 @@ export default {
   mounted() {
     this.categoryStore.load();
 
-    // uses beforeunload event to warn user if they have
-    // unsaved changes and are about to leave the page
-    // also needs to be hooked into the router using the
-    // beforeEach hook
+    // Warn user about unsaved changes when closing/refreshing the browser tab.
+    // Route navigation guard is handled by the parent Settings.vue component
+    // using beforeRouteLeave (automatically cleaned up by Vue Router).
     window.addEventListener('beforeunload', this.beforeUnload);
-
-    this.routerGuardRemover = router.beforeEach((to, from, next) => {
-      try {
-        if (this.classes_unsaved_changes) {
-          if (confirm(confirmationMessage)) {
-            next();
-          } else {
-            next(false);
-          }
-        } else {
-          next();
-        }
-      } catch (e) {
-        console.error('Error in router.beforeEach: ', e);
-        next();
-      }
-    });
   },
   beforeDestroy() {
     window.removeEventListener('beforeunload', this.beforeUnload);
-    if (this.routerGuardRemover) {
-      this.routerGuardRemover();
-    }
   },
   methods: {
     addClass: function () {
