@@ -230,6 +230,7 @@ const browser_appnames: Record<string, string[]> = {
   yandex: ['ru.yandex.Browser'],
   zen: ['app.zen_browser.zen'],
   floorp: ['one.ablaze.floorp'],
+  helium: ['net.imput.helium'],
 };
 
 // Returns a list of (browserName, bucketId) pairs for found browser buckets
@@ -262,6 +263,7 @@ export const browser_appname_regex: Record<string, string> = {
   yandex: '(?i)(yandex)',
   zen: '(?i)(zen)',
   floorp: '(?i)(floorp)',
+  helium: '(?i)^helium',
 };
 
 // Returns a list of active browser events (where the browser was the active window) from all browser buckets

@@ -51,6 +51,9 @@
  *
  *   Floorp:   'Floorp', 'floorp.exe', 'Floorp.exe', 'floorp'
  *             (Flatpak app ID retained: 'one.ablaze.floorp')
+ *
+ *   Helium:   'Helium', 'Helium.app', 'helium', 'helium.exe', 'Helium.exe'
+ *             (Flatpak app ID retained: 'net.imput.helium')
  */
 
 import { browser_appname_regex } from '~/queries';
@@ -226,6 +229,14 @@ describe('browser_appname_regex', () => {
   test('floorp pattern matches all known Floorp app names', () => {
     const re = toRegex(browser_appname_regex.floorp);
     const knownNames = ['Floorp', 'floorp.exe', 'Floorp.exe', 'floorp'];
+    for (const name of knownNames) {
+      expect(re.test(name)).toBe(true);
+    }
+  });
+
+  test('helium pattern matches all known Helium app names', () => {
+    const re = toRegex(browser_appname_regex.helium);
+    const knownNames = ['Helium', 'Helium.app', 'helium', 'helium.exe', 'Helium.exe'];
     for (const name of knownNames) {
       expect(re.test(name)).toBe(true);
     }
