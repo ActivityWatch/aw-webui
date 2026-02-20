@@ -29,7 +29,7 @@
     "@types/lodash": "^4.14.178",
     "@types/node": "^20.0",
     "@vitejs/plugin-vue2": "^2.3.3",
-    "ajv": "^8.12.0",
+    "ajv": "^8.18.0",
     "ajv-keywords": "^5.1.0",
     "aw-client": "^0.3.7",
     "bootstrap": "^4.6.1",
