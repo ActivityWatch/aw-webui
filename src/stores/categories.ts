@@ -164,9 +164,15 @@ export const useCategoryStore = defineStore('categories', {
         Object.assign(old_class, new_class);
       }
 
-      // When a parent category is renamed, we also need to rename the children
+      // When a parent category is renamed, we also need to rename the children.
+      // Only match categories strictly longer than old_name (actual children),
+      // not siblings with the same name (fixes #702).
       _.map(this.classes, c => {
-        if (_.isEqual(old_name, c.name.slice(0, parent_depth))) {
+        if (
+          c.id !== new_class.id &&
+          c.name.length > parent_depth &&
+          _.isEqual(old_name, c.name.slice(0, parent_depth))
+        ) {
           c.name = new_class.name.concat(c.name.slice(parent_depth));
           console.log('Renamed child:', c.name);
         }
