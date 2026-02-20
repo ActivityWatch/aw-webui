@@ -75,8 +75,18 @@ export default {
   },
   methods: {
     addSubclass: function (parent) {
+      // Generate a unique default name to prevent duplicate name conflicts (#702)
+      const baseName = 'New class';
+      let name = baseName;
+      let counter = 2;
+      const existingNames = this.categoryStore.classes.map(c => JSON.stringify(c.name));
+      while (existingNames.includes(JSON.stringify(parent.name.concat([name])))) {
+        name = `${baseName} (${counter})`;
+        counter++;
+      }
+
       this.categoryStore.addClass({
-        name: parent.name.concat(['New class']),
+        name: parent.name.concat([name]),
         rule: { type: 'regex', regex: 'FILL ME' },
       });
 
