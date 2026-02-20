@@ -248,12 +248,12 @@ function browsersWithBuckets(browserbuckets: string[]): [string, string][] {
 // Used with filter_keyvals_regex in addition to the exact names in browser_appnames.
 // See: https://github.com/ActivityWatch/aw-webui/issues/749
 const browser_appname_regex: Record<string, string> = {
-  chrome: '(?i)(google.?chrome|chrome|chromium)',
+  chrome: '(?i)^(google[-_ ]?chrome|chrome|chromium)',
   firefox: '(?i)(firefox|librewolf|waterfox|nightly)',
   opera: '(?i)(opera)',
   brave: '(?i)(brave)',
-  edge: '(?i)(microsoft.?edge|msedge)',
-  arc: '(?i)(arc)',
+  edge: '(?i)^(microsoft[-_ ]?edge|msedge)',
+  arc: '(?i)^(arc)$',
   vivaldi: '(?i)(vivaldi)',
   orion: '(?i)(orion)',
   yandex: '(?i)(yandex)',
