@@ -76,6 +76,9 @@ RETURN = sort_by_duration(merged_events);
       else return '';
     },
   },
+  mounted: function () {
+    useCategoryStore().load();
+  },
   methods: {
     query: async function () {
       let query = this.query_code;
