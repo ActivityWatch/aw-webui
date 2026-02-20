@@ -231,15 +231,25 @@ export default {
         alert('selected multiple items: ' + JSON.stringify(properties.items));
       }
     },
+    escapeHtml(str: string): string {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    },
     abbreviateBucketName(bucketId: string): string {
       // Abbreviate synced bucket names which can be extremely long (#682)
       // e.g. "aw-watcher-window_host-synced-from-remotehost" -> "aw-watcher-window (synced from remotehost)"
+      const escaped = this.escapeHtml(bucketId);
       const syncMatch = bucketId.match(/^([^_]+)_.*-synced-from-(.+)$/);
       if (syncMatch) {
-        const escaped = bucketId.replace(/"/g, '&quot;');
-        return `<span title="${escaped}">${syncMatch[1]} (synced from ${syncMatch[2]})</span>`;
+        return `<span title="${escaped}">${this.escapeHtml(
+          syncMatch[1]
+        )} (synced from ${this.escapeHtml(syncMatch[2])})</span>`;
       }
-      return `<span title="${bucketId}">${bucketId}</span>`;
+      return `<span title="${escaped}">${escaped}</span>`;
     },
     ensureUpdate() {
       // Will only run update() if data available and never ran before
