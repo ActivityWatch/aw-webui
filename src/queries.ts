@@ -213,7 +213,7 @@ export function appQuery(
   return querystr_to_array(code);
 }
 
-// Exact app names (mostly macOS bundle IDs) used for bucket discovery and as a
+// Exact app names (Flatpak app IDs and similar reverse-domain identifiers) used for bucket discovery and as a
 // fallback for names that don't match the regex patterns below. Process name
 // variants (upper/lowercase, spacing, .exe suffix) are handled by
 // browser_appname_regex using (?i) flag. See test/unit/queries.test.node.ts for

@@ -12,7 +12,7 @@
  *             'google-chrome-stable', 'Chromium', 'Chromium-browser', 'chromium-browser',
  *             'Chromium-browser-chromium', 'Chromium.exe', 'chromium.exe',
  *             'Google-chrome-beta', 'Google-chrome-unstable'
- *             (bundle IDs retained as exact: 'com.google.Chrome', 'com.google.ChromeDev',
+ *             (Flatpak app IDs retained as exact: 'com.google.Chrome', 'com.google.ChromeDev',
  *              'org.chromium.Chromium')
  *
  *   Firefox:  'Firefox', 'Firefox.exe', 'firefox', 'firefox.exe',
@@ -21,36 +21,36 @@
  *             'LibreWolf-Portable.exe', 'LibreWolf', 'LibreWolf.exe', 'Librewolf', 'Librewolf.exe',
  *             'librewolf', 'librewolf.exe', 'librewolf-default',
  *             'Waterfox', 'Waterfox.exe', 'waterfox', 'waterfox.exe'
- *             (bundle IDs retained as exact: 'org.mozilla.firefox',
+ *             (Flatpak app IDs retained as exact: 'org.mozilla.firefox',
  *              'io.gitlab.librewolf-community', 'net.waterfox.waterfox')
  *
  *   Opera:    'opera.exe', 'Opera.exe', 'Opera'
- *             (bundle ID retained: 'com.opera.Opera')
+ *             (Flatpak app ID retained: 'com.opera.Opera')
  *
  *   Brave:    'Brave-browser', 'brave-browser', 'Brave Browser', 'brave.exe', 'Brave.exe'
- *             (bundle ID retained: 'com.brave.Browser')
+ *             (Flatpak app ID retained: 'com.brave.Browser')
  *
  *   Edge:     'msedge.exe', 'Microsoft Edge', 'Microsoft Edge Beta',
  *             'Microsoft-Edge-Stable', 'Microsoft-edge', 'microsoft-edge',
  *             'microsoft-edge-beta', 'microsoft-edge-dev'
- *             (bundle IDs retained: 'com.microsoft.Edge', 'com.microsoft.EdgeDev')
+ *             (Flatpak app IDs retained: 'com.microsoft.Edge', 'com.microsoft.EdgeDev')
  *
  *   Arc:      'arc.exe', 'Arc.exe', 'Arc'
  *
  *   Vivaldi:  'Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe', 'Vivaldi.exe', 'Vivaldi'
- *             (bundle ID retained: 'com.vivaldi.Vivaldi')
+ *             (Flatpak app ID retained: 'com.vivaldi.Vivaldi')
  *
  *   Orion:    'Orion'
  *
  *   Yandex:   'Yandex'
- *             (bundle ID retained: 'ru.yandex.Browser')
+ *             (Flatpak app ID retained: 'ru.yandex.Browser')
  *
  *   Zen:      'Zen', 'Zen Browser', 'Zen-browser', 'zen', 'zen browser', 'zen-browser',
  *             'zen.exe', 'Zen.exe'
- *             (bundle ID retained: 'app.zen_browser.zen')
+ *             (Flatpak app ID retained: 'app.zen_browser.zen')
  *
  *   Floorp:   'Floorp', 'floorp.exe', 'Floorp.exe', 'floorp'
- *             (bundle ID retained: 'one.ablaze.floorp')
+ *             (Flatpak app ID retained: 'one.ablaze.floorp')
  */
 
 import { browser_appname_regex } from '~/queries';
@@ -89,7 +89,7 @@ describe('browser_appname_regex', () => {
 
   test('chrome pattern does not false-positive', () => {
     const re = toRegex(browser_appname_regex.chrome);
-    // Bundle IDs are in the exact list, not matched by regex
+    // Flatpak app IDs are in the exact list, not matched by regex
     expect(re.test('com.google.Chrome')).toBe(false);
     expect(re.test('Slack')).toBe(false);
     expect(re.test('Electron')).toBe(false);
