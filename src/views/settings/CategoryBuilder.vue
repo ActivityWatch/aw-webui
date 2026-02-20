@@ -199,6 +199,7 @@ export default {
         }
         // If still no valid hostname, bail out and wait for QueryOptions to provide one
         if (!this.queryOptions.hostname) {
+          this.loading = false;
           return;
         }
       }
