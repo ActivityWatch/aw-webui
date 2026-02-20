@@ -213,9 +213,11 @@ export function appQuery(
   return querystr_to_array(code);
 }
 
-// Exact app names used for bucket discovery and as a fallback for bundle IDs
-// that don't match the regex patterns below. Process name variants (upper/lowercase,
-// spacing, .exe suffix) are handled by browser_appname_regex using (?i) flag.
+// Exact app names (mostly macOS bundle IDs) used for bucket discovery and as a
+// fallback for names that don't match the regex patterns below. Process name
+// variants (upper/lowercase, spacing, .exe suffix) are handled by
+// browser_appname_regex using (?i) flag. See test/unit/queries.test.node.ts for
+// the complete list of known app names these patterns cover.
 const browser_appnames: Record<string, string[]> = {
   chrome: ['com.google.Chrome', 'com.google.ChromeDev', 'org.chromium.Chromium'],
   firefox: ['org.mozilla.firefox', 'io.gitlab.librewolf-community', 'net.waterfox.waterfox'],
@@ -246,14 +248,15 @@ function browsersWithBuckets(browserbuckets: string[]): [string, string][] {
 // Case-insensitive regex patterns covering all OS/platform process name variants
 // (Windows .exe, Linux lowercase, macOS capitalized, versioned names like firefox-esr-esr140).
 // Used with filter_keyvals_regex in addition to the exact names in browser_appnames.
-// See: https://github.com/ActivityWatch/aw-webui/issues/749
-const browser_appname_regex: Record<string, string> = {
+// The full set of historical app names these patterns replace is documented in the unit tests.
+// See: test/unit/queries.test.node.ts, https://github.com/ActivityWatch/aw-webui/issues/749
+export const browser_appname_regex: Record<string, string> = {
   chrome: '(?i)^(google[-_ ]?chrome|chrome|chromium)',
   firefox: '(?i)(firefox|librewolf|waterfox|nightly)',
   opera: '(?i)(opera)',
   brave: '(?i)(brave)',
   edge: '(?i)^(microsoft[-_ ]?edge|msedge)',
-  arc: '(?i)^(arc)$',
+  arc: '(?i)^arc(\\.exe)?$',
   vivaldi: '(?i)(vivaldi)',
   orion: '(?i)(orion)',
   yandex: '(?i)(yandex)',
