@@ -19,6 +19,15 @@ div#visualization {
     overflow: visible;
   }
 
+  .vis-tooltip {
+    // Position tooltip above the cursor instead of overlapping the timeline bars
+    transform: translateY(-100%);
+    margin-top: -15px;
+    // Ensure tooltip is readable
+    max-width: 400px;
+    pointer-events: none;
+  }
+
   .timeline-timeline {
     font-family: sans-serif !important;
 
@@ -83,7 +92,7 @@ export default {
         stack: false,
         tooltip: {
           followMouse: true,
-          overflowMethod: 'cap',
+          overflowMethod: 'flip',
           delay: 0,
         },
       },
