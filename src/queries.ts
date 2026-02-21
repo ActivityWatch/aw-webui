@@ -95,6 +95,17 @@ function isMultiParams(object: any): object is MultiQueryParams {
   return 'hosts' in object;
 }
 
+// Use query_bucket directly when we have a full bucket ID (contains hostname after the prefix).
+// Fall back to find_bucket only when the ID is partial (ends with '_', meaning hostname is unknown).
+// This avoids find_bucket matching wrong buckets when similar names exist (e.g. host vs host.local).
+// See: https://github.com/ActivityWatch/aw-webui/issues/590
+function queryBucket(bid: string): string {
+  if (bid.endsWith('_')) {
+    return `query_bucket(find_bucket("${bid}"))`;
+  }
+  return `query_bucket("${bid}")`;
+}
+
 // Constructs a query that returns a fully-detailed list of events from the merging of several sources (window, afk, web).
 // Performs:
 //  - AFK filtering (if filter_afk is true)
@@ -116,12 +127,12 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
 
   return [
     // Fetch window/app events
-    `events = flood(query_bucket(find_bucket("${bid_window}")));`,
+    `events = flood(${queryBucket(bid_window)});`,
     // On Android, merge events to avoid overload of events
     isAndroidParams(params) ? 'events = merge_events_by_keys(events, ["app"]);' : '',
     // Fetch not-afk events
     isDesktopParams(params)
-      ? `not_afk = flood(query_bucket(find_bucket("${params.bid_afk}")));
+      ? `not_afk = flood(${queryBucket(params.bid_afk)});
          not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);` +
         (always_active_pattern_str
           ? `not_treat_as_afk = filter_keyvals_regex(events, "app", "${always_active_pattern_str}");
