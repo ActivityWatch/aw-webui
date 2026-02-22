@@ -48,8 +48,7 @@ div
                 b-dropdown(variant="outline-secondary", size="sm", text="More")
                   // FIXME: These also exist as almost-copies in the Bucket view, can maybe be shared/reused instead.
                   b-dropdown-item(
-                             :href="$aw.baseURL + '/api/0/buckets/' + data.item.id + '/export'",
-                             :download="'aw-bucket-export-' + data.item.id + '.json'",
+                             @click="export_bucket_json(data.item.id)",
                              title="Export bucket to JSON",
                              variant="secondary")
                       icon(name="download")
@@ -100,9 +99,8 @@ div
         | A valid file to import is a JSON file from either an export of a single bucket or an export from multiple buckets.
         | If there are buckets with the same name the import will fail.
     b-card(header="Export buckets")
-      b-button(:href="$aw.baseURL + '/api/0/export'",
-               :download="'aw-bucket-export.json'",
-               title="Export bucket to JSON",
+      b-button(@click="export_all_buckets_json()",
+               title="Export all buckets to JSON",
                variant="outline-secondary")
         icon(name="download")
         | Export all buckets as JSON
@@ -160,6 +158,7 @@ import moment from 'moment';
 
 import { useServerStore } from '~/stores/server';
 import { useBucketsStore } from '~/stores/buckets';
+import { downloadFile } from '~/util/export';
 
 export default {
   name: 'Buckets',
@@ -255,10 +254,22 @@ export default {
       return this.$aw.req.post('/0/import', formData, { headers });
     },
 
+    async export_bucket_json(bucketId: string) {
+      const response = await this.$aw.req.get(`/0/buckets/${bucketId}/export`);
+      const data = JSON.stringify(response.data, null, 2);
+      await downloadFile(`aw-bucket-export-${bucketId}.json`, data, 'application/json');
+    },
+
+    async export_all_buckets_json() {
+      const response = await this.$aw.req.get('/0/export');
+      const data = JSON.stringify(response.data, null, 2);
+      await downloadFile('aw-bucket-export.json', data, 'application/json');
+    },
+
     async export_csv(bucketId: string) {
       const bucket = await this.bucketsStore.getBucketWithEvents({ id: bucketId });
       const events = bucket.events;
-      const datakeys = Object.keys(events[0].data);
+      const datakeys = events.length > 0 ? Object.keys(events[0].data) : [];
       const columns = ['timestamp', 'duration'].concat(datakeys);
       const data = events.map(e => {
         return Object.assign(
@@ -267,16 +278,10 @@ export default {
         );
       });
       const csv = Papa.unparse(data, { columns, header: true });
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `aw-events-export-${bucketId}-${new Date()
+      const filename = `aw-events-export-${bucketId}-${new Date()
         .toISOString()
         .substring(0, 10)}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      await downloadFile(filename, csv, 'text/csv');
     },
   },
 };
