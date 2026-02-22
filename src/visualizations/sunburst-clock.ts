@@ -269,12 +269,16 @@ function update(
       }
       root_end = root_start.clone().add(1, 'days');
 
-      // Draw clock ticks at 6-hour intervals relative to the start-of-day offset
-      const start_hour = root_start.hours() + root_start.minutes() / 60;
-      for (let i = 0; i < 4; i++) {
-        const tick_hours = Math.floor((start_hour + i * 6) % 24);
-        const tick_minutes = Math.round(((start_hour + i * 6) % 1) * 60);
-        drawClock(tick_hours, tick_minutes);
+      // Draw clock ticks at standard 6-hour intervals (00, 06, 12, 18)
+      for (const h of [0, 6, 12, 18]) {
+        drawClock(h, 0);
+      }
+
+      // Draw a special marker for the start-of-day boundary if it's not at midnight
+      const start_hour = root_start.hours();
+      const start_min = root_start.minutes();
+      if (start_hour !== 0 || start_min !== 0) {
+        drawClock(start_hour, start_min, `${root_start.format('HH:mm')} ☀`);
       }
 
       // TODO: Draw only if showing today
