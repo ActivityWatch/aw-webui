@@ -48,6 +48,7 @@ import 'vue-awesome/icons/undo';
 import { useCategoryStore } from '~/stores/categories';
 
 import _ from 'lodash';
+import { downloadFile } from '~/util/export';
 
 const confirmationMessage = 'Your categories have unsaved changes, are you sure you want to leave?';
 
@@ -99,27 +100,14 @@ export default {
     hideEditModal: function () {
       this.editingId = null;
     },
-    exportClasses: function () {
+    exportClasses: async function () {
       console.log('Exporting categories...');
 
       const export_data = {
         categories: this.categoryStore.classes,
       };
-      // Pretty-format it for easier reading
       const text = JSON.stringify(export_data, null, 2);
-      const filename = 'aw-category-export.json';
-
-      // Initiate downloading a file by creating a hidden button and clicking it
-      const element = document.createElement('a');
-      element.setAttribute(
-        'href',
-        'data:application/json;charset=utf-8,' + encodeURIComponent(text)
-      );
-      element.setAttribute('download', filename);
-      element.style.display = 'none';
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
+      await downloadFile('aw-category-export.json', text, 'application/json');
     },
     importCategories: async function (elem) {
       console.log('Importing categories...');

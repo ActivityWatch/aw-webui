@@ -95,6 +95,7 @@ import { useCategoryStore } from '~/stores/categories';
 import { useBucketsStore } from '~/stores/buckets';
 
 import { getClient } from '~/util/awclient';
+import { downloadFile } from '~/util/export';
 
 export default {
   name: 'Report',
@@ -161,33 +162,19 @@ export default {
       }
     },
 
-    export_json() {
+    async export_json() {
       const data = JSON.stringify(this.events, null, 2);
-      const blob = new Blob([data], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'events.json';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      await downloadFile('events.json', data, 'application/json');
     },
 
-    export_csv() {
+    async export_csv() {
       const data = this.events.map(e => {
         return [e.timestamp, e.duration, e.data['$category'], e.data['app'], e.data['title']];
       });
       const csv = Papa.unparse(data, {
         columns: ['timestamp', 'duration', 'category', 'app', 'title'],
       });
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'events.csv';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      await downloadFile('events.csv', csv, 'text/csv');
     },
   },
 };
