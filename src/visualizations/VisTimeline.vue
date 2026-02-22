@@ -28,6 +28,13 @@ div#visualization {
     pointer-events: none;
   }
 
+  .vis-labelset .vis-label .vis-inner {
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .timeline-timeline {
     font-family: sans-serif !important;
 
@@ -224,6 +231,26 @@ export default {
         alert('selected multiple items: ' + JSON.stringify(properties.items));
       }
     },
+    escapeHtml(str: string): string {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    },
+    abbreviateBucketName(bucketId: string): string {
+      // Abbreviate synced bucket names which can be extremely long (#682)
+      // e.g. "aw-watcher-window_host-synced-from-remotehost" -> "aw-watcher-window (synced from remotehost)"
+      const escaped = this.escapeHtml(bucketId);
+      const syncMatch = bucketId.match(/^([^_]+)_.*-synced-from-(.+)$/);
+      if (syncMatch) {
+        return `<span title="${escaped}">${this.escapeHtml(
+          syncMatch[1]
+        )} (synced from ${this.escapeHtml(syncMatch[2])})</span>`;
+      }
+      return `<span title="${escaped}">${escaped}</span>`;
+    },
     ensureUpdate() {
       // Will only run update() if data available and never ran before
       if (!this.updateHasRun) {
@@ -248,7 +275,8 @@ export default {
             );
           }
         }
-        return { id: bucket.id, content: this.showRowLabels ? bucket.id : '' };
+        const label = this.showRowLabels ? this.abbreviateBucketName(bucket.id) : '';
+        return { id: bucket.id, content: label };
       });
 
       // Build items
