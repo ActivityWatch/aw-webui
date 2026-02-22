@@ -50,7 +50,7 @@ npm run build
 
 ### By copying the web-assets to your main install
 
-You can run a development version of aw-webui with your main version of ActivityWatch by building it (or fetching the latest build from CI) and replacing placing the contents of the `static` directory of your aw-server (or aw-server-rust) installation. For simplicity, back up the original directory for easier switching back.
+You can run a development version of aw-webui with your main version of ActivityWatch by building it (or fetching the latest build from CI) and replacing the contents of the `static` directory of your aw-server (or aw-server-rust) installation. For simplicity, back up the original directory for easier switching back.
 
 The assets are stored in the following directories (relative to your installation directory), depending on if you use aw-server-python (default) or aw-server-rust:
 
@@ -60,6 +60,17 @@ The assets are stored in the following directories (relative to your installatio
 You can copy the assets manually from your `make build` or `npm run build` output to the above locations.
 
 Once you've put the files in the directories, you may have to do a hard refresh in your browser to invalidate any stale caches.
+
+### Using `--webpath` with aw-server-rust
+
+Instead of copying files, `aw-server-rust` supports loading the web UI from a custom path via the `--webpath` flag. This is especially useful on platforms where the server bundles static assets into the executable (e.g. Windows):
+
+```bash
+# Point aw-server-rust to your local build output
+aw-server-rust --webpath /path/to/aw-webui/dist
+```
+
+This avoids having to copy files and makes it easy to switch between development and production builds.
 
 ### Using your main install's data
 
