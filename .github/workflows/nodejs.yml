@@ -179,8 +179,9 @@ jobs:
     - name: Print server logs to console
       if: ${{ always() }}
       shell: bash
-      run:
-        for file in ~/.cache/activitywatch/log/*/*.log; do echo $file; cat $file; echo; done
+      run: |
+        shopt -s nullglob
+        for file in ~/.cache/activitywatch/log/*/*.log; do echo "$file"; cat "$file"; echo; done
     - name: Move logs to subdir
       # Run this step even if e2e tests flag failure
       if: ${{ always() }}
@@ -189,7 +190,8 @@ jobs:
         aw_version: ${{ matrix.aw-version }}
       run: |
         mkdir -p logs/dist/$aw_server/$aw_version
-        mv ~/.cache/activitywatch/log/*/*.log logs/dist/$aw_server/$aw_version
+        shopt -s nullglob
+        for file in ~/.cache/activitywatch/log/*/*.log; do mv "$file" logs/dist/$aw_server/$aw_version/; done
     - name: Upload logs
       if: ${{ always() }}
       uses: actions/upload-artifact@v4
