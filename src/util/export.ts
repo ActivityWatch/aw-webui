@@ -52,9 +52,15 @@ async function downloadFileTauri(
   mimeType: string
 ): Promise<void> {
   try {
-    // Dynamic imports — these modules are only available in the Tauri runtime
-    const { save } = await import('@tauri-apps/plugin-dialog');
-    const { writeTextFile } = await import('@tauri-apps/plugin-fs');
+    // Dynamic imports — these modules are only available in the Tauri runtime.
+    // webpackIgnore and vite-ignore prevent bundlers from trying to resolve these
+    // at build time (they're not in package.json; they're injected by aw-tauri).
+    const { save } = await import(
+      /* webpackIgnore: true */ /* @vite-ignore */ '@tauri-apps/plugin-dialog'
+    );
+    const { writeTextFile } = await import(
+      /* webpackIgnore: true */ /* @vite-ignore */ '@tauri-apps/plugin-fs'
+    );
 
     const path = await save({
       title: 'Save export',
