@@ -269,7 +269,7 @@ export default {
     async export_csv(bucketId: string) {
       const bucket = await this.bucketsStore.getBucketWithEvents({ id: bucketId });
       const events = bucket.events;
-      const datakeys = Object.keys(events[0].data);
+      const datakeys = events.length > 0 ? Object.keys(events[0].data) : [];
       const columns = ['timestamp', 'duration'].concat(datakeys);
       const data = events.map(e => {
         return Object.assign(
