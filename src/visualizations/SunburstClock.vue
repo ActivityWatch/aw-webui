@@ -219,7 +219,7 @@ export default {
             };
             this.centerMsg = 'No data';
           }
-          sunburst.update(this.$el, hierarchy);
+          sunburst.update(this.$el, hierarchy, this.starttime);
         });
       });
     },

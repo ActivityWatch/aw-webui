@@ -232,7 +232,11 @@ function create(el: HTMLElement) {
 }
 
 // Main function to draw and set up the visualization, once we have the data.
-function update(el: HTMLElement, root_event: IEvent & { children: IEvent[] }) {
+function update(
+  el: HTMLElement,
+  root_event: IEvent & { children: IEvent[] },
+  startOfDay?: moment.Moment
+) {
   // Basic setup of page elements.
   initializeBreadcrumbTrail();
 
@@ -255,13 +259,23 @@ function update(el: HTMLElement, root_event: IEvent & { children: IEvent[] }) {
     let root_start = moment(root_event.timestamp);
     let root_end = root_start.clone().add(root_event.duration, 'seconds');
     if (show_whole_day) {
-      root_start = root_start.startOf('day');
-      root_end = root_start.clone().endOf('day');
+      // Use the provided start-of-day (which respects the user's startOfDay setting)
+      // so that events between midnight and the startOfDay offset are shown correctly.
+      // Fall back to calendar midnight if no startOfDay is provided.
+      if (startOfDay) {
+        root_start = startOfDay.clone();
+      } else {
+        root_start = root_start.startOf('day');
+      }
+      root_end = root_start.clone().add(1, 'days');
 
-      drawClock(0, 0);
-      drawClock(6, 0);
-      drawClock(12, 0);
-      drawClock(18, 0);
+      // Draw clock ticks at 6-hour intervals relative to the start-of-day offset
+      const start_hour = root_start.hours() + root_start.minutes() / 60;
+      for (let i = 0; i < 4; i++) {
+        const tick_hours = Math.floor((start_hour + i * 6) % 24);
+        const tick_minutes = Math.round(((start_hour + i * 6) % 1) * 60);
+        drawClock(tick_hours, tick_minutes);
+      }
 
       // TODO: Draw only if showing today
       const now = moment();
