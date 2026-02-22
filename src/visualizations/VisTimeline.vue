@@ -183,7 +183,18 @@ export default {
       } else if (properties.items.length == 1) {
         const event = this.chartData[properties.items[0]].event;
         const groupId = this.items[properties.items[0]].group;
-        const bucketId = _.find(this.groups, g => g.id == groupId).content;
+        // Use group.id (not group.content) — content is '' when showRowLabels=false
+        const bucketId = _.find(this.groups, g => g.id == groupId).id;
+
+        // Skip editing if event has no ID (e.g. merged query results) or bucket is a placeholder
+        if (!event.id || !bucketId || bucketId === 'events' || bucketId === 'search') {
+          console.log(
+            'Event has no ID or bucket is a placeholder, skipping editor',
+            event,
+            bucketId
+          );
+          return;
+        }
 
         // We retrieve the full event to ensure if's not cut-off by the query range
         // See: https://github.com/ActivityWatch/aw-webui/pull/320#issuecomment-1056921587
