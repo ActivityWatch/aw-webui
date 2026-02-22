@@ -46,8 +46,8 @@ div
       tr(v-if="mode == 'range'")
         th.pr-2 Range:
         td
-          input(type="date", v-model="start")
-          input(type="date", v-model="end")
+          input(type="date", v-model="start", :max="end || undefined")
+          input(type="date", v-model="end", :min="start || undefined", placeholder="(optional)")
           button(
             class="btn btn-outline-dark btn-sm",
             type="button",
@@ -115,20 +115,27 @@ export default {
   computed: {
     value: {
       get() {
-        if (this.mode == 'range' && this.start && this.end) {
-          return [moment(this.start), moment(this.end).add(1, 'day')];
+        if (this.mode == 'range' && this.start) {
+          const startDate = moment(this.start);
+          // If only start date is set, show that single day
+          const endDate = this.end
+            ? moment(this.end).add(1, 'day')
+            : startDate.clone().add(1, 'day');
+          return [startDate, endDate];
         } else {
           return [moment().subtract(this.duration, 'seconds'), moment()];
         }
       },
     },
     emptyDaterange() {
-      return !(this.start && this.end);
+      return !this.start;
     },
     invalidDaterange() {
+      if (!this.end) return false;
       return moment(this.start) > moment(this.end);
     },
     daterangeTooLong() {
+      if (!this.end) return false;
       return moment(this.start).add(this.maxDuration, 'seconds').isBefore(moment(this.end));
     },
   },
