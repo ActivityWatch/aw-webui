@@ -59,7 +59,7 @@
     "semver": "^7.6.0",
     "style-loader": "^3.3.3",
     "typeface-varela-round": "0.0.54",
-    "uuid": "^7.0.3",
+    "uuid": "^8.0.0",
     "vis-data": "^7.1.2",
     "vis-timeline": "^7.5.0",
     "vis-util": "^5.0.2",
