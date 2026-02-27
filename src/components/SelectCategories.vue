@@ -27,12 +27,12 @@ b-form-tags#tags-component-select(
 </template>
 
 <script lang="typescript">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import { useCategoryStore } from '~/stores/categories';
 
 const SEP = " > ";
 
-export default Vue.extend({
+export default defineComponent({
   data() {
     return {
       value: [],
