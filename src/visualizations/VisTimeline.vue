@@ -102,6 +102,8 @@ export default {
           overflowMethod: 'flip',
           delay: 0,
         },
+        horizontalScroll: true,
+        zoomKey: 'ctrlKey',
       },
       editingEvent: null,
       editingEventBucket: null,
