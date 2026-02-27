@@ -55,7 +55,7 @@ div
               option(:value='1 * 60 * 60') 1+ hrs
               option(:value='2 * 60 * 60') 2+ hrs
   div(style="float: right; color: #999").d-inline-block.pt-3
-    | Drag to pan and scroll to zoom
+    | Scroll to zoom, swipe/horizontal-scroll to pan, arrow keys to navigate
 
   div(v-if="buckets !== null")
     div(style="clear: both")
