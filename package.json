@@ -144,6 +144,13 @@
     "@vue/cli-plugin-unit-jest": {
       "ts-jest": "$ts-jest",
       "@vue/vue2-jest": "$@vue/vue2-jest"
-    }
+    },
+    "editorconfig": {
+      "minimatch": "^9.0.7"
+    },
+    "filelist": {
+      "minimatch": "^5.1.8"
+    },
+    "webpack-dev-server": "^5.2.1"
   }
 }
