@@ -15,6 +15,7 @@ const Trends = () => import('./views/Trends.vue');
 const Settings = () => import('./views/settings/Settings.vue');
 const CategoryBuilder = () => import('./views/settings/CategoryBuilder.vue');
 const Stopwatch = () => import('./views/Stopwatch.vue');
+const WorkReport = () => import('./views/WorkReport.vue');
 const Alerts = () => import('./views/Alerts.vue');
 const Search = () => import('./views/Search.vue');
 const Report = () => import('./views/Report.vue');
@@ -66,6 +67,7 @@ const router = new VueRouter({
     { path: '/settings', component: Settings },
     { path: '/settings/category-builder', component: CategoryBuilder },
     { path: '/stopwatch', component: Stopwatch },
+    { path: '/work-report', component: WorkReport },
     { path: '/search', component: Search },
     { path: '/graph', component: Graph },
     { path: '/dev', component: Dev },
