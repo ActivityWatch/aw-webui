@@ -38,6 +38,17 @@ div
           td
             b-form-checkbox(v-model="filter_afk" size="sm" switch)
               | Filter AFK
+        tr
+          th.pt-2.pr-3
+            label Categories:
+          td
+            select(@change="onCategorySelect($event)", :value="''")
+              option(value="" disabled) {{ filter_categories.length > 0 ? 'Add category...' : 'All' }}
+              option(v-for="cat in category_options", :key="cat.text", :value="cat.text") {{ cat.text }}
+            div.mt-1(v-if="filter_categories.length > 0")
+              span.badge.badge-info.mr-1(v-for="(cat, idx) in filter_categories", :key="idx")
+                | {{ cat.join(' > ') }}
+                button.ml-1.close.small(@click="removeCategory(idx)", type="button", style="font-size: 0.8rem") &times;
   div.d-inline-block.border.rounded.p-2.mr-2(v-if="num_events !== 0")
     | Events shown: {{ num_events }}
   b-alert.d-inline-block.p-2.mb-0.mt-2(v-if="num_events === 0", variant="warning", show)
@@ -80,7 +91,22 @@ import { useSettingsStore } from '~/stores/settings';
 import { useBucketsStore } from '~/stores/buckets';
 import { getClient } from '~/util/awclient';
 import { canonicalEvents } from '~/queries';
+import { useCategoryStore } from '~/stores/categories';
+import { matchString } from '~/util/classes';
 import { seconds_to_duration } from '~/util/time';
+
+function getCategorizationString(bucket, e) {
+  if (bucket.type == 'currentwindow') {
+    return e.data.app + '\n' + e.data.title;
+  } else if (bucket.type == 'web.tab.current') {
+    return e.data.title + '\n' + e.data.url;
+  } else if (bucket.type?.startsWith('app.editor')) {
+    return e.data.file;
+  } else if (bucket.type?.startsWith('general.stopwatch')) {
+    return e.data.label;
+  }
+  return null;
+}
 
 export default {
   name: 'Timeline',
@@ -96,6 +122,7 @@ export default {
       filter_client: null,
       filter_duration: null,
       filter_afk: false,
+      filter_categories: [],
       swimlane: null,
       updateTimelineWindow: true,
     };
@@ -110,6 +137,10 @@ export default {
     num_events() {
       return _.sumBy(this.buckets, 'events.length');
     },
+    category_options() {
+      const categoryStore = useCategoryStore();
+      return categoryStore.allCategoriesSelect;
+    },
     filter_summary() {
       const desc = [];
       if (this.filter_hostname) {
@@ -123,6 +154,13 @@ export default {
       }
       if (this.filter_afk) {
         desc.push('AFK filtered');
+      }
+      if (this.filter_categories.length > 0) {
+        desc.push(
+          this.filter_categories.length +
+            ' categor' +
+            (this.filter_categories.length === 1 ? 'y' : 'ies')
+        );
       }
 
       if (desc.length > 0) {
@@ -152,12 +190,28 @@ export default {
       this.updateTimelineWindow = false;
       this.getBuckets();
     },
+    filter_categories() {
+      this.updateTimelineWindow = false;
+      this.getBuckets();
+    },
     swimlane() {
       this.updateTimelineWindow = false;
       this.getBuckets();
     },
   },
   methods: {
+    onCategorySelect(event) {
+      const text = event.target.value;
+      if (!text) return;
+      const cat = this.category_options.find(c => c.text === text);
+      if (cat && !this.filter_categories.some(fc => _.isEqual(fc, cat.value))) {
+        this.filter_categories = [...this.filter_categories, cat.value];
+      }
+      event.target.value = '';
+    },
+    removeCategory(idx) {
+      this.filter_categories = this.filter_categories.filter((_, i) => i !== idx);
+    },
     getBuckets: async function () {
       if (this.daterange == null) return;
 
@@ -186,6 +240,26 @@ export default {
       if (this.filter_duration > 0) {
         for (const bucket of buckets) {
           bucket.events = _.filter(bucket.events, e => e.duration >= this.filter_duration);
+        }
+      }
+
+      if (this.filter_categories.length > 0) {
+        const categoryStore = useCategoryStore();
+        const allCats = categoryStore.classes;
+        for (const bucket of buckets) {
+          // Skip AFK buckets — they don't have meaningful categorization
+          if (bucket.type === 'afkstatus') continue;
+          bucket.events = _.filter(bucket.events, e => {
+            const str = getCategorizationString(bucket, e);
+            if (str === null) return true; // Keep events from unknown bucket types
+            const matched = matchString(str, allCats);
+            const eventCat = matched ? matched.name : ['Uncategorized'];
+            // Check if the event's category matches any selected filter category
+            // (including parent matches: selecting "Work" also shows "Work > Programming")
+            return this.filter_categories.some(filterCat =>
+              _.isEqual(eventCat.slice(0, filterCat.length), filterCat)
+            );
+          });
         }
       }
 
