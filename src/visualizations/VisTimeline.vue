@@ -102,6 +102,7 @@ export default {
           overflowMethod: 'flip',
           delay: 0,
         },
+        horizontalScroll: true
       },
       editingEvent: null,
       editingEventBucket: null,
