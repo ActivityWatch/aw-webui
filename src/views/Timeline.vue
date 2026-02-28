@@ -192,7 +192,7 @@ export default {
       event.target.value = '';
     },
     removeCategory(idx) {
-      this.filter_categories = this.filter_categories.filter((_, i) => i !== idx);
+      this.filter_categories = this.filter_categories.filter((_cat, i) => i !== idx);
     },
     getBuckets: async function () {
       if (this.daterange == null) return;
