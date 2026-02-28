@@ -129,6 +129,7 @@ export default defineConfig(({ mode }) => {
       }),
     ],
     server: {
+      host: '127.0.0.1',
       port: 27180,
       // TODO: Fix this.
       // Breaks a bunch of style-related stuff etc.
