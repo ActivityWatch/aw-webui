@@ -37,7 +37,7 @@ div
       summary
         icon.mx-2(name="check", style="color: #0C0", v-if="overlappingEvents.length === 0")
         icon.mx-2(name="exclamation-triangle", style="color: #CC0", v-else)
-        | Overlaps: {{ overlappingEvents.length }}x with a total duration of {{ overlapDuration / 1000 | friendlyduration }}
+        | Overlaps: {{ overlappingEvents.length }}x with a total duration of {{ friendlyduration(overlapDuration / 1000) }}
       div.p-2
         p(v-if="overlappingEvents.length === 0")
           | No overlapping events found.
@@ -45,7 +45,7 @@ div
           | The following {{ overlappingEvents.length }} overlaps were found.
           br
           span(v-if="overlapDurationSameData > 0")
-            | Of these, {{ overlapDurationSameData / 1000 | friendlyduration }} are overlaps where the data is the same. These events could potentially be merged.
+            | Of these, {{ friendlyduration(overlapDurationSameData / 1000) }} are overlaps where the data is the same. These events could potentially be merged.
           p.mt-2(v-for="event in overlappingEvents")
             ul
               li {{ event[0].start.toISOString() }}/{{ event[0].end.toISOString() }} - (id: {{ event[0].event.id }}): {{ JSON.stringify(event[0].event.data) }}
@@ -77,6 +77,7 @@ import 'vue-awesome/icons/exclamation-triangle';
 import 'vue-awesome/icons/info-circle';
 import { getClient } from '~/util/awclient';
 import { overlappingEvents } from '~/util/transforms';
+import { friendlyduration } from '~/util/filters';
 import _ from 'lodash';
 
 export default {
@@ -158,6 +159,7 @@ export default {
     this.getBuckets();
   },
   methods: {
+    friendlyduration,
     getBuckets: async function () {
       const client = getClient();
       const buckets = await client.getBuckets();

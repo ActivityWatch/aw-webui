@@ -26,19 +26,19 @@ div
               time(:style="{'color': isRecent(device.last_updated) ? 'green' : 'inherit'}",
                    :datetime="device.last_updated",
                    :title="device.last_updated")
-                | {{ device.last_updated | friendlytime }}
+                | {{ friendlytime(device.last_updated) }}
             div
               | First seen:&nbsp;
               time(:datetime="device.first_seen",
                    :title="device.first_seen")
-                | {{ device.first_seen | friendlytime }}
+                | {{ friendlytime(device.first_seen) }}
 
     b-row
       b-col
         b-table.mb-0(small, hover, :items="device.buckets", :fields="fields", responsive="md")
           template(v-slot:cell(last_updated)="data")
             small(v-if="data.item.last_updated", :style="{'color': isRecent(data.item.last_updated) ? 'green' : 'inherit'}")
-              | {{ data.item.last_updated | friendlytime }}
+              | {{ friendlytime(data.item.last_updated) }}
           template(v-slot:cell(actions)="data")
             b-button-toolbar.float-right
               b-button-group(size="sm", class="mx-1")
@@ -159,6 +159,7 @@ import moment from 'moment';
 import { useServerStore } from '~/stores/server';
 import { useBucketsStore } from '~/stores/buckets';
 import { downloadFile } from '~/util/export';
+import { friendlytime } from '~/util/filters';
 
 export default {
   name: 'Buckets',
@@ -208,6 +209,7 @@ export default {
     await this.bucketsStore.loadBuckets();
   },
   methods: {
+    friendlytime,
     isRecent: function (date) {
       return moment().diff(date) / 1000 < 120;
     },

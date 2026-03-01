@@ -1,9 +1,7 @@
 // Initializes Pinia, does not import stores
+// NOTE: In Vue 3, PiniaVuePlugin is not needed. Pinia is registered via app.use(pinia) in main.js.
 
-import { createPinia, PiniaVuePlugin } from 'pinia';
-import Vue from 'vue';
-
-Vue.use(PiniaVuePlugin); // Only needed for Vue 2
+import { createPinia } from 'pinia';
 
 const rootStore = createPinia();
 export default rootStore;

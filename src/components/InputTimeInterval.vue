@@ -61,7 +61,7 @@ div
         span.d-none.d-md-inline
           | Refresh
       div.mt-2.small(v-if="lastUpdate")
-        | Last update: #[time(:datetime="lastUpdate.format()") {{lastUpdate | friendlytime}}]
+        | Last update: #[time(:datetime="lastUpdate.format()") {{ friendlytime(lastUpdate) }}]
 </template>
 
 <style scoped lang="scss">
@@ -74,6 +74,7 @@ div
 
 <script lang="ts">
 import moment from 'moment';
+import { friendlytime } from '../util/filters';
 import 'vue-awesome/icons/sync';
 export default {
   name: 'input-timeinterval',
@@ -151,17 +152,18 @@ export default {
       this.lastUpdate = _lastUpdate;
     }, 500);
   },
-  beforeDestroy() {
+  beforeUnmount() {
     clearInterval(this.lastUpdateTimer);
   },
   methods: {
+    friendlytime,
     valueChanged() {
       if (
         this.mode == 'last_duration' ||
         (!this.emptyDaterange && !this.invalidDaterange && !this.daterangeTooLong)
       ) {
         this.lastUpdate = moment();
-        this.$emit('input', this.value);
+        this.$emit('update:modelValue', this.value);
       }
     },
     refresh() {

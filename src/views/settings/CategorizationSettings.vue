@@ -74,7 +74,7 @@ export default {
     // using beforeRouteLeave (automatically cleaned up by Vue Router).
     window.addEventListener('beforeunload', this.beforeUnload);
   },
-  beforeDestroy() {
+  beforeUnmount() {
     window.removeEventListener('beforeunload', this.beforeUnload);
   },
   methods: {

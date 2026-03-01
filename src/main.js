@@ -1,17 +1,12 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 
-import Vue from 'vue';
+import { createApp, defineAsyncComponent } from 'vue';
 
 // Load the Bootstrap CSS
-import BootstrapVue from 'bootstrap-vue';
+import { createBootstrap } from 'bootstrap-vue-next';
 import 'bootstrap/dist/css/bootstrap.css';
-import 'bootstrap-vue/dist/bootstrap-vue.css';
-Vue.use(BootstrapVue);
-
-import { Datetime } from 'vue-datetime';
-import 'vue-datetime/dist/vue-datetime.css';
-Vue.component('datetime', Datetime);
+import 'bootstrap-vue-next/dist/bootstrap-vue-next.css';
 
 // Load the Varela Round font
 import 'typeface-varela-round';
@@ -28,52 +23,8 @@ import router from './route.js';
 // Sets up the pinia store
 import pinia from './stores';
 
-// Register Font Awesome icon component
-Vue.component('icon', () => import('vue-awesome/components/Icon.vue'));
-
-// General components
-Vue.component('error-boundary', () => import('./components/ErrorBoundary.vue'));
-Vue.component('input-timeinterval', () => import('./components/InputTimeInterval.vue'));
-Vue.component('aw-header', () => import('./components/Header.vue'));
-Vue.component('aw-footer', () => import('./components/Footer.vue'));
-Vue.component('aw-devonly', () => import('./components/DevOnly.vue'));
-Vue.component('aw-selectable-vis', () => import('./components/SelectableVisualization.vue'));
-Vue.component('aw-selectable-eventview', () => import('./components/SelectableEventView.vue'));
-Vue.component('new-release-notification', () => import('./components/NewReleaseNotification.vue'));
-Vue.component('user-satisfaction-poll', () => import('./components/UserSatisfactionPoll.vue'));
-Vue.component('aw-query-options', () => import('./components/QueryOptions.vue'));
-Vue.component('aw-select-categories', () => import('./components/SelectCategories.vue'));
-Vue.component('aw-select-categories-or-pattern', () =>
-  import('./components/SelectCategoriesOrPattern.vue')
-);
-
-// Visualization components
-Vue.component('aw-summary', () => import('./visualizations/Summary.vue'));
-Vue.component('aw-periodusage', () => import('./visualizations/PeriodUsage.vue'));
-Vue.component('aw-eventlist', () => import('./visualizations/EventList.vue'));
-Vue.component('aw-sunburst-categories', () => import('./visualizations/SunburstCategories.vue'));
-Vue.component('aw-top-bucket-data', () => import('./visualizations/TopBucketData.vue'));
-Vue.component('aw-sunburst-clock', () => import('./visualizations/SunburstClock.vue'));
-Vue.component('aw-timeline-inspect', () => import('./visualizations/TimelineInspect.vue'));
-Vue.component('aw-timeline', () => import('./visualizations/TimelineSimple.vue'));
-Vue.component('vis-timeline', () => import('./visualizations/VisTimeline.vue'));
-Vue.component('aw-categorytree', () => import('./visualizations/CategoryTree.vue'));
-Vue.component('aw-timeline-barchart', () => import('./visualizations/TimelineBarChart.vue'));
-Vue.component('aw-calendar', () => import('./visualizations/Calendar.vue'));
-Vue.component('aw-custom-vis', () => import('./visualizations/CustomVisualization.vue'));
-Vue.component('aw-score', () => import('./visualizations/Score.vue'));
-
-// A mixin to make async method errors propagate
-import asyncErrorCapturedMixin from './mixins/asyncErrorCaptured.js';
-Vue.mixin(asyncErrorCapturedMixin);
-
-// Set the PRODUCTION constant
-// FIXME: Thould follow Vue convention and start with a $.
-Vue.prototype.PRODUCTION = PRODUCTION;
-Vue.prototype.COMMIT_HASH = COMMIT_HASH;
-
-// Set the $isAndroid constant
-Vue.prototype.$isAndroid = process.env.VUE_APP_ON_ANDROID;
+// NOTE: vue-datetime is Vue 2 only — removed (TODO: find Vue 3 alternative)
+// NOTE: vue-awesome is Vue 2 only — removed (TODO: find Vue 3 alternative, e.g. @fortawesome/vue-fontawesome)
 
 // Create an instance of AWClient as this.$aw
 // NOTE: needs to be created before the Vue app is created,
@@ -83,15 +34,140 @@ createClient();
 
 // Setup Vue app
 import App from './App.vue';
-new Vue({
-  el: '#app',
-  router: router,
-  render: h => h(App),
-  pinia,
-});
+import asyncErrorCapturedMixin from './mixins/asyncErrorCaptured.js';
 
-// Set the $aw global
-Vue.prototype.$aw = getClient();
+const app = createApp(App);
+
+// Register plugins
+app.use(createBootstrap());
+app.use(router);
+app.use(pinia);
+
+// Set global properties (replaces Vue.prototype.X = Y)
+app.config.globalProperties.PRODUCTION = PRODUCTION;
+app.config.globalProperties.COMMIT_HASH = COMMIT_HASH;
+app.config.globalProperties.$isAndroid = process.env.VUE_APP_ON_ANDROID;
+
+// Register global mixin
+app.mixin(asyncErrorCapturedMixin);
+
+// Register global async components (replaces Vue.component with lazy imports)
+// NOTE: icon component (vue-awesome) removed — Vue 2 only, register replacement here when available
+app.component(
+  'icon',
+  defineAsyncComponent(() => import('./components/IconPlaceholder.vue'))
+);
+app.component(
+  'error-boundary',
+  defineAsyncComponent(() => import('./components/ErrorBoundary.vue'))
+);
+app.component(
+  'input-timeinterval',
+  defineAsyncComponent(() => import('./components/InputTimeInterval.vue'))
+);
+app.component(
+  'aw-header',
+  defineAsyncComponent(() => import('./components/Header.vue'))
+);
+app.component(
+  'aw-footer',
+  defineAsyncComponent(() => import('./components/Footer.vue'))
+);
+app.component(
+  'aw-devonly',
+  defineAsyncComponent(() => import('./components/DevOnly.vue'))
+);
+app.component(
+  'aw-selectable-vis',
+  defineAsyncComponent(() => import('./components/SelectableVisualization.vue'))
+);
+app.component(
+  'aw-selectable-eventview',
+  defineAsyncComponent(() => import('./components/SelectableEventView.vue'))
+);
+app.component(
+  'new-release-notification',
+  defineAsyncComponent(() => import('./components/NewReleaseNotification.vue'))
+);
+app.component(
+  'user-satisfaction-poll',
+  defineAsyncComponent(() => import('./components/UserSatisfactionPoll.vue'))
+);
+app.component(
+  'aw-query-options',
+  defineAsyncComponent(() => import('./components/QueryOptions.vue'))
+);
+app.component(
+  'aw-select-categories',
+  defineAsyncComponent(() => import('./components/SelectCategories.vue'))
+);
+app.component(
+  'aw-select-categories-or-pattern',
+  defineAsyncComponent(() => import('./components/SelectCategoriesOrPattern.vue'))
+);
+
+// Visualization components
+app.component(
+  'aw-summary',
+  defineAsyncComponent(() => import('./visualizations/Summary.vue'))
+);
+app.component(
+  'aw-periodusage',
+  defineAsyncComponent(() => import('./visualizations/PeriodUsage.vue'))
+);
+app.component(
+  'aw-eventlist',
+  defineAsyncComponent(() => import('./visualizations/EventList.vue'))
+);
+app.component(
+  'aw-sunburst-categories',
+  defineAsyncComponent(() => import('./visualizations/SunburstCategories.vue'))
+);
+app.component(
+  'aw-top-bucket-data',
+  defineAsyncComponent(() => import('./visualizations/TopBucketData.vue'))
+);
+app.component(
+  'aw-sunburst-clock',
+  defineAsyncComponent(() => import('./visualizations/SunburstClock.vue'))
+);
+app.component(
+  'aw-timeline-inspect',
+  defineAsyncComponent(() => import('./visualizations/TimelineInspect.vue'))
+);
+app.component(
+  'aw-timeline',
+  defineAsyncComponent(() => import('./visualizations/TimelineSimple.vue'))
+);
+app.component(
+  'vis-timeline',
+  defineAsyncComponent(() => import('./visualizations/VisTimeline.vue'))
+);
+app.component(
+  'aw-categorytree',
+  defineAsyncComponent(() => import('./visualizations/CategoryTree.vue'))
+);
+app.component(
+  'aw-timeline-barchart',
+  defineAsyncComponent(() => import('./visualizations/TimelineBarChart.vue'))
+);
+app.component(
+  'aw-calendar',
+  defineAsyncComponent(() => import('./visualizations/Calendar.vue'))
+);
+app.component(
+  'aw-custom-vis',
+  defineAsyncComponent(() => import('./visualizations/CustomVisualization.vue'))
+);
+app.component(
+  'aw-score',
+  defineAsyncComponent(() => import('./visualizations/Score.vue'))
+);
+
+app.mount('#app');
+
+// Set the $aw global property
+app.config.globalProperties.$aw = getClient();
 
 // Must be run after vue init since it relies on the settings store
 configureClient();

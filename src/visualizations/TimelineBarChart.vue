@@ -12,7 +12,7 @@ div.small(v-else, style="font-size: 16pt; color: #aaa;")
 import _ from 'lodash';
 import { ChartOptions } from 'chart.js';
 import 'chart.js/auto';
-import { Bar } from 'vue-chartjs/legacy';
+import { Bar } from 'vue-chartjs';
 import { get_hour_offset } from '~/util/time';
 
 function hourToTick(hours: number): string {
