@@ -49,7 +49,7 @@ export default defineComponent({
   watch: {
     value(val) {
       const category_names = val.map(v => v.split(SEP))
-      this.$emit('input', category_names);
+      this.$emit('update:modelValue', category_names);
     },
   },
 });

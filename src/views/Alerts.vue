@@ -19,7 +19,7 @@ div
 
     div Goal name: {{ alert.name }}
     div Category: {{ alert.category.join(" > ") }}
-    div Current: {{ alertTime(alert.category) | friendlyduration }} / {{alert.goal}} minutes
+    div Current: {{ friendlyduration(alertTime(alert.category)) }} / {{alert.goal}} minutes
       span(v-if="alertTime(alert.category) >= alert.goal")
         icon(name="check" style="color: #0C0")
       span(v-else)
@@ -66,6 +66,7 @@ import 'vue-awesome/icons/trash';
 
 import { useBucketsStore } from '~/stores/buckets';
 import { useCategoryStore } from '~/stores/categories';
+import { friendlyduration } from '~/util/filters';
 
 export default {
   name: 'Alerts',
@@ -122,6 +123,7 @@ export default {
     this.hostname = this.hostnames[0];
   },
   methods: {
+    friendlyduration,
     addAlert: function () {
       // TODO: Persist to settings/localstorage
       this.alerts = this.alerts.concat({ ...this.editing_alert });

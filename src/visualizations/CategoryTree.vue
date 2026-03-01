@@ -20,7 +20,7 @@ div(style="font-size: 0.9em")
       span(v-if="show_perc")
         | {{Math.round(100 * cat.duration / total_duration, 1)}}%
       span(v-else)
-        | {{cat.duration | friendlyduration}}
+        | {{friendlyduration(cat.duration)}}
   hr
   // TODO: Make configurable in a cleaner way (figure out a way to configure visualizations generally)
   b-checkbox(v-model="show_perc" size="sm") Show percent
@@ -37,6 +37,7 @@ import 'vue-awesome/icons/circle';
 import 'vue-awesome/icons/regular/plus-square';
 import 'vue-awesome/icons/regular/minus-square';
 import _ from 'lodash';
+import { friendlyduration } from '~/util/filters';
 import { build_category_hierarchy, flatten_category_hierarchy } from '../util/classes.ts';
 import { IEvent } from '../util/interfaces.ts';
 
@@ -108,6 +109,7 @@ export default {
     },
   },
   methods: {
+    friendlyduration,
     get_category: function (cat_arr) {
       return _.find(this.category_hierarchy, c => _.isEqual(c.name, cat_arr));
     },

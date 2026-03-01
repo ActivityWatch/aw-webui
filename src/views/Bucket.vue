@@ -13,7 +13,7 @@ div
       td {{ bucket.hostname }}
     tr
       th Created:
-      td {{ bucket.created | iso8601 }}
+      td {{ iso8601(bucket.created) }}
     tr(v-if="bucket.metadata")
       th First/last event:
       td
@@ -36,6 +36,7 @@ div
 <script lang="ts">
 import { useBucketsStore } from '~/stores/buckets';
 import { getClient } from '~/util/awclient';
+import { iso8601 } from '~/util/filters';
 
 export default {
   name: 'Bucket',
@@ -74,6 +75,7 @@ export default {
     await this.getEventCount(this.id);
   },
   methods: {
+    iso8601,
     getEvents: async function (bucket_id) {
       const bucket = await this.bucketsStore.getBucketWithEvents({
         id: bucket_id,

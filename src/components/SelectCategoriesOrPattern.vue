@@ -69,11 +69,11 @@ export default defineComponent({
       this.filterCategoriesData = [...this.filterCategoriesData, ...this.filterCategories];
     },
     filterCategoriesData() {
-      this.$emit('input', this.categoriesWithRules);
+      this.$emit('update:modelValue', this.categoriesWithRules);
       console.log(this.categoriesWithRules);
     },
     pattern() {
-      this.$emit('input', this.categoriesWithRules);
+      this.$emit('update:modelValue', this.categoriesWithRules);
       console.log(this.categoriesWithRules);
     },
   },

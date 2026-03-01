@@ -47,7 +47,7 @@ export default defineComponent({
   watch: {
     queryOptionsData: {
       handler(value) {
-        this.$emit('input', value);
+        this.$emit('update:modelValue', value);
       },
       deep: true,
     },
@@ -60,7 +60,7 @@ export default defineComponent({
       hostname: this.hostnameChoices[0],
       ...this.queryOptions,
     };
-    this.$emit('input', this.queryOptionsData);
+    this.$emit('update:modelValue', this.queryOptionsData);
   },
 });
 </script>
