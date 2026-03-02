@@ -93,20 +93,8 @@ import { getClient } from '~/util/awclient';
 import { canonicalEvents } from '~/queries';
 import { useCategoryStore } from '~/stores/categories';
 import { matchString } from '~/util/classes';
+import { getCategorizationStringFromEvent } from '~/util/color';
 import { seconds_to_duration } from '~/util/time';
-
-function getCategorizationString(bucket, e) {
-  if (bucket.type == 'currentwindow') {
-    return e.data.app + '\n' + e.data.title;
-  } else if (bucket.type == 'web.tab.current') {
-    return e.data.title + '\n' + e.data.url;
-  } else if (bucket.type?.startsWith('app.editor')) {
-    return e.data.file;
-  } else if (bucket.type?.startsWith('general.stopwatch')) {
-    return e.data.label;
-  }
-  return null;
-}
 
 export default {
   name: 'Timeline',
@@ -250,7 +238,7 @@ export default {
           // Skip AFK buckets — they don't have meaningful categorization
           if (bucket.type === 'afkstatus') continue;
           bucket.events = _.filter(bucket.events, e => {
-            const str = getCategorizationString(bucket, e);
+            const str = getCategorizationStringFromEvent(bucket, e);
             if (str === null) return true; // Keep events from unknown bucket types
             const matched = matchString(str, allCats);
             const eventCat = matched ? matched.name : ['Uncategorized'];
