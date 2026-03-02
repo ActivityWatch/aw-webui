@@ -32,6 +32,12 @@ div
             select(v-model="filter_client")
               option(:value='null') All
               option(v-for="client in clients", :value="client") {{ client }}
+        tr
+          th.pt-2.pr-3
+            label AFK:
+          td
+            b-form-checkbox(v-model="filter_afk" size="sm" switch)
+              | Filter AFK
   div.d-inline-block.border.rounded.p-2.mr-2(v-if="num_events !== 0")
     | Events shown: {{ num_events }}
   b-alert.d-inline-block.p-2.mb-0.mt-2(v-if="num_events === 0", variant="warning", show)
@@ -69,8 +75,11 @@ div
 
 <script lang="ts">
 import _ from 'lodash';
+import { mapState } from 'pinia';
 import { useSettingsStore } from '~/stores/settings';
 import { useBucketsStore } from '~/stores/buckets';
+import { getClient } from '~/util/awclient';
+import { canonicalEvents } from '~/queries';
 import { seconds_to_duration } from '~/util/time';
 
 export default {
@@ -86,11 +95,13 @@ export default {
       filter_hostname: null,
       filter_client: null,
       filter_duration: null,
+      filter_afk: false,
       swimlane: null,
       updateTimelineWindow: true,
     };
   },
   computed: {
+    ...mapState(useSettingsStore, ['always_active_pattern']),
     timeintervalDefaultDuration() {
       const settingsStore = useSettingsStore();
       return Number(settingsStore.durationDefault);
@@ -109,6 +120,9 @@ export default {
       }
       if (this.filter_duration > 0) {
         desc.push(seconds_to_duration(this.filter_duration));
+      }
+      if (this.filter_afk) {
+        desc.push('AFK filtered');
       }
 
       if (desc.length > 0) {
@@ -131,6 +145,10 @@ export default {
       this.getBuckets();
     },
     filter_duration() {
+      this.updateTimelineWindow = false;
+      this.getBuckets();
+    },
+    filter_afk() {
       this.updateTimelineWindow = false;
       this.getBuckets();
     },
@@ -171,7 +189,73 @@ export default {
         }
       }
 
+      // AFK filtering: use query engine to filter window events by AFK status
+      if (this.filter_afk) {
+        buckets = await this._applyAfkFilter(buckets);
+      }
+
       this.buckets = buckets;
+    },
+
+    // Replaces raw window bucket events with AFK-filtered events via aw query engine.
+    // Also hides AFK status buckets since they're used for filtering, not display.
+    _applyAfkFilter: async function (buckets) {
+      const bucketsStore = useBucketsStore();
+      const result = [];
+
+      for (const bucket of buckets) {
+        // Hide AFK status buckets when AFK filtering is active
+        if (bucket.type === 'afkstatus') {
+          continue;
+        }
+
+        // For window buckets, replace events with AFK-filtered query results
+        if (bucket.type === 'currentwindow' && bucket.hostname) {
+          const afkBucketIds = bucketsStore.bucketsAFK(bucket.hostname);
+          if (afkBucketIds.length > 0) {
+            try {
+              const filteredEvents = await this._queryAfkFilteredEvents(bucket.id, afkBucketIds[0]);
+              // Create a copy with filtered events to avoid mutating frozen all_buckets
+              result.push({ ...bucket, events: filteredEvents });
+              continue;
+            } catch (e) {
+              console.warn('AFK filter query failed, falling back to raw events:', e);
+            }
+          }
+        }
+
+        // Keep other buckets unchanged
+        result.push(bucket);
+      }
+
+      return result;
+    },
+
+    // Runs a canonicalEvents query to get window events filtered by AFK status,
+    // respecting the user's always_active_pattern setting.
+    _queryAfkFilteredEvents: async function (windowBucketId, afkBucketId) {
+      const queryCode =
+        canonicalEvents({
+          bid_window: windowBucketId,
+          bid_afk: afkBucketId,
+          filter_afk: true,
+          always_active_pattern: this.always_active_pattern || undefined,
+          categories: [],
+          filter_categories: null,
+        }) + '\nRETURN = events;';
+
+      const queryArray = queryCode
+        .split(';')
+        .map(s => s.trim())
+        .filter(s => s)
+        .map(s => s + ';');
+
+      const start = this.daterange[0].format();
+      const end = this.daterange[1].format();
+      const timeperiods = [`${start}/${end}`];
+
+      const data = await getClient().query(timeperiods, queryArray);
+      return data[0] || [];
     },
   },
 };
