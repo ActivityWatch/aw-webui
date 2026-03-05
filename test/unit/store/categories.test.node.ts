@@ -125,4 +125,20 @@ describe('categories store', () => {
       1
     );
   });
+
+  test('get_category_color decodes URL-encoded category segments', () => {
+    categoryStore.load([
+      {
+        name: ['Work Project'],
+        rule: { type: 'regex', regex: 'work-project' },
+        data: { color: '#123456' },
+      } as Category,
+    ]);
+
+    const decoded = categoryStore.get_category_color(['Work Project']);
+    const encoded = categoryStore.get_category_color(['Work%20Project']);
+
+    expect(decoded).toEqual('#123456');
+    expect(encoded).toEqual('#123456');
+  });
 });
