@@ -47,7 +47,7 @@
   },
   "parser": "vue-eslint-parser",
   "parserOptions": {
-    "ecmaVersion": 2017,
+    "ecmaVersion": 2020,
     "sourceType": "module"
   },
   "env": {
@@ -60,25 +60,10 @@
   },
   "overrides": [
     {
-      "files": [".*\\.vue$"],
-      "parserOptions": {
-          "parser": "vue-eslint-parser"
-      }
-    },
-    {
-      "files": [".*\\.js$"],
-      "parserOptions": {
-          "parser": "babel-eslint"
-      }
-    },
-    {
-      "files": [".*\\.ts$"],
+      "files": ["*.ts", "*.tsx"],
       "parserOptions": {
           "parser": "@typescript-eslint/parser"
-      }
-    },
-    {
-      "files": ["*.ts", "*.tsx"],
+      },
       "rules": {
         "@typescript-eslint/explicit-module-boundary-types": ["off"]
       }

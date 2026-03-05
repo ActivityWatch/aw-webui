@@ -1,39 +1,37 @@
 'use strict';
 
+// NOTE: Vue 3 removed global filters (Vue.filter is gone).
+// These functions are exported for direct use in components via computed props or methods.
+// Components using {{ value | filterName }} need to be updated to {{ filterName(value) }}.
+
 import _ from 'lodash';
-import Vue from 'vue';
 import { seconds_to_duration, friendlydate } from './time';
 import { periodReadable } from './timeperiod';
 
 import moment from 'moment';
 
-Vue.filter('iso8601', function (timestamp) {
+export function iso8601(timestamp) {
   return moment.parseZone(timestamp).format();
-});
+}
 
-Vue.filter('shortdate', function (timestamp) {
+export function shortdate(timestamp) {
   return moment(timestamp).format('YYYY-MM-DD');
-});
+}
 
-Vue.filter('shorttime', function (timestamp) {
+export function shorttime(timestamp) {
   return moment(timestamp).format('HH:mm');
-});
+}
 
-Vue.filter('friendlytime', function (timestamp) {
+export function friendlytime(timestamp) {
   return friendlydate(timestamp);
-});
+}
 
-Vue.filter('friendlyduration', function (seconds) {
+export function friendlyduration(seconds) {
   return seconds_to_duration(seconds);
-});
+}
 
-Vue.filter('friendlyperiod', function (timeperiod) {
+export function friendlyperiod(timeperiod) {
   return periodReadable(timeperiod);
-});
+}
 
-// Apparently this is how we should do filters now
-// https://github.com/vuejs/vue/issues/2756#issuecomment-215508316
-Vue.prototype.filters = {
-  //  filterBy: ...,
-  orderBy: _.orderBy,
-};
+export const orderBy = _.orderBy;

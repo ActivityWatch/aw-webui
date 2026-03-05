@@ -16,12 +16,12 @@ div
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import { useCategoryStore } from '~/stores/categories';
 
 const SEP = ' > ';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'SelectCategoriesOrPattern',
   props: {
     filterCategories: {
@@ -69,11 +69,11 @@ export default Vue.extend({
       this.filterCategoriesData = [...this.filterCategoriesData, ...this.filterCategories];
     },
     filterCategoriesData() {
-      this.$emit('input', this.categoriesWithRules);
+      this.$emit('update:modelValue', this.categoriesWithRules);
       console.log(this.categoriesWithRules);
     },
     pattern() {
-      this.$emit('input', this.categoriesWithRules);
+      this.$emit('update:modelValue', this.categoriesWithRules);
       console.log(this.categoriesWithRules);
     },
   },

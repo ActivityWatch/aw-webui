@@ -18,7 +18,7 @@ div.mx-3
 import { getTitleAttr, getColorFromString } from '../util/color';
 import moment from 'moment';
 import _ from 'lodash';
-import FullCalendar from '@fullcalendar/vue';
+import FullCalendar from '@fullcalendar/vue3';
 import timeGridPlugin from '@fullcalendar/timegrid';
 
 // TODO: Use canonical timeline query, with flooding and categorization

@@ -8,12 +8,14 @@ module.exports = {
   projects: [
     {
       displayName: 'jsdom',
-      preset: '@vue/cli-plugin-unit-jest',
       testEnvironment: 'jsdom',
+      testEnvironmentOptions: {
+        customExportConditions: ['node', 'node-addons'],
+      },
       transform: {
         '^.+\\.js$': 'babel-jest',
         '^.+\\.ts$': 'ts-jest',
-        '^.+\\.vue$': '@vue/vue2-jest',
+        '^.+\\.vue$': '@vue/vue3-jest',
       },
       testMatch: ['**/test/**/*.test.js?(x)'],
       moduleNameMapper: {
@@ -31,7 +33,7 @@ module.exports = {
       transform: {
         '^.+\\.js$': 'babel-jest',
         '^.+\\.ts$': 'ts-jest',
-        '^.+\\.vue$': '@vue/vue2-jest',
+        '^.+\\.vue$': '@vue/vue3-jest',
       },
       moduleNameMapper: {
         '^~/(.+)$': '<rootDir>/src/$1',
