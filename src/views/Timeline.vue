@@ -40,6 +40,12 @@ div
               | Filter AFK
         tr
           th.pt-2.pr-3
+            label Merge:
+          td
+            b-form-checkbox(v-model="filter_merge_similar" size="sm" switch)
+              | Merge by app
+        tr
+          th.pt-2.pr-3
             label Categories:
           td
             select(@change="onCategorySelect($event)", :value="''")
@@ -110,6 +116,7 @@ export default {
       filter_client: null,
       filter_duration: null,
       filter_afk: false,
+      filter_merge_similar: false,
       filter_categories: [],
       swimlane: null,
       updateTimelineWindow: true,
@@ -143,6 +150,9 @@ export default {
       if (this.filter_afk) {
         desc.push('AFK filtered');
       }
+      if (this.filter_merge_similar) {
+        desc.push('merged by app');
+      }
       if (this.filter_categories.length > 0) {
         desc.push(
           this.filter_categories.length +
@@ -175,6 +185,10 @@ export default {
       this.getBuckets();
     },
     filter_afk() {
+      this.updateTimelineWindow = false;
+      this.getBuckets();
+    },
+    filter_merge_similar() {
       this.updateTimelineWindow = false;
       this.getBuckets();
     },
@@ -251,12 +265,57 @@ export default {
         }
       }
 
+      // Merge adjacent events by app name for window buckets.
+      // Reduces visual clutter when apps produce many small events (e.g. title
+      // changes from toggling UI panels). See: activitywatch#1165
+      if (this.filter_merge_similar) {
+        buckets = this._applyMergeSimilar(buckets);
+      }
+
       // AFK filtering: use query engine to filter window events by AFK status
       if (this.filter_afk) {
         buckets = await this._applyAfkFilter(buckets);
       }
 
       this.buckets = buckets;
+    },
+
+    // Merges adjacent events with the same app name within window buckets.
+    // This collapses rapid title changes (e.g. toggling UI panels) into single
+    // blocks per app, fixing timeline flooding for apps like Adobe Illustrator.
+    _applyMergeSimilar: function (buckets) {
+      return buckets.map(bucket => {
+        if (bucket.type !== 'currentwindow' || !bucket.events || bucket.events.length <= 1) {
+          return bucket;
+        }
+
+        const sorted = [...bucket.events].sort(
+          (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        );
+
+        const merged = [];
+        let current = { ...sorted[0] };
+
+        for (let i = 1; i < sorted.length; i++) {
+          const next = sorted[i];
+          const currentEnd = new Date(current.timestamp).getTime() + current.duration * 1000;
+          const nextStart = new Date(next.timestamp).getTime();
+          const gap = nextStart - currentEnd;
+
+          // Merge if same app and gap is small (< 30 seconds)
+          if (current.data?.app && current.data.app === next.data?.app && gap < 30000) {
+            const nextEnd = nextStart + next.duration * 1000;
+            current.duration =
+              (Math.max(currentEnd, nextEnd) - new Date(current.timestamp).getTime()) / 1000;
+          } else {
+            merged.push(current);
+            current = { ...next };
+          }
+        }
+        merged.push(current);
+
+        return { ...bucket, events: merged };
+      });
     },
 
     // Replaces raw window bucket events with AFK-filtered events via aw query engine.
