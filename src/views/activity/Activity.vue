@@ -35,6 +35,18 @@ div
     div.mx-2(v-if="periodLength === 'day'")
       input.form-control.px-2(id="date" type="date" :value="_date" :max="today"
                          @change="setDate($event.target.value, periodLength)")
+    
+    div.mx-2(v-if="periodLength === 'hour'")
+      input.form-control.px-2(id="date" type="date" :value="_date" :max="today"
+                     @change="setDate($event.target.value, periodLength)")
+    div.mx-2(v-if="periodLength === 'hour'")
+      b-input-group
+        input.form-control.px-2(type="time" :value="startTime" 
+                       @change="setStartTime($event.target.value)")
+        b-input-group-text.px-2 to
+        input.form-control.px-2(type="time" :value="endTime"
+                       @change="setEndTime($event.target.value)")
+
 
     div.ml-auto
       b-button-group
@@ -178,11 +190,6 @@ export default {
     host: String,
     date: {
       type: String,
-      // NOTE: This does not work as you'd might expect since the default is set on
-      // initialization, which would lead to the same date always being returned,
-      // even if the day has changed.
-      // Instead, use the computed _date.
-      //default: get_today(),
     },
     periodLength: {
       type: String,
@@ -210,6 +217,29 @@ export default {
     ...mapState(useSettingsStore, ['devmode']),
     ...mapState(useSettingsStore, ['always_active_pattern']),
 
+    // Get start and end times from query params, with defaults
+    startTime: {
+      get() {
+        return this.$route.query.start_time || '00:00';
+      },
+      set(value) {
+        this.$router.push({ 
+          query: { ...this.$route.query, start_time: value } 
+        });
+      }
+    },
+
+    endTime: {
+      get() {
+        return this.$route.query.end_time || '23:59';
+      },
+      set(value) {
+        this.$router.push({ 
+          query: { ...this.$route.query, end_time: value } 
+        });
+      }
+    },
+
     // number of filters currently set (different from defaults)
     filters_set() {
       return (this.filter_category ? 1 : 0) + (!this.filter_afk ? 1 : 0);
@@ -233,6 +263,7 @@ export default {
     periodLengths: function () {
       const settingsStore = useSettingsStore();
       let periods: Record<string, string> = {
+        hour: 'hour',
         day: 'day',
         week: 'week',
         month: 'month',
@@ -248,7 +279,7 @@ export default {
       return periods;
     },
     periodIsBrowseable: function () {
-      return ['day', 'week', 'month', 'year'].includes(this.periodLength);
+      return ['hour', 'day', 'week', 'month', 'year'].includes(this.periodLength);
     },
     currentView: function () {
       return this.views.find(v => v.id == this.$route.params.view_id) || this.views[0];
@@ -284,6 +315,31 @@ export default {
       const settingsStore = useSettingsStore();
 
       if (this.periodIsBrowseable) {
+        if (this.periodLength === 'hour') {
+          // Parse start and end times
+          const [startHour, startMin] = this.startTime.split(':').map(Number);
+          const [endHour, endMin] = this.endTime.split(':').map(Number);
+          
+          // Create moment objects for start and end
+          const startDateTime = moment(this._date)
+            .startOf('day')
+            .add(startHour, 'hours')
+            .add(startMin, 'minutes');
+          
+          const endDateTime = moment(this._date)
+            .startOf('day')
+            .add(endHour, 'hours')
+            .add(endMin, 'minutes');
+          
+          // Calculate duration in hours (can be fractional)
+          const durationHours = endDateTime.diff(startDateTime, 'minutes') / 60;
+          
+          return {
+            start: startDateTime.format(),
+            length: [durationHours, 'hour'],  // Use 'hour' (singular) to match TimelineBarChart
+          };
+        }
+
         return {
           start: get_day_start_with_offset(this._date, settingsStore.startOfDay),
           length: [1, this.periodLength],
@@ -303,13 +359,13 @@ export default {
       const periodStart = moment(this.timeperiod.start);
       const dateFormatString = 'YYYY-MM-DD';
 
-      // it's helpful to render a range for the week as opposed to just the start of the week
-      // or the number of the week so users can easily determine (a) if we are using monday/sunday as the week
-      // start and exactly when the week ends. The formatting code ends up being a bit more wonky, but it's
-      // worth the tradeoff. https://github.com/ActivityWatch/aw-webui/pull/284
-
       let periodLength;
       if (this.periodIsBrowseable) {
+        if (this.periodLength === 'hour') {
+          // For hour view, show the time range
+          const endTime = moment(periodStart).add(this.timeperiod.length[0], 'hours');
+          return `${periodStart.format('YYYY-MM-DD HH:mm')} — ${endTime.format('HH:mm')}`;
+        }
         periodLength = [1, this.periodLength];
       } else {
         if (this.periodLength === 'last7d') {
@@ -364,6 +420,10 @@ export default {
 
   methods: {
     previousPeriod: function () {
+      if (this.periodLength === 'hour') {
+        // For hour view, go back by 1 day
+        return moment(this._date).subtract(1, 'day').format('YYYY-MM-DD');
+      }
       return moment(this._date)
         .subtract(
           this.timeperiod.length[0],
@@ -372,6 +432,10 @@ export default {
         .format('YYYY-MM-DD');
     },
     nextPeriod: function () {
+      if (this.periodLength === 'hour') {
+        // For hour view, go forward by 1 day
+        return moment(this._date).add(1, 'day').format('YYYY-MM-DD');
+      }
       return moment(this._date)
         .add(
           this.timeperiod.length[0],
@@ -477,6 +541,14 @@ export default {
         name: '',
       };
     },
+    
+    setStartTime: function(time) {
+      this.startTime = time;
+    },
+    
+    setEndTime: function(time) {
+      this.endTime = time;
+    }
   },
 };
 </script>
