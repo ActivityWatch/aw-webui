@@ -98,10 +98,15 @@ export const useBucketsStore = defineStore('buckets', {
         );
     },
     bucketsAndroid(): (host: string) => string[] {
-      return host =>
-        this.bucketsByType(host, 'currentwindow').filter((id: string) =>
+      return host => {
+        const android = this.bucketsByType(host, 'currentwindow').filter((id: string) =>
           id.startsWith('aw-watcher-android')
         );
+        const ios = this.bucketsByType(host, 'app').filter((id: string) =>
+          id.startsWith('aw-import-screentime')
+        );
+        return [...android, ...ios];
+      };
     },
     bucketsEditor(): (host: string) => string[] {
       // fallback to a bucket with 'unknown' host, if one exists.
