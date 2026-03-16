@@ -99,7 +99,17 @@ export const useCategoryStore = defineStore('categories', {
     },
     get_category_color() {
       return (cat: string[]): string => {
-        return getColorFromCategory(this.get_category(cat), this.classes);
+        // In Vue 3 / Vite, route query params can arrive URL-encoded and split strings
+        // (e.g. ["Work%20Project"]) while category names are stored decoded.
+        // Normalize each segment before lookup to avoid false "Uncategorized" fallback.
+        const normalized = (cat || []).map(segment => {
+          try {
+            return decodeURIComponent(segment);
+          } catch {
+            return segment;
+          }
+        });
+        return getColorFromCategory(this.get_category(normalized), this.classes);
       };
     },
     get_category_score() {
