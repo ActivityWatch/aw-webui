@@ -51,7 +51,7 @@ import { mapState } from 'pinia';
 import { useServerStore } from '~/stores/server';
 
 export default {
-  name: 'Footer',
+  name: 'AwFooter',
   computed: {
     ...mapState(useServerStore, ['info']),
   },

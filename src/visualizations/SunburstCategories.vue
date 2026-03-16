@@ -15,7 +15,7 @@ sunburst(:data="data", :colorScale="colorfunc", :getCategoryForColor="categoryFo
       div(v-if="nodes.mouseOver !== null && nodes.mouseOver")
         div.parent {{ nodes.mouseOver.data.parent ? nodes.mouseOver.data.parent.join(" > ") : " " }}
         div.name {{ nodes.mouseOver.data.name }}
-        div {{ nodes.mouseOver.value | friendlyduration }}
+        div {{ friendlyduration(nodes.mouseOver.value) }}
         div ({{ Math.round(100 * nodes.mouseOver.value / nodes.root.value) }}%)
 
   // Add legend
@@ -32,6 +32,7 @@ import {
 } from 'vue-d3-sunburst';
 import 'vue-d3-sunburst/dist/vue-d3-sunburst.css';
 import { getColorFromCategory } from '~/util/color';
+import { friendlyduration } from '~/util/filters';
 
 import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
@@ -77,6 +78,7 @@ export default {
     },
   },
   methods: {
+    friendlyduration,
     categoryForColor: function (d) {
       const category = d.parent ? d.parent.concat([d.name]) : [d.name];
       return category.join(SEP);

@@ -128,7 +128,7 @@ import { useBucketsStore } from '~/stores/buckets';
 import { IBucket } from '~/util/interfaces';
 
 export default {
-  name: 'Header',
+  name: 'AwHeader',
   data() {
     return {
       activityViews: null,

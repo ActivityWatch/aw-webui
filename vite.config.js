@@ -1,7 +1,56 @@
 import path from 'node:path';
 import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue2';
+import vue from '@vitejs/plugin-vue';
 import { VitePWA } from 'vite-plugin-pwa';
+
+// Stub plugin for Vue 2-only packages that can't be resolved yet.
+// This lets the build proceed so we can see all component-level errors.
+// TODO(vue3-migration): Replace these stubs with real Vue 3 alternatives.
+const vue2StubPlugin = () => {
+  const stubIds = [
+    // vue-awesome: Vue 2 icon library — stub all icon imports and the main component
+    /^vue-awesome(\/.*)?$/,
+    // vue-color: Vue 2 color picker — needs replacement (e.g. vue3-colorpicker)
+    /^vue-color(\/.*)?$/,
+    // vue-datetime: Vue 2 datetime picker — needs replacement (e.g. vue-datepicker-next)
+    /^vue-datetime(\/.*)?$/,
+    // vue-d3-sunburst: may or may not work with Vue 3; stub for now
+    /^vue-d3-sunburst(\/.*)?$/,
+  ];
+
+  return {
+    name: 'vue2-stub',
+    resolveId(id) {
+      if (stubIds.some(re => re.test(id))) {
+        return '\0vue2-stub:' + id;
+      }
+    },
+    load(id) {
+      if (id.startsWith('\0vue2-stub:')) {
+        // For CSS imports: return empty string
+        if (id.endsWith('.css')) {
+          return '';
+        }
+        // For icon side-effect imports (vue-awesome/icons/*): no-op
+        // For component imports: export a stub component
+        return `
+import { defineComponent, h } from 'vue';
+const Stub = defineComponent({
+  name: 'Vue2Stub',
+  props: { name: String, scale: [Number, String] },
+  render() { return h('span', { 'data-stub': true }); },
+});
+export default Stub;
+export const Compact = Stub;
+export const Sketch = Stub;
+export const Chrome = Stub;
+export const Datetime = Stub;
+export { Stub as Icon };
+`;
+      }
+    },
+  };
+};
 
 export default defineConfig(({ mode }) => {
   const PRODUCTION = mode === 'production';
@@ -46,13 +95,22 @@ export default defineConfig(({ mode }) => {
   // Return the configuration
   return {
     plugins: [
+      vue2StubPlugin(),
       setCsp(),
       autoInject(),
-      vue(),
+      vue({
+        // Disable asset URL transformation so that runtime-provided assets
+        // (like /logo.png served by aw-server) are not treated as build-time imports.
+        template: {
+          transformAssetUrls: false,
+        },
+      }),
       VitePWA({
         devOptions: {
           enabled: true,
         },
+        // NOTE: logo.png is gitignored — it is copied from the aw-media package at release build
+        // time. The PWA manifest references it but it doesn't need to be present during dev builds.
         manifest: {
           name: 'ActivityWatch',
           short_name: 'ActivityWatch',
@@ -66,9 +124,12 @@ export default defineConfig(({ mode }) => {
             },
           ],
         },
+        // Don't fail the build if the logo isn't present (it's provided at runtime by aw-media)
+        includeAssets: [],
       }),
     ],
     server: {
+      host: '127.0.0.1',
       port: 27180,
       // TODO: Fix this.
       // Breaks a bunch of style-related stuff etc.

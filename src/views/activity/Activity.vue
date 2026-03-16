@@ -2,7 +2,7 @@
 div
   h3.mb-0 Activity #[span.d-sm-inline.d-none for ]
     span.text-muted.d-sm-inline-block.d-block
-      span(v-if="periodIsBrowseable") {{ timeperiod | friendlyperiod }}
+      span(v-if="periodIsBrowseable") {{ friendlyperiod(timeperiod) }}
       span(v-else) {{ {"last7d": "last 7 days", "last30d": "last 30 days"}[periodLength] }}
 
   div.mb-3.text-muted(style="font-size: 0.9em;")
@@ -12,7 +12,7 @@ div
         span {{ host }}
       li.list-group-item.pl-0.pr-3.py-0.border-0
         b.mr-1 Time active:
-        span {{ activityStore.active.duration | friendlyduration }}
+        span {{ friendlyduration(activityStore.active.duration) }}
     ul.list-group.list-group-horizontal-md(v-if="periodLength != 'day'")
       li.list-group-item.pl-0.pr-3.py-0.border-0
         b.mr-1 Query range:
@@ -152,6 +152,7 @@ import { mapState } from 'pinia';
 import moment from 'moment';
 import { get_day_start_with_offset, get_today_with_offset } from '~/util/time';
 import { periodLengthConvertMoment } from '~/util/timeperiod';
+import { friendlyperiod, friendlyduration } from '~/util/filters';
 import _ from 'lodash';
 
 import 'vue-awesome/icons/arrow-left';
@@ -357,12 +358,14 @@ export default {
     }
   },
 
-  beforeDestroy: async function () {
+  beforeUnmount: async function () {
     // Cancels pending requests and resets store
     await this.activityStore.reset();
   },
 
   methods: {
+    friendlyperiod,
+    friendlyduration,
     previousPeriod: function () {
       return moment(this._date)
         .subtract(
