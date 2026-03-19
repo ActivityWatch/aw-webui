@@ -94,3 +94,12 @@ export function get_today_with_offset(offset?: string): string {
   const offset_dur = get_offset_duration(offset);
   return moment().subtract(offset_dur).startOf('day').format('YYYY-MM-DD');
 }
+
+export function get_first_day_of_week(startOfWeek: string): number {
+  const mapping: Record<string, number> = {
+    Sunday: 0,
+    Monday: 1,
+    Saturday: 6,
+  };
+  return mapping[startOfWeek] !== undefined ? mapping[startOfWeek] : 1;
+}

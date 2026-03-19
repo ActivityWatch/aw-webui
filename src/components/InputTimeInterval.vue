@@ -87,6 +87,7 @@ import 'vue-awesome/icons/arrow-left';
 import 'vue-awesome/icons/arrow-right';
 import { mapState } from 'pinia';
 import { useSettingsStore } from '~/stores/settings';
+import { get_first_day_of_week } from '~/util/time';
 
 export default {
   name: 'input-timeinterval',
@@ -153,12 +154,7 @@ export default {
       return moment(this.start).add(this.maxDuration, 'seconds').isBefore(moment(this.end));
     },
     firstDayOfWeek() {
-      const mapping = {
-        Sunday: 0,
-        Monday: 1,
-        Saturday: 6,
-      };
-      return mapping[this.startOfWeek] !== undefined ? mapping[this.startOfWeek] : 1;
+      return get_first_day_of_week(this.startOfWeek);
     },
   },
   mounted() {

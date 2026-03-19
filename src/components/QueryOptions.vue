@@ -19,6 +19,7 @@ import moment from 'moment';
 import { mapState } from 'pinia';
 import { useBucketsStore } from '~/stores/buckets';
 import { useSettingsStore } from '~/stores/settings';
+import { get_first_day_of_week } from '~/util/time';
 
 export default Vue.extend({
   name: 'QueryOptions',
@@ -46,12 +47,7 @@ export default Vue.extend({
       return this.bucketsStore.hosts;
     },
     firstDayOfWeek() {
-      const mapping = {
-        Sunday: 0,
-        Monday: 1,
-        Saturday: 6,
-      };
-      return mapping[this.startOfWeek] !== undefined ? mapping[this.startOfWeek] : 1;
+      return get_first_day_of_week(this.startOfWeek);
     },
   },
 
