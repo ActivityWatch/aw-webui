@@ -45,11 +45,15 @@ div
             option(:value="24*60*60") 24h
       tr(v-if="mode == 'range'")
         th.pr-2 Range:
-        td
-          input(type="date", v-model="start", :max="end || undefined")
-          input(type="date", v-model="end", :min="start || undefined", placeholder="(optional)")
+        td.d-flex.align-items-center
+          b-button(variant="outline-dark", size="sm", @click="shiftDays(-1)")
+            icon(name="arrow-left")
+          b-form-datepicker(v-model="start", size="sm", :start-weekday="firstDayOfWeek" :max="end || undefined")
+          b-form-datepicker(v-model="end", size="sm", :start-weekday="firstDayOfWeek", :min="start || undefined", placeholder="(optional)")
+          b-button(variant="outline-dark", size="sm", @click="shiftDays(1)")
+            icon(name="arrow-right")
           button(
-            class="btn btn-outline-dark btn-sm",
+            class="btn btn-outline-dark btn-sm ml-1",
             type="button",
             :disabled="invalidDaterange || emptyDaterange || daterangeTooLong",
             @click="applyRange"
@@ -70,11 +74,20 @@ div
     background-color: #aaa;
   }
 }
+
+.b-form-datepicker {
+  min-width: 300px;
+}
 </style>
 
 <script lang="ts">
 import moment from 'moment';
 import 'vue-awesome/icons/sync';
+import 'vue-awesome/icons/arrow-left';
+import 'vue-awesome/icons/arrow-right';
+import { mapState } from 'pinia';
+import { useSettingsStore } from '~/stores/settings';
+
 export default {
   name: 'input-timeinterval',
   props: {
@@ -113,6 +126,7 @@ export default {
     };
   },
   computed: {
+    ...mapState(useSettingsStore, ['startOfWeek']),
     value: {
       get() {
         if (this.mode == 'range' && this.start) {
@@ -137,6 +151,14 @@ export default {
     daterangeTooLong() {
       if (!this.end) return false;
       return moment(this.start).add(this.maxDuration, 'seconds').isBefore(moment(this.end));
+    },
+    firstDayOfWeek() {
+      const mapping = {
+        Sunday: 0,
+        Monday: 1,
+        Saturday: 6,
+      };
+      return mapping[this.startOfWeek] !== undefined ? mapping[this.startOfWeek] : 1;
     },
   },
   mounted() {
@@ -178,6 +200,14 @@ export default {
     applyLastDuration() {
       this.mode = 'last_duration';
       this.valueChanged();
+    },
+    shiftDays(n) {
+      if (!this.start) return;
+      this.start = moment(this.start).add(n, 'days').format('YYYY-MM-DD');
+      if (this.end) {
+        this.end = moment(this.end).add(n, 'days').format('YYYY-MM-DD');
+      }
+      this.applyRange();
     },
   },
 };
