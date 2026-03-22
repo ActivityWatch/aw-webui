@@ -33,6 +33,18 @@ function getScoreFromCategory(c: Category, allCats: Category[]): number {
   }
 }
 
+// Normalize URL-encoded category segments (e.g. "Work%20Project" → "Work Project").
+// Route query params can arrive encoded while category names are stored decoded.
+function normalizeSegments(cat: string[]): string[] {
+  return (cat || []).map(segment => {
+    try {
+      return decodeURIComponent(segment);
+    } catch {
+      return segment;
+    }
+  });
+}
+
 export const useCategoryStore = defineStore('categories', {
   state: (): State => ({
     classes: [],
@@ -99,12 +111,12 @@ export const useCategoryStore = defineStore('categories', {
     },
     get_category_color() {
       return (cat: string[]): string => {
-        return getColorFromCategory(this.get_category(cat), this.classes);
+        return getColorFromCategory(this.get_category(normalizeSegments(cat)), this.classes);
       };
     },
     get_category_score() {
       return (cat: string[]): number => {
-        return getScoreFromCategory(this.get_category(cat), this.classes);
+        return getScoreFromCategory(this.get_category(normalizeSegments(cat)), this.classes);
       };
     },
     category_select() {
