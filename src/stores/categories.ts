@@ -114,7 +114,14 @@ export const useCategoryStore = defineStore('categories', {
     },
     get_category_score() {
       return (cat: string[]): number => {
-        return getScoreFromCategory(this.get_category(cat), this.classes);
+        const normalized = (cat || []).map(segment => {
+          try {
+            return decodeURIComponent(segment);
+          } catch {
+            return segment;
+          }
+        });
+        return getScoreFromCategory(this.get_category(normalized), this.classes);
       };
     },
     category_select() {

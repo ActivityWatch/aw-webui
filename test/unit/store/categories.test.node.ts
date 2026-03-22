@@ -141,4 +141,20 @@ describe('categories store', () => {
     expect(decoded).toEqual('#123456');
     expect(encoded).toEqual('#123456');
   });
+
+  test('get_category_score decodes URL-encoded category segments', () => {
+    categoryStore.load([
+      {
+        name: ['Work Project'],
+        rule: { type: 'regex', regex: 'work-project' },
+        data: { score: 42 },
+      } as Category,
+    ]);
+
+    const decoded = categoryStore.get_category_score(['Work Project']);
+    const encoded = categoryStore.get_category_score(['Work%20Project']);
+
+    expect(decoded).toEqual(42);
+    expect(encoded).toEqual(42);
+  });
 });
