@@ -47,6 +47,7 @@ app.use(pinia);
 app.config.globalProperties.PRODUCTION = PRODUCTION;
 app.config.globalProperties.COMMIT_HASH = COMMIT_HASH;
 app.config.globalProperties.$isAndroid = process.env.VUE_APP_ON_ANDROID;
+app.config.globalProperties.$aw = getClient();
 
 // Register global mixin
 app.mixin(asyncErrorCapturedMixin);
@@ -165,9 +166,6 @@ app.component(
 );
 
 app.mount('#app');
-
-// Set the $aw global property
-app.config.globalProperties.$aw = getClient();
 
 // Must be run after vue init since it relies on the settings store
 configureClient();
