@@ -59,7 +59,7 @@ export default defineConfig(({ mode }) => {
   // Sets the CSP
   const setCsp = () => {
     return {
-      name: 'html-transform',
+      name: 'set-csp',
       transformIndexHtml(html) {
         const pattern = '<%= htmlWebpackPlugin.options.templateParameters.cspDefaultSrc %>';
         // check if the pattern exists in the html, if not, throw error
@@ -74,7 +74,7 @@ export default defineConfig(({ mode }) => {
   // Auto-injects /src/main.js into index.html on a new line after the one which has VITE_AUTOINJECT
   const autoInject = () => {
     return {
-      name: 'html-transform',
+      name: 'auto-inject',
       transformIndexHtml: {
         order: 'pre',
         handler(html) {

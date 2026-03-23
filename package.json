@@ -65,7 +65,8 @@
     "vue-d3-sunburst": "git+https://github.com/ErikBjare/Vue.D3.sunburst.git#patch-1",
     "vuedraggable": "^4.1.0",
     "weekstart": "^1.0.1",
-    "xss": "^1.0.14"
+    "xss": "^1.0.14",
+    "vue-router": "^4.4.5"
   },
   "devDependencies": {
     "@babel/cli": "^7.16.0",
@@ -113,7 +114,6 @@
     "url-loader": "^4.1",
     "vite-plugin-pwa": "^1.0.0",
     "vue-eslint-parser": "^9.3",
-    "vue-router": "^4.4.5",
     "style-loader": "^3.3.3"
   },
   "overrides": {

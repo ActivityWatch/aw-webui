@@ -19,7 +19,7 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
 
         // If multiple (or no) activity views are available
         b-nav-item-dropdown(v-if="!activityViews || activityViews.length !== 1")
-          template(slot="button-content")
+          template(#button-content)
             div.d-inline.px-2.px-lg-1
               icon(name="calendar-day")
               | Activity
@@ -52,7 +52,7 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
 
       b-navbar-nav.ml-auto
         b-nav-item-dropdown
-          template(slot="button-content")
+          template(#button-content)
             div.d-inline.px-2.px-lg-1
               icon(name="tools")
               | Tools
