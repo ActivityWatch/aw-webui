@@ -265,16 +265,17 @@ export default {
         }
       }
 
-      // Merge adjacent events by app name for window buckets.
-      // Reduces visual clutter when apps produce many small events (e.g. title
-      // changes from toggling UI panels). See: activitywatch#1165
-      if (this.filter_merge_similar) {
-        buckets = this._applyMergeSimilar(buckets);
-      }
-
       // AFK filtering: use query engine to filter window events by AFK status
       if (this.filter_afk) {
         buckets = await this._applyAfkFilter(buckets);
+      }
+
+      // Merge adjacent events by app name for window buckets.
+      // Runs after AFK filtering so merges operate on already-filtered events.
+      // Reduces visual clutter from apps that produce many small events (e.g.
+      // Adobe Illustrator's TAB key toggling UI panels). See: activitywatch#1165
+      if (this.filter_merge_similar) {
+        buckets = this._applyMergeSimilar(buckets);
       }
 
       this.buckets = buckets;
