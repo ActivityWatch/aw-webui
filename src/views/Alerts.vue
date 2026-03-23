@@ -16,12 +16,12 @@ div
     | {{ $t('ui.alerts.noHost') }}
 
   b-card(v-for="alert in alerts", :key="alert.name")
-    b-button.float-right(@click="deleteAlert(alert.name)" size="sm" variant="outline-danger" :disabled="saving")
+    b-button.float-end(@click="deleteAlert(alert.name)" size="sm" variant="outline-danger" :disabled="saving")
       icon(name="trash")
 
     div {{ $t('ui.alerts.goalName') }}: {{ alert.name }}
     div {{ $t('ui.alerts.category') }}: {{ alert.category.join(" > ") }}
-    div {{ $t('ui.alerts.current') }}: {{ alertTime(alert.category) | friendlyduration }} / {{alert.goal}} {{ $t('ui.alerts.minutes') }}
+    div {{ $t('ui.alerts.current') }}: {{ friendlyduration(alertTime(alert.category)) }} / {{alert.goal}} {{ $t('ui.alerts.minutes') }}
       span(v-if="alertTime(alert.category) >= alert.goal")
         icon.text-success(name="check")
       span(v-else)
@@ -29,10 +29,10 @@ div
 
   div.d-flex.align-items-center.mt-3
     b-btn(@click="check" variant="success" :disabled="!hostname") {{ $t('ui.alerts.check') }}
-    b-form-checkbox.ml-3.mb-0(v-model="autorefresh", @change="toggleAutoRefresh", switch) {{ $t('ui.alerts.autoRefresh') }}
+    b-form-checkbox.ms-3.mb-0(v-model="autorefresh", @change="toggleAutoRefresh", switch) {{ $t('ui.alerts.autoRefresh') }}
 
   small.text-muted(v-if="last_updated")
-    | {{ $t('ui.alerts.lastUpdated') }} #[time(:datetime="last_updated && last_updated.toISOString && last_updated.toISOString()") {{ last_updated | friendlytime }}]
+    | {{ $t('ui.alerts.lastUpdated') }} #[time(:datetime="last_updated && last_updated.toISOString && last_updated.toISOString()") {{ friendlytime(last_updated) }}]
 
   hr
 

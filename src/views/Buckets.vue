@@ -9,12 +9,12 @@ div
   )
     div.d-flex.justify-content-between.align-items-start.mb-2
       div.d-flex.align-items-center
-        icon.mr-2.text-muted(v-if="device.hostname === 'unknown'" name="question" scale="1.2")
-        icon.mr-2.text-secondary(v-else-if="bucketsStore.available(device.hostname).android" name="mobile" scale="1.2")
-        icon.mr-2.text-secondary(v-else name="desktop" scale="1.2")
+        icon.me-2.text-muted(v-if="device.hostname === 'unknown'" name="question" scale="1.2")
+        icon.me-2.text-secondary(v-else-if="bucketsStore.available(device.hostname).android" name="mobile" scale="1.2")
+        icon.me-2.text-secondary(v-else name="desktop" scale="1.2")
         div
-          span.font-weight-bold {{ device.hostname }}
-          b-badge.ml-2(v-if="serverStore.info && serverStore.info.hostname == device.hostname" variant="info") {{ $t('buckets.thisDevice') }}
+          span.fw-bold {{ device.hostname }}
+          b-badge.ms-2(v-if="serverStore.info && serverStore.info.hostname == device.hostname" variant="info") {{ $t('buckets.thisDevice') }}
           div.small.text-muted(v-if="device.device_id && device.hostname !== device.device_id")
             | {{ $t('ui.buckets.id') }}: {{ device.device_id }}
           div.small(v-if="deviceHasEvents(device)")
@@ -22,7 +22,7 @@ div
             time(:class="{'text-success': isRecent(device.last_updated)}",
                  :datetime="device.last_updated",
                  :title="device.last_updated")
-              | {{ device.last_updated | friendlytime }}
+              | {{ friendlytime(device.last_updated) }}
           div.small.text-muted(v-else)
             | {{ $t('buckets.noEventsYet') }}
       b-dropdown.kebab-dropdown(
@@ -42,7 +42,7 @@ div
           button-class="text-danger",
           :title="$t('buckets.deleteAllTitle', { count: device.buckets.length, hostname: device.hostname })"
         )
-          icon.mr-1(name="trash")
+          icon.me-1(name="trash")
           | {{ $t('buckets.deleteAllForHost') }}
 
     //- A list rather than a table: the name opens the bucket, the timestamp
@@ -50,7 +50,7 @@ div
     ul.list-unstyled.mb-0.bucket-list
       li.bucket-row(v-for="bucket in sortedBuckets(device)", :key="bucket.id")
         router-link.bucket-link(:to="'/buckets/' + bucket.id", :title="$t('buckets.openBucket') + ': ' + bucket.id")
-          small.text-monospace.bucket-id {{ bucket.id }}
+          small.font-monospace.bucket-id {{ bucket.id }}
           time.small.bucket-updated(v-if="bucketHasEvents(bucket)",
                                    :class="{'text-success': isRecent(bucket.last_updated)}",
                                    :datetime="bucket.last_updated",
@@ -62,14 +62,14 @@ div
           template(v-slot:button-content)
             icon(name="ellipsis-v")
           b-dropdown-item(@click="export_bucket_json(bucket.id)", :title="$t('buckets.exportBucketJson')")
-            icon.mr-1(name="download")
+            icon.me-1(name="download")
             | {{ $t('buckets.exportBucketJson') }}
           b-dropdown-item(@click="export_csv(bucket.id)", :title="$t('buckets.exportEventsCsv')")
-            icon.mr-1(name="download")
+            icon.me-1(name="download")
             | {{ $t('buckets.exportEventsCsv') }}
           b-dropdown-divider
           b-dropdown-item-button(@click="openDeleteBucketModal(bucket.id)", :title="$t('buckets.deleteBucket')", button-class="text-danger")
-            icon.mr-1(name="trash")
+            icon.me-1(name="trash")
             | {{ $t('buckets.deleteBucket') }}
 
     div(v-for="msg in runChecks(device)" :key="msg")
@@ -84,7 +84,7 @@ div
     br
     b {{ $t('buckets.deletePermanent') }}
     hr
-    div.float-right
+    div.float-end
       b-button.mx-2(@click="$root.$emit('bv::hide::modal','delete-modal')")
         | {{ $t('common.cancel') }}
       b-button(@click="deleteBucket(delete_bucket_selected)", variant="danger")
@@ -108,7 +108,7 @@ div
       b-alert.mt-2(v-if="delete_host_error" show variant="danger")
         | {{ delete_host_error }}
       hr
-      div.float-right
+      div.float-end
         b-button.mx-2(@click="$root.$emit('bv::hide::modal','delete-host-modal')")
           | {{ $t('common.cancel') }}
         b-button(@click="deleteBucketsForSelectedHost()",
@@ -131,7 +131,7 @@ div
                   :placeholder="$t('buckets.importPlaceholder')"
                   :drop-placeholder="$t('buckets.importDrop')")
       div.mt-2(v-if="import_file")
-        b-spinner.mr-2(small)
+        b-spinner.me-2(small)
         small.text-muted {{ $t('buckets.importing') }}
       small.d-block.mt-2.text-muted
         | {{ $t('buckets.importHelpNew') }}
@@ -141,8 +141,8 @@ div
                :title="$t('buckets.exportAllJson')",
                :disabled="exporting",
                variant="outline-secondary")
-        b-spinner.mr-1(v-if="exporting", small)
-        icon.mr-1(v-else, name="download")
+        b-spinner.me-1(v-if="exporting", small)
+        icon.me-1(v-else, name="download")
         | {{ exporting ? $t('buckets.exporting') : $t('buckets.exportAllJson') }}
       b-alert.mt-2(v-if="export_error", variant="danger", show, dismissible, @dismissed="export_error = null")
         | {{ export_error }}

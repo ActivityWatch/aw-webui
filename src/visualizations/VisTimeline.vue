@@ -224,7 +224,7 @@ export default {
       this.ensureUpdate();
     });
   },
-  beforeDestroy() {
+  beforeUnmount() {
     if (this.viewportFrame != null) cancelAnimationFrame(this.viewportFrame);
     this.itemEvents?.clear();
     this.preparedItems?.clear();

@@ -30,7 +30,7 @@ div
 
   h5 {{ $t('ui.categoryBuilder.commonWords', { category: category.join(' > ') }) }}
   div(v-if="loading")
-    b-spinner.mr-2(small)
+    b-spinner.me-2(small)
     span.text-muted {{ $t('common.loading') }}
   div(v-else-if="loadError" role="alert")
     p.text-danger {{ loadError }}
@@ -54,11 +54,11 @@ div
             div.flex-grow-1
               | {{ word.word }} ({{ Math.round(word.duration) }}s)
             div.flex-grow-0
-              b-button.mr-1(size="sm" @click="createRule(word.word)" variant="success")
+              b-button.me-1(size="sm" @click="createRule(word.word)" variant="success")
                 | {{ $t('ui.categoryBuilder.newRule') }}
-              b-button.mr-1(size="sm" @click="appendRule(word.word)" variant="warning")
+              b-button.me-1(size="sm" @click="appendRule(word.word)" variant="warning")
                 | {{ $t('ui.categoryBuilder.appendRule') }}
-              b-button.mr-1(size="sm" @click="ignoreWord(word.word)")
+              b-button.me-1(size="sm" @click="ignoreWord(word.word)")
                 | {{ $t('ui.categoryBuilder.ignore') }}
               b-button(size="sm" @click="showEvents(word)" variant="outline-dark")
                 span(v-if="showing_events[0] != word") {{ $t('ui.categoryBuilder.showEvents') }}
@@ -67,15 +67,15 @@ div
             table.table.table-sm.table-striped
               tr
                 th {{ $t('ui.categoryBuilder.titleColumn') }}
-                th.text-right {{ $t('ui.categoryBuilder.duration') }}
+                th.text-end {{ $t('ui.categoryBuilder.duration') }}
               tr(v-for="event in showing_events[1]")
                 td {{ event.data.title || event.data.app }}
-                td.text-right {{ Math.round(event.duration) }}s
+                td.text-end {{ Math.round(event.duration) }}s
             hr
       div.d-flex.align-items-center.mt-3(v-if="hasMoreWords")
         small.text-muted
           | {{ $t('ui.categoryBuilder.showingWords', { shown: words_visible.length, total: words_by_duration.length }) }}
-        b-button.ml-auto(
+        b-button.ms-auto(
           size="sm"
           variant="outline-primary"
           @click="visible_count += page_size"

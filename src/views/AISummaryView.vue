@@ -7,20 +7,20 @@ div
 
   div.row.mb-3
     div.col-md-4
-      b-form-group(:label="$t('ui.aiSummary.host')" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.aiSummary.host')" label-class="fw-bold")
         b-form-select(v-model="selectedHost" :options="hostOptions")
 
     div.col-md-4
-      b-form-group(:label="$t('ui.aiSummary.dateRange')" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.aiSummary.dateRange')" label-class="fw-bold")
         b-form-select(v-model="dateRange" :options="dateRangeOptions")
 
     div.col-md-4
-      b-form-group(:label="$t('ui.aiSummary.provider')" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.aiSummary.provider')" label-class="fw-bold")
         b-form-select(v-model="provider" :options="providerOptions" @change="onProviderChange")
 
   div.row.mb-3
     div.col-md-6
-      b-form-group(:label="$t('ui.aiSummary.apiKey')" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.aiSummary.apiKey')" label-class="fw-bold")
         b-form-input(
           v-model="apiKey"
           type="password"
@@ -30,31 +30,31 @@ div
         )
 
     div.col-md-6
-      b-form-group(:label="$t('ui.aiSummary.model')" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.aiSummary.model')" label-class="fw-bold")
         b-form-input(v-model="model" placeholder="e.g. gpt-4o-mini" @blur="persistConfig")
 
   div.mb-3
-    b-form-group(:label="$t('ui.aiSummary.privacyTitle')" label-class="font-weight-bold")
+    b-form-group(:label="$t('ui.aiSummary.privacyTitle')" label-class="fw-bold")
       b-form-checkbox(v-model="excludeUncategorized")
         | {{ $t('ui.aiSummary.excludeUncategorized') }}
       b-form-checkbox(v-model="excludePrivateCategories")
         | {{ $t('ui.aiSummary.excludePrivate') }}
-        span.text-muted.ml-1(v-if="privateCategories.length")
+        span.text-muted.ms-1(v-if="privateCategories.length")
           | ({{ privateCategories.map(c => c.join(' > ')).join(', ') }})
-        span.text-muted.ml-1(v-else)
+        span.text-muted.ms-1(v-else)
           | ({{ $t('ui.aiSummary.noPrivateCategories') }} — #[code private: true])
       small.text-muted
         | {{ $t('ui.aiSummary.browserPrivacyHelp') }}
 
   div.mb-3
-    b-form-group(:label="$t('ui.aiSummary.prompt')" label-class="font-weight-bold")
+    b-form-group(:label="$t('ui.aiSummary.prompt')" label-class="fw-bold")
       b-form-textarea(v-model="userPrompt" rows="3" max-rows="8")
 
   div.mb-4
     b-button(@click="generate" variant="primary" :disabled="loading || !apiKey || !selectedHost")
-      b-spinner.mr-2(v-if="loading" small)
+      b-spinner.me-2(v-if="loading" small)
       | {{ loading ? $t('ui.aiSummary.generating') : $t('ui.aiSummary.generate') }}
-    b-button.ml-2(
+    b-button.ms-2(
       v-if="aggregatedText"
       variant="outline-secondary"
       @click="dataVisible = !dataVisible"
@@ -65,13 +65,13 @@ div
 
   div(v-if="dataVisible && aggregatedText")
     b-card.mb-3
-      template(slot="header")
+      template(#header)
         strong {{ $t('ui.aiSummary.rawData') }}
       pre.mb-0(style="white-space: pre-wrap; font-size: 0.85em") {{ aggregatedText }}
 
   div(v-if="llmResponse")
     b-card
-      template(slot="header")
+      template(#header)
         div.d-flex.justify-content-between.align-items-center
           strong {{ $t('ui.aiSummary.title') }}
           b-button(size="sm" variant="outline-secondary" @click="copyResponse")

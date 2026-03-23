@@ -43,7 +43,7 @@ describe('i18n', () => {
   test('initial locale comes from localStorage when valid', () => {
     localStorage.setItem('locale', 'uk');
     const { i18n } = loadI18n();
-    expect(i18n.locale).toBe('uk');
+    expect(i18n.global.locale.value).toBe('uk');
   });
 
   test('initial locale detects browser language', () => {
@@ -52,7 +52,7 @@ describe('i18n', () => {
       configurable: true,
     });
     const { i18n } = loadI18n();
-    expect(i18n.locale).toBe('de');
+    expect(i18n.global.locale.value).toBe('de');
   });
 
   test('initial locale detects Chinese browser language', () => {
@@ -61,7 +61,7 @@ describe('i18n', () => {
       configurable: true,
     });
     const { i18n } = loadI18n();
-    expect(i18n.locale).toBe('zh-CN');
+    expect(i18n.global.locale.value).toBe('zh-CN');
   });
 
   test('initial locale detects Spanish browser language', () => {
@@ -487,13 +487,13 @@ describe('i18n', () => {
       configurable: true,
     });
     const { i18n } = loadI18n();
-    expect(i18n.locale).toBe('en');
+    expect(i18n.global.locale.value).toBe('en');
   });
 
   test('setAppLocale updates i18n, moment, document, and storage', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('zh-CN');
-    expect(i18n.locale).toBe('zh-CN');
+    expect(i18n.global.locale.value).toBe('zh-CN');
     expect(document.documentElement.lang).toBe('zh-CN');
     expect(localStorage.getItem('locale')).toBe('zh-CN');
   });
@@ -519,7 +519,7 @@ describe('i18n', () => {
   test('setAppLocale falls back to en for invalid locale', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('not-a-locale');
-    expect(i18n.locale).toBe('en');
+    expect(i18n.global.locale.value).toBe('en');
     expect(document.documentElement.lang).toBe('en');
     expect(localStorage.getItem('locale')).toBe('en');
   });

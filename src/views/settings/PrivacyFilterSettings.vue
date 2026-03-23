@@ -4,9 +4,9 @@ div
     div
       h5.mt-1.mb-2.mb-sm-0 {{ $t('settings.privacyFilters.title') }}
     div
-      b-btn.ml-1(@click="resetEditor" variant="outline-warning" size="sm" :disabled="!hasUnsavedChanges || isSaving")
+      b-btn.ms-1(@click="resetEditor" variant="outline-warning" size="sm" :disabled="!hasUnsavedChanges || isSaving")
         | {{ $t('settings.privacyFilters.discard') }}
-      b-btn.ml-1(@click="savePrivacyFilters" variant="success" size="sm" :disabled="!canSave")
+      b-btn.ms-1(@click="savePrivacyFilters" variant="success" size="sm" :disabled="!canSave")
         | {{ $t('settings.privacyFilters.save') }}
   p.mt-2.mb-2
     | {{ $t('settings.privacyFilters.help') }}

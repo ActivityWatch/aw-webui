@@ -5,8 +5,8 @@ div
 
   b-alert.supporter-nudge(v-if="supporterNudgeVisible" show variant="success" dismissible @dismissed="snoozeSupporterNudge")
     span {{ $t('home.supporterNudge.message') }}
-    b-button.ml-2(size="sm" variant="primary" :href="supporterNudgeHref" target="_blank" @click="onSupporterNudgeSupport") {{ $t('home.supporterNudge.support') }}
-    b-button.ml-1(size="sm" variant="link" @click="snoozeSupporterNudge") {{ $t('home.supporterNudge.notNow') }}
+    b-button.ms-2(size="sm" variant="primary" :href="supporterNudgeHref" target="_blank" @click="onSupporterNudgeSupport") {{ $t('home.supporterNudge.support') }}
+    b-button.ms-1(size="sm" variant="link" @click="snoozeSupporterNudge") {{ $t('home.supporterNudge.notNow') }}
 
   h3 {{ $t('home.greeting') }}
   p
@@ -172,7 +172,7 @@ export default {
     // Track ongoing webui engagement (client-side only) for the retention signal.
     this.startEngagementTracking();
   },
-  beforeDestroy() {
+  beforeUnmount() {
     this.stopSupporterStorageSync();
     this.stopEngagementTracking();
   },

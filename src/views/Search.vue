@@ -9,11 +9,11 @@ div
     b-input(v-model="pattern" v-on:keyup.enter="search()" :placeholder="$t('ui.search.regexPlaceholder')")
     b-input-group-append
       b-button(type="button", @click="search()" variant="success")
-        icon.mr-1(name="search")
+        icon.me-1(name="search")
         | {{ $t('search.searchBtn') }}
 
   div.d-flex.mt-1
-    span.mr-auto.small.text-muted {{ $t('ui.search.hostname') }}: {{queryOptions.hostname}}
+    span.me-auto.small.text-muted {{ $t('ui.search.hostname') }}: {{queryOptions.hostname}}
     b-button.border-0(size="sm", variant="outline-dark" @click="show_options = !show_options")
       span(v-if="!show_options")
         | #[icon(name="angle-double-down")] {{ $t('ui.search.showOptions') }}

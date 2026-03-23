@@ -8,7 +8,7 @@ div
     @save="(e) => $emit('save', e)", @delete="removeEvent"
   )
   b-card.event-container(no-block=true)
-    span(slot="header")
+    template(#header)
       h4.card-title {{ $t('ui.eventList.title') }}
       span.pagination-header
         | {{ $t('ui.eventList.showing', { shown: displayed_events.length, total: events.length }) }}
@@ -23,10 +23,10 @@ div
           span.event
             span.field(:title="event.timestamp")
               icon(name="calendar")
-              | {{ event.timestamp | friendlytime }}
+              | {{ friendlytime(event.timestamp) }}
             span.field
               icon(name="clock")
-              | {{ event.duration | friendlyduration }}
+              | {{ friendlyduration(event.duration) }}
             span(v-for="(val, key) in event.data").field
               icon(name="tags")
               // TODO: Add some kind of highlighting to key
@@ -141,6 +141,7 @@ import 'vue-awesome/icons/clock';
 import 'vue-awesome/icons/calendar';
 
 import EventEditor from '~/components/EventEditor.vue';
+import { friendlytime, friendlyduration } from '~/util/filters';
 
 export default {
   name: 'EventList',
@@ -168,6 +169,8 @@ export default {
     },
   },
   methods: {
+    friendlytime,
+    friendlyduration,
     editEvent: function (event) {
       this.editableEvent = event;
       this.$nextTick(() => {

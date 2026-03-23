@@ -55,7 +55,7 @@ div
               small.form-text.text-muted {{ $t('settings.notifications.thresholdsHelp') }}
             b-form-group(:label="$t('settings.notifications.type')" label-cols-sm="3" label-size="sm")
               b-form-radio-group(v-model="alert.positive" :options="goalOptions" size="sm")
-          b-btn.ml-2(@click="removeAlert(idx)" variant="outline-danger" size="sm" :title="$t('settings.notifications.removeAlert')")
+          b-btn.ms-2(@click="removeAlert(idx)" variant="outline-danger" size="sm" :title="$t('settings.notifications.removeAlert')")
             icon(name="trash")
 
       b-btn.mt-1(@click="addAlert" variant="outline-secondary" size="sm")

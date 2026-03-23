@@ -23,8 +23,8 @@ div
             | {{savedQuery.name}}
       div.form-group.col-lg-6
         div.saved-query-actions
-          button.btn.btn-success.mr-2(type="button", @click="saveCurrentQuery()") {{ $t('ui.query.saveCurrent') }}
-          button.btn.btn-secondary.mr-2(type="button", @click="renameSelectedQuery()", :disabled="!selected_saved_query_id") {{ $t('ui.query.rename') }}
+          button.btn.btn-success.me-2(type="button", @click="saveCurrentQuery()") {{ $t('ui.query.saveCurrent') }}
+          button.btn.btn-secondary.me-2(type="button", @click="renameSelectedQuery()", :disabled="!selected_saved_query_id") {{ $t('ui.query.rename') }}
           button.btn.btn-danger(type="button", @click="deleteSelectedQuery()", :disabled="!selected_saved_query_id")
             icon(name="trash")
             |  {{ $t('common.delete') }}

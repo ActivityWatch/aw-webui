@@ -130,8 +130,8 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
     b-navbar-nav.d-block.d-lg-none
       b-navbar-brand(to="/" style="background-color: transparent;")
         img.aligh-middle(src="/logo.png" style="height: 1.5em;")
-        span.ml-2.align-middle(style="font-size: 1em; color: #000;") {{ $t('app.name') }}
-        b-badge.ml-2.align-middle(v-if="researchEdition" variant="info" data-testid="research-edition-badge") {{ $t('app.researchEdition') }}
+        span.ms-2.align-middle(style="font-size: 1em; color: #000;") {{ $t('app.name') }}
+        b-badge.ms-2.align-middle(v-if="researchEdition" variant="info" data-testid="research-edition-badge") {{ $t('app.researchEdition') }}
 
     // Opens the drawer (b-sidebar listens to the same toggle event as b-collapse)
     b-navbar-toggle(target="nav-drawer" data-testid="nav-drawer-toggle")
@@ -144,11 +144,11 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
       // Brand on large screens (centered)
       b-navbar-nav.abs-center.d-none.d-lg-block
         b-navbar-brand(to="/" style="background-color: transparent;")
-          img.ml-0.aligh-middle(src="/logo.png" style="height: 1.5em;")
-          span.ml-2.align-middle(style="font-size: 1.0em; color: #000;") {{ $t('app.name') }}
-          b-badge.ml-2.align-middle(v-if="researchEdition" variant="info" data-testid="research-edition-badge") {{ $t('app.researchEdition') }}
+          img.ms-0.aligh-middle(src="/logo.png" style="height: 1.5em;")
+          span.ms-2.align-middle(style="font-size: 1.0em; color: #000;") {{ $t('app.name') }}
+          b-badge.ms-2.align-middle(v-if="researchEdition" variant="info" data-testid="research-edition-badge") {{ $t('app.researchEdition') }}
 
-      b-navbar-nav.ml-auto
+      b-navbar-nav.ms-auto
         +navTools(true)
 
     // Phone/tablet: modal side drawer. Closes on route change, Escape and

@@ -4,12 +4,12 @@ div
 
   div.row.mb-4
     div.col-md-3
-      b-form-group(:label="$t('ui.workReport.hosts')" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.workReport.hosts')" label-class="fw-bold")
         b-form-select(v-model="selectedHosts" :options="hostOptions" multiple :select-size="4")
         small.text-muted {{ $t('ui.workReport.selectDevices') }}
 
     div.col-md-3
-      b-form-group(:label="$t('ui.workReport.categories')" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.workReport.categories')" label-class="fw-bold")
         b-form-select(
           :value="''"
           :options="addableCategoryOptions"
@@ -17,9 +17,9 @@ div
           @change="addCategory"
         )
         div.mt-2(v-if="selectedCategories.length > 0")
-          span.badge.badge-info.mr-1.mb-1(v-for="(cat, idx) in selectedCategories" :key="idx")
+          span.badge.text-bg-info.me-1.mb-1(v-for="(cat, idx) in selectedCategories" :key="idx")
             | {{ JSON.parse(cat).join(' > ') }}
-            button.ml-1.close.small(
+            button.ms-1.close.small(
               type="button"
               :aria-label="$t('ui.workReport.removeCategory')"
               style="font-size: 0.85rem; line-height: 1"
@@ -28,7 +28,7 @@ div
         small.text-muted.d-block.mt-1 {{ $t('ui.workReport.subcategories') }}
 
     div.col-md-3
-      b-form-group(:label="$t('ui.workReport.breakTime')" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.workReport.breakTime')" label-class="fw-bold")
         div.d-flex.align-items-center
           b-form-input(
             v-model="breakTime"
@@ -37,11 +37,11 @@ div
             max="30"
             step="1"
           )
-          span.ml-2.text-nowrap {{ breakTime }} min
+          span.ms-2.text-nowrap {{ breakTime }} min
         small.text-muted {{ $t('ui.workReport.breakHelp') }}
 
     div.col-md-3
-      b-form-group(:label="$t('ui.workReport.dateRange')" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.workReport.dateRange')" label-class="fw-bold")
         b-form-select(v-model="dateRange" :options="dateRangeOptions")
 
   div.mb-3.report-actions
@@ -56,7 +56,7 @@ div
       |  {{ $t('common.export') }} JSON
 
   div(v-if="loading")
-    b-spinner.mr-2
+    b-spinner.me-2
     | {{ $t('workReport.loading') }}
 
   div(v-if="hasData && !loading")
@@ -66,21 +66,21 @@ div
       thead
         tr
           th {{ $t('ui.workReport.date') }}
-          th.text-right {{ $t('ui.workReport.workTime') }}
-          th.text-right {{ $t('ui.workReport.sessions') }}
-          th.text-right {{ $t('ui.workReport.avgSession') }}
+          th.text-end {{ $t('ui.workReport.workTime') }}
+          th.text-end {{ $t('ui.workReport.sessions') }}
+          th.text-end {{ $t('ui.workReport.avgSession') }}
       tbody
         tr(v-for="day in dailyData" :key="day.date")
           td.text-nowrap {{ day.date }}
-          td.text-right {{ formatDuration(day.duration) }}
-          td.text-right {{ day.sessions }}
-          td.text-right {{ formatDuration(day.avgSession) }}
+          td.text-end {{ formatDuration(day.duration) }}
+          td.text-end {{ day.sessions }}
+          td.text-end {{ formatDuration(day.avgSession) }}
       tfoot
-        tr.font-weight-bold
+        tr.fw-bold
           td {{ $t('ui.billing.total') }}
-          td.text-right {{ formatDuration(totalDuration) }}
-          td.text-right {{ totalSessions }}
-          td.text-right {{ formatDuration(avgSessionLength) }}
+          td.text-end {{ formatDuration(totalDuration) }}
+          td.text-end {{ totalSessions }}
+          td.text-end {{ formatDuration(avgSessionLength) }}
 
 </template>
 

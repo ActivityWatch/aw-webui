@@ -2,7 +2,7 @@
 div
   div.d-flex.align-items-center.mb-3
     h3.mb-0 {{ $t('stopwatch.title') }}
-    button.btn.btn-link.p-0.ml-2.text-muted(
+    button.btn.btn-link.p-0.ms-2.text-muted(
       id="stopwatch-help"
       type="button"
       :aria-label="$t('stopwatch.aboutTitle')"
@@ -35,7 +35,7 @@ div
     b-button.ml-2(size="sm" :disabled="refreshing" @click="getEvents()") Retry
 
   div(v-if="loading")
-    b-spinner.mr-2(small)
+    b-spinner.me-2(small)
     span.text-muted {{ $t('common.loading') }}
   div(v-else)
     h3.mt-3 {{ $t('stopwatch.running') }}
@@ -148,7 +148,7 @@ export default {
       if (i != -1) {
         // This is needed instead of this.events[i] because insides of arrays
         // are not reactive in Vue
-        this.$set(this.events, i, new_event);
+        this.events[i] = new_event;
       } else {
         console.error(':(');
       }

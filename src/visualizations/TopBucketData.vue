@@ -35,7 +35,7 @@ div
   div.mt-2
     div.text-center.py-4(v-if="loading")
       b-spinner(small type="grow" :label="$t('common.loading')")
-      span.ml-2 {{ $t('ui.topBucket.loadingEvents') }}
+      span.ms-2 {{ $t('ui.topBucket.loadingEvents') }}
     aw-summary(
       v-else-if="aggregated.length",
       :fields="aggregated",

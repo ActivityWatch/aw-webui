@@ -1,6 +1,6 @@
 <template lang="pug">
 // The category edit modal
-b-modal(id="edit" ref="edit" :title="$t('ui.categoryEditor.editTitle')" @show="resetModal" @hidden="hidden" @ok="handleOk" @keydown.native.enter="handleEnter" :ok-disabled="!canSubmit")
+b-modal(id="edit" ref="edit" :title="$t('ui.categoryEditor.editTitle')" @show="resetModal" @hidden="hidden" @ok="handleOk" @keydown.enter="handleEnter" :ok-disabled="!canSubmit")
   div.my-1
     b-input-group.my-1(:prepend="$t('ui.categoryEditor.name')")
       b-form-input(v-model="editing.name")
@@ -21,13 +21,13 @@ b-modal(id="edit" ref="edit" :title="$t('ui.categoryEditor.editTitle')" @show="r
           b-form-checkbox(v-model="editing.rule.ignore_case" switch)
             | {{ $t('ui.categoryEditor.caseInsensitive') }}
         div.flex-grow-1
-          small.text-right
+          small.text-end
             div.text-danger(v-if="!validPattern") {{ $t('settings.activePattern.invalid') }}
             div.text-warning(v-if="validPattern && broad_pattern") {{ $t('settings.activePattern.tooBroad') }}
       div.mt-2
         small.text-muted {{ $t('ui.categoryEditor.matchFields') }}
         div.d-flex.flex-wrap
-          b-form-checkbox.mr-3(
+          b-form-checkbox.me-3(
             v-for="key in fieldOptions"
             :key="key"
             v-model="editing.match_fields"

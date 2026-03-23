@@ -14,12 +14,12 @@ div
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import moment from 'moment';
 import { useBucketsStore } from '~/stores/buckets';
 import { preferKnownHostnames } from '~/util/hostnames';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'QueryOptions',
   props: {
     queryOptions: {
@@ -48,7 +48,7 @@ export default Vue.extend({
   watch: {
     queryOptionsData: {
       handler(value) {
-        this.$emit('input', value);
+        this.$emit('update:modelValue', value);
       },
       deep: true,
     },
@@ -61,7 +61,7 @@ export default Vue.extend({
       hostname: this.hostnameChoices[0],
       ...this.queryOptions,
     };
-    this.$emit('input', this.queryOptionsData);
+    this.$emit('update:modelValue', this.queryOptionsData);
   },
 });
 </script>

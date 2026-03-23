@@ -19,7 +19,7 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
         datetime(type="datetime" v-model="end" :disabled="busy")
       tr
         th {{ $t('ui.eventEditor.duration') }}
-        td {{ editedEvent.duration | friendlyduration }}
+        td {{ friendlyduration(editedEvent.duration) }}
 
     hr
 
@@ -40,11 +40,11 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
     b-alert(v-if="error" show variant="danger")
       | {{ error }}
 
-    div.float-left
+    div.float-start
       b-button.mx-1(@click="delete_", variant="danger", :disabled="busy")
         icon.mx-1(name="trash")
         | {{ $t('common.delete') }}
-    div.float-right
+    div.float-end
       b-button.mx-1(@click="close", :disabled="busy")
         icon.mx-1(name="times")
         | {{ $t('common.cancel') }}
@@ -66,6 +66,7 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
 
 import moment from 'moment';
 import _ from 'lodash';
+import { friendlyduration } from '~/util/filters';
 
 import 'vue-awesome/icons/times';
 import 'vue-awesome/icons/save';
@@ -119,6 +120,7 @@ export default {
     await this.getEvent();
   },
   methods: {
+    friendlyduration,
     async save() {
       if (!this.editedEvent) return;
       // Capture before any async suspension: another selection can change
