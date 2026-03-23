@@ -8,8 +8,8 @@ div
         span(v-else style="opacity: 0.6")
           icon(name="circle" scale="0.4" style="margin-left: 1em; margin-right: 1.22em;")
         | {{ _class.name.slice(depth).join(" ➤ ")}}
-        icon.ml-1(v-if="_class.data && _class.data.color" name="circle" :style="'color: ' + _class.data.color")
-        span.ml-1(v-if="_class.children.length > 0" style="opacity: 0.5") ({{totalChildren}})
+        icon.ms-1(v-if="_class.data && _class.data.color" name="circle" :style="'color: ' + _class.data.color")
+        span.ms-1(v-if="_class.children.length > 0" style="opacity: 0.5") ({{totalChildren}})
         span.d-none.d-md-inline
           span(v-if="_class.data && _class.data.score !== undefined" :style="'color: ' + (_class.data.score > 0 ? 'green' : 'red')")
             | &nbsp; {{ _class.data.score >= 0 ? '+' : '' }}{{ _class.data.score }}
@@ -21,10 +21,10 @@ div
           span.text-muted(v-if="_class.rule.select_keys && _class.rule.select_keys.length")
             |  [{{ _class.rule.select_keys.join(', ') }}]
         span.text-muted(v-else) No rule
-      span.float-right
-        b-btn.ml-1.border-0(size="sm", variant="outline-secondary", @click="showEditModal(_class.id)" pill)
+      span.float-end
+        b-btn.ms-1.border-0(size="sm", variant="outline-secondary", @click="showEditModal(_class.id)" pill)
           icon(name="edit")
-        b-btn.ml-1.border-0(size="sm", variant="outline-success", @click="addSubclass(_class); expanded = true" pill)
+        b-btn.ms-1.border-0(size="sm", variant="outline-success", @click="addSubclass(_class); expanded = true" pill)
           icon(name="plus")
   div
     div.pa-2(v-for="child in _class.children", style="background: rgba(0, 0, 0, 0);", v-show="expanded")

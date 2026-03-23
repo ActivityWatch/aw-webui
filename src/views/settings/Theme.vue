@@ -12,7 +12,7 @@ div
           @click="theme = opt.value"
           variant="outline-dark"
         )
-          icon.mr-1(:name="opt.icon")
+          icon.me-1(:name="opt.icon")
           | {{ opt.label }}
       span(v-else)
         .aw-loading Loading...

@@ -9,7 +9,7 @@
 
     b-alert(v-if="isFollowUpVisible", variant="success", show)
       | Checking for new releases is now disabled, you can re-enable it in the
-      | #[router-link(to="/settings" class="alert-link" @click.native="isFollowUpVisible=false") settings page].
+      | #[router-link(to="/settings" class="alert-link" @click="isFollowUpVisible=false") settings page].
       button(type="button", class="close", @click="isFollowUpVisible=false") &times;
 </template>
 

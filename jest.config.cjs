@@ -9,10 +9,13 @@ module.exports = {
     {
       displayName: 'jsdom',
       testEnvironment: 'jsdom',
+      testEnvironmentOptions: {
+        customExportConditions: ['node', 'node-addons'],
+      },
       transform: {
         '^.+\\.js$': 'babel-jest',
         '^.+\\.ts$': 'ts-jest',
-        '^.+\\.vue$': '@vue/vue2-jest',
+        '^.+\\.vue$': '@vue/vue3-jest',
       },
       transformIgnorePatterns: ['/node_modules/(?!(vue-awesome)/)'],
       testMatch: ['**/test/**/*.test.js?(x)'],
@@ -31,7 +34,7 @@ module.exports = {
       transform: {
         '^.+\\.js$': 'babel-jest',
         '^.+\\.ts$': 'ts-jest',
-        '^.+\\.vue$': '@vue/vue2-jest',
+        '^.+\\.vue$': '@vue/vue3-jest',
       },
       transformIgnorePatterns: ['/node_modules/(?!(vue-awesome)/)'],
       moduleNameMapper: {

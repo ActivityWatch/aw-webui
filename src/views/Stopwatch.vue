@@ -2,7 +2,7 @@
 div
   div.d-flex.align-items-center.mb-3
     h3.mb-0 Stopwatch
-    button.btn.btn-link.p-0.ml-2.text-muted(
+    button.btn.btn-link.p-0.ms-2.text-muted(
       id="stopwatch-help"
       type="button"
       aria-label="About the stopwatch"
@@ -34,7 +34,7 @@ div
   hr
 
   div(v-if="loading")
-    b-spinner.mr-2(small)
+    b-spinner.me-2(small)
     span.text-muted Loading...
   div(v-else)
     h3.mt-3 Running
@@ -128,7 +128,7 @@ export default {
       if (i != -1) {
         // This is needed instead of this.events[i] because insides of arrays
         // are not reactive in Vue
-        this.$set(this.events, i, new_event);
+        this.events[i] = new_event;
       } else {
         console.error(':(');
       }

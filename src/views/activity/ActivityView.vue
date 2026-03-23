@@ -25,14 +25,14 @@ div(v-else-if="view")
       b-button(variant="outline-dark" @click="discard(); editing = !editing;")
         icon(name="times")
         span Cancel
-      b-button.mr-2(variant="success" @click="save(); editing = !editing;")
+      b-button.me-2(variant="success" @click="save(); editing = !editing;")
         icon(name="save")
         span Save
     div.mt-2.d-flex.flex-row-reverse
       b-button(variant="warning" size="sm" @click="restoreDefaults();")
         icon(name="undo")
         span Restore defaults
-      b-button.mr-2(variant="danger" size="sm" v-b-modal="'remove-view-modal-' + view.id")
+      b-button.me-2(variant="danger" size="sm" v-b-modal="'remove-view-modal-' + view.id")
         icon(name="trash")
         span Remove
   div(v-else).d-flex.flex-row-reverse.mt-2
