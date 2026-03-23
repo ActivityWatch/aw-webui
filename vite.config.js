@@ -99,8 +99,9 @@ export default defineConfig(({ mode }) => {
       setCsp(),
       autoInject(),
       vue({
-        // Disable asset URL transformation so that runtime-provided assets
-        // (like /logo.png served by aw-server) are not treated as build-time imports.
+        // Disable asset URL transformation — the logo is served at runtime by aw-server,
+        // not bundled at build time. Using a targeted allowlist (Greptile suggestion)
+        // doesn't work because /logo.png is an absolute runtime path, not a local asset.
         template: {
           transformAssetUrls: false,
         },

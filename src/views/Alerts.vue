@@ -14,7 +14,7 @@ div
     | {{error}}
 
   b-card(v-for="alert in alerts", :key="alert.name")
-    b-button.float-right(@click="deleteAlert(alert.name)" size="sm" variant="outline-danger")
+    b-button.float-end(@click="deleteAlert(alert.name)" size="sm" variant="outline-danger")
       icon(name="trash")
 
     div Goal name: {{ alert.name }}
@@ -28,7 +28,7 @@ div
   b-input-group.mt-3
     b-btn(@click="check" variant="success") Check
     b-input-group-append
-      b-form-checkbox.my-2.ml-3(v-model="autorefresh", @change="toggleAutoRefresh", switch) Toggle autorefresh every 10s
+      b-form-checkbox.my-2.ms-3(v-model="autorefresh", @change="toggleAutoRefresh", switch) Toggle autorefresh every 10s
 
   small(v-if="last_updated")
     | Last updated: {{ last_updated }}

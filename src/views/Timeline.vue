@@ -5,57 +5,57 @@ div
   input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration").mb-3
 
   // blocks
-  div.d-inline-block.border.rounded.p-2.mr-2
+  div.d-inline-block.border.rounded.p-2.me-2
     | Events shown:  {{ num_events }}
-  div.d-inline-block.border.rounded.p-2.mr-2
+  div.d-inline-block.border.rounded.p-2.me-2
     | Swimlanes:
     select(v-model="swimlane")
       option(:value='null') None
       option(value='category') Categories
       option(value='bucketType') Bucket Specific
-  details.d-inline-block.bg-light.small.border.rounded.mr-2.px-2
+  details.d-inline-block.bg-light.small.border.rounded.me-2.px-2
     summary.p-2
       b Filters: {{ filter_summary }}
     div.p-2.bg-light
       table
         tr
-          th.pt-2.pr-3
+          th.pt-2.pe-3
             label Host:
           td
               select(v-model="filter_hostname")
                 option(:value='null') All
                 option(v-for="host in hosts", :value="host") {{ host }}
         tr
-          th.pt-2.pr-3
+          th.pt-2.pe-3
             label Client:
           td
             select(v-model="filter_client")
               option(:value='null') All
               option(v-for="client in clients", :value="client") {{ client }}
         tr
-          th.pt-2.pr-3
+          th.pt-2.pe-3
             label AFK:
           td
             b-form-checkbox(v-model="filter_afk" size="sm" switch)
               | Filter AFK
         tr
-          th.pt-2.pr-3
+          th.pt-2.pe-3
             label Categories:
           td
             select(@change="onCategorySelect($event)", :value="''")
               option(value="" disabled) {{ filter_categories.length > 0 ? 'Add category...' : 'All' }}
               option(v-for="cat in category_options", :key="cat.text", :value="cat.text") {{ cat.text }}
             div.mt-1(v-if="filter_categories.length > 0")
-              span.badge.badge-info.mr-1(v-for="(cat, idx) in filter_categories", :key="idx")
+              span.badge.badge-info.me-1(v-for="(cat, idx) in filter_categories", :key="idx")
                 | {{ cat.join(' > ') }}
-                button.ml-1.close.small(@click="removeCategory(idx)", type="button", style="font-size: 0.8rem") &times;
-  div.d-inline-block.border.rounded.p-2.mr-2(v-if="num_events !== 0")
+                button.ms-1.close.small(@click="removeCategory(idx)", type="button", style="font-size: 0.8rem") &times;
+  div.d-inline-block.border.rounded.p-2.me-2(v-if="num_events !== 0")
     | Events shown: {{ num_events }}
   b-alert.d-inline-block.p-2.mb-0.mt-2(v-if="num_events === 0", variant="warning", show)
     | No events match selected criteria. Timeline is not updated.
-  div.float-right.small.text-muted.pt-3
+  div.float-end.small.text-muted.pt-3
         tr
-          th.pt-2.pr-3
+          th.pt-2.pe-3
             label Duration:
           td
             select(v-model="filter_duration")

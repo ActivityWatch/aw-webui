@@ -2,14 +2,14 @@
 div
   h5.d-inline-block
     div Categorization
-  div.float-right
-    b-btn.ml-1(@click="restoreDefaultClasses", variant="outline-warning" size="sm")
+  div.float-end
+    b-btn.ms-1(@click="restoreDefaultClasses", variant="outline-warning" size="sm")
       icon(name="undo")
       | Restore defaults
-    label.btn.btn-sm.ml-1.btn-outline-primary(style="margin: 0")
+    label.btn.btn-sm.ms-1.btn-outline-primary(style="margin: 0")
       | Import
       input(type="file" @change="importCategories" hidden)
-    b-btn.ml-1(@click="exportClasses", variant="outline-primary" size="sm")
+    b-btn.ms-1(@click="exportClasses", variant="outline-primary" size="sm")
       | Export
   p
     | Rules for categorizing events. An event can only have one category. If several categories match, the deepest one will be chosen.
@@ -21,10 +21,10 @@ div
   div.my-4
     b-alert(variant="warning" :show="classes_unsaved_changes")
       | You have unsaved changes!
-      div.float-right(style="margin-top: -0.15em; margin-right: -0.6em")
-        b-btn.ml-2(@click="saveClasses", variant="success" size="sm")
+      div.float-end(style="margin-top: -0.15em; margin-right: -0.6em")
+        b-btn.ms-2(@click="saveClasses", variant="success" size="sm")
           | Save
-        b-btn.ml-2(@click="resetClasses", variant="warning" size="sm")
+        b-btn.ms-2(@click="resetClasses", variant="warning" size="sm")
           | Discard
     div(v-for="_class in classes_hierarchy")
       CategoryEditTree(:_class="_class")
@@ -34,9 +34,9 @@ div
   div.row
     div.col-sm-12
       b-btn(@click="addClass")
-        icon.mr-2(name="plus")
+        icon.me-2(name="plus")
         | Add category
-      b-btn.float-right(@click="saveClasses", variant="success" :disabled="!classes_unsaved_changes")
+      b-btn.float-end(@click="saveClasses", variant="success" :disabled="!classes_unsaved_changes")
         | Save
 </template>
 <script lang="ts">

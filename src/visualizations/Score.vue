@@ -16,7 +16,7 @@ div
             | {{cat.data.$category.slice(-1)[0]}}
           div(style="font-size: 0.7em; color: #666;")
             | {{cat.data.$category.slice(0, -1).join(" > ")}}
-        div.ml-auto
+        div.ms-auto
           span(style="font-size: 1.2em; color: #0A0")
             | +{{ (Math.round(cat.data.$total_score * 10) / 10).toFixed(1) }}
   hr
@@ -29,7 +29,7 @@ div
             | {{cat.data.$category.slice(-1)[0]}}
           div(style="font-size: 0.7em; color: #666;")
             | {{cat.data.$category.slice(0, -1).join(" > ")}}
-        div.ml-auto
+        div.ms-auto
           span(style="font-size: 1.2em; color: #F00")
             | {{ (Math.round(cat.data.$total_score * 10) / 10).toFixed(1) }}
 </template>

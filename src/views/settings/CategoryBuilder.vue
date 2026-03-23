@@ -49,11 +49,11 @@ div
             div.flex-grow-1
               | {{ word.word }} ({{ Math.round(word.duration) }}s)
             div.flex-grow-0
-              b-button.mr-1(size="sm" @click="createRule(word.word)" variant="success")
+              b-button.me-1(size="sm" @click="createRule(word.word)" variant="success")
                 | New rule
-              b-button.mr-1(size="sm" @click="appendRule(word.word)" variant="warning")
+              b-button.me-1(size="sm" @click="appendRule(word.word)" variant="warning")
                 | Append rule
-              b-button.mr-1(size="sm" @click="ignoreWord(word.word)")
+              b-button.me-1(size="sm" @click="ignoreWord(word.word)")
                 | Ignore
               b-button(size="sm" @click="showEvents(word)" variant="outline-dark")
                 span(v-if="showing_events[0] != word") Show events
@@ -62,10 +62,10 @@ div
             table.table.table-sm.table-striped
               tr
                 th Title
-                th.text-right Duration
+                th.text-end Duration
               tr(v-for="event in showing_events[1]")
                 td {{ event.data.title }}
-                td.text-right {{ Math.round(event.duration) }}s
+                td.text-end {{ Math.round(event.duration) }}s
             hr
       //hr
       //div.d-flex

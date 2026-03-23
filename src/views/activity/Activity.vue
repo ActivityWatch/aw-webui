@@ -7,15 +7,15 @@ div
 
   div.mb-3.text-muted(style="font-size: 0.9em;")
     ul.list-group.list-group-horizontal-md
-      li.list-group-item.pl-0.pr-3.py-0.border-0
-        b.mr-1 Host:
+      li.list-group-item.ps-0.pe-3.py-0.border-0
+        b.me-1 Host:
         span {{ host }}
-      li.list-group-item.pl-0.pr-3.py-0.border-0
-        b.mr-1 Time active:
+      li.list-group-item.ps-0.pe-3.py-0.border-0
+        b.me-1 Time active:
         span {{ friendlyduration(activityStore.active.duration) }}
     ul.list-group.list-group-horizontal-md(v-if="periodLength != 'day'")
-      li.list-group-item.pl-0.pr-3.py-0.border-0
-        b.mr-1 Query range:
+      li.list-group-item.ps-0.pe-3.py-0.border-0
+        b.me-1 Query range:
         span {{ periodReadableRange }}
 
   div.mb-2.d-flex
@@ -25,7 +25,7 @@ div
           b-button.px-2(:to="link_prefix + '/' + previousPeriod() + '/' + subview + '/' + currentViewId",
                    variant="outline-dark")
             icon(name="arrow-left")
-        b-select.pl-2.pr-3(:value="periodLength", :options="periodLengths",
+        b-select.ps-2.pe-3(:value="periodLength", :options="periodLengths",
                  @change="(periodLength) => setDate(_date, periodLength)")
         b-input-group-append
           b-button.px-2(:to="link_prefix + '/' + nextPeriod() + '/' + subview + '/' + currentViewId",
@@ -36,13 +36,13 @@ div
       input.form-control.px-2(id="date" type="date" :value="_date" :max="today"
                          @change="setDate($event.target.value, periodLength)")
 
-    div.ml-auto
+    div.ms-auto
       b-button-group
         b-button.px-2(:pressed.sync="showOptions", variant="outline-dark")
           icon(name="filter")
           span.d-none.d-md-inline
             |  Filters
-            b-badge(pill, variant="secondary" v-if="filters_set > 0").ml-2 {{ filters_set }}
+            b-badge(pill, variant="secondary" v-if="filters_set > 0").ms-2 {{ filters_set }}
         b-button.px-2(@click="refresh(true)", variant="outline-dark")
           icon(name="sync")
           span.d-none.d-md-inline
@@ -148,6 +148,7 @@ div
 </style>
 
 <script lang="ts">
+import { defineAsyncComponent } from 'vue';
 import { mapState } from 'pinia';
 import moment from 'moment';
 import { get_day_start_with_offset, get_today_with_offset } from '~/util/time';
@@ -173,7 +174,9 @@ import { useViewsStore } from '~/stores/views';
 export default {
   name: 'Activity',
   components: {
-    'aw-uncategorized-notification': () => import('~/components/UncategorizedNotification.vue'),
+    'aw-uncategorized-notification': defineAsyncComponent(
+      () => import('~/components/UncategorizedNotification.vue')
+    ),
   },
   props: {
     host: String,

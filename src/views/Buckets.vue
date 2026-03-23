@@ -16,7 +16,7 @@ div
           | &nbsp;
         div
           b {{ device.hostname }}
-          span.small.ml-2(v-if="serverStore.info.hostname == device.hostname")
+          span.small.ms-2(v-if="serverStore.info && serverStore.info.hostname == device.hostname")
             | (the current device)
           div.small
             div(v-if="device.hostname !== device.device_id", style="color: #666")
@@ -40,7 +40,7 @@ div
             small(v-if="data.item.last_updated", :style="{'color': isRecent(data.item.last_updated) ? 'green' : 'inherit'}")
               | {{ friendlytime(data.item.last_updated) }}
           template(v-slot:cell(actions)="data")
-            b-button-toolbar.float-right
+            b-button-toolbar.float-end
               b-button-group(size="sm", class="mx-1")
                 b-button(variant="primary", :to="'/buckets/' + data.item.id")
                   icon(name="folder-open").d-none.d-md-inline-block
@@ -72,14 +72,14 @@ div
       | &nbsp;
       | {{ msg }}
 
-  b-modal(id="delete-modal", title="Danger!", centered, hide-footer)
+  b-modal(v-model="showDeleteModal", title="Danger!", centered, hide-footer)
     | Are you sure you want to delete bucket "{{delete_bucket_selected}}"?
     br
     br
     b This is permanent and cannot be undone!
     hr
-    div.float-right
-      b-button.mx-2(@click="$root.$emit('bv::hide::modal','delete-modal')")
+    div.float-end
+      b-button.mx-2(@click="showDeleteModal = false")
         | Cancel
       b-button(@click="deleteBucket(delete_bucket_selected)", variant="danger")
         | Confirm
@@ -152,6 +152,7 @@ import 'vue-awesome/icons/mobile';
 import 'vue-awesome/icons/question';
 import 'vue-awesome/icons/exclamation-triangle';
 
+import { defineAsyncComponent } from 'vue';
 import _ from 'lodash';
 import Papa from 'papaparse';
 import moment from 'moment';
@@ -164,8 +165,8 @@ import { friendlytime } from '~/util/filters';
 export default {
   name: 'Buckets',
   components: {
-    'aw-bucket-merge': () => import('~/components/BucketMerge.vue'),
-    'aw-bucket-validate': () => import('~/components/BucketValidate.vue'),
+    'aw-bucket-merge': defineAsyncComponent(() => import('~/components/BucketMerge.vue')),
+    'aw-bucket-validate': defineAsyncComponent(() => import('~/components/BucketValidate.vue')),
   },
   data() {
     return {
@@ -176,6 +177,7 @@ export default {
       import_file: null,
       import_error: null,
       delete_bucket_selected: null,
+      showDeleteModal: false,
       fields: [
         { key: 'id', label: 'Bucket ID', sortable: true },
         { key: 'hostname', sortable: true },
@@ -243,11 +245,11 @@ export default {
     },
     openDeleteBucketModal: function (bucketId: string) {
       this.delete_bucket_selected = bucketId;
-      this.$root.$emit('bv::show::modal', 'delete-modal');
+      this.showDeleteModal = true;
     },
     deleteBucket: async function (bucketId: string) {
       await this.bucketsStore.deleteBucket({ bucketId });
-      this.$root.$emit('bv::hide::modal', 'delete-modal');
+      this.showDeleteModal = false;
     },
     importBuckets: async function (importFile) {
       const formData = new FormData();

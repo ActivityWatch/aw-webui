@@ -6,9 +6,9 @@ div(style="font-size: 0.9em")
       // icon
       span(v-if="cat.children.length > 0", style="opacity: 0.8")
         b(v-if="!expanded.has(cat.name_pretty)")
-          icon.mr-1(name="regular/plus-square", scale="0.8")
+          icon.me-1(name="regular/plus-square", scale="0.8")
         b(v-else)
-          icon.mr-1(name="regular/minus-square", scale="0.8")
+          icon.me-1(name="regular/minus-square", scale="0.8")
       span(v-else, style="opacity: 0.6")
         icon(name="circle", scale="0.4", style="margin-left: 1em; margin-right: 1.22em;")
 

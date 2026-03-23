@@ -14,7 +14,7 @@ div
           | Zoom Meeting|Google Meet|Microsoft Teams
     div
       b-form-input(size="sm" v-model="always_active_pattern_editing" :state="(enabled || null) && valid")
-      small.text-right
+      small.text-end
         div(v-if="enabled && valid" style="color: #0A0") Enabled
         div(v-else-if="enabled" style="color: #A00") Invalid pattern
         div(v-else, style="color: gray") Disabled

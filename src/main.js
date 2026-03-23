@@ -24,7 +24,11 @@ import router from './route.js';
 import pinia from './stores';
 
 // NOTE: vue-datetime is Vue 2 only — removed (TODO: find Vue 3 alternative)
-// NOTE: vue-awesome is Vue 2 only — removed (TODO: find Vue 3 alternative, e.g. @fortawesome/vue-fontawesome)
+
+// Font Awesome (replaces vue-awesome which was Vue 2 only)
+import '@fortawesome/fontawesome-svg-core/styles.css';
+import { config } from '@fortawesome/fontawesome-svg-core';
+config.autoAddCss = false; // We import CSS above manually
 
 // Create an instance of AWClient as this.$aw
 // NOTE: needs to be created before the Vue app is created,

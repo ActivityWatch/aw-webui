@@ -7,7 +7,7 @@ div.container(style="color: #555; font-size: 0.9em")
     | by the #[a(href="http://activitywatch.net/contributors/") ActivityWatch developers]
     div
       span.mt-2(v-if="info", style="color: #888; font-size: 0.8em")
-        span.mr-2
+        span.me-2
           b Host:
           | &nbsp; {{info.hostname}}
         span
@@ -15,24 +15,24 @@ div.container(style="color: #555; font-size: 0.9em")
           | &nbsp; {{info.version}}
 
   div(style="font-size: 0.9em; opacity: 0.8; fill: #88F")
-    div.float-none.float-md-right.my-2
-      a(href="https://github.com/ActivityWatch/activitywatch/issues/new/choose", target="_blank").mr-3
+    div.float-none.float-md-end.my-2
+      a(href="https://github.com/ActivityWatch/activitywatch/issues/new/choose", target="_blank").me-3
         icon(name="bug")
         | Report a bug
-      a(href="https://forum.activitywatch.net/c/support", target="_blank").mr-3
+      a(href="https://forum.activitywatch.net/c/support", target="_blank").me-3
         icon(name="question-circle")
         | Ask for help
       a(href="https://forum.activitywatch.net/c/features", target="_blank")
         icon(name="vote-yea")
         | Vote on features
-    div.float-none.float-md-left.my-2
+    div.float-none.float-md-start.my-2
       a(href="https://twitter.com/ActivityWatchIt", target="_blank")
         icon(name="brands/twitter")
         | Twitter
-      a(href="https://github.com/ActivityWatch", target="_blank").ml-3
+      a(href="https://github.com/ActivityWatch", target="_blank").ms-3
         icon(name="brands/github")
         | GitHub
-      a(href="https://activitywatch.net/donate/", target="_blank").ml-3
+      a(href="https://activitywatch.net/donate/", target="_blank").ms-3
         icon(name="hand-holding-heart")
         | Donate
 </template>

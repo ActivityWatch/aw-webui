@@ -21,7 +21,7 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
           b-form-checkbox(v-model="editing.rule.ignore_case" switch)
             | Case insensitive
         div.flex-grow-1
-          small.text-right
+          small.text-end
             //div(v-if="valid" style="color: green") Valid
             div(v-if="!validPattern" style="color: red") Invalid pattern
             div(v-if="validPattern && broad_pattern" style="color: orange") Pattern too broad

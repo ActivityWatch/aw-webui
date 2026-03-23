@@ -37,11 +37,11 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
 
     hr
 
-    div.float-left
+    div.float-start
       b-button.mx-1(@click="delete_(); close();" variant="danger")
         icon.mx-1(name="trash")
         | Delete
-    div.float-right
+    div.float-end
       b-button.mx-1(@click="close")
         icon.mx-1(name="times")
         | Cancel

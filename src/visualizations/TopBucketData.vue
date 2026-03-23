@@ -35,7 +35,7 @@ div
   div.mt-2
     div.text-center.py-4(v-if="loading")
       b-spinner(small type="grow" label="Loading")
-      span.ml-2 Loading events...
+      span.ms-2 Loading events...
     aw-summary(
       v-else-if="aggregated.length",
       :fields="aggregated",

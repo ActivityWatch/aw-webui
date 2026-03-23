@@ -59,9 +59,9 @@ div
         icon.mx-2(name="info-circle", style="color: #09F", v-else)
         | Zero-duration events: {{ zeroDurationEvents.length }}
       div.p-2
-        p.ml-3(v-if="zeroDurationEvents.length === 0")
+        p.ms-3(v-if="zeroDurationEvents.length === 0")
           | No zero-duration events found.
-        p.ml-3(v-else)
+        p.ms-3(v-else)
           | The following {{ zeroDurationEvents.length }} zero-duration events were found:
           ul.mt-2
             li(v-for="event in zeroDurationEvents")

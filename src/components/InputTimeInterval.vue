@@ -9,7 +9,7 @@ div
   div.d-flex.justify-content-between
     table
       tr
-        td.pr-2
+        td.pe-2
           label.col-form-label.col-form-label-sm Show last
         td(colspan=2)
           .btn-group(role="group")
@@ -24,14 +24,14 @@ div
               label(:for="'dur' + idx" v-html="dur.label").btn.btn-light.btn-sm
 
       tr
-        td.pr-2
+        td.pe-2
           label.col-form-label.col-form-label-sm Show from
         td
           select(id="mode", v-model="mode", @change="valueChanged")
             option(value='last_duration') Last duration
             option(value='range') Date range
       tr(v-if="mode == 'last_duration'")
-        th.pr-2
+        th.pe-2
           label(for="duration") Show last:
         td
           select(id="duration", v-model="duration", @change="valueChanged")
@@ -44,7 +44,7 @@ div
             option(:value="12*60*60") 12h
             option(:value="24*60*60") 24h
       tr(v-if="mode == 'range'")
-        th.pr-2 Range:
+        th.pe-2 Range:
         td
           input(type="date", v-model="start", :max="end || undefined")
           input(type="date", v-model="end", :min="start || undefined", placeholder="(optional)")
