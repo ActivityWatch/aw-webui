@@ -56,7 +56,7 @@ export default {
     colorValue(val) {
       if (val) {
         this.updateColors(val);
-        this.$emit('input', val);
+        this.$emit('update:modelValue', val);
       }
     },
   },

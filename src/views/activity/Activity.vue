@@ -2,13 +2,13 @@
 div
   h3.mb-0 {{ $t('activity.title') }} #[span.d-sm-inline.d-none {{ $t('activity.for') }} ]
     span.text-muted.d-sm-inline-block.d-block
-      span(v-if="periodIsBrowseable") {{ timeperiod | friendlyperiod }}
+      span(v-if="periodIsBrowseable") {{ friendlyperiod(timeperiod) }}
       span(v-else) {{ periodLengthTitle }}
 
   div.mb-3.text-muted(style="font-size: 0.9em;")
     ul.list-group.list-group-horizontal-md
-      li.list-group-item.pl-0.pr-3.py-0.border-0
-        b.mr-1 {{ isMultidevice ? $t('activity.devices') : $t('activity.host') }}
+      li.list-group-item.ps-0.pe-3.py-0.border-0
+        b.me-1 {{ isMultidevice ? $t('activity.devices') : $t('activity.host') }}
         span(v-if="selectableHosts.length <= 1 && !isMultidevice") {{ host }}
         // Device selector: a single device, a subset, or "All devices".
         // The selection is encoded in the route's :host param, see util/multidevice.ts.
@@ -26,7 +26,7 @@ div
             :active="hostSelection.all"
             data-testid="host-selector-all"
           )
-            icon.mr-1(name="layer-group")
+            icon.me-1(name="layer-group")
             | {{ $t('activity.allDevices') }}
           b-dropdown-divider
           b-dropdown-form.host-selector-form
@@ -34,13 +34,13 @@ div
               v-for="h in selectableHosts"
               :key="h"
             )
-              b-form-checkbox.mr-3(
+              b-form-checkbox.me-3(
                 :checked="selectedHosts.includes(h)"
                 :disabled="selectedHosts.length === 1 && selectedHosts.includes(h)"
                 @change="toggleHost(h)"
                 :data-testid="'host-selector-host-' + h"
               )
-                icon.mr-1(:name="isMobileHost(h) ? 'mobile' : 'desktop'" scale="0.8")
+                icon.me-1(:name="isMobileHost(h) ? 'mobile' : 'desktop'" scale="0.8")
                 | {{ h }}
               router-link.small(:to="routeForHost(hostParamFor([h]))")
                 | {{ $t('activity.onlyThisDevice') }}
@@ -51,11 +51,11 @@ div
               :key="'unavailable-' + h"
               :data-testid="'host-selector-unavailable-' + h"
             )
-              b-form-checkbox.mr-3(:checked="false" disabled)
+              b-form-checkbox.me-3(:checked="false" disabled)
                 | {{ h }} {{ $t('visualizations.noData') }}
-      li.list-group-item.pl-0.pr-3.py-0.border-0(:title="$t('activity.timeActiveTooltip')")
-        b.mr-1 {{ $t('activity.timeActive') }}
-        span {{ activityStore.active.duration | friendlyduration }}
+      li.list-group-item.ps-0.pe-3.py-0.border-0(:title="$t('activity.timeActiveTooltip')")
+        b.me-1 {{ $t('activity.timeActive') }}
+        span {{ friendlyduration(activityStore.active.duration) }}
     b-alert.py-1.px-2.mb-1.small(
       v-if="isMultidevice && !multideviceNoteDismissed"
       show
@@ -65,14 +65,14 @@ div
       data-testid="multidevice-note"
     ) {{ $t('activity.multideviceNote') }}
     ul.list-group.list-group-horizontal-md(v-if="periodLength != 'day'")
-      li.list-group-item.pl-0.pr-3.py-0.border-0
-        b.mr-1 {{ $t('activity.queryRange') }}
+      li.list-group-item.ps-0.pe-3.py-0.border-0
+        b.me-1 {{ $t('activity.queryRange') }}
         span {{ periodReadableRange }}
 
   b-alert(v-if="invalidRange" variant="warning" show) {{ $t('activity.invalidRange') }}
 
   div.activity-toolbar.d-flex.flex-wrap.align-items-center
-    div.d-flex.mr-2
+    div.d-flex.me-2
       b-button-group
         b-button.px-3(
           v-for="opt in primaryPeriods"
@@ -95,7 +95,7 @@ div
         ) {{ extendedPeriodLabel }}
       // Kebab sits outside the b-button-group so the last pressed pill
       // (whichever it is) keeps its rounded right corner.
-      b-dropdown.kebab-dropdown.ml-1(
+      b-dropdown.kebab-dropdown.ms-1(
         size="sm"
         variant="outline-secondary"
         toggle-class="border-0"
@@ -113,7 +113,7 @@ div
           @click="setDate(_date, opt.value)"
         ) {{ opt.text }}
 
-    b-input-group.mr-2(v-if="!invalidRange && periodLength !== 'all'" size="sm" style="width: auto")
+    b-input-group.me-2(v-if="!invalidRange && periodLength !== 'all'" size="sm" style="width: auto")
       b-input-group-prepend
         b-button.px-2(:to="link_prefix + '/' + previousPeriod() + '/' + subview + '/' + currentViewId",
                  variant="outline-dark",
@@ -153,13 +153,13 @@ div
                       :aria-label="'Next ' + periodLength")
           icon(name="arrow-right")
 
-    div.ml-auto
+    div.ms-auto
       b-button-group(size="sm")
         b-button.px-2(:pressed.sync="showOptions", variant="outline-dark", title="Filters", aria-label="Filters")
           icon(name="filter")
           span.d-none.d-md-inline
             |  {{ $t('activity.filters') }}
-            b-badge(pill, variant="secondary" v-if="filters_set > 0").ml-2 {{ filters_set }}
+            b-badge(pill, variant="secondary" v-if="filters_set > 0").ms-2 {{ filters_set }}
         b-button.px-2(@click="refresh(true)", variant="outline-dark", title="Refresh", aria-label="Refresh")
           icon(name="sync")
           span.d-none.d-md-inline
@@ -677,7 +677,7 @@ export default {
     }
   },
 
-  beforeDestroy: async function () {
+  beforeUnmount: async function () {
     // Cancels pending requests and resets store
     await this.activityStore.reset();
   },

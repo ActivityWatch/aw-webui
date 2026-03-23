@@ -4,9 +4,9 @@ div
     div
       h5.mt-1.mb-2.mb-sm-0 Privacy filters
     div
-      b-btn.ml-1(@click="resetEditor" variant="outline-warning" size="sm" :disabled="!hasUnsavedChanges || isSaving")
+      b-btn.ms-1(@click="resetEditor" variant="outline-warning" size="sm" :disabled="!hasUnsavedChanges || isSaving")
         | Discard
-      b-btn.ml-1(@click="savePrivacyFilters" variant="success" size="sm" :disabled="!canSave")
+      b-btn.ms-1(@click="savePrivacyFilters" variant="success" size="sm" :disabled="!canSave")
         | Save
   p.mt-2.mb-2
     | Regex-based rules that drop or redact sensitive event data before it is stored.

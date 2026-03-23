@@ -3,7 +3,7 @@ div
   b-alert.my-2(v-if="isVisible", variant="info", show dismissible @dismissed="onDismiss")
     p.mb-0
       | #[b {{ $t('uncategorized.title') }}]
-      router-link.ml-1.uncategorized-hint__cog(
+      router-link.ms-1.uncategorized-hint__cog(
         :to="{ path: '/settings/general' }"
         :title="$t('uncategorized.settingsCogTitle')"
         :aria-label="$t('uncategorized.settingsCogTitle')"

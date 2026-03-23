@@ -56,7 +56,7 @@ div
               small.form-text.text-muted Comma-separated positive whole minutes. A notification fires as each threshold is crossed.
             b-form-group(label="Type" label-cols-sm="3" label-size="sm")
               b-form-radio-group(v-model="alert.positive" :options="goalOptions" size="sm")
-          b-btn.ml-2(@click="removeAlert(idx)" variant="outline-danger" size="sm" title="Remove alert")
+          b-btn.ms-2(@click="removeAlert(idx)" variant="outline-danger" size="sm" title="Remove alert")
             icon(name="trash")
 
       b-btn.mt-1(@click="addAlert" variant="outline-secondary" size="sm")

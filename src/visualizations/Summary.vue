@@ -3,7 +3,7 @@ div
   div.aw-summary-container
   // Use visibility to make sure elements don't skip when data finishes loading
   div(:style='{"visibility": visible_more ? "visible" : "hidden"}')
-    b-button.mt-1.mr-2(v-if="fields && (limit_ < fields.length)", size="sm", variant="outline-secondary", @click="limit_ += 5")
+    b-button.mt-1.me-2(v-if="fields && (limit_ < fields.length)", size="sm", variant="outline-secondary", @click="limit_ += 5")
       icon(name="angle-double-down")
       | Show more
     b-button.mt-1(v-if="limit_ != limit" size="sm", variant="outline-secondary", @click="limit_ = limit")

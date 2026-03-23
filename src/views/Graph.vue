@@ -19,13 +19,13 @@ div
     b-form-checkbox(v-model="excludeUncategorized")
 
   div.d-flex
-    span.mr-auto
+    span.me-auto
     b-button(type="button", @click="generate()" variant="success")
       icon(name="search")
       | Generate
 
   div.d-flex.mt-1
-    span.mr-auto.small.text-muted Hostname: {{queryOptions.hostname}}
+    span.me-auto.small.text-muted Hostname: {{queryOptions.hostname}}
     b-button.border-0(size="sm", variant="outline-dark" @click="show_options = !show_options")
       span(v-if="!show_options")
         | #[icon(name="angle-double-down")] Show options

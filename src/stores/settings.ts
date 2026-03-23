@@ -6,7 +6,7 @@ import { SavedQuery } from '~/util/savedQueries';
 import { View, defaultViews } from '~/stores/views';
 import type { PrivacyFilterRule } from '~/util/privacyFilters';
 import { isEqual } from 'lodash';
-import { AppLocale, i18n, isAppLocale, setAppLocale } from '~/i18n';
+import { AppLocale, getAppLocale, isAppLocale, setAppLocale } from '~/i18n';
 
 function jsonEq(a: any, b: any) {
   try {
@@ -234,8 +234,8 @@ export const useSettingsStore = defineStore('settings', {
 
       if ((localeFromServer || localeFromLocalStorage) && isAppLocale(this.locale)) {
         setAppLocale(this.locale);
-      } else if (isAppLocale(i18n.locale)) {
-        this.$patch({ locale: i18n.locale as AppLocale });
+      } else if (isAppLocale(getAppLocale())) {
+        this.$patch({ locale: getAppLocale() as AppLocale });
       }
 
       // Since `requestTimeout` is used to initialize the client, we need to set it again

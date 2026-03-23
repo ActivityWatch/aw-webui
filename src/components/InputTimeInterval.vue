@@ -36,11 +36,11 @@ div
             ).d-none
             label(:for="'dur' + idx" v-html="dur.label").btn.btn-light.btn-sm
       div.d-flex.flex-wrap.align-items-center(v-else)
-        input.form-control.form-control-sm.mr-1(
+        input.form-control.form-control-sm.me-1(
           type="date", v-model="start", :max="end || undefined", style="width: auto"
           aria-label="Start date"
         )
-        input.form-control.form-control-sm.mr-1(
+        input.form-control.form-control-sm.me-1(
           type="date", v-model="end", :min="start || undefined", placeholder="(optional)", style="width: auto"
           aria-label="End date (optional)"
         )
@@ -50,13 +50,13 @@ div
           @click="applyRange"
         ) Apply
 
-    div.text-right.d-none.d-md-block(v-if="showUpdate")
+    div.text-end.d-none.d-md-block(v-if="showUpdate")
       b-button.px-2(@click="refresh()", variant="outline-dark", size="sm")
-        icon.mr-1(name="sync")
+        icon.me-1(name="sync")
         span.d-none.d-md-inline
           | Refresh
       div.mt-2.small.text-muted(v-if="lastUpdate")
-        | Last update: #[time(:datetime="lastUpdate.format()") {{lastUpdate | friendlytime}}]
+        | Last update: #[time(:datetime="lastUpdate.format()") {{ friendlytime(lastUpdate) }}]
 </template>
 
 <style scoped lang="scss">
@@ -99,6 +99,7 @@ import moment from 'moment';
 import 'vue-awesome/icons/sync';
 export default {
   name: 'input-timeinterval',
+  emits: ['update:modelValue'],
   props: {
     defaultDuration: {
       type: Number,
@@ -177,7 +178,7 @@ export default {
       this.lastUpdate = _lastUpdate;
     }, 500);
   },
-  beforeDestroy() {
+  beforeUnmount() {
     clearInterval(this.lastUpdateTimer);
   },
   methods: {
@@ -187,7 +188,7 @@ export default {
         (!this.emptyDaterange && !this.invalidDaterange && !this.daterangeTooLong)
       ) {
         this.lastUpdate = moment();
-        this.$emit('input', this.value);
+        this.$emit('update:modelValue', this.value);
       }
     },
     refresh() {

@@ -18,12 +18,12 @@ div
     | Install #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") aw-watcher-window and aw-watcher-afk] to enable this view.
 
   b-card(v-for="alert in alerts", :key="alert.name")
-    b-button.float-right(@click="deleteAlert(alert.name)" size="sm" variant="outline-danger")
+    b-button.float-end(@click="deleteAlert(alert.name)" size="sm" variant="outline-danger")
       icon(name="trash")
 
     div Goal name: {{ alert.name }}
     div Category: {{ alert.category.join(" > ") }}
-    div Current: {{ alertTime(alert.category) | friendlyduration }} / {{alert.goal}} minutes
+    div Current: {{ friendlyduration(alertTime(alert.category)) }} / {{alert.goal}} minutes
       span(v-if="alertTime(alert.category) >= alert.goal")
         icon.text-success(name="check")
       span(v-else)
@@ -31,10 +31,10 @@ div
 
   div.d-flex.align-items-center.mt-3
     b-btn(@click="check" variant="success" :disabled="!hostname") Check
-    b-form-checkbox.ml-3.mb-0(v-model="autorefresh", @change="toggleAutoRefresh", switch) Auto-refresh every 10s
+    b-form-checkbox.ms-3.mb-0(v-model="autorefresh", @change="toggleAutoRefresh", switch) Auto-refresh every 10s
 
   small.text-muted(v-if="last_updated")
-    | Last updated #[time(:datetime="last_updated && last_updated.toISOString && last_updated.toISOString()") {{ last_updated | friendlytime }}]
+    | Last updated #[time(:datetime="last_updated && last_updated.toISOString && last_updated.toISOString()") {{ friendlytime(last_updated) }}]
 
   hr
 
