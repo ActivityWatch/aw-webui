@@ -6,7 +6,7 @@
 
 <template lang="pug">
 div
-  h3.mb-0 Trends for {{ timeperiod | friendlyperiod }}
+  h3.mb-0 Trends for {{ friendlyperiod(timeperiod) }}
 
   // Select a hostname from the ones available in the store
   b-input-group(size="sm")
@@ -18,7 +18,7 @@ div
 
   div.mb-2
     ul.list-group.list-group-horizontal-md.mb-3(style="font-size: 0.9em; opacity: 0.7")
-      li.list-group-item.pl-0.pr-3.py-0.border-0
+      li.list-group-item.ps-0.pe-3.py-0.border-0
         | #[b Host:] {{ host }}
 
   b-alert(style="warning" show)
@@ -48,6 +48,7 @@ import { buildBarchartDataset } from '~/util/datasets';
 import { useBucketsStore } from '~/stores/buckets';
 import { useCategoryStore } from '~/stores/categories';
 import { useActivityStore, QueryOptions } from '~/stores/activity';
+import { friendlyperiod } from '~/util/filters';
 
 export default {
   name: 'Trends',
@@ -84,6 +85,7 @@ export default {
   },
 
   methods: {
+    friendlyperiod,
     refresh: async function (force) {
       const queryParams: QueryOptions = {
         timeperiod: this.timeperiod,

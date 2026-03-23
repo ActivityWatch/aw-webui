@@ -14,12 +14,12 @@ div
     | {{error}}
 
   b-card(v-for="alert in alerts", :key="alert.name")
-    b-button.float-right(@click="deleteAlert(alert.name)" size="sm" variant="outline-danger")
+    b-button.float-end(@click="deleteAlert(alert.name)" size="sm" variant="outline-danger")
       icon(name="trash")
 
     div Goal name: {{ alert.name }}
     div Category: {{ alert.category.join(" > ") }}
-    div Current: {{ alertTime(alert.category) | friendlyduration }} / {{alert.goal}} minutes
+    div Current: {{ friendlyduration(alertTime(alert.category)) }} / {{alert.goal}} minutes
       span(v-if="alertTime(alert.category) >= alert.goal")
         icon(name="check" style="color: #0C0")
       span(v-else)
@@ -28,7 +28,7 @@ div
   b-input-group.mt-3
     b-btn(@click="check" variant="success") Check
     b-input-group-append
-      b-form-checkbox.my-2.ml-3(v-model="autorefresh", @change="toggleAutoRefresh", switch) Toggle autorefresh every 10s
+      b-form-checkbox.my-2.ms-3(v-model="autorefresh", @change="toggleAutoRefresh", switch) Toggle autorefresh every 10s
 
   small(v-if="last_updated")
     | Last updated: {{ last_updated }}
@@ -66,6 +66,7 @@ import 'vue-awesome/icons/trash';
 
 import { useBucketsStore } from '~/stores/buckets';
 import { useCategoryStore } from '~/stores/categories';
+import { friendlyduration } from '~/util/filters';
 
 export default {
   name: 'Alerts',
@@ -122,6 +123,7 @@ export default {
     this.hostname = this.hostnames[0];
   },
   methods: {
+    friendlyduration,
     addAlert: function () {
       // TODO: Persist to settings/localstorage
       this.alerts = this.alerts.concat({ ...this.editing_alert });

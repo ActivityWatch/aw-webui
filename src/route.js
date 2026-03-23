@@ -1,5 +1,4 @@
-import Vue from 'vue';
-import VueRouter from 'vue-router';
+import { createRouter, createWebHashHistory } from 'vue-router';
 
 const Home = () => import('./views/Home.vue');
 
@@ -23,9 +22,8 @@ const Dev = () => import('./views/Dev.vue');
 const Graph = () => import('./views/Graph.vue');
 const NotFound = () => import('./views/NotFound.vue');
 
-Vue.use(VueRouter);
-
-const router = new VueRouter({
+const router = createRouter({
+  history: createWebHashHistory(),
   routes: [
     {
       path: '/',
@@ -69,9 +67,9 @@ const router = new VueRouter({
     { path: '/search', component: Search },
     { path: '/graph', component: Graph },
     { path: '/dev', component: Dev },
-    // NOTE: Will break with Vue 3: https://stackoverflow.com/questions/40193634/vue-router-redirect-on-page-not-found-404/64186073#64186073
+    // Vue Router 4: catch-all uses :pathMatch(.*)*
     {
-      path: '*',
+      path: '/:pathMatch(.*)*',
       component: NotFound,
     },
   ],

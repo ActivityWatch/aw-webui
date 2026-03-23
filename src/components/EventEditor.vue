@@ -19,7 +19,7 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
         datetime(type="datetime" v-model="end")
       tr
         th Duration
-        td {{ editedEvent.duration | friendlyduration }}
+        td {{ friendlyduration(editedEvent.duration) }}
 
     hr
 
@@ -37,11 +37,11 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
 
     hr
 
-    div.float-left
+    div.float-start
       b-button.mx-1(@click="delete_(); close();" variant="danger")
         icon.mx-1(name="trash")
         | Delete
-    div.float-right
+    div.float-end
       b-button.mx-1(@click="close")
         icon.mx-1(name="times")
         | Cancel
@@ -62,6 +62,7 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
 //  - Search (soon)
 
 import moment from 'moment';
+import { friendlyduration } from '~/util/filters';
 
 import 'vue-awesome/icons/times';
 import 'vue-awesome/icons/save';
@@ -108,6 +109,7 @@ export default {
     await this.getEvent();
   },
   methods: {
+    friendlyduration,
     async save() {
       // This emit needs to be called first, otherwise it won't occur for some reason
       // FIXME: but what if the replace fails? Then UI will incorrectly think event was replaced?

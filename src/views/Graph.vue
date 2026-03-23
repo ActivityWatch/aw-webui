@@ -22,13 +22,13 @@ div
     b-form-checkbox(v-model="excludeUncategorized")
 
   div.d-flex
-    span.mr-auto
+    span.me-auto
     b-button(type="button", @click="generate()" variant="success")
       icon(name="search")
       | Generate
 
   div.d-flex.mt-1
-    span.mr-auto.small(style="color: #666") Hostname: {{queryOptions.hostname}}
+    span.me-auto.small(style="color: #666") Hostname: {{queryOptions.hostname}}
     b-button.border-0(size="sm", variant="outline-dark" @click="show_options = !show_options")
       span(v-if="!show_options")
         | #[icon(name="angle-double-down")] Show options
@@ -62,6 +62,7 @@ div
 <style scoped lang="scss"></style>
 
 <script lang="ts">
+import { defineAsyncComponent } from 'vue';
 import _ from 'lodash';
 import moment from 'moment';
 
@@ -79,7 +80,7 @@ import { getClient } from '~/util/awclient';
 export default {
   name: 'Graph',
   components: {
-    'aw-force-graph': () => import('~/visualizations/ForceGraph.vue'),
+    'aw-force-graph': defineAsyncComponent(() => import('~/visualizations/ForceGraph.vue')),
   },
   data() {
     return {

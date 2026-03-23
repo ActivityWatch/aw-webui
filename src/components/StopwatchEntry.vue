@@ -5,20 +5,20 @@ div
       span #[b {{event.data.label || 'No label'}}]
       span(style="color: #888") &nbsp;|&nbsp;
       span(v-if="event.data.running")
-        | Running for #[span(:title="event.timestamp") {{event.data.running ? (now - event.timestamp) / 1000 : event.duration | friendlyduration}}]
-        | &nbsp;(Started {{ event.timestamp | shorttime }})
+        | Running for #[span(:title="event.timestamp") {{friendlyduration(event.data.running ? (now - event.timestamp) / 1000 : event.duration)}}]
+        | &nbsp;(Started {{ shorttime(event.timestamp) }})
       span(v-else)
-        | Started #[span(:title="event.timestamp") {{event.timestamp | friendlytime}}]
-        | &nbsp;({{event.data.running ? (now - event.timestamp) / 1000 : event.duration | friendlyduration}})
+        | Started #[span(:title="event.timestamp") {{friendlytime(event.timestamp)}}]
+        | &nbsp;({{friendlyduration(event.data.running ? (now - event.timestamp) / 1000 : event.duration)}})
     div
       b-button.mx-1(v-if="event.data.running", @click="stop", variant="outline-primary", size="sm")
-        icon.ml-0.mr-1(name="stop")
+        icon.ms-0.me-1(name="stop")
         | Stop
       b-button.mx-1(v-if="!event.data.running", @click="$emit('new')", variant="outline-primary", size="sm")
-        icon.ml-0.mr-1(name="play")
+        icon.ms-0.me-1(name="play")
         | Start new
       b-button.mx-1(v-b-modal="'edit-modal-' + event.id", variant="outline-dark", size="sm")
-        icon.ml-0.mr-1(name="edit")
+        icon.ms-0.me-1(name="edit")
         | Edit
   event-editor(:event="event", :bucket_id="bucket_id", @save="save", @delete="delete_")
 </template>
@@ -36,6 +36,7 @@ import 'vue-awesome/icons/stop';
 import 'vue-awesome/icons/play';
 
 import EventEditor from './EventEditor.vue';
+import { friendlyduration, friendlytime, shorttime } from '~/util/filters';
 
 export default {
   name: 'StopwatchEntry',
@@ -51,6 +52,9 @@ export default {
     },
   },
   methods: {
+    friendlyduration,
+    friendlytime,
+    shorttime,
     stop: async function () {
       const new_event = JSON.parse(JSON.stringify(this.event));
       new_event.data.running = false;
