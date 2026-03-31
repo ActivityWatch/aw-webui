@@ -75,6 +75,7 @@ import { getClient } from '~/util/awclient';
 import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
 import { useBucketsStore } from '~/stores/buckets';
+import { get_day_start_with_offset, get_day_end_with_offset } from '~/util/time';
 
 import 'vue-awesome/icons/sync';
 import 'vue-awesome/icons/download';
@@ -175,13 +176,16 @@ export default {
         const categories = this.categoryStore.classes_for_query;
         const categoriesStr = JSON.stringify(categories).replace(/\\\\/g, '\\');
 
-        // Build multi-device query with flood-based gap merging
+        // Build multi-device query with flood-based gap merging and AFK filtering
         let query = '';
 
         for (const hostname of this.selectedHosts) {
           const safeHost = hostname.replace(/[^a-zA-Z0-9_]/g, '');
           query += `
             events_${safeHost} = flood(query_bucket(find_bucket("aw-watcher-window_${hostname}")), ${breakTimeSeconds});
+            not_afk_${safeHost} = flood(query_bucket(find_bucket("aw-watcher-afk_${hostname}")));
+            not_afk_${safeHost} = filter_keyvals(not_afk_${safeHost}, "status", ["not-afk"]);
+            events_${safeHost} = filter_period_intersect(events_${safeHost}, not_afk_${safeHost});
             events_${safeHost} = categorize(events_${safeHost}, ${categoriesStr});
             events_${safeHost} = filter_keyvals(events_${safeHost}, "$category", ${JSON.stringify(
             categoriesFilter
@@ -247,9 +251,10 @@ export default {
       }
 
       for (let i = days - 1; i >= 0; i--) {
-        const start = moment().subtract(i, 'days').startOf('day').add(offset);
-        const end = start.clone().add(1, 'day');
-        timeperiods.push(start.format() + '/' + end.format());
+        const date = moment().subtract(i, 'days');
+        const start = get_day_start_with_offset(date, offset);
+        const end = get_day_end_with_offset(date, offset);
+        timeperiods.push(start + '/' + end);
       }
 
       return timeperiods;
