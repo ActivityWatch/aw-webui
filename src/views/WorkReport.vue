@@ -181,7 +181,7 @@ export default {
         for (const hostname of this.selectedHosts) {
           const safeHost = hostname.replace(/[^a-zA-Z0-9_]/g, '');
           query += `
-            events_${safeHost} = flood(query_bucket(find_bucket("aw-watcher-window_${safeHost}")), ${breakTimeSeconds});
+            events_${safeHost} = flood(query_bucket(find_bucket("aw-watcher-window_${hostname}")), ${breakTimeSeconds});
             events_${safeHost} = categorize(events_${safeHost}, ${categoriesStr});
             events_${safeHost} = filter_keyvals(events_${safeHost}, "$category", ${JSON.stringify(
             categoriesFilter
