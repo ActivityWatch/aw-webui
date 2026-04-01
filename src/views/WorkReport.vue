@@ -76,6 +76,7 @@ import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
 import { useBucketsStore } from '~/stores/buckets';
 import { get_day_start_with_offset, get_day_end_with_offset } from '~/util/time';
+import { safeHostname } from '~/queries';
 
 import 'vue-awesome/icons/sync';
 import 'vue-awesome/icons/download';
@@ -180,10 +181,10 @@ export default {
         let query = '';
 
         for (const hostname of this.selectedHosts) {
-          const safeHost = hostname.replace(/[^a-zA-Z0-9_]/g, '');
+          const safeHost = safeHostname(hostname);
           query += `
-            events_${safeHost} = flood(query_bucket(find_bucket("aw-watcher-window_${hostname}")), ${breakTimeSeconds});
-            not_afk_${safeHost} = flood(query_bucket(find_bucket("aw-watcher-afk_${hostname}")));
+            events_${safeHost} = flood(query_bucket("aw-watcher-window_${hostname}"), ${breakTimeSeconds});
+            not_afk_${safeHost} = flood(query_bucket("aw-watcher-afk_${hostname}"));
             not_afk_${safeHost} = filter_keyvals(not_afk_${safeHost}, "status", ["not-afk"]);
             events_${safeHost} = filter_period_intersect(events_${safeHost}, not_afk_${safeHost});
             events_${safeHost} = categorize(events_${safeHost}, ${categoriesStr});
@@ -196,7 +197,7 @@ export default {
         // Combine events from all hosts
         query += '\nevents = [];';
         for (const hostname of this.selectedHosts) {
-          const safeHost = hostname.replace(/[^a-zA-Z0-9_]/g, '');
+          const safeHost = safeHostname(hostname);
           query += `\nevents = union_no_overlap(events, events_${safeHost});`;
         }
 
