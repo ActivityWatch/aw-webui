@@ -76,6 +76,7 @@ import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
 import { useBucketsStore } from '~/stores/buckets';
 import { get_day_start_with_offset, get_day_end_with_offset } from '~/util/time';
+import { getWorkReportHostOptions, getUnsupportedWorkReportHosts } from '~/util/workReport';
 
 import 'vue-awesome/icons/sync';
 import 'vue-awesome/icons/download';
@@ -108,17 +109,7 @@ export default {
   },
   computed: {
     hostOptions() {
-      const allBuckets = this.bucketsStore.buckets || [];
-      const windowBuckets = allBuckets.filter(b => b.type === 'currentwindow');
-
-      const hosts = windowBuckets.map(b => {
-        return b.id.replace('aw-watcher-window_', '');
-      });
-
-      return hosts.map(host => ({
-        value: host,
-        text: host,
-      }));
+      return getWorkReportHostOptions(this.bucketsStore.buckets || []);
     },
 
     categoryOptions() {
@@ -154,7 +145,7 @@ export default {
     await this.bucketsStore.ensureLoaded();
 
     if (this.hostOptions.length > 0) {
-      this.selectedHosts = this.hostOptions.map(opt => opt.value);
+      this.selectedHosts = this.hostOptions.filter(opt => !opt.disabled).map(opt => opt.value);
     }
   },
   methods: {
@@ -171,6 +162,20 @@ export default {
 
         if (this.selectedCategories.length === 0) {
           alert('Please select at least one category');
+          this.loading = false;
+          return;
+        }
+
+        const unsupportedHosts = getUnsupportedWorkReportHosts(
+          this.selectedHosts,
+          this.bucketsStore.buckets || []
+        );
+        if (unsupportedHosts.length > 0) {
+          alert(
+            `The following hosts are missing aw-watcher-afk buckets and can't be included in Work Report: ${unsupportedHosts.join(
+              ', '
+            )}`
+          );
           this.loading = false;
           return;
         }
