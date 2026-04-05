@@ -76,7 +76,6 @@ import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
 import { useBucketsStore } from '~/stores/buckets';
 import { get_day_start_with_offset, get_day_end_with_offset } from '~/util/time';
-import { safeHostname } from '~/queries';
 
 import 'vue-awesome/icons/sync';
 import 'vue-awesome/icons/download';
@@ -170,6 +169,12 @@ export default {
           return;
         }
 
+        if (this.selectedCategories.length === 0) {
+          alert('Please select at least one category');
+          this.loading = false;
+          return;
+        }
+
         const timeperiods = this.getTimeperiods();
         const breakTimeSeconds = this.breakTime * 60;
         const categoriesFilter = this.selectedCategories.map(c => JSON.parse(c));
@@ -180,15 +185,17 @@ export default {
         // Build multi-device query with flood-based gap merging and AFK filtering
         let query = '';
 
-        for (const hostname of this.selectedHosts) {
-          const safeHost = safeHostname(hostname);
+        // Use indexed variable names to avoid collisions when hostnames
+        // differ only in non-alphanumeric chars (e.g., "my-laptop" vs "mylaptop").
+        for (let hi = 0; hi < this.selectedHosts.length; hi++) {
+          const hostname = this.selectedHosts[hi];
           query += `
-            events_${safeHost} = flood(query_bucket("aw-watcher-window_${hostname}"), ${breakTimeSeconds});
-            not_afk_${safeHost} = flood(query_bucket("aw-watcher-afk_${hostname}"));
-            not_afk_${safeHost} = filter_keyvals(not_afk_${safeHost}, "status", ["not-afk"]);
-            events_${safeHost} = filter_period_intersect(events_${safeHost}, not_afk_${safeHost});
-            events_${safeHost} = categorize(events_${safeHost}, ${categoriesStr});
-            events_${safeHost} = filter_keyvals(events_${safeHost}, "$category", ${JSON.stringify(
+            events_${hi} = flood(query_bucket("aw-watcher-window_${hostname}"), ${breakTimeSeconds});
+            not_afk_${hi} = flood(query_bucket("aw-watcher-afk_${hostname}"));
+            not_afk_${hi} = filter_keyvals(not_afk_${hi}, "status", ["not-afk"]);
+            events_${hi} = filter_period_intersect(events_${hi}, not_afk_${hi});
+            events_${hi} = categorize(events_${hi}, ${categoriesStr});
+            events_${hi} = filter_keyvals(events_${hi}, "$category", ${JSON.stringify(
             categoriesFilter
           )});
           `;
@@ -196,9 +203,8 @@ export default {
 
         // Combine events from all hosts
         query += '\nevents = [];';
-        for (const hostname of this.selectedHosts) {
-          const safeHost = safeHostname(hostname);
-          query += `\nevents = union_no_overlap(events, events_${safeHost});`;
+        for (let hi = 0; hi < this.selectedHosts.length; hi++) {
+          query += `\nevents = union_no_overlap(events, events_${hi});`;
         }
 
         query += `
