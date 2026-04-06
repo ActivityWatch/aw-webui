@@ -40,3 +40,8 @@ export function getUnsupportedWorkReportHosts(
   const afkHosts = getAFKHosts(buckets);
   return selectedHosts.filter(host => !afkHosts.has(host));
 }
+
+export function getSupportedWorkReportHosts(selectedHosts: string[], buckets: IBucket[]): string[] {
+  const unsupportedHosts = new Set(getUnsupportedWorkReportHosts(selectedHosts, buckets));
+  return selectedHosts.filter(host => !unsupportedHosts.has(host));
+}

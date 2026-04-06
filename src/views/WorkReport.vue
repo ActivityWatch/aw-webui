@@ -76,7 +76,11 @@ import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
 import { useBucketsStore } from '~/stores/buckets';
 import { get_day_start_with_offset, get_day_end_with_offset } from '~/util/time';
-import { getWorkReportHostOptions, getUnsupportedWorkReportHosts } from '~/util/workReport';
+import {
+  getSupportedWorkReportHosts,
+  getWorkReportHostOptions,
+  getUnsupportedWorkReportHosts,
+} from '~/util/workReport';
 
 import 'vue-awesome/icons/sync';
 import 'vue-awesome/icons/download';
@@ -171,15 +175,32 @@ export default {
           this.bucketsStore.buckets || []
         );
         if (unsupportedHosts.length > 0) {
-          alert(
-            `The following hosts are missing aw-watcher-afk buckets and can't be included in Work Report: ${unsupportedHosts.join(
-              ', '
-            )}`
+          const supportedHosts = getSupportedWorkReportHosts(
+            this.selectedHosts,
+            this.bucketsStore.buckets || []
           );
-          this.loading = false;
-          return;
+          if (supportedHosts.length === 0) {
+            alert(
+              `The selected hosts are missing aw-watcher-afk buckets and can't be included in Work Report: ${unsupportedHosts.join(
+                ', '
+              )}`
+            );
+            this.loading = false;
+            return;
+          }
+
+          alert(
+            `Skipping hosts without aw-watcher-afk buckets: ${unsupportedHosts.join(
+              ', '
+            )}. Work Report will use: ${supportedHosts.join(', ')}`
+          );
+          this.selectedHosts = supportedHosts;
         }
 
+        const hostsToQuery = getSupportedWorkReportHosts(
+          this.selectedHosts,
+          this.bucketsStore.buckets || []
+        );
         const timeperiods = this.getTimeperiods();
         const breakTimeSeconds = this.breakTime * 60;
         const categoriesFilter = this.selectedCategories.map(c => JSON.parse(c));
@@ -192,8 +213,8 @@ export default {
 
         // Use indexed variable names to avoid collisions when hostnames
         // differ only in non-alphanumeric chars (e.g., "my-laptop" vs "mylaptop").
-        for (let hi = 0; hi < this.selectedHosts.length; hi++) {
-          const hostname = this.selectedHosts[hi];
+        for (let hi = 0; hi < hostsToQuery.length; hi++) {
+          const hostname = hostsToQuery[hi];
           query += `
             events_${hi} = flood(query_bucket("aw-watcher-window_${hostname}"), ${breakTimeSeconds});
             not_afk_${hi} = flood(query_bucket("aw-watcher-afk_${hostname}"));
@@ -208,7 +229,7 @@ export default {
 
         // Combine events from all hosts
         query += '\nevents = [];';
-        for (let hi = 0; hi < this.selectedHosts.length; hi++) {
+        for (let hi = 0; hi < hostsToQuery.length; hi++) {
           query += `\nevents = union_no_overlap(events, events_${hi});`;
         }
 

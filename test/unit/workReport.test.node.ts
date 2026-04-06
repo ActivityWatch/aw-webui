@@ -1,4 +1,8 @@
-import { getUnsupportedWorkReportHosts, getWorkReportHostOptions } from '~/util/workReport';
+import {
+  getSupportedWorkReportHosts,
+  getUnsupportedWorkReportHosts,
+  getWorkReportHostOptions,
+} from '~/util/workReport';
 
 const buckets = [
   {
@@ -34,5 +38,33 @@ describe('workReport host helpers', () => {
 
   test('getUnsupportedWorkReportHosts returns selected hosts missing AFK buckets', () => {
     expect(getUnsupportedWorkReportHosts(['laptop', 'phone'], buckets as any)).toEqual(['phone']);
+  });
+
+  test('getSupportedWorkReportHosts returns only hosts with AFK buckets', () => {
+    expect(getSupportedWorkReportHosts(['laptop', 'phone'], buckets as any)).toEqual(['laptop']);
+  });
+
+  test('getSupportedWorkReportHosts preserves selected host order', () => {
+    const moreBuckets = [
+      ...buckets,
+      {
+        id: 'aw-watcher-window_desktop',
+        hostname: 'desktop',
+        device_id: 'desktop',
+        type: 'currentwindow',
+        data: {},
+      },
+      {
+        id: 'aw-watcher-afk_desktop',
+        hostname: 'desktop',
+        device_id: 'desktop',
+        type: 'afkstatus',
+        data: {},
+      },
+    ];
+
+    expect(getSupportedWorkReportHosts(['desktop', 'phone', 'laptop'], moreBuckets as any)).toEqual(
+      ['desktop', 'laptop']
+    );
   });
 });
