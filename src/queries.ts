@@ -15,7 +15,7 @@ function escape_doublequote(s: string) {
 }
 
 // Hostname safe for using as a variable name
-function safeHostname(hostname: string): string {
+export function safeHostname(hostname: string): string {
   return hostname.replace(/[^a-zA-Z0-9_]/g, '');
 }
 
