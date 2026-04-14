@@ -56,7 +56,25 @@ export default {
     labels() {
       const start = this.timeperiod_start;
       const [count, resolution] = this.timeperiod_length;
-      if (resolution.startsWith('day') && count == 1) {
+      
+      // Handle hour ranges - show individual hour labels
+      if (resolution.startsWith('hour')) {
+        const startDate = new Date(start);
+        const numHours = Math.ceil(count);
+        
+        return _.range(numHours).map(h => {
+          const hourDate = new Date(startDate.getTime() + h * 60 * 60 * 1000);
+          const hours = hourDate.getHours();
+          const minutes = hourDate.getMinutes();
+          
+          // Format as HH:MM if there are minutes, otherwise just HH:00
+          if (minutes === 0) {
+            return `${hours}:00`;
+          } else {
+            return `${hours}:${minutes.toString().padStart(2, '0')}`;
+          }
+        });
+      } else if (resolution.startsWith('day') && count == 1) {
         const hourOffset = get_hour_offset();
         return _.range(0, 24).map(h => `${(h + hourOffset) % 24}`);
       } else if (resolution.startsWith('day')) {
@@ -107,6 +125,21 @@ export default {
     },
     chartOptions(): ChartOptions {
       const resolution = this.timeperiod_length[1];
+      const count = this.timeperiod_length[0];
+      
+      // Set appropriate y-axis max based on resolution
+      let suggestedMax = undefined;
+      let stepSize = 1;
+      
+      if (resolution.startsWith('hour')) {
+        // For hour ranges, each bar represents 1 hour max
+        suggestedMax = 1;
+        stepSize = 0.25;  // 15-minute increments
+      } else if (resolution.startsWith('day')) {
+        suggestedMax = 1;
+        stepSize = 0.25;
+      }
+      
       return {
         plugins: {
           tooltip: {
@@ -137,10 +170,10 @@ export default {
           y: {
             stacked: true,
             min: 0,
-            suggestedMax: resolution.startsWith('day') ? 1 : undefined,
+            suggestedMax: suggestedMax,
             ticks: {
               callback: hourToTick,
-              stepSize: resolution.startsWith('day') ? 0.25 : 1,
+              stepSize: stepSize,
             },
           },
         },
