@@ -113,6 +113,7 @@ import { canonicalEvents } from '~/queries';
 import { getClient } from '~/util/awclient';
 import CategoryEditModal from '~/components/CategoryEditModal.vue';
 import { isRegexBroad, validateRegex } from '~/util/validate';
+import { findCommonPhrases } from '~/util/categorization';
 
 export default {
   name: 'aw-category-builder',
@@ -224,26 +225,7 @@ export default {
       );
 
       const events = data[0];
-      const words = new Map<string, { word: string; duration: number; events: any[] }>();
-      for (const event of events) {
-        const words_in_event = event.data.title.split(/[\s\-,:()[\]/]/);
-        for (const word of words_in_event) {
-          if (word.length <= 2 || this.ignored_words.includes(word)) {
-            continue;
-          }
-          if (words.has(word)) {
-            words.get(word).duration += event.duration;
-            words.get(word).events.push(event);
-          } else {
-            words.set(word, {
-              word: word,
-              duration: event.duration,
-              events: [event],
-            });
-          }
-        }
-      }
-      this.words = words;
+      this.words = findCommonPhrases(events, this.ignored_words);
       this.loading = false;
     },
     showEvents(word) {
