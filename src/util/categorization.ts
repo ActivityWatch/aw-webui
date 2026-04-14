@@ -79,11 +79,11 @@ export function findCommonPhrases(
     const word2 = bigram.slice(spaceIdx + 1);
     const w1Entry = words.get(word1);
     const w2Entry = words.get(word2);
-    if (!w1Entry || !w2Entry) continue;
+    const w1OrigDuration = originalDurations.get(word1);
+    const w2OrigDuration = originalDurations.get(word2);
+    if (!w1Entry || !w2Entry || w1OrigDuration === undefined || w2OrigDuration === undefined) continue;
 
     const bigram_duration = bigramEntry.duration;
-    const w1OrigDuration = originalDurations.get(word1)!;
-    const w2OrigDuration = originalDurations.get(word2)!;
     if (bigram_duration / w1OrigDuration > 0.5 && bigram_duration / w2OrigDuration > 0.5) {
       // Promote bigram, reduce constituent word durations
       words.set(bigram, { word: bigram, duration: bigram_duration, events: bigramEntry.events });
