@@ -105,4 +105,20 @@ describe('findCommonPhrases', () => {
     expect(entry?.events).toHaveLength(1);
     expect(entry?.events[0]).toBe(events[0]);
   });
+
+  test('trigram: does not double-promote when middle word duration is consumed', () => {
+    // "Alpha Beta" dominates (110s); "Alpha Beta Gamma" appears rarely (10s).
+    // Word totals: Alpha=110, Beta=110, Gamma=10
+    // Bigram totals: "Alpha Beta"=110, "Beta Gamma"=10
+    // "Alpha Beta" correctly promotes (110/110 > 0.5 for both words).
+    // After promotion, Beta.duration drops to 0.  Without snapshotting original
+    // durations, "Beta Gamma" sees 10/0 = Infinity and incorrectly promotes too.
+    // With the fix, the check uses the original Beta=110: 10/110 ≈ 0.09 < 0.5 → no promotion.
+    const events = [makeEvent('Alpha Beta', 100), makeEvent('Alpha Beta Gamma', 10)];
+    const result = findCommonPhrases(events, []);
+    expect(result.get('Alpha Beta')).toBeDefined(); // correctly promoted
+    expect(result.get('Beta Gamma')).toBeUndefined(); // must NOT be promoted
+    const betaEntry = result.get('Beta');
+    expect(betaEntry?.duration).toBeGreaterThanOrEqual(0); // no negative durations
+  });
 });

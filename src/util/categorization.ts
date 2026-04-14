@@ -64,6 +64,15 @@ export function findCommonPhrases(
   }
 
   // Step 3: Promote bigrams that dominate both constituent words (>50% threshold)
+  // Snapshot original durations before the loop so that promoting one bigram
+  // (which reduces its constituent words' durations) does not corrupt the
+  // threshold check for a later bigram that shares a common word.  Without this,
+  // a trigram such as "Alpha Beta Gamma" causes Beta.duration to reach 0 after
+  // "Alpha Beta" is promoted, making 10/0 = Infinity pass the check for "Beta Gamma"
+  // even though only 10/110 ≈ 9% of Beta's original time was spent in that bigram.
+  const originalDurations = new Map<string, number>(
+    Array.from(words.entries(), ([w, e]) => [w, e.duration])
+  );
   for (const [bigram, bigramEntry] of bigrams) {
     const spaceIdx = bigram.indexOf(' ');
     const word1 = bigram.slice(0, spaceIdx);
@@ -73,7 +82,9 @@ export function findCommonPhrases(
     if (!w1Entry || !w2Entry) continue;
 
     const bigram_duration = bigramEntry.duration;
-    if (bigram_duration / w1Entry.duration > 0.5 && bigram_duration / w2Entry.duration > 0.5) {
+    const w1OrigDuration = originalDurations.get(word1)!;
+    const w2OrigDuration = originalDurations.get(word2)!;
+    if (bigram_duration / w1OrigDuration > 0.5 && bigram_duration / w2OrigDuration > 0.5) {
       // Promote bigram, reduce constituent word durations
       words.set(bigram, { word: bigram, duration: bigram_duration, events: bigramEntry.events });
       w1Entry.duration -= bigram_duration;
