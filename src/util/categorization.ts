@@ -81,7 +81,8 @@ export function findCommonPhrases(
     const w2Entry = words.get(word2);
     const w1OrigDuration = originalDurations.get(word1);
     const w2OrigDuration = originalDurations.get(word2);
-    if (!w1Entry || !w2Entry || w1OrigDuration === undefined || w2OrigDuration === undefined) continue;
+    if (!w1Entry || !w2Entry || w1OrigDuration === undefined || w2OrigDuration === undefined)
+      continue;
 
     const bigram_duration = bigramEntry.duration;
     if (bigram_duration / w1OrigDuration > 0.5 && bigram_duration / w2OrigDuration > 0.5) {
