@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import {
   saveClasses,
-  loadClasses,
   saveCategories,
   loadCategories,
   cleanCategory,
