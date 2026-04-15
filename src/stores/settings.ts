@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import moment, { Moment } from 'moment';
 import { getClient } from '~/util/awclient';
-import { Category, defaultCategories, cleanCategory } from '~/util/classes';
+import { Category, CategorySet, defaultCategories, cleanCategory } from '~/util/classes';
 import { View, defaultViews } from '~/stores/views';
 import { isEqual } from 'lodash';
 
@@ -37,6 +37,11 @@ interface State {
   };
   always_active_pattern: string;
   classes: Category[];
+  // Named category sets — each set is an independent collection of category rules.
+  // The active_set_ids list controls which sets are combined (in priority order).
+  category_sets: CategorySet[];
+  // Ordered list of active set IDs. First entry has highest priority when merging.
+  active_set_ids: string[];
   views: View[];
 
   // Whether to show certain WIP features
@@ -75,6 +80,8 @@ export const useSettingsStore = defineStore('settings', {
 
     always_active_pattern: '',
     classes: defaultCategories,
+    category_sets: [],
+    active_set_ids: ['default'],
     views: defaultViews,
 
     // Developer settings
@@ -125,7 +132,13 @@ export const useSettingsStore = defineStore('settings', {
         //console.debug(`${locstr} ${key}:`, value);
 
         // Keys ending with 'Data' are JSON-serialized objects in localStorage
-        if ((key.endsWith('Data') || key == 'views' || key == 'classes') && !set_in_server) {
+        const isJsonKey =
+          key.endsWith('Data') ||
+          key == 'views' ||
+          key == 'classes' ||
+          key == 'category_sets' ||
+          key == 'active_set_ids';
+        if (isJsonKey && !set_in_server) {
           try {
             value = JSON.parse(value);
             // Needed due to https://github.com/ActivityWatch/activitywatch/issues/1067

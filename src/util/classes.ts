@@ -24,6 +24,31 @@ export interface Category {
   children?: Category[];
 }
 
+export interface CategorySet {
+  id: string;
+  categories: Category[];
+}
+
+/**
+ * Merge multiple category sets in priority order (first set = highest priority).
+ * When the same category name appears in multiple sets, the first occurrence wins.
+ * Within each set, the standard specificity rule applies (deeper category wins).
+ */
+export function mergeCategorySets(sets: CategorySet[]): Category[] {
+  const seen = new Set<string>();
+  const merged: Category[] = [];
+  for (const set of sets) {
+    for (const cat of set.categories) {
+      const key = JSON.stringify(cat.name);
+      if (!seen.has(key)) {
+        seen.add(key);
+        merged.push(cat);
+      }
+    }
+  }
+  return merged;
+}
+
 const COLOR_UNCAT = '#CCC';
 
 // The default categories
@@ -196,6 +221,48 @@ export function cleanCategory(cat: Category): Category {
 export function loadClasses(): Category[] {
   const settingsStore = useSettingsStore();
   return settingsStore.classes;
+}
+
+/**
+ * Persist category sets and active set IDs to the settings store.
+ * Also updates the legacy `classes` field for backwards compatibility with external readers.
+ */
+export function saveCategories(sets: CategorySet[], activeIds: string[]) {
+  if (areWeTesting()) {
+    console.log('Not saving categories in test mode');
+    return;
+  }
+  const settingsStore = useSettingsStore();
+  const cleanSets = sets.map(s => ({ ...s, categories: s.categories.map(cleanCategory) }));
+  const effectiveClasses = mergeCategorySets(sets.filter(s => activeIds.includes(s.id))).map(
+    cleanCategory
+  );
+  settingsStore.update({
+    category_sets: cleanSets,
+    active_set_ids: activeIds,
+    classes: effectiveClasses,
+  });
+}
+
+/**
+ * Load category sets and active set IDs from the settings store.
+ * Falls back to the legacy flat `classes` setting if no sets are defined yet.
+ */
+export function loadCategories(): { sets: CategorySet[]; activeIds: string[] } {
+  const settingsStore = useSettingsStore();
+  const sets: CategorySet[] = settingsStore.category_sets;
+  const activeIds: string[] = settingsStore.active_set_ids;
+
+  if (sets && sets.length > 0) {
+    return { sets, activeIds: activeIds && activeIds.length > 0 ? activeIds : [sets[0].id] };
+  }
+
+  // Migration path: no sets defined yet — wrap the existing flat classes into a "default" set
+  const legacyClasses = settingsStore.classes || defaultCategories;
+  return {
+    sets: [{ id: 'default', categories: legacyClasses }],
+    activeIds: ['default'],
+  };
 }
 
 function pickDeepest(categories: Category[]) {
