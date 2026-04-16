@@ -64,9 +64,19 @@ function computeEffectiveClasses(categorySets: CategorySet[], activeSetIds: stri
   return assignIds(createMissingParents(merged));
 }
 
-/** Copy current effective classes back into the primary active set (no-op if no sets). */
+/**
+ * Copy current effective classes back into the primary active set.
+ *
+ * Only safe when exactly one set is active: with multiple sets `state.classes`
+ * is the merged result of all active sets and cannot be split back into
+ * individual sets, so we skip the sync to avoid corrupting secondary sets.
+ */
 function syncToPrimarySet(state: State) {
   if (state.active_set_ids.length === 0 || state.category_sets.length === 0) return;
+  // Skip when multiple sets are active — state.classes is a merged result
+  // and writing it back to only the primary set would absorb all secondary
+  // sets' categories into it (data corruption).
+  if (state.active_set_ids.length > 1) return;
   const primaryId = state.active_set_ids[0];
   const primarySet = state.category_sets.find(s => s.id === primaryId);
   if (primarySet) {
@@ -251,6 +261,18 @@ export const useCategoryStore = defineStore('categories', {
       }
       syncToPrimarySet(this);
       this.active_set_ids = [id];
+      this.classes = computeEffectiveClasses(this.category_sets, this.active_set_ids);
+      this.classes_unsaved_changes = false;
+    },
+
+    /**
+     * Discard unsaved in-memory edits and recompute classes from the stored sets.
+     *
+     * Call this before switchToSet() when the user explicitly chooses to discard
+     * changes. Without this, switchToSet() would call syncToPrimarySet() first —
+     * writing the discarded edits back into the set's in-memory state.
+     */
+    discardChanges(this: State) {
       this.classes = computeEffectiveClasses(this.category_sets, this.active_set_ids);
       this.classes_unsaved_changes = false;
     },

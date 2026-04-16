@@ -218,6 +218,10 @@ export default {
           this.activeSetId = this.categoryStore.active_set_ids[0] || 'default';
           return;
         }
+        // User confirmed discard: reset in-memory edits before switching so that
+        // switchToSet() → syncToPrimarySet() writes back the original (clean) state,
+        // not the unsaved edits the user just chose to discard.
+        this.categoryStore.discardChanges();
       }
       this.categoryStore.switchToSet(setId);
     },
