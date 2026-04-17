@@ -146,10 +146,10 @@ export default {
     exportClasses: async function () {
       console.log('Exporting categories...');
 
-      // Export the active set with its ID — suitable for re-importing as a named set
+      // Export the active set with its ID — suitable for re-importing as a named set.
+      // Use classes_clean (current in-memory state) so unsaved edits are included.
       const activeSetId = this.categoryStore.active_set_ids[0] || 'default';
-      const activeSet = this.categoryStore.category_sets.find(s => s.id === activeSetId);
-      const export_data = activeSet || { id: activeSetId, categories: this.categoryStore.classes };
+      const export_data = { id: activeSetId, categories: this.categoryStore.classes_clean };
       const text = JSON.stringify(export_data, null, 2);
       await downloadFile(`aw-category-export-${export_data.id}.json`, text, 'application/json');
     },
@@ -184,10 +184,19 @@ export default {
         const existing = this.categoryStore.category_sets.find(s => s.id === setId);
         if (existing) {
           existing.categories = import_obj.categories;
+          // If importing into the active set, don't call switchToSet — it would call
+          // syncToPrimarySet first and overwrite the just-imported categories with
+          // stale in-memory classes. Use discardChanges to recompute from the updated set.
+          const isActiveSet = setId === (this.categoryStore.active_set_ids[0] || '');
+          if (isActiveSet) {
+            this.categoryStore.discardChanges();
+          } else {
+            this.categoryStore.switchToSet(setId);
+          }
         } else {
           this.categoryStore.category_sets.push({ id: setId, categories: import_obj.categories });
+          this.categoryStore.switchToSet(setId);
         }
-        this.categoryStore.switchToSet(setId);
         this.categoryStore.classes_unsaved_changes = true;
       } else {
         console.error('Unrecognized import format');
