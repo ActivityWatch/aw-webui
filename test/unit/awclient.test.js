@@ -10,18 +10,15 @@ jest.mock('aw-client', () => ({
   })),
 }));
 
-import { AWClient } from 'aw-client';
-
-import {
-  createClient,
-  getApiTokenFromLocation,
-  getStoredApiToken,
-  loadApiTokenFromBrowser,
-} from '~/util/awclient';
-
 describe('awclient auth bootstrap', () => {
-  beforeEach(() => {
-    AWClient.mockClear();
+  let AWClient;
+  let createClient, getApiTokenFromLocation, getStoredApiToken, loadApiTokenFromBrowser;
+
+  beforeEach(async () => {
+    jest.resetModules();
+    ({ AWClient } = await import('aw-client'));
+    ({ createClient, getApiTokenFromLocation, getStoredApiToken, loadApiTokenFromBrowser } =
+      await import('~/util/awclient'));
     sessionStorage.clear();
     window.history.replaceState({}, '', '/');
   });

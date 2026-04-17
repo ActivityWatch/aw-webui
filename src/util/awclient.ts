@@ -1,4 +1,5 @@
 import { AWClient } from 'aw-client';
+import type { AxiosInstance } from 'axios';
 
 import { useSettingsStore } from '~/stores/settings';
 
@@ -55,6 +56,10 @@ export function stripApiTokenFromCurrentUrl(): void {
   window.history.replaceState(window.history.state, '', nextUrl || '/');
 }
 
+// NOTE: The token is visible in window.location.href from page load until this
+// function executes.  In the intended WebView/launcher environment no third-party
+// scripts run, so the exposure window is acceptable.  For general browser use,
+// consider passing the credential via the URL fragment instead of a query param.
 export function loadApiTokenFromBrowser(): string | null {
   if (typeof window === 'undefined') {
     return null;
@@ -70,8 +75,9 @@ export function loadApiTokenFromBrowser(): string | null {
   return getStoredApiToken();
 }
 
-export function applyApiToken(client: { req: { defaults: any } }, token: string | null): void {
-  const headers = client.req.defaults.headers || {};
+export function applyApiToken(client: { req: AxiosInstance }, token: string | null): void {
+  const defaults = client.req.defaults;
+  const headers = (defaults.headers as Record<string, Record<string, unknown>>) || {};
   const commonHeaders = headers.common || {};
 
   if (token) {
@@ -81,7 +87,7 @@ export function applyApiToken(client: { req: { defaults: any } }, token: string 
   }
 
   headers.common = commonHeaders;
-  client.req.defaults.headers = headers;
+  defaults.headers = headers as typeof defaults.headers;
 }
 
 export function createClient(force?: boolean): AWClient {
