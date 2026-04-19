@@ -21,6 +21,7 @@ const Report = () => import('./views/Report.vue');
 const TimespiralView = () => import('./views/TimespiralView.vue');
 const Dev = () => import('./views/Dev.vue');
 const Graph = () => import('./views/Graph.vue');
+const TaskTracker = () => import('./views/TaskTracker.vue');
 const NotFound = () => import('./views/NotFound.vue');
 
 Vue.use(VueRouter);
@@ -68,6 +69,7 @@ const router = new VueRouter({
     { path: '/stopwatch', component: Stopwatch },
     { path: '/search', component: Search },
     { path: '/graph', component: Graph },
+    { path: '/task-tracker', component: TaskTracker },
     { path: '/dev', component: Dev },
     // NOTE: Will break with Vue 3: https://stackoverflow.com/questions/40193634/vue-router-redirect-on-page-not-found-404/64186073#64186073
     {

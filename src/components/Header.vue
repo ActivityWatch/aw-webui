@@ -44,6 +44,11 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
             icon(name="stopwatch")
             | Stopwatch
 
+        b-nav-item(to="/task-tracker")
+          div.px-2.px-lg-1
+            icon(name="tasks")
+            | Task Tracker
+
       // Brand on large screens (centered)
       b-navbar-nav.abs-center.d-none.d-lg-block
         b-navbar-brand(to="/" style="background-color: transparent;")
@@ -107,6 +112,7 @@ import 'vue-awesome/icons/chart-line'; // TODO: switch to chart-column, when vue
 import 'vue-awesome/icons/chart-pie';
 import 'vue-awesome/icons/flag-checkered';
 import 'vue-awesome/icons/stopwatch';
+import 'vue-awesome/icons/tasks';
 import 'vue-awesome/icons/cog';
 import 'vue-awesome/icons/tools';
 import 'vue-awesome/icons/history';

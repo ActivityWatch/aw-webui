@@ -58,6 +58,12 @@ export default {
     static: {
       directory: path.join(__dirname, 'dist'),
     },
+    proxy: {
+        '/api': {
+            target: 'http://127.0.0.1:5666',
+            changeOrigin: true
+        },
+    }
   },
   pwa: {
     name: 'ActivityWatch',
