@@ -17,6 +17,7 @@ div
 import Vue from 'vue';
 import moment from 'moment';
 import { useBucketsStore } from '~/stores/buckets';
+import { preferKnownHostnames } from '~/util/hostnames';
 
 export default Vue.extend({
   name: 'QueryOptions',
@@ -40,7 +41,7 @@ export default Vue.extend({
 
   computed: {
     hostnameChoices() {
-      return this.bucketsStore.hosts;
+      return preferKnownHostnames(this.bucketsStore.hosts);
     },
   },
 
