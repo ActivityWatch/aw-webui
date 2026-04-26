@@ -108,6 +108,8 @@ export default {
           enabled: true,
           speed: { x: 10, y: 0, zoom: 0.02 },
         },
+        horizontalScroll: true,
+        zoomKey: 'ctrlKey',
       },
       editingEvent: null,
       editingEventBucket: null,
