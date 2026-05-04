@@ -49,7 +49,9 @@ export default {
         AW_SERVER_URL: process.env.AW_SERVER_URL,
         COMMIT_HASH: JSON.stringify(_COMMIT_HASH),
       }),
-      new CopyWebpackPlugin([{ from: 'static/', to: '' }]),
+      new CopyWebpackPlugin({
+        patterns: [{ from: 'static/', to: '' }],
+      }),
     ],
   },
   devServer: {
