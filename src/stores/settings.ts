@@ -116,20 +116,24 @@ export const useSettingsStore = defineStore('settings', {
       // Fetch from server, fall back to localStorage
       const server_settings = await client.get_settings();
 
-      const all_keys = [...Object.keys(localStorage), ...Object.keys(server_settings)].filter(
-        key => {
-          // Skip keys starting with underscore, as they are local to the vuex store.
-          return !key.startsWith('_');
-        }
-      );
+      // Build a unified map: server value wins, localStorage is fallback.
+      // Skip keys that are missing from BOTH sources — otherwise `null` from
+      // localStorage.getItem overrides the defaults defined in `state()`.
+      const storage: Record<string, unknown> = {};
+      const used = new Set<string>();
 
-      const storage = {};
-      for (const key of all_keys) {
-        // If key is set in server, use that value, otherwise use localStorage
-        const set_in_server = server_settings[key] !== undefined;
-        let value = set_in_server ? server_settings[key] : localStorage.getItem(key);
-        //const locstr = set_in_server ? '[server]' : '[localStorage]';
-        //console.debug(`${locstr} ${key}:`, value);
+      // 1. Server settings take priority
+      for (const key of Object.keys(server_settings)) {
+        if (key.startsWith('_')) continue;
+        storage[key] = server_settings[key];
+        used.add(key);
+      }
+
+      // 2. localStorage fills in gaps, but skip missing keys (null)
+      for (const key of Object.keys(localStorage)) {
+        if (key.startsWith('_') || used.has(key)) continue;
+        const raw = localStorage.getItem(key);
+        if (raw === null) continue; // key absent → keep state() default
 
         // Keys ending with 'Data' are JSON-serialized objects in localStorage
         const isJsonKey =
@@ -138,21 +142,20 @@ export const useSettingsStore = defineStore('settings', {
           key == 'classes' ||
           key == 'category_sets' ||
           key == 'active_set_ids';
-        if (isJsonKey && !set_in_server) {
-          try {
-            value = JSON.parse(value);
-            // Needed due to https://github.com/ActivityWatch/activitywatch/issues/1067
+        try {
+          if (isJsonKey) {
+            let parsed = JSON.parse(raw);
             if (key == 'classes') {
-              value = value.map(cleanCategory);
+              parsed = parsed.map(cleanCategory);
             }
-            storage[key] = value;
-          } catch (e) {
-            console.error('failed to parse', key, value, e);
+            storage[key] = parsed;
+          } else if (raw === 'true' || raw === 'false') {
+            storage[key] = raw === 'true';
+          } else {
+            storage[key] = raw;
           }
-        } else if (value === 'true' || value === 'false') {
-          storage[key] = value === 'true';
-        } else {
-          storage[key] = value;
+        } catch (e) {
+          console.error('failed to parse', key, raw, e);
         }
       }
       this.$patch({ ...storage, _loaded: true });
