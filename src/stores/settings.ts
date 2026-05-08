@@ -133,7 +133,7 @@ export const useSettingsStore = defineStore('settings', {
       for (const key of Object.keys(localStorage)) {
         if (key.startsWith('_') || used.has(key)) continue;
         const raw = localStorage.getItem(key);
-        if (raw === null) continue; // key absent → keep state() default
+        if (raw === null || raw === 'null') continue; // key absent or stored as null → keep state() default
 
         // Keys ending with 'Data' are JSON-serialized objects in localStorage
         const isJsonKey =
