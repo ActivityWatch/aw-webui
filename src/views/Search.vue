@@ -71,7 +71,7 @@ export default {
   },
   methods: {
     addWeek: function () {
-      this.queryOptions.start = moment(this.queryOptions.start).subtract(1, 'week').format('YYYY-MM-DD');
+      this.queryOptions.start = moment(this.queryOptions.start, 'YYYY-MM-DD').subtract(1, 'week').format('YYYY-MM-DD');
       this.search();
     },
     search: async function () {
