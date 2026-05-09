@@ -96,7 +96,7 @@ export default {
         this.status = null;
       }
     },
-    extendByWeek: function () {
+    extendByWeek() {
       this.queryOptions.start = moment(this.queryOptions.start).subtract(1, 'week');
       this.search();
     },
