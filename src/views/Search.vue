@@ -38,7 +38,7 @@ div
     div
       | Didn't find what you were looking for?
       br
-      | Add a week to the search: #[b-button(size="sm" variant="outline-dark" @click="start = start.subtract(1, 'week'); search()") +1 week]
+      | Add a week to the search: #[b-button(size="sm" variant="outline-dark" @click="addWeek()") +1 week]
 </template>
 
 <script lang="ts">
@@ -70,6 +70,10 @@ export default {
     };
   },
   methods: {
+    addWeek: function () {
+      this.queryOptions.start = moment(this.queryOptions.start).subtract(1, 'week').format('YYYY-MM-DD');
+      this.search();
+    },
     search: async function () {
       let query = canonicalEvents({
         bid_window: 'aw-watcher-window_' + this.queryOptions.hostname,
