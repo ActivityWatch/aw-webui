@@ -92,7 +92,7 @@ div
       b-button(@click="deleteBucket(delete_bucket_selected)", variant="danger")
         | Confirm
 
-  b-modal(id="delete-host-modal", title="Danger!", centered, hide-footer, @hidden="delete_host_selected = null")
+  b-modal(id="delete-host-modal", title="Danger!", centered, hide-footer, @hidden="delete_host_selected = null; delete_host_error = null")
     template(v-if="delete_host_selected")
       | Are you sure you want to delete
       |
@@ -107,6 +107,8 @@ div
         ul.mb-0
           li(v-for="bucketId in delete_host_selected.bucketIds", :key="bucketId")
             code {{ bucketId }}
+      b-alert.mt-2(v-if="delete_host_error" show variant="danger")
+        | {{ delete_host_error }}
       hr
       div.float-right
         b-button.mx-2(@click="$root.$emit('bv::hide::modal','delete-host-modal')")
@@ -212,6 +214,7 @@ export default {
       delete_bucket_selected: null,
       delete_host_selected: null,
       deleting_host: false,
+      delete_host_error: null,
       fields: [
         { key: 'id', label: 'Bucket ID', sortable: true },
         { key: 'hostname', sortable: true },
@@ -295,14 +298,17 @@ export default {
     deleteBucketsForSelectedHost: async function () {
       if (!this.delete_host_selected) return;
       this.deleting_host = true;
+      this.delete_host_error = null;
       try {
         await this.bucketsStore.deleteBucketsByHost({
           bucketIds: this.delete_host_selected.bucketIds,
         });
+        this.$root.$emit('bv::hide::modal', 'delete-host-modal');
+      } catch (err) {
+        this.delete_host_error =
+          err?.message || 'Deletion failed. Some buckets may not have been deleted.';
       } finally {
         this.deleting_host = false;
-        this.$root.$emit('bv::hide::modal', 'delete-host-modal');
-        // delete_host_selected is cleared by the modal's @hidden event after the animation
       }
     },
     importBuckets: async function (importFile) {
