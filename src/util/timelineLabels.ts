@@ -8,6 +8,8 @@ function escapeHtml(str: string): string {
 }
 
 function addWrapOpportunities(str: string): string {
+  // `str` must already be HTML-escaped because those entities contain no `_`, `/`,
+  // or `-`, so the inserted <wbr> tags can't split them.
   return str.replace(/([/_-])/g, '$1<wbr>');
 }
 
