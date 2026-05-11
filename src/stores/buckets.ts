@@ -230,7 +230,9 @@ export const useBucketsStore = defineStore('buckets', {
           await getClient().deleteBucket(bucketId);
         }
       } finally {
-        await this.loadBuckets();
+        await this.loadBuckets().catch(err => {
+          console.warn('Failed to reload buckets after deletion:', err);
+        });
       }
       return bucketIds;
     },
