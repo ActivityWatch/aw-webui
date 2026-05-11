@@ -223,19 +223,16 @@ export const useBucketsStore = defineStore('buckets', {
       await this.loadBuckets();
     },
 
-    async deleteBucketsByHost({ hostname }: { hostname: string }): Promise<string[]> {
-      const targets = (this.buckets as IBucket[])
-        .filter(b => b.hostname === hostname)
-        .map(b => b.id);
-      console.log(`Deleting ${targets.length} buckets for host ${hostname}`);
+    async deleteBucketsByHost({ bucketIds }: { bucketIds: string[] }): Promise<string[]> {
+      console.log(`Deleting ${bucketIds.length} buckets`);
       try {
-        for (const bucketId of targets) {
+        for (const bucketId of bucketIds) {
           await getClient().deleteBucket(bucketId);
         }
       } finally {
         await this.loadBuckets();
       }
-      return targets;
+      return bucketIds;
     },
 
     // mutations

@@ -102,7 +102,7 @@ div
       br
       br
       b This is permanent and cannot be undone!
-      div.small.text-muted.mt-2
+      div.small.text-muted.mt-2(style="max-height: 200px; overflow-y: auto;")
         | Buckets that will be deleted:
         ul.mb-0
           li(v-for="bucketId in delete_host_selected.bucketIds", :key="bucketId")
@@ -294,10 +294,11 @@ export default {
     },
     deleteBucketsForSelectedHost: async function () {
       if (!this.delete_host_selected) return;
-      const hostname = this.delete_host_selected.hostname;
       this.deleting_host = true;
       try {
-        await this.bucketsStore.deleteBucketsByHost({ hostname });
+        await this.bucketsStore.deleteBucketsByHost({
+          bucketIds: this.delete_host_selected.bucketIds,
+        });
       } finally {
         this.deleting_host = false;
         this.$root.$emit('bv::hide::modal', 'delete-host-modal');
