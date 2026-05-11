@@ -228,10 +228,13 @@ export const useBucketsStore = defineStore('buckets', {
         .filter(b => b.hostname === hostname)
         .map(b => b.id);
       console.log(`Deleting ${targets.length} buckets for host ${hostname}`);
-      for (const bucketId of targets) {
-        await getClient().deleteBucket(bucketId);
+      try {
+        for (const bucketId of targets) {
+          await getClient().deleteBucket(bucketId);
+        }
+      } finally {
+        await this.loadBuckets();
       }
-      await this.loadBuckets();
       return targets;
     },
 

@@ -92,7 +92,7 @@ div
       b-button(@click="deleteBucket(delete_bucket_selected)", variant="danger")
         | Confirm
 
-  b-modal(id="delete-host-modal", title="Danger!", centered, hide-footer)
+  b-modal(id="delete-host-modal", title="Danger!", centered, hide-footer, @hidden="delete_host_selected = null")
     template(v-if="delete_host_selected")
       | Are you sure you want to delete
       |
@@ -300,8 +300,8 @@ export default {
         await this.bucketsStore.deleteBucketsByHost({ hostname });
       } finally {
         this.deleting_host = false;
-        this.delete_host_selected = null;
         this.$root.$emit('bv::hide::modal', 'delete-host-modal');
+        // delete_host_selected is cleared by the modal's @hidden event after the animation
       }
     },
     importBuckets: async function (importFile) {
