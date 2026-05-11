@@ -38,7 +38,7 @@ div
     div
       | Didn't find what you were looking for?
       br
-      | Add a week to the search: #[b-button(size="sm" variant="outline-dark" @click="start = start.subtract(1, 'week'); search()") +1 week]
+      | Add a week to the search: #[b-button(size="sm" variant="outline-dark" @click="extendByWeek()") +1 week]
 </template>
 
 <script lang="ts">
@@ -95,6 +95,10 @@ export default {
       } finally {
         this.status = null;
       }
+    },
+    extendByWeek() {
+      this.queryOptions.start = moment(this.queryOptions.start).subtract(1, 'week');
+      this.search();
     },
   },
 };
