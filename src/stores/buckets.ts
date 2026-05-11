@@ -223,6 +223,18 @@ export const useBucketsStore = defineStore('buckets', {
       await this.loadBuckets();
     },
 
+    async deleteBucketsByHost({ hostname }: { hostname: string }): Promise<string[]> {
+      const targets = (this.buckets as IBucket[])
+        .filter(b => b.hostname === hostname)
+        .map(b => b.id);
+      console.log(`Deleting ${targets.length} buckets for host ${hostname}`);
+      for (const bucketId of targets) {
+        await getClient().deleteBucket(bucketId);
+      }
+      await this.loadBuckets();
+      return targets;
+    },
+
     // mutations
     update_buckets(this: State, buckets: IBucket[]): void {
       this.buckets = _.orderBy(buckets, [b => b.id], ['asc']).map(b => {
