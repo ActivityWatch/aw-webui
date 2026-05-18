@@ -242,6 +242,7 @@ const browser_appnames: Record<string, string[]> = {
   zen: ['app.zen_browser.zen'],
   floorp: ['one.ablaze.floorp'],
   helium: ['net.imput.helium'],
+  safari: ['com.apple.Safari'],
 };
 
 // Returns a list of (browserName, bucketId) pairs for found browser buckets
@@ -275,6 +276,7 @@ export const browser_appname_regex: Record<string, string> = {
   zen: '(?i)(zen)',
   floorp: '(?i)(floorp)',
   helium: '(?i)(helium)',
+  safari: '(?i)^safari(浏览器)?$',
 };
 
 // Returns a list of active browser events (where the browser was the active window) from all browser buckets
