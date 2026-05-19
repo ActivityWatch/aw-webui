@@ -6,6 +6,10 @@ function getStartOfDayOffset() {
   return settingsStore.startOfDay;
 }
 
+function normalize_date(dateParam: Date | string) {
+  return dateParam instanceof Date ? new Date(dateParam.getTime()) : new Date(dateParam);
+}
+
 export function seconds_to_duration(seconds: number) {
   // Returns a human-readable duration string
   const hrs = Math.floor(seconds / 60 / 60);
@@ -93,4 +97,18 @@ export function get_today_with_offset(offset?: string): string {
   // Gets "today" in an offset-aware way
   const offset_dur = get_offset_duration(offset);
   return moment().subtract(offset_dur).startOf('day').format('YYYY-MM-DD');
+}
+
+export function format_weekday_short(dateParam: Date | string, locale?: string | string[]) {
+  return new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(normalize_date(dateParam));
+}
+
+export function format_month_day(dateParam: Date | string, locale?: string | string[]) {
+  return new Intl.DateTimeFormat(locale, { day: 'numeric' }).format(normalize_date(dateParam));
+}
+
+export function get_short_month_labels(locale?: string | string[]) {
+  return Array.from({ length: 12 }, (_, month) =>
+    new Intl.DateTimeFormat(locale, { month: 'short' }).format(new Date(2020, month, 1, 12))
+  );
 }

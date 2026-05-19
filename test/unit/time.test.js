@@ -1,4 +1,9 @@
-import { seconds_to_duration } from '~/util/time';
+import {
+  format_month_day,
+  format_weekday_short,
+  get_short_month_labels,
+  seconds_to_duration,
+} from '~/util/time';
 
 describe('seconds_to_duration', () => {
   test('should format 8145 seconds as "2h 15m 45s"', () => {
@@ -23,5 +28,40 @@ describe('seconds_to_duration', () => {
 
   test('should format 30 seconds as "30s"', () => {
     expect(seconds_to_duration(30)).toBe('30s');
+  });
+});
+
+describe('locale-aware time labels', () => {
+  test('should format weekday labels using the supplied locale', () => {
+    const monday = new Date(2026, 4, 18, 12);
+
+    expect(format_weekday_short(monday, 'en-US')).toBe(
+      new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(monday)
+    );
+    expect(format_weekday_short(monday, 'sv-SE')).toBe(
+      new Intl.DateTimeFormat('sv-SE', { weekday: 'short' }).format(monday)
+    );
+    expect(format_weekday_short(monday, 'sv-SE')).not.toBe(format_weekday_short(monday, 'en-US'));
+  });
+
+  test('should format month-day labels without hardcoded english ordinals', () => {
+    expect(format_month_day(new Date(2026, 4, 1, 12), 'en-US')).toBe('1');
+  });
+
+  test('should format short month labels using the supplied locale', () => {
+    const enUSMonths = get_short_month_labels('en-US');
+    const svSEMonths = get_short_month_labels('sv-SE');
+
+    expect(enUSMonths).toEqual(
+      Array.from({ length: 12 }, (_, month) =>
+        new Intl.DateTimeFormat('en-US', { month: 'short' }).format(new Date(2020, month, 1, 12))
+      )
+    );
+    expect(svSEMonths).toEqual(
+      Array.from({ length: 12 }, (_, month) =>
+        new Intl.DateTimeFormat('sv-SE', { month: 'short' }).format(new Date(2020, month, 1, 12))
+      )
+    );
+    expect(svSEMonths).not.toEqual(enUSMonths);
   });
 });

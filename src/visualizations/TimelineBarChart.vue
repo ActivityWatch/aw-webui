@@ -13,7 +13,12 @@ import _ from 'lodash';
 import { ChartOptions } from 'chart.js';
 import 'chart.js/auto';
 import { Bar } from 'vue-chartjs/legacy';
-import { get_hour_offset } from '~/util/time';
+import {
+  format_month_day,
+  format_weekday_short,
+  get_hour_offset,
+  get_short_month_labels,
+} from '~/util/time';
 
 function hourToTick(hours: number): string {
   if (hours > 1) {
@@ -65,29 +70,20 @@ export default {
         // Look up days of the week from `start`
         return _.range(7).map(d => {
           const date = new Date(start);
+          date.setHours(12, 0, 0, 0);
           date.setDate(date.getDate() + d);
-          return date.toLocaleDateString('en-US', { weekday: 'short' });
+          return format_weekday_short(date);
         });
       } else if (resolution.startsWith('month')) {
         // FIXME: Needs access to the timeperiod start to know which month
         // How many days are in the given month?
         const date = new Date(start);
         const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-        const ordinalsEnUS = {
-          one: 'st',
-          two: 'nd',
-          few: 'rd',
-          many: 'th',
-          zero: 'th',
-          other: 'th',
-        };
-        const toOrdinalSuffix = (num: number, locale = 'en-US', ordinals = ordinalsEnUS) => {
-          const pluralRules = new Intl.PluralRules(locale, { type: 'ordinal' });
-          return `${num}${ordinals[pluralRules.select(num)]}`;
-        };
-        return _.range(1, daysInMonth + 1).map(d => toOrdinalSuffix(d));
+        return _.range(1, daysInMonth + 1).map(d =>
+          format_month_day(new Date(date.getFullYear(), date.getMonth(), d, 12))
+        );
       } else if (resolution == 'year') {
-        return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return get_short_month_labels();
       } else {
         console.error(`Invalid resolution: ${resolution}`);
         return [];
