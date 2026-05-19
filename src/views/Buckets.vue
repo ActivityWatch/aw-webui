@@ -8,30 +8,38 @@ div
   // By device
   b-card.mb-3(v-for="device in bucketsStore.bucketsByDevice", :key="device.hostname || device.device_id")
     div.mb-3
-      div.d-flex
+      div.d-flex.justify-content-between
+        div.d-flex
+          div
+            icon(v-if="device.hostname === 'unknown'" name="question")
+            // TODO: detect device type somewhere else (should unify with store logic)
+            icon(v-else, name="desktop")
+            | &nbsp;
+          div
+            b {{ device.hostname }}
+            span.small.ml-2(v-if="serverStore.info.hostname == device.hostname")
+              | (the current device)
+            div.small
+              div(v-if="device.hostname !== device.device_id", style="color: #666")
+                | ID: {{ device.id }}
+              div
+                | Last updated:&nbsp;
+                time(:style="{'color': isRecent(device.last_updated) ? 'green' : 'inherit'}",
+                     :datetime="device.last_updated",
+                     :title="device.last_updated")
+                  | {{ device.last_updated | friendlytime }}
+              div
+                | First seen:&nbsp;
+                time(:datetime="device.first_seen",
+                     :title="device.first_seen")
+                  | {{ device.first_seen | friendlytime }}
         div
-          icon(v-if="device.hostname === 'unknown'" name="question")
-          // TODO: detect device type somewhere else (should unify with store logic)
-          icon(v-else, name="desktop")
-          | &nbsp;
-        div
-          b {{ device.hostname }}
-          span.small.ml-2(v-if="serverStore.info.hostname == device.hostname")
-            | (the current device)
-          div.small
-            div(v-if="device.hostname !== device.device_id", style="color: #666")
-              | ID: {{ device.id }}
-            div
-              | Last updated:&nbsp;
-              time(:style="{'color': isRecent(device.last_updated) ? 'green' : 'inherit'}",
-                   :datetime="device.last_updated",
-                   :title="device.last_updated")
-                | {{ device.last_updated | friendlytime }}
-            div
-              | First seen:&nbsp;
-              time(:datetime="device.first_seen",
-                   :title="device.first_seen")
-                | {{ device.first_seen | friendlytime }}
+          b-button(size="sm",
+                   variant="outline-danger",
+                   :title="`Delete all ${device.buckets.length} buckets for ${device.hostname}`",
+                   @click="openDeleteHostModal(device)")
+            icon(name="trash")
+            |  Delete all buckets for this host
 
     b-row
       b-col
@@ -83,6 +91,35 @@ div
         | Cancel
       b-button(@click="deleteBucket(delete_bucket_selected)", variant="danger")
         | Confirm
+
+  b-modal(id="delete-host-modal", title="Danger!", centered, hide-footer, @hidden="delete_host_selected = null; delete_host_error = null")
+    template(v-if="delete_host_selected")
+      | Are you sure you want to delete
+      |
+      b all {{ delete_host_selected.bucketCount }} buckets
+      |
+      | for host "{{ delete_host_selected.hostname }}"?
+      br
+      br
+      b This is permanent and cannot be undone!
+      div.small.text-muted.mt-2(style="max-height: 200px; overflow-y: auto;")
+        | Buckets that will be deleted:
+        ul.mb-0
+          li(v-for="bucketId in delete_host_selected.bucketIds", :key="bucketId")
+            code {{ bucketId }}
+      b-alert.mt-2(v-if="delete_host_error" show variant="danger")
+        | {{ delete_host_error }}
+      hr
+      div.float-right
+        b-button.mx-2(@click="$root.$emit('bv::hide::modal','delete-host-modal')")
+          | Cancel
+        b-button(@click="deleteBucketsForSelectedHost()",
+                 :disabled="deleting_host",
+                 variant="danger")
+          template(v-if="deleting_host")
+            | Deleting...
+          template(v-else)
+            | Confirm
 
   h3 Import and export buckets
 
@@ -175,6 +212,9 @@ export default {
       import_file: null,
       import_error: null,
       delete_bucket_selected: null,
+      delete_host_selected: null,
+      deleting_host: false,
+      delete_host_error: null,
       fields: [
         { key: 'id', label: 'Bucket ID', sortable: true },
         { key: 'hostname', sortable: true },
@@ -246,6 +286,30 @@ export default {
     deleteBucket: async function (bucketId: string) {
       await this.bucketsStore.deleteBucket({ bucketId });
       this.$root.$emit('bv::hide::modal', 'delete-modal');
+    },
+    openDeleteHostModal: function (device) {
+      this.delete_host_selected = {
+        hostname: device.hostname,
+        bucketCount: device.buckets.length,
+        bucketIds: device.buckets.map(b => b.id),
+      };
+      this.$root.$emit('bv::show::modal', 'delete-host-modal');
+    },
+    deleteBucketsForSelectedHost: async function () {
+      if (!this.delete_host_selected) return;
+      this.deleting_host = true;
+      this.delete_host_error = null;
+      try {
+        await this.bucketsStore.deleteBucketsByHost({
+          bucketIds: this.delete_host_selected.bucketIds,
+        });
+        this.$root.$emit('bv::hide::modal', 'delete-host-modal');
+      } catch (err) {
+        this.delete_host_error =
+          err?.message || 'Deletion failed. Some buckets may not have been deleted.';
+      } finally {
+        this.deleting_host = false;
+      }
     },
     importBuckets: async function (importFile) {
       const formData = new FormData();
