@@ -14,7 +14,7 @@ import { ChartOptions } from 'chart.js';
 import 'chart.js/auto';
 import { Bar } from 'vue-chartjs/legacy';
 import {
-  format_month_day,
+  format_day_of_month,
   format_weekday_short,
   get_hour_offset,
   get_short_month_labels,
@@ -80,7 +80,7 @@ export default {
         const date = new Date(start);
         const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
         return _.range(1, daysInMonth + 1).map(d =>
-          format_month_day(new Date(date.getFullYear(), date.getMonth(), d, 12))
+          format_day_of_month(new Date(date.getFullYear(), date.getMonth(), d, 12))
         );
       } else if (resolution == 'year') {
         return get_short_month_labels();

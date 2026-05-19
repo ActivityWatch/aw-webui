@@ -6,8 +6,8 @@ function getStartOfDayOffset() {
   return settingsStore.startOfDay;
 }
 
-function normalize_date(dateParam: Date | string) {
-  return dateParam instanceof Date ? new Date(dateParam.getTime()) : new Date(dateParam);
+function normalize_date(dateParam: Date) {
+  return new Date(dateParam.getTime());
 }
 
 export function seconds_to_duration(seconds: number) {
@@ -99,11 +99,11 @@ export function get_today_with_offset(offset?: string): string {
   return moment().subtract(offset_dur).startOf('day').format('YYYY-MM-DD');
 }
 
-export function format_weekday_short(dateParam: Date | string, locale?: string | string[]) {
+export function format_weekday_short(dateParam: Date, locale?: string | string[]) {
   return new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(normalize_date(dateParam));
 }
 
-export function format_month_day(dateParam: Date | string, locale?: string | string[]) {
+export function format_day_of_month(dateParam: Date, locale?: string | string[]) {
   return new Intl.DateTimeFormat(locale, { day: 'numeric' }).format(normalize_date(dateParam));
 }
 

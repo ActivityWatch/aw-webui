@@ -1,5 +1,5 @@
 import {
-  format_month_day,
+  format_day_of_month,
   format_weekday_short,
   get_short_month_labels,
   seconds_to_duration,
@@ -45,7 +45,7 @@ describe('locale-aware time labels', () => {
   });
 
   test('should format month-day labels without hardcoded english ordinals', () => {
-    expect(format_month_day(new Date(2026, 4, 1, 12), 'en-US')).toBe('1');
+    expect(format_day_of_month(new Date(2026, 4, 1, 12), 'en-US')).toBe('1');
   });
 
   test('should format short month labels using the supplied locale', () => {
