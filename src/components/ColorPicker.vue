@@ -57,9 +57,15 @@ export default {
         this.$emit('update:modelValue', val);
       }
     },
+    modelValue(val) {
+      const nextColor = val || '#000000';
+      if (nextColor !== this.colorValue) {
+        this.setColor(nextColor);
+      }
+    },
   },
   mounted() {
-    this.setColor(this.modelValue);
+    this.setColor(this.modelValue || '#000000');
   },
   methods: {
     setColor(color) {
