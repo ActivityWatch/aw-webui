@@ -3,7 +3,7 @@ export type PrivacyFilterAction = 'drop' | 'redact';
 export interface PrivacyFilterRule {
   enabled: boolean;
   bucket_prefix?: string;
-  field?: string;
+  field: string;
   pattern: string;
   action: PrivacyFilterAction;
   replacement?: string;
@@ -103,6 +103,8 @@ export function validatePrivacyFiltersInput(input: string): PrivacyFilterValidat
     const pattern = candidate.pattern;
     if (typeof pattern !== 'string') {
       errors.push(`Rule ${ruleNumber}: \`pattern\` must be a string.`);
+    } else if (pattern.trim() === '') {
+      errors.push(`Rule ${ruleNumber}: \`pattern\` cannot be an empty string.`);
     }
 
     const bucketPrefix = optionalString(
@@ -114,16 +116,15 @@ export function validatePrivacyFiltersInput(input: string): PrivacyFilterValidat
     const field = optionalString(candidate.field, 'field', ruleNumber, errors);
     const replacement = optionalString(candidate.replacement, 'replacement', ruleNumber, errors);
 
-    const action = candidate.action;
-    if (action !== 'drop' && action !== 'redact') {
-      errors.push(`Rule ${ruleNumber}: \`action\` must be either "drop" or "redact".`);
-      return;
-    }
-
     if (field === undefined) {
       errors.push(
         `Rule ${ruleNumber}: \`field\` is required so the rule only matches the intended event data.`
       );
+    }
+
+    const action = candidate.action;
+    if (action !== 'drop' && action !== 'redact') {
+      errors.push(`Rule ${ruleNumber}: \`action\` must be either "drop" or "redact".`);
     }
 
     if (action === 'redact' && replacement === undefined) {
@@ -133,7 +134,9 @@ export function validatePrivacyFiltersInput(input: string): PrivacyFilterValidat
     if (
       errors.length > errorCountBefore ||
       typeof enabled !== 'boolean' ||
-      typeof pattern !== 'string'
+      typeof pattern !== 'string' ||
+      field === undefined ||
+      (action !== 'drop' && action !== 'redact')
     ) {
       return;
     }

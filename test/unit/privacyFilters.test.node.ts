@@ -73,6 +73,39 @@ test('rejects rules without a field', () => {
   );
 });
 
+test('rejects empty pattern strings', () => {
+  const result = validatePrivacyFiltersInput(
+    JSON.stringify([
+      {
+        enabled: true,
+        bucket_prefix: 'aw-watcher-window',
+        field: 'title',
+        pattern: '   ',
+        action: 'drop',
+      },
+    ])
+  );
+  expect(result.rules).toBeNull();
+  expect(result.errors).toContain('Rule 1: `pattern` cannot be an empty string.');
+});
+
+test('reports invalid action and missing field together', () => {
+  const result = validatePrivacyFiltersInput(
+    JSON.stringify([
+      {
+        enabled: true,
+        pattern: '(?i)private browsing',
+        action: 'remove',
+      },
+    ])
+  );
+  expect(result.rules).toBeNull();
+  expect(result.errors).toEqual([
+    'Rule 1: `field` is required so the rule only matches the intended event data.',
+    'Rule 1: `action` must be either "drop" or "redact".',
+  ]);
+});
+
 test('treats blank input as an empty rule set', () => {
   const result = validatePrivacyFiltersInput('   ');
   expect(result.errors).toEqual([]);
