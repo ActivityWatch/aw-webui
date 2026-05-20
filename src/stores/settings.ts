@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import moment, { Moment } from 'moment';
 import { getClient } from '~/util/awclient';
 import { Category, CategorySet, defaultCategories, cleanCategory } from '~/util/classes';
+import { SavedQuery } from '~/util/savedQueries';
 import { View, defaultViews } from '~/stores/views';
 import { isEqual } from 'lodash';
 
@@ -43,6 +44,7 @@ interface State {
   // Ordered list of active set IDs. First entry has highest priority when merging.
   active_set_ids: string[];
   views: View[];
+  saved_queries: SavedQuery[];
 
   // Whether to show certain WIP features
   devmode: boolean;
@@ -83,6 +85,7 @@ export const useSettingsStore = defineStore('settings', {
     category_sets: [],
     active_set_ids: ['default'],
     views: defaultViews,
+    saved_queries: [],
 
     // Developer settings
     // NOTE: PRODUCTION might be undefined (in tests, for example)
@@ -141,7 +144,8 @@ export const useSettingsStore = defineStore('settings', {
           key == 'views' ||
           key == 'classes' ||
           key == 'category_sets' ||
-          key == 'active_set_ids';
+          key == 'active_set_ids' ||
+          key == 'saved_queries';
         try {
           if (isJsonKey) {
             let parsed = JSON.parse(raw);
