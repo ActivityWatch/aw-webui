@@ -153,6 +153,6 @@
     },
     "postcss": "^8.5.10",
     "serialize-javascript": "^7.0.5",
-    "webpack-dev-server": "^5.2.1"
+    "webpack-dev-server": "^5.2.4"
   }
 }
