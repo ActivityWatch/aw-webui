@@ -167,7 +167,7 @@ RETURN = sort_by_duration(merged_events);
         return;
       }
 
-      const defaultName = current?.name || getDefaultSavedQueryName(this.query_code);
+      const defaultName = getDefaultSavedQueryName(this.query_code);
       const name = prompt('Name for the saved query:', defaultName);
       if (name === null) {
         return;
@@ -213,11 +213,10 @@ RETURN = sort_by_duration(merged_events);
         return;
       }
 
+      const selectedQueryId = this.selectedSavedQuery.id;
       await this.persistSavedQueries(
         this.savedQueries.map(savedQuery =>
-          savedQuery.id === this.selectedSavedQuery.id
-            ? { ...savedQuery, name: trimmedName }
-            : savedQuery
+          savedQuery.id === selectedQueryId ? { ...savedQuery, name: trimmedName } : savedQuery
         )
       );
     },

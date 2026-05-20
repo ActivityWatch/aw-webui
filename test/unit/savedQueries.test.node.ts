@@ -20,10 +20,28 @@ describe('saved query helpers', () => {
       now: moment('2026-05-20T15:45:00Z'),
     });
 
-    expect(savedQuery.start_offset).toBe(0);
-    expect(savedQuery.end_offset).toBe(-1);
+    expect(savedQuery.start_day_offset).toBe(0);
+    expect(savedQuery.end_day_offset).toBe(-1);
 
     expect(resolveSavedQueryDates(savedQuery, moment('2026-05-27T08:00:00Z'))).toEqual({
+      startdate: '2026-05-27',
+      enddate: '2026-05-28',
+    });
+  });
+
+  test('rounds legacy hour offsets back to day offsets when loading older presets', () => {
+    expect(
+      resolveSavedQueryDates(
+        {
+          id: 'legacy-dst-query',
+          name: 'Legacy DST Query',
+          query_code: 'RETURN = [];',
+          start_offset: 0,
+          end_offset: -23,
+        },
+        moment('2026-05-27T08:00:00Z')
+      )
+    ).toEqual({
       startdate: '2026-05-27',
       enddate: '2026-05-28',
     });
@@ -39,8 +57,8 @@ describe('saved query helpers', () => {
       now: moment('2026-05-20T15:45:00Z'),
     });
 
-    expect(savedQuery.start_offset).toBe(2);
-    expect(savedQuery.end_offset).toBe(-1);
+    expect(savedQuery.start_day_offset).toBe(2);
+    expect(savedQuery.end_day_offset).toBe(-1);
   });
 
   test('slugifies and de-duplicates saved query ids', () => {

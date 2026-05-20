@@ -4,6 +4,9 @@ export interface SavedQuery {
   id: string;
   name: string;
   query_code: string;
+  start_day_offset?: number;
+  end_day_offset?: number;
+  // Legacy hour-based offsets are kept as read-only fallbacks for already-saved presets.
   start_offset?: number;
   end_offset?: number;
   event_type?: string;
@@ -11,6 +14,20 @@ export interface SavedQuery {
 
 function referenceDay(now: Moment | string = moment()) {
   return moment(now).startOf('day');
+}
+
+function resolveDayOffset(
+  dayOffset: number | undefined,
+  legacyHourOffset: number | undefined,
+  defaultValue: number
+) {
+  if (dayOffset !== undefined) {
+    return dayOffset;
+  }
+  if (legacyHourOffset !== undefined) {
+    return Math.round(legacyHourOffset / 24);
+  }
+  return defaultValue;
 }
 
 export function buildSavedQuery({
@@ -36,16 +53,16 @@ export function buildSavedQuery({
     id,
     name: name.trim(),
     query_code,
-    start_offset: reference.diff(moment(startdate).startOf('day'), 'days'),
-    end_offset: reference.diff(moment(enddate).startOf('day'), 'days'),
+    start_day_offset: reference.diff(moment(startdate).startOf('day'), 'days'),
+    end_day_offset: reference.diff(moment(enddate).startOf('day'), 'days'),
     event_type,
   };
 }
 
 export function resolveSavedQueryDates(savedQuery: SavedQuery, now: Moment | string = moment()) {
   const reference = referenceDay(now);
-  const startOffset = savedQuery.start_offset ?? 0;
-  const endOffset = savedQuery.end_offset ?? -1;
+  const startOffset = resolveDayOffset(savedQuery.start_day_offset, savedQuery.start_offset, 0);
+  const endOffset = resolveDayOffset(savedQuery.end_day_offset, savedQuery.end_offset, -1);
 
   return {
     startdate: moment(reference).subtract(startOffset, 'days').format('YYYY-MM-DD'),
