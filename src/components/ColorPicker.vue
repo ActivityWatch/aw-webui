@@ -40,7 +40,7 @@ export default {
   components: {
     picker: Compact,
   },
-  props: { value: { type: String, default: '#000000' } },
+  props: { modelValue: { type: String, default: '#000000' } },
   data() {
     return {
       colors: {
@@ -59,7 +59,7 @@ export default {
     },
   },
   mounted() {
-    this.setColor(this.value);
+    this.setColor(this.modelValue);
   },
   methods: {
     setColor(color) {
