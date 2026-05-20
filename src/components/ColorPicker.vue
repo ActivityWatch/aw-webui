@@ -14,7 +14,7 @@ div
         icon(name="sync" scale="1")
 
   div(style="position: relative")
-    picker(:value="colors" @input="updateFromPicker" v-if="displayPicker")
+    picker(:modelValue="colors" @update:modelValue="updateFromPicker" v-if="displayPicker")
 </template>
 
 <style>
