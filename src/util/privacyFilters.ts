@@ -113,14 +113,19 @@ export function validatePrivacyFiltersInput(input: string): PrivacyFilterValidat
       ruleNumber,
       errors
     );
-    const field = optionalString(candidate.field, 'field', ruleNumber, errors);
-    const replacement = optionalString(candidate.replacement, 'replacement', ruleNumber, errors);
-
-    if (field === undefined) {
+    let field: string | undefined;
+    if (candidate.field === undefined || candidate.field === null) {
       errors.push(
         `Rule ${ruleNumber}: \`field\` is required so the rule only matches the intended event data.`
       );
+    } else if (typeof candidate.field !== 'string') {
+      errors.push(`Rule ${ruleNumber}: \`field\` must be a string.`);
+    } else if (candidate.field.trim() === '') {
+      errors.push(`Rule ${ruleNumber}: \`field\` cannot be an empty string.`);
+    } else {
+      field = candidate.field;
     }
+    const replacement = optionalString(candidate.replacement, 'replacement', ruleNumber, errors);
 
     const action = candidate.action;
     if (action !== 'drop' && action !== 'redact') {

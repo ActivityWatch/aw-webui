@@ -73,6 +73,38 @@ test('rejects rules without a field', () => {
   );
 });
 
+test('rejects blank fields without also reporting them as missing', () => {
+  const result = validatePrivacyFiltersInput(
+    JSON.stringify([
+      {
+        enabled: true,
+        bucket_prefix: 'aw-watcher-window',
+        field: '   ',
+        pattern: '(?i)private browsing',
+        action: 'drop',
+      },
+    ])
+  );
+  expect(result.rules).toBeNull();
+  expect(result.errors).toEqual(['Rule 1: `field` cannot be an empty string.']);
+});
+
+test('rejects non-string fields without also reporting them as missing', () => {
+  const result = validatePrivacyFiltersInput(
+    JSON.stringify([
+      {
+        enabled: true,
+        bucket_prefix: 'aw-watcher-window',
+        field: 7,
+        pattern: '(?i)private browsing',
+        action: 'drop',
+      },
+    ])
+  );
+  expect(result.rules).toBeNull();
+  expect(result.errors).toEqual(['Rule 1: `field` must be a string.']);
+});
+
 test('rejects empty pattern strings', () => {
   const result = validatePrivacyFiltersInput(
     JSON.stringify([
