@@ -144,14 +144,6 @@ div
 </style>
 
 <script lang="ts">
-import 'vue-awesome/icons/trash';
-import 'vue-awesome/icons/download';
-import 'vue-awesome/icons/folder-open';
-import 'vue-awesome/icons/desktop';
-import 'vue-awesome/icons/mobile';
-import 'vue-awesome/icons/question';
-import 'vue-awesome/icons/exclamation-triangle';
-
 import { defineAsyncComponent } from 'vue';
 import _ from 'lodash';
 import Papa from 'papaparse';

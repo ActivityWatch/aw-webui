@@ -31,9 +31,6 @@ div
 
 <script lang="ts">
 import moment from 'moment';
-import 'vue-awesome/icons/edit';
-import 'vue-awesome/icons/stop';
-import 'vue-awesome/icons/play';
 
 import EventEditor from './EventEditor.vue';
 import { friendlyduration, friendlytime, shorttime } from '~/util/filters';

@@ -43,7 +43,6 @@ div
 import { mapState, mapGetters } from 'pinia';
 import CategoryEditTree from '~/components/CategoryEditTree.vue';
 import CategoryEditModal from '~/components/CategoryEditModal.vue';
-import 'vue-awesome/icons/undo';
 
 import { useCategoryStore } from '~/stores/categories';
 

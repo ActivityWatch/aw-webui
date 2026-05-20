@@ -32,14 +32,6 @@ div
 </template>
 
 <script lang="ts">
-import 'vue-awesome/icons/regular/plus-square';
-import 'vue-awesome/icons/regular/minus-square';
-import 'vue-awesome/icons/circle';
-import 'vue-awesome/icons/caret-right';
-import 'vue-awesome/icons/trash';
-import 'vue-awesome/icons/plus';
-import 'vue-awesome/icons/edit';
-
 import CategoryEditModal from './CategoryEditModal.vue';
 import { useCategoryStore } from '~/stores/categories';
 

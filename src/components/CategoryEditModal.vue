@@ -57,8 +57,6 @@ import { useCategoryStore } from '~/stores/categories';
 import { mapState } from 'pinia';
 import { validateRegex, isRegexBroad } from '~/util/validate';
 
-import 'vue-awesome/icons/trash';
-
 export default {
   name: 'CategoryEditModal',
   components: {

@@ -75,7 +75,6 @@ div
 <script lang="ts">
 import moment from 'moment';
 import { friendlytime } from '../util/filters';
-import 'vue-awesome/icons/sync';
 export default {
   name: 'input-timeinterval',
   props: {

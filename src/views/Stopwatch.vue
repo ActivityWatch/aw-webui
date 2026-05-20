@@ -59,8 +59,6 @@ import _ from 'lodash';
 import moment from 'moment';
 
 import StopwatchEntry from '../components/StopwatchEntry.vue';
-import 'vue-awesome/icons/play';
-import 'vue-awesome/icons/trash';
 
 export default {
   name: 'Stopwatch',
