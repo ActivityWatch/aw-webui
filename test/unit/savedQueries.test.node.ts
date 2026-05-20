@@ -17,13 +17,13 @@ describe('saved query helpers', () => {
       startdate: '2026-05-20',
       enddate: '2026-05-21',
       event_type: 'currentwindow',
-      now: moment('2026-05-20T15:45:00Z'),
+      now: moment('2026-05-20T12:00:00'),
     });
 
     expect(savedQuery.start_day_offset).toBe(0);
     expect(savedQuery.end_day_offset).toBe(-1);
 
-    expect(resolveSavedQueryDates(savedQuery, moment('2026-05-27T08:00:00Z'))).toEqual({
+    expect(resolveSavedQueryDates(savedQuery, moment('2026-05-27T12:00:00'))).toEqual({
       startdate: '2026-05-27',
       enddate: '2026-05-28',
     });
@@ -39,7 +39,7 @@ describe('saved query helpers', () => {
           start_offset: 0,
           end_offset: -23,
         },
-        moment('2026-05-27T08:00:00Z')
+        moment('2026-05-27T12:00:00')
       )
     ).toEqual({
       startdate: '2026-05-27',
@@ -54,7 +54,7 @@ describe('saved query helpers', () => {
       query_code: 'RETURN = [];',
       startdate: '2026-05-18',
       enddate: '2026-05-21',
-      now: moment('2026-05-20T15:45:00Z'),
+      now: moment('2026-05-20T12:00:00'),
     });
 
     expect(savedQuery.start_day_offset).toBe(2);
