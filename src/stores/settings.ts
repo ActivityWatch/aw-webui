@@ -4,6 +4,7 @@ import { getClient } from '~/util/awclient';
 import { Category, CategorySet, defaultCategories, cleanCategory } from '~/util/classes';
 import { SavedQuery } from '~/util/savedQueries';
 import { View, defaultViews } from '~/stores/views';
+import type { PrivacyFilterRule } from '~/util/privacyFilters';
 import { isEqual } from 'lodash';
 
 function jsonEq(a: any, b: any) {
@@ -39,6 +40,7 @@ interface State {
     timesPollIsShown: number;
   };
   always_active_pattern: string;
+  privacy_filters: PrivacyFilterRule[];
   classes: Category[];
   // Named category sets — each set is an independent collection of category rules.
   // The active_set_ids list controls which sets are combined (in priority order).
@@ -83,6 +85,7 @@ export const useSettingsStore = defineStore('settings', {
     },
 
     always_active_pattern: '',
+    privacy_filters: [],
     classes: defaultCategories,
     category_sets: [],
     active_set_ids: ['default'],
