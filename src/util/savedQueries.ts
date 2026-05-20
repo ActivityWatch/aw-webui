@@ -36,8 +36,8 @@ export function buildSavedQuery({
     id,
     name: name.trim(),
     query_code,
-    start_offset: reference.diff(moment(startdate).startOf('day'), 'hours'),
-    end_offset: reference.diff(moment(enddate).startOf('day'), 'hours'),
+    start_offset: reference.diff(moment(startdate).startOf('day'), 'days'),
+    end_offset: reference.diff(moment(enddate).startOf('day'), 'days'),
     event_type,
   };
 }
@@ -45,11 +45,11 @@ export function buildSavedQuery({
 export function resolveSavedQueryDates(savedQuery: SavedQuery, now: Moment | string = moment()) {
   const reference = referenceDay(now);
   const startOffset = savedQuery.start_offset ?? 0;
-  const endOffset = savedQuery.end_offset ?? -24;
+  const endOffset = savedQuery.end_offset ?? -1;
 
   return {
-    startdate: moment(reference).subtract(startOffset, 'hours').format('YYYY-MM-DD'),
-    enddate: moment(reference).subtract(endOffset, 'hours').format('YYYY-MM-DD'),
+    startdate: moment(reference).subtract(startOffset, 'days').format('YYYY-MM-DD'),
+    enddate: moment(reference).subtract(endOffset, 'days').format('YYYY-MM-DD'),
   };
 }
 

@@ -142,7 +142,11 @@ RETURN = sort_by_duration(merged_events);
     saveCurrentQuery: async function () {
       const current = this.selectedSavedQuery;
 
-      if (current && confirm(`Update saved query "${current.name}"?`)) {
+      if (current) {
+        if (!confirm(`Update saved query "${current.name}"?`)) {
+          return;
+        }
+
         const updatedQuery = buildSavedQuery({
           id: current.id,
           name: current.name,

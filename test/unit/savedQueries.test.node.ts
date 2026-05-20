@@ -21,12 +21,26 @@ describe('saved query helpers', () => {
     });
 
     expect(savedQuery.start_offset).toBe(0);
-    expect(savedQuery.end_offset).toBe(-24);
+    expect(savedQuery.end_offset).toBe(-1);
 
     expect(resolveSavedQueryDates(savedQuery, moment('2026-05-27T08:00:00Z'))).toEqual({
       startdate: '2026-05-27',
       enddate: '2026-05-28',
     });
+  });
+
+  test('stores relative date offsets in days', () => {
+    const savedQuery = buildSavedQuery({
+      id: 'weekly-review',
+      name: 'Weekly Review',
+      query_code: 'RETURN = [];',
+      startdate: '2026-05-18',
+      enddate: '2026-05-21',
+      now: moment('2026-05-20T15:45:00Z'),
+    });
+
+    expect(savedQuery.start_offset).toBe(2);
+    expect(savedQuery.end_offset).toBe(-1);
   });
 
   test('slugifies and de-duplicates saved query ids', () => {
@@ -40,7 +54,7 @@ describe('saved query helpers', () => {
     expect(
       getDefaultSavedQueryName('\n  merged_events = merge_events();\nRETURN = merged_events;')
     ).toBe('merged_events = merge_events();');
-    expect(getDefaultSavedQueryName('   \n  ', moment('2026-05-20T00:00:00Z'))).toBe(
+    expect(getDefaultSavedQueryName('   \n  ', moment('2026-05-20T12:00:00'))).toBe(
       'Query 2026-05-20'
     );
   });
