@@ -105,12 +105,8 @@ export default {
           overflowMethod: 'flip',
           delay: 0,
         },
-        // Keyboard & scroll navigation (see #629)
+        // Horizontal scroll navigation (see #629)
         horizontalScroll: true, // horizontal scroll/swipe pans the timeline
-        keyboard: {
-          enabled: true,
-          speed: { x: 10, y: 0, zoom: 0.02 },
-        },
       },
       editingEvent: null,
       editingEventBucket: null,
