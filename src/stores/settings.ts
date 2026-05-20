@@ -12,6 +12,8 @@ function jsonEq(a: any, b: any) {
   return isEqual(jsonA, jsonB);
 }
 
+let settingsLoadPromise: Promise<void> | null = null;
+
 // Backoffs for NewReleaseNotification
 export const SHORT_BACKOFF_PERIOD = 24 * 60 * 60;
 export const LONG_BACKOFF_PERIOD = 5 * 24 * 60 * 60;
@@ -105,9 +107,17 @@ export const useSettingsStore = defineStore('settings', {
 
   actions: {
     async ensureLoaded() {
-      if (!this.loaded) {
-        await this.load();
+      if (this.loaded) {
+        return;
       }
+
+      if (!settingsLoadPromise) {
+        settingsLoadPromise = this.load().finally(() => {
+          settingsLoadPromise = null;
+        });
+      }
+
+      await settingsLoadPromise;
     },
     async load({ save }: { save?: boolean } = {}) {
       if (typeof localStorage === 'undefined') {
@@ -230,6 +240,7 @@ export const useSettingsStore = defineStore('settings', {
     },
     async update(new_state: Record<string, any>) {
       console.log('Updating state', new_state);
+      await this.ensureLoaded();
       this.$patch(new_state);
       await this.save();
     },
