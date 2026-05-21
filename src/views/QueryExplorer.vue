@@ -14,17 +14,18 @@ div
     | {{saved_query_error}}
 
   form
-    div.form-row
+    div.form-row.align-items-end
       div.form-group.col-lg-6
-        | Saved Queries
-        select.form-control(v-model="selected_saved_query_id", @change="loadSelectedQuery()")
+        label.mb-1(for="saved-query-select") Saved Queries
+        select#saved-query-select.form-control(v-model="selected_saved_query_id", @change="loadSelectedQuery()")
           option(value="") Select saved query...
           option(v-for="savedQuery in savedQueries", :key="savedQuery.id", :value="savedQuery.id")
             | {{savedQuery.name}}
-      div.form-group.col-lg-6.d-flex.align-items-end.flex-wrap
-        button.btn.btn-outline-primary.mr-2.mb-2(type="button", @click="saveCurrentQuery()") Save Current
-        button.btn.btn-outline-secondary.mr-2.mb-2(type="button", @click="renameSelectedQuery()", :disabled="!selected_saved_query_id") Rename
-        button.btn.btn-outline-danger.mb-2(type="button", @click="deleteSelectedQuery()", :disabled="!selected_saved_query_id") Delete
+      div.form-group.col-lg-6
+        div.saved-query-actions
+          button.btn.btn-success.mr-2(type="button", @click="saveCurrentQuery()") Save Current
+          button.btn.btn-outline-secondary.mr-2(type="button", @click="renameSelectedQuery()", :disabled="!selected_saved_query_id") Rename
+          button.btn.btn-outline-danger(type="button", @click="deleteSelectedQuery()", :disabled="!selected_saved_query_id") Delete
 
     div.form-row
       div.form-group.col-md-6
@@ -47,7 +48,13 @@ div
   aw-selectable-eventview(:events="events", :event_type="event_type")
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.saved-query-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+}
+</style>
 
 <script lang="ts">
 import moment from 'moment';
