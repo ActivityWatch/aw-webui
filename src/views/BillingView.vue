@@ -92,8 +92,6 @@ import {
   WorkReportHostBuckets,
 } from '~/util/workReport';
 
-import 'vue-awesome/icons/sync';
-import 'vue-awesome/icons/download';
 
 interface CategoryRow {
   key: string; // JSON.stringify(parts) — unambiguous identity for rate lookup

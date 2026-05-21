@@ -96,7 +96,6 @@ div
 
 <script lang="ts">
 import moment from 'moment';
-import 'vue-awesome/icons/sync';
 export default {
   name: 'input-timeinterval',
   emits: ['update:modelValue'],

@@ -44,11 +44,6 @@ import moment from 'moment';
 import { canonicalEvents, querystr_to_array } from '~/queries';
 import { useBucketsStore } from '~/stores/buckets';
 
-import 'vue-awesome/icons/search';
-import 'vue-awesome/icons/spinner';
-import 'vue-awesome/icons/angle-double-down';
-import 'vue-awesome/icons/angle-double-up';
-
 export default {
   name: 'Search',
   data() {

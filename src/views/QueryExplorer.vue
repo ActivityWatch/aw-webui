@@ -87,7 +87,6 @@ div
 </style>
 
 <script lang="ts">
-import 'vue-awesome/icons/trash';
 import moment from 'moment';
 import _ from 'lodash';
 import { querystr_to_array } from '~/queries';

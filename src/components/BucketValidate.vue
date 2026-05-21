@@ -72,9 +72,6 @@ div
 </template>
 
 <script lang="ts">
-import 'vue-awesome/icons/check';
-import 'vue-awesome/icons/exclamation-triangle';
-import 'vue-awesome/icons/info-circle';
 import { getClient } from '~/util/awclient';
 import { overlappingEvents } from '~/util/transforms';
 import { friendlyduration } from '~/util/filters';

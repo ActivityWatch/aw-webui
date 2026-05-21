@@ -96,7 +96,6 @@ import {
   privateCategoriesFrom,
   type CategoryName,
 } from '~/util/activityContext';
-import 'vue-awesome/icons/copy';
 
 const DEFAULT_PROMPT =
   'Based on the following activity data, provide a concise summary of how I spent my time. ' +
