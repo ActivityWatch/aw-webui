@@ -33,9 +33,6 @@ div(style="font-size: 0.9em")
 </style>
 
 <script lang="ts">
-import 'vue-awesome/icons/circle';
-import 'vue-awesome/icons/regular/plus-square';
-import 'vue-awesome/icons/regular/minus-square';
 import _ from 'lodash';
 import { friendlyduration } from '~/util/filters';
 import { build_category_hierarchy, flatten_category_hierarchy } from '../util/classes.ts';

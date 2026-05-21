@@ -14,7 +14,7 @@ div
         icon(name="sync" scale="1")
 
   div(style="position: relative")
-    picker(:value="colors" @input="updateFromPicker" v-if="displayPicker")
+    picker(:modelValue="colors" @update:modelValue="updateFromPicker" v-if="displayPicker")
 </template>
 
 <style>
@@ -34,15 +34,13 @@ div
 
 <script lang="ts">
 // Based on https://codepen.io/Brownsugar/pen/NaGPKy
-import 'vue-awesome/icons/sync';
-
-import { Compact } from 'vue-color';
+import { Compact } from '@ckpack/vue-color';
 
 export default {
   components: {
     picker: Compact,
   },
-  props: { value: { type: String, default: '#000000' } },
+  props: { modelValue: { type: String, default: '#000000' } },
   data() {
     return {
       colors: {
@@ -59,9 +57,15 @@ export default {
         this.$emit('update:modelValue', val);
       }
     },
+    modelValue(val) {
+      const nextColor = val || '#000000';
+      if (nextColor !== this.colorValue) {
+        this.setColor(nextColor);
+      }
+    },
   },
   mounted() {
-    this.setColor(this.value);
+    this.setColor(this.modelValue || '#000000');
   },
   methods: {
     setColor(color) {

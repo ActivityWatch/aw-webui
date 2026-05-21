@@ -115,11 +115,6 @@ $border-color: #ddd;
 </style>
 
 <script lang="ts">
-import 'vue-awesome/icons/edit';
-import 'vue-awesome/icons/tags';
-import 'vue-awesome/icons/clock';
-import 'vue-awesome/icons/calendar';
-
 import EventEditor from '~/components/EventEditor.vue';
 import { friendlytime, friendlyduration } from '~/util/filters';
 

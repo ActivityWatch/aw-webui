@@ -32,11 +32,6 @@ div(v-if="view")
 </template>
 
 <script lang="ts">
-import 'vue-awesome/icons/save';
-import 'vue-awesome/icons/times';
-import 'vue-awesome/icons/trash';
-import 'vue-awesome/icons/undo';
-
 import { mapState } from 'pinia';
 import draggable from 'vuedraggable';
 

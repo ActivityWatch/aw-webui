@@ -97,28 +97,9 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
 
 <script lang="ts">
 // only import the icons you use to reduce bundle size
-import 'vue-awesome/icons/calendar-day';
-import 'vue-awesome/icons/calendar-week';
-import 'vue-awesome/icons/stream';
-import 'vue-awesome/icons/database';
-import 'vue-awesome/icons/search';
-import 'vue-awesome/icons/code';
-import 'vue-awesome/icons/chart-line'; // TODO: switch to chart-column, when vue-awesome supports FA v6
-import 'vue-awesome/icons/chart-pie';
-import 'vue-awesome/icons/flag-checkered';
-import 'vue-awesome/icons/stopwatch';
-import 'vue-awesome/icons/cog';
-import 'vue-awesome/icons/tools';
-import 'vue-awesome/icons/history';
 
 // TODO: use circle-nodes instead in the future
-import 'vue-awesome/icons/project-diagram';
 //import 'vue-awesome/icons/cicle-nodes';
-
-import 'vue-awesome/icons/ellipsis-h';
-
-import 'vue-awesome/icons/mobile';
-import 'vue-awesome/icons/desktop';
 
 import _ from 'lodash';
 

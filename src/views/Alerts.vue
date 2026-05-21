@@ -59,11 +59,6 @@ import _ from 'lodash';
 import moment from 'moment';
 import { canonicalEvents } from '~/queries';
 
-import 'vue-awesome/icons/plus';
-import 'vue-awesome/icons/check';
-import 'vue-awesome/icons/times';
-import 'vue-awesome/icons/trash';
-
 import { useBucketsStore } from '~/stores/buckets';
 import { useCategoryStore } from '~/stores/categories';
 import { friendlyduration } from '~/util/filters';

@@ -66,11 +66,6 @@ import { defineAsyncComponent } from 'vue';
 import _ from 'lodash';
 import moment from 'moment';
 
-import 'vue-awesome/icons/search';
-import 'vue-awesome/icons/spinner';
-import 'vue-awesome/icons/angle-double-down';
-import 'vue-awesome/icons/angle-double-up';
-
 import { canonicalEvents } from '~/queries';
 
 import { useCategoryStore } from '~/stores/categories';

@@ -156,16 +156,6 @@ import { periodLengthConvertMoment } from '~/util/timeperiod';
 import { friendlyperiod, friendlyduration } from '~/util/filters';
 import _ from 'lodash';
 
-import 'vue-awesome/icons/arrow-left';
-import 'vue-awesome/icons/arrow-right';
-import 'vue-awesome/icons/sync';
-import 'vue-awesome/icons/plus';
-import 'vue-awesome/icons/edit';
-import 'vue-awesome/icons/times';
-import 'vue-awesome/icons/save';
-import 'vue-awesome/icons/question-circle';
-import 'vue-awesome/icons/filter';
-
 import { useSettingsStore } from '~/stores/settings';
 import { useCategoryStore } from '~/stores/categories';
 import { useActivityStore, QueryOptions } from '~/stores/activity';

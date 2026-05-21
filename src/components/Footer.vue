@@ -39,13 +39,6 @@ div.container(style="color: #555; font-size: 0.9em")
 
 <script lang="ts">
 // only import the icons you use to reduce bundle size
-import 'vue-awesome/icons/brands/twitter';
-import 'vue-awesome/icons/brands/github';
-import 'vue-awesome/icons/hand-holding-heart';
-import 'vue-awesome/icons/vote-yea';
-import 'vue-awesome/icons/question-circle';
-import 'vue-awesome/icons/bug';
-import 'vue-awesome/icons/heart';
 
 import { mapState } from 'pinia';
 import { useServerStore } from '~/stores/server';
