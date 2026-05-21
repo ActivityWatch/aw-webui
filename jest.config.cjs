@@ -8,7 +8,6 @@ module.exports = {
   projects: [
     {
       displayName: 'jsdom',
-      preset: '@vue/cli-plugin-unit-jest',
       testEnvironment: 'jsdom',
       transform: {
         '^.+\\.js$': 'babel-jest',
