@@ -1,7 +1,10 @@
 name: Dependabot Auto-merge
 
-# Use the repository-scoped GitHub Actions token instead of an external PAT.
-# The workflow-level permissions below grant the merge action the access it needs.
+# NOTE: `merge-me-action` still needs the bot PAT here.
+# Using `secrets.GITHUB_TOKEN` fails on `workflow_run` with
+# "Resource not accessible by integration" when the action queries
+# branch protection rules over GraphQL.
+# See: https://github.com/ridedott/merge-me-action/issues/1581
 
 on:
   workflow_run:
@@ -10,10 +13,6 @@ on:
     workflows:
       # List all required workflow names here.
       - Build
-
-permissions:
-  contents: write
-  pull-requests: write
 
 jobs:
   auto_merge:
@@ -27,4 +26,4 @@ jobs:
     steps:
       - uses: ridedott/merge-me-action@2568f177a681785a874d6e7af950eb1a0dd31123
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.AWBOT_GH_TOKEN }}
