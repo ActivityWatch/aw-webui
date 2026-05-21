@@ -24,8 +24,10 @@ div
       div.form-group.col-lg-6
         div.saved-query-actions
           button.btn.btn-success.mr-2(type="button", @click="saveCurrentQuery()") Save Current
-          button.btn.btn-outline-secondary.mr-2(type="button", @click="renameSelectedQuery()", :disabled="!selected_saved_query_id") Rename
-          button.btn.btn-outline-danger(type="button", @click="deleteSelectedQuery()", :disabled="!selected_saved_query_id") Delete
+          button.btn.btn-secondary.mr-2(type="button", @click="renameSelectedQuery()", :disabled="!selected_saved_query_id") Rename
+          button.btn.btn-danger(type="button", @click="deleteSelectedQuery()", :disabled="!selected_saved_query_id")
+            icon(name="trash")
+            |  Delete
 
     div.form-row
       div.form-group.col-md-6
@@ -57,6 +59,7 @@ div
 </style>
 
 <script lang="ts">
+import 'vue-awesome/icons/trash';
 import moment from 'moment';
 import _ from 'lodash';
 import { useCategoryStore } from '~/stores/categories';
