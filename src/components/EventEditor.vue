@@ -64,10 +64,6 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
 import moment from 'moment';
 import { friendlyduration } from '~/util/filters';
 
-import 'vue-awesome/icons/times';
-import 'vue-awesome/icons/save';
-import 'vue-awesome/icons/trash';
-
 export default {
   name: 'EventEditor',
   props: {

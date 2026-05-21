@@ -108,8 +108,6 @@ div
 </template>
 
 <script lang="ts">
-import 'vue-awesome/icons/filter';
-import 'vue-awesome/icons/ellipsis-v';
 import _ from 'lodash';
 import { mapState } from 'pinia';
 import { useSettingsStore } from '~/stores/settings';

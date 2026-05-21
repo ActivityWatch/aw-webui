@@ -21,9 +21,6 @@ div
 </template>
 
 <script lang="ts">
-import 'vue-awesome/icons/desktop';
-import 'vue-awesome/icons/sun';
-import 'vue-awesome/icons/moon';
 import { mapState } from 'pinia';
 import { useSettingsStore } from '~/stores/settings';
 import { detectPreferredTheme } from '~/util/theme';

@@ -16,7 +16,6 @@ div
 </template>
 
 <script lang="ts">
-import 'vue-awesome/icons/cog';
 import { mapState } from 'pinia';
 import { useActivityStore } from '~/stores/activity';
 import { useSettingsStore } from '~/stores/settings';

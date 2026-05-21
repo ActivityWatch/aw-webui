@@ -121,9 +121,6 @@ div(v-if="editable || !activityStore.buckets.loaded || has_prerequisites || !set
 
 <script lang="ts">
 import _ from 'lodash';
-import 'vue-awesome/icons/cog';
-import 'vue-awesome/icons/times';
-import 'vue-awesome/icons/bars';
 
 import { buildBarchartDataset } from '~/util/datasets';
 

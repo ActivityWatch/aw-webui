@@ -302,19 +302,6 @@ import {
 } from '~/util/timeperiod';
 import _ from 'lodash';
 
-import 'vue-awesome/icons/arrow-left';
-import 'vue-awesome/icons/arrow-right';
-import 'vue-awesome/icons/sync';
-import 'vue-awesome/icons/plus';
-import 'vue-awesome/icons/edit';
-import 'vue-awesome/icons/times';
-import 'vue-awesome/icons/save';
-import 'vue-awesome/icons/question-circle';
-import 'vue-awesome/icons/filter';
-import 'vue-awesome/icons/ellipsis-v';
-import 'vue-awesome/icons/layer-group';
-import 'vue-awesome/icons/mobile';
-import 'vue-awesome/icons/desktop';
 
 import { useSettingsStore } from '~/stores/settings';
 import { useCategoryStore } from '~/stores/categories';

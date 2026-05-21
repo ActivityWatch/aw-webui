@@ -71,7 +71,6 @@ div
 
 <script lang="ts">
 import _ from 'lodash';
-import 'vue-awesome/icons/question-circle';
 import { useActivityStore } from '~/stores/activity';
 import { IEvent } from '~/util/interfaces';
 import { periodReadable } from '~/util/timeperiod';

@@ -59,8 +59,6 @@ div
 </template>
 
 <script lang="ts">
-import 'vue-awesome/icons/plus';
-import 'vue-awesome/icons/trash';
 
 import { getClient } from '~/util/awclient';
 import {

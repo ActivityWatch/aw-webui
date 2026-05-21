@@ -77,8 +77,6 @@ import { mapState } from 'pinia';
 import { validateRegex, isRegexBroad } from '~/util/validate';
 import { CANONICAL_SELECT_KEYS, normalizeSelectKeys } from '~/util/classes';
 
-import 'vue-awesome/icons/trash';
-
 export default {
   name: 'CategoryEditModal',
   components: {
