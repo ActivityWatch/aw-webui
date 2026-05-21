@@ -38,7 +38,8 @@ div
                      variant="outline-secondary",
                      no-caret,
                      right,
-                     :title="`More actions for ${device.hostname}`")
+                     :title="`More actions for ${device.hostname}`",
+                     :aria-label="`More actions for ${device.hostname}`")
             template(v-slot:button-content)
               icon(name="ellipsis-v")
             b-dropdown-item-button(@click="openDeleteHostModal(device)",
