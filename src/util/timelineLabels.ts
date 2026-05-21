@@ -8,9 +8,10 @@ function escapeHtml(str: string): string {
 }
 
 function addWrapOpportunities(str: string): string {
-  // `str` must already be HTML-escaped because those entities contain no `_`, `/`,
-  // or `-`, so the inserted <wbr> tags can't split them.
-  return str.replace(/([/_-])/g, '$1<wbr>');
+  // Insert zero-width space after word-breaking characters so the label
+  // breaks at natural boundaries without HTML <wbr> tags (vis-timeline
+  // does not support <wbr> in group label content).
+  return str.replace(/([/_-])/g, '$1\u200B');
 }
 
 export function formatTimelineBucketLabelHtml(bucketId: string): string {

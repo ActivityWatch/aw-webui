@@ -34,12 +34,18 @@ div
                      :title="device.first_seen")
                   | {{ device.first_seen | friendlytime }}
         div
-          b-button(size="sm",
-                   variant="outline-danger",
-                   :title="`Delete all ${device.buckets.length} buckets for ${device.hostname}`",
-                   @click="openDeleteHostModal(device)")
-            icon(name="trash")
-            |  Delete all buckets for this host
+          b-dropdown(size="sm",
+                     variant="outline-secondary",
+                     no-caret,
+                     right,
+                     :title="`More actions for ${device.hostname}`")
+            template(v-slot:button-content)
+              icon(name="ellipsis-v")
+            b-dropdown-item-button(@click="openDeleteHostModal(device)",
+                     variant="danger",
+                     :title="`Delete all ${device.buckets.length} buckets for ${device.hostname}`")
+              icon(name="trash")
+              |  Delete all buckets for this host
 
     b-row
       b-col
@@ -188,6 +194,7 @@ import 'vue-awesome/icons/desktop';
 import 'vue-awesome/icons/mobile';
 import 'vue-awesome/icons/question';
 import 'vue-awesome/icons/exclamation-triangle';
+import 'vue-awesome/icons/ellipsis-v';
 
 import _ from 'lodash';
 import Papa from 'papaparse';
