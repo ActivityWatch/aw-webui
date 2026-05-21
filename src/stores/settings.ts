@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import moment, { Moment } from 'moment';
 import { getClient } from '~/util/awclient';
 import { Category, CategorySet, defaultCategories, cleanCategory } from '~/util/classes';
+import { SavedQuery } from '~/util/savedQueries';
 import { View, defaultViews } from '~/stores/views';
 import { isEqual } from 'lodash';
 
@@ -10,6 +11,8 @@ function jsonEq(a: any, b: any) {
   const jsonB = JSON.parse(JSON.stringify(b));
   return isEqual(jsonA, jsonB);
 }
+
+let settingsLoadPromise: Promise<void> | null = null;
 
 // Backoffs for NewReleaseNotification
 export const SHORT_BACKOFF_PERIOD = 24 * 60 * 60;
@@ -43,6 +46,7 @@ interface State {
   // Ordered list of active set IDs. First entry has highest priority when merging.
   active_set_ids: string[];
   views: View[];
+  saved_queries: SavedQuery[];
 
   // Whether to show certain WIP features
   devmode: boolean;
@@ -83,6 +87,7 @@ export const useSettingsStore = defineStore('settings', {
     category_sets: [],
     active_set_ids: ['default'],
     views: defaultViews,
+    saved_queries: [],
 
     // Developer settings
     // NOTE: PRODUCTION might be undefined (in tests, for example)
@@ -102,9 +107,17 @@ export const useSettingsStore = defineStore('settings', {
 
   actions: {
     async ensureLoaded() {
-      if (!this.loaded) {
-        await this.load();
+      if (this.loaded) {
+        return;
       }
+
+      if (!settingsLoadPromise) {
+        settingsLoadPromise = this.load().finally(() => {
+          settingsLoadPromise = null;
+        });
+      }
+
+      await settingsLoadPromise;
     },
     async load({ save }: { save?: boolean } = {}) {
       if (typeof localStorage === 'undefined') {
@@ -141,7 +154,8 @@ export const useSettingsStore = defineStore('settings', {
           key == 'views' ||
           key == 'classes' ||
           key == 'category_sets' ||
-          key == 'active_set_ids';
+          key == 'active_set_ids' ||
+          key == 'saved_queries';
         try {
           if (isJsonKey) {
             let parsed = JSON.parse(raw);
@@ -226,6 +240,7 @@ export const useSettingsStore = defineStore('settings', {
     },
     async update(new_state: Record<string, any>) {
       console.log('Updating state', new_state);
+      await this.ensureLoaded();
       this.$patch(new_state);
       await this.save();
     },
