@@ -37,6 +37,11 @@ div
   hr
 
   DeveloperSettings
+  div.mt-2
+    b-btn(v-b-modal.cors-config-modal, variant="outline-primary", size="sm")
+      | Configure CORS
+
+  CorsConfigModal
 </template>
 
 <script lang="ts">
@@ -49,6 +54,7 @@ import ReleaseNotificationSettings from '~/views/settings/ReleaseNotificationSet
 import CategorizationSettings from '~/views/settings/CategorizationSettings.vue';
 import LandingPageSettings from '~/views/settings/LandingPageSettings.vue';
 import DeveloperSettings from '~/views/settings/DeveloperSettings.vue';
+import CorsConfigModal from '~/components/CorsConfigModal.vue';
 import Theme from '~/views/settings/Theme.vue';
 import ColorSettings from '~/views/settings/ColorSettings.vue';
 import ActivePatternSettings from '~/views/settings/ActivePatternSettings.vue';
@@ -65,6 +71,7 @@ export default {
     ColorSettings,
     DeveloperSettings,
     ActivePatternSettings,
+    CorsConfigModal,
   },
   beforeRouteLeave(to, from, next) {
     const categoryStore = useCategoryStore();
