@@ -22,8 +22,6 @@ div
 //       Code should generally go in the framework-independent file.
 
 import summary from './summary';
-import 'vue-awesome/icons/angle-double-down';
-import 'vue-awesome/icons/angle-double-up';
 
 export default {
   name: 'aw-summary',

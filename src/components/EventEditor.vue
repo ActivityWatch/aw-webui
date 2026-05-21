@@ -68,10 +68,6 @@ import moment from 'moment';
 import _ from 'lodash';
 import { friendlyduration } from '~/util/filters';
 
-import 'vue-awesome/icons/times';
-import 'vue-awesome/icons/save';
-import 'vue-awesome/icons/trash';
-
 export default {
   name: 'EventEditor',
   props: {

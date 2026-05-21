@@ -101,8 +101,6 @@ import {
   summarizeWorkSessions,
 } from '~/util/workReport';
 
-import 'vue-awesome/icons/sync';
-import 'vue-awesome/icons/download';
 
 interface DailyData {
   date: string;
