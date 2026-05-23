@@ -68,6 +68,33 @@ test('matches events using selected fields only', () => {
   expect(events[2].data.$category).toEqual(['Uncategorized']);
 });
 
+test('matchString with event applies select_keys field scoping', () => {
+  const appOnlyCat: Category = {
+    name: ['Browser'],
+    rule: { type: 'regex', regex: 'Firefox', select_keys: ['app'] },
+  };
+  const categories = [appOnlyCat];
+
+  const eventWithAppMatch: IEvent = {
+    timestamp: new Date().toISOString(),
+    duration: 0,
+    data: { app: 'Firefox', title: 'Session notes' },
+  };
+  const eventWithTitleMatchOnly: IEvent = {
+    timestamp: new Date().toISOString(),
+    duration: 0,
+    data: { app: 'Ghostty', title: 'Firefox docs' },
+  };
+
+  // With event: only the app field is tested, so app-match hits and title-only-match misses
+  expect(classes.matchString('', categories, eventWithAppMatch)).toEqual(appOnlyCat);
+  expect(classes.matchString('', categories, eventWithTitleMatchOnly)).toBeNull();
+
+  // Without event: falls back to testing the concatenated string argument
+  expect(classes.matchString('Firefox', categories)).toEqual(appOnlyCat);
+  expect(classes.matchString('no match', categories)).toBeNull();
+});
+
 test('cleanCategory drops empty select_keys but preserves valid ones', () => {
   const emptySelectKeys = classes.cleanCategory({
     name: ['Test'],
