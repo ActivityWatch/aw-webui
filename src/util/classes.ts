@@ -3,13 +3,14 @@ import { IEvent } from './interfaces';
 import { useSettingsStore } from '~/stores/settings';
 
 const level_sep = '>';
-const CLASSIFY_KEYS = ['app', 'title'];
+export const CLASSIFY_KEYS = ['app', 'title'];
 const UNCATEGORIZED = ['Uncategorized'];
 
 export interface Rule {
   type: 'regex' | 'none';
   regex?: string;
   ignore_case?: boolean;
+  select_keys?: string[];
 }
 
 export interface Category {
@@ -189,8 +190,20 @@ export function cleanCategory(cat: Category): Category {
   // we also want to strip any excess properties that may have belonged to another rule type
   if (cat.rule && (cat.rule.type === null || cat.rule.type === 'none')) {
     cat.rule = { type: 'none' };
+  } else if (cat.rule?.type === 'regex') {
+    const select_keys = cat.rule.select_keys?.filter(key => CLASSIFY_KEYS.includes(key));
+    if (select_keys && select_keys.length > 0) {
+      cat.rule.select_keys = select_keys;
+    } else {
+      delete cat.rule.select_keys;
+    }
   }
   return cat;
+}
+
+function getRuleSelectKeys(rule: Rule): string[] {
+  const select_keys = rule.select_keys?.filter(key => CLASSIFY_KEYS.includes(key));
+  return select_keys && select_keys.length > 0 ? select_keys : CLASSIFY_KEYS;
 }
 
 export function loadClasses(): Category[] {
@@ -202,7 +215,11 @@ function pickDeepest(categories: Category[]) {
   return _.maxBy(categories, c => c.name.length);
 }
 
-export function matchString(str: string, categories: Category[] | null): Category | null {
+export function matchString(
+  str: string,
+  categories: Category[] | null,
+  event?: IEvent
+): Category | null {
   if (!categories) {
     console.log(
       'Categories not passed, loading... (if you see this outside of a test, you should probably pass them)'
@@ -221,7 +238,17 @@ export function matchString(str: string, categories: Category[] | null): Categor
 
   // Find the matching category.
   // If several categories match the event, the deepest category will be chosen.
-  const matchingCats: [Category, RegExp][] = regexes.filter(c => c[1].test(str));
+  const matchingCats: [Category, RegExp][] = regexes.filter(([cat, re]) => {
+    // When the caller provides the raw event and the category has select_keys,
+    // test only the specified fields so field-scoped rules work consistently.
+    if (event && cat.rule.select_keys && cat.rule.select_keys.length > 0) {
+      return getRuleSelectKeys(cat.rule).some(key => {
+        const value = event.data[key];
+        return typeof value === 'string' && re.test(value);
+      });
+    }
+    return re.test(str);
+  });
   if (matchingCats.length > 0) {
     return pickDeepest(matchingCats.map(c => c[0]));
   }
@@ -242,7 +269,10 @@ export function classifyEvents(events: IEvent[], categories: Category[]): IEvent
   // If several categories match the event, the deepest category will be chosen.
   return events.map((e: IEvent) => {
     const matchingCats: [Category, RegExp][] = regexes.filter(c => {
-      return _.map(CLASSIFY_KEYS, key => c[1].test(e.data[key])).some(x => x);
+      return _.map(getRuleSelectKeys(c[0].rule), key => {
+        const value = e.data[key];
+        return typeof value === 'string' ? c[1].test(value) : false;
+      }).some(x => x);
     });
     if (matchingCats.length > 0) {
       const category = pickDeepest(matchingCats.map(c => c[0]));
