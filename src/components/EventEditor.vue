@@ -14,11 +14,11 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
       tr
         th Start
         td
-          input(type="datetime-local" v-model="start")
+          input(type="datetime-local" step="1" v-model="start")
       tr
         th End
         td
-          input(type="datetime-local" v-model="end")
+          input(type="datetime-local" step="1" v-model="end")
       tr
         th Duration
         td {{ friendlyduration(editedEvent.duration) }}
@@ -80,7 +80,7 @@ export default {
   computed: {
     start: {
       get: function () {
-        return moment(this.editedEvent.timestamp).format('YYYY-MM-DDTHH:mm');
+        return moment(this.editedEvent.timestamp).format('YYYY-MM-DDTHH:mm:ss');
       },
       set: function (dt) {
         // Duration needs to be set first since otherwise the computed for end will use the new timestamp
@@ -91,7 +91,7 @@ export default {
     end: {
       get: function () {
         const end = moment(this.editedEvent.timestamp).add(this.editedEvent.duration, 'seconds');
-        return end.format('YYYY-MM-DDTHH:mm');
+        return end.format('YYYY-MM-DDTHH:mm:ss');
       },
       set: function (dt) {
         this.editedEvent.duration = moment(dt).diff(this.editedEvent.timestamp, 'seconds');
