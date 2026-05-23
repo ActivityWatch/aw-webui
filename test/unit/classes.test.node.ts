@@ -37,3 +37,47 @@ test('matches events to category', () => {
   expect(events[1].data.$category).toEqual(testClasses[0].name);
   expect(events[2].data.$category).toEqual(['Uncategorized']);
 });
+
+test('matches events using selected fields only', () => {
+  const fieldScopedClasses: Category[] = [
+    { name: ['Browser'], rule: { type: 'regex', regex: 'Firefox', select_keys: ['app'] } },
+    { name: ['Docs'], rule: { type: 'regex', regex: 'Firefox', select_keys: ['title'] } },
+  ];
+  let events: IEvent[] = [
+    {
+      timestamp: new Date().toISOString(),
+      duration: 0,
+      data: { app: 'Firefox', title: 'Session notes' },
+    },
+    {
+      timestamp: new Date().toISOString(),
+      duration: 0,
+      data: { app: 'Ghostty', title: 'Firefox docs' },
+    },
+    {
+      timestamp: new Date().toISOString(),
+      duration: 0,
+      data: { app: 'Ghostty', title: 'Session notes' },
+    },
+  ];
+
+  events = classes.classifyEvents(events, fieldScopedClasses);
+
+  expect(events[0].data.$category).toEqual(fieldScopedClasses[0].name);
+  expect(events[1].data.$category).toEqual(fieldScopedClasses[1].name);
+  expect(events[2].data.$category).toEqual(['Uncategorized']);
+});
+
+test('cleanCategory drops empty select_keys but preserves valid ones', () => {
+  const emptySelectKeys = classes.cleanCategory({
+    name: ['Test'],
+    rule: { type: 'regex', regex: 'Firefox', select_keys: [] },
+  });
+  const validSelectKeys = classes.cleanCategory({
+    name: ['Test'],
+    rule: { type: 'regex', regex: 'Firefox', select_keys: ['title'] },
+  });
+
+  expect(emptySelectKeys.rule.select_keys).toBeUndefined();
+  expect(validSelectKeys.rule.select_keys).toEqual(['title']);
+});

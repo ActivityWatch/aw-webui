@@ -16,6 +16,13 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
     div(v-if="editing.rule.type === 'regex'")
       b-input-group.my-1(prepend="Pattern")
         b-form-input(v-model="editing.rule.regex")
+      div.my-2
+        div.mb-1 Fields
+        b-form-checkbox-group(
+          v-model="editing.rule.select_keys"
+          :options="regexFieldOptions"
+        )
+        small.text-muted Leave blank to match all canonical string fields.
       div.d-flex
         div.flex-grow-1
           b-form-checkbox(v-model="editing.rule.ignore_case" switch)
@@ -56,6 +63,7 @@ import ColorPicker from '~/components/ColorPicker.vue';
 import { useCategoryStore } from '~/stores/categories';
 import { mapState } from 'pinia';
 import { validateRegex, isRegexBroad } from '~/util/validate';
+import { CLASSIFY_KEYS } from '~/util/classes';
 
 export default {
   name: 'CategoryEditModal',
@@ -72,7 +80,7 @@ export default {
       editing: {
         id: 0, // FIXME: Use ID assigned to category in store, in order for saves to be uniquely targeted
         name: null,
-        rule: {},
+        rule: { type: 'none', select_keys: [] },
         parent: [],
         inherit_color: true,
         color: null,
@@ -91,6 +99,12 @@ export default {
         { value: 'regex', text: 'Regular Expression' },
         //{ value: 'glob', text: 'Glob pattern' },
       ];
+    },
+    regexFieldOptions: function () {
+      return CLASSIFY_KEYS.map(key => ({
+        value: key,
+        text: key,
+      }));
     },
     valid: function () {
       return this.editing.rule.type !== 'none' && this.validPattern;
@@ -144,10 +158,15 @@ export default {
       }
 
       // Save the category
+      const rule = _.cloneDeep(this.editing.rule);
+      if (rule.type === 'regex' && (!rule.select_keys || rule.select_keys.length === 0)) {
+        delete rule.select_keys;
+      }
+
       const new_class = {
         id: this.editing.id,
         name: this.editing.parent.concat(this.editing.name),
-        rule: this.editing.rule.type !== 'none' ? this.editing.rule : { type: 'none' },
+        rule: rule.type !== 'none' ? rule : { type: 'none' },
         data: {
           color: this.editing.inherit_color === true ? undefined : this.editing.color,
           score: this.editing.inherit_score === true ? undefined : this.editing.score,
@@ -166,10 +185,14 @@ export default {
       const inherit_color = !color;
       const score = cat.data ? cat.data.score : undefined;
       const inherit_score = !score;
+      const rule = _.cloneDeep(cat.rule);
+      if (rule.type === 'regex') {
+        rule.select_keys = rule.select_keys ? [...rule.select_keys] : [];
+      }
       this.editing = {
         id: cat.id,
         name: cat.subname,
-        rule: _.cloneDeep(cat.rule),
+        rule,
         parent: cat.parent ? cat.parent : [],
         color,
         inherit_color,

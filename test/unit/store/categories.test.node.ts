@@ -58,6 +58,21 @@ describe('categories store', () => {
     expect(cats).toHaveLength(2);
   });
 
+  test('updateClass preserves regex select_keys', () => {
+    categoryStore.load([
+      {
+        name: ['Browser'],
+        rule: { type: 'regex', regex: 'Firefox', select_keys: ['app'] },
+      },
+    ]);
+
+    const browserCat = categoryStore.get_category(['Browser']);
+    browserCat.rule.select_keys = ['title'];
+    categoryStore.updateClass(browserCat);
+
+    expect(categoryStore.get_category(['Browser']).rule.select_keys).toEqual(['title']);
+  });
+
   test('update implicit parent category', () => {
     // The default categories have implicit Media and Comms categories (with 'No Rule')
     // Tests against https://github.com/ActivityWatch/activitywatch/issues/580
