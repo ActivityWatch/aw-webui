@@ -215,7 +215,11 @@ function pickDeepest(categories: Category[]) {
   return _.maxBy(categories, c => c.name.length);
 }
 
-export function matchString(str: string, categories: Category[] | null): Category | null {
+export function matchString(
+  str: string,
+  categories: Category[] | null,
+  event?: IEvent
+): Category | null {
   if (!categories) {
     console.log(
       'Categories not passed, loading... (if you see this outside of a test, you should probably pass them)'
@@ -234,7 +238,17 @@ export function matchString(str: string, categories: Category[] | null): Categor
 
   // Find the matching category.
   // If several categories match the event, the deepest category will be chosen.
-  const matchingCats: [Category, RegExp][] = regexes.filter(c => c[1].test(str));
+  const matchingCats: [Category, RegExp][] = regexes.filter(([cat, re]) => {
+    // When the caller provides the raw event and the category has select_keys,
+    // test only the specified fields so field-scoped rules work consistently.
+    if (event && cat.rule.select_keys && cat.rule.select_keys.length > 0) {
+      return getRuleSelectKeys(cat.rule).some(key => {
+        const value = event.data[key];
+        return typeof value === 'string' && re.test(value);
+      });
+    }
+    return re.test(str);
+  });
   if (matchingCats.length > 0) {
     return pickDeepest(matchingCats.map(c => c[0]));
   }

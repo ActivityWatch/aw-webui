@@ -240,7 +240,7 @@ export default {
           bucket.events = _.filter(bucket.events, e => {
             const str = getCategorizationStringFromEvent(bucket, e);
             if (str === null) return true; // Keep events from unknown bucket types
-            const matched = matchString(str, allCats);
+            const matched = matchString(str, allCats, e);
             const eventCat = matched ? matched.name : ['Uncategorized'];
             // Check if the event's category matches any selected filter category
             // (including parent matches: selecting "Work" also shows "Work > Programming")

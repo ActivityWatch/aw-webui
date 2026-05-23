@@ -186,9 +186,7 @@ export default {
       const score = cat.data ? cat.data.score : undefined;
       const inherit_score = !score;
       const rule = _.cloneDeep(cat.rule);
-      if (rule.type === 'regex') {
-        rule.select_keys = rule.select_keys ? [...rule.select_keys] : [];
-      }
+      rule.select_keys = rule.type === 'regex' && rule.select_keys ? [...rule.select_keys] : [];
       this.editing = {
         id: cat.id,
         name: cat.subname,
