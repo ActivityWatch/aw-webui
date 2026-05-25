@@ -1,7 +1,7 @@
 <template lang="pug">
 div(style="font-size: 0.9em")
-  div.px-1(v-for="cat in category_hierarchy" @click="toggle(cat)" v-if="parents_expanded(cat)", :class="{'clickable': cat.children.length > 0}")
-    span(:style="'padding-left: ' + (1.4 * cat.depth) + 'em'")
+  div.px-1.category-row(v-for="cat in category_hierarchy" @click="toggle(cat)" v-if="parents_expanded(cat)", :class="{'clickable': cat.children.length > 0}")
+    div.category-label(:style="'padding-left: ' + (1.4 * cat.depth) + 'em'")
 
       // icon
       span(v-if="cat.children.length > 0", style="opacity: 0.8")
@@ -12,11 +12,10 @@ div(style="font-size: 0.9em")
       span(v-else, style="opacity: 0.6")
         icon(name="circle", scale="0.4", style="margin-left: 1em; margin-right: 1.22em;")
 
-      // title
-      | {{cat.subname}}
+      span.category-title {{cat.subname}}
 
     // time
-    span(style="float: right")
+    span.category-value
       span(v-if="show_perc")
         | {{Math.round(100 * cat.duration / total_duration, 1)}}%
       span(v-else)
@@ -27,6 +26,31 @@ div(style="font-size: 0.9em")
 </template>
 
 <style lang="scss" scoped>
+.category-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.category-label {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  align-items: flex-start;
+}
+
+.category-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.category-value {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  text-align: right;
+}
+
 .clickable {
   cursor: pointer;
 }
