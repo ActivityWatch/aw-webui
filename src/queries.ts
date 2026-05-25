@@ -264,7 +264,9 @@ function browsersWithBuckets(browserbuckets: string[]): [string, string][] {
 // See: test/unit/queries.test.node.ts, https://github.com/ActivityWatch/aw-webui/issues/749
 export const browser_appname_regex: Record<string, string> = {
   chrome: '(?i)^(google[-_ ]?chrome|chrome|chromium)',
-  firefox: '(?i)(firefox|librewolf|waterfox|nightly)',
+  // Zen Browser installs the Firefox WebExtension build and can report into
+  // aw-watcher-web-firefox buckets, so match it as Firefox-compatible too.
+  firefox: '(?i)(firefox|librewolf|waterfox|nightly|zen)',
   opera: '(?i)(opera)',
   brave: '(?i)(brave)',
   edge: '(?i)^(microsoft[-_ ]?edge|msedge)',
