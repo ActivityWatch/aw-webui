@@ -1,20 +1,20 @@
 <template lang="pug">
 div
-  h3 Graph
+  h3 {{ $t('graph.title') }}
 
   b-alert(show variant="warning")
-    | This feature is still in early development. See PR #[a(href="https://github.com/ActivityWatch/aw-webui/pull/365") aw-webui#365] for more information.
+    | {{ $t('graph.earlyDev') }} See PR #[a(href="https://github.com/ActivityWatch/aw-webui/pull/365") aw-webui#365] for more information.
 
-  | Displays a graph of categories and their transitions.
+  | {{ $t('graph.desc') }}
 
   b-alert.mt-2(style="warning" show)
-    | This feature is still in early development.
+    | {{ $t('graph.earlyDev') }}
 
   b-alert(v-if="error" show variant="danger")
     | {{error}}
 
   // Specify max category depth
-  b-form-group(label="Max category depth")
+  b-form-group(:label="$t('graph.maxDepth')")
     b-form-input(v-model="maxDepth" type="number" min="1")
 
   // Toggle to exclude uncategorized

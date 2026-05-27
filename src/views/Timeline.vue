@@ -1,71 +1,71 @@
 <template lang="pug">
 div
-  h2 Timeline
+  h2 {{ $t('timeline.title') }}
 
   input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration").mb-3
 
   // blocks
   div.d-inline-block.border.rounded.p-2.mr-2
-    | Events shown:  {{ num_events }}
+    | {{ $t('timeline.eventsShown', { count: num_events }) }}
   div.d-inline-block.border.rounded.p-2.mr-2
-    | Swimlanes:
+    | {{ $t('timeline.swimlanes') }}
     select(v-model="swimlane")
-      option(:value='null') None
-      option(value='category') Categories
-      option(value='bucketType') Bucket Specific
+      option(:value='null') {{ $t('timeline.swimlaneNone') }}
+      option(value='category') {{ $t('timeline.swimlaneCategories') }}
+      option(value='bucketType') {{ $t('timeline.swimlaneBucketType') }}
   details.d-inline-block.bg-light.small.border.rounded.mr-2.px-2
     summary.p-2
-      b Filters: {{ filter_summary }}
+      b {{ $t('timeline.filters', { summary: filter_summary }) }}
     div.p-2.bg-light
       table
         tr
           th.pt-2.pr-3
-            label Host:
+            label {{ $t('timeline.filterHost') }}
           td
-              select(v-model="filter_hostname")
-                option(:value='null') All
-                option(v-for="host in hosts", :value="host") {{ host }}
+            select(v-model="filter_hostname")
+              option(:value='null') {{ $t('timeline.filterCategoryAll') }}
+              option(v-for="host in hosts", :value="host") {{ host }}
         tr
           th.pt-2.pr-3
-            label Client:
+            label {{ $t('timeline.filterClient') }}
           td
             select(v-model="filter_client")
-              option(:value='null') All
+              option(:value='null') {{ $t('timeline.filterCategoryAll') }}
               option(v-for="client in clients", :value="client") {{ client }}
         tr
           th.pt-2.pr-3
-            label AFK:
+            label {{ $t('timeline.filterAfk') }}
           td
             b-form-checkbox(v-model="filter_afk" size="sm" switch)
-              | Filter AFK
+              | {{ $t('timeline.filterAfkLabel') }}
         tr
           th.pt-2.pr-3
-            label Merge:
+            label {{ $t('timeline.filterMerge') }}
           td
             b-form-checkbox(v-model="filter_merge_similar" size="sm" switch)
-              | Merge by app
+              | {{ $t('timeline.filterMergeLabel') }}
         tr
           th.pt-2.pr-3
-            label Categories:
+            label {{ $t('timeline.filterCategories') }}
           td
             select(@change="onCategorySelect($event)", :value="''")
-              option(value="" disabled) {{ filter_categories.length > 0 ? 'Add category...' : 'All' }}
+              option(value="" disabled) {{ filter_categories.length > 0 ? $t('timeline.filterCategoryAdd') : $t('timeline.filterCategoryAll') }}
               option(v-for="cat in category_options", :key="cat.text", :value="cat.text") {{ cat.text }}
             div.mt-1(v-if="filter_categories.length > 0")
               span.badge.badge-info.mr-1(v-for="(cat, idx) in filter_categories", :key="idx")
                 | {{ cat.join(' > ') }}
                 button.ml-1.close.small(@click="removeCategory(idx)", type="button", style="font-size: 0.8rem") &times;
   div.d-inline-block.border.rounded.p-2.mr-2(v-if="num_events !== 0")
-    | Events shown: {{ num_events }}
+    | {{ $t('timeline.eventsShown', { count: num_events }) }}
   b-alert.d-inline-block.p-2.mb-0.mt-2(v-if="num_events === 0", variant="warning", show)
-    | No events match selected criteria. Timeline is not updated.
+    | {{ $t('timeline.noEvents') }}
   div.float-right.small.text-muted.pt-3
         tr
           th.pt-2.pr-3
-            label Duration:
+            label {{ $t('timeline.filterDuration') }}
           td
             select(v-model="filter_duration")
-              option(:value='null') All
+              option(:value='null') {{ $t('timeline.filterCategoryAll') }}
               option(:value='2') 2+ secs
               option(:value='5') 5+ secs
               option(:value='10') 10+ secs
@@ -78,7 +78,7 @@ div
               option(:value='1 * 60 * 60') 1+ hrs
               option(:value='2 * 60 * 60') 2+ hrs
   div(style="float: right; color: #999").d-inline-block.pt-3
-    | Scroll to zoom, swipe/horizontal-scroll to pan, arrow keys to navigate
+    | {{ $t('timeline.scrollHint') }}
 
   div(v-if="buckets !== null")
     div(style="clear: both")
@@ -87,7 +87,7 @@ div
     aw-devonly(reason="Not ready for production, still experimenting")
       aw-calendar(:buckets="buckets")
   div(v-else)
-    h1.aw-loading Loading...
+    h1.aw-loading {{ $t('timeline.loading') }}
 </template>
 
 <script lang="ts">

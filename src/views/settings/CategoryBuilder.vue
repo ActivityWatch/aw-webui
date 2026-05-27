@@ -1,47 +1,38 @@
 <template lang="pug">
 div
-  h1 Categorization helper
+  h1 {{ $t('categoryBuilder.title') }}
   div
+    p {{ $t('categoryBuilder.desc1') }}
+    p {{ $t('categoryBuilder.desc2') }}
     p
-      | This tool will help you create categories from your uncategorized time.
-
-    p
-      | It works by fetching all uncategorized time for a recent timeperiod,
-      | and then finds the most common words (by time, not count) each of
-      | which may then either be ignored (if too broad/irrelevant), or used
-      | to create a new (sub)category, or to append the word to a pre-existing category rule.
-      | Words with less than 60s of time will not be shown.
-
-    p
-      | When you're done, you can inspect the categories in the #[router-link(:to="{ path: '/settings' }") Settings] page.
-
+      | {{ $t('categoryBuilder.desc3', { link: '<router-link :to=\"{ path: \\'/settings\\' }\">' + $t('categoryBuilder.settingsLink') + '</router-link>' }) }}
 
   div.d-flex
     div.flex-grow-1
       div
-        b Options
+        b {{ $t('categoryBuilder.options') }}
       div
-        small Hostname: {{ queryOptions.hostname }}
+        small {{ $t('categoryBuilder.hostname', { hostname: queryOptions.hostname }) }}
       div
-        small Range: {{ queryOptions.start }} - {{ queryOptions.stop }}
+        small {{ $t('categoryBuilder.range', { start: queryOptions.start, stop: queryOptions.stop }) }}
     div.flex-grow-0
       b-button(variant="outline-dark" @click="show_options = !show_options" size="sm")
-        span(v-if="!show_options") Show options
-        span(v-else) Hide options
+        span(v-if="!show_options") {{ $t('categoryBuilder.showOptions') }}
+        span(v-else) {{ $t('categoryBuilder.hideOptions') }}
 
   div(v-show="show_options")
     hr
-    h4 Options
+    h4 {{ $t('categoryBuilder.options') }}
     aw-query-options(v-model="queryOptions")
 
   hr
 
-  h5 Common words in "{{category.join(" > ")}}" events
+  h5(v-html="$t('categoryBuilder.commonWords', { category: category.join(' > ') })")
   div(v-if="loading")
-    | Loading...
+    | {{ $t('categoryBuilder.loading') }}
   div(v-else)
     div(v-if="words_by_duration.length == 0")
-      | No words with significant duration. You're good to go!
+      | {{ $t('categoryBuilder.noWords') }}
     div(v-else)
       div.row.category-builder-word(v-for="word in words_by_duration")
         div.col.hover-highlight
@@ -50,19 +41,19 @@ div
               | {{ word.word }} ({{ Math.round(word.duration) }}s)
             div.flex-grow-0
               b-button.mr-1(size="sm" @click="createRule(word.word)" variant="success")
-                | New rule
+                | {{ $t('categoryBuilder.newRule') }}
               b-button.mr-1(size="sm" @click="appendRule(word.word)" variant="warning")
-                | Append rule
+                | {{ $t('categoryBuilder.appendRule') }}
               b-button.mr-1(size="sm" @click="ignoreWord(word.word)")
-                | Ignore
+                | {{ $t('categoryBuilder.ignore') }}
               b-button(size="sm" @click="showEvents(word)" variant="outline-dark")
-                span(v-if="showing_events[0] != word") Show events
-                span(v-else) Hide events
+                span(v-if="showing_events[0] != word") {{ $t('categoryBuilder.showEvents') }}
+                span(v-else) {{ $t('categoryBuilder.hideEvents') }}
           div(v-if="showing_events && showing_events[0] == word")
             table.table.table-sm.table-striped
               tr
-                th Title
-                th.text-right Duration
+                th {{ $t('categoryBuilder.titleCol') }}
+                th.text-right {{ $t('categoryBuilder.durationCol') }}
               tr(v-for="event in showing_events[1]")
                 td {{ event.data.title }}
                 td.text-right {{ Math.round(event.duration) }}s
@@ -78,21 +69,21 @@ div
                       @ok="createRuleOk()"
                       @hidden="createRuleCancel()")
 
-  b-modal(id="appendRule" title="Append rule" @ok="handleOk" :ok-disabled="!valid")
+  b-modal(id="appendRule" :title="$t('categoryBuilder.appendTitle')" @ok="handleOk" :ok-disabled="!valid")
     b-form(ref="form" @submit.stop.prevent="handleSubmit")
-      b-form-group(label="Rule"
+      b-form-group(:label="$t('categoryBuilder.ruleLabel')"
                    label-for="append-category"
-                   invalid-feedback="Category is required"
+                   :invalid-feedback="$t('categoryBuilder.ruleRequired')"
                    :state="validCategory"
                    required)
         b-form-select#append-category(v-model="append.category")
           b-form-select-option(v-for="cat in allCategoriesSelect" :value="cat.value" :key="cat.id") {{ cat.text }}
-      b-form-group(label="Word")
+      b-form-group(:label="$t('categoryBuilder.wordLabel')")
         b-form-input(v-model="append.word")
         small
-          div(v-if="validPattern" style="color: green") Valid
-          div(v-else style="color: red") Invalid pattern
-          div(v-if="validPattern && broad_pattern" style="color: orange") Pattern too broad
+          div(v-if="validPattern" style="color: green") {{ $t('categoryBuilder.valid') }}
+          div(v-else style="color: red") {{ $t('categoryBuilder.invalidPattern') }}
+          div(v-if="validPattern && broad_pattern" style="color: orange") {{ $t('categoryBuilder.patternTooBroad') }}
 </template>
 
 <style>

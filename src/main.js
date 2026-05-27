@@ -22,6 +22,17 @@ import './style/style.scss';
 // Loads all the filters
 import './util/filters.js';
 
+// Load i18n
+import VueI18n from 'vue-i18n';
+Vue.use(VueI18n);
+import en from './locales/en.json';
+import zh from './locales/zh.json';
+const i18n = new VueI18n({
+  locale: localStorage.getItem('locale') || navigator.language.startsWith('zh') ? 'zh' : 'en',
+  fallbackLocale: 'en',
+  messages: { en, zh },
+});
+
 // Sets up the routing and the base app (using vue-router)
 import router from './route.js';
 
@@ -88,6 +99,7 @@ new Vue({
   router: router,
   render: h => h(App),
   pinia,
+  i18n,
 });
 
 // Set the $aw global

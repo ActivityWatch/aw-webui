@@ -2,7 +2,7 @@
 div
   div.d-sm-flex.justify-content-between
     div
-      h5.mb-2.mb-sm-0 Duration default value
+      h5.mb-2.mb-sm-0 {{ $t('settings.durationDefault') }}
     div
       b-select(size="sm" :value="durationDefault", @change="durationDefault = $event")
           option(:value="15*60") 15min
@@ -14,7 +14,7 @@ div
           option(:value="12*60*60") 12h
           option(:value="24*60*60") 24h
   small
-    | The default duration used for 'show last' in the timeline view.
+    | {{ $t('settings.durationDefaultDesc') }}
 </template>
 <script lang="ts">
 import { useSettingsStore } from '~/stores/settings';

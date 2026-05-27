@@ -1,37 +1,37 @@
 <template lang="pug">
 div
-  h2 Stopwatch
+  h2 {{ $t('stopwatch.title') }}
   p
-    | Using bucket: {{bucket_id}}
+    | {{ $t('stopwatch.usingBucket', { id: bucket_id }) }}
 
   b-alert(show)
-    | This is an early experiment. Data entered here is not shown in the Activity view, yet.
+    | {{ $t('stopwatch.earlyExp') }}
 
   b-input-group(size="lg")
-    b-input(v-model="label" placeholder="What are you working on?")
+    b-input(v-model="label" :placeholder="$t('stopwatch.placeholder')")
     b-input-group-append
       b-button(@click="startTimer(label)", variant="success")
         icon(name="play")
-        | Start
+        | {{ $t('stopwatch.start') }}
 
   hr
 
   div(v-if="loading")
-    span.text-muted.center.aw-loading Loading...
+    span.text-muted.center.aw-loading {{ $t('stopwatch.loading') }}
   div.row(v-else)
     div.col-md-12
-      h3 Running
+      h3 {{ $t('stopwatch.running') }}
       div(v-if="runningTimers.length > 0")
         div(v-for="e in runningTimers" :key="e.id")
           stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
             @delete="removeTimer", @update="updateTimer")
           hr(style="margin: 0")
       div(v-else)
-        span(style="color: #555") No stopwatch running
+        span(style="color: #555") {{ $t('stopwatch.noRunning') }}
         hr
 
       div(v-if="stoppedTimers.length > 0")
-        h3.mt-4.mb-4 History
+        h3.mt-4.mb-4 {{ $t('stopwatch.history') }}
         div(v-for="k in Object.keys(timersByDate).sort().reverse()")
           h5.mt-2.mb-1 {{ k }}
           div(v-for="e in timersByDate[k]" :key="e.id")
@@ -39,7 +39,7 @@ div
               @delete="removeTimer", @update="updateTimer", @new="startTimer(e.data.label)")
             hr(style="margin: 0")
       div(v-else)
-        span(style="color: #555") No history to show
+        span(style="color: #555") {{ $t('stopwatch.noHistory') }}
         hr
 </template>
 

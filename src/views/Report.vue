@@ -1,11 +1,11 @@
 <template lang="pug">
 div
-  h3 Report
+  h3 {{ $t('report.title') }}
 
-  | Generate a report of time spent on a certain category of device activity.
+  | {{ $t('report.desc') }}
 
   b-alert.mt-2(style="warning" show)
-    | This feature is still in early development.
+    | {{ $t('report.earlyDev') }}
 
   b-alert(v-if="error" show variant="danger")
     | {{error}}
@@ -14,7 +14,7 @@ div
     template(v-slot:input-group-append)
       b-button(type="button", @click="generate()" variant="success" :disabled="!has_pattern")
         icon(name="search")
-        | Generate
+        | {{ $t('report.generate') }}
 
   div.d-flex.mt-1
     span.mr-auto.small(style="color: #666") Hostname: {{queryOptions.hostname}}

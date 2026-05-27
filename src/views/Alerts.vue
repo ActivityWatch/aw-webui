@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  h3 Alerts
+  h3 {{ $t('alerts.title') }}
 
   // TODO: Call this "goals" instead? (alerts is more general, but goals might fit the most common use better
   // TODO: Support 'less than' goals
@@ -8,7 +8,7 @@ div
   // TODO: Query from day start, not 24h ago
 
   b-alert(style="warning" show)
-    | This feature is still in early development.
+    | {{ $t('alerts.earlyDev') }}
 
   b-alert(v-if="error" show variant="danger")
     | {{error}}

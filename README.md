@@ -1,3 +1,5 @@
+[![en](README.md)](README.md) | [![zh](README.zh.md)](README.zh.md)
+
 # aw-webui
 
 A web-based UI for ActivityWatch, built with Vue.js

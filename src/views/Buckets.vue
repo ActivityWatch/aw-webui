@@ -1,9 +1,9 @@
 <template lang="pug">
 div
-  h2 Buckets
+  h2 {{ $t('buckets.title') }}
 
   b-alert(show)
-    | Are you looking to collect more data? Check out #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") the docs] for more watchers.
+    | {{ $t('buckets.moreWatchers', { link: '<a href=\"https://activitywatch.readthedocs.io/en/latest/watchers.html\">' + $t('buckets.moreWatchersLink') + '</a>' }) }}
 
   // By device
   b-card.mb-3(v-for="device in bucketsStore.bucketsByDevice", :key="device.hostname || device.device_id")
@@ -17,18 +17,18 @@ div
         div
           b {{ device.hostname }}
           span.small.ml-2(v-if="serverStore.info.hostname == device.hostname")
-            | (the current device)
+            | {{ $t('buckets.currentDevice') }}
           div.small
             div(v-if="device.hostname !== device.device_id", style="color: #666")
-              | ID: {{ device.id }}
+              | {{ $t('buckets.id', { id: device.id }) }}
             div
-              | Last updated:&nbsp;
+              | {{ $t('buckets.lastUpdated') }}&nbsp;
               time(:style="{'color': isRecent(device.last_updated) ? 'green' : 'inherit'}",
                    :datetime="device.last_updated",
                    :title="device.last_updated")
                 | {{ device.last_updated | friendlytime }}
             div
-              | First seen:&nbsp;
+              | {{ $t('buckets.firstSeen') }}&nbsp;
               time(:datetime="device.first_seen",
                    :title="device.first_seen")
                 | {{ device.first_seen | friendlytime }}
@@ -42,28 +42,28 @@ div
           template(v-slot:cell(actions)="data")
             b-button-toolbar.float-right
               b-button-group(size="sm", class="mx-1")
-                b-button(variant="primary", :to="'/buckets/' + data.item.id")
+          b-button(variant="primary", :to="'/buckets/' + data.item.id")
                   icon(name="folder-open").d-none.d-md-inline-block
-                  | Open
-                b-dropdown(variant="outline-secondary", size="sm", text="More")
+                  | {{ $t('buckets.open') }}
+                b-dropdown(variant="outline-secondary", size="sm", :text="$t('buckets.more')")
                   // FIXME: These also exist as almost-copies in the Bucket view, can maybe be shared/reused instead.
                   b-dropdown-item(
                              @click="export_bucket_json(data.item.id)",
-                             title="Export bucket to JSON",
+                             :title="$t('buckets.exportJson')",
                              variant="secondary")
                       icon(name="download")
-                      | Export bucket as JSON
+                      | {{ $t('buckets.exportJson') }}
                   b-dropdown-item(
-                              @click="export_csv(data.item.id)",
-                             title="Export events to CSV",
-                             variant="secondary")
+                               @click="export_csv(data.item.id)",
+                              :title="$t('buckets.exportCsv')",
+                              variant="secondary")
                       icon(name="download")
-                      | Export events as CSV
+                      | {{ $t('buckets.exportCsv') }}
                   b-dropdown-divider
                   b-dropdown-item-button(@click="openDeleteBucketModal(data.item.id)",
-                           title="Delete this bucket permanently",
+                           :title="$t('buckets.deleteBucket')",
                            variant="danger")
-                    | #[icon(name="trash")] Delete bucket
+                    | #[icon(name="trash")] {{ $t('buckets.deleteBucket') }}
 
     // Checks
     hr.mt-1(v-if="runChecks(device).length > 0")
@@ -72,38 +72,36 @@ div
       | &nbsp;
       | {{ msg }}
 
-  b-modal(id="delete-modal", title="Danger!", centered, hide-footer)
-    | Are you sure you want to delete bucket "{{delete_bucket_selected}}"?
+  b-modal(id="delete-modal", :title="$t('buckets.deleteTitle')", centered, hide-footer)
+    | {{ $t('buckets.deleteConfirm', { id: delete_bucket_selected }) }}
     br
     br
-    b This is permanent and cannot be undone!
+    b {{ $t('buckets.deleteWarning') }}
     hr
     div.float-right
       b-button.mx-2(@click="$root.$emit('bv::hide::modal','delete-modal')")
-        | Cancel
+        | {{ $t('buckets.cancel') }}
       b-button(@click="deleteBucket(delete_bucket_selected)", variant="danger")
-        | Confirm
+        | {{ $t('buckets.confirm') }}
 
-  h3 Import and export buckets
+  h3 {{ $t('buckets.importExport') }}
 
   b-card-group.deck
-    b-card(header="Import buckets")
+    b-card(:header="$t('buckets.importTitle')")
       b-alert(v-if="import_error" show variant="danger" dismissable)
         | {{ import_error }}
       b-form-file(v-model="import_file"
-                  placeholder="Choose or drop a file here..."
-                  drop-placeholder="Drop file here...")
+                  :placeholder="$t('buckets.importPlaceholder')"
+                  :drop-placeholder="$t('buckets.importDropPlaceholder')")
       // TODO: This spinner could be placed in a more suitable place
       div(v-if="import_file" class="spinner-border" role="status")
-      span
-        | A valid file to import is a JSON file from either an export of a single bucket or an export from multiple buckets.
-        | If there are buckets with the same name the import will fail.
-    b-card(header="Export buckets")
+      span {{ $t('buckets.importDesc') }}
+    b-card(:header="$t('buckets.exportTitle')")
       b-button(@click="export_all_buckets_json()",
-               title="Export all buckets to JSON",
+               :title="$t('buckets.exportAllJson')",
                variant="outline-secondary")
         icon(name="download")
-        | Export all buckets as JSON
+        | {{ $t('buckets.exportAllJson') }}
 
   hr
 

@@ -1,26 +1,26 @@
 <template lang="pug">
 div
-  h4.mb-3 Developer settings
-  b-alert(show) #[b Note:] These settings are meant for developers who (hopefully) know what they are doing, and as such, may break things unexpectedly.
+  h4.mb-3 {{ $t('settings.developer') }}
+  b-alert(show) #[b {{ $t('settings.developerNote') }}]
 
-  b-form-group(label="Force devmode" label-cols-md=3 description="Devmode enables some features that are still work-in-progress.")
+  b-form-group(:label="$t('settings.forceDevmode')" label-cols-md=3 :description="$t('settings.forceDevmodeDesc')")
     div
       b-form-checkbox.float-right.ml-2(v-model="devmode" switch)
 
-  b-form-group(label="Show yearly time range" label-cols-md=3 description="Querying an entire year is a very heavy operation, and is likely to lead to timeouts. However, the query might be fast enough if you're running aw-server-rust.")
+  b-form-group(:label="$t('settings.showYearly')" label-cols-md=3 :description="$t('settings.showYearlyDesc')")
     div
       b-form-checkbox.float-right.ml-2(v-model="showYearly" switch)
 
-  b-form-group(label="Use multidevice query" label-cols-md=3 description="Multidevice query is where events are collected from several hosts in the Activity view. It is an early experiment, that currently does not support browser buckets (or the audible-as-active feature).")
+  b-form-group(:label="$t('settings.useMultidevice')" label-cols-md=3 :description="$t('settings.useMultideviceDesc')")
     div
       b-form-checkbox.float-right.ml-2(v-model="useMultidevice" switch)
 
-  b-form-group(label="Request timeout" label-cols-md=3 description="The maximum amount of time a server request can take before timing out. Setting this to a high value can be useful for large queries. Note that you need to reload the web UI for it to apply.")
+  b-form-group(:label="$t('settings.requestTimeout')" label-cols-md=3 :description="$t('settings.requestTimeoutDesc')")
     div
       b-input.float-right.ml-2(v-model="requestTimeout" type="number")
 
   div
-    | Web UI commit hash: {{ COMMIT_HASH }}
+    | {{ $t('settings.commitHash', { hash: COMMIT_HASH }) }}
 </template>
 
 <script lang="ts">
