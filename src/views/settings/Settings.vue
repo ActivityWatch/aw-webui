@@ -32,6 +32,10 @@ div
 
   hr
 
+  PrivacyFilterSettings
+
+  hr
+
   CategorizationSettings
 
   hr
@@ -52,6 +56,7 @@ import DeveloperSettings from '~/views/settings/DeveloperSettings.vue';
 import Theme from '~/views/settings/Theme.vue';
 import ColorSettings from '~/views/settings/ColorSettings.vue';
 import ActivePatternSettings from '~/views/settings/ActivePatternSettings.vue';
+import PrivacyFilterSettings from '~/views/settings/PrivacyFilterSettings.vue';
 
 export default {
   name: 'Settings',
@@ -65,6 +70,7 @@ export default {
     ColorSettings,
     DeveloperSettings,
     ActivePatternSettings,
+    PrivacyFilterSettings,
   },
   beforeRouteLeave(to, from, next) {
     const categoryStore = useCategoryStore();

@@ -71,7 +71,7 @@ div
     div
       | Didn't find what you were looking for?
       br
-      | Add a week to the search: #[b-button(size="sm" variant="outline-dark" @click="start = start.subtract(1, 'week'); search()") +1 week]
+      | Add a week to the search: #[b-button(size="sm" variant="outline-dark" @click="extendByWeek()") +1 week]
 
 </template>
 
@@ -175,6 +175,11 @@ export default {
         columns: ['timestamp', 'duration', 'category', 'app', 'title'],
       });
       await downloadFile('events.csv', csv, 'text/csv');
+    },
+
+    extendByWeek() {
+      this.queryOptions.start = moment(this.queryOptions.start).subtract(1, 'week');
+      this.generate();
     },
   },
 };
