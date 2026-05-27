@@ -3,7 +3,7 @@
 div
   h3 {{ $t('queryExplorer.title') }}
 
-  | {{ $t('queryExplorer.desc', { link: '<a href=\"https://docs.activitywatch.net/en/latest/examples/querying-data.html\">' + $t('queryExplorer.docsLink') + '</a>' }) }}
+  span(v-html="$t('queryExplorer.desc', { link: '<a href=\"https://docs.activitywatch.net/en/latest/examples/querying-data.html\">' + $t('queryExplorer.docsLink') + '</a>' })")
 
   hr
 

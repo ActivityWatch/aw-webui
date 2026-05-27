@@ -3,7 +3,7 @@ div
   h2 {{ $t('buckets.title') }}
 
   b-alert(show)
-    | {{ $t('buckets.moreWatchers', { link: '<a href=\"https://activitywatch.readthedocs.io/en/latest/watchers.html\">' + $t('buckets.moreWatchersLink') + '</a>' }) }}
+    span(v-html="$t('buckets.moreWatchers', { link: '<a href=\"https://activitywatch.readthedocs.io/en/latest/watchers.html\">' + $t('buckets.moreWatchersLink') + '</a>' })")
 
   // By device
   b-card.mb-3(v-for="device in bucketsStore.bucketsByDevice", :key="device.hostname || device.device_id")
@@ -42,9 +42,9 @@ div
           template(v-slot:cell(actions)="data")
             b-button-toolbar.float-right
               b-button-group(size="sm", class="mx-1")
-          b-button(variant="primary", :to="'/buckets/' + data.item.id")
-                  icon(name="folder-open").d-none.d-md-inline-block
-                  | {{ $t('buckets.open') }}
+            b-button(variant="primary", :to="'/buckets/' + data.item.id")
+              icon(name="folder-open").d-none.d-md-inline-block
+              | {{ $t('buckets.open') }}
                 b-dropdown(variant="outline-secondary", size="sm", :text="$t('buckets.more')")
                   // FIXME: These also exist as almost-copies in the Bucket view, can maybe be shared/reused instead.
                   b-dropdown-item(
