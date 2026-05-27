@@ -27,7 +27,7 @@ div
 
   hr
 
-  h5(v-html="$t('categoryBuilder.commonWords', { category: category.join(' > ') })")
+  h5 {{ $t('categoryBuilder.commonWords', { category: category.join(' > ') }) }}
   div(v-if="loading")
     | {{ $t('categoryBuilder.loading') }}
   div(v-else)
