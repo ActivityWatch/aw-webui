@@ -1,34 +1,34 @@
 <template lang="pug">
 div
-  h3 Search
+  h3 {{ $t('search.title') }}
 
   b-alert(style="warning" show)
-    | This feature is still in early development.
+    | {{ $t('search.earlyDev') }}
 
   b-alert(v-if="error" show variant="danger")
     | {{error}}
 
   b-input-group(size="lg")
-    b-input(v-model="pattern" v-on:keyup.enter="search()" placeholder="Regex pattern to search for")
+    b-input(v-model="pattern" v-on:keyup.enter="search()" :placeholder="$t('search.placeholder')")
     b-input-group-append
       b-button(type="button", @click="search()" variant="success")
         icon(name="search")
-        | Search
+        | {{ $t('search.searchBtn') }}
 
   div.d-flex.mt-1
     span.mr-auto.small(style="color: #666") Hostname: {{queryOptions.hostname}}
     b-button.border-0(size="sm", variant="outline-dark" @click="show_options = !show_options")
       span(v-if="!show_options")
-        | #[icon(name="angle-double-down")] Show options
+        | #[icon(name="angle-double-down")] {{ $t('search.showOptions') }}
       span(v-else)
-        | #[icon(name="angle-double-up")] Hide options
+        | #[icon(name="angle-double-up")] {{ $t('search.hideOptions') }}
 
   div(v-show="show_options")
-    h4 Options
+    h4 {{ $t('search.options') }}
     aw-query-options(v-model="queryOptions")
 
   div(v-if="status == 'searching'")
-    div #[icon(name="spinner" pulse)] Searching...
+    div #[icon(name="spinner" pulse)] {{ $t('search.searching') }}
 
   div(v-if="events != null")
     hr
@@ -36,9 +36,9 @@ div
     aw-selectable-eventview(:events="events")
 
     div
-      | Didn't find what you were looking for?
+      | {{ $t('search.notFound') }}
       br
-      | Add a week to the search: #[b-button(size="sm" variant="outline-dark" @click="extendByWeek()") +1 week]
+      | {{ $t('search.addWeek') }} #[b-button(size="sm" variant="outline-dark" @click="extendByWeek()") +1 week]
 </template>
 
 <script lang="ts">

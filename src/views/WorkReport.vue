@@ -1,19 +1,19 @@
 <template lang="pug">
 div
-  h3.mb-3 Work Time Report
+  h3.mb-3 {{ $t('workReport.title') }}
 
   div.row.mb-4
     div.col-md-3
-      b-form-group(label="Hosts" label-class="font-weight-bold")
+      b-form-group(:label="$t('workReport.hosts')" label-class="font-weight-bold")
         b-form-select(v-model="selectedHosts" :options="hostOptions" multiple :select-size="4")
-        small.text-muted Select devices to include
+        small.text-muted {{ $t('workReport.hostsDesc') }}
 
     div.col-md-3
-      b-form-group(label="Categories" label-class="font-weight-bold")
+      b-form-group(:label="$t('workReport.categories')" label-class="font-weight-bold")
         b-form-select(v-model="selectedCategories" :options="categoryOptions" multiple :select-size="3")
 
     div.col-md-3
-      b-form-group(label="Break Time" label-class="font-weight-bold")
+      b-form-group(:label="$t('workReport.breakTime')" label-class="font-weight-bold")
         div.d-flex.align-items-center
           b-form-input(
             v-model="breakTime"

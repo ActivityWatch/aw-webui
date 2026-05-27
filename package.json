@@ -69,6 +69,7 @@
     "vue-color": "^2.8.1",
     "vue-d3-sunburst": "git+https://github.com/ErikBjare/Vue.D3.sunburst.git#patch-1",
     "vue-datetime": "^1.0.0-beta.13",
+    "vue-i18n": "^8.28.2",
     "vuedraggable": "^2.24.3",
     "weekstart": "^1.0.1",
     "xss": "^1.0.14"

@@ -1,3 +1,5 @@
+[![en](https://img.shields.io/badge/lang-en-red.svg)](README.md) | [![zh](https://img.shields.io/badge/lang-zh--CN-yellow.svg)](README.zh.md)
+
 # aw-webui
 
 A web-based UI for ActivityWatch, built with Vue.js
