@@ -1,7 +1,7 @@
 <template lang="pug">
 div
   div(style="text-align: center")
-    | Your total score today is:
+    | Your total score for {{ score_period_label }} is:
     div(:style="'font-size: 2em; color: ' + (score >= 0 ? '#0A0' : '#F00')")
       | {{score >= 0 ? '+' : ''}}{{ (Math.round(score * 10) / 10).toFixed(1) }}
     div.small.text-muted
@@ -38,6 +38,7 @@ div
 import _ from 'lodash';
 import { useActivityStore } from '~/stores/activity';
 import { IEvent } from '~/util/interfaces';
+import { periodReadable } from '~/util/timeperiod';
 
 // TODO: Maybe add a "Category Tree"-style visualization?
 
@@ -54,6 +55,10 @@ export default {
     },
     score: function (): number {
       return _.sum(_.map(this.categories_with_score, cat => cat.data.$total_score));
+    },
+    score_period_label: function (): string {
+      const timeperiod = useActivityStore().query_options?.timeperiod;
+      return timeperiod ? periodReadable(timeperiod) : 'selected period';
     },
     score_productive_percent() {
       // Compute the percentage of time spent on productive activities (score > 0)
