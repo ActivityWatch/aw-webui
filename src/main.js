@@ -28,7 +28,7 @@ Vue.use(VueI18n);
 import en from './locales/en.json';
 import zh from './locales/zh.json';
 const i18n = new VueI18n({
-  locale: localStorage.getItem('locale') || navigator.language.startsWith('zh') ? 'zh' : 'en',
+  locale: localStorage.getItem('locale') || (navigator.language.startsWith('zh') ? 'zh' : 'en'),
   fallbackLocale: 'en',
   messages: { en, zh },
 });

@@ -56,7 +56,9 @@ div
   p
     small
       i
-        | You can change which page opens when you open ActivityWatch (instead of this page) in the #[router-link(to="/settings") settings].
+        i18n(path="home.changeLanding" tag="span")
+          template(v-slot:link)
+            router-link(to="/settings") {{ $t('home.settingsLink') }}
 
 </template>
 

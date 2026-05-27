@@ -172,10 +172,6 @@
   "newSetPrompt": "Name for the new category set:",
   "setExists": "A set named \"{name}\" already exists.",
 
-  "notFound.title": "Page not found",
-  "notFound.message": "The page you were looking for doesn't exist.",
-  "notFound.goHome": "Go home",
-
   "buckets.title": "Buckets",
   "buckets.moreWatchers": "Are you looking to collect more data? Check out {link} for more watchers.",
   "buckets.moreWatchersLink": "the docs",

@@ -172,10 +172,6 @@
   "newSetPrompt": "新分类集的名称：",
   "setExists": "名为 \"{name}\" 的集已存在。",
 
-  "notFound.title": "页面未找到",
-  "notFound.message": "你要查找的页面不存在。",
-  "notFound.goHome": "返回首页",
-
   "buckets.title": "数据桶",
   "buckets.moreWatchers": "想要收集更多数据？查看{link}了解更多监控器。",
   "buckets.moreWatchersLink": "文档",
