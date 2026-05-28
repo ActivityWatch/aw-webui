@@ -136,8 +136,7 @@ export default {
   data() {
     return {
       activityViews: null,
-      // Make configurable?
-      fixedTopMenu: this.$isAndroid,
+      fixedTopMenu: true,
     };
   },
   computed: {
