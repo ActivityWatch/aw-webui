@@ -285,4 +285,55 @@ describe('canonicalEvents editor bucket support', () => {
     expect(categorizePos).toBeGreaterThan(-1);
     expect(editorPos).toBeLessThan(categorizePos);
   });
+
+  test('window_events is saved before editor concat to preserve app/title breakdown', () => {
+    // canonicalEvents must emit "window_events = events" BEFORE the concat so that
+    // fullDesktopQuery can use window_events for app/title aggregation without
+    // including editor events (which lack "app"/"title" and would create a null-app bucket).
+    const query = canonicalEvents({
+      ...baseParams,
+      bid_editors: ['aw-watcher-vim_host'],
+    });
+    const windowSavePos = query.indexOf('window_events = events');
+    const concatPos = query.indexOf('concat(window_events, editor_events)');
+    expect(windowSavePos).toBeGreaterThan(-1);
+    expect(concatPos).toBeGreaterThan(-1);
+    expect(windowSavePos).toBeLessThan(concatPos);
+  });
+
+  test('window_events is NOT emitted when bid_editors is absent', () => {
+    const query = canonicalEvents(baseParams);
+    expect(query).not.toContain('window_events');
+  });
+});
+
+import { fullDesktopQuery } from '~/queries';
+
+describe('fullDesktopQuery editor bucket regression', () => {
+  const baseDesktopParams = {
+    bid_window: 'aw-watcher-window_host',
+    bid_afk: 'aw-watcher-afk_host',
+    filter_afk: true,
+    categories: [],
+    filter_categories: [],
+  };
+
+  test('uses window_events for app/title aggregation when bid_editors is set', () => {
+    const query = fullDesktopQuery({
+      ...baseDesktopParams,
+      bid_editors: ['aw-watcher-vim_host'],
+    }).join('\n');
+    // app/title aggregation must use window_events, not events, to avoid null-app bucket
+    expect(query).toContain('merge_events_by_keys(window_events, ["app", "title"])');
+    expect(query).toContain('sum_durations(window_events)');
+    // cat_events must still use the full events (with editor events) for category breakdown
+    expect(query).toContain('merge_events_by_keys(events, ["$category"])');
+  });
+
+  test('uses events directly for app/title aggregation when no bid_editors', () => {
+    const query = fullDesktopQuery(baseDesktopParams).join('\n');
+    expect(query).toContain('merge_events_by_keys(events, ["app", "title"])');
+    expect(query).toContain('sum_durations(events)');
+    expect(query).not.toContain('window_events');
+  });
 });

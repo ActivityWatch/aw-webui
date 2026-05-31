@@ -172,7 +172,11 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
               )}")));`
           ),
           'editor_events = filter_period_intersect(editor_events, events);',
-          'events = sort_by_timestamp(concat(events, editor_events));',
+          // Save window-only events before editor merge so app/title/duration
+          // aggregations in fullDesktopQuery exclude editor events (which lack
+          // "app"/"title" fields and would otherwise create a spurious null-app bucket).
+          'window_events = events;',
+          'events = sort_by_timestamp(concat(window_events, editor_events));',
         ].join('\n')
       : '',
     // Categorize
@@ -323,6 +327,14 @@ function browserEvents(params: DesktopQueryParams): string {
 }
 
 export function fullDesktopQuery(params: DesktopQueryParams): string[] {
+  // When editor buckets are present, canonicalEvents saves window-only events in
+  // "window_events" before the editor concat. Use that for app/title breakdown so
+  // editor events (which lack "app"/"title") don't create a spurious null-app bucket.
+  // cat_events still uses the full "events" stream so category rules can fire on
+  // editor fields (project, file, language). Duration uses window_events to avoid
+  // double-counting time shared between window and editor events.
+  const hasEditors = !!(params.bid_editors && params.bid_editors.length > 0);
+  const windowSrc = hasEditors ? 'window_events' : 'events';
   return querystr_to_array(
     `
     ${canonicalEvents({
@@ -332,13 +344,13 @@ export function fullDesktopQuery(params: DesktopQueryParams): string[] {
       bid_afk: escape_doublequote(params.bid_afk),
       bid_browsers: _.map(params.bid_browsers, escape_doublequote),
     })}
-    title_events = sort_by_duration(merge_events_by_keys(events, ["app", "title"]));
+    title_events = sort_by_duration(merge_events_by_keys(${windowSrc}, ["app", "title"]));
     app_events   = sort_by_duration(merge_events_by_keys(title_events, ["app"]));
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
 
     app_events  = limit_events(app_events, ${default_limit});
     title_events  = limit_events(title_events, ${default_limit});
-    duration = sum_durations(events);
+    duration = sum_durations(${windowSrc});
     ` + // Browser events are retrieved in canonicalQuery
       `
     browser_events = split_url_events(browser_events);
