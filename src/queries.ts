@@ -32,6 +32,7 @@ interface BaseQueryParams {
   filter_categories: string[][];
   bid_browsers?: string[];
   bid_stopwatch?: string;
+  bid_editors?: string[];
   return_variable_suffix?: string;
 }
 
@@ -158,6 +159,19 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
       ? `stopwatch_events = query_bucket("${params.bid_stopwatch}");
          events = union_no_overlap(stopwatch_events, events);`
       : 'stopwatch_events = [];',
+    // Merge editor bucket events into the main stream so category rules can match on
+    // editor fields (project, file, language). Editor events are intersected with the
+    // current active-window period to avoid introducing new time outside window activity.
+    params.bid_editors && params.bid_editors.length > 0
+      ? [
+          'editor_events = [];',
+          ...params.bid_editors.map(
+            b => `editor_events = concat(editor_events, query_bucket("${escape_doublequote(b)}"));`
+          ),
+          'editor_events = filter_period_intersect(editor_events, events);',
+          'events = concat(events, editor_events);',
+        ].join('\n')
+      : '',
     // Categorize
     params.categories ? `events = categorize(events, ${categories_str});` : '',
     // Filter out selected categories

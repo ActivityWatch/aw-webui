@@ -366,6 +366,7 @@ export const useActivityStore = defineStore('activity', {
           include_stopwatch && this.buckets.stopwatch.length > 0
             ? this.buckets.stopwatch[0]
             : undefined,
+        bid_editors: this.buckets.editor.length > 0 ? this.buckets.editor : undefined,
         filter_afk,
         categories,
         filter_categories,
@@ -506,6 +507,7 @@ export const useActivityStore = defineStore('activity', {
             include_stopwatch && this.buckets.stopwatch.length > 0
               ? this.buckets.stopwatch[0]
               : undefined,
+          bid_editors: this.buckets.editor.length > 0 ? this.buckets.editor : undefined,
           categories,
           filter_categories,
           filter_afk,

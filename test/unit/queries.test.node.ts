@@ -53,7 +53,7 @@
  *             (Flatpak app ID retained: 'one.ablaze.floorp')
  */
 
-import { browser_appname_regex } from '~/queries';
+import { browser_appname_regex, canonicalEvents } from '~/queries';
 
 // Convert ActivityWatch (?i) patterns to JS RegExp with i flag for testing.
 // AW server uses Python-style (?i) inline flag; JS uses RegExp 'i' flag instead.
@@ -229,5 +229,57 @@ describe('browser_appname_regex', () => {
     for (const name of knownNames) {
       expect(re.test(name)).toBe(true);
     }
+  });
+});
+
+describe('canonicalEvents editor bucket support', () => {
+  const baseParams = {
+    bid_window: 'aw-watcher-window_host',
+    bid_afk: 'aw-watcher-afk_host',
+    filter_afk: true,
+    categories: [],
+    filter_categories: [],
+  };
+
+  test('includes editor bucket queries when bid_editors is set', () => {
+    const query = canonicalEvents({
+      ...baseParams,
+      bid_editors: ['aw-watcher-vim_host'],
+    });
+    expect(query).toContain('editor_events');
+    expect(query).toContain('aw-watcher-vim_host');
+    expect(query).toContain('filter_period_intersect');
+  });
+
+  test('includes multiple editor buckets when bid_editors has multiple entries', () => {
+    const query = canonicalEvents({
+      ...baseParams,
+      bid_editors: ['aw-watcher-vim_host', 'aw-watcher-vscode_host'],
+    });
+    expect(query).toContain('aw-watcher-vim_host');
+    expect(query).toContain('aw-watcher-vscode_host');
+  });
+
+  test('does not include editor query when bid_editors is absent', () => {
+    const query = canonicalEvents(baseParams);
+    expect(query).not.toContain('editor_events');
+  });
+
+  test('does not include editor query when bid_editors is empty', () => {
+    const query = canonicalEvents({ ...baseParams, bid_editors: [] });
+    expect(query).not.toContain('editor_events');
+  });
+
+  test('editor events are added before categorize', () => {
+    const query = canonicalEvents({
+      ...baseParams,
+      categories: [[['Development'], { type: 'regex', regex: 'myproject' }]],
+      bid_editors: ['aw-watcher-vim_host'],
+    });
+    const editorPos = query.indexOf('editor_events');
+    const categorizePos = query.indexOf('categorize');
+    expect(editorPos).toBeGreaterThan(-1);
+    expect(categorizePos).toBeGreaterThan(-1);
+    expect(editorPos).toBeLessThan(categorizePos);
   });
 });
