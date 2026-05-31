@@ -166,10 +166,13 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
       ? [
           'editor_events = [];',
           ...params.bid_editors.map(
-            b => `editor_events = concat(editor_events, flood(query_bucket("${escape_doublequote(b)}")));`
+            b =>
+              `editor_events = concat(editor_events, flood(query_bucket("${escape_doublequote(
+                b
+              )}")));`
           ),
           'editor_events = filter_period_intersect(editor_events, events);',
-          'events = concat(events, editor_events);',
+          'events = sort_by_timestamp(concat(events, editor_events));',
         ].join('\n')
       : '',
     // Categorize
