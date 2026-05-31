@@ -249,6 +249,9 @@ describe('canonicalEvents editor bucket support', () => {
     expect(query).toContain('editor_events');
     expect(query).toContain('aw-watcher-vim_host');
     expect(query).toContain('filter_period_intersect');
+    // flood() is required so category rules fire for full editing sessions,
+    // not just brief heartbeat windows
+    expect(query).toContain('flood(query_bucket("aw-watcher-vim_host"))');
   });
 
   test('includes multiple editor buckets when bid_editors has multiple entries', () => {
