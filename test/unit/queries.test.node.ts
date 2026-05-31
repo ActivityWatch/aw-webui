@@ -336,4 +336,35 @@ describe('fullDesktopQuery editor bucket regression', () => {
     expect(query).toContain('sum_durations(events)');
     expect(query).not.toContain('window_events');
   });
+
+  test('re-intersects window_events with filtered events when editor buckets + category filter active', () => {
+    // When bid_editors + filter_categories are both set, window_events must be
+    // re-intersected with the post-filter events stream so duration/app/title
+    // aggregations respect the active category filter (Greptile 4/5 finding).
+    const query = fullDesktopQuery({
+      ...baseDesktopParams,
+      bid_editors: ['aw-watcher-vim_host'],
+      filter_categories: [['Work']],
+    }).join('\n');
+    const filterPos = query.indexOf('filter_keyvals(events, "$category"');
+    const reIntersectPos = query.indexOf('filter_period_intersect(window_events, events)');
+    expect(reIntersectPos).toBeGreaterThan(-1);
+    // re-intersect must happen AFTER filter_keyvals so it uses the filtered stream
+    expect(reIntersectPos).toBeGreaterThan(filterPos);
+  });
+
+  test('does NOT re-intersect window_events when no category filter active', () => {
+    // Without a non-empty category filter, window_events from before the editor concat
+    // is already correct — no need to re-intersect.
+    // baseDesktopParams has filter_categories: [] (empty = no active filter).
+    const query = fullDesktopQuery({
+      ...baseDesktopParams,
+      bid_editors: ['aw-watcher-vim_host'],
+      filter_categories: [],
+    }).join('\n');
+    // window_events = events save-point is present (for null-app protection)
+    expect(query).toContain('window_events = events');
+    // but no re-intersection since filter_categories is empty
+    expect(query).not.toContain('filter_period_intersect(window_events, events)');
+  });
 });

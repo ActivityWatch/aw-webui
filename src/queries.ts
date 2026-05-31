@@ -185,6 +185,17 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
     params.filter_categories
       ? `events = filter_keyvals(events, "$category", ${cat_filter_str});`
       : '',
+    // When editor buckets are active and a non-empty category filter is applied,
+    // re-intersect window_events with the filtered event stream so app/title/duration
+    // aggregations in fullDesktopQuery respect the active category filter. Without this,
+    // window_events (saved before categorize/filter) includes all window time regardless
+    // of the filter, causing incorrect duration/app/title totals.
+    params.bid_editors &&
+    params.bid_editors.length > 0 &&
+    params.filter_categories &&
+    params.filter_categories.length > 0
+      ? 'window_events = filter_period_intersect(window_events, events);'
+      : '',
     // "Return" events by setting variable named with return_variable if set
     params.return_variable_suffix
       ? `events_${params.return_variable_suffix} = events;
