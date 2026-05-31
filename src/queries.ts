@@ -171,6 +171,9 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
                 b
               )}")));`
           ),
+          // Sort before intersect: filter_period_intersect requires sorted input.
+          // With multiple editor buckets the concat is unsorted.
+          'editor_events = sort_by_timestamp(editor_events);',
           'editor_events = filter_period_intersect(editor_events, events);',
           // Save window-only events before editor merge so app/title/duration
           // aggregations in fullDesktopQuery exclude editor events (which lack

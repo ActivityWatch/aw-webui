@@ -261,6 +261,12 @@ describe('canonicalEvents editor bucket support', () => {
     });
     expect(query).toContain('aw-watcher-vim_host');
     expect(query).toContain('aw-watcher-vscode_host');
+    // sort_by_timestamp must precede filter_period_intersect so multi-bucket
+    // concat output is sorted before the intersection (required by aw-query).
+    const sortPos = query.indexOf('sort_by_timestamp(editor_events)');
+    const intersectPos = query.indexOf('filter_period_intersect(editor_events');
+    expect(sortPos).toBeGreaterThan(-1);
+    expect(sortPos).toBeLessThan(intersectPos);
   });
 
   test('does not include editor query when bid_editors is absent', () => {
