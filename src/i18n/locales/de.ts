@@ -151,7 +151,7 @@ export default {
   home: {
     note: 'Hinweis:',
     androidNote:
-      'Hinweis: ActivityWatch auf Android ist noch sehr früh. Es gibt Fehler, aber wir arbeiten an Parität mit der Desktop-Version (probieren Sie sie!).',
+      'ActivityWatch auf Android ist noch sehr früh. Es gibt Fehler, aber wir arbeiten an Parität mit der Desktop-Version (probieren Sie sie!).',
     greeting: 'Hallo, früher Nutzer,',
     intro1:
       'ActivityWatch ist noch in der Entwicklung{android}. Wir brauchen Nutzer (wie Sie!), um das Projekt erfolgreich zu machen.',

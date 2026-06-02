@@ -151,7 +151,7 @@ export default {
   home: {
     note: 'Note:',
     androidNote:
-      'Note: ActivityWatch on Android is in a very early stage of development. There will be bugs, but we hope you bear with us as we refine things and get it on par with the desktop version of ActivityWatch (which you should try!).',
+      'ActivityWatch on Android is in a very early stage of development. There will be bugs, but we hope you bear with us as we refine things and get it on par with the desktop version of ActivityWatch (which you should try!).',
     greeting: 'Hello early user,',
     intro1:
       'It is still early days for ActivityWatch{android}. We have come a long way but we need users (like you!) to provide feedback and help us turn ActivityWatch into a successful project.',

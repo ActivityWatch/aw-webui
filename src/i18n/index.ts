@@ -64,7 +64,7 @@ export const i18n = new VueI18n({
   locale: initialLocale,
   fallbackLocale: 'en',
   messages: { en, uk, de, ru },
-  silentTranslationWarn: true,
+  silentTranslationWarn: process.env.NODE_ENV === 'production',
 });
 
 moment.locale(MOMENT_LOCALE[initialLocale]);

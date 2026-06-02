@@ -4,7 +4,7 @@ import { getClient } from '~/util/awclient';
 import { Category, CategorySet, defaultCategories, cleanCategory } from '~/util/classes';
 import { View, defaultViews } from '~/stores/views';
 import { isEqual } from 'lodash';
-import { isAppLocale, setAppLocale } from '~/i18n';
+import { AppLocale, i18n, isAppLocale, setAppLocale } from '~/i18n';
 
 function jsonEq(a: any, b: any) {
   const jsonA = JSON.parse(JSON.stringify(a));
@@ -29,7 +29,7 @@ interface State {
   useColorFallback: boolean;
   landingpage: string;
   theme: 'light' | 'dark' | 'auto';
-  locale: 'en' | 'uk' | 'de' | 'ru';
+  locale: string;
 
   newReleaseCheckData: Record<string, any>;
   userSatisfactionPollData: {
@@ -154,14 +154,25 @@ export const useSettingsStore = defineStore('settings', {
           }
         } else if (value === 'true' || value === 'false') {
           storage[key] = value === 'true';
+        } else if (key === 'locale') {
+          if (isAppLocale(value)) {
+            storage[key] = value;
+          } else {
+            console.warn('Ignoring invalid locale from storage:', value);
+          }
         } else {
           storage[key] = value;
         }
       }
       this.$patch({ ...storage, _loaded: true });
 
-      if (isAppLocale(this.locale)) {
+      const localeFromServer = 'locale' in server_settings;
+      const localeFromLocalStorage = localStorage.getItem('locale') != null;
+
+      if ((localeFromServer || localeFromLocalStorage) && isAppLocale(this.locale)) {
         setAppLocale(this.locale);
+      } else if (isAppLocale(i18n.locale)) {
+        this.$patch({ locale: i18n.locale as AppLocale });
       }
 
       // Since `requestTimeout` is used to initialize the client, we need to set it again
