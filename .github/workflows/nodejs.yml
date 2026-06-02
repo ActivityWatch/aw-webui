@@ -148,6 +148,7 @@ jobs:
         npm test
     - uses: codecov/codecov-action@v6
       timeout-minutes: 2
+      continue-on-error: true
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         fail_ci_if_error: false
