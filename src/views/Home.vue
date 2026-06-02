@@ -52,6 +52,7 @@ div
           li #[a(href="https://activitywatch.readthedocs.org/") Documentation]
           li #[a(href="https://forum.activitywatch.net/") Forum]
           li #[a(href="https://discord.gg/vDskV9q") Discord]
+          li #[a(href="https://www.reddit.com/r/activitywatch/") Reddit]
           li #[a(href="https://github.com/ActivityWatch/activitywatch") GitHub]
           li(v-if="!info.version.includes('rust')" ) #[a(href="/api/") API Browser]
 

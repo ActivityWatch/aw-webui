@@ -32,6 +32,9 @@ div.container(style="color: #555; font-size: 0.9em")
       a(href="https://github.com/ActivityWatch", target="_blank").ml-3
         icon(name="brands/github")
         | GitHub
+      a(href="https://www.reddit.com/r/activitywatch/", target="_blank" rel="noopener noreferrer").ml-3
+        icon(name="brands/reddit")
+        | Reddit
       a(href="https://activitywatch.net/donate/", target="_blank").ml-3
         icon(name="hand-holding-heart")
         | Donate
@@ -41,6 +44,7 @@ div.container(style="color: #555; font-size: 0.9em")
 // only import the icons you use to reduce bundle size
 import 'vue-awesome/icons/brands/twitter';
 import 'vue-awesome/icons/brands/github';
+import 'vue-awesome/icons/brands/reddit';
 import 'vue-awesome/icons/hand-holding-heart';
 import 'vue-awesome/icons/vote-yea';
 import 'vue-awesome/icons/question-circle';
