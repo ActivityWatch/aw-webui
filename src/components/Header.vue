@@ -77,6 +77,9 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
           b-dropdown-item(to="/query")
             icon(name="code")
             | Query
+          b-dropdown-item(href="https://reddit.com/r/activitywatch" target="_blank")
+            icon(name="brands/reddit")
+            | r/activitywatch
           b-dropdown-item(to="/graph" v-if="devmode")
             // TODO: use circle-nodes instead in the future
             icon(name="project-diagram")
@@ -117,6 +120,7 @@ import 'vue-awesome/icons/history';
 
 // TODO: use circle-nodes instead in the future
 import 'vue-awesome/icons/project-diagram';
+import 'vue-awesome/icons/brands/reddit';
 //import 'vue-awesome/icons/cicle-nodes';
 
 import 'vue-awesome/icons/ellipsis-h';
