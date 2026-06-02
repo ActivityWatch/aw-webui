@@ -223,6 +223,20 @@ export const useBucketsStore = defineStore('buckets', {
       await this.loadBuckets();
     },
 
+    async deleteBucketsByHost({ bucketIds }: { bucketIds: string[] }): Promise<string[]> {
+      console.log(`Deleting ${bucketIds.length} buckets`);
+      try {
+        for (const bucketId of bucketIds) {
+          await getClient().deleteBucket(bucketId);
+        }
+      } finally {
+        await this.loadBuckets().catch(err => {
+          console.warn('Failed to reload buckets after deletion:', err);
+        });
+      }
+      return bucketIds;
+    },
+
     // mutations
     update_buckets(this: State, buckets: IBucket[]): void {
       this.buckets = _.orderBy(buckets, [b => b.id], ['asc']).map(b => {

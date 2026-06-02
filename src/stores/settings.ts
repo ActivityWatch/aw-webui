@@ -2,7 +2,9 @@ import { defineStore } from 'pinia';
 import moment, { Moment } from 'moment';
 import { getClient } from '~/util/awclient';
 import { Category, CategorySet, defaultCategories, cleanCategory } from '~/util/classes';
+import { SavedQuery } from '~/util/savedQueries';
 import { View, defaultViews } from '~/stores/views';
+import type { PrivacyFilterRule } from '~/util/privacyFilters';
 import { isEqual } from 'lodash';
 import { AppLocale, i18n, isAppLocale, setAppLocale } from '~/i18n';
 
@@ -11,6 +13,8 @@ function jsonEq(a: any, b: any) {
   const jsonB = JSON.parse(JSON.stringify(b));
   return isEqual(jsonA, jsonB);
 }
+
+let settingsLoadPromise: Promise<void> | null = null;
 
 // Backoffs for NewReleaseNotification
 export const SHORT_BACKOFF_PERIOD = 24 * 60 * 60;
@@ -38,6 +42,7 @@ interface State {
     timesPollIsShown: number;
   };
   always_active_pattern: string;
+  privacy_filters: PrivacyFilterRule[];
   classes: Category[];
   // Named category sets — each set is an independent collection of category rules.
   // The active_set_ids list controls which sets are combined (in priority order).
@@ -45,6 +50,7 @@ interface State {
   // Ordered list of active set IDs. First entry has highest priority when merging.
   active_set_ids: string[];
   views: View[];
+  saved_queries: SavedQuery[];
 
   // Whether to show certain WIP features
   devmode: boolean;
@@ -82,10 +88,12 @@ export const useSettingsStore = defineStore('settings', {
     },
 
     always_active_pattern: '',
+    privacy_filters: [],
     classes: defaultCategories,
     category_sets: [],
     active_set_ids: ['default'],
     views: defaultViews,
+    saved_queries: [],
 
     // Developer settings
     // NOTE: PRODUCTION might be undefined (in tests, for example)
@@ -105,9 +113,17 @@ export const useSettingsStore = defineStore('settings', {
 
   actions: {
     async ensureLoaded() {
-      if (!this.loaded) {
-        await this.load();
+      if (this.loaded) {
+        return;
       }
+
+      if (!settingsLoadPromise) {
+        settingsLoadPromise = this.load().finally(() => {
+          settingsLoadPromise = null;
+        });
+      }
+
+      await settingsLoadPromise;
     },
     async load({ save }: { save?: boolean } = {}) {
       if (typeof localStorage === 'undefined') {
@@ -119,20 +135,28 @@ export const useSettingsStore = defineStore('settings', {
       // Fetch from server, fall back to localStorage
       const server_settings = await client.get_settings();
 
-      const all_keys = [...Object.keys(localStorage), ...Object.keys(server_settings)].filter(
-        key => {
-          // Skip keys starting with underscore, as they are local to the vuex store.
-          return !key.startsWith('_');
-        }
-      );
+      // Build a unified map: server value wins, localStorage is fallback.
+      // Skip keys that are missing from BOTH sources — otherwise `null` from
+      // localStorage.getItem overrides the defaults defined in `state()`.
+      const storage: Record<string, unknown> = {};
+      const used = new Set<string>();
 
-      const storage = {};
-      for (const key of all_keys) {
-        // If key is set in server, use that value, otherwise use localStorage
-        const set_in_server = server_settings[key] !== undefined;
-        let value = set_in_server ? server_settings[key] : localStorage.getItem(key);
-        //const locstr = set_in_server ? '[server]' : '[localStorage]';
-        //console.debug(`${locstr} ${key}:`, value);
+      // 1. Server settings take priority
+      for (const key of Object.keys(server_settings)) {
+        if (key.startsWith('_')) continue;
+        if (key === 'locale' && !isAppLocale(server_settings[key])) {
+          console.warn('Ignoring invalid locale from server:', server_settings[key]);
+          continue;
+        }
+        storage[key] = server_settings[key];
+        used.add(key);
+      }
+
+      // 2. localStorage fills in gaps, but skip missing keys (null)
+      for (const key of Object.keys(localStorage)) {
+        if (key.startsWith('_') || used.has(key)) continue;
+        const raw = localStorage.getItem(key);
+        if (raw === null || raw === 'null') continue; // key absent or stored as null → keep state() default
 
         // Keys ending with 'Data' are JSON-serialized objects in localStorage
         const isJsonKey =
@@ -140,28 +164,28 @@ export const useSettingsStore = defineStore('settings', {
           key == 'views' ||
           key == 'classes' ||
           key == 'category_sets' ||
-          key == 'active_set_ids';
-        if (isJsonKey && !set_in_server) {
-          try {
-            value = JSON.parse(value);
-            // Needed due to https://github.com/ActivityWatch/activitywatch/issues/1067
+          key == 'active_set_ids' ||
+          key == 'saved_queries';
+        try {
+          if (isJsonKey) {
+            let parsed = JSON.parse(raw);
             if (key == 'classes') {
-              value = value.map(cleanCategory);
+              parsed = parsed.map(cleanCategory);
             }
-            storage[key] = value;
-          } catch (e) {
-            console.error('failed to parse', key, value, e);
-          }
-        } else if (value === 'true' || value === 'false') {
-          storage[key] = value === 'true';
-        } else if (key === 'locale') {
-          if (isAppLocale(value)) {
-            storage[key] = value;
+            storage[key] = parsed;
+          } else if (raw === 'true' || raw === 'false') {
+            storage[key] = raw === 'true';
+          } else if (key === 'locale') {
+            if (isAppLocale(raw)) {
+              storage[key] = raw;
+            } else {
+              console.warn('Ignoring invalid locale from storage:', raw);
+            }
           } else {
-            console.warn('Ignoring invalid locale from storage:', value);
+            storage[key] = raw;
           }
-        } else {
-          storage[key] = value;
+        } catch (e) {
+          console.error('failed to parse', key, raw, e);
         }
       }
       this.$patch({ ...storage, _loaded: true });
@@ -241,6 +265,7 @@ export const useSettingsStore = defineStore('settings', {
     },
     async update(new_state: Record<string, any>) {
       console.log('Updating state', new_state);
+      await this.ensureLoaded();
       this.$patch(new_state);
       await this.save();
     },

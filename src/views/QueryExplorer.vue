@@ -10,7 +10,25 @@ div
   div.alert.alert-danger(v-if="error")
     | {{error}}
 
+  div.alert.alert-danger(v-if="saved_query_error")
+    | {{saved_query_error}}
+
   form
+    div.form-row.align-items-end
+      div.form-group.col-lg-6
+        label.mb-1(for="saved-query-select") Saved Queries
+        select#saved-query-select.form-control(v-model="selected_saved_query_id", @change="loadSelectedQuery()")
+          option(value="") Select saved query...
+          option(v-for="savedQuery in savedQueries", :key="savedQuery.id", :value="savedQuery.id")
+            | {{savedQuery.name}}
+      div.form-group.col-lg-6
+        div.saved-query-actions
+          button.btn.btn-success.mr-2(type="button", @click="saveCurrentQuery()") Save Current
+          button.btn.btn-secondary.mr-2(type="button", @click="renameSelectedQuery()", :disabled="!selected_saved_query_id") Rename
+          button.btn.btn-danger(type="button", @click="deleteSelectedQuery()", :disabled="!selected_saved_query_id")
+            icon(name="trash")
+            |  Delete
+
     div.form-row
       div.form-group.col-md-6
         | {{ $t('query.start') }}
@@ -32,12 +50,28 @@ div
   aw-selectable-eventview(:events="events", :event_type="event_type")
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.saved-query-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+}
+</style>
 
 <script lang="ts">
+import 'vue-awesome/icons/trash';
 import moment from 'moment';
 import _ from 'lodash';
 import { useCategoryStore } from '~/stores/categories';
+import { useSettingsStore } from '~/stores/settings';
+import {
+  buildSavedQuery,
+  buildSavedQueryId,
+  getDefaultSavedQueryName,
+  resolveSavedQueryDates,
+  SavedQuery,
+  sortSavedQueries,
+} from '~/util/savedQueries';
 
 const today = moment().startOf('day');
 const tomorrow = moment(today).add(24, 'hours');
@@ -45,6 +79,8 @@ const tomorrow = moment(today).add(24, 'hours');
 export default {
   name: 'QueryExplorer',
   data() {
+    const settingsStore = useSettingsStore();
+
     // allow queries to be saved in a URL parameter
     let queryCode = this.$route.query.q;
 
@@ -60,26 +96,158 @@ RETURN = sort_by_duration(merged_events);
     }
 
     return {
+      settingsStore,
       query_code: queryCode,
       event_type: 'currentwindow',
       events: [],
       today: today.format(),
       tomorrow: tomorrow.format(),
       error: '',
+      saved_query_error: '',
+      selected_saved_query_id: '',
       startdate: today.format('YYYY-MM-DD'),
       enddate: tomorrow.format('YYYY-MM-DD'),
     };
   },
   computed: {
+    savedQueries: function (): SavedQuery[] {
+      return sortSavedQueries(this.settingsStore.saved_queries || []);
+    },
+    selectedSavedQuery: function (): SavedQuery | null {
+      return this.savedQueries.find(query => query.id === this.selected_saved_query_id) || null;
+    },
     eventcount_str: function () {
       if (Array.isArray(this.events)) return 'Number of events: ' + this.events.length;
       else return '';
     },
   },
-  mounted: function () {
+  mounted: async function () {
+    await this.settingsStore.ensureLoaded();
     useCategoryStore().load();
   },
   methods: {
+    persistSavedQueries: async function (savedQueries: SavedQuery[]) {
+      try {
+        this.saved_query_error = '';
+        await this.settingsStore.update({ saved_queries: sortSavedQueries(savedQueries) });
+        return true;
+      } catch (e) {
+        console.error('Failed to save query presets', e);
+        this.saved_query_error = 'Failed to save query presets.';
+        return false;
+      }
+    },
+    loadSelectedQuery: function () {
+      if (!this.selectedSavedQuery) {
+        return;
+      }
+
+      const { startdate, enddate } = resolveSavedQueryDates(this.selectedSavedQuery);
+      this.query_code = this.selectedSavedQuery.query_code;
+      this.event_type = this.selectedSavedQuery.event_type || 'currentwindow';
+      this.startdate = startdate;
+      this.enddate = enddate;
+      this.saved_query_error = '';
+    },
+    saveCurrentQuery: async function () {
+      const current = this.selectedSavedQuery;
+
+      if (current) {
+        if (!confirm(`Update saved query "${current.name}"?`)) {
+          return;
+        }
+
+        const updatedQuery = buildSavedQuery({
+          id: current.id,
+          name: current.name,
+          query_code: this.query_code,
+          startdate: this.startdate,
+          enddate: this.enddate,
+          event_type: this.event_type,
+        });
+
+        const didPersist = await this.persistSavedQueries(
+          this.savedQueries.map(savedQuery =>
+            savedQuery.id === current.id ? updatedQuery : savedQuery
+          )
+        );
+        if (didPersist) {
+          this.selected_saved_query_id = current.id;
+        }
+        return;
+      }
+
+      const defaultName = getDefaultSavedQueryName(this.query_code);
+      const name = prompt('Name for the saved query:', defaultName);
+      if (name === null) {
+        return;
+      }
+
+      const trimmedName = name.trim();
+      if (_.isEmpty(trimmedName)) {
+        alert('Saved query name cannot be empty.');
+        return;
+      }
+
+      const newId = buildSavedQueryId(
+        trimmedName,
+        this.savedQueries.map(savedQuery => savedQuery.id)
+      );
+      const newQuery = buildSavedQuery({
+        id: newId,
+        name: trimmedName,
+        query_code: this.query_code,
+        startdate: this.startdate,
+        enddate: this.enddate,
+        event_type: this.event_type,
+      });
+
+      const didPersist = await this.persistSavedQueries([...this.savedQueries, newQuery]);
+      if (didPersist) {
+        this.selected_saved_query_id = newId;
+      }
+    },
+    renameSelectedQuery: async function () {
+      if (!this.selectedSavedQuery) {
+        return;
+      }
+
+      const name = prompt('Rename saved query:', this.selectedSavedQuery.name);
+      if (name === null) {
+        return;
+      }
+
+      const trimmedName = name.trim();
+      if (_.isEmpty(trimmedName)) {
+        alert('Saved query name cannot be empty.');
+        return;
+      }
+
+      const selectedQueryId = this.selectedSavedQuery.id;
+      await this.persistSavedQueries(
+        this.savedQueries.map(savedQuery =>
+          savedQuery.id === selectedQueryId ? { ...savedQuery, name: trimmedName } : savedQuery
+        )
+      );
+    },
+    deleteSelectedQuery: async function () {
+      if (!this.selectedSavedQuery) {
+        return;
+      }
+
+      if (
+        !confirm(`Delete saved query "${this.selectedSavedQuery.name}"? This cannot be undone.`)
+      ) {
+        return;
+      }
+
+      const didPersist = await this.persistSavedQueries(
+        this.savedQueries.filter(savedQuery => savedQuery.id !== this.selected_saved_query_id)
+      );
+      if (didPersist) {
+        this.selected_saved_query_id = '';
+      }
+    },
     query: async function () {
       let query = this.query_code;
 

@@ -18,6 +18,8 @@ jobs:
     steps:
     - uses: actions/checkout@v6
     - uses: iterative/setup-cml@v3
+      with:
+        vega: false
 
     # Doesn't work for fetching artifacts from separate workflows
     #- name: Download screenshots
