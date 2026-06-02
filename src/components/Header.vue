@@ -77,7 +77,7 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
           b-dropdown-item(to="/query")
             icon(name="code")
             | Query
-          b-dropdown-item(href="https://reddit.com/r/activitywatch" target="_blank")
+          b-dropdown-item(href="https://reddit.com/r/activitywatch" target="_blank" rel="noopener noreferrer")
             icon(name="brands/reddit")
             | r/activitywatch
           b-dropdown-item(to="/graph" v-if="devmode")
