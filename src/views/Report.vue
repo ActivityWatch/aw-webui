@@ -1,11 +1,11 @@
 <template lang="pug">
 div
-  h3 Report
+  h3 {{ $t('report.title') }}
 
-  | Generate a report of time spent on a certain category of device activity.
+  | {{ $t('report.description') }}
 
   b-alert.mt-2(style="warning" show)
-    | This feature is still in early development.
+    | {{ $t('report.earlyDev') }}
 
   b-alert(v-if="error" show variant="danger")
     | {{error}}
@@ -14,7 +14,7 @@ div
     template(v-slot:input-group-append)
       b-button(type="button", @click="generate()" variant="success" :disabled="!has_pattern")
         icon(name="search")
-        | Generate
+        | {{ $t('report.generate') }}
 
   div.d-flex.mt-1
     span.mr-auto.small(style="color: #666") Hostname: {{queryOptions.hostname}}
@@ -25,7 +25,7 @@ div
         | #[icon(name="angle-double-up")] Hide options
 
   div(v-show="show_options")
-    h4 Options
+    h4 {{ $t('report.options') }}
     aw-query-options(v-model="queryOptions")
 
   div(v-if="status == 'searching'")
@@ -37,7 +37,7 @@ div
 
     div.d-flex
       div.flex-fill
-        | Found {{ events.length }} events in {{ queryTime / 1000 }} seconds
+        | {{ $t('report.foundEvents', { count: events.length, seconds: queryTime / 1000 }) }}
       div
         b-input-group(size="sm")
           b-input-group-prepend
@@ -46,7 +46,7 @@ div
               .mx-1 Export as:
           b-input-group-append
             b-button(type="button", @click="export_csv()" variant="outline-dark")
-              | CSV
+              | {{ $t('report.csv') }}
             b-button(type="button", @click="export_json()" variant="outline-dark")
               | JSON
 

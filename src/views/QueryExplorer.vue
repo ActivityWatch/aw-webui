@@ -1,9 +1,9 @@
 <template lang="pug">
 
 div
-  h3 Query Explorer
+  h3 {{ $t('query.title') }}
 
-  | See #[a(href="https://docs.activitywatch.net/en/latest/examples/querying-data.html") the documentation] for help on how to write queries.
+  | {{ $t('query.docsHelp') }} #[a(href="https://docs.activitywatch.net/en/latest/examples/querying-data.html") {{ $t('home.documentation') }}].
 
   hr
 
@@ -13,10 +13,10 @@ div
   form
     div.form-row
       div.form-group.col-md-6
-        | Start
+        | {{ $t('query.start') }}
         input.form-control(type="date", :max="today", v-model="startdate")
       div.form-group.col-md-6
-        | End
+        | {{ $t('query.end') }}
         input.form-control(type="date", :max="tomorrow", v-model="enddate")
 
     div.form-group

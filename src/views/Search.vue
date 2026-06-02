@@ -1,9 +1,9 @@
 <template lang="pug">
 div
-  h3 Search
+  h3 {{ $t('search.title') }}
 
   b-alert(style="warning" show)
-    | This feature is still in early development.
+    | {{ $t('search.earlyDev') }}
 
   b-alert(v-if="error" show variant="danger")
     | {{error}}
@@ -13,7 +13,7 @@ div
     b-input-group-append
       b-button(type="button", @click="search()" variant="success")
         icon(name="search")
-        | Search
+        | {{ $t('search.searchBtn') }}
 
   div.d-flex.mt-1
     span.mr-auto.small(style="color: #666") Hostname: {{queryOptions.hostname}}
@@ -24,7 +24,7 @@ div
         | #[icon(name="angle-double-up")] Hide options
 
   div(v-show="show_options")
-    h4 Options
+    h4 {{ $t('search.options') }}
     aw-query-options(v-model="queryOptions")
 
   div(v-if="status == 'searching'")
@@ -36,9 +36,9 @@ div
     aw-selectable-eventview(:events="events")
 
     div
-      | Didn't find what you were looking for?
+      | {{ $t('search.notFound') }}
       br
-      | Add a week to the search: #[b-button(size="sm" variant="outline-dark" @click="start = start.subtract(1, 'week'); search()") +1 week]
+      | {{ $t('search.addWeek') }} #[b-button(size="sm" variant="outline-dark" @click="start = start.subtract(1, 'week'); search()") {{ $t('search.addWeekBtn') }}]
 </template>
 
 <script lang="ts">

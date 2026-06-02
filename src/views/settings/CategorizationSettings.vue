@@ -1,27 +1,31 @@
 <template lang="pug">
 div
   h5.d-inline-block
-    div Categorization
+    div {{ $t('settings.categorization.title') }}
   div.float-right
     b-btn.ml-1(@click="restoreDefaultClasses", variant="outline-warning" size="sm")
       icon(name="undo")
-      | Restore defaults
+      | {{ $t('settings.categorization.restoreDefaults') }}
     label.btn.btn-sm.ml-1.btn-outline-primary(style="margin: 0")
-      | Import
+      | {{ $t('common.import') }}
       input(type="file" @change="importCategories" hidden)
     b-btn.ml-1(@click="exportClasses", variant="outline-primary" size="sm")
-      | Export
+      | {{ $t('common.export') }}
   p
-    | Rules for categorizing events. An event can only have one category. If several categories match, the deepest one will be chosen.
+    | {{ $t('settings.categorization.rulesHelp') }}
   p
-    | You can use the #[router-link(:to="{ path: '/settings/category-builder' }") Category Builder] to quickly create categories from uncategorized activity.
-    | You can also find and share categorization rule presets on #[a(href="https://forum.activitywatch.net/c/projects/category-rules") the forum].
-    | For help on how to write categorization rules, see #[a(href="https://docs.activitywatch.net/en/latest/features/categorization.html") the documentation].
+    | {{ $t('settings.categorization.builderIntro') }}
+    |  #[router-link(:to="{ path: '/settings/category-builder' }") {{ $t('settings.categorization.categoryBuilder') }}]
+    |  {{ $t('settings.categorization.builderOutro') }}
+    | {{ $t('settings.categorization.forumIntro') }}
+    |  #[a(href="https://forum.activitywatch.net/c/projects/category-rules") {{ $t('settings.categorization.forum') }}].
+    | {{ $t('settings.categorization.docsIntro') }}
+    |  #[a(href="https://docs.activitywatch.net/en/latest/features/categorization.html") {{ $t('settings.categorization.documentation') }}].
 
   // Category set switcher
   div.my-3.p-3(style="background: var(--bs-light, #f8f9fa); border-radius: 4px;")
     div.d-flex.align-items-center.flex-wrap(style="gap: 0.5rem;")
-      span.font-weight-bold(style="white-space: nowrap") Category set:
+      span.font-weight-bold(style="white-space: nowrap") {{ $t('settings.categorization.categorySet') }}
       b-select(
         v-model="activeSetId"
         @change="onSetChange"
@@ -37,27 +41,27 @@ div
         @click="createSet"
         variant="outline-primary"
         size="sm"
-      ) New set
+      ) {{ $t('settings.categorization.newSet') }}
       b-btn(
         v-if="categoryStore.category_sets.length > 1"
         @click="deleteActiveSet"
         variant="outline-danger"
         size="sm"
-      ) Delete set
+      ) {{ $t('settings.categorization.deleteSet') }}
     div.mt-1(
       v-if="categoryStore.category_sets.length > 1"
       style="font-size: 0.85em; color: var(--bs-secondary, #6c757d);"
     )
-      | {{ categoryStore.category_sets.length }} sets available — switch sets to use different rule profiles.
+      | {{ $t('settings.categorization.setsAvailable', { count: categoryStore.category_sets.length }) }}
 
   div.my-4
     b-alert(variant="warning" :show="classes_unsaved_changes")
-      | You have unsaved changes!
+      | {{ $t('settings.categorization.unsavedChanges') }}
       div.float-right(style="margin-top: -0.15em; margin-right: -0.6em")
         b-btn.ml-2(@click="saveClasses", variant="success" size="sm")
-          | Save
+          | {{ $t('common.save') }}
         b-btn.ml-2(@click="resetClasses", variant="warning" size="sm")
-          | Discard
+          | {{ $t('settings.categorization.discard') }}
     div(v-for="_class in classes_hierarchy")
       CategoryEditTree(:_class="_class")
     div(v-if="editingId !== null")
@@ -67,9 +71,9 @@ div
     div.col-sm-12
       b-btn(@click="addClass")
         icon.mr-2(name="plus")
-        | Add category
+        | {{ $t('settings.categorization.addCategory') }}
       b-btn.float-right(@click="saveClasses", variant="success" :disabled="!classes_unsaved_changes")
-        | Save
+        | {{ $t('common.save') }}
 </template>
 <script lang="ts">
 import { mapState, mapGetters } from 'pinia';
@@ -81,8 +85,6 @@ import { useCategoryStore } from '~/stores/categories';
 
 import _ from 'lodash';
 import { downloadFile } from '~/util/export';
-
-const confirmationMessage = 'Your categories have unsaved changes, are you sure you want to leave?';
 
 export default {
   name: 'CategorizationSettings',
@@ -236,10 +238,11 @@ export default {
     },
     beforeUnload: function (e) {
       if (this.classes_unsaved_changes) {
+        const msg = this.$t('settings.unsavedCategoriesLeave');
         e = e || window.event;
         e.preventDefault();
-        e.returnValue = confirmationMessage;
-        return confirmationMessage;
+        e.returnValue = msg;
+        return msg;
       }
     },
   },

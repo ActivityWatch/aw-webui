@@ -4,6 +4,7 @@ import { getClient } from '~/util/awclient';
 import { Category, CategorySet, defaultCategories, cleanCategory } from '~/util/classes';
 import { View, defaultViews } from '~/stores/views';
 import { isEqual } from 'lodash';
+import { isAppLocale, setAppLocale } from '~/i18n';
 
 function jsonEq(a: any, b: any) {
   const jsonA = JSON.parse(JSON.stringify(a));
@@ -28,6 +29,7 @@ interface State {
   useColorFallback: boolean;
   landingpage: string;
   theme: 'light' | 'dark' | 'auto';
+  locale: 'en' | 'uk' | 'de' | 'ru';
 
   newReleaseCheckData: Record<string, any>;
   userSatisfactionPollData: {
@@ -65,6 +67,7 @@ export const useSettingsStore = defineStore('settings', {
     landingpage: '/home',
 
     theme: 'auto',
+    locale: 'en',
 
     newReleaseCheckData: {
       isEnabled: true,
@@ -156,6 +159,10 @@ export const useSettingsStore = defineStore('settings', {
         }
       }
       this.$patch({ ...storage, _loaded: true });
+
+      if (isAppLocale(this.locale)) {
+        setAppLocale(this.locale);
+      }
 
       // Since `requestTimeout` is used to initialize the client, we need to set it again
       // https://github.com/ActivityWatch/activitywatch/issues/979
