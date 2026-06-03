@@ -183,7 +183,7 @@ export default {
     apiBrowser: 'Просмотр API',
     workingOnTitle: 'Над чем мы работаем?',
     workingOn: 'Смотрите',
-    devUpdates: 'обновления разработки',
+    devUpdates: 'новости разработки',
     landingHint: 'Страницу при открытии ActivityWatch (вместо этой) можно изменить в',
   },
   buckets: {
@@ -316,7 +316,7 @@ export default {
   },
   search: {
     title: 'Поиск',
-    earlyDev: 'Функция ещё в разработке.',
+    earlyDev: 'Функция ещё на ранней стадии разработки.',
     searchBtn: 'Искать',
     options: 'Параметры',
     notFound: 'Не нашли нужное?',
@@ -336,7 +336,7 @@ export default {
   report: {
     title: 'Отчёт',
     description: 'Отчёт о времени в определённой категории активности устройства.',
-    earlyDev: 'Функция ещё в разработке.',
+    earlyDev: 'Функция ещё на ранней стадии разработки.',
     generate: 'Сгенерировать',
     options: 'Параметры',
     foundEvents: 'Найдено событий: {count} за {seconds} с',
@@ -344,7 +344,7 @@ export default {
   },
   trends: {
     titlePrefix: 'Тренды за',
-    earlyDev: 'Функция ещё в разработке.',
+    earlyDev: 'Функция ещё на ранней стадии разработки.',
     loadDemo: 'Загрузить демо-данные',
   },
   timespiral: {

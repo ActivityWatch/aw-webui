@@ -142,7 +142,7 @@ export default {
         'Eine Abfrage über ein ganzes Jahr ist sehr schwer und führt oft zu Timeouts. Mit aw-server-rust kann es schneller sein.',
       multidevice: 'Multi-Device-Abfrage',
       multideviceHelp:
-        'Ereignisse von mehreren Hosts in der Aktivitätsansicht. Experimentell; Browser-Buckets und „Audio = aktiv“ werden noch nicht unterstützt.',
+        'Frühes Experiment: Ereignisse von mehreren Hosts in der Aktivitätsansicht. Browser-Buckets und „Audio = aktiv“ werden noch nicht unterstützt.',
       requestTimeout: 'Anfrage-Timeout',
       requestTimeoutHelp:
         'Maximale Wartezeit auf Serverantwort. Für große Abfragen erhöhen. Web-UI neu laden, damit es wirkt.',
@@ -153,9 +153,9 @@ export default {
     note: 'Hinweis:',
     androidNote:
       'ActivityWatch auf Android ist noch sehr früh. Es gibt Fehler, aber wir arbeiten an Parität mit der Desktop-Version (probieren Sie sie!).',
-    greeting: 'Hallo, früher Nutzer,',
+    greeting: 'Hallo und willkommen, Early Adopter,',
     intro1:
-      'ActivityWatch ist noch in der Entwicklung{android}. Wir brauchen Nutzer (wie Sie!), um das Projekt erfolgreich zu machen.',
+      'ActivityWatch steht noch am Anfang{android}. Wir sind schon weit gekommen, brauchen aber Nutzer (wie Sie!), um das Projekt erfolgreich zu machen.',
     introAndroid: ' (besonders auf Android!)',
     intro2: 'Frühe Nutzer sind uns wichtig — schreiben Sie uns mit Verbesserungsideen!',
     intro3:
@@ -318,7 +318,7 @@ export default {
   },
   search: {
     title: 'Suche',
-    earlyDev: 'Diese Funktion ist noch in der Entwicklung.',
+    earlyDev: 'Diese Funktion befindet sich noch in früher Entwicklung.',
     searchBtn: 'Suchen',
     options: 'Optionen',
     notFound: 'Nicht gefunden, was Sie suchten?',
@@ -338,7 +338,7 @@ export default {
   report: {
     title: 'Bericht',
     description: 'Bericht über die in einer Geräteaktivitätskategorie verbrachte Zeit.',
-    earlyDev: 'Diese Funktion ist noch in der Entwicklung.',
+    earlyDev: 'Diese Funktion befindet sich noch in früher Entwicklung.',
     generate: 'Erzeugen',
     options: 'Optionen',
     foundEvents: '{count} Ereignisse in {seconds} Sekunden gefunden',
@@ -346,7 +346,7 @@ export default {
   },
   trends: {
     titlePrefix: 'Trends für',
-    earlyDev: 'Diese Funktion ist noch in der Entwicklung.',
+    earlyDev: 'Diese Funktion befindet sich noch in früher Entwicklung.',
     loadDemo: 'Demo-Daten laden',
   },
   timespiral: {

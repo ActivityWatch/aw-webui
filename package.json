@@ -12,6 +12,7 @@
     "test": "jest",
     "test:unit": "jest --selectProjects jsdom",
     "test:e2e": "vue-cli-service test:e2e",
+    "check:locales": "node scripts/check-locales.mjs",
     "lint": "vue-cli-service lint",
     "lint_old": "eslint --ignore-path=.gitignore --ext .vue,.js,.ts ."
   },
