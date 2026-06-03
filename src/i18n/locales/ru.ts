@@ -30,6 +30,7 @@ export default {
     voteFeatures: 'Голосовать за функции',
     twitter: 'Twitter',
     github: 'GitHub',
+    reddit: 'Reddit',
     donate: 'Поддержать',
   },
   common: {
@@ -178,6 +179,7 @@ export default {
     documentation: 'Документация',
     forum: 'Форум',
     discord: 'Discord',
+    reddit: 'Reddit',
     apiBrowser: 'Просмотр API',
     workingOnTitle: 'Над чем мы работаем?',
     workingOn: 'Смотрите',

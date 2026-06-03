@@ -31,6 +31,7 @@ export default {
     voteFeatures: 'Голосувати за функції',
     twitter: 'Twitter',
     github: 'GitHub',
+    reddit: 'Reddit',
     donate: 'Підтримати',
   },
   common: {
@@ -179,6 +180,7 @@ export default {
     documentation: 'Документація',
     forum: 'Форум',
     discord: 'Discord',
+    reddit: 'Reddit',
     apiBrowser: 'Оглядач API',
     workingOnTitle: 'Над чим ми працюємо?',
     workingOn: 'Дивіться',

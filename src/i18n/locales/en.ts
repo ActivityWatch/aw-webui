@@ -31,6 +31,7 @@ export default {
     voteFeatures: 'Vote on features',
     twitter: 'Twitter',
     github: 'GitHub',
+    reddit: 'Reddit',
     donate: 'Donate',
   },
   common: {
@@ -182,6 +183,7 @@ export default {
     documentation: 'Documentation',
     forum: 'Forum',
     discord: 'Discord',
+    reddit: 'Reddit',
     apiBrowser: 'API Browser',
     workingOnTitle: 'What are we working on?',
     workingOn: 'Check out the',

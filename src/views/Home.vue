@@ -65,6 +65,7 @@ div
           li #[a(href="https://activitywatch.readthedocs.org/") {{ $t('home.documentation') }}]
           li #[a(href="https://forum.activitywatch.net/") {{ $t('home.forum') }}]
           li #[a(href="https://discord.gg/vDskV9q") {{ $t('home.discord') }}]
+          li #[a(href="https://www.reddit.com/r/activitywatch/") {{ $t('home.reddit') }}]
           li #[a(href="https://github.com/ActivityWatch/activitywatch") GitHub]
           li(v-if="!info.version.includes('rust')" ) #[a(href="/api/") {{ $t('home.apiBrowser') }}]
 
