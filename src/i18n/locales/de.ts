@@ -76,7 +76,7 @@ export default {
       help: 'Standarddauer für „Zuletzt anzeigen“ in der Zeitleiste.',
     },
     landingPage: {
-      title: 'Startseite',
+      title: 'Einstiegsseite',
       home: 'Startseite',
       activity: 'Aktivität ({hostname})',
       timeline: 'Zeitleiste',
@@ -116,7 +116,7 @@ export default {
       rulesHelp:
         'Regeln zur Kategorisierung von Ereignissen. Ein Ereignis hat nur eine Kategorie. Bei mehreren Treffern wird die tiefste gewählt.',
       builderIntro: 'Sie können den',
-      categoryBuilder: 'Kategorie-Editor',
+      categoryBuilder: 'Kategorie-Builder',
       builderOutro: 'nutzen, um schnell Kategorien aus unkategorisierter Aktivität zu erstellen.',
       forumIntro: 'Fertige Regelsätze finden Sie im',
       forum: 'Forum',
@@ -152,7 +152,7 @@ export default {
   home: {
     note: 'Hinweis:',
     androidNote:
-      'ActivityWatch auf Android ist noch sehr früh. Es gibt Fehler, aber wir arbeiten an Parität mit der Desktop-Version (probieren Sie sie!).',
+      'ActivityWatch auf Android befindet sich in einem sehr frühen Entwicklungsstadium. Es gibt Fehler, aber wir arbeiten an Parität mit der Desktop-Version (probieren Sie sie!).',
     greeting: 'Hallo und willkommen, Early Adopter,',
     intro1:
       'ActivityWatch steht noch am Anfang{android}. Wir sind schon weit gekommen, brauchen aber Nutzer (wie Sie!), um das Projekt erfolgreich zu machen.',

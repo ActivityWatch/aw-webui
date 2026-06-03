@@ -127,7 +127,7 @@ export default {
       deleteSet: 'Видалити набір',
       setsAvailable: 'Доступно наборів: {count} — перемикайте профілі правил.',
       unsavedChanges: 'Є незбережені зміни!',
-      discard: 'Скасувати',
+      discard: 'Відкинути',
       addCategory: 'Додати категорію',
     },
     developer: {
@@ -154,7 +154,7 @@ export default {
       'ActivityWatch на Android на дуже ранній стадії. Будуть помилки, але ми працюємо над паритетом із десктопною версією (її варто спробувати!).',
     greeting: 'Вітаємо, ранній користувачу,',
     intro1:
-      'ActivityWatch ще розвивається{android}. Нам потрібні користувачі (як ви!), щоб зробити проєкт успішним.',
+      'ActivityWatch ще на початку шляху{android}. Ми вже багато досягли, але нам потрібні користувачі (як ви!), щоб зробити проєкт успішним.',
     introAndroid: ' (особливо на Android!)',
     intro2: 'Ранні користувачі для нас важливі — пишіть із ідеями покращень!',
     intro3:
@@ -192,7 +192,7 @@ export default {
     moreWatchers: 'Хочете більше даних? У документації є додаткові watcher-и.',
     currentDevice: '(поточний пристрій)',
     lastUpdated: 'Оновлено:',
-    firstSeen: 'Вперше бачили:',
+    firstSeen: 'Вперше виявлено:',
     bucketId: 'ID bucket-а',
     updated: 'Оновлено',
     exportBucketJson: 'Експорт bucket-а в JSON',
@@ -261,7 +261,7 @@ export default {
   },
   uncategorized: {
     title: 'Багато некатегоризованого часу',
-    body: 'Усього {duration} некатегоризованого часу — це {percent}% за {period}.',
+    body: 'Усього {duration} некатегоризованого часу — це {percent}% усього часу за {period}.',
     hint: 'Можна виправити через',
     categoryBuilder: 'Конструктор категорій',
     periodToday: 'сьогодні',
