@@ -137,7 +137,8 @@ export default {
 .settings-layout {
   display: grid;
   grid-template-columns: minmax(180px, 220px) 1fr;
-  gap: 1.5rem;
+  gap: 2rem;
+  margin-top: 0.5rem;
 }
 
 .settings-nav {
@@ -150,6 +151,7 @@ export default {
   color: #495057;
   border-radius: 0.25rem;
   padding: 0.5rem 0.75rem;
+  margin-bottom: 0.125rem;
 }
 
 ::v-deep .settings-nav .nav-link:hover {
@@ -162,13 +164,31 @@ export default {
   color: #fff !important;
 }
 
+.settings-content {
+  min-width: 0; // prevent grid blowout from long content
+}
+
 .settings-section__title {
   margin-bottom: 0.25rem;
+}
+
+.settings-section ::v-deep > * + * {
+  margin-top: 1.25rem;
+}
+
+.settings-section ::v-deep .form-group,
+.settings-section ::v-deep .b-form-group {
+  margin-bottom: 0;
+}
+
+.settings-section ::v-deep hr {
+  margin: 1.5rem 0;
 }
 
 @media (max-width: 767px) {
   .settings-layout {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
 
   .settings-nav {
@@ -179,9 +199,10 @@ export default {
     flex-direction: row !important;
     overflow-x: auto;
     flex-wrap: nowrap;
+    gap: 0.25rem;
   }
 
-  ::v-deep .settings-nav__link {
+  ::v-deep .settings-nav .nav-link {
     white-space: nowrap;
   }
 }

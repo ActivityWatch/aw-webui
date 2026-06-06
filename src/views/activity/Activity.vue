@@ -414,10 +414,13 @@ export default {
       let anchorDate = momentJsDate;
       const today = moment(get_today_with_offset(this.settingsStore.startOfDay));
       if (this.periodIsBrowseable) {
-        const sourceStart = momentJsDate
+        const sourceUnit = periodLengthConvertMoment(this.periodLength);
+        const sourceStart = momentJsDate.clone().startOf(sourceUnit);
+        // moment.add() rejects "isoWeek" as a DurationConstructor (even
+        // though startOf() accepts it). Cast — runtime handles both spellings.
+        const sourceEnd = sourceStart
           .clone()
-          .startOf(periodLengthConvertMoment(this.periodLength));
-        const sourceEnd = sourceStart.clone().add(1, periodLengthConvertMoment(this.periodLength));
+          .add(1, sourceUnit as moment.unitOfTime.DurationConstructor);
         if (today.isSameOrAfter(sourceStart) && today.isBefore(sourceEnd)) {
           anchorDate = today;
         }

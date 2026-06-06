@@ -77,5 +77,11 @@ export function buildWorkReportQuery(
           duration = sum_durations(events);
           RETURN = {"events": events, "duration": duration};
         `;
-  return query;
+  // Strip per-line trailing whitespace so the snapshot test stays stable
+  // under the trailing-whitespace pre-commit hook. aw-query is whitespace-
+  // tolerant so this has no runtime effect.
+  return query
+    .split('\n')
+    .map(line => line.replace(/\s+$/, ''))
+    .join('\n');
 }

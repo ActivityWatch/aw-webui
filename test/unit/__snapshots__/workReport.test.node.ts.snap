@@ -21,5 +21,5 @@ events = union_no_overlap(events, events_0);
 events = union_no_overlap(events, events_1);
           duration = sum_durations(events);
           RETURN = {"events": events, "duration": duration};
-        "
+"
 `;
