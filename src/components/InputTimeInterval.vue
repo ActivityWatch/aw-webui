@@ -7,20 +7,24 @@ div
       | The selected date range is too long. The maximum is {{ maxDuration/(24*60*60) }} days.
 
   div.input-time-interval.d-flex.flex-wrap.align-items-start.justify-content-between
-    div
-      div.d-flex.align-items-center.flex-wrap.mb-2
-        label.col-form-label.col-form-label-sm.mr-2.mb-0(for="time-mode") Mode
-        b-form-radio-group#time-mode(
-          v-model="mode",
-          @change="valueChanged",
-          buttons,
-          button-variant="outline-secondary",
-          size="sm",
-          :options="modeOptions"
-        )
+    // Two-row grid: labels share a fixed-width column so the Mode toggle
+    // and the Range controls line up vertically and the secondary label
+    // stays in the same spot (just "Range") regardless of which mode is
+    // active. Previously the label flipped between "Quick range" / "Range"
+    // and the inputs shifted horizontally on every toggle.
+    div.time-interval-grid
+      label.col-form-label.col-form-label-sm.mb-0(for="time-mode") Mode
+      b-form-radio-group#time-mode(
+        v-model="mode",
+        @change="valueChanged",
+        buttons,
+        button-variant="outline-secondary",
+        size="sm",
+        :options="modeOptions"
+      )
 
-      div.d-flex.align-items-center.flex-wrap(v-if="mode == 'last_duration'")
-        label.col-form-label.col-form-label-sm.mr-2.mb-0 Quick range
+      label.col-form-label.col-form-label-sm.mb-0 Range
+      div.d-flex.flex-wrap.align-items-center(v-if="mode == 'last_duration'")
         div.btn-group(role="group" aria-label="Quick durations")
           template(v-for="(dur, idx) in durations")
             input(
@@ -31,14 +35,14 @@ div
               @change="applyLastDuration"
             ).d-none
             label(:for="'dur' + idx" v-html="dur.label").btn.btn-light.btn-sm
-
-      div.d-flex.align-items-center.flex-wrap.mt-2(v-if="mode == 'range'")
-        label.col-form-label.col-form-label-sm.mr-2.mb-0 Range
+      div.d-flex.flex-wrap.align-items-center(v-else)
         input.form-control.form-control-sm.mr-1(
           type="date", v-model="start", :max="end || undefined", style="width: auto"
+          aria-label="Start date"
         )
         input.form-control.form-control-sm.mr-1(
           type="date", v-model="end", :min="start || undefined", placeholder="(optional)", style="width: auto"
+          aria-label="End date (optional)"
         )
         b-button(
           size="sm" variant="outline-dark"
@@ -58,6 +62,16 @@ div
 <style scoped lang="scss">
 .input-time-interval {
   row-gap: 0.5rem;
+}
+
+.time-interval-grid {
+  display: grid;
+  // Fixed label column keeps Mode/Range labels aligned and the controls
+  // start at the same X regardless of which mode is active.
+  grid-template-columns: 4rem 1fr;
+  column-gap: 0.75rem;
+  row-gap: 0.5rem;
+  align-items: center;
 }
 
 .btn-group {
