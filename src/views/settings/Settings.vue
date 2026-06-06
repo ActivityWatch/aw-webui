@@ -92,9 +92,9 @@ export default {
         help: 'Theme and visualization colors.',
         components: [{ name: 'Theme' }, { name: 'ColorSettings' }],
       };
-      const notifications: Group = {
-        id: 'notifications',
-        label: 'Notifications',
+      const updates: Group = {
+        id: 'updates',
+        label: 'Updates',
         components: [{ name: 'ReleaseNotificationSettings' }],
       };
       const categorization: Group = {
@@ -116,7 +116,7 @@ export default {
       };
 
       const groups: Group[] = [general, appearance];
-      if (!this.$isAndroid) groups.push(notifications);
+      if (!this.$isAndroid) groups.push(updates);
       groups.push(categorization, privacy, developer);
       return groups;
     },

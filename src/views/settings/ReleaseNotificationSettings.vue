@@ -1,12 +1,12 @@
 <template lang="pug">
 div
-  div.d-flex.justify-content-between
+  div.d-flex.justify-content-between.align-items-center
     div
-      h5.mb-0 New release notification
+      h5.mb-0 Check for new releases
     div
       b-form-checkbox(v-model="isEnabled" switch)
-  small
-    | We will send you a notification if there is a new release available for download, this check will happen at most once per day.
+  small.text-muted
+    | When enabled, the web UI checks once per day for a new ActivityWatch release and shows a hint if one is available.
 </template>
 
 <script lang="ts">
