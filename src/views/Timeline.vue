@@ -6,8 +6,8 @@ div
 
   // Toolbar: filters (primary), display kebab (swimlanes etc.), event count,
   // and keyboard hint. Flex-wrap so it doesn't overlap at narrow widths.
-  div.timeline-toolbar.d-flex.flex-wrap.align-items-center.mb-2
-    details.timeline-filters.mr-2.mb-2(ref="filtersDetails")
+  div.timeline-toolbar.d-flex.flex-wrap.align-items-center
+    details.timeline-filters.mr-2(ref="filtersDetails")
       summary.timeline-chip.timeline-chip--clickable
         icon.mr-1(name="filter")
         b Filters: {{ filter_summary }}
@@ -70,7 +70,7 @@ div
 
     // Display options (swimlanes, future visual toggles) tucked behind a
     // ghost kebab so they don't compete visually with Filters.
-    b-dropdown.kebab-dropdown.mr-2.mb-2(
+    b-dropdown.kebab-dropdown.mr-2(
       size="sm"
       variant="outline-secondary"
       toggle-class="border-0"
@@ -89,10 +89,10 @@ div
         @click="swimlane = opt.value"
       ) {{ opt.text }}
 
-    div.timeline-chip.mr-2.mb-2.text-muted
+    div.timeline-chip.mr-2.text-muted
       | {{ num_events }} events shown
 
-    small.text-muted.ml-auto.mb-2
+    small.text-muted.ml-auto
       | Scroll to zoom, swipe to pan, arrow keys to navigate
 
   b-alert.mb-2(v-if="buckets !== null && num_events === 0", variant="warning", show)
@@ -409,7 +409,8 @@ export default {
 
 <style scoped>
 .timeline-toolbar {
-  row-gap: 0;
+  row-gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .timeline-chip {

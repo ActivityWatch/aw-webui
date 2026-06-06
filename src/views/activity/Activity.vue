@@ -18,8 +18,8 @@ div
         b.mr-1 Query range:
         span {{ periodReadableRange }}
 
-  div.mb-2.d-flex.flex-wrap.align-items-center
-    div.d-flex.mr-2.mb-2
+  div.activity-toolbar.d-flex.flex-wrap.align-items-center
+    div.d-flex.mr-2
       b-button-group
         b-button.px-3(
           v-for="opt in primaryPeriods"
@@ -50,7 +50,7 @@ div
           @click="setDate(_date, opt.value)"
         ) {{ opt.text }}
 
-    b-input-group.mr-2.mb-2(size="sm" style="width: auto")
+    b-input-group.mr-2(size="sm" style="width: auto")
       b-input-group-prepend
         b-button.px-2(:to="link_prefix + '/' + previousPeriod() + '/' + subview + '/' + currentViewId",
                  variant="outline-dark",
@@ -71,7 +71,7 @@ div
                       :aria-label="'Next ' + periodLength")
           icon(name="arrow-right")
 
-    div.ml-auto.mb-2
+    div.ml-auto
       b-button-group(size="sm")
         b-button.px-2(:pressed.sync="showOptions", variant="outline-dark", title="Filters", aria-label="Filters")
           icon(name="filter")
@@ -107,7 +107,7 @@ div
         b-form-select(v-model="filter_category", :options="categoryStore.category_select(true)" size="sm")
 
 
-  aw-periodusage.mt-2(:periodusage_arr="periodusage", @update="setDate")
+  aw-periodusage(:periodusage_arr="periodusage", @update="setDate")
 
   aw-uncategorized-notification(:periodLength="periodLength")
 
@@ -140,6 +140,13 @@ div
 
 <style lang="scss" scoped>
 @import '../../style/globals';
+
+.activity-toolbar {
+  // row-gap kicks in only when items wrap to a second line, so the
+  // single-row case stays compact without piling mb-2 on every child.
+  row-gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
 
 .activity-dateinput {
   // Keep the date picker compact and aligned with the period button-group
