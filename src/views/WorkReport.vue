@@ -10,7 +10,22 @@ div
 
     div.col-md-3
       b-form-group(label="Categories" label-class="font-weight-bold")
-        b-form-select(v-model="selectedCategories" :options="categoryOptions" multiple :select-size="3")
+        b-form-select(
+          :value="''"
+          :options="addableCategoryOptions"
+          size="sm"
+          @change="addCategory"
+        )
+        div.mt-2(v-if="selectedCategories.length > 0")
+          span.badge.badge-info.mr-1.mb-1(v-for="(cat, idx) in selectedCategories" :key="idx")
+            | {{ JSON.parse(cat).join(' > ') }}
+            button.ml-1.close.small(
+              type="button"
+              aria-label="Remove category"
+              style="font-size: 0.85rem; line-height: 1"
+              @click="removeCategory(idx)"
+            ) &times;
+        small.text-muted.d-block.mt-1 Subcategories are included automatically (e.g. "Work" also covers "Work > Programming").
 
     div.col-md-3
       b-form-group(label="Break Time" label-class="font-weight-bold")
@@ -139,6 +154,21 @@ export default {
         text: cat.join(' > '),
       }));
     },
+    // Hide categories that are already selected (or that are descendants of
+    // a selected category, since we auto-include subcategories anyway).
+    addableCategoryOptions() {
+      const selected: string[][] = this.selectedCategories.map(c => JSON.parse(c));
+      const isCoveredBySelected = (cat: string[]) =>
+        selected.some(sel => sel.every((seg, i) => cat[i] === seg));
+      return [
+        {
+          value: '',
+          text: this.selectedCategories.length === 0 ? 'Select category…' : 'Add category…',
+          disabled: true,
+        },
+        ...this.categoryOptions.filter(opt => !isCoveredBySelected(JSON.parse(opt.value))),
+      ];
+    },
     dateRangeOptions() {
       return [
         { value: 'last7d', text: 'Last 7 days' },
@@ -219,7 +249,35 @@ export default {
         );
         const timeperiods = this.getTimeperiods();
         const breakTimeSeconds = this.breakTime * 60;
-        const categoriesFilter = this.selectedCategories.map(c => JSON.parse(c));
+        // Auto-expand the selection to include subcategories. Selecting
+        // "Work" should also match "Work > Programming", "Work > Email",
+        // etc., which is what users intuitively expect — aw-query's
+        // filter_keyvals only does exact-array matches on $category.
+        const allCategories = (this.categoryStore.all_categories || []) as string[][];
+        const selected: string[][] = this.selectedCategories.map(c => JSON.parse(c));
+        const isDescendant = (sel: string[], cat: string[]) =>
+          cat.length >= sel.length && sel.every((seg, i) => cat[i] === seg);
+        const expanded: string[][] = [];
+        const seen = new Set<string>();
+        for (const cat of allCategories) {
+          if (selected.some(sel => isDescendant(sel, cat))) {
+            const key = JSON.stringify(cat);
+            if (!seen.has(key)) {
+              seen.add(key);
+              expanded.push(cat);
+            }
+          }
+        }
+        // Also keep the originally-selected categories even if they aren't
+        // in all_categories (defensive).
+        for (const sel of selected) {
+          const key = JSON.stringify(sel);
+          if (!seen.has(key)) {
+            seen.add(key);
+            expanded.push(sel);
+          }
+        }
+        const categoriesFilter = expanded;
 
         const categories = this.categoryStore.classes_for_query;
         const categoriesStr = JSON.stringify(categories).replace(/\\\\/g, '\\');
@@ -255,6 +313,17 @@ export default {
       } finally {
         this.loading = false;
       }
+    },
+
+    addCategory(value: string) {
+      if (!value) return;
+      if (!this.selectedCategories.includes(value)) {
+        this.selectedCategories = [...this.selectedCategories, value];
+      }
+    },
+
+    removeCategory(idx: number) {
+      this.selectedCategories = this.selectedCategories.filter((_c, i) => i !== idx);
     },
 
     getTimeperiods(): string[] {
