@@ -262,7 +262,14 @@ export default {
       showOptions: false,
 
       include_audible: true,
-      include_stopwatch: false,
+      // Include stopwatch events when a stopwatch bucket exists. The
+      // store query falls back to noop if no bucket is present, so this
+      // is safe for users without stopwatch data. Enabling by default
+      // means the "Top Stopwatch Events" visualization shows real
+      // numbers as soon as a user records a session; previously a
+      // stopwatch run produced "No data" unless they also flipped the
+      // dev-only "Include manually logged events" checkbox.
+      include_stopwatch: true,
       filter_afk: true,
       new_view: {},
     };
