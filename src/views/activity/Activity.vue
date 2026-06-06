@@ -36,11 +36,13 @@ div
                  :title="'Previous ' + periodLength",
                  :aria-label="'Previous ' + periodLength")
           icon(name="arrow-left")
-      input.form-control.form-control-sm(v-if="periodLength === 'day'" type="date" :value="_date" :max="today"
-                       @change="setDate($event.target.value, periodLength)"
-                       style="min-width: 9em")
-      b-input-group-text(v-else style="background: #fff")
-        | {{ periodReadableRange }}
+      input.form-control.form-control-sm.activity-dateinput(
+        type="date"
+        :value="_date"
+        :max="today"
+        :title="periodIsBrowseable ? periodReadableRange : ''"
+        @change="setDate($event.target.value, periodLength)"
+      )
       b-input-group-append
         b-button.px-2(:to="link_prefix + '/' + nextPeriod() + '/' + subview + '/' + currentViewId",
                       :disabled="nextPeriod() > today", variant="outline-dark",
@@ -117,6 +119,15 @@ div
 
 <style lang="scss" scoped>
 @import '../../style/globals';
+
+.activity-dateinput {
+  // Keep the date picker compact and aligned with the period button-group
+  // regardless of mode (day / week / month / year / N days). The full
+  // human-readable range remains available via the input's tooltip and the
+  // page heading.
+  width: 9.5rem;
+  min-width: 9.5rem;
+}
 
 .nav {
   border-bottom: 1px solid $lightBorderColor;

@@ -18,6 +18,7 @@ div
         option(value='bucketType') Bucket Specific
     details.timeline-filters.mr-2.mb-2(ref="filtersDetails")
       summary.timeline-chip.timeline-chip--clickable
+        icon.mr-1(name="filter")
         b Filters: {{ filter_summary }}
       div.timeline-filters-panel.shadow-sm
         table
@@ -91,6 +92,7 @@ div
 </template>
 
 <script lang="ts">
+import 'vue-awesome/icons/filter';
 import _ from 'lodash';
 import { mapState } from 'pinia';
 import { useSettingsStore } from '~/stores/settings';
