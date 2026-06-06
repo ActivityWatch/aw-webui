@@ -2,7 +2,7 @@
 div
   h3 Search
 
-  b-alert(style="warning" show)
+  b-alert(variant="warning" show)
     | This feature is still in early development.
 
   b-alert(v-if="error" show variant="danger")
