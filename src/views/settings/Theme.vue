@@ -11,7 +11,9 @@ div
           :pressed="theme === opt.value"
           @click="theme = opt.value"
           variant="outline-dark"
-        ) {{ opt.label }}
+        )
+          icon.mr-1(:name="opt.icon")
+          | {{ opt.label }}
       span(v-else)
         .aw-loading Loading...
   small.text-muted
@@ -19,6 +21,9 @@ div
 </template>
 
 <script lang="ts">
+import 'vue-awesome/icons/desktop';
+import 'vue-awesome/icons/sun';
+import 'vue-awesome/icons/moon';
 import { mapState } from 'pinia';
 import { useSettingsStore } from '~/stores/settings';
 import { detectPreferredTheme } from '~/util/theme';
@@ -28,9 +33,9 @@ export default {
   data() {
     return {
       themeOptions: [
-        { value: 'auto', label: 'Auto' },
-        { value: 'light', label: 'Light' },
-        { value: 'dark', label: 'Dark' },
+        { value: 'auto', label: 'Auto', icon: 'desktop' },
+        { value: 'light', label: 'Light', icon: 'sun' },
+        { value: 'dark', label: 'Dark', icon: 'moon' },
       ],
     };
   },
