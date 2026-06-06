@@ -3,7 +3,8 @@ div
   h3.mb-3 Stopwatch
 
   b-alert(show variant="info")
-    | This is an early experiment. Data entered here is not shown in the Activity view, yet.
+    | Track manually-logged sessions alongside automatic tracking. Add the
+    | #[b Top Stopwatch Events] visualization to an Activity view (via #[b + New view] or by editing an existing one) to see your stopwatch totals.
 
   b-input-group(size="lg")
     b-input(
