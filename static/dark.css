@@ -55,6 +55,17 @@ hr {
   color: #e9ebf0 !important;
 }
 
+/* Keep destructive items obviously red even in dark mode. */
+.dropdown-menu .dropdown-item.text-danger,
+.dropdown-menu .dropdown-item .text-danger {
+  color: #ff6b6b !important;
+}
+
+.dropdown-menu .dropdown-item.text-danger:hover,
+.dropdown-menu .dropdown-item .text-danger:hover {
+  color: #ff8585 !important;
+}
+
 .dropdown-menu .dropdown-item:hover {
   background-color: #282c32 !important;
 }
@@ -264,4 +275,83 @@ div[style="color: rgb(85, 85, 85); font-size: 0.9em;"] {
   color: hsl(355, 70%, 90%);
   background-color: hsl(355, 60%, 30%);
   border-color: hsl(355, 60%, 25%);
+}
+
+/* ---- Components introduced by the pre-release polish PR ---- */
+
+/* Timeline toolbar chips + filter popover */
+.timeline-chip {
+  background: #1a1d24 !important;
+  border-color: #282c32 !important;
+  color: #e9ebf0 !important;
+}
+
+.timeline-chip--clickable:hover {
+  background: #282c32 !important;
+}
+
+.timeline-filters-panel {
+  background: #1a1d24 !important;
+  border-color: #282c32 !important;
+  color: #e9ebf0 !important;
+}
+
+/* Quick-range chips (InputTimeInterval) */
+.input-time-interval .btn-group .btn-light {
+  background: #1a1d24 !important;
+  border-color: #282c32 !important;
+  color: #e9ebf0 !important;
+}
+
+.input-time-interval .btn-group input[type='radio']:checked + label {
+  background: #e9ebf0 !important;
+  border-color: #e9ebf0 !important;
+  color: #1a1d24 !important;
+}
+
+/* Buckets: ghost kebab + "unknown" device card */
+.kebab-dropdown > .btn {
+  background: transparent !important;
+  color: #adb5bd !important;
+}
+
+.kebab-dropdown > .btn:hover,
+.kebab-dropdown > .btn:focus,
+.kebab-dropdown.show > .btn {
+  background: #282c32 !important;
+  color: #e9ebf0 !important;
+}
+
+.bucket-card--unknown {
+  background: #15181e !important;
+}
+
+/* Settings vertical pill nav */
+.settings-nav .nav-link {
+  color: #c5cad3 !important;
+}
+
+.settings-nav .nav-link:hover {
+  background-color: #282c32 !important;
+}
+
+.settings-nav .nav-link.active,
+.settings-nav .nav-link.active:hover {
+  background-color: #e9ebf0 !important;
+  color: #0f131a !important;
+}
+
+/* Activity period button-group */
+.btn-outline-dark {
+  color: #e9ebf0 !important;
+  border-color: #3d444d !important;
+}
+
+.btn-outline-dark:hover,
+.btn-outline-dark.active,
+.btn-outline-dark:not(:disabled):not(.disabled).active,
+.btn-outline-dark:not(:disabled):not(.disabled):active {
+  background-color: #e9ebf0 !important;
+  color: #0f131a !important;
+  border-color: #e9ebf0 !important;
 }

@@ -33,7 +33,7 @@ export default {
   data() {
     return {
       themeOptions: [
-        { value: 'auto', label: 'Auto', icon: 'desktop' },
+        { value: 'auto', label: 'System', icon: 'desktop' },
         { value: 'light', label: 'Light', icon: 'sun' },
         { value: 'dark', label: 'Dark', icon: 'moon' },
       ],

@@ -42,7 +42,7 @@ div
           icon(name="ellipsis-v")
         b-dropdown-item-button(
           @click="openDeleteHostModal(device)",
-          variant="danger",
+          button-class="text-danger",
           :title="`Delete all ${device.buckets.length} buckets for ${device.hostname}`"
         )
           icon.mr-1(name="trash")
@@ -81,7 +81,7 @@ div
               icon.mr-1(name="download")
               | Export events as CSV
             b-dropdown-divider
-            b-dropdown-item-button(@click="openDeleteBucketModal(data.item.id)", title="Delete this bucket permanently", variant="danger")
+            b-dropdown-item-button(@click="openDeleteBucketModal(data.item.id)", title="Delete this bucket permanently", button-class="text-danger")
               icon.mr-1(name="trash")
               | Delete bucket
 
@@ -198,17 +198,17 @@ div
 }
 
 ::v-deep .bucket-table td {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   vertical-align: middle;
 }
 
+// Truncate only the bucket id span itself, not the cell — applying
+// overflow:hidden to the td clips the row's kebab popover menu.
 ::v-deep .bucket-id {
   display: inline-block;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
   vertical-align: middle;
 }
 
