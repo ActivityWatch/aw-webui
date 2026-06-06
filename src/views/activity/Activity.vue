@@ -18,32 +18,44 @@ div
         b.mr-1 Query range:
         span {{ periodReadableRange }}
 
-  div.mb-2.d-flex
-    div
-      b-input-group
-        b-input-group-prepend
-          b-button.px-2(:to="link_prefix + '/' + previousPeriod() + '/' + subview + '/' + currentViewId",
-                   variant="outline-dark")
-            icon(name="arrow-left")
-        b-select.pl-2.pr-3(:value="periodLength", :options="periodLengths",
-                 @change="(periodLength) => setDate(_date, periodLength)")
-        b-input-group-append
-          b-button.px-2(:to="link_prefix + '/' + nextPeriod() + '/' + subview + '/' + currentViewId",
-                        :disabled="nextPeriod() > today", variant="outline-dark")
-            icon(name="arrow-right")
+  div.mb-2.d-flex.flex-wrap.align-items-center
+    b-button-group.mr-2.mb-2
+      b-button.px-3(
+        v-for="opt in periodLengthsButtons"
+        :key="opt.value"
+        :pressed="periodLength === opt.value"
+        @click="setDate(_date, opt.value)"
+        variant="outline-dark"
+        size="sm"
+      ) {{ opt.text }}
 
-    div.mx-2(v-if="periodLength === 'day'")
-      input.form-control.px-2(id="date" type="date" :value="_date" :max="today"
-                         @change="setDate($event.target.value, periodLength)")
+    b-input-group.mr-2.mb-2(size="sm" style="width: auto")
+      b-input-group-prepend
+        b-button.px-2(:to="link_prefix + '/' + previousPeriod() + '/' + subview + '/' + currentViewId",
+                 variant="outline-dark",
+                 :title="'Previous ' + periodLength",
+                 :aria-label="'Previous ' + periodLength")
+          icon(name="arrow-left")
+      input.form-control.form-control-sm(v-if="periodLength === 'day'" type="date" :value="_date" :max="today"
+                       @change="setDate($event.target.value, periodLength)"
+                       style="min-width: 9em")
+      b-input-group-text(v-else style="background: #fff")
+        | {{ periodReadableRange }}
+      b-input-group-append
+        b-button.px-2(:to="link_prefix + '/' + nextPeriod() + '/' + subview + '/' + currentViewId",
+                      :disabled="nextPeriod() > today", variant="outline-dark",
+                      :title="'Next ' + periodLength",
+                      :aria-label="'Next ' + periodLength")
+          icon(name="arrow-right")
 
-    div.ml-auto
-      b-button-group
-        b-button.px-2(:pressed.sync="showOptions", variant="outline-dark")
+    div.ml-auto.mb-2
+      b-button-group(size="sm")
+        b-button.px-2(:pressed.sync="showOptions", variant="outline-dark", title="Filters", aria-label="Filters")
           icon(name="filter")
           span.d-none.d-md-inline
             |  Filters
             b-badge(pill, variant="secondary" v-if="filters_set > 0").ml-2 {{ filters_set }}
-        b-button.px-2(@click="refresh(true)", variant="outline-dark")
+        b-button.px-2(@click="refresh(true)", variant="outline-dark", title="Refresh", aria-label="Refresh")
           icon(name="sync")
           span.d-none.d-md-inline
             |  Refresh
@@ -247,6 +259,9 @@ export default {
       };
       return periods;
     },
+    periodLengthsButtons: function () {
+      return Object.entries(this.periodLengths).map(([value, text]) => ({ value, text }));
+    },
     periodIsBrowseable: function () {
       return ['day', 'week', 'month', 'year'].includes(this.periodLength);
     },
@@ -391,16 +406,33 @@ export default {
         return;
       }
 
+      // When switching between period buttons (day/week/month/year), prefer
+      // today's date if today falls inside the source period. Otherwise the
+      // user gets thrown across the calendar — e.g. year(2026) → month →
+      // week lands on 2025-12-29 because startOf("week") of Jan 1 walks
+      // back into the previous year.
+      let anchorDate = momentJsDate;
+      const today = moment(get_today_with_offset(this.settingsStore.startOfDay));
+      if (this.periodIsBrowseable) {
+        const sourceStart = momentJsDate
+          .clone()
+          .startOf(periodLengthConvertMoment(this.periodLength));
+        const sourceEnd = sourceStart.clone().add(1, periodLengthConvertMoment(this.periodLength));
+        if (today.isSameOrAfter(sourceStart) && today.isBefore(sourceEnd)) {
+          anchorDate = today;
+        }
+      }
+
       let new_date;
       if (periodLength == '7 days') {
         periodLength = 'last7d';
-        new_date = momentJsDate.add(1, 'days').format('YYYY-MM-DD');
+        new_date = anchorDate.clone().add(1, 'days').format('YYYY-MM-DD');
       } else if (periodLength == '30 days') {
         periodLength = 'last30d';
-        new_date = momentJsDate.add(1, 'days').format('YYYY-MM-DD');
+        new_date = anchorDate.clone().add(1, 'days').format('YYYY-MM-DD');
       } else {
         const new_period_length_moment = periodLengthConvertMoment(periodLength);
-        new_date = momentJsDate.startOf(new_period_length_moment).format('YYYY-MM-DD');
+        new_date = anchorDate.clone().startOf(new_period_length_moment).format('YYYY-MM-DD');
       }
       const path = `/activity/${this.host}/${periodLength}/${new_date}/${this.subview}/${this.currentViewId}`;
       if (this.$route.path !== path) {

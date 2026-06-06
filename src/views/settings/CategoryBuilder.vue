@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  h1 Categorization helper
+  h3 Categorization helper
   div
     p
       | This tool will help you create categories from your uncategorized time.
@@ -38,7 +38,13 @@ div
 
   h5 Common words in "{{category.join(" > ")}}" events
   div(v-if="loading")
-    | Loading...
+    b-spinner.mr-2(small)
+    span.text-muted Loading...
+  div(v-else-if="!queryOptions.hostname")
+    p.text-muted.mb-0
+      | No host with window/AFK buckets is available. Install
+      | #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") a watcher]
+      | to start collecting data.
   div(v-else)
     div(v-if="words_by_duration.length == 0")
       | No words with significant duration. You're good to go!
@@ -90,8 +96,8 @@ div
       b-form-group(label="Word")
         b-form-input(v-model="append.word")
         small
-          div(v-if="validPattern" style="color: green") Valid
-          div(v-else style="color: red") Invalid pattern
+          div.text-success(v-if="validPattern") Valid
+          div.text-danger(v-else) Invalid pattern
           div(v-if="validPattern && broad_pattern" style="color: orange") Pattern too broad
 </template>
 

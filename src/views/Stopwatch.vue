@@ -1,14 +1,17 @@
 <template lang="pug">
 div
-  h2 Stopwatch
-  p
-    | Using bucket: {{bucket_id}}
+  h3.mb-3 Stopwatch
 
-  b-alert(show)
+  b-alert(show variant="info")
     | This is an early experiment. Data entered here is not shown in the Activity view, yet.
 
   b-input-group(size="lg")
-    b-input(v-model="label" placeholder="What are you working on?")
+    b-input(
+      v-model="label"
+      placeholder="What are you working on?"
+      aria-label="What are you working on?"
+      @keyup.enter="startTimer(label)"
+    )
     b-input-group-append
       b-button(@click="startTimer(label)", variant="success")
         icon(name="play")
@@ -17,30 +20,23 @@ div
   hr
 
   div(v-if="loading")
-    span.text-muted.center.aw-loading Loading...
-  div.row(v-else)
-    div.col-md-12
-      h3 Running
-      div(v-if="runningTimers.length > 0")
-        div(v-for="e in runningTimers" :key="e.id")
-          stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
-            @delete="removeTimer", @update="updateTimer")
-          hr(style="margin: 0")
-      div(v-else)
-        span(style="color: #555") No stopwatch running
-        hr
+    b-spinner.mr-2(small)
+    span.text-muted Loading...
+  div(v-else)
+    h3.mt-3 Running
+    div(v-if="runningTimers.length > 0")
+      div(v-for="e in runningTimers" :key="e.id")
+        stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
+          @delete="removeTimer", @update="updateTimer")
+    p.text-muted.mb-0(v-else) No stopwatch running. Start one above to track focused work.
 
-      div(v-if="stoppedTimers.length > 0")
-        h3.mt-4.mb-4 History
-        div(v-for="k in Object.keys(timersByDate).sort().reverse()")
-          h5.mt-2.mb-1 {{ k }}
-          div(v-for="e in timersByDate[k]" :key="e.id")
-            stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
-              @delete="removeTimer", @update="updateTimer", @new="startTimer(e.data.label)")
-            hr(style="margin: 0")
-      div(v-else)
-        span(style="color: #555") No history to show
-        hr
+    div(v-if="stoppedTimers.length > 0")
+      h3.mt-4.mb-2 History
+      div(v-for="k in Object.keys(timersByDate).sort().reverse()" :key="k")
+        h5.mt-3.mb-1 {{ k }}
+        div(v-for="e in timersByDate[k]" :key="e.id")
+          stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
+            @delete="removeTimer", @update="updateTimer", @new="startTimer(e.data.label)")
 </template>
 
 <style scoped lang="scss">

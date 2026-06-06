@@ -248,6 +248,12 @@ export default {
       }
     },
     update() {
+      // Guard against the buckets/events watch firing before mounted's
+      // $nextTick has constructed the vis Timeline. Otherwise revisiting
+      // the route with the keep-alive cache cleared throws
+      // "can't access property setData, this.timeline is null".
+      if (!this.timeline) return;
+
       // Used by unsureUpdate to check if ran
       this.updateHasRun = true;
 
@@ -331,11 +337,14 @@ export default {
         this.items = items;
         this.groups = groups;
       } else {
-        // update the timeline range
-        this.options.min = this.queriedInterval[0];
-        this.options.max = this.queriedInterval[1];
-        this.timeline.setOptions(this.options);
-        this.timeline.setWindow(this.queriedInterval[0], this.queriedInterval[1]);
+        // update the timeline range (only if a queried interval is provided;
+        // some callers like the Bucket detail view don't pass one)
+        if (this.queriedInterval) {
+          this.options.min = this.queriedInterval[0];
+          this.options.max = this.queriedInterval[1];
+          this.timeline.setOptions(this.options);
+          this.timeline.setWindow(this.queriedInterval[0], this.queriedInterval[1]);
+        }
 
         // clear the data
         this.timeline.setData({ groups: [], items: [] });

@@ -1,4 +1,5 @@
 import {
+  buildWorkReportQuery,
   getSupportedWorkReportHosts,
   getUnsupportedWorkReportHosts,
   getWorkReportHostOptions,
@@ -42,6 +43,23 @@ describe('workReport host helpers', () => {
 
   test('getSupportedWorkReportHosts returns only hosts with AFK buckets', () => {
     expect(getSupportedWorkReportHosts(['laptop', 'phone'], buckets as any)).toEqual(['laptop']);
+  });
+
+  test('buildWorkReportQuery uses single-arg flood() for both window and afk buckets', () => {
+    // Regression: aw-query's flood() takes one argument. A previous version
+    // passed breakTimeSeconds as a second argument, which made aw-server
+    // respond with HTTP 400 "Tried to call function flood with invalid amount
+    // of arguments" and broke the whole report.
+    const query = buildWorkReportQuery(['laptop'], '[]', []);
+    expect(query).toContain('events_0 = flood(query_bucket("aw-watcher-window_laptop"));');
+    expect(query).toContain('not_afk_0 = flood(query_bucket("aw-watcher-afk_laptop"));');
+    // Must NOT contain flood() with two arguments
+    expect(query).not.toMatch(/flood\([^)]+,[^)]+\)/);
+  });
+
+  test('buildWorkReportQuery produces a snapshot-stable query for multiple hosts', () => {
+    const query = buildWorkReportQuery(['laptop', 'desktop'], '[]', [['Work']]);
+    expect(query).toMatchSnapshot();
   });
 
   test('getSupportedWorkReportHosts preserves selected host order', () => {

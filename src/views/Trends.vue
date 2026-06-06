@@ -21,7 +21,7 @@ div
       li.list-group-item.pl-0.pr-3.py-0.border-0
         | #[b Host:] {{ host }}
 
-  b-alert(style="warning" show)
+  b-alert(variant="warning" show)
     | This feature is still in early development.
 
   div
@@ -67,8 +67,11 @@ export default {
   },
 
   computed: {
+    // Falls back to the first available host when /trends is opened without a
+    // :host param. Without this fallback ensure_loaded gets an undefined host
+    // and the generated query references `bid_window=undefined`, throwing.
     host() {
-      return this.$route.params.host;
+      return this.$route.params.host || this.bucketsStore.hosts[0];
     },
     datasets: function () {
       return buildBarchartDataset(
@@ -79,12 +82,14 @@ export default {
   },
 
   mounted: async function () {
+    await this.bucketsStore.ensureLoaded();
     this.categoryStore.load();
     await this.refresh();
   },
 
   methods: {
     refresh: async function (force) {
+      if (!this.host) return;
       const queryParams: QueryOptions = {
         timeperiod: this.timeperiod,
         host: this.host,
@@ -94,7 +99,10 @@ export default {
         filter_categories: this.filter_categories,
         dont_query_inactive: false,
       };
-      await this.activityStore.query_category_time_by_period(queryParams);
+      // ensure_loaded resolves bid_window/bid_afk from bucketsStore before
+      // composing queries; without it query_category_time_by_period sees
+      // empty buckets.window[] and crashes on bid.endsWith.
+      await this.activityStore.ensure_loaded(queryParams);
     },
 
     load_demo: async function () {

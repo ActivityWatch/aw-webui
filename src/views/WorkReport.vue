@@ -80,6 +80,7 @@ import {
   getSupportedWorkReportHosts,
   getWorkReportHostOptions,
   getUnsupportedWorkReportHosts,
+  buildWorkReportQuery,
 } from '~/util/workReport';
 
 import 'vue-awesome/icons/sync';
@@ -91,6 +92,21 @@ interface DailyData {
   sessions: number;
   avgSession: number;
   events: any[];
+}
+
+// Sum of gaps between adjacent events that are <= breakTimeSeconds.
+function bridgeGaps(events: any[], breakTimeSeconds: number): number {
+  if (!events || events.length < 2 || breakTimeSeconds <= 0) return 0;
+  const sorted = [...events].sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  );
+  let extra = 0;
+  for (let i = 1; i < sorted.length; i++) {
+    const prevEnd = new Date(sorted[i - 1].timestamp).getTime() + sorted[i - 1].duration * 1000;
+    const gap = (new Date(sorted[i].timestamp).getTime() - prevEnd) / 1000;
+    if (gap > 0 && gap <= breakTimeSeconds) extra += gap;
+  }
+  return extra;
 }
 
 export default {
@@ -208,50 +224,26 @@ export default {
         const categories = this.categoryStore.classes_for_query;
         const categoriesStr = JSON.stringify(categories).replace(/\\\\/g, '\\');
 
-        // Build multi-device query with flood-based gap merging and AFK filtering
-        let query = '';
-
-        // Use indexed variable names to avoid collisions when hostnames
-        // differ only in non-alphanumeric chars (e.g., "my-laptop" vs "mylaptop").
-        for (let hi = 0; hi < hostsToQuery.length; hi++) {
-          const hostname = hostsToQuery[hi];
-          query += `
-            events_${hi} = flood(query_bucket("aw-watcher-window_${hostname}"), ${breakTimeSeconds});
-            not_afk_${hi} = flood(query_bucket("aw-watcher-afk_${hostname}"));
-            not_afk_${hi} = filter_keyvals(not_afk_${hi}, "status", ["not-afk"]);
-            events_${hi} = filter_period_intersect(events_${hi}, not_afk_${hi});
-            events_${hi} = categorize(events_${hi}, ${categoriesStr});
-            events_${hi} = filter_keyvals(events_${hi}, "$category", ${JSON.stringify(
-            categoriesFilter
-          )});
-          `;
-        }
-
-        // Combine events from all hosts
-        query += '\nevents = [];';
-        for (let hi = 0; hi < hostsToQuery.length; hi++) {
-          query += `\nevents = union_no_overlap(events, events_${hi});`;
-        }
-
-        query += `
-          duration = sum_durations(events);
-          RETURN = {"events": events, "duration": duration};
-        `;
+        const query = buildWorkReportQuery(hostsToQuery, categoriesStr, categoriesFilter);
 
         const results = await client.query(timeperiods, [query]);
 
         this.dailyData = timeperiods.map((tp, i) => {
           const result = results[i];
           const events = result.events || [];
-          const duration = result.duration || 0;
+          const baseDuration = result.duration || 0;
+          // Bridge sub-breakTime gaps between adjacent events so a quick
+          // context-switch still counts as continuous work time. aw-query's
+          // flood() only deduplicates overlap, so we add the bridging here.
+          const bridged = baseDuration + bridgeGaps(events, breakTimeSeconds);
 
           const startDate = tp.split('/')[0];
 
           return {
             date: moment(startDate).format('YYYY-MM-DD'),
-            duration,
+            duration: bridged,
             sessions: events.length,
-            avgSession: events.length > 0 ? duration / events.length : 0,
+            avgSession: events.length > 0 ? bridged / events.length : 0,
             events,
           };
         });
@@ -269,20 +261,25 @@ export default {
       const offset = this.settingsStore.startOfDay;
       const timeperiods: string[] = [];
 
-      let days: number;
+      // Resolve to an inclusive [startDate, today] window. For "thisWeek" and
+      // "thisMonth" the start anchors to the calendar boundary (not "N days
+      // ago"), so on a Wednesday "thisMonth" gives Mar 1..Mar 5, not Mar 1..N.
+      let startDate: moment.Moment;
+      const today = moment().startOf('day');
 
       if (this.dateRange === 'last7d') {
-        days = 7;
+        startDate = today.clone().subtract(6, 'days');
       } else if (this.dateRange === 'last30d') {
-        days = 30;
+        startDate = today.clone().subtract(29, 'days');
       } else if (this.dateRange === 'thisWeek') {
-        days = moment().isoWeekday(); // Mon=1 .. Sun=7
+        startDate = moment().startOf('isoWeek');
       } else if (this.dateRange === 'thisMonth') {
-        days = moment().date(); // 1-based day of month
+        startDate = moment().startOf('month');
       } else {
-        days = 7;
+        startDate = today.clone().subtract(6, 'days');
       }
 
+      const days = today.diff(startDate, 'days') + 1;
       for (let i = days - 1; i >= 0; i--) {
         const date = moment().subtract(i, 'days');
         const start = get_day_start_with_offset(date, offset);

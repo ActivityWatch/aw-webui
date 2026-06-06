@@ -45,3 +45,37 @@ export function getSupportedWorkReportHosts(selectedHosts: string[], buckets: IB
   const unsupportedHosts = new Set(getUnsupportedWorkReportHosts(selectedHosts, buckets));
   return selectedHosts.filter(host => !unsupportedHosts.has(host));
 }
+
+// Builds the aw-query string for the Work Time Report. Extracted from the
+// component so the generated query can be snapshot-tested — that's how we
+// catch arg-count regressions like flood(events, breakTime) which aw-query
+// rejects with "Tried to call function flood with invalid amount of arguments".
+export function buildWorkReportQuery(
+  hosts: string[],
+  categoriesStr: string,
+  categoriesFilter: any[]
+): string {
+  let query = '';
+  for (let hi = 0; hi < hosts.length; hi++) {
+    const hostname = hosts[hi];
+    query += `
+            events_${hi} = flood(query_bucket("aw-watcher-window_${hostname}"));
+            not_afk_${hi} = flood(query_bucket("aw-watcher-afk_${hostname}"));
+            not_afk_${hi} = filter_keyvals(not_afk_${hi}, "status", ["not-afk"]);
+            events_${hi} = filter_period_intersect(events_${hi}, not_afk_${hi});
+            events_${hi} = categorize(events_${hi}, ${categoriesStr});
+            events_${hi} = filter_keyvals(events_${hi}, "$category", ${JSON.stringify(
+      categoriesFilter
+    )});
+          `;
+  }
+  query += '\nevents = [];';
+  for (let hi = 0; hi < hosts.length; hi++) {
+    query += `\nevents = union_no_overlap(events, events_${hi});`;
+  }
+  query += `
+          duration = sum_durations(events);
+          RETURN = {"events": events, "duration": duration};
+        `;
+  return query;
+}

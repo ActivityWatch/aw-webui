@@ -1,87 +1,87 @@
 <template lang="pug">
 div
-  h2 Timeline
+  h3 Timeline
 
   input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration").mb-3
 
-  // blocks
-  div.d-inline-block.border.rounded.p-2.mr-2
-    | Events shown:  {{ num_events }}
-  div.d-inline-block.border.rounded.p-2.mr-2
-    | Swimlanes:
-    select(v-model="swimlane")
-      option(:value='null') None
-      option(value='category') Categories
-      option(value='bucketType') Bucket Specific
-  details.d-inline-block.bg-light.small.border.rounded.mr-2.px-2
-    summary.p-2
-      b Filters: {{ filter_summary }}
-    div.p-2.bg-light
-      table
-        tr
-          th.pt-2.pr-3
-            label Host:
-          td
-              select(v-model="filter_hostname")
+  // Toolbar: event count, swimlane selector, filters dropdown, and keyboard
+  // hint, laid out as a flex row so they wrap cleanly at narrow widths
+  // (replacing the prior float/inline-block hack that overlapped at 800px).
+  div.timeline-toolbar.d-flex.flex-wrap.align-items-center.mb-2
+    div.timeline-chip.mr-2.mb-2
+      | Events shown: {{ num_events }}
+    div.timeline-chip.mr-2.mb-2
+      label.mb-0.mr-1(for="timeline-swimlane") Swimlanes:
+      select#timeline-swimlane.form-control.form-control-sm.d-inline-block(v-model="swimlane", style="width: auto")
+        option(:value='null') None
+        option(value='category') Categories
+        option(value='bucketType') Bucket Specific
+    details.timeline-filters.mr-2.mb-2(ref="filtersDetails")
+      summary.timeline-chip.timeline-chip--clickable
+        b Filters: {{ filter_summary }}
+      div.timeline-filters-panel.shadow-sm
+        table
+          tr
+            th.pt-2.pr-3
+              label(for="timeline-filter-host") Host:
+            td
+              select#timeline-filter-host.form-control.form-control-sm(v-model="filter_hostname")
                 option(:value='null') All
                 option(v-for="host in hosts", :value="host") {{ host }}
-        tr
-          th.pt-2.pr-3
-            label Client:
-          td
-            select(v-model="filter_client")
-              option(:value='null') All
-              option(v-for="client in clients", :value="client") {{ client }}
-        tr
-          th.pt-2.pr-3
-            label AFK:
-          td
-            b-form-checkbox(v-model="filter_afk" size="sm" switch)
-              | Filter AFK
-        tr
-          th.pt-2.pr-3
-            label Merge:
-          td
-            b-form-checkbox(v-model="filter_merge_similar" size="sm" switch)
-              | Merge by app
-        tr
-          th.pt-2.pr-3
-            label Categories:
-          td
-            select(@change="onCategorySelect($event)", :value="''")
-              option(value="" disabled) {{ filter_categories.length > 0 ? 'Add category...' : 'All' }}
-              option(v-for="cat in category_options", :key="cat.text", :value="cat.text") {{ cat.text }}
-            div.mt-1(v-if="filter_categories.length > 0")
-              span.badge.badge-info.mr-1(v-for="(cat, idx) in filter_categories", :key="idx")
-                | {{ cat.join(' > ') }}
-                button.ml-1.close.small(@click="removeCategory(idx)", type="button", style="font-size: 0.8rem") &times;
-  div.d-inline-block.border.rounded.p-2.mr-2(v-if="num_events !== 0")
-    | Events shown: {{ num_events }}
-  b-alert.d-inline-block.p-2.mb-0.mt-2(v-if="num_events === 0", variant="warning", show)
+          tr
+            th.pt-2.pr-3
+              label(for="timeline-filter-client") Client:
+            td
+              select#timeline-filter-client.form-control.form-control-sm(v-model="filter_client")
+                option(:value='null') All
+                option(v-for="client in clients", :value="client") {{ client }}
+          tr
+            th.pt-2.pr-3
+              label(for="timeline-filter-duration") Duration:
+            td
+              select#timeline-filter-duration.form-control.form-control-sm(v-model="filter_duration")
+                option(:value='null') All
+                option(:value='2') 2+ secs
+                option(:value='5') 5+ secs
+                option(:value='10') 10+ secs
+                option(:value='30') 30+ sec
+                option(:value='1 * 60') 1+ mins
+                option(:value='2 * 60') 2+ mins
+                option(:value='3 * 60') 3+ mins
+                option(:value='10 * 60') 10+ mins
+                option(:value='30 * 60') 30+ mins
+                option(:value='1 * 60 * 60') 1+ hrs
+                option(:value='2 * 60 * 60') 2+ hrs
+          tr
+            th.pt-2.pr-3
+              label AFK:
+            td
+              b-form-checkbox(v-model="filter_afk" size="sm" switch)
+                | Filter AFK
+          tr
+            th.pt-2.pr-3
+              label Merge:
+            td
+              b-form-checkbox(v-model="filter_merge_similar" size="sm" switch)
+                | Merge by app
+          tr
+            th.pt-2.pr-3
+              label(for="timeline-filter-categories") Categories:
+            td
+              select#timeline-filter-categories.form-control.form-control-sm(@change="onCategorySelect($event)", :value="''")
+                option(value="" disabled) {{ filter_categories.length > 0 ? 'Add category...' : 'All' }}
+                option(v-for="cat in category_options", :key="cat.text", :value="cat.text") {{ cat.text }}
+              div.mt-1(v-if="filter_categories.length > 0")
+                span.badge.badge-info.mr-1(v-for="(cat, idx) in filter_categories", :key="idx")
+                  | {{ cat.join(' > ') }}
+                  button.ml-1.close.small(@click="removeCategory(idx)", type="button", aria-label="Remove category", style="font-size: 0.85rem; line-height: 1") &times;
+    small.text-muted.ml-auto.mb-2
+      | Scroll to zoom, swipe to pan, arrow keys to navigate
+
+  b-alert.mb-2(v-if="buckets !== null && num_events === 0", variant="warning", show)
     | No events match selected criteria. Timeline is not updated.
-  div.float-right.small.text-muted.pt-3
-        tr
-          th.pt-2.pr-3
-            label Duration:
-          td
-            select(v-model="filter_duration")
-              option(:value='null') All
-              option(:value='2') 2+ secs
-              option(:value='5') 5+ secs
-              option(:value='10') 10+ secs
-              option(:value='30') 30+ sec
-              option(:value='1 * 60') 1+ mins
-              option(:value='2 * 60') 2+ mins
-              option(:value='3 * 60') 3+ mins
-              option(:value='10 * 60') 10+ mins
-              option(:value='30 * 60') 30+ mins
-              option(:value='1 * 60 * 60') 1+ hrs
-              option(:value='2 * 60 * 60') 2+ hrs
-  div(style="float: right; color: #999").d-inline-block.pt-3
-    | Scroll to zoom, swipe/horizontal-scroll to pan, arrow keys to navigate
 
   div(v-if="buckets !== null")
-    div(style="clear: both")
     vis-timeline(:buckets="buckets", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane", :updateTimelineWindow='updateTimelineWindow')
 
     aw-devonly(reason="Not ready for production, still experimenting")
@@ -384,18 +384,56 @@ export default {
 </script>
 
 <style scoped>
-details {
+.timeline-toolbar {
+  row-gap: 0;
+}
+
+.timeline-chip {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+  background: #fff;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.875rem;
+  line-height: 1.25;
+}
+
+.timeline-chip--clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.timeline-chip--clickable:hover {
+  background: #f8f9fa;
+}
+
+.timeline-filters {
   position: relative;
 }
 
-details[open] summary ~ * {
-  visibility: visible;
+.timeline-filters > summary {
+  list-style: none;
+}
+
+.timeline-filters > summary::-webkit-details-marker {
+  display: none;
+}
+
+.timeline-filters-panel {
+  display: none;
   position: absolute;
-  border: 1px solid #ddd;
-  border-radius: 5px;
   left: 0;
-  top: 2.7em;
-  background: white;
+  top: calc(100% + 4px);
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  padding: 0.75rem 1rem;
   z-index: 100;
+  min-width: 320px;
+}
+
+.timeline-filters[open] .timeline-filters-panel {
+  display: block;
 }
 </style>

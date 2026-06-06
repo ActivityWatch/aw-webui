@@ -15,10 +15,10 @@ div
     div
       b-form-input(size="sm" v-model="always_active_pattern_editing" :state="(enabled || null) && valid")
       small.text-right
-        div(v-if="enabled && valid" style="color: #0A0") Enabled
-        div(v-else-if="enabled" style="color: #A00") Invalid pattern
-        div(v-else, style="color: gray") Disabled
-        div(v-if="enabled && valid && broad_pattern" style="color: #A00") Pattern too broad
+        div.text-success(v-if="enabled && valid") Enabled
+        div.text-danger(v-else-if="enabled") Invalid pattern
+        div.text-muted(v-else) Disabled
+        div.text-danger(v-if="enabled && valid && broad_pattern") Pattern too broad
 
 </template>
 
