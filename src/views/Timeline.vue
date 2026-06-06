@@ -4,18 +4,9 @@ div
 
   input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration").mb-3
 
-  // Toolbar: event count, swimlane selector, filters dropdown, and keyboard
-  // hint, laid out as a flex row so they wrap cleanly at narrow widths
-  // (replacing the prior float/inline-block hack that overlapped at 800px).
+  // Toolbar: filters (primary), display kebab (swimlanes etc.), event count,
+  // and keyboard hint. Flex-wrap so it doesn't overlap at narrow widths.
   div.timeline-toolbar.d-flex.flex-wrap.align-items-center.mb-2
-    div.timeline-chip.mr-2.mb-2
-      | Events shown: {{ num_events }}
-    div.timeline-chip.mr-2.mb-2
-      label.mb-0.mr-1(for="timeline-swimlane") Swimlanes:
-      select#timeline-swimlane.form-control.form-control-sm.d-inline-block(v-model="swimlane", style="width: auto")
-        option(:value='null') None
-        option(value='category') Categories
-        option(value='bucketType') Bucket Specific
     details.timeline-filters.mr-2.mb-2(ref="filtersDetails")
       summary.timeline-chip.timeline-chip--clickable
         icon.mr-1(name="filter")
@@ -76,6 +67,31 @@ div
                 span.badge.badge-info.mr-1(v-for="(cat, idx) in filter_categories", :key="idx")
                   | {{ cat.join(' > ') }}
                   button.ml-1.close.small(@click="removeCategory(idx)", type="button", aria-label="Remove category", style="font-size: 0.85rem; line-height: 1") &times;
+
+    // Display options (swimlanes, future visual toggles) tucked behind a
+    // ghost kebab so they don't compete visually with Filters.
+    b-dropdown.kebab-dropdown.mr-2.mb-2(
+      size="sm"
+      variant="outline-secondary"
+      toggle-class="border-0"
+      no-caret
+      right
+      title="Display options"
+      aria-label="Display options"
+    )
+      template(v-slot:button-content)
+        icon(name="ellipsis-v")
+      b-dropdown-header Swimlanes
+      b-dropdown-item-button(
+        v-for="opt in swimlaneOptions"
+        :key="String(opt.value)"
+        :active="swimlane === opt.value"
+        @click="swimlane = opt.value"
+      ) {{ opt.text }}
+
+    div.timeline-chip.mr-2.mb-2.text-muted
+      | {{ num_events }} events shown
+
     small.text-muted.ml-auto.mb-2
       | Scroll to zoom, swipe to pan, arrow keys to navigate
 
@@ -93,6 +109,7 @@ div
 
 <script lang="ts">
 import 'vue-awesome/icons/filter';
+import 'vue-awesome/icons/ellipsis-v';
 import _ from 'lodash';
 import { mapState } from 'pinia';
 import { useSettingsStore } from '~/stores/settings';
@@ -121,6 +138,11 @@ export default {
       filter_merge_similar: false,
       filter_categories: [],
       swimlane: null,
+      swimlaneOptions: [
+        { value: null, text: 'None' },
+        { value: 'category', text: 'Group by category' },
+        { value: 'bucketType', text: 'Group by bucket type' },
+      ],
       updateTimelineWindow: true,
     };
   },

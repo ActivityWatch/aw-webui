@@ -19,24 +19,25 @@ div
         span {{ periodReadableRange }}
 
   div.mb-2.d-flex.flex-wrap.align-items-center
-    b-button-group.mr-2.mb-2
-      b-button.px-3(
-        v-for="opt in primaryPeriods"
-        :key="opt.value"
-        :pressed="periodLength === opt.value"
-        @click="setDate(_date, opt.value)"
-        variant="outline-dark"
+    div.d-flex.mr-2.mb-2
+      b-button-group
+        b-button.px-3(
+          v-for="opt in primaryPeriods"
+          :key="opt.value"
+          :pressed="periodLength === opt.value"
+          @click="setDate(_date, opt.value)"
+          variant="outline-dark"
+          size="sm"
+        ) {{ opt.text }}
+      // Kebab sits outside the b-button-group so the last primary pill
+      // keeps its rounded right corner. Slight negative margin makes them
+      // still visually adjacent.
+      b-dropdown.kebab-dropdown.ml-1(
         size="sm"
-      ) {{ opt.text }}
-      // Extended range picker. Kebab keeps the primary pill row uncluttered;
-      // adding e.g. "Custom range" later just drops in as another item.
-      b-dropdown.kebab-dropdown(
-        size="sm"
-        variant="outline-dark"
-        toggle-class="border-0 px-2"
+        variant="outline-secondary"
+        toggle-class="border-0"
         no-caret
         right
-        :pressed="!isPrimaryPeriod"
         :title="extendedPeriodLabel || 'More ranges'"
         aria-label="More date ranges"
       )
