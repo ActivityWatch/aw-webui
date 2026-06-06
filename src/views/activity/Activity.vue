@@ -21,13 +21,33 @@ div
   div.mb-2.d-flex.flex-wrap.align-items-center
     b-button-group.mr-2.mb-2
       b-button.px-3(
-        v-for="opt in periodLengthsButtons"
+        v-for="opt in primaryPeriods"
         :key="opt.value"
         :pressed="periodLength === opt.value"
         @click="setDate(_date, opt.value)"
         variant="outline-dark"
         size="sm"
       ) {{ opt.text }}
+      // Extended range picker. Kebab keeps the primary pill row uncluttered;
+      // adding e.g. "Custom range" later just drops in as another item.
+      b-dropdown.kebab-dropdown(
+        size="sm"
+        variant="outline-dark"
+        toggle-class="border-0 px-2"
+        no-caret
+        right
+        :pressed="!isPrimaryPeriod"
+        :title="extendedPeriodLabel || 'More ranges'"
+        aria-label="More date ranges"
+      )
+        template(v-slot:button-content)
+          icon(name="ellipsis-v")
+        b-dropdown-item-button(
+          v-for="opt in extendedPeriods"
+          :key="opt.value"
+          :active="periodLength === opt.value"
+          @click="setDate(_date, opt.value)"
+        ) {{ opt.text }}
 
     b-input-group.mr-2.mb-2(size="sm" style="width: auto")
       b-input-group-prepend
@@ -186,6 +206,7 @@ import 'vue-awesome/icons/times';
 import 'vue-awesome/icons/save';
 import 'vue-awesome/icons/question-circle';
 import 'vue-awesome/icons/filter';
+import 'vue-awesome/icons/ellipsis-v';
 
 import { useSettingsStore } from '~/stores/settings';
 import { useCategoryStore } from '~/stores/categories';
@@ -272,6 +293,24 @@ export default {
     },
     periodLengthsButtons: function () {
       return Object.entries(this.periodLengths).map(([value, text]) => ({ value, text }));
+    },
+    // Rolling windows ("Last N days") are surfaced as primary buttons —
+    // they always represent a full period of data, whereas calendar
+    // periods (week/month/year) show only a partial range until the
+    // boundary is reached. Calendar periods stay in the kebab for users
+    // who need exact week/month boundaries (week-over-week comparisons).
+    primaryPeriods: function () {
+      return this.periodLengthsButtons.filter(p => ['day', 'last7d', 'last30d'].includes(p.value));
+    },
+    extendedPeriods: function () {
+      return this.periodLengthsButtons.filter(p => !['day', 'last7d', 'last30d'].includes(p.value));
+    },
+    isPrimaryPeriod: function () {
+      return ['day', 'last7d', 'last30d'].includes(this.periodLength);
+    },
+    extendedPeriodLabel: function () {
+      const opt = this.extendedPeriods.find(p => p.value === this.periodLength);
+      return opt ? opt.text : '';
     },
     periodIsBrowseable: function () {
       return ['day', 'week', 'month', 'year'].includes(this.periodLength);
