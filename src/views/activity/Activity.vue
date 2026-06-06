@@ -29,16 +29,26 @@ div
           variant="outline-dark"
           size="sm"
         ) {{ opt.text }}
-      // Kebab sits outside the b-button-group so the last primary pill
-      // keeps its rounded right corner. Slight negative margin makes them
-      // still visually adjacent.
+        // If an extended period is active (week/month/year), surface it as
+        // an extra pressed pill so the user sees what's selected — the kebab
+        // alone wouldn't communicate that. Click toggles it back off (back
+        // to "day") so it's not stuck.
+        b-button.px-3(
+          v-if="!isPrimaryPeriod"
+          pressed
+          variant="outline-dark"
+          size="sm"
+          @click="setDate(_date, 'day')"
+        ) {{ extendedPeriodLabel }}
+      // Kebab sits outside the b-button-group so the last pressed pill
+      // (whichever it is) keeps its rounded right corner.
       b-dropdown.kebab-dropdown.ml-1(
         size="sm"
         variant="outline-secondary"
         toggle-class="border-0"
         no-caret
         right
-        :title="extendedPeriodLabel || 'More ranges'"
+        title="More ranges"
         aria-label="More date ranges"
       )
         template(v-slot:button-content)
