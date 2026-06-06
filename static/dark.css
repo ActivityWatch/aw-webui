@@ -116,15 +116,19 @@ hr {
   color: #212529 !important;
 }
 
-[class*=table-responsive-] > .table {
+[class*=table-responsive-] > .table,
+.table {
   color: #e9ebf0 !important;
 }
 
-[class*=table-responsive-] > .table * {
+[class*=table-responsive-] > .table *,
+.table * {
   border-color: #454d55 !important;
 }
 
-[class*=table-responsive-] > .table tr:hover:not(thead tr) {
+[class*=table-responsive-] > .table tr:hover:not(thead tr),
+.table.b-table.table-hover tbody tr:hover,
+.table-hover tbody tr:hover {
   color: #fff !important;
   background-color: hsla(0, 0%, 100%, .075) !important;
 }
