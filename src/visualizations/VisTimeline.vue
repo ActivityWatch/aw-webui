@@ -66,6 +66,8 @@ import 'vis-timeline/styles/vis-timeline-graph2d.css';
 import EventEditor from '~/components/EventEditor.vue';
 
 let isAlertWarningShown = false;
+const PIXELS_PER_WHEEL_LINE = 40;
+const PIXELS_PER_WHEEL_PAGE = 800;
 
 interface IChartDataItem {
   bucketId: string;
@@ -218,7 +220,13 @@ export default {
       const currentWindow = this.timeline.getWindow();
       const start = currentWindow.start.valueOf();
       const end = currentWindow.end.valueOf();
-      const diff = (event.deltaX / 120) * ((end - start) / 20);
+      let deltaX = event.deltaX;
+      if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) {
+        deltaX *= PIXELS_PER_WHEEL_LINE;
+      } else if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
+        deltaX *= PIXELS_PER_WHEEL_PAGE;
+      }
+      const diff = (deltaX / 120) * ((end - start) / 20);
 
       this.timeline.setWindow(new Date(start + diff), new Date(end + diff), {
         animation: false,
