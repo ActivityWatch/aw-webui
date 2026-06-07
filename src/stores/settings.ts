@@ -6,6 +6,7 @@ import { SavedQuery } from '~/util/savedQueries';
 import { View, defaultViews } from '~/stores/views';
 import type { PrivacyFilterRule } from '~/util/privacyFilters';
 import { isEqual } from 'lodash';
+import { AppLocale, i18n, isAppLocale, setAppLocale } from '~/i18n';
 
 function jsonEq(a: any, b: any) {
   const jsonA = JSON.parse(JSON.stringify(a));
@@ -32,6 +33,7 @@ interface State {
   useColorFallback: boolean;
   landingpage: string;
   theme: 'light' | 'dark' | 'auto';
+  locale: string;
 
   newReleaseCheckData: Record<string, any>;
   userSatisfactionPollData: {
@@ -71,6 +73,7 @@ export const useSettingsStore = defineStore('settings', {
     landingpage: '/home',
 
     theme: 'auto',
+    locale: 'en',
 
     newReleaseCheckData: {
       isEnabled: true,
@@ -141,6 +144,10 @@ export const useSettingsStore = defineStore('settings', {
       // 1. Server settings take priority
       for (const key of Object.keys(server_settings)) {
         if (key.startsWith('_')) continue;
+        if (key === 'locale' && !isAppLocale(server_settings[key])) {
+          console.warn('Ignoring invalid locale from server:', server_settings[key]);
+          continue;
+        }
         storage[key] = server_settings[key];
         used.add(key);
       }
@@ -168,6 +175,12 @@ export const useSettingsStore = defineStore('settings', {
             storage[key] = parsed;
           } else if (raw === 'true' || raw === 'false') {
             storage[key] = raw === 'true';
+          } else if (key === 'locale') {
+            if (isAppLocale(raw)) {
+              storage[key] = raw;
+            } else {
+              console.warn('Ignoring invalid locale from storage:', raw);
+            }
           } else {
             storage[key] = raw;
           }
@@ -176,6 +189,15 @@ export const useSettingsStore = defineStore('settings', {
         }
       }
       this.$patch({ ...storage, _loaded: true });
+
+      const localeFromServer = 'locale' in server_settings;
+      const localeFromLocalStorage = localStorage.getItem('locale') != null;
+
+      if ((localeFromServer || localeFromLocalStorage) && isAppLocale(this.locale)) {
+        setAppLocale(this.locale);
+      } else if (isAppLocale(i18n.locale)) {
+        this.$patch({ locale: i18n.locale as AppLocale });
+      }
 
       // Since `requestTimeout` is used to initialize the client, we need to set it again
       // https://github.com/ActivityWatch/activitywatch/issues/979

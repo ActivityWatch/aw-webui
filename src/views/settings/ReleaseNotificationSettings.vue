@@ -2,11 +2,11 @@
 div
   div.d-flex.justify-content-between
     div
-      h5.mb-0 New release notification
+      h5.mb-0 {{ $t('settings.releaseNotification.title') }}
     div
       b-form-checkbox(v-model="isEnabled" switch)
   small
-    | We will send you a notification if there is a new release available for download, this check will happen at most once per day.
+    | {{ $t('settings.releaseNotification.help') }}
 </template>
 
 <script lang="ts">
@@ -16,8 +16,7 @@ export default {
   computed: {
     isEnabled: {
       get() {
-        const settingsStore = useSettingsStore();
-        return settingsStore.newReleaseCheckData.isEnabled;
+        return useSettingsStore().newReleaseCheckData.isEnabled;
       },
       set(value) {
         const settingsStore = useSettingsStore();

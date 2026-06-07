@@ -12,6 +12,7 @@
     "test": "jest",
     "test:unit": "jest --selectProjects jsdom",
     "test:e2e": "vue-cli-service test:e2e",
+    "check:locales": "node scripts/check-locales.mjs",
     "lint": "vue-cli-service lint",
     "lint_old": "eslint --ignore-path=.gitignore --ext .vue,.js,.ts ."
   },
@@ -69,6 +70,7 @@
     "vue-color": "^2.8.1",
     "vue-d3-sunburst": "git+https://github.com/ErikBjare/Vue.D3.sunburst.git#patch-1",
     "vue-datetime": "^1.0.0-beta.13",
+    "vue-i18n": "^8.28.2",
     "vuedraggable": "^2.24.3",
     "weekstart": "^1.0.1",
     "xss": "^1.0.14"

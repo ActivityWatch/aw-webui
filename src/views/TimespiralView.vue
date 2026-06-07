@@ -1,8 +1,8 @@
 <template lang="pug">
 div
-  h1 Timespiral
+  h1 {{ $t('timespiral.title') }}
   b-alert(show, variant="info")
-    | This is a work-in-progress experiment.
+    | {{ $t('timespiral.wip') }}
   div Bucket: {{ bucketId }}
   div Events: {{ events.length }}
   Timespiral(:events="events")

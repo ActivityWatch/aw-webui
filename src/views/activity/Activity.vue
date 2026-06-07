@@ -1,21 +1,21 @@
 <template lang="pug">
 div
-  h3.mb-0 Activity #[span.d-sm-inline.d-none for ]
+  h3.mb-0 {{ $t('activity.title') }} #[span.d-sm-inline.d-none {{ $t('activity.for') }} ]
     span.text-muted.d-sm-inline-block.d-block
       span(v-if="periodIsBrowseable") {{ timeperiod | friendlyperiod }}
-      span(v-else) {{ {"last7d": "last 7 days", "last30d": "last 30 days"}[periodLength] }}
+      span(v-else) {{ periodLengthTitle }}
 
   div.mb-3.text-muted(style="font-size: 0.9em;")
     ul.list-group.list-group-horizontal-md
       li.list-group-item.pl-0.pr-3.py-0.border-0
-        b.mr-1 Host:
+        b.mr-1 {{ $t('activity.host') }}
         span {{ host }}
       li.list-group-item.pl-0.pr-3.py-0.border-0
-        b.mr-1 Time active:
+        b.mr-1 {{ $t('activity.timeActive') }}
         span {{ activityStore.active.duration | friendlyduration }}
     ul.list-group.list-group-horizontal-md(v-if="periodLength != 'day'")
       li.list-group-item.pl-0.pr-3.py-0.border-0
-        b.mr-1 Query range:
+        b.mr-1 {{ $t('activity.queryRange') }}
         span {{ periodReadableRange }}
 
   div.mb-2.d-flex
@@ -41,34 +41,34 @@ div
         b-button.px-2(:pressed.sync="showOptions", variant="outline-dark")
           icon(name="filter")
           span.d-none.d-md-inline
-            |  Filters
+            |  {{ $t('activity.filters') }}
             b-badge(pill, variant="secondary" v-if="filters_set > 0").ml-2 {{ filters_set }}
         b-button.px-2(@click="refresh(true)", variant="outline-dark")
           icon(name="sync")
           span.d-none.d-md-inline
-            |  Refresh
+            |  {{ $t('activity.refresh') }}
 
   div.row(v-if="showOptions" style="background-color: #EEE;").my-3.py-3
     div.col-md-12
-      h5 Filters
+      h5 {{ $t('activity.filtersTitle') }}
     div.col-md-6
       b-form-checkbox(v-model="filter_afk" size="sm")
-        | Exclude AFK time
+        | {{ $t('activity.excludeAfk') }}
         icon#filterAFKHelp(name="question-circle" style="opacity: 0.4")
-        b-tooltip(target="filterAFKHelp" v-b-tooltip.hover title="Filter away time where the AFK watcher didn't detect any input.")
+        b-tooltip(target="filterAFKHelp" v-b-tooltip.hover :title="$t('activity.filterAfkTooltip')")
       b-form-checkbox(v-model="include_audible" :disabled="!filter_afk" size="sm")
-        | Count audible browser tab as active
+        | {{ $t('activity.audibleActive') }}
         icon#includeAudibleHelp(name="question-circle" style="opacity: 0.4")
-        b-tooltip(target="includeAudibleHelp" v-b-tooltip.hover title="If the active window is an audible browser tab, count as active. Requires a browser watcher.")
+        b-tooltip(target="includeAudibleHelp" v-b-tooltip.hover :title="$t('activity.filterAudibleTooltip')")
 
       b-form-checkbox(v-if="devmode" v-model="include_stopwatch" size="sm")
         // WIP: https://github.com/ActivityWatch/aw-webui/pull/368
-        | Include manually logged events (stopwatch)
+        | {{ $t('activity.includeStopwatch') }}
         br
-        | #[b Note:] WIP. Stopwatch events shadow other events, when overlapping with them. Only shown in devmode.
+        | {{ $t('activity.stopwatchWipNote') }}
 
     div.col-md-6.mt-2.mt-md-0
-      b-form-group(label="Show category" label-cols="5" label-cols-lg="4" style="font-size: 0.88em")
+      b-form-group(:label="$t('activity.showCategory')" label-cols="5" label-cols-lg="4" style="font-size: 0.88em")
         b-form-select(v-model="filter_category", :options="categoryStore.category_select(true)" size="sm")
 
 
@@ -86,13 +86,13 @@ div
         h6
           icon(name="plus")
           span.d-none.d-md-inline
-            | New view
+            | {{ $t('activity.newView') }}
 
-  b-modal(id="new_view" ref="new_view" title="New view" @show="resetModal" @hidden="resetModal" @ok="handleOk")
+  b-modal(id="new_view" ref="new_view" :title="$t('activity.newViewTitle')" @show="resetModal" @hidden="resetModal" @ok="handleOk")
     div.my-1
-      b-input-group.my-1(prepend="ID")
+      b-input-group.my-1(:prepend="$t('activity.viewId')")
         b-form-input(v-model="new_view.id")
-      b-input-group.my-1(prepend="Name")
+      b-input-group.my-1(:prepend="$t('activity.viewName')")
         b-form-input(v-model="new_view.name")
 
   div
@@ -100,7 +100,7 @@ div
 
     aw-devonly
       b-btn(id="load-demo", @click="load_demo")
-        | Load demo data
+        | {{ $t('activity.loadDemo') }}
 </template>
 
 <style lang="scss" scoped>
@@ -233,19 +233,28 @@ export default {
     periodLengths: function () {
       const settingsStore = useSettingsStore();
       let periods: Record<string, string> = {
-        day: 'day',
-        week: 'week',
-        month: 'month',
+        day: this.$t('activity.periodDay').toString(),
+        week: this.$t('activity.periodWeek').toString(),
+        month: this.$t('activity.periodMonth').toString(),
       };
       if (settingsStore.showYearly) {
-        periods['year'] = 'year';
+        periods['year'] = this.$t('activity.periodYear').toString();
       }
       periods = {
         ...periods,
-        last7d: '7 days',
-        last30d: '30 days',
+        last7d: this.$t('activity.periodLast7d').toString(),
+        last30d: this.$t('activity.periodLast30d').toString(),
       };
       return periods;
+    },
+    periodLengthTitle: function () {
+      if (this.periodLength === 'last7d') {
+        return this.$t('activity.periodLast7dTitle');
+      }
+      if (this.periodLength === 'last30d') {
+        return this.$t('activity.periodLast30dTitle');
+      }
+      return '';
     },
     periodIsBrowseable: function () {
       return ['day', 'week', 'month', 'year'].includes(this.periodLength);
@@ -431,18 +440,18 @@ export default {
 
     checkFormValidity() {
       // All checks must be false for check to pass
-      const checks = {
-        // Check if view id is unique
-        'ID is not unique': this.viewsStore.views.map(v => v.id).includes(this.new_view.id),
-        'Missing ID': this.new_view.id === '',
-        'Missing name': this.new_view.name === '',
-      };
-      const errors = Object.entries(checks)
-        .filter(([_k, v]) => v)
-        .map(([k, _v]) => k);
+      const checks: [string, boolean][] = [
+        [
+          this.$t('activity.errIdNotUnique').toString(),
+          this.viewsStore.views.map(v => v.id).includes(this.new_view.id),
+        ],
+        [this.$t('activity.errMissingId').toString(), this.new_view.id === ''],
+        [this.$t('activity.errMissingName').toString(), this.new_view.name === ''],
+      ];
+      const errors = checks.filter(([, v]) => v).map(([k]) => k);
       const valid = errors.length == 0;
       if (!valid) {
-        alert(`Invalid form input: ${errors}`);
+        alert(this.$t('activity.invalidForm', { errors: errors.join(', ') }));
       }
       return valid;
     },

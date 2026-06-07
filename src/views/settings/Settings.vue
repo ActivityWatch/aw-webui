@@ -1,6 +1,10 @@
 <template lang="pug">
 div
-  h3 Settings
+  h3 {{ $t('settings.title') }}
+
+  hr
+
+  LanguageSettings
 
   hr
 
@@ -47,6 +51,7 @@ div
 import { useSettingsStore } from '~/stores/settings';
 import { useCategoryStore } from '~/stores/categories';
 
+import LanguageSettings from '~/views/settings/LanguageSettings.vue';
 import DaystartSettings from '~/views/settings/DaystartSettings.vue';
 import TimelineDurationSettings from '~/views/settings/TimelineDurationSettings.vue';
 import ReleaseNotificationSettings from '~/views/settings/ReleaseNotificationSettings.vue';
@@ -61,6 +66,7 @@ import PrivacyFilterSettings from '~/views/settings/PrivacyFilterSettings.vue';
 export default {
   name: 'Settings',
   components: {
+    LanguageSettings,
     DaystartSettings,
     TimelineDurationSettings,
     ReleaseNotificationSettings,
@@ -75,7 +81,7 @@ export default {
   beforeRouteLeave(to, from, next) {
     const categoryStore = useCategoryStore();
     if (categoryStore.classes_unsaved_changes) {
-      if (confirm('Your categories have unsaved changes, are you sure you want to leave?')) {
+      if (confirm(this.$t('settings.unsavedCategoriesLeave'))) {
         next();
       } else {
         next(false);

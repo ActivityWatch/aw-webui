@@ -6,7 +6,7 @@
 
 <template lang="pug">
 div
-  h3.mb-0 Trends for {{ timeperiod | friendlyperiod }}
+  h3.mb-0 {{ $t('trends.titlePrefix') }} {{ timeperiod | friendlyperiod }}
 
   // Select a hostname from the ones available in the store
   b-input-group(size="sm")
@@ -22,7 +22,7 @@ div
         | #[b Host:] {{ host }}
 
   b-alert(style="warning" show)
-    | This feature is still in early development.
+    | {{ $t('trends.earlyDev') }}
 
   div
     aw-timeline-barchart(:datasets="datasets" :height="100")
@@ -35,7 +35,7 @@ div
 
     aw-devonly
       b-btn(id="load-demo", @click="load_demo")
-        | Load demo data
+        | {{ $t('trends.loadDemo') }}
 </template>
 
 <style lang="scss" scoped></style>

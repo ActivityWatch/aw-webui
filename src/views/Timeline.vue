@@ -1,14 +1,14 @@
 <template lang="pug">
 div
-  h2 Timeline
+  h2 {{ $t('timeline.title') }}
 
   input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration").mb-3
 
   // blocks
   div.d-inline-block.border.rounded.p-2.mr-2
-    | Events shown:  {{ num_events }}
+    | {{ $t('timeline.eventsShown') }}  {{ num_events }}
   div.d-inline-block.border.rounded.p-2.mr-2
-    | Swimlanes:
+    | {{ $t('timeline.swimlanes') }}
     select(v-model="swimlane")
       option(:value='null') None
       option(value='category') Categories
@@ -37,13 +37,13 @@ div
             label AFK:
           td
             b-form-checkbox(v-model="filter_afk" size="sm" switch)
-              | Filter AFK
+              | {{ $t('timeline.filterAfk') }}
         tr
           th.pt-2.pr-3
             label Merge:
           td
             b-form-checkbox(v-model="filter_merge_similar" size="sm" switch)
-              | Merge by app
+              | {{ $t('timeline.mergeByApp') }}
         tr
           th.pt-2.pr-3
             label Categories:
@@ -58,7 +58,7 @@ div
   div.d-inline-block.border.rounded.p-2.mr-2(v-if="num_events !== 0")
     | Events shown: {{ num_events }}
   b-alert.d-inline-block.p-2.mb-0.mt-2(v-if="num_events === 0", variant="warning", show)
-    | No events match selected criteria. Timeline is not updated.
+    | {{ $t('timeline.noEvents') }}
   div.float-right.small.text-muted.pt-3
         tr
           th.pt-2.pr-3
@@ -78,7 +78,7 @@ div
               option(:value='1 * 60 * 60') 1+ hrs
               option(:value='2 * 60 * 60') 2+ hrs
   div(style="float: right; color: #999").d-inline-block.pt-3
-    | Scroll to zoom, swipe/horizontal-scroll to pan, arrow keys to navigate
+    | {{ $t('timeline.scrollHint') }}
 
   div(v-if="buckets !== null")
     div(style="clear: both")
@@ -87,7 +87,7 @@ div
     aw-devonly(reason="Not ready for production, still experimenting")
       aw-calendar(:buckets="buckets")
   div(v-else)
-    h1.aw-loading Loading...
+    h1.aw-loading {{ $t('timeline.loading') }}
 </template>
 
 <script lang="ts">
