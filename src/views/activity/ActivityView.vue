@@ -120,7 +120,9 @@ export default {
       await useViewsStore().removeVisualization({ view_id: this.view.id, el_id: id });
     },
     isVisLarge(el) {
-      return el.type == 'sunburst_clock' || el.type == 'vis_timeline';
+      return (
+        el.type == 'sunburst_clock' || el.type == 'vis_timeline' || el.type == 'timeline_barchart'
+      );
     },
   },
 };
