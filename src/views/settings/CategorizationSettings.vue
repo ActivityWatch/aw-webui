@@ -18,8 +18,10 @@ div
     | You can also find and share categorization rule presets on #[a(href="https://forum.activitywatch.net/c/projects/category-rules") the forum].
     | For help on how to write categorization rules, see #[a(href="https://docs.activitywatch.net/en/latest/features/categorization.html") the documentation].
 
-  // Category set switcher
-  div.my-3.p-3(style="background: var(--bs-light, #f8f9fa); border-radius: 4px;")
+  // Category set switcher. bg-light + .rounded so dark.css's .bg-light
+  // override flips the background in dark mode instead of leaving an
+  // inline white block on a dark canvas.
+  div.my-3.p-3.bg-light.rounded
     div.d-flex.align-items-center.flex-wrap(style="gap: 0.5rem;")
       span.font-weight-bold(style="white-space: nowrap") Category set:
       b-select(
@@ -44,10 +46,7 @@ div
         variant="outline-danger"
         size="sm"
       ) Delete set
-    div.mt-1(
-      v-if="categoryStore.category_sets.length > 1"
-      style="font-size: 0.85em; color: var(--bs-secondary, #6c757d);"
-    )
+    div.mt-1.small.text-muted(v-if="categoryStore.category_sets.length > 1")
       | {{ categoryStore.category_sets.length }} sets available — switch sets to use different rule profiles.
 
   div.my-4
