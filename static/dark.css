@@ -423,6 +423,49 @@ div[style="color: rgb(85, 85, 85); font-size: 0.9em;"] {
   border-color: #3d444d !important;
 }
 
+/* Outline buttons need explicit color overrides — the generic
+   `button { color: #e9ebf0 !important }` rule above wipes Bootstrap's
+   variant text colors on <button>s, while <label class="btn">s
+   (e.g. the file-input "Import" button) escape that rule and keep
+   the Bootstrap defaults. Pin every outline-* variant explicitly so
+   they match across both element types. */
+.btn-outline-primary,
+label.btn-outline-primary {
+  color: #5cb3ff !important;
+  border-color: #5cb3ff !important;
+}
+
+.btn-outline-primary:hover,
+label.btn-outline-primary:hover,
+.btn-outline-primary:not(:disabled):not(.disabled).active,
+.btn-outline-primary:not(:disabled):not(.disabled):active {
+  background-color: #5cb3ff !important;
+  color: #0f131a !important;
+  border-color: #5cb3ff !important;
+}
+
+.btn-outline-warning,
+label.btn-outline-warning {
+  color: #ffd84d !important;
+  border-color: #ffd84d !important;
+}
+
+.btn-outline-warning:not(:hover) {
+  background-color: transparent !important;
+}
+
+.btn-outline-danger,
+label.btn-outline-danger {
+  color: #ff6b6b !important;
+  border-color: #ff6b6b !important;
+}
+
+.btn-outline-danger:hover {
+  background-color: #ff6b6b !important;
+  color: #0f131a !important;
+  border-color: #ff6b6b !important;
+}
+
 .btn-outline-dark:hover,
 .btn-outline-dark.active,
 .btn-outline-dark:not(:disabled):not(.disabled).active,
