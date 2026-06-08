@@ -89,6 +89,9 @@ export default {
           { name: 'DaystartSettings' },
           { name: 'TimelineDurationSettings' },
           { name: 'LandingPageSettings' },
+          // Release-notification check folded in here so it doesn't
+          // need its own one-setting "Updates" panel.
+          ...(this.$isAndroid ? [] : [{ name: 'ReleaseNotificationSettings' }]),
         ],
       };
       const appearance: Group = {
@@ -96,11 +99,6 @@ export default {
         label: 'Appearance',
         help: 'Theme and visualization colors.',
         components: [{ name: 'Theme' }, { name: 'ColorSettings' }],
-      };
-      const updates: Group = {
-        id: 'updates',
-        label: 'Updates',
-        components: [{ name: 'ReleaseNotificationSettings' }],
       };
       const categorization: Group = {
         id: 'categorization',
@@ -123,9 +121,7 @@ export default {
         components: [{ name: 'DeveloperSettings' }],
       };
 
-      const groups: Group[] = [general, appearance];
-      if (!this.$isAndroid) groups.push(updates);
-      groups.push(categorization, privacy, developer);
+      const groups: Group[] = [general, appearance, categorization, privacy, developer];
       return groups;
     },
   },
