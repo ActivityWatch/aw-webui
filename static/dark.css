@@ -139,8 +139,10 @@ hr {
 }
 
 .card {
-  background-color: #1a1d24 !important;
-  border-color: #282c32 !important;
+  /* Slightly lighter than the aw-container background (#1a1d24) so cards
+     read as elevated surfaces rather than blending with the page. */
+  background-color: #21252c !important;
+  border-color: #2f343c !important;
 }
 
 .custom-file-label {
@@ -194,6 +196,16 @@ hr {
 svg text {
   fill: #fff !important;
   text-shadow: #000 0.5px 0.5px 0.5px;
+}
+
+/* Timespiral labels are drawn via D3 .style('fill', '#888'), which loses
+   to the generic svg text rule above via !important — but the inner
+   textPath elements (date rings) inherit a dim parent and need their own
+   bump. Brighten the clock labels and date rings explicitly. */
+svg#timespiral text,
+svg#timespiral textPath {
+  fill: #d8dbe1 !important;
+  opacity: 0.95;
 }
 
 svg.appsummary g rect[style="fill: rgb(204, 204, 204);"] {
@@ -279,6 +291,25 @@ div[style="color: rgb(85, 85, 85); font-size: 0.9em;"] {
   color: hsl(355, 70%, 90%);
   background-color: hsl(355, 60%, 30%);
   border-color: hsl(355, 60%, 25%);
+}
+
+/* Links inside dark-mode colored alerts inherit Bootstrap's default
+   darker variant which sits ~equal-luminance with the alert background.
+   Push them brighter and underline so they read clearly. */
+.alert-success a,
+.alert-info a,
+.alert-warning a,
+.alert-danger a {
+  color: #fff !important;
+  text-decoration: underline;
+}
+
+.alert-success a:hover,
+.alert-info a:hover,
+.alert-warning a:hover,
+.alert-danger a:hover {
+  color: #fff !important;
+  opacity: 0.85;
 }
 
 /* ---- Components introduced by the pre-release polish PR ---- */
