@@ -14,8 +14,7 @@ div
   p
     | Rules for categorizing events. An event can only have one category. If several categories match, the deepest one will be chosen.
   p
-    | You can use the #[router-link(:to="{ path: '/settings/category-builder' }") Category Builder] to quickly create categories from uncategorized activity.
-    | You can also find and share categorization rule presets on #[a(href="https://forum.activitywatch.net/c/projects/category-rules") the forum].
+    | Find and share categorization rule presets on #[a(href="https://forum.activitywatch.net/c/projects/category-rules") the forum].
     | For help on how to write categorization rules, see #[a(href="https://docs.activitywatch.net/en/latest/features/categorization.html") the documentation].
 
   // Category set switcher. bg-light + .rounded so dark.css's .bg-light
@@ -69,12 +68,37 @@ div
         | Add category
       b-btn.float-right(@click="saveClasses", variant="success" :disabled="!classes_unsaved_changes")
         | Save
+
+  hr.mt-4
+
+  // Embedded Category Builder. Mounted only after the user opens it so
+  // the words query doesn't fire for users who just came to edit rules.
+  // Edits made via the builder show up in the rule tree above without
+  // navigating away.
+  div.mt-3
+    div.d-flex.align-items-center.flex-wrap
+      h5.mb-0 Category builder
+      small.text-muted.ml-2 Generate rules from uncategorized activity
+      b-btn.ml-auto(
+        variant="outline-primary"
+        size="sm"
+        @click="builderOpen = !builderOpen"
+        :aria-expanded="builderOpen ? 'true' : 'false'"
+        aria-controls="category-builder-collapse"
+      )
+        icon.mr-1(:name="builderOpen ? 'angle-double-up' : 'angle-double-down'")
+        | {{ builderOpen ? 'Hide builder' : 'Open builder' }}
+    b-collapse#category-builder-collapse(v-model="builderOpen")
+      div.mt-3(v-if="builderMounted")
+        CategoryBuilder(embedded)
 </template>
 <script lang="ts">
 import { mapState, mapGetters } from 'pinia';
 import CategoryEditTree from '~/components/CategoryEditTree.vue';
 import CategoryEditModal from '~/components/CategoryEditModal.vue';
 import 'vue-awesome/icons/undo';
+import 'vue-awesome/icons/angle-double-down';
+import 'vue-awesome/icons/angle-double-up';
 
 import { useCategoryStore } from '~/stores/categories';
 
@@ -88,17 +112,25 @@ export default {
   components: {
     CategoryEditTree,
     CategoryEditModal,
+    // Lazy-load the builder so visiting Categorization without opening
+    // the builder doesn't drag in its query/word-list code.
+    CategoryBuilder: () => import('~/views/settings/CategoryBuilder.vue'),
   },
   data: () => ({
     categoryStore: useCategoryStore(),
     editingId: null,
     activeSetId: 'default',
+    builderOpen: false,
+    builderMounted: false,
   }),
   computed: {
     ...mapState(useCategoryStore, ['classes_unsaved_changes']),
     ...mapGetters(useCategoryStore, ['classes_hierarchy']),
   },
   watch: {
+    builderOpen(v: boolean) {
+      if (v) this.builderMounted = true;
+    },
     'categoryStore.active_set_ids': {
       handler(newIds: string[]) {
         if (newIds && newIds.length > 0) {

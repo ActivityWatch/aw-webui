@@ -65,7 +65,10 @@ const router = new VueRouter({
     { path: '/alerts', component: Alerts },
     { path: '/timespiral', component: TimespiralView },
     { path: '/settings', component: Settings },
-    { path: '/settings/category-builder', component: CategoryBuilder },
+    // Category Builder now lives embedded inside the Categorization
+    // settings panel; keep the old standalone route as a redirect so
+    // external links / bookmarks still land somewhere useful.
+    { path: '/settings/category-builder', redirect: '/settings/categorization' },
     // :group lets the active settings panel survive reloads / be linkable.
     // The matcher excludes 'category-builder' so the more specific route above
     // wins; new groups added in Settings.vue should also be added here.

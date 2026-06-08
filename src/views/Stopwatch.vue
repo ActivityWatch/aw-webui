@@ -1,10 +1,23 @@
 <template lang="pug">
 div
-  h3.mb-3 Stopwatch
-
-  b-alert(show variant="info")
-    | Track manually-logged sessions alongside automatic tracking. To see your stopwatch totals on a dashboard,
-    | open an Activity view, click #[b Edit view], then #[b Add visualization] and pick #[b Top Stopwatch Events].
+  div.d-flex.align-items-center.mb-3
+    h3.mb-0 Stopwatch
+    button.btn.btn-link.p-0.ml-2.text-muted(
+      id="stopwatch-help"
+      type="button"
+      aria-label="About the stopwatch"
+    )
+      icon(name="question-circle")
+    b-popover(
+      target="stopwatch-help"
+      triggers="hover focus click blur"
+      placement="bottom"
+      title="About the stopwatch"
+    )
+      | Track manually-logged sessions alongside automatic tracking.
+      | To see your stopwatch totals on a dashboard, open an Activity view,
+      | click #[b Edit view], then #[b Add visualization] and pick
+      | #[b Top Stopwatch Events].
 
   b-input-group(size="lg")
     b-input(
@@ -58,6 +71,7 @@ import moment from 'moment';
 import StopwatchEntry from '../components/StopwatchEntry.vue';
 import 'vue-awesome/icons/play';
 import 'vue-awesome/icons/trash';
+import 'vue-awesome/icons/question-circle';
 
 export default {
   name: 'Stopwatch',

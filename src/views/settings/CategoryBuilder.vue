@@ -1,20 +1,16 @@
 <template lang="pug">
 div
-  h3 Categorization helper
-  div
+  // Standalone mode prints the full intro; embedded mode (used inside
+  // CategorizationSettings) omits the header so it doesn't double up
+  // with the section title that wraps the embed.
+  div(v-if="!embedded")
+    h3 Categorization helper
     p
-      | This tool will help you create categories from your uncategorized time.
-
-    p
-      | It works by fetching all uncategorized time for a recent timeperiod,
-      | and then finds the most common words (by time, not count) each of
-      | which may then either be ignored (if too broad/irrelevant), or used
-      | to create a new (sub)category, or to append the word to a pre-existing category rule.
-      | Words with less than 60s of time will not be shown.
-
-    p
-      | When you're done, you can inspect the categories in the #[router-link(:to="{ path: '/settings' }") Settings] page.
-
+      | This tool helps you create categories from your uncategorized time.
+      | It scans a recent window for the most common app/title words (by
+      | time, not count) so you can promote each one into a new category,
+      | append it to an existing rule, or ignore it. Words under 60s are
+      | hidden.
 
   div.d-flex
     div.flex-grow-1
@@ -122,9 +118,13 @@ import { isRegexBroad, validateRegex } from '~/util/validate';
 import { findCommonPhrases } from '~/util/categorization';
 
 export default {
-  name: 'aw-category-builder',
+  name: 'CategoryBuilder',
   components: { CategoryEditModal },
-  props: {},
+  props: {
+    // When embedded inside CategorizationSettings, drop the standalone
+    // page chrome so the embed reads as a subsection of the parent.
+    embedded: { type: Boolean, default: false },
+  },
   data() {
     return {
       loading: true,
