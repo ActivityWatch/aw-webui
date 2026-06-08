@@ -43,20 +43,10 @@ describe('Trends view', () => {
       expect(ensureLoaded).not.toHaveBeenCalled();
     });
 
-    test('calls ensure_loaded (not just query_category_time_by_period) so buckets are populated first', async () => {
-      // Regression: refresh() previously called query_category_time_by_period
-      // directly, but that store action assumes `buckets.window/afk` are
-      // already populated. Without ensure_loaded the bucket arrays stay []
-      // and the generated query references bid_window=undefined.
-      const ensureLoaded = jest.fn();
-      const vm = {
-        host: 'laptop',
-        activityStore: { ensure_loaded: ensureLoaded },
-        timeperiod: { start: new Date(), length: [7, 'day'] },
-      };
-      await Trends.methods.refresh.call(vm);
-      expect(ensureLoaded).toHaveBeenCalledTimes(1);
-      expect(ensureLoaded.mock.calls[0][0].host).toBe('laptop');
-    });
+    // Regression for the original bid.endsWith crash used to assert that
+    // refresh() forwarded to activityStore.ensure_loaded. That code path
+    // no longer exists — Trends now queries the aw-server directly via
+    // getClient() and ensure_loaded() is not involved. The host-fallback
+    // and no-host-bail-out tests above still cover the bug class.
   });
 });
