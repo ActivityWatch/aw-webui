@@ -83,10 +83,10 @@ export default {
 <style scoped>
 .uncategorized-hint__cog {
   color: inherit;
-  opacity: 0.7;
+  opacity: 0.45;
 }
 .uncategorized-hint__cog:hover,
 .uncategorized-hint__cog:focus {
-  opacity: 1;
+  opacity: 0.85;
 }
 </style>
