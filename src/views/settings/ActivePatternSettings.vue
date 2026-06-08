@@ -9,9 +9,10 @@ div
         |
         | Can be used to count time as active, despite no input (like meetings, or games with controllers). An empty string disables it.
         |
-        | Example expression:&nbsp;
-        code.d-inline-block(style="background-color: rgba(200, 200, 200, 0.3); padding: 2px 4px; border-radius: 2px; white-space: nowrap;")
-          | Zoom Meeting|Google Meet|Microsoft Teams
+        span.text-nowrap
+          | Example expression:&nbsp;
+          code(style="background-color: rgba(200, 200, 200, 0.3); padding: 2px 4px; border-radius: 2px;")
+            | Zoom Meeting|Google Meet|Microsoft Teams
     div
       b-form-input(size="sm" v-model="always_active_pattern_editing" :state="(enabled || null) && valid")
       small.text-right
