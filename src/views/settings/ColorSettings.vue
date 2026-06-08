@@ -2,7 +2,7 @@
 div.d-flex.justify-content-between
   div
     h5.mb-0 Use fallback colors
-    small
+    small.text-muted
       | Uses the old coloring style for some visualizations when uncategorized or no category color.
   div
     b-form-checkbox(v-model="useColorFallback", switch)

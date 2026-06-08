@@ -10,7 +10,7 @@ div
         option(value="/timeline") Timeline
       span(v-else)
         .aw-loading Loading...
-  small
+  small.text-muted
     | The page to open when opening ActivityWatch, or clicking the logo in the top menu.
 </template>
 

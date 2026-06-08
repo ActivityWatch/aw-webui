@@ -4,7 +4,7 @@ div
     div
       h5.mb-2.mb-sm-0 Always count as active pattern
 
-      small
+      small.text-muted
         | Apps or titles matching this regular expression will never be counted as AFK.
         |
         | Can be used to count time as active, despite no input (like meetings, or games with controllers). An empty string disables it.

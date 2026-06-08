@@ -13,7 +13,7 @@ div
           option(:value="6*60*60") 6h
           option(:value="12*60*60") 12h
           option(:value="24*60*60") 24h
-  small
+  small.text-muted
     | The default duration used for 'show last' in the timeline view.
 </template>
 <script lang="ts">

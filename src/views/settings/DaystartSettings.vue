@@ -5,7 +5,7 @@ div
       h5.mt-1.mb-2.mb-sm-0 Start of day
     div
       b-input(type="time" size="sm" :value="startOfDay" @change="startOfDay = $event")
-  small
+  small.text-muted
     | The time at which days "start", since humans don't always go to bed before midnight.
     | Set to 04:00 by default.
 
@@ -14,7 +14,7 @@ div
       h5.mt-1.mb-2.mb-sm-0 Start of week
     div
       b-form-select(:text="startOfWeek", size="sm" v-model="startOfWeek" variant="outline-dark" :options="['Saturday', 'Sunday', 'Monday']")
-  small
+  small.text-muted
     | The weekday which starts a new week.
 </template>
 <script lang="ts">
