@@ -1,5 +1,12 @@
 <template lang="pug">
-div(v-if="view")
+div(v-if="viewMissing")
+  b-alert.mt-3(show variant="warning")
+    | This view ("#[code {{ view_id }}]") doesn't exist on this dashboard.
+    |
+    router-link(:to="{ name: 'activity-view', params: {...$route.params, view_id: 'default'} }")
+      | Go to the default view
+    | .
+div(v-else-if="view")
   draggable.row(v-model="elements" handle=".handle")
     // TODO: Handle large/variable sized visualizations better
     div.col-md-6.col-lg-4.p-3(v-for="el, index in elements", :key="index", :class="{'col-md-12': isVisLarge(el), 'col-lg-12': isVisLarge(el)}")
@@ -22,13 +29,28 @@ div(v-if="view")
       b-button(variant="warning" size="sm" @click="restoreDefaults();")
         icon(name="undo")
         span Restore defaults
-      b-button.mr-2(variant="danger" size="sm" @click="remove();")
+      b-button.mr-2(variant="danger" size="sm" v-b-modal="'remove-view-modal-' + view.id")
         icon(name="trash")
         span Remove
   div(v-else).d-flex.flex-row-reverse.mt-2
     b-button(variant="outline-dark" size="sm" @click="editing = !editing")
       icon(name="edit")
       span Edit view
+
+  b-modal(
+    v-if="view"
+    :id="'remove-view-modal-' + view.id"
+    title="Remove this view?"
+    centered
+    ok-title="Remove view"
+    ok-variant="danger"
+    cancel-variant="outline-secondary"
+    @ok="remove"
+  )
+    | Are you sure you want to remove "#[b {{ view.name || view.id }}]"?
+    br
+    br
+    | This will delete the view's configuration. You can run #[b Restore defaults] to bring built-in views back.
 </template>
 
 <script lang="ts">
@@ -61,6 +83,12 @@ export default {
       } else {
         return this.views.find(v => v.id == this.view_id);
       }
+    },
+    viewMissing: function (): boolean {
+      // True only once views have loaded but the requested id doesn't exist.
+      // Without this guard, navigating to a stale URL (e.g. /view/category)
+      // silently rendered the default view's content under the wrong tab.
+      return this.views.length > 0 && this.view_id !== 'default' && !this.view;
     },
     elements: {
       get() {

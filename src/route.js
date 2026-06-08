@@ -13,7 +13,10 @@ const QueryExplorer = () => import('./views/QueryExplorer.vue');
 const Timeline = () => import('./views/Timeline.vue');
 const Trends = () => import('./views/Trends.vue');
 const Settings = () => import('./views/settings/Settings.vue');
-const CategoryBuilder = () => import('./views/settings/CategoryBuilder.vue');
+// CategoryBuilder is no longer a top-level route — it's embedded inside
+// CategorizationSettings. The /settings/category-builder path is now a
+// redirect, so no direct reference here. Keeping the import out avoids
+// pulling a second copy into a separate chunk.
 const Stopwatch = () => import('./views/Stopwatch.vue');
 const WorkReport = () => import('./views/WorkReport.vue');
 const Alerts = () => import('./views/Alerts.vue');
@@ -65,7 +68,18 @@ const router = new VueRouter({
     { path: '/alerts', component: Alerts },
     { path: '/timespiral', component: TimespiralView },
     { path: '/settings', component: Settings },
-    { path: '/settings/category-builder', component: CategoryBuilder },
+    // Category Builder now lives embedded inside the Categorization
+    // settings panel; keep the old standalone route as a redirect so
+    // external links / bookmarks still land somewhere useful.
+    { path: '/settings/category-builder', redirect: '/settings/categorization' },
+    // :group lets the active settings panel survive reloads / be linkable.
+    // The matcher excludes 'category-builder' so the more specific route above
+    // wins; new groups added in Settings.vue should also be added here.
+    {
+      path: '/settings/:group(general|appearance|categorization|privacy|developer)',
+      component: Settings,
+      props: true,
+    },
     { path: '/stopwatch', component: Stopwatch },
     { path: '/work-report', component: WorkReport },
     { path: '/search', component: Search },

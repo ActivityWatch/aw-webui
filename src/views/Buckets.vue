@@ -1,93 +1,97 @@
 <template lang="pug">
 div
-  h2 Buckets
+  h3 Buckets
 
   b-alert(show)
-    | Are you looking to collect more data? Check out #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") the docs] for more watchers.
+    | Are you looking to collect more data? Check out #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") the docs] for more watchers.
 
   // By device
-  b-card.mb-3(v-for="device in bucketsStore.bucketsByDevice", :key="device.hostname || device.device_id")
-    div.mb-3
-      div.d-flex.justify-content-between
-        div.d-flex
-          div
-            icon(v-if="device.hostname === 'unknown'" name="question")
-            // TODO: detect device type somewhere else (should unify with store logic)
-            icon(v-else, name="desktop")
-            | &nbsp;
-          div
-            b {{ device.hostname }}
-            span.small.ml-2(v-if="serverStore.info.hostname == device.hostname")
-              | (the current device)
-            div.small
-              div(v-if="device.hostname !== device.device_id", style="color: #666")
-                | ID: {{ device.id }}
-              div
-                | Last updated:&nbsp;
-                time(:style="{'color': isRecent(device.last_updated) ? 'green' : 'inherit'}",
-                     :datetime="device.last_updated",
-                     :title="device.last_updated")
-                  | {{ device.last_updated | friendlytime }}
-              div
-                | First seen:&nbsp;
-                time(:datetime="device.first_seen",
-                     :title="device.first_seen")
-                  | {{ device.first_seen | friendlytime }}
+  b-card.bucket-card.mb-3(
+    v-for="device in bucketsStore.bucketsByDevice",
+    :key="device.hostname || device.device_id",
+    :class="{'bucket-card--unknown': device.hostname === 'unknown'}"
+  )
+    div.d-flex.justify-content-between.align-items-start.mb-2
+      div.d-flex.align-items-center
+        icon.mr-2.text-muted(v-if="device.hostname === 'unknown'" name="question" scale="1.2")
+        icon.mr-2.text-secondary(v-else, name="desktop" scale="1.2")
         div
-          b-dropdown(size="sm",
-                     variant="outline-secondary",
-                     no-caret,
-                     right,
-                     :title="`More actions for ${device.hostname}`",
-                     :aria-label="`More actions for ${device.hostname}`")
+          span.font-weight-bold {{ device.hostname }}
+          b-badge.ml-2(v-if="serverStore.info.hostname == device.hostname" variant="info") this device
+          div.small.text-muted(v-if="device.hostname !== device.device_id")
+            | ID: {{ device.id }}
+          div.small(v-if="deviceHasEvents(device)")
+            span.text-muted Last updated&nbsp;
+            time(:class="{'text-success': isRecent(device.last_updated)}",
+                 :datetime="device.last_updated",
+                 :title="device.last_updated")
+              | {{ device.last_updated | friendlytime }}
+          div.small.text-muted(v-else)
+            | No events recorded yet
+      b-dropdown.kebab-dropdown(
+        size="sm",
+        variant="outline-secondary",
+        toggle-class="border-0",
+        no-caret,
+        right,
+        boundary="window",
+        :title="`More actions for ${device.hostname}`",
+        :aria-label="`More actions for ${device.hostname}`"
+      )
+        template(v-slot:button-content)
+          icon(name="ellipsis-v")
+        b-dropdown-item-button(
+          @click="openDeleteHostModal(device)",
+          button-class="text-danger",
+          :title="`Delete all ${device.buckets.length} buckets for ${device.hostname}`"
+        )
+          icon.mr-1(name="trash")
+          | Delete all buckets for this host
+
+    // No `responsive` wrapper: with fixed column widths the table fits its
+    // container, and dropping the wrapper means the row dropdowns can render
+    // outside the table without being clipped by overflow-x: auto.
+    b-table.mb-0.bucket-table(
+      small, hover,
+      :items="device.buckets",
+      :fields="fields"
+    )
+      template(v-slot:cell(id)="data")
+        small.text-monospace.bucket-id(:title="data.item.id") {{ data.item.id }}
+      template(v-slot:cell(last_updated)="data")
+        small(v-if="bucketHasEvents(data.item)", :class="{'text-success': isRecent(data.item.last_updated)}")
+          | {{ data.item.last_updated | friendlytime }}
+        small.text-muted(v-else) no events
+      template(v-slot:cell(actions)="data")
+        b-button-group(size="sm")
+          b-button(variant="primary", :to="'/buckets/' + data.item.id", title="Open bucket")
+            icon.d-none.d-md-inline-block.mr-1(name="folder-open")
+            | Open
+          // boundary="window" so the menu renders on top of the
+          // b-table's responsive overflow wrapper instead of being clipped
+          // (which previously made the whole row turn into a scrollbox).
+          b-dropdown.kebab-dropdown(variant="outline-secondary", toggle-class="border-0", size="sm", right, no-caret, boundary="window", title="More actions")
             template(v-slot:button-content)
               icon(name="ellipsis-v")
-            b-dropdown-item-button(@click="openDeleteHostModal(device)",
-                     variant="danger",
-                     :title="`Delete all ${device.buckets.length} buckets for ${device.hostname}`")
-              icon(name="trash")
-              |  Delete all buckets for this host
+            // FIXME: These also exist as almost-copies in the Bucket view, can maybe be shared/reused instead.
+            b-dropdown-item(@click="export_bucket_json(data.item.id)", title="Export bucket to JSON")
+              icon.mr-1(name="download")
+              | Export as JSON
+            b-dropdown-item(@click="export_csv(data.item.id)", title="Export events to CSV")
+              icon.mr-1(name="download")
+              | Export events as CSV
+            b-dropdown-divider
+            b-dropdown-item-button(@click="openDeleteBucketModal(data.item.id)", title="Delete this bucket permanently", button-class="text-danger")
+              icon.mr-1(name="trash")
+              | Delete bucket
 
-    b-row
-      b-col
-        b-table.mb-0(small, hover, :items="device.buckets", :fields="fields", responsive="md")
-          template(v-slot:cell(last_updated)="data")
-            small(v-if="data.item.last_updated", :style="{'color': isRecent(data.item.last_updated) ? 'green' : 'inherit'}")
-              | {{ data.item.last_updated | friendlytime }}
-          template(v-slot:cell(actions)="data")
-            b-button-toolbar.float-right
-              b-button-group(size="sm", class="mx-1")
-                b-button(variant="primary", :to="'/buckets/' + data.item.id")
-                  icon(name="folder-open").d-none.d-md-inline-block
-                  | Open
-                b-dropdown(variant="outline-secondary", size="sm", text="More")
-                  // FIXME: These also exist as almost-copies in the Bucket view, can maybe be shared/reused instead.
-                  b-dropdown-item(
-                             @click="export_bucket_json(data.item.id)",
-                             title="Export bucket to JSON",
-                             variant="secondary")
-                      icon(name="download")
-                      | Export bucket as JSON
-                  b-dropdown-item(
-                              @click="export_csv(data.item.id)",
-                             title="Export events to CSV",
-                             variant="secondary")
-                      icon(name="download")
-                      | Export events as CSV
-                  b-dropdown-divider
-                  b-dropdown-item-button(@click="openDeleteBucketModal(data.item.id)",
-                           title="Delete this bucket permanently",
-                           variant="danger")
-                    | #[icon(name="trash")] Delete bucket
+    div(v-for="msg in runChecks(device)" :key="msg")
+      b-alert.mt-2.mb-0.py-1.px-2.small(show variant="warning")
+        icon(name="exclamation-triangle")
+        | &nbsp;
+        | {{ msg }}
 
-    // Checks
-    hr.mt-1(v-if="runChecks(device).length > 0")
-    div.small.text-muted(v-for="msg in runChecks(device)", style="color: #333")
-      icon(name="exclamation-triangle")
-      | &nbsp;
-      | {{ msg }}
-
-  b-modal(id="delete-modal", title="Danger!", centered, hide-footer)
+  b-modal(id="delete-modal", title="Delete bucket?", centered, hide-footer)
     | Are you sure you want to delete bucket "{{delete_bucket_selected}}"?
     br
     br
@@ -99,7 +103,7 @@ div
       b-button(@click="deleteBucket(delete_bucket_selected)", variant="danger")
         | Confirm
 
-  b-modal(id="delete-host-modal", title="Danger!", centered, hide-footer, @hidden="delete_host_selected = null; delete_host_error = null")
+  b-modal(id="delete-host-modal", :title="delete_host_selected ? `Delete all buckets for ${delete_host_selected.hostname}?` : 'Delete buckets?'", centered, hide-footer, @hidden="delete_host_selected = null; delete_host_error = null")
     template(v-if="delete_host_selected")
       | Are you sure you want to delete
       |
@@ -128,31 +132,33 @@ div
           template(v-else)
             | Confirm
 
-  h3 Import and export buckets
+  h4.mt-4 Import and export buckets
 
   b-card-group.deck
     b-card(header="Import buckets")
-      b-alert(v-if="import_error" show variant="danger" dismissable)
+      b-alert(v-if="import_error" show variant="danger" dismissible)
         | {{ import_error }}
       b-form-file(v-model="import_file"
                   placeholder="Choose or drop a file here..."
                   drop-placeholder="Drop file here...")
-      // TODO: This spinner could be placed in a more suitable place
-      div(v-if="import_file" class="spinner-border" role="status")
-      span
-        | A valid file to import is a JSON file from either an export of a single bucket or an export from multiple buckets.
-        | If there are buckets with the same name the import will fail.
+      div.mt-2(v-if="import_file")
+        b-spinner.mr-2(small)
+        small.text-muted Importing...
+      small.d-block.mt-2.text-muted
+        | Provide a JSON file exported from a single bucket or from multiple buckets.
+        | Import fails if a bucket with the same ID already exists.
     b-card(header="Export buckets")
+      p.small.text-muted Download every bucket on this server as a single JSON file. Use this for backups.
       b-button(@click="export_all_buckets_json()",
                title="Export all buckets to JSON",
                variant="outline-secondary")
-        icon(name="download")
+        icon.mr-1(name="download")
         | Export all buckets as JSON
 
   hr
 
   aw-devonly(reason="This section is still under development")
-    h2.p-2 Tools
+    h4.p-2 Tools
 
     hr
 
@@ -180,6 +186,44 @@ div
 <style scoped lang="scss">
 .bucket-card {
   margin-bottom: 1em;
+}
+
+.bucket-card--unknown {
+  opacity: 0.85;
+  background: #fbfbfb;
+}
+
+.bucket-table {
+  table-layout: fixed;
+}
+
+::v-deep .bucket-table td {
+  vertical-align: middle;
+}
+
+// Truncate only the bucket id span itself, not the cell — applying
+// overflow:hidden to the td clips the row's kebab popover menu.
+::v-deep .bucket-id {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+// Ghost-styled kebab dropdowns: invisible until hover/focus, like
+// the "borderless" overflow menus in most modern UIs.
+::v-deep .kebab-dropdown > .btn {
+  color: #6c757d;
+  background: transparent;
+}
+
+::v-deep .kebab-dropdown > .btn:hover,
+::v-deep .kebab-dropdown > .btn:focus,
+::v-deep .kebab-dropdown.show > .btn {
+  background: #f0f1f3;
+  color: #212529;
 }
 
 .bucket-last-updated {
@@ -223,11 +267,33 @@ export default {
       delete_host_selected: null,
       deleting_host: false,
       delete_host_error: null,
+      // Explicit thStyle widths so each device's table aligns with the
+      // others (b-table otherwise auto-fits per-card based on its own
+      // content, which produced jagged columns across hosts).
       fields: [
-        { key: 'id', label: 'Bucket ID', sortable: true },
-        { key: 'hostname', sortable: true },
-        { key: 'last_updated', label: 'Updated', sortable: true },
-        { key: 'actions', label: '' },
+        {
+          key: 'id',
+          label: 'Bucket ID',
+          sortable: true,
+          thStyle: { width: '45%' },
+        },
+        {
+          key: 'hostname',
+          sortable: true,
+          thStyle: { width: '25%' },
+        },
+        {
+          key: 'last_updated',
+          label: 'Updated',
+          sortable: true,
+          thStyle: { width: '15%' },
+        },
+        {
+          key: 'actions',
+          label: '',
+          thStyle: { width: '15%' },
+          tdClass: 'text-right',
+        },
       ],
     };
   },
@@ -258,6 +324,18 @@ export default {
   methods: {
     isRecent: function (date) {
       return moment().diff(date) / 1000 < 120;
+    },
+    // last_updated is only set once a bucket has actually been written to:
+    //   - aw-server-python omits it when the bucket has no events
+    //   - aw-server-rust's store harmonization (see update_buckets) sets
+    //     last_updated from metadata.end, which is also only present once
+    //     events exist
+    // The previous device-level "Last updated 0s ago" was just moment(undefined).fromNow().
+    bucketHasEvents: function (bucket) {
+      return Boolean(bucket && bucket.last_updated);
+    },
+    deviceHasEvents: function (device) {
+      return _.some(device.buckets, b => this.bucketHasEvents(b));
     },
     runChecks: function (device) {
       const checks = [

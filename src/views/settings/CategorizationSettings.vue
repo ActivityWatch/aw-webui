@@ -1,25 +1,15 @@
 <template lang="pug">
 div
-  h5.d-inline-block
-    div Categorization
-  div.float-right
-    b-btn.ml-1(@click="restoreDefaultClasses", variant="outline-warning" size="sm")
-      icon(name="undo")
-      | Restore defaults
-    label.btn.btn-sm.ml-1.btn-outline-primary(style="margin: 0")
-      | Import
-      input(type="file" @change="importCategories" hidden)
-    b-btn.ml-1(@click="exportClasses", variant="outline-primary" size="sm")
-      | Export
-  p
+  p.mb-2
     | Rules for categorizing events. An event can only have one category. If several categories match, the deepest one will be chosen.
   p
-    | You can use the #[router-link(:to="{ path: '/settings/category-builder' }") Category Builder] to quickly create categories from uncategorized activity.
-    | You can also find and share categorization rule presets on #[a(href="https://forum.activitywatch.net/c/projects/category-rules") the forum].
+    | Find and share categorization rule presets on #[a(href="https://forum.activitywatch.net/c/projects/category-rules") the forum].
     | For help on how to write categorization rules, see #[a(href="https://docs.activitywatch.net/en/latest/features/categorization.html") the documentation].
 
-  // Category set switcher
-  div.my-3.p-3(style="background: var(--bs-light, #f8f9fa); border-radius: 4px;")
+  // Category set switcher. bg-light + .rounded so dark.css's .bg-light
+  // override flips the background in dark mode instead of leaving an
+  // inline white block on a dark canvas.
+  div.my-3.p-3.bg-light.rounded
     div.d-flex.align-items-center.flex-wrap(style="gap: 0.5rem;")
       span.font-weight-bold(style="white-space: nowrap") Category set:
       b-select(
@@ -44,13 +34,22 @@ div
         variant="outline-danger"
         size="sm"
       ) Delete set
-    div.mt-1(
-      v-if="categoryStore.category_sets.length > 1"
-      style="font-size: 0.85em; color: var(--bs-secondary, #6c757d);"
-    )
+    div.mt-1.small.text-muted(v-if="categoryStore.category_sets.length > 1")
       | {{ categoryStore.category_sets.length }} sets available — switch sets to use different rule profiles.
 
-  div.my-4
+  div.d-flex.align-items-center.flex-wrap.mt-4
+    h5.mb-0 Categories
+    div.ml-auto
+      b-btn.ml-1(@click="restoreDefaultClasses", variant="outline-warning" size="sm")
+        icon(name="undo")
+        | Restore defaults
+      label.btn.btn-sm.ml-1.btn-outline-primary(style="margin: 0")
+        | Import
+        input(type="file" @change="importCategories" hidden)
+      b-btn.ml-1(@click="exportClasses", variant="outline-primary" size="sm")
+        | Export
+
+  div.my-3
     b-alert(variant="warning" :show="classes_unsaved_changes")
       | You have unsaved changes!
       div.float-right(style="margin-top: -0.15em; margin-right: -0.6em")
@@ -70,12 +69,35 @@ div
         | Add category
       b-btn.float-right(@click="saveClasses", variant="success" :disabled="!classes_unsaved_changes")
         | Save
+
+  // Category Builder sits at the end of the categories list (above the
+  // ActivePatternSettings panel below the group). Collapsed by default
+  // so the words query doesn't fire for users who only came to edit
+  // rules; once opened it mounts lazily.
+  div.mt-4(ref="builderSection")
+    div.d-flex.align-items-center.flex-wrap
+      h5.mb-0 Category builder
+      small.text-muted.ml-2 Generate rules from uncategorized activity
+      b-btn.ml-auto(
+        variant="outline-primary"
+        size="sm"
+        @click="builderOpen = !builderOpen"
+        :aria-expanded="builderOpen ? 'true' : 'false'"
+        aria-controls="category-builder-collapse"
+      )
+        icon.mr-1(:name="builderOpen ? 'angle-double-up' : 'angle-double-down'")
+        | {{ builderOpen ? 'Hide builder' : 'Open builder' }}
+    b-collapse#category-builder-collapse(v-model="builderOpen")
+      div.mt-3(v-if="builderMounted")
+        CategoryBuilder(embedded)
 </template>
 <script lang="ts">
 import { mapState, mapGetters } from 'pinia';
 import CategoryEditTree from '~/components/CategoryEditTree.vue';
 import CategoryEditModal from '~/components/CategoryEditModal.vue';
 import 'vue-awesome/icons/undo';
+import 'vue-awesome/icons/angle-double-down';
+import 'vue-awesome/icons/angle-double-up';
 
 import { useCategoryStore } from '~/stores/categories';
 
@@ -89,17 +111,25 @@ export default {
   components: {
     CategoryEditTree,
     CategoryEditModal,
+    // Lazy-load the builder so visiting Categorization without opening
+    // the builder doesn't drag in its query/word-list code.
+    CategoryBuilder: () => import('~/views/settings/CategoryBuilder.vue'),
   },
   data: () => ({
     categoryStore: useCategoryStore(),
     editingId: null,
     activeSetId: 'default',
+    builderOpen: false,
+    builderMounted: false,
   }),
   computed: {
     ...mapState(useCategoryStore, ['classes_unsaved_changes']),
     ...mapGetters(useCategoryStore, ['classes_hierarchy']),
   },
   watch: {
+    builderOpen(v: boolean) {
+      if (v) this.builderMounted = true;
+    },
     'categoryStore.active_set_ids': {
       handler(newIds: string[]) {
         if (newIds && newIds.length > 0) {
@@ -116,6 +146,19 @@ export default {
     // Route navigation guard is handled by the parent Settings.vue component
     // using beforeRouteLeave (automatically cleaned up by Vue Router).
     window.addEventListener('beforeunload', this.beforeUnload);
+
+    // Deep-link from UncategorizedNotification ("Category Builder" link) lands
+    // on /settings/categorization?builder=open — open the builder and scroll
+    // it into view so the user can act immediately.
+    if (this.$route.query.builder === 'open') {
+      this.builderOpen = true;
+      this.$nextTick(() => {
+        const el = this.$refs.builderSection as HTMLElement | undefined;
+        if (el && typeof el.scrollIntoView === 'function') {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    }
   },
   beforeDestroy() {
     window.removeEventListener('beforeunload', this.beforeUnload);

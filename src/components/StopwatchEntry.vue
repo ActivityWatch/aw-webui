@@ -1,16 +1,16 @@
 <template lang="pug">
 div
-  div.row.px-3.py-2.stopwatch-entry#root
-    div.flex-fill
+  div.d-flex.flex-wrap.align-items-center.px-3.py-2.stopwatch-entry
+    div.flex-fill.mr-2
       span #[b {{event.data.label || 'No label'}}]
-      span(style="color: #888") &nbsp;|&nbsp;
+      span.text-muted &nbsp;|&nbsp;
       span(v-if="event.data.running")
         | Running for #[span(:title="event.timestamp") {{event.data.running ? (now - event.timestamp) / 1000 : event.duration | friendlyduration}}]
         | &nbsp;(Started {{ event.timestamp | shorttime }})
       span(v-else)
         | Started #[span(:title="event.timestamp") {{event.timestamp | friendlytime}}]
         | &nbsp;({{event.data.running ? (now - event.timestamp) / 1000 : event.duration | friendlyduration}})
-    div
+    div.stopwatch-entry__actions
       b-button.mx-1(v-if="event.data.running", @click="stop", variant="outline-primary", size="sm")
         icon.ml-0.mr-1(name="stop")
         | Stop
@@ -24,8 +24,17 @@ div
 </template>
 
 <style scoped lang="scss">
-#root:hover {
-  background-color: #eee;
+.stopwatch-entry {
+  border-bottom: 1px solid #eee;
+}
+
+.stopwatch-entry:hover {
+  background-color: #f8f9fa;
+}
+
+.stopwatch-entry__actions {
+  display: flex;
+  flex-wrap: nowrap;
 }
 </style>
 

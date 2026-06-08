@@ -6,68 +6,79 @@ div
     b-alert(v-if="daterangeTooLong", variant="warning", show)
       | The selected date range is too long. The maximum is {{ maxDuration/(24*60*60) }} days.
 
-  div.d-flex.justify-content-between
-    table
-      tr
-        td.pr-2
-          label.col-form-label.col-form-label-sm Show last
-        td(colspan=2)
-          .btn-group(role="group")
-            template(v-for="(dur, idx) in durations")
-              input(
-                type="radio"
-                :id="'dur' + idx"
-                :value="dur.seconds"
-                v-model="duration"
-                @change="applyLastDuration"
-              ).d-none
-              label(:for="'dur' + idx" v-html="dur.label").btn.btn-light.btn-sm
+  div.input-time-interval.d-flex.flex-wrap.align-items-start.justify-content-between
+    // Two-row grid: labels share a fixed-width column so the Mode toggle
+    // and the Range controls line up vertically and the secondary label
+    // stays in the same spot (just "Range") regardless of which mode is
+    // active. Previously the label flipped between "Quick range" / "Range"
+    // and the inputs shifted horizontally on every toggle.
+    div.time-interval-grid
+      label.col-form-label.col-form-label-sm.mb-0(for="time-mode") Mode
+      b-form-radio-group#time-mode(
+        v-model="mode",
+        @change="valueChanged",
+        buttons,
+        button-variant="outline-secondary",
+        size="sm",
+        :options="modeOptions"
+      )
 
-      tr
-        td.pr-2
-          label.col-form-label.col-form-label-sm Show from
-        td
-          select(id="mode", v-model="mode", @change="valueChanged")
-            option(value='last_duration') Last duration
-            option(value='range') Date range
-      tr(v-if="mode == 'last_duration'")
-        th.pr-2
-          label(for="duration") Show last:
-        td
-          select(id="duration", v-model="duration", @change="valueChanged")
-            option(:value="15*60") 15min
-            option(:value="30*60") 30min
-            option(:value="60*60") 1h
-            option(:value="2*60*60") 2h
-            option(:value="4*60*60") 4h
-            option(:value="6*60*60") 6h
-            option(:value="12*60*60") 12h
-            option(:value="24*60*60") 24h
-      tr(v-if="mode == 'range'")
-        th.pr-2 Range:
-        td
-          input(type="date", v-model="start", :max="end || undefined")
-          input(type="date", v-model="end", :min="start || undefined", placeholder="(optional)")
-          button(
-            class="btn btn-outline-dark btn-sm",
-            type="button",
-            :disabled="invalidDaterange || emptyDaterange || daterangeTooLong",
-            @click="applyRange"
-          ) Apply
+      label.col-form-label.col-form-label-sm.mb-0 Range
+      div.d-flex.flex-wrap.align-items-center(v-if="mode == 'last_duration'")
+        div.btn-group(role="group" aria-label="Quick durations")
+          template(v-for="(dur, idx) in durations")
+            input(
+              type="radio"
+              :id="'dur' + idx"
+              :value="dur.seconds"
+              v-model="duration"
+              @change="applyLastDuration"
+            ).d-none
+            label(:for="'dur' + idx" v-html="dur.label").btn.btn-light.btn-sm
+      div.d-flex.flex-wrap.align-items-center(v-else)
+        input.form-control.form-control-sm.mr-1(
+          type="date", v-model="start", :max="end || undefined", style="width: auto"
+          aria-label="Start date"
+        )
+        input.form-control.form-control-sm.mr-1(
+          type="date", v-model="end", :min="start || undefined", placeholder="(optional)", style="width: auto"
+          aria-label="End date (optional)"
+        )
+        b-button(
+          size="sm" variant="outline-dark"
+          :disabled="invalidDaterange || emptyDaterange || daterangeTooLong"
+          @click="applyRange"
+        ) Apply
 
-    div.text-muted.d-none.d-md-block(style="text-align:right" v-if="showUpdate")
-      b-button.mt-2.px-2(@click="refresh()", variant="outline-dark", size="sm", style="opacity: 0.7")
-        icon(name="sync")
+    div.text-right.d-none.d-md-block(v-if="showUpdate")
+      b-button.px-2(@click="refresh()", variant="outline-dark", size="sm")
+        icon.mr-1(name="sync")
         span.d-none.d-md-inline
           | Refresh
-      div.mt-2.small(v-if="lastUpdate")
+      div.mt-2.small.text-muted(v-if="lastUpdate")
         | Last update: #[time(:datetime="lastUpdate.format()") {{lastUpdate | friendlytime}}]
 </template>
 
 <style scoped lang="scss">
+.input-time-interval {
+  row-gap: 0.5rem;
+}
+
+.time-interval-grid {
+  display: grid;
+  // Fixed label column keeps Mode/Range labels aligned and the controls
+  // start at the same X regardless of which mode is active.
+  grid-template-columns: 4rem 1fr;
+  column-gap: 0.75rem;
+  row-gap: 0.5rem;
+  align-items: center;
+}
+
 .btn-group {
   input[type='radio']:checked + label {
-    background-color: #aaa;
+    background-color: #495057;
+    color: #fff;
+    border-color: #495057;
   }
 }
 </style>
@@ -109,6 +120,10 @@ export default {
         { seconds: 12 * 60 * 60, label: '12h' },
         { seconds: 24 * 60 * 60, label: '24h' },
         { seconds: 48 * 60 * 60, label: '48h' },
+      ],
+      modeOptions: [
+        { text: 'Last duration', value: 'last_duration' },
+        { text: 'Date range', value: 'range' },
       ],
     };
   },

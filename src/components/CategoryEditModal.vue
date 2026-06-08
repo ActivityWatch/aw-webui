@@ -22,9 +22,8 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
             | Case insensitive
         div.flex-grow-1
           small.text-right
-            //div(v-if="valid" style="color: green") Valid
-            div(v-if="!validPattern" style="color: red") Invalid pattern
-            div(v-if="validPattern && broad_pattern" style="color: orange") Pattern too broad
+            div.text-danger(v-if="!validPattern") Invalid pattern
+            div.text-warning(v-if="validPattern && broad_pattern") Pattern too broad
 
   hr
   div.my-1

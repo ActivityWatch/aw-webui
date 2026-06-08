@@ -31,11 +31,29 @@ export const useBucketsStore = defineStore('buckets', {
     hosts(state: State): string[] {
       // TODO: Include consideration of device_id UUID
       let hosts = _.uniq(_.map(state.buckets, bucket => bucket.hostname || bucket.data.hostname));
-      // sort by last_updated, such that the most recently updated host is first (likely the current host)
+
+      // Sort priority:
+      //   1. Host that matches the server's own hostname (the device the
+      //      webui is running on) — almost always what the user wants by
+      //      default in views like Alerts/Trends.
+      //   2. Hosts that actually have the buckets we typically query against
+      //      (window + AFK), so views don't pick a stale legacy hostname
+      //      with only one orphan bucket and then immediately error out.
+      //   3. Then by last_updated, newest first (legacy behavior).
+      const serverStore = useServerStore();
+      const selfHost = serverStore.info && serverStore.info.hostname;
       hosts = _.orderBy(
         hosts,
-        host => _.max(_.map(this.bucketsByHostname[host], b => b.last_updated)),
-        ['desc']
+        [
+          host => (host && host === selfHost ? 1 : 0),
+          host => {
+            const hasWindow = this.bucketsWindow(host).length > 0;
+            const hasAfk = this.bucketsAFK(host).length > 0;
+            return hasWindow && hasAfk ? 2 : hasWindow || hasAfk ? 1 : 0;
+          },
+          host => _.max(_.map(this.bucketsByHostname[host], b => b.last_updated)) || '',
+        ],
+        ['desc', 'desc', 'desc']
       );
       return hosts;
     },

@@ -1,26 +1,44 @@
 <template lang="pug">
 div
-  div.d-sm-flex.justify-content-between
+  div.d-sm-flex.justify-content-between.align-items-center
     div
       h5.mt-1.mb-2.mb-sm-0 Theme
     div
-      b-select.landingpage(v-if="_loaded" size="sm" :value="theme", @change="theme = $event")
-        option(value="auto") Auto (System)
-        option(value="light") Light
-        option(value="dark") Dark
+      b-button-group(v-if="_loaded" size="sm")
+        b-button(
+          v-for="opt in themeOptions"
+          :key="opt.value"
+          :pressed="theme === opt.value"
+          @click="theme = opt.value"
+          variant="outline-dark"
+        )
+          icon.mr-1(:name="opt.icon")
+          | {{ opt.label }}
       span(v-else)
         .aw-loading Loading...
-  small
-    | Change color theme of the application (you need to change categories colors manually to be suitable with dark mode).
+  small.text-muted
+    | Change the color theme. Category colors are picked separately — you may want to adjust them when switching to dark mode.
 </template>
 
 <script lang="ts">
+import 'vue-awesome/icons/desktop';
+import 'vue-awesome/icons/sun';
+import 'vue-awesome/icons/moon';
 import { mapState } from 'pinia';
 import { useSettingsStore } from '~/stores/settings';
 import { detectPreferredTheme } from '~/util/theme';
 
 export default {
   name: 'Theme',
+  data() {
+    return {
+      themeOptions: [
+        { value: 'auto', label: 'System', icon: 'desktop' },
+        { value: 'light', label: 'Light', icon: 'sun' },
+        { value: 'dark', label: 'Dark', icon: 'moon' },
+      ],
+    };
+  },
   computed: {
     ...mapState(useSettingsStore, ['_loaded']),
     theme: {

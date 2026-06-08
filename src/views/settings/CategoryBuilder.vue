@@ -1,20 +1,16 @@
 <template lang="pug">
 div
-  h1 Categorization helper
-  div
+  // Standalone mode prints the full intro; embedded mode (used inside
+  // CategorizationSettings) omits the header so it doesn't double up
+  // with the section title that wraps the embed.
+  div(v-if="!embedded")
+    h3 Categorization helper
     p
-      | This tool will help you create categories from your uncategorized time.
-
-    p
-      | It works by fetching all uncategorized time for a recent timeperiod,
-      | and then finds the most common words (by time, not count) each of
-      | which may then either be ignored (if too broad/irrelevant), or used
-      | to create a new (sub)category, or to append the word to a pre-existing category rule.
-      | Words with less than 60s of time will not be shown.
-
-    p
-      | When you're done, you can inspect the categories in the #[router-link(:to="{ path: '/settings' }") Settings] page.
-
+      | This tool helps you create categories from your uncategorized time.
+      | It scans a recent window for the most common app/title words (by
+      | time, not count) so you can promote each one into a new category,
+      | append it to an existing rule, or ignore it. Words under 60s are
+      | hidden.
 
   div.d-flex
     div.flex-grow-1
@@ -38,12 +34,18 @@ div
 
   h5 Common words in "{{category.join(" > ")}}" events
   div(v-if="loading")
-    | Loading...
+    b-spinner.mr-2(small)
+    span.text-muted Loading...
+  div(v-else-if="!queryOptions.hostname")
+    p.text-muted.mb-0
+      | No host with window/AFK buckets is available. Install
+      | #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") a watcher]
+      | to start collecting data.
   div(v-else)
     div(v-if="words_by_duration.length == 0")
       | No words with significant duration. You're good to go!
     div(v-else)
-      div.row.category-builder-word(v-for="word in words_by_duration")
+      div.row.category-builder-word(v-for="word in words_visible" :key="word.word")
         div.col.hover-highlight
           div.d-flex.flex-row.py-2
             div.flex-grow-1
@@ -67,11 +69,14 @@ div
                 td {{ event.data.title }}
                 td.text-right {{ Math.round(event.duration) }}s
             hr
-      //hr
-      //div.d-flex
-        div.flex-grow-1
-        div.flex-grow-0
-          b-button(size="sm" @click="days_back += 7; fetchWords()") Load more
+      div.d-flex.align-items-center.mt-3(v-if="hasMoreWords")
+        small.text-muted
+          | Showing {{ words_visible.length }} of {{ words_by_duration.length }} words
+        b-button.ml-auto(
+          size="sm"
+          variant="outline-primary"
+          @click="visible_count += page_size"
+        ) Show more
 
   div(v-if="create.categoryId !== null")
     CategoryEditModal(:categoryId="create.categoryId",
@@ -90,8 +95,8 @@ div
       b-form-group(label="Word")
         b-form-input(v-model="append.word")
         small
-          div(v-if="validPattern" style="color: green") Valid
-          div(v-else style="color: red") Invalid pattern
+          div.text-success(v-if="validPattern") Valid
+          div.text-danger(v-else) Invalid pattern
           div(v-if="validPattern && broad_pattern" style="color: orange") Pattern too broad
 </template>
 
@@ -116,14 +121,24 @@ import { isRegexBroad, validateRegex } from '~/util/validate';
 import { findCommonPhrases } from '~/util/categorization';
 
 export default {
-  name: 'aw-category-builder',
+  name: 'CategoryBuilder',
   components: { CategoryEditModal },
-  props: {},
+  props: {
+    // When embedded inside CategorizationSettings, drop the standalone
+    // page chrome so the embed reads as a subsection of the parent.
+    embedded: { type: Boolean, default: false },
+  },
   data() {
     return {
       loading: true,
 
       categoryStore: useCategoryStore(),
+
+      // Pagination for the words list. Showing the full list directly
+      // produced a 2+ screen wall of buttons on most users' data; this
+      // shows page_size at a time with a "Show more" button.
+      page_size: 10,
+      visible_count: 10,
 
       // Options
       show_options: false,
@@ -160,6 +175,12 @@ export default {
         .filter(word => word.duration > 60)
         .filter(word => !this.ignored_words.includes(word.word));
     },
+    words_visible: function () {
+      return this.words_by_duration.slice(0, this.visible_count);
+    },
+    hasMoreWords: function () {
+      return this.words_by_duration.length > this.visible_count;
+    },
     valid: function () {
       return this.validPattern && this.validCategory;
     },
@@ -191,6 +212,9 @@ export default {
   methods: {
     async fetchWords() {
       this.loading = true;
+      // Reset pagination so the user sees the top of the new ranking
+      // after every requery.
+      this.visible_count = this.page_size;
       if (!this.queryOptions.hostname) {
         // Try to resolve hostname from loaded buckets
         // Don't ever return the "unknown" hostname

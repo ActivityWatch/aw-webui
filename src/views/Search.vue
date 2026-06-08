@@ -2,7 +2,7 @@
 div
   h3 Search
 
-  b-alert(style="warning" show)
+  b-alert(variant="warning" show)
     | This feature is still in early development.
 
   b-alert(v-if="error" show variant="danger")
@@ -12,11 +12,11 @@ div
     b-input(v-model="pattern" v-on:keyup.enter="search()" placeholder="Regex pattern to search for")
     b-input-group-append
       b-button(type="button", @click="search()" variant="success")
-        icon(name="search")
+        icon.mr-1(name="search")
         | Search
 
   div.d-flex.mt-1
-    span.mr-auto.small(style="color: #666") Hostname: {{queryOptions.hostname}}
+    span.mr-auto.small.text-muted Hostname: {{queryOptions.hostname}}
     b-button.border-0(size="sm", variant="outline-dark" @click="show_options = !show_options")
       span(v-if="!show_options")
         | #[icon(name="angle-double-down")] Show options

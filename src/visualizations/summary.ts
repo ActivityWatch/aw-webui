@@ -107,11 +107,18 @@ function update(container: HTMLElement, apps: Entry[]) {
       .attr('height', barHeight)
       .style('fill', appcolor);
 
-    // App name
+    // App name. Truncate long titles so wide window titles don't run
+    // visually past their bar; full text remains in the hover tooltip
+    // (the <title> appended above) so no information is hidden.
+    const maxNameChars = 80;
+    const displayName =
+      app.name && app.name.length > maxNameChars
+        ? app.name.slice(0, maxNameChars - 1) + '…'
+        : app.name;
     eg.append('text')
       .attr('x', 5)
       .attr('y', curr_y + 1.4 * textSize)
-      .text(app.name)
+      .text(displayName)
       .attr('font-family', 'sans-serif')
       .attr('font-size', textSize + 'px')
       .attr('fill', textColor);

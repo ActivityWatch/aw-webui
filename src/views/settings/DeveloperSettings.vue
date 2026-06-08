@@ -1,7 +1,6 @@
 <template lang="pug">
 div
-  h4.mb-3 Developer settings
-  b-alert(show) #[b Note:] These settings are meant for developers who (hopefully) know what they are doing, and as such, may break things unexpectedly.
+  b-alert(show variant="warning") #[b Note:] These settings are meant for developers who (hopefully) know what they are doing, and as such, may break things unexpectedly.
 
   b-form-group(label="Force devmode" label-cols-md=3 description="Devmode enables some features that are still work-in-progress.")
     div

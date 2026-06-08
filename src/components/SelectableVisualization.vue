@@ -8,7 +8,7 @@ div
       template(v-slot:button-content)
         icon(name="cog")
       b-dropdown-item(v-for="t in types" :key="t" variant="outline-secondary" @click="$emit('onTypeChange', id, t)")
-        | {{ visualizations[t].title }} #[span.small(v-if="!visualizations[t].available" style="color: #A50") (no data)]
+        | {{ visualizations[t].title }} #[span.small.text-warning(v-if="!visualizations[t].available") (no data)]
     b-button.p-0(size="sm", variant="outline-danger" @click="$emit('onRemove', id)")
       icon(name="times")
 
@@ -21,7 +21,7 @@ div
     div(v-if="!has_prerequisites")
       b-alert.small.px-2.py-1(show variant="warning")
         | This feature is missing data from a required watcher.
-        | You can find a list of all watchers in #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") the documentation].
+        | You can find a list of all watchers in #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") the documentation].
 
     div(v-if="type == 'top_apps'")
       aw-summary(:fields="activityStore.window.top_apps",

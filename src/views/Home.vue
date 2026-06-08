@@ -3,16 +3,18 @@ div
   b-alert(v-if="$isAndroid" show)
     | #[b Note:] ActivityWatch on Android is in a very early stage of development. There will be bugs, but we hope you bear with us as we refine things and get it on par with the desktop version of ActivityWatch (which you should try!).
 
-  h3 Hello early user,
+  h3 Welcome to ActivityWatch
   p
-    | It's still early days for ActivityWatch#[span(v-if="$isAndroid") (especially on Android!)]. We've come a long way but we need users (like you!)
-    | to provide feedback and help us turn ActivityWatch into a successful project.
-    | Early users like you mean a lot to us, and we hope you'll reach out to us with any ideas you have for improvements!
+    | We've come a long way#[span(v-if="$isAndroid") (especially on Android!)] but we still need users (like you!) to provide feedback and help us turn ActivityWatch into a successful project.
+    | We'd love to hear any ideas you have for improvements.
   p
     | If you are a developer, we hope you can contribute by writing a watcher, visualization, or something else, and share it with us on the forum!
+  p.mb-0 Thank you for using ActivityWatch!
   p
-    div Thank you for using ActivityWatch!
-    small If you have a minute to spare, please take the time to fill out our #[a(href="https://forms.gle/q2N9K5RoERBV8kqPA") user survey] or #[a(href="https://forum.activitywatch.net/c/features") vote on features on the forum].
+    a(href="https://forms.gle/q2N9K5RoERBV8kqPA") Fill out our user survey
+    | &nbsp;or&nbsp;
+    a(href="https://forum.activitywatch.net/c/features") vote on features on the forum
+    | &nbsp;to help shape what comes next.
 
   hr
 
@@ -46,20 +48,20 @@ div
   div.row
     div.col-md-6
       h4 Resources
-      p
-        ul
-          li #[a(href="https://activitywatch.net/") Website]
-          li #[a(href="https://activitywatch.readthedocs.org/") Documentation]
-          li #[a(href="https://forum.activitywatch.net/") Forum]
-          li #[a(href="https://discord.gg/vDskV9q") Discord]
-          li #[a(href="https://www.reddit.com/r/activitywatch/") Reddit]
-          li #[a(href="https://github.com/ActivityWatch/activitywatch") GitHub]
-          li(v-if="!info.version.includes('rust')" ) #[a(href="/api/") API Browser]
+      ul
+        li #[a(href="https://activitywatch.net/") Website]
+        li #[a(href="https://docs.activitywatch.net/") Documentation]
+        li #[a(href="https://forum.activitywatch.net/") Forum]
+        li #[a(href="https://discord.gg/vDskV9q") Discord]
+        li #[a(href="https://www.reddit.com/r/activitywatch/") Reddit]
+        li #[a(href="https://github.com/ActivityWatch/activitywatch") GitHub]
+        li(v-if="!info.version.includes('rust')") #[a(:href="apiBrowserUrl") API Browser]
 
     div.col-md-6
-      h4 Want to know what we're working on?
+      h4 What we're working on
       p
-        | Check out the #[a(href="https://forum.activitywatch.net/c/news") development updates]!
+        | Stay up to date with the #[a(href="https://forum.activitywatch.net/c/news") development updates]
+        | and follow the project on #[a(href="https://github.com/ActivityWatch/activitywatch") GitHub] for release notes.
 
   hr
 
@@ -78,6 +80,12 @@ export default {
   name: 'Home',
   computed: {
     ...mapState(useServerStore, ['info']),
+    // Resolve the API browser link relative to the current document so it
+    // works when the webui is served behind a reverse proxy at a sub-path.
+    apiBrowserUrl(): string {
+      const base = window.location.pathname.replace(/[^/]*$/, '');
+      return base + 'api/';
+    },
   },
 };
 </script>
