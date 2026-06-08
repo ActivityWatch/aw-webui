@@ -173,10 +173,10 @@ export default {
 }
 
 .settings-section {
-  // Breathing room at the end of each panel so long subviews don't
-  // crash into the card border (and short ones don't end abruptly
-  // just above the sticky nav's last item).
-  padding-bottom: 3rem;
+  // Modest breathing room at the end of each panel — keeps long
+  // subviews from crashing into the card border without making
+  // short ones feel overly padded.
+  padding-bottom: 1rem;
 }
 
 .settings-section__title {
