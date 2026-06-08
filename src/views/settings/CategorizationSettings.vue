@@ -74,7 +74,7 @@ div
   // ActivePatternSettings panel below the group). Collapsed by default
   // so the words query doesn't fire for users who only came to edit
   // rules; once opened it mounts lazily.
-  div.mt-4
+  div.mt-4(ref="builderSection")
     div.d-flex.align-items-center.flex-wrap
       h5.mb-0 Category builder
       small.text-muted.ml-2 Generate rules from uncategorized activity
@@ -146,6 +146,19 @@ export default {
     // Route navigation guard is handled by the parent Settings.vue component
     // using beforeRouteLeave (automatically cleaned up by Vue Router).
     window.addEventListener('beforeunload', this.beforeUnload);
+
+    // Deep-link from UncategorizedNotification ("Category Builder" link) lands
+    // on /settings/categorization?builder=open — open the builder and scroll
+    // it into view so the user can act immediately.
+    if (this.$route.query.builder === 'open') {
+      this.builderOpen = true;
+      this.$nextTick(() => {
+        const el = this.$refs.builderSection as HTMLElement | undefined;
+        if (el && typeof el.scrollIntoView === 'function') {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    }
   },
   beforeDestroy() {
     window.removeEventListener('beforeunload', this.beforeUnload);
