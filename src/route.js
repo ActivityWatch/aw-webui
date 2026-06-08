@@ -13,7 +13,10 @@ const QueryExplorer = () => import('./views/QueryExplorer.vue');
 const Timeline = () => import('./views/Timeline.vue');
 const Trends = () => import('./views/Trends.vue');
 const Settings = () => import('./views/settings/Settings.vue');
-const CategoryBuilder = () => import('./views/settings/CategoryBuilder.vue');
+// CategoryBuilder is no longer a top-level route — it's embedded inside
+// CategorizationSettings. The /settings/category-builder path is now a
+// redirect, so no direct reference here. Keeping the import out avoids
+// pulling a second copy into a separate chunk.
 const Stopwatch = () => import('./views/Stopwatch.vue');
 const WorkReport = () => import('./views/WorkReport.vue');
 const Alerts = () => import('./views/Alerts.vue');
