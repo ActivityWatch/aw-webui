@@ -176,6 +176,13 @@ export default {
   min-width: 0; // prevent grid blowout from long content
 }
 
+.settings-section {
+  // Breathing room at the end of each panel so long subviews don't
+  // crash into the card border (and short ones don't end abruptly
+  // just above the sticky nav's last item).
+  padding-bottom: 3rem;
+}
+
 .settings-section__title {
   margin-bottom: 0.25rem;
 }
