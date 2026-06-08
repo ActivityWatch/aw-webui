@@ -59,7 +59,7 @@ import { buildTooltip } from '../util/tooltip.js';
 import { getCategoryColorFromEvent, getTitleAttr } from '../util/color';
 import { getSwimlane } from '../util/swimlane.js';
 import { IEvent } from '../util/interfaces';
-import { formatTimelineBucketLabelHtml } from '../util/timelineLabels';
+import { formatTimelineBucketLabelHtml, shortenBucketLabel } from '../util/timelineLabels';
 
 import { Timeline } from 'vis-timeline/esnext';
 import 'vis-timeline/styles/vis-timeline-graph2d.css';
@@ -227,9 +227,19 @@ export default {
           this.openEditor();
         });
         if (!isAlertWarningShown) {
-          alert(
-            "Note: Changes won't be reflected in the timeline until the page is refreshed. This will be improved in a future version."
-          );
+          // Show a one-time inline toast instead of a blocking alert(),
+          // which fired on top of the editor and rudely interrupted the
+          // edit flow. Persist the dismissal via localStorage so the user
+          // doesn't see it every session.
+          if (!this.editRefreshHintDismissed()) {
+            this.$bvToast.toast('Your edit is saved. Refresh the timeline to see it reflected.', {
+              title: 'Heads up',
+              variant: 'info',
+              autoHideDelay: 6000,
+              solid: true,
+            });
+            this.markEditRefreshHintDismissed();
+          }
           isAlertWarningShown = true;
         }
       } else {
@@ -237,9 +247,24 @@ export default {
       }
     },
     abbreviateBucketName(bucketId: string): string {
-      // Abbreviate synced bucket names which can be extremely long (#682)
-      // e.g. "aw-watcher-window_host-synced-from-remotehost" -> "aw-watcher-window (synced from remotehost)"
+      // Kept for callers that don't know about multi-host. update() builds
+      // labels directly via formatTimelineBucketLabelHtml so it can pass
+      // the multi-host hint.
       return formatTimelineBucketLabelHtml(bucketId);
+    },
+    editRefreshHintDismissed(): boolean {
+      try {
+        return localStorage.getItem('aw.timeline.editRefreshHintDismissed') === '1';
+      } catch (e) {
+        return false;
+      }
+    },
+    markEditRefreshHintDismissed(): void {
+      try {
+        localStorage.setItem('aw.timeline.editRefreshHintDismissed', '1');
+      } catch (e) {
+        /* localStorage disabled — fine, fall back to the in-memory flag */
+      }
     },
     ensureUpdate() {
       // Will only run update() if data available and never ran before
@@ -259,6 +284,19 @@ export default {
 
       // Build groups
       const buckets = this.bucketsFromEither;
+
+      // Disambiguate per-row labels by hostname only when two buckets
+      // would otherwise share the same shortened label (e.g. a "window"
+      // bucket on two different hosts). Buckets with no host collision
+      // keep the clean short form like "window" or "afk".
+      const labelCounts: Record<string, number> = {};
+      _.each(buckets, b => {
+        if (b && b.id) {
+          const short = shortenBucketLabel(b.id) || b.id;
+          labelCounts[short] = (labelCounts[short] || 0) + 1;
+        }
+      });
+
       let groups = _.map(buckets, bucket => {
         // If bucket id is not set, then if only one bucket is given, assume result of a search/query and set a constant placeholder one.
         // Otherwise, log a warning.
@@ -271,7 +309,16 @@ export default {
             );
           }
         }
-        const label = this.showRowLabels ? this.abbreviateBucketName(bucket.id) : '';
+        let label = '';
+        if (this.showRowLabels) {
+          const short = shortenBucketLabel(bucket.id) || bucket.id;
+          const collides = labelCounts[short] > 1;
+          label = formatTimelineBucketLabelHtml(bucket.id, {
+            hostname: collides
+              ? bucket.hostname || (bucket.data && bucket.data.hostname)
+              : undefined,
+          });
+        }
         return { id: bucket.id, content: label };
       });
 
