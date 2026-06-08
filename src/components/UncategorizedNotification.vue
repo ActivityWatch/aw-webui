@@ -7,7 +7,7 @@ div
       | You have a total of {{ uncategorizedDuration[0] | friendlyduration }} uncategorized time,
       | that's {{ Math.round(100 * uncategorizedDuration[0] / uncategorizedDuration[1]) }}% of all time {{ periodText }}.
       | You can address this by using the #[router-link(:to="{ path: '/settings/categorization', query: { builder: 'open' } }") Category Builder].
-      | #[small.text-muted.d-block.mt-1 You can hide or adjust this hint in #[router-link(:to="{ path: '/settings/general' }") Settings].]
+      | #[small.d-block.mt-1(style="opacity: 0.85") You can hide or adjust this hint in #[router-link(:to="{ path: '/settings/general' }") Settings].]
 </template>
 
 <script lang="ts">
