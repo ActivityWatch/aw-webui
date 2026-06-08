@@ -45,7 +45,7 @@ div
     div(v-if="words_by_duration.length == 0")
       | No words with significant duration. You're good to go!
     div(v-else)
-      div.row.category-builder-word(v-for="word in words_by_duration")
+      div.row.category-builder-word(v-for="word in words_visible" :key="word.word")
         div.col.hover-highlight
           div.d-flex.flex-row.py-2
             div.flex-grow-1
@@ -69,11 +69,14 @@ div
                 td {{ event.data.title }}
                 td.text-right {{ Math.round(event.duration) }}s
             hr
-      //hr
-      //div.d-flex
-        div.flex-grow-1
-        div.flex-grow-0
-          b-button(size="sm" @click="days_back += 7; fetchWords()") Load more
+      div.d-flex.align-items-center.mt-3(v-if="hasMoreWords")
+        small.text-muted
+          | Showing {{ words_visible.length }} of {{ words_by_duration.length }} words
+        b-button.ml-auto(
+          size="sm"
+          variant="outline-primary"
+          @click="visible_count += page_size"
+        ) Show more
 
   div(v-if="create.categoryId !== null")
     CategoryEditModal(:categoryId="create.categoryId",
@@ -131,6 +134,12 @@ export default {
 
       categoryStore: useCategoryStore(),
 
+      // Pagination for the words list. Showing the full list directly
+      // produced a 2+ screen wall of buttons on most users' data; this
+      // shows page_size at a time with a "Show more" button.
+      page_size: 10,
+      visible_count: 10,
+
       // Options
       show_options: false,
       queryOptions: {
@@ -166,6 +175,12 @@ export default {
         .filter(word => word.duration > 60)
         .filter(word => !this.ignored_words.includes(word.word));
     },
+    words_visible: function () {
+      return this.words_by_duration.slice(0, this.visible_count);
+    },
+    hasMoreWords: function () {
+      return this.words_by_duration.length > this.visible_count;
+    },
     valid: function () {
       return this.validPattern && this.validCategory;
     },
@@ -197,6 +212,9 @@ export default {
   methods: {
     async fetchWords() {
       this.loading = true;
+      // Reset pagination so the user sees the top of the new ranking
+      // after every requery.
+      this.visible_count = this.page_size;
       if (!this.queryOptions.hostname) {
         // Try to resolve hostname from loaded buckets
         // Don't ever return the "unknown" hostname
