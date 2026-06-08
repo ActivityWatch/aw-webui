@@ -51,6 +51,47 @@ hr {
   border-color: #282c32 !important;
 }
 
+/* Bootstrap popovers/tooltips render white-on-white in dark mode because
+   .popover .popover-body inherits .body color but keeps its default
+   white background. Patch all three layers (arrow, header, body). */
+.popover {
+  background-color: #21252c !important;
+  border-color: #2f343c !important;
+}
+
+.popover .popover-header {
+  background-color: #1a1d24 !important;
+  border-bottom-color: #2f343c !important;
+  color: #e9ebf0 !important;
+}
+
+.popover .popover-body {
+  background-color: #21252c !important;
+  color: #e9ebf0 !important;
+}
+
+.popover .arrow::before {
+  border-color: #2f343c !important;
+}
+
+.popover .arrow::after {
+  border-color: #21252c !important;
+}
+
+.popover.bs-popover-bottom .arrow::after,
+.popover.bs-popover-auto[x-placement^='bottom'] .arrow::after {
+  border-bottom-color: #1a1d24 !important;
+}
+
+.tooltip .tooltip-inner {
+  background-color: #2f343c !important;
+  color: #e9ebf0 !important;
+}
+
+.tooltip .arrow::before {
+  border-color: #2f343c !important;
+}
+
 .dropdown-menu .dropdown-item {
   color: #e9ebf0 !important;
 }
