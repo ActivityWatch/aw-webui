@@ -48,6 +48,27 @@ div
     div.mt-1.small.text-muted(v-if="categoryStore.category_sets.length > 1")
       | {{ categoryStore.category_sets.length }} sets available — switch sets to use different rule profiles.
 
+  // Category Builder lives above the rules tree so it's easy to find
+  // (the rules list can be long enough to bury anything below it).
+  // It stays collapsed by default so the words query doesn't fire for
+  // users who only came to edit rules; once opened it mounts lazily.
+  div.my-3
+    div.d-flex.align-items-center.flex-wrap
+      h5.mb-0 Category builder
+      small.text-muted.ml-2 Generate rules from uncategorized activity
+      b-btn.ml-auto(
+        variant="outline-primary"
+        size="sm"
+        @click="builderOpen = !builderOpen"
+        :aria-expanded="builderOpen ? 'true' : 'false'"
+        aria-controls="category-builder-collapse"
+      )
+        icon.mr-1(:name="builderOpen ? 'angle-double-up' : 'angle-double-down'")
+        | {{ builderOpen ? 'Hide builder' : 'Open builder' }}
+    b-collapse#category-builder-collapse(v-model="builderOpen")
+      div.mt-3(v-if="builderMounted")
+        CategoryBuilder(embedded)
+
   div.my-4
     b-alert(variant="warning" :show="classes_unsaved_changes")
       | You have unsaved changes!
@@ -68,29 +89,6 @@ div
         | Add category
       b-btn.float-right(@click="saveClasses", variant="success" :disabled="!classes_unsaved_changes")
         | Save
-
-  hr.mt-4
-
-  // Embedded Category Builder. Mounted only after the user opens it so
-  // the words query doesn't fire for users who just came to edit rules.
-  // Edits made via the builder show up in the rule tree above without
-  // navigating away.
-  div.mt-3
-    div.d-flex.align-items-center.flex-wrap
-      h5.mb-0 Category builder
-      small.text-muted.ml-2 Generate rules from uncategorized activity
-      b-btn.ml-auto(
-        variant="outline-primary"
-        size="sm"
-        @click="builderOpen = !builderOpen"
-        :aria-expanded="builderOpen ? 'true' : 'false'"
-        aria-controls="category-builder-collapse"
-      )
-        icon.mr-1(:name="builderOpen ? 'angle-double-up' : 'angle-double-down'")
-        | {{ builderOpen ? 'Hide builder' : 'Open builder' }}
-    b-collapse#category-builder-collapse(v-model="builderOpen")
-      div.mt-3(v-if="builderMounted")
-        CategoryBuilder(embedded)
 </template>
 <script lang="ts">
 import { mapState, mapGetters } from 'pinia';
