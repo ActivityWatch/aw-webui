@@ -66,6 +66,8 @@ import 'vis-timeline/styles/vis-timeline-graph2d.css';
 import EventEditor from '~/components/EventEditor.vue';
 
 let isAlertWarningShown = false;
+const PIXELS_PER_WHEEL_LINE = 40;
+const PIXELS_PER_WHEEL_PAGE = 800;
 
 interface IChartDataItem {
   bucketId: string;
@@ -105,7 +107,12 @@ export default {
           overflowMethod: 'flip',
           delay: 0,
         },
-        // Horizontal scroll navigation (see #629)
+        // Keep vertical wheel input as zoom-only. Without preferZoom, vis-timeline
+        // zooms around the cursor and then pans the same wheel event when
+        // horizontalScroll is enabled, which makes the zoom anchor drift.
+        preferZoom: true,
+        // Horizontal scroll navigation (see #629). Dominant horizontal wheel
+        // events are handled by onHorizontalWheel.
         horizontalScroll: true, // horizontal scroll/swipe pans the timeline
       },
       editingEvent: null,
@@ -183,6 +190,10 @@ export default {
   mounted() {
     this.$nextTick(() => {
       const el = this.$el.querySelector('#visualization');
+      el.addEventListener('wheel', this.onHorizontalWheel, {
+        capture: true,
+        passive: false,
+      });
       this.timeline = new Timeline(el, [], [], this.options);
       this.timeline.on('select', properties => {
         // Sends both 'press' and 'tap' events, only one should trigger
@@ -194,7 +205,35 @@ export default {
       this.ensureUpdate();
     });
   },
+  beforeDestroy() {
+    const el = this.$el.querySelector('#visualization');
+    if (el) {
+      el.removeEventListener('wheel', this.onHorizontalWheel, { capture: true });
+    }
+  },
   methods: {
+    onHorizontalWheel: function (event: WheelEvent) {
+      if (!this.timeline || Math.abs(event.deltaX) <= Math.abs(event.deltaY)) {
+        return;
+      }
+
+      const currentWindow = this.timeline.getWindow();
+      const start = currentWindow.start.valueOf();
+      const end = currentWindow.end.valueOf();
+      let deltaX = event.deltaX;
+      if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) {
+        deltaX *= PIXELS_PER_WHEEL_LINE;
+      } else if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
+        deltaX *= PIXELS_PER_WHEEL_PAGE;
+      }
+      const diff = (deltaX / 120) * ((end - start) / 20);
+
+      this.timeline.setWindow(new Date(start + diff), new Date(end + diff), {
+        animation: false,
+      });
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    },
     openEditor: function () {
       this.$bvModal.show('edit-modal-' + this.editingEvent.id);
     },
