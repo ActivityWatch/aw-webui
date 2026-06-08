@@ -29,6 +29,7 @@ import { useCategoryStore } from '~/stores/categories';
 import DaystartSettings from '~/views/settings/DaystartSettings.vue';
 import TimelineDurationSettings from '~/views/settings/TimelineDurationSettings.vue';
 import ReleaseNotificationSettings from '~/views/settings/ReleaseNotificationSettings.vue';
+import UncategorizedHintSettings from '~/views/settings/UncategorizedHintSettings.vue';
 import CategorizationSettings from '~/views/settings/CategorizationSettings.vue';
 import LandingPageSettings from '~/views/settings/LandingPageSettings.vue';
 import DeveloperSettings from '~/views/settings/DeveloperSettings.vue';
@@ -50,6 +51,7 @@ export default {
     DaystartSettings,
     TimelineDurationSettings,
     ReleaseNotificationSettings,
+    UncategorizedHintSettings,
     CategorizationSettings,
     LandingPageSettings,
     Theme,
@@ -89,6 +91,7 @@ export default {
           { name: 'DaystartSettings' },
           { name: 'TimelineDurationSettings' },
           { name: 'LandingPageSettings' },
+          { name: 'UncategorizedHintSettings' },
           // Release-notification check folded in here so it doesn't
           // need its own one-setting "Updates" panel.
           ...(this.$isAndroid ? [] : [{ name: 'ReleaseNotificationSettings' }]),
