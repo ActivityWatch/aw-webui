@@ -1,11 +1,15 @@
 <template lang="pug">
 div
-  div.text-center
-    div.d-inline-flex.align-items-center.justify-content-center
-      | Your total score for {{ score_period_label }} is
-      icon#scoreHelp.ml-1.text-muted(name="question-circle" style="cursor: help")
-      b-tooltip(target="scoreHelp" placement="top")
-        | Sum of (hours &times; category score). Set category scores in #[b Settings &gt; Categories]. Positive scores reward activities you want to do more of; negative ones penalize distractions.
+  div.text-center.position-relative
+    button.score__help-btn(
+      id="scoreHelp"
+      type="button"
+      aria-label="How is the score calculated?"
+    )
+      icon(name="question-circle" scale="0.9")
+    b-tooltip(target="scoreHelp" placement="left" triggers="hover focus")
+      | Sum of (hours &times; category score). Set category scores in #[b Settings &gt; Categories]. Positive scores reward activities you want to do more of; negative ones penalize distractions.
+    div.small.text-muted Score for {{ score_period_label }}
     div.score-value(:class="score >= 0 ? 'text-success' : 'text-danger'")
       | {{score >= 0 ? '+' : ''}}{{ (Math.round(score * 10) / 10).toFixed(1) }}
     div.small.text-muted(v-if="!isNaN(score_productive_percent)")
@@ -43,6 +47,25 @@ div
   font-size: 2em;
   font-weight: 600;
   line-height: 1.1;
+}
+
+.score__help-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: transparent;
+  border: 0;
+  padding: 0.25rem;
+  color: inherit;
+  opacity: 0.45;
+  cursor: help;
+  line-height: 1;
+}
+
+.score__help-btn:hover,
+.score__help-btn:focus {
+  opacity: 0.85;
+  outline: none;
 }
 </style>
 
