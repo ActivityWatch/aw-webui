@@ -1,17 +1,6 @@
 <template lang="pug">
 div
-  h5.d-inline-block
-    div Categorization
-  div.float-right
-    b-btn.ml-1(@click="restoreDefaultClasses", variant="outline-warning" size="sm")
-      icon(name="undo")
-      | Restore defaults
-    label.btn.btn-sm.ml-1.btn-outline-primary(style="margin: 0")
-      | Import
-      input(type="file" @change="importCategories" hidden)
-    b-btn.ml-1(@click="exportClasses", variant="outline-primary" size="sm")
-      | Export
-  p
+  p.mb-2
     | Rules for categorizing events. An event can only have one category. If several categories match, the deepest one will be chosen.
   p
     | Find and share categorization rule presets on #[a(href="https://forum.activitywatch.net/c/projects/category-rules") the forum].
@@ -48,28 +37,19 @@ div
     div.mt-1.small.text-muted(v-if="categoryStore.category_sets.length > 1")
       | {{ categoryStore.category_sets.length }} sets available — switch sets to use different rule profiles.
 
-  // Category Builder lives above the rules tree so it's easy to find
-  // (the rules list can be long enough to bury anything below it).
-  // It stays collapsed by default so the words query doesn't fire for
-  // users who only came to edit rules; once opened it mounts lazily.
-  div.my-3
-    div.d-flex.align-items-center.flex-wrap
-      h5.mb-0 Category builder
-      small.text-muted.ml-2 Generate rules from uncategorized activity
-      b-btn.ml-auto(
-        variant="outline-primary"
-        size="sm"
-        @click="builderOpen = !builderOpen"
-        :aria-expanded="builderOpen ? 'true' : 'false'"
-        aria-controls="category-builder-collapse"
-      )
-        icon.mr-1(:name="builderOpen ? 'angle-double-up' : 'angle-double-down'")
-        | {{ builderOpen ? 'Hide builder' : 'Open builder' }}
-    b-collapse#category-builder-collapse(v-model="builderOpen")
-      div.mt-3(v-if="builderMounted")
-        CategoryBuilder(embedded)
+  div.d-flex.align-items-center.flex-wrap.mt-4
+    h5.mb-0 Categories
+    div.ml-auto
+      b-btn.ml-1(@click="restoreDefaultClasses", variant="outline-warning" size="sm")
+        icon(name="undo")
+        | Restore defaults
+      label.btn.btn-sm.ml-1.btn-outline-primary(style="margin: 0")
+        | Import
+        input(type="file" @change="importCategories" hidden)
+      b-btn.ml-1(@click="exportClasses", variant="outline-primary" size="sm")
+        | Export
 
-  div.my-4
+  div.my-3
     b-alert(variant="warning" :show="classes_unsaved_changes")
       | You have unsaved changes!
       div.float-right(style="margin-top: -0.15em; margin-right: -0.6em")
@@ -89,6 +69,27 @@ div
         | Add category
       b-btn.float-right(@click="saveClasses", variant="success" :disabled="!classes_unsaved_changes")
         | Save
+
+  // Category Builder sits at the end of the categories list (above the
+  // ActivePatternSettings panel below the group). Collapsed by default
+  // so the words query doesn't fire for users who only came to edit
+  // rules; once opened it mounts lazily.
+  div.mt-4
+    div.d-flex.align-items-center.flex-wrap
+      h5.mb-0 Category builder
+      small.text-muted.ml-2 Generate rules from uncategorized activity
+      b-btn.ml-auto(
+        variant="outline-primary"
+        size="sm"
+        @click="builderOpen = !builderOpen"
+        :aria-expanded="builderOpen ? 'true' : 'false'"
+        aria-controls="category-builder-collapse"
+      )
+        icon.mr-1(:name="builderOpen ? 'angle-double-up' : 'angle-double-down'")
+        | {{ builderOpen ? 'Hide builder' : 'Open builder' }}
+    b-collapse#category-builder-collapse(v-model="builderOpen")
+      div.mt-3(v-if="builderMounted")
+        CategoryBuilder(embedded)
 </template>
 <script lang="ts">
 import { mapState, mapGetters } from 'pinia';

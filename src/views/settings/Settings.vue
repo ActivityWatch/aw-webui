@@ -106,7 +106,10 @@ export default {
         id: 'categorization',
         label: 'Categorization',
         help: 'Rules that classify events into categories, plus AFK/active-pattern overrides.',
-        components: [{ name: 'ActivePatternSettings' }, { name: 'CategorizationSettings' }],
+        // CategorizationSettings (rules) is the primary content; the
+        // ActivePatternSettings AFK override is an advanced edge-case
+        // setting so it lives at the bottom of the group.
+        components: [{ name: 'CategorizationSettings' }, { name: 'ActivePatternSettings' }],
       };
       const privacy: Group = {
         id: 'privacy',
