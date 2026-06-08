@@ -12,7 +12,7 @@ div
     | Regex-based rules that drop or redact sensitive event data before it is stored.
     | Rules are saved to the server setting #[code privacy_filters] and used by aw-server-rust.
   small.text-muted
-    | Leave the editor empty or save #[code []] to disable the feature.
+    | Leave the editor empty or save <code>[]</code> to disable the feature.
 
   b-alert.mt-3(:show="saveError !== ''" variant="danger")
     | {{ saveError }}
