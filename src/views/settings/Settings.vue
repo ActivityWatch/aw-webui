@@ -9,8 +9,9 @@ div
           v-for="group in groups"
           :key="group.id"
           :active="activeGroup === group.id"
-          @click="activeGroup = group.id"
+          :to="`/settings/${group.id}`"
           link-classes="settings-nav__link"
+          replace
         ) {{ group.label }}
 
     div.settings-content
@@ -69,12 +70,16 @@ export default {
       next();
     }
   },
-  data() {
-    return {
-      activeGroup: 'general',
-    };
+  props: {
+    // Hydrated from the /settings/:group route param so reloads / direct
+    // links preserve which panel is open.
+    group: { type: String, default: '' },
   },
   computed: {
+    activeGroup(): string {
+      const requested = this.group || 'general';
+      return this.groups.some(g => g.id === requested) ? requested : 'general';
+    },
     groups(): Group[] {
       const general: Group = {
         id: 'general',
@@ -185,7 +190,7 @@ export default {
   margin: 1.5rem 0;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 767.98px) {
   .settings-layout {
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -193,17 +198,25 @@ export default {
 
   .settings-nav {
     position: static;
+    // Keep the nav fully inside the layout so the horizontal pill row
+    // doesn't push the page to overflow at xs widths.
+    min-width: 0;
+    max-width: 100%;
   }
 
+  // Flex-wrap the pills onto multiple rows instead of overflow-x: auto.
+  // The hidden horizontal scrollbar produced "incorrect" extra horizontal
+  // scroll space on xs viewports and let pills like "Developer" hide
+  // off-screen — both of which break discoverability.
   ::v-deep .settings-nav .nav {
     flex-direction: row !important;
-    overflow-x: auto;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 0.25rem;
   }
 
   ::v-deep .settings-nav .nav-link {
     white-space: nowrap;
+    padding: 0.375rem 0.625rem;
   }
 }
 </style>

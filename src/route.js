@@ -66,6 +66,14 @@ const router = new VueRouter({
     { path: '/timespiral', component: TimespiralView },
     { path: '/settings', component: Settings },
     { path: '/settings/category-builder', component: CategoryBuilder },
+    // :group lets the active settings panel survive reloads / be linkable.
+    // The matcher excludes 'category-builder' so the more specific route above
+    // wins; new groups added in Settings.vue should also be added here.
+    {
+      path: '/settings/:group(general|appearance|updates|categorization|privacy|developer)',
+      component: Settings,
+      props: true,
+    },
     { path: '/stopwatch', component: Stopwatch },
     { path: '/work-report', component: WorkReport },
     { path: '/search', component: Search },
