@@ -3,14 +3,20 @@ div
   b-alert.my-2(v-if="isVisible", variant="info", show dismissible @dismissed="onDismiss")
     p.mb-0
       | #[b High uncategorized time]
+      router-link.ml-1.uncategorized-hint__cog(
+        :to="{ path: '/settings/general' }"
+        title="Hide or adjust this hint in Settings"
+        aria-label="Hide or adjust this hint in Settings"
+      )
+        icon(name="cog" scale="0.85")
       br
       | You have a total of {{ uncategorizedDuration[0] | friendlyduration }} uncategorized time,
       | that's {{ Math.round(100 * uncategorizedDuration[0] / uncategorizedDuration[1]) }}% of all time {{ periodText }}.
       | You can address this by using the #[router-link(:to="{ path: '/settings/categorization', query: { builder: 'open' } }") Category Builder].
-      | #[small.d-block.mt-1(style="opacity: 0.85") You can hide or adjust this hint in #[router-link(:to="{ path: '/settings/general' }") Settings].]
 </template>
 
 <script lang="ts">
+import 'vue-awesome/icons/cog';
 import { mapState } from 'pinia';
 import { useActivityStore } from '~/stores/activity';
 import { useSettingsStore } from '~/stores/settings';
@@ -73,3 +79,14 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.uncategorized-hint__cog {
+  color: inherit;
+  opacity: 0.7;
+}
+.uncategorized-hint__cog:hover,
+.uncategorized-hint__cog:focus {
+  opacity: 1;
+}
+</style>
