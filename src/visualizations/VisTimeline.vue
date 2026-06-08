@@ -285,17 +285,28 @@ export default {
       // Build groups
       const buckets = this.bucketsFromEither;
 
-      // Disambiguate per-row labels by hostname only when two buckets
-      // would otherwise share the same shortened label (e.g. a "window"
-      // bucket on two different hosts). Buckets with no host collision
-      // keep the clean short form like "window" or "afk".
+      // Decide whether to surface hostnames on labels. We do it
+      // all-or-nothing: if ANY two host-attributed buckets share the same
+      // shortened label (e.g. two "window" buckets on different hosts),
+      // every host-attributed row gets the "@ host" suffix for
+      // consistency. Buckets without a real hostname (stopwatch /
+      // aw-watcher-web-*, which aren't per-host yet — see
+      // https://github.com/ActivityWatch/activitywatch/issues/ for
+      // host attribution of these watchers) are always shown bare.
+      // TODO: drop the hostnameless-exception branch once
+      // stopwatch/browser buckets are migrated to per-host ids.
+      const realHost = (b: any): string | undefined => {
+        const h = b && (b.hostname || (b.data && b.data.hostname));
+        return h && h !== 'unknown' ? h : undefined;
+      };
       const labelCounts: Record<string, number> = {};
       _.each(buckets, b => {
-        if (b && b.id) {
+        if (b && b.id && realHost(b)) {
           const short = shortenBucketLabel(b.id) || b.id;
           labelCounts[short] = (labelCounts[short] || 0) + 1;
         }
       });
+      const hasCollision = _.some(labelCounts, c => c > 1);
 
       let groups = _.map(buckets, bucket => {
         // If bucket id is not set, then if only one bucket is given, assume result of a search/query and set a constant placeholder one.
@@ -311,12 +322,9 @@ export default {
         }
         let label = '';
         if (this.showRowLabels) {
-          const short = shortenBucketLabel(bucket.id) || bucket.id;
-          const collides = labelCounts[short] > 1;
+          const host = realHost(bucket);
           label = formatTimelineBucketLabelHtml(bucket.id, {
-            hostname: collides
-              ? bucket.hostname || (bucket.data && bucket.data.hostname)
-              : undefined,
+            hostname: hasCollision && host ? host : undefined,
           });
         }
         return { id: bucket.id, content: label };
