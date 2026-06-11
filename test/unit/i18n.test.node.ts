@@ -1,11 +1,14 @@
 import {
   DEFAULT_LOCALE,
   SUPPORTED_LOCALES,
+  getLocale,
+  installI18n,
   interpolate,
   setLocale,
   t,
   translate,
 } from '~/i18n';
+import Vue from 'vue';
 
 describe('i18n', () => {
   test('uses English as the default locale', () => {
@@ -44,6 +47,30 @@ describe('i18n', () => {
     expect(t('nav.activity')).toBe('活动');
     setLocale('en');
     expect(t('nav.activity')).toBe('Activity');
+  });
+
+  test('falls back to the default locale for invalid locale input', () => {
+    setLocale('zh-CN');
+
+    setLocale('fr-FR');
+    expect(getLocale()).toBe(DEFAULT_LOCALE);
+    expect(t('nav.activity')).toBe('Activity');
+
+    setLocale('zh-CN');
+    setLocale(null);
+    expect(getLocale()).toBe(DEFAULT_LOCALE);
+
+    setLocale('zh-CN');
+    setLocale(undefined);
+    expect(getLocale()).toBe(DEFAULT_LOCALE);
+  });
+
+  test('installs $t on Vue without requiring a Vue argument', () => {
+    delete Vue.prototype.$t;
+
+    installI18n();
+
+    expect(Vue.prototype.$t('nav.activity')).toBe('Activity');
   });
 
   test('keeps placeholders for missing params', () => {

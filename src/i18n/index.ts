@@ -42,8 +42,8 @@ export function isSupportedLocale(locale: string): locale is SupportedLocale {
   return SUPPORTED_LOCALES.some(supportedLocale => supportedLocale.code === locale);
 }
 
-export function setLocale(locale: SupportedLocale): void {
-  state.locale = locale;
+export function setLocale(locale: string | null | undefined): void {
+  state.locale = locale && isSupportedLocale(locale) ? locale : DEFAULT_LOCALE;
 }
 
 export function getLocale(): SupportedLocale {
@@ -72,7 +72,6 @@ export function t(key: string, params?: TranslationParams): string {
   return translate(key, state.locale, params);
 }
 
-export function installI18n(vue: typeof Vue): void {
-  vue.prototype.$t = t;
-  vue.prototype.$translate = translate;
+export function installI18n(): void {
+  Vue.prototype.$t = t;
 }
