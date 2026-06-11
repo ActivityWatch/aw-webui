@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  h3 Timeline
+  h3 {{ $t('timeline.title') }}
 
   input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration").mb-3
 
@@ -10,29 +10,29 @@ div
     details.timeline-filters.mr-2(ref="filtersDetails")
       summary.timeline-chip.timeline-chip--clickable
         icon.mr-1(name="filter")
-        b Filters: {{ filter_summary }}
+        b {{ $t('timeline.filters') }}: {{ filter_summary }}
       div.timeline-filters-panel.shadow-sm
         table
           tr
             th.pt-2.pr-3
-              label(for="timeline-filter-host") Host:
+              label(for="timeline-filter-host") {{ $t('timeline.host') }}
             td
               select#timeline-filter-host.form-control.form-control-sm(v-model="filter_hostname")
-                option(:value='null') All
+                option(:value='null') {{ $t('timeline.all') }}
                 option(v-for="host in hosts", :value="host") {{ host }}
           tr
             th.pt-2.pr-3
-              label(for="timeline-filter-client") Client:
+              label(for="timeline-filter-client") {{ $t('timeline.client') }}
             td
               select#timeline-filter-client.form-control.form-control-sm(v-model="filter_client")
-                option(:value='null') All
+                option(:value='null') {{ $t('timeline.all') }}
                 option(v-for="client in clients", :value="client") {{ client }}
           tr
             th.pt-2.pr-3
-              label(for="timeline-filter-duration") Duration:
+              label(for="timeline-filter-duration") {{ $t('timeline.duration') }}
             td
               select#timeline-filter-duration.form-control.form-control-sm(v-model="filter_duration")
-                option(:value='null') All
+                option(:value='null') {{ $t('timeline.all') }}
                 option(:value='2') 2+ secs
                 option(:value='5') 5+ secs
                 option(:value='10') 10+ secs
@@ -46,27 +46,27 @@ div
                 option(:value='2 * 60 * 60') 2+ hrs
           tr
             th.pt-2.pr-3
-              label AFK:
+              label {{ $t('timeline.afk') }}
             td
               b-form-checkbox(v-model="filter_afk" size="sm" switch)
-                | Filter AFK
+                | {{ $t('timeline.filterAfk') }}
           tr
             th.pt-2.pr-3
-              label Merge:
+              label {{ $t('timeline.merge') }}
             td
               b-form-checkbox(v-model="filter_merge_similar" size="sm" switch)
-                | Merge by app
+                | {{ $t('timeline.mergeByApp') }}
           tr
             th.pt-2.pr-3
-              label(for="timeline-filter-categories") Categories:
+              label(for="timeline-filter-categories") {{ $t('timeline.categories') }}
             td
               select#timeline-filter-categories.form-control.form-control-sm(@change="onCategorySelect($event)", :value="''")
-                option(value="" disabled) {{ filter_categories.length > 0 ? 'Add category...' : 'All' }}
+                option(value="" disabled) {{ filter_categories.length > 0 ? $t('timeline.addCategory') : $t('timeline.all') }}
                 option(v-for="cat in category_options", :key="cat.text", :value="cat.text") {{ cat.text }}
               div.mt-1(v-if="filter_categories.length > 0")
                 span.badge.badge-info.mr-1(v-for="(cat, idx) in filter_categories", :key="idx")
                   | {{ cat.join(' > ') }}
-                  button.ml-1.close.small(@click="removeCategory(idx)", type="button", aria-label="Remove category", style="font-size: 0.85rem; line-height: 1") &times;
+                  button.ml-1.close.small(@click="removeCategory(idx)", type="button", :aria-label="$t('timeline.removeCategory')", style="font-size: 0.85rem; line-height: 1") &times;
 
     // Display options (swimlanes, future visual toggles) tucked behind a
     // ghost kebab so they don't compete visually with Filters.
@@ -76,12 +76,12 @@ div
       toggle-class="border-0"
       no-caret
       right
-      title="Display options"
-      aria-label="Display options"
+      :title="$t('timeline.displayOptions')"
+      :aria-label="$t('timeline.displayOptions')"
     )
       template(v-slot:button-content)
         icon(name="ellipsis-v")
-      b-dropdown-header Swimlanes
+      b-dropdown-header {{ $t('timeline.swimlanes') }}
       b-dropdown-item-button(
         v-for="opt in swimlaneOptions"
         :key="String(opt.value)"
@@ -90,13 +90,13 @@ div
       ) {{ opt.text }}
 
     div.timeline-chip.mr-2.text-muted
-      | {{ num_events }} events shown
+      | {{ $t('timeline.eventsShown', { count: num_events }) }}
 
     small.text-muted.ml-auto
-      | Scroll to zoom, swipe to pan, arrow keys to navigate
+      | {{ $t('timeline.navigationHint') }}
 
   b-alert.mb-2(v-if="buckets !== null && num_events === 0", variant="warning", show)
-    | No events match selected criteria. Timeline is not updated.
+    | {{ $t('timeline.emptyWarning') }}
 
   div(v-if="buckets !== null")
     vis-timeline(:buckets="buckets", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane", :updateTimelineWindow='updateTimelineWindow')
@@ -104,7 +104,7 @@ div
     aw-devonly(reason="Not ready for production, still experimenting")
       aw-calendar(:buckets="buckets")
   div(v-else)
-    h1.aw-loading Loading...
+    h1.aw-loading {{ $t('timeline.loading') }}
 </template>
 
 <script lang="ts">
@@ -138,11 +138,6 @@ export default {
       filter_merge_similar: false,
       filter_categories: [],
       swimlane: null,
-      swimlaneOptions: [
-        { value: null, text: 'None' },
-        { value: 'category', text: 'Group by category' },
-        { value: 'bucketType', text: 'Group by bucket type' },
-      ],
       updateTimelineWindow: true,
     };
   },
@@ -160,6 +155,13 @@ export default {
       const categoryStore = useCategoryStore();
       return categoryStore.allCategoriesSelect;
     },
+    swimlaneOptions() {
+      return [
+        { value: null, text: this.$t('timeline.swimlaneNone') },
+        { value: 'category', text: this.$t('timeline.swimlaneCategory') },
+        { value: 'bucketType', text: this.$t('timeline.swimlaneBucketType') },
+      ];
+    },
     filter_summary() {
       const desc = [];
       if (this.filter_hostname) {
@@ -172,23 +174,19 @@ export default {
         desc.push(seconds_to_duration(this.filter_duration));
       }
       if (this.filter_afk) {
-        desc.push('AFK filtered');
+        desc.push(this.$t('timeline.filterSummaryAfk'));
       }
       if (this.filter_merge_similar) {
-        desc.push('merged by app');
+        desc.push(this.$t('timeline.filterSummaryMerged'));
       }
       if (this.filter_categories.length > 0) {
-        desc.push(
-          this.filter_categories.length +
-            ' categor' +
-            (this.filter_categories.length === 1 ? 'y' : 'ies')
-        );
+        desc.push(this.$t('timeline.filterSummaryCategories', { count: this.filter_categories.length }));
       }
 
       if (desc.length > 0) {
         return desc.join(', ');
       }
-      return 'none';
+      return this.$t('timeline.filterSummaryNone');
     },
   },
   watch: {
