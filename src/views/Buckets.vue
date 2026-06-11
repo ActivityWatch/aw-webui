@@ -156,7 +156,7 @@ div
 
   hr
 
-  aw-devonly(reason="This section is still under development")
+  aw-devonly(:reason="$t('experiments.underDevelopmentReason')")
     h4.p-2 {{ $t('buckets.tools') }}
 
     hr
@@ -395,8 +395,7 @@ export default {
         });
         this.$root.$emit('bv::hide::modal', 'delete-host-modal');
       } catch (err) {
-        this.delete_host_error =
-          err?.message || this.$t('buckets.deleteHostFailed');
+        this.delete_host_error = err?.message || this.$t('buckets.deleteHostFailed');
       } finally {
         this.deleting_host = false;
       }

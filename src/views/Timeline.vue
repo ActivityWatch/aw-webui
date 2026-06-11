@@ -180,7 +180,9 @@ export default {
         desc.push(this.$t('timeline.filterSummaryMerged'));
       }
       if (this.filter_categories.length > 0) {
-        desc.push(this.$t('timeline.filterSummaryCategories', { count: this.filter_categories.length }));
+        desc.push(
+          this.$t('timeline.filterSummaryCategories', { count: this.filter_categories.length })
+        );
       }
 
       if (desc.length > 0) {

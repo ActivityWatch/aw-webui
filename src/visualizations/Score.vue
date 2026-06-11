@@ -4,19 +4,19 @@ div
     button.score__help-btn(
       id="scoreHelp"
       type="button"
-      aria-label="How is the score calculated?"
+      :aria-label="$t('score.helpAria')"
     )
       icon(name="question-circle" scale="0.9")
     b-tooltip(target="scoreHelp" placement="left" triggers="hover focus")
-      | Sum of (hours &times; category score). Set category scores in #[b Settings &gt; Categories]. Positive scores reward activities you want to do more of; negative ones penalize distractions.
-    div.small.text-muted Score for {{ score_period_label }}
+      | {{ $t('score.helpBefore') }} #[b {{ $t('score.helpSettingsPath') }}]{{ $t('score.helpAfter') }}
+    div.small.text-muted {{ $t('score.scoreFor', { period: score_period_label }) }}
     div.score-value(:class="score >= 0 ? 'text-success' : 'text-danger'")
       | {{score >= 0 ? '+' : ''}}{{ (Math.round(score * 10) / 10).toFixed(1) }}
     div.small.text-muted(v-if="!isNaN(score_productive_percent)")
-      | {{score_productive_percent.toFixed(1)}}% productive
+      | {{ $t('score.productivePercent', { percent: score_productive_percent.toFixed(1) }) }}
   hr
   div
-    b Top productive
+    b {{ $t('score.topProductive') }}
     div.mt-2(v-for="cat in top_productive" :key="cat.data.$category.join('>')")
       div.d-flex.align-items-center
         div
@@ -26,10 +26,10 @@ div
         div.ml-auto.text-success.h5.mb-0
           | +{{ (Math.round(cat.data.$total_score * 10) / 10).toFixed(1) }}
     p.text-muted.small.mb-0.mt-2(v-if="top_productive.length === 0")
-      | No productive categories recorded yet.
+      | {{ $t('score.noProductive') }}
   hr
   div
-    b Top distracting
+    b {{ $t('score.topDistracting') }}
     div.mt-2(v-for="cat in top_distracting" :key="cat.data.$category.join('>')")
       div.d-flex.align-items-center
         div
@@ -39,7 +39,7 @@ div
         div.ml-auto.text-danger.h5.mb-0
           | {{ (Math.round(cat.data.$total_score * 10) / 10).toFixed(1) }}
     p.text-muted.small.mb-0.mt-2(v-if="top_distracting.length === 0")
-      | No distracting activity in this period.
+      | {{ $t('score.noDistracting') }}
 </template>
 
 <style scoped>
@@ -94,7 +94,7 @@ export default {
     },
     score_period_label: function (): string {
       const timeperiod = useActivityStore().query_options?.timeperiod;
-      return timeperiod ? periodReadable(timeperiod) : 'selected period';
+      return timeperiod ? periodReadable(timeperiod) : this.$t('score.selectedPeriod');
     },
     score_productive_percent() {
       // Compute the percentage of time spent on productive activities (score > 0)
