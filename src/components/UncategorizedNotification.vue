@@ -2,20 +2,22 @@
 div
   b-alert.my-2(v-if="isVisible", variant="info", show dismissible @dismissed="onDismiss")
     p.mb-0
-      | #[b High uncategorized time]
+      b {{ $t('notifications.highUncategorizedTime') }}
       router-link.ml-1.uncategorized-hint__cog(
         :to="{ path: '/settings/general' }"
-        title="Hide or adjust this hint in Settings"
-        aria-label="Hide or adjust this hint in Settings"
+        :title="$t('notifications.adjustHintInSettings')"
+        :aria-label="$t('notifications.adjustHintInSettings')"
       )
         icon(name="cog" scale="0.85")
       br
-      | You have a total of {{ uncategorizedDuration[0] | friendlyduration }} uncategorized time,
-      | that's {{ Math.round(100 * uncategorizedDuration[0] / uncategorizedDuration[1]) }}% of all time {{ periodText }}.
-      | You can address this by using the #[router-link(:to="{ path: '/settings/categorization', query: { builder: 'open' } }") Category Builder].
+      span {{ $t('notifications.uncategorizedSummary', { duration: formattedUncategorizedDuration, percent: uncategorizedPercent, period: periodText }) }}
+      span.ml-1 {{ $t('notifications.categoryBuilderHintBefore') }}
+      router-link(:to="{ path: '/settings/categorization', query: { builder: 'open' } }") {{ $t('notifications.categoryBuilder') }}
+      span {{ $t('notifications.categoryBuilderHintAfter') }}
 </template>
 
 <script lang="ts">
+import Vue from 'vue';
 import 'vue-awesome/icons/cog';
 import { mapState } from 'pinia';
 import { useActivityStore } from '~/stores/activity';
@@ -42,14 +44,21 @@ export default {
     },
     periodText() {
       const periodMap: Record<string, string> = {
-        day: 'today',
-        week: 'this week',
-        month: 'this month',
-        year: 'this year',
-        last7d: 'the last 7 days',
-        last30d: 'the last 30 days',
+        day: this.$t('notifications.periodToday'),
+        week: this.$t('notifications.periodThisWeek'),
+        month: this.$t('notifications.periodThisMonth'),
+        year: this.$t('notifications.periodThisYear'),
+        last7d: this.$t('notifications.periodLast7Days'),
+        last30d: this.$t('notifications.periodLast30Days'),
       };
-      return periodMap[this.periodLength] || 'today';
+      return periodMap[this.periodLength] || this.$t('notifications.periodToday');
+    },
+    formattedUncategorizedDuration() {
+      const friendlyDuration = Vue.filter('friendlyduration');
+      return friendlyDuration(this.uncategorizedDuration[0]);
+    },
+    uncategorizedPercent() {
+      return Math.round((100 * this.uncategorizedDuration[0]) / this.uncategorizedDuration[1]);
     },
     isVisible() {
       const cfg = this.uncategorizedNotificationData || {};
