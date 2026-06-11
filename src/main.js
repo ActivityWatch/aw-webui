@@ -22,6 +22,9 @@ import './style/style.scss';
 // Loads all the filters
 import './util/filters.js';
 
+import { installI18n } from './i18n';
+installI18n();
+
 // Sets up the routing and the base app (using vue-router)
 import router from './route.js';
 

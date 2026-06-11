@@ -6,6 +6,7 @@ import { SavedQuery } from '~/util/savedQueries';
 import { View, defaultViews } from '~/stores/views';
 import type { PrivacyFilterRule } from '~/util/privacyFilters';
 import { isEqual } from 'lodash';
+import { DEFAULT_LOCALE, isSupportedLocale, type SupportedLocale } from '~/i18n';
 
 function jsonEq(a: any, b: any) {
   const jsonA = JSON.parse(JSON.stringify(a));
@@ -32,6 +33,7 @@ interface State {
   useColorFallback: boolean;
   landingpage: string;
   theme: 'light' | 'dark' | 'auto';
+  language: SupportedLocale;
 
   newReleaseCheckData: Record<string, any>;
   userSatisfactionPollData: {
@@ -79,6 +81,7 @@ export const useSettingsStore = defineStore('settings', {
     landingpage: '/home',
 
     theme: 'auto',
+    language: 'en',
 
     newReleaseCheckData: {
       isEnabled: true,
@@ -179,6 +182,8 @@ export const useSettingsStore = defineStore('settings', {
               parsed = parsed.map(cleanCategory);
             }
             storage[key] = parsed;
+          } else if (key == 'language' && !isSupportedLocale(raw)) {
+            storage[key] = DEFAULT_LOCALE;
           } else if (raw === 'true' || raw === 'false') {
             storage[key] = raw === 'true';
           } else {
@@ -188,6 +193,13 @@ export const useSettingsStore = defineStore('settings', {
           console.error('failed to parse', key, raw, e);
         }
       }
+      if (
+        storage.language !== undefined &&
+        (typeof storage.language !== 'string' || !isSupportedLocale(storage.language))
+      ) {
+        storage.language = DEFAULT_LOCALE;
+      }
+
       this.$patch({ ...storage, _loaded: true });
 
       // Since `requestTimeout` is used to initialize the client, we need to set it again
