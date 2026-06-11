@@ -103,6 +103,10 @@ describe('i18n', () => {
     expect(translate('missing.key', 'zh-CN')).toBe('missing.key');
   });
 
+  test('does not resolve missing keys through the object prototype chain', () => {
+    expect(translate('constructor.name', 'en')).toBe('constructor.name');
+  });
+
   test('interpolates named params', () => {
     expect(translate('activity.hostLabel', 'en', { host: 'laptop' })).toBe('Host: laptop');
     expect(translate('activity.hostLabel', 'zh-CN', { host: 'laptop' })).toBe('主机：laptop');

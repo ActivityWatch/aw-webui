@@ -36,6 +36,10 @@ function resolveKey(locale: SupportedLocale, key: string): string | undefined {
       return undefined;
     }
 
+    if (!Object.prototype.hasOwnProperty.call(current, part)) {
+      return undefined;
+    }
+
     return current[part];
   }, messages[locale]);
 
