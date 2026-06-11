@@ -1,3 +1,9 @@
+import type en from './en';
+
+type DeepPartial<T> = {
+  [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
+};
+
 const zhCN = {
   common: {
     loading: '加载中...',
@@ -90,6 +96,6 @@ const zhCN = {
     landingPageTimeline: '时间线',
     landingPageDescription: '打开 ActivityWatch 或点击顶部菜单 logo 时进入的页面。',
   },
-};
+} satisfies DeepPartial<typeof en>;
 
 export default zhCN;
