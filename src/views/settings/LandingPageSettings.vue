@@ -2,16 +2,16 @@
 div
   div.d-sm-flex.justify-content-between
     div
-      h5.mt-1.mb-2.mb-sm-0 Landing page
+      h5.mt-1.mb-2.mb-sm-0 {{ $t('settingsSections.landingPage') }}
     div
       b-select.landingpage(v-if="loaded" size="sm" :value="landingpage", @change="landingpage = $event")
-        option(value="/home") Home
-        option(:value="'/activity/' + hostname + '/view/'" v-for="hostname in hostnames") Activity ({{hostname}})
-        option(value="/timeline") Timeline
+        option(value="/home") {{ $t('settings.landingPageHome') }}
+        option(:value="'/activity/' + hostname + '/view/'" v-for="hostname in hostnames") {{ $t('settings.landingPageActivity', { hostname }) }}
+        option(value="/timeline") {{ $t('settings.landingPageTimeline') }}
       span(v-else)
-        .aw-loading Loading...
+        .aw-loading {{ $t('common.loading') }}
   small.text-muted
-    | The page to open when opening ActivityWatch, or clicking the logo in the top menu.
+    | {{ $t('settings.landingPageDescription') }}
 </template>
 
 <script lang="ts">

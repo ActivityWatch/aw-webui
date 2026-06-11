@@ -3,9 +3,9 @@ div(v-if="datasets && datasets.length > 0")
   // Height set here to avoid elements jumping when loading Activity view
   bar(:chart-data="chartData" :chart-options="chartOptions" :height="330")
 div.small(v-else-if="datasets === null", style="font-size: 16pt; color: #aaa;")
-  | No data
+  | {{ $t('visualizationStatus.noData') }}
 div.small(v-else, style="font-size: 16pt; color: #aaa;")
-  .aw-loading Loading...
+  .aw-loading {{ $t('visualizationStatus.loading') }}
 </template>
 
 <script lang="ts">
@@ -19,6 +19,7 @@ import {
   get_hour_offset,
   get_short_month_labels,
 } from '~/util/time';
+import { getLocale, t } from '~/i18n';
 
 function hourToTick(hours: number): string {
   if (hours > 1) {
@@ -43,6 +44,7 @@ export default {
       default: () => [
         {
           label: 'Total time',
+          labelKey: 'visualizationStatus.totalTime',
           backgroundColor: '#6699ff',
           data: Array.from({ length: 40 }, () => Math.floor(Math.random() * 40)),
         },
@@ -58,9 +60,13 @@ export default {
     },
   },
   computed: {
+    currentLocale() {
+      return getLocale();
+    },
     labels() {
       const start = this.timeperiod_start;
       const [count, resolution] = this.timeperiod_length;
+      const locale = this.currentLocale;
       if (resolution.startsWith('day') && count == 1) {
         const hourOffset = get_hour_offset();
         return _.range(0, 24).map(h => `${(h + hourOffset) % 24}`);
@@ -72,7 +78,7 @@ export default {
           const date = new Date(start);
           date.setHours(12, 0, 0, 0);
           date.setDate(date.getDate() + d);
-          return format_weekday_short(date);
+          return format_weekday_short(date, locale);
         });
       } else if (resolution.startsWith('month')) {
         // FIXME: Needs access to the timeperiod start to know which month
@@ -80,10 +86,10 @@ export default {
         const date = new Date(start);
         const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
         return _.range(1, daysInMonth + 1).map(d =>
-          format_day_of_month(new Date(date.getFullYear(), date.getMonth(), d, 12))
+          format_day_of_month(new Date(date.getFullYear(), date.getMonth(), d, 12), locale)
         );
       } else if (resolution == 'year') {
-        return get_short_month_labels();
+        return get_short_month_labels(locale);
       } else {
         console.error(`Invalid resolution: ${resolution}`);
         return [];
@@ -92,14 +98,20 @@ export default {
     chartData() {
       return {
         labels: this.labels,
-        datasets: _.sortBy(this.datasets, d => d.label),
+        datasets: _.sortBy(this.localizedDatasets, d => d.label),
         title: {
           display: true,
-          text: 'Timeline',
+          text: this.$t('visualizationStatus.timeline'),
         },
         responsive: true,
         maintainAspectRatio: false,
       };
+    },
+    localizedDatasets() {
+      return this.datasets.map(dataset => ({
+        ...dataset,
+        label: dataset.labelKey ? t(dataset.labelKey) : dataset.label,
+      }));
     },
     chartOptions(): ChartOptions {
       const resolution = this.timeperiod_length[1];

@@ -1,6 +1,7 @@
 import { isEqual } from 'lodash';
 import { setActivePinia, createPinia } from 'pinia';
 
+import { setLocale } from '~/i18n';
 import { useCategoryStore } from '~/stores/categories';
 import { createMissingParents, defaultCategories, Category } from '~/util/classes';
 
@@ -9,6 +10,7 @@ describe('categories store', () => {
   const categoryStore = useCategoryStore();
 
   beforeEach(() => {
+    setLocale('en');
     categoryStore.clearAll();
   });
 
@@ -43,6 +45,18 @@ describe('categories store', () => {
     expect(categoryStore.classes).toHaveLength(0);
     categoryStore.load([{ name: ['Test'], rule: { type: 'none' } }]);
     expect(categoryStore.all_categories).toHaveLength(1);
+  });
+
+  test('translates category select metadata options without changing category names', () => {
+    categoryStore.load([{ name: ['Test'], rule: { type: 'none' } }]);
+
+    setLocale('zh-CN');
+
+    expect(categoryStore.category_select(true).slice(0, 3)).toEqual([
+      { text: '全部', value: null },
+      { text: '未分类', value: ['Uncategorized'] },
+      { text: 'Test', value: ['Test'] },
+    ]);
   });
 
   test('get category hierarchy', () => {

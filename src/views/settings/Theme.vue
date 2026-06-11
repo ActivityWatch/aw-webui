@@ -2,7 +2,7 @@
 div
   div.d-sm-flex.justify-content-between.align-items-center
     div
-      h5.mt-1.mb-2.mb-sm-0 Theme
+      h5.mt-1.mb-2.mb-sm-0 {{ $t('settingsSections.theme') }}
     div
       b-button-group(v-if="_loaded" size="sm")
         b-button(
@@ -15,9 +15,9 @@ div
           icon.mr-1(:name="opt.icon")
           | {{ opt.label }}
       span(v-else)
-        .aw-loading Loading...
+        .aw-loading {{ $t('common.loading') }}
   small.text-muted
-    | Change the color theme. Category colors are picked separately — you may want to adjust them when switching to dark mode.
+    | {{ $t('settings.themeDescription') }}
 </template>
 
 <script lang="ts">
@@ -30,17 +30,15 @@ import { detectPreferredTheme } from '~/util/theme';
 
 export default {
   name: 'Theme',
-  data() {
-    return {
-      themeOptions: [
-        { value: 'auto', label: 'System', icon: 'desktop' },
-        { value: 'light', label: 'Light', icon: 'sun' },
-        { value: 'dark', label: 'Dark', icon: 'moon' },
-      ],
-    };
-  },
   computed: {
     ...mapState(useSettingsStore, ['_loaded']),
+    themeOptions() {
+      return [
+        { value: 'auto', label: this.$t('settings.themeSystem'), icon: 'desktop' },
+        { value: 'light', label: this.$t('settings.themeLight'), icon: 'sun' },
+        { value: 'dark', label: this.$t('settings.themeDark'), icon: 'moon' },
+      ];
+    },
     theme: {
       get() {
         const settingsStore = useSettingsStore();

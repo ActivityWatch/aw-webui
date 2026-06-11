@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  h3.mb-3 Settings
+  h3.mb-3 {{ $t('settingsSections.settings') }}
 
   div.settings-layout
     nav.settings-nav
@@ -65,7 +65,7 @@ export default {
   beforeRouteLeave(to, from, next) {
     const categoryStore = useCategoryStore();
     if (categoryStore.classes_unsaved_changes) {
-      if (confirm('Your categories have unsaved changes, are you sure you want to leave?')) {
+      if (confirm(this.$t('categories.confirmLeave'))) {
         next();
       } else {
         next(false);
@@ -87,8 +87,8 @@ export default {
     groups(): Group[] {
       const general: Group = {
         id: 'general',
-        label: 'General',
-        help: 'Defaults that shape how time periods, the timeline, and landing page behave.',
+        label: this.$t('settingsGroups.general'),
+        help: this.$t('settingsGroups.generalHelp'),
         components: [
           { name: 'DaystartSettings' },
           { name: 'TimelineDurationSettings' },
@@ -102,14 +102,14 @@ export default {
       };
       const appearance: Group = {
         id: 'appearance',
-        label: 'Appearance',
-        help: 'Theme and visualization colors.',
+        label: this.$t('settingsGroups.appearance'),
+        help: this.$t('settingsGroups.appearanceHelp'),
         components: [{ name: 'Theme' }, { name: 'ColorSettings' }],
       };
       const categorization: Group = {
         id: 'categorization',
-        label: 'Categorization',
-        help: 'Rules that classify events into categories, plus AFK/active-pattern overrides.',
+        label: this.$t('settingsGroups.categorization'),
+        help: this.$t('settingsGroups.categorizationHelp'),
         // CategorizationSettings (rules) is the primary content; the
         // ActivePatternSettings AFK override is an advanced edge-case
         // setting so it lives at the bottom of the group.
@@ -117,13 +117,13 @@ export default {
       };
       const privacy: Group = {
         id: 'privacy',
-        label: 'Privacy',
-        help: 'Filters that drop or redact sensitive event data before it is stored.',
+        label: this.$t('settingsGroups.privacy'),
+        help: this.$t('settingsGroups.privacyHelp'),
         components: [{ name: 'PrivacyFilterSettings' }],
       };
       const developer: Group = {
         id: 'developer',
-        label: 'Developer',
+        label: this.$t('settingsGroups.developer'),
         components: [{ name: 'DeveloperSettings' }],
       };
 

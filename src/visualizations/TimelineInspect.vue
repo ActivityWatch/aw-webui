@@ -14,6 +14,7 @@ svg {
 //       Code should generally go in the framework-independent file.
 
 import timeline from './timeline';
+import { getLocale } from '~/i18n';
 
 export default {
   name: 'aw-timeline',
@@ -23,11 +24,19 @@ export default {
     chunkfunc: { type: Function },
     eventfunc: { type: Function },
   },
+  computed: {
+    currentLocale() {
+      return getLocale();
+    },
+  },
   watch: {
     chunks: function () {
       this.update();
     },
     show_afk: function () {
+      this.update();
+    },
+    currentLocale: function () {
       this.update();
     },
   },
@@ -38,7 +47,7 @@ export default {
   methods: {
     update: function () {
       if (this.chunks === null) {
-        timeline.set_status(this.$el, 'Loading...');
+        timeline.set_status(this.$el, this.$t('visualizationStatus.loading'));
       } else {
         timeline.update(this.$el, this.chunks, this.show_afk, this.chunkfunc, this.eventfunc);
       }
