@@ -32,6 +32,7 @@ import ReleaseNotificationSettings from '~/views/settings/ReleaseNotificationSet
 import UncategorizedHintSettings from '~/views/settings/UncategorizedHintSettings.vue';
 import CategorizationSettings from '~/views/settings/CategorizationSettings.vue';
 import LandingPageSettings from '~/views/settings/LandingPageSettings.vue';
+import LanguageSettings from '~/views/settings/LanguageSettings.vue';
 import DeveloperSettings from '~/views/settings/DeveloperSettings.vue';
 import Theme from '~/views/settings/Theme.vue';
 import ColorSettings from '~/views/settings/ColorSettings.vue';
@@ -54,6 +55,7 @@ export default {
     UncategorizedHintSettings,
     CategorizationSettings,
     LandingPageSettings,
+    LanguageSettings,
     Theme,
     ColorSettings,
     DeveloperSettings,
@@ -91,6 +93,7 @@ export default {
           { name: 'DaystartSettings' },
           { name: 'TimelineDurationSettings' },
           { name: 'LandingPageSettings' },
+          { name: 'LanguageSettings' },
           { name: 'UncategorizedHintSettings' },
           // Release-notification check folded in here so it doesn't
           // need its own one-setting "Updates" panel.
