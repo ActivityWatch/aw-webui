@@ -1,17 +1,22 @@
 <template lang="pug">
 div
   p.mb-2
-    | Rules for categorizing events. An event can only have one category. If several categories match, the deepest one will be chosen.
+    | {{ $t('categories.description') }}
   p
-    | Find and share categorization rule presets on #[a(href="https://forum.activitywatch.net/c/projects/category-rules") the forum].
-    | For help on how to write categorization rules, see #[a(href="https://docs.activitywatch.net/en/latest/features/categorization.html") the documentation].
+    | {{ $t('categories.builderIntroBefore') }}
+    span {{ $t('categories.categoryBuilder') }}
+    | {{ $t('categories.builderIntroAfter') }}
+    a(href="https://forum.activitywatch.net/c/projects/category-rules") {{ $t('categories.forum') }}
+    | {{ $t('categories.builderIntroAfterForum') }}
+    a(href="https://docs.activitywatch.net/en/latest/features/categorization.html") {{ $t('categories.documentation') }}
+    | {{ $t('categories.builderIntroAfterDocs') }}
 
   // Category set switcher. bg-light + .rounded so dark.css's .bg-light
   // override flips the background in dark mode instead of leaving an
   // inline white block on a dark canvas.
   div.my-3.p-3.bg-light.rounded
     div.d-flex.align-items-center.flex-wrap(style="gap: 0.5rem;")
-      span.font-weight-bold(style="white-space: nowrap") Category set:
+      span.font-weight-bold(style="white-space: nowrap") {{ $t('categories.categorySet') }}
       b-select(
         v-model="activeSetId"
         @change="onSetChange"
@@ -27,36 +32,36 @@ div
         @click="createSet"
         variant="outline-primary"
         size="sm"
-      ) New set
+      ) {{ $t('categories.newSet') }}
       b-btn(
         v-if="categoryStore.category_sets.length > 1"
         @click="deleteActiveSet"
         variant="outline-danger"
         size="sm"
-      ) Delete set
+      ) {{ $t('categories.deleteSet') }}
     div.mt-1.small.text-muted(v-if="categoryStore.category_sets.length > 1")
-      | {{ categoryStore.category_sets.length }} sets available — switch sets to use different rule profiles.
+      | {{ $t('categories.setsAvailable', { count: categoryStore.category_sets.length }) }}
 
   div.d-flex.align-items-center.flex-wrap.mt-4
-    h5.mb-0 Categories
+    h5.mb-0 {{ $t('categories.categories') }}
     div.ml-auto
       b-btn.ml-1(@click="restoreDefaultClasses", variant="outline-warning" size="sm")
         icon(name="undo")
-        | Restore defaults
+        | {{ $t('categories.restoreDefaults') }}
       label.btn.btn-sm.ml-1.btn-outline-primary(style="margin: 0")
-        | Import
+        | {{ $t('categories.import') }}
         input(type="file" @change="importCategories" hidden)
       b-btn.ml-1(@click="exportClasses", variant="outline-primary" size="sm")
-        | Export
+        | {{ $t('categories.export') }}
 
   div.my-3
     b-alert(variant="warning" :show="classes_unsaved_changes")
-      | You have unsaved changes!
+      | {{ $t('categories.unsavedChanges') }}
       div.float-right(style="margin-top: -0.15em; margin-right: -0.6em")
         b-btn.ml-2(@click="saveClasses", variant="success" size="sm")
-          | Save
+          | {{ $t('common.save') }}
         b-btn.ml-2(@click="resetClasses", variant="warning" size="sm")
-          | Discard
+          | {{ $t('categories.discard') }}
     div(v-for="_class in classes_hierarchy")
       CategoryEditTree(:_class="_class")
     div(v-if="editingId !== null")
@@ -66,9 +71,9 @@ div
     div.col-sm-12
       b-btn(@click="addClass")
         icon.mr-2(name="plus")
-        | Add category
+        | {{ $t('categories.addCategory') }}
       b-btn.float-right(@click="saveClasses", variant="success" :disabled="!classes_unsaved_changes")
-        | Save
+        | {{ $t('common.save') }}
 
   // Category Builder sits at the end of the categories list (above the
   // ActivePatternSettings panel below the group). Collapsed by default
@@ -76,8 +81,8 @@ div
   // rules; once opened it mounts lazily.
   div.mt-4(ref="builderSection")
     div.d-flex.align-items-center.flex-wrap
-      h5.mb-0 Category builder
-      small.text-muted.ml-2 Generate rules from uncategorized activity
+      h5.mb-0 {{ $t('categories.categoryBuilder') }}
+      small.text-muted.ml-2 {{ $t('categories.builderSubtitle') }}
       b-btn.ml-auto(
         variant="outline-primary"
         size="sm"
@@ -86,7 +91,7 @@ div
         aria-controls="category-builder-collapse"
       )
         icon.mr-1(:name="builderOpen ? 'angle-double-up' : 'angle-double-down'")
-        | {{ builderOpen ? 'Hide builder' : 'Open builder' }}
+        | {{ builderOpen ? $t('categories.hideBuilder') : $t('categories.openBuilder') }}
     b-collapse#category-builder-collapse(v-model="builderOpen")
       div.mt-3(v-if="builderMounted")
         CategoryBuilder(embedded)
@@ -103,8 +108,6 @@ import { useCategoryStore } from '~/stores/categories';
 
 import _ from 'lodash';
 import { downloadFile } from '~/util/export';
-
-const confirmationMessage = 'Your categories have unsaved changes, are you sure you want to leave?';
 
 export default {
   name: 'CategorizationSettings',
@@ -164,9 +167,12 @@ export default {
     window.removeEventListener('beforeunload', this.beforeUnload);
   },
   methods: {
+    confirmationMessage: function () {
+      return this.$t('categories.confirmLeave');
+    },
     addClass: function () {
       this.categoryStore.addClass({
-        name: ['New class'],
+        name: [this.$t('categories.newClass')],
         rule: { type: 'regex', regex: 'FILL ME' },
       });
 
@@ -246,10 +252,10 @@ export default {
       }
     },
     createSet: function () {
-      const name = prompt('Name for the new category set:');
+      const name = prompt(this.$t('categories.newSetPrompt'));
       if (!name) return;
       if (this.categoryStore.category_sets.find(s => s.id === name)) {
-        alert(`A set named "${name}" already exists.`);
+        alert(this.$t('categories.setAlreadyExists', { name }));
         return;
       }
       // Create the new set and switch to it (switchToSet syncs current state first)
@@ -259,13 +265,13 @@ export default {
     deleteActiveSet: function () {
       const id = this.categoryStore.active_set_ids[0];
       if (!id) return;
-      if (!confirm(`Delete category set "${id}"? This cannot be undone.`)) return;
+      if (!confirm(this.$t('categories.deleteSetConfirm', { id }))) return;
       this.categoryStore.deleteSet(id);
       this.categoryStore.save();
     },
     onSetChange: function (setId: string) {
       if (this.classes_unsaved_changes) {
-        if (!confirm('You have unsaved changes. Switch sets anyway? (Changes will be discarded)')) {
+        if (!confirm(this.$t('categories.switchSetConfirm'))) {
           // Revert the select back to current active
           this.activeSetId = this.categoryStore.active_set_ids[0] || 'default';
           return;
@@ -281,8 +287,8 @@ export default {
       if (this.classes_unsaved_changes) {
         e = e || window.event;
         e.preventDefault();
-        e.returnValue = confirmationMessage;
-        return confirmationMessage;
+        e.returnValue = this.confirmationMessage();
+        return this.confirmationMessage();
       }
     },
   },

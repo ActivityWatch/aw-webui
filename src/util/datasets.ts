@@ -12,6 +12,7 @@ interface HourlyData {
 
 interface Dataset {
   label: string;
+  labelKey?: string;
   backgroundColor: string;
   data: number[];
 }
@@ -62,6 +63,7 @@ export function buildBarchartDatasetActive(events_active: IEvent[]) {
   return [
     {
       label: 'Total time',
+      labelKey: 'visualizationStatus.totalTime',
       backgroundColor: '#6699ff',
       data,
     },

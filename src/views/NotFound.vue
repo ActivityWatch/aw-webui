@@ -1,8 +1,8 @@
 <template lang="pug">
 div
-  h3 Woops, this page was not found!
+  h3 {{ $t('experiments.notFoundTitle') }}
   p.mb-0
-    | Try navigating back where you came from.
+    | {{ $t('experiments.notFoundHint') }}
 </template>
 
 <script lang="ts">

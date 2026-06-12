@@ -8,6 +8,7 @@ import { useCategoryStore } from '~/stores/categories';
 import { getCategoryColorFromString } from '~/util/color';
 import { seconds_to_duration } from '~/util/time';
 import { IEvent } from '~/util/interfaces';
+import { t } from '~/i18n';
 
 const textColor = '#333';
 
@@ -49,7 +50,7 @@ interface Entry {
 function update(container: HTMLElement, apps: Entry[]) {
   // No apps, sets status to "No data"
   if (apps.length <= 0) {
-    set_status(container, 'No data');
+    set_status(container, t('visualizationStatus.noData'));
     return container;
   }
 

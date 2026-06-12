@@ -2,9 +2,9 @@
 div
   div
     b-alert(v-if="invalidDaterange", variant="warning", show)
-      | The selected date range is invalid. The second date must be greater or equal to the first date.
+      | {{ $t('time.invalidRange') }}
     b-alert(v-if="daterangeTooLong", variant="warning", show)
-      | The selected date range is too long. The maximum is {{ maxDuration/(24*60*60) }} days.
+      | {{ $t('time.rangeTooLong', { days: maxDurationDays }) }}
 
   div.input-time-interval.d-flex.flex-wrap.align-items-start.justify-content-between
     // Two-row grid: labels share a fixed-width column so the Mode toggle
@@ -13,7 +13,7 @@ div
     // active. Previously the label flipped between "Quick range" / "Range"
     // and the inputs shifted horizontally on every toggle.
     div.time-interval-grid
-      label.col-form-label.col-form-label-sm.mb-0(for="time-mode") Mode
+      label.col-form-label.col-form-label-sm.mb-0(for="time-mode") {{ $t('time.mode') }}
       b-form-radio-group#time-mode(
         v-model="mode",
         @change="valueChanged",
@@ -23,9 +23,9 @@ div
         :options="modeOptions"
       )
 
-      label.col-form-label.col-form-label-sm.mb-0 Range
+      label.col-form-label.col-form-label-sm.mb-0 {{ $t('time.range') }}
       div.d-flex.flex-wrap.align-items-center(v-if="mode == 'last_duration'")
-        div.btn-group(role="group" aria-label="Quick durations")
+        div.btn-group(role="group" :aria-label="$t('time.quickDurations')")
           template(v-for="(dur, idx) in durations")
             input(
               type="radio"
@@ -38,25 +38,25 @@ div
       div.d-flex.flex-wrap.align-items-center(v-else)
         input.form-control.form-control-sm.mr-1(
           type="date", v-model="start", :max="end || undefined", style="width: auto"
-          aria-label="Start date"
+          :aria-label="$t('time.startDate')"
         )
         input.form-control.form-control-sm.mr-1(
           type="date", v-model="end", :min="start || undefined", placeholder="(optional)", style="width: auto"
-          aria-label="End date (optional)"
+          :aria-label="$t('time.endDateOptional')"
         )
         b-button(
           size="sm" variant="outline-dark"
           :disabled="invalidDaterange || emptyDaterange || daterangeTooLong"
           @click="applyRange"
-        ) Apply
+        ) {{ $t('time.apply') }}
 
     div.text-right.d-none.d-md-block(v-if="showUpdate")
       b-button.px-2(@click="refresh()", variant="outline-dark", size="sm")
         icon.mr-1(name="sync")
         span.d-none.d-md-inline
-          | Refresh
+          | {{ $t('common.refresh') }}
       div.mt-2.small.text-muted(v-if="lastUpdate")
-        | Last update: #[time(:datetime="lastUpdate.format()") {{lastUpdate | friendlytime}}]
+        | {{ $t('time.lastUpdateLabel') }} #[time(:datetime="lastUpdate.format()") {{lastUpdate | friendlytime}}]
 </template>
 
 <style scoped lang="scss">
@@ -152,6 +152,9 @@ export default {
     daterangeTooLong() {
       if (!this.end) return false;
       return moment(this.start).add(this.maxDuration, 'seconds').isBefore(moment(this.end));
+    },
+    maxDurationDays() {
+      return this.maxDuration / (24 * 60 * 60);
     },
   },
   mounted() {

@@ -4,7 +4,7 @@
       button(type="button", class="close", @click="isPollVisible=false") &times;
       form
         p
-          | Hey there! You've been using ActivityWatch for a while. How likely are you to recommend it to a friend/colleague on a scale 1-10? (with 10 being the most likely)
+          | {{ $t('poll.prompt') }}
         div(class="radio-options")
           div(v-for="i in options", class="option-group")
             input(type="radio", :id="'option' + i", name="rating", :value="i", v-model="rating")
@@ -13,39 +13,39 @@
               | {{ i }}
       div(style="display: flex; justify-content: space-between")
         a(@click="dontShowAgain" href="#")
-          | Don't show again
-        input(type="submit" value="Submit" @click="submit")
+          | {{ $t('poll.dontShowAgain') }}
+        input(type="submit" :value="$t('poll.submit')" @click="submit")
 
     b-alert(v-if="isPosFollowUpVisible", variant="info" show)
       button(type="button", class="close", @click="isPosFollowUpVisible=false") &times;
       p
-        | We're happy to hear you enjoy using ActivityWatch, but we can do better!
+        | {{ $t('poll.positiveIntro') }}
         br
-        | To help us help you, here are a few things you can do:
+        | {{ $t('poll.positiveHelp') }}
       ul.small
         li
-          | Support us on #[a(href="https://www.patreon.com/erikbjare") Patreon] or #[a(href="https://opencollective.com/activitywatch") Open Collective] (or by #[a(href="https://activitywatch.net/donate/") other donation methods]).
+          | {{ $t('poll.supportBefore') }}#[a(href="https://www.patreon.com/erikbjare") Patreon]{{ $t('poll.supportBetween') }}#[a(href="https://opencollective.com/activitywatch") Open Collective]{{ $t('poll.supportAfter') }}#[a(href="https://activitywatch.net/donate/") {{ $t('poll.otherDonationMethods') }}]{{ $t('poll.supportEnd') }}
         li
-          | Tell your friends and colleagues!
+          | {{ $t('poll.tellFriends') }}
         li
-          | Post about it on social media, we are on #[a(href="https://twitter.com/ActivityWatchIt") Twitter] and #[a(href="https://www.facebook.com/ActivityWatch") Facebook].
+          | {{ $t('poll.postBefore') }}#[a(href="https://twitter.com/ActivityWatchIt") Twitter]{{ $t('poll.postBetween') }}#[a(href="https://www.facebook.com/ActivityWatch") Facebook]{{ $t('poll.sentenceEnd') }}
         //li
           | Fill out the #[a(href="https://forms.gle/q2N9K5RoERBV8kqPA") feedback form].
         li
-          | Rate us on #[a(href="https://alternativeto.net/software/activitywatch/about/") AlternativeTo] and #[a(href="https://play.google.com/store/apps/details?id=net.activitywatch.android") Google Play Store].
+          | {{ $t('poll.rateBefore') }}#[a(href="https://alternativeto.net/software/activitywatch/about/") AlternativeTo]{{ $t('poll.rateBetween') }}#[a(href="https://play.google.com/store/apps/details?id=net.activitywatch.android") Google Play Store]{{ $t('poll.rateAfter') }}
         li
-          | Join our #[a(href="https://discord.gg/vDskV9q") Discord server].
+          | {{ $t('poll.joinBefore') }}#[a(href="https://discord.gg/vDskV9q") {{ $t('poll.discordServer') }}]{{ $t('poll.sentenceEnd') }}
         li
-          | Sign up for the #[a(href="http://eepurl.com/cTU6QX") newsletter] (we rarely send anything).
+          | {{ $t('poll.signupBefore') }}#[a(href="http://eepurl.com/cTU6QX") {{ $t('poll.newsletter') }}]{{ $t('poll.signupAfter') }}
 
     b-alert(v-if="isNegFollowUpVisible", variant="info" show)
       button(type="button", class="close", @click="isNegFollowUpVisible=false") &times;
-      | We are sorry to hear that you did not like ActivityWatch, but we want to improve! We would be very thankful if you helped us by:
+      | {{ $t('poll.negativeIntro') }}
       ul
         li
-          | Fill out the #[a(href="https://forms.gle/q2N9K5RoERBV8kqPA") feedback form].
+          | {{ $t('poll.feedbackBefore') }}#[a(href="https://forms.gle/q2N9K5RoERBV8kqPA") {{ $t('poll.feedbackForm') }}]{{ $t('poll.sentenceEnd') }}
         li
-          | Vote for new features on the #[a(href="https://forum.activitywatch.net/c/features") forum].
+          | {{ $t('poll.voteBefore') }}#[a(href="https://forum.activitywatch.net/c/features") {{ $t('poll.forum') }}]{{ $t('poll.voteAfter') }}
 </template>
 
 <style scoped>

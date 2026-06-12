@@ -18,6 +18,7 @@ svg {
 //       Code should generally go in the framework-independent file.
 
 import periodusage from './periodusage';
+import { getLocale } from '~/i18n';
 
 export default {
   name: 'aw-periodusage',
@@ -26,16 +27,31 @@ export default {
       type: Array,
     },
   },
+  computed: {
+    currentLocale() {
+      return getLocale();
+    },
+  },
   watch: {
     periodusage_arr: function () {
-      periodusage.update(this.$el, this.periodusage_arr, this.onPeriodClicked);
+      this.update();
+    },
+    currentLocale: function () {
+      this.update();
     },
   },
   mounted: function () {
     periodusage.create(this.$el);
-    periodusage.set_status(this.$el, 'Loading...');
+    periodusage.set_status(this.$el, this.$t('visualizationStatus.loading'));
   },
   methods: {
+    update: function () {
+      if (this.periodusage_arr) {
+        periodusage.update(this.$el, this.periodusage_arr, this.onPeriodClicked);
+      } else {
+        periodusage.set_status(this.$el, this.$t('visualizationStatus.loading'));
+      }
+    },
     onPeriodClicked: function (period) {
       this.$emit('update', period);
     },

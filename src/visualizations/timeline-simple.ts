@@ -6,6 +6,7 @@ const _ = require('lodash');
 const moment = require('moment');
 
 import { getTitleAttr, getColorFromString } from '../util/color';
+import { t } from '~/i18n';
 
 const time = require('../util/time');
 
@@ -36,7 +37,7 @@ function update(svg_el, events, event_type: string) {
   timeline.selectAll('*').remove();
 
   if (events.length <= 0) {
-    set_status(svg_el, 'No data');
+    set_status(svg_el, t('visualizationStatus.noData'));
     return;
   }
 
@@ -86,7 +87,8 @@ function update(svg_el, events, event_type: string) {
       .text(
         timestamp.format() +
           '\n' +
-          'Duration: ' +
+          t('visualizationStatus.duration') +
+          ': ' +
           time.seconds_to_duration(e.duration) +
           '\n' +
           JSON.stringify(e.data)

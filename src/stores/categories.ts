@@ -15,6 +15,7 @@ import {
 } from '~/util/classes';
 import { getColorFromCategory } from '~/util/color';
 import { defineStore } from 'pinia';
+import { t } from '~/i18n';
 
 interface State {
   classes: Category[];
@@ -171,8 +172,8 @@ export const useCategoryStore = defineStore('categories', {
           .sort((a, b) => a.text > b.text);
         if (insertMeta) {
           cats = [
-            { text: 'All', value: null },
-            { text: 'Uncategorized', value: ['Uncategorized'] },
+            { text: t('categories.all'), value: null },
+            { text: t('categories.uncategorized'), value: ['Uncategorized'] },
           ].concat(cats);
         }
         return cats;

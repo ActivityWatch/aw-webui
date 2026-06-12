@@ -14,6 +14,7 @@ svg {
 //       Code should generally go in the framework-independent file.
 
 import timeline_simple from './timeline-simple';
+import { getLocale } from '~/i18n';
 
 export default {
   name: 'aw-timeline',
@@ -22,13 +23,29 @@ export default {
     event_type: String,
     events: Array,
   },
+  computed: {
+    currentLocale() {
+      return getLocale();
+    },
+  },
   watch: {
     events: function () {
-      timeline_simple.update(this.$el, this.events, this.event_type);
+      this.update();
+    },
+    currentLocale: function () {
+      this.update();
     },
   },
   mounted: function () {
     timeline_simple.create(this.$el);
+    this.update();
+  },
+  methods: {
+    update: function () {
+      if (this.events) {
+        timeline_simple.update(this.$el, this.events, this.event_type);
+      }
+    },
   },
 };
 </script>

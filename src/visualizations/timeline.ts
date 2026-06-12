@@ -8,6 +8,7 @@ import _ from 'lodash';
 import moment from 'moment';
 
 import { getColorFromString } from '../util/color';
+import { t as translate } from '~/i18n';
 import { seconds_to_duration } from '../util/time';
 import { IEvent } from '../util/interfaces';
 
@@ -78,7 +79,7 @@ function update(
   d3.select(container.querySelector('.titleinfo-container')).html(null);
 
   if (events.length <= 0) {
-    set_status(container, 'No data');
+    set_status(container, translate('visualizationStatus.noData'));
     return container;
   }
 

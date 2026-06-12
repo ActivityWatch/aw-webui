@@ -1,18 +1,18 @@
 <template lang="pug">
 div
-  h3 Validate buckets
+  h3 {{ $t('bucketTools.validateTitle') }}
   p.small
-    | This is a small tool to check the validity of your buckets and their events.
+    | {{ $t('bucketTools.validateDescription') }}
 
   // Form
   b-row
     b-col
-      h4 Bucket
+      h4 {{ $t('bucketTools.bucket') }}
       b-form-select(v-model="bucket" :options="buckets" :disabled="buckets.length === 0")
       p.small
-        | Select the bucket to validate.
+        | {{ $t('bucketTools.validateBucketHelp') }}
       p.small(v-if="events !== null")
-        | Events: {{ events.length }}
+        | {{ $t('bucketTools.events', { count: events.length }) }}
 
   // Checks
   // check for duplicate events
@@ -21,12 +21,12 @@ div
       summary
         icon.mx-2(name="check", style="color: #0C0", v-if="duplicateEvents.length === 0")
         icon.mx-2(name="exclamation-triangle", style="color: #CC0", v-else)
-        | Duplicates: {{ duplicateEvents.length }}
+        | {{ $t('bucketTools.duplicates', { count: duplicateEvents.length }) }}
       div.p-2
         p(v-if="duplicateEvents.length === 0")
-          | No duplicate events found.
+          | {{ $t('bucketTools.noDuplicates') }}
         p(v-else)
-          | The following {{ duplicateEvents.length }} duplicates were found.
+          | {{ $t('bucketTools.duplicatesFound', { count: duplicateEvents.length }) }}
           ul.mt-2
             li(v-for="overlap in duplicateEvents")
               | {{ overlap[0].start.toISOString() }} - (id: {{ overlap[0].event.id }} & {{ overlap[1].event.id }}): {{ JSON.stringify(overlap[0].data) }}
@@ -37,15 +37,15 @@ div
       summary
         icon.mx-2(name="check", style="color: #0C0", v-if="overlappingEvents.length === 0")
         icon.mx-2(name="exclamation-triangle", style="color: #CC0", v-else)
-        | Overlaps: {{ overlappingEvents.length }}x with a total duration of {{ overlapDuration / 1000 | friendlyduration }}
+        | {{ $t('bucketTools.overlapsBefore', { count: overlappingEvents.length }) }} {{ overlapDuration / 1000 | friendlyduration }}
       div.p-2
         p(v-if="overlappingEvents.length === 0")
-          | No overlapping events found.
+          | {{ $t('bucketTools.noOverlaps') }}
         p(v-else)
-          | The following {{ overlappingEvents.length }} overlaps were found.
+          | {{ $t('bucketTools.overlapsFound', { count: overlappingEvents.length }) }}
           br
           span(v-if="overlapDurationSameData > 0")
-            | Of these, {{ overlapDurationSameData / 1000 | friendlyduration }} are overlaps where the data is the same. These events could potentially be merged.
+            | {{ $t('bucketTools.sameDataOverlapsBefore') }} {{ overlapDurationSameData / 1000 | friendlyduration }} {{ $t('bucketTools.sameDataOverlapsAfter') }}
           p.mt-2(v-for="event in overlappingEvents")
             ul
               li {{ event[0].start.toISOString() }}/{{ event[0].end.toISOString() }} - (id: {{ event[0].event.id }}): {{ JSON.stringify(event[0].event.data) }}
@@ -57,12 +57,12 @@ div
       summary
         icon.mx-2(name="check", style="color: #0C0", v-if="zeroDurationEvents.length === 0")
         icon.mx-2(name="info-circle", style="color: #09F", v-else)
-        | Zero-duration events: {{ zeroDurationEvents.length }}
+        | {{ $t('bucketTools.zeroDuration', { count: zeroDurationEvents.length }) }}
       div.p-2
         p.ml-3(v-if="zeroDurationEvents.length === 0")
-          | No zero-duration events found.
+          | {{ $t('bucketTools.noZeroDuration') }}
         p.ml-3(v-else)
-          | The following {{ zeroDurationEvents.length }} zero-duration events were found:
+          | {{ $t('bucketTools.zeroDurationFound', { count: zeroDurationEvents.length }) }}
           ul.mt-2
             li(v-for="event in zeroDurationEvents")
               | {{ event.timestamp.toISOString() }}/{{ new Date(new Date(event.timestamp).valueOf() + 1000 * event.duration).toISOString() }} - (id: {{ event.id }}): {{ JSON.stringify(event.data) }}

@@ -5,7 +5,7 @@ div
   div(:style='{"visibility": visible_more ? "visible" : "hidden"}')
     b-button.mt-1.mr-2(v-if="fields && (limit_ < fields.length)", size="sm", variant="outline-secondary", @click="limit_ += 5")
       icon(name="angle-double-down")
-      | Show more
+      | {{ $t('visualizationStatus.showMore') }}
     b-button.mt-1(v-if="limit_ != limit" size="sm", variant="outline-secondary", @click="limit_ = limit")
       icon(name="angle-double-up")
 </template>
@@ -24,6 +24,7 @@ div
 import summary from './summary';
 import 'vue-awesome/icons/angle-double-down';
 import 'vue-awesome/icons/angle-double-up';
+import { getLocale } from '~/i18n';
 
 export default {
   name: 'aw-summary',
@@ -52,6 +53,9 @@ export default {
     return { limit_: this.limit };
   },
   computed: {
+    currentLocale() {
+      return getLocale();
+    },
     visible_more() {
       return this.fields && this.fields.length > 0 && this.with_limit;
     },
@@ -61,6 +65,9 @@ export default {
       this.update();
     },
     limit_: function () {
+      this.update();
+    },
+    currentLocale: function () {
       this.update();
     },
   },
@@ -82,7 +89,7 @@ export default {
           this.linkfunc
         );
       } else {
-        summary.set_status(el, 'Loading...');
+        summary.set_status(el, this.$t('visualizationStatus.loading'));
       }
     },
   },

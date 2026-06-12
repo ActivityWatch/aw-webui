@@ -1,16 +1,16 @@
 <template lang="pug">
 div.mx-3
   b-form
-    b-form-group(label="Bucket:")
+    b-form-group(:label="$t('calendar.bucket')")
       select(v-model="selectedBucket")
         option(v-for="bucket in buckets", :value="bucket.id") {{ bucket.id }}
-    b-form-group(label="Show:")
+    b-form-group(:label="$t('calendar.show')")
       select(v-model="view")
-        option(value="timeGridDay") Day
-        option(value="timeGridWeek") Week
+        option(value="timeGridDay") {{ $t('calendar.day') }}
+        option(value="timeGridWeek") {{ $t('calendar.week') }}
     b-form-group
       b-checkbox(v-model="fitToActive")
-        | Fit to active
+        | {{ $t('calendar.fitToActive') }}
   FullCalendar(ref="fullCalendar", :options="calendarOptions")
 </template>
 
@@ -97,7 +97,7 @@ export default {
   methods: {
     onEventClick: function (arg) {
       // TODO: Open event inspector/editor here
-      alert('event click! ' + JSON.stringify(arg.event));
+      alert(this.$t('calendar.eventClick', { event: JSON.stringify(arg.event) }));
     },
   },
 };
