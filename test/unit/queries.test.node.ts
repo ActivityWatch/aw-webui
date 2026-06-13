@@ -230,4 +230,13 @@ describe('browser_appname_regex', () => {
       expect(re.test(name)).toBe(true);
     }
   });
+
+  test('safari pattern matches known Safari app names', () => {
+    const re = toRegex(browser_appname_regex.safari);
+    expect(re.test('Safari')).toBe(true);
+    expect(re.test('safari')).toBe(true);
+    expect(re.test('Safari浏览器')).toBe(true); // macOS Chinese localization
+    // Should not match unrelated apps
+    expect(re.test('SafariBrowser')).toBe(false);
+  });
 });
