@@ -27,14 +27,13 @@ jest.mock('vis-timeline/styles/vis-timeline-graph2d.css', () => ({}));
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
-function makeTimeline(windowOverride = {}) {
+function makeTimeline() {
   const start = new Date(1_000_000);
   const end = new Date(1_000_000 + 3_600_000); // 1-hour window
   return {
     getWindow: jest.fn(() => ({
       start,
       end,
-      ...windowOverride,
     })),
     setWindow: jest.fn(),
   };
@@ -72,6 +71,7 @@ describe('VisTimeline zoom-anchor regression (#847)', () => {
 
       onHorizontalWheel.call(vm, event);
 
+      // Cannot assert setWindow here because vm.timeline is intentionally null.
       expect(event.preventDefault).not.toHaveBeenCalled();
     });
 
