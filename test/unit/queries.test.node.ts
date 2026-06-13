@@ -129,6 +129,12 @@ describe('browser_appname_regex', () => {
     }
   });
 
+  test('firefox pattern matches Zen when it reports to a Firefox web watcher bucket', () => {
+    const re = toRegex(browser_appname_regex.firefox);
+    expect(re.test('Zen')).toBe(true);
+    expect(re.test('Zen Browser')).toBe(true);
+  });
+
   test('opera pattern matches all known Opera app names', () => {
     const re = toRegex(browser_appname_regex.opera);
     const knownNames = ['opera.exe', 'Opera.exe', 'Opera'];
