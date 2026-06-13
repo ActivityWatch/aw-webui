@@ -144,7 +144,7 @@ export default {
   },
   computed: {
     displayed_events: function () {
-      return this.events.slice(0, this.limit);
+      return (this.events || []).slice(0, this.limit);
     },
   },
   methods: {
