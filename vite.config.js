@@ -45,6 +45,12 @@ export default defineConfig(({ mode }) => {
 
   // Return the configuration
   return {
+    build: {
+      // esbuild 0.28.x cannot transform destructuring for the old default targets
+      // (chrome87/firefox78/safari14 + vite overrides). All browsers from 2022+
+      // support ES2022 natively, so no lowering is needed.
+      target: 'es2022',
+    },
     plugins: [
       setCsp(),
       autoInject(),
