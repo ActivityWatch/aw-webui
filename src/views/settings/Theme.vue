@@ -1,20 +1,29 @@
 <template lang="pug">
 div
-  div.d-sm-flex.justify-content-between
+  div.d-sm-flex.justify-content-between.align-items-center
     div
       h5.mt-1.mb-2.mb-sm-0 {{ $t('settings.theme.title') }}
     div
-      b-select.landingpage(v-if="_loaded" size="sm" :value="theme", @change="theme = $event")
-        option(value="auto") {{ $t('settings.theme.auto') }}
-        option(value="light") {{ $t('settings.theme.light') }}
-        option(value="dark") {{ $t('settings.theme.dark') }}
+      b-button-group(v-if="_loaded" size="sm")
+        b-button(
+          v-for="opt in themeOptions"
+          :key="opt.value"
+          :pressed="theme === opt.value"
+          @click="theme = opt.value"
+          variant="outline-dark"
+        )
+          icon.mr-1(:name="opt.icon")
+          | {{ opt.label }}
       span(v-else)
         .aw-loading {{ $t('common.loading') }}
-  small
+  small.text-muted
     | {{ $t('settings.theme.help') }}
 </template>
 
 <script lang="ts">
+import 'vue-awesome/icons/desktop';
+import 'vue-awesome/icons/sun';
+import 'vue-awesome/icons/moon';
 import { mapState } from 'pinia';
 import { useSettingsStore } from '~/stores/settings';
 import { detectPreferredTheme } from '~/util/theme';
@@ -23,6 +32,13 @@ export default {
   name: 'Theme',
   computed: {
     ...mapState(useSettingsStore, ['_loaded']),
+    themeOptions() {
+      return [
+        { value: 'auto', label: this.$t('settings.theme.auto'), icon: 'desktop' },
+        { value: 'light', label: this.$t('settings.theme.light'), icon: 'sun' },
+        { value: 'dark', label: this.$t('settings.theme.dark'), icon: 'moon' },
+      ];
+    },
     theme: {
       get() {
         return useSettingsStore().theme;

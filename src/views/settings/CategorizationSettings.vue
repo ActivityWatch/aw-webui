@@ -1,29 +1,14 @@
 <template lang="pug">
 div
-  h5.d-inline-block
-    div {{ $t('settings.categorization.title') }}
-  div.float-right
-    b-btn.ml-1(@click="restoreDefaultClasses", variant="outline-warning" size="sm")
-      icon(name="undo")
-      | {{ $t('settings.categorization.restoreDefaults') }}
-    label.btn.btn-sm.ml-1.btn-outline-primary(style="margin: 0")
-      | {{ $t('common.import') }}
-      input(type="file" @change="importCategories" hidden)
-    b-btn.ml-1(@click="exportClasses", variant="outline-primary" size="sm")
-      | {{ $t('common.export') }}
-  p
+  p.mb-2
     | {{ $t('settings.categorization.rulesHelp') }}
   p
-    | {{ $t('settings.categorization.builderIntro') }}
-    |  #[router-link(:to="{ path: '/settings/category-builder' }") {{ $t('settings.categorization.categoryBuilder') }}]
-    |  {{ $t('settings.categorization.builderOutro') }}
     | {{ $t('settings.categorization.forumIntro') }}
     |  #[a(href="https://forum.activitywatch.net/c/projects/category-rules") {{ $t('settings.categorization.forum') }}].
     | {{ $t('settings.categorization.docsIntro') }}
     |  #[a(href="https://docs.activitywatch.net/en/latest/features/categorization.html") {{ $t('settings.categorization.documentation') }}].
 
-  // Category set switcher
-  div.my-3.p-3(style="background: var(--bs-light, #f8f9fa); border-radius: 4px;")
+  div.my-3.p-3.bg-light.rounded
     div.d-flex.align-items-center.flex-wrap(style="gap: 0.5rem;")
       span.font-weight-bold(style="white-space: nowrap") {{ $t('settings.categorization.categorySet') }}
       b-select(
@@ -48,13 +33,22 @@ div
         variant="outline-danger"
         size="sm"
       ) {{ $t('settings.categorization.deleteSet') }}
-    div.mt-1(
-      v-if="categoryStore.category_sets.length > 1"
-      style="font-size: 0.85em; color: var(--bs-secondary, #6c757d);"
-    )
+    div.mt-1.small.text-muted(v-if="categoryStore.category_sets.length > 1")
       | {{ $t('settings.categorization.setsAvailable', { count: categoryStore.category_sets.length }) }}
 
-  div.my-4
+  div.d-flex.align-items-center.flex-wrap.mt-4
+    h5.mb-0 {{ $t('settings.categorization.categories') }}
+    div.ml-auto
+      b-btn.ml-1(@click="restoreDefaultClasses", variant="outline-warning" size="sm")
+        icon(name="undo")
+        | {{ $t('settings.categorization.restoreDefaults') }}
+      label.btn.btn-sm.ml-1.btn-outline-primary(style="margin: 0")
+        | {{ $t('common.import') }}
+        input(type="file" @change="importCategories" hidden)
+      b-btn.ml-1(@click="exportClasses", variant="outline-primary" size="sm")
+        | {{ $t('common.export') }}
+
+  div.my-3
     b-alert(variant="warning" :show="classes_unsaved_changes")
       | {{ $t('settings.categorization.unsavedChanges') }}
       div.float-right(style="margin-top: -0.15em; margin-right: -0.6em")
@@ -74,12 +68,31 @@ div
         | {{ $t('settings.categorization.addCategory') }}
       b-btn.float-right(@click="saveClasses", variant="success" :disabled="!classes_unsaved_changes")
         | {{ $t('common.save') }}
+
+  div.mt-4(ref="builderSection")
+    div.d-flex.align-items-center.flex-wrap
+      h5.mb-0 {{ $t('settings.categorization.builderTitle') }}
+      small.text-muted.ml-2 {{ $t('settings.categorization.builderSubtitle') }}
+      b-btn.ml-auto(
+        variant="outline-primary"
+        size="sm"
+        @click="builderOpen = !builderOpen"
+        :aria-expanded="builderOpen ? 'true' : 'false'"
+        aria-controls="category-builder-collapse"
+      )
+        icon.mr-1(:name="builderOpen ? 'angle-double-up' : 'angle-double-down'")
+        | {{ builderOpen ? $t('settings.categorization.hideBuilder') : $t('settings.categorization.openBuilder') }}
+    b-collapse#category-builder-collapse(v-model="builderOpen")
+      div.mt-3(v-if="builderMounted")
+        CategoryBuilder(embedded)
 </template>
 <script lang="ts">
 import { mapState, mapGetters } from 'pinia';
 import CategoryEditTree from '~/components/CategoryEditTree.vue';
 import CategoryEditModal from '~/components/CategoryEditModal.vue';
 import 'vue-awesome/icons/undo';
+import 'vue-awesome/icons/angle-double-down';
+import 'vue-awesome/icons/angle-double-up';
 
 import { useCategoryStore } from '~/stores/categories';
 
@@ -91,17 +104,23 @@ export default {
   components: {
     CategoryEditTree,
     CategoryEditModal,
+    CategoryBuilder: () => import('~/views/settings/CategoryBuilder.vue'),
   },
   data: () => ({
     categoryStore: useCategoryStore(),
     editingId: null,
     activeSetId: 'default',
+    builderOpen: false,
+    builderMounted: false,
   }),
   computed: {
     ...mapState(useCategoryStore, ['classes_unsaved_changes']),
     ...mapGetters(useCategoryStore, ['classes_hierarchy']),
   },
   watch: {
+    builderOpen(v: boolean) {
+      if (v) this.builderMounted = true;
+    },
     'categoryStore.active_set_ids': {
       handler(newIds: string[]) {
         if (newIds && newIds.length > 0) {
@@ -113,11 +132,17 @@ export default {
   },
   mounted() {
     this.categoryStore.load();
-
-    // Warn user about unsaved changes when closing/refreshing the browser tab.
-    // Route navigation guard is handled by the parent Settings.vue component
-    // using beforeRouteLeave (automatically cleaned up by Vue Router).
     window.addEventListener('beforeunload', this.beforeUnload);
+
+    if (this.$route.query.builder === 'open') {
+      this.builderOpen = true;
+      this.$nextTick(() => {
+        const el = this.$refs.builderSection as HTMLElement | undefined;
+        if (el && typeof el.scrollIntoView === 'function') {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    }
   },
   beforeDestroy() {
     window.removeEventListener('beforeunload', this.beforeUnload);
@@ -129,7 +154,6 @@ export default {
         rule: { type: 'regex', regex: 'FILL ME' },
       });
 
-      // Find the category with the max ID, and open an editor for it
       const lastId = _.max(_.map(this.categoryStore.classes, 'id'));
       this.editingId = lastId;
     },
@@ -146,49 +170,35 @@ export default {
       this.editingId = null;
     },
     exportClasses: async function () {
-      console.log('Exporting categories...');
-
-      // Export the active set with its ID — suitable for re-importing as a named set.
-      // Use classes_clean (current in-memory state) so unsaved edits are included.
       const activeSetId = this.categoryStore.active_set_ids[0] || 'default';
       const export_data = { id: activeSetId, categories: this.categoryStore.classes_clean };
       const text = JSON.stringify(export_data, null, 2);
       await downloadFile(`aw-category-export-${export_data.id}.json`, text, 'application/json');
     },
     importCategories: async function (elem) {
-      console.log('Importing categories...');
-
-      // Get file from upload
       const file = elem.target.files[0];
       if (file.type != 'application/json') {
         console.error('Only JSON files are possible to import');
         return;
       }
 
-      // Read and parse import text to JSON
       const text = await file.text();
       const import_obj = JSON.parse(text);
 
       if (import_obj.categories && !import_obj.id) {
-        // Legacy format: flat categories array — import into the active set
         this.categoryStore.import(import_obj.categories);
       } else if (import_obj.id && import_obj.categories) {
-        // New CategorySet format — create or overwrite set with same ID
         let setId = import_obj.id;
         while (
           this.categoryStore.category_sets.find(
             s => s.id === setId && s.id !== (this.categoryStore.active_set_ids[0] || '')
           )
         ) {
-          // Avoid duplicate IDs (except if overwriting the active set)
           setId = setId + '-imported';
         }
         const existing = this.categoryStore.category_sets.find(s => s.id === setId);
         if (existing) {
           existing.categories = import_obj.categories;
-          // If importing into the active set, don't call switchToSet — it would call
-          // syncToPrimarySet first and overwrite the just-imported categories with
-          // stale in-memory classes. Use discardChanges to recompute from the updated set.
           const isActiveSet = setId === (this.categoryStore.active_set_ids[0] || '');
           if (isActiveSet) {
             this.categoryStore.discardChanges();
@@ -211,7 +221,6 @@ export default {
         alert(`A set named "${name}" already exists.`);
         return;
       }
-      // Create the new set and switch to it (switchToSet syncs current state first)
       this.categoryStore.createSet(name);
       this.categoryStore.switchToSet(name);
     },
@@ -225,13 +234,9 @@ export default {
     onSetChange: function (setId: string) {
       if (this.classes_unsaved_changes) {
         if (!confirm('You have unsaved changes. Switch sets anyway? (Changes will be discarded)')) {
-          // Revert the select back to current active
           this.activeSetId = this.categoryStore.active_set_ids[0] || 'default';
           return;
         }
-        // User confirmed discard: reset in-memory edits before switching so that
-        // switchToSet() → syncToPrimarySet() writes back the original (clean) state,
-        // not the unsaved edits the user just chose to discard.
         this.categoryStore.discardChanges();
       }
       this.categoryStore.switchToSet(setId);

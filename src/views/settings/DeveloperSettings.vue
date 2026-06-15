@@ -1,7 +1,6 @@
 <template lang="pug">
 div
-  h4.mb-3 {{ $t('settings.developer.title') }}
-  b-alert(show) #[b {{ $t('settings.developer.note') }}] {{ $t('settings.developer.noteBody') }}
+  b-alert(show variant="warning") #[b {{ $t('settings.developer.note') }}] {{ $t('settings.developer.noteBody') }}
 
   b-form-group(:label="$t('settings.developer.forceDevmode')" label-cols-md=3 :description="$t('settings.developer.forceDevmodeHelp')")
     div

@@ -1,18 +1,25 @@
 <template lang="pug">
 div
-  // TODO: Add some way to disable this notification, probably by making the ratio threshold configurable
-  b-alert.my-2(v-if="isVisible", variant="info", show)
+  b-alert.my-2(v-if="isVisible", variant="info", show dismissible @dismissed="onDismiss")
     p.mb-0
       | #[b {{ $t('uncategorized.title') }}]
+      router-link.ml-1.uncategorized-hint__cog(
+        :to="{ path: '/settings/general' }"
+        :title="$t('uncategorized.settingsCogTitle')"
+        :aria-label="$t('uncategorized.settingsCogTitle')"
+      )
+        icon(name="cog" scale="0.85")
       br
       | {{ uncategorizedBody }}
       | {{ $t('uncategorized.hint') }}
-      | #[router-link(:to="{ path: '/settings/category-builder' }") {{ $t('uncategorized.categoryBuilder') }}].
+      | #[router-link(:to="{ path: '/settings/categorization', query: { builder: 'open' } }") {{ $t('uncategorized.categoryBuilder') }}].
 </template>
 
 <script lang="ts">
+import 'vue-awesome/icons/cog';
 import { mapState } from 'pinia';
 import { useActivityStore } from '~/stores/activity';
+import { useSettingsStore } from '~/stores/settings';
 import { seconds_to_duration } from '~/util/time';
 
 export default {
@@ -25,6 +32,7 @@ export default {
   },
   computed: {
     ...mapState(useActivityStore, ['uncategorizedDuration']),
+    ...mapState(useSettingsStore, ['uncategorizedNotificationData']),
     ratio() {
       return this.uncategorizedDuration
         ? this.uncategorizedDuration[0] / this.uncategorizedDuration[1]
@@ -60,11 +68,38 @@ export default {
       });
     },
     isVisible() {
-      const overTotal = this.total > 60 * 60;
-      const overRatio = this.ratio > 0.3;
+      const cfg = this.uncategorizedNotificationData || {};
+      if (cfg.isEnabled === false) return false;
+      const minTotalSeconds =
+        typeof cfg.minTotalSeconds === 'number' ? cfg.minTotalSeconds : 60 * 60;
+      const minRatio = typeof cfg.minRatio === 'number' ? cfg.minRatio : 0.3;
+      const overTotal = this.total > minTotalSeconds;
+      const overRatio = this.ratio > minRatio;
       const hasCategoryFilter = this.$route.query.category;
       return overTotal && overRatio && !hasCategoryFilter;
     },
   },
+  methods: {
+    onDismiss() {
+      const settingsStore = useSettingsStore();
+      settingsStore.update({
+        uncategorizedNotificationData: {
+          ...this.uncategorizedNotificationData,
+          isEnabled: false,
+        },
+      });
+    },
+  },
 };
 </script>
+
+<style scoped>
+.uncategorized-hint__cog {
+  color: inherit;
+  opacity: 0.45;
+}
+.uncategorized-hint__cog:hover,
+.uncategorized-hint__cog:focus {
+  opacity: 0.85;
+}
+</style>

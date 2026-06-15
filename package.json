@@ -143,6 +143,7 @@
   },
   "overrides": {
     "@tootallnate/once": "^2.0.1",
+    "d3-color": "^3.1.0",
     "editorconfig": {
       "minimatch": "^9.0.7"
     },

@@ -1,41 +1,77 @@
 <template lang="pug">
 div
-  div(style="text-align: center")
-    | Your total score for {{ score_period_label }} is:
-    div(:style="'font-size: 2em; color: ' + (score >= 0 ? '#0A0' : '#F00')")
+  div.text-center.position-relative
+    button.score__help-btn(
+      id="scoreHelp"
+      type="button"
+      aria-label="How is the score calculated?"
+    )
+      icon(name="question-circle" scale="0.9")
+    b-tooltip(target="scoreHelp" placement="left" triggers="hover focus")
+      | Sum of (hours &times; category score). Set category scores in #[b Settings &gt; Categories]. Positive scores reward activities you want to do more of; negative ones penalize distractions.
+    div.small.text-muted Score for {{ score_period_label }}
+    div.score-value(:class="score >= 0 ? 'text-success' : 'text-danger'")
       | {{score >= 0 ? '+' : ''}}{{ (Math.round(score * 10) / 10).toFixed(1) }}
-    div.small.text-muted
-      | ({{score_productive_percent.toFixed(1)}}% productive)
+    div.small.text-muted(v-if="!isNaN(score_productive_percent)")
+      | {{score_productive_percent.toFixed(1)}}% productive
   hr
   div
-    b Top productive:
-    div.mt-2(v-for="cat in top_productive")
-      div.d-flex
+    b Top productive
+    div.mt-2(v-for="cat in top_productive" :key="cat.data.$category.join('>')")
+      div.d-flex.align-items-center
         div
-          div
-            | {{cat.data.$category.slice(-1)[0]}}
-          div(style="font-size: 0.7em; color: #666;")
+          div {{cat.data.$category.slice(-1)[0]}}
+          div.small.text-muted(v-if="cat.data.$category.length > 1")
             | {{cat.data.$category.slice(0, -1).join(" > ")}}
-        div.ml-auto
-          span(style="font-size: 1.2em; color: #0A0")
-            | +{{ (Math.round(cat.data.$total_score * 10) / 10).toFixed(1) }}
+        div.ml-auto.text-success.h5.mb-0
+          | +{{ (Math.round(cat.data.$total_score * 10) / 10).toFixed(1) }}
+    p.text-muted.small.mb-0.mt-2(v-if="top_productive.length === 0")
+      | No productive categories recorded yet.
   hr
   div
-    b Top distracting:
-    div.mt-2(v-for="cat in top_distracting")
-      div.d-flex
+    b Top distracting
+    div.mt-2(v-for="cat in top_distracting" :key="cat.data.$category.join('>')")
+      div.d-flex.align-items-center
         div
-          div
-            | {{cat.data.$category.slice(-1)[0]}}
-          div(style="font-size: 0.7em; color: #666;")
+          div {{cat.data.$category.slice(-1)[0]}}
+          div.small.text-muted(v-if="cat.data.$category.length > 1")
             | {{cat.data.$category.slice(0, -1).join(" > ")}}
-        div.ml-auto
-          span(style="font-size: 1.2em; color: #F00")
-            | {{ (Math.round(cat.data.$total_score * 10) / 10).toFixed(1) }}
+        div.ml-auto.text-danger.h5.mb-0
+          | {{ (Math.round(cat.data.$total_score * 10) / 10).toFixed(1) }}
+    p.text-muted.small.mb-0.mt-2(v-if="top_distracting.length === 0")
+      | No distracting activity in this period.
 </template>
+
+<style scoped>
+.score-value {
+  font-size: 2em;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.score__help-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: transparent;
+  border: 0;
+  padding: 0.25rem;
+  color: inherit;
+  opacity: 0.45;
+  cursor: help;
+  line-height: 1;
+}
+
+.score__help-btn:hover,
+.score__help-btn:focus {
+  opacity: 0.85;
+  outline: none;
+}
+</style>
 
 <script lang="ts">
 import _ from 'lodash';
+import 'vue-awesome/icons/question-circle';
 import { useActivityStore } from '~/stores/activity';
 import { IEvent } from '~/util/interfaces';
 import { periodReadable } from '~/util/timeperiod';

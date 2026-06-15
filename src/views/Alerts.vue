@@ -7,11 +7,15 @@ div
   // TODO: Send notifications when goals met
   // TODO: Query from day start, not 24h ago
 
-  b-alert(style="warning" show)
+  b-alert(variant="warning" show)
     | This feature is still in early development.
 
   b-alert(v-if="error" show variant="danger")
     | {{error}}
+
+  b-alert(v-if="hostnames.length === 0" show variant="info")
+    | No host with both window and AFK buckets is available, so alerts can't run yet.
+    | Install #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") aw-watcher-window and aw-watcher-afk] to enable this view.
 
   b-card(v-for="alert in alerts", :key="alert.name")
     b-button.float-right(@click="deleteAlert(alert.name)" size="sm" variant="outline-danger")
@@ -21,17 +25,16 @@ div
     div Category: {{ alert.category.join(" > ") }}
     div Current: {{ alertTime(alert.category) | friendlyduration }} / {{alert.goal}} minutes
       span(v-if="alertTime(alert.category) >= alert.goal")
-        icon(name="check" style="color: #0C0")
+        icon.text-success(name="check")
       span(v-else)
-        icon(name="times" color="#555")
+        icon.text-muted(name="times")
 
-  b-input-group.mt-3
-    b-btn(@click="check" variant="success") Check
-    b-input-group-append
-      b-form-checkbox.my-2.ml-3(v-model="autorefresh", @change="toggleAutoRefresh", switch) Toggle autorefresh every 10s
+  div.d-flex.align-items-center.mt-3
+    b-btn(@click="check" variant="success" :disabled="!hostname") Check
+    b-form-checkbox.ml-3.mb-0(v-model="autorefresh", @change="toggleAutoRefresh", switch) Auto-refresh every 10s
 
-  small(v-if="last_updated")
-    | Last updated: {{ last_updated }}
+  small.text-muted(v-if="last_updated")
+    | Last updated #[time(:datetime="last_updated && last_updated.toISOString && last_updated.toISOString()") {{ last_updated | friendlytime }}]
 
   hr
 
@@ -118,7 +121,13 @@ export default {
   mounted: async function () {
     await this.bucketsStore.ensureLoaded();
     await this.categoryStore.load();
-    this.hostnames = this.bucketsStore.hosts;
+    // Filter to hosts that actually have the buckets we query against.
+    // Prevents "There's no bucket named 'aw-watcher-afk_<host>'" when the
+    // hosts list contains a stale hostname with only one orphan bucket.
+    this.hostnames = this.bucketsStore.hosts.filter(
+      h =>
+        this.bucketsStore.bucketsWindow(h).length > 0 && this.bucketsStore.bucketsAFK(h).length > 0
+    );
     this.hostname = this.hostnames[0];
   },
   methods: {

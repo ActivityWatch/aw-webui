@@ -41,6 +41,14 @@ interface State {
     nextPollTime: Moment;
     timesPollIsShown: number;
   };
+  uncategorizedNotificationData: {
+    isEnabled: boolean;
+    // Below this total tracked duration (seconds) the hint is hidden —
+    // avoids nagging on quiet days.
+    minTotalSeconds: number;
+    // Hint shows when the uncategorized fraction crosses this ratio.
+    minRatio: number;
+  };
   always_active_pattern: string;
   privacy_filters: PrivacyFilterRule[];
   classes: Category[];
@@ -85,6 +93,11 @@ export const useSettingsStore = defineStore('settings', {
       isEnabled: true,
       nextPollTime: moment().add(INITIAL_WAIT_PERIOD, 'seconds'),
       timesPollIsShown: 0,
+    },
+    uncategorizedNotificationData: {
+      isEnabled: true,
+      minTotalSeconds: 60 * 60, // 1 hour
+      minRatio: 0.3, // 30%
     },
 
     always_active_pattern: '',

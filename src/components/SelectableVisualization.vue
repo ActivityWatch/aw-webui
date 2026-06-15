@@ -8,7 +8,7 @@ div
       template(v-slot:button-content)
         icon(name="cog")
       b-dropdown-item(v-for="t in types" :key="t" variant="outline-secondary" @click="$emit('onTypeChange', id, t)")
-        | {{ visualizations[t].title }} #[span.small(v-if="!visualizations[t].available" style="color: #A50") {{ $t('visualizations.noData') }}]
+        | {{ visualizations[t].title }} #[span.small.text-warning(v-if="!visualizations[t].available") {{ $t('visualizations.noData') }}]
     b-button.p-0(size="sm", variant="outline-danger" @click="$emit('onRemove', id)")
       icon(name="times")
 
@@ -21,7 +21,7 @@ div
     div(v-if="!has_prerequisites")
       b-alert.small.px-2.py-1(show variant="warning")
         | {{ $t('visualizations.missingWatcher') }}
-        | #[a(href="https://activitywatch.readthedocs.io/en/latest/watchers.html") {{ $t('visualizations.docLink') }}].
+        | #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") {{ $t('visualizations.docLink') }}].
 
     div(v-if="type == 'top_apps'")
       aw-summary(:fields="activityStore.window.top_apps",

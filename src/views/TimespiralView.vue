@@ -1,11 +1,17 @@
 <template lang="pug">
 div
-  h1 {{ $t('timespiral.title') }}
-  b-alert(show, variant="info")
+  h3 {{ $t('timespiral.title') }}
+  b-alert(show, variant="warning")
     | {{ $t('timespiral.wip') }}
-  div Bucket: {{ bucketId }}
-  div Events: {{ events.length }}
-  Timespiral(:events="events")
+
+  div(v-if="!bucketId")
+    p.text-muted
+      | {{ $t('timespiral.noAfkBucket') }}
+      | #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") aw-watcher-afk]
+      | {{ $t('timespiral.noAfkBucketSuffix') }}
+  div(v-else)
+    p.small.text-muted {{ $t('timespiral.bucketLabel') }} #[code {{ bucketId }}] &middot; {{ $t('timespiral.eventsLabel') }} {{ events.length }}
+    Timespiral(:events="events")
 </template>
 
 <script lang="ts">
@@ -33,13 +39,13 @@ export default {
     }
     this.bucketId = buckets[0];
 
+    const start = new Date();
+    start.setDate(start.getDate() - 7);
     const bucket = await bucketStore.getBucketWithEvents({
       id: this.bucketId,
-      start: new Date('2022-08-08'),
+      start,
     });
     this.events = bucket.events;
-    console.log('Retrieved events:', this.events);
-    console.log('First/last event:', this.events[0], this.events[this.events.length - 1]);
   },
   methods: {
     onEventClick(event) {

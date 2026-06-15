@@ -1,14 +1,28 @@
 <template lang="pug">
 div
-  h2 {{ $t('stopwatch.title') }}
-  p
-    | {{ $t('stopwatch.usingBucket') }} {{bucket_id}}
-
-  b-alert(show)
-    | {{ $t('stopwatch.experiment') }}
+  div.d-flex.align-items-center.mb-3
+    h3.mb-0 {{ $t('stopwatch.title') }}
+    button.btn.btn-link.p-0.ml-2.text-muted(
+      id="stopwatch-help"
+      type="button"
+      :aria-label="$t('stopwatch.aboutTitle')"
+    )
+      icon(name="question-circle")
+    b-popover(
+      target="stopwatch-help"
+      triggers="hover focus click blur"
+      placement="bottom"
+      :title="$t('stopwatch.aboutTitle')"
+    )
+      | {{ $t('stopwatch.aboutBody') }}
 
   b-input-group(size="lg")
-    b-input(v-model="label" placeholder="What are you working on?")
+    b-input(
+      v-model="label"
+      :placeholder="$t('stopwatch.placeholder')"
+      :aria-label="$t('stopwatch.placeholder')"
+      @keyup.enter="startTimer(label)"
+    )
     b-input-group-append
       b-button(@click="startTimer(label)", variant="success")
         icon(name="play")
@@ -17,30 +31,23 @@ div
   hr
 
   div(v-if="loading")
-    span.text-muted.center.aw-loading Loading...
-  div.row(v-else)
-    div.col-md-12
-      h3 {{ $t('stopwatch.running') }}
-      div(v-if="runningTimers.length > 0")
-        div(v-for="e in runningTimers" :key="e.id")
-          stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
-            @delete="removeTimer", @update="updateTimer")
-          hr(style="margin: 0")
-      div(v-else)
-        span(style="color: #555") No stopwatch running
-        hr
+    b-spinner.mr-2(small)
+    span.text-muted {{ $t('common.loading') }}
+  div(v-else)
+    h3.mt-3 {{ $t('stopwatch.running') }}
+    div(v-if="runningTimers.length > 0")
+      div(v-for="e in runningTimers" :key="e.id")
+        stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
+          @delete="removeTimer", @update="updateTimer")
+    p.text-muted.mb-0(v-else) {{ $t('stopwatch.noRunning') }}
 
-      div(v-if="stoppedTimers.length > 0")
-        h3.mt-4.mb-4 {{ $t('stopwatch.history') }}
-        div(v-for="k in Object.keys(timersByDate).sort().reverse()")
-          h5.mt-2.mb-1 {{ k }}
-          div(v-for="e in timersByDate[k]" :key="e.id")
-            stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
-              @delete="removeTimer", @update="updateTimer", @new="startTimer(e.data.label)")
-            hr(style="margin: 0")
-      div(v-else)
-        span(style="color: #555") No history to show
-        hr
+    div(v-if="stoppedTimers.length > 0")
+      h3.mt-4.mb-2 {{ $t('stopwatch.history') }}
+      div(v-for="k in Object.keys(timersByDate).sort().reverse()" :key="k")
+        h5.mt-3.mb-1 {{ k }}
+        div(v-for="e in timersByDate[k]" :key="e.id")
+          stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
+            @delete="removeTimer", @update="updateTimer", @new="startTimer(e.data.label)")
 </template>
 
 <style scoped lang="scss">
@@ -61,6 +68,7 @@ import moment from 'moment';
 import StopwatchEntry from '../components/StopwatchEntry.vue';
 import 'vue-awesome/icons/play';
 import 'vue-awesome/icons/trash';
+import 'vue-awesome/icons/question-circle';
 
 export default {
   name: 'Stopwatch',
@@ -88,15 +96,8 @@ export default {
     },
   },
   mounted: async function () {
-    // TODO: List all possible timer buckets
-    //this.getBuckets();
-
-    // Create default timer bucket
     await this.$aw.ensureBucket(this.bucket_id, 'general.stopwatch', 'unknown');
-
-    // TODO: Get all timer events
     await this.getEvents();
-
     setInterval(() => (this.now = moment()), 1000);
   },
   methods: {
@@ -115,8 +116,6 @@ export default {
     updateTimer: async function (new_event) {
       const i = this.events.findIndex(e => e.id == new_event.id);
       if (i != -1) {
-        // This is needed instead of this.events[i] because insides of arrays
-        // are not reactive in Vue
         this.$set(this.events, i, new_event);
       } else {
         console.error(':(');

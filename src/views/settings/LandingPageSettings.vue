@@ -10,7 +10,7 @@ div
         option(value="/timeline") {{ $t('settings.landingPage.timeline') }}
       span(v-else)
         .aw-loading {{ $t('common.loading') }}
-  small
+  small.text-muted
     | {{ $t('settings.landingPage.help') }}
 </template>
 

@@ -2,7 +2,7 @@
 div.d-flex.justify-content-between
   div
     h5.mb-0 {{ $t('settings.color.title') }}
-    small
+    small.text-muted
       | {{ $t('settings.color.help') }}
   div
     b-form-checkbox(v-model="useColorFallback", switch)

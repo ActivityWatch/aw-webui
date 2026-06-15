@@ -18,32 +18,77 @@ div
         b.mr-1 {{ $t('activity.queryRange') }}
         span {{ periodReadableRange }}
 
-  div.mb-2.d-flex
-    div
-      b-input-group
-        b-input-group-prepend
-          b-button.px-2(:to="link_prefix + '/' + previousPeriod() + '/' + subview + '/' + currentViewId",
-                   variant="outline-dark")
-            icon(name="arrow-left")
-        b-select.pl-2.pr-3(:value="periodLength", :options="periodLengths",
-                 @change="(periodLength) => setDate(_date, periodLength)")
-        b-input-group-append
-          b-button.px-2(:to="link_prefix + '/' + nextPeriod() + '/' + subview + '/' + currentViewId",
-                        :disabled="nextPeriod() > today", variant="outline-dark")
-            icon(name="arrow-right")
+  div.activity-toolbar.d-flex.flex-wrap.align-items-center
+    div.d-flex.mr-2
+      b-button-group
+        b-button.px-3(
+          v-for="opt in primaryPeriods"
+          :key="opt.value"
+          :pressed="periodLength === opt.value"
+          @click="setDate(_date, opt.value)"
+          variant="outline-dark"
+          size="sm"
+        ) {{ opt.text }}
+        // If an extended period is active (week/month/year), surface it as
+        // an extra pressed pill so the user sees what's selected — the kebab
+        // alone wouldn't communicate that. Click toggles it back off (back
+        // to "day") so it's not stuck.
+        b-button.px-3(
+          v-if="!isPrimaryPeriod"
+          pressed
+          variant="outline-dark"
+          size="sm"
+          @click="setDate(_date, 'day')"
+        ) {{ extendedPeriodLabel }}
+      // Kebab sits outside the b-button-group so the last pressed pill
+      // (whichever it is) keeps its rounded right corner.
+      b-dropdown.kebab-dropdown.ml-1(
+        size="sm"
+        variant="outline-secondary"
+        toggle-class="border-0"
+        no-caret
+        right
+        title="More ranges"
+        aria-label="More date ranges"
+      )
+        template(v-slot:button-content)
+          icon(name="ellipsis-v")
+        b-dropdown-item-button(
+          v-for="opt in extendedPeriods"
+          :key="opt.value"
+          :active="periodLength === opt.value"
+          @click="setDate(_date, opt.value)"
+        ) {{ opt.text }}
 
-    div.mx-2(v-if="periodLength === 'day'")
-      input.form-control.px-2(id="date" type="date" :value="_date" :max="today"
-                         @change="setDate($event.target.value, periodLength)")
+    b-input-group.mr-2(size="sm" style="width: auto")
+      b-input-group-prepend
+        b-button.px-2(:to="link_prefix + '/' + previousPeriod() + '/' + subview + '/' + currentViewId",
+                 variant="outline-dark",
+                 :title="'Previous ' + periodLength",
+                 :aria-label="'Previous ' + periodLength")
+          icon(name="arrow-left")
+      input.form-control.form-control-sm.activity-dateinput(
+        type="date"
+        :value="_date"
+        :max="today"
+        :title="periodIsBrowseable ? periodReadableRange : ''"
+        @change="setDate($event.target.value, periodLength)"
+      )
+      b-input-group-append
+        b-button.px-2(:to="link_prefix + '/' + nextPeriod() + '/' + subview + '/' + currentViewId",
+                      :disabled="nextPeriod() > today", variant="outline-dark",
+                      :title="'Next ' + periodLength",
+                      :aria-label="'Next ' + periodLength")
+          icon(name="arrow-right")
 
     div.ml-auto
-      b-button-group
-        b-button.px-2(:pressed.sync="showOptions", variant="outline-dark")
+      b-button-group(size="sm")
+        b-button.px-2(:pressed.sync="showOptions", variant="outline-dark", title="Filters", aria-label="Filters")
           icon(name="filter")
           span.d-none.d-md-inline
             |  {{ $t('activity.filters') }}
             b-badge(pill, variant="secondary" v-if="filters_set > 0").ml-2 {{ filters_set }}
-        b-button.px-2(@click="refresh(true)", variant="outline-dark")
+        b-button.px-2(@click="refresh(true)", variant="outline-dark", title="Refresh", aria-label="Refresh")
           icon(name="sync")
           span.d-none.d-md-inline
             |  {{ $t('activity.refresh') }}
@@ -72,7 +117,7 @@ div
         b-form-select(v-model="filter_category", :options="categoryStore.category_select(true)" size="sm")
 
 
-  aw-periodusage.mt-2(:periodusage_arr="periodusage", @update="setDate")
+  aw-periodusage(:periodusage_arr="periodusage", @update="setDate")
 
   aw-uncategorized-notification(:periodLength="periodLength")
 
@@ -105,6 +150,22 @@ div
 
 <style lang="scss" scoped>
 @import '../../style/globals';
+
+.activity-toolbar {
+  // row-gap kicks in only when items wrap to a second line, so the
+  // single-row case stays compact without piling mb-2 on every child.
+  row-gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.activity-dateinput {
+  // Keep the date picker compact and aligned with the period button-group
+  // regardless of mode (day / week / month / year / N days). The full
+  // human-readable range remains available via the input's tooltip and the
+  // page heading.
+  width: 9.5rem;
+  min-width: 9.5rem;
+}
 
 .nav {
   border-bottom: 1px solid $lightBorderColor;
@@ -163,6 +224,7 @@ import 'vue-awesome/icons/times';
 import 'vue-awesome/icons/save';
 import 'vue-awesome/icons/question-circle';
 import 'vue-awesome/icons/filter';
+import 'vue-awesome/icons/ellipsis-v';
 
 import { useSettingsStore } from '~/stores/settings';
 import { useCategoryStore } from '~/stores/categories';
@@ -200,7 +262,14 @@ export default {
       showOptions: false,
 
       include_audible: true,
-      include_stopwatch: false,
+      // Include stopwatch events when a stopwatch bucket exists. The
+      // store query falls back to noop if no bucket is present, so this
+      // is safe for users without stopwatch data. Enabling by default
+      // means the "Top Stopwatch Events" visualization shows real
+      // numbers as soon as a user records a session; previously a
+      // stopwatch run produced "No data" unless they also flipped the
+      // dev-only "Include manually logged events" checkbox.
+      include_stopwatch: true,
       filter_afk: true,
       new_view: {},
     };
@@ -255,6 +324,22 @@ export default {
         return this.$t('activity.periodLast30dTitle');
       }
       return '';
+    },
+    periodLengthsButtons: function () {
+      return Object.entries(this.periodLengths).map(([value, text]) => ({ value, text }));
+    },
+    primaryPeriods: function () {
+      return this.periodLengthsButtons.filter(p => ['day', 'last7d', 'last30d'].includes(p.value));
+    },
+    extendedPeriods: function () {
+      return this.periodLengthsButtons.filter(p => !['day', 'last7d', 'last30d'].includes(p.value));
+    },
+    isPrimaryPeriod: function () {
+      return ['day', 'last7d', 'last30d'].includes(this.periodLength);
+    },
+    extendedPeriodLabel: function () {
+      const opt = this.extendedPeriods.find(p => p.value === this.periodLength);
+      return opt ? opt.text : '';
     },
     periodIsBrowseable: function () {
       return ['day', 'week', 'month', 'year'].includes(this.periodLength);
@@ -400,16 +485,36 @@ export default {
         return;
       }
 
+      // When switching between period buttons (day/week/month/year), prefer
+      // today's date if today falls inside the source period. Otherwise the
+      // user gets thrown across the calendar — e.g. year(2026) → month →
+      // week lands on 2025-12-29 because startOf("week") of Jan 1 walks
+      // back into the previous year.
+      let anchorDate = momentJsDate;
+      const today = moment(get_today_with_offset(this.settingsStore.startOfDay));
+      if (this.periodIsBrowseable) {
+        const sourceUnit = periodLengthConvertMoment(this.periodLength);
+        const sourceStart = momentJsDate.clone().startOf(sourceUnit);
+        // moment.add() rejects "isoWeek" as a DurationConstructor (even
+        // though startOf() accepts it). Cast — runtime handles both spellings.
+        const sourceEnd = sourceStart
+          .clone()
+          .add(1, sourceUnit as moment.unitOfTime.DurationConstructor);
+        if (today.isSameOrAfter(sourceStart) && today.isBefore(sourceEnd)) {
+          anchorDate = today;
+        }
+      }
+
       let new_date;
       if (periodLength == '7 days') {
         periodLength = 'last7d';
-        new_date = momentJsDate.add(1, 'days').format('YYYY-MM-DD');
+        new_date = anchorDate.clone().add(1, 'days').format('YYYY-MM-DD');
       } else if (periodLength == '30 days') {
         periodLength = 'last30d';
-        new_date = momentJsDate.add(1, 'days').format('YYYY-MM-DD');
+        new_date = anchorDate.clone().add(1, 'days').format('YYYY-MM-DD');
       } else {
         const new_period_length_moment = periodLengthConvertMoment(periodLength);
-        new_date = momentJsDate.startOf(new_period_length_moment).format('YYYY-MM-DD');
+        new_date = anchorDate.clone().startOf(new_period_length_moment).format('YYYY-MM-DD');
       }
       const path = `/activity/${this.host}/${periodLength}/${new_date}/${this.subview}/${this.currentViewId}`;
       if (this.$route.path !== path) {

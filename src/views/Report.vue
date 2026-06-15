@@ -4,7 +4,7 @@ div
 
   | {{ $t('report.description') }}
 
-  b-alert.mt-2(style="warning" show)
+  b-alert.mt-2(variant="warning" show)
     | {{ $t('report.earlyDev') }}
 
   b-alert(v-if="error" show variant="danger")
@@ -17,7 +17,7 @@ div
         | {{ $t('report.generate') }}
 
   div.d-flex.mt-1
-    span.mr-auto.small(style="color: #666") Hostname: {{queryOptions.hostname}}
+    span.mr-auto.small.text-muted Hostname: {{queryOptions.hostname}}
     b-button.border-0(size="sm", variant="outline-dark" @click="show_options = !show_options")
       span(v-if="!show_options")
         | #[icon(name="angle-double-down")] Show options
@@ -37,7 +37,7 @@ div
 
     div.d-flex
       div.flex-fill
-        | {{ $t('report.foundEvents', { count: events.length, seconds: queryTime / 1000 }) }}
+        | {{ $t('report.foundEvents', { count: events.length, seconds: (queryTime / 1000).toFixed(2) }) }}
       div
         b-input-group(size="sm")
           b-input-group-prepend
@@ -53,8 +53,8 @@ div
     hr
 
     vis-timeline(:events="events.slice(0, 500)" filterShortEvents=true)
-    div.small(v-if="events.length > 500")
-      | Too many events, will only show last 500 events.
+    div.small.text-muted(v-if="events.length > 500")
+      | Showing the {{ 500 }} most recent events of {{ events.length }} total.
 
     hr
 
@@ -63,8 +63,6 @@ div
     hr
 
     aw-selectable-eventview(:events="events")
-
-    hr
 
     hr
 

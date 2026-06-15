@@ -5,10 +5,7 @@ div
   b-alert(show variant="warning")
     | This feature is still in early development. See PR #[a(href="https://github.com/ActivityWatch/aw-webui/pull/365") aw-webui#365] for more information.
 
-  | Displays a graph of categories and their transitions.
-
-  b-alert.mt-2(style="warning" show)
-    | This feature is still in early development.
+  p Displays a graph of categories and their transitions.
 
   b-alert(v-if="error" show variant="danger")
     | {{error}}
@@ -28,7 +25,7 @@ div
       | Generate
 
   div.d-flex.mt-1
-    span.mr-auto.small(style="color: #666") Hostname: {{queryOptions.hostname}}
+    span.mr-auto.small.text-muted Hostname: {{queryOptions.hostname}}
     b-button.border-0(size="sm", variant="outline-dark" @click="show_options = !show_options")
       span(v-if="!show_options")
         | #[icon(name="angle-double-down")] Show options

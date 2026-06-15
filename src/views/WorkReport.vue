@@ -10,7 +10,22 @@ div
 
     div.col-md-3
       b-form-group(label="Categories" label-class="font-weight-bold")
-        b-form-select(v-model="selectedCategories" :options="categoryOptions" multiple :select-size="3")
+        b-form-select(
+          :value="''"
+          :options="addableCategoryOptions"
+          size="sm"
+          @change="addCategory"
+        )
+        div.mt-2(v-if="selectedCategories.length > 0")
+          span.badge.badge-info.mr-1.mb-1(v-for="(cat, idx) in selectedCategories" :key="idx")
+            | {{ JSON.parse(cat).join(' > ') }}
+            button.ml-1.close.small(
+              type="button"
+              aria-label="Remove category"
+              style="font-size: 0.85rem; line-height: 1"
+              @click="removeCategory(idx)"
+            ) &times;
+        small.text-muted.d-block.mt-1 Subcategories are included automatically (e.g. "Work" also covers "Work > Programming").
 
     div.col-md-3
       b-form-group(label="Break Time" label-class="font-weight-bold")
@@ -80,6 +95,7 @@ import {
   getSupportedWorkReportHosts,
   getWorkReportHostOptions,
   getUnsupportedWorkReportHosts,
+  buildWorkReportQuery,
 } from '~/util/workReport';
 
 import 'vue-awesome/icons/sync';
@@ -91,6 +107,21 @@ interface DailyData {
   sessions: number;
   avgSession: number;
   events: any[];
+}
+
+// Sum of gaps between adjacent events that are <= breakTimeSeconds.
+function bridgeGaps(events: any[], breakTimeSeconds: number): number {
+  if (!events || events.length < 2 || breakTimeSeconds <= 0) return 0;
+  const sorted = [...events].sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  );
+  let extra = 0;
+  for (let i = 1; i < sorted.length; i++) {
+    const prevEnd = new Date(sorted[i - 1].timestamp).getTime() + sorted[i - 1].duration * 1000;
+    const gap = (new Date(sorted[i].timestamp).getTime() - prevEnd) / 1000;
+    if (gap > 0 && gap <= breakTimeSeconds) extra += gap;
+  }
+  return extra;
 }
 
 export default {
@@ -122,6 +153,21 @@ export default {
         value: JSON.stringify(cat),
         text: cat.join(' > '),
       }));
+    },
+    // Hide categories that are already selected (or that are descendants of
+    // a selected category, since we auto-include subcategories anyway).
+    addableCategoryOptions() {
+      const selected: string[][] = this.selectedCategories.map(c => JSON.parse(c));
+      const isCoveredBySelected = (cat: string[]) =>
+        selected.some(sel => sel.every((seg, i) => cat[i] === seg));
+      return [
+        {
+          value: '',
+          text: this.selectedCategories.length === 0 ? 'Select category…' : 'Add category…',
+          disabled: true,
+        },
+        ...this.categoryOptions.filter(opt => !isCoveredBySelected(JSON.parse(opt.value))),
+      ];
     },
     dateRangeOptions() {
       return [
@@ -203,55 +249,59 @@ export default {
         );
         const timeperiods = this.getTimeperiods();
         const breakTimeSeconds = this.breakTime * 60;
-        const categoriesFilter = this.selectedCategories.map(c => JSON.parse(c));
+        // Auto-expand the selection to include subcategories. Selecting
+        // "Work" should also match "Work > Programming", "Work > Email",
+        // etc., which is what users intuitively expect — aw-query's
+        // filter_keyvals only does exact-array matches on $category.
+        const allCategories = (this.categoryStore.all_categories || []) as string[][];
+        const selected: string[][] = this.selectedCategories.map(c => JSON.parse(c));
+        const isDescendant = (sel: string[], cat: string[]) =>
+          cat.length >= sel.length && sel.every((seg, i) => cat[i] === seg);
+        const expanded: string[][] = [];
+        const seen = new Set<string>();
+        for (const cat of allCategories) {
+          if (selected.some(sel => isDescendant(sel, cat))) {
+            const key = JSON.stringify(cat);
+            if (!seen.has(key)) {
+              seen.add(key);
+              expanded.push(cat);
+            }
+          }
+        }
+        // Also keep the originally-selected categories even if they aren't
+        // in all_categories (defensive).
+        for (const sel of selected) {
+          const key = JSON.stringify(sel);
+          if (!seen.has(key)) {
+            seen.add(key);
+            expanded.push(sel);
+          }
+        }
+        const categoriesFilter = expanded;
 
         const categories = this.categoryStore.classes_for_query;
         const categoriesStr = JSON.stringify(categories).replace(/\\\\/g, '\\');
 
-        // Build multi-device query with flood-based gap merging and AFK filtering
-        let query = '';
-
-        // Use indexed variable names to avoid collisions when hostnames
-        // differ only in non-alphanumeric chars (e.g., "my-laptop" vs "mylaptop").
-        for (let hi = 0; hi < hostsToQuery.length; hi++) {
-          const hostname = hostsToQuery[hi];
-          query += `
-            events_${hi} = flood(query_bucket("aw-watcher-window_${hostname}"), ${breakTimeSeconds});
-            not_afk_${hi} = flood(query_bucket("aw-watcher-afk_${hostname}"));
-            not_afk_${hi} = filter_keyvals(not_afk_${hi}, "status", ["not-afk"]);
-            events_${hi} = filter_period_intersect(events_${hi}, not_afk_${hi});
-            events_${hi} = categorize(events_${hi}, ${categoriesStr});
-            events_${hi} = filter_keyvals(events_${hi}, "$category", ${JSON.stringify(
-            categoriesFilter
-          )});
-          `;
-        }
-
-        // Combine events from all hosts
-        query += '\nevents = [];';
-        for (let hi = 0; hi < hostsToQuery.length; hi++) {
-          query += `\nevents = union_no_overlap(events, events_${hi});`;
-        }
-
-        query += `
-          duration = sum_durations(events);
-          RETURN = {"events": events, "duration": duration};
-        `;
+        const query = buildWorkReportQuery(hostsToQuery, categoriesStr, categoriesFilter);
 
         const results = await client.query(timeperiods, [query]);
 
         this.dailyData = timeperiods.map((tp, i) => {
           const result = results[i];
           const events = result.events || [];
-          const duration = result.duration || 0;
+          const baseDuration = result.duration || 0;
+          // Bridge sub-breakTime gaps between adjacent events so a quick
+          // context-switch still counts as continuous work time. aw-query's
+          // flood() only deduplicates overlap, so we add the bridging here.
+          const bridged = baseDuration + bridgeGaps(events, breakTimeSeconds);
 
           const startDate = tp.split('/')[0];
 
           return {
             date: moment(startDate).format('YYYY-MM-DD'),
-            duration,
+            duration: bridged,
             sessions: events.length,
-            avgSession: events.length > 0 ? duration / events.length : 0,
+            avgSession: events.length > 0 ? bridged / events.length : 0,
             events,
           };
         });
@@ -265,24 +315,40 @@ export default {
       }
     },
 
+    addCategory(value: string) {
+      if (!value) return;
+      if (!this.selectedCategories.includes(value)) {
+        this.selectedCategories = [...this.selectedCategories, value];
+      }
+    },
+
+    removeCategory(idx: number) {
+      this.selectedCategories = this.selectedCategories.filter((_c, i) => i !== idx);
+    },
+
     getTimeperiods(): string[] {
       const offset = this.settingsStore.startOfDay;
       const timeperiods: string[] = [];
 
-      let days: number;
+      // Resolve to an inclusive [startDate, today] window. For "thisWeek" and
+      // "thisMonth" the start anchors to the calendar boundary (not "N days
+      // ago"), so on a Wednesday "thisMonth" gives Mar 1..Mar 5, not Mar 1..N.
+      let startDate: moment.Moment;
+      const today = moment().startOf('day');
 
       if (this.dateRange === 'last7d') {
-        days = 7;
+        startDate = today.clone().subtract(6, 'days');
       } else if (this.dateRange === 'last30d') {
-        days = 30;
+        startDate = today.clone().subtract(29, 'days');
       } else if (this.dateRange === 'thisWeek') {
-        days = moment().isoWeekday(); // Mon=1 .. Sun=7
+        startDate = moment().startOf('isoWeek');
       } else if (this.dateRange === 'thisMonth') {
-        days = moment().date(); // 1-based day of month
+        startDate = moment().startOf('month');
       } else {
-        days = 7;
+        startDate = today.clone().subtract(6, 'days');
       }
 
+      const days = today.diff(startDate, 'days') + 1;
       for (let i = days - 1; i >= 0; i--) {
         const date = moment().subtract(i, 'days');
         const start = get_day_start_with_offset(date, offset);
