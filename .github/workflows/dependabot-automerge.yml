@@ -24,6 +24,6 @@ jobs:
       github.actor == 'dependabot[bot]'
 
     steps:
-      - uses: ridedott/merge-me-action@2568f177a681785a874d6e7af950eb1a0dd31123
+      - uses: ridedott/merge-me-action@138c0450f286c35bc00c6f759c63dec24ef6bd81
         with:
           GITHUB_TOKEN: ${{ secrets.AWBOT_GH_TOKEN }}
