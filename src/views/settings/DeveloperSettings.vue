@@ -19,6 +19,10 @@ div
     div
       b-input.float-right.ml-2(v-model="requestTimeout" type="number")
 
+  b-form-group(label="Flood pulsetime (seconds)" label-cols-md=3 description="Controls how large a gap between events (in seconds) is filled when computing activity durations. The default of 5 works for the standard 1s polling interval. If you have raised the watcher polling interval (e.g. to 30s), set this to polling_interval + 1 to avoid missing time in reports. See issue #1177.")
+    div
+      b-input.float-right.ml-2(v-model.number="floodPulsetime" type="number" min="1" step="1")
+
   div
     | Web UI commit hash: {{ COMMIT_HASH }}
 </template>
@@ -63,6 +67,14 @@ export default {
       },
       set(requestTimeout) {
         useSettingsStore().update({ requestTimeout });
+      },
+    },
+    floodPulsetime: {
+      get() {
+        return useSettingsStore().floodPulsetime;
+      },
+      set(floodPulsetime) {
+        useSettingsStore().update({ floodPulsetime });
       },
     },
   },

@@ -342,6 +342,7 @@ export const useActivityStore = defineStore('activity', {
         filter_categories,
         host_params: {},
         always_active_pattern,
+        floodPulsetime: useSettingsStore().floodPulsetime,
       });
       const data = await getClient().query(periods, q, { name: 'multidevice', verbose: true });
       this.query_window_completed(data[0].window);
@@ -371,6 +372,7 @@ export const useActivityStore = defineStore('activity', {
         filter_categories,
         include_audible,
         always_active_pattern,
+        floodPulsetime: useSettingsStore().floodPulsetime,
       });
       const data = await getClient().query(periods, q, {
         name: 'fullDesktopQuery',

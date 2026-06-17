@@ -33,6 +33,14 @@ interface BaseQueryParams {
   bid_browsers?: string[];
   bid_stopwatch?: string;
   return_variable_suffix?: string;
+  /**
+   * Seconds used as the pulsetime argument to flood().
+   * Must be >= your watcher's polling interval to avoid gaps in the timeline.
+   * Default: 5 (matches the default 1s poll interval with headroom).
+   * Increase this if you use a higher polling interval (e.g. set to 31 for 30s polling).
+   * See: https://github.com/ActivityWatch/activitywatch/issues/1177
+   */
+  floodPulsetime?: number;
 }
 
 interface DesktopQueryParams extends BaseQueryParams {
@@ -125,14 +133,16 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
   // For simplicity, we assume that bid_window and bid_android are exchangeable (note however it needs special treatment)
   const bid_window = isDesktopParams(params) ? params.bid_window : params.bid_android;
 
+  const pulsetime = params.floodPulsetime ?? 5;
+
   return [
     // Fetch window/app events
-    `events = flood(${queryBucket(bid_window)});`,
+    `events = flood(${queryBucket(bid_window)}, ${pulsetime});`,
     // On Android, merge events to avoid overload of events
     isAndroidParams(params) ? 'events = merge_events_by_keys(events, ["app"]);' : '',
     // Fetch not-afk events
     isDesktopParams(params)
-      ? `not_afk = flood(${queryBucket(params.bid_afk)});
+      ? `not_afk = flood(${queryBucket(params.bid_afk)}, ${pulsetime});
          not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);` +
         (always_active_pattern_str
           ? `not_treat_as_afk = filter_keyvals_regex(events, "app", "${always_active_pattern_str}");
@@ -279,13 +289,14 @@ export const browser_appname_regex: Record<string, string> = {
 
 // Returns a list of active browser events (where the browser was the active window) from all browser buckets
 function browserEvents(params: DesktopQueryParams): string {
+  const pulsetime = params.floodPulsetime ?? 5;
   let code = `
     browser_events = [];
   `;
 
   _.each(browsersWithBuckets(params.bid_browsers), ([browserName, bucketId]) => {
     const browser_appnames_str = JSON.stringify(browser_appnames[browserName]);
-    code += `events_${browserName} = flood(query_bucket("${bucketId}"));
+    code += `events_${browserName} = flood(query_bucket("${bucketId}"), ${pulsetime});
        window_${browserName} = filter_keyvals(events, "app", ${browser_appnames_str});`;
 
     // Add regex-based matching to cover case/spacing/versioning variants (e.g., Firefox.exe, firefox-esr-esr140)

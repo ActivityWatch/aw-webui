@@ -49,6 +49,12 @@ interface State {
   showYearly: boolean;
   useMultidevice: boolean;
   requestTimeout: number;
+  /**
+   * Seconds used as the pulsetime argument to flood() in queries.
+   * Increase if you use a high watcher polling interval (e.g. set to 31 for 30s polling).
+   * See: https://github.com/ActivityWatch/activitywatch/issues/1177
+   */
+  floodPulsetime: number;
 
   // Set to true if settings loaded
   _loaded: boolean;
@@ -90,6 +96,7 @@ export const useSettingsStore = defineStore('settings', {
     showYearly: false,
     useMultidevice: false,
     requestTimeout: 30,
+    floodPulsetime: 5,
 
     _loaded: false,
   }),
