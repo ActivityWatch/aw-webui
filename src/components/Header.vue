@@ -90,6 +90,10 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
           div.px-2.px-lg-1
             icon(name="cog")
             | Settings
+        b-nav-item(to="/pcd-admin")
+          div.px-2.px-lg-1
+            icon(name="user-shield")
+            | PCD Admin
 </template>
 
 <style lang="scss" scoped>
@@ -114,6 +118,7 @@ import 'vue-awesome/icons/stopwatch';
 import 'vue-awesome/icons/cog';
 import 'vue-awesome/icons/tools';
 import 'vue-awesome/icons/history';
+import 'vue-awesome/icons/user-shield';
 
 // TODO: use circle-nodes instead in the future
 import 'vue-awesome/icons/project-diagram';
