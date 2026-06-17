@@ -15,28 +15,49 @@ div
           | {{ loginLoading ? ' Signing in…' : ' Sign in' }}
 
   div(v-else)
-    b-card(header="Server URL" header-tag="h5" style="max-width: 520px;" class="mb-4")
-      b-alert(v-if="configError" show variant="danger" dismissible @dismissed="configError = ''") {{ configError }}
-      b-alert(v-if="configSuccess" show variant="success" dismissible @dismissed="configSuccess = ''") {{ configSuccess }}
-      p.mb-3
-        | Active:&nbsp;
-        strong {{ serverUrl || '(not set)' }}
-      b-form(@submit.prevent="saveConfig")
-        b-form-group(label="Environment" label-cols-md="3")
-          b-form-select(v-model="selectedPreset" :options="envOptions" @change="onPresetChange")
-        b-form-group(v-if="selectedPreset === 'custom'" label="Custom URL" label-cols-md="3")
-          b-form-input(
-            v-model="customUrl"
-            type="url"
-            placeholder="https://api.example.com"
-            required
-          )
-        b-button(type="submit" variant="primary" :disabled="configLoading")
-          b-spinner(v-if="configLoading" small type="border")
-          | {{ configLoading ? ' Saving…' : ' Save URL' }}
-        b-button.ml-2(variant="outline-secondary" @click="logout") Sign out
+    b-row.mb-4
+      b-col(md="6")
+        b-card(header="Server URL" header-tag="h5")
+          b-alert(v-if="configError" show variant="danger" dismissible @dismissed="configError = ''") {{ configError }}
+          b-alert(v-if="configSuccess" show variant="success" dismissible @dismissed="configSuccess = ''") {{ configSuccess }}
+          p.mb-3
+            | Active:&nbsp;
+            strong {{ serverUrl || '(not set)' }}
+          b-form(@submit.prevent="saveConfig")
+            b-form-group(label="Environment" label-cols-md="3")
+              b-form-select(v-model="selectedPreset" :options="envOptions" @change="onPresetChange")
+            b-form-group(v-if="selectedPreset === 'custom'" label="Custom URL" label-cols-md="3")
+              b-form-input(
+                v-model="customUrl"
+                type="url"
+                placeholder="https://api.example.com"
+                required
+              )
+            b-button(type="submit" variant="primary" :disabled="configLoading")
+              b-spinner(v-if="configLoading" small type="border")
+              | {{ configLoading ? ' Saving…' : ' Save URL' }}
+            b-button.ml-2(variant="outline-secondary" @click="logout") Sign out
 
-    b-card(header="Sync Logs" header-tag="h5" class="mb-4")
+      b-col(md="6")
+        b-card(header="Registered activity email" header-tag="h5")
+          b-alert(v-if="updateError" show variant="danger" dismissible @dismissed="updateError = ''") {{ updateError }}
+          b-alert(v-if="successMsg" show variant="success" dismissible @dismissed="successMsg = ''") {{ successMsg }}
+          p.mb-3
+            | Current:&nbsp;
+            strong {{ currentEmail || '(not set)' }}
+          b-form(@submit.prevent="updateEmail")
+            b-form-group(label="New email" label-cols-md="3")
+              b-form-input(
+                v-model="newEmail"
+                type="email"
+                placeholder="user@prescribingcaredirect.co.uk"
+                required
+              )
+            b-button(type="submit" variant="primary" :disabled="updateLoading")
+              b-spinner(v-if="updateLoading" small type="border")
+              | {{ updateLoading ? ' Updating…' : ' Update & validate' }}
+
+    b-card(header="Sync Logs" header-tag="h5")
       b-alert(v-if="logsError" show variant="danger" dismissible @dismissed="logsError = ''") {{ logsError }}
       div.d-flex.align-items-center.mb-2
         small.text-muted.mr-auto Last {{ logs.length }} entries (newest first)
@@ -55,24 +76,6 @@ div
             b-td(style="font-size:0.85em")
               | {{ entry.msg }}
               span.text-muted(v-if="entry.detail")  — {{ entry.detail }}
-
-    b-card(header="Registered activity email" header-tag="h5" style="max-width: 520px;")
-      b-alert(v-if="updateError" show variant="danger" dismissible @dismissed="updateError = ''") {{ updateError }}
-      b-alert(v-if="successMsg" show variant="success" dismissible @dismissed="successMsg = ''") {{ successMsg }}
-      p.mb-3
-        | Current:&nbsp;
-        strong {{ currentEmail || '(not set)' }}
-      b-form(@submit.prevent="updateEmail")
-        b-form-group(label="New email" label-cols-md="3")
-          b-form-input(
-            v-model="newEmail"
-            type="email"
-            placeholder="user@prescribingcaredirect.co.uk"
-            required
-          )
-        b-button(type="submit" variant="primary" :disabled="updateLoading")
-          b-spinner(v-if="updateLoading" small type="border")
-          | {{ updateLoading ? ' Updating…' : ' Update & validate' }}
 </template>
 
 <script lang="ts">
