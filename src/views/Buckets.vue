@@ -126,7 +126,9 @@ div
 
   b-card-group.deck
     b-card(:header="$t('buckets.importBuckets')")
-      b-alert(v-if="import_error" show variant="danger" dismissible)
+      b-alert(v-if="import_success" show variant="success" dismissible @dismissed="import_success = false")
+        | {{ $t('buckets.importSuccess') }}
+      b-alert(v-if="import_error" show variant="danger" dismissible @dismissed="import_error = null")
         | {{ import_error }}
       b-form-file(v-model="import_file"
                   :placeholder="$t('buckets.importPlaceholder')"
@@ -254,6 +256,7 @@ export default {
 
       import_file: null,
       import_error: null,
+      import_success: false,
       delete_bucket_selected: null,
       delete_host_selected: null,
       deleting_host: false,
@@ -303,8 +306,11 @@ export default {
         try {
           await this.importBuckets(this.import_file);
           this.import_error = null;
+          this.import_success = true;
         } catch (err) {
-          this.import_error = 'Import failed, see aw-server logs for more info';
+          const serverMessage = err?.response?.data?.message;
+          this.import_error = serverMessage || this.$t('buckets.importFailedGeneric');
+          this.import_success = false;
         }
         await this.bucketsStore.loadBuckets();
         this.import_file = null;
