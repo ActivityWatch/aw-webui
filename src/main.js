@@ -22,6 +22,9 @@ import './style/style.scss';
 // Loads all the filters
 import './util/filters.js';
 
+// Internationalization
+import { i18n } from './i18n';
+
 // Sets up the routing and the base app (using vue-router)
 import router from './route.js';
 
@@ -86,6 +89,7 @@ import App from './App.vue';
 new Vue({
   el: '#app',
   router: router,
+  i18n,
   render: h => h(App),
   pinia,
 });

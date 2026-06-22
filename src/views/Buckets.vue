@@ -1,11 +1,10 @@
 <template lang="pug">
 div
-  h3 Buckets
+  h3 {{ $t('buckets.title') }}
 
   b-alert(show)
-    | Are you looking to collect more data? Check out #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") the docs] for more watchers.
+    | {{ $t('buckets.moreWatchers') }} #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") {{ $t('buckets.docsLink') }}].
 
-  // By device
   b-card.bucket-card.mb-3(
     v-for="device in bucketsStore.bucketsByDevice",
     :key="device.hostname || device.device_id",
@@ -17,17 +16,17 @@ div
         icon.mr-2.text-secondary(v-else, name="desktop" scale="1.2")
         div
           span.font-weight-bold {{ device.hostname }}
-          b-badge.ml-2(v-if="serverStore.info.hostname == device.hostname" variant="info") this device
+          b-badge.ml-2(v-if="serverStore.info.hostname == device.hostname" variant="info") {{ $t('buckets.thisDevice') }}
           div.small.text-muted(v-if="device.hostname !== device.device_id")
             | ID: {{ device.id }}
           div.small(v-if="deviceHasEvents(device)")
-            span.text-muted Last updated&nbsp;
+            span.text-muted {{ $t('buckets.lastUpdatedInline') }}&nbsp;
             time(:class="{'text-success': isRecent(device.last_updated)}",
                  :datetime="device.last_updated",
                  :title="device.last_updated")
               | {{ device.last_updated | friendlytime }}
           div.small.text-muted(v-else)
-            | No events recorded yet
+            | {{ $t('buckets.noEventsYet') }}
       b-dropdown.kebab-dropdown(
         size="sm",
         variant="outline-secondary",
@@ -35,22 +34,19 @@ div
         no-caret,
         right,
         boundary="window",
-        :title="`More actions for ${device.hostname}`",
-        :aria-label="`More actions for ${device.hostname}`"
+        :title="$t('buckets.moreActionsFor', { hostname: device.hostname })",
+        :aria-label="$t('buckets.moreActionsFor', { hostname: device.hostname })"
       )
         template(v-slot:button-content)
           icon(name="ellipsis-v")
         b-dropdown-item-button(
           @click="openDeleteHostModal(device)",
           button-class="text-danger",
-          :title="`Delete all ${device.buckets.length} buckets for ${device.hostname}`"
+          :title="$t('buckets.deleteAllTitle', { count: device.buckets.length, hostname: device.hostname })"
         )
           icon.mr-1(name="trash")
-          | Delete all buckets for this host
+          | {{ $t('buckets.deleteAllForHost') }}
 
-    // No `responsive` wrapper: with fixed column widths the table fits its
-    // container, and dropping the wrapper means the row dropdowns can render
-    // outside the table without being clipped by overflow-x: auto.
     b-table.mb-0.bucket-table(
       small, hover,
       :items="device.buckets",
@@ -61,29 +57,25 @@ div
       template(v-slot:cell(last_updated)="data")
         small(v-if="bucketHasEvents(data.item)", :class="{'text-success': isRecent(data.item.last_updated)}")
           | {{ data.item.last_updated | friendlytime }}
-        small.text-muted(v-else) no events
+        small.text-muted(v-else) {{ $t('buckets.noEvents') }}
       template(v-slot:cell(actions)="data")
         b-button-group(size="sm")
-          b-button(variant="primary", :to="'/buckets/' + data.item.id", title="Open bucket")
+          b-button(variant="primary", :to="'/buckets/' + data.item.id", :title="$t('buckets.openBucket')")
             icon.d-none.d-md-inline-block.mr-1(name="folder-open")
-            | Open
-          // boundary="window" so the menu renders on top of the
-          // b-table's responsive overflow wrapper instead of being clipped
-          // (which previously made the whole row turn into a scrollbox).
-          b-dropdown.kebab-dropdown(variant="outline-secondary", toggle-class="border-0", size="sm", right, no-caret, boundary="window", title="More actions")
+            | {{ $t('common.open') }}
+          b-dropdown.kebab-dropdown(variant="outline-secondary", toggle-class="border-0", size="sm", right, no-caret, boundary="window", :title="$t('common.more')")
             template(v-slot:button-content)
               icon(name="ellipsis-v")
-            // FIXME: These also exist as almost-copies in the Bucket view, can maybe be shared/reused instead.
-            b-dropdown-item(@click="export_bucket_json(data.item.id)", title="Export bucket to JSON")
+            b-dropdown-item(@click="export_bucket_json(data.item.id)", :title="$t('buckets.exportBucketJson')")
               icon.mr-1(name="download")
-              | Export as JSON
-            b-dropdown-item(@click="export_csv(data.item.id)", title="Export events to CSV")
+              | {{ $t('buckets.exportBucketJson') }}
+            b-dropdown-item(@click="export_csv(data.item.id)", :title="$t('buckets.exportEventsCsv')")
               icon.mr-1(name="download")
-              | Export events as CSV
+              | {{ $t('buckets.exportEventsCsv') }}
             b-dropdown-divider
-            b-dropdown-item-button(@click="openDeleteBucketModal(data.item.id)", title="Delete this bucket permanently", button-class="text-danger")
+            b-dropdown-item-button(@click="openDeleteBucketModal(data.item.id)", :title="$t('buckets.deleteBucket')", button-class="text-danger")
               icon.mr-1(name="trash")
-              | Delete bucket
+              | {{ $t('buckets.deleteBucket') }}
 
     div(v-for="msg in runChecks(device)" :key="msg")
       b-alert.mt-2.mb-0.py-1.px-2.small(show variant="warning")
@@ -91,30 +83,30 @@ div
         | &nbsp;
         | {{ msg }}
 
-  b-modal(id="delete-modal", title="Delete bucket?", centered, hide-footer)
-    | Are you sure you want to delete bucket "{{delete_bucket_selected}}"?
+  b-modal(id="delete-modal", :title="$t('buckets.deleteBucketTitle')", centered, hide-footer)
+    | {{ $t('buckets.deleteConfirm', { id: delete_bucket_selected }) }}
     br
     br
-    b This is permanent and cannot be undone!
+    b {{ $t('buckets.deletePermanent') }}
     hr
     div.float-right
       b-button.mx-2(@click="$root.$emit('bv::hide::modal','delete-modal')")
-        | Cancel
+        | {{ $t('common.cancel') }}
       b-button(@click="deleteBucket(delete_bucket_selected)", variant="danger")
-        | Confirm
+        | {{ $t('common.confirm') }}
 
-  b-modal(id="delete-host-modal", :title="delete_host_selected ? `Delete all buckets for ${delete_host_selected.hostname}?` : 'Delete buckets?'", centered, hide-footer, @hidden="delete_host_selected = null; delete_host_error = null")
+  b-modal(id="delete-host-modal", :title="deleteHostModalTitle", centered, hide-footer, @hidden="delete_host_selected = null; delete_host_error = null")
     template(v-if="delete_host_selected")
-      | Are you sure you want to delete
+      | {{ $t('buckets.deleteHostConfirmPrefix') }}
       |
-      b all {{ delete_host_selected.bucketCount }} buckets
+      b {{ $t('buckets.deleteHostConfirmCount', { count: delete_host_selected.bucketCount }) }}
       |
-      | for host "{{ delete_host_selected.hostname }}"?
+      | {{ $t('buckets.deleteHostConfirmSuffix', { hostname: delete_host_selected.hostname }) }}
       br
       br
-      b This is permanent and cannot be undone!
+      b {{ $t('buckets.deletePermanent') }}
       div.small.text-muted.mt-2(style="max-height: 200px; overflow-y: auto;")
-        | Buckets that will be deleted:
+        | {{ $t('buckets.bucketsToDelete') }}
         ul.mb-0
           li(v-for="bucketId in delete_host_selected.bucketIds", :key="bucketId")
             code {{ bucketId }}
@@ -123,42 +115,41 @@ div
       hr
       div.float-right
         b-button.mx-2(@click="$root.$emit('bv::hide::modal','delete-host-modal')")
-          | Cancel
+          | {{ $t('common.cancel') }}
         b-button(@click="deleteBucketsForSelectedHost()",
                  :disabled="deleting_host",
                  variant="danger")
           template(v-if="deleting_host")
-            | Deleting...
+            | {{ $t('buckets.deleting') }}
           template(v-else)
-            | Confirm
+            | {{ $t('common.confirm') }}
 
-  h4.mt-4 Import and export buckets
+  h4.mt-4 {{ $t('buckets.importExportTitle') }}
 
   b-card-group.deck
-    b-card(header="Import buckets")
+    b-card(:header="$t('buckets.importBuckets')")
       b-alert(v-if="import_error" show variant="danger" dismissible)
         | {{ import_error }}
       b-form-file(v-model="import_file"
-                  placeholder="Choose or drop a file here..."
-                  drop-placeholder="Drop file here...")
+                  :placeholder="$t('buckets.importPlaceholder')"
+                  :drop-placeholder="$t('buckets.importDrop')")
       div.mt-2(v-if="import_file")
         b-spinner.mr-2(small)
-        small.text-muted Importing...
+        small.text-muted {{ $t('buckets.importing') }}
       small.d-block.mt-2.text-muted
-        | Provide a JSON file exported from a single bucket or from multiple buckets.
-        | Import fails if a bucket with the same ID already exists.
-    b-card(header="Export buckets")
-      p.small.text-muted Download every bucket on this server as a single JSON file. Use this for backups.
+        | {{ $t('buckets.importHelpNew') }}
+    b-card(:header="$t('buckets.exportBuckets')")
+      p.small.text-muted {{ $t('buckets.exportHelp') }}
       b-button(@click="export_all_buckets_json()",
-               title="Export all buckets to JSON",
+               :title="$t('buckets.exportAllJson')",
                variant="outline-secondary")
         icon.mr-1(name="download")
-        | Export all buckets as JSON
+        | {{ $t('buckets.exportAllJson') }}
 
   hr
 
   aw-devonly(reason="This section is still under development")
-    h4.p-2 Tools
+    h4.p-2 {{ $t('buckets.tools') }}
 
     hr
 
@@ -170,7 +161,6 @@ div
 </template>
 
 <style lang="scss">
-// This won't work if scoped
 .bucket-card {
   .card-header,
   .card-footer {
@@ -201,8 +191,6 @@ div
   vertical-align: middle;
 }
 
-// Truncate only the bucket id span itself, not the cell — applying
-// overflow:hidden to the td clips the row's kebab popover menu.
 ::v-deep .bucket-id {
   display: inline-block;
   max-width: 100%;
@@ -212,8 +200,6 @@ div
   vertical-align: middle;
 }
 
-// Ghost-styled kebab dropdowns: invisible until hover/focus, like
-// the "borderless" overflow menus in most modern UIs.
 ::v-deep .kebab-dropdown > .btn {
   color: #6c757d;
   background: transparent;
@@ -267,13 +253,14 @@ export default {
       delete_host_selected: null,
       deleting_host: false,
       delete_host_error: null,
-      // Explicit thStyle widths so each device's table aligns with the
-      // others (b-table otherwise auto-fits per-card based on its own
-      // content, which produced jagged columns across hosts).
-      fields: [
+    };
+  },
+  computed: {
+    fields() {
+      return [
         {
           key: 'id',
-          label: 'Bucket ID',
+          label: this.$t('buckets.bucketId'),
           sortable: true,
           thStyle: { width: '45%' },
         },
@@ -284,7 +271,7 @@ export default {
         },
         {
           key: 'last_updated',
-          label: 'Updated',
+          label: this.$t('buckets.updated'),
           sortable: true,
           thStyle: { width: '15%' },
         },
@@ -294,43 +281,38 @@ export default {
           thStyle: { width: '15%' },
           tdClass: 'text-right',
         },
-      ],
-    };
+      ];
+    },
+    deleteHostModalTitle() {
+      if (this.delete_host_selected) {
+        return this.$t('buckets.deleteHostTitleNamed', {
+          hostname: this.delete_host_selected.hostname,
+        });
+      }
+      return this.$t('buckets.deleteHostTitle');
+    },
   },
   watch: {
     import_file: async function (_new_value, _old_value) {
       if (this.import_file != null) {
-        console.log('Importing file');
         try {
           await this.importBuckets(this.import_file);
-          console.log('Import successful');
           this.import_error = null;
         } catch (err) {
-          console.log('Import failed');
-          // TODO: Make aw-server report error message so it can be shown in the web-ui
           this.import_error = 'Import failed, see aw-server logs for more info';
         }
-        // We need to reload buckets even if we fail because imports can be partial
-        // (first bucket succeeds, second fails for example when importing multiple)
         await this.bucketsStore.loadBuckets();
         this.import_file = null;
       }
     },
   },
   mounted: async function () {
-    // load or reload buckets on mount
     await this.bucketsStore.loadBuckets();
   },
   methods: {
     isRecent: function (date) {
       return moment().diff(date) / 1000 < 120;
     },
-    // last_updated is only set once a bucket has actually been written to:
-    //   - aw-server-python omits it when the bucket has no events
-    //   - aw-server-rust's store harmonization (see update_buckets) sets
-    //     last_updated from metadata.end, which is also only present once
-    //     events exist
-    // The previous device-level "Last updated 0s ago" was just moment(undefined).fromNow().
     bucketHasEvents: function (bucket) {
       return Boolean(bucket && bucket.last_updated);
     },
@@ -357,10 +339,6 @@ export default {
           },
           failed: () => _.isEqual(device.hostnames, ['unknown']),
         },
-        //{
-        //  msg: () => 'just a test',
-        //  failed: () => true,
-        //},
       ];
       const failedChecks = _.filter(checks, c => c.failed());
       return _.map(failedChecks, c => c.msg());

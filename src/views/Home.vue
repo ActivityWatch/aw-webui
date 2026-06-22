@@ -1,74 +1,86 @@
 <template lang="pug">
 div
   b-alert(v-if="$isAndroid" show)
-    | #[b Note:] ActivityWatch on Android is in a very early stage of development. There will be bugs, but we hope you bear with us as we refine things and get it on par with the desktop version of ActivityWatch (which you should try!).
+    | #[b {{ $t('home.note') }}] {{ $t('home.androidNote') }}
 
-  h3 Welcome to ActivityWatch
+  h3 {{ $t('home.greeting') }}
   p
-    | We've come a long way#[span(v-if="$isAndroid") (especially on Android!)] but we still need users (like you!) to provide feedback and help us turn ActivityWatch into a successful project.
-    | We'd love to hear any ideas you have for improvements.
+    | {{ homeIntro1 }}
   p
-    | If you are a developer, we hope you can contribute by writing a watcher, visualization, or something else, and share it with us on the forum!
-  p.mb-0 Thank you for using ActivityWatch!
+    | {{ $t('home.intro3') }}
+  p.mb-0 {{ $t('home.thanks') }}
   p
-    a(href="https://forms.gle/q2N9K5RoERBV8kqPA") Fill out our user survey
-    | &nbsp;or&nbsp;
-    a(href="https://forum.activitywatch.net/c/features") vote on features on the forum
-    | &nbsp;to help shape what comes next.
+    a(href="https://forms.gle/q2N9K5RoERBV8kqPA") {{ $t('home.surveyFill') }}
+    | &nbsp;{{ $t('home.surveyOr') }}&nbsp;
+    a(href="https://forum.activitywatch.net/c/features") {{ $t('home.voteForum') }}
+    | &nbsp;{{ $t('home.surveySuffix') }}
 
   hr
 
   div.row
     div.col-md-6
-      h4 Spread the word
+      h4 {{ $t('home.spreadTitle') }}
       p
-        | Nothing is as motivating as getting ActivityWatch into the hands of users.
-        | By sharing it you get us to make ActivityWatch even better!
+        | {{ $t('home.spread1') }}
       ul
-        li Give us a like and a review on #[a(href="https://alternativeto.net/software/activitywatch/") AlternativeTo]
-        li Vote on us at #[a(href="https://www.producthunt.com/posts/activitywatch") ProductHunt]
-        li Follow us and spread the word on #[a(href="https://twitter.com/ActivityWatchIt") Twitter] and #[a(href="https://www.facebook.com/ActivityWatch") Facebook]
-        li Star us on #[a(href="https://github.com/ActivityWatch/activitywatch") GitHub]
+        li
+          | {{ $t('home.spreadReview') }}
+          |  #[a(href="https://alternativeto.net/software/activitywatch/") AlternativeTo]
+        li
+          | {{ $t('home.spreadVote') }}
+          |  #[a(href="https://www.producthunt.com/posts/activitywatch") ProductHunt]
+        li
+          | {{ $t('home.spreadFollow') }}
+          |  #[a(href="https://twitter.com/ActivityWatchIt") Twitter]
+          |  /
+          |  #[a(href="https://www.facebook.com/ActivityWatch") Facebook]
+        li
+          | {{ $t('home.spreadStar') }}
+          |  #[a(href="https://github.com/ActivityWatch/activitywatch") GitHub]
 
     div.col-md-6
-      h4 Support us!
+      h4 {{ $t('home.supportTitle') }}
       p
-        | Do you like ActivityWatch? Has it helped you? Help us help you by donating!
-        | You can donate to us via:
+        | {{ $t('home.support1') }}
       ul
         li #[a(href="https://www.patreon.com/erikbjare") Patreon]
         li #[a(href="https://opencollective.com/activitywatch") Open Collective]
         li #[a(href="https://liberapay.com/ActivityWatch/") Liberapay]
-        li #[a(href="https://activitywatch.net/donate/") Other methods] (incl. cryptocurrency)
+        li #[a(href="https://activitywatch.net/donate/") {{ $t('home.otherDonationMethods') }}]
       p
-        | For more info, please visit the #[a(href="https://activitywatch.net/donate/") donation page on the website].
+        | {{ $t('home.support2') }}
+        |  #[a(href="https://activitywatch.net/donate/") {{ $t('home.donationPage') }}].
 
   hr
 
   div.row
     div.col-md-6
-      h4 Resources
+      h4 {{ $t('home.resourcesTitle') }}
       ul
-        li #[a(href="https://activitywatch.net/") Website]
-        li #[a(href="https://docs.activitywatch.net/") Documentation]
-        li #[a(href="https://forum.activitywatch.net/") Forum]
-        li #[a(href="https://discord.gg/vDskV9q") Discord]
-        li #[a(href="https://www.reddit.com/r/activitywatch/") Reddit]
+        li #[a(href="https://activitywatch.net/") {{ $t('home.website') }}]
+        li #[a(href="https://docs.activitywatch.net/") {{ $t('home.documentation') }}]
+        li #[a(href="https://forum.activitywatch.net/") {{ $t('home.forum') }}]
+        li #[a(href="https://discord.gg/vDskV9q") {{ $t('home.discord') }}]
+        li #[a(href="https://www.reddit.com/r/activitywatch/") {{ $t('home.reddit') }}]
         li #[a(href="https://github.com/ActivityWatch/activitywatch") GitHub]
-        li(v-if="!info.version.includes('rust')") #[a(:href="apiBrowserUrl") API Browser]
+        li(v-if="!info.version.includes('rust')") #[a(:href="apiBrowserUrl") {{ $t('home.apiBrowser') }}]
 
     div.col-md-6
-      h4 What we're working on
+      h4 {{ $t('home.workingOnTitle') }}
       p
-        | Stay up to date with the #[a(href="https://forum.activitywatch.net/c/news") development updates]
-        | and follow the project on #[a(href="https://github.com/ActivityWatch/activitywatch") GitHub] for release notes.
+        | {{ $t('home.workingOnPrefix') }}
+        |  #[a(href="https://forum.activitywatch.net/c/news") {{ $t('home.devUpdates') }}]
+        |  {{ $t('home.workingOnMiddle') }}
+        |  #[a(href="https://github.com/ActivityWatch/activitywatch") GitHub]
+        |  {{ $t('home.workingOnSuffix') }}
 
   hr
 
   p
     small
       i
-        | You can change which page opens when you open ActivityWatch (instead of this page) in the #[router-link(to="/settings") settings].
+        | {{ $t('home.landingHint') }}
+        |  #[router-link(to="/settings") {{ $t('nav.settings') }}].
 
 </template>
 
@@ -80,8 +92,10 @@ export default {
   name: 'Home',
   computed: {
     ...mapState(useServerStore, ['info']),
-    // Resolve the API browser link relative to the current document so it
-    // works when the webui is served behind a reverse proxy at a sub-path.
+    homeIntro1() {
+      const android = this.$isAndroid ? this.$t('home.introAndroid') : '';
+      return this.$t('home.intro1', { android });
+    },
     apiBrowserUrl(): string {
       const base = window.location.pathname.replace(/[^/]*$/, '');
       return base + 'api/';

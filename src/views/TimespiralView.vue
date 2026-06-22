@@ -1,16 +1,16 @@
 <template lang="pug">
 div
-  h3 Timespiral
+  h3 {{ $t('timespiral.title') }}
   b-alert(show, variant="warning")
-    | This is a work-in-progress experiment.
+    | {{ $t('timespiral.wip') }}
 
   div(v-if="!bucketId")
     p.text-muted
-      | No AFK bucket found on this host. Install
+      | {{ $t('timespiral.noAfkBucket') }}
       | #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") aw-watcher-afk]
-      | to use the Timespiral.
+      | {{ $t('timespiral.noAfkBucketSuffix') }}
   div(v-else)
-    p.small.text-muted Bucket: #[code {{ bucketId }}] &middot; Events: {{ events.length }}
+    p.small.text-muted {{ $t('timespiral.bucketLabel') }} #[code {{ bucketId }}] &middot; {{ $t('timespiral.eventsLabel') }} {{ events.length }}
     Timespiral(:events="events")
 </template>
 
@@ -39,8 +39,6 @@ export default {
     }
     this.bucketId = buckets[0];
 
-    // Show the last week by default. Previously hard-coded to 2022-08-08
-    // which left most users staring at an empty chart.
     const start = new Date();
     start.setDate(start.getDate() - 7);
     const bucket = await bucketStore.getBucketWithEvents({
@@ -48,8 +46,6 @@ export default {
       start,
     });
     this.events = bucket.events;
-    console.log('Retrieved events:', this.events);
-    console.log('First/last event:', this.events[0], this.events[this.events.length - 1]);
   },
   methods: {
     onEventClick(event) {

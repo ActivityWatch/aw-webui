@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  h3 Timeline
+  h3 {{ $t('timeline.title') }}
 
   input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration").mb-3
 
@@ -49,13 +49,13 @@ div
               label AFK:
             td
               b-form-checkbox(v-model="filter_afk" size="sm" switch)
-                | Filter AFK
+                | {{ $t('timeline.filterAfk') }}
           tr
             th.pt-2.pr-3
               label Merge:
             td
               b-form-checkbox(v-model="filter_merge_similar" size="sm" switch)
-                | Merge by app
+                | {{ $t('timeline.mergeByApp') }}
           tr
             th.pt-2.pr-3
               label(for="timeline-filter-categories") Categories:
@@ -90,13 +90,13 @@ div
       ) {{ opt.text }}
 
     div.timeline-chip.mr-2.text-muted
-      | {{ num_events }} events shown
+      | {{ num_events }} {{ $t('timeline.eventsShown') }}
 
     small.text-muted.ml-auto
-      | Scroll to zoom, swipe to pan, arrow keys to navigate
+      | {{ $t('timeline.scrollHint') }}
 
   b-alert.mb-2(v-if="buckets !== null && num_events === 0", variant="warning", show)
-    | No events match selected criteria. Timeline is not updated.
+    | {{ $t('timeline.noEvents') }}
 
   div(v-if="buckets !== null")
     vis-timeline(:buckets="buckets", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane", :updateTimelineWindow='updateTimelineWindow')
@@ -104,7 +104,7 @@ div
     aw-devonly(reason="Not ready for production, still experimenting")
       aw-calendar(:buckets="buckets")
   div(v-else)
-    h1.aw-loading Loading...
+    h1.aw-loading {{ $t('common.loading') }}
 </template>
 
 <script lang="ts">

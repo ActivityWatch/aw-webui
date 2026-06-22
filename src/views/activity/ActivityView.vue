@@ -15,42 +15,42 @@ div(v-else-if="view")
     div.col-md-6.col-lg-4.p-3(v-if="editing")
       b-button(@click="addVisualization" variant="outline-dark" block size="lg")
         icon(name="plus")
-        span Add visualization
+        span {{ $t('activityView.addVisualization') }}
 
   div(v-if="editing").mt-2
     div.d-flex.flex-row-reverse
       b-button(variant="outline-dark" @click="discard(); editing = !editing;")
         icon(name="times")
-        span Cancel
+        span {{ $t('activityView.cancel') }}
       b-button.mr-2(variant="success" @click="save(); editing = !editing;")
         icon(name="save")
-        span Save
+        span {{ $t('activityView.save') }}
     div.mt-2.d-flex.flex-row-reverse
       b-button(variant="warning" size="sm" @click="restoreDefaults();")
         icon(name="undo")
-        span Restore defaults
+        span {{ $t('activityView.restoreDefaults') }}
       b-button.mr-2(variant="danger" size="sm" v-b-modal="'remove-view-modal-' + view.id")
         icon(name="trash")
-        span Remove
+        span {{ $t('activityView.remove') }}
   div(v-else).d-flex.flex-row-reverse.mt-2
     b-button(variant="outline-dark" size="sm" @click="editing = !editing")
       icon(name="edit")
-      span Edit view
+      span {{ $t('activityView.editView') }}
 
   b-modal(
     v-if="view"
     :id="'remove-view-modal-' + view.id"
-    title="Remove this view?"
+    :title="$t('activityView.removeViewTitle')"
     centered
-    ok-title="Remove view"
+    :ok-title="$t('activityView.removeViewOk')"
     ok-variant="danger"
     cancel-variant="outline-secondary"
     @ok="remove"
   )
-    | Are you sure you want to remove "#[b {{ view.name || view.id }}]"?
+    | {{ $t('activityView.removeViewConfirm') }} "#[b {{ view.name || view.id }}]"?
     br
     br
-    | This will delete the view's configuration. You can run #[b Restore defaults] to bring built-in views back.
+    | {{ $t('activityView.removeViewHint') }} #[b {{ $t('activityView.restoreDefaults') }}] {{ $t('activityView.removeViewRestoreHint') }}
 </template>
 
 <script lang="ts">
@@ -115,9 +115,7 @@ export default {
     },
     restoreDefaults() {
       useViewsStore().restoreDefaults();
-      alert(
-        "All views have been restored to defaults. Changes won't be saved until you click 'Save'."
-      );
+      alert(this.$t('activityView.restoreAlert'));
       // If we're on an URL that might become invalid, navigate to the main/default view
       if (!this.$route.path.includes('default')) {
         this.$router.replace('./default');
@@ -130,10 +128,10 @@ export default {
       let props = {};
 
       if (type === 'custom_vis') {
-        const visname = prompt('Please enter the watcher name', 'aw-watcher-');
+        const visname = prompt(this.$t('activityView.promptWatcher').toString(), 'aw-watcher-');
         if (!visname) return;
 
-        const title = prompt('Please enter the visualization title');
+        const title = prompt(this.$t('activityView.promptTitle').toString());
         if (!title) return;
 
         props = {

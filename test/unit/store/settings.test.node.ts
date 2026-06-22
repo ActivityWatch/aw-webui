@@ -1,14 +1,55 @@
 import { setActivePinia, createPinia } from 'pinia';
 
+const mockGetSettings = jest.fn();
+
+jest.mock('~/util/awclient', () => ({
+  getClient: () => ({
+    get_settings: mockGetSettings,
+    req: {
+      defaults: { timeout: 0 },
+      post: jest.fn(),
+    },
+  }),
+}));
+
 import { useSettingsStore } from '~/stores/settings';
+import { i18n } from '~/i18n';
+
+function mockLocalStorage() {
+  const store: Record<string, string> = {};
+  const storage = {
+    getItem: (key: string) => (key in store ? store[key] : null),
+    setItem: (key: string, value: string) => {
+      store[key] = value;
+    },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
+    clear: () => {
+      for (const key of Object.keys(store)) {
+        delete store[key];
+      }
+    },
+    key: (index: number) => Object.keys(store)[index] ?? null,
+    get length() {
+      return Object.keys(store).length;
+    },
+  };
+  Object.defineProperty(global, 'localStorage', { value: storage, configurable: true });
+}
 
 describe('settings store', () => {
   setActivePinia(createPinia());
   const settingsStore = useSettingsStore();
 
   beforeEach(() => {
+    mockLocalStorage();
     settingsStore.$reset();
+    settingsStore.$patch({ _loaded: false });
     jest.restoreAllMocks();
+    mockGetSettings.mockReset();
+    mockGetSettings.mockResolvedValue({});
+    i18n.locale = 'en';
   });
 
   test('ensureLoaded coalesces concurrent loads', async () => {
@@ -62,5 +103,14 @@ describe('settings store', () => {
 
     expect(steps).toEqual(['ensureLoaded', 'save']);
     expect(settingsStore.saved_queries).toEqual(savedQueries);
+  });
+
+  test('load syncs store locale from i18n when no saved locale exists', async () => {
+    i18n.locale = 'uk';
+    mockGetSettings.mockResolvedValue({});
+
+    await settingsStore.load();
+
+    expect(settingsStore.locale).toBe('uk');
   });
 });

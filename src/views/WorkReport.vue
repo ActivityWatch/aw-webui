@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  h3.mb-3 Work Time Report
+  h3.mb-3 {{ $t('workReport.title') }}
 
   div.row.mb-4
     div.col-md-3
@@ -57,7 +57,7 @@ div
 
   div(v-if="loading")
     b-spinner.mr-2
-    | Loading...
+    | {{ $t('workReport.loading') }}
 
   div(v-if="hasData && !loading")
     h5.mt-4 Daily Breakdown

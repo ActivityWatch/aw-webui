@@ -2,24 +2,24 @@
 div
   div.d-sm-flex.justify-content-between
     div
-      h5.mb-2.mb-sm-0 Always count as active pattern
+      h5.mb-2.mb-sm-0 {{ $t('settings.activePattern.title') }}
 
       small.text-muted
-        | Apps or titles matching this regular expression will never be counted as AFK.
+        | {{ $t('settings.activePattern.help1') }}
         |
-        | Can be used to count time as active, despite no input (like meetings, or games with controllers). An empty string disables it.
+        | {{ $t('settings.activePattern.help2') }}
         |
         span.text-nowrap
-          | Example expression:&nbsp;
+          | {{ $t('settings.activePattern.example') }}&nbsp;
           code(style="background-color: rgba(200, 200, 200, 0.3); padding: 2px 4px; border-radius: 2px;")
             | Zoom Meeting|Google Meet|Microsoft Teams
     div
       b-form-input(size="sm" v-model="always_active_pattern_editing" :state="(enabled || null) && valid")
       small.text-right
-        div.text-success(v-if="enabled && valid") Enabled
-        div.text-danger(v-else-if="enabled") Invalid pattern
-        div.text-muted(v-else) Disabled
-        div.text-danger(v-if="enabled && valid && broad_pattern") Pattern too broad
+        div.text-success(v-if="enabled && valid") {{ $t('common.enabled') }}
+        div.text-danger(v-else-if="enabled") {{ $t('settings.activePattern.invalid') }}
+        div.text-muted(v-else) {{ $t('common.disabled') }}
+        div.text-danger(v-if="enabled && valid && broad_pattern") {{ $t('settings.activePattern.tooBroad') }}
 
 </template>
 
@@ -43,8 +43,6 @@ export default {
       return validateRegex(this.always_active_pattern_editing);
     },
     broad_pattern: function () {
-      // Check if the pattern matches random strings that we don't expect it to
-      // like the alphabet
       const pattern = this.always_active_pattern_editing;
       if (pattern == '') {
         return false;
@@ -56,7 +54,6 @@ export default {
         return this.settingsStore.always_active_pattern;
       },
       set(value) {
-        console.log('Setting always_active_pattern to ' + value);
         this.settingsStore.update({ always_active_pattern: value });
       },
     },

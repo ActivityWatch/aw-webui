@@ -1,7 +1,7 @@
 <template lang="pug">
 div
   div.d-flex.flex-wrap.align-items-center.mb-3
-    h3.mb-0.mr-3 Trends
+    h3.mb-0.mr-3 {{ $t('nav.trends') }}
 
     b-button-group.mr-2.mb-1(size="sm")
       b-button.px-3(

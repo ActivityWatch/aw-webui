@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  h3.mb-3 Settings
+  h3.mb-3 {{ $t('settings.title') }}
 
   div.settings-layout
     nav.settings-nav
@@ -26,6 +26,7 @@ div
 import { useSettingsStore } from '~/stores/settings';
 import { useCategoryStore } from '~/stores/categories';
 
+import LanguageSettings from '~/views/settings/LanguageSettings.vue';
 import DaystartSettings from '~/views/settings/DaystartSettings.vue';
 import TimelineDurationSettings from '~/views/settings/TimelineDurationSettings.vue';
 import ReleaseNotificationSettings from '~/views/settings/ReleaseNotificationSettings.vue';
@@ -48,6 +49,7 @@ interface Group {
 export default {
   name: 'Settings',
   components: {
+    LanguageSettings,
     DaystartSettings,
     TimelineDurationSettings,
     ReleaseNotificationSettings,
@@ -63,7 +65,7 @@ export default {
   beforeRouteLeave(to, from, next) {
     const categoryStore = useCategoryStore();
     if (categoryStore.classes_unsaved_changes) {
-      if (confirm('Your categories have unsaved changes, are you sure you want to leave?')) {
+      if (confirm(this.$t('settings.unsavedCategoriesLeave'))) {
         next();
       } else {
         next(false);
@@ -73,8 +75,6 @@ export default {
     }
   },
   props: {
-    // Hydrated from the /settings/:group route param so reloads / direct
-    // links preserve which panel is open.
     group: { type: String, default: '' },
   },
   computed: {
@@ -85,47 +85,42 @@ export default {
     groups(): Group[] {
       const general: Group = {
         id: 'general',
-        label: 'General',
-        help: 'Defaults that shape how time periods, the timeline, and landing page behave.',
+        label: this.$t('settings.groups.general'),
+        help: this.$t('settings.groups.generalHelp'),
         components: [
+          { name: 'LanguageSettings' },
           { name: 'DaystartSettings' },
           { name: 'TimelineDurationSettings' },
           { name: 'LandingPageSettings' },
           { name: 'UncategorizedHintSettings' },
-          // Release-notification check folded in here so it doesn't
-          // need its own one-setting "Updates" panel.
           ...(this.$isAndroid ? [] : [{ name: 'ReleaseNotificationSettings' }]),
         ],
       };
       const appearance: Group = {
         id: 'appearance',
-        label: 'Appearance',
-        help: 'Theme and visualization colors.',
+        label: this.$t('settings.groups.appearance'),
+        help: this.$t('settings.groups.appearanceHelp'),
         components: [{ name: 'Theme' }, { name: 'ColorSettings' }],
       };
       const categorization: Group = {
         id: 'categorization',
-        label: 'Categorization',
-        help: 'Rules that classify events into categories, plus AFK/active-pattern overrides.',
-        // CategorizationSettings (rules) is the primary content; the
-        // ActivePatternSettings AFK override is an advanced edge-case
-        // setting so it lives at the bottom of the group.
+        label: this.$t('settings.groups.categorization'),
+        help: this.$t('settings.groups.categorizationHelp'),
         components: [{ name: 'CategorizationSettings' }, { name: 'ActivePatternSettings' }],
       };
       const privacy: Group = {
         id: 'privacy',
-        label: 'Privacy',
-        help: 'Filters that drop or redact sensitive event data before it is stored.',
+        label: this.$t('settings.groups.privacy'),
+        help: this.$t('settings.groups.privacyHelp'),
         components: [{ name: 'PrivacyFilterSettings' }],
       };
       const developer: Group = {
         id: 'developer',
-        label: 'Developer',
+        label: this.$t('settings.groups.developer'),
         components: [{ name: 'DeveloperSettings' }],
       };
 
-      const groups: Group[] = [general, appearance, categorization, privacy, developer];
-      return groups;
+      return [general, appearance, categorization, privacy, developer];
     },
   },
   async created() {
@@ -172,13 +167,10 @@ export default {
 }
 
 .settings-content {
-  min-width: 0; // prevent grid blowout from long content
+  min-width: 0;
 }
 
 .settings-section {
-  // Modest breathing room at the end of each panel — keeps long
-  // subviews from crashing into the card border without making
-  // short ones feel overly padded.
   padding-bottom: 1rem;
 }
 
@@ -207,16 +199,10 @@ export default {
 
   .settings-nav {
     position: static;
-    // Keep the nav fully inside the layout so the horizontal pill row
-    // doesn't push the page to overflow at xs widths.
     min-width: 0;
     max-width: 100%;
   }
 
-  // Flex-wrap the pills onto multiple rows instead of overflow-x: auto.
-  // The hidden horizontal scrollbar produced "incorrect" extra horizontal
-  // scroll space on xs viewports and let pills like "Developer" hide
-  // off-screen — both of which break discoverability.
   ::v-deep .settings-nav .nav {
     flex-direction: row !important;
     flex-wrap: wrap;
