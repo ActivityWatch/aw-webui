@@ -45,6 +45,12 @@ export default defineConfig(({ mode }) => {
 
   // Return the configuration
   return {
+    build: {
+      // Temporary compat knob for #867/#869: the forced esbuild 0.28.x security
+      // upgrade cannot lower one destructuring pattern to the old default targets.
+      // Drop this once Vite can consume a patched esbuild line without overrides.
+      target: 'es2022',
+    },
     plugins: [
       setCsp(),
       autoInject(),
