@@ -31,6 +31,20 @@ describe('seconds_to_duration', () => {
   });
 });
 
+// Node builds without full ICU data silently fall back to the default locale
+// for any non-English locale, which breaks cross-locale assertions. This is
+// common in distro-packaged Node (Debian, Fedora, Arch). Detect it so we can
+// skip the cross-locale comparisons in those environments. See issue #871.
+function hasLocale(locale) {
+  try {
+    return new Intl.DateTimeFormat(locale).resolvedOptions().locale === locale;
+  } catch (_) {
+    return false;
+  }
+}
+
+const HAS_SV_SE = hasLocale('sv-SE');
+
 describe('locale-aware time labels', () => {
   test('should format weekday labels using the supplied locale', () => {
     const monday = new Date(2026, 4, 18, 12);
@@ -41,7 +55,9 @@ describe('locale-aware time labels', () => {
     expect(format_weekday_short(monday, 'sv-SE')).toBe(
       new Intl.DateTimeFormat('sv-SE', { weekday: 'short' }).format(monday)
     );
-    expect(format_weekday_short(monday, 'sv-SE')).not.toBe(format_weekday_short(monday, 'en-US'));
+    if (HAS_SV_SE) {
+      expect(format_weekday_short(monday, 'sv-SE')).not.toBe(format_weekday_short(monday, 'en-US'));
+    }
   });
 
   test('should format month-day labels without hardcoded english ordinals', () => {
@@ -62,6 +78,8 @@ describe('locale-aware time labels', () => {
         new Intl.DateTimeFormat('sv-SE', { month: 'short' }).format(new Date(2020, month, 1, 12))
       )
     );
-    expect(svSEMonths).not.toEqual(enUSMonths);
+    if (HAS_SV_SE) {
+      expect(svSEMonths).not.toEqual(enUSMonths);
+    }
   });
 });
