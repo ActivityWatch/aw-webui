@@ -15,21 +15,21 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
         b-nav-item(v-if="activityViews && activityViews.length === 1", v-for="view in activityViews", :key="view.name", :to="view.pathUrl")
           div.px-2.px-lg-1
             icon(name="calendar-day")
-            | Activity
+            | {{ $t('nav.activity') }}
 
         // If multiple (or no) activity views are available
         b-nav-item-dropdown(v-if="!activityViews || activityViews.length !== 1")
           template(slot="button-content")
             div.d-inline.px-2.px-lg-1
               icon(name="calendar-day")
-              | Activity
+              | {{ $t('nav.activity') }}
           b-dropdown-item(v-if="activityViews === null", disabled)
-            span.text-muted Loading...
+            span.text-muted {{ $t('nav.loading') }}
             br
           b-dropdown-item(v-else-if="activityViews && activityViews.length <= 0", disabled)
-            | No activity reports available
+            | {{ $t('nav.noActivityReports') }}
             br
-            small Make sure you have both an AFK and window watcher running
+            small {{ $t('nav.missingWatchers') }}
           b-dropdown-item(v-for="view in activityViews", :key="view.name", :to="view.pathUrl")
             icon(:name="view.icon")
             | {{ view.name }}
@@ -37,12 +37,12 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
         b-nav-item(to="/timeline" style="font-color: #000;")
           div.px-2.px-lg-1
             icon(name="stream")
-            | Timeline
+            | {{ $t('nav.timeline') }}
 
         b-nav-item(to="/stopwatch")
           div.px-2.px-lg-1
             icon(name="stopwatch")
-            | Stopwatch
+            | {{ $t('nav.stopwatch') }}
 
       // Brand on large screens (centered)
       b-navbar-nav.abs-center.d-none.d-lg-block
@@ -55,41 +55,41 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
           template(slot="button-content")
             div.d-inline.px-2.px-lg-1
               icon(name="tools")
-              | Tools
+              | {{ $t('nav.tools') }}
           b-dropdown-item(to="/search")
             icon(name="search")
-            | Search
+            | {{ $t('nav.search') }}
           b-dropdown-item(to="/work-report")
             icon(name="briefcase")
-            | Work Report
+            | {{ $t('nav.workReport') }}
           b-dropdown-item(to="/trends" v-if="devmode")
             icon(name="chart-line")
-            | Trends
+            | {{ $t('nav.trends') }}
           b-dropdown-item(to="/report" v-if="devmode")
             icon(name="chart-pie")
-            | Report
+            | {{ $t('nav.report') }}
           b-dropdown-item(to="/alerts" v-if="devmode")
             icon(name="flag-checkered")
-            | Alerts
+            | {{ $t('nav.alerts') }}
           b-dropdown-item(to="/timespiral" v-if="devmode")
             icon(name="history")
-            | Timespiral
+            | {{ $t('nav.timespiral') }}
           b-dropdown-item(to="/query")
             icon(name="code")
-            | Query
+            | {{ $t('nav.query') }}
           b-dropdown-item(to="/graph" v-if="devmode")
             // TODO: use circle-nodes instead in the future
             icon(name="project-diagram")
-            | Graph
+            | {{ $t('nav.graph') }}
 
         b-nav-item(to="/buckets")
           div.px-2.px-lg-1
             icon(name="database")
-            | Raw Data
+            | {{ $t('nav.rawData') }}
         b-nav-item(to="/settings")
           div.px-2.px-lg-1
             icon(name="cog")
-            | Settings
+            | {{ $t('nav.settings') }}
 </template>
 
 <style lang="scss" scoped>

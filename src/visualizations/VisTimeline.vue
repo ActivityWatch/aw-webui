@@ -3,7 +3,7 @@
     div#visualization
 
     div.small.text-muted.my-2(v-if="bucketsFromEither.length != 1")
-      i Buckets with no events in the queried range will be hidden.
+      i {{ $t('visualizationStatus.hiddenBuckets') }}
 
     div(v-if="editingEvent")
       EventEditor(:event="editingEvent" :bucket_id="editingEventBucket")
@@ -60,6 +60,7 @@ import { getCategoryColorFromEvent, getTitleAttr } from '../util/color';
 import { getSwimlane } from '../util/swimlane.js';
 import { IEvent } from '../util/interfaces';
 import { formatTimelineBucketLabelHtml, shortenBucketLabel } from '../util/timelineLabels';
+import { getLocale } from '~/i18n';
 
 import { Timeline } from 'vis-timeline/esnext';
 import 'vis-timeline/styles/vis-timeline-graph2d.css';
@@ -122,6 +123,9 @@ export default {
     };
   },
   computed: {
+    currentLocale() {
+      return getLocale();
+    },
     bucketsFromEither() {
       if (this.buckets) {
         return this.buckets;
@@ -184,6 +188,9 @@ export default {
         return;
       }
 
+      this.update();
+    },
+    currentLocale() {
       this.update();
     },
   },
@@ -271,8 +278,8 @@ export default {
           // edit flow. Persist the dismissal via localStorage so the user
           // doesn't see it every session.
           if (!this.editRefreshHintDismissed()) {
-            this.$bvToast.toast('Your edit is saved. Refresh the timeline to see it reflected.', {
-              title: 'Heads up',
+            this.$bvToast.toast(this.$t('visualizationStatus.refreshRequiredAfterEditToast'), {
+              title: this.$t('visualizationStatus.headsUp'),
               variant: 'info',
               autoHideDelay: 6000,
               solid: true,
@@ -282,7 +289,11 @@ export default {
           isAlertWarningShown = true;
         }
       } else {
-        alert('selected multiple items: ' + JSON.stringify(properties.items));
+        alert(
+          this.$t('visualizationStatus.selectedMultipleItems', {
+            items: JSON.stringify(properties.items),
+          })
+        );
       }
     },
     abbreviateBucketName(bucketId: string): string {
@@ -388,7 +399,10 @@ export default {
       if (groups.length > 0 && items.length > 0) {
         if (this.queriedInterval && this.showQueriedInterval) {
           const duration = this.queriedInterval[1].diff(this.queriedInterval[0], 'seconds');
-          groups.push({ id: String(groups.length), content: 'queried interval' });
+          groups.push({
+            id: String(groups.length),
+            content: this.$t('visualizationStatus.queriedInterval'),
+          });
           items.push({
             id: String(items.length + 1),
             group: groups.length - 1,
@@ -400,7 +414,7 @@ export default {
                 data: { title: 'test' },
               }
             ),
-            content: 'query',
+            content: this.$t('visualizationStatus.query'),
             start: this.queriedInterval[0],
             end: this.queriedInterval[1],
             style: 'background-color: #aaa; height: 10px',

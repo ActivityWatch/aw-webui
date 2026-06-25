@@ -8,20 +8,23 @@ div
       template(v-slot:button-content)
         icon(name="cog")
       b-dropdown-item(v-for="t in types" :key="t" variant="outline-secondary" @click="$emit('onTypeChange', id, t)")
-        | {{ visualizations[t].title }} #[span.small.text-warning(v-if="!visualizations[t].available") (no data)]
+        | {{ visualizations[t].title }} #[span.small.text-warning(v-if="!visualizations[t].available") ({{ $t('visualizations.noData') }})]
     b-button.p-0(size="sm", variant="outline-danger" @click="$emit('onRemove', id)")
       icon(name="times")
 
   div(v-if="!supports_period")
     b-alert.small.px-2.py-1(show variant="warning")
-      | This feature doesn't support the current time period.
+      | {{ $t('visualizations.unsupportedPeriod') }}
 
   div(v-if="activityStore.buckets.loaded")
     // Check data prerequisites
     div(v-if="!has_prerequisites")
       b-alert.small.px-2.py-1(show variant="warning")
-        | This feature is missing data from a required watcher.
-        | You can find a list of all watchers in #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") the documentation].
+        | {{ $t('visualizations.missingWatcher') }}
+        |
+        | {{ $t('visualizations.missingWatcherDocumentationBefore') }}
+        a(href="https://docs.activitywatch.net/en/latest/watchers.html") {{ $t('visualizations.documentation') }}
+        | {{ $t('visualizations.missingWatcherDocumentationAfter') }}
 
     div(v-if="type == 'top_apps'")
       aw-summary(:fields="activityStore.window.top_apps",
@@ -194,19 +197,19 @@ export default {
     visualizations: function () {
       return {
         top_apps: {
-          title: 'Top Applications',
+          title: this.$t('visualizations.topApplications'),
           available: this.activityStore.window.available || this.activityStore.android.available,
         },
         top_titles: {
-          title: 'Top Window Titles',
+          title: this.$t('visualizations.topWindowTitles'),
           available: this.activityStore.window.available,
         },
         top_domains: {
-          title: 'Top Browser Domains',
+          title: this.$t('visualizations.topBrowserDomains'),
           available: this.activityStore.browser.available,
         },
         top_urls: {
-          title: 'Top Browser URLs',
+          title: this.$t('visualizations.topBrowserUrls'),
           available: this.activityStore.browser.available,
         },
         top_browser_titles: {
@@ -214,47 +217,47 @@ export default {
           available: this.activityStore.browser.available,
         },
         top_editor_files: {
-          title: 'Top Editor Files',
+          title: this.$t('visualizations.topEditorFiles'),
           available: this.activityStore.editor.available,
         },
         top_editor_languages: {
-          title: 'Top Editor Languages',
+          title: this.$t('visualizations.topEditorLanguages'),
           available: this.activityStore.editor.available,
         },
         top_editor_projects: {
-          title: 'Top Editor Projects',
+          title: this.$t('visualizations.topEditorProjects'),
           available: this.activityStore.editor.available,
         },
         top_categories: {
-          title: 'Top Categories',
+          title: this.$t('visualizations.topCategories'),
           available: this.activityStore.category.available,
         },
         category_tree: {
-          title: 'Category Tree',
+          title: this.$t('visualizations.categoryTree'),
           available: this.activityStore.category.available,
         },
         category_sunburst: {
-          title: 'Category Sunburst',
+          title: this.$t('visualizations.categorySunburst'),
           available: this.activityStore.category.available,
         },
         timeline_barchart: {
-          title: 'Timeline (barchart)',
+          title: this.$t('visualizations.timelineBarchart'),
           available: true,
         },
         sunburst_clock: {
-          title: 'Sunburst clock',
+          title: this.$t('visualizations.sunburstClock'),
           available: this.activityStore.window.available && this.activityStore.active.available,
         },
         vis_timeline: {
-          title: 'Daily Timeline (Chronological)',
+          title: this.$t('visualizations.dailyTimeline'),
           available: true,
         },
         custom_vis: {
-          title: 'Custom Visualization',
+          title: this.$t('visualizations.customVisualization'),
           available: true, // TODO: Implement
         },
         score: {
-          title: 'Score',
+          title: this.$t('visualizations.score'),
           available: this.activityStore.category.available,
         },
         top_stopwatches: {

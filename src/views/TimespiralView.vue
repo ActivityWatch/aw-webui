@@ -1,16 +1,16 @@
 <template lang="pug">
 div
-  h3 Timespiral
+  h3 {{ $t('experiments.timespiralTitle') }}
   b-alert(show, variant="warning")
-    | This is a work-in-progress experiment.
+    | {{ $t('experiments.workInProgress') }}
 
   div(v-if="!bucketId")
     p.text-muted
-      | No AFK bucket found on this host. Install
+      | {{ $t('experiments.noAfkBucketBefore') }}
       | #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") aw-watcher-afk]
-      | to use the Timespiral.
+      | {{ $t('experiments.noAfkBucketAfter') }}
   div(v-else)
-    p.small.text-muted Bucket: #[code {{ bucketId }}] &middot; Events: {{ events.length }}
+    p.small.text-muted {{ $t('experiments.bucket') }} #[code {{ bucketId }}] &middot; {{ $t('experiments.events') }} {{ events.length }}
     Timespiral(:events="events")
 </template>
 

@@ -1,32 +1,32 @@
 <template lang="pug">
-b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEditModal", title="Edit event", centered, hide-footer)
+b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEditModal", :title="$t('eventEditor.editTitle')" centered, hide-footer)
   div(v-if="!editedEvent")
-    | Loading event...
+    | {{ $t('eventEditor.loading') }}
 
   div(v-else)
     table(style="width: 100%")
       tr
-        th Bucket
+        th {{ $t('eventEditor.bucket') }}
         td {{ bucket_id }}
       tr
-        th ID
+        th {{ $t('eventEditor.id') }}
         td {{ event.id }}
       tr
-        th Start
+        th {{ $t('eventEditor.start') }}
         datetime(type="datetime" v-model="start")
       tr
-        th End
+        th {{ $t('eventEditor.end') }}
         datetime(type="datetime" v-model="end")
       tr
-        th Duration
+        th {{ $t('eventEditor.duration') }}
         td {{ editedEvent.duration | friendlyduration }}
 
     hr
 
     table(style="width: 100%")
       tr
-        th Key
-        th Value
+        th {{ $t('eventEditor.key') }}
+        th {{ $t('eventEditor.value') }}
       tr(v-for="(v, k) in editedEvent.data" :key="k")
         td
           b-input(disabled, :value="k", size="sm")
@@ -40,14 +40,14 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
     div.float-left
       b-button.mx-1(@click="delete_(); close();" variant="danger")
         icon.mx-1(name="trash")
-        | Delete
+        | {{ $t('common.delete') }}
     div.float-right
       b-button.mx-1(@click="close")
         icon.mx-1(name="times")
-        | Cancel
+        | {{ $t('common.cancel') }}
       b-button.mx-1(@click="save(); close();", variant="primary")
         icon.mx-1(name="save")
-        | Save
+        | {{ $t('common.save') }}
 </template>
 
 <style lang="scss"></style>

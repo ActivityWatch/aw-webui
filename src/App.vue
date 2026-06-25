@@ -16,6 +16,7 @@ div#wrapper(v-if="loaded")
 import { useSettingsStore } from '~/stores/settings';
 import { useServerStore } from '~/stores/server';
 import { detectPreferredTheme } from '~/util/theme';
+import { setLocale } from '~/i18n';
 // if vite is used, you can import css file as module
 //import darkCssUrl from '../static/dark.css?url';
 //import darkCssContent from '../static/dark.css?inline';
@@ -33,12 +34,22 @@ export default {
     fullContainer() {
       return this.$route.meta.fullContainer;
     },
+    language() {
+      return useSettingsStore().language;
+    },
+  },
+
+  watch: {
+    language(language: string) {
+      setLocale(language);
+    },
   },
 
   async beforeCreate() {
     // Get Theme From LocalStorage
     const settingsStore = useSettingsStore();
     await settingsStore.ensureLoaded();
+    setLocale(settingsStore.language);
     const theme = settingsStore.theme;
     const detectedTheme = theme === 'auto' ? detectPreferredTheme() : theme;
 

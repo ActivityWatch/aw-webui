@@ -1,30 +1,31 @@
 <template lang="pug">
 div.container(style="color: #555; font-size: 0.9em")
   div.mb-2
-    | Made with
+    span {{ $t('footer.madeWith') }}
     a(href="https://activitywatch.net/donate/", target="_blank" rel="noopener noreferrer")
       icon(name="heart" scale=0.75 style="fill: #E55")
-    | by the #[a(href="http://activitywatch.net/contributors/") ActivityWatch developers]
+    span {{ $t('footer.by') }}
+    a(href="http://activitywatch.net/contributors/") {{ $t('footer.developers') }}
     div
       span.mt-2(v-if="info", style="color: #888; font-size: 0.8em")
         span.mr-2
-          b Host:
+          b {{ $t('footer.host') }}
           | &nbsp; {{info.hostname}}
         span
-          b Version:
+          b {{ $t('footer.version') }}
           | &nbsp; {{info.version}}
 
   div(style="font-size: 0.9em; opacity: 0.8; fill: #88F")
     div.float-none.float-md-right.my-2
       a(href="https://github.com/ActivityWatch/activitywatch/issues/new/choose", target="_blank" rel="noopener noreferrer").mr-3
         icon(name="bug")
-        | Report a bug
+        | {{ $t('footer.reportBug') }}
       a(href="https://forum.activitywatch.net/c/support", target="_blank" rel="noopener noreferrer").mr-3
         icon(name="question-circle")
-        | Ask for help
+        | {{ $t('footer.askForHelp') }}
       a(href="https://forum.activitywatch.net/c/features", target="_blank" rel="noopener noreferrer")
         icon(name="vote-yea")
-        | Vote on features
+        | {{ $t('footer.voteOnFeatures') }}
     div.float-none.float-md-left.my-2
       a(href="https://twitter.com/ActivityWatchIt", target="_blank" rel="noopener noreferrer")
         icon(name="brands/twitter")
@@ -37,7 +38,7 @@ div.container(style="color: #555; font-size: 0.9em")
         | Reddit
       a(href="https://activitywatch.net/donate/", target="_blank" rel="noopener noreferrer").ml-3
         icon(name="hand-holding-heart")
-        | Donate
+        | {{ $t('footer.donate') }}
 </template>
 
 <script lang="ts">

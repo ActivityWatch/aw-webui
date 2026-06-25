@@ -2,11 +2,11 @@
 div
   div.d-flex.justify-content-between.align-items-center
     div
-      h5.mb-0 Check for new releases
+      h5.mb-0 {{ $t('settingsSections.releaseNotification') }}
     div
       b-form-checkbox(v-model="isEnabled" switch)
   small.text-muted
-    | When enabled, the web UI checks once per day for a new ActivityWatch release and shows a hint if one is available.
+    | {{ $t('settings.releaseNotificationDescription') }}
 </template>
 
 <script lang="ts">

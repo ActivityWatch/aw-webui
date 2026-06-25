@@ -2,20 +2,21 @@
 div
   div.d-sm-flex.justify-content-between
     div
-      h5.mt-1.mb-2.mb-sm-0 Start of day
+      h5.mt-1.mb-2.mb-sm-0 {{ $t('settingsSections.startOfDay') }}
     div
       b-input(type="time" size="sm" :value="startOfDay" @change="startOfDay = $event")
   small.text-muted
-    | The time at which days "start", since humans don't always go to bed before midnight.
-    | Set to 04:00 by default.
+    | {{ $t('settings.startOfDayDescription') }}
+    |
+    | {{ $t('settings.startOfDayDefault') }}
 
   div.mt-3.d-sm-flex.justify-content-between
     div
-      h5.mt-1.mb-2.mb-sm-0 Start of week
+      h5.mt-1.mb-2.mb-sm-0 {{ $t('settingsSections.startOfWeek') }}
     div
-      b-form-select(:text="startOfWeek", size="sm" v-model="startOfWeek" variant="outline-dark" :options="['Saturday', 'Sunday', 'Monday']")
+      b-form-select(:text="startOfWeek", size="sm" v-model="startOfWeek" variant="outline-dark" :options="startOfWeekOptions")
   small.text-muted
-    | The weekday which starts a new week.
+    | {{ $t('settings.startOfWeekDescription') }}
 </template>
 <script lang="ts">
 import { useSettingsStore } from '~/stores/settings';
@@ -28,6 +29,13 @@ export default {
     };
   },
   computed: {
+    startOfWeekOptions: function () {
+      return [
+        { text: this.$t('settings.weekSaturday'), value: 'Saturday' },
+        { text: this.$t('settings.weekSunday'), value: 'Sunday' },
+        { text: this.$t('settings.weekMonday'), value: 'Monday' },
+      ];
+    },
     startOfDay: {
       get: function () {
         return this.settingsStore.startOfDay;

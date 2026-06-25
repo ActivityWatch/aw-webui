@@ -1,10 +1,10 @@
 <template lang="pug">
 div
-  h3 Developer zone
-  | Just some tools to aid in development and debugging.
+  h3 {{ $t('experiments.developerZoneTitle') }}
+  | {{ $t('experiments.developerZoneDescription') }}
 
   p
-    | Nothing to see here right now...
+    | {{ $t('experiments.developerZoneEmpty') }}
 </template>
 
 <script lang="ts">

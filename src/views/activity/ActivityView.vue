@@ -15,42 +15,43 @@ div(v-else-if="view")
     div.col-md-6.col-lg-4.p-3(v-if="editing")
       b-button(@click="addVisualization" variant="outline-dark" block size="lg")
         icon(name="plus")
-        span Add visualization
+        span {{ $t('activity.addVisualization') }}
 
   div(v-if="editing").mt-2
     div.d-flex.flex-row-reverse
       b-button(variant="outline-dark" @click="discard(); editing = !editing;")
         icon(name="times")
-        span Cancel
+        span {{ $t('common.cancel') }}
       b-button.mr-2(variant="success" @click="save(); editing = !editing;")
         icon(name="save")
-        span Save
+        span {{ $t('common.save') }}
     div.mt-2.d-flex.flex-row-reverse
       b-button(variant="warning" size="sm" @click="restoreDefaults();")
         icon(name="undo")
-        span Restore defaults
+        span {{ $t('activity.restoreDefaults') }}
       b-button.mr-2(variant="danger" size="sm" v-b-modal="'remove-view-modal-' + view.id")
         icon(name="trash")
-        span Remove
+        span {{ $t('activity.remove') }}
   div(v-else).d-flex.flex-row-reverse.mt-2
     b-button(variant="outline-dark" size="sm" @click="editing = !editing")
       icon(name="edit")
-      span Edit view
+      span {{ $t('activity.editView') }}
 
   b-modal(
     v-if="view"
     :id="'remove-view-modal-' + view.id"
-    title="Remove this view?"
+    :title="$t('activity.removeViewTitle')"
     centered
-    ok-title="Remove view"
+    :ok-title="$t('activity.removeViewOk')"
     ok-variant="danger"
     cancel-variant="outline-secondary"
+    :cancel-title="$t('common.cancel')"
     @ok="remove"
   )
-    | Are you sure you want to remove "#[b {{ view.name || view.id }}]"?
+    | {{ $t('activity.removeViewConfirmBefore') }} #[b {{ view.name || view.id }}]{{ $t('activity.removeViewConfirmAfter') }}
     br
     br
-    | This will delete the view's configuration. You can run #[b Restore defaults] to bring built-in views back.
+    | {{ $t('activity.removeViewConsequenceBefore') }} #[b {{ $t('activity.restoreDefaults') }}] {{ $t('activity.removeViewConsequenceAfter') }}
 </template>
 
 <script lang="ts">
@@ -115,9 +116,7 @@ export default {
     },
     restoreDefaults() {
       useViewsStore().restoreDefaults();
-      alert(
-        "All views have been restored to defaults. Changes won't be saved until you click 'Save'."
-      );
+      alert(this.$t('activity.restoreDefaultsAlert'));
       // If we're on an URL that might become invalid, navigate to the main/default view
       if (!this.$route.path.includes('default')) {
         this.$router.replace('./default');
@@ -130,10 +129,10 @@ export default {
       let props = {};
 
       if (type === 'custom_vis') {
-        const visname = prompt('Please enter the watcher name', 'aw-watcher-');
+        const visname = prompt(this.$t('activity.customVisualizationWatcherPrompt'), 'aw-watcher-');
         if (!visname) return;
 
-        const title = prompt('Please enter the visualization title');
+        const title = prompt(this.$t('activity.customVisualizationTitlePrompt'));
         if (!title) return;
 
         props = {

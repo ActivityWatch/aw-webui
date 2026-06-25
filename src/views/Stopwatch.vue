@@ -1,51 +1,55 @@
 <template lang="pug">
 div
   div.d-flex.align-items-center.mb-3
-    h3.mb-0 Stopwatch
+    h3.mb-0 {{ $t('stopwatch.title') }}
     button.btn.btn-link.p-0.ml-2.text-muted(
       id="stopwatch-help"
       type="button"
-      aria-label="About the stopwatch"
+      :aria-label="$t('stopwatch.aboutTitle')"
     )
       icon(name="question-circle")
     b-popover(
       target="stopwatch-help"
       triggers="hover focus click blur"
       placement="bottom"
-      title="About the stopwatch"
+      :title="$t('stopwatch.aboutTitle')"
     )
-      | Track manually-logged sessions alongside automatic tracking.
-      | To see your stopwatch totals on a dashboard, open an Activity view,
-      | click #[b Edit view], then #[b Add visualization] and pick
-      | #[b Top Stopwatch Events].
+      | {{ $t('stopwatch.aboutBodyBefore') }}
+      | {{ $t('stopwatch.aboutDashboardBefore') }}
+      b {{ $t('activity.editView') }}
+      | {{ $t('stopwatch.aboutDashboardMiddle') }}
+      b {{ $t('activity.addVisualization') }}
+      | {{ $t('stopwatch.aboutDashboardAfter') }}
+      b {{ $t('visualizations.topStopwatchEvents') }}
+      | .
 
   b-input-group(size="lg")
     b-input(
       v-model="label"
-      placeholder="What are you working on?"
-      aria-label="What are you working on?"
+      :placeholder="$t('stopwatch.placeholder')"
+      :aria-label="$t('stopwatch.placeholder')"
       @keyup.enter="startTimer(label)"
     )
     b-input-group-append
       b-button(@click="startTimer(label)", variant="success")
         icon(name="play")
-        | Start
+        | {{ $t('stopwatch.start') }}
 
   hr
 
   div(v-if="loading")
     b-spinner.mr-2(small)
-    span.text-muted Loading...
+    span.text-muted {{ $t('stopwatch.loading') }}
   div(v-else)
-    h3.mt-3 Running
+    h3.mt-3 {{ $t('stopwatch.running') }}
     div(v-if="runningTimers.length > 0")
       div(v-for="e in runningTimers" :key="e.id")
         stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
           @delete="removeTimer", @update="updateTimer")
-    p.text-muted.mb-0(v-else) No stopwatch running. Start one above to track focused work.
+    p.text-muted.mb-0(v-else) {{ $t('stopwatch.noRunning') }}
 
     div(v-if="stoppedTimers.length > 0")
-      h3.mt-4.mb-2 History
+      h3.mt-4.mb-2 {{ $t('stopwatch.history') }}
       div(v-for="k in Object.keys(timersByDate).sort().reverse()" :key="k")
         h5.mt-3.mb-1 {{ k }}
         div(v-for="e in timersByDate[k]" :key="e.id")

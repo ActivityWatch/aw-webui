@@ -1,9 +1,9 @@
 <template lang="pug">
 
 div
-  h3 Query Explorer
+  h3 {{ $t('queryExplorer.title') }}
 
-  | See #[a(href="https://docs.activitywatch.net/en/latest/examples/querying-data.html") the documentation] for help on how to write queries.
+  | {{ $t('queryExplorer.documentationBefore') }}#[a(href="https://docs.activitywatch.net/en/latest/examples/querying-data.html") {{ $t('queryExplorer.documentationLink') }}]{{ $t('queryExplorer.documentationAfter') }}
 
   hr
 
@@ -31,17 +31,17 @@ div
 
     div.form-row
       div.form-group.col-md-6
-        | Start
+        | {{ $t('queryExplorer.start') }}
         input.form-control(type="date", :max="today", v-model="startdate")
       div.form-group.col-md-6
-        | End
+        | {{ $t('queryExplorer.end') }}
         input.form-control(type="date", :max="tomorrow", v-model="enddate")
 
     div.form-group
       textarea.form-control(v-model="query_code", @keypress.ctrl.enter="query()" style="font-family: monospace", rows=10)
     div.form-inline
       div.form-group
-        button.btn.btn-success(type="button", @click="query()") Query
+        button.btn.btn-success(type="button", @click="query()") {{ $t('queryExplorer.query') }}
       span(style="padding-left: 1em;")
       | {{eventcount_str}}
 
@@ -117,8 +117,10 @@ RETURN = sort_by_duration(merged_events);
       return this.savedQueries.find(query => query.id === this.selected_saved_query_id) || null;
     },
     eventcount_str: function () {
-      if (Array.isArray(this.events)) return 'Number of events: ' + this.events.length;
-      else return '';
+      if (Array.isArray(this.events)) {
+        return this.$t('queryExplorer.numberOfEvents', { count: this.events.length });
+      }
+      return '';
     },
   },
   mounted: async function () {
@@ -256,7 +258,7 @@ RETURN = sort_by_duration(merged_events);
         const categoryRules = useCategoryStore().classes_for_query;
 
         if (useCategoryStore().classes_for_query.length === 0) {
-          this.error = '__CATEGORIES__ was used in query but no categories have been defined yet.';
+          this.error = this.$t('queryExplorer.categoriesMissing');
           return;
         }
 
