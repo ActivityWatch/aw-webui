@@ -70,14 +70,18 @@ div
       i
         | You can change which page opens when you open ActivityWatch (instead of this page) in the #[router-link(to="/settings") settings].
 
+  PCDAdminPanel
+
 </template>
 
 <script lang="ts">
 import { mapState } from 'pinia';
 import { useServerStore } from '~/stores/server';
+import PCDAdminPanel from '~/components/PCDAdminPanel.vue';
 
 export default {
   name: 'Home',
+  components: { PCDAdminPanel },
   computed: {
     ...mapState(useServerStore, ['info']),
     // Resolve the API browser link relative to the current document so it
