@@ -27,7 +27,12 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            const prNumber = context.payload.workflow_run.pull_requests[0].number;
+            const triggeredPullRequests = context.payload.workflow_run.pull_requests;
+            if (!triggeredPullRequests || triggeredPullRequests.length === 0) {
+              core.info('No associated pull request on the triggering workflow run. Skipping.');
+              return;
+            }
+            const prNumber = triggeredPullRequests[0].number;
 
             const { data: pr } = await github.rest.pulls.get({
               owner: context.repo.owner,
