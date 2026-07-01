@@ -138,6 +138,8 @@ div
     b-card(header="Import buckets")
       b-alert(v-if="import_error" show variant="danger" dismissible)
         | {{ import_error }}
+      b-alert(v-if="import_success" show variant="success" dismissible)
+        | Import completed successfully!
       b-form-file(v-model="import_file"
                   placeholder="Choose or drop a file here..."
                   drop-placeholder="Drop file here...")
@@ -263,6 +265,7 @@ export default {
 
       import_file: null,
       import_error: null,
+      import_success: false,
       delete_bucket_selected: null,
       delete_host_selected: null,
       deleting_host: false,
@@ -301,14 +304,19 @@ export default {
     import_file: async function (_new_value, _old_value) {
       if (this.import_file != null) {
         console.log('Importing file');
+        this.import_error = null;
+        this.import_success = false;
         try {
           await this.importBuckets(this.import_file);
           console.log('Import successful');
-          this.import_error = null;
+          this.import_success = true;
         } catch (err) {
-          console.log('Import failed');
-          // TODO: Make aw-server report error message so it can be shown in the web-ui
-          this.import_error = 'Import failed, see aw-server logs for more info';
+          console.log('Import failed', err);
+          if (err.response && err.response.data && err.response.data.message) {
+            this.import_error = err.response.data.message;
+          } else {
+            this.import_error = 'Import failed, see aw-server logs for more info';
+          }
         }
         // We need to reload buckets even if we fail because imports can be partial
         // (first bucket succeeds, second fails for example when importing multiple)
