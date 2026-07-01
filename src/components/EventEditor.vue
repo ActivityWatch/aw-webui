@@ -1,5 +1,5 @@
 <template lang="pug">
-b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEditModal", title="Edit event", centered, hide-footer)
+b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEditModal", title="Event details", centered, hide-footer)
   div(v-if="!editedEvent")
     | Loading event...
 
@@ -13,10 +13,10 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
         td {{ event.id }}
       tr
         th Start
-        datetime(type="datetime" v-model="start")
+        td {{ start }}
       tr
         th End
-        datetime(type="datetime" v-model="end")
+        td {{ end }}
       tr
         th Duration
         td {{ editedEvent.duration | friendlyduration }}
@@ -31,23 +31,14 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
         td
           b-input(disabled, :value="k", size="sm")
         td
-          b-checkbox(v-if="typeof event.data[k] === typeof true", v-model="editedEvent.data[k]", style="margin: 0.25em")
-          b-input(v-if="typeof event.data[k] === typeof 'string'", v-model="editedEvent.data[k]", size="sm")
-          b-input(v-if="typeof event.data[k] === 'number'", v-model.number="editedEvent.data[k]", size="sm", type="number")
+          b-input(disabled, :value="v", size="sm")
 
     hr
 
-    div.float-left
-      b-button.mx-1(@click="delete_(); close();" variant="danger")
-        icon.mx-1(name="trash")
-        | Delete
     div.float-right
       b-button.mx-1(@click="close")
         icon.mx-1(name="times")
-        | Cancel
-      b-button.mx-1(@click="save(); close();", variant="primary")
-        icon.mx-1(name="save")
-        | Save
+        | Close
 </template>
 
 <style lang="scss"></style>
