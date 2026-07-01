@@ -4,8 +4,8 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
     // Brand on mobile
     b-navbar-nav.d-block.d-lg-none
       b-navbar-brand(to="/" style="background-color: transparent;")
-        img.aligh-middle(src="/logo.png" style="height: 1.5em;")
-        span.ml-2.align-middle(style="font-size: 1em; color: #000;") ActivityWatch
+        img.aligh-middle(src="/logo.svg" style="height: 1.8em;")
+        span.ml-2.align-middle(style="font-size: 1em; color: #0B9DD0; font-weight: 600;") Prescribing Care Direct
 
     b-navbar-toggle(target="nav-collapse")
 
@@ -47,8 +47,8 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
       // Brand on large screens (centered)
       b-navbar-nav.abs-center.d-none.d-lg-block
         b-navbar-brand(to="/" style="background-color: transparent;")
-          img.ml-0.aligh-middle(src="/logo.png" style="height: 1.5em;")
-          span.ml-2.align-middle(style="font-size: 1.0em; color: #000;") ActivityWatch
+          img.ml-0.aligh-middle(src="/logo.svg" style="height: 1.8em;")
+          span.ml-2.align-middle(style="font-size: 1.0em; color: #0B9DD0; font-weight: 600;") Prescribing Care Direct
 
       b-navbar-nav.ml-auto
         b-nav-item-dropdown
