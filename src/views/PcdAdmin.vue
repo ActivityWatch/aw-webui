@@ -99,7 +99,7 @@ export default {
       token: '',
       // server url config
       serverUrl: '',
-      selectedPreset: 'dev',
+      selectedPreset: 'qa',
       customUrl: '',
       configLoading: false,
       configError: '',

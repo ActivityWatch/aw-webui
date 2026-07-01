@@ -9,7 +9,7 @@ div#wrapper(v-if="loaded")
         new-release-notification(v-if="isNewReleaseCheckEnabled")
         router-view
 
-  aw-footer
+  //- aw-footer
 </template>
 
 <script lang="ts">

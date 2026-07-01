@@ -31,3 +31,29 @@ body {
   border: 1px solid $lightBorderColor;
   border-radius: 5px;
 }
+
+// PCD brand color overrides
+$pcd-primary: #0B9DD0;
+$pcd-secondary: #08A160;
+
+.btn-primary, .badge-primary, .bg-primary {
+  background-color: $pcd-primary !important;
+  border-color: $pcd-primary !important;
+}
+
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+  background-color: darken($pcd-primary, 8%) !important;
+  border-color: darken($pcd-primary, 8%) !important;
+}
+
+.btn-success, .badge-success, .bg-success {
+  background-color: $pcd-secondary !important;
+  border-color: $pcd-secondary !important;
+}
+
+a { color: $pcd-primary; }
+a:hover { color: darken($pcd-primary, 10%); }
+
+.aw-navbar {
+  border-top: 3px solid $pcd-primary;
+}
