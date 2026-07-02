@@ -32,7 +32,11 @@
     "client": "Client:",
     "duration": "Duration:",
     "afk": "AFK:",
-    "all": "All"
+    "all": "All",
+    "filterAFK": "AFK filtered",
+    "filterMerged": "merged by app",
+    "filterNone": "none",
+    "filterCategories": "{count} category | {count} categories"
   },
   "buckets": {
     "title": "Buckets",

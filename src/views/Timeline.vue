@@ -172,23 +172,23 @@ export default {
         desc.push(seconds_to_duration(this.filter_duration));
       }
       if (this.filter_afk) {
-        desc.push('AFK filtered');
+        desc.push(this.$t('timeline.filterAFK'));
       }
       if (this.filter_merge_similar) {
-        desc.push('merged by app');
+        desc.push(this.$t('timeline.filterMerged'));
       }
       if (this.filter_categories.length > 0) {
         desc.push(
-          this.filter_categories.length +
-            ' categor' +
-            (this.filter_categories.length === 1 ? 'y' : 'ies')
+          this.$tc('timeline.filterCategories', this.filter_categories.length, {
+            count: this.filter_categories.length,
+          })
         );
       }
 
       if (desc.length > 0) {
         return desc.join(', ');
       }
-      return 'none';
+      return this.$t('timeline.filterNone');
     },
   },
   watch: {

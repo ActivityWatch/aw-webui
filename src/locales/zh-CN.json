@@ -32,7 +32,11 @@
     "client": "客户端：",
     "duration": "持续时间：",
     "afk": "离开状态：",
-    "all": "全部"
+    "all": "全部",
+    "filterAFK": "AFK 过滤",
+    "filterMerged": "按应用合并",
+    "filterNone": "无",
+    "filterCategories": "{count} 个分类"
   },
   "buckets": {
     "title": "数据桶",
