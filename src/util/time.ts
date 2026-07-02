@@ -122,7 +122,11 @@ export function format_date_short(date: Date | string, locale?: string | string[
 // Format a date with weekday prefix (e.g. "Mon, Jun 15" in en-US, "mån 15 jun" in sv-SE)
 export function format_date_with_weekday(date: Date | string, locale?: string | string[]) {
   const d = date instanceof Date ? date : new Date(date);
-  return new Intl.DateTimeFormat(locale, { weekday: 'short', month: 'short', day: 'numeric' }).format(d);
+  return new Intl.DateTimeFormat(locale, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  }).format(d);
 }
 
 // Format a time-of-day string locale-aware (e.g. "14:30:05" or "2:30:05 PM" per browser locale)

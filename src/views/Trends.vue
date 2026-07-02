@@ -167,7 +167,9 @@ export default {
     },
 
     previousRangeLabel(): string {
-      const start = format_date_short(this.currentStart.clone().subtract(this.periodDays, 'days').toDate());
+      const start = format_date_short(
+        this.currentStart.clone().subtract(this.periodDays, 'days').toDate()
+      );
       const end = format_date_short(moment(this.today).subtract(this.periodDays, 'days').toDate());
       return `${start} – ${end}`;
     },
