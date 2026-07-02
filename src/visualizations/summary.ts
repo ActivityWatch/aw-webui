@@ -9,7 +9,18 @@ import { getCategoryColorFromString } from '~/util/color';
 import { seconds_to_duration } from '~/util/time';
 import { IEvent } from '~/util/interfaces';
 
-const textColor = '#333';
+// Returns an inline CSS fill declaration that overrides dark-mode's
+// `svg text { fill: #fff !important }` rule. The color is chosen for
+// contrast against the bar's background so text is readable on both
+// light (e.g. #FFE082) and dark (e.g. #1a237e) category colors.
+function getBarTextStyle(bgColor: string): string {
+  try {
+    const textColor = Color(bgColor).isLight() ? '#333' : '#eee';
+    return `fill: ${textColor} !important`;
+  } catch {
+    return 'fill: #333 !important';
+  }
+}
 
 function create(container: HTMLElement) {
   // Clear element
@@ -121,7 +132,7 @@ function update(container: HTMLElement, apps: Entry[]) {
       .text(displayName)
       .attr('font-family', 'sans-serif')
       .attr('font-size', textSize + 'px')
-      .attr('fill', textColor);
+      .attr('style', getBarTextStyle(appcolor));
 
     // Duration
     eg.append('text')
@@ -130,7 +141,7 @@ function update(container: HTMLElement, apps: Entry[]) {
       .text(seconds_to_duration(app.duration))
       .attr('font-family', 'sans-serif')
       .attr('font-size', textSize - 3 + 'px')
-      .attr('fill', '#444');
+      .attr('style', getBarTextStyle(appcolor));
 
     curr_y += barHeight + 5;
   });
