@@ -239,6 +239,13 @@ svg text {
   text-shadow: #000 0.5px 0.5px 0.5px;
 }
 
+svg.appsummary text {
+  paint-order: stroke fill;
+  stroke: #000;
+  stroke-linejoin: round;
+  stroke-width: 2px;
+}
+
 /* Timespiral labels are drawn via D3 .style('fill', '#888'), which loses
    to the generic svg text rule above via !important — but the inner
    textPath elements (date rings) inherit a dim parent and need their own
