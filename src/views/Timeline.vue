@@ -138,11 +138,6 @@ export default {
       filter_merge_similar: false,
       filter_categories: [],
       swimlane: null,
-      swimlaneOptions: [
-        { value: null, text: 'None' },
-        { value: 'category', text: 'Group by category' },
-        { value: 'bucketType', text: 'Group by bucket type' },
-      ],
       updateTimelineWindow: true,
     };
   },
@@ -159,6 +154,13 @@ export default {
     category_options() {
       const categoryStore = useCategoryStore();
       return categoryStore.allCategoriesSelect;
+    },
+    swimlaneOptions() {
+      return [
+        { value: null, text: this.$t('timeline.swimlaneNone') },
+        { value: 'category', text: this.$t('timeline.swimlaneCategory') },
+        { value: 'bucketType', text: this.$t('timeline.swimlaneBucketType') },
+      ];
     },
     filter_summary() {
       const desc = [];

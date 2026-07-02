@@ -36,7 +36,10 @@
     "filterAFK": "AFK filtered",
     "filterMerged": "merged by app",
     "filterNone": "none",
-    "filterCategories": "{count} category | {count} categories"
+    "filterCategories": "{count} category | {count} categories",
+    "swimlaneNone": "None",
+    "swimlaneCategory": "Group by category",
+    "swimlaneBucketType": "Group by bucket type"
   },
   "buckets": {
     "title": "Buckets",
