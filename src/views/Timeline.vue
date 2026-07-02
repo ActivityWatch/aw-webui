@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  h3 Timeline
+  h3 {{ $t('timeline.title') }}
 
   input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration").mb-3
 
@@ -10,29 +10,29 @@ div
     details.timeline-filters.mr-2(ref="filtersDetails")
       summary.timeline-chip.timeline-chip--clickable
         icon.mr-1(name="filter")
-        b Filters: {{ filter_summary }}
+        b {{ $t('timeline.filters') }}: {{ filter_summary }}
       div.timeline-filters-panel.shadow-sm
         table
           tr
             th.pt-2.pr-3
-              label(for="timeline-filter-host") Host:
+              label(for="timeline-filter-host") {{ $t('timeline.host') }}
             td
               select#timeline-filter-host.form-control.form-control-sm(v-model="filter_hostname")
-                option(:value='null') All
+                option(:value='null') {{ $t('timeline.all') }}
                 option(v-for="host in hosts", :value="host") {{ host }}
           tr
             th.pt-2.pr-3
-              label(for="timeline-filter-client") Client:
+              label(for="timeline-filter-client") {{ $t('timeline.client') }}
             td
               select#timeline-filter-client.form-control.form-control-sm(v-model="filter_client")
-                option(:value='null') All
+                option(:value='null') {{ $t('timeline.all') }}
                 option(v-for="client in clients", :value="client") {{ client }}
           tr
             th.pt-2.pr-3
-              label(for="timeline-filter-duration") Duration:
+              label(for="timeline-filter-duration") {{ $t('timeline.duration') }}
             td
               select#timeline-filter-duration.form-control.form-control-sm(v-model="filter_duration")
-                option(:value='null') All
+                option(:value='null') {{ $t('timeline.all') }}
                 option(:value='2') 2+ secs
                 option(:value='5') 5+ secs
                 option(:value='10') 10+ secs
@@ -46,7 +46,7 @@ div
                 option(:value='2 * 60 * 60') 2+ hrs
           tr
             th.pt-2.pr-3
-              label AFK:
+              label {{ $t('timeline.afk') }}
             td
               b-form-checkbox(v-model="filter_afk" size="sm" switch)
                 | Filter AFK

@@ -1,0 +1,66 @@
+{
+  "nav": {
+    "activity": "活动",
+    "timeline": "时间线",
+    "stopwatch": "秒表",
+    "tools": "工具",
+    "search": "搜索",
+    "workReport": "工作报告",
+    "trends": "趋势",
+    "report": "报告",
+    "alerts": "提醒",
+    "timespiral": "时间螺旋",
+    "query": "查询",
+    "graph": "图表",
+    "rawData": "原始数据",
+    "settings": "设置",
+    "noActivityReports": "暂无活动报告",
+    "noActivityReportsHint": "请确保 AFK 监控器和窗口监控器均已运行",
+    "loading": "加载中..."
+  },
+  "home": {
+    "title": "欢迎使用 ActivityWatch",
+    "survey": "填写用户调查",
+    "voteFeatures": "在论坛中为功能投票",
+    "spreadWord": "传播",
+    "support": "支持我们！"
+  },
+  "timeline": {
+    "title": "时间线",
+    "filters": "筛选",
+    "host": "主机：",
+    "client": "客户端：",
+    "duration": "持续时间：",
+    "afk": "离开状态：",
+    "all": "全部"
+  },
+  "buckets": {
+    "title": "数据桶",
+    "docsHint": "想收集更多数据？请查阅 {link} 获取更多监控器。",
+    "docsLinkText": "文档",
+    "lastUpdated": "最后更新",
+    "noEvents": "暂无事件记录",
+    "thisDevice": "此设备"
+  },
+  "settings": {
+    "title": "设置",
+    "groups": {
+      "general": "通用",
+      "generalHelp": "影响时间段、时间线和落地页行为的默认设置。",
+      "appearance": "外观",
+      "appearanceHelp": "主题与可视化颜色。",
+      "categorization": "分类",
+      "categorizationHelp": "将事件分类的规则，以及 AFK/活跃模式覆盖设置。",
+      "privacy": "隐私",
+      "privacyHelp": "在存储前过滤或遮盖敏感事件数据的过滤器。",
+      "developer": "开发者",
+      "language": "语言",
+      "languageHelp": "选择 ActivityWatch 的界面语言。"
+    }
+  },
+  "language": {
+    "label": "语言",
+    "en": "English",
+    "zh-CN": "中文（简体）"
+  }
+}

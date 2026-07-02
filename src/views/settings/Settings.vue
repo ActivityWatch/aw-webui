@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  h3.mb-3 Settings
+  h3.mb-3 {{ $t('settings.title') }}
 
   div.settings-layout
     nav.settings-nav
@@ -33,6 +33,7 @@ import UncategorizedHintSettings from '~/views/settings/UncategorizedHintSetting
 import CategorizationSettings from '~/views/settings/CategorizationSettings.vue';
 import LandingPageSettings from '~/views/settings/LandingPageSettings.vue';
 import DeveloperSettings from '~/views/settings/DeveloperSettings.vue';
+import LanguageSettings from '~/views/settings/LanguageSettings.vue';
 import Theme from '~/views/settings/Theme.vue';
 import ColorSettings from '~/views/settings/ColorSettings.vue';
 import ActivePatternSettings from '~/views/settings/ActivePatternSettings.vue';
@@ -54,6 +55,7 @@ export default {
     UncategorizedHintSettings,
     CategorizationSettings,
     LandingPageSettings,
+    LanguageSettings,
     Theme,
     ColorSettings,
     DeveloperSettings,
@@ -85,8 +87,8 @@ export default {
     groups(): Group[] {
       const general: Group = {
         id: 'general',
-        label: 'General',
-        help: 'Defaults that shape how time periods, the timeline, and landing page behave.',
+        label: this.$t('settings.groups.general'),
+        help: this.$t('settings.groups.generalHelp'),
         components: [
           { name: 'DaystartSettings' },
           { name: 'TimelineDurationSettings' },
@@ -99,14 +101,14 @@ export default {
       };
       const appearance: Group = {
         id: 'appearance',
-        label: 'Appearance',
-        help: 'Theme and visualization colors.',
+        label: this.$t('settings.groups.appearance'),
+        help: this.$t('settings.groups.appearanceHelp'),
         components: [{ name: 'Theme' }, { name: 'ColorSettings' }],
       };
       const categorization: Group = {
         id: 'categorization',
-        label: 'Categorization',
-        help: 'Rules that classify events into categories, plus AFK/active-pattern overrides.',
+        label: this.$t('settings.groups.categorization'),
+        help: this.$t('settings.groups.categorizationHelp'),
         // CategorizationSettings (rules) is the primary content; the
         // ActivePatternSettings AFK override is an advanced edge-case
         // setting so it lives at the bottom of the group.
@@ -114,17 +116,23 @@ export default {
       };
       const privacy: Group = {
         id: 'privacy',
-        label: 'Privacy',
-        help: 'Filters that drop or redact sensitive event data before it is stored.',
+        label: this.$t('settings.groups.privacy'),
+        help: this.$t('settings.groups.privacyHelp'),
         components: [{ name: 'PrivacyFilterSettings' }],
       };
       const developer: Group = {
         id: 'developer',
-        label: 'Developer',
+        label: this.$t('settings.groups.developer'),
         components: [{ name: 'DeveloperSettings' }],
       };
+      const language: Group = {
+        id: 'language',
+        label: this.$t('settings.groups.language'),
+        help: this.$t('settings.groups.languageHelp'),
+        components: [{ name: 'LanguageSettings' }],
+      };
 
-      const groups: Group[] = [general, appearance, categorization, privacy, developer];
+      const groups: Group[] = [general, appearance, categorization, privacy, language, developer];
       return groups;
     },
   },

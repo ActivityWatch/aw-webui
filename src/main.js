@@ -81,6 +81,9 @@ Vue.prototype.$isAndroid = process.env.VUE_APP_ON_ANDROID;
 import { createClient, getClient, configureClient } from './util/awclient';
 createClient();
 
+// Setup i18n
+import { i18n } from './i18n';
+
 // Setup Vue app
 import App from './App.vue';
 new Vue({
@@ -88,6 +91,7 @@ new Vue({
   router: router,
   render: h => h(App),
   pinia,
+  i18n,
 });
 
 // Set the $aw global

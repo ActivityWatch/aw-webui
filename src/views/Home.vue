@@ -3,7 +3,7 @@ div
   b-alert(v-if="$isAndroid" show)
     | #[b Note:] ActivityWatch on Android is in a very early stage of development. There will be bugs, but we hope you bear with us as we refine things and get it on par with the desktop version of ActivityWatch (which you should try!).
 
-  h3 Welcome to ActivityWatch
+  h3 {{ $t('home.title') }}
   p
     | We've come a long way#[span(v-if="$isAndroid") (especially on Android!)] but we still need users (like you!) to provide feedback and help us turn ActivityWatch into a successful project.
     | We'd love to hear any ideas you have for improvements.

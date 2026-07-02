@@ -1,0 +1,66 @@
+{
+  "nav": {
+    "activity": "Activity",
+    "timeline": "Timeline",
+    "stopwatch": "Stopwatch",
+    "tools": "Tools",
+    "search": "Search",
+    "workReport": "Work Report",
+    "trends": "Trends",
+    "report": "Report",
+    "alerts": "Alerts",
+    "timespiral": "Timespiral",
+    "query": "Query",
+    "graph": "Graph",
+    "rawData": "Raw Data",
+    "settings": "Settings",
+    "noActivityReports": "No activity reports available",
+    "noActivityReportsHint": "Make sure you have both an AFK and window watcher running",
+    "loading": "Loading..."
+  },
+  "home": {
+    "title": "Welcome to ActivityWatch",
+    "survey": "Fill out our user survey",
+    "voteFeatures": "vote on features on the forum",
+    "spreadWord": "Spread the word",
+    "support": "Support us!"
+  },
+  "timeline": {
+    "title": "Timeline",
+    "filters": "Filters",
+    "host": "Host:",
+    "client": "Client:",
+    "duration": "Duration:",
+    "afk": "AFK:",
+    "all": "All"
+  },
+  "buckets": {
+    "title": "Buckets",
+    "docsHint": "Are you looking to collect more data? Check out {link} for more watchers.",
+    "docsLinkText": "the docs",
+    "lastUpdated": "Last updated",
+    "noEvents": "No events recorded yet",
+    "thisDevice": "this device"
+  },
+  "settings": {
+    "title": "Settings",
+    "groups": {
+      "general": "General",
+      "generalHelp": "Defaults that shape how time periods, the timeline, and landing page behave.",
+      "appearance": "Appearance",
+      "appearanceHelp": "Theme and visualization colors.",
+      "categorization": "Categorization",
+      "categorizationHelp": "Rules that classify events into categories, plus AFK/active-pattern overrides.",
+      "privacy": "Privacy",
+      "privacyHelp": "Filters that drop or redact sensitive event data before it is stored.",
+      "developer": "Developer",
+      "language": "Language",
+      "languageHelp": "Choose the display language for ActivityWatch."
+    }
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "zh-CN": "中文（简体）"
+  }
+}

@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  h3 Buckets
+  h3 {{ $t('buckets.title') }}
 
   b-alert(show)
     | Are you looking to collect more data? Check out #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") the docs] for more watchers.
@@ -17,17 +17,17 @@ div
         icon.mr-2.text-secondary(v-else, name="desktop" scale="1.2")
         div
           span.font-weight-bold {{ device.hostname }}
-          b-badge.ml-2(v-if="serverStore.info.hostname == device.hostname" variant="info") this device
+          b-badge.ml-2(v-if="serverStore.info.hostname == device.hostname" variant="info") {{ $t('buckets.thisDevice') }}
           div.small.text-muted(v-if="device.hostname !== device.device_id")
             | ID: {{ device.id }}
           div.small(v-if="deviceHasEvents(device)")
-            span.text-muted Last updated&nbsp;
+            span.text-muted {{ $t('buckets.lastUpdated') }}&nbsp;
             time(:class="{'text-success': isRecent(device.last_updated)}",
                  :datetime="device.last_updated",
                  :title="device.last_updated")
               | {{ device.last_updated | friendlytime }}
           div.small.text-muted(v-else)
-            | No events recorded yet
+            | {{ $t('buckets.noEvents') }}
       b-dropdown.kebab-dropdown(
         size="sm",
         variant="outline-secondary",
