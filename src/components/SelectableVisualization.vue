@@ -33,6 +33,11 @@ div
                  :namefunc="e => e.data.title",
                  :colorfunc="e => e.data['$category']",
                  with_limit)
+    div(v-if="type == 'top_bundle_ids' && activityStore.android.available")
+      aw-summary(:fields="activityStore.window.top_titles",
+                 :namefunc="e => e.data.classname",
+                 :colorfunc="e => e.data.app",
+                 with_limit)
     div(v-if="type == 'top_domains'")
       aw-summary(:fields="activityStore.browser.top_domains",
                  :namefunc="e => e.data.$domain",
@@ -152,6 +157,7 @@ export default {
       types: [
         'top_apps',
         'top_titles',
+        'top_bundle_ids',
         'top_domains',
         'top_urls',
         'top_browser_titles',
@@ -199,7 +205,11 @@ export default {
         },
         top_titles: {
           title: 'Top Window Titles',
-          available: this.activityStore.window.available,
+          available: this.activityStore.window.available || this.activityStore.android.available,
+        },
+        top_bundle_ids: {
+          title: 'Bundle IDs',
+          available: this.activityStore.window.available || this.activityStore.android.available,
         },
         top_domains: {
           title: 'Top Browser Domains',
