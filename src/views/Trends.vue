@@ -89,7 +89,7 @@ div
 
 <script lang="ts">
 import moment from 'moment';
-import { get_today_with_offset } from '~/util/time';
+import { get_today_with_offset, format_date_short, format_date_with_weekday } from '~/util/time';
 import { buildBarchartDataset } from '~/util/datasets';
 import { canonicalEvents } from '~/queries';
 import { getClient } from '~/util/awclient';
@@ -161,14 +161,14 @@ export default {
     },
 
     currentRangeLabel(): string {
-      const start = this.currentStart.format('MMM D');
-      const end = moment(this.today).format('MMM D');
+      const start = format_date_short(this.currentStart.toDate());
+      const end = format_date_short(moment(this.today).toDate());
       return `${start} – ${end}`;
     },
 
     previousRangeLabel(): string {
-      const start = this.currentStart.clone().subtract(this.periodDays, 'days').format('MMM D');
-      const end = moment(this.today).subtract(this.periodDays, 'days').format('MMM D');
+      const start = format_date_short(this.currentStart.clone().subtract(this.periodDays, 'days').toDate());
+      const end = format_date_short(moment(this.today).subtract(this.periodDays, 'days').toDate());
       return `${start} – ${end}`;
     },
 
@@ -210,7 +210,7 @@ export default {
         const total = evts.reduce((a, e) => a + (e.duration || 0), 0);
         if (!best || total > best.duration) {
           const start = period.split('/')[0];
-          best = { label: moment(start).format('ddd, MMM D'), duration: total };
+          best = { label: format_date_with_weekday(new Date(start)), duration: total };
         }
       }
       return best && best.duration > 0 ? best : null;
