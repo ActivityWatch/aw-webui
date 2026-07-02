@@ -11,16 +11,16 @@ div
     | If you are a developer, we hope you can contribute by writing a watcher, visualization, or something else, and share it with us on the forum!
   p.mb-0 Thank you for using ActivityWatch!
   p
-    a(href="https://forms.gle/q2N9K5RoERBV8kqPA") Fill out our user survey
+    a(href="https://forms.gle/q2N9K5RoERBV8kqPA") {{ $t('home.survey') }}
     | &nbsp;or&nbsp;
-    a(href="https://forum.activitywatch.net/c/features") vote on features on the forum
+    a(href="https://forum.activitywatch.net/c/features") {{ $t('home.voteFeatures') }}
     | &nbsp;to help shape what comes next.
 
   hr
 
   div.row
     div.col-md-6
-      h4 Spread the word
+      h4 {{ $t('home.spreadWord') }}
       p
         | Nothing is as motivating as getting ActivityWatch into the hands of users.
         | By sharing it you get us to make ActivityWatch even better!
@@ -31,7 +31,7 @@ div
         li Star us on #[a(href="https://github.com/ActivityWatch/activitywatch") GitHub]
 
     div.col-md-6
-      h4 Support us!
+      h4 {{ $t('home.support') }}
       p
         | Do you like ActivityWatch? Has it helped you? Help us help you by donating!
         | You can donate to us via:

@@ -3,7 +3,8 @@ div
   h3 {{ $t('buckets.title') }}
 
   b-alert(show)
-    | Are you looking to collect more data? Check out #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") the docs] for more watchers.
+    i18n(path="buckets.docsHint" tag="span")
+      a(place="link" href="https://docs.activitywatch.net/en/latest/watchers.html") {{ $t('buckets.docsLinkText') }}
 
   // By device
   b-card.bucket-card.mb-3(
