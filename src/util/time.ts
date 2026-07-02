@@ -133,7 +133,7 @@ export function format_date_with_weekday(date: Date | string, locale?: string | 
 export function format_time_of_day(date: Date | string, locale?: string | string[]) {
   const d = date instanceof Date ? date : new Date(date);
   return new Intl.DateTimeFormat(locale, {
-    hour: 'numeric',
+    hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
   }).format(d);
