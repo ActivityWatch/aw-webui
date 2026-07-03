@@ -8,7 +8,7 @@ import _ from 'lodash';
 import moment from 'moment';
 
 import { getColorFromString } from '../util/color';
-import { seconds_to_duration } from '../util/time';
+import { seconds_to_duration, format_time_of_day } from '../util/time';
 import { IEvent } from '../util/interfaces';
 
 function show_info(container: HTMLElement, elem_id: string): void {
@@ -148,7 +148,7 @@ function update(
     _.each(e.data.subevents, function (t: IEvent) {
       const inforow = infolist.append('tr');
       // Clocktime
-      const clocktime = moment(t.timestamp).format('HH:mm:ss');
+      const clocktime = format_time_of_day(new Date(t.timestamp));
       inforow.append('td').text(clocktime);
       // Duration
       const duration = seconds_to_duration(t.duration);
