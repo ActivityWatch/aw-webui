@@ -19,6 +19,7 @@ describe('i18n', () => {
     expect(isAppLocale('uk')).toBe(true);
     expect(isAppLocale('de')).toBe(true);
     expect(isAppLocale('ru')).toBe(true);
+    expect(isAppLocale('zh-CN')).toBe(true);
     expect(isAppLocale('fr')).toBe(false);
     expect(isAppLocale('')).toBe(false);
   });
@@ -38,6 +39,15 @@ describe('i18n', () => {
     expect(i18n.locale).toBe('de');
   });
 
+  test('initial locale detects Chinese browser language', () => {
+    Object.defineProperty(navigator, 'language', {
+      value: 'zh-CN',
+      configurable: true,
+    });
+    const { i18n } = loadI18n();
+    expect(i18n.locale).toBe('zh-CN');
+  });
+
   test('initial locale falls back to en', () => {
     Object.defineProperty(navigator, 'language', {
       value: 'fr-FR',
@@ -49,10 +59,10 @@ describe('i18n', () => {
 
   test('setAppLocale updates i18n, moment, document, and storage', () => {
     const { setAppLocale, i18n } = loadI18n();
-    setAppLocale('ru');
-    expect(i18n.locale).toBe('ru');
-    expect(document.documentElement.lang).toBe('ru');
-    expect(localStorage.getItem('locale')).toBe('ru');
+    setAppLocale('zh-CN');
+    expect(i18n.locale).toBe('zh-CN');
+    expect(document.documentElement.lang).toBe('zh-CN');
+    expect(localStorage.getItem('locale')).toBe('zh-CN');
   });
 
   test('setAppLocale falls back to en for invalid locale', () => {

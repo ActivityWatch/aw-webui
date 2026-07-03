@@ -40,7 +40,7 @@ describe('settings store locale loading', () => {
   });
 
   test('load ignores invalid locale from server', async () => {
-    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
     mockGetSettings.mockResolvedValue({ locale: 'fr' });
 
     await settingsStore.load();
@@ -51,17 +51,17 @@ describe('settings store locale loading', () => {
   });
 
   test('load applies valid locale from localStorage', async () => {
-    localStorage.setItem('locale', 'ru');
+    localStorage.setItem('locale', 'zh-CN');
     mockGetSettings.mockResolvedValue({});
 
     await settingsStore.load();
 
-    expect(settingsStore.locale).toBe('ru');
-    expect(i18n.locale).toBe('ru');
+    expect(settingsStore.locale).toBe('zh-CN');
+    expect(i18n.locale).toBe('zh-CN');
   });
 
   test('load ignores invalid locale from localStorage', async () => {
-    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
     localStorage.setItem('locale', 'xx');
     mockGetSettings.mockResolvedValue({});
 

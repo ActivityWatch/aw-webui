@@ -52,6 +52,7 @@ export default {
     languageEn: 'English',
     languageDe: 'Deutsch',
     languageRu: 'Русский',
+    languageZhCN: '简体中文',
     rangeTo: 'to',
   },
   notFound: {
@@ -91,8 +92,7 @@ export default {
     },
     groups: {
       general: 'General',
-      generalHelp:
-        'Defaults that shape how time periods, the timeline, and landing page behave.',
+      generalHelp: 'Defaults that shape how time periods, the timeline, and landing page behave.',
       appearance: 'Appearance',
       appearanceHelp: 'Theme and visualization colors.',
       categorization: 'Categorization',
@@ -233,8 +233,7 @@ export default {
     importing: 'Importing...',
     importHelpNew:
       'Provide a JSON file exported from a single bucket or from multiple buckets. Import fails if a bucket with the same ID already exists.',
-    exportHelp:
-      'Download every bucket on this server as a single JSON file. Use this for backups.',
+    exportHelp: 'Download every bucket on this server as a single JSON file. Use this for backups.',
     currentDevice: '(the current device)',
     lastUpdated: 'Last updated:',
     firstSeen: 'First seen:',

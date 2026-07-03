@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const LOCALES_DIR = path.join(__dirname, '../src/i18n/locales');
-const LOCALES = ['en', 'uk', 'de', 'ru'];
+const LOCALES = ['en', 'uk', 'de', 'ru', 'zh-CN'];
 
 /** Substrings: identical en/value is OK when value contains any of these (case-insensitive). */
 const ALLOWLIST_SUBSTRINGS = [
@@ -37,7 +37,6 @@ const ALLOWLIST_SUBSTRINGS = [
   'hostname',
   'http',
   'forum',
-  'patreon',
   'liberapay',
   'opencollective',
   'mozilla',
@@ -95,7 +94,6 @@ const ALLOWLIST_SUBSTRINGS = [
   'history',
   'documentation',
   'website',
-  'forum',
 ];
 
 function loadLocale(code) {
@@ -176,14 +174,16 @@ for (const code of LOCALES) {
   if (placeholderMismatches.length) {
     failed = true;
     console.error(`\n[${code}] Placeholder mismatches (${placeholderMismatches.length}):`);
-    placeholderMismatches.slice(0, 15).forEach(({ key, en, got }) =>
-      console.error(`  - ${key}: en [${en}] vs [${got}]`)
-    );
+    placeholderMismatches
+      .slice(0, 15)
+      .forEach(({ key, en, got }) => console.error(`  - ${key}: en [${en}] vs [${got}]`));
   }
 
   if (untranslated.length) {
     console.warn(`\n[${code}] Possibly untranslated (identical to en, ${untranslated.length}):`);
-    untranslated.slice(0, 15).forEach(k => console.warn(`  - ${k}: "${enFlat[k].slice(0, 60)}..."`));
+    untranslated
+      .slice(0, 15)
+      .forEach(k => console.warn(`  - ${k}: "${enFlat[k].slice(0, 60)}..."`));
     if (untranslated.length > 15) console.warn(`  ... and ${untranslated.length - 15} more`);
   }
 }
