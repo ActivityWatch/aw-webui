@@ -4,8 +4,8 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
     // Brand on mobile
     b-navbar-nav.d-block.d-lg-none
       b-navbar-brand(to="/" style="background-color: transparent;")
-        img.aligh-middle(src="/logo.png" style="height: 1.5em;")
-        span.ml-2.align-middle(style="font-size: 1em; color: #000;") ActivityWatch
+        img.aligh-middle(src="/logo.svg" style="height: 1.8em;")
+        span.ml-2.align-middle(style="font-size: 1em; color: #0B9DD0; font-weight: 600;") Prescribing Care Direct
 
     b-navbar-toggle(target="nav-collapse")
 
@@ -47,8 +47,8 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
       // Brand on large screens (centered)
       b-navbar-nav.abs-center.d-none.d-lg-block
         b-navbar-brand(to="/" style="background-color: transparent;")
-          img.ml-0.aligh-middle(src="/logo.png" style="height: 1.5em;")
-          span.ml-2.align-middle(style="font-size: 1.0em; color: #000;") ActivityWatch
+          img.ml-0.aligh-middle(src="/logo.svg" style="height: 1.8em;")
+          span.ml-2.align-middle(style="font-size: 1.0em; color: #0B9DD0; font-weight: 600;") Prescribing Care Direct
 
       b-navbar-nav.ml-auto
         b-nav-item-dropdown
@@ -90,6 +90,10 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
           div.px-2.px-lg-1
             icon(name="cog")
             | Settings
+        b-nav-item(to="/pcd-admin")
+          div.px-2.px-lg-1
+            icon(name="user-shield")
+            | PCD Admin
 </template>
 
 <style lang="scss" scoped>
@@ -114,6 +118,7 @@ import 'vue-awesome/icons/stopwatch';
 import 'vue-awesome/icons/cog';
 import 'vue-awesome/icons/tools';
 import 'vue-awesome/icons/history';
+import 'vue-awesome/icons/user-shield';
 
 // TODO: use circle-nodes instead in the future
 import 'vue-awesome/icons/project-diagram';
