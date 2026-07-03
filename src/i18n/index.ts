@@ -18,7 +18,7 @@ export type AppLocale = 'en' | 'uk' | 'de' | 'ru' | 'zh-CN';
 
 const SUPPORTED: AppLocale[] = ['en', 'uk', 'de', 'ru', 'zh-CN'];
 
-export function isAppLocale(value: string | null): value is AppLocale {
+export function isAppLocale(value: string | null | undefined): value is AppLocale {
   return SUPPORTED.includes(value as AppLocale);
 }
 
@@ -46,7 +46,7 @@ function detectBrowserLocale(): AppLocale | null {
 export function getInitialLocale(): AppLocale {
   try {
     const saved = localStorage.getItem('locale');
-    if (isAppLocale(saved)) {
+    if (saved !== null && isAppLocale(saved)) {
       return saved;
     }
   } catch {

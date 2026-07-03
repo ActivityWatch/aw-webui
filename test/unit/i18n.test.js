@@ -22,6 +22,7 @@ describe('i18n', () => {
     expect(isAppLocale('zh-CN')).toBe(true);
     expect(isAppLocale('fr')).toBe(false);
     expect(isAppLocale('')).toBe(false);
+    expect(isAppLocale(null)).toBe(false);
   });
 
   test('initial locale comes from localStorage when valid', () => {
