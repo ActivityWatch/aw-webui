@@ -40,7 +40,7 @@ describe('settings store locale loading', () => {
   });
 
   test('load ignores invalid locale from server', async () => {
-    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const warn = jest.spyOn(console, 'warn').mockImplementation(jest.fn());
     mockGetSettings.mockResolvedValue({ locale: 'fr' });
 
     await settingsStore.load();
@@ -61,7 +61,7 @@ describe('settings store locale loading', () => {
   });
 
   test('load ignores invalid locale from localStorage', async () => {
-    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const warn = jest.spyOn(console, 'warn').mockImplementation(jest.fn());
     localStorage.setItem('locale', 'xx');
     mockGetSettings.mockResolvedValue({});
 
