@@ -96,7 +96,6 @@ import 'vue-awesome/icons/angle-double-up';
 
 import { useCategoryStore } from '~/stores/categories';
 
-import _ from 'lodash';
 import { downloadFile } from '~/util/export';
 
 export default {
@@ -149,12 +148,10 @@ export default {
   },
   methods: {
     addClass: function () {
-      this.categoryStore.addClass({
+      const lastId = this.categoryStore.addClass({
         name: ['New class'],
         rule: { type: 'regex', regex: 'FILL ME' },
       });
-
-      const lastId = _.max(_.map(this.categoryStore.classes, 'id'));
       this.editingId = lastId;
     },
     saveClasses: async function () {

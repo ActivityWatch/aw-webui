@@ -157,4 +157,29 @@ describe('categories store', () => {
     expect(decoded).toEqual(42);
     expect(encoded).toEqual(42);
   });
+
+  test('addClass after clearAll assigns id 0, not NaN/null', () => {
+    // Regression test for #427: _.max([]) returns undefined, so
+    // `_.max(_.map(this.classes, 'id')) + 1` evaluated to NaN for an empty
+    // class list. JSON.stringify(NaN) produces null, creating an uneditable category.
+    expect(categoryStore.classes).toHaveLength(0);
+    const id = categoryStore.addClass({ name: ['New class'], rule: { type: 'none' } });
+    expect(id).toBe(0);
+    expect(categoryStore.classes[0].id).toBe(0);
+    // Verify the new category is immediately editable (updateClass should find it by id)
+    categoryStore.updateClass({ ...categoryStore.classes[0], name: ['Renamed'] });
+    expect(categoryStore.classes[0].name).toEqual(['Renamed']);
+  });
+
+  test('addClass after partial deletion starts from max existing id', () => {
+    categoryStore.load([
+      { name: ['A'], rule: { type: 'none' } },
+      { name: ['B'], rule: { type: 'none' } },
+      { name: ['C'], rule: { type: 'none' } },
+    ]);
+    const maxBefore = Math.max(...categoryStore.classes.map(c => c.id ?? -1));
+    categoryStore.removeClass(categoryStore.classes[1].id);
+    const id = categoryStore.addClass({ name: ['D'], rule: { type: 'none' } });
+    expect(id).toBe(maxBefore + 1);
+  });
 });
