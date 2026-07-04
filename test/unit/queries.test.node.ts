@@ -11,7 +11,7 @@
  *   Chrome:   'Google Chrome', 'Google-chrome', 'Chrome.exe', 'chrome.exe',
  *             'google-chrome-stable', 'Chromium', 'Chromium-browser', 'chromium-browser',
  *             'Chromium-browser-chromium', 'Chromium.exe', 'chromium.exe',
- *             'Google-chrome-beta', 'Google-chrome-unstable'
+ *             'Google-chrome-beta', 'Google-chrome-unstable', 'Helium'
  *             (Flatpak app IDs retained as exact: 'com.google.Chrome', 'com.google.ChromeDev',
  *              'org.chromium.Chromium')
  *
@@ -81,6 +81,7 @@ describe('browser_appname_regex', () => {
       'chromium.exe',
       'Google-chrome-beta',
       'Google-chrome-unstable',
+      'Helium',
     ];
     for (const name of knownNames) {
       expect(re.test(name)).toBe(true);

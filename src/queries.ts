@@ -263,7 +263,8 @@ function browsersWithBuckets(browserbuckets: string[]): [string, string][] {
 // The full set of historical app names these patterns replace is documented in the unit tests.
 // See: test/unit/queries.test.node.ts, https://github.com/ActivityWatch/aw-webui/issues/749
 export const browser_appname_regex: Record<string, string> = {
-  chrome: '(?i)^(google[-_ ]?chrome|chrome|chromium)',
+  // Helium can use the Chrome Web Store extension, which emits aw-watcher-web-chrome buckets.
+  chrome: '(?i)^(google[-_ ]?chrome|chrome|chromium|helium)',
   firefox: '(?i)(firefox|librewolf|waterfox|nightly)',
   opera: '(?i)(opera)',
   brave: '(?i)(brave)',
