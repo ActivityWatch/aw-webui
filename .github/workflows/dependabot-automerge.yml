@@ -55,6 +55,7 @@ jobs:
               repo: context.repo.repo,
               pull_number: pull.number,
               merge_method: "squash",
+              sha: context.payload.workflow_run.head_sha,
             });
 
             core.info(`Merged Dependabot PR #${pull.number}.`);
