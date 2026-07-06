@@ -1,10 +1,7 @@
 name: Dependabot Auto-merge
 
-# NOTE: `merge-me-action` still needs the bot PAT here.
-# Using `secrets.GITHUB_TOKEN` fails on `workflow_run` with
-# "Resource not accessible by integration" when the action queries
-# branch protection rules over GraphQL.
-# See: https://github.com/ridedott/merge-me-action/issues/1581
+# Run in the trusted `workflow_run` context and merge Dependabot PRs directly
+# with the repository token instead of depending on an external PAT.
 
 on:
   workflow_run:
@@ -13,6 +10,10 @@ on:
     workflows:
       # List all required workflow names here.
       - Build
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   auto_merge:
@@ -24,6 +25,36 @@ jobs:
       github.actor == 'dependabot[bot]'
 
     steps:
-      - uses: ridedott/merge-me-action@bb09d7d3c3504d3837816cc4eb821e663dc7ffde
+      - uses: actions/github-script@v9
         with:
-          GITHUB_TOKEN: ${{ secrets.AWBOT_GH_TOKEN }}
+          script: |
+            const pr = context.payload.workflow_run.pull_requests?.[0];
+            if (!pr) {
+              core.setFailed("No pull request found in workflow_run payload.");
+              return;
+            }
+
+            const { data: pull } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+            });
+
+            if (pull.state !== "open") {
+              core.info(`PR #${pull.number} is already ${pull.state}; nothing to do.`);
+              return;
+            }
+
+            if (pull.draft) {
+              core.info(`PR #${pull.number} is a draft; skipping.`);
+              return;
+            }
+
+            await github.rest.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pull.number,
+              merge_method: "squash",
+            });
+
+            core.info(`Merged Dependabot PR #${pull.number}.`);
