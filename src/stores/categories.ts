@@ -323,7 +323,7 @@ export const useCategoryStore = defineStore('categories', {
       const parent_depth = old_class.name.length;
 
       if (new_class.id === undefined || new_class.id === null) {
-        new_class.id = _.max(_.map(this.classes, 'id')) + 1;
+        new_class.id = (_.max(_.map(this.classes, 'id')) ?? -1) + 1;
         this.classes.push(new_class);
       } else {
         Object.assign(old_class, new_class);
@@ -345,10 +345,11 @@ export const useCategoryStore = defineStore('categories', {
 
       this.classes_unsaved_changes = true;
     },
-    addClass(this: State, new_class: Category) {
-      new_class.id = _.max(_.map(this.classes, 'id')) + 1;
+    addClass(this: State, new_class: Category): number {
+      new_class.id = (_.max(_.map(this.classes, 'id')) ?? -1) + 1;
       this.classes.push(new_class);
       this.classes_unsaved_changes = true;
+      return new_class.id;
     },
     removeClass(this: State, classId: number) {
       this.classes = this.classes.filter((c: Category) => c.id !== classId);
