@@ -13,7 +13,8 @@ div
     div.d-flex.justify-content-between.align-items-start.mb-2
       div.d-flex.align-items-center
         icon.mr-2.text-muted(v-if="device.hostname === 'unknown'" name="question" scale="1.2")
-        icon.mr-2.text-secondary(v-else, name="desktop" scale="1.2")
+        icon.mr-2.text-secondary(v-else-if="bucketsStore.available(device.hostname).android" name="mobile" scale="1.2")
+        icon.mr-2.text-secondary(v-else name="desktop" scale="1.2")
         div
           span.font-weight-bold {{ device.hostname }}
           b-badge.ml-2(v-if="serverStore.info.hostname == device.hostname" variant="info") {{ $t('buckets.thisDevice') }}
