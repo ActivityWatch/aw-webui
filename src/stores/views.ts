@@ -54,7 +54,7 @@ const desktopViews: View[] = [
   },
 ];
 
-const androidViews = [
+export const androidViews: View[] = [
   {
     id: 'summary',
     name: 'Summary',
