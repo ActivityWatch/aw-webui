@@ -59,10 +59,10 @@ import 'vue-awesome/icons/times';
 import 'vue-awesome/icons/trash';
 import 'vue-awesome/icons/undo';
 
-import { mapState } from 'pinia';
 import draggable from 'vuedraggable';
 
-import { useViewsStore } from '~/stores/views';
+import { useViewsStore, androidViews } from '~/stores/views';
+import { useBucketsStore } from '~/stores/buckets';
 
 export default {
   name: 'ActivityView',
@@ -73,10 +73,23 @@ export default {
     view_id: { type: String, default: 'default' },
   },
   data() {
-    return { editing: false };
+    return { editing: false, bucketsStore: useBucketsStore() };
   },
   computed: {
-    ...mapState(useViewsStore, ['views']),
+    views: function () {
+      // Use Android views when the current host is an Android device.
+      // Mirrors the same runtime check in Activity.vue so the child view
+      // resolves its elements from the correct view list instead of always
+      // falling back to the stored desktop views.
+      const host = this.$route.params.host;
+      if (host) {
+        const available = this.bucketsStore.available(host);
+        if (available.android && !available.window) {
+          return androidViews;
+        }
+      }
+      return useViewsStore().views;
+    },
     view: function () {
       if (this.view_id == 'default') {
         return this.views[0];
