@@ -275,7 +275,9 @@ export default {
     };
   },
   computed: {
-    ...mapState(useViewsStore, ['views']),
+    views(): import('~/stores/views').View[] {
+      return this.viewsStore.viewsForHost(this.host);
+    },
     ...mapState(useSettingsStore, ['devmode']),
     ...mapState(useSettingsStore, ['always_active_pattern']),
 

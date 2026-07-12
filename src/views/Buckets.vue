@@ -262,18 +262,13 @@ export default {
           key: 'id',
           label: this.$t('buckets.bucketId'),
           sortable: true,
-          thStyle: { width: '45%' },
-        },
-        {
-          key: 'hostname',
-          sortable: true,
-          thStyle: { width: '25%' },
+          thStyle: { width: '65%' },
         },
         {
           key: 'last_updated',
           label: this.$t('buckets.updated'),
           sortable: true,
-          thStyle: { width: '15%' },
+          thStyle: { width: '20%' },
         },
         {
           key: 'actions',

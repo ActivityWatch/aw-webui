@@ -59,7 +59,6 @@ import 'vue-awesome/icons/times';
 import 'vue-awesome/icons/trash';
 import 'vue-awesome/icons/undo';
 
-import { mapState } from 'pinia';
 import draggable from 'vuedraggable';
 
 import { useViewsStore } from '~/stores/views';
@@ -76,7 +75,9 @@ export default {
     return { editing: false };
   },
   computed: {
-    ...mapState(useViewsStore, ['views']),
+    views: function () {
+      return useViewsStore().viewsForHost(this.$route.params.host || '');
+    },
     view: function () {
       if (this.view_id == 'default') {
         return this.views[0];

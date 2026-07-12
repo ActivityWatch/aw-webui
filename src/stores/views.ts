@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { useSettingsStore } from './settings';
+import { useBucketsStore } from './buckets';
 
 interface IElement {
   type: string;
@@ -54,7 +55,7 @@ const desktopViews: View[] = [
   },
 ];
 
-const androidViews = [
+export const androidViews: View[] = [
   {
     id: 'summary',
     name: 'Summary',
@@ -68,7 +69,6 @@ const androidViews = [
   },
 ];
 
-// FIXME: Decide depending on what kind of device is being viewed, not from which device it is being viewed from.
 export const defaultViews = !process.env.VUE_APP_ON_ANDROID ? desktopViews : androidViews;
 
 interface State {
@@ -106,6 +106,14 @@ export const useViewsStore = defineStore('views', {
     },
     restoreDefaults(this: State) {
       this.views = defaultViews;
+    },
+    viewsForHost(host: string): View[] {
+      const bucketsStore = useBucketsStore();
+      const available = bucketsStore.available(host);
+      if (available.android && !available.window) {
+        return androidViews;
+      }
+      return this.views;
     },
     addView(this: State, view: View) {
       this.views.push({ ...view, elements: [] });
