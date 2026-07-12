@@ -145,20 +145,20 @@ export default {
       }
 
       // Save the category
-      // Guard against null/undefined segments (e.g. when parent is "None" and
-      // subname was never touched, or when a corrupted class was loaded).
+      // Guard against null/undefined/empty segments (e.g. when parent is "None"
+      // and subname was never touched, or when a corrupted class was loaded).
       // Without this, [].concat(null) or [null].concat(x) writes `null` into
       // classes[].name, which the query engine then tries to resolve as the
       // variable `null` and throws QueryInterpretException, breaking all
       // charts that call categorize(). See #1355.
-      const parent = Array.isArray(this.editing.parent) ? this.editing.parent : [];
-      const nameSegments = parent
-        .concat(this.editing.name)
-        .filter(s => s !== null && s !== undefined && s !== '');
-      if (nameSegments.length === 0) {
-        // Nothing valid to save (no parent, no name) — abort silently.
+      const isValid = s => s !== null && s !== undefined && s !== '';
+      const parent = Array.isArray(this.editing.parent) ? this.editing.parent.filter(isValid) : [];
+      // The leaf name must be valid on its own — do NOT let a blank name
+      // silently collapse a child into its parent's path.
+      if (!isValid(this.editing.name)) {
         return;
       }
+      const nameSegments = parent.concat(this.editing.name);
       const new_class = {
         id: this.editing.id,
         name: nameSegments,
