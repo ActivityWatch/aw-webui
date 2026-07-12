@@ -229,8 +229,7 @@ import 'vue-awesome/icons/ellipsis-v';
 import { useSettingsStore } from '~/stores/settings';
 import { useCategoryStore } from '~/stores/categories';
 import { useActivityStore, QueryOptions } from '~/stores/activity';
-import { useViewsStore, androidViews } from '~/stores/views';
-import { useBucketsStore } from '~/stores/buckets';
+import { useViewsStore } from '~/stores/views';
 
 export default {
   name: 'Activity',
@@ -255,7 +254,6 @@ export default {
   data: function () {
     return {
       activityStore: useActivityStore(),
-      bucketsStore: useBucketsStore(),
       categoryStore: useCategoryStore(),
       viewsStore: useViewsStore(),
       settingsStore: useSettingsStore(),
@@ -278,15 +276,7 @@ export default {
   },
   computed: {
     views(): import('~/stores/views').View[] {
-      // Use Android views when the current host is an Android device.
-      // VUE_APP_ON_ANDROID is a build-time flag that only applies when the webui
-      // is embedded in the Android app itself. When browsing Android device data
-      // from a desktop browser we need a runtime check instead.
-      const available = this.bucketsStore.available(this.host);
-      if (available.android && !available.window) {
-        return androidViews;
-      }
-      return this.viewsStore.views;
+      return this.viewsStore.viewsForHost(this.host);
     },
     ...mapState(useSettingsStore, ['devmode']),
     ...mapState(useSettingsStore, ['always_active_pattern']),

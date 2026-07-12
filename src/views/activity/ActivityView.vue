@@ -61,8 +61,7 @@ import 'vue-awesome/icons/undo';
 
 import draggable from 'vuedraggable';
 
-import { useViewsStore, androidViews } from '~/stores/views';
-import { useBucketsStore } from '~/stores/buckets';
+import { useViewsStore } from '~/stores/views';
 
 export default {
   name: 'ActivityView',
@@ -73,22 +72,11 @@ export default {
     view_id: { type: String, default: 'default' },
   },
   data() {
-    return { editing: false, bucketsStore: useBucketsStore() };
+    return { editing: false };
   },
   computed: {
     views: function () {
-      // Use Android views when the current host is an Android device.
-      // Mirrors the same runtime check in Activity.vue so the child view
-      // resolves its elements from the correct view list instead of always
-      // falling back to the stored desktop views.
-      const host = this.$route.params.host;
-      if (host) {
-        const available = this.bucketsStore.available(host);
-        if (available.android && !available.window) {
-          return androidViews;
-        }
-      }
-      return useViewsStore().views;
+      return useViewsStore().viewsForHost(this.$route.params.host || '');
     },
     view: function () {
       if (this.view_id == 'default') {
