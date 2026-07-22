@@ -2,7 +2,7 @@
 div
   div.row.py-2.class
     div.col-8.col-md-4
-      span(:style="{ marginLeft: (1.5 * depth) + 'em', cursor: _class.children.length > 0 ? 'pointer' : null}" @click="expanded = !expanded")
+      span(:style="{ marginLeft: (1.5 * depth) + 'em', cursor: _class.children.length > 0 ? 'pointer' : null }" @click="expanded = !expanded")
         span(v-if="_class.children.length > 0" style="opacity: 0.8")
           icon(:name="expanded ? 'regular/minus-square' : 'regular/plus-square'" scale="0.8")
         span(v-else style="opacity: 0.6")
@@ -16,7 +16,10 @@ div
 
     div.col-4.col-md-8
       span.d-none.d-md-inline
-        span(v-if="_class.rule.type === 'regex'") Rule ({{_class.rule.type}}): #[code {{_class.rule.regex}}]
+        span(v-if="_class.rule.type === 'regex'")
+          | Rule ({{_class.rule.type}}):
+          div.rule-item(v-for="(pat, indx) in splitRegex(_class.rule.regex)" :key="indx") 
+            code(:style='{ color: "#d63384 !important" }') {{ pat }}
         span.text-muted(v-else) No rule
       span.float-right
         b-btn.ml-1.border-0(size="sm", variant="outline-secondary", @click="showEditModal(_class.id)" pill)
@@ -42,6 +45,7 @@ import 'vue-awesome/icons/edit';
 
 import CategoryEditModal from './CategoryEditModal.vue';
 import { useCategoryStore } from '~/stores/categories';
+import { splitRegexPipe } from '~/util/validate';
 
 import _ from 'lodash';
 
@@ -97,6 +101,9 @@ export default {
     },
     hideEditModal: function () {
       this.editingId = null;
+    },
+    splitRegex: function (regex: string): string[] {
+      return splitRegexPipe(regex);
     },
   },
 };
