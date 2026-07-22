@@ -42,7 +42,7 @@ div
       h4 {{ $t('home.supportTitle') }}
       p
         | {{ $t('home.subscribeIntro') }}
-        |  #[a(href="https://activitywatch.net/subscribe?src=inapp-home") {{ $t('home.subscribeCta') }}]
+        |  #[a(href="https://activitywatch.net/go/?src=inapp-home") {{ $t('home.subscribeCta') }}]
       p
         | {{ $t('home.support1') }}
       ul
