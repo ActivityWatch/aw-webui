@@ -136,6 +136,7 @@ const SRC_REGULAR = 'inapp-regular';
 let engagementActiveSince: number | null = null;
 let engagementInterval: ReturnType<typeof setInterval> | null = null;
 let engagementChangeHandler: (() => void) | null = null;
+let supporterStorageHandler: ((event: StorageEvent) => void) | null = null;
 
 function localDateStr(d: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -167,10 +168,12 @@ export default {
   mounted() {
     // Best-effort: must never block or break the Home render.
     this.evaluateSupporterNudge();
+    this.startSupporterStorageSync();
     // Track ongoing webui engagement (client-side only) for the retention signal.
     this.startEngagementTracking();
   },
   beforeDestroy() {
+    this.stopSupporterStorageSync();
     this.stopEngagementTracking();
   },
   methods: {
@@ -223,6 +226,28 @@ export default {
         return localStorage.getItem(SUPPORTER_FLAG_KEY) === 'true';
       } catch {
         return false;
+      }
+    },
+
+    startSupporterStorageSync(): void {
+      supporterStorageHandler = (event: StorageEvent) => {
+        if (
+          event.key === SUPPORTER_NUDGE_DISMISS_KEY ||
+          event.key === SUPPORTER_FLAG_KEY ||
+          event.key === null
+        ) {
+          if (this.isSupporterNudgeSnoozed() || this.isSupporter()) {
+            this.supporterNudgeVisible = false;
+          }
+        }
+      };
+      window.addEventListener('storage', supporterStorageHandler);
+    },
+
+    stopSupporterStorageSync(): void {
+      if (supporterStorageHandler) {
+        window.removeEventListener('storage', supporterStorageHandler);
+        supporterStorageHandler = null;
       }
     },
 
