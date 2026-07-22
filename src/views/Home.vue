@@ -97,7 +97,6 @@ import moment from 'moment';
 import { mapState } from 'pinia';
 import { useServerStore } from '~/stores/server';
 import { useBucketsStore } from '~/stores/buckets';
-import { getClient } from '~/util/awclient';
 import { IBucket } from '~/util/interfaces';
 
 // "Support ActivityWatch" nudge — engagement-gated, dismissable, never modal.
@@ -112,10 +111,18 @@ const INSTALL_AGE_DAYS = 30;
 // Signal 2 — power-user setup.
 const POWER_USER_MIN_BUCKETS = 6;
 const POWER_USER_MIN_HOSTS = 2;
-// Signal 3 — retention / regular use: several active days across the month.
-const RETENTION_LOOKBACK_DAYS = 30;
-const ACTIVE_DAY_MIN_MINUTES = 10; // a day counts as "active" above this much not-afk time
-const ACTIVE_DAYS_THRESHOLD = 8; // trigger if >= this many active days in the lookback
+// Signal 3 — retention / regular use: the user actively OPENS AND LOOKS AT the
+// webui on several distinct days (real product engagement — they come back to
+// check their data), tracked purely client-side (localStorage, no server query).
+// NOTE: this accumulates only AFTER this feature ships (localStorage starts
+// empty), so it is forward-looking: a brand-new install won't fire it for the
+// first ~week of use. That's intended — install-age (tenure) and setup cover
+// existing users retroactively; this one rewards ongoing engagement.
+const ENGAGED_DAYS_KEY = 'aw-engaged-days'; // array of local YYYY-MM-DD dates
+const ENGAGED_SECONDS_KEY = 'aw-engaged-seconds-today'; // partial accrual for today
+const ENGAGED_DAY_MIN_SECONDS = 10; // active viewing today needed to count the day
+const ENGAGED_DAYS_LOOKBACK_DAYS = 30;
+const ENGAGED_DAYS_THRESHOLD = 5; // fire if >= this many engaged days in the lookback
 
 // GA src tags, one per triggering signal, so the /go/ redirect reveals which
 // indicator actually converts. Support-button src = the highest-priority
@@ -123,6 +130,17 @@ const ACTIVE_DAYS_THRESHOLD = 8; // trigger if >= this many active days in the l
 const SRC_TENURE = 'inapp-tenure';
 const SRC_SETUP = 'inapp-setup';
 const SRC_REGULAR = 'inapp-regular';
+
+// Engagement-tracking state (module-scoped: only one Home is mounted at a time).
+// "Active" = the webui tab is visible AND focused; we accumulate seconds while so.
+let engagementActiveSince: number | null = null;
+let engagementInterval: ReturnType<typeof setInterval> | null = null;
+let engagementChangeHandler: (() => void) | null = null;
+
+function localDateStr(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
 
 export default {
   name: 'Home',
@@ -149,6 +167,11 @@ export default {
   mounted() {
     // Best-effort: must never block or break the Home render.
     this.evaluateSupporterNudge();
+    // Track ongoing webui engagement (client-side only) for the retention signal.
+    this.startEngagementTracking();
+  },
+  beforeDestroy() {
+    this.stopEngagementTracking();
   },
   methods: {
     async evaluateSupporterNudge(): Promise<void> {
@@ -168,9 +191,8 @@ export default {
           return;
         }
 
-        // Retention signal — best-effort, never blocks render.
-        const isRegular = await this.hasRegularUsage(buckets).catch(() => false);
-        if (isRegular) this.showSupporterNudge(SRC_REGULAR);
+        // Retention signal — client-side localStorage check, never errors render.
+        if (this.hasRegularEngagement()) this.showSupporterNudge(SRC_REGULAR);
       } catch (e) {
         // Swallow: the nudge is entirely optional, Home must still render.
         console.warn('Supporter nudge evaluation skipped:', e);
@@ -225,50 +247,115 @@ export default {
       return null;
     },
 
-    // Signal 3 — retention / regular use. Counts days in the last 30 with at
-    // least ACTIVE_DAY_MIN_MINUTES of not-afk (active) time. Reuses the same
-    // aw-client query2 infra; all local. Best-effort.
-    async hasRegularUsage(buckets: IBucket[]): Promise<boolean> {
-      const escape = (id: string) => id.replace(/"/g, '\\"');
-      const afkBuckets = buckets.filter(b => b.type === 'afkstatus').map(b => escape(b.id));
-      const androidBuckets = buckets
-        .filter(b => b.type === 'currentwindow' && b.id.startsWith('aw-watcher-android'))
-        .map(b => escape(b.id));
-
-      // Per-day not-afk seconds. On desktop, sum not-afk time from afk buckets;
-      // on Android (no afk buckets) treat all logged window time as active.
-      let query: string[];
-      if (afkBuckets.length > 0) {
-        query = ['not_afk = [];'];
-        for (const id of afkBuckets) {
-          query.push(`not_afk_curr = query_bucket("${id}");`);
-          query.push('not_afk_curr = filter_keyvals(not_afk_curr, "status", ["not-afk"]);');
-          query.push('not_afk = union_no_overlap(not_afk, not_afk_curr);');
-        }
-        query.push('RETURN = sum_durations(not_afk);');
-      } else if (androidBuckets.length > 0) {
-        query = ['events = [];'];
-        for (const id of androidBuckets) {
-          query.push(`events = concat(events, query_bucket("${id}"));`);
-        }
-        query.push('RETURN = sum_durations(events);');
-      } else {
+    // Signal 3 — retention / regular use. Purely client-side: fires if the
+    // user has actively opened+viewed the webui on >= ENGAGED_DAYS_THRESHOLD
+    // distinct days within the lookback window. No server query.
+    hasRegularEngagement(): boolean {
+      try {
+        return this.readEngagedDaysWithinLookback().length >= ENGAGED_DAYS_THRESHOLD;
+      } catch {
         return false;
       }
+    },
 
-      // One day-long period per day in the lookback window.
-      const periods: string[] = [];
-      for (let i = 0; i < RETENTION_LOOKBACK_DAYS; i++) {
-        const dayStart = moment().subtract(i, 'days').startOf('day');
-        periods.push(`${dayStart.format()}/${dayStart.clone().add(1, 'day').format()}`);
+    // Read the recorded engaged-day dates, pruned to the lookback window.
+    readEngagedDaysWithinLookback(): string[] {
+      let days: string[] = [];
+      try {
+        const raw = localStorage.getItem(ENGAGED_DAYS_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) days = parsed.filter(d => typeof d === 'string');
+        }
+      } catch {
+        return [];
       }
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - ENGAGED_DAYS_LOOKBACK_DAYS);
+      const cutoffStr = localDateStr(cutoff);
+      // YYYY-MM-DD sorts lexicographically by date; keep unique in-window dates.
+      return [...new Set(days)].filter(d => d >= cutoffStr).sort();
+    },
 
-      const results = await getClient().query(periods, query, { name: 'supporterRetention' });
-      const minSeconds = ACTIVE_DAY_MIN_MINUTES * 60;
-      const activeDays = (Array.isArray(results) ? results : []).filter(
-        (s: unknown) => typeof s === 'number' && s >= minSeconds
-      ).length;
-      return activeDays >= ACTIVE_DAYS_THRESHOLD;
+    // --- Client-side engagement tracking -------------------------------------
+    // "Active" = the webui tab is visible (Page Visibility API) AND focused.
+    // We accumulate active seconds for today; once past ENGAGED_DAY_MIN_SECONDS
+    // we record today's date. localStorage-only, cannot error the render.
+
+    startEngagementTracking(): void {
+      if (typeof document === 'undefined') return;
+      engagementChangeHandler = () => this.updateEngagementActive();
+      document.addEventListener('visibilitychange', engagementChangeHandler);
+      window.addEventListener('focus', engagementChangeHandler);
+      window.addEventListener('blur', engagementChangeHandler);
+      // Periodic flush so long, uninterrupted visits still get recorded.
+      engagementInterval = setInterval(() => this.flushEngagement(), 5000);
+      engagementActiveSince = null;
+      this.updateEngagementActive();
+    },
+
+    stopEngagementTracking(): void {
+      this.flushEngagement();
+      if (engagementInterval !== null) {
+        clearInterval(engagementInterval);
+        engagementInterval = null;
+      }
+      if (engagementChangeHandler) {
+        document.removeEventListener('visibilitychange', engagementChangeHandler);
+        window.removeEventListener('focus', engagementChangeHandler);
+        window.removeEventListener('blur', engagementChangeHandler);
+        engagementChangeHandler = null;
+      }
+      engagementActiveSince = null;
+    },
+
+    isEngagementActive(): boolean {
+      return document.visibilityState === 'visible' && document.hasFocus();
+    },
+
+    updateEngagementActive(): void {
+      const active = this.isEngagementActive();
+      if (active && engagementActiveSince === null) {
+        engagementActiveSince = Date.now();
+      } else if (!active && engagementActiveSince !== null) {
+        this.flushEngagement();
+        engagementActiveSince = null;
+      }
+    },
+
+    // Add elapsed active time to today's accrual; record the day past threshold.
+    flushEngagement(): void {
+      try {
+        if (engagementActiveSince === null) return;
+        const now = Date.now();
+        const elapsed = (now - engagementActiveSince) / 1000;
+        engagementActiveSince = now;
+        if (elapsed <= 0) return;
+
+        const today = localDateStr(new Date());
+        let seconds = 0;
+        const raw = localStorage.getItem(ENGAGED_SECONDS_KEY);
+        if (raw) {
+          const rec = JSON.parse(raw);
+          if (rec && rec.date === today && typeof rec.seconds === 'number') {
+            seconds = rec.seconds;
+          }
+        }
+        seconds += elapsed;
+        localStorage.setItem(ENGAGED_SECONDS_KEY, JSON.stringify({ date: today, seconds }));
+
+        if (seconds >= ENGAGED_DAY_MIN_SECONDS) this.recordEngagedDay(today);
+      } catch {
+        // Tracking is best-effort; ignore storage/parse failures.
+      }
+    },
+
+    recordEngagedDay(today: string): void {
+      const days = this.readEngagedDaysWithinLookback();
+      if (days.includes(today)) return;
+      days.push(today);
+      // Already pruned to the lookback window by readEngagedDaysWithinLookback.
+      localStorage.setItem(ENGAGED_DAYS_KEY, JSON.stringify([...new Set(days)].sort()));
     },
 
     onSupporterNudgeSupport(): void {
