@@ -185,6 +185,9 @@ export default {
     spreadFollow: '关注我们并传播：',
     spreadStar: '给我们加星：',
     supportTitle: '支持我们！',
+    subscribeIntro:
+      'The best way to keep ActivityWatch maintained is a subscription — from $5/month, every feature stays free, cancel anytime.',
+    subscribeCta: 'Support ActivityWatch →',
     support1:
       '你喜欢 ActivityWatch 吗？它帮到你了吗？通过捐赠帮助我们继续帮助你！你可以通过以下方式捐赠：',
     support2: '更多信息请访问',
