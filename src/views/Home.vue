@@ -5,7 +5,7 @@ div
 
   b-alert.supporter-nudge(v-if="supporterNudgeVisible" show variant="success" dismissible @dismissed="snoozeSupporterNudge")
     span {{ $t('home.supporterNudge.message') }}
-    b-button.ml-2(size="sm" variant="primary" href="https://activitywatch.net/go/?src=inapp-poweruser" target="_blank" @click="onSupporterNudgeSupport") {{ $t('home.supporterNudge.support') }}
+    b-button.ml-2(size="sm" variant="primary" :href="supporterNudgeHref" target="_blank" @click="onSupporterNudgeSupport") {{ $t('home.supporterNudge.support') }}
     b-button.ml-1(size="sm" variant="link" @click="snoozeSupporterNudge") {{ $t('home.supporterNudge.notNow') }}
 
   h3 {{ $t('home.greeting') }}
@@ -106,17 +106,30 @@ import { IBucket } from '~/util/interfaces';
 const SUPPORTER_NUDGE_DISMISS_KEY = 'aw-supporter-nudge-dismissed-until';
 const SUPPORTER_FLAG_KEY = 'aw-supporter'; // honor-system "I already support" flag
 const SNOOZE_DAYS = 90;
+
+// Signal 1 — install tenure.
 const INSTALL_AGE_DAYS = 30;
+// Signal 2 — power-user setup.
 const POWER_USER_MIN_BUCKETS = 6;
 const POWER_USER_MIN_HOSTS = 2;
-const AFFINITY_MIN_SECONDS = 2 * 60 * 60; // ~2h of logged ActivityWatch time
-const AFFINITY_LOOKBACK_DAYS = 90;
+// Signal 3 — retention / regular use: several active days across the month.
+const RETENTION_LOOKBACK_DAYS = 30;
+const ACTIVE_DAY_MIN_MINUTES = 10; // a day counts as "active" above this much not-afk time
+const ACTIVE_DAYS_THRESHOLD = 8; // trigger if >= this many active days in the lookback
+
+// GA src tags, one per triggering signal, so the /go/ redirect reveals which
+// indicator actually converts. Support-button src = the highest-priority
+// matching signal (most -> least predictive of paying): regular > setup > tenure.
+const SRC_TENURE = 'inapp-tenure';
+const SRC_SETUP = 'inapp-setup';
+const SRC_REGULAR = 'inapp-regular';
 
 export default {
   name: 'Home',
   data() {
     return {
       supporterNudgeVisible: false,
+      supporterNudgeSrc: '',
     };
   },
   computed: {
@@ -128,6 +141,9 @@ export default {
     apiBrowserUrl(): string {
       const base = window.location.pathname.replace(/[^/]*$/, '');
       return base + 'api/';
+    },
+    supporterNudgeHref(): string {
+      return `https://activitywatch.net/go/?src=${this.supporterNudgeSrc}`;
     },
   },
   mounted() {
@@ -144,19 +160,26 @@ export default {
         const buckets = bucketsStore.buckets as IBucket[];
         if (!buckets || buckets.length === 0) return;
 
-        // Cheap, synchronous signals first (install age + power-user setup).
-        if (this.hasEngagementSignal(buckets)) {
-          this.supporterNudgeVisible = true;
+        // Cheap, synchronous signals first (setup checked before tenure, since
+        // setup ranks higher when both match).
+        const syncTag = this.syncEngagementTag(buckets);
+        if (syncTag) {
+          this.showSupporterNudge(syncTag);
           return;
         }
 
-        // ActivityWatch-affinity signal — best-effort, never blocks render.
-        const hasAffinity = await this.hasActivityWatchAffinity(buckets).catch(() => false);
-        if (hasAffinity) this.supporterNudgeVisible = true;
+        // Retention signal — best-effort, never blocks render.
+        const isRegular = await this.hasRegularUsage(buckets).catch(() => false);
+        if (isRegular) this.showSupporterNudge(SRC_REGULAR);
       } catch (e) {
         // Swallow: the nudge is entirely optional, Home must still render.
         console.warn('Supporter nudge evaluation skipped:', e);
       }
+    },
+
+    showSupporterNudge(src: string): void {
+      this.supporterNudgeSrc = src;
+      this.supporterNudgeVisible = true;
     },
 
     isSupporterNudgeSnoozed(): boolean {
@@ -179,55 +202,73 @@ export default {
     },
 
     // Signals 1 & 2 — derivable synchronously from getBuckets().
-    hasEngagementSignal(buckets: IBucket[]): boolean {
-      // Signal 1 (primary, cheapest): install age >= 30 days, from the
-      // earliest `created` timestamp across all buckets.
+    // Returns the winning src tag (setup outranks tenure) or null.
+    syncEngagementTag(buckets: IBucket[]): string | null {
+      // Signal 2: power-user setup — many buckets OR multi-host/multi-watcher.
+      // Checked first: outranks tenure when both match.
+      const hostnames = new Set(buckets.map(b => b.hostname).filter(Boolean));
+      if (buckets.length >= POWER_USER_MIN_BUCKETS || hostnames.size >= POWER_USER_MIN_HOSTS) {
+        return SRC_SETUP;
+      }
+
+      // Signal 1 (cheapest): install age >= 30 days, from the earliest
+      // `created` timestamp across all buckets.
       const createds = buckets
         .map(b => (b.created ? new Date(b.created as unknown as string).getTime() : NaN))
         .filter(t => !isNaN(t));
       if (createds.length > 0) {
         const earliest = Math.min(...createds);
         const ageDays = (Date.now() - earliest) / (1000 * 60 * 60 * 24);
-        if (ageDays >= INSTALL_AGE_DAYS) return true;
+        if (ageDays >= INSTALL_AGE_DAYS) return SRC_TENURE;
       }
 
-      // Signal 2: power-user setup — many buckets OR multi-host/multi-watcher.
-      if (buckets.length >= POWER_USER_MIN_BUCKETS) return true;
-      const hostnames = new Set(buckets.map(b => b.hostname).filter(Boolean));
-      if (hostnames.size >= POWER_USER_MIN_HOSTS) return true;
-
-      return false;
+      return null;
     },
 
-    // Signal 3 — ActivityWatch affinity (dogfooder/contributor).
-    // Sums logged window time whose app/title matches "activitywatch".
-    // Reuses the existing aw-client query infra; all local. Best-effort.
-    async hasActivityWatchAffinity(buckets: IBucket[]): Promise<boolean> {
-      const windowBuckets = buckets
-        .filter(b => b.type === 'currentwindow' && !b.id.startsWith('aw-watcher-android'))
-        .map(b => b.id.replace(/"/g, '\\"'));
-      if (windowBuckets.length === 0) return false;
+    // Signal 3 — retention / regular use. Counts days in the last 30 with at
+    // least ACTIVE_DAY_MIN_MINUTES of not-afk (active) time. Reuses the same
+    // aw-client query2 infra; all local. Best-effort.
+    async hasRegularUsage(buckets: IBucket[]): Promise<boolean> {
+      const escape = (id: string) => id.replace(/"/g, '\\"');
+      const afkBuckets = buckets.filter(b => b.type === 'afkstatus').map(b => escape(b.id));
+      const androidBuckets = buckets
+        .filter(b => b.type === 'currentwindow' && b.id.startsWith('aw-watcher-android'))
+        .map(b => escape(b.id));
 
-      const end = moment();
-      const start = moment().subtract(AFFINITY_LOOKBACK_DAYS, 'days');
-      const period = `${start.format()}/${end.format()}`;
-
-      const query: string[] = ['events = [];'];
-      for (const id of windowBuckets) {
-        query.push(`events = concat(events, query_bucket("${id}"));`);
+      // Per-day not-afk seconds. On desktop, sum not-afk time from afk buckets;
+      // on Android (no afk buckets) treat all logged window time as active.
+      let query: string[];
+      if (afkBuckets.length > 0) {
+        query = ['not_afk = [];'];
+        for (const id of afkBuckets) {
+          query.push(`not_afk_curr = query_bucket("${id}");`);
+          query.push('not_afk_curr = filter_keyvals(not_afk_curr, "status", ["not-afk"]);');
+          query.push('not_afk = union_no_overlap(not_afk, not_afk_curr);');
+        }
+        query.push('RETURN = sum_durations(not_afk);');
+      } else if (androidBuckets.length > 0) {
+        query = ['events = [];'];
+        for (const id of androidBuckets) {
+          query.push(`events = concat(events, query_bucket("${id}"));`);
+        }
+        query.push('RETURN = sum_durations(events);');
+      } else {
+        return false;
       }
-      query.push(
-        // (?i) = case-insensitive match, mirroring /activitywatch/i.
-        'app_events = filter_keyvals_regex(events, "app", "(?i)activitywatch");',
-        'title_events = filter_keyvals_regex(events, "title", "(?i)activitywatch");',
-        // union_no_overlap dedups events matching both app and title.
-        'matched = union_no_overlap(app_events, title_events);',
-        'RETURN = sum_durations(matched);'
-      );
 
-      const result = await getClient().query([period], query, { name: 'supporterAffinity' });
-      const seconds = Array.isArray(result) ? result[0] : result;
-      return typeof seconds === 'number' && seconds >= AFFINITY_MIN_SECONDS;
+      // One day-long period per day in the lookback window.
+      const periods: string[] = [];
+      for (let i = 0; i < RETENTION_LOOKBACK_DAYS; i++) {
+        const dayStart = moment().subtract(i, 'days').startOf('day');
+        periods.push(`${dayStart.format()}/${dayStart.clone().add(1, 'day').format()}`);
+      }
+
+      const results = await getClient().query(periods, query, { name: 'supporterRetention' });
+      const minSeconds = ACTIVE_DAY_MIN_MINUTES * 60;
+      const activeDays = (Array.isArray(results) ? results : []).filter(
+        (s: unknown) => typeof s === 'number' && s >= minSeconds
+      ).length;
+      return activeDays >= ACTIVE_DAYS_THRESHOLD;
     },
 
     onSupporterNudgeSupport(): void {
