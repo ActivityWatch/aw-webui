@@ -41,6 +41,9 @@ div
     div.col-md-6
       h4 {{ $t('home.supportTitle') }}
       p
+        | {{ $t('home.subscribeIntro') }}
+        |  #[a(href="https://activitywatch.net/go/?src=inapp-home") {{ $t('home.subscribeCta') }}]
+      p
         | {{ $t('home.support1') }}
       ul
         li #[a(href="https://www.patreon.com/erikbjare") Patreon]

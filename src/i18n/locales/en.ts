@@ -190,6 +190,9 @@ export default {
     spreadFollow: 'Follow us and spread the word on',
     spreadStar: 'Star us on',
     supportTitle: 'Support us!',
+    subscribeIntro:
+      'The best way to keep ActivityWatch maintained is a subscription — from $5/month, every feature stays free, cancel anytime.',
+    subscribeCta: 'Support ActivityWatch →',
     support1:
       'Do you like ActivityWatch? Has it helped you? Help us help you by donating! You can donate to us via:',
     support2: 'For more info, please visit the',
