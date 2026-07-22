@@ -212,6 +212,12 @@ export default {
     workingOnSuffix: 'für Release-Hinweise.',
     landingHint:
       'Welche Seite beim Öffnen von ActivityWatch erscheint (statt dieser), können Sie in den',
+    supporterNudge: {
+      message:
+        "You've been getting a lot out of ActivityWatch — would you consider supporting its development?",
+      support: 'Support ActivityWatch →',
+      notNow: 'Not now',
+    },
   },
   buckets: {
     title: 'Buckets',

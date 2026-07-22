@@ -209,6 +209,12 @@ export default {
     workingOnMiddle: 'та за проєктом на',
     workingOnSuffix: 'щоб читати нотатки до релізів.',
     landingHint: 'Сторінку при відкритті ActivityWatch (замість цієї) можна змінити в',
+    supporterNudge: {
+      message:
+        "You've been getting a lot out of ActivityWatch — would you consider supporting its development?",
+      support: 'Support ActivityWatch →',
+      notNow: 'Not now',
+    },
   },
   buckets: {
     title: 'Bucket-и',

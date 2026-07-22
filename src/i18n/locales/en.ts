@@ -212,6 +212,12 @@ export default {
     workingOnSuffix: 'for release notes.',
     landingHint:
       'You can change which page opens when you open ActivityWatch (instead of this page) in the',
+    supporterNudge: {
+      message:
+        "You've been getting a lot out of ActivityWatch — would you consider supporting its development?",
+      support: 'Support ActivityWatch →',
+      notNow: 'Not now',
+    },
   },
   buckets: {
     title: 'Buckets',

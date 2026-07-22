@@ -209,6 +209,12 @@ export default {
     workingOnMiddle: 'и за проектом на',
     workingOnSuffix: 'чтобы читать заметки к релизам.',
     landingHint: 'Страницу при открытии ActivityWatch (вместо этой) можно изменить в',
+    supporterNudge: {
+      message:
+        "You've been getting a lot out of ActivityWatch — would you consider supporting its development?",
+      support: 'Support ActivityWatch →',
+      notNow: 'Not now',
+    },
   },
   buckets: {
     title: 'Bucket-и',

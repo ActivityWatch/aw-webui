@@ -206,6 +206,12 @@ export default {
     workingOnMiddle: '了解最新进展，在',
     workingOnSuffix: '上关注项目获取发布说明。',
     landingHint: '你可以在',
+    supporterNudge: {
+      message:
+        "You've been getting a lot out of ActivityWatch — would you consider supporting its development?",
+      support: 'Support ActivityWatch →',
+      notNow: 'Not now',
+    },
   },
   buckets: {
     title: '存储桶',
