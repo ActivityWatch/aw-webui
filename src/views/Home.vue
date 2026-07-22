@@ -200,6 +200,9 @@ export default {
     },
 
     showSupporterNudge(src: string): void {
+      // Re-read shared state after async evaluation: another tab may have
+      // snoozed the nudge or marked this user as a supporter in the meantime.
+      if (this.isSupporterNudgeSnoozed() || this.isSupporter()) return;
       this.supporterNudgeSrc = src;
       this.supporterNudgeVisible = true;
     },
