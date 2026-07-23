@@ -53,13 +53,25 @@
  *             (Flatpak app ID retained: 'one.ablaze.floorp')
  */
 
-import { browser_appname_regex } from '~/queries';
+import { browser_appname_regex, fullDesktopQuery } from '~/queries';
 
 // Convert ActivityWatch (?i) patterns to JS RegExp with i flag for testing.
 // AW server uses Python-style (?i) inline flag; JS uses RegExp 'i' flag instead.
 function toRegex(pattern: string): RegExp {
   const stripped = pattern.replace(/^\(\?i\)/, '');
   return new RegExp(stripped, 'i');
+}
+
+function browserQueryForBuckets(bid_browsers: string[]): string {
+  return fullDesktopQuery({
+    bid_window: 'aw-watcher-window_testhost',
+    bid_afk: 'aw-watcher-afk_testhost',
+    bid_browsers,
+    filter_afk: true,
+    categories: [],
+    filter_categories: [],
+    include_audible: false,
+  }).join('\n');
 }
 
 describe('browser_appname_regex', () => {
@@ -93,6 +105,29 @@ describe('browser_appname_regex', () => {
     expect(re.test('com.google.Chrome')).toBe(false);
     expect(re.test('Slack')).toBe(false);
     expect(re.test('Electron')).toBe(false);
+  });
+
+  test('chrome web watcher bucket matches Helium when there is no Helium bucket', () => {
+    const query = browserQueryForBuckets(['aw-watcher-web-chrome_testhost']);
+    expect(query).toContain(
+      'window_chrome_re = filter_keyvals_regex(events, "app", "(?i)^(google[-_ ]?chrome|chrome|chromium|helium)")'
+    );
+  });
+
+  test('chrome web watcher bucket does not match Helium when a Helium bucket exists', () => {
+    const query = browserQueryForBuckets([
+      'aw-watcher-web-chrome_testhost',
+      'aw-watcher-web-helium_testhost',
+    ]);
+    expect(query).toContain(
+      'window_chrome_re = filter_keyvals_regex(events, "app", "(?i)^(google[-_ ]?chrome|chrome|chromium)")'
+    );
+    expect(query).toContain(
+      'window_helium_re = filter_keyvals_regex(events, "app", "(?i)(helium)")'
+    );
+    expect(query).not.toContain(
+      'window_chrome_re = filter_keyvals_regex(events, "app", "(?i)^(google[-_ ]?chrome|chrome|chromium|helium)")'
+    );
   });
 
   test('firefox pattern matches all known Firefox/LibreWolf/Waterfox app names', () => {

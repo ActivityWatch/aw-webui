@@ -245,11 +245,21 @@ const browser_appnames: Record<string, string[]> = {
 };
 
 // Returns a list of (browserName, bucketId) pairs for found browser buckets
+function browserBucketMatches(bucketId: string, browserName: string): boolean {
+  return _.includes(bucketId, browserName);
+}
+
+function browserBucketExists(browserbuckets: string[], browserName: string): boolean {
+  return _.some(browserbuckets, bucket_id => browserBucketMatches(bucket_id, browserName));
+}
+
 function browsersWithBuckets(browserbuckets: string[]): [string, string][] {
   const browsername_to_bucketid: [string, string | undefined][] = _.map(
     Object.keys(browser_appnames),
     browserName => {
-      const bucketId = _.find(browserbuckets, bucket_id => _.includes(bucket_id, browserName));
+      const bucketId = _.find(browserbuckets, bucket_id =>
+        browserBucketMatches(bucket_id, browserName)
+      );
       return [browserName, bucketId];
     }
   );
@@ -262,8 +272,11 @@ function browsersWithBuckets(browserbuckets: string[]): [string, string][] {
 // Used with filter_keyvals_regex in addition to the exact names in browser_appnames.
 // The full set of historical app names these patterns replace is documented in the unit tests.
 // See: test/unit/queries.test.node.ts, https://github.com/ActivityWatch/aw-webui/issues/749
+const chrome_appname_regex = '(?i)^(google[-_ ]?chrome|chrome|chromium)';
+const chrome_appname_regex_with_helium = '(?i)^(google[-_ ]?chrome|chrome|chromium|helium)';
+
 export const browser_appname_regex: Record<string, string> = {
-  chrome: '(?i)^(google[-_ ]?chrome|chrome|chromium)',
+  chrome: chrome_appname_regex,
   firefox: '(?i)(firefox|librewolf|waterfox|nightly)',
   opera: '(?i)(opera)',
   brave: '(?i)(brave)',
@@ -277,6 +290,15 @@ export const browser_appname_regex: Record<string, string> = {
   helium: '(?i)(helium)',
 };
 
+function browserAppnameRegex(browserName: string, browserbuckets: string[]): string | undefined {
+  // Helium can use the Chrome Web Store extension, which emits aw-watcher-web-chrome buckets.
+  // Only match Helium there when no dedicated Helium bucket exists, to avoid double-counting.
+  if (browserName === 'chrome' && !browserBucketExists(browserbuckets, 'helium')) {
+    return chrome_appname_regex_with_helium;
+  }
+  return browser_appname_regex[browserName];
+}
+
 // Returns a list of active browser events (where the browser was the active window) from all browser buckets
 function browserEvents(params: DesktopQueryParams): string {
   let code = `
@@ -289,7 +311,7 @@ function browserEvents(params: DesktopQueryParams): string {
        window_${browserName} = filter_keyvals(events, "app", ${browser_appnames_str});`;
 
     // Add regex-based matching to cover case/spacing/versioning variants (e.g., Firefox.exe, firefox-esr-esr140)
-    const pattern = browser_appname_regex[browserName];
+    const pattern = browserAppnameRegex(browserName, params.bid_browsers);
     if (pattern) {
       code += `
        window_${browserName}_re = filter_keyvals_regex(events, "app", ${JSON.stringify(pattern)});
