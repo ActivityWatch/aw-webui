@@ -550,7 +550,11 @@ export const useActivityStore = defineStore('activity', {
           }
         }
 
-        const isAndroid = this.buckets.android[0] !== undefined;
+        // Prefer ScreenTime bucket over Android watcher for consistency with query_android
+        const iosOrAndroidBucket =
+          this.buckets.android.find((id: string) => id.startsWith('aw-import-screentime')) ||
+          this.buckets.android[0];
+        const isAndroid = iosOrAndroidBucket !== undefined;
         const categories = useCategoryStore().classes_for_query;
         // TODO: Clean up call, pass QueryParams in fullDesktopQuery as well
         // TODO: Unify QueryOptions and QueryParams
@@ -566,7 +570,7 @@ export const useActivityStore = defineStore('activity', {
           always_active_pattern,
           ...(isAndroid
             ? {
-                bid_android: this.buckets.android[0],
+                bid_android: iosOrAndroidBucket,
               }
             : {
                 bid_afk: this.buckets.afk[0],
@@ -592,9 +596,13 @@ export const useActivityStore = defineStore('activity', {
       const periods = timeperiodStrsAroundTimeperiod(timeperiod).filter(tp_str => {
         return !_.includes(this.active.history, tp_str);
       });
+      // Prefer ScreenTime bucket over Android watcher for consistency with query_android
+      const iosOrAndroidBucket =
+        this.buckets.android.find((id: string) => id.startsWith('aw-import-screentime')) ||
+        this.buckets.android[0];
       const data = await getClient().query(
         periods,
-        queries.activityQueryAndroid(this.buckets.android[0])
+        queries.activityQueryAndroid(iosOrAndroidBucket)
       );
       const active_history = _.zipObject(periods, data);
       const active_history_events = _.mapValues(
