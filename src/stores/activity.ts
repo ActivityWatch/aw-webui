@@ -114,6 +114,10 @@ interface State {
     available: boolean;
   };
 
+  ios: {
+    available: boolean;
+  };
+
   stopwatch: {
     available: boolean;
     top_stopwatches: IEvent[];
@@ -177,6 +181,10 @@ export const useActivityStore = defineStore('activity', {
     },
 
     android: {
+      available: false,
+    },
+
+    ios: {
       available: false,
     },
 
@@ -311,12 +319,58 @@ export const useActivityStore = defineStore('activity', {
     async query_android({ timeperiod, filter_categories }: QueryOptions) {
       const periods = [timeperiodToStr(timeperiod)];
       const categoryStore = useCategoryStore();
+
+      // Prefer the ScreenTime bucket when both Android watcher and ScreenTime buckets
+      // exist for the same host (hybrid case). Without this, android[0] is the Android
+      // watcher bucket, isIos is false, and ScreenTime data is never processed.
+      const iosBucket = this.buckets.android.find((id: string) =>
+        id.startsWith('aw-import-screentime')
+      );
+      const selectedBucket = iosBucket || this.buckets.android[0];
+
       const q = queries.appQuery(
-        this.buckets.android[0],
+        selectedBucket,
         categoryStore.classes_for_query,
         filter_categories
       );
       const data = await getClient().query(periods, q).catch(this.errorHandler);
+
+      // Post-process for iOS compatibility (swap app <-> title)
+      const isIos = !!iosBucket;
+
+      if (isIos && data && data[0] && data[0].title_events) {
+        // Build bundle ID → human name lookup from title_events before modifying them.
+        // title_events has 'app' = bundle ID and 'title' = human-readable name.
+        // For ScreenTime imports each bundle ID maps to exactly one human-readable name,
+        // so the server's top-100 title groups and top-100 app groups rank identically —
+        // this lookup covers every app_events entry. Apps with no title fall back to the
+        // raw bundle ID via the `|| bundleId` guard below.
+        const bundleIdToName: Record<string, string> = {};
+        data[0].title_events.forEach((e: IEvent) => {
+          if (e.data.title && !bundleIdToName[e.data.app]) {
+            bundleIdToName[e.data.app] = e.data.title;
+          }
+        });
+
+        // Remap title_events: swap bundle ID → human name, store bundle ID as classname.
+        data[0].title_events.forEach((e: IEvent) => {
+          const originalApp = e.data.app;
+          e.data.classname = originalApp; // Bundle ID (e.g. com.google.ios.youtube)
+          e.data.app = e.data.title || originalApp; // Human name (e.g. YouTube), or bundle ID if absent
+        });
+
+        // Remap app_events directly using the lookup, preserving the server's complete aggregation.
+        // Re-aggregating from title_events would corrupt totals when there are >100 distinct apps,
+        // because title_events is capped at 100 entries by the query.
+        if (data[0].app_events) {
+          data[0].app_events.forEach((e: IEvent) => {
+            const bundleId = e.data.app;
+            e.data.classname = bundleId;
+            e.data.app = bundleIdToName[bundleId] || bundleId;
+          });
+        }
+      }
+
       this.query_window_completed(data[0]);
     },
 
@@ -496,7 +550,11 @@ export const useActivityStore = defineStore('activity', {
           }
         }
 
-        const isAndroid = this.buckets.android[0] !== undefined;
+        // Prefer ScreenTime bucket over Android watcher for consistency with query_android
+        const iosOrAndroidBucket =
+          this.buckets.android.find((id: string) => id.startsWith('aw-import-screentime')) ||
+          this.buckets.android[0];
+        const isAndroid = iosOrAndroidBucket !== undefined;
         const categories = useCategoryStore().classes_for_query;
         // TODO: Clean up call, pass QueryParams in fullDesktopQuery as well
         // TODO: Unify QueryOptions and QueryParams
@@ -512,7 +570,7 @@ export const useActivityStore = defineStore('activity', {
           always_active_pattern,
           ...(isAndroid
             ? {
-                bid_android: this.buckets.android[0],
+                bid_android: iosOrAndroidBucket,
               }
             : {
                 bid_afk: this.buckets.afk[0],
@@ -538,9 +596,13 @@ export const useActivityStore = defineStore('activity', {
       const periods = timeperiodStrsAroundTimeperiod(timeperiod).filter(tp_str => {
         return !_.includes(this.active.history, tp_str);
       });
+      // Prefer ScreenTime bucket over Android watcher for consistency with query_android
+      const iosOrAndroidBucket =
+        this.buckets.android.find((id: string) => id.startsWith('aw-import-screentime')) ||
+        this.buckets.android[0];
       const data = await getClient().query(
         periods,
-        queries.activityQueryAndroid(this.buckets.android[0])
+        queries.activityQueryAndroid(iosOrAndroidBucket)
       );
       const active_history = _.zipObject(periods, data);
       const active_history_events = _.mapValues(
@@ -562,6 +624,7 @@ export const useActivityStore = defineStore('activity', {
       this.active.available = this.buckets.afk.length > 0;
       this.editor.available = this.buckets.editor.length > 0;
       this.android.available = this.buckets.android.length > 0;
+      this.ios.available = this.buckets.android.some(id => id.startsWith('aw-import-screentime'));
       this.category.available = this.window.available || this.android.available;
       this.stopwatch.available = this.buckets.stopwatch.length > 0;
     },
