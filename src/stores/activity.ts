@@ -325,6 +325,10 @@ export const useActivityStore = defineStore('activity', {
       if (isIos && data && data[0] && data[0].title_events) {
         // Build bundle ID → human name lookup from title_events before modifying them.
         // title_events has 'app' = bundle ID and 'title' = human-readable name.
+        // For ScreenTime imports each bundle ID maps to exactly one human-readable name,
+        // so the server's top-100 title groups and top-100 app groups rank identically —
+        // this lookup covers every app_events entry. Apps with no title fall back to the
+        // raw bundle ID via the `|| bundleId` guard below.
         const bundleIdToName: Record<string, string> = {};
         data[0].title_events.forEach((e: IEvent) => {
           if (e.data.title && !bundleIdToName[e.data.app]) {

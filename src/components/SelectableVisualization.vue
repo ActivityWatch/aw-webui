@@ -209,7 +209,7 @@ export default {
         },
         top_bundle_ids: {
           title: 'Bundle IDs',
-          available: this.activityStore.window.available || this.activityStore.android.available,
+          available: this.activityStore.android.available,
         },
         top_domains: {
           title: 'Top Browser Domains',
