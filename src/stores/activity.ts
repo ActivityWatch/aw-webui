@@ -324,29 +324,29 @@ export const useActivityStore = defineStore('activity', {
 
       if (isIos && data && data[0] && data[0].title_events) {
         data[0].title_events.forEach((e: IEvent) => {
-          // iOS events have 'app' (bundleID) and 'title'. We swap them.
-          // Check if title exists to avoid overwriting with undefined
-          if (e.data.title) {
-            const originalApp = e.data.app;
-            e.data.classname = originalApp; // Bundle ID (e.g. com.google.ios.youtube)
-            e.data.app = e.data.title; // Human Name (e.g. YouTube)
-          }
+          // iOS events: 'app' = bundle ID, 'title' = human-readable name.
+          // Always remap so downstream sees human names as 'app' and bundle IDs as 'classname'.
+          // Fall back to the bundle ID as app name when 'title' is missing so no events are dropped.
+          const originalApp = e.data.app;
+          e.data.classname = originalApp; // Bundle ID (e.g. com.google.ios.youtube)
+          e.data.app = e.data.title || originalApp; // Human name (e.g. YouTube), or bundle ID if absent
         });
 
-        // Re-aggregate app_events from the modified title_events
+        // Re-aggregate app_events from the modified title_events, preserving classname and title
+        // so downstream visualizations (e.g. Bundle IDs view) can access them.
         const new_app_events_map: Record<string, IEvent> = {};
         data[0].title_events.forEach((e: IEvent) => {
           const app = e.data.app;
           if (!new_app_events_map[app]) {
-            // Clone event to avoid reference issues
-            new_app_events_map[app] = { ...e, duration: 0, data: { ...e.data } };
-            // Ensure we only keep the 'app' key for app_events to match standard structure
-            new_app_events_map[app].data = { app: app, $category: e.data.$category };
+            new_app_events_map[app] = {
+              ...e,
+              duration: 0,
+              data: { app, classname: e.data.classname, title: e.data.title, $category: e.data.$category },
+            };
           }
           new_app_events_map[app].duration += e.duration;
         });
 
-        // Sort by duration desc
         data[0].app_events = _.orderBy(_.values(new_app_events_map), ['duration'], ['desc']);
       }
 

@@ -120,6 +120,8 @@ export const useBucketsStore = defineStore('buckets', {
         const android = this.bucketsByType(host, 'currentwindow').filter((id: string) =>
           id.startsWith('aw-watcher-android')
         );
+        // aw-import-screentime uses bucket type 'app'; filter by name prefix to avoid
+        // matching unrelated 'app'-type buckets from other sources.
         const ios = this.bucketsByType(host, 'app').filter((id: string) =>
           id.startsWith('aw-import-screentime')
         );
