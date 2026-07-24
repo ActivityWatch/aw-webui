@@ -319,16 +319,24 @@ export const useActivityStore = defineStore('activity', {
     async query_android({ timeperiod, filter_categories }: QueryOptions) {
       const periods = [timeperiodToStr(timeperiod)];
       const categoryStore = useCategoryStore();
+
+      // Prefer the ScreenTime bucket when both Android watcher and ScreenTime buckets
+      // exist for the same host (hybrid case). Without this, android[0] is the Android
+      // watcher bucket, isIos is false, and ScreenTime data is never processed.
+      const iosBucket = this.buckets.android.find((id: string) =>
+        id.startsWith('aw-import-screentime')
+      );
+      const selectedBucket = iosBucket || this.buckets.android[0];
+
       const q = queries.appQuery(
-        this.buckets.android[0],
+        selectedBucket,
         categoryStore.classes_for_query,
         filter_categories
       );
       const data = await getClient().query(periods, q).catch(this.errorHandler);
 
       // Post-process for iOS compatibility (swap app <-> title)
-      const androidBucket = this.buckets.android[0];
-      const isIos = androidBucket && androidBucket.startsWith('aw-import-screentime');
+      const isIos = !!iosBucket;
 
       if (isIos && data && data[0] && data[0].title_events) {
         // Build bundle ID → human name lookup from title_events before modifying them.
