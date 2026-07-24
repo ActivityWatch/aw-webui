@@ -205,7 +205,7 @@ export default {
         },
         top_titles: {
           title: 'Top Window Titles',
-          available: this.activityStore.window.available || this.activityStore.android.available,
+          available: this.activityStore.window.available,
         },
         top_bundle_ids: {
           title: 'Bundle IDs',

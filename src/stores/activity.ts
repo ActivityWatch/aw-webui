@@ -323,36 +323,32 @@ export const useActivityStore = defineStore('activity', {
       const isIos = androidBucket && androidBucket.startsWith('aw-import-screentime');
 
       if (isIos && data && data[0] && data[0].title_events) {
+        // Build bundle ID → human name lookup from title_events before modifying them.
+        // title_events has 'app' = bundle ID and 'title' = human-readable name.
+        const bundleIdToName: Record<string, string> = {};
         data[0].title_events.forEach((e: IEvent) => {
-          // iOS events: 'app' = bundle ID, 'title' = human-readable name.
-          // Always remap so downstream sees human names as 'app' and bundle IDs as 'classname'.
-          // Fall back to the bundle ID as app name when 'title' is missing so no events are dropped.
+          if (e.data.title && !bundleIdToName[e.data.app]) {
+            bundleIdToName[e.data.app] = e.data.title;
+          }
+        });
+
+        // Remap title_events: swap bundle ID → human name, store bundle ID as classname.
+        data[0].title_events.forEach((e: IEvent) => {
           const originalApp = e.data.app;
           e.data.classname = originalApp; // Bundle ID (e.g. com.google.ios.youtube)
           e.data.app = e.data.title || originalApp; // Human name (e.g. YouTube), or bundle ID if absent
         });
 
-        // Re-aggregate app_events from the modified title_events, preserving classname and title
-        // so downstream visualizations (e.g. Bundle IDs view) can access them.
-        const new_app_events_map: Record<string, IEvent> = {};
-        data[0].title_events.forEach((e: IEvent) => {
-          const app = e.data.app;
-          if (!new_app_events_map[app]) {
-            new_app_events_map[app] = {
-              ...e,
-              duration: 0,
-              data: {
-                app,
-                classname: e.data.classname,
-                title: e.data.title,
-                $category: e.data.$category,
-              },
-            };
-          }
-          new_app_events_map[app].duration += e.duration;
-        });
-
-        data[0].app_events = _.orderBy(_.values(new_app_events_map), ['duration'], ['desc']);
+        // Remap app_events directly using the lookup, preserving the server's complete aggregation.
+        // Re-aggregating from title_events would corrupt totals when there are >100 distinct apps,
+        // because title_events is capped at 100 entries by the query.
+        if (data[0].app_events) {
+          data[0].app_events.forEach((e: IEvent) => {
+            const bundleId = e.data.app;
+            e.data.classname = bundleId;
+            e.data.app = bundleIdToName[bundleId] || bundleId;
+          });
+        }
       }
 
       this.query_window_completed(data[0]);
