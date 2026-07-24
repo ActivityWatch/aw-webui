@@ -114,6 +114,10 @@ interface State {
     available: boolean;
   };
 
+  ios: {
+    available: boolean;
+  };
+
   stopwatch: {
     available: boolean;
     top_stopwatches: IEvent[];
@@ -177,6 +181,10 @@ export const useActivityStore = defineStore('activity', {
     },
 
     android: {
+      available: false,
+    },
+
+    ios: {
       available: false,
     },
 
@@ -600,6 +608,7 @@ export const useActivityStore = defineStore('activity', {
       this.active.available = this.buckets.afk.length > 0;
       this.editor.available = this.buckets.editor.length > 0;
       this.android.available = this.buckets.android.length > 0;
+      this.ios.available = this.buckets.android.some(id => id.startsWith('aw-import-screentime'));
       this.category.available = this.window.available || this.android.available;
       this.stopwatch.available = this.buckets.stopwatch.length > 0;
     },

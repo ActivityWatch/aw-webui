@@ -33,7 +33,7 @@ div
                  :namefunc="e => e.data.title",
                  :colorfunc="e => e.data['$category']",
                  with_limit)
-    div(v-if="type == 'top_bundle_ids' && activityStore.android.available")
+    div(v-if="type == 'top_bundle_ids' && activityStore.ios.available")
       aw-summary(:fields="activityStore.window.top_titles",
                  :namefunc="e => e.data.classname",
                  :colorfunc="e => e.data.app",
@@ -209,7 +209,7 @@ export default {
         },
         top_bundle_ids: {
           title: 'Bundle IDs',
-          available: this.activityStore.android.available,
+          available: this.activityStore.ios.available,
         },
         top_domains: {
           title: 'Top Browser Domains',
