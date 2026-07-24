@@ -341,7 +341,12 @@ export const useActivityStore = defineStore('activity', {
             new_app_events_map[app] = {
               ...e,
               duration: 0,
-              data: { app, classname: e.data.classname, title: e.data.title, $category: e.data.$category },
+              data: {
+                app,
+                classname: e.data.classname,
+                title: e.data.title,
+                $category: e.data.$category,
+              },
             };
           }
           new_app_events_map[app].duration += e.duration;
