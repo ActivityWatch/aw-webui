@@ -9,15 +9,15 @@ export function querystr_to_array(querystr: string): string[] {
   const statements: string[] = [];
   let current = '';
   let inString = false;
-  let escape = false;
+  let inEscape = false;
 
   for (const char of querystr) {
-    if (escape) {
+    if (inEscape) {
       current += char;
-      escape = false;
+      inEscape = false;
     } else if (char === '\\' && inString) {
       current += char;
-      escape = true;
+      inEscape = true;
     } else if (char === '"') {
       inString = !inString;
       current += char;

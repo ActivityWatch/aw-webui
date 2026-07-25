@@ -243,8 +243,7 @@ describe('querystr_to_array', () => {
 
   test('does not split on semicolons inside string literals (category regex case)', () => {
     // A category rule with a semicolon in the regex — the naive .split(';') would shred this.
-    const query =
-      'events = categorize(events, [["Work", {"type": "regex", "regex": "foo;bar"}]]);';
+    const query = 'events = categorize(events, [["Work", {"type": "regex", "regex": "foo;bar"}]]);';
     const result = querystr_to_array(query);
     expect(result).toHaveLength(1);
     expect(result[0]).toBe(
