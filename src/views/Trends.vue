@@ -91,7 +91,7 @@ div
 import moment from 'moment';
 import { get_today_with_offset, format_date_short, format_date_with_weekday } from '~/util/time';
 import { buildBarchartDataset } from '~/util/datasets';
-import { canonicalEvents } from '~/queries';
+import { canonicalEvents, querystr_to_array } from '~/queries';
 import { getClient } from '~/util/awclient';
 import { useBucketsStore } from '~/stores/buckets';
 import { useCategoryStore } from '~/stores/categories';
@@ -375,11 +375,7 @@ export default {
         cat_events = sort_by_duration(merge_events_by_keys(events, ["$category"]));
         RETURN = {"cat_events": cat_events};
       `;
-      return code
-        .split(';')
-        .map(s => s.trim())
-        .filter(s => s)
-        .map(s => s + ';');
+      return querystr_to_array(code);
     },
   },
 };
