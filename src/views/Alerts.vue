@@ -60,7 +60,7 @@ div
 <script lang="ts">
 import _ from 'lodash';
 import moment from 'moment';
-import { canonicalEvents } from '~/queries';
+import { canonicalEvents, querystr_to_array } from '~/queries';
 
 import 'vue-awesome/icons/plus';
 import 'vue-awesome/icons/check';
@@ -163,7 +163,7 @@ export default {
       });
       query += '; RETURN = events;';
 
-      const query_array = query.split(';').map(s => s.trim() + ';');
+      const query_array = querystr_to_array(query);
 
       // Get start of today
       const start = moment().subtract(1, 'days').startOf('day');

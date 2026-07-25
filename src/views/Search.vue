@@ -44,7 +44,7 @@ div
 <script lang="ts">
 import _ from 'lodash';
 import moment from 'moment';
-import { canonicalEvents } from '~/queries';
+import { canonicalEvents, querystr_to_array } from '~/queries';
 
 import 'vue-awesome/icons/search';
 import 'vue-awesome/icons/spinner';
@@ -80,7 +80,7 @@ export default {
       });
       query += '; RETURN = events;';
 
-      const query_array = query.split(';').map(s => s.trim() + ';');
+      const query_array = querystr_to_array(query);
       const timeperiods = [
         moment(this.queryOptions.start).format() + '/' + moment(this.queryOptions.stop).format(),
       ];

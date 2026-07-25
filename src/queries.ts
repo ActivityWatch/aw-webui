@@ -2,12 +2,38 @@ import _ from 'lodash';
 
 // TODO: Sanitize string input of buckets
 
-function querystr_to_array(querystr: string): string[] {
-  return querystr
-    .split(';')
-    .map(s => s.trim())
-    .filter(s => s)
-    .map(s => s + ';');
+export function querystr_to_array(querystr: string): string[] {
+  // Split on ';' but only when not inside a double-quoted string literal.
+  // A naive .split(';') breaks category rules whose regex contains semicolons,
+  // e.g. `"regex": "foo;bar"` would be shredded before reaching the server.
+  const statements: string[] = [];
+  let current = '';
+  let inString = false;
+  let inEscape = false;
+
+  for (const char of querystr) {
+    if (inEscape) {
+      current += char;
+      inEscape = false;
+    } else if (char === '\\' && inString) {
+      current += char;
+      inEscape = true;
+    } else if (char === '"') {
+      inString = !inString;
+      current += char;
+    } else if (char === ';' && !inString) {
+      const trimmed = current.trim();
+      if (trimmed) statements.push(trimmed + ';');
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+
+  const trimmed = current.trim();
+  if (trimmed) statements.push(trimmed + ';');
+
+  return statements;
 }
 
 function escape_doublequote(s: string) {
