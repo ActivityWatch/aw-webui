@@ -1,5 +1,5 @@
 <template lang="pug">
-div(v-if="editable || !activityStore.buckets.loaded || has_prerequisites")
+div(v-if="editable || !activityStore.buckets.loaded || has_prerequisites || !settingsStore.hideUnsupportedVisualizations")
   h5
     icon.handle(name="bars" v-if="editable" style="opacity: 0.6; cursor: grab;")
     | {{ visualizations[type].title }}
@@ -131,6 +131,7 @@ import { useActivityStore } from '~/stores/activity';
 import { useCategoryStore } from '~/stores/categories';
 import { useBucketsStore } from '~/stores/buckets';
 import { useViewsStore } from '~/stores/views';
+import { useSettingsStore } from '~/stores/settings';
 
 import moment from 'moment';
 
@@ -153,6 +154,7 @@ export default {
     return {
       activityStore: useActivityStore(),
       categoryStore: useCategoryStore(),
+      settingsStore: useSettingsStore(),
 
       types: [
         'top_apps',
