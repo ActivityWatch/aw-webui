@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
 import { useSettingsStore } from './settings';
-import { useBucketsStore } from './buckets';
 
 interface IElement {
   type: string;
@@ -107,12 +106,7 @@ export const useViewsStore = defineStore('views', {
     restoreDefaults(this: State) {
       this.views = defaultViews;
     },
-    viewsForHost(host: string): View[] {
-      const bucketsStore = useBucketsStore();
-      const available = bucketsStore.available(host);
-      if (available.android && !available.window) {
-        return androidViews;
-      }
+    viewsForHost(_host: string): View[] {
       return this.views;
     },
     addView(this: State, view: View) {

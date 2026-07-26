@@ -1,5 +1,5 @@
 <template lang="pug">
-div
+div(v-if="editable || !activityStore.buckets.loaded || has_prerequisites")
   h5
     icon.handle(name="bars" v-if="editable" style="opacity: 0.6; cursor: grab;")
     | {{ visualizations[type].title }}
