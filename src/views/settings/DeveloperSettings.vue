@@ -18,6 +18,10 @@ div
     div
       b-input.float-right.ml-2(v-model="requestTimeout" type="number")
 
+  b-form-group(label="Hide unsupported visualizations" label-cols-md=3 description="Hide visualizations that lack required data instead of showing a warning. Disabled by default.")
+    div
+      b-form-checkbox.float-right.ml-2(v-model="hideUnsupportedVisualizations" switch)
+
   div
     | Web UI commit hash: {{ COMMIT_HASH }}
 </template>
@@ -62,6 +66,14 @@ export default {
       },
       set(requestTimeout) {
         useSettingsStore().update({ requestTimeout });
+      },
+    },
+    hideUnsupportedVisualizations: {
+      get() {
+        return useSettingsStore().hideUnsupportedVisualizations;
+      },
+      set(hideUnsupportedVisualizations) {
+        useSettingsStore().update({ hideUnsupportedVisualizations });
       },
     },
   },

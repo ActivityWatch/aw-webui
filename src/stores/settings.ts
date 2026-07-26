@@ -66,6 +66,9 @@ interface State {
   useMultidevice: boolean;
   requestTimeout: number;
 
+  // Whether to hide visualizations that lack required data (default: off)
+  hideUnsupportedVisualizations: boolean;
+
   // Set to true if settings loaded
   _loaded: boolean;
 }
@@ -114,6 +117,7 @@ export const useSettingsStore = defineStore('settings', {
     showYearly: false,
     useMultidevice: false,
     requestTimeout: 30,
+    hideUnsupportedVisualizations: false,
 
     _loaded: false,
   }),
