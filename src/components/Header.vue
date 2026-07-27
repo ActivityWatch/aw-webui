@@ -11,33 +11,10 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
 
     b-collapse#nav-collapse(is-nav)
       b-navbar-nav
-        // If only a single view (the default) is available
-        b-nav-item(v-if="activityViews && activityViews.length === 1", v-for="view in activityViews", :key="view.name", :to="view.pathUrl")
+        b-nav-item(to="/pcd-admin")
           div.px-2.px-lg-1
-            icon(name="calendar-day")
-            | Activity
-
-        // If multiple (or no) activity views are available
-        b-nav-item-dropdown(v-if="!activityViews || activityViews.length !== 1")
-          template(slot="button-content")
-            div.d-inline.px-2.px-lg-1
-              icon(name="calendar-day")
-              | Activity
-          b-dropdown-item(v-if="activityViews === null", disabled)
-            span.text-muted Loading...
-            br
-          b-dropdown-item(v-else-if="activityViews && activityViews.length <= 0", disabled)
-            | No activity reports available
-            br
-            small Make sure you have both an AFK and window watcher running
-          b-dropdown-item(v-for="view in activityViews", :key="view.name", :to="view.pathUrl")
-            icon(:name="view.icon")
-            | {{ view.name }}
-
-        b-nav-item(to="/timeline" style="font-color: #000;")
-          div.px-2.px-lg-1
-            icon(name="stream")
-            | Timeline
+            icon(name="user-shield")
+            | PCD Admin
 
         b-nav-item(to="/stopwatch")
           div.px-2.px-lg-1
@@ -90,10 +67,6 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
           div.px-2.px-lg-1
             icon(name="cog")
             | Settings
-        b-nav-item(to="/pcd-admin")
-          div.px-2.px-lg-1
-            icon(name="user-shield")
-            | PCD Admin
 </template>
 
 <style lang="scss" scoped>
