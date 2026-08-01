@@ -12,7 +12,7 @@ describe('validateRegex', () => {
     expect(validateRegex('')).toBe(false);
   });
 
-  test('rejects invalid patterns', () => {
+  test('rejects JavaScript-invalid patterns', () => {
     // ++ is invalid: nothing to repeat for the second +
     expect(validateRegex('Notepad++')).toBe(false);
     // Unclosed group
@@ -21,6 +21,19 @@ describe('validateRegex', () => {
     expect(validateRegex('[foo')).toBe(false);
     // Invalid quantifier
     expect(validateRegex('a{2,1}')).toBe(false);
+  });
+
+  test('rejects JavaScript-only syntax that Python does not support', () => {
+    // JS named groups (?<name>...) are invalid in Python's re module
+    expect(validateRegex('(?<name>foo)')).toBe(false);
+    expect(validateRegex('(?<year>\\d{4})-(?<month>\\d{2})')).toBe(false);
+  });
+
+  test('accepts lookbehind assertions (valid in both JS and Python)', () => {
+    // Positive lookbehind (?<=...) is valid in both
+    expect(validateRegex('(?<=foo)bar')).toBe(true);
+    // Negative lookbehind (?<!...) is valid in both
+    expect(validateRegex('(?<!foo)bar')).toBe(true);
   });
 });
 

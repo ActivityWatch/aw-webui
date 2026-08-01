@@ -1,10 +1,16 @@
 export function validateRegex(re: string) {
-  // validates if pattern is a valid regex
+  // validates if pattern is a valid regex in both JavaScript and Python
   // returns true if regex is valid
   if (re === '') return false;
   try {
     new RegExp(re);
   } catch (e) {
+    return false;
+  }
+  // Reject JS-only syntax that Python's re module doesn't support.
+  // JS named groups (?<name>...) are valid JS but invalid Python (Python uses (?P<name>...)).
+  // Lookbehind (?<=...) and (?<!...) are valid in both, so we allow those.
+  if (/\(\?<(?![=!])/.test(re)) {
     return false;
   }
   return true;
