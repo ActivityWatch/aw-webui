@@ -74,7 +74,6 @@ div
 </template>
 
 <script lang="ts">
-import { getClient } from '~/util/awclient';
 import { useBucketsStore } from '~/stores/buckets';
 import {
   aggregateEvents,
@@ -218,7 +217,6 @@ export default {
       }
     },
     async fetchEvents(): Promise<any[]> {
-      const client = getClient();
       const buckets = this.bucketsStore.buckets || [];
       const windowBucket = buckets.find(
         b => b.type === 'currentwindow' && b.hostname === this.selectedHost

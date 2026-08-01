@@ -65,7 +65,7 @@ export function saveLLMConfig(config: Partial<LLMConfig>): void {
   localStorage.setItem(LS_KEY, JSON.stringify(config));
 }
 
-export async function callLLM(config: LLMConfig, prompt: string): Promise<string> {
+export async function callLLM(config: LLMConfig, userMessage: string): Promise<string> {
   if (!config.apiKey) throw new Error('API key is required');
 
   if (config.provider === 'openai' || config.provider === 'custom') {
@@ -82,7 +82,7 @@ export async function callLLM(config: LLMConfig, prompt: string): Promise<string
       },
       body: JSON.stringify({
         model: config.model || 'gpt-4o-mini',
-        messages: [{ role: 'user', content: prompt }],
+        messages: [{ role: 'user', content: userMessage }],
         max_tokens: 1024,
       }),
     });
@@ -105,7 +105,7 @@ export async function callLLM(config: LLMConfig, prompt: string): Promise<string
       body: JSON.stringify({
         model: config.model || 'claude-haiku-4-5-20251001',
         max_tokens: 1024,
-        messages: [{ role: 'user', content: prompt }],
+        messages: [{ role: 'user', content: userMessage }],
       }),
     });
     if (!res.ok) {
