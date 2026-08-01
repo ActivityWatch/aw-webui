@@ -1,6 +1,7 @@
 import {
   aggregateEvents,
   buildSummaryText,
+  callLLM,
   formatDurationHuman,
   loadLLMConfig,
   saveLLMConfig,
@@ -81,6 +82,51 @@ describe('LLM config storage', () => {
 
     expect(loadLLMConfig()).toEqual({ provider: 'openai', model: 'gpt-4o-mini' });
     expect(localStorage.getItem('aw-ai-summary-llm-config')).not.toContain('secret');
+  });
+});
+
+describe('callLLM', () => {
+  const fetchMock = jest.fn();
+
+  beforeAll(() => {
+    Object.defineProperty(globalThis, 'fetch', {
+      value: fetchMock,
+      configurable: true,
+    });
+  });
+  beforeEach(() => fetchMock.mockReset());
+
+  test('sends OpenAI requests to the CSP-allowed endpoint', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: 'Summary' } }] }),
+    });
+
+    await expect(
+      callLLM({ provider: 'openai', apiKey: 'secret', model: 'gpt-4o-mini' }, 'Activity')
+    ).resolves.toBe('Summary');
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.openai.com/v1/chat/completions',
+      expect.any(Object)
+    );
+  });
+
+  test('sends Anthropic requests to the CSP-allowed endpoint', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ content: [{ text: 'Summary' }] }),
+    });
+
+    await expect(
+      callLLM(
+        { provider: 'anthropic', apiKey: 'secret', model: 'claude-haiku-4-5-20251001' },
+        'Activity'
+      )
+    ).resolves.toBe('Summary');
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.anthropic.com/v1/messages',
+      expect.any(Object)
+    );
   });
 });
 

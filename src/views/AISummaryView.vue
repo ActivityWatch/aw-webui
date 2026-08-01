@@ -30,13 +30,9 @@ div
           @blur="persistConfig"
         )
 
-    div.col-md-3
+    div.col-md-6
       b-form-group(label="Model" label-class="font-weight-bold")
         b-form-input(v-model="model" placeholder="e.g. gpt-4o-mini" @blur="persistConfig")
-
-    div.col-md-3(v-if="provider === 'custom'")
-      b-form-group(label="Base URL" label-class="font-weight-bold")
-        b-form-input(v-model="customBaseUrl" placeholder="https://my-proxy.example.com" @blur="persistConfig")
 
   div.mb-3
     b-form-group(label="Prompt" label-class="font-weight-bold")
@@ -101,7 +97,6 @@ export default {
       provider: (saved.provider || 'openai') as LLMProvider,
       apiKey: saved.apiKey || '',
       model: saved.model || '',
-      customBaseUrl: saved.baseUrl || '',
       userPrompt: DEFAULT_PROMPT,
 
       loading: false,
@@ -134,7 +129,6 @@ export default {
       return [
         { value: 'openai', text: 'OpenAI' },
         { value: 'anthropic', text: 'Anthropic' },
-        { value: 'custom', text: 'Custom (OpenAI-compatible)' },
       ];
     },
     periodDays(): number {
@@ -170,7 +164,6 @@ export default {
         provider: this.provider,
         apiKey: this.apiKey,
         model: this.model,
-        baseUrl: this.customBaseUrl,
       });
     },
     async generate() {
@@ -205,7 +198,6 @@ export default {
             provider: this.provider,
             apiKey: this.apiKey.trim(),
             model: effectiveModel,
-            baseUrl: this.customBaseUrl,
           },
           fullPrompt
         );

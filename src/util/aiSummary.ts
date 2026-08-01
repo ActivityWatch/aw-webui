@@ -41,13 +41,12 @@ export function buildSummaryText(data: ActivitySummaryData): string {
   return lines.join('\n');
 }
 
-export type LLMProvider = 'openai' | 'anthropic' | 'custom';
+export type LLMProvider = 'openai' | 'anthropic';
 
 export interface LLMConfig {
   provider: LLMProvider;
   apiKey: string;
   model: string;
-  baseUrl?: string; // used when provider === 'custom'
 }
 
 const LS_KEY = 'aw-ai-summary-llm-config';
@@ -70,13 +69,8 @@ export function saveLLMConfig(config: Partial<LLMConfig>): void {
 export async function callLLM(config: LLMConfig, userMessage: string): Promise<string> {
   if (!config.apiKey) throw new Error('API key is required');
 
-  if (config.provider === 'openai' || config.provider === 'custom') {
-    const baseUrl =
-      config.provider === 'custom'
-        ? (config.baseUrl || '').replace(/\/$/, '')
-        : 'https://api.openai.com';
-    const url = `${baseUrl}/v1/chat/completions`;
-    const res = await fetch(url, {
+  if (config.provider === 'openai') {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
