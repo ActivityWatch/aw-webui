@@ -1,6 +1,6 @@
 <template lang="pug">
 // The category edit modal
-b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="hidden" @ok="handleOk")
+b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="hidden" @ok="handleOk" :ok-disabled="editing.rule.type === 'regex' && !validPattern")
   div.my-1
     b-input-group.my-1(prepend="Name")
       b-form-input(v-model="editing.name")
@@ -128,7 +128,9 @@ export default {
       this.categoryStore.removeClass(this.categoryId);
     },
     checkFormValidity() {
-      // FIXME
+      if (this.editing.rule.type === 'regex') {
+        return this.validPattern;
+      }
       return true;
     },
     handleOk(event) {
