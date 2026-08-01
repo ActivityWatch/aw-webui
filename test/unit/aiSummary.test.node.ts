@@ -83,6 +83,15 @@ describe('LLM config storage', () => {
     expect(loadLLMConfig()).toEqual({ provider: 'openai', model: 'gpt-4o-mini' });
     expect(localStorage.getItem('aw-ai-summary-llm-config')).not.toContain('secret');
   });
+
+  test('discards a stale unsupported provider', () => {
+    localStorage.setItem(
+      'aw-ai-summary-llm-config',
+      JSON.stringify({ provider: 'custom', model: 'local-model' })
+    );
+
+    expect(loadLLMConfig()).toEqual({ model: 'local-model' });
+  });
 });
 
 describe('callLLM', () => {

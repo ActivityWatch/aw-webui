@@ -54,7 +54,11 @@ const LS_KEY = 'aw-ai-summary-llm-config';
 export function loadLLMConfig(): Partial<LLMConfig> {
   try {
     const raw = localStorage.getItem(LS_KEY);
-    return raw ? JSON.parse(raw) : {};
+    const config: Partial<LLMConfig> = raw ? JSON.parse(raw) : {};
+    if (config.provider !== 'openai' && config.provider !== 'anthropic') {
+      delete config.provider;
+    }
+    return config;
   } catch {
     return {};
   }
