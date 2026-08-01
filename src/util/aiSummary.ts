@@ -51,26 +51,20 @@ export interface LLMConfig {
 }
 
 const LS_KEY = 'aw-ai-summary-llm-config';
-const SS_KEY = 'aw-ai-summary-llm-apikey';
 
 export function loadLLMConfig(): Partial<LLMConfig> {
   try {
     const raw = localStorage.getItem(LS_KEY);
-    const config: Partial<LLMConfig> = raw ? JSON.parse(raw) : {};
-    const apiKey = sessionStorage.getItem(SS_KEY);
-    if (apiKey) config.apiKey = apiKey;
-    return config;
+    return raw ? JSON.parse(raw) : {};
   } catch {
     return {};
   }
 }
 
 export function saveLLMConfig(config: Partial<LLMConfig>): void {
-  const { apiKey, ...rest } = config;
-  localStorage.setItem(LS_KEY, JSON.stringify(rest));
-  if (apiKey !== undefined) {
-    sessionStorage.setItem(SS_KEY, apiKey);
-  }
+  const persistedConfig = { ...config };
+  delete persistedConfig.apiKey;
+  localStorage.setItem(LS_KEY, JSON.stringify(persistedConfig));
 }
 
 export async function callLLM(config: LLMConfig, userMessage: string): Promise<string> {

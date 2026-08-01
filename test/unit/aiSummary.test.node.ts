@@ -1,4 +1,10 @@
-import { aggregateEvents, buildSummaryText, formatDurationHuman } from '~/util/aiSummary';
+import {
+  aggregateEvents,
+  buildSummaryText,
+  formatDurationHuman,
+  loadLLMConfig,
+  saveLLMConfig,
+} from '~/util/aiSummary';
 
 describe('aggregateEvents', () => {
   test('returns empty array for no events', () => {
@@ -52,6 +58,29 @@ describe('formatDurationHuman', () => {
   test('formats hours with minutes', () => {
     expect(formatDurationHuman(3660)).toBe('1h 1m');
     expect(formatDurationHuman(7200)).toBe('2h');
+  });
+});
+
+describe('LLM config storage', () => {
+  const values = new Map<string, string>();
+
+  beforeAll(() => {
+    Object.defineProperty(globalThis, 'localStorage', {
+      value: {
+        getItem: (key: string) => values.get(key) ?? null,
+        setItem: (key: string, value: string) => values.set(key, value),
+        clear: () => values.clear(),
+      },
+      configurable: true,
+    });
+  });
+  beforeEach(() => values.clear());
+
+  test('persists provider settings without the API key', () => {
+    saveLLMConfig({ provider: 'openai', model: 'gpt-4o-mini', apiKey: 'secret' });
+
+    expect(loadLLMConfig()).toEqual({ provider: 'openai', model: 'gpt-4o-mini' });
+    expect(localStorage.getItem('aw-ai-summary-llm-config')).not.toContain('secret');
   });
 });
 

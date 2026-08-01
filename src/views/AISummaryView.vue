@@ -3,8 +3,8 @@ div
   h3.mb-3 AI Activity Summary
 
   b-alert(variant="info" show)
-    | Your API key is kept only in memory and sent directly to the LLM provider.
-    |  ActivityWatch does not receive it.
+    | Your API key is kept only in this page's memory and sent directly to the LLM provider.
+    |  It is cleared when the page reloads and ActivityWatch does not receive it.
 
   div.row.mb-3
     div.col-md-4
