@@ -5,7 +5,7 @@
 let _unicodeNames: Map<number, string> | null = null;
 try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  _unicodeNames = require(/* webpackIgnore: true */ '@unicode/unicode-13.0.0/Names');
+  _unicodeNames = require('@unicode/unicode-13.0.0/Names');
 } catch {
   // browser build: skip name-level validation
 }

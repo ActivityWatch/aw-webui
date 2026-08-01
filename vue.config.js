@@ -44,6 +44,10 @@ export default {
     },
     plugins: [
       new webpack.IgnorePlugin({ resourceRegExp: /^\.\/locale$/, contextRegExp: /moment$/ }),
+      // @unicode/unicode-13.0.0/Names uses zlib.gunzipSync which is not polyfilled
+      // in webpack 5 browser builds. Exclude it so the require() in validate.ts
+      // throws at runtime and the try/catch falls back to no-op name validation.
+      new webpack.IgnorePlugin({ resourceRegExp: /^@unicode\/unicode-13\.0\.0/ }),
       new webpack.DefinePlugin({
         PRODUCTION: process.env.NODE_ENV === 'production',
         AW_SERVER_URL: process.env.AW_SERVER_URL,
