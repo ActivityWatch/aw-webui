@@ -90,7 +90,7 @@ describe('LLM config storage', () => {
       JSON.stringify({ provider: 'custom', model: 'local-model' })
     );
 
-    expect(loadLLMConfig()).toEqual({ model: 'local-model' });
+    expect(loadLLMConfig()).toEqual({});
   });
 });
 

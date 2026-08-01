@@ -57,6 +57,7 @@ export function loadLLMConfig(): Partial<LLMConfig> {
     const config: Partial<LLMConfig> = raw ? JSON.parse(raw) : {};
     if (config.provider !== 'openai' && config.provider !== 'anthropic') {
       delete config.provider;
+      delete config.model;
     }
     return config;
   } catch {
