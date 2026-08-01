@@ -33,9 +33,15 @@ describe('validateRegex', () => {
     expect(validateRegex('foo\\8bar')).toBe(false);
   });
 
-  test('accepts Python named Unicode escapes', () => {
+  test('validates Python named Unicode escapes', () => {
     expect(validateRegex('\\N{EM DASH}')).toBe(true);
     expect(validateRegex('foo\\N{EM DASH}bar')).toBe(true);
+    expect(validateRegex('\\N{NOT A REAL UNICODE NAME}')).toBe(false);
+  });
+
+  test('accepts named-group text inside character classes', () => {
+    expect(validateRegex('[(?<]')).toBe(true);
+    expect(validateRegex('[abc](?<name>foo)')).toBe(false);
   });
 
   test('accepts lookbehind assertions (valid in both JS and Python)', () => {
