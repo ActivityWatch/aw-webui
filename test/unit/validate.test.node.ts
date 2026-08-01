@@ -27,6 +27,10 @@ describe('validateRegex', () => {
     // JS named groups (?<name>...) are invalid in Python's re module
     expect(validateRegex('(?<name>foo)')).toBe(false);
     expect(validateRegex('(?<year>\\d{4})-(?<month>\\d{2})')).toBe(false);
+    // JavaScript treats unknown letter escapes as literal characters, while Python rejects them
+    expect(validateRegex('foo\\qbar')).toBe(false);
+    expect(validateRegex('foo\\Cbar')).toBe(false);
+    expect(validateRegex('foo\\8bar')).toBe(false);
   });
 
   test('accepts lookbehind assertions (valid in both JS and Python)', () => {
@@ -34,6 +38,9 @@ describe('validateRegex', () => {
     expect(validateRegex('(?<=foo)bar')).toBe(true);
     // Negative lookbehind (?<!...) is valid in both
     expect(validateRegex('(?<!foo)bar')).toBe(true);
+    // Escaped backslashes and punctuation escapes are accepted by both engines
+    expect(validateRegex('foo\\\\qbar')).toBe(true);
+    expect(validateRegex('foo\\!bar')).toBe(true);
   });
 });
 
