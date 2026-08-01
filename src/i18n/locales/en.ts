@@ -12,6 +12,7 @@ export default {
     tools: 'Tools',
     search: 'Search',
     workReport: 'Work Report',
+    aiSummary: 'AI Summary',
     trends: 'Trends',
     report: 'Report',
     alerts: 'Alerts',

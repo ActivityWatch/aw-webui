@@ -60,6 +60,9 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
           b-dropdown-item(to="/work-report")
             icon(name="briefcase")
             | {{ $t('nav.workReport') }}
+          b-dropdown-item(to="/ai-summary")
+            icon(name="robot")
+            | {{ $t('nav.aiSummary') }}
           b-dropdown-item(to="/trends" v-if="devmode")
             icon(name="chart-line")
             | {{ $t('nav.trends') }}
@@ -108,6 +111,7 @@ import 'vue-awesome/icons/chart-line';
 import 'vue-awesome/icons/chart-pie';
 import 'vue-awesome/icons/flag-checkered';
 import 'vue-awesome/icons/stopwatch';
+import 'vue-awesome/icons/robot';
 import 'vue-awesome/icons/cog';
 import 'vue-awesome/icons/tools';
 import 'vue-awesome/icons/history';

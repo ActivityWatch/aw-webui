@@ -19,6 +19,7 @@ const Settings = () => import('./views/settings/Settings.vue');
 // pulling a second copy into a separate chunk.
 const Stopwatch = () => import('./views/Stopwatch.vue');
 const WorkReport = () => import('./views/WorkReport.vue');
+const AISummaryView = () => import('./views/AISummaryView.vue');
 const Alerts = () => import('./views/Alerts.vue');
 const Search = () => import('./views/Search.vue');
 const Report = () => import('./views/Report.vue');
@@ -82,6 +83,7 @@ const router = new VueRouter({
     },
     { path: '/stopwatch', component: Stopwatch },
     { path: '/work-report', component: WorkReport },
+    { path: '/ai-summary', component: AISummaryView },
     { path: '/search', component: Search },
     { path: '/graph', component: Graph },
     { path: '/dev', component: Dev },
