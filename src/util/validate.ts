@@ -1,9 +1,19 @@
-import unicodeNames from '@unicode/unicode-13.0.0/Names';
+// Loaded lazily with webpackIgnore so the bundle doesn't pull in Node's zlib.
+// In Node.js (Jest) the real package resolves; in browser builds the require
+// throws (module excluded from bundle) and we fall back to an empty set,
+// accepting any \N{...} syntax and letting the server validate the name.
+let _unicodeNames: Map<number, string> | null = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  _unicodeNames = require(/* webpackIgnore: true */ '@unicode/unicode-13.0.0/Names');
+} catch {
+  // browser build: skip name-level validation
+}
 
 const PYTHON_INVALID_IDENTITY_ESCAPE = /\\[CEFGHIJKLMOPQRTVXYceghijklmnopqyz]/;
 const PYTHON_INCOMPLETE_ESCAPE =
   /\\(?:N(?!\{[^}]+\})|u(?![0-9A-Fa-f]{4})|U(?![0-9A-Fa-f]{8})|x(?![0-9A-Fa-f]{2}))/;
-const PYTHON_UNICODE_NAMES = new Set(unicodeNames.values());
+const PYTHON_UNICODE_NAMES = new Set(_unicodeNames?.values() ?? []);
 
 function stripCharacterClasses(re: string): string {
   let result = '';
@@ -43,6 +53,8 @@ function hasPythonInvalidEscape(re: string): boolean {
     return true;
   }
 
+  // If the name database is unavailable (browser build), accept any \N{...}
+  if (PYTHON_UNICODE_NAMES.size === 0) return false;
   return [...escapes.matchAll(/\\N\{([^}]+)\}/g)].some(
     match => !PYTHON_UNICODE_NAMES.has(match[1])
   );
