@@ -33,6 +33,11 @@ describe('validateRegex', () => {
     expect(validateRegex('foo\\8bar')).toBe(false);
   });
 
+  test('accepts Python named Unicode escapes', () => {
+    expect(validateRegex('\\N{EM DASH}')).toBe(true);
+    expect(validateRegex('foo\\N{EM DASH}bar')).toBe(true);
+  });
+
   test('accepts lookbehind assertions (valid in both JS and Python)', () => {
     // Positive lookbehind (?<=...) is valid in both
     expect(validateRegex('(?<=foo)bar')).toBe(true);
