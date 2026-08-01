@@ -3,9 +3,8 @@ div
   h3.mb-3 AI Activity Summary
 
   b-alert(variant="info" show)
-    | Your API key is stored only in your browser's&nbsp;
-    code localStorage
-    |  and is sent directly to the LLM provider. ActivityWatch does not receive it.
+    | Your API key is kept only in memory and sent directly to the LLM provider.
+    |  ActivityWatch does not receive it.
 
   div.row.mb-3
     div.col-md-4
@@ -75,6 +74,7 @@ div
 
 <script lang="ts">
 import { useBucketsStore } from '~/stores/buckets';
+import { getClient } from '~/util/awclient';
 import {
   aggregateEvents,
   buildSummaryText,
@@ -228,16 +228,7 @@ export default {
       const end = new Date();
       const start = new Date(end.getTime() - this.periodDays * 24 * 60 * 60 * 1000);
 
-      // Use REST directly for simplicity — aw-client's getEvents signature
-      const resp = await fetch(
-        `/api/0/buckets/${
-          windowBucket.id
-        }/events?start=${start.toISOString()}&end=${end.toISOString()}&limit=10000`
-      );
-      if (!resp.ok) {
-        throw new Error(`Failed to fetch events: ${resp.status}`);
-      }
-      return resp.json();
+      return getClient().getEvents(windowBucket.id, { start, end, limit: -1 });
     },
     async copyResponse() {
       try {
