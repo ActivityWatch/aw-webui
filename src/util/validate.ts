@@ -2,10 +2,26 @@
 // In Node.js (Jest) the real package resolves; in browser builds the require
 // throws (module excluded from bundle) and we fall back to an empty set,
 // accepting any \N{...} syntax and letting the server validate the name.
+type UnicodeAliases = Record<string, string[]>;
+
 let _unicodeNames: Map<number, string> | null = null;
+let _unicodeAliases: UnicodeAliases[] = [];
 try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   _unicodeNames = require('@unicode/unicode-13.0.0/Names');
+  _unicodeAliases = [
+    // Python's \N{...} lookup accepts NameAliases.txt aliases too.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require('@unicode/unicode-13.0.0/Names/Abbreviation'),
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require('@unicode/unicode-13.0.0/Names/Alternate'),
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require('@unicode/unicode-13.0.0/Names/Control'),
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require('@unicode/unicode-13.0.0/Names/Correction'),
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require('@unicode/unicode-13.0.0/Names/Figment'),
+  ];
 } catch {
   // browser build: skip name-level validation
 }
@@ -13,16 +29,18 @@ try {
 const PYTHON_INVALID_IDENTITY_ESCAPE = /\\[CEFGHIJKLMOPQRTVXYceghijklmnopqyz]/;
 const PYTHON_INCOMPLETE_ESCAPE =
   /\\(?:N(?!\{[^}]+\})|u(?![0-9A-Fa-f]{4})|U(?![0-9A-Fa-f]{8})|x(?![0-9A-Fa-f]{2}))/;
-const PYTHON_UNICODE_NAMES = new Set(_unicodeNames?.values() ?? []);
+const PYTHON_UNICODE_NAMES = new Set([
+  ...(_unicodeNames?.values() ?? []),
+  ..._unicodeAliases.flatMap(aliases => Object.values(aliases).flat()),
+]);
 
-function stripCharacterClasses(re: string): string {
-  let result = '';
+function hasJavaScriptNamedGroup(re: string): boolean {
   let inClass = false;
   let escaped = false;
 
-  for (const char of re) {
+  for (let index = 0; index < re.length; index += 1) {
+    const char = re[index];
     if (escaped) {
-      if (!inClass) result += `\\${char}`;
       escaped = false;
     } else if (char === '\\') {
       escaped = true;
@@ -30,13 +48,12 @@ function stripCharacterClasses(re: string): string {
       inClass = true;
     } else if (char === ']' && inClass) {
       inClass = false;
-    } else if (!inClass) {
-      result += char;
+    } else if (!inClass && re.startsWith('(?<', index) && !['=', '!'].includes(re[index + 3])) {
+      return true;
     }
   }
 
-  if (escaped && !inClass) result += '\\';
-  return result;
+  return false;
 }
 
 function hasPythonInvalidEscape(re: string): boolean {
@@ -72,7 +89,7 @@ export function validateRegex(re: string) {
   // Reject JS-only syntax that Python's re module doesn't support.
   // JS named groups (?<name>...) are valid JS but invalid Python (Python uses (?P<name>...)).
   // Lookbehind (?<=...) and (?<!...) are valid in both, so we allow those.
-  if (/\(\?<(?![=!])/.test(stripCharacterClasses(re)) || hasPythonInvalidEscape(re)) {
+  if (hasJavaScriptNamedGroup(re) || hasPythonInvalidEscape(re)) {
     return false;
   }
   return true;

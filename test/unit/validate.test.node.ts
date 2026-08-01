@@ -36,11 +36,15 @@ describe('validateRegex', () => {
   test('validates Python named Unicode escapes', () => {
     expect(validateRegex('\\N{EM DASH}')).toBe(true);
     expect(validateRegex('foo\\N{EM DASH}bar')).toBe(true);
+    expect(validateRegex('\\N{LF}')).toBe(true);
+    expect(validateRegex('\\N{CR}')).toBe(true);
+    expect(validateRegex('\\N{LINE FEED}')).toBe(true);
     expect(validateRegex('\\N{NOT A REAL UNICODE NAME}')).toBe(false);
   });
 
-  test('accepts named-group text inside character classes', () => {
+  test('ignores named-group text in literal regex contexts', () => {
     expect(validateRegex('[(?<]')).toBe(true);
+    expect(validateRegex('\\(?<name>foo\\)')).toBe(true);
     expect(validateRegex('[abc](?<name>foo)')).toBe(false);
   });
 
