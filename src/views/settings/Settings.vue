@@ -38,6 +38,7 @@ import Theme from '~/views/settings/Theme.vue';
 import ColorSettings from '~/views/settings/ColorSettings.vue';
 import ActivePatternSettings from '~/views/settings/ActivePatternSettings.vue';
 import PrivacyFilterSettings from '~/views/settings/PrivacyFilterSettings.vue';
+import AwNotifySettings from '~/views/settings/AwNotifySettings.vue';
 
 interface Group {
   id: string;
@@ -61,6 +62,7 @@ export default {
     DeveloperSettings,
     ActivePatternSettings,
     PrivacyFilterSettings,
+    AwNotifySettings,
   },
   beforeRouteLeave(to, from, next) {
     const categoryStore = useCategoryStore();
@@ -120,7 +122,14 @@ export default {
         components: [{ name: 'DeveloperSettings' }],
       };
 
-      return [general, appearance, categorization, privacy, developer];
+      const notifications: Group = {
+        id: 'notifications',
+        label: 'Notifications',
+        help: 'Configure alert thresholds for the aw-notify Android integration.',
+        components: [{ name: 'AwNotifySettings' }],
+      };
+
+      return [general, appearance, categorization, notifications, privacy, developer];
     },
   },
   async created() {
