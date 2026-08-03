@@ -1,7 +1,8 @@
 // Loaded lazily with webpackIgnore so the bundle doesn't pull in Node's zlib.
 // In Node.js (Jest) the real package resolves; in browser builds the require
-// throws (module excluded from bundle) and we fall back to an empty set,
-// accepting any \N{...} syntax and letting the server validate the name.
+// throws (module excluded from bundle) and we fall back to an empty set.
+// When the database is unavailable, \N{...} patterns are rejected outright
+// (fail-safe) rather than passed through for server-side validation.
 type UnicodeAliases = Record<string, string[]>;
 
 let _unicodeNames: Map<number, string> | null = null;
@@ -23,7 +24,8 @@ try {
     require('@unicode/unicode-13.0.0/Names/Figment'),
   ];
 } catch {
-  // browser build: skip name-level validation
+  // browser build: Unicode package excluded from bundle; \N{...} patterns will
+  // be rejected outright by hasPythonInvalidEscape (fail-safe behavior).
 }
 
 const PYTHON_INVALID_IDENTITY_ESCAPE = /\\[CEFGHIJKLMOPQRTVXYceghijklmnopqyz]/;
@@ -70,8 +72,12 @@ function hasPythonInvalidEscape(re: string): boolean {
     return true;
   }
 
-  // If the name database is unavailable (browser build), accept any \N{...}
-  if (PYTHON_UNICODE_NAMES.size === 0) return false;
+  // If the name database is unavailable (browser build), reject any \N{...}
+  // rather than accepting unknown names. Fail-safe: unknown names would cause
+  // Python's re module to raise re.error at category-match time.
+  if (PYTHON_UNICODE_NAMES.size === 0) {
+    return /\\N\{[^}]+\}/.test(escapes);
+  }
   return [...escapes.matchAll(/\\N\{([^}]+)\}/g)].some(
     match => !PYTHON_UNICODE_NAMES.has(match[1])
   );

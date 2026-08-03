@@ -59,6 +59,48 @@ describe('validateRegex', () => {
   });
 });
 
+describe('validateRegex - browser environment (Unicode DB unavailable)', () => {
+  // Simulate the webpack IgnorePlugin that excludes @unicode packages from the browser bundle.
+  // In that environment require('@unicode/unicode-13.0.0/Names') throws, PYTHON_UNICODE_NAMES
+  // is an empty Set, and the validator must REJECT \N{...} patterns (fail-safe).
+  let browserValidate: (re: string) => boolean;
+
+  beforeAll(() => {
+    jest.isolateModules(() => {
+      const throwExcluded = () => {
+        throw new Error('Module excluded from browser bundle');
+      };
+      jest.doMock('@unicode/unicode-13.0.0/Names', throwExcluded);
+      jest.doMock('@unicode/unicode-13.0.0/Names/Abbreviation', throwExcluded);
+      jest.doMock('@unicode/unicode-13.0.0/Names/Alternate', throwExcluded);
+      jest.doMock('@unicode/unicode-13.0.0/Names/Control', throwExcluded);
+      jest.doMock('@unicode/unicode-13.0.0/Names/Correction', throwExcluded);
+      jest.doMock('@unicode/unicode-13.0.0/Names/Figment', throwExcluded);
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      browserValidate = require('~/util/validate').validateRegex;
+    });
+  });
+
+  afterAll(() => {
+    jest.resetModules();
+  });
+
+  test('rejects \\N{VALID NAME} — cannot verify name without database', () => {
+    expect(browserValidate('\\N{EM DASH}')).toBe(false);
+    expect(browserValidate('foo\\N{LINE FEED}bar')).toBe(false);
+  });
+
+  test('rejects \\N{INVALID NAME} — same as valid: cannot verify', () => {
+    expect(browserValidate('\\N{NOT A REAL UNICODE NAME}')).toBe(false);
+  });
+
+  test('accepts patterns with no \\N{...} escapes', () => {
+    expect(browserValidate('Chrome|Firefox')).toBe(true);
+    expect(browserValidate('.*\\.py$')).toBe(true);
+    expect(browserValidate('foo\\\\qbar')).toBe(true);
+  });
+});
+
 describe('isRegexBroad', () => {
   test('flags single-char patterns as broad', () => {
     expect(isRegexBroad('a')).toBe(true);
