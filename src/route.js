@@ -83,7 +83,7 @@ const router = new VueRouter({
     },
     { path: '/stopwatch', component: Stopwatch },
     { path: '/work-report', component: WorkReport },
-    { path: '/activity-analysis', component: AISummaryView },
+    { path: '/analysis/activity', component: AISummaryView },
     { path: '/search', component: Search },
     { path: '/graph', component: Graph },
     { path: '/dev', component: Dev },

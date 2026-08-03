@@ -60,7 +60,7 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
           b-dropdown-item(to="/work-report")
             icon(name="briefcase")
             | {{ $t('nav.workReport') }}
-          b-dropdown-item(to="/activity-analysis" v-if="devmode")
+          b-dropdown-item(to="/analysis/activity" v-if="devmode")
             icon(name="robot")
             | {{ $t('nav.aiSummary') }}
           b-dropdown-item(to="/trends" v-if="devmode")
