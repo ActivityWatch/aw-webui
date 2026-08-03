@@ -88,7 +88,7 @@ export function parseAwNotifyConfig(value: unknown): AwNotifyConfig | null {
 
   // PR #923 briefly stored Android's original array schema. Read it so users can
   // migrate without losing settings, then always save the canonical desktop shape.
-  if (Array.isArray(value) && value.length > 0 && value.every(isLegacyAlert)) {
+  if (Array.isArray(value) && value.every(isLegacyAlert)) {
     return {
       alerts: value.map(candidate => ({
         category: candidate.category ?? 'All',

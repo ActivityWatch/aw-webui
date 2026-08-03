@@ -47,9 +47,12 @@ describe('parseAwNotifyConfig', () => {
     });
   });
 
+  test('migrates an empty original Android array', () => {
+    expect(parseAwNotifyConfig([])).toEqual({ alerts: [] });
+  });
+
   test.each([
     null,
-    [],
     { alerts: 'bad' },
     { alerts: [{ ...canonicalAlert, category: null }] },
     { alerts: [{ ...canonicalAlert, thresholds_minutes: [] }] },
