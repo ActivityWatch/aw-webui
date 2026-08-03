@@ -2,8 +2,8 @@
 div
   div.d-flex.justify-content-between.align-items-center.mb-3
     div
-      h5.mb-1 Mobile Notifications
-      small.text-muted Configure aw-notify alert thresholds for the Android app
+      h5.mb-1 Activity Notifications
+      small.text-muted Configure aw-notify alerts for Android and desktop
     b-btn(@click="save" size="sm" variant="primary" :disabled="saving || loading")
       | {{ saving ? 'Saving…' : 'Save' }}
 
@@ -15,9 +15,8 @@ div
 
   div(v-else)
     p.text-muted.small.mb-3
-      | Alerts are checked periodically by the Android app. Each alert fires a notification
-      | when the accumulated time crosses a threshold.
-      | Uses the #[code /api/0/settings/aw-notify] server setting.
+      | Alerts are checked periodically by aw-notify. Each alert fires a notification when
+      | the accumulated time crosses a threshold. The same config works in Android and aw-tauri.
 
     div(v-if="alerts.length === 0")
       p.text-muted.font-italic No alerts configured.
@@ -31,10 +30,10 @@ div
             b-input(
               v-model="alert.category"
               size="sm"
-              placeholder="Leave empty to track all time"
+              placeholder="All"
             )
             small.form-text.text-muted
-              | Match the category name in your AW categorization rules, or leave empty for total time.
+              | Match the category name in your AW categorization rules, or use All for total time.
           b-form-group(
             label="Thresholds"
             label-cols-sm="3"
@@ -64,42 +63,40 @@ import 'vue-awesome/icons/plus';
 import 'vue-awesome/icons/trash';
 
 import { getClient } from '~/util/awclient';
-import { parseThresholds } from '~/util/aw-notify';
+import {
+  AwNotifyAlert,
+  AwNotifyConfig,
+  parseAwNotifyConfig,
+  parseThresholds,
+} from '~/util/aw-notify';
 
 const SETTINGS_KEY = 'aw-notify';
 
 interface AlertRow {
   label: string;
-  category: string | null; // null = aggregate "All"
+  category: string;
   thresholdStr: string;
   positive: boolean;
 }
 
-interface AlertDTO {
-  label: string;
-  category: string | null;
-  thresholdMinutes: number[];
-  positive: boolean;
-}
-
-function dtoToRow(dto: AlertDTO): AlertRow {
+function dtoToRow(dto: AwNotifyAlert): AlertRow {
   return {
-    label: dto.label,
-    category: dto.category ?? '',
-    thresholdStr: dto.thresholdMinutes.join(', '),
+    label: dto.label ?? '',
+    category: dto.category,
+    thresholdStr: dto.thresholds_minutes.join(', '),
     positive: dto.positive,
   };
 }
 
-function rowToDto(row: AlertRow): AlertDTO {
+function rowToDto(row: AlertRow): AwNotifyAlert {
   const thresholds = parseThresholds(row.thresholdStr);
   if (!thresholds) {
     throw new Error('Thresholds must be comma-separated positive whole minutes.');
   }
   return {
-    label: row.label,
-    category: row.category && row.category.trim() !== '' ? row.category.trim() : null,
-    thresholdMinutes: thresholds,
+    label: row.label.trim() || null,
+    category: row.category.trim() || 'All',
+    thresholds_minutes: thresholds,
     positive: row.positive,
   };
 }
@@ -109,6 +106,7 @@ export default {
   data() {
     return {
       alerts: [] as AlertRow[],
+      config: {} as AwNotifyConfig,
       loading: false,
       saving: false,
       error: '',
@@ -129,10 +127,15 @@ export default {
       try {
         const client = getClient();
         const resp = await client.req.get(`/0/settings/${SETTINGS_KEY}`);
-        const data: AlertDTO[] = resp.data;
-        this.alerts = Array.isArray(data) ? data.map(dtoToRow) : this.defaultAlerts();
+        const config = parseAwNotifyConfig(resp.data);
+        if (!config) {
+          throw new Error('The saved aw-notify setting has an unsupported format.');
+        }
+        this.config = config;
+        this.alerts = config.alerts.map(dtoToRow);
       } catch (e: any) {
         if (e?.response?.status === 404) {
+          this.config = {} as AwNotifyConfig;
           this.alerts = this.defaultAlerts();
         } else {
           this.error = `Failed to load settings: ${e?.message ?? e}`;
@@ -151,7 +154,7 @@ export default {
       this.saving = true;
       try {
         const client = getClient();
-        const payload: AlertDTO[] = this.alerts.map(rowToDto);
+        const payload: AwNotifyConfig = { ...this.config, alerts: this.alerts.map(rowToDto) };
         await client.req.post(`/0/settings/${SETTINGS_KEY}`, payload, {
           headers: { 'Content-Type': 'application/json' },
         });
@@ -171,7 +174,7 @@ export default {
     addAlert() {
       this.alerts.push({
         label: '',
-        category: '',
+        category: 'All',
         thresholdStr: '60, 120',
         positive: false,
       });
@@ -181,8 +184,8 @@ export default {
     },
     defaultAlerts(): AlertRow[] {
       return [
-        { label: 'All', category: '', thresholdStr: '60, 120, 240', positive: false },
-        { label: 'Work', category: 'Work', thresholdStr: '15, 30, 60', positive: true },
+        { label: 'All', category: 'All', thresholdStr: '60, 240, 480', positive: false },
+        { label: '💼 Work', category: 'Work', thresholdStr: '60, 120, 240', positive: true },
       ];
     },
   },
