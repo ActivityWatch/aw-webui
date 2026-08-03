@@ -35,13 +35,20 @@ div
             )
             small.form-text.text-muted
               | Match the category name in your AW categorization rules, or leave empty for total time.
-          b-form-group(label="Thresholds" label-cols-sm="3" label-size="sm")
+          b-form-group(
+            label="Thresholds"
+            label-cols-sm="3"
+            label-size="sm"
+            :invalid-feedback="thresholdError(alert.thresholdStr)"
+            :state="thresholdState(alert.thresholdStr)"
+          )
             b-input(
               v-model="alert.thresholdStr"
               size="sm"
               placeholder="e.g. 60, 120, 240"
+              :state="thresholdState(alert.thresholdStr)"
             )
-            small.form-text.text-muted Comma-separated minutes. A notification fires as each threshold is crossed.
+            small.form-text.text-muted Comma-separated positive whole minutes. A notification fires as each threshold is crossed.
           b-form-group(label="Type" label-cols-sm="3" label-size="sm")
             b-form-radio-group(v-model="alert.positive" :options="goalOptions" size="sm")
         b-btn.ml-2(@click="removeAlert(idx)" variant="outline-danger" size="sm" title="Remove alert")
@@ -57,6 +64,7 @@ import 'vue-awesome/icons/plus';
 import 'vue-awesome/icons/trash';
 
 import { getClient } from '~/util/awclient';
+import { parseThresholds } from '~/util/aw-notify';
 
 const SETTINGS_KEY = 'aw-notify';
 
@@ -84,10 +92,10 @@ function dtoToRow(dto: AlertDTO): AlertRow {
 }
 
 function rowToDto(row: AlertRow): AlertDTO {
-  const thresholds = row.thresholdStr
-    .split(',')
-    .map(s => parseInt(s.trim(), 10))
-    .filter(n => !isNaN(n) && n > 0);
+  const thresholds = parseThresholds(row.thresholdStr);
+  if (!thresholds) {
+    throw new Error('Thresholds must be comma-separated positive whole minutes.');
+  }
   return {
     label: row.label,
     category: row.category && row.category.trim() !== '' ? row.category.trim() : null,
@@ -122,11 +130,7 @@ export default {
         const client = getClient();
         const resp = await client.req.get(`/0/settings/${SETTINGS_KEY}`);
         const data: AlertDTO[] = resp.data;
-        if (Array.isArray(data) && data.length > 0) {
-          this.alerts = data.map(dtoToRow);
-        } else {
-          this.alerts = this.defaultAlerts();
-        }
+        this.alerts = Array.isArray(data) ? data.map(dtoToRow) : this.defaultAlerts();
       } catch (e: any) {
         if (e?.response?.status === 404) {
           this.alerts = this.defaultAlerts();
@@ -138,9 +142,13 @@ export default {
       }
     },
     async save() {
-      this.saving = true;
       this.error = '';
       this.success = false;
+      if (this.alerts.some(row => parseThresholds(row.thresholdStr) === null)) {
+        this.error = 'Thresholds must be comma-separated positive whole minutes.';
+        return;
+      }
+      this.saving = true;
       try {
         const client = getClient();
         const payload: AlertDTO[] = this.alerts.map(rowToDto);
@@ -153,6 +161,12 @@ export default {
       } finally {
         this.saving = false;
       }
+    },
+    thresholdError(value: string): string {
+      return parseThresholds(value) === null ? 'Use comma-separated positive whole minutes.' : '';
+    },
+    thresholdState(value: string): boolean | null {
+      return parseThresholds(value) === null ? false : null;
     },
     addAlert() {
       this.alerts.push({
