@@ -66,7 +66,7 @@ div
                 th Title
                 th.text-right Duration
               tr(v-for="event in showing_events[1]")
-                td {{ event.data.title }}
+                td {{ event.data.title || event.data.app }}
                 td.text-right {{ Math.round(event.duration) }}s
             hr
       div.d-flex.align-items-center.mt-3(v-if="hasMoreWords")
@@ -230,11 +230,32 @@ export default {
       }
       await this.categoryStore.load();
       const awclient = getClient();
+
+      // Hosts without a window/AFK bucket pair (Android, iOS/ScreenTime import)
+      // need to be queried through their android-style bucket instead, mirroring
+      // query_android in the activity store (which also prefers the ScreenTime
+      // bucket when both exist for a host).
+      const bucketsStore = useBucketsStore();
+      const hostname = this.queryOptions.hostname;
+      const windowAvail =
+        bucketsStore.bucketsWindow(hostname).length > 0 &&
+        bucketsStore.bucketsAFK(hostname).length > 0;
+      const androidBuckets = bucketsStore.bucketsAndroid(hostname);
+      let bucketParams;
+      if (!windowAvail && androidBuckets.length > 0) {
+        const screentimeBucket = androidBuckets.find(id => id.startsWith('aw-import-screentime'));
+        bucketParams = { bid_android: screentimeBucket || androidBuckets[0] };
+      } else {
+        bucketParams = {
+          bid_window: 'aw-watcher-window_' + hostname,
+          bid_afk: 'aw-watcher-afk_' + hostname,
+          filter_afk: this.queryOptions.filter_afk,
+        };
+      }
+
       const query =
         canonicalEvents({
-          bid_window: 'aw-watcher-window_' + this.queryOptions.hostname,
-          bid_afk: 'aw-watcher-afk_' + this.queryOptions.hostname,
-          filter_afk: this.queryOptions.filter_afk,
+          ...bucketParams,
           categories: this.categoryStore.classes_for_query,
           filter_categories: [this.category],
         }) + 'RETURN = limit_events(sort_by_duration(events), 1000);';

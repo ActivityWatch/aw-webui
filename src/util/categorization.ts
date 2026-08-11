@@ -28,9 +28,13 @@ export function findCommonPhrases(
   const words = new Map<string, WordEntry>();
   const bigrams = new Map<string, { bigram: string; duration: number; events: IEvent[] }>();
 
+  // Android/ScreenTime events have no title (only an app name), so fall
+  // back to the app field there. Empty titles count as missing.
+  const eventText = (event: IEvent): string => event.data.title || event.data.app || '';
+
   // Step 1: Build word duration dictionary
   for (const event of events) {
-    for (const word of event.data.title.split(SPLIT_REGEX)) {
+    for (const word of eventText(event).split(SPLIT_REGEX)) {
       if (word.length <= 2 || ignored_words.includes(word)) {
         continue;
       }
@@ -46,7 +50,7 @@ export function findCommonPhrases(
 
   // Step 2: Build bigram duration dictionary (skip bigrams with filtered words)
   for (const event of events) {
-    const parts = event.data.title.split(SPLIT_REGEX);
+    const parts = eventText(event).split(SPLIT_REGEX);
     for (let i = 0; i < parts.length - 1; i++) {
       const w1 = parts[i];
       const w2 = parts[i + 1];
