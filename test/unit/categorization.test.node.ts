@@ -14,6 +14,15 @@ describe('findCommonPhrases', () => {
     expect(findCommonPhrases([], [])).toEqual(new Map());
   });
 
+  test('falls back to app name for events without a title (Android)', () => {
+    const events: IEvent[] = [
+      { timestamp: new Date().toISOString(), duration: 100, data: { app: 'Firefox' } },
+      { timestamp: new Date().toISOString(), duration: 70, data: { app: 'Firefox' } },
+    ];
+    const result = findCommonPhrases(events, []);
+    expect(result.get('Firefox')?.duration).toBeCloseTo(170);
+  });
+
   test('counts single words by duration', () => {
     // Single-word titles produce no bigrams, so durations accumulate directly
     const events = [makeEvent('hello', 100), makeEvent('hello', 50), makeEvent('world', 80)];
