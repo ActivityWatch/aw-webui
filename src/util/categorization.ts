@@ -29,8 +29,8 @@ export function findCommonPhrases(
   const bigrams = new Map<string, { bigram: string; duration: number; events: IEvent[] }>();
 
   // Android/ScreenTime events have no title (only an app name), so fall
-  // back to the app field there.
-  const eventText = (event: IEvent): string => event.data.title ?? event.data.app ?? '';
+  // back to the app field there. Empty titles count as missing.
+  const eventText = (event: IEvent): string => event.data.title || event.data.app || '';
 
   // Step 1: Build word duration dictionary
   for (const event of events) {

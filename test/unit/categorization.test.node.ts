@@ -18,9 +18,11 @@ describe('findCommonPhrases', () => {
     const events: IEvent[] = [
       { timestamp: new Date().toISOString(), duration: 100, data: { app: 'Firefox' } },
       { timestamp: new Date().toISOString(), duration: 70, data: { app: 'Firefox' } },
+      // An empty title should also fall back to the app name
+      { timestamp: new Date().toISOString(), duration: 30, data: { title: '', app: 'Firefox' } },
     ];
     const result = findCommonPhrases(events, []);
-    expect(result.get('Firefox')?.duration).toBeCloseTo(170);
+    expect(result.get('Firefox')?.duration).toBeCloseTo(200);
   });
 
   test('counts single words by duration', () => {
