@@ -27,6 +27,11 @@ const presetSet: CategorySet = {
   ],
 };
 
+const extraSet: CategorySet = {
+  id: 'extra',
+  categories: [{ name: ['Extra'], rule: { type: 'regex', regex: '^Extra$' } }],
+};
+
 function setPresetGlobal(value: unknown) {
   if (value === undefined) {
     delete (globalThis as Record<string, unknown>)[PRESET_GLOBAL_NAME];
@@ -202,13 +207,20 @@ describe('getDefaultClasses', () => {
     expect(getDefaultClasses()).toEqual(defaultCategories);
   });
 
-  test('uses the merged presets when the build ships them', () => {
+  test('uses the preset when the build ships one', () => {
     setPresetGlobal([presetSet]);
     expect(getDefaultClasses().map(c => c.name[0])).toEqual([
       'Music & Audio',
       'Video Streaming',
       'Excluded',
     ]);
+  });
+
+  test('uses only the first preset — the one activated on a fresh install', () => {
+    // Otherwise "Restore defaults" + save would fold inactive presets into the
+    // active set via syncToPrimarySet().
+    setPresetGlobal([presetSet, extraSet]);
+    expect(getDefaultClasses().map(c => c.name[0])).not.toContain('Extra');
   });
 });
 
@@ -343,6 +355,20 @@ describe('categories store with presets', () => {
       'Video Streaming',
       'Excluded',
     ]);
+  });
+
+  test('restore defaults + save keeps inactive presets out of the active set', () => {
+    setPresetGlobal([presetSet, extraSet]);
+    const categoryStore = useCategoryStore();
+    categoryStore.load();
+    categoryStore.restoreDefaultClasses();
+    categoryStore.save();
+
+    const activeSet = categoryStore.category_sets.find(s => s.id === 'study');
+    expect(activeSet.categories.map(c => c.name[0])).not.toContain('Extra');
+    expect(categoryStore.category_sets.find(s => s.id === 'extra').categories).toEqual(
+      extraSet.categories
+    );
   });
 
   test('restore defaults is unchanged on a stock build', () => {

@@ -133,11 +133,15 @@ export const defaultCategories: Category[] = [
  *
  * Normally the built-in `defaultCategories`, but builds/deployments that ship
  * preset category sets (see `~/util/presetCategories`) start from those instead.
+ *
+ * Only the *first* preset is used, matching what `loadCategories()` activates on
+ * a fresh install. Merging every preset here would make "Restore defaults" fold
+ * the categories of inactive presets into the one active set on the next save.
  */
 export function getDefaultClasses(): Category[] {
   const presets = getPresetCategorySets();
   if (presets.length > 0) {
-    return mergeCategorySets(presets);
+    return presets[0].categories;
   }
   return _.cloneDeep(defaultCategories);
 }
