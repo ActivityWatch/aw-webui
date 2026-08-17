@@ -8,6 +8,14 @@ describe('validateRegex', () => {
     expect(validateRegex('[a-z]+')).toBe(true);
   });
 
+  test('accepts standard Python regex escape sequences', () => {
+    // \n, \t, \r etc. are valid in both JS and Python regex
+    expect(validateRegex('^app\\nwindow title$')).toBe(true);
+    expect(validateRegex('foo\\tbar')).toBe(true);
+    expect(validateRegex('line\\rend')).toBe(true);
+    expect(validateRegex('\\n+')).toBe(true);
+  });
+
   test('rejects empty string', () => {
     expect(validateRegex('')).toBe(false);
   });

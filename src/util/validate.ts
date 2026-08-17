@@ -28,7 +28,7 @@ try {
   // be rejected outright by hasPythonInvalidEscape (fail-safe behavior).
 }
 
-const PYTHON_INVALID_IDENTITY_ESCAPE = /\\[CEFGHIJKLMOPQRTVXYceghijklmnopqyz]/;
+const PYTHON_INVALID_IDENTITY_ESCAPE = /\\[CEFGHIJKLMOPQRTVXYceghijklmopqyz]/;
 const PYTHON_INCOMPLETE_ESCAPE =
   /\\(?:N(?!\{[^}]+\})|u(?![0-9A-Fa-f]{4})|U(?![0-9A-Fa-f]{8})|x(?![0-9A-Fa-f]{2}))/;
 const PYTHON_UNICODE_NAMES = new Set([
