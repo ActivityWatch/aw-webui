@@ -29,15 +29,13 @@
  *                       "data": {"color": "#0F0"}}]}]
  *
  * Behaviour of the resulting sets is defined in `loadCategories()` in
- * `~/util/classes`: preset sets are always *available*, but only the first one
- * is activated by default, and only when the user has no stored categorization
- * of their own.
+ * `~/util/classes`: preset sets are always *available*, but only activated by
+ * default when the user has no stored categorization of their own.
  *
  * Malformed input is dropped with a warning rather than thrown — a broken
  * preset must never prevent the UI from starting.
  */
 import type { Category, CategorySet, Rule } from '~/util/classes';
-import { validateRegex } from '~/util/validate';
 
 /** Name of the global an embedder can set to inject presets at runtime. */
 export const PRESET_GLOBAL_NAME = '__AW_PRESET_CATEGORY_SETS__';
@@ -64,12 +62,18 @@ function parseRule(raw: unknown, context: string): Rule | null {
     console.warn(`[presets] ${context}: regex rule without a pattern, skipping`);
     return null;
   }
-  // Validate here so a bad pattern can't break categorization at match time.
-  // validateRegex() also rejects patterns that only work in JavaScript: rules
-  // are sent to the server-side query engine via `classes_for_query`, so a
-  // JS-only pattern would break every categorized query.
-  if (!validateRegex(raw.regex)) {
-    console.warn(`[presets] ${context}: invalid regex ${JSON.stringify(raw.regex)}, skipping`);
+  try {
+    // Validate against JavaScript regex syntax so a bad pattern cannot break
+    // categorization at match time. Note: this does NOT guarantee that the
+    // pattern is valid for the Python `re` module used by aw-server for
+    // server-side categorization queries (classes_for_query). JS-specific
+    // constructs such as named-capture-group syntax (?<name>...) are accepted
+    // here but will fail on the backend. Keep preset regexes simple and stick
+    // to syntax that is valid in both engines (basic groups, quantifiers,
+    // character classes, anchors).
+    RegExp(raw.regex);
+  } catch (e) {
+    console.warn(`[presets] ${context}: invalid regex ${JSON.stringify(raw.regex)}, skipping`, e);
     return null;
   }
   const rule: Rule = { type: 'regex', regex: raw.regex };

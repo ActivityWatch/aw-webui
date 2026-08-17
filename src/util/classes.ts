@@ -285,13 +285,16 @@ export function loadCategories(): { sets: CategorySet[]; activeIds: string[] } {
     activeIds =
       storedActiveIds && storedActiveIds.length > 0 ? [...storedActiveIds] : [storedSets[0].id];
   } else if (presets.length > 0 && !settingsStore.hasStoredCategories) {
-    // First run on a build that ships presets: activate the first one.
+    // First run on a build that ships presets: activate the first preset only.
     //
-    // Deliberately only one: while several sets are active the store cannot
-    // sync edits back into them (see syncToPrimarySet), so activating multiple
-    // sets by default would put users in a state where editing and saving
-    // silently drops their changes. Additional presets stay available for the
-    // user to switch to or combine explicitly.
+    // We deliberately limit the initial selection to one set: syncToPrimarySet()
+    // in the category store cannot split state.classes back into individual sets
+    // when multiple sets are active, so it skips the sync entirely. Activating
+    // more than one preset on first run would therefore cause any category edit
+    // the user makes to be lost on the next reload.
+    //
+    // The remaining presets are still appended below and are available in the UI
+    // for the user to activate manually.
     sets = [];
     activeIds = [presets[0].id];
   } else {

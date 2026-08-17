@@ -115,19 +115,23 @@ categorization settings page imports/exports):
 ]
 ```
 
-The first preset set is activated by default on installs that have no stored
-categorization of their own; any further sets are offered as alternatives the
-user can switch to or combine. Users who already configured categories keep
-theirs — the presets only show up as additional sets in Settings →
-Categorization. A set the user has edited and saved always wins over the preset
-definition with the same id.
-
-Rules are validated for both the JavaScript and the server-side (Python) regex
-engines, since category rules are also evaluated in queries.
+When a build ships presets, the **first** preset in the list is active by
+default on installs with no stored categorization. Remaining presets are
+available in Settings → Categorization for the user to enable. Users who
+already configured categories keep theirs — presets only show up as additional
+sets. A set the user has edited and saved always wins over the preset definition
+with the same id.
 
 Embedders that can set a global before the app boots (Tauri, Android WebView,
 custom launchers) may instead assign the same payload to
 `window.__AW_PRESET_CATEGORY_SETS__`, which avoids rebuilding the bundle.
+
+**Regex compatibility note**: preset regexes are validated against JavaScript
+syntax, but they are also passed to the Python-backed categorization engine for
+server-side queries. Use patterns compatible with both engines: basic groups,
+quantifiers, character classes, and anchors are safe. Avoid JS-only
+constructs such as named-capture-group syntax (`(?<name>...)`) — use the
+Python form (`(?P<name>...)`) or omit named groups entirely.
 
 Malformed presets are logged and ignored rather than breaking the UI.
 See `src/util/presetCategories.ts`.

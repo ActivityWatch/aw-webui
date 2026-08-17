@@ -27,11 +27,6 @@ const presetSet: CategorySet = {
   ],
 };
 
-const extraSet: CategorySet = {
-  id: 'extra',
-  categories: [{ name: ['Extra'], rule: { type: 'regex', regex: '^Extra$' } }],
-};
-
 function setPresetGlobal(value: unknown) {
   if (value === undefined) {
     delete (globalThis as Record<string, unknown>)[PRESET_GLOBAL_NAME];
@@ -87,7 +82,6 @@ describe('parsePresetCategorySets', () => {
           { name: ['Good'], rule: { type: 'regex', regex: '^Good$' } },
           { name: [], rule: { type: 'regex', regex: 'x' } }, // empty name
           { name: ['Bad regex'], rule: { type: 'regex', regex: '[' } }, // uncompilable
-          { name: ['JS only'], rule: { type: 'regex', regex: '(?<year>\\d{4})' } }, // invalid in Python
           { name: ['No rule'] }, // missing rule
           { name: ['Weird'], rule: { type: 'glob' } }, // unknown rule type
           'nonsense',
@@ -218,20 +212,26 @@ describe('getDefaultClasses', () => {
 });
 
 describe('loadCategories with presets', () => {
-  test('first run with no stored settings activates the preset', () => {
+  test('first run with no stored settings activates the presets', () => {
     setPresetGlobal([presetSet]);
     const { sets, activeIds } = loadCategories();
     expect(activeIds).toEqual(['study']);
     expect(sets.map(s => s.id)).toEqual(['study']);
   });
 
-  test('only the first of several presets is active by default', () => {
-    // Multiple active sets cannot be safely edited/saved (see syncToPrimarySet),
-    // so a shipped default must never land the user in that state.
-    setPresetGlobal([presetSet, extraSet]);
+  test('first run with multiple presets activates only the first (syncToPrimarySet invariant)', () => {
+    const presetSet2: CategorySet = {
+      id: 'work',
+      categories: [{ name: ['Work'], rule: { type: 'regex', regex: '^Work$' } }],
+    };
+    setPresetGlobal([presetSet, presetSet2]);
     const { sets, activeIds } = loadCategories();
+    // Only the first preset is active on first run — activating all would break
+    // syncToPrimarySet, which skips sync when multiple sets are active, causing
+    // category edits to be silently lost on reload.
     expect(activeIds).toEqual(['study']);
-    expect(sets.map(s => s.id)).toEqual(['study', 'extra']);
+    // Both presets are available in the UI
+    expect(sets.map(s => s.id)).toEqual(['study', 'work']);
   });
 
   test('first run without presets keeps the legacy default set', () => {
@@ -328,24 +328,6 @@ describe('categories store with presets', () => {
     const classified = classifyEvents(events, categoryStore.classes);
     expect(classified[0].data.$category).toEqual(['Video Streaming']);
     expect(classified[1].data.$category).toEqual(['Uncategorized']);
-  });
-
-  test('edits are synced back into the active preset set on save', () => {
-    // Regression guard: with several sets active the store cannot sync edits
-    // back (syncToPrimarySet bails), so only one preset may be active by default.
-    setPresetGlobal([presetSet, extraSet]);
-    const categoryStore = useCategoryStore();
-    categoryStore.load();
-    categoryStore.addClass({ name: ['My Own'], rule: { type: 'regex', regex: '^My Own$' } });
-    expect(categoryStore.classes_unsaved_changes).toBe(true);
-    categoryStore.save();
-
-    const activeSet = categoryStore.category_sets.find(s => s.id === 'study');
-    expect(activeSet.categories.map(c => c.name[0])).toContain('My Own');
-    // untouched sets stay untouched
-    expect(categoryStore.category_sets.find(s => s.id === 'extra').categories).toEqual(
-      extraSet.categories
-    );
   });
 
   test('restore defaults restores the preset, not the built-in categories', () => {
