@@ -285,9 +285,15 @@ export function loadCategories(): { sets: CategorySet[]; activeIds: string[] } {
     activeIds =
       storedActiveIds && storedActiveIds.length > 0 ? [...storedActiveIds] : [storedSets[0].id];
   } else if (presets.length > 0 && !settingsStore.hasStoredCategories) {
-    // First run on a build that ships presets: activate them, in declared order.
+    // First run on a build that ships presets: activate the first one.
+    //
+    // Deliberately only one: while several sets are active the store cannot
+    // sync edits back into them (see syncToPrimarySet), so activating multiple
+    // sets by default would put users in a state where editing and saving
+    // silently drops their changes. Additional presets stay available for the
+    // user to switch to or combine explicitly.
     sets = [];
-    activeIds = presets.map(s => s.id);
+    activeIds = [presets[0].id];
   } else {
     // Migration path: no sets defined yet — wrap the existing flat classes into a "default" set
     const legacyClasses = settingsStore.classes || defaultCategories;

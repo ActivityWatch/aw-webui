@@ -115,11 +115,15 @@ categorization settings page imports/exports):
 ]
 ```
 
-Preset sets are activated by default on installs that have no stored
-categorization of their own. Users who already configured categories keep
-theirs — the presets only show up as additional sets they can switch to in
-Settings → Categorization. A set the user has edited and saved always wins over
-the preset definition with the same id.
+The first preset set is activated by default on installs that have no stored
+categorization of their own; any further sets are offered as alternatives the
+user can switch to or combine. Users who already configured categories keep
+theirs — the presets only show up as additional sets in Settings →
+Categorization. A set the user has edited and saved always wins over the preset
+definition with the same id.
+
+Rules are validated for both the JavaScript and the server-side (Python) regex
+engines, since category rules are also evaluated in queries.
 
 Embedders that can set a global before the app boots (Tauri, Android WebView,
 custom launchers) may instead assign the same payload to
