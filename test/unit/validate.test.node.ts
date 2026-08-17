@@ -56,11 +56,22 @@ describe('validateRegex', () => {
     expect(validateRegex('[abc](?<name>foo)')).toBe(false);
   });
 
+  test('rejects variable-length lookbehind (Python re requires fixed-width)', () => {
+    // Python's re raises re.error for variable-width lookbehind patterns
+    expect(validateRegex('(?<=\\d+)foo')).toBe(false);
+    expect(validateRegex('(?<=a*)bar')).toBe(false);
+    expect(validateRegex('(?<=a?)baz')).toBe(false);
+    expect(validateRegex('(?<=\\d{1,3})foo')).toBe(false);
+    expect(validateRegex('(?<!\\w+)foo')).toBe(false);
+  });
+
   test('accepts lookbehind assertions (valid in both JS and Python)', () => {
     // Positive lookbehind (?<=...) is valid in both
     expect(validateRegex('(?<=foo)bar')).toBe(true);
     // Negative lookbehind (?<!...) is valid in both
     expect(validateRegex('(?<!foo)bar')).toBe(true);
+    // Fixed-width quantifier in lookbehind is fine
+    expect(validateRegex('(?<=\\d{3})foo')).toBe(true);
     // Escaped backslashes and punctuation escapes are accepted by both engines
     expect(validateRegex('foo\\\\qbar')).toBe(true);
     expect(validateRegex('foo\\!bar')).toBe(true);
