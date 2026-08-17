@@ -222,6 +222,18 @@ describe('getDefaultClasses', () => {
     setPresetGlobal([presetSet, extraSet]);
     expect(getDefaultClasses().map(c => c.name[0])).not.toContain('Extra');
   });
+
+  test('restores the categories of the named preset set', () => {
+    setPresetGlobal([presetSet, extraSet]);
+    expect(getDefaultClasses('extra').map(c => c.name[0])).toEqual(['Extra']);
+  });
+
+  test('restores the built-in categories for a set the build does not ship', () => {
+    // Never hand one set's categories to another set — the caller writes these
+    // into the active set on save.
+    setPresetGlobal([presetSet, extraSet]);
+    expect(getDefaultClasses('my-own-set')).toEqual(defaultCategories);
+  });
 });
 
 describe('loadCategories with presets', () => {
@@ -368,6 +380,32 @@ describe('categories store with presets', () => {
     expect(activeSet.categories.map(c => c.name[0])).not.toContain('Extra');
     expect(categoryStore.category_sets.find(s => s.id === 'extra').categories).toEqual(
       extraSet.categories
+    );
+  });
+
+  test('restore defaults on a non-preset set does not overwrite it with a preset', () => {
+    setPresetGlobal([presetSet, extraSet]);
+    const settingsStore = useSettingsStore();
+    settingsStore.$patch({
+      category_sets: [{ id: 'mine', categories: [{ name: ['Mine'], rule: { type: 'none' } }] }],
+      active_set_ids: ['mine'],
+      _storedKeys: ['category_sets'],
+    });
+    const categoryStore = useCategoryStore();
+    categoryStore.load();
+    expect(categoryStore.active_set_ids).toEqual(['mine']);
+
+    categoryStore.restoreDefaultClasses();
+    categoryStore.save();
+
+    const names = categoryStore.category_sets
+      .find(s => s.id === 'mine')
+      .categories.map(c => c.name[0]);
+    expect(names).not.toContain('Music & Audio');
+    expect(names).toContain('Work');
+    // the preset sets themselves are untouched
+    expect(categoryStore.category_sets.find(s => s.id === 'study').categories).toEqual(
+      presetSet.categories
     );
   });
 

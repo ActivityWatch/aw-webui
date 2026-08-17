@@ -129,21 +129,28 @@ export const defaultCategories: Category[] = [
 ];
 
 /**
- * The categories an install starts out with.
+ * The categories a set starts out with — what "restore defaults" restores.
  *
  * Normally the built-in `defaultCategories`, but builds/deployments that ship
  * preset category sets (see `~/util/presetCategories`) start from those instead.
  *
- * Only the *first* preset is used, matching what `loadCategories()` activates on
- * a fresh install. Merging every preset here would make "Restore defaults" fold
- * the categories of inactive presets into the one active set on the next save.
+ * `setId` is the set the categories are destined for, so that restoring never
+ * writes one set's categories into another:
+ *  - a preset set restores its own categories,
+ *  - a user-owned set restores the built-in defaults,
+ *  - omitting it (install default) uses the first preset, which is the one
+ *    `loadCategories()` activates on a fresh install.
  */
-export function getDefaultClasses(): Category[] {
+export function getDefaultClasses(setId?: string): Category[] {
   const presets = getPresetCategorySets();
-  if (presets.length > 0) {
+  if (presets.length === 0) {
+    return _.cloneDeep(defaultCategories);
+  }
+  if (setId === undefined) {
     return presets[0].categories;
   }
-  return _.cloneDeep(defaultCategories);
+  const preset = presets.find(p => p.id === setId);
+  return preset ? preset.categories : _.cloneDeep(defaultCategories);
 }
 
 export function annotate(c: Category) {

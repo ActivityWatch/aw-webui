@@ -366,13 +366,17 @@ export const useCategoryStore = defineStore('categories', {
       this.classes_unsaved_changes = true;
     },
     /**
-     * Reset the effective classes to the install defaults.
+     * Reset the effective classes to the defaults of the active set.
      *
-     * On builds that ship preset category sets, "defaults" means the presets —
-     * otherwise "Restore defaults" would silently drop the shipped scheme.
+     * When the active set is one shipped by the build, "defaults" means that
+     * preset — otherwise "Restore defaults" would silently drop the shipped
+     * scheme. For a user-owned set it means the built-in categories: the
+     * subsequent save syncs these classes into the active set, so restoring
+     * anything else here would overwrite that set with another set's contents.
      */
     restoreDefaultClasses(this: State) {
-      this.classes = assignIds(createMissingParents(getDefaultClasses()));
+      const activeId = this.active_set_ids.length > 0 ? this.active_set_ids[0] : undefined;
+      this.classes = assignIds(createMissingParents(getDefaultClasses(activeId)));
       this.classes_unsaved_changes = true;
     },
     clearAll(this: State) {
