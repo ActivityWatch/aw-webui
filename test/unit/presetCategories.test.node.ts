@@ -82,6 +82,7 @@ describe('parsePresetCategorySets', () => {
           { name: ['Good'], rule: { type: 'regex', regex: '^Good$' } },
           { name: [], rule: { type: 'regex', regex: 'x' } }, // empty name
           { name: ['Bad regex'], rule: { type: 'regex', regex: '[' } }, // uncompilable
+          { name: ['JS only'], rule: { type: 'regex', regex: '(?<year>\\d{4})' } }, // invalid in Python
           { name: ['No rule'] }, // missing rule
           { name: ['Weird'], rule: { type: 'glob' } }, // unknown rule type
           'nonsense',
