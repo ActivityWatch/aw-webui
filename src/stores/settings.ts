@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import moment, { Moment } from 'moment';
 import { getClient } from '~/util/awclient';
-import { Category, CategorySet, defaultCategories, cleanCategory } from '~/util/classes';
+import { Category, CategorySet, getDefaultClasses, cleanCategory } from '~/util/classes';
 import { SavedQuery } from '~/util/savedQueries';
 import { View, defaultViews } from '~/stores/views';
 import type { PrivacyFilterRule } from '~/util/privacyFilters';
@@ -71,6 +71,11 @@ interface State {
 
   // Set to true if settings loaded
   _loaded: boolean;
+  // Keys that were actually present in storage (server or localStorage) on load.
+  // Lets us tell "user has never configured this" apart from "user configured it
+  // to the same value as the default" — needed to decide whether build-shipped
+  // preset categories may be activated. See `loadCategories()` in ~/util/classes.
+  _storedKeys: string[];
 }
 
 export const useSettingsStore = defineStore('settings', {
@@ -105,7 +110,7 @@ export const useSettingsStore = defineStore('settings', {
 
     always_active_pattern: '',
     privacy_filters: [],
-    classes: defaultCategories,
+    classes: getDefaultClasses(),
     category_sets: [],
     active_set_ids: ['default'],
     views: defaultViews,
@@ -120,11 +125,16 @@ export const useSettingsStore = defineStore('settings', {
     hideUnsupportedVisualizations: false,
 
     _loaded: false,
+    _storedKeys: [],
   }),
 
   getters: {
     loaded(state: State) {
       return state._loaded;
+    },
+    /** Whether the user has a stored categorization of their own (as opposed to defaults). */
+    hasStoredCategories(state: State) {
+      return state._storedKeys.includes('classes') || state._storedKeys.includes('category_sets');
     },
   },
 
@@ -205,7 +215,7 @@ export const useSettingsStore = defineStore('settings', {
           console.error('failed to parse', key, raw, e);
         }
       }
-      this.$patch({ ...storage, _loaded: true });
+      this.$patch({ ...storage, _loaded: true, _storedKeys: Object.keys(storage) });
 
       const localeFromServer = 'locale' in server_settings;
       const localeFromLocalStorage = localStorage.getItem('locale') != null;

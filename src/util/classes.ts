@@ -1,10 +1,14 @@
 import _ from 'lodash';
 import { IEvent } from './interfaces';
 import { useSettingsStore } from '~/stores/settings';
+import { getPresetCategorySets } from '~/util/presetCategories';
 
 const level_sep = '>';
 const CLASSIFY_KEYS = ['app', 'title'];
 const UNCATEGORIZED = ['Uncategorized'];
+
+/** ID of the implicit set holding a user's own (non-preset) categories. */
+export const DEFAULT_SET_ID = 'default';
 
 export interface Rule {
   type: 'regex' | 'none';
@@ -123,6 +127,20 @@ export const defaultCategories: Category[] = [
   { name: ['Comms', 'Email'], rule: { type: 'regex', regex: 'Gmail|Thunderbird|mutt|alpine' } },
   { name: ['Uncategorized'], rule: { type: null }, data: { color: COLOR_UNCAT } },
 ];
+
+/**
+ * The categories an install starts out with.
+ *
+ * Normally the built-in `defaultCategories`, but builds/deployments that ship
+ * preset category sets (see `~/util/presetCategories`) start from those instead.
+ */
+export function getDefaultClasses(): Category[] {
+  const presets = getPresetCategorySets();
+  if (presets.length > 0) {
+    return mergeCategorySets(presets);
+  }
+  return _.cloneDeep(defaultCategories);
+}
 
 export function annotate(c: Category) {
   const ch = c.name;
@@ -247,22 +265,54 @@ export function saveCategories(sets: CategorySet[], activeIds: string[]) {
 /**
  * Load category sets and active set IDs from the settings store.
  * Falls back to the legacy flat `classes` setting if no sets are defined yet.
+ *
+ * Preset sets shipped by the build/deployment (see `~/util/presetCategories`)
+ * are always appended as *available* sets, but are only active by default when
+ * the user has no stored categorization of their own. A stored set with the
+ * same id always wins over the preset definition, so user edits stick.
  */
 export function loadCategories(): { sets: CategorySet[]; activeIds: string[] } {
   const settingsStore = useSettingsStore();
-  const sets: CategorySet[] = settingsStore.category_sets;
-  const activeIds: string[] = settingsStore.active_set_ids;
+  const storedSets: CategorySet[] = settingsStore.category_sets;
+  const storedActiveIds: string[] = settingsStore.active_set_ids;
+  const presets = getPresetCategorySets();
 
-  if (sets && sets.length > 0) {
-    return { sets, activeIds: activeIds && activeIds.length > 0 ? activeIds : [sets[0].id] };
+  let sets: CategorySet[];
+  let activeIds: string[];
+
+  if (storedSets && storedSets.length > 0) {
+    sets = [...storedSets];
+    activeIds =
+      storedActiveIds && storedActiveIds.length > 0 ? [...storedActiveIds] : [storedSets[0].id];
+  } else if (presets.length > 0 && !settingsStore.hasStoredCategories) {
+    // First run on a build that ships presets: activate them, in declared order.
+    sets = [];
+    activeIds = presets.map(s => s.id);
+  } else {
+    // Migration path: no sets defined yet — wrap the existing flat classes into a "default" set
+    const legacyClasses = settingsStore.classes || defaultCategories;
+    sets = [{ id: DEFAULT_SET_ID, categories: legacyClasses }];
+    activeIds = [DEFAULT_SET_ID];
   }
 
-  // Migration path: no sets defined yet — wrap the existing flat classes into a "default" set
-  const legacyClasses = settingsStore.classes || defaultCategories;
-  return {
-    sets: [{ id: 'default', categories: legacyClasses }],
-    activeIds: ['default'],
-  };
+  // Presets are always offered as sets the user can switch to/combine,
+  // unless a set with the same id is already stored (that one is authoritative).
+  for (const preset of presets) {
+    if (!sets.some(s => s.id === preset.id)) {
+      sets.push(preset);
+    }
+  }
+
+  // Never return a dangling or empty selection
+  if (sets.length === 0) {
+    sets = [{ id: DEFAULT_SET_ID, categories: defaultCategories }];
+  }
+  activeIds = activeIds.filter(id => sets.some(s => s.id === id));
+  if (activeIds.length === 0) {
+    activeIds = [sets[0].id];
+  }
+
+  return { sets, activeIds };
 }
 
 function pickDeepest(categories: Category[]) {

@@ -4,7 +4,7 @@ import {
   saveCategories,
   loadCategories,
   cleanCategory,
-  defaultCategories,
+  getDefaultClasses,
   build_category_hierarchy,
   createMissingParents,
   mergeCategorySets,
@@ -365,8 +365,14 @@ export const useCategoryStore = defineStore('categories', {
       }
       this.classes_unsaved_changes = true;
     },
+    /**
+     * Reset the effective classes to the install defaults.
+     *
+     * On builds that ship preset category sets, "defaults" means the presets —
+     * otherwise "Restore defaults" would silently drop the shipped scheme.
+     */
     restoreDefaultClasses(this: State) {
-      this.classes = assignIds(createMissingParents(defaultCategories));
+      this.classes = assignIds(createMissingParents(getDefaultClasses()));
       this.classes_unsaved_changes = true;
     },
     clearAll(this: State) {

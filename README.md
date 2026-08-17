@@ -87,6 +87,47 @@ Then, in another terminal (with your venv activated) run:
 python3 -m http.server --bind 127.0.0.1 27180 --directory ../aw-server/static
 ```
 
+### Shipping preset categories in a build
+
+Distributions that need their own categorization scheme (a research build, a
+company-wide deployment, ...) can ship one or more *preset category sets* with
+the bundle, instead of patching the built-in defaults:
+
+```bash
+AW_PRESET_CATEGORY_SETS="$(cat mypreset.json)" npm run build
+```
+
+where `mypreset.json` holds a list of category sets (the same shape the
+categorization settings page imports/exports):
+
+```json
+[
+  {
+    "id": "mypreset",
+    "categories": [
+      {
+        "name": ["Work"],
+        "rule": { "type": "regex", "regex": "^Work$" },
+        "data": { "color": "#0F0" }
+      }
+    ]
+  }
+]
+```
+
+Preset sets are activated by default on installs that have no stored
+categorization of their own. Users who already configured categories keep
+theirs — the presets only show up as additional sets they can switch to in
+Settings → Categorization. A set the user has edited and saved always wins over
+the preset definition with the same id.
+
+Embedders that can set a global before the app boots (Tauri, Android WebView,
+custom launchers) may instead assign the same payload to
+`window.__AW_PRESET_CATEGORY_SETS__`, which avoids rebuilding the bundle.
+
+Malformed presets are logged and ignored rather than breaking the UI.
+See `src/util/presetCategories.ts`.
+
 ## Tests
 
 Tests can be run with:
