@@ -142,6 +142,7 @@ export default {
       errorMessage: '',
       categoryRows: [] as CategoryRow[],
       totalDuration: 0,
+      queriedPeriod: '' as string,
     };
   },
   computed: {
@@ -163,7 +164,7 @@ export default {
       return this.categoryRows.reduce((sum, row) => sum + this.getAmount(row), 0);
     },
     periodLabel() {
-      const tp = this.getTimeperiod();
+      const tp = this.queriedPeriod || this.getTimeperiod();
       const [start, end] = tp.split('/');
       return `${moment(start).format('MMM D')} – ${moment(end).format('MMM D, YYYY')}`;
     },
@@ -226,6 +227,7 @@ export default {
         const categoriesStr = JSON.stringify(categories).replace(/\\\\/g, '\\');
         const query = buildBillingQuery(hostsToQuery, categoriesStr);
         const tp = this.getTimeperiod();
+        this.queriedPeriod = tp;
 
         const [result] = await client.query([tp], [query]);
         const events: any[] = result.events || [];
@@ -261,7 +263,9 @@ export default {
 
     getEffectiveRate(row: CategoryRow): number {
       const explicit = this.categoryRates[row.category];
-      if (explicit !== undefined && explicit !== null && explicit !== 0) return explicit;
+      // Treat explicitly-entered 0 as "not billable" (don't fall back to defaultRate).
+      // Only fall back when the field has never been touched (undefined/null/'').
+      if (explicit !== undefined && explicit !== null && explicit !== '') return Number(explicit);
       return this.defaultRate || 0;
     },
 
@@ -285,7 +289,7 @@ export default {
     },
 
     exportCSV() {
-      const tp = this.getTimeperiod();
+      const tp = this.queriedPeriod || this.getTimeperiod();
       const [start, end] = tp.split('/');
       const header = [
         `# Billable Hours Export`,
@@ -299,7 +303,7 @@ export default {
         const rate = this.getEffectiveRate(row);
         const amount = this.getAmount(row);
         return [
-          `"${row.category}"`,
+          '"' + row.category.replace(/"/g, '""') + '"',
           (row.duration / 3600).toFixed(2),
           rate > 0 ? rate.toFixed(2) : '',
           amount > 0 ? amount.toFixed(2) : '',
