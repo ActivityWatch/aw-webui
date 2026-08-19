@@ -54,14 +54,14 @@ div
           th.text-right Rate ($/h)
           th.text-right Amount
       tbody
-        tr(v-for="row in categoryRows" :key="row.category")
+        tr(v-for="row in categoryRows" :key="row.key")
           td
             span.badge.mr-1(:style="{ background: '#6c757d', color: 'white' }") {{ row.depth > 0 ? '↳ ' : '' }}
             | {{ row.label }}
           td.text-right {{ formatHours(row.duration) }}
           td.text-right
             b-form-input(
-              v-model.number="categoryRates[row.category]"
+              v-model.number="categoryRates[row.key]"
               type="number"
               min="0"
               step="0.01"
@@ -95,7 +95,8 @@ import 'vue-awesome/icons/sync';
 import 'vue-awesome/icons/download';
 
 interface CategoryRow {
-  category: string;
+  key: string; // JSON.stringify(parts) — unambiguous identity for rate lookup
+  category: string; // parts.join(' > ') — display label in UI and CSV
   label: string;
   depth: number;
   duration: number;
@@ -227,27 +228,31 @@ export default {
         const categoriesStr = JSON.stringify(categories).replace(/\\\\/g, '\\');
         const query = buildBillingQuery(hostsToQuery, categoriesStr);
         const tp = this.getTimeperiod();
-        this.queriedPeriod = tp;
 
         const [result] = await client.query([tp], [query]);
+        // Only update queriedPeriod after a successful query so that on
+        // failure the existing rows continue to display with their correct period.
+        this.queriedPeriod = tp;
         const events: any[] = result.events || [];
         this.totalDuration = result.duration || 0;
 
-        // Aggregate duration by category path
+        // Aggregate duration by category path.
+        // Key: JSON.stringify(parts) — unambiguous even if a segment contains ' > '.
         const durationMap: Record<string, number> = {};
         for (const event of events) {
           const cat: string[] = event.data?.['$category'] || ['Uncategorized'];
-          const key = cat.join(' > ');
+          const key = JSON.stringify(cat);
           durationMap[key] = (durationMap[key] || 0) + event.duration;
         }
 
-        // Build rows sorted by category name
+        // Build rows sorted by display label.
         this.categoryRows = Object.entries(durationMap)
           .sort(([a], [b]) => a.localeCompare(b))
-          .map(([category, duration]) => {
-            const parts = category.split(' > ');
+          .map(([key, duration]) => {
+            const parts: string[] = JSON.parse(key);
             return {
-              category,
+              key,
+              category: parts.join(' > '),
               label: parts[parts.length - 1],
               depth: parts.length - 1,
               duration,
@@ -262,7 +267,7 @@ export default {
     },
 
     getEffectiveRate(row: CategoryRow): number {
-      const explicit = this.categoryRates[row.category];
+      const explicit = this.categoryRates[row.key];
       // Treat explicitly-entered 0 as "not billable" (don't fall back to defaultRate).
       // Only fall back when the field has never been touched (undefined/null/'').
       if (explicit !== undefined && explicit !== null && explicit !== '') return Number(explicit);
