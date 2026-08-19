@@ -60,6 +60,9 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
           b-dropdown-item(to="/work-report")
             icon(name="briefcase")
             | {{ $t('nav.workReport') }}
+          b-dropdown-item(to="/billing")
+            icon(name="dollar-sign")
+            | Billable Hours
           b-dropdown-item(to="/analysis/activity" v-if="devmode")
             icon(name="robot")
             | {{ $t('nav.aiSummary') }}
@@ -102,6 +105,7 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
 // only import the icons you use to reduce bundle size
 import 'vue-awesome/icons/calendar-day';
 import 'vue-awesome/icons/briefcase';
+import 'vue-awesome/icons/dollar-sign';
 import 'vue-awesome/icons/calendar-week';
 import 'vue-awesome/icons/stream';
 import 'vue-awesome/icons/database';
