@@ -81,6 +81,9 @@ describe('validateRegex', () => {
     // Alternation with different-width branches: Python raises re.error
     expect(validateRegex('(?<=\\d{2}|[a-z]{3})foo')).toBe(false);
     expect(validateRegex('(?<=a|ab)x')).toBe(false);
+    // Nested lookbehind inside a lookbehind: Python's re does not support it
+    expect(validateRegex('(?<=(?<=a)b)x')).toBe(false);
+    expect(validateRegex('(?<=(?<!a)b)x')).toBe(false);
   });
 });
 

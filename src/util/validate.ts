@@ -361,6 +361,10 @@ function hasPythonInvalidLookbehind(re: string): boolean {
         j++;
       }
       const body = re.slice(start, j - 1);
+      // Python's re module does not support nested lookbehind inside a lookbehind.
+      // The width-check below treats inner (?<=...) as zero-width, so it would
+      // incorrectly pass e.g. (?<=(?<=a)b). Reject any nested lookbehind early.
+      if (/\(\?<[=!]/.test(body)) return true;
       if (lookbehindIsVariableWidth(body)) return true;
       i = j;
       continue;
