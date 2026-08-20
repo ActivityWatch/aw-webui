@@ -52,6 +52,8 @@ export default {
         PRODUCTION: process.env.NODE_ENV === 'production',
         AW_SERVER_URL: process.env.AW_SERVER_URL,
         COMMIT_HASH: JSON.stringify(_COMMIT_HASH),
+        // Optional JSON preset category sets shipped by this build (see src/util/presetCategories.ts)
+        AW_PRESET_CATEGORY_SETS: JSON.stringify(process.env.AW_PRESET_CATEGORY_SETS || ''),
       }),
       new CopyWebpackPlugin({
         patterns: [{ from: 'static/', to: '' }],

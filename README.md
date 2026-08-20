@@ -87,6 +87,55 @@ Then, in another terminal (with your venv activated) run:
 python3 -m http.server --bind 127.0.0.1 27180 --directory ../aw-server/static
 ```
 
+### Shipping preset categories in a build
+
+Distributions that need their own categorization scheme (a research build, a
+company-wide deployment, ...) can ship one or more *preset category sets* with
+the bundle, instead of patching the built-in defaults:
+
+```bash
+AW_PRESET_CATEGORY_SETS="$(cat mypreset.json)" npm run build
+```
+
+where `mypreset.json` holds a list of category sets (the same shape the
+categorization settings page imports/exports):
+
+```json
+[
+  {
+    "id": "mypreset",
+    "categories": [
+      {
+        "name": ["Work"],
+        "rule": { "type": "regex", "regex": "^Work$" },
+        "data": { "color": "#0F0" }
+      }
+    ]
+  }
+]
+```
+
+When a build ships presets, the **first** preset in the list is active by
+default on installs with no stored categorization. Remaining presets are
+available in Settings → Categorization for the user to enable. Users who
+already configured categories keep theirs — presets only show up as additional
+sets. A set the user has edited and saved always wins over the preset definition
+with the same id.
+
+Embedders that can set a global before the app boots (Tauri, Android WebView,
+custom launchers) may instead assign the same payload to
+`window.__AW_PRESET_CATEGORY_SETS__`, which avoids rebuilding the bundle.
+
+**Regex compatibility note**: preset regexes are validated against JavaScript
+syntax, but they are also passed to the Python-backed categorization engine for
+server-side queries. Use patterns compatible with both engines: basic groups,
+quantifiers, character classes, and anchors are safe. Avoid JS-only
+constructs such as named-capture-group syntax (`(?<name>...)`) — use the
+Python form (`(?P<name>...)`) or omit named groups entirely.
+
+Malformed presets are logged and ignored rather than breaking the UI.
+See `src/util/presetCategories.ts`.
+
 ## Tests
 
 Tests can be run with:

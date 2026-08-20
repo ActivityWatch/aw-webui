@@ -8,6 +8,14 @@ describe('validateRegex', () => {
     expect(validateRegex('[a-z]+')).toBe(true);
   });
 
+  test('accepts standard Python regex escape sequences', () => {
+    // \n, \t, \r etc. are valid in both JS and Python regex
+    expect(validateRegex('^app\\nwindow title$')).toBe(true);
+    expect(validateRegex('foo\\tbar')).toBe(true);
+    expect(validateRegex('line\\rend')).toBe(true);
+    expect(validateRegex('\\n+')).toBe(true);
+  });
+
   test('rejects empty string', () => {
     expect(validateRegex('')).toBe(false);
   });
@@ -56,6 +64,30 @@ describe('validateRegex', () => {
     // Escaped backslashes and punctuation escapes are accepted by both engines
     expect(validateRegex('foo\\\\qbar')).toBe(true);
     expect(validateRegex('foo\\!bar')).toBe(true);
+    // Fixed-width quantifiers inside lookbehind are valid
+    expect(validateRegex('(?<=\\d{3})foo')).toBe(true);
+    expect(validateRegex('(?<=abc)foo')).toBe(true);
+    // Lookbehind with equal-width alternation is valid in Python
+    expect(validateRegex('(?<=foo|bar)x')).toBe(true);
+    expect(validateRegex('(?<=\\d{2}|[a-z]{2})x')).toBe(true);
+  });
+
+  test('rejects Python-invalid lookbehind (variable-width or unequal alternation)', () => {
+    // Variable-width quantifiers in lookbehind: invalid in Python
+    expect(validateRegex('(?<=\\d+)foo')).toBe(false);
+    expect(validateRegex('(?<=a*)foo')).toBe(false);
+    expect(validateRegex('(?<=a?)foo')).toBe(false);
+    expect(validateRegex('(?<=\\d{2,3})foo')).toBe(false);
+    // Alternation with different-width branches: Python raises re.error
+    expect(validateRegex('(?<=\\d{2}|[a-z]{3})foo')).toBe(false);
+    expect(validateRegex('(?<=a|ab)x')).toBe(false);
+    // Nested lookbehind inside a lookbehind: Python's re does not support it
+    expect(validateRegex('(?<=(?<=a)b)x')).toBe(false);
+    expect(validateRegex('(?<=(?<!a)b)x')).toBe(false);
+    // Literal (?<= inside a character class is NOT a nested lookbehind —
+    // the check must be character-class-aware to avoid false rejections.
+    // (?<=[a(?<=z]b) has a fixed-width body [a(?<=z]b (1+1=2 chars) → valid.
+    expect(validateRegex('(?<=[a(?<=z]b)')).toBe(true);
   });
 });
 
