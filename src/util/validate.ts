@@ -364,7 +364,43 @@ function hasPythonInvalidLookbehind(re: string): boolean {
       // Python's re module does not support nested lookbehind inside a lookbehind.
       // The width-check below treats inner (?<=...) as zero-width, so it would
       // incorrectly pass e.g. (?<=(?<=a)b). Reject any nested lookbehind early.
-      if (/\(\?<[=!]/.test(body)) return true;
+      // Scan character-class-aware to avoid false positives when (?<= appears
+      // as literal text inside [...], e.g. (?<=[a(?<=z]b) is a valid fixed-width
+      // lookbehind whose body [a(?<=z]b has no actual nested assertion.
+      {
+        let bi = 0,
+          bClass = false,
+          bEsc = false,
+          hasNested = false;
+        while (bi < body.length) {
+          if (bEsc) {
+            bEsc = false;
+            bi++;
+            continue;
+          }
+          if (body[bi] === '\\') {
+            bEsc = true;
+            bi++;
+            continue;
+          }
+          if (body[bi] === '[' && !bClass) {
+            bClass = true;
+            bi++;
+            continue;
+          }
+          if (body[bi] === ']' && bClass) {
+            bClass = false;
+            bi++;
+            continue;
+          }
+          if (!bClass && (body.startsWith('(?<=', bi) || body.startsWith('(?<!', bi))) {
+            hasNested = true;
+            break;
+          }
+          bi++;
+        }
+        if (hasNested) return true;
+      }
       if (lookbehindIsVariableWidth(body)) return true;
       i = j;
       continue;

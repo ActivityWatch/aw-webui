@@ -84,6 +84,10 @@ describe('validateRegex', () => {
     // Nested lookbehind inside a lookbehind: Python's re does not support it
     expect(validateRegex('(?<=(?<=a)b)x')).toBe(false);
     expect(validateRegex('(?<=(?<!a)b)x')).toBe(false);
+    // Literal (?<= inside a character class is NOT a nested lookbehind —
+    // the check must be character-class-aware to avoid false rejections.
+    // (?<=[a(?<=z]b) has a fixed-width body [a(?<=z]b (1+1=2 chars) → valid.
+    expect(validateRegex('(?<=[a(?<=z]b)')).toBe(true);
   });
 });
 
