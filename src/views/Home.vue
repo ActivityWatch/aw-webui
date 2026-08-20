@@ -71,7 +71,7 @@ div
         li #[a(href="https://discord.gg/vDskV9q") {{ $t('home.discord') }}]
         li #[a(href="https://www.reddit.com/r/activitywatch/") {{ $t('home.reddit') }}]
         li #[a(href="https://github.com/ActivityWatch/activitywatch") GitHub]
-        li(v-if="!info.version.includes('rust')") #[a(:href="apiBrowserUrl") {{ $t('home.apiBrowser') }}]
+        li(v-if="info && !info.version.includes('rust')") #[a(:href="apiBrowserUrl") {{ $t('home.apiBrowser') }}]
 
     div.col-md-6
       h4 {{ $t('home.workingOnTitle') }}
