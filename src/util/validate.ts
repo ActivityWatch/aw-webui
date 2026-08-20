@@ -138,10 +138,10 @@ function applyQuantifier(
   if (s[i] === '+' || s[i] === '*') return { added: null, newI: i + 1 };
   if (s[i] === '?') return { added: null, newI: i + 1 };
   if (s[i] === '{') {
-    const close = s.indexOf('}', i + 1);
-    if (close !== -1) {
-      const inner = s.slice(i + 1, close);
-      let newI = close + 1;
+    const closeBrace = s.indexOf('}', i + 1);
+    if (closeBrace !== -1) {
+      const inner = s.slice(i + 1, closeBrace);
+      let newI = closeBrace + 1;
       if (newI < s.length && s[newI] === '?') newI++; // skip lazy modifier
       if (inner.includes(',')) {
         const [lo, hi] = inner.split(',', 2);
