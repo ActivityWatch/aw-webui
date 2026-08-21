@@ -56,7 +56,8 @@
   "globals": {
     "PRODUCTION": false,
     "AW_SERVER_URL": false,
-    "COMMIT_HASH": false
+    "COMMIT_HASH": false,
+    "AW_RESEARCH_EDITION": false
   },
   "overrides": [
     {
