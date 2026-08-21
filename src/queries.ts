@@ -289,7 +289,12 @@ function browsersWithBuckets(browserbuckets: string[]): [string, string][] {
 // The full set of historical app names these patterns replace is documented in the unit tests.
 // See: test/unit/queries.test.node.ts, https://github.com/ActivityWatch/aw-webui/issues/749
 export const browser_appname_regex: Record<string, string> = {
-  chrome: '(?i)^(google[-_ ]?chrome|chrome|chromium)',
+  // Chromium forks (Arc, Dia) run the chrome build of the extension, which announces itself
+  // as chrome unless the user overrides the browser name in the extension settings. So by
+  // default their events land in the chrome bucket and their app names have to be matched
+  // here (#927, ActivityWatch/activitywatch#1094). The standalone arc key below only covers
+  // setups where Arc was picked explicitly in the settings, which changes the bucket name.
+  chrome: '(?i)^(google[-_ ]?chrome|chrome|chromium|arc(\\.exe)?$|dia(\\.exe)?$)',
   firefox: '(?i)(firefox|librewolf|waterfox|nightly)',
   opera: '(?i)(opera)',
   brave: '(?i)(brave)',
