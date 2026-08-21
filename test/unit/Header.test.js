@@ -22,15 +22,14 @@ describe('Header research edition badge', () => {
     mockEnsureLoaded.mockClear();
   });
 
-  function mountHeader(researchEdition) {
+  function mountHeader(buildFlag) {
+    if (buildFlag === undefined) {
+      delete global.AW_RESEARCH_EDITION;
+    } else {
+      global.AW_RESEARCH_EDITION = buildFlag;
+    }
+
     return shallowMount(Header, {
-      data() {
-        return {
-          activityViews: [],
-          fixedTopMenu: false,
-          researchEdition,
-        };
-      },
       mocks: {
         $isAndroid: false,
         $t: key => key,
@@ -62,19 +61,9 @@ describe('Header research edition badge', () => {
     expect(wrapper.findAll('[data-testid="research-edition-badge"]')).toHaveLength(0);
   });
 
-  test.each([
-    [true, true],
-    [false, false],
-    [undefined, false],
-  ])('maps the build flag %p to researchEdition=%p', (buildFlag, expected) => {
-    if (buildFlag === undefined) {
-      delete global.AW_RESEARCH_EDITION;
-    } else {
-      global.AW_RESEARCH_EDITION = buildFlag;
-    }
+  test('renders no badge when the build flag is absent', () => {
+    const wrapper = mountHeader(undefined);
 
-    const data = Header.data.call({ $isAndroid: false });
-
-    expect(data.researchEdition).toBe(expected);
+    expect(wrapper.findAll('[data-testid="research-edition-badge"]')).toHaveLength(0);
   });
 });
