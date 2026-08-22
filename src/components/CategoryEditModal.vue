@@ -1,6 +1,6 @@
 <template lang="pug">
 // The category edit modal
-b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="hidden" @ok="handleOk" :ok-disabled="editing.rule.type === 'regex' && !validPattern")
+b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="hidden" @ok="handleOk" @keydown.native.enter="handleEnter" :ok-disabled="editing.rule.type === 'regex' && !validPattern")
   div.my-1
     b-input-group.my-1(prepend="Name")
       b-form-input(v-model="editing.name")
@@ -132,6 +132,22 @@ export default {
         return this.validPattern;
       }
       return true;
+    },
+    handleEnter(event) {
+      // Enter submits the modal, same as pressing OK (#232).
+      // Skipped for elements where Enter already has a meaning of its own,
+      // so we don't swallow their default behavior.
+      const tag = event.target && event.target.tagName;
+      if (tag === 'TEXTAREA' || tag === 'BUTTON' || tag === 'A' || tag === 'SELECT') {
+        return;
+      }
+      // Mirrors the :ok-disabled condition on the modal
+      if (this.editing.rule.type === 'regex' && !this.validPattern) {
+        return;
+      }
+      event.preventDefault();
+      this.handleSubmit();
+      this.$emit('ok');
     },
     handleOk(event) {
       // Prevent modal from closing
