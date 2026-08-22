@@ -1,8 +1,14 @@
 import _ from 'lodash';
+import { IEvent } from './interfaces';
 
-const escapeText = value => _.escape(value == null ? 'unknown' : String(value));
+const escapeText = (value: unknown): string => _.escape(value == null ? 'unknown' : String(value));
 
-export function getSwimlane(bucket, color, groupBy, e) {
+export function getSwimlane(
+  bucket: { type?: string } | null | undefined,
+  color: any,
+  groupBy: string,
+  e: IEvent
+): string {
   let subgroup = 'unknown';
 
   // A bucket with no type, or an event with no data, must not throw and take

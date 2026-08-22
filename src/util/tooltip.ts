@@ -2,13 +2,14 @@ import moment from 'moment';
 import { seconds_to_duration } from './time';
 import DOMPurify from 'dompurify';
 import _ from 'lodash';
+import { IEvent } from './interfaces';
 
-const escapeText = value => _.escape(value == null ? '' : String(value));
+const escapeText = (value: unknown): string => _.escape(value == null ? '' : String(value));
 
-function urlLink(value) {
+function urlLink(value: unknown): string {
   const text = escapeText(value);
   try {
-    const url = new URL(value);
+    const url = new URL(String(value));
     if (['http:', 'https:'].includes(url.protocol)) {
       return `<a href="${escapeText(url.href)}">${text}</a>`;
     }
@@ -18,7 +19,7 @@ function urlLink(value) {
   return text;
 }
 
-export function buildTooltip(bucket, e) {
+export function buildTooltip(bucket: { type?: string } | null | undefined, e: IEvent): string {
   let inner = 'Unknown bucket type';
   // A bucket with no type, or an event with no data, must still render a
   // tooltip rather than throwing and taking the whole timeline down.
@@ -26,8 +27,8 @@ export function buildTooltip(bucket, e) {
   const type = String((bucket && bucket.type) || '');
 
   // if same day, don't show date
-  let start = moment(e.timestamp);
-  let stop = moment(e.timestamp).add(e.duration, 'seconds');
+  let start: any = moment(e.timestamp);
+  let stop: any = moment(e.timestamp).add(e.duration, 'seconds');
   if (start.isSame(stop, 'day')) {
     start = start.format('HH:mm:ss');
     stop = stop.format('HH:mm:ss');

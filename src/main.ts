@@ -20,13 +20,13 @@ import 'typeface-varela-round';
 import './style/style.scss';
 
 // Loads all the filters
-import './util/filters.js';
+import './util/filters';
 
 // Internationalization
 import { i18n } from './i18n';
 
 // Sets up the routing and the base app (using vue-router)
-import router from './route.js';
+import router from './route';
 
 // Sets up the pinia store
 import pinia from './stores';
@@ -46,8 +46,9 @@ Vue.component('new-release-notification', () => import('./components/NewReleaseN
 Vue.component('user-satisfaction-poll', () => import('./components/UserSatisfactionPoll.vue'));
 Vue.component('aw-query-options', () => import('./components/QueryOptions.vue'));
 Vue.component('aw-select-categories', () => import('./components/SelectCategories.vue'));
-Vue.component('aw-select-categories-or-pattern', () =>
-  import('./components/SelectCategoriesOrPattern.vue')
+Vue.component(
+  'aw-select-categories-or-pattern',
+  () => import('./components/SelectCategoriesOrPattern.vue')
 );
 
 // Visualization components
@@ -67,7 +68,7 @@ Vue.component('aw-custom-vis', () => import('./visualizations/CustomVisualizatio
 Vue.component('aw-score', () => import('./visualizations/Score.vue'));
 
 // A mixin to make async method errors propagate
-import asyncErrorCapturedMixin from './mixins/asyncErrorCaptured.js';
+import asyncErrorCapturedMixin from './mixins/asyncErrorCaptured';
 Vue.mixin(asyncErrorCapturedMixin);
 
 // Set the PRODUCTION constant
