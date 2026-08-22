@@ -2,17 +2,18 @@ import moment from 'moment';
 import { seconds_to_duration } from './time';
 import DOMPurify from 'dompurify';
 import _ from 'lodash';
+import { IEvent, IBucket } from './interfaces';
 
 const sanitize = DOMPurify.sanitize;
 
-export function buildTooltip(bucket, e) {
+export function buildTooltip(bucket: Pick<IBucket, 'type'>, e: IEvent): string {
   // WARNING: XSS risk, make sure to sanitize properly
   // FIXME: Not actually tested against XSS attacks, implementation needs to be verified in tests.
   let inner = 'Unknown bucket type';
 
   // if same day, don't show date
-  let start = moment(e.timestamp);
-  let stop = moment(e.timestamp).add(e.duration, 'seconds');
+  let start: any = moment(e.timestamp);
+  let stop: any = moment(e.timestamp).add(e.duration, 'seconds');
   if (start.isSame(stop, 'day')) {
     start = start.format('HH:mm:ss');
     stop = stop.format('HH:mm:ss');

@@ -14,7 +14,7 @@ div.mx-3
   FullCalendar(ref="fullCalendar", :options="calendarOptions")
 </template>
 
-<script>
+<script lang="ts">
 import { getTitleAttr, getColorFromString } from '../util/color';
 import moment from 'moment';
 import _ from 'lodash';
@@ -36,9 +36,9 @@ export default {
   },
   computed: {
     calendarOptions: function () {
-      const events = this.events;
-      const first = _.minBy(events, e => e.start);
-      const last = _.maxBy(events, e => e.end);
+      const events: any = this.events;
+      const first: any = _.minBy(events, (e: any) => e.start);
+      const last: any = _.maxBy(events, (e: any) => e.end);
       // FIXME: end must be at least one slot (1 hour) after start, otherwise it fails hard
       let start, end;
       if (this.fitToActive && events.length > 0) {
