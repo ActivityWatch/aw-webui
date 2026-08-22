@@ -91,6 +91,7 @@ export default defineConfig(({ mode }) => {
       PRODUCTION,
       AW_SERVER_URL: process.env.AW_SERVER_URL,
       COMMIT_HASH: process.env.COMMIT_HASH,
+      AW_RESEARCH_EDITION: process.env.AW_RESEARCH_EDITION === 'true',
       // Optional JSON preset category sets shipped by this build (see src/util/presetCategories.ts)
       AW_PRESET_CATEGORY_SETS: JSON.stringify(process.env.AW_PRESET_CATEGORY_SETS || ''),
       'process.env.VUE_APP_ON_ANDROID': process.env.VUE_APP_ON_ANDROID,

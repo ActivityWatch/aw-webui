@@ -5,6 +5,7 @@
 declare const PRODUCTION: boolean;
 declare const AW_SERVER_URL: string;
 declare const COMMIT_HASH: string;
+declare const AW_RESEARCH_EDITION: boolean;
 // JSON-encoded preset category sets shipped by this build (empty string if none).
 // See src/util/presetCategories.ts
 declare const AW_PRESET_CATEGORY_SETS: string;
