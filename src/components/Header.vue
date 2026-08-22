@@ -99,7 +99,7 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
 
 <style lang="scss" scoped>
 .fixed-top-padding {
-  padding-bottom: 3.5em;
+  padding-bottom: var(--aw-navbar-height);
 }
 </style>
 

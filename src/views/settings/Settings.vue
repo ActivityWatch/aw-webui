@@ -154,7 +154,8 @@ export default {
 
 .settings-nav {
   position: sticky;
-  top: 1rem;
+  // Clear the fixed navbar, which overlaps the top of the viewport
+  top: calc(var(--aw-navbar-height) + 1rem);
   align-self: start;
 }
 

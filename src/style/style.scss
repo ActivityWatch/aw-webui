@@ -1,5 +1,12 @@
 @import "globals";
 
+:root {
+  // Height of the fixed navbar. Anything that positions itself against the
+  // top of the viewport (the padding that reserves the navbar's space in
+  // Header.vue, the sticky settings sidebar) offsets by this.
+  --aw-navbar-height: 3.5rem;
+}
+
 body,
 html,
 body,
