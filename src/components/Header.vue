@@ -138,7 +138,10 @@ export default {
   data() {
     return {
       activityViews: null,
-      fixedTopMenu: this.$isAndroid,
+      // Sticky on every platform: tall pages (the timeline, a long activity
+      // view) otherwise scroll the navigation out of reach.
+      // See https://github.com/ActivityWatch/aw-webui/issues/299
+      fixedTopMenu: true,
       researchEdition: typeof AW_RESEARCH_EDITION !== 'undefined' && AW_RESEARCH_EDITION,
     };
   },
