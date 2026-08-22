@@ -15,7 +15,7 @@ console.info('Commit hash:', _COMMIT_HASH);
 export default {
   pages: {
     index: {
-      entry: './src/main.js',
+      entry: './src/main.ts',
       template: './index.html',
       templateParameters: {
         cspDefaultSrc: process.env.NODE_ENV === 'production' ? '' : '*:5600 *:5666 ws://*:27180',

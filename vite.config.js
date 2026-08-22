@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
     };
   };
 
-  // Auto-injects /src/main.js into index.html on a new line after the one which has VITE_AUTOINJECT
+  // Auto-injects /src/main.ts into index.html on a new line after the one which has VITE_AUTOINJECT
   const autoInject = () => {
     return {
       name: 'html-transform',
@@ -36,7 +36,7 @@ export default defineConfig(({ mode }) => {
           }
           return html.replace(
             pattern,
-            '<!-- Vite injected! --><script type="module" src="/src/main.js"></script>'
+            '<!-- Vite injected! --><script type="module" src="/src/main.ts"></script>'
           );
         },
       },
