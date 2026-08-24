@@ -3,7 +3,7 @@ div#wrapper(v-if="loaded")
   aw-header
 
   div(:class="{'container': !fullContainer, 'container-fluid': fullContainer}").px-0.px-md-2
-    div.aw-container.my-sm-3.p-3
+    div.aw-container.my-sm-3.mb-3.p-3
       error-boundary
         user-satisfaction-poll
         new-release-notification(v-if="isNewReleaseCheckEnabled")
