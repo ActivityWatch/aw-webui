@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const LOCALES_DIR = path.join(__dirname, '../src/i18n/locales');
-const LOCALES = ['en', 'uk', 'de', 'ru', 'zh-CN'];
+const LOCALES = ['en', 'uk', 'de', 'ru', 'zh-CN', 'sv'];
 
 /** Substrings: identical en/value is OK when value contains any of these (case-insensitive). */
 const ALLOWLIST_SUBSTRINGS = [

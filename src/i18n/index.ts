@@ -4,19 +4,21 @@ import moment from 'moment';
 import 'moment/locale/uk';
 import 'moment/locale/de';
 import 'moment/locale/ru';
+import 'moment/locale/sv';
 import 'moment/locale/zh-cn';
 
 import en from './locales/en';
 import uk from './locales/uk';
 import de from './locales/de';
 import ru from './locales/ru';
+import sv from './locales/sv';
 import zhCN from './locales/zh-CN';
 
 Vue.use(VueI18n);
 
-export type AppLocale = 'en' | 'uk' | 'de' | 'ru' | 'zh-CN';
+export type AppLocale = 'en' | 'uk' | 'de' | 'ru' | 'zh-CN' | 'sv';
 
-const SUPPORTED: AppLocale[] = ['en', 'uk', 'de', 'ru', 'zh-CN'];
+const SUPPORTED: AppLocale[] = ['en', 'uk', 'de', 'ru', 'zh-CN', 'sv'];
 
 export function isAppLocale(value: string | null | undefined): value is AppLocale {
   return SUPPORTED.includes(value as AppLocale);
@@ -28,6 +30,7 @@ const HTML_LANG: Record<AppLocale, string> = {
   de: 'de',
   ru: 'ru',
   'zh-CN': 'zh-CN',
+  sv: 'sv',
 };
 
 function detectBrowserLocale(): AppLocale | null {
@@ -39,6 +42,7 @@ function detectBrowserLocale(): AppLocale | null {
   if (lang.startsWith('de')) return 'de';
   if (lang.startsWith('ru')) return 'ru';
   if (lang.startsWith('zh')) return 'zh-CN';
+  if (lang.startsWith('sv')) return 'sv';
   if (lang.startsWith('en')) return 'en';
   return null;
 }
@@ -61,6 +65,7 @@ const MOMENT_LOCALE: Record<AppLocale, string> = {
   de: 'de',
   ru: 'ru',
   'zh-CN': 'zh-cn',
+  sv: 'sv',
 };
 
 const initialLocale = getInitialLocale();
@@ -68,7 +73,7 @@ const initialLocale = getInitialLocale();
 export const i18n = new VueI18n({
   locale: initialLocale,
   fallbackLocale: 'en',
-  messages: { en, uk, de, ru, 'zh-CN': zhCN },
+  messages: { en, uk, de, ru, 'zh-CN': zhCN, sv },
   silentTranslationWarn: process.env.NODE_ENV === 'production',
 });
 
