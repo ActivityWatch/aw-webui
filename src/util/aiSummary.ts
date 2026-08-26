@@ -1,45 +1,8 @@
-export interface AppUsage {
-  app: string;
-  duration: number; // seconds
-}
-
-export interface ActivitySummaryData {
-  topApps: AppUsage[];
-  totalDuration: number; // seconds
-  periodDays: number;
-}
-
-export function aggregateEvents(events: any[]): AppUsage[] {
-  const byApp: Record<string, number> = {};
-  for (const event of events) {
-    const app = event.data?.app || event.data?.title || 'unknown';
-    byApp[app] = (byApp[app] || 0) + (event.duration || 0);
-  }
-  return Object.entries(byApp)
-    .map(([app, duration]) => ({ app, duration }))
-    .sort((a, b) => b.duration - a.duration);
-}
-
-export function formatDurationHuman(seconds: number): string {
-  if (seconds < 60) return `${Math.round(seconds)}s`;
-  if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
-  const h = Math.floor(seconds / 3600);
-  const m = Math.round((seconds % 3600) / 60);
-  return m > 0 ? `${h}h ${m}m` : `${h}h`;
-}
-
-export function buildSummaryText(data: ActivitySummaryData): string {
-  const lines: string[] = [
-    `Activity summary — past ${data.periodDays} day(s):`,
-    `Total tracked time: ${formatDurationHuman(data.totalDuration)}`,
-    '',
-    'Top applications by time:',
-  ];
-  for (const item of data.topApps.slice(0, 20)) {
-    lines.push(`  ${item.app}: ${formatDurationHuman(item.duration)}`);
-  }
-  return lines.join('\n');
-}
+/**
+ * LLM provider plumbing for the AI activity summary page.
+ *
+ * The activity context sent to the provider is built by `~/util/activityContext`.
+ */
 
 export type LLMProvider = 'openai' | 'anthropic';
 

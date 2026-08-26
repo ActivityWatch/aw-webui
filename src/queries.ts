@@ -490,6 +490,34 @@ export function activityQueryAndroid(androidbucket: string): string[] {
 
 // Returns a query that yields a dict with a key "cat_events" which is an
 // array of one event per category, with the duration of each event set to the sum of the category durations.
+// Query for the single-pass activity-analysis context (see AISummaryView).
+//
+// Returns the AFK-filtered, categorized timeline plus browser domains and the
+// unfiltered tracked duration, so the client can derive bounded statistics locally
+// without downloading a raw, uncapped bucket. Titles and URLs stay on the device;
+// see src/util/activityContext.ts for what is actually exported.
+export function analysisContextQuery(params: DesktopQueryParams): string[] {
+  return querystr_to_array(
+    `
+    ${canonicalEvents({
+      ...params,
+      bid_window: escape_doublequote(params.bid_window),
+      bid_afk: escape_doublequote(params.bid_afk),
+      bid_browsers: _.map(params.bid_browsers, escape_doublequote),
+    })}
+    events = sort_by_timestamp(events);
+    browser_events = split_url_events(browser_events);
+    browser_domains = sort_by_duration(merge_events_by_keys(browser_events, ["$domain"]));
+    browser_domains = limit_events(browser_domains, ${default_limit});
+    tracked_events = ${queryBucket(escape_doublequote(params.bid_window))};
+    RETURN = {
+        "events": events,
+        "browser_domains": browser_domains,
+        "tracked_duration": sum_durations(tracked_events)
+    };`
+  );
+}
+
 export function categoryQuery(
   params: MultiQueryParams | DesktopQueryParams | AndroidQueryParams
 ): string[] {
@@ -503,6 +531,7 @@ export function categoryQuery(
 
 export default {
   fullDesktopQuery,
+  analysisContextQuery,
   multideviceQuery,
   appQuery,
   activityQuery,
