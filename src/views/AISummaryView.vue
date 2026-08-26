@@ -240,10 +240,11 @@ export default {
       );
       // Only include browser buckets for the selected host; mixing buckets from
       // other hosts would send another device's domains to the LLM under the
-      // selected host's summary.
-      const browserBuckets = buckets
-        .filter(b => b.type === 'web.tab.current' && b.hostname === this.selectedHost)
-        .map(b => b.id);
+      // selected host's summary. Use bucketsBrowser() rather than an inline
+      // filter so the established 'unknown'-hostname fallback is respected: when
+      // a browser bucket's hostname is 'unknown' (common in older AW setups),
+      // strict equality against this.selectedHost would silently drop it.
+      const browserBuckets = this.bucketsStore.bucketsBrowser(this.selectedHost);
 
       const end = new Date();
       const start = new Date(end.getTime() - this.periodDays * 24 * 60 * 60 * 1000);
