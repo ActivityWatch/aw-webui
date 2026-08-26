@@ -238,7 +238,12 @@ export default {
       const afkBucket = buckets.find(
         b => b.type === 'afkstatus' && b.hostname === this.selectedHost
       );
-      const browserBuckets = buckets.filter(b => b.type === 'web.tab.current').map(b => b.id);
+      // Only include browser buckets for the selected host; mixing buckets from
+      // other hosts would send another device's domains to the LLM under the
+      // selected host's summary.
+      const browserBuckets = buckets
+        .filter(b => b.type === 'web.tab.current' && b.hostname === this.selectedHost)
+        .map(b => b.id);
 
       const end = new Date();
       const start = new Date(end.getTime() - this.periodDays * 24 * 60 * 60 * 1000);

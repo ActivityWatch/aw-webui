@@ -234,6 +234,56 @@ function dayKey(timestamp: string, timezone: string): string {
 }
 
 /**
+ * Find the UTC millisecond timestamp of the next local midnight after `fromMs`
+ * in the given timezone, using a binary search over a ≤25h window.
+ */
+function nextMidnightAfter(fromMs: number, timezone: string): number {
+  const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: timezone });
+  const currentDate = fmt.format(new Date(fromMs));
+  let lo = fromMs;
+  let hi = fromMs + 25 * 60 * 60 * 1000; // definitely the next day
+  while (hi - lo > 1000) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (fmt.format(new Date(mid)) === currentDate) {
+      lo = mid;
+    } else {
+      hi = mid;
+    }
+  }
+  return hi;
+}
+
+/**
+ * Accumulate an event's duration into `dayDurations`, splitting at local-midnight
+ * boundaries so events that span midnight are correctly apportioned across days.
+ */
+function accumulateByDay(
+  event: ContextEvent,
+  timezone: string,
+  dayDurations: Record<string, number>
+): void {
+  const duration = event.duration || 0;
+  if (duration <= 0) return;
+  const startMs = new Date(event.timestamp).getTime();
+  if (isNaN(startMs)) {
+    // Unparseable timestamp — fall back to assigning all to the start key.
+    const key = dayKey(event.timestamp, timezone);
+    dayDurations[key] = (dayDurations[key] || 0) + duration;
+    return;
+  }
+  const endMs = startMs + duration * 1000;
+  const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: timezone });
+  let cursor = startMs;
+  while (cursor < endMs) {
+    const dateStr = fmt.format(new Date(cursor));
+    const midnight = nextMidnightAfter(cursor, timezone);
+    const sliceEnd = Math.min(midnight, endMs);
+    dayDurations[dateStr] = (dayDurations[dateStr] || 0) + (sliceEnd - cursor) / 1000;
+    cursor = sliceEnd;
+  }
+}
+
+/**
  * Focus statistics over the AFK-filtered timeline.
  *
  * Events are assumed to be sorted by timestamp. Consecutive events in the same app
@@ -342,11 +392,11 @@ export function buildActivityContext(input: BuildContextInput): ActivityContext 
     .map(([domain, duration]) => ({ domain, duration, share: share(duration, domainTotal) }))
     .sort((a, b) => b.duration - a.duration);
 
-  // Daily distribution.
+  // Daily distribution. Events that span local midnight are split so their
+  // duration is correctly apportioned across both days.
   const dayDurations: Record<string, number> = {};
   for (const event of kept) {
-    const key = dayKey(event.timestamp, input.timezone);
-    dayDurations[key] = (dayDurations[key] || 0) + (event.duration || 0);
+    accumulateByDay(event, input.timezone, dayDurations);
   }
   const daily: DayStat[] = Object.entries(dayDurations)
     .map(([date, duration]) => ({ date, duration }))
@@ -425,10 +475,13 @@ export function formatActivityContext(ctx: ActivityContext): string {
 
   if (ctx.privacy.excludedSeconds > 0 || ctx.privacy.excludedCategories.length > 0) {
     lines.push('');
+    // Deliberately omit category names here: they may themselves be sensitive
+    // (e.g. "Health", "Finance") even though their activity is excluded.
+    const n = ctx.privacy.excludedCategories.length;
     lines.push(
       `Privacy filter: withheld ${formatDuration(ctx.privacy.excludedSeconds)} ` +
-        `(${formatShare(1 - ctx.privacy.coverage)} of active time) across ` +
-        ctx.privacy.excludedCategories.map(c => c.join(' > ')).join(', ')
+        `(${formatShare(1 - ctx.privacy.coverage)} of active time) from ` +
+        `${n} excluded ${n === 1 ? 'category' : 'categories'}`
     );
   }
 
