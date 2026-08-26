@@ -9,7 +9,10 @@ div(v-if="viewMissing")
 div(v-else-if="view")
   draggable.row(v-model="elements" handle=".handle")
     // TODO: Handle large/variable sized visualizations better
-    div.col-md-6.col-lg-4.p-3(v-for="el, index in elements", :key="index", :class="{'col-md-12': isVisLarge(el), 'col-lg-12': isVisLarge(el)}")
+    //- Key on the view id as well as the position, so that switching views
+      rebuilds the visualizations instead of reusing the instance that sat at
+      the same index in the previous view (which kept its stale local state).
+    div.col-md-6.col-lg-4.p-3(v-for="el, index in elements", :key="view.id + '-' + index", :class="{'col-md-12': isVisLarge(el), 'col-lg-12': isVisLarge(el)}")
       aw-selectable-vis(:id="index" :type="el.type" :props="el.props" :view-id="view.id" @onTypeChange="onTypeChange" @onRemove="onRemove" :editable="editing")
 
     div.col-md-6.col-lg-4.p-3(v-if="editing")
