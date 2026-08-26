@@ -170,16 +170,19 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
         ? 'events = merge_events_by_keys(events, ["app", "title"]);'
         : 'events = merge_events_by_keys(events, ["app"]);'
       : '',
-    // Fetch not-afk events
+    // Fetch not-afk events. When there is no AFK bucket (bid_afk is empty), emit
+    // an empty not_afk list so later references to the variable don't fail.
     isDesktopParams(params)
-      ? `not_afk = flood(${queryBucket(params.bid_afk)});
-         not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);` +
-        (always_active_pattern_str
-          ? `not_treat_as_afk = filter_keyvals_regex(events, "app", "${always_active_pattern_str}");
-             not_afk = period_union(not_afk, not_treat_as_afk);
-             not_treat_as_afk = filter_keyvals_regex(events, "title", "${always_active_pattern_str}");
-             not_afk = period_union(not_afk, not_treat_as_afk);`
-          : '')
+      ? params.bid_afk
+        ? `not_afk = flood(${queryBucket(params.bid_afk)});
+           not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);` +
+          (always_active_pattern_str
+            ? `not_treat_as_afk = filter_keyvals_regex(events, "app", "${always_active_pattern_str}");
+               not_afk = period_union(not_afk, not_treat_as_afk);
+               not_treat_as_afk = filter_keyvals_regex(events, "title", "${always_active_pattern_str}");
+               not_afk = period_union(not_afk, not_treat_as_afk);`
+            : '')
+        : 'not_afk = [];'
       : '',
     // Fetch browser events
     isDesktopParams(params) && params.bid_browsers
@@ -200,8 +203,9 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
       : 'stopwatch_events = [];',
     // Categorize
     params.categories ? `events = categorize(events, ${categories_str});` : '',
-    // Filter out selected categories
-    params.filter_categories
+    // Filter out selected categories. Only emit when the list is non-empty: an
+    // empty allow-list would drop every event rather than skip the filter.
+    params.filter_categories && params.filter_categories.length > 0
       ? `events = filter_keyvals(events, "$category", ${cat_filter_str});`
       : '',
     // "Return" events by setting variable named with return_variable if set

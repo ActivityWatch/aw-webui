@@ -98,6 +98,22 @@ describe('buildActivityContext — aggregation', () => {
     });
     expect(ctx.daily).toEqual([{ date: '2026-08-02', duration: 100 }]);
   });
+
+  test('splits events that span local midnight across both days', () => {
+    // Event starts at 23:30 UTC on Aug 1, lasts 3600s (1h), ending at 00:30 UTC on Aug 2.
+    // In UTC: 1800s on Aug 1 (23:30–00:00) and 1800s on Aug 2 (00:00–00:30).
+    const ctx = build([event('vim', 3600, { timestamp: '2026-08-01T23:30:00+00:00' })], {
+      timezone: 'UTC',
+    });
+    expect(ctx.daily).toHaveLength(2);
+    const aug1 = ctx.daily.find(d => d.date === '2026-08-01');
+    const aug2 = ctx.daily.find(d => d.date === '2026-08-02');
+    expect(aug1).toBeDefined();
+    expect(aug2).toBeDefined();
+    expect(aug1!.duration + aug2!.duration).toBeCloseTo(3600, 0);
+    expect(aug1!.duration).toBeCloseTo(1800, 0); // 30 min before midnight
+    expect(aug2!.duration).toBeCloseTo(1800, 0); // 30 min after midnight
+  });
 });
 
 describe('buildActivityContext — coverage and denominators', () => {
@@ -312,15 +328,38 @@ describe('formatActivityContext', () => {
     expect(formatActivityContext(ctx)).not.toContain('secret-project-plan');
   });
 
-  test('states what the privacy filter withheld', () => {
+  test('states what the privacy filter withheld without leaking category names', () => {
     const ctx = build(
-      [event('vim', 600, { category: ['Work'] }), event('Signal', 600, { category: ['Private'] })],
-      { privacy: { excludeUncategorized: false, privateCategories: [['Private']] } }
+      [event('vim', 600, { category: ['Work'] }), event('Signal', 600, { category: ['Health'] })],
+      { privacy: { excludeUncategorized: false, privateCategories: [['Health']] } }
     );
     const text = formatActivityContext(ctx);
     expect(text).toContain('Privacy filter: withheld');
     expect(text).toContain('50% of active time');
-    expect(text).toContain('Private');
+    // The excluded category name must NOT be sent to the LLM provider.
+    expect(text).not.toContain('Health');
+    // The count of excluded categories should appear instead.
+    expect(text).toContain('1 excluded category');
+  });
+
+  test('uses plural "categories" when multiple categories are excluded', () => {
+    const ctx = build(
+      [
+        event('vim', 300, { category: ['Work'] }),
+        event('app1', 100, { category: ['Health'] }),
+        event('app2', 100, { category: ['Finance'] }),
+      ],
+      {
+        privacy: {
+          excludeUncategorized: false,
+          privateCategories: [['Health'], ['Finance']],
+        },
+      }
+    );
+    const text = formatActivityContext(ctx);
+    expect(text).toContain('2 excluded categories');
+    expect(text).not.toContain('Health');
+    expect(text).not.toContain('Finance');
   });
 
   test('flags truncated sections so the model knows the list is partial', () => {
