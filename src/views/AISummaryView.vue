@@ -253,7 +253,7 @@ export default {
         categories: this.categoryStore.classes_for_query,
         filter_categories: [],
       });
-      const [result] = await getClient().query([[start, end]], query);
+      const [result] = await getClient().query([{ start, end }], query);
 
       const context = buildActivityContext({
         events: result.events || [],
