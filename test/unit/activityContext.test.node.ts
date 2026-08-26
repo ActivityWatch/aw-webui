@@ -105,14 +105,13 @@ describe('buildActivityContext — aggregation', () => {
     const ctx = build([event('vim', 3600, { timestamp: '2026-08-01T23:30:00+00:00' })], {
       timezone: 'UTC',
     });
-    expect(ctx.daily).toHaveLength(2);
-    const aug1 = ctx.daily.find(d => d.date === '2026-08-01');
-    const aug2 = ctx.daily.find(d => d.date === '2026-08-02');
-    expect(aug1).toBeDefined();
-    expect(aug2).toBeDefined();
-    expect(aug1!.duration + aug2!.duration).toBeCloseTo(3600, 0);
-    expect(aug1!.duration).toBeCloseTo(1800, 0); // 30 min before midnight
-    expect(aug2!.duration).toBeCloseTo(1800, 0); // 30 min after midnight
+    const byDate: Record<string, number> = Object.fromEntries(
+      ctx.daily.map(d => [d.date, d.duration])
+    );
+    expect(Object.keys(byDate).sort()).toEqual(['2026-08-01', '2026-08-02']);
+    expect(byDate['2026-08-01']).toBeCloseTo(1800, 0); // 30 min before midnight
+    expect(byDate['2026-08-02']).toBeCloseTo(1800, 0); // 30 min after midnight
+    expect(byDate['2026-08-01'] + byDate['2026-08-02']).toBeCloseTo(3600, 0);
   });
 });
 
