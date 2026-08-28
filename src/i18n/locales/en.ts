@@ -62,10 +62,6 @@ export default {
     title: 'Oops, this page was not found!',
     hint: 'Try navigating back where you came from.',
   },
-  activity: {
-    browserAllowlistMiss:
-      'No matching browser window for this period. If you were browsing in a Chromium/Firefox fork, its app name may not be recognized yet.',
-  },
   settings: {
     title: 'Settings',
     unsavedCategoriesLeave: 'Your categories have unsaved changes, are you sure you want to leave?',
@@ -273,6 +269,8 @@ export default {
   },
   activity: {
     title: 'Activity',
+    browserAllowlistMiss:
+      'No matching browser window for this period. If you were browsing in a Chromium/Firefox fork, its app name may not be recognized yet.',
     for: 'for',
     host: 'Host:',
     timeActive: 'Time active:',
