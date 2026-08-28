@@ -61,6 +61,10 @@ export default {
     title: '页面未找到！',
     hint: '请尝试返回之前所在的页面。',
   },
+  activity: {
+    browserAllowlistMiss:
+      '此时间段内未找到匹配的浏览器窗口。如果您使用的是 Chromium/Firefox 衍生浏览器，其应用名称可能尚未被识别。',
+  },
   settings: {
     title: '设置',
     unsavedCategoriesLeave: '分类有未保存的更改，确定要离开吗？',

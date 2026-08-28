@@ -261,19 +261,38 @@ describe('browser_appname_regex', () => {
 });
 
 describe('chrome fork matching in generated query', () => {
+  const params = {
+    bid_window: 'aw-watcher-window_testhost',
+    bid_afk: 'aw-watcher-afk_testhost',
+    filter_afk: true,
+    include_audible: false,
+    categories: [],
+    filter_categories: [],
+  };
+
   test('chrome bucket query includes Dia bundle id and process-name regex', () => {
     const query = fullDesktopQuery({
-      bid_window: 'aw-watcher-window_testhost',
-      bid_afk: 'aw-watcher-afk_testhost',
+      ...params,
       bid_browsers: ['aw-watcher-web-chrome_testhost'],
-      filter_afk: true,
-      include_audible: false,
-      categories: [],
-      filter_categories: [],
     }).join('\n');
     expect(query).toContain('company.thebrowser.dia');
     // JSON.stringify doubles the regex backslash, so the query text has \\.
     expect(query).toContain('dia(\\\\.exe)?$');
+  });
+
+  test('standalone Arc bucket prevents Arc from also matching the chrome bucket', () => {
+    const query = fullDesktopQuery({
+      ...params,
+      bid_browsers: ['aw-watcher-web-chrome_testhost', 'aw-watcher-web-arc_testhost'],
+    }).join('\n');
+    const chromeWindowFilter = query.slice(
+      query.indexOf('window_chrome_re ='),
+      query.indexOf('events_chrome = filter_period_intersect')
+    );
+    expect(chromeWindowFilter).toContain('dia(\\\\.exe)?$');
+    expect(chromeWindowFilter).not.toContain('arc(\\\\.exe)?$');
+    expect(query).toContain('window_arc_re =');
+    expect(query).toContain('arc(\\\\.exe)?$');
   });
 });
 

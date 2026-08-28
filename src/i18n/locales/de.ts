@@ -61,6 +61,10 @@ export default {
     title: 'Hoppla, diese Seite wurde nicht gefunden!',
     hint: 'Versuchen Sie, dorthin zurückzukehren, woher Sie kamen.',
   },
+  activity: {
+    browserAllowlistMiss:
+      'Für diesen Zeitraum wurde kein passendes Browserfenster gefunden. Falls Sie in einem Chromium-/Firefox-Derivat gesurft haben, wird dessen App-Name möglicherweise noch nicht erkannt.',
+  },
   settings: {
     title: 'Einstellungen',
     unsavedCategoriesLeave: 'Ihre Kategorien haben ungespeicherte Änderungen. Wirklich verlassen?',

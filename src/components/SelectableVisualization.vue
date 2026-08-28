@@ -39,7 +39,8 @@ div(v-if="editable || !activityStore.buckets.loaded || has_prerequisites || !set
                  :colorfunc="e => e.data.app",
                  with_limit)
     b-alert.small.px-2.py-1(v-if="isBrowserVis && browserAllowlistMiss" show variant="info")
-      | No matching browser window for this period. If you were browsing in a Chromium/Firefox fork, its app name may not be recognized yet (see #[a(href="https://github.com/ActivityWatch/aw-webui/issues/927") #927]).
+      | {{ $t('activity.browserAllowlistMiss') }}
+      |  (#[a(href="https://github.com/ActivityWatch/aw-webui/issues/927") #927])
     div(v-if="type == 'top_domains'")
       aw-summary(:fields="activityStore.browser.top_domains",
                  :namefunc="e => e.data.$domain",
