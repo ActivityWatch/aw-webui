@@ -14,6 +14,9 @@
  *             'Google-chrome-beta', 'Google-chrome-unstable'
  *             (Flatpak app IDs retained as exact: 'com.google.Chrome', 'com.google.ChromeDev',
  *              'org.chromium.Chromium')
+ *             Chromium forks that report through the chrome extension bucket (#927):
+ *             'Arc', 'arc.exe', 'Arc.exe', 'Dia', 'Dia.exe'
+ *             (macOS bundle ID retained as exact: 'company.thebrowser.dia')
  *
  *   Firefox:  'Firefox', 'Firefox.exe', 'firefox', 'firefox.exe',
  *             'Firefox Developer Edition', 'firefoxdeveloperedition',
@@ -56,11 +59,13 @@
  */
 
 import {
-  browser_appname_regex,
   appQuery,
-  categoryQuery,
-  querystr_to_array,
+  browser_appname_regex,
+  browser_appnames,
   canonicalEvents,
+  categoryQuery,
+  fullDesktopQuery,
+  querystr_to_array,
 } from '~/queries';
 
 // Convert ActivityWatch (?i) patterns to JS RegExp with i flag for testing.
@@ -103,14 +108,19 @@ describe('browser_appname_regex', () => {
 
   test('chrome pattern does not false-positive', () => {
     const re = toRegex(browser_appname_regex.chrome);
-    // Flatpak app IDs are in the exact list, not matched by regex
+    // Flatpak / bundle IDs are in the exact list, not matched by regex
     expect(re.test('com.google.Chrome')).toBe(false);
+    expect(re.test('company.thebrowser.dia')).toBe(false);
     expect(re.test('Slack')).toBe(false);
     expect(re.test('Electron')).toBe(false);
     // The fork alternatives are anchored, so names merely starting with them don't match
     expect(re.test('archive')).toBe(false);
     expect(re.test('arcade')).toBe(false);
     expect(re.test('Dialog')).toBe(false);
+  });
+
+  test('chrome exact list includes the Dia macOS bundle id', () => {
+    expect(browser_appnames.chrome).toContain('company.thebrowser.dia');
   });
 
   test('firefox pattern matches all known Firefox/LibreWolf/Waterfox app names', () => {
@@ -247,6 +257,23 @@ describe('browser_appname_regex', () => {
     for (const name of knownNames) {
       expect(re.test(name)).toBe(true);
     }
+  });
+});
+
+describe('chrome fork matching in generated query', () => {
+  test('chrome bucket query includes Dia bundle id and process-name regex', () => {
+    const query = fullDesktopQuery({
+      bid_window: 'aw-watcher-window_testhost',
+      bid_afk: 'aw-watcher-afk_testhost',
+      bid_browsers: ['aw-watcher-web-chrome_testhost'],
+      filter_afk: true,
+      include_audible: false,
+      categories: [],
+      filter_categories: [],
+    }).join('\n');
+    expect(query).toContain('company.thebrowser.dia');
+    // JSON.stringify doubles the regex backslash, so the query text has \\.
+    expect(query).toContain('dia(\\\\.exe)?$');
   });
 });
 

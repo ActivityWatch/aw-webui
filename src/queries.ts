@@ -277,8 +277,16 @@ export function appQuery(
 // variants (upper/lowercase, spacing, .exe suffix) are handled by
 // browser_appname_regex using (?i) flag. See test/unit/queries.test.node.ts for
 // the complete list of known app names these patterns cover.
-const browser_appnames: Record<string, string[]> = {
-  chrome: ['com.google.Chrome', 'com.google.ChromeDev', 'org.chromium.Chromium'],
+export const browser_appnames: Record<string, string[]> = {
+  // Chromium forks (Dia, Arc) run the chrome extension by default, so their
+  // web events land in the chrome bucket. Reverse-domain identifiers don't
+  // match the process-name regex below and have to live here (#927).
+  chrome: [
+    'com.google.Chrome',
+    'com.google.ChromeDev',
+    'org.chromium.Chromium',
+    'company.thebrowser.dia',
+  ],
   firefox: ['org.mozilla.firefox', 'io.gitlab.librewolf-community', 'net.waterfox.waterfox'],
   opera: ['com.opera.Opera'],
   brave: ['com.brave.Browser'],
@@ -316,6 +324,7 @@ export const browser_appname_regex: Record<string, string> = {
   // default their events land in the chrome bucket and their app names have to be matched
   // here (#927, ActivityWatch/activitywatch#1094). The standalone arc key below only covers
   // setups where Arc was picked explicitly in the settings, which changes the bucket name.
+  // Fork alternatives are $-anchored so names like "archive" / "Dialog" don't match.
   chrome: '(?i)^(google[-_ ]?chrome|chrome|chromium|arc(\\.exe)?$|dia(\\.exe)?$)',
   firefox: '(?i)(firefox|librewolf|waterfox|nightly)',
   opera: '(?i)(opera)',

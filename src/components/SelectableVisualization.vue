@@ -38,6 +38,8 @@ div(v-if="editable || !activityStore.buckets.loaded || has_prerequisites || !set
                  :namefunc="e => e.data.classname",
                  :colorfunc="e => e.data.app",
                  with_limit)
+    b-alert.small.px-2.py-1(v-if="isBrowserVis && browserAllowlistMiss" show variant="info")
+      | No matching browser window for this period. If you were browsing in a Chromium/Firefox fork, its app name may not be recognized yet (see #[a(href="https://github.com/ActivityWatch/aw-webui/issues/927") #927]).
     div(v-if="type == 'top_domains'")
       aw-summary(:fields="activityStore.browser.top_domains",
                  :namefunc="e => e.data.$domain",
@@ -132,6 +134,7 @@ import { useCategoryStore } from '~/stores/categories';
 import { useBucketsStore } from '~/stores/buckets';
 import { useViewsStore } from '~/stores/views';
 import { useSettingsStore } from '~/stores/settings';
+import { isBrowserAllowlistMiss } from '~/util/browserAllowlist';
 
 import moment from 'moment';
 
@@ -281,6 +284,12 @@ export default {
     },
     has_prerequisites() {
       return this.visualizations[this.type].available;
+    },
+    isBrowserVis() {
+      return ['top_domains', 'top_urls', 'top_browser_titles'].includes(this.type);
+    },
+    browserAllowlistMiss() {
+      return isBrowserAllowlistMiss(this.activityStore.browser);
     },
     supports_period: function () {
       if (this.type == 'sunburst_clock' || this.type == 'vis_timeline') {
