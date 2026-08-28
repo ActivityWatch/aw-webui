@@ -17,7 +17,7 @@ div
       div
         b Options
       div
-        small Hostname: {{ queryOptions.hostname }}
+        small Hostname: {{ queryOptions.hostname || '(not selected)' }}
       div
         small Range: {{ queryOptions.start }} - {{ queryOptions.stop }}
     div.flex-grow-0
@@ -25,7 +25,7 @@ div
         span(v-if="!show_options") Show options
         span(v-else) Hide options
 
-  div(v-show="show_options")
+  div(v-if="show_options")
     hr
     h4 Options
     aw-query-options(v-model="queryOptions")
@@ -36,11 +36,16 @@ div
   div(v-if="loading")
     b-spinner.mr-2(small)
     span.text-muted Loading...
-  div(v-else-if="!queryOptions.hostname")
+  div(v-else-if="hostnameEmptyKind === 'no-hosts'")
     p.text-muted.mb-0
       | No host with window/AFK buckets is available. Install
       | #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") a watcher]
       | to start collecting data.
+  div(v-else-if="hostnameEmptyKind === 'hostname-unselected'")
+    p.text-muted.mb-0
+      | Select a hostname under
+      | #[b Show options]
+      | to load uncategorized words. The hostname picker is hidden until you open options.
   div(v-else)
     div(v-if="words_by_duration.length == 0")
       | No words with significant duration. You're good to go!
@@ -119,6 +124,7 @@ import { getClient } from '~/util/awclient';
 import CategoryEditModal from '~/components/CategoryEditModal.vue';
 import { isRegexBroad, validateRegex } from '~/util/validate';
 import { findCommonPhrases } from '~/util/categorization';
+import { categoryBuilderHostnameEmptyKind, selectSoleKnownHostname } from '~/util/hostnames';
 
 export default {
   name: 'CategoryBuilder',
@@ -143,6 +149,7 @@ export default {
       // Options
       show_options: false,
       queryOptions: {
+        hostname: '',
         start: moment().subtract(1, 'day'),
         stop: moment().add(1, 'day'),
       },
@@ -193,6 +200,9 @@ export default {
     broad_pattern: function () {
       return isRegexBroad(this.append.word);
     },
+    hostnameEmptyKind: function () {
+      return categoryBuilderHostnameEmptyKind(useBucketsStore().hosts, this.queryOptions.hostname);
+    },
   },
   watch: {
     queryOptions: {
@@ -204,10 +214,16 @@ export default {
   },
   async mounted() {
     // Make sure we don't have stale unsaved changes in categoryStore
-    await useBucketsStore().ensureLoaded();
+    const bucketsStore = useBucketsStore();
+    await bucketsStore.ensureLoaded();
     await this.categoryStore.load();
-    // Called by watch
-    //await this.fetchWords();
+    const sole = selectSoleKnownHostname(bucketsStore.hosts);
+    if (sole && !this.queryOptions.hostname) {
+      this.$set(this.queryOptions, 'hostname', sole);
+      // Deep watch on queryOptions calls fetchWords.
+    } else {
+      await this.fetchWords();
+    }
   },
   methods: {
     async fetchWords() {
@@ -216,17 +232,18 @@ export default {
       // after every requery.
       this.visible_count = this.page_size;
       if (!this.queryOptions.hostname) {
-        // Try to resolve hostname from loaded buckets
-        // Don't ever return the "unknown" hostname
-        const hosts = useBucketsStore().hosts;
-        if (hosts && hosts.length > 0) {
-          this.queryOptions.hostname = _.filter(hosts, host => host !== 'unknown')[0];
-        }
-        // If still no valid hostname, bail out and wait for QueryOptions to provide one
-        if (!this.queryOptions.hostname) {
-          this.loading = false;
+        // Auto-select only when there is exactly one real hostname. Several
+        // known hosts (or only "unknown") stay unset so the empty-state copy
+        // can point at Show options / the hostname picker instead of
+        // silently querying the first device.
+        const sole = selectSoleKnownHostname(useBucketsStore().hosts);
+        if (sole) {
+          this.$set(this.queryOptions, 'hostname', sole);
+          // Deep watch re-enters fetchWords with hostname set.
           return;
         }
+        this.loading = false;
+        return;
       }
       await this.categoryStore.load();
       const awclient = getClient();
