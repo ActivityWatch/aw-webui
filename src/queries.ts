@@ -325,8 +325,6 @@ export const browser_appname_regex: Record<string, string> = {
   // here (#927, ActivityWatch/activitywatch#1094). The standalone arc key below only covers
   // setups where Arc was picked explicitly in the settings, which changes the bucket name.
   // Fork alternatives are $-anchored so names like "archive" / "Dialog" don't match.
-  // When a standalone Arc bucket is present, browserEvents() drops `arc` from the chrome
-  // pattern so the same web events are not counted through both buckets.
   chrome: '(?i)^(google[-_ ]?chrome|chrome|chromium|arc(\\.exe)?$|dia(\\.exe)?$)',
   firefox: '(?i)(firefox|librewolf|waterfox|nightly)',
   opera: '(?i)(opera)',
@@ -347,20 +345,13 @@ function browserEvents(params: DesktopQueryParams): string {
     browser_events = [];
   `;
 
-  const browsers = browsersWithBuckets(params.bid_browsers);
-  const hasStandaloneArcBucket = browsers.some(([browserName]) => browserName === 'arc');
-
-  _.each(browsers, ([browserName, bucketId]) => {
+  _.each(browsersWithBuckets(params.bid_browsers), ([browserName, bucketId]) => {
     const browser_appnames_str = JSON.stringify(browser_appnames[browserName]);
     code += `events_${browserName} = flood(query_bucket("${bucketId}"));
        window_${browserName} = filter_keyvals(events, "app", ${browser_appnames_str});`;
 
     // Add regex-based matching to cover case/spacing/versioning variants (e.g., Firefox.exe, firefox-esr-esr140).
-    // A standalone Arc bucket owns Arc events when present; do not also match them through Chrome.
-    const pattern =
-      browserName === 'chrome' && hasStandaloneArcBucket
-        ? '(?i)^(google[-_ ]?chrome|chrome|chromium|dia(\\.exe)?$)'
-        : browser_appname_regex[browserName];
+    const pattern = browser_appname_regex[browserName];
     if (pattern) {
       code += `
        window_${browserName}_re = filter_keyvals_regex(events, "app", ${JSON.stringify(pattern)});
@@ -370,8 +361,7 @@ function browserEvents(params: DesktopQueryParams): string {
     code += `
        events_${browserName} = filter_period_intersect(events_${browserName}, window_${browserName});
        events_${browserName} = split_url_events(events_${browserName});
-       browser_events = concat(browser_events, events_${browserName});
-       browser_events = sort_by_timestamp(browser_events);`;
+       browser_events = union_no_overlap(browser_events, events_${browserName});`;
   });
   return code;
 }

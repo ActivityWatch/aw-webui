@@ -280,7 +280,7 @@ describe('chrome fork matching in generated query', () => {
     expect(query).toContain('dia(\\\\.exe)?$');
   });
 
-  test('standalone Arc bucket prevents Arc from also matching the chrome bucket', () => {
+  test('mixed chrome and Arc buckets preserve both matching paths without overlap', () => {
     const query = fullDesktopQuery({
       ...params,
       bid_browsers: ['aw-watcher-web-chrome_testhost', 'aw-watcher-web-arc_testhost'],
@@ -289,10 +289,12 @@ describe('chrome fork matching in generated query', () => {
       query.indexOf('window_chrome_re ='),
       query.indexOf('events_chrome = filter_period_intersect')
     );
-    expect(chromeWindowFilter).toContain('dia(\\\\.exe)?$');
-    expect(chromeWindowFilter).not.toContain('arc(\\\\.exe)?$');
+    expect(chromeWindowFilter).toContain('arc(\\\\.exe)?$');
     expect(query).toContain('window_arc_re =');
     expect(query).toContain('arc(\\\\.exe)?$');
+    expect(query).toContain('browser_events = union_no_overlap(browser_events, events_chrome);');
+    expect(query).toContain('browser_events = union_no_overlap(browser_events, events_arc);');
+    expect(query).not.toContain('browser_events = concat(browser_events, events_');
   });
 });
 
