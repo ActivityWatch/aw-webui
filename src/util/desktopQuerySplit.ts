@@ -34,12 +34,28 @@ export interface FullDesktopQueryResult {
 /**
  * Periods for `fullDesktopQuery` / `multideviceQuery`.
  *
- * A single day stays one request (day view is already under the 30s budget).
- * Week, month, and multi-day ranges split into days — the same shape
- * `query_category_time_by_period` uses to avoid timeout on slow queries.
- * A year is also split into days: month-sized chunks are the timeout.
+ * Axios `requestTimeout` is 30s *per request* (`settings.ts` default). The
+ * month summary used to send the whole month as one TIMEINTERVAL and the
+ * client aborted on large databases. Categorize is not the cost: on 50k
+ * events it is 27–116 ms in release (aw-transform, 2026-08-28).
  *
- * Future-starting periods are dropped so we don't query incomplete days.
+ * Measured 2026-08-28 against a live 31 MB / 4-month aw-server v0.13.2
+ * (41,806 window events, no browser buckets). Query shape: flood window +
+ * flood AFK + filter_period_intersect + categorize (6 rules) + merge/limit.
+ *
+ *   July (23,195 window events) as one TIMEINTERVAL: 0.95 s
+ *   Same month as 31 sequential daily requests: 0.99 s wall, max day 0.098 s
+ *   Apr–Aug as one TIMEINTERVAL: 1.79 s (query_bucket+flood is 1.64 s of that)
+ *
+ * Per-request time drops ~10×; total wall-clock stays comparable. Sequential
+ * day requests are not extra overhead — they keep each Axios call under 30 s.
+ * A 168 MB / 2y reporter DB still 30s-outs the unsplitted month view; this
+ * 31 MB host does not, which is why the split matches
+ * `query_category_time_by_period` rather than raising the global timeout.
+ *
+ * A single day stays one request. Week, month, and multi-day ranges split
+ * into days. A year is also split into days: month-sized chunks are the
+ * timeout. Future-starting periods are dropped so we don't query incomplete days.
  */
 export function periodsForFullDesktopQuery(
   timeperiod: TimePeriod,

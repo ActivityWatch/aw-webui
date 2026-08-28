@@ -62,7 +62,12 @@ function scoreCategories(events: IEvent[]): IEvent[] {
   });
 }
 
-/** One day at a time, same reason as query_category_time_by_period. */
+/**
+ * One day at a time, same reason as query_category_time_by_period.
+ * Axios timeout is per request (default 30s). Measured 2026-08-28 on a
+ * 31 MB / 4-month aw-server: July as one TIMEINTERVAL 0.95s vs max daily
+ * 0.098s; 31-day sequential wall 0.99s. See desktopQuerySplit.ts.
+ */
 async function queryDesktopPeriods(
   periods: string[],
   query: string[],
