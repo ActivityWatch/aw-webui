@@ -117,7 +117,7 @@ import { useBucketsStore } from '~/stores/buckets';
 import { getClient } from '~/util/awclient';
 import { canonicalEvents, querystr_to_array } from '~/queries';
 import { useCategoryStore } from '~/stores/categories';
-import { matchString } from '~/util/classes';
+import { matchEventData } from '~/util/classes';
 import { getCategorizationStringFromEvent } from '~/util/color';
 import { seconds_to_duration } from '~/util/time';
 
@@ -276,9 +276,9 @@ export default {
           // Skip AFK buckets — they don't have meaningful categorization
           if (bucket.type === 'afkstatus') continue;
           bucket.events = _.filter(bucket.events, e => {
-            const str = getCategorizationStringFromEvent(bucket, e);
-            if (str === null) return true; // Keep events from unknown bucket types
-            const matched = matchString(str, allCats);
+            // Keep events from unknown bucket types (no categorization string).
+            if (getCategorizationStringFromEvent(bucket, e) === null) return true;
+            const matched = matchEventData(e.data, allCats);
             const eventCat = matched ? matched.name : ['Uncategorized'];
             // Check if the event's category matches any selected filter category
             // (including parent matches: selecting "Work" also shows "Work > Programming")

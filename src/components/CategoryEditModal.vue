@@ -24,6 +24,16 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
           small.text-right
             div.text-danger(v-if="!validPattern") Invalid pattern
             div.text-warning(v-if="validPattern && broad_pattern") Pattern too broad
+      div.mt-2
+        small.text-muted Match fields
+        div.d-flex.flex-wrap
+          b-form-checkbox.mr-3(
+            v-for="key in fieldOptions"
+            :key="key"
+            v-model="editing.match_fields"
+            :value="key"
+          ) {{ key }}
+        small.text-muted Leave all checked to match every string field (default).
 
   hr
   div.my-1
@@ -55,6 +65,7 @@ import ColorPicker from '~/components/ColorPicker.vue';
 import { useCategoryStore } from '~/stores/categories';
 import { mapState } from 'pinia';
 import { validateRegex, isRegexBroad } from '~/util/validate';
+import { CANONICAL_SELECT_KEYS, normalizeSelectKeys } from '~/util/classes';
 
 import 'vue-awesome/icons/trash';
 
@@ -79,6 +90,7 @@ export default {
         color: null,
         inherit_score: true,
         score: null,
+        match_fields: [...CANONICAL_SELECT_KEYS],
       },
     };
   },
@@ -101,6 +113,12 @@ export default {
     },
     broad_pattern: function () {
       return this.editing.rule.type === 'regex' && isRegexBroad(this.editing.rule.regex || '');
+    },
+    fieldOptions: function () {
+      const extra = (this.editing.match_fields || []).filter(
+        k => !(CANONICAL_SELECT_KEYS as readonly string[]).includes(k)
+      );
+      return [...CANONICAL_SELECT_KEYS, ...extra];
     },
   },
   watch: {
@@ -177,10 +195,26 @@ export default {
         return;
       }
       const nameSegments = parent.concat(this.editing.name);
+      const rule =
+        this.editing.rule.type !== 'none' ? _.cloneDeep(this.editing.rule) : { type: 'none' };
+      if (rule.type === 'regex') {
+        const selected = normalizeSelectKeys(this.editing.match_fields);
+        const allCanonical =
+          selected &&
+          selected.length === CANONICAL_SELECT_KEYS.length &&
+          CANONICAL_SELECT_KEYS.every(k => selected.includes(k));
+        if (!selected || allCanonical) {
+          delete rule.select_keys;
+        } else {
+          rule.select_keys = selected;
+        }
+      } else {
+        delete rule.select_keys;
+      }
       const new_class = {
         id: this.editing.id,
         name: nameSegments,
-        rule: this.editing.rule.type !== 'none' ? this.editing.rule : { type: 'none' },
+        rule,
         data: {
           color: this.editing.inherit_color === true ? undefined : this.editing.color,
           score: this.editing.inherit_score === true ? undefined : this.editing.score,
@@ -199,15 +233,18 @@ export default {
       const inherit_color = !color;
       const score = cat.data ? cat.data.score : undefined;
       const inherit_score = !score;
+      const rule = _.cloneDeep(cat.rule) || {};
+      const storedKeys = normalizeSelectKeys(rule.select_keys);
       this.editing = {
         id: cat.id,
         name: cat.subname,
-        rule: _.cloneDeep(cat.rule),
+        rule,
         parent: cat.parent ? cat.parent : [],
         color,
         inherit_color,
         score,
         inherit_score,
+        match_fields: storedKeys ? [...storedKeys] : [...CANONICAL_SELECT_KEYS],
       };
     },
   },

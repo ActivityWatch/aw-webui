@@ -55,7 +55,13 @@
  *             (Flatpak app ID retained: 'one.ablaze.floorp')
  */
 
-import { browser_appname_regex, appQuery, categoryQuery, querystr_to_array } from '~/queries';
+import {
+  appQuery,
+  browser_appname_regex,
+  canonicalEvents,
+  categoryQuery,
+  querystr_to_array,
+} from '~/queries';
 
 // Convert ActivityWatch (?i) patterns to JS RegExp with i flag for testing.
 // AW server uses Python-style (?i) inline flag; JS uses RegExp 'i' flag instead.
@@ -336,4 +342,12 @@ describe('categoryQuery merge key regression (ScreenTime callers)', () => {
     const joined = q.join('\n');
     expect(joined).toContain('merge_events_by_keys(events, ["app", "title"])');
   });
+test('canonicalEvents serializes select_keys into categorize()', () => {
+  const query = canonicalEvents({
+    bid_android: 'aw-watcher-android_test',
+    categories: [[['Work'], { type: 'regex', regex: 'Firefox', select_keys: ['app'] }]],
+    filter_categories: [],
+  });
+  expect(query).toContain('"select_keys":["app"]');
+  expect(query).toContain('"regex":"Firefox"');
 });
