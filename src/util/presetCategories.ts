@@ -72,7 +72,25 @@ function parseRule(raw: unknown, context: string): Rule | null {
   }
   const rule: Rule = { type: 'regex', regex: raw.regex };
   if (raw.ignore_case === true) rule.ignore_case = true;
+  // Inlined from classes.normalizeSelectKeys to avoid a runtime cycle
+  // (classes.ts imports this module). Empty/duplicate lists are dropped so
+  // the rust parser never sees `select_keys: []`.
+  const selectKeys = normalizePresetSelectKeys(raw.select_keys);
+  if (selectKeys) rule.select_keys = selectKeys;
   return rule;
+}
+
+function normalizePresetSelectKeys(keys: unknown): string[] | undefined {
+  if (!Array.isArray(keys) || keys.length === 0) {
+    return undefined;
+  }
+  const unique: string[] = [];
+  for (const key of keys) {
+    if (typeof key === 'string' && key && !unique.includes(key)) {
+      unique.push(key);
+    }
+  }
+  return unique.length > 0 ? unique : undefined;
 }
 
 function parseCategory(raw: unknown, context: string): Category | null {
