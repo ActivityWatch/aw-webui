@@ -4,11 +4,11 @@ import { useSettingsStore } from '~/stores/settings';
 import { getPresetCategorySets } from '~/util/presetCategories';
 
 const level_sep = '>';
-const CLASSIFY_KEYS = ['app', 'title'];
+export const CLASSIFY_KEYS = ['app', 'title'] as const;
 const UNCATEGORIZED = ['Uncategorized'];
 
 /** Canonical event fields offered in the category-rule editor. */
-export const CANONICAL_SELECT_KEYS = ['app', 'title', 'url'] as const;
+export const CANONICAL_SELECT_KEYS = CLASSIFY_KEYS;
 
 /** ID of the implicit set holding a user's own (non-preset) categories. */
 export const DEFAULT_SET_ID = 'default';
@@ -365,7 +365,11 @@ function pickDeepest(categories: Category[]) {
   return _.maxBy(categories, c => c.name.length);
 }
 
-export function matchString(str: string, categories: Category[] | null): Category | null {
+export function matchString(
+  str: string,
+  categories: Category[] | null,
+  event?: IEvent
+): Category | null {
   if (!categories) {
     console.log(
       'Categories not passed, loading... (if you see this outside of a test, you should probably pass them)'
@@ -384,62 +388,43 @@ export function matchString(str: string, categories: Category[] | null): Categor
 
   // Find the matching category.
   // If several categories match the event, the deepest category will be chosen.
-  const matchingCats: [Category, RegExp][] = regexes.filter(c => c[1].test(str));
+  const matchingCats: [Category, RegExp][] = regexes.filter(([category, re]) => {
+    const selectKeys = normalizeSelectKeys(category.rule.select_keys);
+    if (event && selectKeys) {
+      return selectKeys.some(key => {
+        const value = event.data[key];
+        return typeof value === 'string' && re.test(value);
+      });
+    }
+    return re.test(str);
+  });
   if (matchingCats.length > 0) {
     return pickDeepest(matchingCats.map(c => c[0]));
   }
   return null;
 }
 
-function eventDataMatchesRegex(
-  data: Record<string, unknown>,
-  re: RegExp,
-  select_keys?: string[]
-): boolean {
-  const keys = normalizeSelectKeys(select_keys);
-  if (keys) {
-    return keys.some(key => {
-      const val = data[key];
-      return typeof val === 'string' && re.test(val);
-    });
-  }
-  // Legacy / server parity: test every string-valued field, skipping derived `$` keys.
-  return Object.entries(data).some(([key, val]) => {
-    return !key.startsWith('$') && typeof val === 'string' && re.test(val);
-  });
-}
-
-/** Match an event's data against category rules, honoring optional select_keys. */
-export function matchEventData(
-  data: Record<string, any>,
-  categories: Category[] | null
-): Category | null {
-  if (!categories) {
-    categories = loadClasses();
-  }
-  const regexes: [Category, RegExp][] = categories
-    .filter(c => c.rule.type == 'regex' && c.rule.regex)
-    .map(c => {
-      const re = RegExp(c.rule.regex as string, c.rule.ignore_case ? 'i' : '');
-      return [c, re];
-    });
-  const matchingCats = regexes.filter(([c, re]) =>
-    eventDataMatchesRegex(data, re, c.rule.select_keys)
-  );
-  if (matchingCats.length > 0) {
-    return pickDeepest(matchingCats.map(([c]) => c)) ?? null;
-  }
-  return null;
-}
-
 // this is used only in tests
 export function classifyEvents(events: IEvent[], categories: Category[]): IEvent[] {
+  const regexes: [Category, RegExp][] = categories
+    .filter(c => c.rule.type == 'regex')
+    .map(c => {
+      const re = RegExp(c.rule.regex, c.rule.ignore_case ? 'i' : '');
+      return [c, re];
+    });
+
   return events.map((e: IEvent) => {
-    const category = matchEventData(e.data, categories);
-    e.data.$category = category ? category.name : UNCATEGORIZED;
+    const matchingCats = regexes.filter(([category, re]) => {
+      const keys = normalizeSelectKeys(category.rule.select_keys) || CLASSIFY_KEYS;
+      return keys.some(key => {
+        const value = e.data[key];
+        return typeof value === 'string' && re.test(value);
+      });
+    });
+    e.data.$category =
+      matchingCats.length > 0
+        ? pickDeepest(matchingCats.map(([category]) => category)).name
+        : UNCATEGORIZED;
     return e;
   });
 }
-
-// Keep CLASSIFY_KEYS exported for callers/tests that still want the legacy app+title pair.
-export { CLASSIFY_KEYS };

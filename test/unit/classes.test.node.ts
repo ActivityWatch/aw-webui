@@ -42,16 +42,43 @@ test('select_keys restricts regex matching to named fields', () => {
   const cats: Category[] = [
     { name: ['AppOnly'], rule: { type: 'regex', regex: 'Firefox', select_keys: ['app'] } },
   ];
-  const titleHit = classes.matchEventData({ app: 'Chrome', title: 'Firefox docs' }, cats);
-  const appHit = classes.matchEventData({ app: 'Firefox', title: 'Chrome docs' }, cats);
+  const titleEvent: IEvent = {
+    timestamp: new Date().toISOString(),
+    duration: 0,
+    data: { app: 'Chrome', title: 'Firefox docs' },
+  };
+  const appEvent: IEvent = {
+    timestamp: new Date().toISOString(),
+    duration: 0,
+    data: { app: 'Firefox', title: 'Chrome docs' },
+  };
+  const titleHit = classes.matchString('Chrome\nFirefox docs', cats, titleEvent);
+  const appHit = classes.matchString('Firefox\nChrome docs', cats, appEvent);
   expect(titleHit).toBeNull();
   expect(appHit?.name).toEqual(['AppOnly']);
 });
 
-test('absent select_keys still matches any string field', () => {
+test('absent select_keys preserves legacy categorization-string matching', () => {
   const cats: Category[] = [{ name: ['Any'], rule: { type: 'regex', regex: 'Firefox' } }];
-  expect(classes.matchEventData({ app: 'Chrome', title: 'Firefox' }, cats)?.name).toEqual(['Any']);
-  expect(classes.matchEventData({ url: 'https://Firefox.com' }, cats)?.name).toEqual(['Any']);
+  const event: IEvent = {
+    timestamp: new Date().toISOString(),
+    duration: 0,
+    data: { app: 'Chrome', title: 'Docs', url: 'https://Firefox.com' },
+  };
+  expect(classes.matchString('Chrome\nDocs', cats, event)).toBeNull();
+  expect(classes.matchString('Chrome\nFirefox docs', cats, event)?.name).toEqual(['Any']);
+});
+
+test('absent select_keys preserves cross-field regex matching', () => {
+  const cats: Category[] = [
+    { name: ['CrossField'], rule: { type: 'regex', regex: 'Chrome\\nDocs' } },
+  ];
+  const event: IEvent = {
+    timestamp: new Date().toISOString(),
+    duration: 0,
+    data: { app: 'Chrome', title: 'Docs' },
+  };
+  expect(classes.matchString('Chrome\nDocs', cats, event)?.name).toEqual(['CrossField']);
 });
 
 test('cleanCategory drops empty select_keys and keeps a real list', () => {

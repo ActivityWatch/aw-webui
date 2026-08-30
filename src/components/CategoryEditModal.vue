@@ -33,7 +33,7 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
             v-model="editing.match_fields"
             :value="key"
           ) {{ key }}
-        small.text-muted Leave all checked to match every string field (default).
+        small.text-muted Leave blank to match every string field (default).
 
   hr
   div.my-1
@@ -90,7 +90,7 @@ export default {
         color: null,
         inherit_score: true,
         score: null,
-        match_fields: [...CANONICAL_SELECT_KEYS],
+        match_fields: [],
       },
     };
   },
@@ -199,11 +199,7 @@ export default {
         this.editing.rule.type !== 'none' ? _.cloneDeep(this.editing.rule) : { type: 'none' };
       if (rule.type === 'regex') {
         const selected = normalizeSelectKeys(this.editing.match_fields);
-        const allCanonical =
-          selected &&
-          selected.length === CANONICAL_SELECT_KEYS.length &&
-          CANONICAL_SELECT_KEYS.every(k => selected.includes(k));
-        if (!selected || allCanonical) {
+        if (!selected) {
           delete rule.select_keys;
         } else {
           rule.select_keys = selected;
@@ -244,7 +240,7 @@ export default {
         inherit_color,
         score,
         inherit_score,
-        match_fields: storedKeys ? [...storedKeys] : [...CANONICAL_SELECT_KEYS],
+        match_fields: storedKeys ? [...storedKeys] : [],
       };
     },
   },

@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { Category, matchString, matchEventData, loadClasses } from './classes';
+import { Category, matchString, loadClasses } from './classes';
 import Color from 'color';
 import * as d3 from 'd3';
 import { IEvent, IBucket } from './interfaces';
@@ -160,7 +160,7 @@ export function getCategoryColorFromEvent(bucket: IBucket, e: IEvent) {
   const categorizationString = getCategorizationStringFromEvent(bucket, e);
   if (categorizationString !== null) {
     const allCats = loadClasses();
-    const matched = matchEventData(e.data, allCats);
+    const matched = matchString(categorizationString, allCats, e);
     if (matched !== null) {
       return getColorFromCategory(matched, allCats);
     }

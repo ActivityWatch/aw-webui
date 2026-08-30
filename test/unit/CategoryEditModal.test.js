@@ -47,3 +47,50 @@ describe('CategoryEditModal handleEnter', () => {
     expect(vm.handleSubmit).toHaveBeenCalled();
   });
 });
+
+describe('CategoryEditModal field-scoped rules', () => {
+  const handleSubmit = vm => CategoryEditModal.methods.handleSubmit.call(vm);
+
+  function ctx(match_fields) {
+    const updateClass = jest.fn();
+    return {
+      vm: {
+        editing: {
+          id: 1,
+          name: 'Browser',
+          parent: ['Work'],
+          rule: { type: 'regex', regex: 'Firefox', select_keys: ['stale'] },
+          match_fields,
+          inherit_color: true,
+          color: null,
+          inherit_score: true,
+          score: null,
+        },
+        checkFormValidity: () => true,
+        categoryStore: { updateClass },
+        $nextTick: callback => callback(),
+        $refs: { edit: { hide: jest.fn() } },
+      },
+      updateClass,
+    };
+  }
+
+  test('blank field selection keeps the legacy unrestricted rule', () => {
+    const { vm, updateClass } = ctx([]);
+    handleSubmit(vm);
+    expect(updateClass.mock.calls[0][0].rule.select_keys).toBeUndefined();
+  });
+
+  test('explicit field selection is preserved even when all offered fields are selected', () => {
+    const { vm, updateClass } = ctx(['app', 'title']);
+    handleSubmit(vm);
+    expect(updateClass.mock.calls[0][0].rule.select_keys).toEqual(['app', 'title']);
+  });
+
+  test('only fields categorized by canonicalEvents are offered by default', () => {
+    const fieldOptions = CategoryEditModal.computed.fieldOptions.call({
+      editing: { match_fields: [] },
+    });
+    expect(fieldOptions).toEqual(['app', 'title']);
+  });
+});
