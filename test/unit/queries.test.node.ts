@@ -36,6 +36,8 @@
  *             (Flatpak app IDs retained: 'com.microsoft.Edge', 'com.microsoft.EdgeDev')
  *
  *   Arc:      'arc.exe', 'Arc.exe', 'Arc'
+ *             (also matched by the chrome pattern, since Arc reports to the chrome bucket
+ *              unless the browser name is overridden in the extension settings)
  *
  *   Vivaldi:  'Vivaldi-stable', 'Vivaldi-snapshot', 'vivaldi.exe', 'Vivaldi.exe', 'Vivaldi'
  *             (Flatpak app ID retained: 'com.vivaldi.Vivaldi')
@@ -81,6 +83,12 @@ describe('browser_appname_regex', () => {
       'chromium.exe',
       'Google-chrome-beta',
       'Google-chrome-unstable',
+      // Chromium forks that report through the chrome extension bucket (#927)
+      'Arc',
+      'arc.exe',
+      'Arc.exe',
+      'Dia',
+      'Dia.exe',
     ];
     for (const name of knownNames) {
       expect(re.test(name)).toBe(true);
@@ -93,6 +101,10 @@ describe('browser_appname_regex', () => {
     expect(re.test('com.google.Chrome')).toBe(false);
     expect(re.test('Slack')).toBe(false);
     expect(re.test('Electron')).toBe(false);
+    // The fork alternatives are anchored, so names merely starting with them don't match
+    expect(re.test('archive')).toBe(false);
+    expect(re.test('arcade')).toBe(false);
+    expect(re.test('Dialog')).toBe(false);
   });
 
   test('firefox pattern matches all known Firefox/LibreWolf/Waterfox app names', () => {
