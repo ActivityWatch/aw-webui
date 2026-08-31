@@ -5,9 +5,9 @@ div
       option(v-for="hostname in hostnameChoices")
         | {{hostname}}
   b-form-group(label="Start" label-cols=2)
-    b-form-datepicker(v-model="queryOptionsData.start")
+    input.form-control(type="date" v-model="queryOptionsData.start")
   b-form-group(label="Stop" label-cols=2)
-    b-form-datepicker(v-model="queryOptionsData.stop")
+    input.form-control(type="date" v-model="queryOptionsData.stop")
   b-form-group(label="Toggles" label-cols=2)
     b-form-checkbox(type="checkbox" v-model="queryOptionsData.filter_afk" label="Filter AFK" description="")
       label Exclude time away from computer

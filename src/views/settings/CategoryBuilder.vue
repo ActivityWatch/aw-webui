@@ -150,8 +150,8 @@ export default {
       show_options: false,
       queryOptions: {
         hostname: '',
-        start: moment().subtract(1, 'day'),
-        stop: moment().add(1, 'day'),
+        start: moment().subtract(1, 'day').format('YYYY-MM-DD'),
+        stop: moment().add(1, 'day').format('YYYY-MM-DD'),
       },
 
       // TODO: Support inspecting a different category than Uncategorized (e.g. to make some category more precise)
