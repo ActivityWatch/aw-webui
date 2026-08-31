@@ -60,6 +60,8 @@ export default Vue.extend({
       ...this.queryOptionsData,
       hostname: this.hostnameChoices[0],
       ...this.queryOptions,
+      start: moment(this.queryOptions?.start || this.queryOptionsData.start).format('YYYY-MM-DD'),
+      stop: moment(this.queryOptions?.stop || this.queryOptionsData.stop).format('YYYY-MM-DD'),
     };
     this.$emit('input', this.queryOptionsData);
   },
