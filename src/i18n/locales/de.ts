@@ -53,6 +53,7 @@ export default {
     languageEn: 'English',
     languageDe: 'Deutsch',
     languageRu: 'Русский',
+    languageSv: 'Svenska',
     languageZhCN: '简体中文',
     rangeTo: 'bis',
   },
