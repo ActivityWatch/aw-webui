@@ -341,11 +341,20 @@ export const browser_appname_regex: Record<string, string> = {
 
 // Returns a list of active browser events (where the browser was the active window) from all browser buckets
 function browserEvents(params: DesktopQueryParams): string {
+  const browsers = browsersWithBuckets(params.bid_browsers);
+  // Chrome regex also matches Arc, and a settings-override Arc bucket can
+  // coexist with the default chrome bucket. Those two streams can duplicate
+  // the same Arc activity; union_no_overlap is only for that pair. Distinct
+  // browsers (Chrome + Firefox, etc.) may overlap in time and must concat.
+  const mixChromeArc =
+    browsers.some(([browserName]) => browserName === 'chrome') &&
+    browsers.some(([browserName]) => browserName === 'arc');
+
   let code = `
     browser_events = [];
   `;
 
-  _.each(browsersWithBuckets(params.bid_browsers), ([browserName, bucketId]) => {
+  _.each(browsers, ([browserName, bucketId]) => {
     const browser_appnames_str = JSON.stringify(browser_appnames[browserName]);
     code += `events_${browserName} = flood(query_bucket("${bucketId}"));
        window_${browserName} = filter_keyvals(events, "app", ${browser_appnames_str});`;
@@ -358,11 +367,24 @@ function browserEvents(params: DesktopQueryParams): string {
        window_${browserName} = sort_by_timestamp(concat(window_${browserName}, window_${browserName}_re));`;
     }
 
+    const combineChromeArcDup = mixChromeArc && (browserName === 'chrome' || browserName === 'arc');
     code += `
        events_${browserName} = filter_period_intersect(events_${browserName}, window_${browserName});
-       events_${browserName} = split_url_events(events_${browserName});
-       browser_events = union_no_overlap(browser_events, events_${browserName});`;
+       events_${browserName} = split_url_events(events_${browserName});`;
+    if (!combineChromeArcDup) {
+      code += `
+       browser_events = concat(browser_events, events_${browserName});
+       browser_events = sort_by_timestamp(browser_events);`;
+    }
   });
+
+  if (mixChromeArc) {
+    // Chrome first so current chrome-bucket events win over a stale Arc bucket.
+    code += `
+       chrome_arc_events = union_no_overlap(events_chrome, events_arc);
+       browser_events = concat(browser_events, chrome_arc_events);
+       browser_events = sort_by_timestamp(browser_events);`;
+  }
   return code;
 }
 

@@ -292,9 +292,41 @@ describe('chrome fork matching in generated query', () => {
     expect(chromeWindowFilter).toContain('arc(\\\\.exe)?$');
     expect(query).toContain('window_arc_re =');
     expect(query).toContain('arc(\\\\.exe)?$');
-    expect(query).toContain('browser_events = union_no_overlap(browser_events, events_chrome);');
-    expect(query).toContain('browser_events = union_no_overlap(browser_events, events_arc);');
-    expect(query).not.toContain('browser_events = concat(browser_events, events_');
+    // Duplicate chrome/Arc streams are unioned with each other, not with every browser.
+    expect(query).toContain('chrome_arc_events = union_no_overlap(events_chrome, events_arc);');
+    expect(query).toContain('browser_events = concat(browser_events, chrome_arc_events);');
+    expect(query).not.toContain(
+      'browser_events = union_no_overlap(browser_events, events_chrome);'
+    );
+    expect(query).not.toContain('browser_events = union_no_overlap(browser_events, events_arc);');
+  });
+
+  test('unrelated browser buckets concat instead of dropping overlaps', () => {
+    const query = fullDesktopQuery({
+      ...params,
+      bid_browsers: ['aw-watcher-web-chrome_testhost', 'aw-watcher-web-firefox_testhost'],
+    }).join('\n');
+    expect(query).toContain('browser_events = concat(browser_events, events_chrome);');
+    expect(query).toContain('browser_events = concat(browser_events, events_firefox);');
+    expect(query).not.toContain('union_no_overlap(browser_events, events_');
+    expect(query).not.toContain('union_no_overlap(events_chrome, events_firefox)');
+    expect(query).not.toContain('chrome_arc_events');
+  });
+
+  test('chrome+arc union does not swallow a third browser', () => {
+    const query = fullDesktopQuery({
+      ...params,
+      bid_browsers: [
+        'aw-watcher-web-chrome_testhost',
+        'aw-watcher-web-arc_testhost',
+        'aw-watcher-web-firefox_testhost',
+      ],
+    }).join('\n');
+    expect(query).toContain('chrome_arc_events = union_no_overlap(events_chrome, events_arc);');
+    expect(query).toContain('browser_events = concat(browser_events, events_firefox);');
+    expect(query).toContain('browser_events = concat(browser_events, chrome_arc_events);');
+    expect(query).not.toContain('union_no_overlap(browser_events, events_firefox)');
+    expect(query).not.toContain('union_no_overlap(browser_events, events_chrome)');
   });
 });
 
