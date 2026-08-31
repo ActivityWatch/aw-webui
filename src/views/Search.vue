@@ -64,8 +64,8 @@ export default {
       // Options
       show_options: false,
       queryOptions: {
-        start: moment().subtract(1, 'day'),
-        stop: moment().add(1, 'day'),
+        start: moment().subtract(1, 'day').format('YYYY-MM-DD'),
+        stop: moment().add(1, 'day').format('YYYY-MM-DD'),
       },
     };
   },
@@ -97,7 +97,9 @@ export default {
       }
     },
     extendByWeek() {
-      this.queryOptions.start = moment(this.queryOptions.start).subtract(1, 'week');
+      this.queryOptions.start = moment(this.queryOptions.start)
+        .subtract(1, 'week')
+        .format('YYYY-MM-DD');
       this.search();
     },
   },
