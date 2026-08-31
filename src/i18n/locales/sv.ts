@@ -273,6 +273,8 @@ export default {
   },
   activity: {
     title: 'Aktivitet',
+    browserAllowlistMiss:
+      'Inget matchande webbläsarfönster för den här perioden. Om du surfade i en Chromium-/Firefox-fork kanske dess appnamn inte känns igen ännu.',
     for: 'för',
     host: 'Värd:',
     timeActive: 'Aktiv tid:',
