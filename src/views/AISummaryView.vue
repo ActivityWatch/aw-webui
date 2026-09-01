@@ -6,7 +6,7 @@ div
     | Your API key is kept only in this page's memory and sent directly to the LLM provider.
     |  It is cleared when the page reloads and ActivityWatch does not receive it.
     |  For deeper analysis with agents, see the
-    |  #[a(href="https://docs.activitywatch.net/en/latest/examples/querying-data.html") ActivityWatch querying guide].
+    |  #[a(href="https://docs.activitywatch.net/en/latest/examples/agents-and-ai.html") ActivityWatch agents and AI guide].
 
   div.row.mb-3
     div.col-md-4
