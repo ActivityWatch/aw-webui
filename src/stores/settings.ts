@@ -9,9 +9,16 @@ import { isEqual } from 'lodash';
 import { AppLocale, i18n, isAppLocale, setAppLocale } from '~/i18n';
 
 function jsonEq(a: any, b: any) {
-  const jsonA = JSON.parse(JSON.stringify(a));
-  const jsonB = JSON.parse(JSON.stringify(b));
-  return isEqual(jsonA, jsonB);
+  try {
+    const jsonA = JSON.parse(JSON.stringify(a));
+    const jsonB = JSON.parse(JSON.stringify(b));
+    return isEqual(jsonA, jsonB);
+  } catch (e) {
+    // Don't abort the whole settings save if one key cannot be serialized
+    // (circular Vue objects, etc.). Treat as "not equal" so we still attempt POST.
+    console.error('jsonEq failed', e);
+    return false;
+  }
 }
 
 let settingsLoadPromise: Promise<void> | null = null;

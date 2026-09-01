@@ -266,7 +266,7 @@ export function saveCategories(sets: CategorySet[], activeIds: string[]) {
   const effectiveClasses = mergeCategorySets(sets.filter(s => activeIds.includes(s.id))).map(
     cleanCategory
   );
-  settingsStore.update({
+  return settingsStore.update({
     category_sets: cleanSets,
     active_set_ids: activeIds,
     classes: effectiveClasses,
