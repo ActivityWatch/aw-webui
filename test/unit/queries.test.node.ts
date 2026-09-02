@@ -55,7 +55,7 @@
  *             (Flatpak app ID retained: 'one.ablaze.floorp')
  */
 
-import { browser_appname_regex, appQuery, querystr_to_array } from '~/queries';
+import { browser_appname_regex, appQuery, categoryQuery, querystr_to_array } from '~/queries';
 
 // Convert ActivityWatch (?i) patterns to JS RegExp with i flag for testing.
 // AW server uses Python-style (?i) inline flag; JS uses RegExp 'i' flag instead.
@@ -303,5 +303,37 @@ describe('appQuery merge key regression', () => {
     expect(joined).toContain('merge_events_by_keys(events, ["app", "title"])');
     // The title_events step must merge on "title" for iOS
     expect(joined).toContain('"app", "classname", "title"');
+  });
+});
+
+// Regression guard for the category/Category-Builder ScreenTime caller paths:
+// query_category_time_by_period and CategoryBuilder.vue both call categoryQuery/
+// canonicalEvents with bid_android.  They were missing isIos, causing ScreenTime
+// buckets to lose title distinctions before category assignment.
+describe('categoryQuery merge key regression (ScreenTime callers)', () => {
+  const categories: any[] = [];
+  const filter_categories: string[][] = [];
+
+  test('Android watcher bucket does NOT merge on "title" in category query', () => {
+    const q = categoryQuery({
+      bid_android: 'aw-watcher-android_device',
+      categories,
+      filter_categories,
+      filter_afk: false,
+    });
+    const joined = q.join('\n');
+    expect(joined).not.toContain('merge_events_by_keys(events, ["app", "title"])');
+  });
+
+  test('iOS ScreenTime bucket DOES merge on "title" in category query when isIos=true', () => {
+    const q = categoryQuery({
+      bid_android: 'aw-import-screentime_device',
+      isIos: true,
+      categories,
+      filter_categories,
+      filter_afk: false,
+    });
+    const joined = q.join('\n');
+    expect(joined).toContain('merge_events_by_keys(events, ["app", "title"])');
   });
 });

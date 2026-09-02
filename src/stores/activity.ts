@@ -550,10 +550,14 @@ export const useActivityStore = defineStore('activity', {
         }
 
         // Prefer ScreenTime bucket over Android watcher for consistency with query_android
-        const iosOrAndroidBucket =
-          this.buckets.android.find((id: string) => id.startsWith('aw-import-screentime')) ||
-          this.buckets.android[0];
+        const iosBucketForCategory = this.buckets.android.find((id: string) =>
+          id.startsWith('aw-import-screentime')
+        );
+        const iosOrAndroidBucket = iosBucketForCategory || this.buckets.android[0];
         const isAndroid = iosOrAndroidBucket !== undefined;
+        // ScreenTime (iOS) buckets carry a "title" key; aw-watcher-android buckets do not.
+        // Pass isIos so canonicalEvents uses the correct merge keys and titles are preserved.
+        const isIosForCategory = !!iosBucketForCategory;
         const categories = useCategoryStore().classes_for_query;
         // TODO: Clean up call, pass QueryParams in fullDesktopQuery as well
         // TODO: Unify QueryOptions and QueryParams
@@ -570,6 +574,7 @@ export const useActivityStore = defineStore('activity', {
           ...(isAndroid
             ? {
                 bid_android: iosOrAndroidBucket,
+                isIos: isIosForCategory,
               }
             : {
                 bid_afk: this.buckets.afk[0],
