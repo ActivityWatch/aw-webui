@@ -55,7 +55,7 @@
  *             (Flatpak app ID retained: 'one.ablaze.floorp')
  */
 
-import { browser_appname_regex, querystr_to_array } from '~/queries';
+import { browser_appname_regex, appQuery, querystr_to_array } from '~/queries';
 
 // Convert ActivityWatch (?i) patterns to JS RegExp with i flag for testing.
 // AW server uses Python-style (?i) inline flag; JS uses RegExp 'i' flag instead.
@@ -275,5 +275,33 @@ describe('querystr_to_array', () => {
     const query = '\n  events = query_bucket("bucket");\n  RETURN = events;\n';
     const result = querystr_to_array(query);
     expect(result).toHaveLength(2);
+  });
+});
+
+// Regression guard for ActivityWatch/aw-webui#959:
+// aw-watcher-android events carry "app"/"package"/"classname" but NOT "title".
+// merge_events_by_keys skips events missing any requested key, so including
+// "title" in the Android (non-iOS) path collapsed all activity to 0s.
+describe('appQuery merge key regression', () => {
+  const categories: any[] = [];
+  const filter_categories: string[][] = [];
+
+  test('Android watcher path does NOT merge on "title"', () => {
+    const q = appQuery('aw-watcher-android_device', categories, filter_categories, false);
+    const joined = q.join('\n');
+    // The canonical-events step must not reference "title" for the non-iOS path
+    expect(joined).not.toContain('merge_events_by_keys(events, ["app", "title"])');
+    // The title_events step must merge on "classname" but not "title"
+    expect(joined).toContain('"app", "classname"');
+    expect(joined).not.toContain('"app", "classname", "title"');
+  });
+
+  test('iOS ScreenTime path DOES merge on "title"', () => {
+    const q = appQuery('aw-import-screentime_device', categories, filter_categories, true);
+    const joined = q.join('\n');
+    // The canonical-events step must reference "title" for the iOS path
+    expect(joined).toContain('merge_events_by_keys(events, ["app", "title"])');
+    // The title_events step must merge on "title" for iOS
+    expect(joined).toContain('"app", "classname", "title"');
   });
 });

@@ -328,15 +328,14 @@ export const useActivityStore = defineStore('activity', {
       );
       const selectedBucket = iosBucket || this.buckets.android[0];
 
+      const isIos = !!iosBucket;
       const q = queries.appQuery(
         selectedBucket,
         categoryStore.classes_for_query,
-        filter_categories
+        filter_categories,
+        isIos
       );
       const data = await getClient().query(periods, q).catch(this.errorHandler);
-
-      // Post-process for iOS compatibility (swap app <-> title)
-      const isIos = !!iosBucket;
 
       if (isIos && data && data[0] && data[0].title_events) {
         // Build bundle ID → human name lookup from title_events before modifying them.

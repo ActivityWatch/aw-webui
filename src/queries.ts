@@ -70,6 +70,11 @@ interface DesktopQueryParams extends BaseQueryParams {
 
 interface AndroidQueryParams extends BaseQueryParams {
   bid_android: string;
+  /** True when the bucket is an aw-import-screentime (iOS) bucket.
+   *  ScreenTime events carry a "title" key; aw-watcher-android events do not.
+   *  Keep false (the default) for regular Android watcher buckets so that
+   *  merge_events_by_keys does not drop every event due to a missing key. */
+  isIos?: boolean;
 }
 
 interface MultiQueryParams extends BaseQueryParams {
@@ -154,8 +159,17 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
   return [
     // Fetch window/app events
     `events = flood(${queryBucket(bid_window)});`,
-    // On Android, merge events to avoid overload of events
-    isAndroidParams(params) ? 'events = merge_events_by_keys(events, ["app", "title"]);' : '',
+    // On Android, merge events to avoid overload of events.
+    // aw-watcher-android events carry "app"/"package"/"classname" but NOT "title";
+    // merge_events_by_keys drops events missing any requested key, so including
+    // "title" here collapses all Android watcher events to zero duration
+    // (regression introduced in bf0fc84 to support iOS ScreenTime, which DOES
+    // carry "title").  Only add "title" when the bucket is an iOS ScreenTime import.
+    isAndroidParams(params)
+      ? params.isIos
+        ? 'events = merge_events_by_keys(events, ["app", "title"]);'
+        : 'events = merge_events_by_keys(events, ["app"]);'
+      : '',
     // Fetch not-afk events
     isDesktopParams(params)
       ? `not_afk = flood(${queryBucket(params.bid_afk)});
@@ -225,19 +239,25 @@ const default_limit = 100; // Hardcoded limit per group
 export function appQuery(
   appbucket: string,
   categories: Category[],
-  filter_categories: string[][]
+  filter_categories: string[][],
+  isIos = false
 ): string[] {
   appbucket = escape_doublequote(appbucket);
   const params: AndroidQueryParams = {
     bid_android: appbucket,
     categories,
     filter_categories,
+    isIos,
   };
+
+  // aw-watcher-android events have no "title" key; only ScreenTime (iOS) does.
+  // Merging on "title" when it is absent drops every event (see canonicalEvents).
+  const titleMergeKeys = isIos ? '["app", "classname", "title"]' : '["app", "classname"]';
 
   const code = `
     ${canonicalEvents(params)}
 
-    title_events = sort_by_duration(merge_events_by_keys(events, ["app", "classname", "title"]));
+    title_events = sort_by_duration(merge_events_by_keys(events, ${titleMergeKeys}));
     app_events   = sort_by_duration(merge_events_by_keys(title_events, ["app"]));
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
 
