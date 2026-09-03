@@ -170,16 +170,19 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
         ? 'events = merge_events_by_keys(events, ["app", "title"]);'
         : 'events = merge_events_by_keys(events, ["app"]);'
       : '',
-    // Fetch not-afk events
+    // Fetch not-afk events. When there is no AFK bucket (bid_afk is empty), emit
+    // an empty not_afk list so later references to the variable don't fail.
     isDesktopParams(params)
-      ? `not_afk = flood(${queryBucket(params.bid_afk)});
-         not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);` +
-        (always_active_pattern_str
-          ? `not_treat_as_afk = filter_keyvals_regex(events, "app", "${always_active_pattern_str}");
-             not_afk = period_union(not_afk, not_treat_as_afk);
-             not_treat_as_afk = filter_keyvals_regex(events, "title", "${always_active_pattern_str}");
-             not_afk = period_union(not_afk, not_treat_as_afk);`
-          : '')
+      ? params.bid_afk
+        ? `not_afk = flood(${queryBucket(params.bid_afk)});
+           not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);` +
+          (always_active_pattern_str
+            ? `not_treat_as_afk = filter_keyvals_regex(events, "app", "${always_active_pattern_str}");
+               not_afk = period_union(not_afk, not_treat_as_afk);
+               not_treat_as_afk = filter_keyvals_regex(events, "title", "${always_active_pattern_str}");
+               not_afk = period_union(not_afk, not_treat_as_afk);`
+            : '')
+        : 'not_afk = [];'
       : '',
     // Fetch browser events
     isDesktopParams(params) && params.bid_browsers
@@ -200,8 +203,9 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
       : 'stopwatch_events = [];',
     // Categorize
     params.categories ? `events = categorize(events, ${categories_str});` : '',
-    // Filter out selected categories
-    params.filter_categories
+    // Filter out selected categories. Only emit when the list is non-empty: an
+    // empty allow-list would drop every event rather than skip the filter.
+    params.filter_categories && params.filter_categories.length > 0
       ? `events = filter_keyvals(events, "$category", ${cat_filter_str});`
       : '',
     // "Return" events by setting variable named with return_variable if set
@@ -490,6 +494,34 @@ export function activityQueryAndroid(androidbucket: string): string[] {
 
 // Returns a query that yields a dict with a key "cat_events" which is an
 // array of one event per category, with the duration of each event set to the sum of the category durations.
+// Query for the single-pass activity-analysis context (see AISummaryView).
+//
+// Returns the AFK-filtered, categorized timeline plus browser domains and the
+// unfiltered tracked duration, so the client can derive bounded statistics locally
+// without downloading a raw, uncapped bucket. Titles and URLs stay on the device;
+// see src/util/activityContext.ts for what is actually exported.
+export function analysisContextQuery(params: DesktopQueryParams): string[] {
+  return querystr_to_array(
+    `
+    ${canonicalEvents({
+      ...params,
+      bid_window: escape_doublequote(params.bid_window),
+      bid_afk: escape_doublequote(params.bid_afk),
+      bid_browsers: _.map(params.bid_browsers, escape_doublequote),
+    })}
+    events = sort_by_timestamp(events);
+    browser_events = split_url_events(browser_events);
+    browser_domains = sort_by_duration(merge_events_by_keys(browser_events, ["$domain"]));
+    browser_domains = limit_events(browser_domains, ${default_limit});
+    tracked_events = ${queryBucket(escape_doublequote(params.bid_window))};
+    RETURN = {
+        "events": events,
+        "browser_domains": browser_domains,
+        "tracked_duration": sum_durations(tracked_events)
+    };`
+  );
+}
+
 export function categoryQuery(
   params: MultiQueryParams | DesktopQueryParams | AndroidQueryParams
 ): string[] {
@@ -503,6 +535,7 @@ export function categoryQuery(
 
 export default {
   fullDesktopQuery,
+  analysisContextQuery,
   multideviceQuery,
   appQuery,
   activityQuery,

@@ -37,6 +37,20 @@ div
         b-form-input(v-model="model" placeholder="e.g. gpt-4o-mini" @blur="persistConfig")
 
   div.mb-3
+    b-form-group(label="Privacy" label-class="font-weight-bold")
+      b-form-checkbox(v-model="excludeUncategorized")
+        | Exclude uncategorized activity
+      b-form-checkbox(v-model="excludePrivateCategories")
+        | Exclude categories marked private
+        span.text-muted.ml-1(v-if="privateCategories.length")
+          | ({{ privateCategories.map(c => c.join(' > ')).join(', ') }})
+        span.text-muted.ml-1(v-else)
+          | (none marked yet — set #[code private: true] in a category's data)
+      small.text-muted
+        | Browser domains are omitted entirely while either filter is on, since browser
+        |  events carry no category and cannot be filtered by it.
+
+  div.mb-3
     b-form-group(label="Prompt" label-class="font-weight-bold")
       b-form-textarea(v-model="userPrompt" rows="3" max-rows="8")
 
@@ -48,7 +62,7 @@ div
       v-if="aggregatedText"
       variant="outline-secondary"
       @click="dataVisible = !dataVisible"
-    ) {{ dataVisible ? 'Hide raw data' : 'Show raw data' }}
+    ) {{ dataVisible ? 'Hide context' : 'Show context sent' }}
 
   b-alert(v-if="error" variant="danger" show dismissible @dismissed="error = ''")
     | {{ error }}
@@ -56,7 +70,7 @@ div
   div(v-if="dataVisible && aggregatedText")
     b-card.mb-3
       template(slot="header")
-        strong Raw activity data sent to LLM
+        strong Exact context sent to the LLM
       pre.mb-0(style="white-space: pre-wrap; font-size: 0.85em") {{ aggregatedText }}
 
   div(v-if="llmResponse")
@@ -72,15 +86,16 @@ div
 
 <script lang="ts">
 import { useBucketsStore } from '~/stores/buckets';
+import { useCategoryStore } from '~/stores/categories';
 import { getClient } from '~/util/awclient';
+import { analysisContextQuery } from '~/queries';
+import { loadLLMConfig, saveLLMConfig, callLLM, type LLMProvider } from '~/util/aiSummary';
 import {
-  aggregateEvents,
-  buildSummaryText,
-  loadLLMConfig,
-  saveLLMConfig,
-  callLLM,
-  type LLMProvider,
-} from '~/util/aiSummary';
+  buildActivityContext,
+  formatActivityContext,
+  privateCategoriesFrom,
+  type CategoryName,
+} from '~/util/activityContext';
 import 'vue-awesome/icons/copy';
 
 const DEFAULT_PROMPT =
@@ -93,6 +108,7 @@ export default {
     const saved = loadLLMConfig();
     return {
       bucketsStore: useBucketsStore(),
+      categoryStore: useCategoryStore(),
 
       selectedHost: '',
       dateRange: 'last7d',
@@ -100,6 +116,8 @@ export default {
       apiKey: saved.apiKey || '',
       model: saved.model || '',
       userPrompt: DEFAULT_PROMPT,
+      excludeUncategorized: false,
+      excludePrivateCategories: true,
 
       loading: false,
       error: '',
@@ -136,6 +154,9 @@ export default {
     periodDays(): number {
       return this.dateRange === 'last7d' ? 7 : this.dateRange === 'last30d' ? 30 : 90;
     },
+    privateCategories(): CategoryName[] {
+      return privateCategoriesFrom(this.categoryStore.classes || []);
+    },
     defaultModel(): string {
       if (this.provider === 'anthropic') return 'claude-haiku-4-5-20251001';
       return 'gpt-4o-mini';
@@ -143,6 +164,7 @@ export default {
   },
   async mounted() {
     await this.bucketsStore.ensureLoaded();
+    await this.categoryStore.load();
     if (this.hostOptions.length > 0 && !this.selectedHost) {
       this.selectedHost = this.hostOptions[0].value;
     }
@@ -184,12 +206,7 @@ export default {
 
       this.loading = true;
       try {
-        const events = await this.fetchEvents();
-        const topApps = aggregateEvents(events);
-        const totalDuration = topApps.reduce((s, a) => s + a.duration, 0);
-        const summaryData = { topApps, totalDuration, periodDays: this.periodDays };
-        const summaryText = buildSummaryText(summaryData);
-
+        const summaryText = await this.buildContextText();
         this.aggregatedText = summaryText;
 
         const fullPrompt = `${this.userPrompt}\n\n${summaryText}`;
@@ -210,7 +227,7 @@ export default {
         this.loading = false;
       }
     },
-    async fetchEvents(): Promise<any[]> {
+    async buildContextText(): Promise<string> {
       const buckets = this.bucketsStore.buckets || [];
       const windowBucket = buckets.find(
         b => b.type === 'currentwindow' && b.hostname === this.selectedHost
@@ -218,11 +235,46 @@ export default {
       if (!windowBucket) {
         throw new Error(`No window-watcher bucket found for host: ${this.selectedHost}`);
       }
+      const afkBucket = buckets.find(
+        b => b.type === 'afkstatus' && b.hostname === this.selectedHost
+      );
+      // Only include browser buckets for the selected host; mixing buckets from
+      // other hosts would send another device's domains to the LLM under the
+      // selected host's summary. Use bucketsBrowser() rather than an inline
+      // filter so the established 'unknown'-hostname fallback is respected: when
+      // a browser bucket's hostname is 'unknown' (common in older AW setups),
+      // strict equality against this.selectedHost would silently drop it.
+      const browserBuckets = this.bucketsStore.bucketsBrowser(this.selectedHost);
 
       const end = new Date();
       const start = new Date(end.getTime() - this.periodDays * 24 * 60 * 60 * 1000);
 
-      return getClient().getEvents(windowBucket.id, { start, end, limit: -1 });
+      // Query-side AFK filtering and categorization: only derived statistics
+      // (never raw titles or URLs) are exported from the result below.
+      const query = analysisContextQuery({
+        bid_window: windowBucket.id,
+        bid_afk: afkBucket ? afkBucket.id : '',
+        bid_browsers: browserBuckets,
+        filter_afk: Boolean(afkBucket),
+        categories: this.categoryStore.classes_for_query,
+        filter_categories: [],
+      });
+      const [result] = await getClient().query([{ start, end }], query);
+
+      const context = buildActivityContext({
+        events: result.events || [],
+        domainEvents: result.browser_domains || [],
+        trackedSeconds: result.tracked_duration || 0,
+        start,
+        end,
+        hosts: [this.selectedHost],
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        privacy: {
+          excludeUncategorized: this.excludeUncategorized,
+          privateCategories: this.excludePrivateCategories ? this.privateCategories : [],
+        },
+      });
+      return formatActivityContext(context);
     },
     async copyResponse() {
       try {
