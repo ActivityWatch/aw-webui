@@ -261,7 +261,10 @@ export default {
       let bucketParams;
       if (!windowAvail && androidBuckets.length > 0) {
         const screentimeBucket = androidBuckets.find(id => id.startsWith('aw-import-screentime'));
-        bucketParams = { bid_android: screentimeBucket || androidBuckets[0] };
+        bucketParams = {
+          bid_android: screentimeBucket || androidBuckets[0],
+          isIos: !!screentimeBucket,
+        };
       } else {
         bucketParams = {
           bid_window: 'aw-watcher-window_' + hostname,

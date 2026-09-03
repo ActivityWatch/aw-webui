@@ -70,6 +70,7 @@ interface DesktopQueryParams extends BaseQueryParams {
 
 interface AndroidQueryParams extends BaseQueryParams {
   bid_android: string;
+  isIos?: boolean;
 }
 
 interface MultiQueryParams extends BaseQueryParams {
@@ -154,8 +155,12 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
   return [
     // Fetch window/app events
     `events = flood(${queryBucket(bid_window)});`,
-    // On Android, merge events to avoid overload of events
-    isAndroidParams(params) ? 'events = merge_events_by_keys(events, ["app", "classname"]);' : '',
+    // Android watcher events have classname but no title; ScreenTime events have title.
+    isAndroidParams(params)
+      ? params.isIos
+        ? 'events = merge_events_by_keys(events, ["app", "title"]);'
+        : 'events = merge_events_by_keys(events, ["app", "classname"]);'
+      : '',
     // Fetch not-afk events
     isDesktopParams(params)
       ? `not_afk = flood(${queryBucket(params.bid_afk)});
@@ -225,19 +230,22 @@ const default_limit = 100; // Hardcoded limit per group
 export function appQuery(
   appbucket: string,
   categories: Category[],
-  filter_categories: string[][]
+  filter_categories: string[][],
+  isIos = false
 ): string[] {
   appbucket = escape_doublequote(appbucket);
   const params: AndroidQueryParams = {
     bid_android: appbucket,
     categories,
     filter_categories,
+    isIos,
   };
+  const titleMergeKeys = isIos ? '["app", "title"]' : '["app", "classname"]';
 
   const code = `
     ${canonicalEvents(params)}
 
-    title_events = sort_by_duration(merge_events_by_keys(events, ["app", "classname"]));
+    title_events = sort_by_duration(merge_events_by_keys(events, ${titleMergeKeys}));
     app_events   = sort_by_duration(merge_events_by_keys(title_events, ["app"]));
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
 

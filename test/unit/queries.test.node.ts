@@ -297,8 +297,14 @@ describe('Android merge keys (regression guard for issue #959)', () => {
   test('appQuery does not include "title" in Android merge keys', () => {
     const queryLines = appQuery('aw-watcher-android_test', [], []);
     const fullQuery = queryLines.join('\n');
-    // title_events on Android must group by classname only — "title" is absent on Android events
-    expect(fullQuery).not.toContain('["app", "classname", "title"]');
-    expect(fullQuery).not.toContain('["app", "title"]');
+    expect(fullQuery).toContain('merge_events_by_keys(events, ["app", "classname"])');
+    expect(fullQuery).not.toContain('merge_events_by_keys(events, ["app", "title"])');
+  });
+
+  test('appQuery preserves ScreenTime events with iOS title merge keys', () => {
+    const queryLines = appQuery('aw-import-screentime_test', [], [], true);
+    const fullQuery = queryLines.join('\n');
+    expect(fullQuery).toContain('merge_events_by_keys(events, ["app", "title"])');
+    expect(fullQuery).not.toContain('merge_events_by_keys(events, ["app", "classname"])');
   });
 });
