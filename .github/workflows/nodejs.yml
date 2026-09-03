@@ -177,20 +177,36 @@ jobs:
       with:
         name: screenshots-${{ matrix.aw-server }}-${{ matrix.aw-version }}
         path: screenshots/dist/*
+    # NOTE: the glob covers both cache roots. Since ActivityWatch/aw-server-rust#652
+    # a --testing server logs under ~/.cache/activitywatch-testing/, while released
+    # builds still use ~/.cache/activitywatch/. These steps must never fail on absence.
     - name: Print server logs to console
       if: ${{ always() }}
       shell: bash
-      run:
-        for file in ~/.cache/activitywatch/log/*/*.log; do echo $file; cat $file; echo; done
+      run: |
+        shopt -s nullglob
+        logs=(~/.cache/activitywatch*/log/*/*.log)
+        if [ ${#logs[@]} -eq 0 ]; then
+          echo "No server logs found under ~/.cache/activitywatch*/log/"
+          exit 0
+        fi
+        for file in "${logs[@]}"; do echo "$file"; cat "$file"; echo; done
     - name: Move logs to subdir
       # Run this step even if e2e tests flag failure
       if: ${{ always() }}
+      shell: bash
       env:
         aw_server: ${{ matrix.aw-server }}
         aw_version: ${{ matrix.aw-version }}
       run: |
-        mkdir -p logs/dist/$aw_server/$aw_version
-        mv ~/.cache/activitywatch/log/*/*.log logs/dist/$aw_server/$aw_version
+        shopt -s nullglob
+        logs=(~/.cache/activitywatch*/log/*/*.log)
+        if [ ${#logs[@]} -eq 0 ]; then
+          echo "No server logs to move"
+          exit 0
+        fi
+        mkdir -p "logs/dist/$aw_server/$aw_version"
+        mv "${logs[@]}" "logs/dist/$aw_server/$aw_version"
     - name: Upload logs
       if: ${{ always() }}
       uses: actions/upload-artifact@v7
