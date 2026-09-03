@@ -55,7 +55,7 @@
  *             (Flatpak app ID retained: 'one.ablaze.floorp')
  */
 
-import { browser_appname_regex, querystr_to_array } from '~/queries';
+import { browser_appname_regex, querystr_to_array, canonicalEvents, appQuery } from '~/queries';
 
 // Convert ActivityWatch (?i) patterns to JS RegExp with i flag for testing.
 // AW server uses Python-style (?i) inline flag; JS uses RegExp 'i' flag instead.
@@ -275,5 +275,30 @@ describe('querystr_to_array', () => {
     const query = '\n  events = query_bucket("bucket");\n  RETURN = events;\n';
     const result = querystr_to_array(query);
     expect(result).toHaveLength(2);
+  });
+});
+
+// Regression guard: Android merge keys must not include "title" (Android events
+// only carry app/package/classname — missing keys cause aw-transform to drop all
+// events, producing "Time active: 0s" in the Activity view). See issue #959.
+describe('Android merge keys (regression guard for issue #959)', () => {
+  const androidParams = {
+    bid_android: 'aw-watcher-android_test',
+    categories: [] as never[],
+    filter_categories: [] as never[],
+  };
+
+  test('canonicalEvents uses ["app", "classname"] merge keys for Android, not ["app", "title"]', () => {
+    const query = canonicalEvents(androidParams as Parameters<typeof canonicalEvents>[0]);
+    expect(query).toContain('merge_events_by_keys(events, ["app", "classname"])');
+    expect(query).not.toContain('merge_events_by_keys(events, ["app", "title"])');
+  });
+
+  test('appQuery does not include "title" in Android merge keys', () => {
+    const queryLines = appQuery('aw-watcher-android_test', [], []);
+    const fullQuery = queryLines.join('\n');
+    // title_events on Android must group by classname only — "title" is absent on Android events
+    expect(fullQuery).not.toContain('["app", "classname", "title"]');
+    expect(fullQuery).not.toContain('["app", "title"]');
   });
 });
