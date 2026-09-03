@@ -159,7 +159,12 @@ export function getCategorizationStringFromEvent(bucket: IBucket, e: IEvent): st
 export function getCategoryColorFromEvent(bucket: IBucket, e: IEvent) {
   const categorizationString = getCategorizationStringFromEvent(bucket, e);
   if (categorizationString !== null) {
-    return getCategoryColorFromString(categorizationString);
+    const allCats = loadClasses();
+    const matched = matchString(categorizationString, allCats, e);
+    if (matched !== null) {
+      return getColorFromCategory(matched, allCats);
+    }
+    return fallbackColor(categorizationString);
   }
 
   if (bucket.type == 'afkstatus') {

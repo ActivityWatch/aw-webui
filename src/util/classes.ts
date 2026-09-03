@@ -4,8 +4,11 @@ import { useSettingsStore } from '~/stores/settings';
 import { getPresetCategorySets } from '~/util/presetCategories';
 
 const level_sep = '>';
-const CLASSIFY_KEYS = ['app', 'title'];
+export const CLASSIFY_KEYS = ['app', 'title'] as const;
 const UNCATEGORIZED = ['Uncategorized'];
+
+/** Canonical event fields offered in the category-rule editor. */
+export const CANONICAL_SELECT_KEYS = CLASSIFY_KEYS;
 
 /** ID of the implicit set holding a user's own (non-preset) categories. */
 export const DEFAULT_SET_ID = 'default';
@@ -14,6 +17,22 @@ export interface Rule {
   type: 'regex' | 'none';
   regex?: string;
   ignore_case?: boolean;
+  /** When set, only these event.data keys are tested. Absent = all string fields. */
+  select_keys?: string[];
+}
+
+/** Drop empty/invalid select_keys so the rust parser never sees `[]`. */
+export function normalizeSelectKeys(keys?: string[] | null): string[] | undefined {
+  if (!keys || keys.length === 0) {
+    return undefined;
+  }
+  const unique: string[] = [];
+  for (const key of keys) {
+    if (typeof key === 'string' && key && !unique.includes(key)) {
+      unique.push(key);
+    }
+  }
+  return unique.length > 0 ? unique : undefined;
 }
 
 export interface Category {
@@ -243,6 +262,13 @@ export function cleanCategory(cat: Category): Category {
   // we also want to strip any excess properties that may have belonged to another rule type
   if (cat.rule && (cat.rule.type === null || cat.rule.type === 'none')) {
     cat.rule = { type: 'none' };
+  } else if (cat.rule && cat.rule.type === 'regex') {
+    const keys = normalizeSelectKeys(cat.rule.select_keys);
+    if (keys) {
+      cat.rule.select_keys = keys;
+    } else {
+      delete cat.rule.select_keys;
+    }
   }
   return cat;
 }
@@ -339,7 +365,11 @@ function pickDeepest(categories: Category[]) {
   return _.maxBy(categories, c => c.name.length);
 }
 
-export function matchString(str: string, categories: Category[] | null): Category | null {
+export function matchString(
+  str: string,
+  categories: Category[] | null,
+  event?: IEvent
+): Category | null {
   if (!categories) {
     console.log(
       'Categories not passed, loading... (if you see this outside of a test, you should probably pass them)'
@@ -358,7 +388,16 @@ export function matchString(str: string, categories: Category[] | null): Categor
 
   // Find the matching category.
   // If several categories match the event, the deepest category will be chosen.
-  const matchingCats: [Category, RegExp][] = regexes.filter(c => c[1].test(str));
+  const matchingCats: [Category, RegExp][] = regexes.filter(([category, re]) => {
+    const selectKeys = normalizeSelectKeys(category.rule.select_keys);
+    if (event && selectKeys) {
+      return selectKeys.some(key => {
+        const value = event.data[key];
+        return typeof value === 'string' && re.test(value);
+      });
+    }
+    return re.test(str);
+  });
   if (matchingCats.length > 0) {
     return pickDeepest(matchingCats.map(c => c[0]));
   }
@@ -367,7 +406,6 @@ export function matchString(str: string, categories: Category[] | null): Categor
 
 // this is used only in tests
 export function classifyEvents(events: IEvent[], categories: Category[]): IEvent[] {
-  // Compile regexes
   const regexes: [Category, RegExp][] = categories
     .filter(c => c.rule.type == 'regex')
     .map(c => {
@@ -375,18 +413,18 @@ export function classifyEvents(events: IEvent[], categories: Category[]): IEvent
       return [c, re];
     });
 
-  // Classify events using compiled regexes.
-  // If several categories match the event, the deepest category will be chosen.
   return events.map((e: IEvent) => {
-    const matchingCats: [Category, RegExp][] = regexes.filter(c => {
-      return _.map(CLASSIFY_KEYS, key => c[1].test(e.data[key])).some(x => x);
+    const matchingCats = regexes.filter(([category, re]) => {
+      const keys = normalizeSelectKeys(category.rule.select_keys) || CLASSIFY_KEYS;
+      return keys.some(key => {
+        const value = e.data[key];
+        return typeof value === 'string' && re.test(value);
+      });
     });
-    if (matchingCats.length > 0) {
-      const category = pickDeepest(matchingCats.map(c => c[0]));
-      e.data.$category = category.name;
-    } else {
-      e.data.$category = UNCATEGORIZED;
-    }
+    e.data.$category =
+      matchingCats.length > 0
+        ? pickDeepest(matchingCats.map(([category]) => category)).name
+        : UNCATEGORIZED;
     return e;
   });
 }

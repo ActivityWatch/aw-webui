@@ -123,6 +123,31 @@ describe('parsePresetCategorySets', () => {
     expect(sets[0].categories[1].data).toEqual({ color: '#FFF' });
   });
 
+  test('preserves select_keys on regex rules and drops empty/duplicate lists', () => {
+    const sets = parsePresetCategorySets([
+      {
+        id: 'set',
+        categories: [
+          {
+            name: ['App only'],
+            rule: { type: 'regex', regex: 'Chrome', select_keys: ['app'] },
+          },
+          {
+            name: ['Empty keys'],
+            rule: { type: 'regex', regex: 'x', select_keys: [] },
+          },
+          {
+            name: ['Dup keys'],
+            rule: { type: 'regex', regex: 'x', select_keys: ['title', 'app', 'title', ''] },
+          },
+        ],
+      },
+    ]);
+    expect(sets[0].categories[0].rule.select_keys).toEqual(['app']);
+    expect(sets[0].categories[1].rule.select_keys).toBeUndefined();
+    expect(sets[0].categories[2].rule.select_keys).toEqual(['title', 'app']);
+  });
+
   test('keeps the first of duplicate set ids', () => {
     const sets = parsePresetCategorySets([
       presetSet,
@@ -352,6 +377,38 @@ describe('categories store with presets', () => {
     ];
     const classified = classifyEvents(events, categoryStore.classes);
     expect(classified[0].data.$category).toEqual(['Video Streaming']);
+    expect(classified[1].data.$category).toEqual(['Uncategorized']);
+  });
+
+  test('field-scoped preset rules do not match other string fields', () => {
+    setPresetGlobal([
+      {
+        id: 'study',
+        categories: [
+          {
+            name: ['Docs'],
+            rule: { type: 'regex', regex: 'Google Docs', select_keys: ['app'] },
+          },
+        ],
+      },
+    ]);
+    const categoryStore = useCategoryStore();
+    categoryStore.load();
+
+    const events = [
+      {
+        timestamp: new Date().toISOString(),
+        duration: 0,
+        data: { app: 'Google Docs', title: 'Inbox' },
+      },
+      {
+        timestamp: new Date().toISOString(),
+        duration: 0,
+        data: { app: 'Chrome', title: 'Google Docs' },
+      },
+    ];
+    const classified = classifyEvents(events, categoryStore.classes);
+    expect(classified[0].data.$category).toEqual(['Docs']);
     expect(classified[1].data.$category).toEqual(['Uncategorized']);
   });
 

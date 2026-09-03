@@ -37,3 +37,66 @@ test('matches events to category', () => {
   expect(events[1].data.$category).toEqual(testClasses[0].name);
   expect(events[2].data.$category).toEqual(['Uncategorized']);
 });
+
+test('select_keys restricts regex matching to named fields', () => {
+  const cats: Category[] = [
+    { name: ['AppOnly'], rule: { type: 'regex', regex: 'Firefox', select_keys: ['app'] } },
+  ];
+  const titleEvent: IEvent = {
+    timestamp: new Date().toISOString(),
+    duration: 0,
+    data: { app: 'Chrome', title: 'Firefox docs' },
+  };
+  const appEvent: IEvent = {
+    timestamp: new Date().toISOString(),
+    duration: 0,
+    data: { app: 'Firefox', title: 'Chrome docs' },
+  };
+  const titleHit = classes.matchString('Chrome\nFirefox docs', cats, titleEvent);
+  const appHit = classes.matchString('Firefox\nChrome docs', cats, appEvent);
+  expect(titleHit).toBeNull();
+  expect(appHit?.name).toEqual(['AppOnly']);
+});
+
+test('absent select_keys preserves legacy categorization-string matching', () => {
+  const cats: Category[] = [{ name: ['Any'], rule: { type: 'regex', regex: 'Firefox' } }];
+  const event: IEvent = {
+    timestamp: new Date().toISOString(),
+    duration: 0,
+    data: { app: 'Chrome', title: 'Docs', url: 'https://Firefox.com' },
+  };
+  expect(classes.matchString('Chrome\nDocs', cats, event)).toBeNull();
+  expect(classes.matchString('Chrome\nFirefox docs', cats, event)?.name).toEqual(['Any']);
+});
+
+test('absent select_keys preserves cross-field regex matching', () => {
+  const cats: Category[] = [
+    { name: ['CrossField'], rule: { type: 'regex', regex: 'Chrome\\nDocs' } },
+  ];
+  const event: IEvent = {
+    timestamp: new Date().toISOString(),
+    duration: 0,
+    data: { app: 'Chrome', title: 'Docs' },
+  };
+  expect(classes.matchString('Chrome\nDocs', cats, event)?.name).toEqual(['CrossField']);
+});
+
+test('cleanCategory drops empty select_keys and keeps a real list', () => {
+  const empty = classes.cleanCategory({
+    name: ['X'],
+    rule: { type: 'regex', regex: 'a', select_keys: [] },
+  });
+  expect(empty.rule.select_keys).toBeUndefined();
+
+  const kept = classes.cleanCategory({
+    name: ['Y'],
+    rule: { type: 'regex', regex: 'a', select_keys: ['title', 'title', ''] },
+  });
+  expect(kept.rule.select_keys).toEqual(['title']);
+});
+
+test('normalizeSelectKeys rejects empty lists', () => {
+  expect(classes.normalizeSelectKeys([])).toBeUndefined();
+  expect(classes.normalizeSelectKeys(null)).toBeUndefined();
+  expect(classes.normalizeSelectKeys(['app', 'title'])).toEqual(['app', 'title']);
+});
