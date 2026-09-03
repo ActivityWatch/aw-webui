@@ -56,11 +56,11 @@
  */
 
 import {
-  appQuery,
   browser_appname_regex,
-  canonicalEvents,
+  appQuery,
   categoryQuery,
   querystr_to_array,
+  canonicalEvents,
 } from '~/queries';
 
 // Convert ActivityWatch (?i) patterns to JS RegExp with i flag for testing.
@@ -342,6 +342,8 @@ describe('categoryQuery merge key regression (ScreenTime callers)', () => {
     const joined = q.join('\n');
     expect(joined).toContain('merge_events_by_keys(events, ["app", "title"])');
   });
+});
+
 test('canonicalEvents serializes select_keys into categorize()', () => {
   const query = canonicalEvents({
     bid_android: 'aw-watcher-android_test',
