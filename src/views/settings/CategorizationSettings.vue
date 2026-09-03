@@ -85,6 +85,20 @@ div
     b-collapse#category-builder-collapse(v-model="builderOpen")
       div.mt-3(v-if="builderMounted")
         CategoryBuilder(embedded)
+
+  b-modal(
+    v-model="showCreateSetModal"
+    title="New Category Set"
+    ok-title="Create"
+    @ok="onCreateSetConfirm"
+    @shown="$refs.newSetNameInput && $refs.newSetNameInput.focus()"
+  )
+    b-form-group(label="Name for the new category set:")
+      b-form-input(
+        ref="newSetNameInput"
+        v-model="newSetName"
+        placeholder="Category set name"
+      )
 </template>
 <script lang="ts">
 import { mapState, mapGetters } from 'pinia';
@@ -111,6 +125,8 @@ export default {
     activeSetId: 'default',
     builderOpen: false,
     builderMounted: false,
+    showCreateSetModal: false,
+    newSetName: '',
   }),
   computed: {
     ...mapState(useCategoryStore, ['classes_unsaved_changes']),
@@ -212,7 +228,11 @@ export default {
       }
     },
     createSet: function () {
-      const name = prompt('Name for the new category set:');
+      this.newSetName = '';
+      this.showCreateSetModal = true;
+    },
+    onCreateSetConfirm: function () {
+      const name = this.newSetName.trim();
       if (!name) return;
       if (this.categoryStore.category_sets.find(s => s.id === name)) {
         alert(`A set named "${name}" already exists.`);

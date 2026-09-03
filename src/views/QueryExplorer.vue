@@ -48,6 +48,34 @@ div
   hr
 
   aw-selectable-eventview(:events="events", :event_type="event_type")
+
+  b-modal(
+    v-model="showSaveQueryModal"
+    title="Save Query"
+    ok-title="Save"
+    @ok="onSaveQueryConfirm"
+    @shown="$refs.saveQueryNameInput && $refs.saveQueryNameInput.focus()"
+  )
+    b-form-group(label="Name for the saved query:")
+      b-form-input(
+        ref="saveQueryNameInput"
+        v-model="saveQueryName"
+        placeholder="Query name"
+      )
+
+  b-modal(
+    v-model="showRenameQueryModal"
+    title="Rename Query"
+    ok-title="Rename"
+    @ok="onRenameQueryConfirm"
+    @shown="$refs.renameQueryNameInput && $refs.renameQueryNameInput.focus()"
+  )
+    b-form-group(label="New name for saved query:")
+      b-form-input(
+        ref="renameQueryNameInput"
+        v-model="renameQueryName"
+        placeholder="Query name"
+      )
 </template>
 
 <style scoped lang="scss">
@@ -108,6 +136,10 @@ RETURN = sort_by_duration(merged_events);
       selected_saved_query_id: '',
       startdate: today.format('YYYY-MM-DD'),
       enddate: tomorrow.format('YYYY-MM-DD'),
+      showSaveQueryModal: false,
+      saveQueryName: '',
+      showRenameQueryModal: false,
+      renameQueryName: '',
     };
   },
   computed: {
@@ -178,15 +210,14 @@ RETURN = sort_by_duration(merged_events);
         return;
       }
 
-      const defaultName = getDefaultSavedQueryName(this.query_code);
-      const name = prompt('Name for the saved query:', defaultName);
-      if (name === null) {
-        return;
-      }
-
-      const trimmedName = name.trim();
+      // No existing query — open modal to get a name
+      this.saveQueryName = getDefaultSavedQueryName(this.query_code);
+      this.showSaveQueryModal = true;
+    },
+    onSaveQueryConfirm: async function () {
+      const trimmedName = this.saveQueryName.trim();
       if (_.isEmpty(trimmedName)) {
-        alert('Saved query name cannot be empty.');
+        this.saved_query_error = 'Saved query name cannot be empty.';
         return;
       }
 
@@ -213,14 +244,17 @@ RETURN = sort_by_duration(merged_events);
         return;
       }
 
-      const name = prompt('Rename saved query:', this.selectedSavedQuery.name);
-      if (name === null) {
+      this.renameQueryName = this.selectedSavedQuery.name;
+      this.showRenameQueryModal = true;
+    },
+    onRenameQueryConfirm: async function () {
+      if (!this.selectedSavedQuery) {
         return;
       }
 
-      const trimmedName = name.trim();
+      const trimmedName = this.renameQueryName.trim();
       if (_.isEmpty(trimmedName)) {
-        alert('Saved query name cannot be empty.');
+        this.saved_query_error = 'Saved query name cannot be empty.';
         return;
       }
 
