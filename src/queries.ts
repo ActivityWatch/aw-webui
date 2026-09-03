@@ -277,8 +277,16 @@ export function appQuery(
 // variants (upper/lowercase, spacing, .exe suffix) are handled by
 // browser_appname_regex using (?i) flag. See test/unit/queries.test.node.ts for
 // the complete list of known app names these patterns cover.
-const browser_appnames: Record<string, string[]> = {
-  chrome: ['com.google.Chrome', 'com.google.ChromeDev', 'org.chromium.Chromium'],
+export const browser_appnames: Record<string, string[]> = {
+  // Chromium forks (Dia, Arc) run the chrome extension by default, so their
+  // web events land in the chrome bucket. Reverse-domain identifiers don't
+  // match the process-name regex below and have to live here (#927).
+  chrome: [
+    'com.google.Chrome',
+    'com.google.ChromeDev',
+    'org.chromium.Chromium',
+    'company.thebrowser.dia',
+  ],
   firefox: ['org.mozilla.firefox', 'io.gitlab.librewolf-community', 'net.waterfox.waterfox'],
   opera: ['com.opera.Opera'],
   brave: ['com.brave.Browser'],
@@ -316,6 +324,7 @@ export const browser_appname_regex: Record<string, string> = {
   // default their events land in the chrome bucket and their app names have to be matched
   // here (#927, ActivityWatch/activitywatch#1094). The standalone arc key below only covers
   // setups where Arc was picked explicitly in the settings, which changes the bucket name.
+  // Fork alternatives are $-anchored so names like "archive" / "Dialog" don't match.
   chrome: '(?i)^(google[-_ ]?chrome|chrome|chromium|arc(\\.exe)?$|dia(\\.exe)?$)',
   firefox: '(?i)(firefox|librewolf|waterfox|nightly)',
   opera: '(?i)(opera)',
@@ -332,16 +341,25 @@ export const browser_appname_regex: Record<string, string> = {
 
 // Returns a list of active browser events (where the browser was the active window) from all browser buckets
 function browserEvents(params: DesktopQueryParams): string {
+  const browsers = browsersWithBuckets(params.bid_browsers);
+  // Chrome regex also matches Arc, and a settings-override Arc bucket can
+  // coexist with the default chrome bucket. Those two streams can duplicate
+  // the same Arc activity; union_no_overlap is only for that pair. Distinct
+  // browsers (Chrome + Firefox, etc.) may overlap in time and must concat.
+  const mixChromeArc =
+    browsers.some(([browserName]) => browserName === 'chrome') &&
+    browsers.some(([browserName]) => browserName === 'arc');
+
   let code = `
     browser_events = [];
   `;
 
-  _.each(browsersWithBuckets(params.bid_browsers), ([browserName, bucketId]) => {
+  _.each(browsers, ([browserName, bucketId]) => {
     const browser_appnames_str = JSON.stringify(browser_appnames[browserName]);
     code += `events_${browserName} = flood(query_bucket("${bucketId}"));
        window_${browserName} = filter_keyvals(events, "app", ${browser_appnames_str});`;
 
-    // Add regex-based matching to cover case/spacing/versioning variants (e.g., Firefox.exe, firefox-esr-esr140)
+    // Add regex-based matching to cover case/spacing/versioning variants (e.g., Firefox.exe, firefox-esr-esr140).
     const pattern = browser_appname_regex[browserName];
     if (pattern) {
       code += `
@@ -349,12 +367,24 @@ function browserEvents(params: DesktopQueryParams): string {
        window_${browserName} = sort_by_timestamp(concat(window_${browserName}, window_${browserName}_re));`;
     }
 
+    const combineChromeArcDup = mixChromeArc && (browserName === 'chrome' || browserName === 'arc');
     code += `
        events_${browserName} = filter_period_intersect(events_${browserName}, window_${browserName});
-       events_${browserName} = split_url_events(events_${browserName});
+       events_${browserName} = split_url_events(events_${browserName});`;
+    if (!combineChromeArcDup) {
+      code += `
        browser_events = concat(browser_events, events_${browserName});
        browser_events = sort_by_timestamp(browser_events);`;
+    }
   });
+
+  if (mixChromeArc) {
+    // Chrome first so current chrome-bucket events win over a stale Arc bucket.
+    code += `
+       chrome_arc_events = union_no_overlap(events_chrome, events_arc);
+       browser_events = concat(browser_events, chrome_arc_events);
+       browser_events = sort_by_timestamp(browser_events);`;
+  }
   return code;
 }
 

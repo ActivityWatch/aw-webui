@@ -260,6 +260,8 @@ export default {
   },
   activity: {
     title: '活动',
+    browserAllowlistMiss:
+      '此时间段内未找到匹配的浏览器窗口。如果您使用的是 Chromium/Firefox 衍生浏览器，其应用名称可能尚未被识别。',
     for: '查看',
     host: '主机：',
     timeActive: '活跃时间：',

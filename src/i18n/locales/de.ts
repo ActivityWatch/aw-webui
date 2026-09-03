@@ -268,6 +268,8 @@ export default {
   },
   activity: {
     title: 'Aktivität',
+    browserAllowlistMiss:
+      'Für diesen Zeitraum wurde kein passendes Browserfenster gefunden. Falls Sie in einem Chromium-/Firefox-Derivat gesurft haben, wird dessen App-Name möglicherweise noch nicht erkannt.',
     for: 'für',
     host: 'Host:',
     timeActive: 'Aktive Zeit:',

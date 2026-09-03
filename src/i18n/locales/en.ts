@@ -269,6 +269,8 @@ export default {
   },
   activity: {
     title: 'Activity',
+    browserAllowlistMiss:
+      'No matching browser window for this period. If you were browsing in a Chromium/Firefox fork, its app name may not be recognized yet.',
     for: 'for',
     host: 'Host:',
     timeActive: 'Time active:',

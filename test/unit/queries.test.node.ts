@@ -14,6 +14,9 @@
  *             'Google-chrome-beta', 'Google-chrome-unstable'
  *             (Flatpak app IDs retained as exact: 'com.google.Chrome', 'com.google.ChromeDev',
  *              'org.chromium.Chromium')
+ *             Chromium forks that report through the chrome extension bucket (#927):
+ *             'Arc', 'arc.exe', 'Arc.exe', 'Dia', 'Dia.exe'
+ *             (macOS bundle ID retained as exact: 'company.thebrowser.dia')
  *
  *   Firefox:  'Firefox', 'Firefox.exe', 'firefox', 'firefox.exe',
  *             'Firefox Developer Edition', 'firefoxdeveloperedition',
@@ -56,11 +59,13 @@
  */
 
 import {
-  browser_appname_regex,
   appQuery,
-  categoryQuery,
-  querystr_to_array,
+  browser_appname_regex,
+  browser_appnames,
   canonicalEvents,
+  categoryQuery,
+  fullDesktopQuery,
+  querystr_to_array,
 } from '~/queries';
 
 // Convert ActivityWatch (?i) patterns to JS RegExp with i flag for testing.
@@ -103,14 +108,19 @@ describe('browser_appname_regex', () => {
 
   test('chrome pattern does not false-positive', () => {
     const re = toRegex(browser_appname_regex.chrome);
-    // Flatpak app IDs are in the exact list, not matched by regex
+    // Flatpak / bundle IDs are in the exact list, not matched by regex
     expect(re.test('com.google.Chrome')).toBe(false);
+    expect(re.test('company.thebrowser.dia')).toBe(false);
     expect(re.test('Slack')).toBe(false);
     expect(re.test('Electron')).toBe(false);
     // The fork alternatives are anchored, so names merely starting with them don't match
     expect(re.test('archive')).toBe(false);
     expect(re.test('arcade')).toBe(false);
     expect(re.test('Dialog')).toBe(false);
+  });
+
+  test('chrome exact list includes the Dia macOS bundle id', () => {
+    expect(browser_appnames.chrome).toContain('company.thebrowser.dia');
   });
 
   test('firefox pattern matches all known Firefox/LibreWolf/Waterfox app names', () => {
@@ -247,6 +257,76 @@ describe('browser_appname_regex', () => {
     for (const name of knownNames) {
       expect(re.test(name)).toBe(true);
     }
+  });
+});
+
+describe('chrome fork matching in generated query', () => {
+  const params = {
+    bid_window: 'aw-watcher-window_testhost',
+    bid_afk: 'aw-watcher-afk_testhost',
+    filter_afk: true,
+    include_audible: false,
+    categories: [],
+    filter_categories: [],
+  };
+
+  test('chrome bucket query includes Dia bundle id and process-name regex', () => {
+    const query = fullDesktopQuery({
+      ...params,
+      bid_browsers: ['aw-watcher-web-chrome_testhost'],
+    }).join('\n');
+    expect(query).toContain('company.thebrowser.dia');
+    // JSON.stringify doubles the regex backslash, so the query text has \\.
+    expect(query).toContain('dia(\\\\.exe)?$');
+  });
+
+  test('mixed chrome and Arc buckets preserve both matching paths without overlap', () => {
+    const query = fullDesktopQuery({
+      ...params,
+      bid_browsers: ['aw-watcher-web-chrome_testhost', 'aw-watcher-web-arc_testhost'],
+    }).join('\n');
+    const chromeWindowFilter = query.slice(
+      query.indexOf('window_chrome_re ='),
+      query.indexOf('events_chrome = filter_period_intersect')
+    );
+    expect(chromeWindowFilter).toContain('arc(\\\\.exe)?$');
+    expect(query).toContain('window_arc_re =');
+    expect(query).toContain('arc(\\\\.exe)?$');
+    // Duplicate chrome/Arc streams are unioned with each other, not with every browser.
+    expect(query).toContain('chrome_arc_events = union_no_overlap(events_chrome, events_arc);');
+    expect(query).toContain('browser_events = concat(browser_events, chrome_arc_events);');
+    expect(query).not.toContain(
+      'browser_events = union_no_overlap(browser_events, events_chrome);'
+    );
+    expect(query).not.toContain('browser_events = union_no_overlap(browser_events, events_arc);');
+  });
+
+  test('unrelated browser buckets concat instead of dropping overlaps', () => {
+    const query = fullDesktopQuery({
+      ...params,
+      bid_browsers: ['aw-watcher-web-chrome_testhost', 'aw-watcher-web-firefox_testhost'],
+    }).join('\n');
+    expect(query).toContain('browser_events = concat(browser_events, events_chrome);');
+    expect(query).toContain('browser_events = concat(browser_events, events_firefox);');
+    expect(query).not.toContain('union_no_overlap(browser_events, events_');
+    expect(query).not.toContain('union_no_overlap(events_chrome, events_firefox)');
+    expect(query).not.toContain('chrome_arc_events');
+  });
+
+  test('chrome+arc union does not swallow a third browser', () => {
+    const query = fullDesktopQuery({
+      ...params,
+      bid_browsers: [
+        'aw-watcher-web-chrome_testhost',
+        'aw-watcher-web-arc_testhost',
+        'aw-watcher-web-firefox_testhost',
+      ],
+    }).join('\n');
+    expect(query).toContain('chrome_arc_events = union_no_overlap(events_chrome, events_arc);');
+    expect(query).toContain('browser_events = concat(browser_events, events_firefox);');
+    expect(query).toContain('browser_events = concat(browser_events, chrome_arc_events);');
+    expect(query).not.toContain('union_no_overlap(browser_events, events_firefox)');
+    expect(query).not.toContain('union_no_overlap(browser_events, events_chrome)');
   });
 });
 
