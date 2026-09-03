@@ -180,8 +180,9 @@ jobs:
     - name: Print server logs to console
       if: ${{ always() }}
       shell: bash
-      run:
-        for file in ~/.cache/activitywatch/log/*/*.log; do echo $file; cat $file; echo; done
+      run: |
+        shopt -s nullglob
+        for file in ~/.cache/activitywatch*/log/*/*.log; do echo "$file"; cat "$file"; echo; done
     - name: Move logs to subdir
       # Run this step even if e2e tests flag failure
       if: ${{ always() }}
