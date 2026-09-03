@@ -148,6 +148,42 @@ describe('parsePresetCategorySets', () => {
     expect(sets[0].categories[2].rule.select_keys).toEqual(['title', 'app']);
   });
 
+  test('preserves integer priority and the weight alias on regex rules', () => {
+    const sets = parsePresetCategorySets([
+      {
+        id: 'set',
+        categories: [
+          {
+            name: ['Priority'],
+            rule: { type: 'regex', regex: 'x', priority: 25 },
+          },
+          {
+            name: ['Weight'],
+            rule: { type: 'regex', regex: 'y', weight: -5 },
+          },
+        ],
+      },
+    ]);
+    expect(sets[0].categories[0].rule.priority).toBe(25);
+    expect(sets[0].categories[1].rule.priority).toBe(-5);
+    expect(sets[0].categories[1].rule.weight).toBeUndefined();
+  });
+
+  test('drops preset categories with non-integer priority values', () => {
+    const sets = parsePresetCategorySets([
+      {
+        id: 'set',
+        categories: [
+          {
+            name: ['Bad'],
+            rule: { type: 'regex', regex: 'x', priority: 1.5 },
+          },
+        ],
+      },
+    ]);
+    expect(sets).toEqual([]);
+  });
+
   test('keeps the first of duplicate set ids', () => {
     const sets = parsePresetCategorySets([
       presetSet,
