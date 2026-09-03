@@ -231,10 +231,14 @@ export default {
       this.newSetName = '';
       this.showCreateSetModal = true;
     },
-    onCreateSetConfirm: function () {
+    onCreateSetConfirm: function (event) {
       const name = this.newSetName.trim();
-      if (!name) return;
+      if (!name) {
+        event.preventDefault();
+        return;
+      }
       if (this.categoryStore.category_sets.find(s => s.id === name)) {
+        event.preventDefault();
         alert(`A set named "${name}" already exists.`);
         return;
       }

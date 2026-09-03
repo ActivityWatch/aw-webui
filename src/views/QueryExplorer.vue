@@ -214,9 +214,10 @@ RETURN = sort_by_duration(merged_events);
       this.saveQueryName = getDefaultSavedQueryName(this.query_code);
       this.showSaveQueryModal = true;
     },
-    onSaveQueryConfirm: async function () {
+    onSaveQueryConfirm: async function (event) {
       const trimmedName = this.saveQueryName.trim();
       if (_.isEmpty(trimmedName)) {
+        event.preventDefault();
         this.saved_query_error = 'Saved query name cannot be empty.';
         return;
       }
@@ -247,13 +248,14 @@ RETURN = sort_by_duration(merged_events);
       this.renameQueryName = this.selectedSavedQuery.name;
       this.showRenameQueryModal = true;
     },
-    onRenameQueryConfirm: async function () {
+    onRenameQueryConfirm: async function (event) {
       if (!this.selectedSavedQuery) {
         return;
       }
 
       const trimmedName = this.renameQueryName.trim();
       if (_.isEmpty(trimmedName)) {
+        event.preventDefault();
         this.saved_query_error = 'Saved query name cannot be empty.';
         return;
       }

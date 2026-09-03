@@ -42,4 +42,31 @@ describe('QueryExplorer saveCurrentQuery', () => {
     confirmSpy.mockRestore();
     promptSpy.mockRestore();
   });
+
+  test('keeps save modal open when the query name is blank', async () => {
+    const event = { preventDefault: jest.fn() };
+    const vm = {
+      saveQueryName: '   ',
+      saved_query_error: '',
+    };
+
+    await QueryExplorer.methods.onSaveQueryConfirm.call(vm, event);
+
+    expect(event.preventDefault).toHaveBeenCalledTimes(1);
+    expect(vm.saved_query_error).toBe('Saved query name cannot be empty.');
+  });
+
+  test('keeps rename modal open when the query name is blank', async () => {
+    const event = { preventDefault: jest.fn() };
+    const vm = {
+      renameQueryName: '   ',
+      saved_query_error: '',
+      selectedSavedQuery: { id: 'daily-coding-time', name: 'Daily Coding Time' },
+    };
+
+    await QueryExplorer.methods.onRenameQueryConfirm.call(vm, event);
+
+    expect(event.preventDefault).toHaveBeenCalledTimes(1);
+    expect(vm.saved_query_error).toBe('Saved query name cannot be empty.');
+  });
 });

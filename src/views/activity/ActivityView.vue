@@ -165,8 +165,11 @@ export default {
 
       await useViewsStore().editView({ view_id: this.view.id, el_id: id, type, props: {} });
     },
-    async onCustomVisConfirm() {
-      if (!this.customVisWatcherName || !this.customVisTitle) return;
+    async onCustomVisConfirm(event) {
+      if (!this.customVisWatcherName.trim() || !this.customVisTitle.trim()) {
+        event.preventDefault();
+        return;
+      }
       const props = {
         visname: this.customVisWatcherName,
         title: this.customVisTitle,
