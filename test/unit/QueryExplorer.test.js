@@ -56,6 +56,25 @@ describe('QueryExplorer saveCurrentQuery', () => {
     expect(vm.saved_query_error).toBe('Saved query name cannot be empty.');
   });
 
+  test('keeps save modal open when persistence fails', async () => {
+    const event = { preventDefault: jest.fn() };
+    const vm = {
+      enddate: '2026-05-21',
+      event_type: 'currentwindow',
+      persistSavedQueries: jest.fn().mockResolvedValue(false),
+      query_code: 'RETURN = [];',
+      saveQueryName: 'Daily Coding Time',
+      savedQueries: [],
+      selected_saved_query_id: '',
+      startdate: '2026-05-20',
+    };
+
+    await QueryExplorer.methods.onSaveQueryConfirm.call(vm, event);
+
+    expect(event.preventDefault).toHaveBeenCalledTimes(1);
+    expect(vm.selected_saved_query_id).toBe('');
+  });
+
   test('keeps rename modal open when the query name is blank', async () => {
     const event = { preventDefault: jest.fn() };
     const vm = {
@@ -68,5 +87,20 @@ describe('QueryExplorer saveCurrentQuery', () => {
 
     expect(event.preventDefault).toHaveBeenCalledTimes(1);
     expect(vm.saved_query_error).toBe('Saved query name cannot be empty.');
+  });
+
+  test('keeps rename modal open when persistence fails', async () => {
+    const event = { preventDefault: jest.fn() };
+    const selectedSavedQuery = { id: 'daily-coding-time', name: 'Daily Coding Time' };
+    const vm = {
+      persistSavedQueries: jest.fn().mockResolvedValue(false),
+      renameQueryName: 'Coding Time',
+      savedQueries: [selectedSavedQuery],
+      selectedSavedQuery,
+    };
+
+    await QueryExplorer.methods.onRenameQueryConfirm.call(vm, event);
+
+    expect(event.preventDefault).toHaveBeenCalledTimes(1);
   });
 });

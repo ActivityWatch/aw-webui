@@ -238,6 +238,8 @@ RETURN = sort_by_duration(merged_events);
       const didPersist = await this.persistSavedQueries([...this.savedQueries, newQuery]);
       if (didPersist) {
         this.selected_saved_query_id = newId;
+      } else {
+        event.preventDefault();
       }
     },
     renameSelectedQuery: async function () {
@@ -261,11 +263,14 @@ RETURN = sort_by_duration(merged_events);
       }
 
       const selectedQueryId = this.selectedSavedQuery.id;
-      await this.persistSavedQueries(
+      const didPersist = await this.persistSavedQueries(
         this.savedQueries.map(savedQuery =>
           savedQuery.id === selectedQueryId ? { ...savedQuery, name: trimmedName } : savedQuery
         )
       );
+      if (!didPersist) {
+        event.preventDefault();
+      }
     },
     deleteSelectedQuery: async function () {
       if (!this.selectedSavedQuery) {
