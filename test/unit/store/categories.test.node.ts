@@ -196,4 +196,37 @@ describe('categories store', () => {
     categoryStore.save();
     expect(categoryStore.classes_unsaved_changes).toBeFalsy();
   });
+
+  test('switchToSet marks dirty when switching to a different set', () => {
+    // Regression test for #955: switching category sets did not enable the Save
+    // button because switchToSet reset classes_unsaved_changes to false even
+    // though the new active_set_ids hadn't been persisted yet.
+    categoryStore.$patch({
+      category_sets: [
+        { id: 'setA', categories: [] },
+        { id: 'setB', categories: [{ name: ['Work'], rule: { type: 'none' } }] },
+      ],
+      active_set_ids: ['setA'],
+      classes: [],
+      classes_unsaved_changes: false,
+    });
+
+    categoryStore.switchToSet('setB');
+
+    expect(categoryStore.active_set_ids).toEqual(['setB']);
+    expect(categoryStore.classes_unsaved_changes).toBe(true);
+  });
+
+  test('switchToSet does not mark dirty when re-selecting the already-active set', () => {
+    categoryStore.$patch({
+      category_sets: [{ id: 'setA', categories: [] }],
+      active_set_ids: ['setA'],
+      classes: [],
+      classes_unsaved_changes: false,
+    });
+
+    categoryStore.switchToSet('setA');
+
+    expect(categoryStore.classes_unsaved_changes).toBe(false);
+  });
 });
