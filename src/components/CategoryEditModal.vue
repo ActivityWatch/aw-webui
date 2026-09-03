@@ -34,15 +34,16 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
             :value="key"
           ) {{ key }}
         small.text-muted Leave blank to match every string field (default).
-      b-input-group.my-1(prepend="Priority")
+      b-input-group.my-1(:prepend="$t('settings.categorization.priority')")
         b-form-input(
           v-model="editing.priority"
           type="number"
           step="1"
-          placeholder="Default"
+          :placeholder="$t('settings.categorization.priorityDefault')"
           :state="priorityState"
         )
-      small.text-danger(v-if="!validPriority") Priority must be an integer.
+      small.text-danger(v-if="!validPriority")
+        | {{ $t('settings.categorization.priorityInteger') }}
 
   hr
   div.my-1
