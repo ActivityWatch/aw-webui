@@ -54,6 +54,23 @@ div(v-else-if="view")
     br
     br
     | This will delete the view's configuration. You can run #[b Restore defaults] to bring built-in views back.
+
+  b-modal(
+    v-model="showCustomVisModal"
+    title="Add Custom Visualization"
+    ok-title="Add"
+    @ok="onCustomVisConfirm"
+  )
+    b-form-group(label="Watcher name:")
+      b-form-input(
+        v-model="customVisWatcherName"
+        placeholder="aw-watcher-"
+      )
+    b-form-group(label="Visualization title:")
+      b-form-input(
+        v-model="customVisTitle"
+        placeholder="My Visualization"
+      )
 </template>
 
 <script lang="ts">
@@ -75,7 +92,13 @@ export default {
     view_id: { type: String, default: 'default' },
   },
   data() {
-    return { editing: false };
+    return {
+      editing: false,
+      showCustomVisModal: false,
+      customVisWatcherName: 'aw-watcher-',
+      customVisTitle: '',
+      pendingCustomVisId: null as number | null,
+    };
   },
   computed: {
     views: function () {
@@ -131,22 +154,32 @@ export default {
       useViewsStore().addVisualization({ view_id: this.view.id, type: 'top_apps' });
     },
     async onTypeChange(id, type) {
-      let props = {};
-
       if (type === 'custom_vis') {
-        const visname = prompt('Please enter the watcher name', 'aw-watcher-');
-        if (!visname) return;
-
-        const title = prompt('Please enter the visualization title');
-        if (!title) return;
-
-        props = {
-          visname,
-          title,
-        };
+        // Show modal to collect watcher name and visualization title
+        this.pendingCustomVisId = id;
+        this.customVisWatcherName = 'aw-watcher-';
+        this.customVisTitle = '';
+        this.showCustomVisModal = true;
+        return;
       }
 
-      await useViewsStore().editView({ view_id: this.view.id, el_id: id, type, props });
+      await useViewsStore().editView({ view_id: this.view.id, el_id: id, type, props: {} });
+    },
+    async onCustomVisConfirm(event) {
+      if (!this.customVisWatcherName.trim() || !this.customVisTitle.trim()) {
+        event.preventDefault();
+        return;
+      }
+      const props = {
+        visname: this.customVisWatcherName,
+        title: this.customVisTitle,
+      };
+      await useViewsStore().editView({
+        view_id: this.view.id,
+        el_id: this.pendingCustomVisId,
+        type: 'custom_vis',
+        props,
+      });
     },
     async onRemove(id) {
       await useViewsStore().removeVisualization({ view_id: this.view.id, el_id: id });

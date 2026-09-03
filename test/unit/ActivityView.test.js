@@ -21,6 +21,17 @@ describe('ActivityView isVisLarge', () => {
   });
 });
 
+describe('ActivityView custom visualization modal', () => {
+  test('stays open when a required field is blank', async () => {
+    const event = { preventDefault: jest.fn() };
+    const vm = { customVisWatcherName: 'aw-watcher-window', customVisTitle: '   ' };
+
+    await ActivityView.methods.onCustomVisConfirm.call(vm, event);
+
+    expect(event.preventDefault).toHaveBeenCalledTimes(1);
+  });
+});
+
 // Visualizations keep local state — the Top Bucket Data picker holds its
 // selected bucket, field and fetched events in `data` and fills them in
 // `mounted`. Every view renders the same list at the same positions, so if a
