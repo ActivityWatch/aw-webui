@@ -234,7 +234,7 @@ export function canonicalMultideviceEvents(params: MultiQueryParams): string {
   return query;
 }
 
-const default_limit = 100; // Hardcoded limit per group
+export const default_limit = 100; // Hardcoded limit per group
 
 export function appQuery(
   appbucket: string,
