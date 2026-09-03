@@ -215,9 +215,10 @@ RETURN = sort_by_duration(merged_events);
       this.showSaveQueryModal = true;
     },
     onSaveQueryConfirm: async function (event) {
+      event.preventDefault();
+
       const trimmedName = this.saveQueryName.trim();
       if (_.isEmpty(trimmedName)) {
-        event.preventDefault();
         this.saved_query_error = 'Saved query name cannot be empty.';
         return;
       }
@@ -238,8 +239,7 @@ RETURN = sort_by_duration(merged_events);
       const didPersist = await this.persistSavedQueries([...this.savedQueries, newQuery]);
       if (didPersist) {
         this.selected_saved_query_id = newId;
-      } else {
-        event.preventDefault();
+        this.showSaveQueryModal = false;
       }
     },
     renameSelectedQuery: async function () {
@@ -251,13 +251,14 @@ RETURN = sort_by_duration(merged_events);
       this.showRenameQueryModal = true;
     },
     onRenameQueryConfirm: async function (event) {
+      event.preventDefault();
+
       if (!this.selectedSavedQuery) {
         return;
       }
 
       const trimmedName = this.renameQueryName.trim();
       if (_.isEmpty(trimmedName)) {
-        event.preventDefault();
         this.saved_query_error = 'Saved query name cannot be empty.';
         return;
       }
@@ -268,8 +269,8 @@ RETURN = sort_by_duration(merged_events);
           savedQuery.id === selectedQueryId ? { ...savedQuery, name: trimmedName } : savedQuery
         )
       );
-      if (!didPersist) {
-        event.preventDefault();
+      if (didPersist) {
+        this.showRenameQueryModal = false;
       }
     },
     deleteSelectedQuery: async function () {
