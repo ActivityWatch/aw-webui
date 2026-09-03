@@ -91,4 +91,4 @@ jobs:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         head_sha: ${{ github.event.workflow_run.head_sha }}
       run: |
-        cml comment create --target=commit/$head_sha --repo https://github.com/ActivityWatch/aw-webui comment.md
+        cml comment create --target=commit/$head_sha --repo https://github.com/TimeToBuildBob/aw-webui comment.md
