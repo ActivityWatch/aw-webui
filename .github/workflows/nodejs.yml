@@ -190,7 +190,7 @@ jobs:
         aw_version: ${{ matrix.aw-version }}
       run: |
         mkdir -p logs/dist/$aw_server/$aw_version
-        mv ~/.cache/activitywatch/log/*/*.log logs/dist/$aw_server/$aw_version
+        find ~/.cache/activitywatch/log -name "*.log" -exec mv {} logs/dist/$aw_server/$aw_version/ \; 2>/dev/null || true
     - name: Upload logs
       if: ${{ always() }}
       uses: actions/upload-artifact@v7
