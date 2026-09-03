@@ -328,15 +328,14 @@ export const useActivityStore = defineStore('activity', {
       );
       const selectedBucket = iosBucket || this.buckets.android[0];
 
+      const isIos = !!iosBucket;
       const q = queries.appQuery(
         selectedBucket,
         categoryStore.classes_for_query,
-        filter_categories
+        filter_categories,
+        isIos
       );
       const data = await getClient().query(periods, q).catch(this.errorHandler);
-
-      // Post-process for iOS compatibility (swap app <-> title)
-      const isIos = !!iosBucket;
 
       if (isIos && data && data[0] && data[0].title_events) {
         // Build bundle ID → human name lookup from title_events before modifying them.
@@ -551,10 +550,14 @@ export const useActivityStore = defineStore('activity', {
         }
 
         // Prefer ScreenTime bucket over Android watcher for consistency with query_android
-        const iosOrAndroidBucket =
-          this.buckets.android.find((id: string) => id.startsWith('aw-import-screentime')) ||
-          this.buckets.android[0];
+        const iosBucketForCategory = this.buckets.android.find((id: string) =>
+          id.startsWith('aw-import-screentime')
+        );
+        const iosOrAndroidBucket = iosBucketForCategory || this.buckets.android[0];
         const isAndroid = iosOrAndroidBucket !== undefined;
+        // ScreenTime (iOS) buckets carry a "title" key; aw-watcher-android buckets do not.
+        // Pass isIos so canonicalEvents uses the correct merge keys and titles are preserved.
+        const isIosForCategory = !!iosBucketForCategory;
         const categories = useCategoryStore().classes_for_query;
         // TODO: Clean up call, pass QueryParams in fullDesktopQuery as well
         // TODO: Unify QueryOptions and QueryParams
@@ -571,6 +574,7 @@ export const useActivityStore = defineStore('activity', {
           ...(isAndroid
             ? {
                 bid_android: iosOrAndroidBucket,
+                isIos: isIosForCategory,
               }
             : {
                 bid_afk: this.buckets.afk[0],
