@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import {
-  saveClasses,
   saveCategories,
   loadCategories,
   cleanCategory,
@@ -209,12 +208,17 @@ export const useCategoryStore = defineStore('categories', {
       this.classes_unsaved_changes = false;
     },
 
-    save(this: State) {
+    async save(this: State) {
       // Sync current classes back to the primary active set before persisting
       syncToPrimarySet(this);
-      saveCategories(this.category_sets, this.active_set_ids);
-      // Also update legacy flat classes field for backwards compatibility
-      saveClasses(this.classes);
+      // saveCategories already writes the legacy `classes` field. Do not also
+      // call saveClasses() — the two settingsStore.update() calls raced and
+      // could persist an empty/default snapshot (ActivityWatch/aw-android#247).
+      if (process.env.NODE_ENV === 'test') {
+        this.classes_unsaved_changes = false;
+        return;
+      }
+      await saveCategories(this.category_sets, this.active_set_ids);
       this.classes_unsaved_changes = false;
     },
 
@@ -311,9 +315,14 @@ export const useCategoryStore = defineStore('categories', {
 
     // mutations
     import(this: State, classes: Category[]) {
-      let i = 0;
-      // overwrite id even if already set
-      this.classes = classes.map(c => Object.assign(c, { id: i++ }));
+      this.classes = assignIds(createMissingParents(classes));
+      if (this.category_sets.length === 0) {
+        const setId = this.active_set_ids[0] || 'default';
+        this.category_sets = [{ id: setId, categories: [] }];
+        this.active_set_ids = [setId];
+      }
+      // Keep the primary set in sync so save() persists the import, not defaults.
+      syncToPrimarySet(this);
       this.classes_unsaved_changes = true;
     },
     updateClass(this: State, new_class: Category) {

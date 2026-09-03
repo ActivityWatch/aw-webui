@@ -44,7 +44,7 @@ div
         | {{ $t('settings.categorization.restoreDefaults') }}
       label.btn.btn-sm.ml-1.btn-outline-primary(style="margin: 0")
         | {{ $t('common.import') }}
-        input(type="file" @change="importCategories" hidden)
+        input(type="file" accept=".json,application/json" @change="importCategories" hidden)
       b-btn.ml-1(@click="exportClasses", variant="outline-primary" size="sm")
         | {{ $t('common.export') }}
 
@@ -97,6 +97,7 @@ import 'vue-awesome/icons/angle-double-up';
 import { useCategoryStore } from '~/stores/categories';
 
 import { downloadFile } from '~/util/export';
+import { parseCategoryImport, shouldAttemptJsonImport } from '~/util/importFile';
 
 export default {
   name: 'CategorizationSettings',
@@ -155,7 +156,17 @@ export default {
       this.editingId = lastId;
     },
     saveClasses: async function () {
-      await this.categoryStore.save();
+      try {
+        await this.categoryStore.save();
+      } catch (e) {
+        console.error('Failed to save categories', e);
+        const httpStatus = e && e.response && e.response.status;
+        const detail = (e && e.message) || String(e);
+        const prefix = httpStatus
+          ? `Failed to save categories (HTTP ${httpStatus})`
+          : 'Failed to save categories';
+        alert(`${prefix}: ${detail}`);
+      }
     },
     resetClasses: async function () {
       await this.categoryStore.load();
@@ -174,13 +185,23 @@ export default {
     },
     importCategories: async function (elem) {
       const file = elem.target.files[0];
-      if (file.type != 'application/json') {
-        console.error('Only JSON files are possible to import');
+      if (!file) return;
+      // Reset so picking the same file again retriggers change.
+      elem.target.value = '';
+
+      if (!shouldAttemptJsonImport(file)) {
+        alert('Please select a JSON category export, not an image or other file type.');
         return;
       }
 
-      const text = await file.text();
-      const import_obj = JSON.parse(text);
+      let import_obj;
+      try {
+        import_obj = parseCategoryImport(await file.text());
+      } catch (e) {
+        console.error('Failed to parse category import', e);
+        alert('Could not import categories: file is not a valid JSON category export.');
+        return;
+      }
 
       if (import_obj.categories && !import_obj.id) {
         this.categoryStore.import(import_obj.categories);
@@ -207,8 +228,6 @@ export default {
           this.categoryStore.switchToSet(setId);
         }
         this.categoryStore.classes_unsaved_changes = true;
-      } else {
-        console.error('Unrecognized import format');
       }
     },
     createSet: function () {
