@@ -17,6 +17,8 @@ export interface Rule {
   type: 'regex' | 'none';
   regex?: string;
   ignore_case?: boolean;
+  priority?: number;
+  weight?: number;
   /** When set, only these event.data keys are tested. Absent = all string fields. */
   select_keys?: string[];
 }
@@ -361,8 +363,16 @@ export function loadCategories(): { sets: CategorySet[]; activeIds: string[] } {
   return { sets, activeIds };
 }
 
-function pickDeepest(categories: Category[]) {
-  return _.maxBy(categories, c => c.name.length);
+function categoryRank(category: Category): number {
+  const explicit = category.rule.priority ?? category.rule.weight;
+  if (typeof explicit === 'number' && Number.isInteger(explicit)) {
+    return explicit;
+  }
+  return category.name.length * 10;
+}
+
+function pickHighestRanked(categories: Category[]) {
+  return _.maxBy(categories, categoryRank);
 }
 
 export function matchString(
@@ -387,7 +397,7 @@ export function matchString(
     });
 
   // Find the matching category.
-  // If several categories match the event, the deepest category will be chosen.
+  // If several categories match, explicit priority wins; otherwise depth wins.
   const matchingCats: [Category, RegExp][] = regexes.filter(([category, re]) => {
     const selectKeys = normalizeSelectKeys(category.rule.select_keys);
     if (event && selectKeys) {
@@ -399,7 +409,7 @@ export function matchString(
     return re.test(str);
   });
   if (matchingCats.length > 0) {
-    return pickDeepest(matchingCats.map(c => c[0]));
+    return pickHighestRanked(matchingCats.map(c => c[0]));
   }
   return null;
 }
@@ -423,7 +433,7 @@ export function classifyEvents(events: IEvent[], categories: Category[]): IEvent
     });
     e.data.$category =
       matchingCats.length > 0
-        ? pickDeepest(matchingCats.map(([category]) => category)).name
+        ? pickHighestRanked(matchingCats.map(([category]) => category)).name
         : UNCATEGORIZED;
     return e;
   });
