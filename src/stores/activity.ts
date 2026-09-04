@@ -297,12 +297,13 @@ export const useActivityStore = defineStore('activity', {
           );
           if (settingsStore.useMultidevice) {
             const hostnames = bucketsStore.hosts.filter(
-              // require that the host has window buckets,
-              // and that the host is not a fakedata host,
-              // unless we're explicitly querying fakedata
+              // require that the host has both window and afk buckets
+              // (canonicalEvents needs the pair), and that the host is not
+              // a fakedata host, unless we're explicitly querying fakedata
               host =>
                 host &&
                 bucketsStore.bucketsWindow(host).length > 0 &&
+                bucketsStore.bucketsAFK(host).length > 0 &&
                 (!host.startsWith('fakedata') || query_options.host.startsWith('fakedata'))
             );
             console.info('Including hosts in multiquery: ', hostnames);
@@ -418,13 +419,31 @@ export const useActivityStore = defineStore('activity', {
     ) {
       const periods = periodsForFullDesktopQuery(timeperiod);
       const categories = useCategoryStore().classes_for_query;
+      const bucketsStore = useBucketsStore();
+
+      // Pass each host's actual bucket IDs, so that buckets synced from
+      // another host (whose IDs carry an "-synced-from-<host>" suffix) are
+      // queried instead of the reconstructed "aw-watcher-window_<host>" IDs
+      // which don't exist in the local datastore.
+      const host_params: Record<string, { bid_window: string; bid_afk: string }> = {};
+      const hosts_with_buckets: string[] = [];
+      hosts.forEach(host => {
+        const bid_window = bucketsStore.bucketsWindow(host)[0];
+        const bid_afk = bucketsStore.bucketsAFK(host)[0];
+        if (bid_window && bid_afk) {
+          host_params[host] = { bid_window, bid_afk };
+          hosts_with_buckets.push(host);
+        } else {
+          console.warn(`Skipping host ${host} in multidevice query: missing window/afk bucket`);
+        }
+      });
 
       const q = queries.multideviceQuery({
-        hosts,
+        hosts: hosts_with_buckets,
         filter_afk,
         categories,
         filter_categories,
-        host_params: {},
+        host_params: host_params as any,
         always_active_pattern,
       });
       const merged = await queryDesktopPeriods(periods, q, 'multidevice');
