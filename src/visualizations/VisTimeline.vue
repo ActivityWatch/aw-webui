@@ -55,9 +55,9 @@ div#visualization {
 import _ from 'lodash';
 import moment from 'moment';
 import Color from 'color';
-import { buildTooltip } from '../util/tooltip.js';
+import { buildTooltip } from '../util/tooltip';
 import { getCategoryColorFromEvent, getTitleAttr } from '../util/color';
-import { getSwimlane } from '../util/swimlane.js';
+import { getSwimlane } from '../util/swimlane';
 import { IEvent } from '../util/interfaces';
 import { formatTimelineBucketLabelHtml, shortenBucketLabel } from '../util/timelineLabels';
 

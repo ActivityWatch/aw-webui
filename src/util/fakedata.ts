@@ -1,4 +1,6 @@
-export const window_events = [
+import { IEvent } from './interfaces';
+
+export const window_events: Array<Pick<IEvent, 'duration' | 'data'>> = [
   {
     duration: 32.1 * 60,
     data: {
