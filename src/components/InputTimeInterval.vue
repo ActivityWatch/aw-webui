@@ -68,10 +68,11 @@ div
   display: grid;
   // Fixed label column keeps Mode/Range labels aligned and the controls
   // start at the same X regardless of which mode is active.
-  grid-template-columns: 4rem 1fr;
+  grid-template-columns: 4rem minmax(0, 1fr);
   column-gap: 0.75rem;
   row-gap: 0.5rem;
   align-items: center;
+  min-width: 0;
 }
 
 .btn-group {
@@ -79,6 +80,16 @@ div
     background-color: #495057;
     color: #fff;
     border-color: #495057;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .time-interval-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .btn-group {
+    flex-wrap: wrap;
   }
 }
 </style>

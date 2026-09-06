@@ -73,6 +73,12 @@ async function checkNoError(t) {
   }
 }
 
+async function checkNoHorizontalOverflow(t) {
+  await t
+    .expect(Selector('html').scrollWidth)
+    .lte(await t.eval(() => document.documentElement.clientWidth));
+}
+
 const logJsErrorCode = `
   window.addEventListener('error', function (e) {
       console.error(e.message);
@@ -140,6 +146,13 @@ test.clientScripts({
     fullPage: true,
   });
   await checkNoError(t);
+});
+
+test('Timeline has no horizontal page overflow on mobile', async t => {
+  await t.resizeWindow(360, 800);
+  await hide_devonly(t);
+  await waitForLoading(t);
+  await checkNoHorizontalOverflow(t);
 
   // Debugging
   // console.log(await t.getBrowserConsoleMessages());
