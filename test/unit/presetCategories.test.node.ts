@@ -340,6 +340,42 @@ describe('loadCategories with presets', () => {
     expect(sets.map(s => s.id)).toContain('study');
   });
 
+  test('first-run settings.save of stock defaults does not let default beat the preset', () => {
+    // ActivityWatch/activitywatch#1439: any settings.save() persists every key,
+    // including classes=defaultCategories and active_set_ids=['default']. That
+    // used to trip hasStoredCategories and wrap a competing `default` set.
+    setPresetGlobal([presetSet]);
+    const settingsStore = useSettingsStore();
+    settingsStore.$patch({
+      classes: defaultCategories,
+      category_sets: [],
+      active_set_ids: ['default'],
+      _storedKeys: ['classes', 'category_sets', 'active_set_ids'],
+    });
+
+    const { sets, activeIds } = loadCategories();
+    expect(activeIds).toEqual(['study']);
+    expect(sets.map(s => s.id)).toEqual(['study']);
+  });
+
+  test('first-run settings.save of the preset classes still activates the preset set', () => {
+    // settings.classes defaults to getDefaultClasses(), which *is* the preset
+    // on a research build. Persisting that copy must not create a `default`
+    // set that wins over `research-study`.
+    setPresetGlobal([presetSet]);
+    const settingsStore = useSettingsStore();
+    settingsStore.$patch({
+      classes: presetSet.categories,
+      category_sets: [],
+      active_set_ids: ['default'],
+      _storedKeys: ['classes', 'category_sets', 'active_set_ids'],
+    });
+
+    const { sets, activeIds } = loadCategories();
+    expect(activeIds).toEqual(['study']);
+    expect(sets.map(s => s.id)).toEqual(['study']);
+  });
+
   test('stored sets take precedence over a preset with the same id', () => {
     setPresetGlobal([presetSet]);
     const edited: CategorySet = {

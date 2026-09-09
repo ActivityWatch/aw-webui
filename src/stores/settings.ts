@@ -79,9 +79,10 @@ interface State {
   // Set to true if settings loaded
   _loaded: boolean;
   // Keys that were actually present in storage (server or localStorage) on load.
-  // Lets us tell "user has never configured this" apart from "user configured it
-  // to the same value as the default" — needed to decide whether build-shipped
-  // preset categories may be activated. See `loadCategories()` in ~/util/classes.
+  // Presence of `classes` alone is not enough to suppress a shipped preset:
+  // first-run `save()` writes every key, including the install-default class
+  // list. `loadCategories()` additionally checks whether those classes still
+  // look unconfigured.
   _storedKeys: string[];
 }
 

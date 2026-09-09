@@ -302,13 +302,38 @@ export function saveCategories(sets: CategorySet[], activeIds: string[]) {
 }
 
 /**
+ * True when `classes` is still an install default, not a user taxonomy.
+ *
+ * Used to tell "the user never configured categories" apart from "the user
+ * kept the built-in defaults on purpose after editing". Name-only: colors and
+ * other `data` fields must not count as customization, or shipping palette
+ * updates would reclassify every existing install as a custom taxonomy.
+ */
+export function classesLookUnconfigured(classes: Category[] | undefined | null): boolean {
+  if (!classes || classes.length === 0) return true;
+  const namesOf = (cats: Category[]) =>
+    cats
+      .map(c => c.name.join('>'))
+      .filter(n => n !== 'Uncategorized')
+      .sort()
+      .join('|');
+  const names = namesOf(classes);
+  if (names === namesOf(defaultCategories)) return true;
+  return getPresetCategorySets().some(p => names === namesOf(p.categories));
+}
+
+/**
  * Load category sets and active set IDs from the settings store.
  * Falls back to the legacy flat `classes` setting if no sets are defined yet.
  *
  * Preset sets shipped by the build/deployment (see `~/util/presetCategories`)
  * are always appended as *available* sets, but are only active by default when
- * the user has no stored categorization of their own. A stored set with the
- * same id always wins over the preset definition, so user edits stick.
+ * the user has no stored categorization of their own. Persisted *install
+ * defaults* (the stock `classes` list, or a copy of a shipped preset) do not
+ * count — `settings.save()` writes every key, so a theme/view save on first
+ * run used to look like a user taxonomy and let `default` silently win over
+ * the preset (ActivityWatch/activitywatch#1439). A stored set with the same
+ * id always wins over the preset definition, so user edits stick.
  */
 export function loadCategories(): { sets: CategorySet[]; activeIds: string[] } {
   const settingsStore = useSettingsStore();
@@ -319,11 +344,20 @@ export function loadCategories(): { sets: CategorySet[]; activeIds: string[] } {
   let sets: CategorySet[];
   let activeIds: string[];
 
-  if (storedSets && storedSets.length > 0) {
+  const storedOwnSets = Boolean(storedSets && storedSets.length > 0);
+  // `hasStoredCategories` is true as soon as `classes` exists in storage,
+  // which first-run `settings.save()` always writes. Only a *custom* class
+  // list should suppress the shipped preset.
+  const storedCustomClasses =
+    settingsStore.hasStoredCategories &&
+    !storedOwnSets &&
+    !classesLookUnconfigured(settingsStore.classes);
+
+  if (storedOwnSets) {
     sets = [...storedSets];
     activeIds =
       storedActiveIds && storedActiveIds.length > 0 ? [...storedActiveIds] : [storedSets[0].id];
-  } else if (presets.length > 0 && !settingsStore.hasStoredCategories) {
+  } else if (presets.length > 0 && !storedCustomClasses) {
     // First run on a build that ships presets: activate the first preset only.
     //
     // We deliberately limit the initial selection to one set: syncToPrimarySet()
