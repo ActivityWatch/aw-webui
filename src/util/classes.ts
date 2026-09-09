@@ -314,12 +314,12 @@ export function classesLookUnconfigured(classes: Category[] | undefined | null):
   if (!classes || classes.length === 0) return true;
   const signatureOf = (cats: Category[]) =>
     cats
-      .filter(c => c.name.join('>') !== 'Uncategorized')
       .map(c =>
         JSON.stringify([
           c.name,
-          c.rule?.type ?? null,
-          c.rule?.regex ?? null,
+          // `null` and `'none'` are the same rule type after cleanCategory
+          c.rule?.type === 'regex' ? 'regex' : 'none',
+          c.rule?.type === 'regex' ? c.rule?.regex ?? null : null,
           Boolean(c.rule?.ignore_case),
           c.rule?.select_keys ?? null,
           c.rule?.priority ?? c.rule?.weight ?? null,

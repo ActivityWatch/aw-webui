@@ -358,6 +358,24 @@ describe('loadCategories with presets', () => {
     expect(sets.map(s => s.id)).toEqual(['study']);
   });
 
+  test('editing the Uncategorized rule is kept as a custom taxonomy', () => {
+    setPresetGlobal([presetSet]);
+    const edited = defaultCategories.map(c =>
+      c.name[0] === 'Uncategorized'
+        ? { ...c, rule: { type: 'regex' as const, regex: 'SomeApp' } }
+        : c
+    );
+    const settingsStore = useSettingsStore();
+    settingsStore.$patch({
+      classes: edited,
+      _storedKeys: ['classes'],
+    });
+
+    const { sets, activeIds } = loadCategories();
+    expect(activeIds).toEqual(['default']);
+    expect(sets.find(s => s.id === 'default').categories).toEqual(edited);
+  });
+
   test('edited default rules are kept even when category names still match', () => {
     // A user who only changed a regex must not be classified as unconfigured
     // and have that edit replaced by the shipped preset.
