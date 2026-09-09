@@ -358,6 +358,29 @@ describe('loadCategories with presets', () => {
     expect(sets.map(s => s.id)).toEqual(['study']);
   });
 
+  test('edited default rules are kept even when category names still match', () => {
+    // A user who only changed a regex must not be classified as unconfigured
+    // and have that edit replaced by the shipped preset.
+    setPresetGlobal([presetSet]);
+    const edited = defaultCategories.map(c =>
+      c.name[0] === 'Work' && c.name.length === 1
+        ? { ...c, rule: { ...c.rule, regex: c.rule.regex + '|Overleaf' } }
+        : c
+    );
+    const settingsStore = useSettingsStore();
+    settingsStore.$patch({
+      classes: edited,
+      category_sets: [],
+      active_set_ids: ['default'],
+      _storedKeys: ['classes', 'category_sets', 'active_set_ids'],
+    });
+
+    const { sets, activeIds } = loadCategories();
+    expect(activeIds).toEqual(['default']);
+    expect(sets.find(s => s.id === 'default').categories).toEqual(edited);
+    expect(sets.map(s => s.id)).toContain('study');
+  });
+
   test('first-run settings.save of the preset classes still activates the preset set', () => {
     // settings.classes defaults to getDefaultClasses(), which *is* the preset
     // on a research build. Persisting that copy must not create a `default`

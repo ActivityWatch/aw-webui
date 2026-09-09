@@ -305,21 +305,31 @@ export function saveCategories(sets: CategorySet[], activeIds: string[]) {
  * True when `classes` is still an install default, not a user taxonomy.
  *
  * Used to tell "the user never configured categories" apart from "the user
- * kept the built-in defaults on purpose after editing". Name-only: colors and
- * other `data` fields must not count as customization, or shipping palette
- * updates would reclassify every existing install as a custom taxonomy.
+ * kept the built-in names after editing a rule". Names plus rule fields
+ * (type/regex/flags/select_keys/priority); `data` (colors, scores) is ignored
+ * so a palette update on a shipped preset does not reclassify every install
+ * as a custom taxonomy.
  */
 export function classesLookUnconfigured(classes: Category[] | undefined | null): boolean {
   if (!classes || classes.length === 0) return true;
-  const namesOf = (cats: Category[]) =>
+  const signatureOf = (cats: Category[]) =>
     cats
-      .map(c => c.name.join('>'))
-      .filter(n => n !== 'Uncategorized')
+      .filter(c => c.name.join('>') !== 'Uncategorized')
+      .map(c =>
+        JSON.stringify([
+          c.name,
+          c.rule?.type ?? null,
+          c.rule?.regex ?? null,
+          Boolean(c.rule?.ignore_case),
+          c.rule?.select_keys ?? null,
+          c.rule?.priority ?? c.rule?.weight ?? null,
+        ])
+      )
       .sort()
-      .join('|');
-  const names = namesOf(classes);
-  if (names === namesOf(defaultCategories)) return true;
-  return getPresetCategorySets().some(p => names === namesOf(p.categories));
+      .join('\n');
+  const signature = signatureOf(classes);
+  if (signature === signatureOf(defaultCategories)) return true;
+  return getPresetCategorySets().some(p => signature === signatureOf(p.categories));
 }
 
 /**
