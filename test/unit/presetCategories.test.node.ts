@@ -374,6 +374,44 @@ describe('loadCategories with presets', () => {
     expect(sets.map(s => s.id)).toEqual(['study']);
   });
 
+  test('a recolored default category is kept as a custom taxonomy', () => {
+    setPresetGlobal([presetSet]);
+    const edited = defaultCategories.map(c =>
+      c.name[0] === 'Work' && c.name.length === 1
+        ? { ...c, data: { ...c.data, color: '#123456' } }
+        : c
+    );
+    const settingsStore = useSettingsStore();
+    settingsStore.$patch({
+      classes: edited,
+      _storedKeys: ['classes'],
+    });
+
+    const { sets, activeIds } = loadCategories();
+    expect(activeIds).toEqual(['default']);
+    expect(sets.find(s => s.id === 'default').categories).toEqual(edited);
+  });
+
+  test('a colorless copy of a colored preset is still an install default', () => {
+    const coloredPreset: CategorySet = {
+      id: 'study',
+      categories: presetSet.categories.map(c => ({
+        ...c,
+        data: { color: '#ABCDEF' },
+      })),
+    };
+    setPresetGlobal([coloredPreset]);
+    const settingsStore = useSettingsStore();
+    settingsStore.$patch({
+      classes: presetSet.categories, // no data.color
+      _storedKeys: ['classes'],
+    });
+
+    const { sets, activeIds } = loadCategories();
+    expect(activeIds).toEqual(['study']);
+    expect(sets.map(s => s.id)).toEqual(['study']);
+  });
+
   test('editing the Uncategorized rule is kept as a custom taxonomy', () => {
     setPresetGlobal([presetSet]);
     const edited = defaultCategories.map(c =>

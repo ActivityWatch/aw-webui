@@ -304,34 +304,56 @@ export function saveCategories(sets: CategorySet[], activeIds: string[]) {
 /**
  * True when `classes` is still an install default, not a user taxonomy.
  *
- * Used to tell "the user never configured categories" apart from "the user
- * kept the built-in names after editing a rule". Names plus rule fields
- * (type/regex/flags/select_keys/priority); `data` (colors, scores) is ignored
- * so a palette update on a shipped preset does not reclassify every install
- * as a custom taxonomy.
+ * Used to tell "the user never configured categories" apart from a real edit.
+ * Names and rules must match an install default. A missing `data.color` is
+ * still unconfigured (so a later palette on the shipped preset does not look
+ * like user data); a *different* color is a customization and is kept.
  */
+function categoryNameKey(c: Category): string {
+  return c.name.join('>');
+}
+
+function ruleSignature(c: Category): string {
+  return JSON.stringify([
+    // `null` and `'none'` are the same rule type after cleanCategory
+    c.rule?.type === 'regex' ? 'regex' : 'none',
+    c.rule?.type === 'regex' ? c.rule?.regex ?? null : null,
+    Boolean(c.rule?.ignore_case),
+    c.rule?.select_keys ?? null,
+    c.rule?.priority ?? c.rule?.weight ?? null,
+  ]);
+}
+
+function categoryColor(c: Category): string | null {
+  const color = c.data && c.data.color;
+  return typeof color === 'string' && color.length > 0 ? color : null;
+}
+
+/**
+ * True when `stored` is the same taxonomy as `reference`, allowing a missing
+ * color (install default, or a later palette on the preset) but not a color
+ * the user actually changed.
+ */
+function matchesInstallDefault(stored: Category[], reference: Category[]): boolean {
+  if (stored.length !== reference.length) return false;
+  const refByName = new Map(reference.map(c => [categoryNameKey(c), c]));
+  if (refByName.size !== reference.length) return false;
+  for (const cat of stored) {
+    const ref = refByName.get(categoryNameKey(cat));
+    if (!ref) return false;
+    if (ruleSignature(cat) !== ruleSignature(ref)) return false;
+    const storedColor = categoryColor(cat);
+    if (storedColor !== null && storedColor !== categoryColor(ref)) return false;
+  }
+  return true;
+}
+
 export function classesLookUnconfigured(classes: Category[] | undefined | null): boolean {
   // Empty array is a deliberate "no categories" save, not an install default.
   if (classes == null) return true;
   if (classes.length === 0) return false;
-  const signatureOf = (cats: Category[]) =>
-    cats
-      .map(c =>
-        JSON.stringify([
-          c.name,
-          // `null` and `'none'` are the same rule type after cleanCategory
-          c.rule?.type === 'regex' ? 'regex' : 'none',
-          c.rule?.type === 'regex' ? c.rule?.regex ?? null : null,
-          Boolean(c.rule?.ignore_case),
-          c.rule?.select_keys ?? null,
-          c.rule?.priority ?? c.rule?.weight ?? null,
-        ])
-      )
-      .sort()
-      .join('\n');
-  const signature = signatureOf(classes);
-  if (signature === signatureOf(defaultCategories)) return true;
-  return getPresetCategorySets().some(p => signature === signatureOf(p.categories));
+  if (matchesInstallDefault(classes, defaultCategories)) return true;
+  return getPresetCategorySets().some(p => matchesInstallDefault(classes, p.categories));
 }
 
 /**
