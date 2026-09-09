@@ -263,10 +263,16 @@ export const useCategoryStore = defineStore('categories', {
         console.warn('Category set not found:', id);
         return;
       }
+      // Track whether the active set actually changed so we can mark dirty only
+      // when there is something to save (avoids spurious unsaved-changes prompts
+      // when initialising or re-selecting the already-active set).
+      const changed = this.active_set_ids.length !== 1 || this.active_set_ids[0] !== id;
       syncToPrimarySet(this);
       this.active_set_ids = [id];
       this.classes = computeEffectiveClasses(this.category_sets, this.active_set_ids);
-      this.classes_unsaved_changes = false;
+      // When the active set changed, mark unsaved so the Save button activates
+      // and the user can persist the new active_set_ids to storage.
+      this.classes_unsaved_changes = changed;
     },
 
     /**
