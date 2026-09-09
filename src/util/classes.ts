@@ -334,8 +334,11 @@ function categoryColor(c: Category): string | null {
  * color (install default, or a later palette on the preset) but not a color
  * the user actually changed.
  *
- * Score and other non-color `data` fields are treated like color: a stored
- * value that differs from the reference is a user customization that is kept.
+ * Score is compared exactly: a stored value that differs from the reference
+ * (including a cleared/undefined score when the reference has one) is a user
+ * customization and is kept.  Unlike color, a missing stored score is NOT
+ * treated as "unconfigured" — "Inherit parent score" explicitly sets it to
+ * undefined, which is a meaningful user action.
  *
  * Duplicate stored names are treated as user edits (one-to-one name matching
  * is required, mirroring the uniqueness check on the reference side).
@@ -354,11 +357,13 @@ function matchesInstallDefault(stored: Category[], reference: Category[]): boole
     if (ruleSignature(cat) !== ruleSignature(ref)) return false;
     const storedColor = categoryColor(cat);
     if (storedColor !== null && storedColor !== categoryColor(ref)) return false;
-    // A stored score (or other data field) that differs from the reference is a
-    // user edit — treat the taxonomy as configured and keep it.
-    const storedScore = cat.data?.score;
-    const refScore = ref.data?.score;
-    if (storedScore != null && storedScore !== refScore) return false;
+    // A stored score that differs from the reference is a user edit — treat the
+    // taxonomy as configured and keep it.  Unlike color, a *cleared* score
+    // (stored undefined when the reference has one) is also a user edit:
+    // "Inherit parent score" explicitly removes the value.
+    const storedScore = cat.data?.score ?? null;
+    const refScore = ref.data?.score ?? null;
+    if (storedScore !== refScore) return false;
   }
   return true;
 }

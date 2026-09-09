@@ -478,6 +478,32 @@ describe('loadCategories with presets', () => {
     expect(sets.map(s => s.id)).toContain('study');
   });
 
+  test('a cleared score (inherit parent) is kept as a custom taxonomy (greptile P1)', () => {
+    // "Inherit parent score" in the category editor stores an undefined score
+    // while the install default (e.g. Work) has score: 10.  This is a user
+    // edit and must not be misclassified as an install default that gets
+    // displaced by the shipped preset.
+    setPresetGlobal([presetSet]);
+    const edited = defaultCategories.map(c =>
+      c.name[0] === 'Work' && c.name.length === 1
+        ? { ...c, data: { ...(c.data ?? {}), score: undefined } }
+        : c
+    );
+    const settingsStore = useSettingsStore();
+    settingsStore.$patch({
+      classes: edited,
+      category_sets: [],
+      active_set_ids: ['default'],
+      _storedKeys: ['classes', 'category_sets', 'active_set_ids'],
+    });
+
+    const { sets, activeIds } = loadCategories();
+    // Cleared score → user edit → keep as custom taxonomy, don't activate preset.
+    expect(activeIds).toEqual(['default']);
+    expect(sets.find(s => s.id === 'default').categories).toEqual(edited);
+    expect(sets.map(s => s.id)).toContain('study');
+  });
+
   test('a taxonomy with duplicate stored names is kept as a custom taxonomy (greptile P1)', () => {
     // A legacy taxonomy with a duplicate category name must not be misclassified
     // as an install default: duplicate stored names break the one-to-one name
