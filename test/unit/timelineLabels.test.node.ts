@@ -44,6 +44,16 @@ describe('formatTimelineBucketLabelHtml', () => {
     );
   });
 
+  it('preserves underscores in origin hostname for synced buckets', () => {
+    // Regression for https://github.com/ActivityWatch/aw-webui/issues/967:
+    // 'aw-watcher-android-synced-from-my_phone' was rendering as
+    // 'android-synced-from-my' because the old underscore-split regex consumed
+    // 'my_phone' as the host separator, leaving no '-synced-from-' to match.
+    expect(formatTimelineBucketLabelHtml('aw-watcher-android-synced-from-my_phone')).toBe(
+      '<span class="timeline-label" title="aw-watcher-android-synced-from-my_phone">aw-​watcher-​android (synced from my_​phone)</span>'
+    );
+  });
+
   it('escapes HTML in bucket IDs', () => {
     expect(formatTimelineBucketLabelHtml('bucket<script>')).toBe(
       '<span class="timeline-label" title="bucket&lt;script&gt;">bucket&lt;script&gt;</span>'

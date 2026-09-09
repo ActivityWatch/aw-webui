@@ -49,11 +49,25 @@ export function formatTimelineBucketLabelHtml(
   options: BucketLabelOptions = {}
 ): string {
   const escaped = escapeHtml(bucketId);
-  const syncMatch = bucketId.match(/^([^_]+)_.*-synced-from-(.+)$/);
 
-  if (syncMatch) {
-    const baseLabel = addWrapOpportunities(escapeHtml(syncMatch[1]));
-    const remoteLabel = addWrapOpportunities(escapeHtml(syncMatch[2]));
+  // Detect synced buckets by searching for the literal '-synced-from-' marker
+  // rather than using an underscore-split regex. The old regex
+  //   /^([^_]+)_.*-synced-from-(.+)$/
+  // failed for bucket ids where the origin hostname contains underscores
+  // (e.g. 'aw-watcher-android-synced-from-my_phone'), because [^_]+ stopped
+  // at the underscore inside the hostname, leaving no room for '-synced-from-'
+  // to match in the remaining string.
+  const syncMarker = '-synced-from-';
+  const syncIdx = bucketId.indexOf(syncMarker);
+  if (syncIdx !== -1) {
+    const basePart = bucketId.slice(0, syncIdx);
+    const remotePart = bucketId.slice(syncIdx + syncMarker.length);
+    // Strip optional '_<hostname>' suffix from the base part, which is present
+    // when the source bucket follows the conventional aw-watcher-type_host format.
+    const underscoreIdx = basePart.indexOf('_');
+    const baseDisplay = underscoreIdx !== -1 ? basePart.slice(0, underscoreIdx) : basePart;
+    const baseLabel = addWrapOpportunities(escapeHtml(baseDisplay));
+    const remoteLabel = addWrapOpportunities(escapeHtml(remotePart));
     return `<span class="timeline-label" title="${escaped}">${baseLabel} (synced from ${remoteLabel})</span>`;
   }
 
