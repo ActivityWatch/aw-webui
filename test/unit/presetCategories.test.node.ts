@@ -453,6 +453,52 @@ describe('loadCategories with presets', () => {
     expect(sets.map(s => s.id)).toContain('study');
   });
 
+  test('a score-only edit is kept as a custom taxonomy (greptile P1)', () => {
+    // Users can persist a category's productivity score (data.score).
+    // A taxonomy that differs from the install default only by score must be
+    // treated as customized — not classified as unconfigured and replaced by
+    // the shipped preset.
+    setPresetGlobal([presetSet]);
+    const edited = defaultCategories.map(c =>
+      c.name[0] === 'Work' && c.name.length === 1
+        ? { ...c, data: { ...(c.data ?? {}), score: 0.9 } }
+        : c
+    );
+    const settingsStore = useSettingsStore();
+    settingsStore.$patch({
+      classes: edited,
+      category_sets: [],
+      active_set_ids: ['default'],
+      _storedKeys: ['classes', 'category_sets', 'active_set_ids'],
+    });
+
+    const { sets, activeIds } = loadCategories();
+    expect(activeIds).toEqual(['default']);
+    expect(sets.find(s => s.id === 'default').categories).toEqual(edited);
+    expect(sets.map(s => s.id)).toContain('study');
+  });
+
+  test('a taxonomy with duplicate stored names is kept as a custom taxonomy (greptile P1)', () => {
+    // A legacy taxonomy with a duplicate category name must not be misclassified
+    // as an install default: duplicate stored names break the one-to-one name
+    // match requirement and indicate user edits.
+    setPresetGlobal([presetSet]);
+    // Duplicate the first default category name in the stored list.
+    const withDuplicate = [defaultCategories[0], ...defaultCategories];
+    const settingsStore = useSettingsStore();
+    settingsStore.$patch({
+      classes: withDuplicate,
+      category_sets: [],
+      active_set_ids: ['default'],
+      _storedKeys: ['classes', 'category_sets', 'active_set_ids'],
+    });
+
+    const { sets, activeIds } = loadCategories();
+    // The taxonomy has a duplicate name → it is not an install default → keep it.
+    expect(activeIds).toEqual(['default']);
+    expect(sets.find(s => s.id === 'default')).toBeTruthy();
+  });
+
   test('first-run settings.save of the preset classes still activates the preset set', () => {
     // settings.classes defaults to getDefaultClasses(), which *is* the preset
     // on a research build. Persisting that copy must not create a `default`

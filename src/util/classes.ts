@@ -333,17 +333,32 @@ function categoryColor(c: Category): string | null {
  * True when `stored` is the same taxonomy as `reference`, allowing a missing
  * color (install default, or a later palette on the preset) but not a color
  * the user actually changed.
+ *
+ * Score and other non-color `data` fields are treated like color: a stored
+ * value that differs from the reference is a user customization that is kept.
+ *
+ * Duplicate stored names are treated as user edits (one-to-one name matching
+ * is required, mirroring the uniqueness check on the reference side).
  */
 function matchesInstallDefault(stored: Category[], reference: Category[]): boolean {
   if (stored.length !== reference.length) return false;
   const refByName = new Map(reference.map(c => [categoryNameKey(c), c]));
   if (refByName.size !== reference.length) return false;
+  // Require one-to-one name matching: duplicates in stored would let a renamed/
+  // deleted category slip through as "matching" by piggy-backing on a sibling.
+  const storedNames = stored.map(c => categoryNameKey(c));
+  if (new Set(storedNames).size !== stored.length) return false;
   for (const cat of stored) {
     const ref = refByName.get(categoryNameKey(cat));
     if (!ref) return false;
     if (ruleSignature(cat) !== ruleSignature(ref)) return false;
     const storedColor = categoryColor(cat);
     if (storedColor !== null && storedColor !== categoryColor(ref)) return false;
+    // A stored score (or other data field) that differs from the reference is a
+    // user edit — treat the taxonomy as configured and keep it.
+    const storedScore = cat.data?.score;
+    const refScore = ref.data?.score;
+    if (storedScore != null && storedScore !== refScore) return false;
   }
   return true;
 }
