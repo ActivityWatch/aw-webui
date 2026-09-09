@@ -334,11 +334,12 @@ function categoryColor(c: Category): string | null {
  * color (install default, or a later palette on the preset) but not a color
  * the user actually changed.
  *
- * Score is compared exactly: a stored value that differs from the reference
- * (including a cleared/undefined score when the reference has one) is a user
- * customization and is kept.  Unlike color, a missing stored score is NOT
- * treated as "unconfigured" — "Inherit parent score" explicitly sets it to
- * undefined, which is a meaningful user action.
+ * Score: only an explicitly set stored score that differs from the reference
+ * is treated as a user customization.  A missing/undefined stored score is
+ * indistinguishable from legacy data (categories persisted before scores were
+ * introduced) and is therefore treated as an install default, not a user edit.
+ * This means "Inherit parent score" (stores undefined) does not prevent preset
+ * activation — an acceptable trade-off given the ambiguity.
  *
  * Duplicate stored names are treated as user edits (one-to-one name matching
  * is required, mirroring the uniqueness check on the reference side).
@@ -357,13 +358,11 @@ function matchesInstallDefault(stored: Category[], reference: Category[]): boole
     if (ruleSignature(cat) !== ruleSignature(ref)) return false;
     const storedColor = categoryColor(cat);
     if (storedColor !== null && storedColor !== categoryColor(ref)) return false;
-    // A stored score that differs from the reference is a user edit — treat the
-    // taxonomy as configured and keep it.  Unlike color, a *cleared* score
-    // (stored undefined when the reference has one) is also a user edit:
-    // "Inherit parent score" explicitly removes the value.
-    const storedScore = cat.data?.score ?? null;
-    const refScore = ref.data?.score ?? null;
-    if (storedScore !== refScore) return false;
+    // Only treat score as a user edit if it is explicitly set to a different
+    // value.  A missing/undefined stored score is indistinguishable from legacy
+    // data (persisted before scores existed), so we do not block on it.
+    const storedScore = cat.data?.score;
+    if (storedScore !== undefined && storedScore !== ref.data?.score) return false;
   }
   return true;
 }

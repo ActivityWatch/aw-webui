@@ -478,11 +478,11 @@ describe('loadCategories with presets', () => {
     expect(sets.map(s => s.id)).toContain('study');
   });
 
-  test('a cleared score (inherit parent) is kept as a custom taxonomy (greptile P1)', () => {
-    // "Inherit parent score" in the category editor stores an undefined score
-    // while the install default (e.g. Work) has score: 10.  This is a user
-    // edit and must not be misclassified as an install default that gets
-    // displaced by the shipped preset.
+  test('a cleared score (inherit parent) does not block preset activation (greptile P1 trade-off)', () => {
+    // "Inherit parent score" stores an undefined score, which is indistinguishable
+    // from a legacy entry persisted before scores existed.  We cannot tell
+    // them apart in storage, so we treat both as install-default (not a user edit).
+    // The preset activates; the cleared-score intent is acceptable collateral.
     setPresetGlobal([presetSet]);
     const edited = defaultCategories.map(c =>
       c.name[0] === 'Work' && c.name.length === 1
@@ -498,9 +498,33 @@ describe('loadCategories with presets', () => {
     });
 
     const { sets, activeIds } = loadCategories();
-    // Cleared score → user edit → keep as custom taxonomy, don't activate preset.
-    expect(activeIds).toEqual(['default']);
-    expect(sets.find(s => s.id === 'default').categories).toEqual(edited);
+    // Cleared score ≡ legacy absent score → treated as install default → preset activates.
+    expect(activeIds).toContain('study');
+    expect(sets.map(s => s.id)).toContain('study');
+  });
+
+  test('a legacy taxonomy without scores does not suppress preset activation (greptile P1)', () => {
+    // Categories persisted before scores were introduced have no score field.
+    // The comparison must not treat their absent score as a user customization;
+    // otherwise the preset is never activated for upgrading users.
+    setPresetGlobal([presetSet]);
+    // Strip the score field from all categories, simulating legacy persisted data.
+    const legacy = defaultCategories.map(c => {
+      const d = { ...(c.data ?? {}) };
+      delete d.score;
+      return { ...c, data: d };
+    });
+    const settingsStore = useSettingsStore();
+    settingsStore.$patch({
+      classes: legacy,
+      category_sets: [],
+      active_set_ids: ['default'],
+      _storedKeys: ['classes', 'category_sets', 'active_set_ids'],
+    });
+
+    const { sets, activeIds } = loadCategories();
+    // Legacy data (no stored score) must be treated as install default → preset activates.
+    expect(activeIds).toContain('study');
     expect(sets.map(s => s.id)).toContain('study');
   });
 
