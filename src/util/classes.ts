@@ -334,7 +334,15 @@ export function loadCategories(): { sets: CategorySet[]; activeIds: string[] } {
   // not just fresh ones.  We only honour force_active on presets delivered
   // via AW_PRESET_CATEGORY_SETS (getPresetCategorySets()), never on stored sets
   // — user edits stored under the same id still win over the preset definition.
-  const forceActivePreset = presets.find(p => p.force_active);
+  const forceActivePresets = presets.filter(p => p.force_active);
+  if (forceActivePresets.length > 1) {
+    console.warn(
+      `[categories] ${forceActivePresets.length} presets have force_active:true ` +
+        `(${forceActivePresets.map(p => p.id).join(', ')}); ` +
+        `only the first will be activated — mark exactly one preset force_active.`
+    );
+  }
+  const forceActivePreset = forceActivePresets[0];
 
   if (storedSets && storedSets.length > 0) {
     sets = [...storedSets];
@@ -359,7 +367,9 @@ export function loadCategories(): { sets: CategorySet[]; activeIds: string[] } {
     // The remaining presets are still appended below and are available in the UI
     // for the user to activate manually.
     sets = [];
-    activeIds = [presets[0].id];
+    // Prefer the force_active preset if present; otherwise activate the first
+    // preset (same single-set constraint — see comment above).
+    activeIds = [forceActivePreset ? forceActivePreset.id : presets[0].id];
   } else {
     // Migration path: no sets defined yet — wrap the existing flat classes into a "default" set
     const legacyClasses = settingsStore.classes || defaultCategories;

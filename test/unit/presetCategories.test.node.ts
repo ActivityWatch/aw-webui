@@ -556,6 +556,30 @@ describe('force_active preset', () => {
     expect(categoryStore.active_set_ids).toEqual(['research-study']);
   });
 
+  test('force_active preset wins on fresh install even when it is not presets[0]', () => {
+    // Regression: fresh-install branch previously activated presets[0] unconditionally,
+    // ignoring force_active when it was not the first preset in the array.
+    setPresetGlobal([presetSet, forceActivePreset]); // force_active is second
+    const categoryStore = useCategoryStore();
+    categoryStore.load();
+    expect(categoryStore.active_set_ids).toEqual(['research-study']);
+  });
+
+  test('warns and uses first when multiple presets have force_active', () => {
+    const secondForce: CategorySet = {
+      id: 'also-forced',
+      force_active: true,
+      categories: [{ name: ['Work'], rule: { type: 'regex', regex: '^Work$' } }],
+    };
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    setPresetGlobal([forceActivePreset, secondForce]);
+    const categoryStore = useCategoryStore();
+    categoryStore.load();
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('2 presets have force_active'));
+    expect(categoryStore.active_set_ids).toEqual(['research-study']);
+    warnSpy.mockRestore();
+  });
+
   test('force_active preset is available but not activated when force_active is absent', () => {
     setPresetGlobal([presetSet]);
     const settingsStore = useSettingsStore();
