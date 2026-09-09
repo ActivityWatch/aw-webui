@@ -302,13 +302,91 @@ export function saveCategories(sets: CategorySet[], activeIds: string[]) {
 }
 
 /**
+ * True when `classes` is still an install default, not a user taxonomy.
+ *
+ * Used to tell "the user never configured categories" apart from a real edit.
+ * Names and rules must match an install default. A missing `data.color` is
+ * still unconfigured (so a later palette on the shipped preset does not look
+ * like user data); a *different* color is a customization and is kept.
+ */
+function categoryNameKey(c: Category): string {
+  return c.name.join('>');
+}
+
+function ruleSignature(c: Category): string {
+  return JSON.stringify([
+    // `null` and `'none'` are the same rule type after cleanCategory
+    c.rule?.type === 'regex' ? 'regex' : 'none',
+    c.rule?.type === 'regex' ? c.rule?.regex ?? null : null,
+    Boolean(c.rule?.ignore_case),
+    c.rule?.select_keys ?? null,
+    c.rule?.priority ?? c.rule?.weight ?? null,
+  ]);
+}
+
+function categoryColor(c: Category): string | null {
+  const color = c.data && c.data.color;
+  return typeof color === 'string' && color.length > 0 ? color : null;
+}
+
+/**
+ * True when `stored` is the same taxonomy as `reference`, allowing a missing
+ * color (install default, or a later palette on the preset) but not a color
+ * the user actually changed.
+ *
+ * Score: only an explicitly set stored score that differs from the reference
+ * is treated as a user customization.  A missing/undefined stored score is
+ * indistinguishable from legacy data (categories persisted before scores were
+ * introduced) and is therefore treated as an install default, not a user edit.
+ * This means "Inherit parent score" (stores undefined) does not prevent preset
+ * activation — an acceptable trade-off given the ambiguity.
+ *
+ * Duplicate stored names are treated as user edits (one-to-one name matching
+ * is required, mirroring the uniqueness check on the reference side).
+ */
+function matchesInstallDefault(stored: Category[], reference: Category[]): boolean {
+  if (stored.length !== reference.length) return false;
+  const refByName = new Map(reference.map(c => [categoryNameKey(c), c]));
+  if (refByName.size !== reference.length) return false;
+  // Require one-to-one name matching: duplicates in stored would let a renamed/
+  // deleted category slip through as "matching" by piggy-backing on a sibling.
+  const storedNames = stored.map(c => categoryNameKey(c));
+  if (new Set(storedNames).size !== stored.length) return false;
+  for (const cat of stored) {
+    const ref = refByName.get(categoryNameKey(cat));
+    if (!ref) return false;
+    if (ruleSignature(cat) !== ruleSignature(ref)) return false;
+    const storedColor = categoryColor(cat);
+    if (storedColor !== null && storedColor !== categoryColor(ref)) return false;
+    // Only treat score as a user edit if it is explicitly set to a different
+    // value.  A missing/undefined stored score is indistinguishable from legacy
+    // data (persisted before scores existed), so we do not block on it.
+    const storedScore = cat.data?.score;
+    if (storedScore !== undefined && storedScore !== ref.data?.score) return false;
+  }
+  return true;
+}
+
+export function classesLookUnconfigured(classes: Category[] | undefined | null): boolean {
+  // Empty array is a deliberate "no categories" save, not an install default.
+  if (classes == null) return true;
+  if (classes.length === 0) return false;
+  if (matchesInstallDefault(classes, defaultCategories)) return true;
+  return getPresetCategorySets().some(p => matchesInstallDefault(classes, p.categories));
+}
+
+/**
  * Load category sets and active set IDs from the settings store.
  * Falls back to the legacy flat `classes` setting if no sets are defined yet.
  *
  * Preset sets shipped by the build/deployment (see `~/util/presetCategories`)
  * are always appended as *available* sets, but are only active by default when
- * the user has no stored categorization of their own. A stored set with the
- * same id always wins over the preset definition, so user edits stick.
+ * the user has no stored categorization of their own. Persisted *install
+ * defaults* (the stock `classes` list, or a copy of a shipped preset) do not
+ * count — `settings.save()` writes every key, so a theme/view save on first
+ * run used to look like a user taxonomy and let `default` silently win over
+ * the preset (ActivityWatch/activitywatch#1439). A stored set with the same
+ * id always wins over the preset definition, so user edits stick.
  */
 export function loadCategories(): { sets: CategorySet[]; activeIds: string[] } {
   const settingsStore = useSettingsStore();
@@ -319,11 +397,20 @@ export function loadCategories(): { sets: CategorySet[]; activeIds: string[] } {
   let sets: CategorySet[];
   let activeIds: string[];
 
-  if (storedSets && storedSets.length > 0) {
+  const storedOwnSets = Boolean(storedSets && storedSets.length > 0);
+  // `hasStoredCategories` is true as soon as `classes` exists in storage,
+  // which first-run `settings.save()` always writes. Only a *custom* class
+  // list should suppress the shipped preset.
+  const storedCustomClasses =
+    settingsStore.hasStoredCategories &&
+    !storedOwnSets &&
+    !classesLookUnconfigured(settingsStore.classes);
+
+  if (storedOwnSets) {
     sets = [...storedSets];
     activeIds =
       storedActiveIds && storedActiveIds.length > 0 ? [...storedActiveIds] : [storedSets[0].id];
-  } else if (presets.length > 0 && !settingsStore.hasStoredCategories) {
+  } else if (presets.length > 0 && !storedCustomClasses) {
     // First run on a build that ships presets: activate the first preset only.
     //
     // We deliberately limit the initial selection to one set: syncToPrimarySet()

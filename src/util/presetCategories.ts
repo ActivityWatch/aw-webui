@@ -30,7 +30,9 @@
  *
  * Behaviour of the resulting sets is defined in `loadCategories()` in
  * `~/util/classes`: preset sets are always *available*, but only activated by
- * default when the user has no stored categorization of their own.
+ * default when the user has no stored categorization of their own. A
+ * first-run `settings.save()` that persisted the install-default `classes`
+ * list does not count as user categorization.
  *
  * Malformed input is dropped with a warning rather than thrown — a broken
  * preset must never prevent the UI from starting.
