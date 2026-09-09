@@ -311,7 +311,9 @@ export function saveCategories(sets: CategorySet[], activeIds: string[]) {
  * as a custom taxonomy.
  */
 export function classesLookUnconfigured(classes: Category[] | undefined | null): boolean {
-  if (!classes || classes.length === 0) return true;
+  // Empty array is a deliberate "no categories" save, not an install default.
+  if (classes == null) return true;
+  if (classes.length === 0) return false;
   const signatureOf = (cats: Category[]) =>
     cats
       .map(c =>

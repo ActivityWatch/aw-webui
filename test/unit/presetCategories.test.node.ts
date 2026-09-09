@@ -327,6 +327,22 @@ describe('loadCategories with presets', () => {
     expect(sets[0].categories).toEqual(defaultCategories);
   });
 
+  test('a saved empty class list is kept instead of being replaced by the preset', () => {
+    setPresetGlobal([presetSet]);
+    const settingsStore = useSettingsStore();
+    settingsStore.$patch({
+      classes: [],
+      category_sets: [],
+      active_set_ids: ['default'],
+      _storedKeys: ['classes'],
+    });
+
+    const { sets, activeIds } = loadCategories();
+    expect(activeIds).toEqual(['default']);
+    expect(sets.find(s => s.id === 'default').categories).toEqual([]);
+    expect(sets.map(s => s.id)).toContain('study');
+  });
+
   test('a user with stored classes keeps them; presets are available but inactive', () => {
     setPresetGlobal([presetSet]);
     const myClasses: Category[] = [{ name: ['Mine'], rule: { type: 'regex', regex: 'mine' } }];
