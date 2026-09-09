@@ -52,6 +52,16 @@ export interface Category {
 export interface CategorySet {
   id: string;
   categories: Category[];
+  /**
+   * When true, aw-webui activates this set even when the user already has
+   * stored category sets.  Intended for research or managed builds that need
+   * a specific taxonomy to be active on every install, including machines
+   * that had ActivityWatch before the build was deployed.
+   *
+   * The flag is respected only for sets delivered via `AW_PRESET_CATEGORY_SETS`
+   * — a stored set cannot force-activate itself.
+   */
+  force_active?: boolean;
 }
 
 /**
@@ -319,10 +329,24 @@ export function loadCategories(): { sets: CategorySet[]; activeIds: string[] } {
   let sets: CategorySet[];
   let activeIds: string[];
 
+  // A preset with force_active:true overrides stored active_set_ids so that
+  // managed/research builds activate their taxonomy on every existing install,
+  // not just fresh ones.  We only honour force_active on presets delivered
+  // via AW_PRESET_CATEGORY_SETS (getPresetCategorySets()), never on stored sets
+  // — user edits stored under the same id still win over the preset definition.
+  const forceActivePreset = presets.find(p => p.force_active);
+
   if (storedSets && storedSets.length > 0) {
     sets = [...storedSets];
-    activeIds =
-      storedActiveIds && storedActiveIds.length > 0 ? [...storedActiveIds] : [storedSets[0].id];
+    if (forceActivePreset) {
+      // Activate the force_active preset regardless of what was stored.
+      // We keep only that preset active (same single-set constraint as the
+      // first-run path) so syncToPrimarySet() can write user edits back cleanly.
+      activeIds = [forceActivePreset.id];
+    } else {
+      activeIds =
+        storedActiveIds && storedActiveIds.length > 0 ? [...storedActiveIds] : [storedSets[0].id];
+    }
   } else if (presets.length > 0 && !settingsStore.hasStoredCategories) {
     // First run on a build that ships presets: activate the first preset only.
     //

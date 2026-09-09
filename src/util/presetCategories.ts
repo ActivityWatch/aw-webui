@@ -153,7 +153,9 @@ function parseSet(raw: unknown, index: number): CategorySet | null {
     console.warn(`[presets] set "${raw.id}" has no valid categories, skipping`);
     return null;
   }
-  return { id: raw.id, categories };
+  const set: CategorySet = { id: raw.id, categories };
+  if (raw.force_active === true) set.force_active = true;
+  return set;
 }
 
 /**
@@ -223,6 +225,7 @@ export function getPresetCategorySets(): CategorySet[] {
   // Deep enough copy to keep callers from mutating the cache
   return cached.map(s => ({
     id: s.id,
+    ...(s.force_active ? { force_active: true } : {}),
     categories: s.categories.map(c => ({ ...c, name: [...c.name], rule: { ...c.rule } })),
   }));
 }

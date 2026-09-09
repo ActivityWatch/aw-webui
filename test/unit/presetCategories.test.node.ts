@@ -509,3 +509,66 @@ describe('categories store with presets', () => {
     expect(categoryStore.classes.length).toBeGreaterThan(defaultCategories.length - 1);
   });
 });
+
+// ── force_active preset tests ────────────────────────────────────────────────
+describe('force_active preset', () => {
+  const forceActivePreset: CategorySet = {
+    id: 'research-study',
+    force_active: true,
+    categories: [{ name: ['Music & Audio'], rule: { type: 'regex', regex: '^Music & Audio$' } }],
+  };
+
+  test('parsePresetCategorySets propagates force_active:true', () => {
+    const sets = parsePresetCategorySets([forceActivePreset]);
+    expect(sets).toHaveLength(1);
+    expect(sets[0].force_active).toBe(true);
+  });
+
+  test('parsePresetCategorySets does not set force_active when absent', () => {
+    const sets = parsePresetCategorySets([presetSet]);
+    expect(sets[0].force_active).toBeUndefined();
+  });
+
+  test('parsePresetCategorySets does not set force_active when false', () => {
+    const sets = parsePresetCategorySets([{ ...forceActivePreset, force_active: false }]);
+    expect(sets[0].force_active).toBeUndefined();
+  });
+
+  test('force_active preset activates on a fresh install', () => {
+    setPresetGlobal([forceActivePreset]);
+    const categoryStore = useCategoryStore();
+    categoryStore.load();
+    expect(categoryStore.active_set_ids).toEqual(['research-study']);
+  });
+
+  test('force_active preset overrides stored active_set_ids on existing install', () => {
+    // Simulate a user who already has the default set stored
+    setPresetGlobal([forceActivePreset]);
+    const settingsStore = useSettingsStore();
+    settingsStore.$patch({
+      category_sets: [{ id: 'default', categories: defaultCategories }],
+      active_set_ids: ['default'],
+      _storedKeys: ['category_sets'],
+    });
+    const categoryStore = useCategoryStore();
+    categoryStore.load();
+    // force_active preset must win over the stored selection
+    expect(categoryStore.active_set_ids).toEqual(['research-study']);
+  });
+
+  test('force_active preset is available but not activated when force_active is absent', () => {
+    setPresetGlobal([presetSet]);
+    const settingsStore = useSettingsStore();
+    settingsStore.$patch({
+      category_sets: [{ id: 'default', categories: defaultCategories }],
+      active_set_ids: ['default'],
+      _storedKeys: ['category_sets'],
+    });
+    const categoryStore = useCategoryStore();
+    categoryStore.load();
+    // no force_active — stored selection is preserved
+    expect(categoryStore.active_set_ids).toEqual(['default']);
+    // preset is still offered as an available set
+    expect(categoryStore.category_sets.some(s => s.id === 'study')).toBe(true);
+  });
+});
