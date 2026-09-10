@@ -61,6 +61,7 @@ div
 <script lang="ts">
 import _ from 'lodash';
 import moment from 'moment';
+import { buildGraphData } from '~/util/graphData';
 
 import 'vue-awesome/icons/search';
 import 'vue-awesome/icons/spinner';
@@ -140,71 +141,9 @@ export default {
       return this.events;
     },
     generateGraphData: function (events) {
-      // generate graph data from events
-      // iterate through events, and count the number of category transitions
-      // for each category, add a node to the graphdata with the group of its parent category
-      // for each transition-pair, add a link to the graphdata with the number of transitions as weight
-      const SEP = '>';
-
-      // copy all events, slice off category depth deeper than maxDepth
-      events = events.map(e => {
-        const $category = e.data.$category.slice(0, this.maxDepth);
-        return { ...e, data: { ...e.data, $category } };
-      });
-
-      const allCategories: Set<string> = new Set(
-        events.map(e => e.data.$category).map(c => c.join(SEP))
+      return buildGraphData(events, this.maxDepth, path =>
+        this.categoryStore.get_category_color(path)
       );
-      const groups = { Uncategorized: 0 };
-
-      // Generate groups
-      for (const category of allCategories) {
-        const rootcat = category.split(SEP)[0];
-        if (!Object.prototype.hasOwnProperty.call(groups, rootcat)) {
-          groups[rootcat] = Object.keys(groups).length;
-        }
-      }
-
-      // Generate nodes
-      const nodes = [];
-      for (const category of allCategories) {
-        const rootcat = category.split(SEP)[0];
-        // Size nodes depending on time spent
-        const catTime = events
-          .filter(e => e.data.$category.join(SEP) == category)
-          .map(e => moment(e.timestamp).add(e.duration).diff(e.timestamp))
-          .reduce((a, b) => a + b, 0);
-        nodes.push({
-          id: category,
-          group: groups[rootcat],
-          color: this.categoryStore.get_category_color(category.split(SEP)),
-          value: catTime,
-        });
-      }
-
-      // Generate links
-      const links = [];
-      for (let i = 0; i < events.length - 1; i++) {
-        const e1 = events[i];
-        const e2 = events[i + 1];
-        const e1cat = e1.data.$category;
-        const e2cat = e2.data.$category;
-        if (_.isEqual(e1cat, e2cat)) continue;
-
-        const link = links.find(l => l.source == e1cat.join(SEP) && l.target == e2cat.join(SEP));
-        if (link) {
-          link.value++;
-        } else {
-          links.push({
-            source: e1cat.join(SEP),
-            target: e2cat.join(SEP),
-            value: 1,
-          });
-        }
-      }
-
-      console.log('generated nodes & links');
-      return { nodes, links };
     },
     extendByWeek() {
       this.queryOptions.start = moment(this.queryOptions.start)

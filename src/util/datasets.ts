@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 import { split_by_hour_into_data } from '~/util/transforms';
 import { getColorFromCategory } from '~/util/color';
 import { Category } from '~/util/classes';
@@ -16,45 +14,35 @@ interface Dataset {
   data: number[];
 }
 
-export function buildBarchartDataset(data_by_hour: HourlyData[], classes: Category[]): Dataset[] {
-  const SEP = '>>>';
-  const data = data_by_hour;
-  if (data) {
-    const category_names: Set<string> = new Set(
-      Object.values(data)
-        .map(result => {
-          return result.cat_events.map(e => e.data['$category'].join(SEP));
-        })
-        .flat()
-    );
-    const ds: Dataset[] = [...category_names]
-      .map(c_ => {
-        const categoryStore = useCategoryStore();
-        const c = categoryStore.get_category(c_.split(SEP));
-
-        if (c) {
-          const values = Object.values(data).map(results => {
-            const cat = results.cat_events.find(e => _.isEqual(e.data['$category'], c.name));
-            if (cat) return Math.round((cat.duration / (60 * 60)) * 1000) / 1000;
-            else return null;
-          });
-          return {
-            label: c.name.join(' > '),
-            backgroundColor: getColorFromCategory(c, classes),
-            data: values,
-          } as Dataset;
-        } else {
-          // FIXME: This shouldn't happen
-          // This may for example happen if one doesn't have an 'Uncategorized' category,
-          // as can happen when one upgrades from an old version where there wasn't one in the default classes.
-          console.error('missing category:', c_);
-        }
-      })
-      .filter(x => x);
-    return ds;
-  } else {
-    return [];
+export function buildBarchartDataset(
+  data_by_hour: HourlyData[] | Record<string, HourlyData>,
+  classes: Category[]
+): Dataset[] {
+  if (!data_by_hour) return [];
+  const periods = Object.values(data_by_hour);
+  const categoryPaths = new Map<string, string[]>();
+  const totals = periods.map(period => {
+    const sums = new Map<string, number>();
+    for (const event of period.cat_events) {
+      const path = event.data.$category || [];
+      const key = JSON.stringify(path);
+      if (!categoryPaths.has(key)) categoryPaths.set(key, path);
+      sums.set(key, (sums.get(key) || 0) + event.duration);
+    }
+    return sums;
+  });
+  const categories = new Map<string, Category>();
+  for (const category of classes) {
+    const key = JSON.stringify(category.name);
+    if (!categories.has(key)) categories.set(key, category);
   }
+  return Array.from(categoryPaths, ([key, path]) => ({
+    label: path.length ? path.join(' > ') : 'Uncategorized',
+    backgroundColor: getColorFromCategory(categories.get(key), classes),
+    data: totals.map(sums =>
+      sums.has(key) ? Math.round((sums.get(key) / 3600) * 1000) / 1000 : null
+    ),
+  }));
 }
 
 export function buildBarchartDatasetActive(events_active: IEvent[]) {
