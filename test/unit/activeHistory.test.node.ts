@@ -123,7 +123,7 @@ describe('selectPeriodsToQuery', () => {
     ]);
   });
 
-  test('skips closed periods already cached', () => {
+  test('skips closedPeriod periods already cached', () => {
     expect(
       selectPeriodsToQuery([past, yesterday, today], { [past]: [], [yesterday]: [] }, now)
     ).toEqual([today]);
@@ -143,7 +143,7 @@ describe('selectPeriodsToQuery', () => {
     expect(selectPeriodsToQuery([future], { [future]: [] }, now)).toEqual([]);
   });
 
-  test('returns nothing when every period is cached and closed', () => {
+  test('returns nothing when every period is cached and closedPeriod', () => {
     expect(selectPeriodsToQuery([past, yesterday], { [past]: [], [yesterday]: [] }, now)).toEqual(
       []
     );
@@ -159,10 +159,10 @@ describe('selectPeriodsToQuery', () => {
     expect(selectPeriodsToQuery([boundary], {}, now)).toEqual([]);
   });
 
-  test('a period ending exactly at now is closed and cacheable', () => {
-    const closed = '2026-09-09T12:00:00+00:00/2026-09-10T12:00:00+00:00';
-    expect(selectPeriodsToQuery([closed], {}, now)).toEqual([closed]);
-    expect(selectPeriodsToQuery([closed], { [closed]: [] }, now)).toEqual([]);
+  test('a period ending exactly at now is closedPeriod and cacheable', () => {
+    const closedPeriod = '2026-09-09T12:00:00+00:00/2026-09-10T12:00:00+00:00';
+    expect(selectPeriodsToQuery([closedPeriod], {}, now)).toEqual([closedPeriod]);
+    expect(selectPeriodsToQuery([closedPeriod], { [closedPeriod]: [] }, now)).toEqual([]);
   });
 
   test('respects a non-midnight day boundary', () => {
