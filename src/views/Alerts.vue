@@ -5,7 +5,6 @@ div
   // TODO: Call this "goals" instead? (alerts is more general, but goals might fit the most common use better
   // TODO: Support 'less than' goals
   // TODO: Send notifications when goals met
-  // TODO: Query from day start, not 24h ago
 
   b-alert(variant="warning" show)
     | This feature is still in early development.
@@ -69,6 +68,8 @@ import 'vue-awesome/icons/trash';
 
 import { useBucketsStore } from '~/stores/buckets';
 import { useCategoryStore } from '~/stores/categories';
+import { useSettingsStore } from '~/stores/settings';
+import { get_day_start_with_offset, get_offset_duration } from '~/util/time';
 
 export default {
   name: 'Alerts',
@@ -76,6 +77,7 @@ export default {
     return {
       bucketsStore: useBucketsStore(),
       categoryStore: useCategoryStore(),
+      settingsStore: useSettingsStore(),
 
       // TODO: Support negative goals (avoid distractions)
       alerts: [
@@ -119,6 +121,7 @@ export default {
     },
   },
   mounted: async function () {
+    await this.settingsStore.ensureLoaded();
     await this.bucketsStore.ensureLoaded();
     await this.categoryStore.load();
     // Filter to hosts that actually have the buckets we query against.
@@ -165,10 +168,15 @@ export default {
 
       const query_array = querystr_to_array(query);
 
-      // Get start of today
-      const start = moment().subtract(1, 'days').startOf('day');
-      const end = moment(start).add(1, 'days');
-      const timeperiods = [start.format() + '/' + end.format()];
+      // Query from the start of the current activity day through now. The
+      // activity day respects the user's startOfDay setting (default 04:00),
+      // so before that boundary we are still on the previous calendar day.
+      // `now` is captured once so the interval stays consistent even if the
+      // query straddles the boundary.
+      const now = moment();
+      const activity_day = moment(now).subtract(get_offset_duration()).startOf('day');
+      const start = moment(get_day_start_with_offset(activity_day));
+      const timeperiods = [start.format() + '/' + now.format()];
 
       try {
         this.status = 'searching';
