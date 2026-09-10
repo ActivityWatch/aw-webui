@@ -16,7 +16,10 @@ export interface ActiveHistoryContext {
   useMultidevice: boolean;
   // Period boundaries themselves depend on this.
   startOfDay: string;
-  // Semantic inputs to the active-period union.
+  // Semantic inputs to the active-period union. filter_afk matters because
+  // with AFK filtering disabled the query measures window coverage instead of
+  // AFK-filtered intervals, so the two are not interchangeable results.
+  filter_afk?: boolean;
   include_audible?: boolean;
   always_active_pattern?: string;
 }
@@ -46,6 +49,9 @@ export function activeHistoryCacheKey(
     host: context.host || '',
     useMultidevice: !!context.useMultidevice,
     startOfDay: context.startOfDay || '',
+    // Normalized the same way activeDurationQuery reads it, so an omitted
+    // value and an explicit true share one cache.
+    filter_afk: context.filter_afk !== false,
     include_audible: !!context.include_audible,
     always_active_pattern: context.always_active_pattern || '',
     sources: normalized_sources,

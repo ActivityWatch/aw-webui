@@ -511,6 +511,7 @@ export const useActivityStore = defineStore('activity', {
             host: query_options.host,
             useMultidevice: settingsStore.useMultidevice,
             startOfDay: settingsStore.startOfDay,
+            filter_afk: query_options.filter_afk,
             include_audible: query_options.include_audible,
             always_active_pattern: query_options.always_active_pattern,
           },
