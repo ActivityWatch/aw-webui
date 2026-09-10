@@ -5,6 +5,7 @@ const baseContext = {
   host: 'hostA',
   useMultidevice: false,
   startOfDay: '04:00',
+  filter_afk: true,
   include_audible: false,
   always_active_pattern: '',
 };
@@ -26,6 +27,7 @@ describe('activeHistoryCacheKey', () => {
     ['platform', { platform: 'android' as const }],
     ['multidevice mode', { useMultidevice: true }],
     ['day boundary', { startOfDay: '00:00' }],
+    ['filter_afk', { filter_afk: false }],
     ['include_audible', { include_audible: true }],
     ['always_active_pattern', { always_active_pattern: 'mpv' }],
   ])('a different %s produces a different key', (_label, override) => {
@@ -81,6 +83,13 @@ describe('activeHistoryCacheKey', () => {
 
   test('a missing browser list matches an empty one', () => {
     expect(key({}, [{ bid_afk: 'afk' }])).toBe(key({}, [{ bid_afk: 'afk', bid_browsers: [] }]));
+  });
+
+  test('an omitted filter_afk matches an explicit true', () => {
+    // activeDurationQuery reads it as `filter_afk !== false`, so the key must
+    // normalize the same way or a default-on view would miss its own cache.
+    expect(key({ filter_afk: undefined })).toBe(key({ filter_afk: true }));
+    expect(key({ filter_afk: false })).not.toBe(key({ filter_afk: true }));
   });
 
   test('undefined semantic options match their falsy defaults', () => {
