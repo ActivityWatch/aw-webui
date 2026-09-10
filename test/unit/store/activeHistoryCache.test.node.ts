@@ -153,6 +153,7 @@ describe('query_active_history caching', () => {
 
   test.each([
     ['host change', { host: 'otherhost' }],
+    ['filter_afk change', { filter_afk: false }],
     ['include_audible change', { include_audible: true }],
     ['always_active_pattern change', { always_active_pattern: 'mpv' }],
   ])('%s cannot reuse cached periods', async (_label, override) => {
@@ -161,6 +162,28 @@ describe('query_active_history caching', () => {
 
     await activityStore.query_active_history({ host: HOST, timeperiod: TIMEPERIOD, ...override });
     expect(periodsAsked()[1]).toEqual(first);
+  });
+
+  test('toggling the AFK filter both ways cannot reuse cached periods', async () => {
+    // With AFK filtering off the query measures window coverage instead of
+    // AFK-filtered intervals, so closed periods are not interchangeable.
+    await run({ filter_afk: true });
+    const first = periodsAsked()[0];
+
+    await run({ filter_afk: false });
+    expect(periodsAsked()[1]).toEqual(first);
+
+    await run({ filter_afk: true });
+    expect(periodsAsked()[2]).toEqual(first);
+  });
+
+  test('an omitted filter_afk still reuses the default-on cache', async () => {
+    await run({ filter_afk: true });
+    const first = periodsAsked()[0];
+
+    await run();
+    // Only the open period may be refetched; the default is AFK-filtering on.
+    expect(periodsAsked()[1].length).toBeLessThan(first.length);
   });
 
   test('a day-boundary change cannot reuse cached periods', async () => {
