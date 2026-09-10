@@ -1,23 +1,31 @@
-import DOMPurify from 'dompurify';
+import _ from 'lodash';
 
-const sanitize = DOMPurify.sanitize;
+const escapeText = value => _.escape(value == null ? 'unknown' : String(value));
 
 export function getSwimlane(bucket, color, groupBy, e) {
-  // WARNING: XSS risk, make sure to sanitize properly
-  // FIXME: Not actually tested against XSS attacks, implementation needs to be verified in tests.
   let subgroup = 'unknown';
 
+  // A bucket with no type, or an event with no data, must not throw and take
+  // the whole visualization down with it.
+  const data = (e && e.data) || {};
+  const type = String((bucket && bucket.type) || '');
+
   if (groupBy == 'category') {
-    subgroup = sanitize(color);
+    subgroup = escapeText(color);
   } else if (groupBy == 'bucketType') {
-    if (bucket.type == 'currentwindow') {
-      subgroup = sanitize(e.data.app);
-    } else if (bucket.type == 'web.tab.current') {
-      subgroup = sanitize(new URL(e.data.url).hostname.replace('www.', ''));
-    } else if (bucket.type.startsWith('app.editor')) {
-      subgroup = sanitize(e.data.language);
-    } else if (bucket.type.startsWith('general.stopwatch')) {
-      subgroup = sanitize(e.data.label);
+    if (type == 'currentwindow') {
+      subgroup = escapeText(data.app);
+    } else if (type == 'web.tab.current') {
+      try {
+        const hostname = new URL(data.url).hostname;
+        subgroup = hostname ? escapeText(hostname.replace(/^www\./, '')) : 'unknown';
+      } catch {
+        subgroup = 'unknown';
+      }
+    } else if (type.startsWith('app.editor')) {
+      subgroup = escapeText(data.language);
+    } else if (type.startsWith('general.stopwatch')) {
+      subgroup = escapeText(data.label);
     }
   }
 
