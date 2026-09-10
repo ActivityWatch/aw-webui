@@ -92,7 +92,7 @@ export default {
       categoryStore: useCategoryStore(),
 
       editing: {
-        id: 0, // FIXME: Use ID assigned to category in store, in order for saves to be uniquely targeted
+        id: 0, // Placeholder; replaced with the stored category id by resetModal()
         name: null,
         rule: {},
         parent: [],
