@@ -597,7 +597,8 @@ export function activityQuery(afkbuckets: string[]): string[] {
 }
 
 export interface ActivityQuerySource {
-  bid_afk: string;
+  bid_afk?: string;
+  bid_android?: string;
   bid_window?: string;
   bid_browsers?: string[];
 }
@@ -617,7 +618,12 @@ export function activeDurationQuery(
 ): string[] {
   let code = 'history_events = [];';
   for (const source of sources) {
-    if (source.bid_window) {
+    if (source.bid_android) {
+      // Preserve mobile intervals so overlapping devices count only once.
+      code += `history_events = union_no_overlap(history_events, flood(${queryBucket(
+        escape_doublequote(source.bid_android)
+      )}));`;
+    } else if (source.bid_window) {
       code += canonicalEvents({
         ...options,
         filter_afk: options.filter_afk !== false,
