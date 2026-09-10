@@ -17,7 +17,7 @@ div
     | Install #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") aw-watcher-window and aw-watcher-afk] to enable this view.
 
   b-card(v-for="alert in alerts", :key="alert.name")
-    b-button.float-right(@click="deleteAlert(alert.name)" size="sm" variant="outline-danger")
+    b-button.float-right(@click="deleteAlert(alert.name)" size="sm" variant="outline-danger" :disabled="saving")
       icon(name="trash")
 
     div Goal name: {{ alert.name }}
@@ -49,7 +49,7 @@ div
         b-input(v-model="editing_alert.goal" type="number")
 
     div
-      b-btn(@click="addAlert" variant="success")
+      b-btn(@click="addAlert" variant="success" :disabled="saving")
         icon(name="plus")
         | Add alert
 </template>
@@ -70,6 +70,7 @@ import { useBucketsStore } from '~/stores/buckets';
 import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
 import { get_day_start_with_offset, get_offset_duration } from '~/util/time';
+import { cleanAlertGoal, cleanAlertGoals, getDefaultAlertGoals } from '~/util/alerts';
 
 export default {
   name: 'Alerts',
@@ -80,11 +81,13 @@ export default {
       settingsStore: useSettingsStore(),
 
       // TODO: Support negative goals (avoid distractions)
-      alerts: [
-        { name: 'Work', category: ['Work'], goal: 100 },
-        { name: 'Media', category: ['Media'], goal: 10 },
-      ],
+      // Loaded from settings in mounted(); sample goals are seeded there only
+      // when nothing has been stored yet.
+      alerts: [],
       editing_alert: {},
+
+      // Set while an add/delete is being persisted, to block duplicate writes.
+      saving: false,
 
       alert_times: {},
 
@@ -122,6 +125,11 @@ export default {
   },
   mounted: async function () {
     await this.settingsStore.ensureLoaded();
+    // A stored empty list is a deliberate "no goals" and must be preserved;
+    // only a first run (nothing ever stored) gets the sample goals.
+    this.alerts = this.settingsStore.hasStoredAlerts
+      ? cleanAlertGoals(this.settingsStore.alerts)
+      : getDefaultAlertGoals();
     await this.bucketsStore.ensureLoaded();
     await this.categoryStore.load();
     // Filter to hosts that actually have the buckets we query against.
@@ -134,12 +142,40 @@ export default {
     this.hostname = this.hostnames[0];
   },
   methods: {
-    addAlert: function () {
-      // TODO: Persist to settings/localstorage
-      this.alerts = this.alerts.concat({ ...this.editing_alert });
+    addAlert: async function () {
+      const goal = cleanAlertGoal(this.editing_alert);
+      if (goal === null) {
+        this.error = 'A goal needs a name, a category, and a positive number of minutes.';
+        return;
+      }
+      if (await this.persistAlerts(this.alerts.concat(goal))) {
+        this.editing_alert = {};
+      }
     },
-    deleteAlert: function (name) {
-      this.alerts = this.alerts.filter(a => a.name !== name);
+    deleteAlert: async function (name) {
+      await this.persistAlerts(this.alerts.filter(a => a.name !== name));
+    },
+
+    // Save the given goals, keeping the shown list and storage in step. Returns
+    // whether the write succeeded; on failure the previous list is restored so
+    // the view never implies a failed write was durable.
+    persistAlerts: async function (alerts) {
+      if (this.saving) return false;
+      const previous = this.alerts;
+      this.saving = true;
+      this.alerts = alerts;
+      try {
+        await this.settingsStore.update({ alerts });
+        this.error = '';
+        return true;
+      } catch (e) {
+        console.error(e);
+        this.alerts = previous;
+        this.error = 'Failed to save alert goals. Please try again.';
+        return false;
+      } finally {
+        this.saving = false;
+      }
     },
 
     toggleAutoRefresh: function () {
