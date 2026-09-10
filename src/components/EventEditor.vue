@@ -1,5 +1,5 @@
 <template lang="pug">
-b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEditModal", title="Edit event", centered, hide-footer)
+b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEditModal", title="Edit event", centered, hide-footer, :no-close-on-backdrop="busy", :no-close-on-esc="busy", :hide-header-close="busy")
   div(v-if="!editedEvent")
     | Loading event...
 
@@ -37,15 +37,18 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
 
     hr
 
+    b-alert(v-if="error" show variant="danger")
+      | {{ error }}
+
     div.float-left
-      b-button.mx-1(@click="delete_(); close();" variant="danger")
+      b-button.mx-1(@click="delete_", variant="danger", :disabled="busy")
         icon.mx-1(name="trash")
         | Delete
     div.float-right
-      b-button.mx-1(@click="close")
+      b-button.mx-1(@click="close", :disabled="busy")
         icon.mx-1(name="times")
         | Cancel
-      b-button.mx-1(@click="save(); close();", variant="primary")
+      b-button.mx-1(@click="save", variant="primary", :disabled="busy")
         icon.mx-1(name="save")
         | Save
 </template>
@@ -76,9 +79,15 @@ export default {
   data() {
     return {
       editedEvent: null,
+      // Name of the mutation in flight ('save' / 'delete'), else null.
+      pending: null,
+      error: '',
     };
   },
   computed: {
+    busy() {
+      return this.pending !== null;
+    },
     start: {
       get: function () {
         return moment(this.editedEvent.timestamp).format();
@@ -101,6 +110,7 @@ export default {
   },
   watch: {
     async event() {
+      this.error = '';
       await this.getEvent();
     },
   },
@@ -109,16 +119,56 @@ export default {
   },
   methods: {
     async save() {
-      // This emit needs to be called first, otherwise it won't occur for some reason
-      // FIXME: but what if the replace fails? Then UI will incorrectly think event was replaced?
-      this.$emit('save', this.editedEvent);
-      await this.$aw.replaceEvent(this.bucket_id, this.editedEvent);
+      if (!this.editedEvent) return;
+      await this.runMutation('save', this.editedEvent, () =>
+        this.$aw.replaceEvent(this.bucket_id, this.editedEvent)
+      );
     },
     async delete_() {
-      // This emit needs to be called first, otherwise it won't occur for some reason
-      // FIXME: but what if the replace fails? Then UI will incorrectly think event was deleted?
-      this.$emit('delete', this.event);
-      await this.$aw.deleteEvent(this.bucket_id, this.event.id);
+      await this.runMutation('delete', this.event, () =>
+        this.$aw.deleteEvent(this.bucket_id, this.event.id)
+      );
+    },
+    // Runs one mutation against the server. Parents are told it succeeded only
+    // once the request actually has, so a failure leaves the editor open with
+    // the user's input intact and retryable.
+    //
+    // The modal is hidden before the success event is emitted: a parent
+    // reacting to it may destroy this component (it is usually rendered behind
+    // a v-if on the event being edited), and the ref would be gone by then.
+    async runMutation(name, payload, request) {
+      if (this.pending) return;
+      const editingId = this.event && this.event.id;
+      this.pending = name;
+      this.error = '';
+      try {
+        await request();
+      } catch (e) {
+        console.error(e);
+        this.error = this.requestErrorMessage(e, name);
+        return;
+      } finally {
+        this.pending = null;
+      }
+
+      // The editor may have been pointed at a different event while the
+      // request was in flight; a late response must not act on the new one.
+      if (!this.event || this.event.id !== editingId) return;
+
+      this.hideModal();
+      this.$emit(name, payload);
+    },
+    requestErrorMessage(e, name) {
+      const response = e && e.response;
+      const serverMessage = response && response.data && response.data.message;
+      const verb = name === 'delete' ? 'delete' : 'save';
+      return serverMessage || (e && e.message) || `Failed to ${verb} event.`;
+    },
+    // Hiding is best-effort: the modal may already be gone if a parent
+    // re-rendered or destroyed this component.
+    hideModal() {
+      const modal = this.$refs.eventEditModal;
+      if (modal) modal.hide();
     },
     async getEvent() {
       if (this.bucket_id && this.event && this.event.id) {
@@ -128,7 +178,8 @@ export default {
       }
     },
     close() {
-      this.$refs.eventEditModal.hide();
+      if (this.pending) return;
+      this.hideModal();
       this.$emit('close', this.event);
     },
   },
