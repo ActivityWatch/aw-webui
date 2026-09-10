@@ -196,7 +196,9 @@ describe('query_active_history caching', () => {
   });
 
   test('a delayed response from the previous host cannot populate the new one', async () => {
-    let releaseA: (v: unknown) => void;
+    let releaseA: (v: unknown) => void = () => {
+      throw new Error('releaseA called before the pending mock was installed');
+    };
     query.mockImplementationOnce(
       (periods: string[]) =>
         new Promise(resolve => {
@@ -221,7 +223,7 @@ describe('query_active_history caching', () => {
     expect(Object.keys(afterB).length).toBeGreaterThan(0);
 
     // Now A's stale response lands.
-    releaseA!(null);
+    releaseA(null);
     await pendingA;
 
     for (const [tp, events] of Object.entries(activityStore.active.history)) {

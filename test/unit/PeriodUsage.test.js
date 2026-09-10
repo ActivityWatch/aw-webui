@@ -117,7 +117,7 @@ describe('renderer geometry', () => {
     const el = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     document.body.appendChild(el);
     periodusage.create(el);
-    periodusage.update(el, entries, () => {});
+    periodusage.update(el, entries, jest.fn());
     return el;
   }
 
@@ -156,7 +156,9 @@ describe('renderer geometry', () => {
   });
 
   test('a single all-zero bar produces finite geometry', () => {
-    expectFinite(render([active(period('2026-09-10T04:00:00'), 0)]));
+    const el = render([active(period('2026-09-10T04:00:00'), 0)]);
+    expect(el.querySelectorAll('rect')).toHaveLength(1);
+    expectFinite(el);
   });
 
   test('empty entries still render a bar with finite geometry', () => {
@@ -198,12 +200,12 @@ describe('renderer geometry', () => {
     periodusage.update(
       el,
       [active(period('2026-09-09T04:00:00'), 100), active(period('2026-09-08T04:00:00'), 50)],
-      () => {}
+      jest.fn()
     );
     expect(el.querySelectorAll('rect')).toHaveLength(2);
     expect(todays()).toBe(1);
 
-    periodusage.update(el, [active(period('2020-01-01T04:00:00'), 100)], () => {});
+    periodusage.update(el, [active(period('2020-01-01T04:00:00'), 100)], jest.fn());
     expect(el.querySelectorAll('rect')).toHaveLength(1);
     expect(todays()).toBe(0);
   });
