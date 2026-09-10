@@ -280,7 +280,7 @@ describe('Alerts goal persistence', () => {
     await settle();
 
     update.mockRejectedValueOnce(new Error('offline'));
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'error').mockImplementation(jest.fn());
 
     wrapper.vm.editing_alert = { name: 'Code', category: ['Work', 'Code'], goal: 90 };
     await wrapper.vm.addAlert();
