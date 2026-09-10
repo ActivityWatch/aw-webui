@@ -123,7 +123,8 @@ function update(
       .on('click', function () {
         onPeriodClicked(period);
       });
-    // This is raw device active time (AFK-watcher on desktop, usage events on mobile);
+    // This is device active time (not-AFK, always-active and audible periods on desktop,
+    // usage events on mobile), independent of category filters;
     // the "Time active" headline additionally intersects with window events and
     // applies the active filters (see #722), so bars can be slightly higher.
     rect

@@ -5,7 +5,7 @@ import { map, filter, values, groupBy, sortBy, flow, reverse } from 'lodash/fp';
 import { IEvent } from '~/util/interfaces';
 
 import { window_events } from '~/util/fakedata';
-import queries, { MultiQueryParams } from '~/queries';
+import queries, { ActivityQuerySource, MultiQueryParams } from '~/queries';
 import { get_day_start_with_offset, get_offset_duration } from '~/util/time';
 import {
   TimePeriod,
@@ -41,6 +41,14 @@ import {
 
 function timeperiodStrsAroundTimeperiod(timeperiod: TimePeriod): string[] {
   return timeperiodsAroundTimeperiod(timeperiod).map(timeperiodToStr);
+}
+
+function activeHistorySources(state: State): ActivityQuerySource[] {
+  return state.buckets.afk.slice(0, 1).map(bid_afk => ({
+    bid_afk,
+    bid_window: state.buckets.window[0],
+    bid_browsers: state.buckets.browser,
+  }));
 }
 
 function colorCategories(events: IEvent[]): IEvent[] {
@@ -890,14 +898,13 @@ export const useActivityStore = defineStore('activity', {
       return { date, approximate: false };
     },
 
-    async query_active_history({ timeperiod }: QueryOptions) {
+    async query_active_history({ timeperiod, ...query_options }: QueryOptions) {
       // Filter out periods that are already in the history, and that are in the future
       const periods = uncachedHistoryPeriods(
         timeperiodStrsAroundTimeperiod(timeperiod),
         this.active.history
       );
-      const afk_buckets = [this.buckets.afk[0]];
-      const query = queries.activityQuery(afk_buckets);
+      const query = queries.activeDurationQuery(activeHistorySources(this), query_options);
       const client = getClient();
       const signal = client.controller.signal;
       const data: IEvent[][] = [];
@@ -909,7 +916,7 @@ export const useActivityStore = defineStore('activity', {
       }
       const active_history = _.zipObject(
         periods,
-        _.map(data, pair => _.filter(pair, e => e.data.status == 'not-afk'))
+        data.map(events => events.map(e => ({ ...e, data: { ...e.data, status: 'not-afk' } })))
       );
       this.query_active_history_completed({ active_history });
     },
