@@ -4,7 +4,6 @@ import { split_by_hour_into_data } from '~/util/transforms';
 import { getColorFromCategory } from '~/util/color';
 import { Category } from '~/util/classes';
 import { IEvent } from './interfaces';
-import { useCategoryStore } from '~/stores/categories';
 
 interface HourlyData {
   cat_events: IEvent[];
@@ -13,44 +12,35 @@ interface HourlyData {
 interface Dataset {
   label: string;
   backgroundColor: string;
-  data: number[];
+  data: (number | null)[];
 }
 
 export function buildBarchartDataset(data_by_hour: HourlyData[], classes: Category[]): Dataset[] {
-  const SEP = '>>>';
   const data = data_by_hour;
   if (data) {
     const category_names: Set<string> = new Set(
       Object.values(data)
         .map(result => {
-          return result.cat_events.map(e => e.data['$category'].join(SEP));
+          return result.cat_events.map(e => JSON.stringify(e.data['$category'] || []));
         })
         .flat()
     );
-    const ds: Dataset[] = [...category_names]
-      .map(c_ => {
-        const categoryStore = useCategoryStore();
-        const c = categoryStore.get_category(c_.split(SEP));
+    const ds: Dataset[] = [...category_names].map(c_ => {
+      const path: string[] = JSON.parse(c_);
+      const c = classes.find(category => _.isEqual(category.name, path));
 
-        if (c) {
-          const values = Object.values(data).map(results => {
-            const cat = results.cat_events.find(e => _.isEqual(e.data['$category'], c.name));
-            if (cat) return Math.round((cat.duration / (60 * 60)) * 1000) / 1000;
-            else return null;
-          });
-          return {
-            label: c.name.join(' > '),
-            backgroundColor: getColorFromCategory(c, classes),
-            data: values,
-          } as Dataset;
-        } else {
-          // FIXME: This shouldn't happen
-          // This may for example happen if one doesn't have an 'Uncategorized' category,
-          // as can happen when one upgrades from an old version where there wasn't one in the default classes.
-          console.error('missing category:', c_);
-        }
-      })
-      .filter(x => x);
+      const values = Object.values(data).map(results => {
+        const events = results.cat_events.filter(e => _.isEqual(e.data['$category'] || [], path));
+        if (events.length)
+          return Math.round((_.sumBy(events, 'duration') / (60 * 60)) * 1000) / 1000;
+        else return null;
+      });
+      return {
+        label: path.length ? path.join(' > ') : 'Uncategorized',
+        backgroundColor: getColorFromCategory(c, classes),
+        data: values,
+      } as Dataset;
+    });
     return ds;
   } else {
     return [];
