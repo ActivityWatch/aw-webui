@@ -65,7 +65,7 @@ function mountEditor({ event = makeEvent(), replaceEvent, deleteEvent } = {}) {
 describe('EventEditor save', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'error').mockImplementation(jest.fn());
   });
 
   afterEach(() => {
@@ -73,9 +73,9 @@ describe('EventEditor save', () => {
   });
 
   test('does not emit save or close while the request is in flight', async () => {
-    const pending = deferred();
+    const inFlight = deferred();
     const { wrapper } = mountEditor({
-      replaceEvent: jest.fn().mockReturnValue(pending.promise),
+      replaceEvent: jest.fn().mockReturnValue(inFlight.promise),
     });
     await flush();
     const hide = jest.spyOn(wrapper.vm.$refs.eventEditModal, 'hide');
@@ -87,7 +87,7 @@ describe('EventEditor save', () => {
     expect(hide).not.toHaveBeenCalled();
     expect(wrapper.vm.busy).toBe(true);
 
-    pending.resolve();
+    inFlight.resolve();
     await flush();
   });
 
@@ -114,7 +114,9 @@ describe('EventEditor save', () => {
     await flush();
 
     const order = [];
-    jest.spyOn(wrapper.vm.$refs.eventEditModal, 'hide').mockImplementation(() => order.push('hide'));
+    jest
+      .spyOn(wrapper.vm.$refs.eventEditModal, 'hide')
+      .mockImplementation(() => order.push('hide'));
     wrapper.vm.$on('save', () => order.push('emit'));
 
     await wrapper.vm.save();
@@ -177,8 +179,8 @@ describe('EventEditor save', () => {
   });
 
   test('repeated clicks while pending cause only one request', async () => {
-    const pending = deferred();
-    const replaceEvent = jest.fn().mockReturnValue(pending.promise);
+    const inFlight = deferred();
+    const replaceEvent = jest.fn().mockReturnValue(inFlight.promise);
     const { wrapper } = mountEditor({ replaceEvent });
     await flush();
 
@@ -189,7 +191,7 @@ describe('EventEditor save', () => {
 
     expect(replaceEvent).toHaveBeenCalledTimes(1);
 
-    pending.resolve();
+    inFlight.resolve();
     await Promise.all([first, second, third]);
     await flush();
 
@@ -198,8 +200,8 @@ describe('EventEditor save', () => {
   });
 
   test('a late response is ignored once the editor moved to another event', async () => {
-    const pending = deferred();
-    const replaceEvent = jest.fn().mockReturnValue(pending.promise);
+    const inFlight = deferred();
+    const replaceEvent = jest.fn().mockReturnValue(inFlight.promise);
     const { wrapper } = mountEditor({ replaceEvent });
     await flush();
 
@@ -210,7 +212,7 @@ describe('EventEditor save', () => {
     wrapper.setProps({ event: makeEvent(2) });
     await flush();
 
-    pending.resolve();
+    inFlight.resolve();
     await save;
     await flush();
 
@@ -220,7 +222,7 @@ describe('EventEditor save', () => {
 
 describe('EventEditor delete', () => {
   beforeEach(() => {
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'error').mockImplementation(jest.fn());
   });
 
   afterEach(() => {
@@ -228,9 +230,9 @@ describe('EventEditor delete', () => {
   });
 
   test('does not emit delete while the request is in flight', async () => {
-    const pending = deferred();
+    const inFlight = deferred();
     const { wrapper } = mountEditor({
-      deleteEvent: jest.fn().mockReturnValue(pending.promise),
+      deleteEvent: jest.fn().mockReturnValue(inFlight.promise),
     });
     await flush();
     const hide = jest.spyOn(wrapper.vm.$refs.eventEditModal, 'hide');
@@ -241,7 +243,7 @@ describe('EventEditor delete', () => {
     expect(wrapper.emitted('delete')).toBeUndefined();
     expect(hide).not.toHaveBeenCalled();
 
-    pending.resolve();
+    inFlight.resolve();
     await flush();
   });
 
@@ -274,8 +276,8 @@ describe('EventEditor delete', () => {
   });
 
   test('repeated delete clicks while pending cause only one request', async () => {
-    const pending = deferred();
-    const deleteEvent = jest.fn().mockReturnValue(pending.promise);
+    const inFlight = deferred();
+    const deleteEvent = jest.fn().mockReturnValue(inFlight.promise);
     const { wrapper } = mountEditor({ deleteEvent });
     await flush();
 
@@ -283,7 +285,7 @@ describe('EventEditor delete', () => {
     const second = wrapper.vm.delete_();
     expect(deleteEvent).toHaveBeenCalledTimes(1);
 
-    pending.resolve();
+    inFlight.resolve();
     await Promise.all([first, second]);
     expect(deleteEvent).toHaveBeenCalledTimes(1);
   });
@@ -305,9 +307,9 @@ describe('EventEditor cancel', () => {
   });
 
   test('does not close while a request is pending', async () => {
-    const pending = deferred();
+    const inFlight = deferred();
     const { wrapper } = mountEditor({
-      replaceEvent: jest.fn().mockReturnValue(pending.promise),
+      replaceEvent: jest.fn().mockReturnValue(inFlight.promise),
     });
     await flush();
     const hide = jest.spyOn(wrapper.vm.$refs.eventEditModal, 'hide');
@@ -319,14 +321,14 @@ describe('EventEditor cancel', () => {
     expect(hide).not.toHaveBeenCalled();
     expect(wrapper.emitted('close')).toBeUndefined();
 
-    pending.resolve();
+    inFlight.resolve();
     await flush();
   });
 
   test('dismissal is blocked only while busy', async () => {
-    const pending = deferred();
+    const inFlight = deferred();
     const { wrapper } = mountEditor({
-      replaceEvent: jest.fn().mockReturnValue(pending.promise),
+      replaceEvent: jest.fn().mockReturnValue(inFlight.promise),
     });
     await flush();
 
@@ -341,7 +343,7 @@ describe('EventEditor cancel', () => {
     expect(modal.props('noCloseOnBackdrop')).toBe(true);
     expect(modal.props('hideHeaderClose')).toBe(true);
 
-    pending.resolve();
+    inFlight.resolve();
     await flush();
   });
 });
@@ -349,7 +351,7 @@ describe('EventEditor cancel', () => {
 describe('EventEditor inside a parent that reacts to success', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'error').mockImplementation(jest.fn());
   });
 
   afterEach(() => {

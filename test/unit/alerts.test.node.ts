@@ -22,10 +22,9 @@ describe('cleanAlertGoal', () => {
   });
 
   test('keeps nested category paths', () => {
-    expect(cleanAlertGoal({ name: 'Code', category: ['Work', 'Code'], goal: 30 }).category).toEqual([
-      'Work',
-      'Code',
-    ]);
+    expect(cleanAlertGoal({ name: 'Code', category: ['Work', 'Code'], goal: 30 }).category).toEqual(
+      ['Work', 'Code']
+    );
   });
 
   test('copies the category array rather than aliasing the input', () => {
@@ -74,12 +73,14 @@ describe('cleanAlertGoals', () => {
     expect(cleanAlertGoals([])).toEqual([]);
   });
 
-  test.each([['a string', 'nope'], ['an object', { name: 'Work' }], ['null', null], ['undefined', undefined]])(
-    'returns an empty list for %s',
-    (_label, candidate) => {
-      expect(cleanAlertGoals(candidate)).toEqual([]);
-    }
-  );
+  test.each([
+    ['a string', 'nope'],
+    ['an object', { name: 'Work' }],
+    ['null', null],
+    ['undefined', undefined],
+  ])('returns an empty list for %s', (_label, candidate) => {
+    expect(cleanAlertGoals(candidate)).toEqual([]);
+  });
 });
 
 describe('getDefaultAlertGoals', () => {
