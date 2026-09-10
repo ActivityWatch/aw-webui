@@ -5,7 +5,7 @@ import { map, filter, values, groupBy, sortBy, flow, reverse } from 'lodash/fp';
 import { IEvent } from '~/util/interfaces';
 
 import { window_events } from '~/util/fakedata';
-import queries from '~/queries';
+import queries, { ActivityQuerySource } from '~/queries';
 import { get_day_start_with_offset } from '~/util/time';
 import {
   TimePeriod,
@@ -42,6 +42,27 @@ function timeperiodsStrsMonthsOfPeriod(timeperiod: TimePeriod): string[] {
 
 function timeperiodStrsAroundTimeperiod(timeperiod: TimePeriod): string[] {
   return timeperiodsAroundTimeperiod(timeperiod).map(timeperiodToStr);
+}
+
+function activeHistorySources(state: State, options: QueryOptions): ActivityQuerySource[] {
+  if (!useSettingsStore().useMultidevice) {
+    return state.buckets.afk.slice(0, 1).map(bid_afk => ({
+      bid_afk,
+      bid_window: state.buckets.window[0],
+      bid_browsers: state.buckets.browser,
+    }));
+  }
+  const buckets = useBucketsStore();
+  return buckets.hosts
+    .filter(host => host && (!host.startsWith('fakedata') || options.host.startsWith('fakedata')))
+    .sort()
+    .flatMap(host =>
+      buckets.bucketsAFK(host).map(bid_afk => ({
+        bid_afk,
+        bid_window: buckets.bucketsWindow(host)[0],
+        bid_browsers: buckets.bucketsBrowser(host),
+      }))
+    );
 }
 
 function colorCategories(events: IEvent[]): IEvent[] {
@@ -469,39 +490,23 @@ export const useActivityStore = defineStore('activity', {
     },
 
     async query_active_history({ timeperiod, ...query_options }: QueryOptions) {
-      const settingsStore = useSettingsStore();
-      const bucketsStore = useBucketsStore();
       // Filter out periods that are already in the history, and that are in the future
       const periods = timeperiodStrsAroundTimeperiod(timeperiod).filter(tp_str => {
         return (
           !_.includes(this.active.history, tp_str) && new Date(tp_str.split('/')[0]) < new Date()
         );
       });
-      let afk_buckets: string[] = [];
-      if (settingsStore.useMultidevice) {
-        // get all hostnames that qualify for the multidevice query
-        const hostnames = bucketsStore.hosts.filter(
-          // require that the host has afk buckets,
-          // and that the host is not a fakedata host,
-          // unless we're explicitly querying fakedata
-          host =>
-            host &&
-            bucketsStore.bucketsAFK(host).length > 0 &&
-            (!host.startsWith('fakedata') || query_options.host.startsWith('fakedata'))
-        );
-        // get all afk buckets for all hosts
-        afk_buckets = _.flatten(hostnames.map(bucketsStore.bucketsAFK));
-      } else {
-        afk_buckets = [this.buckets.afk[0]];
-      }
-      const query = queries.activityQuery(afk_buckets);
+      const query = queries.activeDurationQuery(
+        activeHistorySources(this, query_options),
+        query_options
+      );
       const data = await getClient().query(periods, query, {
         name: 'activityQuery',
         verbose: true,
       });
       const active_history = _.zipObject(
         periods,
-        _.map(data, pair => _.filter(pair, e => e.data.status == 'not-afk'))
+        data.map(events => events.map(e => ({ ...e, data: { ...e.data, status: 'not-afk' } })))
       );
       this.query_active_history_completed({ active_history });
     },
