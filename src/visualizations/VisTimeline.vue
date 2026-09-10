@@ -170,6 +170,9 @@ export default {
     },
   },
   watch: {
+    swimlane() {
+      this.update();
+    },
     buckets() {
       // For some reason, an object is passed here, after which the correct array arrives
       if (this.buckets.length === undefined) {
