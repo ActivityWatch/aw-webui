@@ -281,9 +281,13 @@ function update(
         drawClock(start_hour, start_min, `${root_start.format('HH:mm')} ☀`);
       }
 
-      // TODO: Draw only if showing today
+      // Only mark "Now" when the current instant falls inside the displayed
+      // day, so historical and future periods get no marker. Start-inclusive,
+      // end-exclusive against the whole-day bounds computed above.
       const now = moment();
-      drawClock(now.hour(), now.minute(), 'Now');
+      if (!now.isBefore(root_start) && now.isBefore(root_end)) {
+        drawClock(now.hour(), now.minute(), 'Now');
+      }
     }
 
     nodes = root_node

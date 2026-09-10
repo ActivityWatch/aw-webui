@@ -468,9 +468,7 @@ export function editorActivityQuery(editorbuckets: string[]): string[] {
 
 // Returns a query that yields a single event with the duration set to
 // the sum of all non-afk time in the queried period
-// TODO: Would ideally account for `filter_afk` and `always_active_pattern`
-// TODO: rename to something like `activeDurationQuery`
-// FIXME: Doesn't respect audible-as-active and always-active-pattern
+// AFK-only fallback for hosts without window/browser activity.
 export function activityQuery(afkbuckets: string[]): string[] {
   let q = ['not_afk = [];'];
   for (const afkbucket of afkbuckets) {
@@ -482,6 +480,64 @@ export function activityQuery(afkbuckets: string[]): string[] {
   }
   q = q.concat(['not_afk = merge_events_by_keys(not_afk, ["status"]);', 'RETURN = not_afk;']);
   return q;
+}
+
+export interface ActivityQuerySource {
+  bid_afk: string;
+  bid_window?: string;
+  bid_browsers?: string[];
+}
+
+export interface ActivityQueryOptions {
+  filter_afk?: boolean;
+  include_audible?: boolean;
+  always_active_pattern?: string;
+}
+
+// History measures active evidence, independent of category filters. With AFK
+// filtering disabled it measures window coverage instead. Union periods before
+// returning them so overlapping evidence and devices are counted only once.
+export function activeDurationQuery(
+  sources: ActivityQuerySource[],
+  options: ActivityQueryOptions = {}
+): string[] {
+  let code = 'history_events = [];';
+  for (const source of sources) {
+    if (source.bid_window) {
+      code += canonicalEvents({
+        ...options,
+        filter_afk: options.filter_afk !== false,
+        bid_window: escape_doublequote(source.bid_window),
+        bid_afk: escape_doublequote(source.bid_afk),
+        bid_browsers: (source.bid_browsers || []).map(escape_doublequote),
+        always_active_pattern: options.always_active_pattern
+          ? escape_doublequote(options.always_active_pattern)
+          : undefined,
+        categories: null,
+        filter_categories: null,
+      });
+      code += `history_events = union_no_overlap(history_events, ${
+        options.filter_afk === false ? 'events' : 'not_afk'
+      });`;
+    } else {
+      // No window source means there is no app/title or browser context; retain
+      // the observed AFK signal even when filter_afk is disabled.
+      //
+      // Built inline rather than via activityQuery, whose trailing
+      // merge_events_by_keys(not_afk, ["status"]) collapses every not-afk
+      // period into one event carrying the first timestamp and the summed
+      // duration. That is no longer an interval, so unioning it against
+      // another source's real periods trims time that was never concurrent,
+      // and multidevice with an AFK-only host under-counted.
+      const bid_afk = escape_doublequote(source.bid_afk);
+      code += `
+        not_afk = flood(${queryBucket(bid_afk)});
+        not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);
+      `;
+      code += 'history_events = union_no_overlap(history_events, not_afk);';
+    }
+  }
+  return querystr_to_array(code + 'RETURN = history_events;');
 }
 
 // Equivalent function to activityQuery, but for Android (which doesn't have an afk bucket)
@@ -508,6 +564,7 @@ export default {
   multideviceQuery,
   appQuery,
   activityQuery,
+  activeDurationQuery,
   activityQueryAndroid,
   categoryQuery,
   editorActivityQuery,

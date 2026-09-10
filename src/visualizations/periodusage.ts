@@ -2,7 +2,9 @@ import * as d3 from 'd3';
 import _ from 'lodash';
 import moment from 'moment';
 
-import { seconds_to_duration, get_hour_offset } from '../util/time.ts';
+import { seconds_to_duration } from '../util/time.ts';
+import { TimePeriod, timeperiodToStr } from '../util/timeperiod';
+import { IEvent } from '../util/interfaces';
 
 function create(svg_elem: SVGElement) {
   // Clear element
@@ -29,11 +31,15 @@ const diagramcolor = '#aaa';
 const diagramcolor_selected = '#fc5';
 const diagramcolor_focused = '#adf';
 
-function update(svg_elem: SVGElement, usage_arr, onPeriodClicked) {
+function update(
+  svg_elem: SVGElement,
+  usage_arr: { period: TimePeriod; events: IEvent[] }[],
+  onPeriodClicked: (period: TimePeriod) => void
+) {
   const dateformat = 'YYYY-MM-DD';
 
-  // No apps, sets status to "No data"
-  if (usage_arr.length <= 0) {
+  // No periods at all, sets status to "No data"
+  if (!usage_arr || usage_arr.length <= 0) {
     set_status(svg_elem, 'No data');
     return;
   }
@@ -41,36 +47,41 @@ function update(svg_elem: SVGElement, usage_arr, onPeriodClicked) {
   const svg = d3.select(svg_elem);
 
   function get_usage_time(day_events) {
-    const day_event = _.head(_.filter(day_events, e => e.data.status == 'not-afk'));
-    return day_event != undefined ? day_event.duration : 0;
+    return _.sumBy(
+      day_events.filter(e => e.data.status === 'not-afk'),
+      'duration'
+    );
   }
 
-  const usage_times = usage_arr.map(day_events => get_usage_time(day_events));
+  const usage_times = usage_arr.map(({ events }) => get_usage_time(events));
   let longest_usage = Math.max.apply(null, usage_times);
   // Avoid division by zero
   if (longest_usage <= 0) {
     longest_usage = 0.00000000001;
   }
 
-  const padding = 0.3 * (100 / (usage_arr.length - 1));
+  const padding = 0.3 * (100 / usage_arr.length);
   const width = 100 / usage_arr.length - padding;
   const center_elem = Math.floor(usage_arr.length / 2);
 
-  _.each(usage_arr, (events, i: number) => {
+  const now = moment();
+  _.each(usage_arr, ({ period, events }, i: number) => {
     const usage_time = get_usage_time(events);
     const height = 85 * (usage_time / longest_usage);
-    let date = '';
-    if (events.length > 0) {
-      // slice off so it's only the day
-      date = moment(events[0].timestamp).subtract(get_hour_offset(), 'hours').format(dateformat);
-    }
+    const [start, end] = timeperiodToStr(period)
+      .split('/')
+      .map(value => moment(value));
+    const date = start.format(dateformat);
+    const label =
+      period.length[0] === 1 && period.length[1].startsWith('day')
+        ? date
+        : `${date} – ${end.clone().subtract(1, 'day').format(dateformat)}`;
     const color = i === center_elem ? diagramcolor_selected : diagramcolor;
     const offset = 50;
 
     const x = i * padding + i * width + 0.25 * width;
 
-    // FIXME: Doesn't work well, notably breaks on last7d and last30d
-    if (moment(date).isSame(moment(), 'day')) {
+    if (now.isSameOrAfter(start) && now.isBefore(end)) {
       svg
         .append('line')
         .attr('x1', x + width / 2 + '%')
@@ -82,7 +93,8 @@ function update(svg_elem: SVGElement, usage_arr, onPeriodClicked) {
 
       svg
         .append('text')
-        .attr('x', x + 1.5 * width + '%')
+        .attr('x', x + width / 2 + '%')
+        .attr('text-anchor', 'middle')
         .attr('y', '30')
         .text('Today');
     }
@@ -109,9 +121,9 @@ function update(svg_elem: SVGElement, usage_arr, onPeriodClicked) {
         rect.style('fill', e.target.attributes.color.value);
       })
       .on('click', function () {
-        onPeriodClicked(date);
+        onPeriodClicked(period);
       });
-    rect.append('title').text(date + '\n' + seconds_to_duration(usage_time));
+    rect.append('title').text(label + '\n' + seconds_to_duration(usage_time));
   });
 }
 
