@@ -51,7 +51,7 @@ div
         title="More ranges"
         aria-label="More date ranges"
       )
-        template(v-slot:button-content)
+        template(v-slot:button-content="")
           icon(name="ellipsis-v")
         b-dropdown-item-button(
           v-for="opt in extendedPeriods"
@@ -117,7 +117,7 @@ div
         b-form-select(v-model="filter_category", :options="categoryStore.category_select(true)" size="sm")
 
 
-  aw-periodusage(:periodusage_arr="periodusage", @update="setDate")
+  aw-periodusage(:periodusage_arr="periodusage", @update="setUsagePeriod")
 
   aw-uncategorized-notification(:periodLength="periodLength")
 
@@ -212,7 +212,7 @@ div
 import { mapState } from 'pinia';
 import moment from 'moment';
 import { get_day_start_with_offset, get_today_with_offset } from '~/util/time';
-import { periodLengthConvertMoment } from '~/util/timeperiod';
+import { TimePeriod, periodLengthConvertMoment } from '~/util/timeperiod';
 import _ from 'lodash';
 
 import 'vue-awesome/icons/arrow-left';
@@ -476,6 +476,13 @@ export default {
         .format('YYYY-MM-DD');
     },
 
+    setUsagePeriod: function (period: TimePeriod) {
+      const anchor = moment(period.start);
+      if (this.periodLength === 'last7d' || this.periodLength === 'last30d') {
+        anchor.add(period.length[0] - 1, 'days');
+      }
+      this.setDate(anchor.format('YYYY-MM-DD'));
+    },
     setDate: function (date, periodLength) {
       // periodLength is an optional argument, default to this.periodLength
       if (!periodLength) {
@@ -514,6 +521,8 @@ export default {
       } else if (periodLength == '30 days') {
         periodLength = 'last30d';
         new_date = anchorDate.clone().add(1, 'days').format('YYYY-MM-DD');
+      } else if (periodLength === 'last7d' || periodLength === 'last30d') {
+        new_date = anchorDate.format('YYYY-MM-DD');
       } else {
         const new_period_length_moment = periodLengthConvertMoment(periodLength);
         new_date = anchorDate.clone().startOf(new_period_length_moment).format('YYYY-MM-DD');

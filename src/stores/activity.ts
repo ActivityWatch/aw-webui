@@ -239,17 +239,11 @@ export const useActivityStore = defineStore('activity', {
 
   getters: {
     getActiveHistoryAroundTimeperiod(this: State) {
-      return (timeperiod: TimePeriod): IEvent[][] => {
-        const periods = timeperiodStrsAroundTimeperiod(timeperiod);
-        const _history = periods.map(tp => {
-          if (_.has(this.active.history, tp)) {
-            return this.active.history[tp];
-          } else {
-            // A zero-duration placeholder until new data has been fetched
-            return [{ timestamp: moment(tp.split('/')[0]).format(), duration: 0, data: {} }];
-          }
-        });
-        return _history;
+      return (timeperiod: TimePeriod) => {
+        return timeperiodsAroundTimeperiod(timeperiod).map(period => ({
+          period,
+          events: this.active.history[timeperiodToStr(period)] || [],
+        }));
       };
     },
     uncategorizedDuration(this: State): [number, number] | null {
