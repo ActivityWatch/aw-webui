@@ -183,3 +183,44 @@ describe('timeline teardown', () => {
     expect(() => mount()).not.toThrow();
   });
 });
+
+// Exercise the viewport/DataSet integration without constructing browser layout.
+test('panning preserves item IDs and editing uses the original bucket and event', async () => {
+  const vm = { ...VisTimeline.data(), ...VisTimeline.methods };
+  VisTimeline.created.call(vm);
+  const event = {
+    id: 42,
+    timestamp: '2020-01-01T00:00:00Z',
+    duration: 20,
+    data: { status: 'not-afk' },
+  };
+  vm.bucketsFromEither = [{ id: 'afk-host', type: 'afkstatus', events: [event] }];
+  vm.eventIndex = VisTimeline.computed.eventIndex.call(vm);
+  const start = new Date(event.timestamp).getTime();
+  vm.timeline = {
+    getWindow: () => ({ start: new Date(start), end: new Date(start + 10000) }),
+    setOptions: jest.fn(),
+    setWindow: jest.fn(),
+  };
+  vm.update();
+  const ids = vm.itemData.getIds();
+  expect(ids).toHaveLength(1);
+  const update = jest.spyOn(vm.itemData, 'update');
+  vm.update(false);
+  expect(update).not.toHaveBeenCalled();
+  expect(vm.itemData.get(ids[0]).title).toBeUndefined();
+  expect(vm.tooltipForItem(ids[0])).toContain('Duration');
+  vm.$aw = { getEvent: jest.fn().mockResolvedValue(event) };
+  vm.$nextTick = jest.fn();
+  vm.editRefreshHintDismissed = () => true;
+  await vm.onSelect({ items: ids });
+  expect(vm.$aw.getEvent).toHaveBeenCalledWith('afk-host', 42);
+  vm.timeline.getWindow = () => ({
+    start: new Date(start + 100000),
+    end: new Date(start + 110000),
+  });
+  vm.update(false);
+  expect(vm.itemData.getIds()).toEqual([]);
+  // The group remains present while passing through a gap.
+  expect(vm.groupData.getIds()).toEqual(['afk-host']);
+});
