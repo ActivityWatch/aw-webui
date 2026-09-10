@@ -150,3 +150,36 @@ describe('VisTimeline zoom-anchor regression (#847)', () => {
     });
   });
 });
+
+describe('timeline teardown', () => {
+  test('destroys the library instance and releases the wheel listener', () => {
+    const el = { removeEventListener: jest.fn() };
+    const destroy = jest.fn();
+    const vm = {
+      $el: { querySelector: () => el },
+      timeline: { destroy },
+      onHorizontalWheel: jest.fn(),
+    };
+    VisTimeline.beforeDestroy.call(vm);
+    expect(destroy).toHaveBeenCalledTimes(1);
+    expect(vm.timeline).toBeNull();
+    expect(el.removeEventListener).toHaveBeenCalledWith('wheel', vm.onHorizontalWheel, {
+      capture: true,
+    });
+    VisTimeline.beforeDestroy.call(vm);
+    expect(destroy).toHaveBeenCalledTimes(1);
+  });
+
+  test('does not create an instance after destruction while nextTick is pending', () => {
+    let mount;
+    const vm = {
+      $nextTick: callback => {
+        mount = callback;
+      },
+      _isDestroyed: false,
+    };
+    VisTimeline.mounted.call(vm);
+    vm._isDestroyed = true;
+    expect(() => mount()).not.toThrow();
+  });
+});

@@ -192,6 +192,7 @@ export default {
   },
   mounted() {
     this.$nextTick(() => {
+      if (this._isDestroyed || this._isBeingDestroyed) return;
       const el = this.$el.querySelector('#visualization');
       el.addEventListener('wheel', this.onHorizontalWheel, {
         capture: true,
@@ -212,6 +213,10 @@ export default {
     const el = this.$el.querySelector('#visualization');
     if (el) {
       el.removeEventListener('wheel', this.onHorizontalWheel, { capture: true });
+    }
+    if (this.timeline) {
+      this.timeline.destroy();
+      this.timeline = null;
     }
   },
   methods: {
