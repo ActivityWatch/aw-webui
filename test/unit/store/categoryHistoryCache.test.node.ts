@@ -72,3 +72,28 @@ test('skips history for views that do not consume it', async () => {
   await store.ensure_loaded({ ...options, include_category_history: true });
   expect(historySpy).toHaveBeenCalledTimes(1);
 });
+
+test('skipped loads keep history only while its inputs are unchanged', async () => {
+  const { store, options } = setup();
+  jest.spyOn(useSettingsStore(), 'ensureLoaded').mockResolvedValue();
+  jest.spyOn(useBucketsStore(), 'ensureLoaded').mockResolvedValue();
+  jest.spyOn(store, 'get_buckets').mockResolvedValue();
+  jest.spyOn(store, 'query_desktop_full').mockResolvedValue();
+  jest.spyOn(store, 'query_active_history').mockResolvedValue();
+
+  await store.ensure_loaded({ ...options, include_category_history: true });
+  const loaded = store.category.by_period;
+  expect(loaded).not.toBeNull();
+
+  // Same inputs: a view that doesn't render history leaves it in place for
+  // consumers like Report that read it without reloading.
+  await store.ensure_loaded({ ...options, include_category_history: false });
+  expect(store.category.by_period).toBe(loaded);
+
+  // Changed category rules alter the query, so the retained periods no longer
+  // describe the current data and must be dropped even though the range and
+  // filters are unchanged.
+  useCategoryStore().classes = [{ name: ['Work'], rule: { type: 'regex', regex: 'vim' } }];
+  await store.ensure_loaded({ ...options, include_category_history: false });
+  expect(store.category.by_period).toBeNull();
+});
