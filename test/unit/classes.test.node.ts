@@ -130,3 +130,40 @@ test('normalizeSelectKeys rejects empty lists', () => {
   expect(classes.normalizeSelectKeys(null)).toBeUndefined();
   expect(classes.normalizeSelectKeys(['app', 'title'])).toEqual(['app', 'title']);
 });
+
+describe('compiled category rule reuse', () => {
+  test('reuses regex objects while respecting in-place rule edits', () => {
+    const cats: Category[] = [{ name: ['Work'], rule: { type: 'regex', regex: '^vim$' } }];
+    const construct = jest.spyOn(global, 'RegExp');
+    try {
+      expect(classes.matchString('vim', cats)).toBe(cats[0]);
+      expect(classes.matchString('other', cats)).toBeNull();
+      expect(construct).toHaveBeenCalledTimes(1);
+      cats[0].rule.ignore_case = true;
+      expect(classes.matchString('VIM', cats)).toBe(cats[0]);
+      cats[0].rule.regex = '^code$';
+      expect(classes.matchString('vim', cats)).toBeNull();
+      expect(classes.matchString('CODE', cats)).toBe(cats[0]);
+      expect(construct).toHaveBeenCalledTimes(3);
+    } finally {
+      construct.mockRestore();
+    }
+  });
+
+  test('refreshes edited selectors and ranking without stale matches', () => {
+    const cats: Category[] = [
+      { name: ['First'], rule: { type: 'regex', regex: 'vim', select_keys: ['app'] } },
+      { name: ['Second'], rule: { type: 'regex', regex: 'vim' } },
+    ];
+    const event: IEvent = { timestamp: '', duration: 1, data: { app: 'vim', title: 'other' } };
+    expect(classes.matchString('vim', cats, event)).toBe(cats[0]);
+    cats[0].rule.select_keys[0] = 'title';
+    expect(classes.matchString('vim', cats, event)).toBe(cats[1]);
+    delete cats[0].rule.select_keys;
+    expect(classes.matchString('vim', cats, event)).toBe(cats[0]);
+    cats[1].rule.priority = 100;
+    expect(classes.matchString('vim', cats, event)).toBe(cats[1]);
+    cats[1].rule.type = 'none';
+    expect(classes.matchString('vim', cats, event)).toBe(cats[0]);
+  });
+});

@@ -22,6 +22,12 @@ import { useBucketsStore } from '~/stores/buckets';
 import { useCategoryStore } from '~/stores/categories';
 
 import { getClient } from '~/util/awclient';
+import { PeriodCache } from '~/util/periodCache';
+
+const categoryPeriodCaches = new WeakMap<object, PeriodCache<any>>();
+const categoryRequests = new WeakMap<object, object>();
+// Key of the request that produced the current category.by_period.
+const categoryHistoryKeys = new WeakMap<object, string>();
 import {
   FullDesktopQueryResult,
   mergeFullDesktopResults,
@@ -95,6 +101,7 @@ export interface QueryOptions {
   filter_afk?: boolean;
   include_audible?: boolean;
   include_stopwatch?: boolean;
+  include_category_history?: boolean;
   filter_categories?: string[][];
   dont_query_inactive?: boolean;
   force?: boolean;
@@ -337,8 +344,19 @@ export const useActivityStore = defineStore('activity', {
         }
 
         // Perform this last, as it takes the longest
-        if (this.window.available || this.android.available) {
+        const canQueryCategories = this.window.available || this.android.available;
+        if (canQueryCategories && query_options.include_category_history !== false) {
           await this.query_category_time_by_period(query_options);
+        } else if (
+          canQueryCategories &&
+          (query_options.force ||
+            categoryHistoryKeys.get(this) !== this.category_history_request(query_options).key)
+        ) {
+          // This load skipped category history, but the retained periods were
+          // computed for different inputs (range, filters, category rules or
+          // buckets), so they no longer describe the current query and must not
+          // be served to views like Report that read them without reloading.
+          this.query_category_time_by_period_completed({ by_period: null });
         }
       } else {
         console.warn(
@@ -405,6 +423,8 @@ export const useActivityStore = defineStore('activity', {
     },
 
     async reset() {
+      categoryRequests.delete(this);
+      categoryPeriodCaches.delete(this);
       getClient().abort();
       this.query_window_completed({});
       this.query_browser_completed({});
@@ -512,16 +532,18 @@ export const useActivityStore = defineStore('activity', {
       this.query_active_history_completed({ active_history });
     },
 
-    async query_category_time_by_period({
+    // The periods and query that category history is built from. The key
+    // identifies everything the result depends on, including the current
+    // category rules and resolved bucket IDs baked into the query.
+    category_history_request({
       timeperiod,
       filter_categories,
       filter_afk,
       include_stopwatch,
-      dontQueryInactive,
       always_active_pattern,
-    }: QueryOptions & { dontQueryInactive: boolean }) {
+    }: QueryOptions): { periods: string[]; query: string[]; key: string } {
       // TODO: Needs to be adapted for Android
-      let periods: string[];
+      let periods: string[] = [];
       const count = timeperiod.length[0];
       const res = timeperiod.length[1];
       if (res.startsWith('day') && count == 1) {
@@ -544,76 +566,74 @@ export const useActivityStore = defineStore('activity', {
       // Filter out periods that start in the future
       periods = periods.filter(period => new Date(period.split('/')[0]) < new Date());
 
+      // Prefer ScreenTime bucket over Android watcher for consistency with query_android
+      const iosBucketForCategory = this.buckets.android.find((id: string) =>
+        id.startsWith('aw-import-screentime')
+      );
+      const iosOrAndroidBucket = iosBucketForCategory || this.buckets.android[0];
+      const isAndroid = iosOrAndroidBucket !== undefined;
+      // ScreenTime (iOS) buckets carry a "title" key; aw-watcher-android buckets do not.
+      // Pass isIos so canonicalEvents uses the correct merge keys and titles are preserved.
+      const isIosForCategory = !!iosBucketForCategory;
+      const categories = useCategoryStore().classes_for_query;
+      // TODO: Clean up call, pass QueryParams in fullDesktopQuery as well
+      // TODO: Unify QueryOptions and QueryParams
+      const query = queries.categoryQuery({
+        bid_browsers: this.buckets.browser,
+        bid_stopwatch:
+          include_stopwatch && this.buckets.stopwatch.length > 0
+            ? this.buckets.stopwatch[0]
+            : undefined,
+        categories,
+        filter_categories,
+        filter_afk,
+        always_active_pattern,
+        ...(isAndroid
+          ? {
+              bid_android: iosOrAndroidBucket,
+              isIos: isIosForCategory,
+            }
+          : {
+              bid_afk: this.buckets.afk[0],
+              bid_window: this.buckets.window[0],
+            }),
+      });
+      return { periods, query, key: JSON.stringify([query, periods]) };
+    },
+
+    async query_category_time_by_period(query_options: QueryOptions) {
+      const { periods, query, key } = this.category_history_request(query_options);
+
+      const request = {};
+      categoryRequests.set(this, request);
       const signal = getClient().controller.signal;
-      let cancelled = false;
-      signal.onabort = () => {
-        cancelled = true;
-        console.debug('Request aborted');
-      };
+      let cache = categoryPeriodCaches.get(this);
+      if (!cache) {
+        cache = new PeriodCache();
+        categoryPeriodCaches.set(this, cache);
+      }
+      if (query_options.force) cache.clear();
 
-      // Query one period at a time, to avoid timeout on slow queries
-      let data = [];
+      const queryKey = JSON.stringify(query);
+      const data = [];
+      // Retain sequential requests to avoid long server queries/timeouts.
       for (const period of periods) {
-        // Not stable
-        //signal.throwIfAborted();
-        if (cancelled) {
-          throw signal['reason'] || 'unknown reason';
-        }
-
-        // Only query periods with known data from AFK bucket
-        if (dontQueryInactive && this.active.events.length > 0) {
-          const start = new Date(period.split('/')[0]);
-          const end = new Date(period.split('/')[1]);
-
-          // Retrieve active time in period
-          const period_activity = this.active.events.find((e: IEvent) => {
-            return start < new Date(e.timestamp) && new Date(e.timestamp) < end;
+        if (signal.aborted || categoryRequests.get(this) !== request) return;
+        const periodKey = JSON.stringify([queryKey, period]);
+        const periodClosed = new Date(period.split('/')[1]).getTime() <= Date.now();
+        let result = periodClosed ? cache.get(periodKey) : undefined;
+        if (result === undefined) {
+          const revision = cache.version;
+          const response = await getClient().query([period], query, {
+            cache: false, // This bounded cache owns freshness and invalidation.
+            name: 'categoryQuery',
           });
-
-          // Check if there was active time
-          if (!(period_activity && period_activity.duration > 0)) {
-            data = data.concat([{ cat_events: [] }]);
-            continue;
-          }
+          if (signal.aborted || categoryRequests.get(this) !== request) return;
+          result = response[0];
+          if (periodClosed && result !== undefined && revision === cache.version)
+            cache.set(periodKey, result);
         }
-
-        // Prefer ScreenTime bucket over Android watcher for consistency with query_android
-        const iosBucketForCategory = this.buckets.android.find((id: string) =>
-          id.startsWith('aw-import-screentime')
-        );
-        const iosOrAndroidBucket = iosBucketForCategory || this.buckets.android[0];
-        const isAndroid = iosOrAndroidBucket !== undefined;
-        // ScreenTime (iOS) buckets carry a "title" key; aw-watcher-android buckets do not.
-        // Pass isIos so canonicalEvents uses the correct merge keys and titles are preserved.
-        const isIosForCategory = !!iosBucketForCategory;
-        const categories = useCategoryStore().classes_for_query;
-        // TODO: Clean up call, pass QueryParams in fullDesktopQuery as well
-        // TODO: Unify QueryOptions and QueryParams
-        const query = queries.categoryQuery({
-          bid_browsers: this.buckets.browser,
-          bid_stopwatch:
-            include_stopwatch && this.buckets.stopwatch.length > 0
-              ? this.buckets.stopwatch[0]
-              : undefined,
-          categories,
-          filter_categories,
-          filter_afk,
-          always_active_pattern,
-          ...(isAndroid
-            ? {
-                bid_android: iosOrAndroidBucket,
-                isIos: isIosForCategory,
-              }
-            : {
-                bid_afk: this.buckets.afk[0],
-                bid_window: this.buckets.window[0],
-              }),
-        });
-        const result = await getClient().query([period], query, {
-          verbose: true,
-          name: 'categoryQuery',
-        });
-        data = data.concat(result);
+        data.push(result);
       }
 
       // Zip periods
@@ -621,7 +641,7 @@ export const useActivityStore = defineStore('activity', {
       // Filter out values that are undefined (no longer needed, only used when visualization was progressive (looks buggy))
       by_period = _.fromPairs(_.toPairs(by_period).filter(o => o[1]));
 
-      this.query_category_time_by_period_completed({ by_period });
+      this.query_category_time_by_period_completed({ by_period, key });
     },
 
     async query_active_history_android({ timeperiod }: QueryOptions) {
@@ -763,6 +783,7 @@ export const useActivityStore = defineStore('activity', {
 
     // mutations
     start_loading(this: State, query_options: QueryOptions) {
+      categoryRequests.delete(this);
       this.loaded = true;
       this.query_options = query_options;
 
@@ -781,7 +802,13 @@ export const useActivityStore = defineStore('activity', {
       this.editor.top_projects = null;
 
       this.category.top = null;
-      this.category.by_period = null;
+      // When this load refreshes category history, clear it up front like the
+      // rest of the state. When it skips it, ensure_loaded decides after buckets
+      // resolve whether the retained periods still match the current query.
+      if (query_options.include_category_history !== false) {
+        this.category.by_period = null;
+        categoryHistoryKeys.delete(this);
+      }
 
       this.active.duration = null;
 
@@ -841,8 +868,13 @@ export const useActivityStore = defineStore('activity', {
       };
     },
 
-    query_category_time_by_period_completed(this: State, { by_period } = { by_period: [] }) {
+    query_category_time_by_period_completed(
+      this: State,
+      { by_period, key }: { by_period: any; key?: string } = { by_period: [] }
+    ) {
       this.category.by_period = by_period;
+      if (key) categoryHistoryKeys.set(this, key);
+      else categoryHistoryKeys.delete(this);
     },
   },
 });

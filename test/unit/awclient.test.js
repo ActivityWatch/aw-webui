@@ -1,6 +1,7 @@
 jest.mock('aw-client', () => ({
   AWClient: jest.fn().mockImplementation(() => ({
     req: {
+      interceptors: { response: { use: jest.fn() } },
       defaults: {
         headers: {
           common: {},
@@ -59,5 +60,19 @@ describe('awclient auth bootstrap', () => {
     );
     expect(client.req.defaults.headers.common.Authorization).toBe('Bearer secret');
     expect(window.location.search).toBe('');
+  });
+  test('invalidates period caches after writes but not query POSTs', async () => {
+    const { PeriodCache } = await import('~/util/periodCache');
+    const client = createClient(true);
+    const cache = new PeriodCache();
+    const onResponse = client.req.interceptors.response.use.mock.calls[0][0];
+    cache.set('period', 42);
+    onResponse({ config: { method: 'post', url: '/0/query/' } });
+    expect(cache.get('period')).toBe(42);
+    for (const url of ['/0/buckets/window/events', '/0/import']) {
+      cache.set('period', 42);
+      onResponse({ config: { method: 'post', url } });
+      expect(cache.get('period')).toBeUndefined();
+    }
   });
 });

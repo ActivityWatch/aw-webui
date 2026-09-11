@@ -1,4 +1,5 @@
 import { AWClient } from 'aw-client';
+import { invalidatePeriodCaches } from './periodCache';
 import type { AxiosInstance } from 'axios';
 
 import { useSettingsStore } from '~/stores/settings';
@@ -106,6 +107,15 @@ export function createClient(force?: boolean): AWClient {
     _client = new AWClient('aw-webui', {
       testing: !production,
       baseURL,
+    });
+    invalidatePeriodCaches();
+    _client.req.interceptors.response.use(response => {
+      const method = (response.config.method || 'get').toLowerCase();
+      const path = (response.config.url || '').split('?')[0];
+      if (!['get', 'head', 'options'].includes(method) && !/\/query\/?$/.test(path)) {
+        invalidatePeriodCaches();
+      }
+      return response;
     });
     applyApiToken(_client, loadApiTokenFromBrowser());
   } else {

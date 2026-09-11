@@ -270,6 +270,8 @@ export default {
       // stopwatch run produced "No data" unless they also flipped the
       // dev-only "Include manually logged events" checkbox.
       include_stopwatch: true,
+      refreshing: false,
+      refreshGeneration: 0,
       filter_afk: true,
       new_view: {},
     };
@@ -349,6 +351,9 @@ export default {
     currentView: function () {
       return this.views.find(v => v.id == this.$route.params.view_id) || this.views[0];
     },
+    needsCategoryHistory() {
+      return !!this.currentView?.elements.some(el => el.type === 'timeline_barchart');
+    },
     currentViewId: function () {
       // If localStore is not yet initialized, then currentView can be undefined. In that case, we return an empty string (which should route to the default view)
       return this.currentView !== undefined ? this.currentView.id : '';
@@ -423,6 +428,16 @@ export default {
     },
   },
   watch: {
+    async needsCategoryHistory(needed) {
+      if (
+        needed &&
+        !this.refreshing &&
+        this.activityStore.query_options?.timeperiod &&
+        (this.activityStore.window.available || this.activityStore.android.available)
+      ) {
+        await this.activityStore.query_category_time_by_period(this.activityStore.query_options);
+      }
+    },
     host: function () {
       this.refresh();
     },
@@ -535,10 +550,26 @@ export default {
         filter_afk: this.filter_afk,
         include_audible: this.include_audible,
         include_stopwatch: this.include_stopwatch,
+        include_category_history: this.needsCategoryHistory,
         filter_categories: this.filter_categories,
         always_active_pattern: this.always_active_pattern,
       };
-      await this.activityStore.ensure_loaded(queryOptions);
+      const generation = ++this.refreshGeneration;
+      this.refreshing = true;
+      try {
+        await this.activityStore.ensure_loaded(queryOptions);
+        // A view may finish loading or change while the main queries run.
+        if (
+          generation === this.refreshGeneration &&
+          this.needsCategoryHistory &&
+          !queryOptions.include_category_history &&
+          (this.activityStore.window.available || this.activityStore.android.available)
+        ) {
+          await this.activityStore.query_category_time_by_period(queryOptions);
+        }
+      } finally {
+        if (generation === this.refreshGeneration) this.refreshing = false;
+      }
     },
 
     load_demo: async function () {
