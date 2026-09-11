@@ -784,7 +784,13 @@ export const useActivityStore = defineStore('activity', {
       this.editor.top_projects = null;
 
       this.category.top = null;
-      this.category.by_period = null;
+      // Only clear cached category-period data when this load will actually
+      // refresh it; other views (e.g. Report) read this state without
+      // triggering their own reload, so an unrelated view skipping the
+      // category-history query shouldn't wipe it out from under them.
+      if (query_options.include_category_history !== false) {
+        this.category.by_period = null;
+      }
 
       this.active.duration = null;
 
