@@ -2,7 +2,6 @@ import { split_by_hour_into_data } from '~/util/transforms';
 import { getColorFromCategory } from '~/util/color';
 import { Category } from '~/util/classes';
 import { IEvent } from './interfaces';
-import { useCategoryStore } from '~/stores/categories';
 
 interface HourlyData {
   cat_events: IEvent[];

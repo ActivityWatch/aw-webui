@@ -66,9 +66,9 @@ test('skips history for views that do not consume it', async () => {
   jest.spyOn(store, 'get_buckets').mockResolvedValue();
   jest.spyOn(store, 'query_desktop_full').mockResolvedValue();
   jest.spyOn(store, 'query_active_history').mockResolvedValue();
-  const history = jest.spyOn(store, 'query_category_time_by_period').mockResolvedValue();
+  const historySpy = jest.spyOn(store, 'query_category_time_by_period').mockResolvedValue();
   await store.ensure_loaded({ ...options, include_category_history: false });
-  expect(history).not.toHaveBeenCalled();
+  expect(historySpy).not.toHaveBeenCalled();
   await store.ensure_loaded({ ...options, include_category_history: true });
-  expect(history).toHaveBeenCalledTimes(1);
+  expect(historySpy).toHaveBeenCalledTimes(1);
 });

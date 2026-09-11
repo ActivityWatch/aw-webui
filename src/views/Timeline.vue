@@ -146,17 +146,6 @@ export default {
       updateTimelineWindow: true,
     };
   },
-  created() {
-    // Keep request promises outside Vue's reactive event graph. Retain only the
-    // current range; revisiting a range refreshes edits and newly imported data.
-    this.eventRequests = new Map();
-    this.requestRange = '';
-    this.requestGeneration = 0;
-  },
-  beforeDestroy() {
-    this.requestGeneration++;
-    this.eventRequests.clear();
-  },
   computed: {
     ...mapState(useSettingsStore, ['always_active_pattern']),
     timeintervalDefaultDuration() {
@@ -234,6 +223,17 @@ export default {
     always_active_pattern() {
       this.getBuckets();
     },
+  },
+  created() {
+    // Keep request promises outside Vue's reactive event graph. Retain only the
+    // current range; revisiting a range refreshes edits and newly imported data.
+    this.eventRequests = new Map();
+    this.requestRange = '';
+    this.requestGeneration = 0;
+  },
+  beforeDestroy() {
+    this.requestGeneration++;
+    this.eventRequests.clear();
   },
   methods: {
     onCategorySelect(event) {

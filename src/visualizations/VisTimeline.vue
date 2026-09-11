@@ -54,7 +54,6 @@ div#visualization {
 <script lang="ts">
 import _ from 'lodash';
 import { markRaw } from 'vue';
-import moment from 'moment';
 import Color from 'color';
 import { buildTooltip } from '../util/tooltip.js';
 import { getCategoryColorFromEvent, getTitleAttr } from '../util/color';
@@ -117,14 +116,6 @@ export default {
       updateHasRun: false,
     };
   },
-  created() {
-    this.itemData = new DataSet();
-    this.groupData = new DataSet();
-    this.itemEvents = new Map();
-    this.preparedItems = new Map();
-    this.hasInitialRange = false;
-    this.viewportFrame = null;
-  },
   computed: {
     bucketsFromEither() {
       if (this.buckets) {
@@ -170,6 +161,14 @@ export default {
 
       this.update();
     },
+  },
+  created() {
+    this.itemData = new DataSet();
+    this.groupData = new DataSet();
+    this.itemEvents = new Map();
+    this.preparedItems = new Map();
+    this.hasInitialRange = false;
+    this.viewportFrame = null;
   },
   mounted() {
     this.$nextTick(() => {
@@ -393,9 +392,9 @@ export default {
         return { id: bucket.id, content: label };
       });
 
-      const window = this.timeline.getWindow();
-      const start = window.start.valueOf();
-      const end = window.end.valueOf();
+      const timelineWindow = this.timeline.getWindow();
+      const start = timelineWindow.start.valueOf();
+      const end = timelineWindow.end.valueOf();
       const buffer = (end - start) / 2;
       const visible = visibleTimelineEvents(index, start - buffer, end + buffer);
       this.itemEvents = new Map(visible.map(item => [item.id, item]));

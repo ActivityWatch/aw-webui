@@ -602,8 +602,8 @@ export const useActivityStore = defineStore('activity', {
       for (const period of periods) {
         if (signal.aborted || categoryRequests.get(this) !== request) return;
         const key = JSON.stringify([queryKey, period]);
-        const closed = new Date(period.split('/')[1]).getTime() <= Date.now();
-        let result = closed ? cache.get(key) : undefined;
+        const periodClosed = new Date(period.split('/')[1]).getTime() <= Date.now();
+        let result = periodClosed ? cache.get(key) : undefined;
         if (result === undefined) {
           const revision = cache.version;
           const response = await getClient().query([period], query, {
@@ -612,7 +612,8 @@ export const useActivityStore = defineStore('activity', {
           });
           if (signal.aborted || categoryRequests.get(this) !== request) return;
           result = response[0];
-          if (closed && result !== undefined && revision === cache.version) cache.set(key, result);
+          if (periodClosed && result !== undefined && revision === cache.version)
+            cache.set(key, result);
         }
         data.push(result);
       }
