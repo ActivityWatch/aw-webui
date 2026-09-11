@@ -106,6 +106,28 @@ export interface QueryOptions {
   always_active_pattern?: string;
 }
 
+// Identifies the inputs that determine category.by_period's contents, so a
+// view that skips reloading it can tell whether the cached value still
+// applies to the current query.
+function categoryContextKey(query_options: QueryOptions): string {
+  const {
+    host,
+    timeperiod,
+    filter_categories,
+    filter_afk,
+    include_stopwatch,
+    always_active_pattern,
+  } = query_options;
+  return JSON.stringify({
+    host,
+    timeperiod,
+    filter_categories,
+    filter_afk,
+    include_stopwatch,
+    always_active_pattern,
+  });
+}
+
 interface State {
   loaded: boolean;
 
@@ -766,6 +788,7 @@ export const useActivityStore = defineStore('activity', {
     // mutations
     start_loading(this: State, query_options: QueryOptions) {
       categoryRequests.delete(this);
+      const previousQueryOptions = this.query_options;
       this.loaded = true;
       this.query_options = query_options;
 
@@ -784,11 +807,15 @@ export const useActivityStore = defineStore('activity', {
       this.editor.top_projects = null;
 
       this.category.top = null;
-      // Only clear cached category-period data when this load will actually
-      // refresh it; other views (e.g. Report) read this state without
-      // triggering their own reload, so an unrelated view skipping the
-      // category-history query shouldn't wipe it out from under them.
-      if (query_options.include_category_history !== false) {
+      // Only keep cached category-period data when this load skips refreshing it
+      // AND the query context it was computed for hasn't changed. Other views
+      // (e.g. Report) read this state without triggering their own reload, so
+      // it must not survive a host/timeperiod/filter change it no longer matches.
+      if (
+        query_options.include_category_history !== false ||
+        !previousQueryOptions ||
+        categoryContextKey(previousQueryOptions) !== categoryContextKey(query_options)
+      ) {
         this.category.by_period = null;
       }
 
