@@ -18,6 +18,8 @@ jobs:
     steps:
     - uses: actions/checkout@v7
     - uses: iterative/setup-cml@v3
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         vega: false
 
