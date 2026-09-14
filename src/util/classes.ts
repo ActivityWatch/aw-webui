@@ -462,43 +462,65 @@ function pickHighestRanked(categories: Category[]) {
   return _.maxBy(categories, categoryRank);
 }
 
+interface CompiledRule {
+  source: string;
+  ignoreCase: boolean;
+  rawKeys: string[] | undefined;
+  keys: string[] | undefined;
+  regex: RegExp;
+}
+
+// Rule objects can be edited in place by the category editor. Compare the
+// compilation inputs rather than relying only on array/object identity.
+const compiledRules = new WeakMap<Rule, CompiledRule>();
+function compileRule(rule: Rule): CompiledRule {
+  const cached = compiledRules.get(rule);
+  const rawKeys = rule.select_keys;
+  if (
+    cached &&
+    cached.source === rule.regex &&
+    cached.ignoreCase === !!rule.ignore_case &&
+    cached.rawKeys?.length === rawKeys?.length &&
+    (rawKeys || []).every((key, i) => key === cached.rawKeys[i])
+  ) {
+    return cached;
+  }
+  const compiled = {
+    source: rule.regex,
+    ignoreCase: !!rule.ignore_case,
+    rawKeys: rawKeys?.slice(),
+    keys: normalizeSelectKeys(rawKeys),
+    regex: new RegExp(rule.regex, (rule.ignore_case ? 'i' : '') + 'm'),
+  };
+  compiledRules.set(rule, compiled);
+  return compiled;
+}
+
 export function matchString(
   str: string,
   categories: Category[] | null,
   event?: IEvent
 ): Category | null {
-  if (!categories) {
-    console.log(
-      'Categories not passed, loading... (if you see this outside of a test, you should probably pass them)'
-    );
-    categories = loadClasses();
-  }
-
-  // Compile regexes
-  const regexes: [Category, RegExp][] = categories
-    .filter(c => c.rule.type == 'regex')
-    .map(c => {
-      // using 'm' flag to make `$` and `^` in rules work
-      const re = RegExp(c.rule.regex, (c.rule.ignore_case ? 'i' : '') + 'm');
-      return [c, re];
-    });
-
-  // Find the matching category.
-  // If several categories match, explicit priority wins; otherwise depth wins.
-  const matchingCats: [Category, RegExp][] = regexes.filter(([category, re]) => {
-    const selectKeys = normalizeSelectKeys(category.rule.select_keys);
-    if (event && selectKeys) {
-      return selectKeys.some(key => {
-        const value = event.data[key];
-        return typeof value === 'string' && re.test(value);
-      });
+  categories = categories || loadClasses();
+  let best: Category | null = null;
+  let bestRank = -Infinity;
+  for (const category of categories) {
+    if (category.rule.type !== 'regex') continue;
+    const { regex, keys } = compileRule(category.rule);
+    const matches =
+      event && keys
+        ? keys.some(key => typeof event.data[key] === 'string' && regex.test(event.data[key]))
+        : regex.test(str);
+    if (matches) {
+      const rank = categoryRank(category);
+      // Strictly greater preserves the original first-match tie breaking.
+      if (rank > bestRank) {
+        best = category;
+        bestRank = rank;
+      }
     }
-    return re.test(str);
-  });
-  if (matchingCats.length > 0) {
-    return pickHighestRanked(matchingCats.map(c => c[0]));
   }
-  return null;
+  return best;
 }
 
 // this is used only in tests

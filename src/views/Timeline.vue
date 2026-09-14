@@ -79,7 +79,7 @@ div
       title="Display options"
       aria-label="Display options"
     )
-      template(v-slot:button-content)
+      template(v-slot:button-content="")
         icon(name="ellipsis-v")
       b-dropdown-header Swimlanes
       b-dropdown-item-button(
@@ -220,10 +220,20 @@ export default {
       this.updateTimelineWindow = false;
       this.getBuckets();
     },
-    swimlane() {
-      this.updateTimelineWindow = false;
+    always_active_pattern() {
       this.getBuckets();
     },
+  },
+  created() {
+    // Keep request promises outside Vue's reactive event graph. Retain only the
+    // current range; revisiting a range refreshes edits and newly imported data.
+    this.eventRequests = new Map();
+    this.requestRange = '';
+    this.requestGeneration = 0;
+  },
+  beforeDestroy() {
+    this.requestGeneration++;
+    this.eventRequests.clear();
   },
   methods: {
     onCategorySelect(event) {
@@ -241,28 +251,56 @@ export default {
     getBuckets: async function () {
       if (this.daterange == null) return;
 
-      this.all_buckets = Object.freeze(
-        await useBucketsStore().getBucketsWithEvents({
-          start: this.daterange[0].format(),
-          end: this.daterange[1].format(),
+      const generation = ++this.requestGeneration;
+      const start = this.daterange[0].format();
+      const end = this.daterange[1].format();
+      const range = `${start}/${end}`;
+      if (range !== this.requestRange) {
+        this.eventRequests.clear();
+        this.requestRange = range;
+      }
+      const store = useBucketsStore();
+      await store.ensureLoaded();
+      if (generation !== this.requestGeneration) return;
+      this.hosts = [...new Set(store.buckets.map(b => b.hostname))];
+      this.clients = [...new Set(store.buckets.map(b => b.client))];
+      const selected = store.buckets.filter(
+        b =>
+          (!this.filter_hostname || b.hostname === this.filter_hostname) &&
+          (!this.filter_client || b.client === this.filter_client)
+      );
+      const filterAfk = this.filter_afk;
+      const pattern = this.always_active_pattern;
+      const raw = await Promise.all(
+        selected.map(bucket => {
+          const afkId =
+            filterAfk && bucket.type === 'currentwindow' && bucket.hostname
+              ? store.bucketsAFK(bucket.hostname)[0]
+              : null;
+          if (filterAfk && bucket.type === 'afkstatus') return null;
+          const key = JSON.stringify([range, bucket.id, afkId, afkId ? pattern : null]);
+          if (!this.eventRequests.has(key)) {
+            const request = afkId
+              ? this._queryAfkFilteredEvents(bucket.id, afkId, start, end, pattern).then(
+                  events => ({ ...bucket, events })
+                )
+              : store.getBucketWithEvents({ id: bucket.id, start, end });
+            this.eventRequests.set(key, request);
+            request.catch(() => {
+              if (this.eventRequests.get(key) === request) this.eventRequests.delete(key);
+            });
+          }
+          return this.eventRequests.get(key).catch(error => {
+            if (!afkId) throw error;
+            console.warn('AFK filter query failed, falling back to raw events:', error);
+            return store.getBucketWithEvents({ id: bucket.id, start, end });
+          });
         })
       );
-
-      this.hosts = this.all_buckets
-        .map(a => a.hostname)
-        .filter((value, index, array) => array.indexOf(value) === index);
-      this.clients = this.all_buckets
-        .map(a => a.client)
-        .filter((value, index, array) => array.indexOf(value) === index);
-
-      let buckets = this.all_buckets;
-      if (this.filter_hostname) {
-        buckets = _.filter(buckets, b => b.hostname == this.filter_hostname);
-      }
-      if (this.filter_client) {
-        buckets = _.filter(buckets, b => b.client == this.filter_client);
-      }
-
+      if (generation !== this.requestGeneration) return;
+      this.all_buckets = Object.freeze(raw.filter(Boolean));
+      // Filters replace arrays on copies, so clearing a filter restores raw events.
+      let buckets = this.all_buckets.map(bucket => ({ ...bucket }));
       if (this.filter_duration > 0) {
         for (const bucket of buckets) {
           bucket.events = _.filter(bucket.events, e => e.duration >= this.filter_duration);
@@ -287,11 +325,6 @@ export default {
             );
           });
         }
-      }
-
-      // AFK filtering: use query engine to filter window events by AFK status
-      if (this.filter_afk) {
-        buckets = await this._applyAfkFilter(buckets);
       }
 
       // Merge adjacent events by app name for window buckets.
@@ -343,57 +376,21 @@ export default {
       });
     },
 
-    // Replaces raw window bucket events with AFK-filtered events via aw query engine.
-    // Also hides AFK status buckets since they're used for filtering, not display.
-    _applyAfkFilter: async function (buckets) {
-      const bucketsStore = useBucketsStore();
-      const result = [];
-
-      for (const bucket of buckets) {
-        // Hide AFK status buckets when AFK filtering is active
-        if (bucket.type === 'afkstatus') {
-          continue;
-        }
-
-        // For window buckets, replace events with AFK-filtered query results
-        if (bucket.type === 'currentwindow' && bucket.hostname) {
-          const afkBucketIds = bucketsStore.bucketsAFK(bucket.hostname);
-          if (afkBucketIds.length > 0) {
-            try {
-              const filteredEvents = await this._queryAfkFilteredEvents(bucket.id, afkBucketIds[0]);
-              // Create a copy with filtered events to avoid mutating frozen all_buckets
-              result.push({ ...bucket, events: filteredEvents });
-              continue;
-            } catch (e) {
-              console.warn('AFK filter query failed, falling back to raw events:', e);
-            }
-          }
-        }
-
-        // Keep other buckets unchanged
-        result.push(bucket);
-      }
-
-      return result;
-    },
-
     // Runs a canonicalEvents query to get window events filtered by AFK status,
     // respecting the user's always_active_pattern setting.
-    _queryAfkFilteredEvents: async function (windowBucketId, afkBucketId) {
+    _queryAfkFilteredEvents: async function (windowBucketId, afkBucketId, start, end, pattern) {
       const queryCode =
         canonicalEvents({
           bid_window: windowBucketId,
           bid_afk: afkBucketId,
           filter_afk: true,
-          always_active_pattern: this.always_active_pattern || undefined,
+          always_active_pattern: pattern || undefined,
           categories: [],
           filter_categories: null,
         }) + '\nRETURN = events;';
 
       const queryArray = querystr_to_array(queryCode);
 
-      const start = this.daterange[0].format();
-      const end = this.daterange[1].format();
       const timeperiods = [`${start}/${end}`];
 
       const data = await getClient().query(timeperiods, queryArray);
