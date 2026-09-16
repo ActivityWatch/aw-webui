@@ -294,16 +294,25 @@ export function computeFocusStats(events: ContextEvent[]): FocusStats {
   const blocks: number[] = [];
   let currentApp: string | null = null;
   let currentDuration = 0;
+  let prevEnd: number | null = null; // seconds since epoch
 
   for (const event of events) {
     const app = event.data?.app || 'unknown';
-    if (app === currentApp) {
-      currentDuration += event.duration || 0;
+    const start = new Date(event.timestamp).getTime() / 1000;
+    const duration = event.duration || 0;
+    // After AFK or privacy filtering, two events for the same app can be
+    // adjacent in the array while separated by minutes or hours. Only merge
+    // them into one "uninterrupted" block when they are actually contiguous
+    // (small gaps up to 1s are watcher-heartbeat jitter).
+    const contiguous = currentApp === app && prevEnd !== null && start - prevEnd <= 1;
+    if (contiguous) {
+      currentDuration += duration;
     } else {
       if (currentApp !== null) blocks.push(currentDuration);
       currentApp = app;
-      currentDuration = event.duration || 0;
+      currentDuration = duration;
     }
+    prevEnd = start + duration;
   }
   if (currentApp !== null) blocks.push(currentDuration);
 

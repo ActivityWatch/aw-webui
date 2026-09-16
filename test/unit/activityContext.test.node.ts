@@ -298,6 +298,17 @@ describe('computeFocusStats', () => {
     expect(stats.medianBlockSeconds).toBe(25);
   });
 
+  test('does not merge same-app events separated by a time gap', () => {
+    // After AFK/privacy filtering, adjacent same-app events can be hours apart.
+    const stats = computeFocusStats([
+      event('vim', 100, { timestamp: '2026-08-01T09:00:00+00:00' }),
+      event('vim', 200, { timestamp: '2026-08-01T11:00:00+00:00' }),
+    ]);
+    expect(stats.blockCount).toBe(2);
+    expect(stats.appSwitches).toBe(1);
+    expect(stats.longestBlockSeconds).toBe(200);
+  });
+
   test('single block means zero switches', () => {
     const stats = computeFocusStats([event('vim', 100)]);
     expect(stats).toEqual({

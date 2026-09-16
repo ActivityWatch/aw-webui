@@ -513,8 +513,12 @@ export function analysisContextQuery(params: DesktopQueryParams): string[] {
     })}
     events = sort_by_timestamp(events);
     browser_events = split_url_events(browser_events);
+    // Note: browser_domains is intentionally NOT limited here. buildActivityContext
+    // computes truncation metadata (total + otherSeconds) over the full domain list,
+    // so a server-side cap would make the reported totals wrong. Domain events are
+    // one short string per domain, so the response stays small; the client applies
+    // the display limit with correct truncation accounting.
     browser_domains = sort_by_duration(merge_events_by_keys(browser_events, ["$domain"]));
-    browser_domains = limit_events(browser_domains, ${default_limit});
     tracked_events = ${queryBucket(escape_doublequote(params.bid_window))};
     RETURN = {
         "events": events,

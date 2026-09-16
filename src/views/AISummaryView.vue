@@ -132,7 +132,11 @@ export default {
       const buckets = this.bucketsStore.buckets || [];
       const hosts = new Set<string>();
       for (const b of buckets) {
-        if (b.type === 'currentwindow') {
+        // This view builds a desktop query (window + AFK + browser). Exclude
+        // Android buckets so Android-only hosts are not offered: aw-watcher-android
+        // uses the same 'currentwindow' type but its events would be intersected
+        // with a desktop AFK bucket, yielding wrong or empty results.
+        if (b.type === 'currentwindow' && !b.id.startsWith('aw-watcher-android')) {
           hosts.add(b.hostname);
         }
       }
@@ -229,10 +233,11 @@ export default {
     },
     async buildContextText(): Promise<string> {
       const buckets = this.bucketsStore.buckets || [];
-      const windowBucket = buckets.find(
-        b => b.type === 'currentwindow' && b.hostname === this.selectedHost
-      );
-      if (!windowBucket) {
+      // Use the store's bucketsWindow() filter: it excludes aw-watcher-android
+      // buckets which share the 'currentwindow' type but sort before the desktop
+      // watcher, so a naive find() could silently select an Android bucket.
+      const windowBucketId = this.bucketsStore.bucketsWindow(this.selectedHost)[0];
+      if (!windowBucketId) {
         throw new Error(`No window-watcher bucket found for host: ${this.selectedHost}`);
       }
       const afkBucket = buckets.find(
@@ -244,7 +249,15 @@ export default {
       // filter so the established 'unknown'-hostname fallback is respected: when
       // a browser bucket's hostname is 'unknown' (common in older AW setups),
       // strict equality against this.selectedHost would silently drop it.
+      // The fallback is attributed at best to "some device": in multi-device
+      // installs those domains may belong to another host. We keep the fallback
+      // (dropping it would lose all browser data on older single-device setups)
+      // but disclose it explicitly in the context text below, so the user sees
+      // exactly what is being sent in the preview before it reaches the LLM.
       const browserBuckets = this.bucketsStore.bucketsBrowser(this.selectedHost);
+      const browserFallbackUsed =
+        this.bucketsStore.bucketsByType(this.selectedHost, 'web.tab.current').length === 0 &&
+        browserBuckets.length > 0;
 
       const end = new Date();
       const start = new Date(end.getTime() - this.periodDays * 24 * 60 * 60 * 1000);
@@ -252,7 +265,7 @@ export default {
       // Query-side AFK filtering and categorization: only derived statistics
       // (never raw titles or URLs) are exported from the result below.
       const query = analysisContextQuery({
-        bid_window: windowBucket.id,
+        bid_window: windowBucketId,
         bid_afk: afkBucket ? afkBucket.id : '',
         bid_browsers: browserBuckets,
         filter_afk: Boolean(afkBucket),
@@ -274,7 +287,15 @@ export default {
           privateCategories: this.excludePrivateCategories ? this.privateCategories : [],
         },
       });
-      return formatActivityContext(context);
+      const text = formatActivityContext(context);
+      if (browserFallbackUsed) {
+        return (
+          'NOTE: browser data comes from bucket(s) whose hostname could not be ' +
+          'resolved ("unknown"), so those domains may belong to a different device.\n' +
+          text
+        );
+      }
+      return text;
     },
     async copyResponse() {
       try {
