@@ -255,9 +255,11 @@ export default {
       // but disclose it explicitly in the context text below, so the user sees
       // exactly what is being sent in the preview before it reaches the LLM.
       const browserBuckets = this.bucketsStore.bucketsBrowser(this.selectedHost);
+      // Fallback buckets are those the strict per-host getter added on top of the
+      // exact-host ones (i.e. 'unknown'-hostname buckets).
       const browserFallbackUsed =
-        this.bucketsStore.bucketsByType(this.selectedHost, 'web.tab.current').length === 0 &&
-        browserBuckets.length > 0;
+        browserBuckets.length >
+        this.bucketsStore.bucketsByType(this.selectedHost, 'web.tab.current').length;
 
       const end = new Date();
       const start = new Date(end.getTime() - this.periodDays * 24 * 60 * 60 * 1000);
