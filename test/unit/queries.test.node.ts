@@ -280,7 +280,7 @@ describe('chrome fork matching in generated query', () => {
     expect(query).toContain('dia(\\\\.exe)?$');
   });
 
-  test('mixed chrome and Arc buckets preserve both matching paths without overlap', () => {
+  test('mixed chrome and Arc buckets: Arc bucket owns Arc events, chrome stream excludes Arc', () => {
     const query = fullDesktopQuery({
       ...params,
       bid_browsers: ['aw-watcher-web-chrome_testhost', 'aw-watcher-web-arc_testhost'],
@@ -289,16 +289,15 @@ describe('chrome fork matching in generated query', () => {
       query.indexOf('window_chrome_re ='),
       query.indexOf('events_chrome = filter_period_intersect')
     );
-    expect(chromeWindowFilter).toContain('arc(\\\\.exe)?$');
+    // The chrome stream must NOT match Arc when a dedicated Arc bucket exists.
+    expect(chromeWindowFilter).not.toContain('arc(\\\\.exe)?$');
+    // The Arc bucket keeps its own matching path.
     expect(query).toContain('window_arc_re =');
     expect(query).toContain('arc(\\\\.exe)?$');
-    // Duplicate chrome/Arc streams are unioned with each other, not with every browser.
-    expect(query).toContain('chrome_arc_events = union_no_overlap(events_chrome, events_arc);');
-    expect(query).toContain('browser_events = concat(browser_events, chrome_arc_events);');
-    expect(query).not.toContain(
-      'browser_events = union_no_overlap(browser_events, events_chrome);'
-    );
-    expect(query).not.toContain('browser_events = union_no_overlap(browser_events, events_arc);');
+    // Streams concat plainly; no overlap-masking that would drop real activity.
+    expect(query).toContain('browser_events = concat(browser_events, events_chrome);');
+    expect(query).toContain('browser_events = concat(browser_events, events_arc);');
+    expect(query).not.toContain('union_no_overlap');
   });
 
   test('unrelated browser buckets concat instead of dropping overlaps', () => {
@@ -313,7 +312,7 @@ describe('chrome fork matching in generated query', () => {
     expect(query).not.toContain('chrome_arc_events');
   });
 
-  test('chrome+arc union does not swallow a third browser', () => {
+  test('chrome+arc with a third browser concat all streams independently', () => {
     const query = fullDesktopQuery({
       ...params,
       bid_browsers: [
@@ -322,11 +321,9 @@ describe('chrome fork matching in generated query', () => {
         'aw-watcher-web-firefox_testhost',
       ],
     }).join('\n');
-    expect(query).toContain('chrome_arc_events = union_no_overlap(events_chrome, events_arc);');
+    expect(query).toContain('browser_events = concat(browser_events, events_chrome);');
     expect(query).toContain('browser_events = concat(browser_events, events_firefox);');
-    expect(query).toContain('browser_events = concat(browser_events, chrome_arc_events);');
-    expect(query).not.toContain('union_no_overlap(browser_events, events_firefox)');
-    expect(query).not.toContain('union_no_overlap(browser_events, events_chrome)');
+    expect(query).not.toContain('union_no_overlap');
   });
 });
 

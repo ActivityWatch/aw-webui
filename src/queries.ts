@@ -318,6 +318,11 @@ function browsersWithBuckets(browserbuckets: string[]): [string, string][] {
 // Used with filter_keyvals_regex in addition to the exact names in browser_appnames.
 // The full set of historical app names these patterns replace is documented in the unit tests.
 // See: test/unit/queries.test.node.ts, https://github.com/ActivityWatch/aw-webui/issues/749
+// chrome regex without the fork alternatives, generated when a dedicated fork
+// bucket owns those events (see browserEvents) so the same activity is not
+// matched by two streams.
+const chrome_regex_no_forks = '(?i)^(google[-_ ]?chrome|chrome|chromium)';
+
 export const browser_appname_regex: Record<string, string> = {
   // Chromium forks (Arc, Dia) run the chrome build of the extension, which announces itself
   // as chrome unless the user overrides the browser name in the extension settings. So by
@@ -342,13 +347,15 @@ export const browser_appname_regex: Record<string, string> = {
 // Returns a list of active browser events (where the browser was the active window) from all browser buckets
 function browserEvents(params: DesktopQueryParams): string {
   const browsers = browsersWithBuckets(params.bid_browsers);
-  // Chrome regex also matches Arc, and a settings-override Arc bucket can
-  // coexist with the default chrome bucket. Those two streams can duplicate
-  // the same Arc activity; union_no_overlap is only for that pair. Distinct
-  // browsers (Chrome + Firefox, etc.) may overlap in time and must concat.
-  const mixChromeArc =
-    browsers.some(([browserName]) => browserName === 'chrome') &&
-    browsers.some(([browserName]) => browserName === 'arc');
+  // The chrome regex matches Arc so a fork Arc without a dedicated bucket still
+  // counts (#927). But a settings-override Arc bucket can coexist with the
+  // default chrome bucket, and then the same Arc activity would be counted by
+  // both streams. There is no exclude primitive common to both aw-server
+  // implementations (exclude_keyvals is Rust-only), so instead the chrome
+  // stream is generated with an Arc-free regex whenever an Arc bucket
+  // participates: the Arc bucket owns those events and the streams concat
+  // without duplication or loss.
+  const hasArcBucket = browsers.some(([browserName]) => browserName === 'arc');
 
   let code = `
     browser_events = [];
@@ -360,31 +367,23 @@ function browserEvents(params: DesktopQueryParams): string {
        window_${browserName} = filter_keyvals(events, "app", ${browser_appnames_str});`;
 
     // Add regex-based matching to cover case/spacing/versioning variants (e.g., Firefox.exe, firefox-esr-esr140).
-    const pattern = browser_appname_regex[browserName];
+    let pattern = browser_appname_regex[browserName];
+    if (browserName === 'chrome' && hasArcBucket) {
+      pattern = chrome_regex_no_forks;
+    }
     if (pattern) {
       code += `
        window_${browserName}_re = filter_keyvals_regex(events, "app", ${JSON.stringify(pattern)});
        window_${browserName} = sort_by_timestamp(concat(window_${browserName}, window_${browserName}_re));`;
     }
 
-    const combineChromeArcDup = mixChromeArc && (browserName === 'chrome' || browserName === 'arc');
     code += `
        events_${browserName} = filter_period_intersect(events_${browserName}, window_${browserName});
-       events_${browserName} = split_url_events(events_${browserName});`;
-    if (!combineChromeArcDup) {
-      code += `
+       events_${browserName} = split_url_events(events_${browserName});
        browser_events = concat(browser_events, events_${browserName});
        browser_events = sort_by_timestamp(browser_events);`;
-    }
   });
 
-  if (mixChromeArc) {
-    // Chrome first so current chrome-bucket events win over a stale Arc bucket.
-    code += `
-       chrome_arc_events = union_no_overlap(events_chrome, events_arc);
-       browser_events = concat(browser_events, chrome_arc_events);
-       browser_events = sort_by_timestamp(browser_events);`;
-  }
   return code;
 }
 
