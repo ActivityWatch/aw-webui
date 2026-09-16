@@ -166,8 +166,13 @@ export const useBucketsStore = defineStore('buckets', {
           // group differs from the hostname, use that one. A mixed group (some
           // buckets without data.device_id) would otherwise surface the hostname
           // fallback first and hide the ID label in the Buckets view.
-          const hostname = hostnames[0];
-          const device_id = device_ids.find(id => id !== hostname) || device_ids[0];
+          // Compare case-insensitively against every hostname in the group:
+          // data.hostname can differ in case from bucket.hostname, and a
+          // case-sensitive check would let the hostname fallback win over a
+          // real UUID.
+          const hostnameSet = new Set(hostnames.map(h => (h || '').toLowerCase()));
+          const device_id =
+            device_ids.find(id => !hostnameSet.has(id.toLowerCase())) || device_ids[0];
           return {
             buckets: d,
             device_id,

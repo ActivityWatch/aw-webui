@@ -76,6 +76,27 @@ describe('bucketsByDevice', () => {
     expect(device.hostname !== device.device_id).toBe(true);
   });
 
+  test('hostname fallback loses to real UUID even when data.hostname differs in case', () => {
+    // Regression guard: the UUID-vs-hostname comparison must be
+    // case-insensitive against every hostname in the group.
+    const store = useBucketsStore();
+    store.update_buckets([
+      bucket({
+        id: 'aw-watcher-afk_erb-m2',
+        type: 'afkstatus',
+        data: { hostname: 'ERB-M2' }, // case-mismatched data.hostname
+      }),
+      bucket({
+        id: 'aw-watcher-window_erb-m2',
+        data: { device_id: 'real-uuid-xyz' },
+      }),
+    ]);
+
+    const device = Object.values(store.bucketsByDevice)[0];
+    expect(device.device_id).toBe('real-uuid-xyz');
+    expect(device.hostname !== device.device_id).toBe(true);
+  });
+
   test('collects several device_ids on the same host', () => {
     const store = useBucketsStore();
     store.update_buckets([
