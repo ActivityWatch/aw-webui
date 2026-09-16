@@ -55,6 +55,27 @@ describe('bucketsByDevice', () => {
     expect((device as { id?: string }).id).toBeUndefined();
   });
 
+  test('prefers real UUID over hostname fallback in mixed group', () => {
+    // A group where one bucket has no data.device_id (falls back to hostname)
+    // and another has a real UUID. The group device_id must be the UUID so
+    // the Buckets view label is visible (hostname !== device_id guard).
+    const store = useBucketsStore();
+    store.update_buckets([
+      // Older bucket without device_id — would produce hostname fallback
+      bucket({ id: 'aw-watcher-afk_erb-m2', type: 'afkstatus' }),
+      // Newer bucket with a real UUID
+      bucket({
+        id: 'aw-watcher-window_erb-m2',
+        data: { device_id: 'real-uuid-xyz' },
+      }),
+    ]);
+
+    const device = Object.values(store.bucketsByDevice)[0];
+    expect(device.hostname).toBe('erb-m2');
+    expect(device.device_id).toBe('real-uuid-xyz');
+    expect(device.hostname !== device.device_id).toBe(true);
+  });
+
   test('collects several device_ids on the same host', () => {
     const store = useBucketsStore();
     store.update_buckets([
