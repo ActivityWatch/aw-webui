@@ -64,6 +64,7 @@ import {
   browser_appnames,
   canonicalEvents,
   categoryQuery,
+  chromeAppnameRegex,
   fullDesktopQuery,
   querystr_to_array,
 } from '~/queries';
@@ -121,6 +122,26 @@ describe('browser_appname_regex', () => {
 
   test('chrome exact list includes the Dia macOS bundle id', () => {
     expect(browser_appnames.chrome).toContain('company.thebrowser.dia');
+  });
+
+  test('chromeAppnameRegex only drops forks that have a dedicated bucket', () => {
+    const noArc = toRegex(chromeAppnameRegex(['arc']));
+    expect(noArc.test('Arc')).toBe(false);
+    expect(noArc.test('arc.exe')).toBe(false);
+    expect(noArc.test('Dia')).toBe(true);
+    expect(noArc.test('Dia.exe')).toBe(true);
+    expect(noArc.test('Google Chrome')).toBe(true);
+
+    const noDia = toRegex(chromeAppnameRegex(['dia']));
+    expect(noDia.test('Dia')).toBe(false);
+    expect(noDia.test('Arc')).toBe(true);
+
+    const both = toRegex(chromeAppnameRegex(['arc', 'dia']));
+    expect(both.test('Arc')).toBe(false);
+    expect(both.test('Dia')).toBe(false);
+    expect(both.test('Chrome')).toBe(true);
+
+    expect(chromeAppnameRegex()).toBe(browser_appname_regex.chrome);
   });
 
   test('firefox pattern matches all known Firefox/LibreWolf/Waterfox app names', () => {
@@ -291,6 +312,8 @@ describe('chrome fork matching in generated query', () => {
     );
     // The chrome stream must NOT match Arc when a dedicated Arc bucket exists.
     expect(chromeWindowFilter).not.toContain('arc(\\\\.exe)?$');
+    // Dia has no dedicated bucket and still writes to chrome — keep matching it.
+    expect(chromeWindowFilter).toContain('dia(\\\\.exe)?$');
     // The Arc bucket keeps its own matching path.
     expect(query).toContain('window_arc_re =');
     expect(query).toContain('arc(\\\\.exe)?$');
