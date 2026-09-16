@@ -97,6 +97,24 @@ describe('bucketsByDevice', () => {
     expect(device.hostname !== device.device_id).toBe(true);
   });
 
+  test('UUID-shaped device_id wins even over a non-group hostname-like id', () => {
+    const store = useBucketsStore();
+    store.update_buckets([
+      bucket({
+        id: 'aw-watcher-afk_erb-m2',
+        type: 'afkstatus',
+        data: { device_id: 'other-host' }, // hostname-like, but not this group's hostname
+      }),
+      bucket({
+        id: 'aw-watcher-window_erb-m2',
+        data: { device_id: 'f81d4fae-7dec-11d0-a765-00a0c91e6bf6' },
+      }),
+    ]);
+
+    const device = Object.values(store.bucketsByDevice)[0];
+    expect(device.device_id).toBe('f81d4fae-7dec-11d0-a765-00a0c91e6bf6');
+  });
+
   test('collects several device_ids on the same host', () => {
     const store = useBucketsStore();
     store.update_buckets([
