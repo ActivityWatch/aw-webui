@@ -54,7 +54,7 @@ interface Rule {
 
 type Category = [string[], Rule];
 
-interface BaseQueryParams {
+export interface BaseQueryParams {
   include_audible?: boolean;
   categories: Category[];
   filter_categories: string[][];
@@ -63,14 +63,14 @@ interface BaseQueryParams {
   return_variable_suffix?: string;
 }
 
-interface DesktopQueryParams extends BaseQueryParams {
+export interface DesktopQueryParams extends BaseQueryParams {
   bid_window: string;
   bid_afk: string;
   filter_afk: boolean;
   always_active_pattern?: string;
 }
 
-interface AndroidQueryParams extends BaseQueryParams {
+export interface AndroidQueryParams extends BaseQueryParams {
   bid_android: string;
   /** True when the bucket is an aw-import-screentime (iOS) bucket.
    *  ScreenTime events carry a "title" key; aw-watcher-android events do not.
@@ -79,12 +79,14 @@ interface AndroidQueryParams extends BaseQueryParams {
   isIos?: boolean;
 }
 
-interface MultiQueryParams extends BaseQueryParams {
+export interface MultiQueryParams extends BaseQueryParams {
   hosts: string[];
   filter_afk: boolean;
   always_active_pattern: string;
-  // This can be used to override params on a per-host basis
-  host_params: { [host: string]: DesktopQueryParams | AndroidQueryParams };
+  // This can be used to override params on a per-host basis.  Only the
+  // keys present (and non-empty) are applied, so partial objects such as
+  // {bid_window, bid_afk} are valid overrides.
+  host_params: { [host: string]: Partial<DesktopQueryParams> | Partial<AndroidQueryParams> };
 }
 
 function get_params(
@@ -107,9 +109,12 @@ function get_params(
       console.error(`Invalid host_params for host ${host}: ${JSON.stringify(host_params)}`);
     }
     // Only override the params if they are defined and set to a truthy value
-    Object.keys(host_params).forEach(key => {
-      if (host_params[key] && host_params[key].length > 0) {
-        new_params[key] = host_params[key];
+    const overrides = host_params as Record<string, unknown>;
+    const target = new_params as unknown as Record<string, unknown>;
+    Object.keys(overrides).forEach(key => {
+      const value = overrides[key];
+      if ((typeof value === 'string' || Array.isArray(value)) && value.length > 0) {
+        target[key] = value;
       }
     });
   }
