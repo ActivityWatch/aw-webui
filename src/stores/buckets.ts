@@ -162,9 +162,22 @@ export const useBucketsStore = defineStore('buckets', {
         d => {
           const hostnames = _.uniq(_.map(d, b => b.hostname || b.data.hostname));
           const device_ids = _.uniq(_.map(d, b => b.data.device_id || b.hostname));
+          // Prefer a real UUID over a hostname fallback: if any device_id in the
+          // group differs from the hostname, use that one. A mixed group (some
+          // buckets without data.device_id) would otherwise surface the hostname
+          // fallback first and hide the ID label in the Buckets view.
+          // Prefer a real UUID-shaped device_id, then anything that isn't one
+          // of the group's hostnames (case-insensitively: data.hostname can
+          // differ in case from bucket.hostname), then the first entry.
+          const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          const hostnameSet = new Set(hostnames.map(h => (h || '').toLowerCase()));
+          const device_id =
+            device_ids.find(id => UUID_RE.test(id)) ||
+            device_ids.find(id => !hostnameSet.has(id.toLowerCase())) ||
+            device_ids[0];
           return {
             buckets: d,
-            device_id: device_ids[0],
+            device_id,
             device_ids,
             hostname: hostnames[0],
             hostnames,

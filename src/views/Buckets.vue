@@ -18,8 +18,8 @@ div
         div
           span.font-weight-bold {{ device.hostname }}
           b-badge.ml-2(v-if="serverStore.info && serverStore.info.hostname == device.hostname" variant="info") {{ $t('buckets.thisDevice') }}
-          div.small.text-muted(v-if="device.hostname !== device.device_id")
-            | ID: {{ device.id }}
+          div.small.text-muted(v-if="device.device_id && device.hostname !== device.device_id")
+            | ID: {{ device.device_id }}
           div.small(v-if="deviceHasEvents(device)")
             span.text-muted {{ $t('buckets.lastUpdatedInline') }}&nbsp;
             time(:class="{'text-success': isRecent(device.last_updated)}",
