@@ -286,8 +286,16 @@ export function appQuery(
 // variants (upper/lowercase, spacing, .exe suffix) are handled by
 // browser_appname_regex using (?i) flag. See test/unit/queries.test.node.ts for
 // the complete list of known app names these patterns cover.
-const browser_appnames: Record<string, string[]> = {
-  chrome: ['com.google.Chrome', 'com.google.ChromeDev', 'org.chromium.Chromium'],
+export const browser_appnames: Record<string, string[]> = {
+  // Chromium forks (Dia, Arc) run the chrome extension by default, so their
+  // web events land in the chrome bucket. Reverse-domain identifiers don't
+  // match the process-name regex below and have to live here (#927).
+  chrome: [
+    'com.google.Chrome',
+    'com.google.ChromeDev',
+    'org.chromium.Chromium',
+    'company.thebrowser.dia',
+  ],
   firefox: ['org.mozilla.firefox', 'io.gitlab.librewolf-community', 'net.waterfox.waterfox'],
   opera: ['com.opera.Opera'],
   brave: ['com.brave.Browser'],
@@ -319,13 +327,35 @@ function browsersWithBuckets(browserbuckets: string[]): [string, string][] {
 // Used with filter_keyvals_regex in addition to the exact names in browser_appnames.
 // The full set of historical app names these patterns replace is documented in the unit tests.
 // See: test/unit/queries.test.node.ts, https://github.com/ActivityWatch/aw-webui/issues/749
+//
+// Chromium forks (Arc, Dia) run the chrome build of the extension, which announces itself
+// as chrome unless the user overrides the browser name in the extension settings. So by
+// default their events land in the chrome bucket and their app names have to be matched
+// here (#927, ActivityWatch/activitywatch#1094). Fork alternatives are $-anchored so
+// names like "archive" / "Dialog" don't match.
+//
+// When a dedicated fork bucket participates (today: settings-override Arc), only that
+// fork is stripped from the chrome stream so the dedicated bucket owns those events
+// without dropping other chrome-bucket forks (Dia has no dedicated bucket).
+const CHROME_BASE_ALTS = ['google[-_ ]?chrome', 'chrome', 'chromium'];
+const CHROME_FORK_ALTS: Record<string, string> = {
+  arc: 'arc(\\.exe)?$',
+  dia: 'dia(\\.exe)?$',
+};
+
+export function chromeAppnameRegex(excludeForks: Iterable<string> = []): string {
+  const excluded = new Set(excludeForks);
+  const alts = [
+    ...CHROME_BASE_ALTS,
+    ...Object.entries(CHROME_FORK_ALTS)
+      .filter(([name]) => !excluded.has(name))
+      .map(([, alt]) => alt),
+  ];
+  return `(?i)^(${alts.join('|')})`;
+}
+
 export const browser_appname_regex: Record<string, string> = {
-  // Chromium forks (Arc, Dia) run the chrome build of the extension, which announces itself
-  // as chrome unless the user overrides the browser name in the extension settings. So by
-  // default their events land in the chrome bucket and their app names have to be matched
-  // here (#927, ActivityWatch/activitywatch#1094). The standalone arc key below only covers
-  // setups where Arc was picked explicitly in the settings, which changes the bucket name.
-  chrome: '(?i)^(google[-_ ]?chrome|chrome|chromium|arc(\\.exe)?$|dia(\\.exe)?$)',
+  chrome: chromeAppnameRegex(),
   firefox: '(?i)(firefox|librewolf|waterfox|nightly)',
   opera: '(?i)(opera)',
   brave: '(?i)(brave)',
@@ -341,17 +371,32 @@ export const browser_appname_regex: Record<string, string> = {
 
 // Returns a list of active browser events (where the browser was the active window) from all browser buckets
 function browserEvents(params: DesktopQueryParams): string {
+  const browsers = browsersWithBuckets(params.bid_browsers);
+  // The chrome regex matches forks so a fork without a dedicated bucket still
+  // counts (#927). A settings-override Arc bucket can coexist with the default
+  // chrome bucket, and then the same Arc activity would be counted by both
+  // streams. There is no exclude primitive common to both aw-server
+  // implementations (exclude_keyvals is Rust-only), so the chrome stream
+  // strips only the forks that actually have a dedicated bucket.
+  // Dia stays on the chrome stream: it has no dedicated bucket today.
+  const dedicatedChromeForks = browsers
+    .map(([browserName]) => browserName)
+    .filter(name => name in CHROME_FORK_ALTS);
+
   let code = `
     browser_events = [];
   `;
 
-  _.each(browsersWithBuckets(params.bid_browsers), ([browserName, bucketId]) => {
+  _.each(browsers, ([browserName, bucketId]) => {
     const browser_appnames_str = JSON.stringify(browser_appnames[browserName]);
     code += `events_${browserName} = flood(query_bucket("${bucketId}"));
        window_${browserName} = filter_keyvals(events, "app", ${browser_appnames_str});`;
 
-    // Add regex-based matching to cover case/spacing/versioning variants (e.g., Firefox.exe, firefox-esr-esr140)
-    const pattern = browser_appname_regex[browserName];
+    // Add regex-based matching to cover case/spacing/versioning variants (e.g., Firefox.exe, firefox-esr-esr140).
+    let pattern = browser_appname_regex[browserName];
+    if (browserName === 'chrome' && dedicatedChromeForks.length > 0) {
+      pattern = chromeAppnameRegex(dedicatedChromeForks);
+    }
     if (pattern) {
       code += `
        window_${browserName}_re = filter_keyvals_regex(events, "app", ${JSON.stringify(pattern)});
@@ -364,6 +409,7 @@ function browserEvents(params: DesktopQueryParams): string {
        browser_events = concat(browser_events, events_${browserName});
        browser_events = sort_by_timestamp(browser_events);`;
   });
+
   return code;
 }
 

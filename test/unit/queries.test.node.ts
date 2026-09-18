@@ -14,6 +14,9 @@
  *             'Google-chrome-beta', 'Google-chrome-unstable'
  *             (Flatpak app IDs retained as exact: 'com.google.Chrome', 'com.google.ChromeDev',
  *              'org.chromium.Chromium')
+ *             Chromium forks that report through the chrome extension bucket (#927):
+ *             'Arc', 'arc.exe', 'Arc.exe', 'Dia', 'Dia.exe'
+ *             (macOS bundle ID retained as exact: 'company.thebrowser.dia')
  *
  *   Firefox:  'Firefox', 'Firefox.exe', 'firefox', 'firefox.exe',
  *             'Firefox Developer Edition', 'firefoxdeveloperedition',
@@ -56,11 +59,14 @@
  */
 
 import {
-  browser_appname_regex,
   appQuery,
-  categoryQuery,
-  querystr_to_array,
+  browser_appname_regex,
+  browser_appnames,
   canonicalEvents,
+  categoryQuery,
+  chromeAppnameRegex,
+  fullDesktopQuery,
+  querystr_to_array,
 } from '~/queries';
 
 // Convert ActivityWatch (?i) patterns to JS RegExp with i flag for testing.
@@ -103,14 +109,39 @@ describe('browser_appname_regex', () => {
 
   test('chrome pattern does not false-positive', () => {
     const re = toRegex(browser_appname_regex.chrome);
-    // Flatpak app IDs are in the exact list, not matched by regex
+    // Flatpak / bundle IDs are in the exact list, not matched by regex
     expect(re.test('com.google.Chrome')).toBe(false);
+    expect(re.test('company.thebrowser.dia')).toBe(false);
     expect(re.test('Slack')).toBe(false);
     expect(re.test('Electron')).toBe(false);
     // The fork alternatives are anchored, so names merely starting with them don't match
     expect(re.test('archive')).toBe(false);
     expect(re.test('arcade')).toBe(false);
     expect(re.test('Dialog')).toBe(false);
+  });
+
+  test('chrome exact list includes the Dia macOS bundle id', () => {
+    expect(browser_appnames.chrome).toContain('company.thebrowser.dia');
+  });
+
+  test('chromeAppnameRegex only drops forks that have a dedicated bucket', () => {
+    const noArc = toRegex(chromeAppnameRegex(['arc']));
+    expect(noArc.test('Arc')).toBe(false);
+    expect(noArc.test('arc.exe')).toBe(false);
+    expect(noArc.test('Dia')).toBe(true);
+    expect(noArc.test('Dia.exe')).toBe(true);
+    expect(noArc.test('Google Chrome')).toBe(true);
+
+    const noDia = toRegex(chromeAppnameRegex(['dia']));
+    expect(noDia.test('Dia')).toBe(false);
+    expect(noDia.test('Arc')).toBe(true);
+
+    const both = toRegex(chromeAppnameRegex(['arc', 'dia']));
+    expect(both.test('Arc')).toBe(false);
+    expect(both.test('Dia')).toBe(false);
+    expect(both.test('Chrome')).toBe(true);
+
+    expect(chromeAppnameRegex()).toBe(browser_appname_regex.chrome);
   });
 
   test('firefox pattern matches all known Firefox/LibreWolf/Waterfox app names', () => {
@@ -247,6 +278,75 @@ describe('browser_appname_regex', () => {
     for (const name of knownNames) {
       expect(re.test(name)).toBe(true);
     }
+  });
+});
+
+describe('chrome fork matching in generated query', () => {
+  const params = {
+    bid_window: 'aw-watcher-window_testhost',
+    bid_afk: 'aw-watcher-afk_testhost',
+    filter_afk: true,
+    include_audible: false,
+    categories: [],
+    filter_categories: [],
+  };
+
+  test('chrome bucket query includes Dia bundle id and process-name regex', () => {
+    const query = fullDesktopQuery({
+      ...params,
+      bid_browsers: ['aw-watcher-web-chrome_testhost'],
+    }).join('\n');
+    expect(query).toContain('company.thebrowser.dia');
+    // JSON.stringify doubles the regex backslash, so the query text has \\.
+    expect(query).toContain('dia(\\\\.exe)?$');
+  });
+
+  test('mixed chrome and Arc buckets: Arc bucket owns Arc events, chrome stream excludes Arc', () => {
+    const query = fullDesktopQuery({
+      ...params,
+      bid_browsers: ['aw-watcher-web-chrome_testhost', 'aw-watcher-web-arc_testhost'],
+    }).join('\n');
+    const chromeWindowFilter = query.slice(
+      query.indexOf('window_chrome_re ='),
+      query.indexOf('events_chrome = filter_period_intersect')
+    );
+    // The chrome stream must NOT match Arc when a dedicated Arc bucket exists.
+    expect(chromeWindowFilter).not.toContain('arc(\\\\.exe)?$');
+    // Dia has no dedicated bucket and still writes to chrome — keep matching it.
+    expect(chromeWindowFilter).toContain('dia(\\\\.exe)?$');
+    // The Arc bucket keeps its own matching path.
+    expect(query).toContain('window_arc_re =');
+    expect(query).toContain('arc(\\\\.exe)?$');
+    // Streams concat plainly; no overlap-masking that would drop real activity.
+    expect(query).toContain('browser_events = concat(browser_events, events_chrome);');
+    expect(query).toContain('browser_events = concat(browser_events, events_arc);');
+    expect(query).not.toContain('union_no_overlap');
+  });
+
+  test('unrelated browser buckets concat instead of dropping overlaps', () => {
+    const query = fullDesktopQuery({
+      ...params,
+      bid_browsers: ['aw-watcher-web-chrome_testhost', 'aw-watcher-web-firefox_testhost'],
+    }).join('\n');
+    expect(query).toContain('browser_events = concat(browser_events, events_chrome);');
+    expect(query).toContain('browser_events = concat(browser_events, events_firefox);');
+    expect(query).not.toContain('union_no_overlap(browser_events, events_');
+    expect(query).not.toContain('union_no_overlap(events_chrome, events_firefox)');
+    expect(query).not.toContain('chrome_arc_events');
+  });
+
+  test('chrome+arc with a third browser concat all streams independently', () => {
+    const query = fullDesktopQuery({
+      ...params,
+      bid_browsers: [
+        'aw-watcher-web-chrome_testhost',
+        'aw-watcher-web-arc_testhost',
+        'aw-watcher-web-firefox_testhost',
+      ],
+    }).join('\n');
+    expect(query).toContain('browser_events = concat(browser_events, events_chrome);');
+    expect(query).toContain('browser_events = concat(browser_events, events_firefox);');
+    expect(query).not.toContain('union_no_overlap');
   });
 });
 
