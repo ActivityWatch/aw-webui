@@ -14,7 +14,6 @@ not_afk = period_union(not_afk, audible_events);
 events = filter_period_intersect(events, not_afk);
 stopwatch_events = [];
 events = categorize(events, []);
-events = filter_keyvals(events, "$category", true);
 title_events = sort_by_duration(merge_events_by_keys(events, ["app", "title"]));
 app_events   = sort_by_duration(merge_events_by_keys(title_events, ["app"]));
 cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
