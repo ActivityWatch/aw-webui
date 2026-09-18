@@ -7,66 +7,102 @@ div
   // Toolbar: filters (primary), display kebab (swimlanes etc.), event count,
   // and keyboard hint. Flex-wrap so it doesn't overlap at narrow widths.
   div.timeline-toolbar.d-flex.flex-wrap.align-items-center
-    details.timeline-filters.mr-2(ref="filtersDetails")
+    details.timeline-filters.mr-2(ref="filtersDetails", @toggle="onFiltersToggle")
       summary.timeline-chip.timeline-chip--clickable
         icon.mr-1(name="filter")
-        b Filters: {{ filter_summary }}
+        b {{ $t('timeline.filters.label') }} {{ filter_summary }}
       div.timeline-filters-panel.shadow-sm
+        div.timeline-filter-actions
+          button.btn.btn-outline-secondary.btn-sm.timeline-filter-reset(type="button", @click.stop.prevent="resetFilterChanges") {{ $t('timeline.filters.reset') }}
+          button.btn.btn-primary.btn-sm(type="button", @click.stop.prevent="applyFilterChanges") {{ $t('common.confirm') }}
+          button.btn.btn-outline-secondary.btn-sm(type="button", @click.stop.prevent="cancelFilterChanges") {{ $t('common.cancel') }}
         table
           tr
-            th.pt-2.pr-3
-              label(for="timeline-filter-host") Host:
+            th.pr-3
+              label(for="timeline-filter-duration") {{ $t('timeline.filters.duration') }}
             td
-              select#timeline-filter-host.form-control.form-control-sm(v-model="filter_hostname")
-                option(:value='null') All
-                option(v-for="host in hosts", :value="host") {{ host }}
+              div.timeline-duration-control
+                div.timeline-duration-inputs
+                  div.timeline-duration-field
+                    input#timeline-filter-duration-min.form-control.form-control-sm(
+                      type="number"
+                      min="0"
+                      step="any"
+                      v-model.number="pending_filter_duration_min"
+                      :placeholder="$t('timeline.filters.min')"
+                      :aria-label="$t('timeline.filters.minimumDuration')"
+                      @input="clearDurationRangeError"
+                    )
+                    select.form-control.form-control-sm(
+                      v-model="pending_filter_duration_min_unit"
+                      :aria-label="$t('timeline.filters.minimumDurationUnit')"
+                      @change="clearDurationRangeError"
+                    )
+                      option(v-for="unit in durationUnitOptions", :key="unit.value", :value="unit.value") {{ unit.text }}
+                  span.timeline-duration-separator –
+                  div.timeline-duration-field
+                    input#timeline-filter-duration-max.form-control.form-control-sm(
+                      type="number"
+                      min="0"
+                      step="any"
+                      v-model.number="pending_filter_duration_max"
+                      :placeholder="$t('timeline.filters.max')"
+                      :aria-label="$t('timeline.filters.maximumDuration')"
+                      @input="clearDurationRangeError"
+                    )
+                    select.form-control.form-control-sm(
+                      v-model="pending_filter_duration_max_unit"
+                      :aria-label="$t('timeline.filters.maximumDurationUnit')"
+                      @change="clearDurationRangeError"
+                    )
+                      option(v-for="unit in durationUnitOptions", :key="unit.value", :value="unit.value") {{ unit.text }}
+                small.timeline-duration-error.text-danger(v-if="duration_range_error_visible && duration_range_has_negative")
+                  | {{ $t('timeline.filters.durationNonNegativeError') }}
+                small.timeline-duration-error.text-danger(v-else-if="duration_range_error_visible && duration_range_invalid")
+                  | {{ $t('timeline.filters.durationError') }}
           tr
-            th.pt-2.pr-3
-              label(for="timeline-filter-client") Client:
+            th
             td
-              select#timeline-filter-client.form-control.form-control-sm(v-model="filter_client")
-                option(:value='null') All
-                option(v-for="client in clients", :value="client") {{ client }}
+              div.timeline-filter-toggles
+                label.timeline-filter-toggle
+                  input(type="checkbox", v-model="pending_filter_afk")
+                  span {{ $t('timeline.filterAfk') }}
+                label.timeline-filter-toggle
+                  input(type="checkbox", v-model="pending_filter_merge_similar")
+                  span {{ $t('timeline.mergeByApp') }}
           tr
-            th.pt-2.pr-3
-              label(for="timeline-filter-duration") Duration:
+            th.pr-3
+              label {{ $t('timeline.filters.hosts') }}
             td
-              select#timeline-filter-duration.form-control.form-control-sm(v-model="filter_duration")
-                option(:value='null') All
-                option(:value='2') 2+ secs
-                option(:value='5') 5+ secs
-                option(:value='10') 10+ secs
-                option(:value='30') 30+ sec
-                option(:value='1 * 60') 1+ mins
-                option(:value='2 * 60') 2+ mins
-                option(:value='3 * 60') 3+ mins
-                option(:value='10 * 60') 10+ mins
-                option(:value='30 * 60') 30+ mins
-                option(:value='1 * 60 * 60') 1+ hrs
-                option(:value='2 * 60 * 60') 2+ hrs
+              div.timeline-filter-options(v-if="hosts.length > 0")
+                label.timeline-filter-option(:title="$t('timeline.filters.all')")
+                  input(type="checkbox", :checked="all_pending_hosts_selected", @change="toggleAllPendingHosts")
+                  span.timeline-filter-option-label {{ $t('timeline.filters.all') }}
+                label.timeline-filter-option(v-for="host in hosts", :key="host", :title="host")
+                  input(type="checkbox", v-model="pending_filter_hostnames", :value="host")
+                  span.timeline-filter-option-label {{ host }}
           tr
-            th.pt-2.pr-3
-              label AFK:
+            th.pr-3
+              label {{ $t('timeline.filters.clients') }}
             td
-              b-form-checkbox(v-model="filter_afk" size="sm" switch)
-                | {{ $t('timeline.filterAfk') }}
+              div.timeline-filter-options(v-if="clients.length > 0")
+                label.timeline-filter-option(:title="$t('timeline.filters.all')")
+                  input(type="checkbox", :checked="all_pending_clients_selected", @change="toggleAllPendingClients")
+                  span.timeline-filter-option-label {{ $t('timeline.filters.all') }}
+                label.timeline-filter-option(v-for="client in clients", :key="client", :title="client")
+                  input(type="checkbox", v-model="pending_filter_clients", :value="client")
+                  span.timeline-filter-option-label {{ client }}
           tr
-            th.pt-2.pr-3
-              label Merge:
+            th.pr-3
+              label {{ $t('timeline.filters.categories') }}
             td
-              b-form-checkbox(v-model="filter_merge_similar" size="sm" switch)
-                | {{ $t('timeline.mergeByApp') }}
-          tr
-            th.pt-2.pr-3
-              label(for="timeline-filter-categories") Categories:
-            td
-              select#timeline-filter-categories.form-control.form-control-sm(@change="onCategorySelect($event)", :value="''")
-                option(value="" disabled) {{ filter_categories.length > 0 ? 'Add category...' : 'All' }}
-                option(v-for="cat in category_options", :key="cat.text", :value="cat.text") {{ cat.text }}
-              div.mt-1(v-if="filter_categories.length > 0")
-                span.badge.badge-info.mr-1(v-for="(cat, idx) in filter_categories", :key="idx")
-                  | {{ cat.join(' > ') }}
-                  button.ml-1.close.small(@click="removeCategory(idx)", type="button", aria-label="Remove category", style="font-size: 0.85rem; line-height: 1") &times;
+              div.timeline-filter-options(v-if="category_options.length > 0")
+                label.timeline-filter-option(:title="$t('timeline.filters.all')")
+                  input(type="checkbox", :checked="all_pending_categories_selected", @change="toggleAllPendingCategories")
+                  span.timeline-filter-option-label {{ $t('timeline.filters.all') }}
+                label.timeline-filter-option(v-for="cat in category_options", :key="cat.text", :title="cat.text")
+                  input(type="checkbox", :checked="isPendingCategorySelected(cat.value)", @change="togglePendingCategory(cat.value)")
+                  span.timeline-filter-option-label {{ cat.text }}
 
     // Display options (swimlanes, future visual toggles) tucked behind a
     // ghost kebab so they don't compete visually with Filters.
@@ -79,7 +115,7 @@ div
       title="Display options"
       aria-label="Display options"
     )
-      template(v-slot:button-content)
+      template(v-slot:button-content="slotProps")
         icon(name="ellipsis-v")
       b-dropdown-header Swimlanes
       b-dropdown-item-button(
@@ -126,17 +162,34 @@ export default {
   data() {
     return {
       all_buckets: null,
-      hosts: null,
+      hosts: [],
       buckets: null,
-      clients: null,
+      clients: [],
       daterange: null,
       maxDuration: 31 * 24 * 60 * 60,
-      filter_hostname: null,
-      filter_client: null,
-      filter_duration: null,
+      filter_hostnames: [],
+      filter_clients: [],
+      pending_filter_hostnames: [],
+      pending_filter_clients: [],
+      host_filter_initialized: false,
+      client_filter_initialized: false,
+      filter_duration_min: null,
+      filter_duration_max: null,
+      filter_duration_min_unit: 'seconds',
+      filter_duration_max_unit: 'seconds',
+      pending_filter_duration_min: null,
+      pending_filter_duration_max: null,
+      pending_filter_duration_min_unit: 'seconds',
+      pending_filter_duration_max_unit: 'seconds',
+      duration_range_error_visible: false,
       filter_afk: false,
+      pending_filter_afk: false,
       filter_merge_similar: false,
+      pending_filter_merge_similar: false,
       filter_categories: [],
+      pending_filter_categories: [],
+      category_filter_initialized: false,
+      buckets_refresh_scheduled: false,
       swimlane: null,
       swimlaneOptions: [
         { value: null, text: 'None' },
@@ -144,6 +197,8 @@ export default {
         { value: 'bucketType', text: 'Group by bucket type' },
       ],
       updateTimelineWindow: true,
+      // Keep the first chart render on the queried interval while filters initialize.
+      is_initial_timeline_load: true,
     };
   },
   computed: {
@@ -160,35 +215,133 @@ export default {
       const categoryStore = useCategoryStore();
       return categoryStore.allCategoriesSelect;
     },
+    durationUnitOptions() {
+      return [
+        { value: 'seconds', text: this.$t('timeline.filters.seconds') },
+        { value: 'minutes', text: this.$t('timeline.filters.minutes') },
+        { value: 'hours', text: this.$t('timeline.filters.hours') },
+      ];
+    },
+    all_hosts_selected() {
+      return (
+        this.hosts.length > 0 &&
+        this.filter_hostnames.length === this.hosts.length &&
+        this.hosts.every(host => this.filter_hostnames.includes(host))
+      );
+    },
+    all_clients_selected() {
+      return (
+        this.clients.length > 0 &&
+        this.filter_clients.length === this.clients.length &&
+        this.clients.every(client => this.filter_clients.includes(client))
+      );
+    },
+    all_categories_selected() {
+      return (
+        this.category_options.length > 0 &&
+        this.filter_categories.length === this.category_options.length &&
+        this.category_options.every(category => this.isCategorySelected(category.value))
+      );
+    },
+    all_pending_hosts_selected() {
+      return (
+        this.hosts.length > 0 &&
+        this.pending_filter_hostnames.length === this.hosts.length &&
+        this.hosts.every(host => this.pending_filter_hostnames.includes(host))
+      );
+    },
+    all_pending_clients_selected() {
+      return (
+        this.clients.length > 0 &&
+        this.pending_filter_clients.length === this.clients.length &&
+        this.clients.every(client => this.pending_filter_clients.includes(client))
+      );
+    },
+    all_pending_categories_selected() {
+      return (
+        this.category_options.length > 0 &&
+        this.pending_filter_categories.length === this.category_options.length &&
+        this.category_options.every(category => this.isPendingCategorySelected(category.value))
+      );
+    },
+    duration_range_invalid() {
+      const min = this.normalizeDuration(
+        this.pending_filter_duration_min,
+        this.pending_filter_duration_min_unit
+      );
+      const max = this.normalizeDuration(
+        this.pending_filter_duration_max,
+        this.pending_filter_duration_max_unit
+      );
+      return min !== null && max !== null && min > max;
+    },
+    duration_range_has_negative() {
+      return [this.pending_filter_duration_min, this.pending_filter_duration_max].some(
+        value => value !== null && value !== undefined && value !== '' && Number(value) < 0
+      );
+    },
     filter_summary() {
       const desc = [];
-      if (this.filter_hostname) {
-        desc.push(this.filter_hostname);
+      if (this.filter_hostnames.length > 0 && !this.all_hosts_selected) {
+        desc.push(
+          this.filter_hostnames.length > 1
+            ? this.$tc('timeline.filters.hostCount', this.filter_hostnames.length, {
+                count: this.filter_hostnames.length,
+              })
+            : this.filter_hostnames[0]
+        );
       }
-      if (this.filter_client) {
-        desc.push(this.filter_client);
+      if (this.filter_clients.length > 0 && !this.all_clients_selected) {
+        desc.push(
+          this.filter_clients.length > 1
+            ? this.$tc('timeline.filters.clientCount', this.filter_clients.length, {
+                count: this.filter_clients.length,
+              })
+            : this.filter_clients[0]
+        );
       }
-      if (this.filter_duration > 0) {
-        desc.push(seconds_to_duration(this.filter_duration));
+      if (this.duration_filter_summary) {
+        desc.push(this.duration_filter_summary);
       }
       if (this.filter_afk) {
-        desc.push('AFK filtered');
+        desc.push(this.$t('timeline.filters.afkSummary'));
       }
       if (this.filter_merge_similar) {
-        desc.push('merged by app');
+        desc.push(this.$t('timeline.filters.mergeSummary'));
       }
-      if (this.filter_categories.length > 0) {
+      if (this.filter_categories.length > 0 && !this.all_categories_selected) {
         desc.push(
-          this.filter_categories.length +
-            ' categor' +
-            (this.filter_categories.length === 1 ? 'y' : 'ies')
+          this.$tc('timeline.filters.categoryCount', this.filter_categories.length, {
+            count: this.filter_categories.length,
+          })
         );
       }
 
       if (desc.length > 0) {
         return desc.join(', ');
       }
-      return 'none';
+      return this.$t('timeline.filters.none');
+    },
+    duration_filter_summary() {
+      const min = this.filter_duration_min;
+      const max = this.filter_duration_max;
+      if (min !== null && max !== null) {
+        return this.$t('timeline.filters.durationRange', {
+          min: seconds_to_duration(min),
+          max: seconds_to_duration(max),
+        });
+      }
+      if (min !== null) {
+        return this.$t('timeline.filters.durationAtLeast', {
+          value: seconds_to_duration(min),
+        });
+      }
+      if (max !== null) {
+        return this.$t('timeline.filters.durationAtMost', {
+          value: seconds_to_duration(max),
+        });
+      }
+      return null;
     },
   },
   watch: {
@@ -196,50 +349,214 @@ export default {
       this.updateTimelineWindow = true;
       this.getBuckets();
     },
-    filter_hostname() {
-      this.updateTimelineWindow = false;
-      this.getBuckets();
+    filter_hostnames() {
+      this.handleAppliedFilterChange();
     },
-    filter_client() {
-      this.updateTimelineWindow = false;
-      this.getBuckets();
+    filter_clients() {
+      this.handleAppliedFilterChange();
     },
-    filter_duration() {
-      this.updateTimelineWindow = false;
-      this.getBuckets();
+    filter_duration_min() {
+      this.handleAppliedFilterChange();
+    },
+    filter_duration_max() {
+      this.handleAppliedFilterChange();
     },
     filter_afk() {
-      this.updateTimelineWindow = false;
-      this.getBuckets();
+      this.handleAppliedFilterChange();
     },
     filter_merge_similar() {
-      this.updateTimelineWindow = false;
-      this.getBuckets();
+      this.handleAppliedFilterChange();
     },
     filter_categories() {
-      this.updateTimelineWindow = false;
-      this.getBuckets();
+      this.handleAppliedFilterChange();
+    },
+    category_options: {
+      immediate: true,
+      handler(options, previousOptions) {
+        if (options.length === 0) return;
+
+        const previousAllSelected =
+          this.category_filter_initialized &&
+          previousOptions &&
+          previousOptions.length > 0 &&
+          this.filter_categories.length === previousOptions.length &&
+          previousOptions.every(category => this.isCategorySelected(category.value));
+
+        if (!this.category_filter_initialized || previousAllSelected) {
+          this.filter_categories = options.map(category => category.value);
+          this.category_filter_initialized = true;
+          return;
+        }
+
+        this.filter_categories = this.filter_categories.filter(selectedCategory =>
+          options.some(category => _.isEqual(category.value, selectedCategory))
+        );
+      },
     },
     swimlane() {
       this.updateTimelineWindow = false;
-      this.getBuckets();
+      this.scheduleBucketsRefresh();
     },
   },
+  mounted() {
+    const categoryStore = useCategoryStore();
+    // Timeline can be opened directly, before another view has initialized
+    // the category store. Avoid reloading it when it already has state, since
+    // that could overwrite in-memory category edits from another view.
+    if (categoryStore.category_sets.length === 0 && categoryStore.classes.length === 0) {
+      categoryStore.load();
+    }
+  },
   methods: {
-    onCategorySelect(event) {
-      const text = event.target.value;
-      if (!text) return;
-      const cat = this.category_options.find(c => c.text === text);
-      if (cat && !this.filter_categories.some(fc => _.isEqual(fc, cat.value))) {
-        this.filter_categories = [...this.filter_categories, cat.value];
+    onFiltersToggle(event) {
+      if (event.target.open) {
+        this.syncFilterDrafts();
       }
-      event.target.value = '';
     },
-    removeCategory(idx) {
-      this.filter_categories = this.filter_categories.filter((_cat, i) => i !== idx);
+    syncFilterDrafts() {
+      this.duration_range_error_visible = false;
+      this.pending_filter_hostnames = [...this.filter_hostnames];
+      this.pending_filter_clients = [...this.filter_clients];
+      this.pending_filter_duration_min_unit = this.filter_duration_min_unit;
+      this.pending_filter_duration_max_unit = this.filter_duration_max_unit;
+      this.pending_filter_duration_min = this.durationInUnit(
+        this.filter_duration_min,
+        this.filter_duration_min_unit
+      );
+      this.pending_filter_duration_max = this.durationInUnit(
+        this.filter_duration_max,
+        this.filter_duration_max_unit
+      );
+      this.pending_filter_afk = this.filter_afk;
+      this.pending_filter_merge_similar = this.filter_merge_similar;
+      this.pending_filter_categories = this.filter_categories.map(category => [...category]);
+    },
+    applyFilterChanges() {
+      this.duration_range_error_visible = false;
+      if (this.duration_range_has_negative || this.duration_range_invalid) {
+        this.duration_range_error_visible = true;
+        return;
+      }
+
+      if (!_.isEqual(this.filter_hostnames, this.pending_filter_hostnames)) {
+        this.filter_hostnames = [...this.pending_filter_hostnames];
+      }
+      if (!_.isEqual(this.filter_clients, this.pending_filter_clients)) {
+        this.filter_clients = [...this.pending_filter_clients];
+      }
+      const pendingDurationMin = this.normalizeDuration(
+        this.pending_filter_duration_min,
+        this.pending_filter_duration_min_unit
+      );
+      const pendingDurationMax = this.normalizeDuration(
+        this.pending_filter_duration_max,
+        this.pending_filter_duration_max_unit
+      );
+      if (this.filter_duration_min !== pendingDurationMin) {
+        this.filter_duration_min = pendingDurationMin;
+      }
+      if (this.filter_duration_max !== pendingDurationMax) {
+        this.filter_duration_max = pendingDurationMax;
+      }
+      this.filter_duration_min_unit = this.pending_filter_duration_min_unit;
+      this.filter_duration_max_unit = this.pending_filter_duration_max_unit;
+      if (this.filter_afk !== this.pending_filter_afk) {
+        this.filter_afk = this.pending_filter_afk;
+      }
+      if (this.filter_merge_similar !== this.pending_filter_merge_similar) {
+        this.filter_merge_similar = this.pending_filter_merge_similar;
+      }
+      if (!_.isEqual(this.filter_categories, this.pending_filter_categories)) {
+        this.filter_categories = this.pending_filter_categories.map(category => [...category]);
+      }
+      this.$refs.filtersDetails.open = false;
+    },
+    resetFilterChanges() {
+      this.pending_filter_hostnames = [...this.hosts];
+      this.pending_filter_clients = [...this.clients];
+      this.pending_filter_duration_min = null;
+      this.pending_filter_duration_max = null;
+      this.pending_filter_duration_min_unit = 'seconds';
+      this.pending_filter_duration_max_unit = 'seconds';
+      this.pending_filter_afk = false;
+      this.pending_filter_merge_similar = false;
+      this.pending_filter_categories = this.category_options.map(category => [...category.value]);
+      this.duration_range_error_visible = false;
+    },
+    cancelFilterChanges() {
+      this.syncFilterDrafts();
+      this.$refs.filtersDetails.open = false;
+    },
+    clearDurationRangeError() {
+      this.duration_range_error_visible = false;
+    },
+    handleAppliedFilterChange() {
+      // Initial filter population must not replace the queried time window.
+      if (this.is_initial_timeline_load) return;
+
+      this.updateTimelineWindow = false;
+      this.scheduleBucketsRefresh();
+    },
+    scheduleBucketsRefresh() {
+      if (this.buckets_refresh_scheduled) return;
+
+      this.buckets_refresh_scheduled = true;
+      this.$nextTick(() => {
+        this.buckets_refresh_scheduled = false;
+        this.getBuckets();
+      });
+    },
+    durationUnitFactor(unit) {
+      return { seconds: 1, minutes: 60, hours: 60 * 60 }[unit] || 1;
+    },
+    durationInUnit(seconds, unit) {
+      if (seconds === null || seconds === undefined) return null;
+      return seconds / this.durationUnitFactor(unit);
+    },
+    normalizeDuration(value, unit) {
+      if (value === '' || value === null || value === undefined) return null;
+      const duration = Number(value) * this.durationUnitFactor(unit);
+      return Number.isFinite(duration) && duration >= 0 ? duration : null;
+    },
+    toggleAllPendingHosts() {
+      this.pending_filter_hostnames = this.all_pending_hosts_selected ? [] : [...this.hosts];
+    },
+    toggleAllPendingClients() {
+      this.pending_filter_clients = this.all_pending_clients_selected ? [] : [...this.clients];
+    },
+    isCategorySelected(category) {
+      return this.filter_categories.some(filterCategory => _.isEqual(filterCategory, category));
+    },
+    isPendingCategorySelected(category) {
+      return this.pending_filter_categories.some(filterCategory =>
+        _.isEqual(filterCategory, category)
+      );
+    },
+    toggleAllPendingCategories() {
+      this.pending_filter_categories = this.all_pending_categories_selected
+        ? []
+        : this.category_options.map(category => category.value);
+    },
+    togglePendingCategory(category) {
+      if (this.isPendingCategorySelected(category)) {
+        this.pending_filter_categories = this.pending_filter_categories.filter(
+          filterCategory => !_.isEqual(filterCategory, category)
+        );
+      } else {
+        this.pending_filter_categories = [...this.pending_filter_categories, category];
+      }
     },
     getBuckets: async function () {
       if (this.daterange == null) return;
+
+      const completeInitialTimelineLoad = () => {
+        if (this.is_initial_timeline_load) {
+          // Re-enable filter-driven refreshes after the first chart update.
+          this.$nextTick(() => {
+            this.is_initial_timeline_load = false;
+          });
+        }
+      };
 
       this.all_buckets = Object.freeze(
         await useBucketsStore().getBucketsWithEvents({
@@ -248,6 +565,17 @@ export default {
         })
       );
 
+      const previousAllHostsSelected =
+        this.host_filter_initialized &&
+        this.hosts.length > 0 &&
+        this.filter_hostnames.length === this.hosts.length &&
+        this.hosts.every(host => this.filter_hostnames.includes(host));
+      const previousAllClientsSelected =
+        this.client_filter_initialized &&
+        this.clients.length > 0 &&
+        this.filter_clients.length === this.clients.length &&
+        this.clients.every(client => this.filter_clients.includes(client));
+
       this.hosts = this.all_buckets
         .map(a => a.hostname)
         .filter((value, index, array) => array.indexOf(value) === index);
@@ -255,24 +583,84 @@ export default {
         .map(a => a.client)
         .filter((value, index, array) => array.indexOf(value) === index);
 
-      let buckets = this.all_buckets;
-      if (this.filter_hostname) {
-        buckets = _.filter(buckets, b => b.hostname == this.filter_hostname);
-      }
-      if (this.filter_client) {
-        buckets = _.filter(buckets, b => b.client == this.filter_client);
-      }
-
-      if (this.filter_duration > 0) {
-        for (const bucket of buckets) {
-          bucket.events = _.filter(bucket.events, e => e.duration >= this.filter_duration);
+      if (this.hosts.length > 0) {
+        if (!this.host_filter_initialized || previousAllHostsSelected) {
+          const nextHostnames = [...this.hosts];
+          if (!_.isEqual(this.filter_hostnames, nextHostnames)) {
+            this.filter_hostnames = nextHostnames;
+          }
+        } else {
+          const nextHostnames = this.filter_hostnames.filter(host => this.hosts.includes(host));
+          if (!_.isEqual(this.filter_hostnames, nextHostnames)) {
+            this.filter_hostnames = nextHostnames;
+          }
+        }
+        this.host_filter_initialized = true;
+      } else {
+        if (this.filter_hostnames.length > 0) {
+          this.filter_hostnames = [];
         }
       }
 
-      if (this.filter_categories.length > 0) {
+      if (this.clients.length > 0) {
+        if (!this.client_filter_initialized || previousAllClientsSelected) {
+          const nextClients = [...this.clients];
+          if (!_.isEqual(this.filter_clients, nextClients)) {
+            this.filter_clients = nextClients;
+          }
+        } else {
+          const nextClients = this.filter_clients.filter(client => this.clients.includes(client));
+          if (!_.isEqual(this.filter_clients, nextClients)) {
+            this.filter_clients = nextClients;
+          }
+        }
+        this.client_filter_initialized = true;
+      } else {
+        if (this.filter_clients.length > 0) {
+          this.filter_clients = [];
+        }
+      }
+
+      let buckets = this.all_buckets;
+      if (!this.all_hosts_selected) {
+        buckets = _.filter(buckets, b => this.filter_hostnames.includes(b.hostname));
+      }
+      if (!this.all_clients_selected) {
+        buckets = _.filter(buckets, b => this.filter_clients.includes(b.client));
+      }
+
+      // An explicitly empty category selection means no events. Return early
+      // so later AFK/merge processing cannot repopulate the timeline.
+      if (
+        this.category_filter_initialized &&
+        !this.all_categories_selected &&
+        this.filter_categories.length === 0
+      ) {
+        this.buckets = [];
+        completeInitialTimelineLoad();
+        return;
+      }
+
+      const durationMin = this.filter_duration_min;
+      const durationMax = this.filter_duration_max;
+      if (durationMin !== null || durationMax !== null) {
+        for (const bucket of buckets) {
+          bucket.events = _.filter(bucket.events, e => {
+            if (durationMin !== null && e.duration < durationMin) return false;
+            if (durationMax !== null && e.duration > durationMax) return false;
+            return true;
+          });
+        }
+      }
+
+      if (this.category_filter_initialized && !this.all_categories_selected) {
         const categoryStore = useCategoryStore();
         const allCats = categoryStore.classes;
         for (const bucket of buckets) {
+          if (this.filter_categories.length === 0) {
+            bucket.events = [];
+            continue;
+          }
           // Skip AFK buckets — they don't have meaningful categorization
           if (bucket.type === 'afkstatus') continue;
           bucket.events = _.filter(bucket.events, e => {
@@ -303,6 +691,7 @@ export default {
       }
 
       this.buckets = buckets;
+      completeInitialTimelineLoad();
     },
 
     // Merges adjacent events with the same app name within window buckets.
@@ -449,12 +838,150 @@ export default {
   background: #fff;
   border: 1px solid #dee2e6;
   border-radius: 0.375rem;
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 1rem 1rem;
   z-index: 100;
-  min-width: 320px;
+  width: min(36rem, calc(100vw - 2rem));
+  max-width: calc(100vw - 2rem);
+  height: 44rem;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .timeline-filters[open] .timeline-filters-panel {
   display: block;
+}
+
+.timeline-filter-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.timeline-filter-reset {
+  margin-right: 1rem;
+}
+
+.timeline-duration-inputs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.timeline-duration-control {
+  min-width: 0;
+}
+
+.timeline-duration-field {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 0;
+}
+
+.timeline-duration-field input {
+  width: 0;
+  min-width: 0;
+  flex: 1 1 0;
+}
+
+.timeline-duration-field select {
+  width: 6.5rem;
+  flex: 0 0 6.5rem;
+  margin-left: 0.25rem;
+}
+
+.timeline-duration-separator {
+  flex: 0 0 auto;
+  color: #6c757d;
+}
+
+.timeline-duration-error {
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.timeline-filter-toggles {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.timeline-filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  cursor: pointer;
+}
+
+.timeline-filter-toggle input {
+  margin: 0;
+}
+
+.timeline-filters-panel table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.timeline-filters-panel th {
+  width: 7rem;
+  vertical-align: top;
+}
+
+.timeline-filters-panel th,
+.timeline-filters-panel td {
+  padding-top: 0;
+  padding-bottom: 0.75rem;
+  min-width: 0;
+  vertical-align: top;
+}
+
+.timeline-filters-panel tr + tr > th,
+.timeline-filters-panel tr + tr > td {
+  padding-top: 0.75rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.timeline-filters-panel tr:last-child > th,
+.timeline-filters-panel tr:last-child > td {
+  padding-bottom: 0;
+}
+
+.timeline-filter-options {
+  max-height: 9rem;
+  width: 100%;
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.timeline-filters-panel tr:last-child .timeline-filter-options {
+  max-height: 12rem;
+}
+
+.timeline-filter-option {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
+  margin-bottom: 0.25rem;
+  white-space: normal;
+  cursor: pointer;
+}
+
+.timeline-filter-option input {
+  flex: 0 0 auto;
+  margin-right: 0.35rem;
+  margin-top: 0.2rem;
+}
+
+.timeline-filter-option-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 </style>
