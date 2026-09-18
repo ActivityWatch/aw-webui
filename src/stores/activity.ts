@@ -298,13 +298,16 @@ export const useActivityStore = defineStore('activity', {
           );
           if (settingsStore.useMultidevice) {
             const hostnames = bucketsStore.hosts.filter(
-              // require that the host has both window and afk buckets
-              // (canonicalEvents needs the pair), and that the host is not
-              // a fakedata host, unless we're explicitly querying fakedata
+              // require that the host has either a window+afk bucket pair
+              // (canonicalEvents needs the pair) or an android/ScreenTime
+              // bucket (routed through buildMultideviceHostParams' fallback
+              // path), and that the host is not a fakedata host, unless
+              // we're explicitly querying fakedata
               host =>
                 host &&
-                bucketsStore.bucketsWindow(host).length > 0 &&
-                bucketsStore.bucketsAFK(host).length > 0 &&
+                ((bucketsStore.bucketsWindow(host).length > 0 &&
+                  bucketsStore.bucketsAFK(host).length > 0) ||
+                  bucketsStore.bucketsAndroid(host).length > 0) &&
                 (!host.startsWith('fakedata') || query_options.host.startsWith('fakedata'))
             );
             console.info('Including hosts in multiquery: ', hostnames);
@@ -426,11 +429,14 @@ export const useActivityStore = defineStore('activity', {
       // so that buckets synced from another host — whose IDs carry an
       // "-synced-from-<host>" suffix — are queried instead of the
       // reconstructed "aw-watcher-window_<host>" IDs which don't exist in
-      // the local datastore.
+      // the local datastore. Hosts with only an android/ScreenTime bucket
+      // (no afkstatus bucket, e.g. a synced phone) are included via the
+      // android query path instead of being dropped.
       const { host_params, hosts_with_buckets } = buildMultideviceHostParams(
         hosts,
         host => bucketsStore.bucketsWindow(host),
-        host => bucketsStore.bucketsAFK(host)
+        host => bucketsStore.bucketsAFK(host),
+        host => bucketsStore.bucketsAndroid(host)
       );
 
       const q = queries.multideviceQuery({
