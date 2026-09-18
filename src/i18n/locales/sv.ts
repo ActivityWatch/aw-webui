@@ -392,6 +392,7 @@ export default {
       seconds: 'sekunder',
       minutes: 'minuter',
       hours: 'timmar',
+      durationNonNegativeError: 'Varaktighetsvärden får inte vara negativa.',
       durationError: 'Minsta varaktighet kan inte vara längre än den högsta.',
       hostCount: '{count} värd | {count} värdar',
       clientCount: '{count} klient | {count} klienter',

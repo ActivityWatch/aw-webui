@@ -137,10 +137,39 @@ describe('Timeline filters', () => {
     expect(Timeline.computed.duration_range_invalid.call(vm)).toBe(true);
   });
 
+  test('detects negative duration boundaries before normalization', () => {
+    const values = [
+      [-1, null],
+      [null, -1],
+      [-1, -2],
+    ];
+
+    values.forEach(([min, max]) => {
+      const vm = {
+        pending_filter_duration_min: min,
+        pending_filter_duration_max: max,
+      };
+
+      expect(Timeline.computed.duration_range_has_negative.call(vm)).toBe(true);
+    });
+  });
+
   test('checks the duration range only when confirming', () => {
     const vm = {
       duration_range_error_visible: false,
       duration_range_invalid: true,
+    };
+
+    Timeline.methods.applyFilterChanges.call(vm);
+
+    expect(vm.duration_range_error_visible).toBe(true);
+  });
+
+  test('checks negative duration boundaries only when confirming', () => {
+    const vm = {
+      duration_range_error_visible: false,
+      duration_range_has_negative: true,
+      duration_range_invalid: false,
     };
 
     Timeline.methods.applyFilterChanges.call(vm);

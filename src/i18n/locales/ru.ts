@@ -384,6 +384,7 @@ export default {
       seconds: 'секунды',
       minutes: 'минуты',
       hours: 'часы',
+      durationNonNegativeError: 'Значения длительности не могут быть отрицательными.',
       durationError: 'Минимальная длительность не может превышать максимальную.',
       hostCount: '{count} хост | {count} хоста | {count} хостов',
       clientCount: '{count} клиент | {count} клиента | {count} клиентов',

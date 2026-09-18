@@ -387,6 +387,7 @@ export default {
       seconds: 'seconds',
       minutes: 'minutes',
       hours: 'hours',
+      durationNonNegativeError: 'Duration values cannot be negative.',
       durationError: 'Minimum duration cannot exceed maximum duration.',
       hostCount: '{count} host | {count} hosts',
       clientCount: '{count} client | {count} clients',

@@ -384,6 +384,7 @@ export default {
       seconds: 'секунди',
       minutes: 'хвилини',
       hours: 'години',
+      durationNonNegativeError: 'Значення тривалості не можуть бути від’ємними.',
       durationError: 'Мінімальна тривалість не може перевищувати максимальну.',
       hostCount: '{count} хост | {count} хости | {count} хостів',
       clientCount: '{count} клієнт | {count} клієнти | {count} клієнтів',

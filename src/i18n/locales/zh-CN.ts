@@ -375,6 +375,7 @@ export default {
       seconds: '秒',
       minutes: '分钟',
       hours: '小时',
+      durationNonNegativeError: '时长不能为负数。',
       durationError: '最小时长不能大于最大时长。',
       hostCount: '{count} 个主机',
       clientCount: '{count} 个客户端',

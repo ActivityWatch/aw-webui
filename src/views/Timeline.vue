@@ -56,7 +56,9 @@ div
                       @change="clearDurationRangeError"
                     )
                       option(v-for="unit in durationUnitOptions", :key="unit.value", :value="unit.value") {{ unit.text }}
-                small.timeline-duration-error.text-danger(v-if="duration_range_error_visible && duration_range_invalid")
+                small.timeline-duration-error.text-danger(v-if="duration_range_error_visible && duration_range_has_negative")
+                  | {{ $t('timeline.filters.durationNonNegativeError') }}
+                small.timeline-duration-error.text-danger(v-else-if="duration_range_error_visible && duration_range_invalid")
                   | {{ $t('timeline.filters.durationError') }}
           tr
             th
@@ -273,6 +275,11 @@ export default {
       );
       return min !== null && max !== null && min > max;
     },
+    duration_range_has_negative() {
+      return [this.pending_filter_duration_min, this.pending_filter_duration_max].some(
+        value => value !== null && value !== undefined && value !== '' && Number(value) < 0
+      );
+    },
     filter_summary() {
       const desc = [];
       if (this.filter_hostnames.length > 0 && !this.all_hosts_selected) {
@@ -426,7 +433,7 @@ export default {
     },
     applyFilterChanges() {
       this.duration_range_error_visible = false;
-      if (this.duration_range_invalid) {
+      if (this.duration_range_has_negative || this.duration_range_invalid) {
         this.duration_range_error_visible = true;
         return;
       }
