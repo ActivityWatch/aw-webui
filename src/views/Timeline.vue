@@ -200,6 +200,8 @@ export default {
         { value: 'bucketType', text: 'Group by bucket type' },
       ],
       updateTimelineWindow: true,
+      // Keep the first chart render on the queried interval while filters initialize.
+      is_initial_timeline_load: true,
     };
   },
   computed: {
@@ -328,32 +330,25 @@ export default {
       this.getBuckets();
     },
     filter_hostnames() {
-      this.updateTimelineWindow = false;
-      this.scheduleBucketsRefresh();
+      this.handleAppliedFilterChange();
     },
     filter_clients() {
-      this.updateTimelineWindow = false;
-      this.scheduleBucketsRefresh();
+      this.handleAppliedFilterChange();
     },
     filter_duration_min() {
-      this.updateTimelineWindow = false;
-      this.scheduleBucketsRefresh();
+      this.handleAppliedFilterChange();
     },
     filter_duration_max() {
-      this.updateTimelineWindow = false;
-      this.scheduleBucketsRefresh();
+      this.handleAppliedFilterChange();
     },
     filter_afk() {
-      this.updateTimelineWindow = false;
-      this.scheduleBucketsRefresh();
+      this.handleAppliedFilterChange();
     },
     filter_merge_similar() {
-      this.updateTimelineWindow = false;
-      this.scheduleBucketsRefresh();
+      this.handleAppliedFilterChange();
     },
     filter_categories() {
-      this.updateTimelineWindow = false;
-      this.scheduleBucketsRefresh();
+      this.handleAppliedFilterChange();
     },
     category_options: {
       immediate: true,
@@ -475,6 +470,13 @@ export default {
     clearDurationRangeError() {
       this.duration_range_error_visible = false;
     },
+    handleAppliedFilterChange() {
+      // Initial filter population must not replace the queried time window.
+      if (this.is_initial_timeline_load) return;
+
+      this.updateTimelineWindow = false;
+      this.scheduleBucketsRefresh();
+    },
     scheduleBucketsRefresh() {
       if (this.buckets_refresh_scheduled) return;
 
@@ -526,6 +528,15 @@ export default {
     },
     getBuckets: async function () {
       if (this.daterange == null) return;
+
+      const completeInitialTimelineLoad = () => {
+        if (this.is_initial_timeline_load) {
+          // Re-enable filter-driven refreshes after the first chart update.
+          this.$nextTick(() => {
+            this.is_initial_timeline_load = false;
+          });
+        }
+      };
 
       this.all_buckets = Object.freeze(
         await useBucketsStore().getBucketsWithEvents({
@@ -606,6 +617,7 @@ export default {
         this.filter_categories.length === 0
       ) {
         this.buckets = [];
+        completeInitialTimelineLoad();
         return;
       }
 
@@ -659,6 +671,7 @@ export default {
       }
 
       this.buckets = buckets;
+      completeInitialTimelineLoad();
     },
 
     // Merges adjacent events with the same app name within window buckets.

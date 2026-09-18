@@ -178,6 +178,26 @@ describe('Timeline filters', () => {
     expect(vm.duration_range_error_visible).toBe(false);
   });
 
+  test('keeps the initial timeline window while filters are initialized', () => {
+    const scheduleBucketsRefresh = jest.fn();
+    const vm = {
+      is_initial_timeline_load: true,
+      updateTimelineWindow: true,
+      scheduleBucketsRefresh,
+    };
+
+    Timeline.methods.handleAppliedFilterChange.call(vm);
+
+    expect(vm.updateTimelineWindow).toBe(true);
+    expect(scheduleBucketsRefresh).not.toHaveBeenCalled();
+
+    vm.is_initial_timeline_load = false;
+    Timeline.methods.handleAppliedFilterChange.call(vm);
+
+    expect(vm.updateTimelineWindow).toBe(false);
+    expect(scheduleBucketsRefresh).toHaveBeenCalledTimes(1);
+  });
+
   test('shows no buckets when host and client selections are empty', async () => {
     const buckets = [
       { hostname: 'host-a', client: 'client-1', events: [] },
