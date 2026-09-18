@@ -1,9 +1,9 @@
 <template lang="pug">
 div.mx-3
   b-form
-    b-form-group(label="Bucket:")
-      select(v-model="selectedBucket")
-        option(v-for="bucket in buckets", :value="bucket.id") {{ bucket.id }}
+    b-form-group(label="Host:")
+      select(v-model="selectedHost")
+        option(v-for="host in hostnames" :value="host") {{ host }}
     b-form-group(label="Show:")
       select(v-model="view")
         option(value="timeGridDay") Day
@@ -15,26 +15,67 @@ div.mx-3
 </template>
 
 <script>
-import { getTitleAttr, getColorFromString } from '../util/color';
 import moment from 'moment';
 import _ from 'lodash';
 import FullCalendar from '@fullcalendar/vue';
 import timeGridPlugin from '@fullcalendar/timegrid';
+
+import queries from '~/queries';
+import { useCategoryStore } from '~/stores/categories';
+
+function mergeAdjacent(events) {
+  // process events, merging adjacent events with same category
+  const mergedEvents = [];
+  let lastEvent = null;
+  for (let i = 0; i < events.length; i++) {
+    const event = events[i];
+    if (lastEvent == null) {
+      lastEvent = event;
+      continue;
+    }
+    // if adjacent with less than 10 seconds between, merge
+    const isAdjacent =
+      moment(event.timestamp).diff(
+        moment(lastEvent.timestamp).add(lastEvent.duration, 'seconds'),
+        'seconds'
+      ) < 10;
+    if (
+      isAdjacent &&
+      event.data['$category'].join(' > ') == lastEvent.data['$category'].join(' > ')
+    ) {
+      lastEvent.duration += event.duration;
+    } else {
+      mergedEvents.push(lastEvent);
+      lastEvent = event;
+    }
+  }
+  if (lastEvent != null) mergedEvents.push(lastEvent);
+  return mergedEvents;
+}
 
 // TODO: Use canonical timeline query, with flooding and categorization
 // TODO: Checkbox for toggling category-view, where adjacent events with same category are merged and the events are labeled by category
 // TODO: Use the recommended way of dynamically getting events: https://fullcalendar.io/docs/events-function
 export default {
   components: {
-    FullCalendar, // make the <FullCalendar> tag available
+    FullCalendar,
   },
   props: {
     buckets: { type: Array },
   },
   data() {
-    return { fitToActive: false, selectedBucket: null, view: 'timeGridDay' };
+    return {
+      events: [],
+      fitToActive: false,
+      selectedHost: 'erb-m2.localdomain',
+      view: 'timeGridWeek',
+    };
   },
   computed: {
+    hostnames: function () {
+      if (this.buckets == null) return [];
+      return _.uniq(this.buckets.map(b => b.hostname).filter(h => h != null));
+    },
     calendarOptions: function () {
       const events = this.events;
       const first = _.minBy(events, e => e.start);
@@ -67,25 +108,13 @@ export default {
         },
       };
     },
-    events: function () {
-      // NOTE: This returns FullCalendar events, not ActivityWatch events.
-      if (this.buckets == null) return [];
-
-      const bucket = _.find(this.buckets, b => b.id == this.selectedBucket);
-      if (bucket == null) {
-        return;
-      }
-      let events = bucket.events;
-      events = _.filter(events, e => e.duration > 10);
-      events = _.map(events, e => {
-        return {
-          title: getTitleAttr(bucket, e),
-          start: moment(e.timestamp).format(),
-          end: moment(e.timestamp).add(e.duration, 'seconds').format(),
-          backgroundColor: getColorFromString(getTitleAttr(bucket, e)),
-        };
-      });
-      return events;
+    queryOptions: function () {
+      return {
+        hostname: this.selectedHost,
+        filter_afk: true,
+        start: moment().startOf('week').format(),
+        stop: moment().endOf('week').format(),
+      };
     },
   },
   watch: {
@@ -93,11 +122,59 @@ export default {
       const calendar = this.$refs.fullCalendar.getApi();
       calendar.changeView(to);
     },
+    selectedHost: async function () {
+      console.log('selectedHost changed');
+      this.events = await this.loadEventsCanonical();
+    },
+  },
+  mounted: async function () {
+    this.events = await this.loadEventsCanonical();
   },
   methods: {
     onEventClick: function (arg) {
       // TODO: Open event inspector/editor here
-      alert('event click! ' + JSON.stringify(arg.event));
+      alert('event click!\n' + JSON.stringify(arg.event, null, 2));
+    },
+    loadEventsCanonical: async function () {
+      console.log('loadEventsCanonical');
+      console.log(this.queryOptions.hostname);
+      if (this.queryOptions.hostname == null) return [];
+
+      const categoryStore = useCategoryStore();
+      categoryStore.load();
+      const categories = categoryStore.classes_for_query;
+
+      let query = queries.canonicalEvents({
+        bid_window: 'aw-watcher-window_' + this.queryOptions.hostname,
+        bid_afk: 'aw-watcher-afk_' + this.queryOptions.hostname,
+        filter_afk: this.queryOptions.filter_afk,
+        categories,
+      });
+      query += 'RETURN = events;';
+      console.log(query);
+      query = query.split(';').map(s => s.trim() + ';');
+
+      const timeperiods = [
+        moment(this.queryOptions.start).format() + '/' + moment(this.queryOptions.stop).format(),
+      ];
+      console.log('Querying');
+      const data = await this.$aw.query(timeperiods, query);
+      console.log(data);
+      let events = _.orderBy(data[0], ['timestamp'], ['desc']);
+
+      events = mergeAdjacent(events);
+      console.log('mergedEvents', events);
+
+      events = _.filter(events, e => e.duration > 60);
+      events = _.map(events, e => {
+        return {
+          title: e.data['$category'].join(' > '),
+          start: moment(e.timestamp).format(),
+          end: moment(e.timestamp).add(e.duration, 'seconds').format(),
+          backgroundColor: categoryStore.get_category_color(e.data['$category']),
+        };
+      });
+      return events;
     },
   },
 };
