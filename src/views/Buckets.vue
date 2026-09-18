@@ -2,9 +2,6 @@
 div
   h3 {{ $t('buckets.title') }}
 
-  b-alert(show)
-    | {{ $t('buckets.moreWatchers') }} #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") {{ $t('buckets.docsLink') }}].
-
   b-card.bucket-card.mb-3(
     v-for="device in bucketsStore.bucketsByDevice",
     :key="device.hostname || device.device_id",
@@ -148,6 +145,9 @@ div
         | {{ $t('buckets.exportAllJson') }}
 
   hr
+
+  b-alert(show)
+    | {{ $t('buckets.moreWatchers') }} #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") {{ $t('buckets.docsLink') }}].
 
   aw-devonly(reason="This section is still under development")
     h4.p-2 {{ $t('buckets.tools') }}
