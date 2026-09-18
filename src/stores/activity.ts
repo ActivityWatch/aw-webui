@@ -426,11 +426,14 @@ export const useActivityStore = defineStore('activity', {
       // so that buckets synced from another host — whose IDs carry an
       // "-synced-from-<host>" suffix — are queried instead of the
       // reconstructed "aw-watcher-window_<host>" IDs which don't exist in
-      // the local datastore.
+      // the local datastore. Hosts with only an android/ScreenTime bucket
+      // (no afkstatus bucket, e.g. a synced phone) are included via the
+      // android query path instead of being dropped.
       const { host_params, hosts_with_buckets } = buildMultideviceHostParams(
         hosts,
         host => bucketsStore.bucketsWindow(host),
-        host => bucketsStore.bucketsAFK(host)
+        host => bucketsStore.bucketsAFK(host),
+        host => bucketsStore.bucketsAndroid(host)
       );
 
       const q = queries.multideviceQuery({
