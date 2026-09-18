@@ -10,16 +10,16 @@ div
     details.timeline-filters.mr-2(ref="filtersDetails", @toggle="onFiltersToggle")
       summary.timeline-chip.timeline-chip--clickable
         icon.mr-1(name="filter")
-        b Filters: {{ filter_summary }}
+        b {{ $t('timeline.filters.label') }} {{ filter_summary }}
       div.timeline-filters-panel.shadow-sm
         div.timeline-filter-actions
-          button.btn.btn-outline-secondary.btn-sm.timeline-filter-reset(type="button", @click.stop.prevent="resetFilterChanges") Reset
-          button.btn.btn-primary.btn-sm(type="button", @click.stop.prevent="applyFilterChanges") Confirm
-          button.btn.btn-outline-secondary.btn-sm(type="button", @click.stop.prevent="cancelFilterChanges") Cancel
+          button.btn.btn-outline-secondary.btn-sm.timeline-filter-reset(type="button", @click.stop.prevent="resetFilterChanges") {{ $t('timeline.filters.reset') }}
+          button.btn.btn-primary.btn-sm(type="button", @click.stop.prevent="applyFilterChanges") {{ $t('common.confirm') }}
+          button.btn.btn-outline-secondary.btn-sm(type="button", @click.stop.prevent="cancelFilterChanges") {{ $t('common.cancel') }}
         table
           tr
             th.pr-3
-              label(for="timeline-filter-duration") Duration:
+              label(for="timeline-filter-duration") {{ $t('timeline.filters.duration') }}
             td
               div.timeline-duration-control
                 div.timeline-duration-inputs
@@ -29,13 +29,13 @@ div
                       min="0"
                       step="any"
                       v-model.number="pending_filter_duration_min"
-                      placeholder="Min"
-                      aria-label="Minimum duration"
+                      :placeholder="$t('timeline.filters.min')"
+                      :aria-label="$t('timeline.filters.minimumDuration')"
                       @input="clearDurationRangeError"
                     )
                     select.form-control.form-control-sm(
                       v-model="pending_filter_duration_min_unit"
-                      aria-label="Minimum duration unit"
+                      :aria-label="$t('timeline.filters.minimumDurationUnit')"
                       @change="clearDurationRangeError"
                     )
                       option(v-for="unit in durationUnitOptions", :key="unit.value", :value="unit.value") {{ unit.text }}
@@ -46,18 +46,18 @@ div
                       min="0"
                       step="any"
                       v-model.number="pending_filter_duration_max"
-                      placeholder="Max"
-                      aria-label="Maximum duration"
+                      :placeholder="$t('timeline.filters.max')"
+                      :aria-label="$t('timeline.filters.maximumDuration')"
                       @input="clearDurationRangeError"
                     )
                     select.form-control.form-control-sm(
                       v-model="pending_filter_duration_max_unit"
-                      aria-label="Maximum duration unit"
+                      :aria-label="$t('timeline.filters.maximumDurationUnit')"
                       @change="clearDurationRangeError"
                     )
                       option(v-for="unit in durationUnitOptions", :key="unit.value", :value="unit.value") {{ unit.text }}
                 small.timeline-duration-error.text-danger(v-if="duration_range_error_visible && duration_range_invalid")
-                  | Minimum duration cannot exceed maximum duration.
+                  | {{ $t('timeline.filters.durationError') }}
           tr
             th
             td
@@ -70,34 +70,34 @@ div
                   span {{ $t('timeline.mergeByApp') }}
           tr
             th.pr-3
-              label Host:
+              label {{ $t('timeline.filters.hosts') }}
             td
               div.timeline-filter-options(v-if="hosts.length > 0")
-                label.timeline-filter-option(:title="'ALL'")
+                label.timeline-filter-option(:title="$t('timeline.filters.all')")
                   input(type="checkbox", :checked="all_pending_hosts_selected", @change="toggleAllPendingHosts")
-                  span.timeline-filter-option-label ALL
+                  span.timeline-filter-option-label {{ $t('timeline.filters.all') }}
                 label.timeline-filter-option(v-for="host in hosts", :key="host", :title="host")
                   input(type="checkbox", v-model="pending_filter_hostnames", :value="host")
                   span.timeline-filter-option-label {{ host }}
           tr
             th.pr-3
-              label Client:
+              label {{ $t('timeline.filters.clients') }}
             td
               div.timeline-filter-options(v-if="clients.length > 0")
-                label.timeline-filter-option(:title="'ALL'")
+                label.timeline-filter-option(:title="$t('timeline.filters.all')")
                   input(type="checkbox", :checked="all_pending_clients_selected", @change="toggleAllPendingClients")
-                  span.timeline-filter-option-label ALL
+                  span.timeline-filter-option-label {{ $t('timeline.filters.all') }}
                 label.timeline-filter-option(v-for="client in clients", :key="client", :title="client")
                   input(type="checkbox", v-model="pending_filter_clients", :value="client")
                   span.timeline-filter-option-label {{ client }}
           tr
             th.pr-3
-              label Categories:
+              label {{ $t('timeline.filters.categories') }}
             td
               div.timeline-filter-options(v-if="category_options.length > 0")
-                label.timeline-filter-option(:title="'ALL'")
+                label.timeline-filter-option(:title="$t('timeline.filters.all')")
                   input(type="checkbox", :checked="all_pending_categories_selected", @change="toggleAllPendingCategories")
-                  span.timeline-filter-option-label ALL
+                  span.timeline-filter-option-label {{ $t('timeline.filters.all') }}
                 label.timeline-filter-option(v-for="cat in category_options", :key="cat.text", :title="cat.text")
                   input(type="checkbox", :checked="isPendingCategorySelected(cat.value)", @change="togglePendingCategory(cat.value)")
                   span.timeline-filter-option-label {{ cat.text }}
@@ -180,11 +180,6 @@ export default {
       pending_filter_duration_min_unit: 'seconds',
       pending_filter_duration_max_unit: 'seconds',
       duration_range_error_visible: false,
-      durationUnitOptions: [
-        { value: 'seconds', text: 'seconds' },
-        { value: 'minutes', text: 'minutes' },
-        { value: 'hours', text: 'hours' },
-      ],
       filter_afk: false,
       pending_filter_afk: false,
       filter_merge_similar: false,
@@ -217,6 +212,13 @@ export default {
     category_options() {
       const categoryStore = useCategoryStore();
       return categoryStore.allCategoriesSelect;
+    },
+    durationUnitOptions() {
+      return [
+        { value: 'seconds', text: this.$t('timeline.filters.seconds') },
+        { value: 'minutes', text: this.$t('timeline.filters.minutes') },
+        { value: 'hours', text: this.$t('timeline.filters.hours') },
+      ];
     },
     all_hosts_selected() {
       return (
@@ -276,14 +278,18 @@ export default {
       if (this.filter_hostnames.length > 0 && !this.all_hosts_selected) {
         desc.push(
           this.filter_hostnames.length > 1
-            ? `${this.filter_hostnames.length} Hosts`
+            ? this.$tc('timeline.filters.hostCount', this.filter_hostnames.length, {
+                count: this.filter_hostnames.length,
+              })
             : this.filter_hostnames[0]
         );
       }
       if (this.filter_clients.length > 0 && !this.all_clients_selected) {
         desc.push(
           this.filter_clients.length > 1
-            ? `${this.filter_clients.length} Clients`
+            ? this.$tc('timeline.filters.clientCount', this.filter_clients.length, {
+                count: this.filter_clients.length,
+              })
             : this.filter_clients[0]
         );
       }
@@ -291,35 +297,42 @@ export default {
         desc.push(this.duration_filter_summary);
       }
       if (this.filter_afk) {
-        desc.push('AFK filtered');
+        desc.push(this.$t('timeline.filters.afkSummary'));
       }
       if (this.filter_merge_similar) {
-        desc.push('merged by app');
+        desc.push(this.$t('timeline.filters.mergeSummary'));
       }
       if (this.filter_categories.length > 0 && !this.all_categories_selected) {
         desc.push(
-          this.filter_categories.length > 1
-            ? `${this.filter_categories.length} Categories`
-            : '1 category'
+          this.$tc('timeline.filters.categoryCount', this.filter_categories.length, {
+            count: this.filter_categories.length,
+          })
         );
       }
 
       if (desc.length > 0) {
         return desc.join(', ');
       }
-      return 'none';
+      return this.$t('timeline.filters.none');
     },
     duration_filter_summary() {
       const min = this.filter_duration_min;
       const max = this.filter_duration_max;
       if (min !== null && max !== null) {
-        return `${seconds_to_duration(min)} - ${seconds_to_duration(max)}`;
+        return this.$t('timeline.filters.durationRange', {
+          min: seconds_to_duration(min),
+          max: seconds_to_duration(max),
+        });
       }
       if (min !== null) {
-        return `>= ${seconds_to_duration(min)}`;
+        return this.$t('timeline.filters.durationAtLeast', {
+          value: seconds_to_duration(min),
+        });
       }
       if (max !== null) {
-        return `<= ${seconds_to_duration(max)}`;
+        return this.$t('timeline.filters.durationAtMost', {
+          value: seconds_to_duration(max),
+        });
       }
       return null;
     },

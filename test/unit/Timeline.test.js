@@ -1,4 +1,5 @@
 import Timeline from '~/views/Timeline.vue';
+import { i18n } from '~/i18n';
 
 const mockBucketsStore = {
   getBucketsWithEvents: jest.fn(),
@@ -280,9 +281,34 @@ describe('Timeline filters', () => {
       all_hosts_selected: false,
       all_clients_selected: false,
       all_categories_selected: false,
+      $tc: (key, count, params) => {
+        const labels = {
+          'timeline.filters.hostCount': `${params.count} Hosts`,
+          'timeline.filters.clientCount': `${params.count} Clients`,
+          'timeline.filters.categoryCount': `${params.count} Categories`,
+        };
+        return labels[key] || `${count}`;
+      },
     });
 
     expect(summary).toBe('2 Hosts, 3 Clients, 2 Categories');
+  });
+
+  test('uses the correct plural forms for Russian and Ukrainian filter counts', () => {
+    const previousLocale = i18n.locale;
+    const expected = {
+      ru: ['1 хост', '2 хоста', '5 хостов'],
+      uk: ['1 хост', '2 хости', '5 хостів'],
+    };
+
+    Object.entries(expected).forEach(([locale, forms]) => {
+      i18n.locale = locale;
+      expect(i18n.tc('timeline.filters.hostCount', 1, { count: 1 })).toBe(forms[0]);
+      expect(i18n.tc('timeline.filters.hostCount', 2, { count: 2 })).toBe(forms[1]);
+      expect(i18n.tc('timeline.filters.hostCount', 5, { count: 5 })).toBe(forms[2]);
+    });
+
+    i18n.locale = previousLocale;
   });
 
   test('toggles category selections without losing other selections', () => {
