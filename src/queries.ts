@@ -191,11 +191,15 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
         ? 'events = merge_events_by_keys(events, ["app", "title"]);'
         : 'events = merge_events_by_keys(events, ["app"]);'
       : '',
-    // Fetch not-afk events. When there is no AFK bucket (bid_afk is empty, or
-    // the params are Android/ScreenTime which have no afkstatus bucket at
-    // all), emit an empty not_afk list so later references to the variable
+    // Fetch not-afk events. When there is no AFK bucket (bid_afk is empty),
+    // emit an empty not_afk list so later references to the variable
     // (including `return_variable_suffix`, used by the multidevice query)
-    // don't fail.
+    // don't fail. Android/ScreenTime buckets have no afkstatus concept at
+    // all (matching the single-device Android view, which treats all app
+    // events as active — see appQuery's "active_events": app_events), so
+    // their app/window events themselves count as not-afk instead of an
+    // empty list, otherwise mobile hosts would contribute zero events to
+    // the multidevice active timeline despite having counted duration.
     isDesktopParams(params)
       ? params.bid_afk
         ? `not_afk = flood(${queryBucket(params.bid_afk)});
@@ -207,7 +211,7 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
                not_afk = period_union(not_afk, not_treat_as_afk);`
             : '')
         : 'not_afk = [];'
-      : 'not_afk = [];',
+      : 'not_afk = events;',
     // Fetch browser events
     isDesktopParams(params) && params.bid_browsers
       ? browserEvents(params) +
@@ -502,8 +506,15 @@ export function multideviceQuery(params: MultiQueryParams): string[] {
   return querystr_to_array(
     `
     ${canonicalMultideviceEvents(params)}
+    // app_events is computed from events directly, not chained off
+    // title_events: aw-watcher-android events have no "title" key, so
+    // merge_events_by_keys(events, ["app", "title"]) drops them from
+    // title_events entirely (see canonicalEvents). Chaining app_events off
+    // title_events would silently exclude mobile hosts' app-level
+    // breakdown even though their duration is counted; title breakdown
+    // (which mobile hosts can't provide) stays desktop-only.
     title_events = sort_by_duration(merge_events_by_keys(events, ["app", "title"]));
-    app_events   = sort_by_duration(merge_events_by_keys(title_events, ["app"]));
+    app_events   = sort_by_duration(merge_events_by_keys(events, ["app"]));
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
 
     app_events  = limit_events(app_events, ${default_limit});

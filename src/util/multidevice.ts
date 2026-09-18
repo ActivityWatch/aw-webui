@@ -44,7 +44,14 @@ export function buildMultideviceHostParams(
       hosts_with_buckets.push(host);
       return;
     }
-    const bid_android = bucketsAndroid ? bucketsAndroid(host)[0] : undefined;
+    const androidBucketIds = bucketsAndroid ? bucketsAndroid(host) : [];
+    // Prefer the ScreenTime bucket when a host has both an Android watcher
+    // and a ScreenTime bucket, matching the single-device Android view
+    // (see query_android in stores/activity.ts): otherwise index 0 would
+    // pick the Android watcher bucket, set isIos to false, and the host's
+    // ScreenTime data would never be processed.
+    const bid_android =
+      androidBucketIds.find(id => id.startsWith('aw-import-screentime')) || androidBucketIds[0];
     if (bid_android) {
       host_params[host] = { bid_android, isIos: bid_android.startsWith('aw-import-screentime') };
       hosts_with_buckets.push(host);

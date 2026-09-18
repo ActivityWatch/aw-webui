@@ -153,4 +153,59 @@ describe('multideviceQuery with host_params overrides', () => {
     // union across hosts doesn't reference an undefined variable.
     expect(q).toContain('not_afk_phonehost = not_afk;');
   });
+
+  // Regression guard for ActivityWatch/aw-webui#988 Greptile findings:
+  // an android-only host reaching multideviceQuery must actually show up
+  // in the app breakdown and the active timeline, not just count toward
+  // total duration.
+  it("treats an android host's own events as not_afk, not an empty list", () => {
+    const q = queries
+      .multideviceQuery({
+        ...baseParams,
+        hosts: ['phonehost'],
+        host_params: {
+          phonehost: { bid_android: 'aw-watcher-android-synced-from-phonehost' },
+        },
+      })
+      .join('\n');
+    // Android/ScreenTime params have no afkstatus bucket; the per-host
+    // not_afk must be derived from that host's own events (all app usage
+    // counts as active), not an empty literal, or the host contributes
+    // zero to the combined active_events timeline.
+    expect(q).toMatch(/not_afk = events;\s*stopwatch_events = \[\];/);
+  });
+
+  it('computes app_events from all events, not just ones with a title', () => {
+    const q = queries
+      .multideviceQuery({
+        ...baseParams,
+        hosts: ['phonehost'],
+        host_params: {
+          phonehost: { bid_android: 'aw-watcher-android-synced-from-phonehost' },
+        },
+      })
+      .join('\n');
+    // app_events must merge on "app" directly from `events`, not be
+    // derived from title_events: aw-watcher-android events lack "title",
+    // so merge_events_by_keys(events, ["app", "title"]) drops them, and
+    // chaining app_events off that result would silently exclude every
+    // Android host's app-level breakdown.
+    expect(q).toContain('app_events   = sort_by_duration(merge_events_by_keys(events, ["app"]));');
+  });
+});
+
+describe('buildMultideviceHostParams ScreenTime priority', () => {
+  it('prefers a ScreenTime bucket over an Android watcher bucket for the same host', () => {
+    const { host_params, hosts_with_buckets } = buildMultideviceHostParams(
+      ['hybridhost'],
+      () => [],
+      () => [],
+      () => ['aw-watcher-android-synced-from-hybridhost', 'aw-import-screentime_hybridhost']
+    );
+    expect(hosts_with_buckets).toEqual(['hybridhost']);
+    expect(host_params['hybridhost']).toEqual({
+      bid_android: 'aw-import-screentime_hybridhost',
+      isIos: true,
+    });
+  });
 });

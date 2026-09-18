@@ -298,13 +298,16 @@ export const useActivityStore = defineStore('activity', {
           );
           if (settingsStore.useMultidevice) {
             const hostnames = bucketsStore.hosts.filter(
-              // require that the host has both window and afk buckets
-              // (canonicalEvents needs the pair), and that the host is not
-              // a fakedata host, unless we're explicitly querying fakedata
+              // require that the host has either a window+afk bucket pair
+              // (canonicalEvents needs the pair) or an android/ScreenTime
+              // bucket (routed through buildMultideviceHostParams' fallback
+              // path), and that the host is not a fakedata host, unless
+              // we're explicitly querying fakedata
               host =>
                 host &&
-                bucketsStore.bucketsWindow(host).length > 0 &&
-                bucketsStore.bucketsAFK(host).length > 0 &&
+                ((bucketsStore.bucketsWindow(host).length > 0 &&
+                  bucketsStore.bucketsAFK(host).length > 0) ||
+                  bucketsStore.bucketsAndroid(host).length > 0) &&
                 (!host.startsWith('fakedata') || query_options.host.startsWith('fakedata'))
             );
             console.info('Including hosts in multiquery: ', hostnames);
