@@ -23,8 +23,13 @@ div#visualization {
     // Position tooltip above the cursor instead of overlapping the timeline bars
     transform: translateY(-100%);
     margin-top: -15px;
-    // Ensure tooltip is readable
-    max-width: 400px;
+    // Ensure tooltip is readable. vis-timeline sets `white-space: nowrap`, so
+    // long unbroken event data (JSON, URLs) would overflow the box and widen
+    // the whole page on mobile; wrap it and cap the width to the viewport.
+    max-width: min(400px, calc(100vw - 20px));
+    box-sizing: border-box;
+    white-space: normal;
+    overflow-wrap: anywhere;
     pointer-events: none;
   }
 
