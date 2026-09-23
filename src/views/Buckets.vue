@@ -237,7 +237,7 @@ import moment from 'moment';
 
 import { useServerStore } from '~/stores/server';
 import { useBucketsStore } from '~/stores/buckets';
-import { androidExportFromUrl, downloadBlob, downloadFile } from '~/util/export';
+import { androidExportFromUrl, downloadBlob } from '~/util/export';
 
 export default {
   name: 'Buckets',
@@ -420,34 +420,24 @@ export default {
     },
 
     async export_csv(bucketId: string) {
+      const filename = `aw-events-export-${bucketId}.csv`;
+      const path = `/0/buckets/${encodeURIComponent(bucketId)}/export/csv`;
+      const url = `${this.$aw.req.defaults.baseURL || ''}${path}`;
+      // Android WebView: native URL download so the CSV never enters JS memory.
+      if (androidExportFromUrl(url, filename)) {
+        return;
+      }
       this.export_inflight += 1;
       this.export_error = null;
       try {
-        const filename = `aw-events-export-${bucketId}.csv`;
-        const apiPath = `/0/buckets/${encodeURIComponent(bucketId)}/export/csv`;
-
-        // In Tauri the <a download> pattern is not supported, so fetch text
-        // and save via the native dialog.  In a regular browser (including
-        // Android WebView) use a direct anchor navigation: the server sends
-        // headers immediately so the WebView never sees a hung connection, and
-        // the CSV is never loaded into JS memory.
-        if ('__TAURI__' in window) {
-          const response = await this.$aw.req.get(apiPath, {
-            responseType: 'text',
-            timeout: 300_000,
-          });
-          await downloadFile(filename, response.data as string, 'text/csv');
-        } else {
-          const baseURL = (this.$aw.req.defaults.baseURL as string) ?? '/api';
-          const url = `${baseURL}${apiPath}`;
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = filename;
-          link.style.display = 'none';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }
+        // Same authenticated blob path as JSON export: Authorization: Bearer
+        // is sent, errors surface in the export alert, and Tauri still saves
+        // via the native dialog inside downloadBlob.
+        const response = await this.$aw.req.get(path, {
+          timeout: 300_000,
+          responseType: 'blob',
+        });
+        await downloadBlob(filename, response.data, 'text/csv');
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
         this.export_error = `Export failed: ${msg}`;
