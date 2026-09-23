@@ -9,7 +9,7 @@ div
         |
         | Can be used to count time as active, despite no input (like meetings, or games with controllers). An empty string disables it.
         |
-        span.text-nowrap
+        span
           | Example expression:&nbsp;
           code(style="background-color: rgba(200, 200, 200, 0.3); padding: 2px 4px; border-radius: 2px;")
             | Zoom Meeting|Google Meet|Microsoft Teams
