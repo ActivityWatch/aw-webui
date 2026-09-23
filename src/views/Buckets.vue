@@ -238,7 +238,7 @@ import moment from 'moment';
 
 import { useServerStore } from '~/stores/server';
 import { useBucketsStore } from '~/stores/buckets';
-import { downloadFile } from '~/util/export';
+import { androidExportFromUrl, downloadBlob, downloadFile } from '~/util/export';
 
 export default {
   name: 'Buckets',
@@ -258,11 +258,14 @@ export default {
       delete_host_selected: null,
       deleting_host: false,
       delete_host_error: null,
-      exporting: false,
+      export_inflight: 0,
       export_error: null as string | null,
     };
   },
   computed: {
+    exporting() {
+      return this.export_inflight > 0;
+    },
     fields() {
       return [
         {
@@ -385,75 +388,63 @@ export default {
     },
 
     async export_bucket_json(bucketId: string) {
-      this.exporting = true;
-      this.export_error = null;
-      try {
-        // Use fetch with a long timeout instead of axios — the server must serialize
-        // all events before sending the first byte, which can exceed 30 s for large
-        // buckets. fetch() also avoids re-serializing already-valid JSON in JS.
-        const url = `${this.$aw.req.defaults.baseURL}/0/buckets/${bucketId}/export`;
-        const controller = new AbortController();
-        const tid = setTimeout(() => controller.abort(), 300_000);
-        try {
-          const resp = await fetch(url, { signal: controller.signal });
-          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-          const text = await resp.text();
-          await downloadFile(`aw-bucket-export-${bucketId}.json`, text, 'application/json');
-        } finally {
-          clearTimeout(tid);
-        }
-      } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
-        this.export_error = `Export failed: ${msg}`;
-        console.error('export_bucket_json failed:', e);
-      } finally {
-        this.exporting = false;
-      }
+      await this.export_json(`/0/buckets/${bucketId}/export`, `aw-bucket-export-${bucketId}.json`);
     },
 
     async export_all_buckets_json() {
-      this.exporting = true;
+      await this.export_json('/0/export', 'aw-buckets-export.json');
+    },
+
+    async export_json(path: string, filename: string) {
+      const url = `${this.$aw.req.defaults.baseURL || ''}${path}`;
+      if (androidExportFromUrl(url, filename)) {
+        return;
+      }
+      this.export_inflight += 1;
       this.export_error = null;
       try {
-        // Use fetch with a long timeout instead of axios — large all-bucket exports
-        // (500k+ events) can take over 30 s to serialize server-side; axios silently
-        // drops these. fetch() also avoids buffering the full JSON in JS memory.
-        const url = `${this.$aw.req.defaults.baseURL}/0/export`;
-        const controller = new AbortController();
-        const tid = setTimeout(() => controller.abort(), 300_000);
-        try {
-          const resp = await fetch(url, { signal: controller.signal });
-          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-          const text = await resp.text();
-          await downloadFile('aw-buckets-export.json', text, 'application/json');
-        } finally {
-          clearTimeout(tid);
-        }
+        // Keep the axios client so Authorization: Bearer is sent. blob +
+        // timeout 0 avoids JSON.parse/pretty-print and the 30s default.
+        const response = await this.$aw.req.get(path, {
+          timeout: 0,
+          responseType: 'blob',
+        });
+        await downloadBlob(filename, response.data, 'application/json');
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
         this.export_error = `Export failed: ${msg}`;
-        console.error('export_all_buckets_json failed:', e);
+        console.error('JSON export failed:', e);
       } finally {
-        this.exporting = false;
+        this.export_inflight = Math.max(0, this.export_inflight - 1);
       }
     },
 
     async export_csv(bucketId: string) {
-      const bucket = await this.bucketsStore.getBucketWithEvents({ id: bucketId });
-      const events = bucket.events;
-      const datakeys = events.length > 0 ? Object.keys(events[0].data) : [];
-      const columns = ['timestamp', 'duration'].concat(datakeys);
-      const data = events.map(e => {
-        return Object.assign(
-          { timestamp: e.timestamp, duration: e.duration },
-          Object.fromEntries(datakeys.map(k => [k, e.data[k]]))
-        );
-      });
-      const csv = Papa.unparse(data, { columns, header: true });
-      const filename = `aw-events-export-${bucketId}-${new Date()
-        .toISOString()
-        .substring(0, 10)}.csv`;
-      await downloadFile(filename, csv, 'text/csv');
+      this.export_inflight += 1;
+      this.export_error = null;
+      try {
+        const bucket = await this.bucketsStore.getBucketWithEvents({ id: bucketId });
+        const events = bucket.events;
+        const datakeys = events.length > 0 ? Object.keys(events[0].data) : [];
+        const columns = ['timestamp', 'duration'].concat(datakeys);
+        const data = events.map(e => {
+          return Object.assign(
+            { timestamp: e.timestamp, duration: e.duration },
+            Object.fromEntries(datakeys.map(k => [k, e.data[k]]))
+          );
+        });
+        const csv = Papa.unparse(data, { columns, header: true });
+        const filename = `aw-events-export-${bucketId}-${new Date()
+          .toISOString()
+          .substring(0, 10)}.csv`;
+        await downloadFile(filename, csv, 'text/csv');
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        this.export_error = `Export failed: ${msg}`;
+        console.error('CSV export failed:', e);
+      } finally {
+        this.export_inflight = Math.max(0, this.export_inflight - 1);
+      }
     },
   },
 };
