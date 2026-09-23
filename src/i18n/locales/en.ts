@@ -268,6 +268,7 @@ export default {
       'A valid file to import is a JSON file from either an export of a single bucket or an export from multiple buckets. If there are buckets with the same name the import will fail.',
     exportBuckets: 'Export buckets',
     exportAllJson: 'Export all buckets as JSON',
+    exporting: 'Exporting...',
     tools: 'Tools',
   },
   activity: {

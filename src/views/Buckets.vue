@@ -140,9 +140,13 @@ div
       p.small.text-muted {{ $t('buckets.exportHelp') }}
       b-button(@click="export_all_buckets_json()",
                :title="$t('buckets.exportAllJson')",
+               :disabled="exporting",
                variant="outline-secondary")
-        icon.mr-1(name="download")
-        | {{ $t('buckets.exportAllJson') }}
+        b-spinner.mr-1(v-if="exporting", small)
+        icon.mr-1(v-else, name="download")
+        | {{ exporting ? $t('buckets.exporting') : $t('buckets.exportAllJson') }}
+      b-alert.mt-2(v-if="export_error", variant="danger", show, dismissible, @dismissed="export_error = null")
+        | {{ export_error }}
 
   hr
 
@@ -254,6 +258,8 @@ export default {
       delete_host_selected: null,
       deleting_host: false,
       delete_host_error: null,
+      exporting: false,
+      export_error: null as string | null,
     };
   },
   computed: {
@@ -379,15 +385,57 @@ export default {
     },
 
     async export_bucket_json(bucketId: string) {
-      const response = await this.$aw.req.get(`/0/buckets/${bucketId}/export`);
-      const data = JSON.stringify(response.data, null, 2);
-      await downloadFile(`aw-bucket-export-${bucketId}.json`, data, 'application/json');
+      this.exporting = true;
+      this.export_error = null;
+      try {
+        // Use fetch with a long timeout instead of axios — the server must serialize
+        // all events before sending the first byte, which can exceed 30 s for large
+        // buckets. fetch() also avoids re-serializing already-valid JSON in JS.
+        const url = `${this.$aw.req.defaults.baseURL}/0/buckets/${bucketId}/export`;
+        const controller = new AbortController();
+        const tid = setTimeout(() => controller.abort(), 300_000);
+        try {
+          const resp = await fetch(url, { signal: controller.signal });
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          const text = await resp.text();
+          await downloadFile(`aw-bucket-export-${bucketId}.json`, text, 'application/json');
+        } finally {
+          clearTimeout(tid);
+        }
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        this.export_error = `Export failed: ${msg}`;
+        console.error('export_bucket_json failed:', e);
+      } finally {
+        this.exporting = false;
+      }
     },
 
     async export_all_buckets_json() {
-      const response = await this.$aw.req.get('/0/export');
-      const data = JSON.stringify(response.data, null, 2);
-      await downloadFile('aw-bucket-export.json', data, 'application/json');
+      this.exporting = true;
+      this.export_error = null;
+      try {
+        // Use fetch with a long timeout instead of axios — large all-bucket exports
+        // (500k+ events) can take over 30 s to serialize server-side; axios silently
+        // drops these. fetch() also avoids buffering the full JSON in JS memory.
+        const url = `${this.$aw.req.defaults.baseURL}/0/export`;
+        const controller = new AbortController();
+        const tid = setTimeout(() => controller.abort(), 300_000);
+        try {
+          const resp = await fetch(url, { signal: controller.signal });
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          const text = await resp.text();
+          await downloadFile('aw-buckets-export.json', text, 'application/json');
+        } finally {
+          clearTimeout(tid);
+        }
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        this.export_error = `Export failed: ${msg}`;
+        console.error('export_all_buckets_json failed:', e);
+      } finally {
+        this.exporting = false;
+      }
     },
 
     async export_csv(bucketId: string) {
