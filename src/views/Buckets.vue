@@ -434,7 +434,7 @@ export default {
         if ('__TAURI__' in window) {
           const response = await this.$aw.req.get(apiPath, {
             responseType: 'text',
-            timeout: 0,
+            timeout: 300_000,
           });
           await downloadFile(filename, response.data as string, 'text/csv');
         } else {
