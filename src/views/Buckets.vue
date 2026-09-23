@@ -403,10 +403,11 @@ export default {
       this.export_inflight += 1;
       this.export_error = null;
       try {
-        // Keep the axios client so Authorization: Bearer is sent. blob +
-        // timeout 0 avoids JSON.parse/pretty-print and the 30s default.
+        // Keep the axios client so Authorization: Bearer is sent. blob
+        // skips JSON.parse/pretty-print. A 5-minute timeout beats the 30s
+        // default without leaving the spinner stuck if the server stalls.
         const response = await this.$aw.req.get(path, {
-          timeout: 0,
+          timeout: 300_000,
           responseType: 'blob',
         });
         await downloadBlob(filename, response.data, 'application/json');
