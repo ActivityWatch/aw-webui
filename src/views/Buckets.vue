@@ -233,7 +233,6 @@ import 'vue-awesome/icons/exclamation-triangle';
 import 'vue-awesome/icons/ellipsis-v';
 
 import _ from 'lodash';
-import Papa from 'papaparse';
 import moment from 'moment';
 
 import { useServerStore } from '~/stores/server';
@@ -424,21 +423,31 @@ export default {
       this.export_inflight += 1;
       this.export_error = null;
       try {
-        const bucket = await this.bucketsStore.getBucketWithEvents({ id: bucketId });
-        const events = bucket.events;
-        const datakeys = events.length > 0 ? Object.keys(events[0].data) : [];
-        const columns = ['timestamp', 'duration'].concat(datakeys);
-        const data = events.map(e => {
-          return Object.assign(
-            { timestamp: e.timestamp, duration: e.duration },
-            Object.fromEntries(datakeys.map(k => [k, e.data[k]]))
-          );
-        });
-        const csv = Papa.unparse(data, { columns, header: true });
-        const filename = `aw-events-export-${bucketId}-${new Date()
-          .toISOString()
-          .substring(0, 10)}.csv`;
-        await downloadFile(filename, csv, 'text/csv');
+        const filename = `aw-events-export-${bucketId}.csv`;
+        const apiPath = `/0/buckets/${encodeURIComponent(bucketId)}/export/csv`;
+
+        // In Tauri the <a download> pattern is not supported, so fetch text
+        // and save via the native dialog.  In a regular browser (including
+        // Android WebView) use a direct anchor navigation: the server sends
+        // headers immediately so the WebView never sees a hung connection, and
+        // the CSV is never loaded into JS memory.
+        if ('__TAURI__' in window) {
+          const response = await this.$aw.req.get(apiPath, {
+            responseType: 'text',
+            timeout: 0,
+          });
+          await downloadFile(filename, response.data as string, 'text/csv');
+        } else {
+          const baseURL = (this.$aw.req.defaults.baseURL as string) ?? '/api';
+          const url = `${baseURL}${apiPath}`;
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = filename;
+          link.style.display = 'none';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
         this.export_error = `Export failed: ${msg}`;
