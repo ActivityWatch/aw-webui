@@ -27,11 +27,13 @@ describe('Buckets.vue JSON export', () => {
 describe('Buckets.vue CSV export', () => {
   const src = fs.readFileSync(path.join(__dirname, '../../src/views/Buckets.vue'), 'utf8');
 
-  test('uses the authenticated client, not a bare anchor download', () => {
+  test('streams unauthenticated browser downloads and authenticates otherwise', () => {
     expect(src).toMatch(/export\/csv/);
     expect(src).toMatch(/androidExportFromUrl/);
+    expect(src).toMatch(/getStoredApiToken/);
+    expect(src).toMatch(/link\.click\(\)/);
     expect(src).toMatch(/responseType:\s*'blob'/);
-    expect(src).not.toMatch(/link\.click\(\)/);
     expect(src).not.toMatch(/Papa/);
+    expect(src).not.toMatch(/timeout:\s*0/);
   });
 });

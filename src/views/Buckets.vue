@@ -237,6 +237,7 @@ import moment from 'moment';
 
 import { useServerStore } from '~/stores/server';
 import { useBucketsStore } from '~/stores/buckets';
+import { getStoredApiToken } from '~/util/awclient';
 import { androidExportFromUrl, downloadBlob } from '~/util/export';
 
 export default {
@@ -430,9 +431,21 @@ export default {
       this.export_inflight += 1;
       this.export_error = null;
       try {
-        // Same authenticated blob path as JSON export: Authorization: Bearer
-        // is sent, errors surface in the export alert, and Tauri still saves
-        // via the native dialog inside downloadBlob.
+        // Default local installs have no API token. Let the browser stream the
+        // download from the server endpoint so 200 OK lands immediately and
+        // the CSV never enters JS memory. Tauri cannot use <a download>, and
+        // token-authenticated deployments need Authorization: Bearer, so those
+        // still go through the blob client.
+        if (!('__TAURI__' in window) && !getStoredApiToken()) {
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = filename;
+          link.style.display = 'none';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          return;
+        }
         const response = await this.$aw.req.get(path, {
           timeout: 300_000,
           responseType: 'blob',
