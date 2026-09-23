@@ -233,12 +233,12 @@ import 'vue-awesome/icons/exclamation-triangle';
 import 'vue-awesome/icons/ellipsis-v';
 
 import _ from 'lodash';
-import Papa from 'papaparse';
 import moment from 'moment';
 
 import { useServerStore } from '~/stores/server';
 import { useBucketsStore } from '~/stores/buckets';
-import { androidExportFromUrl, downloadBlob, downloadFile } from '~/util/export';
+import { getStoredApiToken } from '~/util/awclient';
+import { androidExportFromUrl, downloadBlob } from '~/util/export';
 
 export default {
   name: 'Buckets',
@@ -421,24 +421,36 @@ export default {
     },
 
     async export_csv(bucketId: string) {
+      const filename = `aw-events-export-${bucketId}.csv`;
+      const path = `/0/buckets/${encodeURIComponent(bucketId)}/export/csv`;
+      const url = `${this.$aw.req.defaults.baseURL || ''}${path}`;
+      // Android WebView: native URL download so the CSV never enters JS memory.
+      if (androidExportFromUrl(url, filename)) {
+        return;
+      }
       this.export_inflight += 1;
       this.export_error = null;
       try {
-        const bucket = await this.bucketsStore.getBucketWithEvents({ id: bucketId });
-        const events = bucket.events;
-        const datakeys = events.length > 0 ? Object.keys(events[0].data) : [];
-        const columns = ['timestamp', 'duration'].concat(datakeys);
-        const data = events.map(e => {
-          return Object.assign(
-            { timestamp: e.timestamp, duration: e.duration },
-            Object.fromEntries(datakeys.map(k => [k, e.data[k]]))
-          );
+        // Default local installs have no API token. Let the browser stream the
+        // download from the server endpoint so 200 OK lands immediately and
+        // the CSV never enters JS memory. Tauri cannot use <a download>, and
+        // token-authenticated deployments need Authorization: Bearer, so those
+        // still go through the blob client.
+        if (!('__TAURI__' in window) && !getStoredApiToken()) {
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = filename;
+          link.style.display = 'none';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          return;
+        }
+        const response = await this.$aw.req.get(path, {
+          timeout: 300_000,
+          responseType: 'blob',
         });
-        const csv = Papa.unparse(data, { columns, header: true });
-        const filename = `aw-events-export-${bucketId}-${new Date()
-          .toISOString()
-          .substring(0, 10)}.csv`;
-        await downloadFile(filename, csv, 'text/csv');
+        await downloadBlob(filename, response.data, 'text/csv');
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
         this.export_error = `Export failed: ${msg}`;

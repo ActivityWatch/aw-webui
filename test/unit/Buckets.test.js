@@ -23,3 +23,17 @@ describe('Buckets.vue JSON export', () => {
     expect(src).not.toMatch(/await fetch\(/);
   });
 });
+
+describe('Buckets.vue CSV export', () => {
+  const src = fs.readFileSync(path.join(__dirname, '../../src/views/Buckets.vue'), 'utf8');
+
+  test('streams unauthenticated browser downloads and authenticates otherwise', () => {
+    expect(src).toMatch(/export\/csv/);
+    expect(src).toMatch(/androidExportFromUrl/);
+    expect(src).toMatch(/getStoredApiToken/);
+    expect(src).toMatch(/link\.click\(\)/);
+    expect(src).toMatch(/responseType:\s*'blob'/);
+    expect(src).not.toMatch(/Papa/);
+    expect(src).not.toMatch(/timeout:\s*0/);
+  });
+});
