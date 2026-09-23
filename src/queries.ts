@@ -355,13 +355,20 @@ function browsersWithBuckets(browserbuckets: string[]): [string, string][] {
 // here (#927, ActivityWatch/activitywatch#1094). Fork alternatives are $-anchored so
 // names like "archive" / "Dialog" don't match.
 //
-// When a dedicated fork bucket participates (today: settings-override Arc), only that
-// fork is stripped from the chrome stream so the dedicated bucket owns those events
-// without dropping other chrome-bucket forks (Dia has no dedicated bucket).
+// Helium is not a Chromium fork itself, but it can run the Chrome Web Store
+// extension build, which reports the "Helium" app name into the chrome bucket
+// the same way (#898). It's listed here rather than in browser_appname_regex.helium
+// so it gets the same dedicated-bucket exclusion as Arc/Dia below.
+//
+// When a dedicated fork bucket participates (today: settings-override Arc, or a
+// standalone Helium bucket), only that fork is stripped from the chrome stream so
+// the dedicated bucket owns those events without dropping other chrome-bucket
+// forks (Dia has no dedicated bucket).
 const CHROME_BASE_ALTS = ['google[-_ ]?chrome', 'chrome', 'chromium'];
 const CHROME_FORK_ALTS: Record<string, string> = {
   arc: 'arc(\\.exe)?$',
   dia: 'dia(\\.exe)?$',
+  helium: 'helium(\\.exe)?$',
 };
 
 export function chromeAppnameRegex(excludeForks: Iterable<string> = []): string {

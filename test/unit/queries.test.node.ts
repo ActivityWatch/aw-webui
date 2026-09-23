@@ -17,6 +17,8 @@
  *             Chromium forks that report through the chrome extension bucket (#927):
  *             'Arc', 'arc.exe', 'Arc.exe', 'Dia', 'Dia.exe'
  *             (macOS bundle ID retained as exact: 'company.thebrowser.dia')
+ *             Helium running the Chrome Web Store extension build (#898):
+ *             'Helium', 'helium.exe'
  *
  *   Firefox:  'Firefox', 'Firefox.exe', 'firefox', 'firefox.exe',
  *             'Firefox Developer Edition', 'firefoxdeveloperedition',
@@ -101,6 +103,9 @@ describe('browser_appname_regex', () => {
       'Arc.exe',
       'Dia',
       'Dia.exe',
+      // Helium running the Chrome Web Store extension build (#898)
+      'Helium',
+      'helium.exe',
     ];
     for (const name of knownNames) {
       expect(re.test(name)).toBe(true);
@@ -118,6 +123,7 @@ describe('browser_appname_regex', () => {
     expect(re.test('archive')).toBe(false);
     expect(re.test('arcade')).toBe(false);
     expect(re.test('Dialog')).toBe(false);
+    expect(re.test('Heliumburger')).toBe(false);
   });
 
   test('chrome exact list includes the Dia macOS bundle id', () => {
@@ -140,6 +146,12 @@ describe('browser_appname_regex', () => {
     expect(both.test('Arc')).toBe(false);
     expect(both.test('Dia')).toBe(false);
     expect(both.test('Chrome')).toBe(true);
+
+    const noHelium = toRegex(chromeAppnameRegex(['helium']));
+    expect(noHelium.test('Helium')).toBe(false);
+    expect(noHelium.test('helium.exe')).toBe(false);
+    expect(noHelium.test('Arc')).toBe(true);
+    expect(noHelium.test('Google Chrome')).toBe(true);
 
     expect(chromeAppnameRegex()).toBe(browser_appname_regex.chrome);
   });
@@ -299,6 +311,36 @@ describe('chrome fork matching in generated query', () => {
     expect(query).toContain('company.thebrowser.dia');
     // JSON.stringify doubles the regex backslash, so the query text has \\.
     expect(query).toContain('dia(\\\\.exe)?$');
+  });
+
+  test('chrome-only bucket (no dedicated Helium bucket) still matches Helium app name (#898)', () => {
+    const query = fullDesktopQuery({
+      ...params,
+      bid_browsers: ['aw-watcher-web-chrome_testhost'],
+    }).join('\n');
+    expect(query).toContain('helium(\\\\.exe)?$');
+  });
+
+  test('mixed chrome and Helium buckets: Helium bucket owns Helium events, chrome stream excludes Helium', () => {
+    const query = fullDesktopQuery({
+      ...params,
+      bid_browsers: ['aw-watcher-web-chrome_testhost', 'aw-watcher-web-helium_testhost'],
+    }).join('\n');
+    const chromeWindowFilter = query.slice(
+      query.indexOf('window_chrome_re ='),
+      query.indexOf('events_chrome = filter_period_intersect')
+    );
+    // The chrome stream must NOT match Helium when a dedicated Helium bucket exists.
+    expect(chromeWindowFilter).not.toContain('helium(\\\\.exe)?$');
+    // Dia has no dedicated bucket and still writes to chrome — keep matching it.
+    expect(chromeWindowFilter).toContain('dia(\\\\.exe)?$');
+    // The Helium bucket keeps its own matching path.
+    expect(query).toContain('window_helium_re =');
+    expect(query).toContain('(?i)(helium)');
+    // Streams concat plainly; no overlap-masking that would drop real activity.
+    expect(query).toContain('browser_events = concat(browser_events, events_chrome);');
+    expect(query).toContain('browser_events = concat(browser_events, events_helium);');
+    expect(query).not.toContain('union_no_overlap');
   });
 
   test('mixed chrome and Arc buckets: Arc bucket owns Arc events, chrome stream excludes Arc', () => {
