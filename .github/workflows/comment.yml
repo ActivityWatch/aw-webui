@@ -17,11 +17,19 @@ jobs:
 
     steps:
     - uses: actions/checkout@v7
-    - uses: iterative/setup-cml@1b5ab8766e715e8f1aab96bbb1f4f2e3e1e8af45  # v3
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        vega: false
+    # setup-cml@v3 still queries GitHub's unauthenticated releases API:
+    # it constructs Octokit with `token:` (ignored; the option is `auth:`),
+    # so GITHUB_TOKEN does not lift the shared runner-IP quota. Pin the
+    # linux-x64 binary instead of calling /releases/latest.
+    # sha256 of iterative/cml v0.20.6 cml-linux-x64.
+    - name: Install CML
+      run: |
+        curl -fsSL -o "$RUNNER_TEMP/cml" \
+          https://github.com/iterative/cml/releases/download/v0.20.6/cml-linux-x64
+        echo "74621a15b0c2cdd2b7751c5eb91228b10661fb0ec21b1564d1146820b5792655  $RUNNER_TEMP/cml" \
+          | sha256sum -c -
+        chmod +x "$RUNNER_TEMP/cml"
+        echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
 
     # Doesn't work for fetching artifacts from separate workflows
     #- name: Download screenshots
