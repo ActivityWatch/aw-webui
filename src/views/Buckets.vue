@@ -140,9 +140,13 @@ div
       p.small.text-muted {{ $t('buckets.exportHelp') }}
       b-button(@click="export_all_buckets_json()",
                :title="$t('buckets.exportAllJson')",
+               :disabled="exporting",
                variant="outline-secondary")
-        icon.mr-1(name="download")
-        | {{ $t('buckets.exportAllJson') }}
+        b-spinner.mr-1(v-if="exporting", small)
+        icon.mr-1(v-else, name="download")
+        | {{ exporting ? $t('buckets.exporting') : $t('buckets.exportAllJson') }}
+      b-alert.mt-2(v-if="export_error", variant="danger", show, dismissible, @dismissed="export_error = null")
+        | {{ export_error }}
 
   hr
 
@@ -234,7 +238,7 @@ import moment from 'moment';
 
 import { useServerStore } from '~/stores/server';
 import { useBucketsStore } from '~/stores/buckets';
-import { downloadFile } from '~/util/export';
+import { androidExportFromUrl, downloadBlob, downloadFile } from '~/util/export';
 
 export default {
   name: 'Buckets',
@@ -254,9 +258,14 @@ export default {
       delete_host_selected: null,
       deleting_host: false,
       delete_host_error: null,
+      export_inflight: 0,
+      export_error: null as string | null,
     };
   },
   computed: {
+    exporting() {
+      return this.export_inflight > 0;
+    },
     fields() {
       return [
         {
@@ -379,33 +388,64 @@ export default {
     },
 
     async export_bucket_json(bucketId: string) {
-      const response = await this.$aw.req.get(`/0/buckets/${bucketId}/export`);
-      const data = JSON.stringify(response.data, null, 2);
-      await downloadFile(`aw-bucket-export-${bucketId}.json`, data, 'application/json');
+      await this.export_json(`/0/buckets/${bucketId}/export`, `aw-bucket-export-${bucketId}.json`);
     },
 
     async export_all_buckets_json() {
-      const response = await this.$aw.req.get('/0/export');
-      const data = JSON.stringify(response.data, null, 2);
-      await downloadFile('aw-bucket-export.json', data, 'application/json');
+      await this.export_json('/0/export', 'aw-buckets-export.json');
+    },
+
+    async export_json(path: string, filename: string) {
+      const url = `${this.$aw.req.defaults.baseURL || ''}${path}`;
+      if (androidExportFromUrl(url, filename)) {
+        return;
+      }
+      this.export_inflight += 1;
+      this.export_error = null;
+      try {
+        // Keep the axios client so Authorization: Bearer is sent. blob
+        // skips JSON.parse/pretty-print. A 5-minute timeout beats the 30s
+        // default without leaving the spinner stuck if the server stalls.
+        const response = await this.$aw.req.get(path, {
+          timeout: 300_000,
+          responseType: 'blob',
+        });
+        await downloadBlob(filename, response.data, 'application/json');
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        this.export_error = `Export failed: ${msg}`;
+        console.error('JSON export failed:', e);
+      } finally {
+        this.export_inflight = Math.max(0, this.export_inflight - 1);
+      }
     },
 
     async export_csv(bucketId: string) {
-      const bucket = await this.bucketsStore.getBucketWithEvents({ id: bucketId });
-      const events = bucket.events;
-      const datakeys = events.length > 0 ? Object.keys(events[0].data) : [];
-      const columns = ['timestamp', 'duration'].concat(datakeys);
-      const data = events.map(e => {
-        return Object.assign(
-          { timestamp: e.timestamp, duration: e.duration },
-          Object.fromEntries(datakeys.map(k => [k, e.data[k]]))
-        );
-      });
-      const csv = Papa.unparse(data, { columns, header: true });
-      const filename = `aw-events-export-${bucketId}-${new Date()
-        .toISOString()
-        .substring(0, 10)}.csv`;
-      await downloadFile(filename, csv, 'text/csv');
+      this.export_inflight += 1;
+      this.export_error = null;
+      try {
+        const bucket = await this.bucketsStore.getBucketWithEvents({ id: bucketId });
+        const events = bucket.events;
+        const datakeys = events.length > 0 ? Object.keys(events[0].data) : [];
+        const columns = ['timestamp', 'duration'].concat(datakeys);
+        const data = events.map(e => {
+          return Object.assign(
+            { timestamp: e.timestamp, duration: e.duration },
+            Object.fromEntries(datakeys.map(k => [k, e.data[k]]))
+          );
+        });
+        const csv = Papa.unparse(data, { columns, header: true });
+        const filename = `aw-events-export-${bucketId}-${new Date()
+          .toISOString()
+          .substring(0, 10)}.csv`;
+        await downloadFile(filename, csv, 'text/csv');
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        this.export_error = `Export failed: ${msg}`;
+        console.error('CSV export failed:', e);
+      } finally {
+        this.export_inflight = Math.max(0, this.export_inflight - 1);
+      }
     },
   },
 };

@@ -9,3 +9,17 @@ describe('Buckets.vue device ID label', () => {
     expect(src).not.toMatch(/ID: \{\{ device\.id \}\}/);
   });
 });
+
+describe('Buckets.vue JSON export', () => {
+  const src = fs.readFileSync(path.join(__dirname, '../../src/views/Buckets.vue'), 'utf8');
+
+  test('does not parse or pretty-print large export JSON in the WebView', () => {
+    expect(src).toMatch(/responseType:\s*'blob'/);
+    expect(src).toMatch(/timeout:\s*300_000/);
+    expect(src).not.toMatch(/timeout:\s*0/);
+    expect(src).toMatch(/androidExportFromUrl/);
+    expect(src).toMatch(/this\.\$aw\.req\.get/);
+    expect(src).not.toMatch(/JSON\.stringify\(response\.data/);
+    expect(src).not.toMatch(/await fetch\(/);
+  });
+});

@@ -9,3 +9,11 @@ declare const AW_RESEARCH_EDITION: boolean;
 // JSON-encoded preset category sets shipped by this build (empty string if none).
 // See src/util/presetCategories.ts
 declare const AW_PRESET_CATEGORY_SETS: string;
+
+interface AndroidExportBridge {
+  exportFromUrl?: (url: string, filename: string) => void;
+}
+
+interface Window {
+  Android?: AndroidExportBridge;
+}

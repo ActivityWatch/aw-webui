@@ -81,7 +81,10 @@ async function downloadFileTauri(
 }
 
 function downloadFileBrowser(filename: string, content: string, mimeType: string): void {
-  const blob = new Blob([content], { type: mimeType });
+  downloadBlobBrowser(filename, new Blob([content], { type: mimeType }));
+}
+
+function downloadBlobBrowser(filename: string, blob: Blob): void {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -91,4 +94,29 @@ function downloadFileBrowser(filename: string, content: string, mimeType: string
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+}
+
+/**
+ * Save a Blob without JSON.parse/stringify. Large bucket exports must not be
+ * inflated into a JS object graph in a WebView.
+ */
+export async function downloadBlob(filename: string, blob: Blob, mimeType: string): Promise<void> {
+  if (isTauri()) {
+    await downloadFile(filename, await blob.text(), mimeType);
+    return;
+  }
+  downloadBlobBrowser(filename, blob);
+}
+
+/**
+ * Android WebView bridge: stream the export URL natively instead of buffering
+ * it in JS. Returns false when the bridge is absent (desktop/browser).
+ */
+export function androidExportFromUrl(url: string, filename: string): boolean {
+  const bridge = typeof window === 'undefined' ? undefined : window.Android;
+  if (!bridge || typeof bridge.exportFromUrl !== 'function') {
+    return false;
+  }
+  bridge.exportFromUrl(url, filename);
+  return true;
 }
