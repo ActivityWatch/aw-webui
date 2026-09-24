@@ -150,3 +150,94 @@ describe('VisTimeline zoom-anchor regression (#847)', () => {
     });
   });
 });
+
+describe('VisTimeline scroll bounds (#996)', () => {
+  const moment = require('moment');
+  const { update } = VisTimeline.methods;
+  const dayStart = moment('2026-09-24T00:00:00Z');
+  const dayEnd = moment(dayStart).add(1, 'day');
+
+  function makeVm(overrides = {}) {
+    return {
+      timeline: { setOptions: jest.fn(), setWindow: jest.fn(), setData: jest.fn() },
+      options: {},
+      bucketsFromEither: [{ id: 'aw-watcher-window_host' }],
+      chartData: [
+        {
+          bucketId: 'aw-watcher-window_host',
+          title: 'app',
+          tooltip: 'app',
+          start: new Date('2026-09-24T10:00:00Z'),
+          end: new Date('2026-09-24T11:00:00Z'),
+          color: '#ccc',
+          swimlane: '',
+        },
+      ],
+      showRowLabels: false,
+      queriedInterval: [dayStart, dayEnd],
+      updateTimelineWindow: undefined,
+      ...overrides,
+    };
+  }
+
+  test('bounds scrolling to the queried interval without updateTimelineWindow', () => {
+    const vm = makeVm();
+
+    update.call(vm);
+
+    expect(vm.options.min).toBe(dayStart);
+    expect(vm.options.max).toBe(dayEnd);
+    expect(vm.timeline.setOptions).toHaveBeenCalledWith(vm.options);
+    // First bounds: show the whole queried day
+    expect(vm.timeline.setWindow).toHaveBeenCalledWith(dayStart, dayEnd);
+  });
+
+  test('keeps the zoomed window when the same interval is re-rendered', () => {
+    const vm = makeVm();
+    update.call(vm);
+    vm.timeline.setWindow.mockClear();
+
+    // e.g. a data refresh for the same day, with fresh moment instances
+    vm.queriedInterval = [moment(dayStart), moment(dayEnd)];
+    update.call(vm);
+
+    expect(vm.timeline.setWindow).not.toHaveBeenCalled();
+  });
+
+  test('moves a zoomed window to the new day when the queried day changes', () => {
+    const vm = makeVm();
+    update.call(vm);
+    vm.timeline.setWindow.mockClear();
+
+    const nextStart = moment(dayStart).add(1, 'day');
+    const nextEnd = moment(dayEnd).add(1, 'day');
+    vm.queriedInterval = [nextStart, nextEnd];
+    update.call(vm);
+
+    expect(vm.options.min).toBe(nextStart);
+    expect(vm.options.max).toBe(nextEnd);
+    // vis-timeline doesn't re-clamp the window on setOptions, so without this
+    // the view would stay on the previous day
+    expect(vm.timeline.setWindow).toHaveBeenCalledWith(nextStart, nextEnd);
+  });
+
+  test('also resets the visible window when updateTimelineWindow is set', () => {
+    const vm = makeVm({ updateTimelineWindow: true });
+
+    update.call(vm);
+
+    expect(vm.options.min).toBe(dayStart);
+    expect(vm.options.max).toBe(dayEnd);
+    expect(vm.timeline.setWindow).toHaveBeenCalledWith(dayStart, dayEnd);
+  });
+
+  test('leaves bounds unset when there is no queried interval', () => {
+    const vm = makeVm({ queriedInterval: undefined });
+
+    update.call(vm);
+
+    expect(vm.options.min).toBeUndefined();
+    expect(vm.options.max).toBeUndefined();
+    expect(vm.timeline.setOptions).not.toHaveBeenCalled();
+  });
+});
