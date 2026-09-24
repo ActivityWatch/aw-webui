@@ -99,7 +99,7 @@ div
     | {{ $t('timeline.noEvents') }}
 
   div(v-if="buckets !== null")
-    vis-timeline(:buckets="buckets", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane", :updateTimelineWindow='updateTimelineWindow')
+    vis-timeline(:buckets="buckets", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane", :updateTimelineWindow='updateTimelineWindow', @event-saved="refreshAfterEdit")
 
     aw-devonly(reason="Not ready for production, still experimenting")
       aw-calendar(:buckets="buckets")
@@ -120,6 +120,7 @@ import { useCategoryStore } from '~/stores/categories';
 import { matchString } from '~/util/classes';
 import { getCategorizationStringFromEvent } from '~/util/color';
 import { seconds_to_duration } from '~/util/time';
+import { reloadEditedBucket } from '~/util/timelineBucketRefresh';
 
 export default {
   name: 'Timeline',
@@ -144,6 +145,9 @@ export default {
         { value: 'bucketType', text: 'Group by bucket type' },
       ],
       updateTimelineWindow: true,
+      bucketLoadId: 0,
+      bucketsLoading: false,
+      savedEditRefreshPending: false,
     };
   },
   computed: {
@@ -226,6 +230,44 @@ export default {
     },
   },
   methods: {
+    async refreshAfterEdit(bucketId) {
+      this.updateTimelineWindow = false;
+      if (!this.all_buckets || !this.buckets || !this.daterange) return;
+      this.savedEditRefreshPending = true;
+      // A full load already in progress may have started before the save.
+      if (this.bucketsLoading) {
+        await this.getBuckets();
+        return;
+      }
+
+      const loadId = ++this.bucketLoadId;
+      const range = this.daterange;
+      try {
+        const result = await reloadEditedBucket(
+          this.all_buckets,
+          this.buckets,
+          bucketId,
+          range,
+          buckets => this.filterBuckets(buckets)
+        );
+        if (loadId !== this.bucketLoadId || this.daterange !== range) return;
+        this.all_buckets = result.allBuckets;
+        this.buckets = result.displayedBuckets;
+        this.savedEditRefreshPending = false;
+      } catch (e) {
+        if (loadId !== this.bucketLoadId) return;
+        this.savedEditRefreshPending = false;
+        this.showRefreshError(e);
+      }
+    },
+    showRefreshError(error) {
+      console.error('Failed to refresh timeline after saving an event:', error);
+      this.$bvToast.toast('Event saved, but the timeline could not refresh. Reload to see it.', {
+        title: 'Timeline refresh failed',
+        variant: 'warning',
+        solid: true,
+      });
+    },
     onCategorySelect(event) {
       const text = event.target.value;
       if (!text) return;
@@ -240,22 +282,39 @@ export default {
     },
     getBuckets: async function () {
       if (this.daterange == null) return;
-
-      this.all_buckets = Object.freeze(
-        await useBucketsStore().getBucketsWithEvents({
-          start: this.daterange[0].format(),
-          end: this.daterange[1].format(),
-        })
-      );
-
-      this.hosts = this.all_buckets
-        .map(a => a.hostname)
-        .filter((value, index, array) => array.indexOf(value) === index);
-      this.clients = this.all_buckets
-        .map(a => a.client)
-        .filter((value, index, array) => array.indexOf(value) === index);
-
-      let buckets = this.all_buckets;
+      const loadId = ++this.bucketLoadId;
+      this.bucketsLoading = true;
+      try {
+        const allBuckets = Object.freeze(
+          await useBucketsStore().getBucketsWithEvents({
+            start: this.daterange[0].format(),
+            end: this.daterange[1].format(),
+          })
+        );
+        if (loadId !== this.bucketLoadId) return;
+        const buckets = await this.filterBuckets(allBuckets);
+        if (loadId !== this.bucketLoadId) return;
+        this.all_buckets = allBuckets;
+        this.buckets = buckets;
+        this.hosts = allBuckets
+          .map(a => a.hostname)
+          .filter((value, index, array) => array.indexOf(value) === index);
+        this.clients = allBuckets
+          .map(a => a.client)
+          .filter((value, index, array) => array.indexOf(value) === index);
+        this.savedEditRefreshPending = false;
+      } catch (e) {
+        if (loadId !== this.bucketLoadId) return;
+        if (!this.savedEditRefreshPending) throw e;
+        this.savedEditRefreshPending = false;
+        this.showRefreshError(e);
+      } finally {
+        if (loadId === this.bucketLoadId) this.bucketsLoading = false;
+      }
+    },
+    filterBuckets: async function (sourceBuckets) {
+      // Filters replace bucket.events; keep the unfiltered data for later changes.
+      let buckets = sourceBuckets.map(bucket => ({ ...bucket }));
       if (this.filter_hostname) {
         buckets = _.filter(buckets, b => b.hostname == this.filter_hostname);
       }
@@ -302,7 +361,7 @@ export default {
         buckets = this._applyMergeSimilar(buckets);
       }
 
-      this.buckets = buckets;
+      return buckets;
     },
 
     // Merges adjacent events with the same app name within window buckets.
