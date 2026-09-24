@@ -13,7 +13,11 @@ jest.mock('vis-timeline/styles/vis-timeline-graph2d.css', () => ({}));
 
 const range = [moment('2026-09-24T00:00:00Z'), moment('2026-09-25T00:00:00Z')];
 const bucket = (id, app) => ({ id, events: [{ id: 1, data: { app } }] });
-const visStub = { name: 'vis-timeline', props: ['buckets'], render: h => h('div') };
+const visStub = {
+  name: 'vis-timeline',
+  props: ['buckets', 'updateTimelineWindow', 'queriedInterval'],
+  render: h => h('div'),
+};
 
 function mountView(...buckets) {
   setActivePinia(createPinia());
@@ -134,6 +138,62 @@ test('a failed reread leaves the timeline visible and warns', async () => {
     );
   } finally {
     log.mockRestore();
+    wrapper.destroy();
+  }
+});
+
+test('overlapping saves in different buckets retain both edits', async () => {
+  let finishFirstRefresh;
+  const firstRefresh = new Promise(resolve => (finishFirstRefresh = resolve));
+  const edited = bucket('edited', 'Edited App');
+  const other = bucket('other', 'Edited Other App');
+  useBucketsStore.mockReturnValue({
+    getBucketWithEvents: jest.fn().mockReturnValueOnce(firstRefresh).mockResolvedValue(other),
+    getBucketsWithEvents: jest.fn().mockResolvedValue([edited, other]),
+  });
+  const wrapper = mountView(bucket('edited', 'Original App'), bucket('other', 'Other App'));
+  try {
+    const pendingRefresh = wrapper.vm.refreshAfterEdit('edited');
+    await wrapper.vm.refreshAfterEdit('other');
+    finishFirstRefresh(edited);
+    await pendingRefresh;
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.findComponent(visStub).props('buckets')).toEqual([edited, other]);
+    expect(wrapper.findComponent(visStub).props('updateTimelineWindow')).toBe(false);
+  } finally {
+    wrapper.destroy();
+  }
+});
+
+test('a save during date navigation preserves the new timeline window', async () => {
+  let finishOldLoad;
+  const oldLoad = new Promise(resolve => (finishOldLoad = resolve));
+  const edited = bucket('edited', 'Edited App');
+  const getBucketsWithEvents = jest
+    .fn()
+    .mockReturnValueOnce(oldLoad)
+    .mockResolvedValueOnce([edited]);
+  useBucketsStore.mockReturnValue({ getBucketsWithEvents });
+  const wrapper = mountView(bucket('edited', 'Original App'));
+  const nextRange = range.map(value => value.clone().add(1, 'day'));
+  try {
+    await wrapper.setData({ daterange: nextRange });
+    expect(getBucketsWithEvents).toHaveBeenCalledTimes(1);
+    await wrapper.vm.refreshAfterEdit('edited');
+    finishOldLoad([bucket('edited', 'Original App')]);
+    await new Promise(resolve => setTimeout(resolve, 0));
+    await wrapper.vm.$nextTick();
+
+    const vis = wrapper.findComponent(visStub);
+    expect(vis.props('buckets')).toEqual([edited]);
+    expect(vis.props('queriedInterval')).toEqual(nextRange);
+    expect(vis.props('updateTimelineWindow')).toBe(true);
+    expect(getBucketsWithEvents).toHaveBeenLastCalledWith({
+      start: nextRange[0].format(),
+      end: nextRange[1].format(),
+    });
+  } finally {
     wrapper.destroy();
   }
 });

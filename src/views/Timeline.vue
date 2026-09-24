@@ -231,15 +231,17 @@ export default {
   },
   methods: {
     async refreshAfterEdit(bucketId) {
-      this.updateTimelineWindow = false;
       if (!this.all_buckets || !this.buckets || !this.daterange) return;
-      this.savedEditRefreshPending = true;
-      // A full load already in progress may have started before the save.
-      if (this.bucketsLoading) {
+      // Restart overlapping loads with all buckets so no saved edit is lost.
+      // Preserve any window update requested by a pending date-range load.
+      if (this.bucketsLoading || this.savedEditRefreshPending) {
+        this.savedEditRefreshPending = true;
         await this.getBuckets();
         return;
       }
 
+      this.updateTimelineWindow = false;
+      this.savedEditRefreshPending = true;
       const loadId = ++this.bucketLoadId;
       const range = this.daterange;
       try {
