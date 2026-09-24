@@ -423,10 +423,17 @@ export default {
           const end =
             (this.queriedInterval && this.queriedInterval[1]) ||
             _.max(_.map(items, item => item.end));
+          // vis-timeline doesn't re-clamp the visible window when min/max
+          // change, so a view left zoomed into the previous day would stay out
+          // of range. Reset the window when the bounds move, but keep the
+          // user's zoom when the same interval is re-rendered.
+          const boundsChanged =
+            moment(this.options.min).valueOf() !== moment(start).valueOf() ||
+            moment(this.options.max).valueOf() !== moment(end).valueOf();
           this.options.min = start;
           this.options.max = end;
           this.timeline.setOptions(this.options);
-          if (this.updateTimelineWindow) {
+          if (this.updateTimelineWindow || boundsChanged) {
             this.timeline.setWindow(start, end);
           }
         }

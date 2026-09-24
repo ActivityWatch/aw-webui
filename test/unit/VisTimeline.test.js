@@ -188,8 +188,37 @@ describe('VisTimeline scroll bounds (#996)', () => {
     expect(vm.options.min).toBe(dayStart);
     expect(vm.options.max).toBe(dayEnd);
     expect(vm.timeline.setOptions).toHaveBeenCalledWith(vm.options);
-    // The visible window is left alone unless the caller asks for it
+    // First bounds: show the whole queried day
+    expect(vm.timeline.setWindow).toHaveBeenCalledWith(dayStart, dayEnd);
+  });
+
+  test('keeps the zoomed window when the same interval is re-rendered', () => {
+    const vm = makeVm();
+    update.call(vm);
+    vm.timeline.setWindow.mockClear();
+
+    // e.g. a data refresh for the same day, with fresh moment instances
+    vm.queriedInterval = [moment(dayStart), moment(dayEnd)];
+    update.call(vm);
+
     expect(vm.timeline.setWindow).not.toHaveBeenCalled();
+  });
+
+  test('moves a zoomed window to the new day when the queried day changes', () => {
+    const vm = makeVm();
+    update.call(vm);
+    vm.timeline.setWindow.mockClear();
+
+    const nextStart = moment(dayStart).add(1, 'day');
+    const nextEnd = moment(dayEnd).add(1, 'day');
+    vm.queriedInterval = [nextStart, nextEnd];
+    update.call(vm);
+
+    expect(vm.options.min).toBe(nextStart);
+    expect(vm.options.max).toBe(nextEnd);
+    // vis-timeline doesn't re-clamp the window on setOptions, so without this
+    // the view would stay on the previous day
+    expect(vm.timeline.setWindow).toHaveBeenCalledWith(nextStart, nextEnd);
   });
 
   test('also resets the visible window when updateTimelineWindow is set', () => {
