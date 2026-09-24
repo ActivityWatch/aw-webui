@@ -413,7 +413,10 @@ export default {
           });
         }
 
-        if (this.updateTimelineWindow) {
+        // Always bound scrolling to the queried interval when one is given, even
+        // if the caller doesn't want the visible window reset (e.g. the Daily
+        // Timeline on the Activity page, see #996).
+        if (this.queriedInterval || this.updateTimelineWindow) {
           const start =
             (this.queriedInterval && this.queriedInterval[0]) ||
             _.min(_.map(items, item => item.start));
@@ -423,7 +426,9 @@ export default {
           this.options.min = start;
           this.options.max = end;
           this.timeline.setOptions(this.options);
-          this.timeline.setWindow(start, end);
+          if (this.updateTimelineWindow) {
+            this.timeline.setWindow(start, end);
+          }
         }
 
         // Hide buckets with no events in the queried range
