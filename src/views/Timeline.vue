@@ -79,7 +79,7 @@ div
       title="Display options"
       aria-label="Display options"
     )
-      template(v-slot:button-content)
+      template(v-slot:button-content="")
         icon(name="ellipsis-v")
       b-dropdown-header Swimlanes
       b-dropdown-item-button(

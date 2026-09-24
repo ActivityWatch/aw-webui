@@ -241,8 +241,8 @@ export default {
     openEditor: function () {
       this.$bvModal.show('edit-modal-' + this.editingEvent.id);
     },
-    onEventSaved() {
-      this.$emit('event-saved', this.editingEventBucket);
+    onEventSaved(bucketId) {
+      this.$emit('event-saved', bucketId);
     },
     onSelect: async function (properties) {
       if (properties.items.length == 0) {

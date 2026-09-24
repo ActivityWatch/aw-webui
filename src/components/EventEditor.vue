@@ -109,11 +109,13 @@ export default {
   },
   methods: {
     async save() {
+      const bucketId = this.bucket_id;
+      const editedEvent = this.editedEvent;
       // This emit needs to be called first, otherwise it won't occur for some reason
       // FIXME: but what if the replace fails? Then UI will incorrectly think event was replaced?
-      this.$emit('save', this.editedEvent);
-      await this.$aw.replaceEvent(this.bucket_id, this.editedEvent);
-      this.$emit('saved', this.editedEvent);
+      this.$emit('save', editedEvent);
+      await this.$aw.replaceEvent(bucketId, editedEvent);
+      this.$emit('saved', bucketId);
     },
     async delete_() {
       // This emit needs to be called first, otherwise it won't occur for some reason
