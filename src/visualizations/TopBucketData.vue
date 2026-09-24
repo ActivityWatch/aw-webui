@@ -10,7 +10,7 @@ div
         )
     b-col(cols="12", md="6").mb-2
       b-form-group
-        template(#label)
+        template(#label="")
           span Field in event data
           span.info-icon(
             title="Field names come from event data. Dot notation is supported (e.g., data.title)."
@@ -121,6 +121,21 @@ export default {
     },
   },
   watch: {
+    // Vue reuses this component instance when switching between two views that
+    // both have a Top Bucket Data vis at the same position (the v-for in
+    // ActivityView keys by index). data() snapshots the initial* props only on
+    // creation, so a reused instance keeps the previous view's selection and
+    // never refreshes. Re-sync from props whenever they change so each view
+    // shows its own saved bucket/field. Fixes #935.
+    initialBucketId: function () {
+      this.syncFromProps();
+    },
+    initialField: function () {
+      this.syncFromProps();
+    },
+    initialCustomField: function () {
+      this.syncFromProps();
+    },
     selectedBucketId: function () {
       this.emitSelection();
       this.loadEvents();
@@ -148,6 +163,26 @@ export default {
     }
   },
   methods: {
+    syncFromProps() {
+      // Adopt the reused instance to the incoming view's saved selection.
+      // Guard against no-op churn: our own emitSelection() round-trips back
+      // through the parent's stored props, so only react to real changes.
+      const nextBucket = this.initialBucketId || '';
+      const nextField = this.initialField || '';
+      const nextCustom = this.initialCustomField || '';
+      if (
+        nextBucket === this.selectedBucketId &&
+        nextField === this.selectedField &&
+        nextCustom === this.customField
+      ) {
+        return;
+      }
+      this.selectedBucketId = nextBucket;
+      this.selectedField = nextField;
+      this.customField = nextCustom;
+      // If the new view didn't pin a bucket, fall back to the default one.
+      this.setDefaultBucket();
+    },
     setDefaultBucket() {
       if (this.selectedBucketId) return;
       const host = this.activityStore.query_options && this.activityStore.query_options.host;
