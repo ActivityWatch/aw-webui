@@ -20,6 +20,7 @@ import moment from 'moment';
 import _ from 'lodash';
 import FullCalendar from '@fullcalendar/vue';
 import timeGridPlugin from '@fullcalendar/timegrid';
+import { calendarTimeBounds } from '~/util/calendar';
 
 // TODO: Use canonical timeline query, with flooding and categorization
 // TODO: Checkbox for toggling category-view, where adjacent events with same category are merged and the events are labeled by category
@@ -37,26 +38,13 @@ export default {
   computed: {
     calendarOptions: function () {
       const events = this.events;
-      const first = _.minBy(events, e => e.start);
-      const last = _.maxBy(events, e => e.end);
-      // FIXME: end must be at least one slot (1 hour) after start, otherwise it fails hard
-      let start, end;
-      if (this.fitToActive && events.length > 0) {
-        console.log(first.start);
-        start = moment(first.start).startOf('hour').format().slice(11, 16);
-        end = moment(last.end).endOf('hour').format().slice(11, 16);
-      } else {
-        start = '00:00:00';
-        end = '24:00:00';
-      }
       return {
         plugins: [timeGridPlugin],
         initialView: this.view,
         eventClick: this.onEventClick,
         events: events,
         allDaySlot: false,
-        slotMinTime: start,
-        slotMaxTime: end,
+        ...calendarTimeBounds(events, this.fitToActive),
         nowIndicator: true,
         expandRows: true,
         slotLabelFormat: {
@@ -73,7 +61,7 @@ export default {
 
       const bucket = _.find(this.buckets, b => b.id == this.selectedBucket);
       if (bucket == null) {
-        return;
+        return [];
       }
       let events = bucket.events;
       events = _.filter(events, e => e.duration > 10);

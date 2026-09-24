@@ -75,8 +75,7 @@ export default {
           return format_weekday_short(date);
         });
       } else if (resolution.startsWith('month')) {
-        // FIXME: Needs access to the timeperiod start to know which month
-        // How many days are in the given month?
+        // How many days are in the month containing `start`?
         const date = new Date(start);
         const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
         return _.range(1, daysInMonth + 1).map(d =>
