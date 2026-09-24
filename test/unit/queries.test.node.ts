@@ -59,6 +59,7 @@
  */
 
 import {
+  analysisContextQuery,
   appQuery,
   browser_appname_regex,
   browser_appnames,
@@ -66,6 +67,7 @@ import {
   categoryQuery,
   chromeAppnameRegex,
   fullDesktopQuery,
+  multideviceQuery,
   querystr_to_array,
 } from '~/queries';
 
@@ -382,6 +384,28 @@ describe('querystr_to_array', () => {
     const result = querystr_to_array(query);
     expect(result).toHaveLength(2);
   });
+});
+
+test('generated AQL contains no JavaScript comments', () => {
+  const multidevice = multideviceQuery({
+    hosts: ['testhost'],
+    host_params: {},
+    filter_afk: true,
+    always_active_pattern: '',
+    categories: [],
+    filter_categories: [],
+  });
+  const context = analysisContextQuery({
+    bid_window: 'aw-watcher-window_testhost',
+    bid_afk: 'aw-watcher-afk_testhost',
+    bid_browsers: [],
+    filter_afk: true,
+    categories: [],
+    filter_categories: [],
+  });
+
+  expect(multidevice.join('\n')).not.toMatch(/^\s*\/\//m);
+  expect(context.join('\n')).not.toMatch(/^\s*\/\//m);
 });
 
 // Regression guard for ActivityWatch/aw-webui#959:
