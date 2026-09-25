@@ -257,6 +257,20 @@ svg.appsummary g rect[style="fill: rgb(184, 184, 184);"] {
   fill: #555555 !important;
 }
 
+/* appsummary bar-chart labels: white text fails WCAG 4.5:1 contrast over
+   light-colored bars (e.g. #FFE082 yellow, #90CAF9 light blue), while plain
+   black text fails on dark bars and on the dark background when a short bar
+   ends before its label does. Keep white fill and add a dark outline:
+   `paint-order: stroke` draws the stroke behind the fill, so the glyph shape
+   stays crisp and the label reads on light bars, dark bars, and background. */
+svg.appsummary g text {
+  fill: #fff !important;
+  stroke: #23272d !important;
+  stroke-width: 3px !important;
+  stroke-linejoin: round !important;
+  paint-order: stroke fill !important;
+}
+
 svg path[style="fill: rgb(255, 255, 255);"] {
   fill: #23272d !important;
 }
