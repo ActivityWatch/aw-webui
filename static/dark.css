@@ -257,6 +257,15 @@ svg.appsummary g rect[style="fill: rgb(184, 184, 184);"] {
   fill: #555555 !important;
 }
 
+/* appsummary bar-chart labels: the generic `svg text { fill: #fff }` rule
+   above renders white text over light-colored bars (e.g. #FFE082 yellow,
+   #90CAF9 light blue) — failing WCAG 4.5:1 contrast. Unset the override
+   so labels fall back to the component's own fill or SVG default (black),
+   which reads on both light and dark bar colors. */
+svg.appsummary g text {
+  fill: unset !important;
+}
+
 svg path[style="fill: rgb(255, 255, 255);"] {
   fill: #23272d !important;
 }
