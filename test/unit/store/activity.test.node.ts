@@ -41,7 +41,7 @@ describe('activity store', () => {
     expect(categoryStore.classes_hierarchy).not.toHaveLength(0);
   });
 
-  test('queries active history one period per request', async () => {
+  test('queries year active history one period per request', async () => {
     activityStore.active.history = {};
     activityStore.buckets.afk = ['aw-watcher-afk_test'];
     const querySpy = jest
@@ -59,6 +59,23 @@ describe('activity store', () => {
       expect(call[0]).toHaveLength(1);
     }
     expect(Object.keys(activityStore.active.history)).toHaveLength(querySpy.mock.calls.length);
+    querySpy.mockRestore();
+  });
+
+  test('queries active history in one batch for shorter periods', async () => {
+    activityStore.active.history = {};
+    activityStore.buckets.afk = ['aw-watcher-afk_test'];
+    const querySpy = jest
+      .spyOn(getClient(), 'query')
+      .mockImplementation(async periods => periods.map(() => []));
+
+    await activityStore.query_active_history({
+      host: 'test',
+      timeperiod: { start: '2020-01-01T00:00:00+00:00', length: [1, 'month'] },
+    });
+
+    expect(querySpy).toHaveBeenCalledTimes(1);
+    expect(querySpy.mock.calls[0][0].length).toBeGreaterThan(1);
     querySpy.mockRestore();
   });
 });

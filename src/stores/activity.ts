@@ -521,20 +521,22 @@ export const useActivityStore = defineStore('activity', {
         afk_buckets = [this.buckets.afk[0]];
       }
       const query = queries.activityQuery(afk_buckets);
-      // One request per period: in Year view each period is a whole year, and
-      // sending all of them at once can exceed the per-request timeout.
       const client = getClient();
-      const signal = client.controller.signal;
-      const data: IEvent[][] = [];
-      for (const period of periods) {
-        if (signal.aborted) {
-          throw signal['reason'] || 'unknown reason';
+      const opts = { name: 'activityQuery', verbose: true };
+      let data: IEvent[][];
+      if (timeperiod.length[1].startsWith('year')) {
+        // One request per period: each is a whole year, and sending all of
+        // them at once can exceed the per-request timeout on large archives.
+        const signal = client.controller.signal;
+        data = [];
+        for (const period of periods) {
+          if (signal.aborted) {
+            throw signal['reason'] || 'unknown reason';
+          }
+          data.push((await client.query([period], query, opts))[0]);
         }
-        const res = await client.query([period], query, {
-          name: 'activityQuery',
-          verbose: true,
-        });
-        data.push(res[0]);
+      } else {
+        data = await client.query(periods, query, opts);
       }
       const active_history = _.zipObject(
         periods,
