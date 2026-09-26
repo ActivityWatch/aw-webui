@@ -1,6 +1,6 @@
 import { setActivePinia, createPinia } from 'pinia';
 
-import { useActivityStore } from '~/stores/activity';
+import { chunkPeriodsBySpan, useActivityStore } from '~/stores/activity';
 import { useCategoryStore } from '~/stores/categories';
 import { createClient, getClient } from '~/util/awclient';
 
@@ -41,7 +41,13 @@ describe('activity store', () => {
     expect(categoryStore.classes_hierarchy).not.toHaveLength(0);
   });
 
-  test('queries year active history one period per request', async () => {
+  test.each([
+    ['day', [1, 'day'], 1],
+    ['week', [1, 'week'], 1],
+    ['month', [1, 'month'], 3],
+    ['last30d', [30, 'day'], 3],
+    ['year', [1, 'year'], null], // one request per (past) year
+  ])('bounds active history requests to ~1 year each (%s)', async (_name, periodLength, calls) => {
     activityStore.active.history = {};
     activityStore.buckets.afk = ['aw-watcher-afk_test'];
     const querySpy = jest
@@ -50,32 +56,27 @@ describe('activity store', () => {
 
     await activityStore.query_active_history({
       host: 'test',
-      timeperiod: { start: '2020-01-01T00:00:00+00:00', length: [1, 'year'] },
+      timeperiod: { start: '2020-01-01T00:00:00+00:00', length: periodLength },
     });
 
-    // 15 years before + the current one; later ones are in the future and skipped
-    expect(querySpy.mock.calls.length).toBeGreaterThan(1);
-    for (const call of querySpy.mock.calls) {
-      expect(call[0]).toHaveLength(1);
-    }
-    expect(Object.keys(activityStore.active.history)).toHaveLength(querySpy.mock.calls.length);
+    const requested = querySpy.mock.calls.flatMap(call => call[0]);
+    expect(querySpy).toHaveBeenCalledTimes(calls ?? requested.length);
+    expect(Object.keys(activityStore.active.history).sort()).toEqual([...requested].sort());
     querySpy.mockRestore();
   });
 
-  test('queries active history in one batch for shorter periods', async () => {
-    activityStore.active.history = {};
-    activityStore.buckets.afk = ['aw-watcher-afk_test'];
-    const querySpy = jest
-      .spyOn(getClient(), 'query')
-      .mockImplementation(async periods => periods.map(() => []));
-
-    await activityStore.query_active_history({
-      host: 'test',
-      timeperiod: { start: '2020-01-01T00:00:00+00:00', length: [1, 'month'] },
-    });
-
-    expect(querySpy).toHaveBeenCalledTimes(1);
-    expect(querySpy.mock.calls[0][0].length).toBeGreaterThan(1);
-    querySpy.mockRestore();
+  test('chunkPeriodsBySpan keeps each chunk within maxDays', () => {
+    const periods = [
+      '2020-01-01T00:00:00Z/2020-07-01T00:00:00Z',
+      '2020-07-01T00:00:00Z/2021-01-01T00:00:00Z',
+      '2021-01-01T00:00:00Z/2021-01-02T00:00:00Z',
+      '2021-01-02T00:00:00Z/2022-06-01T00:00:00Z',
+    ];
+    expect(chunkPeriodsBySpan(periods)).toEqual([
+      periods.slice(0, 2),
+      [periods[2]],
+      [periods[3]], // longer than maxDays on its own, still sent
+    ]);
+    expect(chunkPeriodsBySpan([])).toEqual([]);
   });
 });

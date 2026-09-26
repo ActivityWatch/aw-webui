@@ -89,6 +89,33 @@ async function queryDesktopPeriods(
   return mergeFullDesktopResults(results);
 }
 
+/**
+ * Group period strings so each request covers at most `maxDays` in total.
+ * Active history for a year of AFK events takes ~6-8s on aw-server; all 16
+ * years around a Year view in one request took 37s (erb-m2, 2026-09-26),
+ * past the 30s request timeout. Day/Week views still fit in one request.
+ */
+export function chunkPeriodsBySpan(periods: string[], maxDays = 366): string[][] {
+  const chunks: string[][] = [];
+  let current: string[] = [];
+  let span = 0;
+  for (const period of periods) {
+    const [start, end] = period.split('/');
+    const days = moment(end).diff(moment(start), 'days', true);
+    if (current.length > 0 && span + days > maxDays) {
+      chunks.push(current);
+      current = [];
+      span = 0;
+    }
+    current.push(period);
+    span += days;
+  }
+  if (current.length > 0) {
+    chunks.push(current);
+  }
+  return chunks;
+}
+
 export interface QueryOptions {
   host: string;
   date?: string;
@@ -522,21 +549,13 @@ export const useActivityStore = defineStore('activity', {
       }
       const query = queries.activityQuery(afk_buckets);
       const client = getClient();
-      const opts = { name: 'activityQuery', verbose: true };
-      let data: IEvent[][];
-      if (timeperiod.length[1].startsWith('year')) {
-        // One request per period: each is a whole year, and sending all of
-        // them at once can exceed the per-request timeout on large archives.
-        const signal = client.controller.signal;
-        data = [];
-        for (const period of periods) {
-          if (signal.aborted) {
-            throw signal['reason'] || 'unknown reason';
-          }
-          data.push((await client.query([period], query, opts))[0]);
+      const signal = client.controller.signal;
+      const data: IEvent[][] = [];
+      for (const chunk of chunkPeriodsBySpan(periods)) {
+        if (signal.aborted) {
+          throw signal['reason'] || 'unknown reason';
         }
-      } else {
-        data = await client.query(periods, query, opts);
+        data.push(...(await client.query(chunk, query, { name: 'activityQuery', verbose: true })));
       }
       const active_history = _.zipObject(
         periods,
