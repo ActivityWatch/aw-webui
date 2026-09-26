@@ -2,7 +2,7 @@ import { setActivePinia, createPinia } from 'pinia';
 
 import { useActivityStore } from '~/stores/activity';
 import { useCategoryStore } from '~/stores/categories';
-import { createClient } from '~/util/awclient';
+import { createClient, getClient } from '~/util/awclient';
 
 describe('activity store', () => {
   setActivePinia(createPinia());
@@ -39,5 +39,26 @@ describe('activity store', () => {
     // Check that getters behave somewhat
     expect(categoryStore.all_categories).not.toHaveLength(0);
     expect(categoryStore.classes_hierarchy).not.toHaveLength(0);
+  });
+
+  test('queries active history one period per request', async () => {
+    activityStore.active.history = {};
+    activityStore.buckets.afk = ['aw-watcher-afk_test'];
+    const querySpy = jest
+      .spyOn(getClient(), 'query')
+      .mockImplementation(async periods => periods.map(() => []));
+
+    await activityStore.query_active_history({
+      host: 'test',
+      timeperiod: { start: '2020-01-01T00:00:00+00:00', length: [1, 'year'] },
+    });
+
+    // 15 years before + the current one; later ones are in the future and skipped
+    expect(querySpy.mock.calls.length).toBeGreaterThan(1);
+    for (const call of querySpy.mock.calls) {
+      expect(call[0]).toHaveLength(1);
+    }
+    expect(Object.keys(activityStore.active.history)).toHaveLength(querySpy.mock.calls.length);
+    querySpy.mockRestore();
   });
 });

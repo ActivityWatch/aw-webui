@@ -521,10 +521,21 @@ export const useActivityStore = defineStore('activity', {
         afk_buckets = [this.buckets.afk[0]];
       }
       const query = queries.activityQuery(afk_buckets);
-      const data = await getClient().query(periods, query, {
-        name: 'activityQuery',
-        verbose: true,
-      });
+      // One request per period: in Year view each period is a whole year, and
+      // sending all of them at once can exceed the per-request timeout.
+      const client = getClient();
+      const signal = client.controller.signal;
+      const data: IEvent[][] = [];
+      for (const period of periods) {
+        if (signal.aborted) {
+          throw signal['reason'] || 'unknown reason';
+        }
+        const res = await client.query([period], query, {
+          name: 'activityQuery',
+          verbose: true,
+        });
+        data.push(res[0]);
+      }
       const active_history = _.zipObject(
         periods,
         _.map(data, pair => _.filter(pair, e => e.data.status == 'not-afk'))
