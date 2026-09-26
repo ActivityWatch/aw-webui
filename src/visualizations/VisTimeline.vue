@@ -413,17 +413,29 @@ export default {
           });
         }
 
-        if (this.updateTimelineWindow) {
+        // Always bound scrolling to the queried interval when one is given, even
+        // if the caller doesn't want the visible window reset (e.g. the Daily
+        // Timeline on the Activity page, see #996).
+        if (this.queriedInterval || this.updateTimelineWindow) {
           const start =
             (this.queriedInterval && this.queriedInterval[0]) ||
             _.min(_.map(items, item => item.start));
           const end =
             (this.queriedInterval && this.queriedInterval[1]) ||
             _.max(_.map(items, item => item.end));
+          // vis-timeline doesn't re-clamp the visible window when min/max
+          // change, so a view left zoomed into the previous day would stay out
+          // of range. Reset the window when the bounds move, but keep the
+          // user's zoom when the same interval is re-rendered.
+          const boundsChanged =
+            moment(this.options.min).valueOf() !== moment(start).valueOf() ||
+            moment(this.options.max).valueOf() !== moment(end).valueOf();
           this.options.min = start;
           this.options.max = end;
           this.timeline.setOptions(this.options);
-          this.timeline.setWindow(start, end);
+          if (this.updateTimelineWindow || boundsChanged) {
+            this.timeline.setWindow(start, end);
+          }
         }
 
         // Hide buckets with no events in the queried range
