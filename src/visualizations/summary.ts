@@ -166,6 +166,7 @@ function update(container: HTMLElement, apps: Entry[]) {
         .attr('x', 5)
         .attr('y', curr_y + 1.4 * textSize)
         .attr('clip-path', `url(#${clip})`)
+        .attr('aria-hidden', 'true')
         .text(displayName)
         .attr('font-family', 'sans-serif')
         .attr('font-size', textSize + 'px')
@@ -177,6 +178,7 @@ function update(container: HTMLElement, apps: Entry[]) {
         .attr('x', 5)
         .attr('y', curr_y + 2.6 * textSize)
         .attr('clip-path', `url(#${clip})`)
+        .attr('aria-hidden', 'true')
         .text(seconds_to_duration(app.duration))
         .attr('font-family', 'sans-serif')
         .attr('font-size', textSize - 3 + 'px')
@@ -197,6 +199,37 @@ function update(container: HTMLElement, apps: Entry[]) {
   curr_y -= 5;
 
   svg.attr('height', curr_y);
+
+  // Post-render pass: re-read each bar's actual computed fill (CSS may have
+  // overridden it, e.g. dark.css recolors uncategorized #CCC bars to #666)
+  // and update the in-bar label colours to maintain contrast.
+  if (typeof window !== 'undefined' && window.requestAnimationFrame) {
+    window.requestAnimationFrame(() => {
+      for (let i = 0; i < apps.length; i++) {
+        const group = svg_elem.querySelector(`#summary_${i}`) as SVGGElement | null;
+        if (!group) continue;
+        const barRect = group.querySelector('rect') as SVGRectElement | null;
+        if (!barRect) continue;
+        const computedFill = window.getComputedStyle(barRect).fill;
+        if (!computedFill) continue;
+        let actualHex: string;
+        try {
+          actualHex = Color(computedFill).hex();
+        } catch {
+          continue;
+        }
+        const colors = inBarColors(actualHex);
+        const clipInRef = `url(#${chartId}-in-${i})`;
+        const inBarTexts = group.querySelectorAll<SVGTextElement>(
+          `text[clip-path="${clipInRef}"]`
+        );
+        if (inBarTexts[0])
+          inBarTexts[0].style.setProperty('fill', colors.name, 'important');
+        if (inBarTexts[1])
+          inBarTexts[1].style.setProperty('fill', colors.duration, 'important');
+      }
+    });
+  }
 
   return container;
 }
