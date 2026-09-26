@@ -462,9 +462,7 @@ export const useActivityStore = defineStore('activity', {
         // Perform this last, as it takes the longest.
         // Skipped when query_desktop_full already derived it (long ranges).
         const derivedByPeriod =
-          this.window.available &&
-          !settingsStore.useMultidevice &&
-          usesMonthlyBuckets(query_options.timeperiod);
+          this.window.available && usesMonthlyBuckets(query_options.timeperiod);
         if ((this.window.available || this.android.available) && !derivedByPeriod) {
           await this.query_category_time_by_period(query_options);
         }
@@ -524,13 +522,20 @@ export const useActivityStore = defineStore('activity', {
       this.stopwatch.available = false;
 
       await this.query_multidevice_full(query_options, hosts);
-      await this.query_active_history_multidevice(query_options, hosts);
+      if (!query_options.skip_active_history) {
+        // Period-usage bars (not shown for custom ranges and All time)
+        await this.query_active_history_multidevice(query_options, hosts);
+      }
       if (this.editor.available) {
         await this.query_editor(query_options);
       } else {
         await this.query_editor_completed();
       }
-      await this.query_category_time_by_period(query_options);
+      // Long ranges derive it from the chunk results in query_multidevice_full
+      if (!usesMonthlyBuckets(query_options.timeperiod)) {
+        await this.query_category_time_by_period(query_options);
+      }
+      this.progress = null;
     },
 
     get_buckets_multidevice(this: State, hosts: string[]) {
@@ -658,10 +663,18 @@ export const useActivityStore = defineStore('activity', {
       this.progress_add(periods.length);
       const params = this.multidevice_params(query_options, hosts);
       const q = queries.multideviceQuery(params);
-      const { merged } = await queryDesktopPeriods(periods, q, 'multidevice', () =>
+      const { merged, chunks } = await queryDesktopPeriods(periods, q, 'multidevice', () =>
         this.progress_tick()
       );
       const windowResult = merged.window || {};
+      if (usesMonthlyBuckets(query_options.timeperiod)) {
+        // As in query_desktop_full: long ranges don't keep years of active
+        // events in state, and build the monthly barchart from the chunks.
+        windowResult.active_events = [];
+        this.query_category_time_by_period_completed({
+          by_period: categoryByPeriodFromChunks(query_options.timeperiod, chunks),
+        });
+      }
 
       // ScreenTime (iOS) events carry the bundle ID as "app": show the app
       // name instead, as the single-device view (query_android) does.
@@ -772,7 +785,9 @@ export const useActivityStore = defineStore('activity', {
       const settingsStore = useSettingsStore();
       const bucketsStore = useBucketsStore();
       await bucketsStore.ensureLoaded();
-      const hosts = settingsStore.useMultidevice ? bucketsStore.hosts : [host];
+      // The devices the Activity query will include (see resolve_multidevice_hosts)
+      const selected = this.resolve_multidevice_hosts(host);
+      const hosts = selected.length > 0 ? selected : [host];
       const key = [hosts.join(','), settingsStore.startOfDay].join('|');
       if (earliestDateCache.has(key)) return earliestDateCache.get(key);
 

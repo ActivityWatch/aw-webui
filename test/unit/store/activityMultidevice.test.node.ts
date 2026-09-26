@@ -108,7 +108,13 @@ describe('multidevice availability flags', () => {
     ]) {
       jest.spyOn(activityStore, name as any).mockResolvedValue(undefined);
     }
-    await activityStore.ensure_loaded_multidevice({ host: '@all' } as any, hosts);
+    await activityStore.ensure_loaded_multidevice(
+      {
+        host: '@all',
+        timeperiod: { start: '2026-09-25T04:00:00+02:00', length: [1, 'day'] },
+      } as any,
+      hosts
+    );
     return {
       window: activityStore.window.available,
       android: activityStore.android.available,
@@ -146,5 +152,60 @@ describe('uncachedHistoryPeriods', () => {
 
   test('re-queries the period containing now, and skips future ones', () => {
     expect(uncachedHistoryPeriods([aug, sep, oct], { [aug]: [], [sep]: [] }, now)).toEqual([sep]);
+  });
+});
+
+describe('multidevice path for custom ranges and All time', () => {
+  setActivePinia(createPinia());
+  const activityStore = useActivityStore();
+  const bucketsStore = useBucketsStore();
+  bucketsStore.buckets = [
+    bucket('aw-watcher-window_self', 'currentwindow', 'self'),
+    bucket('aw-watcher-afk_self', 'afkstatus', 'self'),
+    bucket('aw-watcher-android-test', 'currentwindow', 'phone'),
+  ] as any;
+
+  function spies() {
+    const names = [
+      'query_multidevice_full',
+      'query_active_history_multidevice',
+      'query_editor',
+      'query_editor_completed',
+      'query_category_time_by_period',
+    ];
+    return Object.fromEntries(
+      names.map(n => [n, jest.spyOn(activityStore, n as any).mockResolvedValue(undefined)])
+    );
+  }
+
+  test('skips period-usage history when asked, and clears progress', async () => {
+    const s = spies();
+    activityStore.progress = { done: 1, total: 2 };
+    await activityStore.ensure_loaded_multidevice(
+      {
+        host: '@all',
+        skip_active_history: true,
+        timeperiod: { start: '2026-09-01T04:00:00+02:00', length: [7, 'days'] },
+      } as any,
+      ['self', 'phone']
+    );
+    expect(s.query_active_history_multidevice).not.toHaveBeenCalled();
+    expect(s.query_category_time_by_period).toHaveBeenCalled();
+    expect(activityStore.progress).toBeNull();
+    jest.restoreAllMocks();
+  });
+
+  test('long ranges take the barchart from the query chunks instead', async () => {
+    const s = spies();
+    await activityStore.ensure_loaded_multidevice(
+      {
+        host: '@all',
+        timeperiod: { start: '2024-01-01T04:00:00+01:00', length: [700, 'days'] },
+      } as any,
+      ['self', 'phone']
+    );
+    expect(s.query_active_history_multidevice).toHaveBeenCalled();
+    expect(s.query_category_time_by_period).not.toHaveBeenCalled();
+    jest.restoreAllMocks();
   });
 });

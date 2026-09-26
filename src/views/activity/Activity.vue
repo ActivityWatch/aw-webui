@@ -825,9 +825,12 @@ export default {
         this.bucketsStore.bucketsWindow(host).length === 0
       );
     },
+    // Same view for other devices: keep the route's date part as-is, which is
+    // a custom range for 'range', absent for 'all' (and for today), like pushPeriod.
     routeForHost(hostParam: string) {
+      const datePart = this.date ? `/${this.date}` : '';
       return {
-        path: `/activity/${hostParam}/${this.periodLength}/${this._date}/${this.subview}/${this.currentViewId}`,
+        path: `/activity/${hostParam}/${this.periodLength}${datePart}/${this.subview}/${this.currentViewId}`,
         query: this.$route.query,
       };
     },
