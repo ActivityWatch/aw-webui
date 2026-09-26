@@ -289,6 +289,8 @@ export default {
     rangeStart: '开始日期',
     rangeEnd: '结束日期',
     invalidRange: 'URL 中的日期范围无效，改为显示今天。',
+    periodAllTime: '全部时间',
+    allTimeSlowHint: '数据库较大时，加载全部时间可能需要一段时间。',
     filterAfkTooltip: '过滤掉 AFK watcher 未检测到任何输入的时间。',
     filterAudibleTooltip: '如果活动窗口是有声音的浏览器标签页，则计为活跃。需要浏览器 watcher。',
     showCategory: '显示分类',
@@ -330,6 +332,7 @@ export default {
     periodLast7d: '最近 7 天',
     periodLast30d: '最近 30 天',
     periodCustomRange: '在所选范围内',
+    periodAllTime: '总计',
   },
   visualizations: {
     noData: '（无数据）',
