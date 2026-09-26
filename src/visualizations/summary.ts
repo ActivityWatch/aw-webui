@@ -21,7 +21,7 @@ let chartCounter = 0;
 function inBarColors(barColor: string): { name: string; duration: string } {
   const bar = Color(barColor);
   return bar.contrast(Color(textColor)) >= bar.contrast(Color('#fff'))
-    ? { name: textColor, duration: durationColor }
+    ? { name: textColor, duration: textColor }
     : { name: '#fff', duration: '#eee' };
 }
 
