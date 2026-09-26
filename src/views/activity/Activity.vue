@@ -8,11 +8,55 @@ div
   div.mb-3.text-muted(style="font-size: 0.9em;")
     ul.list-group.list-group-horizontal-md
       li.list-group-item.pl-0.pr-3.py-0.border-0
-        b.mr-1 {{ $t('activity.host') }}
-        span {{ host }}
+        b.mr-1 {{ isMultidevice ? $t('activity.devices') : $t('activity.host') }}
+        span(v-if="selectableHosts.length <= 1 && !isMultidevice") {{ host }}
+        // Device selector: a single device, a subset, or "All devices".
+        // The selection is encoded in the route's :host param, see util/multidevice.ts.
+        b-dropdown.host-selector(
+          v-else
+          size="sm"
+          variant="link"
+          toggle-class="p-0 text-muted host-selector-toggle"
+          data-testid="host-selector"
+        )
+          template(v-slot:button-content)
+            span {{ hostLabel }}
+          b-dropdown-item(
+            :to="routeForHost(allDevicesParam)"
+            :active="hostSelection.all"
+            data-testid="host-selector-all"
+          )
+            icon.mr-1(name="layer-group")
+            | {{ $t('activity.allDevices') }}
+          b-dropdown-divider
+          b-dropdown-form.host-selector-form
+            div.d-flex.align-items-center.justify-content-between.host-selector-row(
+              v-for="h in selectableHosts"
+              :key="h"
+            )
+              b-form-checkbox.mr-3(
+                :checked="selectedHosts.includes(h)"
+                :disabled="selectedHosts.length === 1 && selectedHosts.includes(h)"
+                @change="toggleHost(h)"
+                :data-testid="'host-selector-host-' + h"
+              )
+                icon.mr-1(:name="isMobileHost(h) ? 'mobile' : 'desktop'" scale="0.8")
+                | {{ h }}
+              router-link.small(:to="routeForHost(hostParamFor([h]))")
+                | {{ $t('activity.onlyThisDevice') }}
+            // Devices named in the URL that have no activity data (e.g. removed
+            // buckets): shown, but not as selected, since they aren't queried.
+            div.host-selector-row.text-muted(
+              v-for="h in unavailableHosts"
+              :key="'unavailable-' + h"
+              :data-testid="'host-selector-unavailable-' + h"
+            )
+              b-form-checkbox.mr-3(:checked="false" disabled)
+                | {{ h }} {{ $t('visualizations.noData') }}
       li.list-group-item.pl-0.pr-3.py-0.border-0
         b.mr-1 {{ $t('activity.timeActive') }}
         span {{ activityStore.active.duration | friendlyduration }}
+    div(v-if="isMultidevice") {{ $t('activity.multideviceNote') }}
     ul.list-group.list-group-horizontal-md(v-if="periodLength != 'day'")
       li.list-group-item.pl-0.pr-3.py-0.border-0
         b.mr-1 {{ $t('activity.queryRange') }}
@@ -158,6 +202,11 @@ div
   margin-bottom: 0.5rem;
 }
 
+.host-selector-row {
+  white-space: nowrap;
+  line-height: 1.8;
+}
+
 .activity-dateinput {
   // Keep the date picker compact and aligned with the period button-group
   // regardless of mode (day / week / month / year / N days). The full
@@ -225,11 +274,25 @@ import 'vue-awesome/icons/save';
 import 'vue-awesome/icons/question-circle';
 import 'vue-awesome/icons/filter';
 import 'vue-awesome/icons/ellipsis-v';
+import 'vue-awesome/icons/layer-group';
+import 'vue-awesome/icons/mobile';
+import 'vue-awesome/icons/desktop';
 
 import { useSettingsStore } from '~/stores/settings';
 import { useCategoryStore } from '~/stores/categories';
 import { useActivityStore, QueryOptions } from '~/stores/activity';
 import { useViewsStore } from '~/stores/views';
+import { useBucketsStore } from '~/stores/buckets';
+import {
+  ALL_DEVICES,
+  HostSelection,
+  eligibleMultideviceHosts,
+  formatHostParam,
+  isMultiHostSelection,
+  parseHostParam,
+  resolveHostSelection,
+  toggleHostInSelection,
+} from '~/util/multidevice';
 
 export default {
   name: 'Activity',
@@ -257,6 +320,7 @@ export default {
       categoryStore: useCategoryStore(),
       viewsStore: useViewsStore(),
       settingsStore: useSettingsStore(),
+      bucketsStore: useBucketsStore(),
 
       today: null,
       showOptions: false,
@@ -370,8 +434,54 @@ export default {
         return null;
       }
     },
+    // The device selection encoded in the :host route param
+    hostSelection(): HostSelection {
+      return parseHostParam(this.host, this.bucketsStore.hosts);
+    },
+    isMultidevice(): boolean {
+      return isMultiHostSelection(this.hostSelection);
+    },
+    // Hosts with activity data, which can be picked in the device selector
+    selectableHosts(): string[] {
+      const hosts = eligibleMultideviceHosts(
+        this.bucketsStore.hosts,
+        this.bucketsStore.bucketsWindow,
+        this.bucketsStore.bucketsAFK,
+        this.bucketsStore.bucketsAndroid,
+        { includeFakedata: this.hostSelection.hosts.some(h => h.startsWith('fakedata')) }
+      );
+      // A single host is queried whatever buckets it has, so keep it listed
+      if (!this.isMultidevice) {
+        this.hostSelection.hosts.forEach(h => {
+          if (!hosts.includes(h)) hosts.push(h);
+        });
+      }
+      return hosts;
+    },
+    // Hosts named in a multi-device URL that have no activity data
+    // (and are therefore left out of the query)
+    unavailableHosts(): string[] {
+      if (!this.isMultidevice) return [];
+      return this.hostSelection.hosts.filter(h => !this.selectableHosts.includes(h));
+    },
+    selectedHosts(): string[] {
+      return resolveHostSelection(this.hostSelection, this.selectableHosts);
+    },
+    hostLabel(): string {
+      if (this.hostSelection.all) {
+        return this.$t('activity.allDevicesCount', { count: this.selectedHosts.length }).toString();
+      }
+      return this.hostSelection.hosts.join(', ');
+    },
+    allDevicesParam(): string {
+      return ALL_DEVICES;
+    },
+    // Canonical (URI-safe) form of the :host param for building links
+    hostParam(): string {
+      return formatHostParam(this.hostSelection);
+    },
     link_prefix: function () {
-      return `/activity/${this.host}/${this.periodLength}`;
+      return `/activity/${this.hostParam}/${this.periodLength}`;
     },
     periodusage: function () {
       return this.activityStore.getActiveHistoryAroundTimeperiod(this.timeperiod);
@@ -518,7 +628,7 @@ export default {
         const new_period_length_moment = periodLengthConvertMoment(periodLength);
         new_date = anchorDate.clone().startOf(new_period_length_moment).format('YYYY-MM-DD');
       }
-      const path = `/activity/${this.host}/${periodLength}/${new_date}/${this.subview}/${this.currentViewId}`;
+      const path = `/activity/${this.hostParam}/${periodLength}/${new_date}/${this.subview}/${this.currentViewId}`;
       if (this.$route.path !== path) {
         this.$router.push({
           path,
@@ -539,6 +649,29 @@ export default {
         always_active_pattern: this.always_active_pattern,
       };
       await this.activityStore.ensure_loaded(queryOptions);
+    },
+
+    hostParamFor(hosts: string[]): string {
+      return formatHostParam(hosts);
+    },
+    isMobileHost(host: string): boolean {
+      return (
+        this.bucketsStore.bucketsAndroid(host).length > 0 &&
+        this.bucketsStore.bucketsWindow(host).length === 0
+      );
+    },
+    routeForHost(hostParam: string) {
+      return {
+        path: `/activity/${hostParam}/${this.periodLength}/${this._date}/${this.subview}/${this.currentViewId}`,
+        query: this.$route.query,
+      };
+    },
+    toggleHost(host: string) {
+      const next = toggleHostInSelection(this.hostSelection, host, this.selectableHosts);
+      const param = formatHostParam(next);
+      if (param !== this.hostParam) {
+        this.$router.push(this.routeForHost(param));
+      }
     },
 
     load_demo: async function () {

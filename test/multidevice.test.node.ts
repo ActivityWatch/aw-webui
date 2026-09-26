@@ -248,6 +248,24 @@ describe('multideviceQuery android events', () => {
   });
 });
 
+describe('multideviceActivityQuery', () => {
+  it('unions desktop not-afk periods with mobile app usage', () => {
+    const q = queries
+      .multideviceActivityQuery(
+        ['aw-watcher-afk_a', 'aw-watcher-afk_b-synced-from-b'],
+        ['aw-watcher-android-test-synced-from-phone']
+      )
+      .join('\n');
+    expect(q).toContain('query_bucket("aw-watcher-afk_a")');
+    expect(q).toContain('query_bucket("aw-watcher-afk_b-synced-from-b")');
+    expect(q).toContain(
+      'not_afk = period_union(not_afk, query_bucket("aw-watcher-android-test-synced-from-phone"));'
+    );
+    expect(q).toContain('filter_keyvals(not_afk_curr, "status", ["not-afk"])');
+    expect(q).toContain('RETURN = sum_durations(not_afk);');
+  });
+});
+
 describe('multideviceQuery syntax', () => {
   it('contains no comments (the query language has none)', () => {
     const q = queries.multideviceQuery({

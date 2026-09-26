@@ -585,6 +585,29 @@ export function activityQueryAndroid(androidbucket: string): string[] {
   return [`events = query_bucket("${androidbucket}");`, 'RETURN = sum_durations(events);'];
 }
 
+// Active-time query across several devices, used for the period-usage bars
+// in multidevice mode. Desktop hosts contribute their not-afk periods,
+// mobile hosts (no afkstatus bucket) their app-usage events, matching how
+// the multidevice query treats them. period_union makes simultaneous use of
+// two devices count once. Returns the total active duration (seconds).
+export function multideviceActivityQuery(afkbuckets: string[], androidbuckets: string[]): string[] {
+  let q = ['not_afk = [];'];
+  for (const afkbucket of afkbuckets) {
+    q = q.concat([
+      `not_afk_curr = query_bucket("${escape_doublequote(afkbucket)}");`,
+      `not_afk_curr = filter_keyvals(not_afk_curr, "status", ["not-afk"]);`,
+      `not_afk = period_union(not_afk, not_afk_curr);`,
+    ]);
+  }
+  for (const androidbucket of androidbuckets) {
+    q = q.concat([
+      `not_afk = period_union(not_afk, query_bucket("${escape_doublequote(androidbucket)}"));`,
+    ]);
+  }
+  q = q.concat(['RETURN = sum_durations(not_afk);']);
+  return q;
+}
+
 // Returns a query that yields a dict with a key "cat_events" which is an
 // array of one event per category, with the duration of each event set to the sum of the category durations.
 // Query for the single-pass activity-analysis context (see AISummaryView).
@@ -637,6 +660,7 @@ export default {
   appQuery,
   activityQuery,
   activityQueryAndroid,
+  multideviceActivityQuery,
   categoryQuery,
   editorActivityQuery,
 };

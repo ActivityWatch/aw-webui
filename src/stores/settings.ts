@@ -70,7 +70,6 @@ interface State {
   // Whether to show certain WIP features
   devmode: boolean;
   showYearly: boolean;
-  useMultidevice: boolean;
   requestTimeout: number;
 
   // Whether to hide visualizations that lack required data (default: off)
@@ -128,7 +127,6 @@ export const useSettingsStore = defineStore('settings', {
     // NOTE: PRODUCTION might be undefined (in tests, for example)
     devmode: typeof PRODUCTION === 'undefined' ? true : !PRODUCTION,
     showYearly: false,
-    useMultidevice: false,
     requestTimeout: 30,
     hideUnsupportedVisualizations: false,
 
