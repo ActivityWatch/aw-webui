@@ -28,6 +28,16 @@ describe('settings store locale loading', () => {
     localStorage.clear();
   });
 
+  test('load ignores removed settings keys', async () => {
+    mockGetSettings.mockResolvedValue({ showYearly: true });
+    localStorage.setItem('showYearly', 'true');
+
+    await settingsStore.load();
+
+    expect('showYearly' in settingsStore.$state).toBe(false);
+    expect(settingsStore._storedKeys).not.toContain('showYearly');
+  });
+
   test('load applies valid locale from server', async () => {
     mockGetSettings.mockResolvedValue({ locale: 'de' });
 

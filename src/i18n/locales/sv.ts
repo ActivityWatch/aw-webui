@@ -164,9 +164,6 @@ export default {
       forceDevmode: 'Tvinga utvecklarläge',
       forceDevmodeHelp:
         'Utvecklarläget aktiverar vissa funktioner som fortfarande är under utveckling.',
-      showYearly: 'Visa årligt tidsintervall',
-      showYearlyHelp:
-        'Att fråga efter ett helt år är en mycket tung operation och leder sannolikt till timeout. Frågan kan dock vara tillräckligt snabb om du kör aw-server-rust.',
       multidevice: 'Använd fråga för flera enheter',
       multideviceHelp:
         'En fråga för flera enheter samlar händelser från flera värdar i aktivitetsvyn. Det är ett tidigt experiment som för närvarande inte stöder webbläsarbuckets eller funktionen som räknar hörbart innehåll som aktivt.',

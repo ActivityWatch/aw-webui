@@ -302,17 +302,11 @@ export default {
     },
 
     periodLengths: function () {
-      const settingsStore = useSettingsStore();
-      let periods: Record<string, string> = {
+      const periods: Record<string, string> = {
         day: this.$t('activity.periodDay').toString(),
         week: this.$t('activity.periodWeek').toString(),
         month: this.$t('activity.periodMonth').toString(),
-      };
-      if (settingsStore.showYearly) {
-        periods['year'] = this.$t('activity.periodYear').toString();
-      }
-      periods = {
-        ...periods,
+        year: this.$t('activity.periodYear').toString(),
         last7d: this.$t('activity.periodLast7d').toString(),
         last30d: this.$t('activity.periodLast30d').toString(),
       };

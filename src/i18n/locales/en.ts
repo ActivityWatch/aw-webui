@@ -161,9 +161,6 @@ export default {
         'These settings are meant for developers who (hopefully) know what they are doing, and as such, may break things unexpectedly.',
       forceDevmode: 'Force devmode',
       forceDevmodeHelp: 'Devmode enables some features that are still work-in-progress.',
-      showYearly: 'Show yearly time range',
-      showYearlyHelp:
-        'Querying an entire year is a very heavy operation, and is likely to lead to timeouts. However, the query might be fast enough if you are running aw-server-rust.',
       multidevice: 'Use multidevice query',
       multideviceHelp:
         'Multidevice query is where events are collected from several hosts in the Activity view. It is an early experiment, that currently does not support browser buckets (or the audible-as-active feature).',
