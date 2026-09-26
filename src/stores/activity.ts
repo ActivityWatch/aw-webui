@@ -144,6 +144,23 @@ export function applyScreentimeNames(events: IEvent[], bundleIdToName: Record<st
   });
 }
 
+/**
+ * Periods around `timeperiod` whose active history still needs querying:
+ * not started yet periods are skipped, cached ones are reused, except the
+ * period containing now, which is still growing.
+ */
+export function uncachedHistoryPeriods(
+  periods: string[],
+  cachedHistory: Record<string, unknown>,
+  now: Date = new Date()
+): string[] {
+  return periods.filter(tp_str => {
+    const [start, end] = tp_str.split('/').map(t => new Date(t));
+    if (start >= now) return false;
+    return !_.has(cachedHistory, tp_str) || end > now;
+  });
+}
+
 export interface QueryOptions {
   host: string;
   date?: string;
@@ -655,11 +672,10 @@ export const useActivityStore = defineStore('activity', {
 
     async query_active_history({ timeperiod }: QueryOptions) {
       // Filter out periods that are already in the history, and that are in the future
-      const periods = timeperiodStrsAroundTimeperiod(timeperiod).filter(tp_str => {
-        return (
-          !_.includes(this.active.history, tp_str) && new Date(tp_str.split('/')[0]) < new Date()
-        );
-      });
+      const periods = uncachedHistoryPeriods(
+        timeperiodStrsAroundTimeperiod(timeperiod),
+        this.active.history
+      );
       const afk_buckets = [this.buckets.afk[0]];
       const query = queries.activityQuery(afk_buckets);
       const client = getClient();
@@ -802,11 +818,10 @@ export const useActivityStore = defineStore('activity', {
 
     async query_active_history_multidevice({ timeperiod }: QueryOptions, hosts: string[]) {
       const bucketsStore = useBucketsStore();
-      const periods = timeperiodStrsAroundTimeperiod(timeperiod).filter(tp_str => {
-        return (
-          !_.includes(this.active.history, tp_str) && new Date(tp_str.split('/')[0]) < new Date()
-        );
-      });
+      const periods = uncachedHistoryPeriods(
+        timeperiodStrsAroundTimeperiod(timeperiod),
+        this.active.history
+      );
       // Same bucket choice per host as the multidevice query: desktop hosts
       // contribute their afk bucket, mobile hosts their app-usage bucket.
       const { host_params } = buildMultideviceHostParams(
@@ -845,9 +860,10 @@ export const useActivityStore = defineStore('activity', {
     },
 
     async query_active_history_android({ timeperiod }: QueryOptions) {
-      const periods = timeperiodStrsAroundTimeperiod(timeperiod).filter(tp_str => {
-        return !_.includes(this.active.history, tp_str);
-      });
+      const periods = uncachedHistoryPeriods(
+        timeperiodStrsAroundTimeperiod(timeperiod),
+        this.active.history
+      );
       // Prefer ScreenTime bucket over Android watcher for consistency with query_android
       const iosOrAndroidBucket =
         this.buckets.android.find((id: string) => id.startsWith('aw-import-screentime')) ||

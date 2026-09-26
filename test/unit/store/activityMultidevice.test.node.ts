@@ -1,6 +1,6 @@
 import { setActivePinia, createPinia } from 'pinia';
 
-import { useActivityStore } from '~/stores/activity';
+import { useActivityStore, uncachedHistoryPeriods } from '~/stores/activity';
 import { useBucketsStore } from '~/stores/buckets';
 import { createClient } from '~/util/awclient';
 
@@ -130,5 +130,21 @@ describe('multidevice availability flags', () => {
       bucket('aw-watcher-android-test-synced-from-tablet', 'currentwindow', 'tablet'),
     ] as any;
     expect(await flagsFor(['phone', 'tablet'])).toEqual({ window: false, android: true });
+  });
+});
+
+describe('uncachedHistoryPeriods', () => {
+  const now = new Date('2026-09-15T12:00:00Z');
+  const aug = '2026-08-01T00:00:00Z/2026-09-01T00:00:00Z';
+  const sep = '2026-09-01T00:00:00Z/2026-10-01T00:00:00Z';
+  const oct = '2026-10-01T00:00:00Z/2026-11-01T00:00:00Z';
+
+  test('reuses cached past periods (keys, not values)', () => {
+    expect(uncachedHistoryPeriods([aug], { [aug]: [] }, now)).toEqual([]);
+    expect(uncachedHistoryPeriods([aug], {}, now)).toEqual([aug]);
+  });
+
+  test('re-queries the period containing now, and skips future ones', () => {
+    expect(uncachedHistoryPeriods([aug, sep, oct], { [aug]: [], [sep]: [] }, now)).toEqual([sep]);
   });
 });
