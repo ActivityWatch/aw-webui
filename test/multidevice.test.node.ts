@@ -209,3 +209,75 @@ describe('buildMultideviceHostParams ScreenTime priority', () => {
     });
   });
 });
+
+// The android watcher path of canonicalEvents pre-merges events by app to
+// keep single-device responses small. merge_events_by_keys collapses each
+// app into one event at its first timestamp with the summed duration, in
+// arbitrary (hash map) order, which breaks union_no_overlap against other
+// devices' timelines. The multidevice query must keep the real events.
+describe('multideviceQuery android events', () => {
+  const baseParams = {
+    filter_afk: true,
+    categories: [],
+    filter_categories: [],
+    always_active_pattern: '',
+  };
+
+  it('does not pre-merge android events before the cross-device union', () => {
+    for (const isIos of [false, true]) {
+      const q = queries
+        .multideviceQuery({
+          ...baseParams,
+          hosts: ['myhost', 'phonehost'],
+          host_params: {
+            myhost: { bid_window: 'aw-watcher-window_myhost', bid_afk: 'aw-watcher-afk_myhost' },
+            phonehost: { bid_android: 'aw-watcher-android-test', isIos },
+          },
+        })
+        .join('\n');
+      const unionIdx = q.indexOf('union_no_overlap(events, events_phonehost)');
+      expect(unionIdx).toBeGreaterThan(-1);
+      const perHost = q.slice(0, unionIdx);
+      expect(perHost).not.toMatch(/events = merge_events_by_keys\(events, \["app"/);
+    }
+  });
+
+  it('still pre-merges in the single-device android query', () => {
+    const q = queries.appQuery('aw-watcher-android-test', [], []).join('\n');
+    expect(q).toContain('events = merge_events_by_keys(events, ["app"]);');
+  });
+});
+
+describe('multideviceActivityQuery', () => {
+  it('unions desktop not-afk periods with mobile app usage', () => {
+    const q = queries
+      .multideviceActivityQuery(
+        ['aw-watcher-afk_a', 'aw-watcher-afk_b-synced-from-b'],
+        ['aw-watcher-android-test-synced-from-phone']
+      )
+      .join('\n');
+    expect(q).toContain('query_bucket("aw-watcher-afk_a")');
+    expect(q).toContain('query_bucket("aw-watcher-afk_b-synced-from-b")');
+    expect(q).toContain(
+      'not_afk = period_union(not_afk, query_bucket("aw-watcher-android-test-synced-from-phone"));'
+    );
+    expect(q).toContain('filter_keyvals(not_afk_curr, "status", ["not-afk"])');
+    expect(q).toContain('RETURN = sum_durations(not_afk);');
+  });
+});
+
+describe('multideviceQuery syntax', () => {
+  it('contains no comments (the query language has none)', () => {
+    const q = queries.multideviceQuery({
+      filter_afk: true,
+      categories: [],
+      filter_categories: [],
+      always_active_pattern: '',
+      hosts: ['myhost', 'phonehost'],
+      host_params: {
+        phonehost: { bid_android: 'aw-watcher-android-test' },
+      },
+    });
+    q.forEach(stmt => expect(stmt).not.toMatch(/(^|\s)\/\//));
+  });
+});

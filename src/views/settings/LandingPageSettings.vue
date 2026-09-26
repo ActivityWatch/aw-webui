@@ -7,6 +7,7 @@ div
       b-select.landingpage(v-if="loaded" size="sm" :value="landingpage", @change="landingpage = $event")
         option(value="/home") Home
         option(:value="'/activity/' + hostname + '/view/'" v-for="hostname in hostnames") Activity ({{hostname}})
+        option(v-if="hostnames.length > 1" value="/activity/@all/view/") Activity ({{ $t('activity.allDevices') }})
         option(value="/timeline") Timeline
       span(v-else)
         .aw-loading Loading...

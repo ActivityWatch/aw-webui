@@ -148,9 +148,6 @@ export default {
       showYearly: '显示年度时间范围',
       showYearlyHelp:
         '查询整年是一项很重的操作，可能导致超时。不过，如果你运行的是 aw-server-rust，查询可能足够快。',
-      multidevice: '使用多设备查询',
-      multideviceHelp:
-        '多设备查询会在活动视图中收集多个主机的事件。这是早期实验功能，目前不支持浏览器存储桶或有声即活跃功能。',
       requestTimeout: '请求超时时间',
       requestTimeoutHelp:
         '服务器请求超时前允许等待的最长时间。较高的值可用于大型查询。注意：需要重新加载 Web UI 后才会生效。',
@@ -267,6 +264,11 @@ export default {
       '此时间段内未找到匹配的浏览器窗口。如果您使用的是 Chromium/Firefox 衍生浏览器，其应用名称可能尚未被识别。',
     for: '查看',
     host: '主机：',
+    devices: '设备：',
+    allDevices: '所有设备',
+    allDevicesCount: '所有设备（{count}）',
+    onlyThisDevice: '仅此',
+    multideviceNote: '仅在查看单个设备时显示浏览器和秒表数据。',
     timeActive: '活跃时间：',
     queryRange: '查询范围：',
     filters: '筛选',
