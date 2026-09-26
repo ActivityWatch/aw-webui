@@ -71,9 +71,9 @@ function update(container: HTMLElement, apps: Entry[]) {
   svg_elem.innerHTML = '';
   const svg = d3.select(svg_elem);
 
-  // Remove apps without a duration from list
+  // Remove apps without a duration or with zero duration from list
   apps = apps.filter(function (app) {
-    return app.duration !== undefined;
+    return app.duration !== undefined && app.duration > 0;
   });
 
   const chartId = 'appsummary-' + chartCounter++;
@@ -100,6 +100,10 @@ function update(container: HTMLElement, apps: Entry[]) {
 
     const hovercolor = Color(appcolor).darken(0.1).hex();
 
+    // Clip-path ids are defined here so the hover handlers can reference them.
+    const clipIn = `${chartId}-in-${i}`;
+    const clipOut = `${chartId}-out-${i}`;
+
     // Add a parent <a> element if link is set
     const a = app.link ? svg.append('a').attr('href', app.link) : svg;
 
@@ -108,9 +112,40 @@ function update(container: HTMLElement, apps: Entry[]) {
     eg.attr('id', 'summary_' + i)
       .on('mouseover', function () {
         eg.select('rect').style('fill', hovercolor);
+        // Keep in-bar label colours consistent with the hover fill.
+        const hoverColors = inBarColors(hovercolor);
+        eg.selectAll<SVGTextElement, unknown>(`text[clip-path="url(#${clipIn})"]`).each(function (
+          _,
+          j
+        ) {
+          const sel = d3.select<SVGTextElement, unknown>(this);
+          if (j === 0) sel.style('fill', hoverColors.name, 'important');
+          if (j === 1) sel.style('fill', hoverColors.duration, 'important');
+        });
       })
       .on('mouseout', function () {
         eg.select('rect').style('fill', appcolor);
+        // Re-read the actual CSS-applied fill after restoring the bar colour so
+        // any theme override (e.g. dark.css) is taken into account rather than
+        // an inBarColors call on the raw appcolor.
+        window.requestAnimationFrame(() => {
+          const barRect = eg.select<SVGRectElement>('rect').node();
+          if (!barRect) return;
+          const computedFill = window.getComputedStyle(barRect).fill;
+          if (!computedFill) return;
+          try {
+            const colors = inBarColors(Color(computedFill).hex());
+            eg.selectAll<SVGTextElement, unknown>(`text[clip-path="url(#${clipIn})"]`).each(
+              function (_, j) {
+                const sel = d3.select<SVGTextElement, unknown>(this);
+                if (j === 0) sel.style('fill', colors.name, 'important');
+                if (j === 1) sel.style('fill', colors.duration, 'important');
+              }
+            );
+          } catch {
+            // ignore
+          }
+        });
       });
 
     eg.append('title').text(app.hovertext + '\n' + seconds_to_duration(app.duration));
@@ -129,8 +164,6 @@ function update(container: HTMLElement, apps: Entry[]) {
     // once clipped to the bar (coloured for contrast against the bar) and once
     // clipped to the remaining width (default text colour, which dark.css
     // themes for the page background). See ActivityWatch/aw-server-rust#621.
-    const clipIn = `${chartId}-in-${i}`;
-    const clipOut = `${chartId}-out-${i}`;
     defs
       .append('clipPath')
       .attr('id', clipIn)
@@ -220,13 +253,9 @@ function update(container: HTMLElement, apps: Entry[]) {
         }
         const colors = inBarColors(actualHex);
         const clipInRef = `url(#${chartId}-in-${i})`;
-        const inBarTexts = group.querySelectorAll<SVGTextElement>(
-          `text[clip-path="${clipInRef}"]`
-        );
-        if (inBarTexts[0])
-          inBarTexts[0].style.setProperty('fill', colors.name, 'important');
-        if (inBarTexts[1])
-          inBarTexts[1].style.setProperty('fill', colors.duration, 'important');
+        const inBarTexts = group.querySelectorAll<SVGTextElement>(`text[clip-path="${clipInRef}"]`);
+        if (inBarTexts[0]) inBarTexts[0].style.setProperty('fill', colors.name, 'important');
+        if (inBarTexts[1]) inBarTexts[1].style.setProperty('fill', colors.duration, 'important');
       }
     });
   }
