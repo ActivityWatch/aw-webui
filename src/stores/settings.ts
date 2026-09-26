@@ -69,7 +69,6 @@ interface State {
 
   // Whether to show certain WIP features
   devmode: boolean;
-  useMultidevice: boolean;
   requestTimeout: number;
 
   // Whether to hide visualizations that lack required data (default: off)
@@ -87,7 +86,7 @@ interface State {
 
 // Settings that no longer exist. The server has no delete endpoint, so stale values
 // may still be stored; skip them on load so they don't get patched back into state.
-const REMOVED_KEYS = new Set(['showYearly']);
+const REMOVED_KEYS = new Set(['showYearly', 'useMultidevice']);
 
 export const useSettingsStore = defineStore('settings', {
   state: (): State => ({
@@ -130,7 +129,6 @@ export const useSettingsStore = defineStore('settings', {
     // Developer settings
     // NOTE: PRODUCTION might be undefined (in tests, for example)
     devmode: typeof PRODUCTION === 'undefined' ? true : !PRODUCTION,
-    useMultidevice: false,
     requestTimeout: 30,
     hideUnsupportedVisualizations: false,
 

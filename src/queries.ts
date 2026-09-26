@@ -96,10 +96,16 @@ export interface MultiQueryParams extends BaseQueryParams {
   host_params: { [host: string]: Partial<DesktopQueryParams> | Partial<AndroidQueryParams> };
 }
 
-function get_params(
-  params: MultiQueryParams,
-  host: string
-): DesktopQueryParams | AndroidQueryParams {
+// Query-variable suffix for the i-th host of a multidevice query. The index
+// keeps it unique: different hostnames can map to the same safeHostname()
+// (e.g. "work-laptop" and "worklaptop"), and would otherwise overwrite each
+// other's events.
+function hostVariableSuffix(params: MultiQueryParams, i: number): string {
+  return `${safeHostname(params.hosts[i])}_${i}`;
+}
+
+function get_params(params: MultiQueryParams, i: number): DesktopQueryParams | AndroidQueryParams {
+  const host = params.hosts[i];
   // Return the params for a given host, based on the self params and any overrides in host_params.
   // If no overrides are found, return the base (desktop) params.
   const host_params = params.host_params[host];
@@ -113,7 +119,7 @@ function get_params(
       bid_android: host_params.bid_android,
       isIos: host_params.isIos,
       keep_event_timestamps: true,
-      return_variable_suffix: safeHostname(host),
+      return_variable_suffix: hostVariableSuffix(params, i),
     };
     return new_params;
   }
@@ -123,7 +129,7 @@ function get_params(
     bid_window: 'aw-watcher-window_' + host,
     bid_afk: 'aw-watcher-afk_' + host,
     bid_browsers: [],
-    return_variable_suffix: safeHostname(host),
+    return_variable_suffix: hostVariableSuffix(params, i),
   };
 
   if (host_params) {
@@ -256,8 +262,8 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
 
 export function canonicalMultideviceEvents(params: MultiQueryParams): string {
   // First, query each device individually
-  const queries: string[] = _.map(params.hosts, hostname => {
-    return canonicalEvents(get_params(params, hostname));
+  const queries: string[] = _.map(params.hosts, (_hostname, i) => {
+    return canonicalEvents(get_params(params, i));
   });
 
   // Now we need to combine the queries to get a single series of events.
@@ -268,8 +274,8 @@ export function canonicalMultideviceEvents(params: MultiQueryParams): string {
   query += 'not_afk = [];';
   for (let i = 0; i < queries.length; i++) {
     query += `
-    events = union_no_overlap(events, events_${safeHostname(params.hosts[i])});
-    not_afk = union_no_overlap(not_afk, not_afk_${safeHostname(params.hosts[i])});
+    events = union_no_overlap(events, events_${hostVariableSuffix(params, i)});
+    not_afk = union_no_overlap(not_afk, not_afk_${hostVariableSuffix(params, i)});
     `;
   }
 
@@ -543,6 +549,18 @@ export function multideviceQuery(params: MultiQueryParams): string[] {
   );
 }
 
+// Bundle ID -> app name pairs of ScreenTime (iOS) imports, whose events carry
+// the bundle ID as "app" and the human-readable name as "title". Used to show
+// app names in combined (multidevice) views, like the single-device view does.
+export function screentimeNamesQuery(bucketIds: string[]): string[] {
+  const q = ['events = [];'];
+  for (const bid of bucketIds) {
+    q.push(`events = concat(events, query_bucket("${escape_doublequote(bid)}"));`);
+  }
+  q.push('RETURN = merge_events_by_keys(events, ["app", "title"]);');
+  return q;
+}
+
 export function editorActivityQuery(editorbuckets: string[]): string[] {
   let q = ['events = [];'];
   for (const editorbucket of editorbuckets) {
@@ -583,6 +601,29 @@ export function activityQuery(afkbuckets: string[]): string[] {
 export function activityQueryAndroid(androidbucket: string): string[] {
   androidbucket = escape_doublequote(androidbucket);
   return [`events = query_bucket("${androidbucket}");`, 'RETURN = sum_durations(events);'];
+}
+
+// Active-time query across several devices, used for the period-usage bars
+// in multidevice mode. Desktop hosts contribute their not-afk periods,
+// mobile hosts (no afkstatus bucket) their app-usage events, matching how
+// the multidevice query treats them. period_union makes simultaneous use of
+// two devices count once. Returns the total active duration (seconds).
+export function multideviceActivityQuery(afkbuckets: string[], androidbuckets: string[]): string[] {
+  let q = ['not_afk = [];'];
+  for (const afkbucket of afkbuckets) {
+    q = q.concat([
+      `not_afk_curr = query_bucket("${escape_doublequote(afkbucket)}");`,
+      `not_afk_curr = filter_keyvals(not_afk_curr, "status", ["not-afk"]);`,
+      `not_afk = period_union(not_afk, not_afk_curr);`,
+    ]);
+  }
+  for (const androidbucket of androidbuckets) {
+    q = q.concat([
+      `not_afk = period_union(not_afk, query_bucket("${escape_doublequote(androidbucket)}"));`,
+    ]);
+  }
+  q = q.concat(['RETURN = sum_durations(not_afk);']);
+  return q;
 }
 
 // Returns a query that yields a dict with a key "cat_events" which is an
@@ -637,6 +678,8 @@ export default {
   appQuery,
   activityQuery,
   activityQueryAndroid,
+  multideviceActivityQuery,
+  screentimeNamesQuery,
   categoryQuery,
   editorActivityQuery,
 };

@@ -1,4 +1,5 @@
 import { buildMultideviceHostParams } from '~/util/multidevice';
+import { applyScreentimeNames, screentimeNameMap } from '~/stores/activity';
 import queries from '~/queries';
 
 // Simulated bucket inventories, mirroring how aw-sync stores pulled data:
@@ -151,7 +152,7 @@ describe('multideviceQuery with host_params overrides', () => {
     expect(q).not.toContain('aw-watcher-afk_phonehost');
     // The per-host not_afk return variable must still be assigned so the
     // union across hosts doesn't reference an undefined variable.
-    expect(q).toContain('not_afk_phonehost = not_afk;');
+    expect(q).toContain('not_afk_phonehost_0 = not_afk;');
   });
 
   // Regression guard for ActivityWatch/aw-webui#988 Greptile findings:
@@ -235,7 +236,7 @@ describe('multideviceQuery android events', () => {
           },
         })
         .join('\n');
-      const unionIdx = q.indexOf('union_no_overlap(events, events_phonehost)');
+      const unionIdx = q.indexOf('union_no_overlap(events, events_phonehost_1)');
       expect(unionIdx).toBeGreaterThan(-1);
       const perHost = q.slice(0, unionIdx);
       expect(perHost).not.toMatch(/events = merge_events_by_keys\(events, \["app"/);
@@ -245,5 +246,65 @@ describe('multideviceQuery android events', () => {
   it('still pre-merges in the single-device android query', () => {
     const q = queries.appQuery('aw-watcher-android-test', [], []).join('\n');
     expect(q).toContain('events = merge_events_by_keys(events, ["app"]);');
+  });
+});
+
+describe('multideviceActivityQuery', () => {
+  it('unions desktop not-afk periods with mobile app usage', () => {
+    const q = queries
+      .multideviceActivityQuery(
+        ['aw-watcher-afk_a', 'aw-watcher-afk_b-synced-from-b'],
+        ['aw-watcher-android-test-synced-from-phone']
+      )
+      .join('\n');
+    expect(q).toContain('query_bucket("aw-watcher-afk_a")');
+    expect(q).toContain('query_bucket("aw-watcher-afk_b-synced-from-b")');
+    expect(q).toContain(
+      'not_afk = period_union(not_afk, query_bucket("aw-watcher-android-test-synced-from-phone"));'
+    );
+    expect(q).toContain('filter_keyvals(not_afk_curr, "status", ["not-afk"])');
+    expect(q).toContain('RETURN = sum_durations(not_afk);');
+  });
+});
+
+describe('multideviceQuery per-host variables', () => {
+  it('keeps hosts apart whose names normalize to the same identifier', () => {
+    const q = queries
+      .multideviceQuery({
+        filter_afk: true,
+        categories: [],
+        filter_categories: [],
+        always_active_pattern: '',
+        hosts: ['work-laptop', 'worklaptop'],
+        host_params: {},
+      })
+      .join('\n');
+    expect(q).toContain('events = union_no_overlap(events, events_worklaptop_0)');
+    expect(q).toContain('events = union_no_overlap(events, events_worklaptop_1)');
+    expect(q).toContain('events_worklaptop_0 = events;');
+    expect(q).toContain('events_worklaptop_1 = events;');
+  });
+});
+
+describe('ScreenTime names in combined views', () => {
+  it('maps bundle IDs to app names, keeping the bundle ID as classname', () => {
+    const map = screentimeNameMap([
+      { timestamp: '', duration: 1, data: { app: 'com.google.ios.youtube', title: 'YouTube' } },
+      { timestamp: '', duration: 1, data: { app: 'com.apple.mobilesafari', title: '' } },
+    ] as any);
+    expect(map).toEqual({ 'com.google.ios.youtube': 'YouTube' });
+    const events: any[] = [
+      { timestamp: '', duration: 5, data: { app: 'com.google.ios.youtube' } },
+      { timestamp: '', duration: 3, data: { app: 'Firefox' } },
+    ];
+    applyScreentimeNames(events, map);
+    expect(events[0].data).toEqual({ app: 'YouTube', classname: 'com.google.ios.youtube' });
+    expect(events[1].data).toEqual({ app: 'Firefox' });
+  });
+
+  it('builds a name lookup query over the ScreenTime buckets', () => {
+    const q = queries.screentimeNamesQuery(['aw-import-screentime_a']).join('\n');
+    expect(q).toContain('query_bucket("aw-import-screentime_a")');
+    expect(q).toContain('RETURN = merge_events_by_keys(events, ["app", "title"]);');
   });
 });
