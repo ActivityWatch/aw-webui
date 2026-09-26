@@ -11,10 +11,8 @@ import {
   TimePeriod,
   dateToTimeperiod,
   timeperiodToStr,
-  timeperiodsHoursOfPeriod,
-  timeperiodsDaysOfPeriod,
-  timeperiodsMonthsOfPeriod,
   timeperiodsAroundTimeperiod,
+  timeperiodsForBarchart,
 } from '~/util/timeperiod';
 
 import { useSettingsStore } from '~/stores/settings';
@@ -28,18 +26,6 @@ import {
   mergeFullDesktopResults,
   periodsForFullDesktopQuery,
 } from '~/util/desktopQuerySplit';
-
-function timeperiodsStrsHoursOfPeriod(timeperiod: TimePeriod): string[] {
-  return timeperiodsHoursOfPeriod(timeperiod).map(timeperiodToStr);
-}
-
-function timeperiodsStrsDaysOfPeriod(timeperiod: TimePeriod): string[] {
-  return timeperiodsDaysOfPeriod(timeperiod).map(timeperiodToStr);
-}
-
-function timeperiodsStrsMonthsOfPeriod(timeperiod: TimePeriod): string[] {
-  return timeperiodsMonthsOfPeriod(timeperiod).map(timeperiodToStr);
-}
 
 function timeperiodStrsAroundTimeperiod(timeperiod: TimePeriod): string[] {
   return timeperiodsAroundTimeperiod(timeperiod).map(timeperiodToStr);
@@ -541,25 +527,9 @@ export const useActivityStore = defineStore('activity', {
       always_active_pattern,
     }: QueryOptions & { dontQueryInactive: boolean }) {
       // TODO: Needs to be adapted for Android
-      let periods: string[];
-      const count = timeperiod.length[0];
-      const res = timeperiod.length[1];
-      if (res.startsWith('day') && count == 1) {
-        // If timeperiod is a single day, we query the individual hours
-        periods = timeperiodsStrsHoursOfPeriod(timeperiod);
-      } else if (
-        res.startsWith('day') ||
-        (res.startsWith('week') && count == 1) ||
-        (res.startsWith('month') && count == 1)
-      ) {
-        // If timeperiod is several days, or a single week/month, we query the individual days
-        periods = timeperiodsStrsDaysOfPeriod(timeperiod);
-      } else if (timeperiod.length[1].startsWith('year') && timeperiod.length[0] == 1) {
-        // If timeperiod a single year, we query the individual months
-        periods = timeperiodsStrsMonthsOfPeriod(timeperiod);
-      } else {
-        console.error(`Unknown timeperiod length: ${timeperiod.length}`);
-      }
+      // Hours for a single day, days for up to MAX_DAILY_BUCKETS days,
+      // calendar months for a year and longer ranges.
+      let periods: string[] = timeperiodsForBarchart(timeperiod).map(timeperiodToStr);
 
       // Filter out periods that start in the future
       periods = periods.filter(period => new Date(period.split('/')[0]) < new Date());

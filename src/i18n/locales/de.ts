@@ -293,6 +293,10 @@ export default {
     periodLast30d: '30 Tage',
     periodLast7dTitle: 'letzte 7 Tage',
     periodLast30dTitle: 'letzte 30 Tage',
+    periodCustomRange: 'benutzerdefinierter Zeitraum',
+    rangeStart: 'Startdatum',
+    rangeEnd: 'Enddatum',
+    invalidRange: 'Ungültiger Zeitraum in der URL, stattdessen wird heute angezeigt.',
     filterAfkTooltip: 'Zeit ausblenden, in der der AFK-Watcher keine Eingabe erkannt hat.',
     filterAudibleTooltip:
       'Aktives Fenster mit hörbarem Browser-Tab als aktiv zählen. Erfordert Browser-Watcher.',
@@ -336,6 +340,7 @@ export default {
     periodThisYear: 'dieses Jahr',
     periodLast7d: 'die letzten 7 Tage',
     periodLast30d: 'die letzten 30 Tage',
+    periodCustomRange: 'im gewählten Zeitraum',
   },
   visualizations: {
     noData: '(keine Daten)',

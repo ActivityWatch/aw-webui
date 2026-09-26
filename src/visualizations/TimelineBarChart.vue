@@ -14,11 +14,13 @@ import { ChartOptions } from 'chart.js';
 import 'chart.js/auto';
 import { Bar } from 'vue-chartjs/legacy';
 import {
+  format_date_short,
   format_day_of_month,
   format_weekday_short,
   get_hour_offset,
   get_short_month_labels,
 } from '~/util/time';
+import { MAX_DAILY_BUCKETS, timeperiodsCalendarMonthsOfPeriod } from '~/util/timeperiod';
 
 function hourToTick(hours: number): string {
   if (hours > 1) {
@@ -64,8 +66,20 @@ export default {
       if (resolution.startsWith('day') && count == 1) {
         const hourOffset = get_hour_offset();
         return _.range(0, 24).map(h => `${(h + hourOffset) % 24}`);
+      } else if (resolution.startsWith('day') && count > MAX_DAILY_BUCKETS) {
+        // Long custom ranges are bucketed by calendar month (see timeperiodsForBarchart)
+        const fmt = new Intl.DateTimeFormat(undefined, { month: 'short', year: 'numeric' });
+        return timeperiodsCalendarMonthsOfPeriod({
+          start,
+          length: [count, resolution],
+        }).map(p => fmt.format(new Date(p.start)));
       } else if (resolution.startsWith('day')) {
-        return _.range(count).map(d => `${d + 1}`);
+        return _.range(count).map(d => {
+          const date = new Date(start);
+          date.setHours(12, 0, 0, 0);
+          date.setDate(date.getDate() + d);
+          return format_date_short(date);
+        });
       } else if (resolution.startsWith('week')) {
         // Look up days of the week from `start`
         return _.range(7).map(d => {
@@ -102,7 +116,8 @@ export default {
       };
     },
     chartOptions(): ChartOptions {
-      const resolution = this.timeperiod_length[1];
+      const [count, resolution] = this.timeperiod_length;
+      const monthlyBuckets = resolution.startsWith('day') && count > MAX_DAILY_BUCKETS;
       return {
         plugins: {
           tooltip: {
@@ -136,7 +151,7 @@ export default {
             suggestedMax: resolution.startsWith('day') ? 1 : undefined,
             ticks: {
               callback: hourToTick,
-              stepSize: resolution.startsWith('day') ? 0.25 : 1,
+              stepSize: monthlyBuckets ? undefined : resolution.startsWith('day') ? 0.25 : 1,
             },
           },
         },
