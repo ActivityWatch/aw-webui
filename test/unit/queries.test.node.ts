@@ -72,6 +72,8 @@ import {
   multideviceQuery,
   querystr_to_array,
 } from '~/queries';
+import type { DesktopQueryParams, MultiQueryParams } from '~/queries';
+import type { Rule } from '~/util/classes';
 
 // Convert ActivityWatch (?i) patterns to JS RegExp with i flag for testing.
 // AW server uses Python-style (?i) inline flag; JS uses RegExp 'i' flag instead.
@@ -398,8 +400,10 @@ function stripStringLiterals(query: string): string {
 
 describe('generated AQL contains no JavaScript comments', () => {
   // A category regex with comment-like text, which must not be flagged
-  const categories = [{ name: ['Work'], rule: { type: 'regex', regex: 'https://work|/\\*' } }];
-  const desktop = {
+  const categories: [string[], Rule][] = [
+    [['Work'], { type: 'regex', regex: 'https://work|/\\*' }],
+  ];
+  const desktop: DesktopQueryParams = {
     bid_window: 'aw-watcher-window_testhost',
     bid_afk: 'aw-watcher-afk_testhost',
     bid_browsers: ['aw-watcher-web-firefox_testhost'],
@@ -410,7 +414,7 @@ describe('generated AQL contains no JavaScript comments', () => {
     categories,
     filter_categories: [['Work']],
   };
-  const multi = {
+  const multi: MultiQueryParams = {
     hosts: ['testhost', 'phone'],
     host_params: { phone: { bid_android: 'aw-watcher-android-test' } },
     filter_afk: true,
@@ -420,12 +424,12 @@ describe('generated AQL contains no JavaScript comments', () => {
   };
 
   test.each([
-    ['fullDesktopQuery', () => fullDesktopQuery(desktop as any)],
-    ['multideviceQuery', () => multideviceQuery(multi as any)],
-    ['analysisContextQuery', () => analysisContextQuery(desktop as any)],
-    ['categoryQuery (desktop)', () => categoryQuery(desktop as any)],
-    ['categoryQuery (multidevice)', () => categoryQuery(multi as any)],
-    ['appQuery', () => appQuery('aw-watcher-android-test', categories as any, [])],
+    ['fullDesktopQuery', () => fullDesktopQuery(desktop)],
+    ['multideviceQuery', () => multideviceQuery(multi)],
+    ['analysisContextQuery', () => analysisContextQuery(desktop)],
+    ['categoryQuery (desktop)', () => categoryQuery(desktop)],
+    ['categoryQuery (multidevice)', () => categoryQuery(multi)],
+    ['appQuery', () => appQuery('aw-watcher-android-test', categories, [])],
     ['editorActivityQuery', () => editorActivityQuery(['aw-watcher-vim_testhost'])],
     ['activityQuery', () => activityQuery(['aw-watcher-afk_testhost'])],
   ])('%s', (_name, build) => {
