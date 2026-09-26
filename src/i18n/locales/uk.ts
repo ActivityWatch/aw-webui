@@ -294,6 +294,8 @@ export default {
     rangeStart: 'Дата початку',
     rangeEnd: 'Дата завершення',
     invalidRange: 'Недійсний діапазон дат в URL, показано сьогодні.',
+    periodAllTime: 'увесь час',
+    allTimeSlowHint: 'Завантаження за весь час може тривати довго на великих базах даних.',
     filterAfkTooltip: 'Приховати час, коли AFK-watcher не фіксував введення з клавіатури чи миші.',
     filterAudibleTooltip:
       'Якщо активне вікно — вкладка браузера зі звуком, рахувати як активність. Потрібен browser watcher.',
@@ -338,6 +340,7 @@ export default {
     periodLast7d: 'останні 7 днів',
     periodLast30d: 'останні 30 днів',
     periodCustomRange: 'за вибраний період',
+    periodAllTime: 'за весь час',
   },
   visualizations: {
     noData: '(немає даних)',
