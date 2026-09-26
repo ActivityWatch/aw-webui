@@ -4,11 +4,9 @@ import { default_limit as DESKTOP_QUERY_EVENT_LIMIT } from '~/queries';
 import { IEvent } from '~/util/interfaces';
 import {
   TimePeriod,
-  splitTimeperiodStrs,
   timeperiodToStr,
   timeperiodsCalendarMonthsOfPeriod,
   timeperiodsDaysOfPeriod,
-  usesMonthlyBuckets,
 } from '~/util/timeperiod';
 
 export { DESKTOP_QUERY_EVENT_LIMIT };
@@ -64,15 +62,13 @@ export interface FullDesktopQueryResult {
  * into days. A year is also split into days: month-sized chunks are the
  * timeout. Future-starting periods are dropped so we don't query incomplete days.
  *
- * Ranges long enough to use monthly barchart buckets (custom ranges over
- * MAX_DAILY_BUCKETS days) split each calendar month into chunks of at most
- * DESKTOP_CHUNK_DAYS. Chunks never cross a month boundary, so the per-chunk
- * cat_events can be summed into the monthly barchart without a second round of
- * category queries (see categoryByPeriodFromChunks). Measured 2026-09-26 on a
- * 1.7 GB aw-server v0.14 database, 42 days: 1-day chunks 13-16 s, 7-day chunks
- * 11-12 s (max request 2.8 s). Concurrent requests did not help.
+ * Long custom ranges (monthly barchart buckets) are split into days too. Days
+ * never cross a calendar month, so their cat_events are summed into the
+ * monthly barchart without a second round of month-sized category queries
+ * (see categoryByPeriodFromChunks). Week-sized chunks were tried on a 1.7 GB
+ * aw-server v0.14 database (2026-09-26): no faster overall, and single
+ * requests reached 20 s, too close to the 30 s timeout.
  */
-export const DESKTOP_CHUNK_DAYS = 7;
 
 export function periodsForFullDesktopQuery(
   timeperiod: TimePeriod,
@@ -83,10 +79,6 @@ export function periodsForFullDesktopQuery(
 
   if (res.startsWith('day') && count === 1) {
     periods = [timeperiodToStr(timeperiod)];
-  } else if (usesMonthlyBuckets(timeperiod)) {
-    periods = timeperiodsCalendarMonthsOfPeriod(timeperiod).flatMap(month =>
-      splitTimeperiodStrs(month, DESKTOP_CHUNK_DAYS)
-    );
   } else if (
     res.startsWith('day') ||
     (res.startsWith('week') && count === 1) ||

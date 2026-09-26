@@ -1,7 +1,6 @@
 import moment from 'moment';
 
 import {
-  DESKTOP_CHUNK_DAYS,
   DESKTOP_QUERY_EVENT_LIMIT,
   categoryByPeriodFromChunks,
   mergeEventsByKeys,
@@ -67,18 +66,18 @@ describe('long ranges', () => {
     length: [120, 'days'] as [number, string],
   };
 
-  test('chunks never cross a calendar month and are at most DESKTOP_CHUNK_DAYS', () => {
+  test('splits into days, which never cross a calendar month', () => {
     const periods = periodsForFullDesktopQuery(tp, now);
     const total = periods.reduce((acc, p) => {
       const [a, b] = p.split('/').map(d => moment(d));
-      expect(b.diff(a, 'days', true)).toBeLessThanOrEqual(DESKTOP_CHUNK_DAYS + 0.1);
+      expect(b.diff(a, 'days', true)).toBeLessThanOrEqual(1.1);
       // start and (end - 1ms) are in the same month, counting days from 04:00
       const dayStart = (m: moment.Moment) => m.clone().subtract(4, 'hours');
       expect(dayStart(a).month()).toBe(dayStart(b).subtract(1, 'ms').month());
       return acc + Math.round(b.diff(a, 'days', true));
     }, 0);
     expect(total).toBe(120);
-    expect(periods.length).toBeLessThan(30);
+    expect(periods).toHaveLength(120);
   });
 
   test('categoryByPeriodFromChunks sums chunk cat_events per month', () => {
