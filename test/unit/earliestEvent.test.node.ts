@@ -78,15 +78,16 @@ describe('nextEarliestDate', () => {
     expect(nextEarliestDate(null, '2024-06-01')).toBe('2024-06-01');
   });
 
-  it('never moves a known start later on reload', () => {
-    expect(nextEarliestDate('2019-01-01', '2024-06-01', { reload: true })).toBe('2019-01-01');
+  it('never moves a known start later on an approximate (fallback) result', () => {
+    expect(nextEarliestDate('2019-01-01', '2024-06-01', { approximate: true })).toBe('2019-01-01');
   });
 
-  it('moves the start earlier on reload', () => {
-    expect(nextEarliestDate('2024-06-01', '2019-01-01', { reload: true })).toBe('2019-01-01');
-  });
-
-  it('follows the lookup when not reloading (e.g. host change)', () => {
+  it('moves the start later on an exact result (e.g. old buckets deleted)', () => {
     expect(nextEarliestDate('2019-01-01', '2024-06-01')).toBe('2024-06-01');
+  });
+
+  it('moves the start earlier either way', () => {
+    expect(nextEarliestDate('2024-06-01', '2019-01-01', { approximate: true })).toBe('2019-01-01');
+    expect(nextEarliestDate('2024-06-01', '2019-01-01')).toBe('2019-01-01');
   });
 });

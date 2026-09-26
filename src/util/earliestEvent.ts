@@ -61,15 +61,15 @@ export async function earliestEventInBuckets(
 
 /**
  * The All time start date to use after a lookup (YYYY-MM-DD strings).
- * A reload never moves a known start later: a transient lookup failure falls
- * back to bucket creation dates, which can be later than the data, while an
- * unnecessarily early start only adds empty time.
+ * An approximate result (the lookup failed and fell back to bucket creation
+ * dates, which can be later than the data) never moves a known start later;
+ * an exact one is used as is, so e.g. deleting old buckets shortens the range.
  */
 export function nextEarliestDate(
   current: string | null,
   found: string,
-  { reload = false }: { reload?: boolean } = {}
+  { approximate = false }: { approximate?: boolean } = {}
 ): string {
-  if (reload && current && current < found) return current;
+  if (approximate && current && current < found) return current;
   return found;
 }

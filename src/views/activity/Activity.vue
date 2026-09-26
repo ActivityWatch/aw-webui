@@ -796,13 +796,15 @@ export default {
     loadEarliestDate: async function (reload = false) {
       if (this.periodLength !== 'all' || (this.earliestDate && !reload)) return false;
       const host = this.host;
-      const found = await this.activityStore.get_earliest_date(host, { force: reload });
+      const { date: found, approximate } = await this.activityStore.get_earliest_date(host, {
+        force: reload,
+      });
       if (host !== this.host) return false;
       // No data at all: fall back to today
       const date = nextEarliestDate(
         this.earliestDate,
         found || get_today_with_offset(this.settingsStore.startOfDay),
-        { reload }
+        { approximate }
       );
       const changed = date !== this.earliestDate;
       this.earliestDate = date;

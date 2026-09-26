@@ -2,7 +2,7 @@ import { setActivePinia, createPinia } from 'pinia';
 
 import { useActivityStore } from '~/stores/activity';
 import { useBucketsStore } from '~/stores/buckets';
-import { createClient } from '~/util/awclient';
+import { createClient, getClient } from '~/util/awclient';
 
 createClient();
 
@@ -27,24 +27,63 @@ describe('get_earliest_date', () => {
     bucketsStore.buckets = [
       bucket('aw-watcher-window_host', 'currentwindow', '2024-05-01T12:00:00Z'),
     ] as any;
-    expect(await activityStore.get_earliest_date('host')).toBe('2024-05-01');
+    expect(await activityStore.get_earliest_date('host')).toEqual({
+      date: '2024-05-01',
+      approximate: false,
+    });
 
     bucketsStore.buckets = [
       ...bucketsStore.buckets,
       bucket('aw-watcher-window_host-imported', 'currentwindow', '2019-02-03T12:00:00Z'),
     ] as any;
-    expect(await activityStore.get_earliest_date('host')).toBe('2019-02-03');
+    expect(await activityStore.get_earliest_date('host')).toEqual({
+      date: '2019-02-03',
+      approximate: false,
+    });
   });
 
   test('force skips the cache', async () => {
     bucketsStore.buckets = [
       bucket('aw-watcher-afk_host', 'afkstatus', '2023-03-03T12:00:00Z'),
     ] as any;
-    expect(await activityStore.get_earliest_date('host')).toBe('2023-03-03');
+    expect(await activityStore.get_earliest_date('host')).toEqual({
+      date: '2023-03-03',
+      approximate: false,
+    });
     // Same bucket id, but its data changed (e.g. older events synced in)
     (bucketsStore.buckets[0] as any).metadata.start = '2021-01-01T12:00:00Z';
-    expect(await activityStore.get_earliest_date('host')).toBe('2023-03-03');
-    expect(await activityStore.get_earliest_date('host', { force: true })).toBe('2021-01-01');
+    expect(await activityStore.get_earliest_date('host')).toEqual({
+      date: '2023-03-03',
+      approximate: false,
+    });
+    expect(await activityStore.get_earliest_date('host', { force: true })).toEqual({
+      date: '2021-01-01',
+      approximate: false,
+    });
+  });
+});
+
+describe('get_earliest_date fallback', () => {
+  setActivePinia(createPinia());
+  const activityStore = useActivityStore();
+  const bucketsStore = useBucketsStore();
+  jest.spyOn(bucketsStore, 'ensureLoaded').mockResolvedValue(undefined);
+
+  test('marks a result from bucket creation dates as approximate', async () => {
+    // No metadata.start (aw-server), and the events lookup fails
+    bucketsStore.buckets = [
+      {
+        ...bucket('aw-watcher-window_host', 'currentwindow', '2024-05-01T12:00:00Z'),
+        metadata: {},
+        first_seen: '2025-01-02T12:00:00Z',
+      },
+    ] as any;
+    const getEvents = jest.spyOn(getClient(), 'getEvents').mockRejectedValue(new Error('timeout'));
+    expect(await activityStore.get_earliest_date('host', { force: true })).toEqual({
+      date: '2025-01-02',
+      approximate: true,
+    });
+    getEvents.mockRestore();
   });
 });
 
