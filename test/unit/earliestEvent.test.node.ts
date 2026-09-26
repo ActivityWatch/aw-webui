@@ -38,6 +38,14 @@ describe('earliestEventInBucket', () => {
     expect(calls.length).toBeLessThan(25);
   });
 
+  it('finds events from before 2000 (e.g. imported data)', async () => {
+    const { getEvents } = fakeGetEvents({ b: ['1995-06-01T12:00:00Z', '2026-01-01T00:00:00Z'] });
+    const res = await earliestEventInBucket({ id: 'b' } as any, getEvents);
+    const first = new Date('1995-06-01T12:00:00Z').getTime();
+    expect(res.getTime()).toBeLessThanOrEqual(first);
+    expect(first - res.getTime()).toBeLessThanOrEqual(24 * 60 * 60 * 1000);
+  });
+
   it('returns null for an empty bucket', async () => {
     const { getEvents } = fakeGetEvents({ b: [] });
     expect(await earliestEventInBucket({ id: 'b' } as any, getEvents)).toBeNull();

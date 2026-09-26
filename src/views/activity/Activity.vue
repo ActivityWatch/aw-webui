@@ -787,10 +787,13 @@ export default {
       this.pushPeriod(periodLength, new_date);
     },
 
-    loadEarliestDate: async function () {
-      if (this.periodLength !== 'all' || this.earliestDate) return;
+    // `reload` redoes the lookup even when a date is known, e.g. on Refresh:
+    // the lookup may have fallen back to (late) bucket creation dates, or
+    // older data may have been imported since.
+    loadEarliestDate: async function (reload = false) {
+      if (this.periodLength !== 'all' || (this.earliestDate && !reload)) return;
       const host = this.host;
-      const date = await this.activityStore.get_earliest_date(host);
+      const date = await this.activityStore.get_earliest_date(host, { force: reload });
       if (host === this.host) {
         // No data at all: fall back to today
         this.earliestDate = date || get_today_with_offset(this.settingsStore.startOfDay);
@@ -798,6 +801,9 @@ export default {
     },
 
     refresh: async function (force) {
+      if (force && this.periodLength === 'all') {
+        await this.loadEarliestDate(true);
+      }
       if (!this.timeperiod) {
         // All time before the earliest date is known; the timeperiod watcher refreshes later
         return;

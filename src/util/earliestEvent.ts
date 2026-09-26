@@ -6,8 +6,10 @@ type GetEvents = (
 ) => Promise<{ timestamp: string | Date }[]>;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-// Lower bound for the search; ActivityWatch has no data from before this.
-const SEARCH_FLOOR = new Date('2000-01-01T00:00:00Z');
+// Lower bound for the search. The Unix epoch rather than a recent date, so
+// imported data with old timestamps is still found (the wider range costs
+// about one extra request).
+const SEARCH_FLOOR = new Date(0);
 
 /**
  * A time at most ~1 day before the earliest event in a bucket (never after it).
