@@ -10,6 +10,20 @@ import { seconds_to_duration } from '~/util/time';
 import { IEvent } from '~/util/interfaces';
 
 const textColor = '#333';
+const durationColor = '#444';
+
+// Unique per-chart prefix for clipPath ids (several summaries can share a page).
+let chartCounter = 0;
+
+// Label colours for text drawn *over* a bar: pick whichever of dark/light
+// contrasts better with the bar itself, so dark bars get light labels and
+// light bars get dark labels, in both light and dark theme.
+function inBarColors(barColor: string): { name: string; duration: string } {
+  const bar = Color(barColor);
+  return bar.contrast(Color(textColor)) >= bar.contrast(Color('#fff'))
+    ? { name: textColor, duration: durationColor }
+    : { name: '#fff', duration: '#eee' };
+}
 
 function create(container: HTMLElement) {
   // Clear element
@@ -62,13 +76,17 @@ function update(container: HTMLElement, apps: Entry[]) {
     return app.duration !== undefined;
   });
 
+  const chartId = 'appsummary-' + chartCounter++;
+  const defs = svg.append('defs');
+
   let curr_y = 0;
   const longest_duration = apps[0].duration;
   _.each(apps, function (app, i) {
     // TODO: Expand on click and list titles
 
     // Variables
-    const width = (app.duration / longest_duration) * 100 + '%';
+    const widthPct = (app.duration / longest_duration) * 100;
+    const width = widthPct + '%';
     const barHeight = 46;
     const textSize = 14;
 
@@ -107,6 +125,30 @@ function update(container: HTMLElement, apps: Entry[]) {
       .attr('height', barHeight)
       .style('fill', appcolor);
 
+    // Labels can be longer than a short bar, so each label is drawn twice:
+    // once clipped to the bar (coloured for contrast against the bar) and once
+    // clipped to the remaining width (default text colour, which dark.css
+    // themes for the page background). See ActivityWatch/aw-server-rust#621.
+    const clipIn = `${chartId}-in-${i}`;
+    const clipOut = `${chartId}-out-${i}`;
+    defs
+      .append('clipPath')
+      .attr('id', clipIn)
+      .append('rect')
+      .attr('x', 0)
+      .attr('y', curr_y)
+      .attr('width', width)
+      .attr('height', barHeight);
+    defs
+      .append('clipPath')
+      .attr('id', clipOut)
+      .append('rect')
+      .attr('x', width)
+      .attr('y', curr_y)
+      .attr('width', 100 - widthPct + '%')
+      .attr('height', barHeight);
+    const onBar = inBarColors(appcolor);
+
     // App name. Truncate long titles so wide window titles don't run
     // visually past their bar; full text remains in the hover tooltip
     // (the <title> appended above) so no information is hidden.
@@ -115,22 +157,40 @@ function update(container: HTMLElement, apps: Entry[]) {
       app.name && app.name.length > maxNameChars
         ? app.name.slice(0, maxNameChars - 1) + '…'
         : app.name;
-    eg.append('text')
-      .attr('x', 5)
-      .attr('y', curr_y + 1.4 * textSize)
-      .text(displayName)
-      .attr('font-family', 'sans-serif')
-      .attr('font-size', textSize + 'px')
-      .attr('fill', textColor);
+    for (const [clip, inBar] of [
+      [clipIn, true],
+      [clipOut, false],
+    ] as const) {
+      const name = eg
+        .append('text')
+        .attr('x', 5)
+        .attr('y', curr_y + 1.4 * textSize)
+        .attr('clip-path', `url(#${clip})`)
+        .text(displayName)
+        .attr('font-family', 'sans-serif')
+        .attr('font-size', textSize + 'px')
+        .attr('fill', textColor);
 
-    // Duration
-    eg.append('text')
-      .attr('x', 5)
-      .attr('y', curr_y + 2.6 * textSize)
-      .text(seconds_to_duration(app.duration))
-      .attr('font-family', 'sans-serif')
-      .attr('font-size', textSize - 3 + 'px')
-      .attr('fill', '#444');
+      // Duration
+      const duration = eg
+        .append('text')
+        .attr('x', 5)
+        .attr('y', curr_y + 2.6 * textSize)
+        .attr('clip-path', `url(#${clip})`)
+        .text(seconds_to_duration(app.duration))
+        .attr('font-family', 'sans-serif')
+        .attr('font-size', textSize - 3 + 'px')
+        .attr('fill', durationColor);
+
+      if (inBar) {
+        // Inline !important so the theme's generic `svg text` override
+        // (dark.css) doesn't repaint text that sits on the bar itself.
+        name.style('fill', onBar.name, 'important').style('text-shadow', 'none', 'important');
+        duration
+          .style('fill', onBar.duration, 'important')
+          .style('text-shadow', 'none', 'important');
+      }
+    }
 
     curr_y += barHeight + 5;
   });
