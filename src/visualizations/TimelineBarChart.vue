@@ -21,6 +21,7 @@ import {
   get_short_month_labels,
 } from '~/util/time';
 import { MAX_DAILY_BUCKETS, timeperiodsCalendarMonthsOfPeriod } from '~/util/timeperiod';
+import { i18n } from '~/i18n';
 
 function hourToTick(hours: number): string {
   if (hours > 1) {
@@ -68,7 +69,7 @@ export default {
         return _.range(0, 24).map(h => `${(h + hourOffset) % 24}`);
       } else if (resolution.startsWith('day') && count > MAX_DAILY_BUCKETS) {
         // Long custom ranges are bucketed by calendar month (see timeperiodsForBarchart)
-        const fmt = new Intl.DateTimeFormat(undefined, { month: 'short', year: 'numeric' });
+        const fmt = new Intl.DateTimeFormat(i18n.locale, { month: 'short', year: 'numeric' });
         return timeperiodsCalendarMonthsOfPeriod({
           start,
           length: [count, resolution],
@@ -78,7 +79,7 @@ export default {
           const date = new Date(start);
           date.setHours(12, 0, 0, 0);
           date.setDate(date.getDate() + d);
-          return format_date_short(date);
+          return format_date_short(date, i18n.locale);
         });
       } else if (resolution.startsWith('week')) {
         // Look up days of the week from `start`

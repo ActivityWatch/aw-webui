@@ -62,7 +62,7 @@ div
           @click="setDate(_date, opt.value)"
         ) {{ opt.text }}
 
-    b-input-group.mr-2(size="sm" style="width: auto")
+    b-input-group.mr-2(v-if="!invalidRange" size="sm" style="width: auto")
       b-input-group-prepend
         b-button.px-2(:to="link_prefix + '/' + previousPeriod() + '/' + subview + '/' + currentViewId",
                  variant="outline-dark",
@@ -82,6 +82,7 @@ div
           type="date"
           :value="dateRange.end"
           :min="dateRange.start"
+          :max="todayDate"
           :aria-label="$t('activity.rangeEnd')"
           :title="$t('activity.rangeEnd')"
           @change="setRange(dateRange.start, $event.target.value)"
@@ -137,7 +138,9 @@ div
         b-form-select(v-model="filter_category", :options="categoryStore.category_select(true)" size="sm")
 
 
-  aw-periodusage(:periodusage_arr="periodusage", @update="setDate")
+  // Neighbouring periods of an arbitrary range aren't meaningful, and 31 of
+  // them can span decades of AFK data for long ranges.
+  aw-periodusage(v-if="periodLength !== 'range'", :periodusage_arr="periodusage", @update="setDate")
 
   aw-uncategorized-notification(:periodLength="periodLength")
 
@@ -399,8 +402,11 @@ export default {
       }
       return this.date || get_today_with_offset(offset);
     },
+    todayDate: function () {
+      return get_today_with_offset(this.settingsStore.startOfDay);
+    },
     nextDisabled: function () {
-      const today = get_today_with_offset(this.settingsStore.startOfDay);
+      const today = this.todayDate;
       if (this.dateRange) {
         return shiftDateRange(this.dateRange, 1).start > today;
       }
@@ -546,6 +552,8 @@ export default {
     },
 
     setRange: function (start: string, end: string) {
+      // Cap at today: later days have no data
+      if (end > this.todayDate) end = this.todayDate;
       const range = parseDateRange(formatDateRange({ start, end }));
       if (!range) {
         return;
@@ -642,6 +650,7 @@ export default {
         include_stopwatch: this.include_stopwatch,
         filter_categories: this.filter_categories,
         always_active_pattern: this.always_active_pattern,
+        skip_active_history: this.periodLength === 'range',
       };
       await this.activityStore.ensure_loaded(queryOptions);
     },

@@ -86,6 +86,9 @@ export interface QueryOptions {
   include_stopwatch?: boolean;
   filter_categories?: string[][];
   dont_query_inactive?: boolean;
+  // Skip the active-time history around the period (the period-usage bars),
+  // e.g. for custom ranges where neighbouring periods aren't shown.
+  skip_active_history?: boolean;
   force?: boolean;
   always_active_pattern?: string;
 }
@@ -313,7 +316,9 @@ export const useActivityStore = defineStore('activity', {
           this.query_category_time_by_period_completed();
         }
 
-        if (this.active.available) {
+        if (query_options.skip_active_history) {
+          // Period-usage bars not shown
+        } else if (this.active.available) {
           await this.query_active_history(query_options);
         } else if (this.android.available) {
           await this.query_active_history_android(query_options);
