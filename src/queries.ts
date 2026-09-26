@@ -77,6 +77,13 @@ export interface AndroidQueryParams extends BaseQueryParams {
    *  Keep false (the default) for regular Android watcher buckets so that
    *  merge_events_by_keys does not drop every event due to a missing key. */
   isIos?: boolean;
+  /** Keep the raw (flooded) app events instead of pre-merging them by app.
+   *  Required whenever the events are combined with other timelines, as in
+   *  the multidevice query: merge_events_by_keys collapses every app into a
+   *  single event at its first timestamp (with the summed duration) and
+   *  returns them in arbitrary order, which union_no_overlap (it expects
+   *  sorted, positioned events) then clips against the other devices. */
+  keep_event_timestamps?: boolean;
 }
 
 export interface MultiQueryParams extends BaseQueryParams {
@@ -105,6 +112,7 @@ function get_params(
       ...params,
       bid_android: host_params.bid_android,
       isIos: host_params.isIos,
+      keep_event_timestamps: true,
       return_variable_suffix: safeHostname(host),
     };
     return new_params;
@@ -186,7 +194,9 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
     // "title" here collapses all Android watcher events to zero duration
     // (regression introduced in bf0fc84 to support iOS ScreenTime, which DOES
     // carry "title").  Only add "title" when the bucket is an iOS ScreenTime import.
-    isAndroidParams(params)
+    // Skipped when the events are combined with other devices' timelines
+    // (see AndroidQueryParams.keep_event_timestamps).
+    isAndroidParams(params) && !params.keep_event_timestamps
       ? params.isIos
         ? 'events = merge_events_by_keys(events, ["app", "title"]);'
         : 'events = merge_events_by_keys(events, ["app"]);'
@@ -503,16 +513,16 @@ export function fullDesktopQuery(params: DesktopQueryParams): string[] {
 // NOTE: Doesn't support browser buckets (and therefore not browser audible detection either)
 //       This is due to the 'unknown' hostname of browser buckets (will hopefully be fixed soon).
 export function multideviceQuery(params: MultiQueryParams): string[] {
+  // app_events is computed from events directly, not chained off
+  // title_events: aw-watcher-android events have no "title" key, so
+  // merge_events_by_keys(events, ["app", "title"]) drops them from
+  // title_events entirely (see canonicalEvents). Chaining app_events off
+  // title_events would silently exclude mobile hosts' app-level
+  // breakdown even though their duration is counted; title breakdown
+  // (which mobile hosts can't provide) stays desktop-only.
   return querystr_to_array(
     `
     ${canonicalMultideviceEvents(params)}
-    // app_events is computed from events directly, not chained off
-    // title_events: aw-watcher-android events have no "title" key, so
-    // merge_events_by_keys(events, ["app", "title"]) drops them from
-    // title_events entirely (see canonicalEvents). Chaining app_events off
-    // title_events would silently exclude mobile hosts' app-level
-    // breakdown even though their duration is counted; title breakdown
-    // (which mobile hosts can't provide) stays desktop-only.
     title_events = sort_by_duration(merge_events_by_keys(events, ["app", "title"]));
     app_events   = sort_by_duration(merge_events_by_keys(events, ["app"]));
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
