@@ -10,7 +10,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const SEARCH_FLOOR = new Date('2000-01-01T00:00:00Z');
 
 /**
- * Timestamp of the earliest event in a bucket, with ~1 day precision.
+ * A time at most ~1 day before the earliest event in a bucket (never after it).
  *
  * aw-server-rust reports it directly as `metadata.start`. aw-server (Python)
  * has no such field, so we bisect with `GET /events?end=<t>&limit=1`, which
@@ -41,7 +41,9 @@ export async function earliestEventInBucket(
       hi = Math.min(mid, new Date(events[0].timestamp).getTime());
     }
   }
-  return new Date(hi);
+  // `lo` has no event at or before it, so it's a conservative start (at most
+  // a day before the first event) that can't skip the first partial day.
+  return new Date(lo);
 }
 
 /** Earliest event across several buckets, or null if all are empty. */

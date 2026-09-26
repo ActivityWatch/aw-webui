@@ -272,7 +272,8 @@ export function appQuery(
   appbucket: string,
   categories: Category[],
   filter_categories: string[][],
-  isIos = false
+  isIos = false,
+  limit = default_limit
 ): string[] {
   appbucket = escape_doublequote(appbucket);
   const params: AndroidQueryParams = {
@@ -294,8 +295,8 @@ export function appQuery(
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
 
     events = sort_by_timestamp(events);
-    app_events  = limit_events(app_events, ${default_limit});
-    title_events  = limit_events(title_events, ${default_limit});
+    app_events  = limit_events(app_events, ${limit});
+    title_events  = limit_events(title_events, ${limit});
     duration = sum_durations(events);
     RETURN  = {"app_events": app_events, "title_events": title_events, "cat_events": cat_events, "duration": duration, "active_events": app_events};
   `;
@@ -533,18 +534,18 @@ export function multideviceQuery(params: MultiQueryParams): string[] {
   );
 }
 
-export function editorActivityQuery(editorbuckets: string[]): string[] {
+export function editorActivityQuery(editorbuckets: string[], limit = default_limit): string[] {
   let q = ['events = [];'];
   for (const editorbucket of editorbuckets) {
     q.push(`events = concat(events, flood(query_bucket("${escape_doublequote(editorbucket)}")));`);
   }
   q = q.concat([
     'files = sort_by_duration(merge_events_by_keys(events, ["file", "language"]));',
-    `files = limit_events(files, ${default_limit});`,
+    `files = limit_events(files, ${limit});`,
     'languages = sort_by_duration(merge_events_by_keys(events, ["language"]));',
-    `languages = limit_events(languages, ${default_limit});`,
+    `languages = limit_events(languages, ${limit});`,
     'projects = sort_by_duration(merge_events_by_keys(events, ["project"]));',
-    `projects = limit_events(projects, ${default_limit});`,
+    `projects = limit_events(projects, ${limit});`,
     'duration = sum_durations(events);',
     'RETURN = {"files": files, "languages": languages, "projects": projects, "duration": duration};',
   ]);

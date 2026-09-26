@@ -88,6 +88,11 @@ async function queryDesktopPeriods(
 const EDITOR_MAX_DAYS_PER_REQUEST = 366;
 const ANDROID_MAX_DAYS_PER_REQUEST = 92;
 
+// Per-chunk limit when a query is split: items outside one chunk's top 100
+// can still be in the overall top 100 once summed, so over-fetch and cut
+// after merging.
+const CHUNKED_QUERY_LIMIT = 1000;
+
 // host -> first day with data (YYYY-MM-DD), see get_earliest_date
 const earliestDateCache = new Map<string, string | null>();
 
@@ -416,12 +421,20 @@ export const useActivityStore = defineStore('activity', {
         selectedBucket,
         categoryStore.classes_for_query,
         filter_categories,
-        isIos
+        isIos,
+        periods.length > 1 ? CHUNKED_QUERY_LIMIT : undefined
       );
+      this.progress_add(periods.length);
       const chunks = [];
       for (const period of periods) {
         const result = await getClient().query([period], q).catch(this.errorHandler);
-        if (result && result[0]) chunks.push(result[0]);
+        this.progress_tick();
+        if (!(result && result[0])) {
+          // Don't show partial totals as if they covered the whole period
+          this.query_window_completed();
+          return;
+        }
+        chunks.push(result[0]);
       }
       const data = [mergeAppQueryResults(chunks, isIos)];
 
@@ -558,42 +571,69 @@ export const useActivityStore = defineStore('activity', {
 
     async query_editor({ timeperiod }) {
       const periods = splitTimeperiodStrs(timeperiod, EDITOR_MAX_DAYS_PER_REQUEST);
-      const q = queries.editorActivityQuery(this.buckets.editor);
+      const q = queries.editorActivityQuery(
+        this.buckets.editor,
+        periods.length > 1 ? CHUNKED_QUERY_LIMIT : undefined
+      );
+      this.progress_add(periods.length);
       const chunks = [];
       for (const period of periods) {
         const data = await getClient().query([period], q, {
           name: 'editorActivityQuery',
           verbose: true,
         });
+        this.progress_tick();
         if (data && data[0]) chunks.push(data[0]);
       }
       this.query_editor_completed(chunks.length === 1 ? chunks[0] : mergeEditorResults(chunks));
     },
 
     /**
-     * Start of the earliest day with data for `host` (window, AFK and
-     * Android/ScreenTime buckets), or null if there is none. Cached per host.
+     * Start of the earliest day with data in any bucket the Activity view may
+     * query for `host` (all hosts when multidevice is on), or null if there is
+     * none. Cached per host and day-start offset.
      */
     async get_earliest_date(host: string): Promise<string | null> {
-      if (earliestDateCache.has(host)) return earliestDateCache.get(host);
+      const settingsStore = useSettingsStore();
       const bucketsStore = useBucketsStore();
       await bucketsStore.ensureLoaded();
-      const ids = [
-        ...bucketsStore.bucketsWindow(host),
-        ...bucketsStore.bucketsAFK(host),
-        ...bucketsStore.bucketsAndroid(host),
-      ];
+      const hosts = settingsStore.useMultidevice ? bucketsStore.hosts : [host];
+      const key = [hosts.join(','), settingsStore.startOfDay].join('|');
+      if (earliestDateCache.has(key)) return earliestDateCache.get(key);
+
+      const ids = _.uniq(
+        _.flatMap(hosts, h => [
+          ...bucketsStore.bucketsWindow(h),
+          ...bucketsStore.bucketsAFK(h),
+          ...bucketsStore.bucketsAndroid(h),
+          ...bucketsStore.bucketsEditor(h),
+          ...bucketsStore.bucketsBrowser(h),
+          ...bucketsStore.bucketsStopwatch(h),
+        ])
+      );
       const buckets = ids.map(id => bucketsStore.getBucket(id)).filter(b => b);
       const client = getClient();
-      const earliest = await earliestEventInBuckets(buckets, (id, params) =>
-        client.getEvents(id, params)
-      );
+      let earliest: Date | null;
+      try {
+        earliest = await earliestEventInBuckets(buckets, (id, params) =>
+          client.getEvents(id, params)
+        );
+      } catch (e) {
+        // Fall back to bucket creation dates (not cached, so a refresh retries)
+        console.warn('Failed to find earliest event, using bucket creation dates', e);
+        const created = buckets.map(b => b.first_seen).filter(d => d);
+        return created.length > 0
+          ? moment(_.min(created.map(d => new Date(d).getTime())))
+              .subtract(get_offset_duration(settingsStore.startOfDay))
+              .format('YYYY-MM-DD')
+          : null;
+      }
       const date = earliest
         ? moment(earliest)
-            .subtract(get_offset_duration(useSettingsStore().startOfDay))
+            .subtract(get_offset_duration(settingsStore.startOfDay))
             .format('YYYY-MM-DD')
         : null;
-      earliestDateCache.set(host, date);
+      earliestDateCache.set(key, date);
       return date;
     },
 

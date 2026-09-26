@@ -26,14 +26,15 @@ describe('earliestEventInBucket', () => {
     expect(calls).toHaveLength(0);
   });
 
-  it('bisects to within a day of the first event (aw-server)', async () => {
+  it('bisects to within a day before the first event (aw-server)', async () => {
     const { getEvents, calls } = fakeGetEvents({
       b: ['2022-09-22T15:05:08Z', '2023-01-01T00:00:00Z', '2026-09-26T10:00:00Z'],
     });
     const res = await earliestEventInBucket({ id: 'b' } as any, getEvents);
     const first = new Date('2022-09-22T15:05:08Z').getTime();
-    expect(res.getTime()).toBeGreaterThanOrEqual(first);
-    expect(res.getTime() - first).toBeLessThanOrEqual(24 * 60 * 60 * 1000);
+    // Conservative: never after the first event, at most a day before it
+    expect(res.getTime()).toBeLessThanOrEqual(first);
+    expect(first - res.getTime()).toBeLessThanOrEqual(24 * 60 * 60 * 1000);
     expect(calls.length).toBeLessThan(25);
   });
 
@@ -54,6 +55,8 @@ describe('earliestEventInBuckets', () => {
       [{ id: 'a' }, { id: 'b' }, { id: 'c' }] as any,
       getEvents
     );
-    expect(res.toISOString().slice(0, 10)).toBe('2023-06-01');
+    const first = new Date('2023-06-01T12:00:00Z').getTime();
+    expect(res.getTime()).toBeLessThanOrEqual(first);
+    expect(first - res.getTime()).toBeLessThanOrEqual(24 * 60 * 60 * 1000);
   });
 });
