@@ -503,16 +503,16 @@ export function fullDesktopQuery(params: DesktopQueryParams): string[] {
 // NOTE: Doesn't support browser buckets (and therefore not browser audible detection either)
 //       This is due to the 'unknown' hostname of browser buckets (will hopefully be fixed soon).
 export function multideviceQuery(params: MultiQueryParams): string[] {
+  // app_events is computed from events directly, not chained off
+  // title_events: aw-watcher-android events have no "title" key, so
+  // merge_events_by_keys(events, ["app", "title"]) drops them from
+  // title_events entirely (see canonicalEvents). Chaining app_events off
+  // title_events would silently exclude mobile hosts' app-level
+  // breakdown even though their duration is counted; title breakdown
+  // (which mobile hosts can't provide) stays desktop-only.
   return querystr_to_array(
     `
     ${canonicalMultideviceEvents(params)}
-    // app_events is computed from events directly, not chained off
-    // title_events: aw-watcher-android events have no "title" key, so
-    // merge_events_by_keys(events, ["app", "title"]) drops them from
-    // title_events entirely (see canonicalEvents). Chaining app_events off
-    // title_events would silently exclude mobile hosts' app-level
-    // breakdown even though their duration is counted; title breakdown
-    // (which mobile hosts can't provide) stays desktop-only.
     title_events = sort_by_duration(merge_events_by_keys(events, ["app", "title"]));
     app_events   = sort_by_duration(merge_events_by_keys(events, ["app"]));
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
@@ -584,6 +584,11 @@ export function activityQueryAndroid(androidbucket: string): string[] {
 // without downloading a raw, uncapped bucket. Titles and URLs stay on the device;
 // see src/util/activityContext.ts for what is actually exported.
 export function analysisContextQuery(params: DesktopQueryParams): string[] {
+  // browser_domains is intentionally not limited here. buildActivityContext
+  // computes truncation metadata (total + otherSeconds) over the full domain list;
+  // a server-side cap would make the reported totals wrong. Domain events are
+  // one short string per domain, so the response stays small; the client applies
+  // the display limit with correct truncation accounting.
   return querystr_to_array(
     `
     ${canonicalEvents({
@@ -594,11 +599,6 @@ export function analysisContextQuery(params: DesktopQueryParams): string[] {
     })}
     events = sort_by_timestamp(events);
     browser_events = split_url_events(browser_events);
-    // Note: browser_domains is intentionally NOT limited here. buildActivityContext
-    // computes truncation metadata (total + otherSeconds) over the full domain list,
-    // so a server-side cap would make the reported totals wrong. Domain events are
-    // one short string per domain, so the response stays small; the client applies
-    // the display limit with correct truncation accounting.
     browser_domains = sort_by_duration(merge_events_by_keys(browser_events, ["$domain"]));
     tracked_events = ${queryBucket(escape_doublequote(params.bid_window))};
     RETURN = {
