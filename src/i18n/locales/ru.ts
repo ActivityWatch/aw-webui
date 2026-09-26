@@ -294,6 +294,8 @@ export default {
     rangeStart: 'Дата начала',
     rangeEnd: 'Дата окончания',
     invalidRange: 'Неверный диапазон дат в URL, показан сегодняшний день.',
+    periodAllTime: 'всё время',
+    allTimeSlowHint: 'Загрузка за всё время может занять время на больших базах данных.',
     filterAfkTooltip: 'Скрыть время, когда AFK-watcher не фиксировал ввод с клавиатуры или мыши.',
     filterAudibleTooltip:
       'Если активное окно — вкладка браузера со звуком, считать активностью. Нужен browser watcher.',
@@ -338,6 +340,7 @@ export default {
     periodLast7d: 'последние 7 дней',
     periodLast30d: 'последние 30 дней',
     periodCustomRange: 'за выбранный период',
+    periodAllTime: 'за всё время',
   },
   visualizations: {
     noData: '(нет данных)',

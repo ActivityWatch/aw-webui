@@ -237,3 +237,24 @@ export function usesMonthlyBuckets(timeperiod: TimePeriod): boolean {
   const [count, res] = timeperiod.length;
   return res.startsWith('day') && count > MAX_DAILY_BUCKETS;
 }
+
+/**
+ * Split a timeperiod into consecutive period strings of at most `maxDays` each.
+ * Used for queries that return a single aggregate per request (editor, Android)
+ * so that very long ranges (e.g. All time) don't exceed the request timeout.
+ */
+export function splitTimeperiodStrs(timeperiod: TimePeriod, maxDays: number): string[] {
+  const start = moment(timeperiod.start);
+  const end = start
+    .clone()
+    .add(timeperiod.length[0], timeperiod.length[1] as moment.unitOfTime.DurationConstructor);
+  const periods: string[] = [];
+  let cur = start.clone();
+  while (cur.isBefore(end)) {
+    let next = cur.clone().add(maxDays, 'days');
+    if (next.isAfter(end)) next = end.clone();
+    periods.push([cur.format(), next.format()].join('/'));
+    cur = next;
+  }
+  return periods;
+}

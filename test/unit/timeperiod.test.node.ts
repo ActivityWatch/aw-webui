@@ -8,6 +8,7 @@ import {
   formatDateRange,
   parseDateRange,
   shiftDateRange,
+  splitTimeperiodStrs,
   timeperiodsCalendarMonthsOfPeriod,
   timeperiodsForBarchart,
 } from '~/util/timeperiod';
@@ -100,5 +101,29 @@ describe('timeperiodsForBarchart', () => {
 
   it('uses months for a year', () => {
     expect(timeperiodsForBarchart({ start, length: [1, 'year'] })).toHaveLength(12);
+  });
+});
+
+describe('splitTimeperiodStrs', () => {
+  it('keeps short periods as one request', () => {
+    const tp = {
+      start: moment('2026-01-01T00:00:00').format(),
+      length: [30, 'days'] as [number, string],
+    };
+    expect(splitTimeperiodStrs(tp, 92)).toHaveLength(1);
+  });
+
+  it('splits long periods into contiguous chunks', () => {
+    const tp = {
+      start: moment('2022-01-01T00:00:00').format(),
+      length: [1000, 'days'] as [number, string],
+    };
+    const chunks = splitTimeperiodStrs(tp, 366);
+    expect(chunks).toHaveLength(3);
+    for (let i = 1; i < chunks.length; i++) {
+      expect(chunks[i].split('/')[0]).toBe(chunks[i - 1].split('/')[1]);
+    }
+    const end = moment(tp.start).add(1000, 'days').format();
+    expect(chunks[chunks.length - 1].split('/')[1]).toBe(end);
   });
 });
