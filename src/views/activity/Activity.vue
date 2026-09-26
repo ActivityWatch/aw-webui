@@ -541,7 +541,12 @@ export default {
     },
     nextPeriod: function () {
       if (this.dateRange) {
-        return formatDateRange(shiftDateRange(this.dateRange, 1));
+        const next = shiftDateRange(this.dateRange, 1);
+        // Clip at today, like setRange (only reachable when next.start <= today)
+        if (next.end > this.todayDate && next.start <= this.todayDate) {
+          next.end = this.todayDate;
+        }
+        return formatDateRange(next);
       }
       return moment(this._date)
         .add(
