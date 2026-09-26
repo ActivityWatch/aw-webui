@@ -161,9 +161,6 @@ export default {
         'Diese Einstellungen sind für Entwickler gedacht und können unerwartet etwas kaputt machen.',
       forceDevmode: 'Devmode erzwingen',
       forceDevmodeHelp: 'Devmode aktiviert noch unfertige Funktionen.',
-      showYearly: 'Jahreszeitraum anzeigen',
-      showYearlyHelp:
-        'Eine Abfrage über ein ganzes Jahr ist sehr schwer und führt oft zu Timeouts. Mit aw-server-rust kann es schneller sein.',
       multidevice: 'Multi-Device-Abfrage',
       multideviceHelp:
         'Frühes Experiment: Ereignisse von mehreren Hosts in der Aktivitätsansicht. Browser-Buckets und „Audio = aktiv“ werden noch nicht unterstützt.',
