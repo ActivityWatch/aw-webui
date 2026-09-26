@@ -58,3 +58,18 @@ export async function earliestEventInBuckets(
   if (valid.length === 0) return null;
   return new Date(Math.min(...valid.map(d => d.getTime())));
 }
+
+/**
+ * The All time start date to use after a lookup (YYYY-MM-DD strings).
+ * A reload never moves a known start later: a transient lookup failure falls
+ * back to bucket creation dates, which can be later than the data, while an
+ * unnecessarily early start only adds empty time.
+ */
+export function nextEarliestDate(
+  current: string | null,
+  found: string,
+  { reload = false }: { reload?: boolean } = {}
+): string {
+  if (reload && current && current < found) return current;
+  return found;
+}

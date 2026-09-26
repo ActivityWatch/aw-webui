@@ -1,4 +1,8 @@
-import { earliestEventInBucket, earliestEventInBuckets } from '~/util/earliestEvent';
+import {
+  earliestEventInBucket,
+  earliestEventInBuckets,
+  nextEarliestDate,
+} from '~/util/earliestEvent';
 
 // Fake events endpoint: returns the latest event at or before `end` (limit 1)
 function fakeGetEvents(timestamps: Record<string, string[]>) {
@@ -66,5 +70,23 @@ describe('earliestEventInBuckets', () => {
     const first = new Date('2023-06-01T12:00:00Z').getTime();
     expect(res.getTime()).toBeLessThanOrEqual(first);
     expect(first - res.getTime()).toBeLessThanOrEqual(24 * 60 * 60 * 1000);
+  });
+});
+
+describe('nextEarliestDate', () => {
+  it('takes the lookup result on first load', () => {
+    expect(nextEarliestDate(null, '2024-06-01')).toBe('2024-06-01');
+  });
+
+  it('never moves a known start later on reload', () => {
+    expect(nextEarliestDate('2019-01-01', '2024-06-01', { reload: true })).toBe('2019-01-01');
+  });
+
+  it('moves the start earlier on reload', () => {
+    expect(nextEarliestDate('2024-06-01', '2019-01-01', { reload: true })).toBe('2019-01-01');
+  });
+
+  it('follows the lookup when not reloading (e.g. host change)', () => {
+    expect(nextEarliestDate('2019-01-01', '2024-06-01')).toBe('2024-06-01');
   });
 });
