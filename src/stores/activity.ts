@@ -11,10 +11,9 @@ import {
   TimePeriod,
   dateToTimeperiod,
   timeperiodToStr,
-  timeperiodsHoursOfPeriod,
-  timeperiodsDaysOfPeriod,
-  timeperiodsMonthsOfPeriod,
   timeperiodsAroundTimeperiod,
+  timeperiodsForBarchart,
+  usesMonthlyBuckets,
 } from '~/util/timeperiod';
 
 import { useSettingsStore } from '~/stores/settings';
@@ -25,21 +24,10 @@ import { getClient } from '~/util/awclient';
 import { buildMultideviceHostParams } from '~/util/multidevice';
 import {
   FullDesktopQueryResult,
+  categoryByPeriodFromChunks,
   mergeFullDesktopResults,
   periodsForFullDesktopQuery,
 } from '~/util/desktopQuerySplit';
-
-function timeperiodsStrsHoursOfPeriod(timeperiod: TimePeriod): string[] {
-  return timeperiodsHoursOfPeriod(timeperiod).map(timeperiodToStr);
-}
-
-function timeperiodsStrsDaysOfPeriod(timeperiod: TimePeriod): string[] {
-  return timeperiodsDaysOfPeriod(timeperiod).map(timeperiodToStr);
-}
-
-function timeperiodsStrsMonthsOfPeriod(timeperiod: TimePeriod): string[] {
-  return timeperiodsMonthsOfPeriod(timeperiod).map(timeperiodToStr);
-}
 
 function timeperiodStrsAroundTimeperiod(timeperiod: TimePeriod): string[] {
   return timeperiodsAroundTimeperiod(timeperiod).map(timeperiodToStr);
@@ -73,20 +61,20 @@ async function queryDesktopPeriods(
   periods: string[],
   query: string[],
   name: string
-): Promise<FullDesktopQueryResult> {
+): Promise<{ merged: FullDesktopQueryResult; chunks: [string, FullDesktopQueryResult][] }> {
   const client = getClient();
   const signal = client.controller.signal;
-  const results: FullDesktopQueryResult[] = [];
+  const chunks: [string, FullDesktopQueryResult][] = [];
   for (const period of periods) {
     if (signal.aborted) {
       throw signal['reason'] || 'unknown reason';
     }
     const data = await client.query([period], query, { name, verbose: true });
     if (data && data[0]) {
-      results.push(data[0]);
+      chunks.push([period, data[0]]);
     }
   }
-  return mergeFullDesktopResults(results);
+  return { merged: mergeFullDesktopResults(chunks.map(([, r]) => r)), chunks };
 }
 
 export interface QueryOptions {
@@ -98,6 +86,9 @@ export interface QueryOptions {
   include_stopwatch?: boolean;
   filter_categories?: string[][];
   dont_query_inactive?: boolean;
+  // Skip the active-time history around the period (the period-usage bars),
+  // e.g. for custom ranges where neighbouring periods aren't shown.
+  skip_active_history?: boolean;
   force?: boolean;
   always_active_pattern?: string;
 }
@@ -325,7 +316,9 @@ export const useActivityStore = defineStore('activity', {
           this.query_category_time_by_period_completed();
         }
 
-        if (this.active.available) {
+        if (query_options.skip_active_history) {
+          // Period-usage bars not shown
+        } else if (this.active.available) {
           await this.query_active_history(query_options);
         } else if (this.android.available) {
           await this.query_active_history_android(query_options);
@@ -341,8 +334,13 @@ export const useActivityStore = defineStore('activity', {
           await this.query_editor_completed();
         }
 
-        // Perform this last, as it takes the longest
-        if (this.window.available || this.android.available) {
+        // Perform this last, as it takes the longest.
+        // Skipped when query_desktop_full already derived it (long ranges).
+        const derivedByPeriod =
+          this.window.available &&
+          !settingsStore.useMultidevice &&
+          usesMonthlyBuckets(query_options.timeperiod);
+        if ((this.window.available || this.android.available) && !derivedByPeriod) {
           await this.query_category_time_by_period(query_options);
         }
       } else {
@@ -447,7 +445,7 @@ export const useActivityStore = defineStore('activity', {
         host_params,
         always_active_pattern,
       });
-      const merged = await queryDesktopPeriods(periods, q, 'multidevice');
+      const { merged } = await queryDesktopPeriods(periods, q, 'multidevice');
       this.query_window_completed(merged.window || {});
     },
 
@@ -476,8 +474,16 @@ export const useActivityStore = defineStore('activity', {
         include_audible,
         always_active_pattern,
       });
-      const merged = await queryDesktopPeriods(periods, q, 'fullDesktopQuery');
+      const { merged, chunks } = await queryDesktopPeriods(periods, q, 'fullDesktopQuery');
       this.query_window_completed(merged.window || {});
+      if (usesMonthlyBuckets(timeperiod)) {
+        // Long ranges: build the monthly barchart from the chunk results
+        // instead of querying every month again (month-sized category
+        // queries took 10-38 s each on a 1.7 GB database, past the timeout).
+        this.query_category_time_by_period_completed({
+          by_period: categoryByPeriodFromChunks(timeperiod, chunks),
+        });
+      }
       this.query_browser_completed(merged.browser || {});
       if (include_stopwatch) {
         this.query_stopwatch_completed(merged.stopwatch || {});
@@ -541,25 +547,9 @@ export const useActivityStore = defineStore('activity', {
       always_active_pattern,
     }: QueryOptions & { dontQueryInactive: boolean }) {
       // TODO: Needs to be adapted for Android
-      let periods: string[];
-      const count = timeperiod.length[0];
-      const res = timeperiod.length[1];
-      if (res.startsWith('day') && count == 1) {
-        // If timeperiod is a single day, we query the individual hours
-        periods = timeperiodsStrsHoursOfPeriod(timeperiod);
-      } else if (
-        res.startsWith('day') ||
-        (res.startsWith('week') && count == 1) ||
-        (res.startsWith('month') && count == 1)
-      ) {
-        // If timeperiod is several days, or a single week/month, we query the individual days
-        periods = timeperiodsStrsDaysOfPeriod(timeperiod);
-      } else if (timeperiod.length[1].startsWith('year') && timeperiod.length[0] == 1) {
-        // If timeperiod a single year, we query the individual months
-        periods = timeperiodsStrsMonthsOfPeriod(timeperiod);
-      } else {
-        console.error(`Unknown timeperiod length: ${timeperiod.length}`);
-      }
+      // Hours for a single day, days for up to MAX_DAILY_BUCKETS days,
+      // calendar months for a year and longer ranges.
+      let periods: string[] = timeperiodsForBarchart(timeperiod).map(timeperiodToStr);
 
       // Filter out periods that start in the future
       periods = periods.filter(period => new Date(period.split('/')[0]) < new Date());

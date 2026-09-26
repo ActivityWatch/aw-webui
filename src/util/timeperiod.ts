@@ -128,3 +128,112 @@ export function timeperiodsMonthsOfPeriod(timeperiod: TimePeriod): TimePeriod[] 
   }
   return periods;
 }
+
+/**
+ * Custom date ranges are encoded in the Activity URL as a single path segment,
+ * `YYYY-MM-DD..YYYY-MM-DD` (both ends inclusive), under the `range` period:
+ * `/activity/:host/range/2026-01-01..2026-03-15/view/...`
+ */
+export interface DateRange {
+  start: string;
+  end: string;
+}
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+export const DATE_RANGE_SEP = '..';
+
+export function parseDateRange(str: string | undefined | null): DateRange | null {
+  if (!str) return null;
+  const parts = str.split(DATE_RANGE_SEP);
+  if (parts.length !== 2) return null;
+  const [start, end] = parts;
+  if (!DATE_RE.test(start) || !DATE_RE.test(end)) return null;
+  const mStart = moment(start, 'YYYY-MM-DD', true);
+  const mEnd = moment(end, 'YYYY-MM-DD', true);
+  if (!mStart.isValid() || !mEnd.isValid() || mEnd.isBefore(mStart)) return null;
+  return { start, end };
+}
+
+export function formatDateRange(range: DateRange): string {
+  return `${range.start}${DATE_RANGE_SEP}${range.end}`;
+}
+
+/** Number of days in the range, counting both ends. */
+export function dateRangeDays(range: DateRange): number {
+  return moment(range.end).diff(moment(range.start), 'days') + 1;
+}
+
+/** Shift a range by its own length (direction -1 = previous, +1 = next). */
+export function shiftDateRange(range: DateRange, direction: number): DateRange {
+  const days = dateRangeDays(range) * direction;
+  return {
+    start: moment(range.start).add(days, 'days').format('YYYY-MM-DD'),
+    end: moment(range.end).add(days, 'days').format('YYYY-MM-DD'),
+  };
+}
+
+export function dateRangeToTimeperiod(range: DateRange, offset: string): TimePeriod {
+  return {
+    start: get_day_start_with_offset(range.start, offset),
+    length: [dateRangeDays(range), 'days'],
+  };
+}
+
+/**
+ * Multi-day ranges longer than this are bucketed by calendar month instead of
+ * by day, both for the timeline barchart and for the per-period category query.
+ * 92 days keeps a full quarter at day resolution.
+ */
+export const MAX_DAILY_BUCKETS = 92;
+
+/**
+ * Calendar-month periods covering `timeperiod`, with the first and last month
+ * clipped to the period bounds.
+ */
+export function timeperiodsCalendarMonthsOfPeriod(timeperiod: TimePeriod): TimePeriod[] {
+  const start = moment(timeperiod.start);
+  const end = start
+    .clone()
+    .add(timeperiod.length[0], timeperiod.length[1] as moment.unitOfTime.DurationConstructor);
+  const periods: TimePeriod[] = [];
+  let cur = start.clone();
+  while (cur.isBefore(end)) {
+    let next = cur.clone().startOf('month').add(1, 'month');
+    // Keep the day-start offset (e.g. 04:00) on month boundaries
+    next = next.hours(start.hours()).minutes(start.minutes());
+    if (next.isAfter(end)) next = end.clone();
+    const days = next.diff(cur, 'days', true);
+    periods.push({ start: cur.format(), length: [Math.round(days), 'days'] });
+    cur = next;
+  }
+  return periods;
+}
+
+/**
+ * Periods for the timeline barchart (and the category-by-period query feeding it):
+ * hours for a single day, days for weeks/months/multi-day ranges up to
+ * MAX_DAILY_BUCKETS, months for a year and for longer ranges.
+ */
+export function timeperiodsForBarchart(timeperiod: TimePeriod): TimePeriod[] {
+  const [count, res] = timeperiod.length;
+  if (res.startsWith('day') && count === 1) {
+    return timeperiodsHoursOfPeriod(timeperiod);
+  } else if (res.startsWith('day') && count > MAX_DAILY_BUCKETS) {
+    return timeperiodsCalendarMonthsOfPeriod(timeperiod);
+  } else if (
+    res.startsWith('day') ||
+    (res.startsWith('week') && count === 1) ||
+    (res.startsWith('month') && count === 1)
+  ) {
+    return timeperiodsDaysOfPeriod(timeperiod);
+  } else if (res.startsWith('year') && count === 1) {
+    return timeperiodsMonthsOfPeriod(timeperiod);
+  }
+  throw new Error(`Unknown timeperiod length: ${timeperiod.length}`);
+}
+
+/** Whether the barchart (and category-by-period data) uses calendar-month buckets. */
+export function usesMonthlyBuckets(timeperiod: TimePeriod): boolean {
+  const [count, res] = timeperiod.length;
+  return res.startsWith('day') && count > MAX_DAILY_BUCKETS;
+}

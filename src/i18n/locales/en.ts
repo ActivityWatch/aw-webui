@@ -295,6 +295,10 @@ export default {
     periodLast30d: '30 days',
     periodLast7dTitle: 'last 7 days',
     periodLast30dTitle: 'last 30 days',
+    periodCustomRange: 'custom range',
+    rangeStart: 'Start date',
+    rangeEnd: 'End date',
+    invalidRange: 'Invalid date range in URL, showing today instead.',
     filterAfkTooltip: 'Filter away time where the AFK watcher did not detect any input.',
     filterAudibleTooltip:
       'If the active window is an audible browser tab, count as active. Requires a browser watcher.',
@@ -338,6 +342,7 @@ export default {
     periodThisYear: 'this year',
     periodLast7d: 'the last 7 days',
     periodLast30d: 'the last 30 days',
+    periodCustomRange: 'in the selected range',
   },
   visualizations: {
     noData: '(no data)',

@@ -290,6 +290,10 @@ export default {
     periodLast30d: '30 днів',
     periodLast7dTitle: 'останні 7 днів',
     periodLast30dTitle: 'останні 30 днів',
+    periodCustomRange: 'власний діапазон',
+    rangeStart: 'Дата початку',
+    rangeEnd: 'Дата завершення',
+    invalidRange: 'Недійсний діапазон дат в URL, показано сьогодні.',
     filterAfkTooltip: 'Приховати час, коли AFK-watcher не фіксував введення з клавіатури чи миші.',
     filterAudibleTooltip:
       'Якщо активне вікно — вкладка браузера зі звуком, рахувати як активність. Потрібен browser watcher.',
@@ -333,6 +337,7 @@ export default {
     periodThisYear: 'цей рік',
     periodLast7d: 'останні 7 днів',
     periodLast30d: 'останні 30 днів',
+    periodCustomRange: 'за вибраний період',
   },
   visualizations: {
     noData: '(немає даних)',
