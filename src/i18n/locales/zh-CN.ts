@@ -145,9 +145,6 @@ export default {
       noteBody: '这些设置面向知道自己在做什么的开发者，可能会意外破坏功能。',
       forceDevmode: '强制开发模式',
       forceDevmodeHelp: '开发模式会启用一些仍在开发中的功能。',
-      showYearly: '显示年度时间范围',
-      showYearlyHelp:
-        '查询整年是一项很重的操作，可能导致超时。不过，如果你运行的是 aw-server-rust，查询可能足够快。',
       multidevice: '使用多设备查询',
       multideviceHelp:
         '多设备查询会在活动视图中收集多个主机的事件。这是早期实验功能，目前不支持浏览器存储桶或有声即活跃功能。',
