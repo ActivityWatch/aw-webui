@@ -1,5 +1,9 @@
+import moment from 'moment';
+
 import {
+  DESKTOP_CHUNK_DAYS,
   DESKTOP_QUERY_EVENT_LIMIT,
+  categoryByPeriodFromChunks,
   mergeEventsByKeys,
   mergeFullDesktopResults,
   periodsForFullDesktopQuery,
@@ -52,6 +56,51 @@ describe('periodsForFullDesktopQuery', () => {
     for (const period of periods) {
       expect(new Date(period.split('/')[0]) < now).toBe(true);
     }
+  });
+});
+
+describe('long ranges', () => {
+  const now = new Date('2026-08-28T12:00:00Z');
+  // 2026-01-15 .. 2026-05-14, local day starts
+  const tp = {
+    start: moment('2026-01-15T04:00:00').format(),
+    length: [120, 'days'] as [number, string],
+  };
+
+  test('chunks never cross a calendar month and are at most DESKTOP_CHUNK_DAYS', () => {
+    const periods = periodsForFullDesktopQuery(tp, now);
+    const total = periods.reduce((acc, p) => {
+      const [a, b] = p.split('/').map(d => moment(d));
+      expect(b.diff(a, 'days', true)).toBeLessThanOrEqual(DESKTOP_CHUNK_DAYS + 0.1);
+      // start and (end - 1ms) are in the same month, counting days from 04:00
+      const dayStart = (m: moment.Moment) => m.clone().subtract(4, 'hours');
+      expect(dayStart(a).month()).toBe(dayStart(b).subtract(1, 'ms').month());
+      return acc + Math.round(b.diff(a, 'days', true));
+    }, 0);
+    expect(total).toBe(120);
+    expect(periods.length).toBeLessThan(30);
+  });
+
+  test('categoryByPeriodFromChunks sums chunk cat_events per month', () => {
+    const periods = periodsForFullDesktopQuery(tp, now);
+    const cat = (name: string, d: number) => ev({ $category: [name] }, d);
+    const chunks = periods.map(p => [
+      p,
+      { window: { cat_events: [cat('Work', 10), cat('Media', 1)] } },
+    ]) as any;
+    const byPeriod = categoryByPeriodFromChunks(tp, chunks);
+    const months = Object.keys(byPeriod);
+    expect(months.map(k => moment(k.split('/')[0]).format('YYYY-MM-DD'))).toEqual([
+      '2026-01-15',
+      '2026-02-01',
+      '2026-03-01',
+      '2026-04-01',
+      '2026-05-01',
+    ]);
+    const chunksInFeb = periods.filter(p => moment(p.split('/')[0]).month() === 1).length;
+    const feb = byPeriod[months[1]].cat_events;
+    expect(feb[0].data.$category).toEqual(['Work']);
+    expect(feb[0].duration).toBe(10 * chunksInFeb);
   });
 });
 
