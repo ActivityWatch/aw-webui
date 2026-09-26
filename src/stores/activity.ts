@@ -13,6 +13,7 @@ import {
   timeperiodToStr,
   timeperiodsAroundTimeperiod,
   timeperiodsForBarchart,
+  usesMonthlyBuckets,
 } from '~/util/timeperiod';
 
 import { useSettingsStore } from '~/stores/settings';
@@ -29,6 +30,7 @@ import {
 } from '~/util/multidevice';
 import {
   FullDesktopQueryResult,
+  categoryByPeriodFromChunks,
   mergeFullDesktopResults,
   periodsForFullDesktopQuery,
 } from '~/util/desktopQuerySplit';
@@ -65,20 +67,20 @@ async function queryDesktopPeriods(
   periods: string[],
   query: string[],
   name: string
-): Promise<FullDesktopQueryResult> {
+): Promise<{ merged: FullDesktopQueryResult; chunks: [string, FullDesktopQueryResult][] }> {
   const client = getClient();
   const signal = client.controller.signal;
-  const results: FullDesktopQueryResult[] = [];
+  const chunks: [string, FullDesktopQueryResult][] = [];
   for (const period of periods) {
     if (signal.aborted) {
       throw signal['reason'] || 'unknown reason';
     }
     const data = await client.query([period], query, { name, verbose: true });
     if (data && data[0]) {
-      results.push(data[0]);
+      chunks.push([period, data[0]]);
     }
   }
-  return mergeFullDesktopResults(results);
+  return { merged: mergeFullDesktopResults(chunks.map(([, r]) => r)), chunks };
 }
 
 /**
@@ -402,8 +404,13 @@ export const useActivityStore = defineStore('activity', {
           await this.query_editor_completed();
         }
 
-        // Perform this last, as it takes the longest
-        if (this.window.available || this.android.available) {
+        // Perform this last, as it takes the longest.
+        // Skipped when query_desktop_full already derived it (long ranges).
+        const derivedByPeriod =
+          this.window.available &&
+          !settingsStore.useMultidevice &&
+          usesMonthlyBuckets(query_options.timeperiod);
+        if ((this.window.available || this.android.available) && !derivedByPeriod) {
           await this.query_category_time_by_period(query_options);
         }
       } else {
@@ -579,7 +586,7 @@ export const useActivityStore = defineStore('activity', {
       const periods = periodsForFullDesktopQuery(query_options.timeperiod);
       const params = this.multidevice_params(query_options, hosts);
       const q = queries.multideviceQuery(params);
-      const merged = await queryDesktopPeriods(periods, q, 'multidevice');
+      const { merged } = await queryDesktopPeriods(periods, q, 'multidevice');
       const windowResult = merged.window || {};
 
       // ScreenTime (iOS) events carry the bundle ID as "app": show the app
@@ -638,8 +645,16 @@ export const useActivityStore = defineStore('activity', {
         include_audible,
         always_active_pattern,
       });
-      const merged = await queryDesktopPeriods(periods, q, 'fullDesktopQuery');
+      const { merged, chunks } = await queryDesktopPeriods(periods, q, 'fullDesktopQuery');
       this.query_window_completed(merged.window || {});
+      if (usesMonthlyBuckets(timeperiod)) {
+        // Long ranges: build the monthly barchart from the chunk results
+        // instead of querying every month again (month-sized category
+        // queries took 10-38 s each on a 1.7 GB database, past the timeout).
+        this.query_category_time_by_period_completed({
+          by_period: categoryByPeriodFromChunks(timeperiod, chunks),
+        });
+      }
       this.query_browser_completed(merged.browser || {});
       if (include_stopwatch) {
         this.query_stopwatch_completed(merged.stopwatch || {});

@@ -2,7 +2,14 @@ import moment from 'moment';
 
 import { default_limit as DESKTOP_QUERY_EVENT_LIMIT } from '~/queries';
 import { IEvent } from '~/util/interfaces';
-import { TimePeriod, timeperiodToStr, timeperiodsDaysOfPeriod } from '~/util/timeperiod';
+import {
+  TimePeriod,
+  splitTimeperiodStrs,
+  timeperiodToStr,
+  timeperiodsCalendarMonthsOfPeriod,
+  timeperiodsDaysOfPeriod,
+  usesMonthlyBuckets,
+} from '~/util/timeperiod';
 
 export { DESKTOP_QUERY_EVENT_LIMIT };
 
@@ -56,7 +63,17 @@ export interface FullDesktopQueryResult {
  * A single day stays one request. Week, month, and multi-day ranges split
  * into days. A year is also split into days: month-sized chunks are the
  * timeout. Future-starting periods are dropped so we don't query incomplete days.
+ *
+ * Ranges long enough to use monthly barchart buckets (custom ranges over
+ * MAX_DAILY_BUCKETS days) split each calendar month into chunks of at most
+ * DESKTOP_CHUNK_DAYS. Chunks never cross a month boundary, so the per-chunk
+ * cat_events can be summed into the monthly barchart without a second round of
+ * category queries (see categoryByPeriodFromChunks). Measured 2026-09-26 on a
+ * 1.7 GB aw-server v0.14 database, 42 days: 1-day chunks 13-16 s, 7-day chunks
+ * 11-12 s (max request 2.8 s). Concurrent requests did not help.
  */
+export const DESKTOP_CHUNK_DAYS = 7;
+
 export function periodsForFullDesktopQuery(
   timeperiod: TimePeriod,
   now: Date = new Date()
@@ -66,6 +83,10 @@ export function periodsForFullDesktopQuery(
 
   if (res.startsWith('day') && count === 1) {
     periods = [timeperiodToStr(timeperiod)];
+  } else if (usesMonthlyBuckets(timeperiod)) {
+    periods = timeperiodsCalendarMonthsOfPeriod(timeperiod).flatMap(month =>
+      splitTimeperiodStrs(month, DESKTOP_CHUNK_DAYS)
+    );
   } else if (
     res.startsWith('day') ||
     (res.startsWith('week') && count === 1) ||
@@ -108,6 +129,32 @@ export function mergeEventsByKeys(events: IEvent[], keys: string[], limit?: numb
   }
   const merged = Array.from(groups.values()).sort((a, b) => b.duration - a.duration);
   return limit === undefined ? merged : merged.slice(0, limit);
+}
+
+/**
+ * Category-by-period data for the monthly barchart, built from the results of
+ * the chunked desktop query (chunks never cross a calendar month) instead of
+ * querying each month again.
+ */
+export function categoryByPeriodFromChunks(
+  timeperiod: TimePeriod,
+  chunks: [string, FullDesktopQueryResult][]
+): Record<string, { cat_events: IEvent[] }> {
+  const byPeriod: Record<string, { cat_events: IEvent[] }> = {};
+  const now = new Date();
+  for (const month of timeperiodsCalendarMonthsOfPeriod(timeperiod)) {
+    const key = timeperiodToStr(month);
+    const [start, end] = key.split('/').map(d => new Date(d));
+    if (start >= now) continue;
+    const events = chunks
+      .filter(([period]) => {
+        const chunkStart = new Date(period.split('/')[0]);
+        return chunkStart >= start && chunkStart < end;
+      })
+      .flatMap(([, result]) => (result.window && result.window.cat_events) || []);
+    byPeriod[key] = { cat_events: mergeEventsByKeys(events, ['$category']) };
+  }
+  return byPeriod;
 }
 
 function concatEvents(chunks: Array<IEvent[] | undefined>): IEvent[] {
