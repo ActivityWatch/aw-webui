@@ -164,9 +164,6 @@ export default {
       forceDevmode: 'Tvinga utvecklarläge',
       forceDevmodeHelp:
         'Utvecklarläget aktiverar vissa funktioner som fortfarande är under utveckling.',
-      multidevice: 'Använd fråga för flera enheter',
-      multideviceHelp:
-        'En fråga för flera enheter samlar händelser från flera värdar i aktivitetsvyn. Det är ett tidigt experiment som för närvarande inte stöder webbläsarbuckets eller funktionen som räknar hörbart innehåll som aktivt.',
       requestTimeout: 'Timeout för begäran',
       requestTimeoutHelp:
         'Den maximala tid en serverbegäran får ta innan den avbryts. Ett högt värde kan vara användbart för stora frågor. Observera att webbgränssnittet måste läsas om för att ändringen ska börja gälla.',
@@ -277,6 +274,11 @@ export default {
       'Inget matchande webbläsarfönster för den här perioden. Om du surfade i en Chromium-/Firefox-fork kanske dess appnamn inte känns igen ännu.',
     for: 'för',
     host: 'Värd:',
+    devices: 'Enheter:',
+    allDevices: 'Alla enheter',
+    allDevicesCount: 'Alla enheter ({count})',
+    onlyThisDevice: 'endast',
+    multideviceNote: 'Webbläsar- och stoppursdata visas bara när en enskild enhet är vald.',
     timeActive: 'Aktiv tid:',
     queryRange: 'Frågeintervall:',
     filters: 'Filter',

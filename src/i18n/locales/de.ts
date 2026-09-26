@@ -161,9 +161,6 @@ export default {
         'Diese Einstellungen sind für Entwickler gedacht und können unerwartet etwas kaputt machen.',
       forceDevmode: 'Devmode erzwingen',
       forceDevmodeHelp: 'Devmode aktiviert noch unfertige Funktionen.',
-      multidevice: 'Multi-Device-Abfrage',
-      multideviceHelp:
-        'Frühes Experiment: Ereignisse von mehreren Hosts in der Aktivitätsansicht. Browser-Buckets und „Audio = aktiv“ werden noch nicht unterstützt.',
       requestTimeout: 'Anfrage-Timeout',
       requestTimeoutHelp:
         'Maximale Wartezeit auf Serverantwort. Für große Abfragen erhöhen. Web-UI neu laden, damit es wirkt.',
@@ -272,6 +269,12 @@ export default {
       'Für diesen Zeitraum wurde kein passendes Browserfenster gefunden. Falls Sie in einem Chromium-/Firefox-Derivat gesurft haben, wird dessen App-Name möglicherweise noch nicht erkannt.',
     for: 'für',
     host: 'Host:',
+    devices: 'Geräte:',
+    allDevices: 'Alle Geräte',
+    allDevicesCount: 'Alle Geräte ({count})',
+    onlyThisDevice: 'nur',
+    multideviceNote:
+      'Browser- und Stoppuhrdaten sind nur bei Auswahl eines einzelnen Geräts verfügbar.',
     timeActive: 'Aktive Zeit:',
     queryRange: 'Abfragezeitraum:',
     filters: 'Filter',

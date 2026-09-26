@@ -32,6 +32,12 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
           b-dropdown-item(v-for="view in activityViews", :key="view.name", :to="view.pathUrl")
             icon(:name="view.icon")
             | {{ view.name }}
+          // Combined view of every device (incl. synced and mobile ones)
+          template(v-if="activityViews && activityViews.length > 1")
+            b-dropdown-divider
+            b-dropdown-item(:to="allDevicesPathUrl" data-testid="nav-all-devices")
+              icon(name="layer-group")
+              | {{ $t('activity.allDevices') }}
 
         b-nav-item(to="/timeline" style="font-color: #000;")
           div.px-2.px-lg-1
@@ -125,6 +131,7 @@ import 'vue-awesome/icons/project-diagram';
 import 'vue-awesome/icons/ellipsis-h';
 import 'vue-awesome/icons/mobile';
 import 'vue-awesome/icons/desktop';
+import 'vue-awesome/icons/layer-group';
 
 import _ from 'lodash';
 
@@ -132,6 +139,7 @@ import { mapState } from 'pinia';
 import { useSettingsStore } from '~/stores/settings';
 import { useBucketsStore } from '~/stores/buckets';
 import { IBucket } from '~/util/interfaces';
+import { ALL_DEVICES, formatHostParam } from '~/util/multidevice';
 
 export default {
   name: 'Header',
@@ -143,6 +151,7 @@ export default {
       // See https://github.com/ActivityWatch/aw-webui/issues/299
       fixedTopMenu: true,
       researchEdition: typeof AW_RESEARCH_EDITION !== 'undefined' && AW_RESEARCH_EDITION,
+      allDevicesPathUrl: `/activity/${ALL_DEVICES}`,
     };
   },
   computed: {
@@ -169,7 +178,7 @@ export default {
           name: `${hostname} (Android)`,
           hostname: hostname,
           type: 'android',
-          pathUrl: `/activity/${hostname}`,
+          pathUrl: `/activity/${formatHostParam([hostname])}`,
           icon: 'mobile',
         });
       } else if (hostname != 'unknown') {
@@ -177,7 +186,7 @@ export default {
           name: hostname,
           hostname: hostname,
           type: 'default',
-          pathUrl: `/activity/${hostname}`,
+          pathUrl: `/activity/${formatHostParam([hostname])}`,
           icon: 'desktop',
         });
       }

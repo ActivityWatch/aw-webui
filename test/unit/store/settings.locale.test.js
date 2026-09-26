@@ -29,13 +29,16 @@ describe('settings store locale loading', () => {
   });
 
   test('load ignores removed settings keys', async () => {
-    mockGetSettings.mockResolvedValue({ showYearly: true });
+    mockGetSettings.mockResolvedValue({ showYearly: true, useMultidevice: true });
     localStorage.setItem('showYearly', 'true');
+    localStorage.setItem('useMultidevice', 'true');
 
     await settingsStore.load();
 
-    expect('showYearly' in settingsStore.$state).toBe(false);
-    expect(settingsStore._storedKeys).not.toContain('showYearly');
+    for (const key of ['showYearly', 'useMultidevice']) {
+      expect(key in settingsStore.$state).toBe(false);
+      expect(settingsStore._storedKeys).not.toContain(key);
+    }
   });
 
   test('load applies valid locale from server', async () => {
