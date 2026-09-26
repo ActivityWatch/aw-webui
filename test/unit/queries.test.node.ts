@@ -63,13 +63,17 @@ import {
   appQuery,
   browser_appname_regex,
   browser_appnames,
+  activityQuery,
   canonicalEvents,
   categoryQuery,
   chromeAppnameRegex,
+  editorActivityQuery,
   fullDesktopQuery,
   multideviceQuery,
   querystr_to_array,
 } from '~/queries';
+import type { DesktopQueryParams, MultiQueryParams } from '~/queries';
+import type { Rule } from '~/util/classes';
 
 // Convert ActivityWatch (?i) patterns to JS RegExp with i flag for testing.
 // AW server uses Python-style (?i) inline flag; JS uses RegExp 'i' flag instead.
@@ -386,26 +390,61 @@ describe('querystr_to_array', () => {
   });
 });
 
-test('generated AQL contains no JavaScript comments', () => {
-  const multidevice = multideviceQuery({
-    hosts: ['testhost'],
-    host_params: {},
-    filter_afk: true,
-    always_active_pattern: '',
-    categories: [],
-    filter_categories: [],
-  });
-  const context = analysisContextQuery({
+// AQL has no comment syntax, so any comment leaking into a generated query
+// makes the server reject it (#999). Strip string literals first, so
+// comment-like text inside them (e.g. "https://" in a category regex) is
+// allowed, then look for `//` and `/*` anywhere, not only at line starts.
+function stripStringLiterals(query: string): string {
+  return query.replace(/"(?:[^"\\]|\\.)*"/g, '""');
+}
+
+describe('generated AQL contains no JavaScript comments', () => {
+  // A category regex with comment-like text, which must not be flagged
+  const categories: [string[], Rule][] = [
+    [['Work'], { type: 'regex', regex: 'https://work|/\\*' }],
+  ];
+  const desktop: DesktopQueryParams = {
     bid_window: 'aw-watcher-window_testhost',
     bid_afk: 'aw-watcher-afk_testhost',
-    bid_browsers: [],
+    bid_browsers: ['aw-watcher-web-firefox_testhost'],
+    bid_stopwatch: 'aw-stopwatch',
     filter_afk: true,
-    categories: [],
+    include_audible: true,
+    always_active_pattern: 'zoom',
+    categories,
+    filter_categories: [['Work']],
+  };
+  const multi: MultiQueryParams = {
+    hosts: ['testhost', 'phone'],
+    host_params: { phone: { bid_android: 'aw-watcher-android-test' } },
+    filter_afk: true,
+    always_active_pattern: '',
+    categories,
     filter_categories: [],
+  };
+
+  test.each([
+    ['fullDesktopQuery', () => fullDesktopQuery(desktop)],
+    ['multideviceQuery', () => multideviceQuery(multi)],
+    ['analysisContextQuery', () => analysisContextQuery(desktop)],
+    ['categoryQuery (desktop)', () => categoryQuery(desktop)],
+    ['categoryQuery (multidevice)', () => categoryQuery(multi)],
+    ['appQuery', () => appQuery('aw-watcher-android-test', categories, [])],
+    ['editorActivityQuery', () => editorActivityQuery(['aw-watcher-vim_testhost'])],
+    ['activityQuery', () => activityQuery(['aw-watcher-afk_testhost'])],
+  ])('%s', (_name, build) => {
+    const query = build().join('\n');
+    const code = stripStringLiterals(query);
+    expect(code).not.toMatch(/\/\//);
+    expect(code).not.toMatch(/\/\*/);
   });
 
-  expect(multidevice.join('\n')).not.toMatch(/^\s*\/\//m);
-  expect(context.join('\n')).not.toMatch(/^\s*\/\//m);
+  test('the check itself catches inline and block comments', () => {
+    const code = (q: string) => stripStringLiterals(q);
+    expect(code('events = []; // inline')).toMatch(/\/\//);
+    expect(code('/* block */ events = [];')).toMatch(/\/\*/);
+    expect(code('x = "https://a/*b";')).not.toMatch(/\/\/|\/\*/);
+  });
 });
 
 // Regression guard for ActivityWatch/aw-webui#959:

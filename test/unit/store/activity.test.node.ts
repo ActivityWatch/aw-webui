@@ -65,6 +65,33 @@ describe('activity store', () => {
     querySpy.mockRestore();
   });
 
+  // Each chunk request returns one event list per period in that chunk; the
+  // per-chunk results must be flattened so every period keeps its own data.
+  test('keeps active history aligned with its period across chunks', async () => {
+    activityStore.active.history = {};
+    activityStore.buckets.afk = ['aw-watcher-afk_test'];
+    const eventFor = (period: string) => ({
+      timestamp: period.split('/')[0],
+      duration: 1,
+      data: { status: 'not-afk', period },
+    });
+    const querySpy = jest
+      .spyOn(getClient(), 'query')
+      .mockImplementation(async periods => periods.map(p => [eventFor(p)]));
+
+    await activityStore.query_active_history({
+      host: 'test',
+      timeperiod: { start: '2020-01-01T00:00:00+00:00', length: [1, 'month'] },
+    });
+
+    expect(querySpy.mock.calls.length).toBeGreaterThan(1);
+    const requested = querySpy.mock.calls.flatMap(call => call[0]);
+    for (const period of requested) {
+      expect(activityStore.active.history[period]).toEqual([eventFor(period)]);
+    }
+    querySpy.mockRestore();
+  });
+
   test('chunkPeriodsBySpan keeps each chunk within maxDays', () => {
     const periods = [
       '2020-01-01T00:00:00Z/2020-07-01T00:00:00Z',
