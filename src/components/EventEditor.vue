@@ -13,10 +13,10 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
         td {{ event.id }}
       tr
         th Start
-        datetime(type="datetime" v-model="start")
+        datetime(type="datetime" v-model="start" :disabled="busy")
       tr
         th End
-        datetime(type="datetime" v-model="end")
+        datetime(type="datetime" v-model="end" :disabled="busy")
       tr
         th Duration
         td {{ editedEvent.duration | friendlyduration }}
@@ -31,9 +31,9 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
         td
           b-input(disabled, :value="k", size="sm")
         td
-          b-checkbox(v-if="typeof event.data[k] === typeof true", v-model="editedEvent.data[k]", style="margin: 0.25em")
-          b-input(v-if="typeof event.data[k] === typeof 'string'", v-model="editedEvent.data[k]", size="sm")
-          b-input(v-if="typeof event.data[k] === 'number'", v-model.number="editedEvent.data[k]", size="sm", type="number")
+          b-checkbox(v-if="typeof event.data[k] === typeof true", v-model="editedEvent.data[k]", :disabled="busy", style="margin: 0.25em")
+          b-input(v-if="typeof event.data[k] === typeof 'string'", v-model="editedEvent.data[k]", :disabled="busy", size="sm")
+          b-input(v-if="typeof event.data[k] === 'number'", v-model.number="editedEvent.data[k]", :disabled="busy", size="sm", type="number")
 
     hr
 
@@ -65,6 +65,7 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
 //  - Search (soon)
 
 import moment from 'moment';
+import { cloneDeep } from 'lodash';
 
 import 'vue-awesome/icons/times';
 import 'vue-awesome/icons/save';
@@ -120,8 +121,10 @@ export default {
   methods: {
     async save() {
       if (!this.editedEvent) return;
-      await this.runMutation('save', this.editedEvent, () =>
-        this.$aw.replaceEvent(this.bucket_id, this.editedEvent)
+      // Keep the request and success payload tied to the exact submitted data.
+      const submittedEvent = cloneDeep(this.editedEvent);
+      await this.runMutation('save', submittedEvent, () =>
+        this.$aw.replaceEvent(this.bucket_id, submittedEvent)
       );
     },
     async delete_() {
