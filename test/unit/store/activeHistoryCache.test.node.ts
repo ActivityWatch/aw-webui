@@ -259,6 +259,36 @@ describe('query_active_history caching', () => {
     }
   });
 
+  test.each([false, true])(
+    'a host without history buckets clears old data and rejects late responses (pending=%s)',
+    async requestPending => {
+      await run();
+      let release: () => void;
+      let oldRequest: Promise<void>;
+      if (requestPending) {
+        query.mockImplementationOnce(
+          periods =>
+            new Promise(resolve => {
+              release = () =>
+                resolve(
+                  periods.map(tp => [{ timestamp: tp.split('/')[0], duration: 111, data: {} }])
+                );
+            })
+        );
+        oldRequest = run({ force: true });
+      }
+      const buckets = useBucketsStore();
+      buckets.update_buckets([]);
+      jest.spyOn(buckets, 'ensureLoaded').mockResolvedValue(undefined);
+      await activityStore.ensure_loaded({ host: 'empty', timeperiod: TIMEPERIOD });
+      if (requestPending) {
+        release();
+        await oldRequest;
+      }
+      expect(activityStore.active.history).toEqual({});
+    }
+  );
+
   test('a failed request leaves the cache untouched and is retryable', async () => {
     query.mockRejectedValueOnce(new Error('offline'));
     await expect(run()).rejects.toThrow('offline');
@@ -457,12 +487,14 @@ describe('multidevice history cache after merging device selection', () => {
             resolve(periods.map(tp => [{ timestamp: tp.split('/')[0], duration: 111, data: {} }]));
         })
     );
-    const pending = run({ timeperiod: { start: '2020-01-01T00:00:00Z', length: [1, 'year'] } });
+    const pendingRequest = run({
+      timeperiod: { start: '2020-01-01T00:00:00Z', length: [1, 'year'] },
+    });
     expect(query.mock.calls[0][0]).toHaveLength(1);
     await run({}, ['other', 'phone']);
     const current = JSON.parse(JSON.stringify(store.active.history));
     release();
-    await pending;
+    await pendingRequest;
     expect(query).toHaveBeenCalledTimes(2);
     expect(store.active.history).toEqual(current);
   });

@@ -161,6 +161,7 @@ export default {
     persistAlerts: async function (alerts) {
       if (this.saving) return false;
       const previous = this.alerts;
+      const previousStored = this.settingsStore.alerts;
       this.saving = true;
       this.alerts = alerts;
       try {
@@ -170,6 +171,9 @@ export default {
       } catch (e) {
         console.error(e);
         this.alerts = previous;
+        // update() patches the store before persisting; roll back that state
+        // too, so remounts and unrelated settings saves cannot revive it.
+        this.settingsStore.$patch({ alerts: previousStored });
         this.error = 'Failed to save alert goals. Please try again.';
         return false;
       } finally {

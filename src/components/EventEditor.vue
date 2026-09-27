@@ -13,10 +13,10 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
         td {{ event.id }}
       tr
         th {{ $t('ui.eventEditor.start') }}
-        datetime(type="datetime" v-model="start")
+        datetime(type="datetime" v-model="start" :disabled="busy")
       tr
         th {{ $t('ui.eventEditor.end') }}
-        datetime(type="datetime" v-model="end")
+        datetime(type="datetime" v-model="end" :disabled="busy")
       tr
         th {{ $t('ui.eventEditor.duration') }}
         td {{ editedEvent.duration | friendlyduration }}
@@ -31,9 +31,9 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
         td
           b-input(disabled, :value="k", size="sm")
         td
-          b-checkbox(v-if="typeof event.data[k] === typeof true", v-model="editedEvent.data[k]", style="margin: 0.25em")
-          b-input(v-if="typeof event.data[k] === typeof 'string'", v-model="editedEvent.data[k]", size="sm")
-          b-input(v-if="typeof event.data[k] === 'number'", v-model.number="editedEvent.data[k]", size="sm", type="number")
+          b-checkbox(v-if="typeof event.data[k] === typeof true", v-model="editedEvent.data[k]", :disabled="busy", style="margin: 0.25em")
+          b-input(v-if="typeof event.data[k] === typeof 'string'", v-model="editedEvent.data[k]", :disabled="busy", size="sm")
+          b-input(v-if="typeof event.data[k] === 'number'", v-model.number="editedEvent.data[k]", :disabled="busy", size="sm", type="number")
 
     hr
 
