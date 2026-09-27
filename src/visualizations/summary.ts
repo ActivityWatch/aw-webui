@@ -115,7 +115,7 @@ function update(container: HTMLElement, apps: Entry[]) {
         // Keep in-bar label colours consistent with the hover fill.
         const hoverColors = inBarColors(hovercolor);
         eg.selectAll<SVGTextElement, unknown>(`text[clip-path="url(#${clipIn})"]`).each(function (
-          _,
+          _e,
           j
         ) {
           const sel = d3.select<SVGTextElement, unknown>(this);
@@ -136,7 +136,7 @@ function update(container: HTMLElement, apps: Entry[]) {
           try {
             const colors = inBarColors(Color(computedFill).hex());
             eg.selectAll<SVGTextElement, unknown>(`text[clip-path="url(#${clipIn})"]`).each(
-              function (_, j) {
+              function (_e, j) {
                 const sel = d3.select<SVGTextElement, unknown>(this);
                 if (j === 0) sel.style('fill', colors.name, 'important');
                 if (j === 1) sel.style('fill', colors.duration, 'important');
