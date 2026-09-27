@@ -114,43 +114,42 @@ function update(container: HTMLElement, apps: Entry[]) {
 
     // The group representing an entry in the barchart
     const eg = a.append('g');
+    // Re-colour in-bar labels from the bar's *displayed* fill (computed style),
+    // so theme overrides (e.g. dark.css !important rules) are honoured. Called
+    // in a rAF so the browser has applied the new fill first.
+    const recolorInBarLabels = () => {
+      window.requestAnimationFrame(() => {
+        const barRect = eg.select<SVGRectElement>('rect').node();
+        if (!barRect) return;
+        const computedFill = window.getComputedStyle(barRect).fill;
+        if (!computedFill) return;
+        try {
+          const colors = inBarColors(Color(computedFill).hex());
+          eg.selectAll<SVGTextElement, unknown>(`text[clip-path="url(#${clipIn})"]`).each(function (
+            _e,
+            j
+          ) {
+            const sel = d3.select<SVGTextElement, unknown>(this);
+            if (j === 0) sel.style('fill', colors.name, 'important');
+            if (j === 1) sel.style('fill', colors.duration, 'important');
+          });
+        } catch {
+          // ignore
+        }
+      });
+    };
     eg.attr('id', 'summary_' + i)
       .on('mouseover', function () {
         eg.select('rect').style('fill', hovercolor);
-        // Keep in-bar label colours consistent with the hover fill.
-        const hoverColors = inBarColors(hovercolor);
-        eg.selectAll<SVGTextElement, unknown>(`text[clip-path="url(#${clipIn})"]`).each(function (
-          _e,
-          j
-        ) {
-          const sel = d3.select<SVGTextElement, unknown>(this);
-          if (j === 0) sel.style('fill', hoverColors.name, 'important');
-          if (j === 1) sel.style('fill', hoverColors.duration, 'important');
-        });
+        // Keep in-bar label colours consistent with the *displayed* hover fill:
+        // themes may override the hover fill (e.g. dark.css), so derive label
+        // colours from the computed style rather than the raw hover color.
+        recolorInBarLabels();
       })
       .on('mouseout', function () {
         eg.select('rect').style('fill', appcolor);
-        // Re-read the actual CSS-applied fill after restoring the bar colour so
-        // any theme override (e.g. dark.css) is taken into account rather than
-        // an inBarColors call on the raw appcolor.
-        window.requestAnimationFrame(() => {
-          const barRect = eg.select<SVGRectElement>('rect').node();
-          if (!barRect) return;
-          const computedFill = window.getComputedStyle(barRect).fill;
-          if (!computedFill) return;
-          try {
-            const colors = inBarColors(Color(computedFill).hex());
-            eg.selectAll<SVGTextElement, unknown>(`text[clip-path="url(#${clipIn})"]`).each(
-              function (_e, j) {
-                const sel = d3.select<SVGTextElement, unknown>(this);
-                if (j === 0) sel.style('fill', colors.name, 'important');
-                if (j === 1) sel.style('fill', colors.duration, 'important');
-              }
-            );
-          } catch {
-            // ignore
-          }
-        });
+        // Same reasoning as mouseover: the restored bar colour may be themed.
+        recolorInBarLabels();
       });
 
     eg.append('title').text(app.hovertext + '\n' + seconds_to_duration(app.duration));
