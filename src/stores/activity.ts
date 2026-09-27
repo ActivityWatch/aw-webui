@@ -490,6 +490,9 @@ export const useActivityStore = defineStore('activity', {
         await this.query_active_history_android(query_options);
       } else {
         console.log('Cannot call query_active_history as we do not have an afk bucket');
+        // No query will run to invalidate the previous host's cache. Also
+        // reject any response still arriving for that previous host.
+        this.invalidate_active_history({ cache_key: null, force: true });
         await this.query_active_history_completed();
       }
 

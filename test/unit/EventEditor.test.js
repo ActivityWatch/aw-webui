@@ -109,6 +109,25 @@ describe('EventEditor save', () => {
     expect(wrapper.vm.busy).toBe(false);
   });
 
+  test('emits the submitted snapshot even if the editable event changes during Save', async () => {
+    const inFlight = deferred();
+    const { wrapper, $aw } = mountEditor({
+      replaceEvent: jest.fn().mockReturnValue(inFlight.promise),
+    });
+    await flush();
+    wrapper.vm.editedEvent.data.title = 'submitted';
+    const saving = wrapper.vm.save();
+    wrapper.vm.editedEvent.data.title = 'not submitted';
+    wrapper.vm.editedEvent.duration = 999;
+    inFlight.resolve();
+    await saving;
+    const payload = wrapper.emitted('save')[0][0];
+    expect(payload.data.title).toBe('submitted');
+    expect(payload.duration).toBe(60);
+    expect($aw.replaceEvent.mock.calls[0][1]).toEqual(payload);
+    wrapper.destroy();
+  });
+
   test('closes the modal before notifying the parent', async () => {
     const { wrapper } = mountEditor();
     await flush();

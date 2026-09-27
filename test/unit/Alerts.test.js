@@ -296,6 +296,33 @@ describe('Alerts goal persistence', () => {
     expect(wrapper.vm.error).toBe('');
   });
 
+  test.each(['add', 'delete'])(
+    'failed %s rolls back the settings store as well as the visible list',
+    async action => {
+      const stored = [{ name: 'Work', category: ['Work'], goal: 100 }];
+      const { wrapper, update, settingsStore } = mountAlerts({ storedAlerts: stored });
+      await settle();
+      update.mockRestore();
+      const save = jest.spyOn(settingsStore, 'save').mockRejectedValueOnce(new Error('offline'));
+      const errors = jest.spyOn(console, 'error').mockImplementation(jest.fn());
+      if (action === 'add') {
+        wrapper.vm.editing_alert = { name: 'Code', category: ['Work', 'Code'], goal: 90 };
+        await wrapper.vm.addAlert();
+      } else {
+        await wrapper.vm.deleteAlert('Work');
+      }
+      expect(wrapper.vm.alerts).toEqual(stored);
+      expect(settingsStore.alerts).toEqual(stored);
+      wrapper.destroy();
+      const remounted = mountAlerts();
+      await settle();
+      expect(remounted.wrapper.vm.alerts).toEqual(stored);
+      remounted.wrapper.destroy();
+      save.mockRestore();
+      errors.mockRestore();
+    }
+  );
+
   test('a second click while a save is pending does not write twice', async () => {
     const { wrapper, update } = mountAlerts({ storedAlerts: [] });
     await settle();
