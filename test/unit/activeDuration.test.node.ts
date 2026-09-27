@@ -1,12 +1,13 @@
 import { activeDurationQuery } from '~/queries';
 import { createPinia, setActivePinia } from 'pinia';
 import { useActivityStore } from '~/stores/activity';
-import { useSettingsStore } from '~/stores/settings';
 import { useBucketsStore } from '~/stores/buckets';
 import { getClient } from '~/util/awclient';
 
 const mockQuery = jest.fn();
-jest.mock('~/util/awclient', () => ({ getClient: () => ({ query: mockQuery }) }));
+jest.mock('~/util/awclient', () => ({
+  getClient: () => ({ query: mockQuery, controller: new AbortController() }),
+}));
 const source = {
   bid_afk: 'afk_host',
   bid_window: 'window_host',
@@ -79,8 +80,7 @@ test('store passes activity options and normalizes every returned event for the 
   ).toBe(true);
 });
 
-test('multidevice history resolves real per-host window, AFK and browser bucket IDs', async () => {
-  useSettingsStore().useMultidevice = true;
+test('multidevice history uses selected desktop and mobile buckets without browser evidence', async () => {
   const buckets = useBucketsStore();
   buckets.buckets = Object.fromEntries(
     [
@@ -88,18 +88,29 @@ test('multidevice history resolves real per-host window, AFK and browser bucket 
       ['custom-window_a', 'currentwindow', 'a'],
       ['aw-watcher-web-chrome_a', 'web.tab.current', 'a'],
       ['custom-afk_b', 'afkstatus', 'b'],
+      ['custom-window_b', 'currentwindow', 'b'],
+      ['aw-watcher-android-phone', 'currentwindow', 'phone'],
     ].map(([id, type, hostname]) => [id, { id, type, hostname, data: {} }])
   ) as any;
-  await useActivityStore().query_active_history({
-    host: 'a',
-    timeperiod: { start: '2026-01-01T04:00:00Z', length: [1, 'day'] },
-    include_audible: true,
-  });
+  await useActivityStore().query_active_history_multidevice(
+    {
+      host: 'a,phone',
+      timeperiod: { start: '2026-01-01T04:00:00Z', length: [1, 'day'] },
+      include_audible: true,
+      filter_afk: false,
+      always_active_pattern: 'Code',
+    },
+    ['a', 'phone']
+  );
   const query = mockQuery.mock.calls[0][1].join('\n');
-  for (const id of ['custom-afk_a', 'custom-window_a', 'aw-watcher-web-chrome_a', 'custom-afk_b']) {
-    expect(query).toContain(`query_bucket("${id}")`);
-  }
-  expect(query).not.toContain('aw-watcher-window_b');
+  expect(query).toContain('query_bucket("custom-window_a")');
+  expect(query).toContain('union_no_overlap(history_events, events)');
+  expect(query).toContain(
+    'union_no_overlap(history_events, flood(query_bucket("aw-watcher-android-phone")))'
+  );
+  expect(query).not.toContain('aw-watcher-web-chrome_a');
+  expect(query).not.toContain('custom-window_b');
+  expect(query).not.toContain('audible_events =');
 });
 
 // Regression: the AFK-only fallback must contribute real intervals.
