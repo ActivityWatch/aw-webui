@@ -75,6 +75,11 @@ function update(container: HTMLElement, apps: Entry[]) {
   apps = apps.filter(function (app) {
     return app.duration !== undefined && app.duration > 0;
   });
+  if (apps.length <= 0) {
+    // All apps were zero/undefined duration — nothing to draw.
+    set_status(container, 'No data');
+    return container;
+  }
 
   const chartId = 'appsummary-' + chartCounter++;
   const defs = svg.append('defs');
