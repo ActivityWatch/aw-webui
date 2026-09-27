@@ -71,33 +71,6 @@ describe('activity store host selection', () => {
   });
 });
 
-describe('activity store history cache', () => {
-  setActivePinia(createPinia());
-  const activityStore = useActivityStore();
-
-  const key = (hosts: string[], afk: string[], android: string[]) =>
-    JSON.stringify([hosts, afk, android]);
-
-  test('is kept while the queried devices and buckets are the same', () => {
-    const k = key(['a', 'b'], ['afk_a', 'afk_b'], []);
-    activityStore.invalidate_active_history({ cache_key: k });
-    activityStore.active.history = { p: [] } as any;
-    activityStore.invalidate_active_history({ cache_key: k });
-    expect(activityStore.active.history).toEqual({ p: [] });
-  });
-
-  test('is cleared when a new device shows up under the same selection', () => {
-    activityStore.active.history = { p: [] } as any;
-    activityStore.invalidate_active_history({
-      cache_key: key(
-        ['a', 'b', 'phone'],
-        ['afk_a', 'afk_b'],
-        ['aw-watcher-android-test-synced-from-phone']
-      ),
-    });
-    expect(activityStore.active.history).toEqual({});
-  });
-});
 describe('multidevice availability flags', () => {
   setActivePinia(createPinia());
   const activityStore = useActivityStore();

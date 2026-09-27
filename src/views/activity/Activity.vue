@@ -19,7 +19,7 @@ div
           toggle-class="p-0 text-muted host-selector-toggle"
           data-testid="host-selector"
         )
-          template(v-slot:button-content)
+          template(v-slot:button-content="")
             span {{ hostLabel }}
           b-dropdown-item(
             :to="routeForHost(allDevicesParam)"

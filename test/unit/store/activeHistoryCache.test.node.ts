@@ -11,6 +11,7 @@ function mockQuery(result: unknown[] = []) {
   jest.spyOn(awclient, 'getClient').mockReturnValue({
     query,
     abort: jest.fn(),
+    controller: new AbortController(),
     req: { defaults: {} },
   } as any);
   return query;
@@ -58,8 +59,9 @@ describe('query_active_history caching', () => {
   };
 
   beforeEach(() => {
+    jest.useFakeTimers({ now: new Date('2026-09-10T12:00:00Z') });
     setActivePinia(createPinia());
-    useSettingsStore().$patch({ _loaded: true, startOfDay: '00:00', useMultidevice: false });
+    useSettingsStore().$patch({ _loaded: true, startOfDay: '00:00' });
     activityStore = useActivityStore();
     jest.restoreAllMocks();
     // activeDurationQuery returns an event array per period on this branch.
@@ -71,6 +73,7 @@ describe('query_active_history caching', () => {
   });
 
   afterEach(() => {
+    jest.useRealTimers();
     jest.restoreAllMocks();
   });
 
@@ -212,8 +215,9 @@ describe('query_active_history caching', () => {
     const first = periodsAsked()[0];
 
     seedBuckets({ [HOST]: { window: true } });
-    useSettingsStore().$patch({ useMultidevice: true });
-    await run();
+    await activityStore.query_active_history_multidevice({ host: '@all', timeperiod: TIMEPERIOD }, [
+      HOST,
+    ]);
 
     expect(periodsAsked()[1]).toEqual(first);
   });
@@ -294,8 +298,9 @@ describe('query_active_history_android caching', () => {
   let query: jest.Mock;
 
   beforeEach(() => {
+    jest.useFakeTimers({ now: new Date('2026-09-10T12:00:00Z') });
     setActivePinia(createPinia());
-    useSettingsStore().$patch({ _loaded: true, startOfDay: '00:00', useMultidevice: false });
+    useSettingsStore().$patch({ _loaded: true, startOfDay: '00:00' });
     activityStore = useActivityStore();
     jest.restoreAllMocks();
     query = mockQuery([]);
@@ -312,6 +317,7 @@ describe('query_active_history_android caching', () => {
   });
 
   afterEach(() => {
+    jest.useRealTimers();
     jest.restoreAllMocks();
   });
 
@@ -361,5 +367,103 @@ describe('query_active_history_android caching', () => {
     const tp = query.mock.calls[0][0][0];
     expect(activityStore.active.history[tp][0].data).toEqual({ status: 'not-afk' });
     expect(activityStore.active.history[tp][0].duration).toBe(60);
+  });
+});
+
+describe('multidevice history cache after merging device selection', () => {
+  let store: ReturnType<typeof useActivityStore>;
+  let query: jest.Mock;
+  const past = { start: '2020-01-05T00:00:00Z', length: [1, 'day'] as [number, string] };
+  const options = { host: '@all', timeperiod: past };
+  const run = (overrides = {}, hosts = ['desktop', 'phone']) =>
+    store.query_active_history_multidevice({ ...options, ...overrides }, hosts);
+
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    useSettingsStore().$patch({ _loaded: true, startOfDay: '00:00' });
+    seedBuckets({ desktop: { window: true }, other: { window: true } });
+    const buckets = useBucketsStore();
+    buckets.update_buckets([
+      ...buckets.buckets,
+      {
+        id: 'aw-watcher-android-phone',
+        type: 'currentwindow',
+        hostname: 'phone',
+        data: {},
+      } as any,
+    ]);
+    store = useActivityStore();
+    query = mockQuery();
+    query.mockImplementation(async periods =>
+      periods.map(tp => [{ timestamp: tp.split('/')[0], duration: 60, data: {} }])
+    );
+  });
+
+  afterEach(() => jest.restoreAllMocks());
+
+  test('navigation through the multidevice loader preserves cached closed periods', async () => {
+    for (const name of [
+      'query_multidevice_full',
+      'query_editor',
+      'query_category_time_by_period',
+    ]) {
+      jest.spyOn(store, name as any).mockResolvedValue(undefined);
+    }
+    await store.ensure_loaded_multidevice(options, ['desktop', 'phone']);
+    await store.ensure_loaded_multidevice(options, ['desktop', 'phone']);
+    expect(query).toHaveBeenCalledTimes(1);
+  });
+
+  test.each([{ force: true }, { filter_afk: false }, { always_active_pattern: 'Code' }])(
+    'refreshes when the query semantics or force option changes: %j',
+    async overrides => {
+      await run();
+      await run(overrides);
+      expect(query).toHaveBeenCalledTimes(2);
+      expect(query.mock.calls[1][0]).toEqual(query.mock.calls[0][0]);
+    }
+  );
+
+  test('adding a device under @all invalidates closed periods', async () => {
+    await run();
+    await run({}, ['desktop', 'phone', 'other']);
+    expect(query).toHaveBeenCalledTimes(2);
+    expect(query.mock.calls[1][1].join(' ')).toContain('aw-watcher-window_other');
+  });
+
+  test('changing a mobile source invalidates closed periods', async () => {
+    await run();
+    const buckets = useBucketsStore();
+    buckets.update_buckets([
+      ...buckets.buckets,
+      {
+        id: 'aw-import-screentime_phone',
+        type: 'app',
+        hostname: 'phone',
+        data: {},
+      } as any,
+    ]);
+    await run();
+    expect(query).toHaveBeenCalledTimes(2);
+    expect(query.mock.calls[1][1].join(' ')).toContain('aw-import-screentime_phone');
+  });
+
+  test('year requests remain chunked and stale chunks cannot overwrite a new selection', async () => {
+    let release: () => void;
+    query.mockImplementationOnce(
+      periods =>
+        new Promise(resolve => {
+          release = () =>
+            resolve(periods.map(tp => [{ timestamp: tp.split('/')[0], duration: 111, data: {} }]));
+        })
+    );
+    const pending = run({ timeperiod: { start: '2020-01-01T00:00:00Z', length: [1, 'year'] } });
+    expect(query.mock.calls[0][0]).toHaveLength(1);
+    await run({}, ['other', 'phone']);
+    const current = JSON.parse(JSON.stringify(store.active.history));
+    release();
+    await pending;
+    expect(query).toHaveBeenCalledTimes(2);
+    expect(store.active.history).toEqual(current);
   });
 });

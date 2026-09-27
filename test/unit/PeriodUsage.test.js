@@ -97,6 +97,7 @@ test.each(['last7d', 'last30d'])('%s route retains the supplied anchor', periodL
     settingsStore: { startOfDay: '04:00' },
     periodIsBrowseable: false,
     host: 'host',
+    hostParam: 'host',
     subview: 'view',
     currentViewId: 'default',
     $route: { path: '', query: { test: 'value' } },
