@@ -299,6 +299,8 @@ export default {
     invalidRange: 'Ungültiger Zeitraum in der URL, stattdessen wird heute angezeigt.',
     periodAllTime: 'gesamter Zeitraum',
     allTimeSlowHint: 'Der gesamte Zeitraum kann bei großen Datenbanken eine Weile dauern.',
+    loadProgress: '{done} / {total} Anfragen',
+    loadEta: 'noch ~{eta}',
     filterAfkTooltip: 'Zeit ausblenden, in der der AFK-Watcher keine Eingabe erkannt hat.',
     filterAudibleTooltip:
       'Aktives Fenster mit hörbarem Browser-Tab als aktiv zählen. Erfordert Browser-Watcher.',

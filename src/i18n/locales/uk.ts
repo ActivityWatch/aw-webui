@@ -296,6 +296,8 @@ export default {
     invalidRange: 'Недійсний діапазон дат в URL, показано сьогодні.',
     periodAllTime: 'увесь час',
     allTimeSlowHint: 'Завантаження за весь час може тривати довго на великих базах даних.',
+    loadProgress: '{done} / {total} запитів',
+    loadEta: 'залишилось ~{eta}',
     filterAfkTooltip: 'Приховати час, коли AFK-watcher не фіксував введення з клавіатури чи миші.',
     filterAudibleTooltip:
       'Якщо активне вікно — вкладка браузера зі звуком, рахувати як активність. Потрібен browser watcher.',

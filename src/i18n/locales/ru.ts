@@ -296,6 +296,8 @@ export default {
     invalidRange: 'Неверный диапазон дат в URL, показан сегодняшний день.',
     periodAllTime: 'всё время',
     allTimeSlowHint: 'Загрузка за всё время может занять время на больших базах данных.',
+    loadProgress: '{done} / {total} запросов',
+    loadEta: 'осталось ~{eta}',
     filterAfkTooltip: 'Скрыть время, когда AFK-watcher не фиксировал ввод с клавиатуры или мыши.',
     filterAudibleTooltip:
       'Если активное окно — вкладка браузера со звуком, считать активностью. Нужен browser watcher.',

@@ -304,6 +304,8 @@ export default {
     invalidRange: 'Ogiltigt datumintervall i URL:en, visar idag istället.',
     periodAllTime: 'all tid',
     allTimeSlowHint: 'All tid kan ta en stund med stora databaser.',
+    loadProgress: '{done} / {total} förfrågningar',
+    loadEta: '~{eta} kvar',
     filterAfkTooltip: 'Filtrera bort tid då AFK-bevakaren inte upptäckte någon inmatning.',
     filterAudibleTooltip:
       'Om det aktiva fönstret är en hörbar webbläsarflik räknas den som aktiv. Kräver en webbläsarbevakare.',

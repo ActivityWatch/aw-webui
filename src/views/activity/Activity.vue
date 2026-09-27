@@ -140,15 +140,15 @@ div
 
   div.mb-2.small.text-muted(v-if="periodLength === 'all'")
     span(:title="$t('activity.allTimeSlowHint')") 🐌 {{ $t('activity.allTimeSlowHint') }}
-    b-progress.mt-1(
-      v-if="activityStore.progress && activityStore.progress.total > 0"
-      :value="activityStore.progress.done"
-      :max="activityStore.progress.total"
-      height="0.5rem"
-    )
   // Neighbouring periods of a custom range aren't meaningful, and 31 of
   // them can span decades of AFK data for long ranges.
   aw-periodusage(v-else-if="periodLength !== 'range'", :periodusage_arr="periodusage", @update="setDate")
+
+  // Multi-request loads (everything but a single day) show request progress
+  div.mb-2.small.text-muted(v-if="loadProgress")
+    b-progress(:value="loadProgress.done" :max="loadProgress.total" height="0.5rem")
+    span {{ $t('activity.loadProgress', { done: loadProgress.done, total: loadProgress.total }) }}
+    span(v-if="loadProgress.eta")  · {{ $t('activity.loadEta', { eta: loadProgress.eta }) }}
 
   aw-uncategorized-notification(:periodLength="periodLength")
 
@@ -242,7 +242,7 @@ div
 <script lang="ts">
 import { mapState } from 'pinia';
 import moment from 'moment';
-import { get_day_start_with_offset, get_today_with_offset } from '~/util/time';
+import { get_day_start_with_offset, get_today_with_offset, seconds_to_duration } from '~/util/time';
 import {
   DateRange,
   dateRangeToTimeperiod,
@@ -424,6 +424,17 @@ export default {
     },
     todayDate: function () {
       return get_today_with_offset(this.settingsStore.startOfDay);
+    },
+    loadProgress: function () {
+      const p = this.activityStore.progress;
+      if (!p || this.periodLength === 'day' || p.total <= 1 || p.done >= p.total) return null;
+      let eta = null;
+      // Estimate from the mean request time so far, once a few are done
+      if (p.done >= 3) {
+        const remaining = ((p.lastAt - p.startedAt) / p.done) * (p.total - p.done);
+        eta = seconds_to_duration(Math.max(1, Math.round(remaining / 1000)));
+      }
+      return { done: p.done, total: p.total, eta };
     },
     nextDisabled: function () {
       const today = this.todayDate;

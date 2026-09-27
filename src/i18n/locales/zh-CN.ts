@@ -291,6 +291,8 @@ export default {
     invalidRange: 'URL 中的日期范围无效，改为显示今天。',
     periodAllTime: '全部时间',
     allTimeSlowHint: '数据库较大时，加载全部时间可能需要一段时间。',
+    loadProgress: '{done} / {total} 个请求',
+    loadEta: '剩余约 {eta}',
     filterAfkTooltip: '过滤掉 AFK watcher 未检测到任何输入的时间。',
     filterAudibleTooltip: '如果活动窗口是有声音的浏览器标签页，则计为活跃。需要浏览器 watcher。',
     showCategory: '显示分类',

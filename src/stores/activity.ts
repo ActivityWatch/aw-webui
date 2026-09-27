@@ -195,8 +195,11 @@ interface State {
 
   query_options?: QueryOptions;
 
-  // Request progress while loading, for long periods (All time). null when idle.
-  progress: { done: number; total: number } | null;
+  // Incremented per load, so requests from an aborted load can't touch the
+  // progress of the next one.
+  load_id: number;
+  // Request progress of the current load; null when idle.
+  progress: { done: number; total: number; startedAt: number; lastAt: number } | null;
 
   // Can't this be handled in bucketStore?
   buckets: {
@@ -267,6 +270,7 @@ export const useActivityStore = defineStore('activity', {
     },
 
     query_options: null,
+    load_id: 0,
     progress: null,
 
     buckets: {
@@ -324,77 +328,87 @@ export const useActivityStore = defineStore('activity', {
       }
       if (!this.loaded || this.query_options !== query_options || query_options.force) {
         this.start_loading(query_options);
-        if (!query_options.timeperiod) {
-          query_options.timeperiod = dateToTimeperiod(query_options.date, settingsStore.startOfDay);
-        }
-
-        await bucketsStore.ensureLoaded();
-        await this.get_buckets(query_options);
-
-        // TODO: These queries can actually run in parallel, but since server won't process them in parallel anyway we won't.
-        this.set_available();
-
-        if (this.window.available) {
-          console.info(
-            settingsStore.useMultidevice ? 'Querying multiple devices' : 'Querying a single device'
-          );
-          if (settingsStore.useMultidevice) {
-            const hostnames = bucketsStore.hosts.filter(
-              // require that the host has either a window+afk bucket pair
-              // (canonicalEvents needs the pair) or an android/ScreenTime
-              // bucket (routed through buildMultideviceHostParams' fallback
-              // path), and that the host is not a fakedata host, unless
-              // we're explicitly querying fakedata
-              host =>
-                host &&
-                ((bucketsStore.bucketsWindow(host).length > 0 &&
-                  bucketsStore.bucketsAFK(host).length > 0) ||
-                  bucketsStore.bucketsAndroid(host).length > 0) &&
-                (!host.startsWith('fakedata') || query_options.host.startsWith('fakedata'))
+        const loadId = this.load_id;
+        try {
+          if (!query_options.timeperiod) {
+            query_options.timeperiod = dateToTimeperiod(
+              query_options.date,
+              settingsStore.startOfDay
             );
-            console.info('Including hosts in multiquery: ', hostnames);
-            await this.query_multidevice_full(query_options, hostnames);
-          } else {
-            await this.query_desktop_full(query_options);
           }
-        } else if (this.android.available) {
-          await this.query_android(query_options);
-        } else {
-          console.log(
-            'Cannot query windows as we are missing either an afk/window bucket pair or an android bucket'
-          );
-          this.query_window_completed();
-          this.query_category_time_by_period_completed();
-        }
 
-        if (query_options.skip_active_history) {
-          // Period-usage bars not shown
-        } else if (this.active.available) {
-          await this.query_active_history(query_options);
-        } else if (this.android.available) {
-          await this.query_active_history_android(query_options);
-        } else {
-          console.log('Cannot call query_active_history as we do not have an afk bucket');
-          await this.query_active_history_completed();
-        }
+          await bucketsStore.ensureLoaded();
+          await this.get_buckets(query_options);
 
-        if (this.editor.available) {
-          await this.query_editor(query_options);
-        } else {
-          console.log('Cannot call query_editor as we do not have any editor buckets');
-          await this.query_editor_completed();
-        }
+          // TODO: These queries can actually run in parallel, but since server won't process them in parallel anyway we won't.
+          this.set_available();
 
-        // Perform this last, as it takes the longest.
-        // Skipped when query_desktop_full already derived it (long ranges).
-        const derivedByPeriod =
-          this.window.available &&
-          !settingsStore.useMultidevice &&
-          usesMonthlyBuckets(query_options.timeperiod);
-        if ((this.window.available || this.android.available) && !derivedByPeriod) {
-          await this.query_category_time_by_period(query_options);
+          if (this.window.available) {
+            console.info(
+              settingsStore.useMultidevice
+                ? 'Querying multiple devices'
+                : 'Querying a single device'
+            );
+            if (settingsStore.useMultidevice) {
+              const hostnames = bucketsStore.hosts.filter(
+                // require that the host has either a window+afk bucket pair
+                // (canonicalEvents needs the pair) or an android/ScreenTime
+                // bucket (routed through buildMultideviceHostParams' fallback
+                // path), and that the host is not a fakedata host, unless
+                // we're explicitly querying fakedata
+                host =>
+                  host &&
+                  ((bucketsStore.bucketsWindow(host).length > 0 &&
+                    bucketsStore.bucketsAFK(host).length > 0) ||
+                    bucketsStore.bucketsAndroid(host).length > 0) &&
+                  (!host.startsWith('fakedata') || query_options.host.startsWith('fakedata'))
+              );
+              console.info('Including hosts in multiquery: ', hostnames);
+              await this.query_multidevice_full(query_options, hostnames);
+            } else {
+              await this.query_desktop_full(query_options);
+            }
+          } else if (this.android.available) {
+            await this.query_android(query_options);
+          } else {
+            console.log(
+              'Cannot query windows as we are missing either an afk/window bucket pair or an android bucket'
+            );
+            this.query_window_completed();
+            this.query_category_time_by_period_completed();
+          }
+
+          if (query_options.skip_active_history) {
+            // Period-usage bars not shown
+          } else if (this.active.available) {
+            await this.query_active_history(query_options);
+          } else if (this.android.available) {
+            await this.query_active_history_android(query_options);
+          } else {
+            console.log('Cannot call query_active_history as we do not have an afk bucket');
+            await this.query_active_history_completed();
+          }
+
+          if (this.editor.available) {
+            await this.query_editor(query_options);
+          } else {
+            console.log('Cannot call query_editor as we do not have any editor buckets');
+            await this.query_editor_completed();
+          }
+
+          // Perform this last, as it takes the longest.
+          // Skipped when query_desktop_full already derived it (long ranges).
+          const derivedByPeriod =
+            this.window.available &&
+            !settingsStore.useMultidevice &&
+            usesMonthlyBuckets(query_options.timeperiod);
+          if ((this.window.available || this.android.available) && !derivedByPeriod) {
+            await this.query_category_time_by_period(query_options);
+          }
+        } finally {
+          // Done, failed or aborted: hide this load's progress (a newer load owns it otherwise)
+          if (this.load_id === loadId) this.progress = null;
         }
-        this.progress = null;
       } else {
         console.warn(
           'ensure_loaded called twice with same query_options but without query_options.force = true, skipping...'
@@ -424,11 +438,12 @@ export const useActivityStore = defineStore('activity', {
         isIos,
         periods.length > 1 ? CHUNKED_QUERY_LIMIT : undefined
       );
-      this.progress_add(periods.length);
+      const loadId = this.load_id;
+      this.progress_add(loadId, periods.length);
       const chunks = [];
       for (const period of periods) {
         const result = await getClient().query([period], q).catch(this.errorHandler);
-        this.progress_tick();
+        this.progress_tick(loadId);
         if (!(result && result[0])) {
           // Don't show partial totals as if they covered the whole period
           this.query_window_completed();
@@ -476,6 +491,8 @@ export const useActivityStore = defineStore('activity', {
 
     async reset() {
       getClient().abort();
+      this.load_id += 1;
+      this.progress = null;
       this.query_window_completed({});
       this.query_browser_completed({});
       this.query_editor_completed({});
@@ -487,7 +504,8 @@ export const useActivityStore = defineStore('activity', {
       hosts: string[]
     ) {
       const periods = periodsForFullDesktopQuery(timeperiod);
-      this.progress_add(periods.length);
+      const loadId = this.load_id;
+      this.progress_add(loadId, periods.length);
       const categories = useCategoryStore().classes_for_query;
       const bucketsStore = useBucketsStore();
 
@@ -514,7 +532,7 @@ export const useActivityStore = defineStore('activity', {
         always_active_pattern,
       });
       const { merged } = await queryDesktopPeriods(periods, q, 'multidevice', () =>
-        this.progress_tick()
+        this.progress_tick(loadId)
       );
       this.query_window_completed(merged.window || {});
     },
@@ -528,7 +546,8 @@ export const useActivityStore = defineStore('activity', {
       always_active_pattern,
     }: QueryOptions) {
       const periods = periodsForFullDesktopQuery(timeperiod);
-      this.progress_add(periods.length);
+      const loadId = this.load_id;
+      this.progress_add(loadId, periods.length);
       const categories = useCategoryStore().classes_for_query;
 
       const q = queries.fullDesktopQuery({
@@ -546,7 +565,7 @@ export const useActivityStore = defineStore('activity', {
         always_active_pattern,
       });
       const { merged, chunks } = await queryDesktopPeriods(periods, q, 'fullDesktopQuery', () =>
-        this.progress_tick()
+        this.progress_tick(loadId)
       );
       if (usesMonthlyBuckets(timeperiod) && merged.window) {
         // active_events is only used to skip inactive periods in the
@@ -575,14 +594,15 @@ export const useActivityStore = defineStore('activity', {
         this.buckets.editor,
         periods.length > 1 ? CHUNKED_QUERY_LIMIT : undefined
       );
-      this.progress_add(periods.length);
+      const loadId = this.load_id;
+      this.progress_add(loadId, periods.length);
       const chunks = [];
       for (const period of periods) {
         const data = await getClient().query([period], q, {
           name: 'editorActivityQuery',
           verbose: true,
         });
-        this.progress_tick();
+        this.progress_tick(loadId);
         if (data && data[0]) chunks.push(data[0]);
       }
       this.query_editor_completed(chunks.length === 1 ? chunks[0] : mergeEditorResults(chunks));
@@ -690,7 +710,8 @@ export const useActivityStore = defineStore('activity', {
 
       // Filter out periods that start in the future
       periods = periods.filter(period => new Date(period.split('/')[0]) < new Date());
-      this.progress_add(periods.length);
+      const loadId = this.load_id;
+      this.progress_add(loadId, periods.length);
 
       const signal = getClient().controller.signal;
       let cancelled = false;
@@ -707,7 +728,7 @@ export const useActivityStore = defineStore('activity', {
         if (cancelled) {
           throw signal['reason'] || 'unknown reason';
         }
-        this.progress_tick();
+        this.progress_tick(loadId);
 
         // Only query periods with known data from AFK bucket
         if (dontQueryInactive && this.active.events.length > 0) {
@@ -933,6 +954,7 @@ export const useActivityStore = defineStore('activity', {
       this.category.by_period = null;
 
       this.active.duration = null;
+      this.load_id += 1;
       this.progress = null;
 
       // Ensures that active history isn't being fully reloaded on every date change
@@ -984,18 +1006,19 @@ export const useActivityStore = defineStore('activity', {
       this.editor.top_projects = data.projects;
     },
 
-    progress_add(this: State, n: number) {
+    progress_add(this: State, loadId: number, n: number) {
+      if (loadId !== this.load_id) return;
       if (this.progress === null) {
-        this.progress = { done: 0, total: n };
+        const now = Date.now();
+        this.progress = { done: 0, total: n, startedAt: now, lastAt: now };
       } else {
         this.progress = { ...this.progress, total: this.progress.total + n };
       }
     },
 
-    progress_tick(this: State) {
-      if (this.progress !== null) {
-        this.progress = { ...this.progress, done: this.progress.done + 1 };
-      }
+    progress_tick(this: State, loadId: number) {
+      if (loadId !== this.load_id || this.progress === null) return;
+      this.progress = { ...this.progress, done: this.progress.done + 1, lastAt: Date.now() };
     },
 
     query_active_history_completed(this: State, { active_history } = { active_history: {} }) {
