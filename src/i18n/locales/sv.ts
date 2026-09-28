@@ -297,6 +297,12 @@ export default {
     periodLast30d: '30 dagar',
     periodLast7dTitle: 'senaste 7 dagarna',
     periodLast30dTitle: 'senaste 30 dagarna',
+    periodCustomRange: 'anpassat intervall',
+    rangeStart: 'Startdatum',
+    rangeEnd: 'Slutdatum',
+    invalidRange: 'Ogiltigt datumintervall i URL:en, visar idag istället.',
+    periodAllTime: 'all tid',
+    allTimeSlowHint: 'All tid kan ta en stund med stora databaser.',
     filterAfkTooltip: 'Filtrera bort tid då AFK-bevakaren inte upptäckte någon inmatning.',
     filterAudibleTooltip:
       'Om det aktiva fönstret är en hörbar webbläsarflik räknas den som aktiv. Kräver en webbläsarbevakare.',
@@ -340,6 +346,8 @@ export default {
     periodThisYear: 'det här året',
     periodLast7d: 'de senaste 7 dagarna',
     periodLast30d: 'de senaste 30 dagarna',
+    periodCustomRange: 'i det valda intervallet',
+    periodAllTime: 'totalt',
   },
   visualizations: {
     noData: '(inga data)',

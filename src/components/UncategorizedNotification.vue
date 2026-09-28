@@ -49,6 +49,8 @@ export default {
         year: 'uncategorized.periodThisYear',
         last7d: 'uncategorized.periodLast7d',
         last30d: 'uncategorized.periodLast30d',
+        range: 'uncategorized.periodCustomRange',
+        all: 'uncategorized.periodAllTime',
       };
       const key = periodMap[this.periodLength] || 'uncategorized.periodToday';
       return this.$t(key);

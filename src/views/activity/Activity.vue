@@ -62,6 +62,8 @@ div
         b.mr-1 {{ $t('activity.queryRange') }}
         span {{ periodReadableRange }}
 
+  b-alert(v-if="invalidRange" variant="warning" show) {{ $t('activity.invalidRange') }}
+
   div.activity-toolbar.d-flex.flex-wrap.align-items-center
     div.d-flex.mr-2
       b-button-group
@@ -104,14 +106,33 @@ div
           @click="setDate(_date, opt.value)"
         ) {{ opt.text }}
 
-    b-input-group.mr-2(size="sm" style="width: auto")
+    b-input-group.mr-2(v-if="!invalidRange && periodLength !== 'all'" size="sm" style="width: auto")
       b-input-group-prepend
         b-button.px-2(:to="link_prefix + '/' + previousPeriod() + '/' + subview + '/' + currentViewId",
                  variant="outline-dark",
                  :title="'Previous ' + periodLength",
                  :aria-label="'Previous ' + periodLength")
           icon(name="arrow-left")
+      template(v-if="dateRange")
+        input.form-control.form-control-sm.activity-dateinput(
+          type="date"
+          :value="dateRange.start"
+          :max="dateRange.end"
+          :aria-label="$t('activity.rangeStart')"
+          :title="$t('activity.rangeStart')"
+          @change="setRange($event.target.value, dateRange.end)"
+        )
+        input.form-control.form-control-sm.activity-dateinput(
+          type="date"
+          :value="dateRange.end"
+          :min="dateRange.start"
+          :max="todayDate"
+          :aria-label="$t('activity.rangeEnd')"
+          :title="$t('activity.rangeEnd')"
+          @change="setRange(dateRange.start, $event.target.value)"
+        )
       input.form-control.form-control-sm.activity-dateinput(
+        v-else
         type="date"
         :value="_date"
         :max="today"
@@ -120,7 +141,7 @@ div
       )
       b-input-group-append
         b-button.px-2(:to="link_prefix + '/' + nextPeriod() + '/' + subview + '/' + currentViewId",
-                      :disabled="nextPeriod() > today", variant="outline-dark",
+                      :disabled="nextDisabled", variant="outline-dark",
                       :title="'Next ' + periodLength",
                       :aria-label="'Next ' + periodLength")
           icon(name="arrow-right")
@@ -161,7 +182,17 @@ div
         b-form-select(v-model="filter_category", :options="categoryStore.category_select(true)" size="sm")
 
 
-  aw-periodusage(:periodusage_arr="periodusage", @update="setDate")
+  div.mb-2.small.text-muted(v-if="periodLength === 'all'")
+    span(:title="$t('activity.allTimeSlowHint')") 🐌 {{ $t('activity.allTimeSlowHint') }}
+    b-progress.mt-1(
+      v-if="activityStore.progress && activityStore.progress.total > 0"
+      :value="activityStore.progress.done"
+      :max="activityStore.progress.total"
+      height="0.5rem"
+    )
+  // Neighbouring periods of a custom range aren't meaningful, and 31 of
+  // them can span decades of AFK data for long ranges.
+  aw-periodusage(v-else-if="periodLength !== 'range'", :periodusage_arr="periodusage", @update="setDate")
 
   aw-uncategorized-notification(:periodLength="periodLength")
 
@@ -261,7 +292,14 @@ div
 import { mapState } from 'pinia';
 import moment from 'moment';
 import { get_day_start_with_offset, get_today_with_offset } from '~/util/time';
-import { periodLengthConvertMoment } from '~/util/timeperiod';
+import {
+  DateRange,
+  dateRangeToTimeperiod,
+  formatDateRange,
+  parseDateRange,
+  periodLengthConvertMoment,
+  shiftDateRange,
+} from '~/util/timeperiod';
 import _ from 'lodash';
 
 import 'vue-awesome/icons/arrow-left';
@@ -324,6 +362,8 @@ export default {
 
       today: null,
       showOptions: false,
+      // First day with data for the host, used by All time
+      earliestDate: null,
 
       include_audible: true,
       // Include stopwatch events when a stopwatch bucket exists. The
@@ -373,6 +413,8 @@ export default {
         year: this.$t('activity.periodYear').toString(),
         last7d: this.$t('activity.periodLast7d').toString(),
         last30d: this.$t('activity.periodLast30d').toString(),
+        range: this.$t('activity.periodCustomRange').toString(),
+        all: this.$t('activity.periodAllTime').toString() + ' 🐌',
       };
       return periods;
     },
@@ -382,6 +424,12 @@ export default {
       }
       if (this.periodLength === 'last30d') {
         return this.$t('activity.periodLast30dTitle');
+      }
+      if (this.periodLength === 'range') {
+        return this.periodReadableRange;
+      }
+      if (this.periodLength === 'all') {
+        return this.$t('activity.periodAllTime');
       }
       return '';
     },
@@ -411,9 +459,36 @@ export default {
       // If localStore is not yet initialized, then currentView can be undefined. In that case, we return an empty string (which should route to the default view)
       return this.currentView !== undefined ? this.currentView.id : '';
     },
+    // Set when periodLength is 'range' and the :date segment is a valid `start..end` range
+    dateRange: function (): DateRange | null {
+      if (this.periodLength !== 'range') return null;
+      return parseDateRange(this.date);
+    },
+    // All time is the range from the host's first day with data to today
+    allTimeRange: function (): DateRange | null {
+      if (this.periodLength !== 'all' || !this.earliestDate) return null;
+      const today = get_today_with_offset(this.settingsStore.startOfDay);
+      return { start: this.earliestDate < today ? this.earliestDate : today, end: today };
+    },
+    invalidRange: function () {
+      return this.periodLength === 'range' && !this.dateRange;
+    },
     _date: function () {
       const offset = this.settingsStore.startOfDay;
+      if (this.periodLength === 'range') {
+        return this.dateRange ? this.dateRange.start : get_today_with_offset(offset);
+      }
       return this.date || get_today_with_offset(offset);
+    },
+    todayDate: function () {
+      return get_today_with_offset(this.settingsStore.startOfDay);
+    },
+    nextDisabled: function () {
+      const today = this.todayDate;
+      if (this.dateRange) {
+        return shiftDateRange(this.dateRange, 1).start > today;
+      }
+      return this.nextPeriod() > today;
     },
     subview: function () {
       return this.$route.meta.subview;
@@ -478,12 +553,26 @@ export default {
       return `/activity/${this.hostParam}/${this.periodLength}`;
     },
     periodusage: function () {
+      if (!this.timeperiod) return [];
       return this.activityStore.getActiveHistoryAroundTimeperiod(this.timeperiod);
     },
     timeperiod: function () {
       const settingsStore = useSettingsStore();
 
-      if (this.periodIsBrowseable) {
+      if (this.dateRange) {
+        return dateRangeToTimeperiod(this.dateRange, settingsStore.startOfDay);
+      } else if (this.periodLength === 'all') {
+        // null until the earliest date is known; refresh() waits for it
+        return this.allTimeRange
+          ? dateRangeToTimeperiod(this.allTimeRange, settingsStore.startOfDay)
+          : null;
+      } else if (this.periodLength === 'range') {
+        // Invalid range in the URL: fall back to today (a warning is shown)
+        return {
+          start: get_day_start_with_offset(this._date, settingsStore.startOfDay),
+          length: [1, 'day'],
+        };
+      } else if (this.periodIsBrowseable) {
         return {
           start: get_day_start_with_offset(this._date, settingsStore.startOfDay),
           length: [1, this.periodLength],
@@ -500,6 +589,12 @@ export default {
       }
     },
     periodReadableRange: function () {
+      if (this.periodLength === 'range' || this.periodLength === 'all') {
+        // Show both ends as picked/derived (end inclusive)
+        const range = this.dateRange || this.allTimeRange || { start: this._date, end: this._date };
+        return `${range.start}—${range.end}`;
+      }
+
       const periodStart = moment(this.timeperiod.start);
       const dateFormatString = 'YYYY-MM-DD';
 
@@ -528,7 +623,12 @@ export default {
   },
   watch: {
     host: function () {
+      this.earliestDate = null;
+      this.loadEarliestDate();
       this.refresh();
+    },
+    periodLength: function () {
+      this.loadEarliestDate();
     },
     timeperiod: function () {
       this.refresh();
@@ -547,6 +647,7 @@ export default {
   mounted: async function () {
     this.viewsStore.load();
     this.categoryStore.load();
+    this.loadEarliestDate();
     try {
       await this.refresh();
     } catch (e) {
@@ -564,6 +665,9 @@ export default {
 
   methods: {
     previousPeriod: function () {
+      if (this.dateRange) {
+        return formatDateRange(shiftDateRange(this.dateRange, -1));
+      }
       return moment(this._date)
         .subtract(
           this.timeperiod.length[0],
@@ -572,12 +676,41 @@ export default {
         .format('YYYY-MM-DD');
     },
     nextPeriod: function () {
+      if (this.dateRange) {
+        const next = shiftDateRange(this.dateRange, 1);
+        // Clip at today, like setRange (only reachable when next.start <= today)
+        if (next.end > this.todayDate && next.start <= this.todayDate) {
+          next.end = this.todayDate;
+        }
+        return formatDateRange(next);
+      }
       return moment(this._date)
         .add(
           this.timeperiod.length[0],
           this.timeperiod.length[1] as moment.unitOfTime.DurationConstructor
         )
         .format('YYYY-MM-DD');
+    },
+
+    setRange: function (start: string, end: string) {
+      // Cap at today: later days have no data
+      if (end > this.todayDate) end = this.todayDate;
+      const range = parseDateRange(formatDateRange({ start, end }));
+      if (!range) {
+        return;
+      }
+      this.pushPeriod('range', formatDateRange(range));
+    },
+
+    pushPeriod: function (periodLength: string, date: string | null) {
+      const datePart = date ? `/${date}` : '';
+      const path = `/activity/${this.hostParam}/${periodLength}${datePart}/${this.subview}/${this.currentViewId}`;
+      if (this.$route.path !== path) {
+        this.$router.push({
+          path,
+          query: this.$route.query,
+        });
+      }
     },
 
     setDate: function (date, periodLength) {
@@ -588,6 +721,35 @@ export default {
 
       const momentJsDate = moment(date);
       if (!momentJsDate.isValid()) {
+        return;
+      }
+
+      if (periodLength === 'all') {
+        this.pushPeriod('all', null);
+        return;
+      }
+
+      if (periodLength === 'range') {
+        // Entering (or moving within) custom range mode: keep the length of
+        // the currently shown period, starting at `date` (the start of the
+        // current period, or a clicked period in the period-usage bar).
+        // The end is clipped to today so e.g. "this week" doesn't reach
+        // into the future.
+        const days = Math.max(
+          1,
+          Math.round(
+            moment(this.timeperiod.start)
+              .add(...this.timeperiod.length)
+              .diff(moment(this.timeperiod.start), 'days', true)
+          )
+        );
+        const start = this.periodLength === 'range' ? momentJsDate : moment(this.timeperiod.start);
+        let end = start.clone().add(days - 1, 'days');
+        const today = moment(get_today_with_offset(this.settingsStore.startOfDay));
+        if (end.isAfter(today) && !start.isAfter(today)) {
+          end = today;
+        }
+        this.setRange(start.format('YYYY-MM-DD'), end.format('YYYY-MM-DD'));
         return;
       }
 
@@ -622,16 +784,24 @@ export default {
         const new_period_length_moment = periodLengthConvertMoment(periodLength);
         new_date = anchorDate.clone().startOf(new_period_length_moment).format('YYYY-MM-DD');
       }
-      const path = `/activity/${this.hostParam}/${periodLength}/${new_date}/${this.subview}/${this.currentViewId}`;
-      if (this.$route.path !== path) {
-        this.$router.push({
-          path,
-          query: this.$route.query,
-        });
+      this.pushPeriod(periodLength, new_date);
+    },
+
+    loadEarliestDate: async function () {
+      if (this.periodLength !== 'all' || this.earliestDate) return;
+      const host = this.host;
+      const date = await this.activityStore.get_earliest_date(host);
+      if (host === this.host) {
+        // No data at all: fall back to today
+        this.earliestDate = date || get_today_with_offset(this.settingsStore.startOfDay);
       }
     },
 
     refresh: async function (force) {
+      if (!this.timeperiod) {
+        // All time before the earliest date is known; the timeperiod watcher refreshes later
+        return;
+      }
       const queryOptions: QueryOptions = {
         timeperiod: this.timeperiod,
         host: this.host,
@@ -641,6 +811,7 @@ export default {
         include_stopwatch: this.include_stopwatch,
         filter_categories: this.filter_categories,
         always_active_pattern: this.always_active_pattern,
+        skip_active_history: this.periodLength === 'range' || this.periodLength === 'all',
       };
       await this.activityStore.ensure_loaded(queryOptions);
     },
@@ -654,9 +825,12 @@ export default {
         this.bucketsStore.bucketsWindow(host).length === 0
       );
     },
+    // Same view for other devices: keep the route's date part as-is, which is
+    // a custom range for 'range', absent for 'all' (and for today), like pushPeriod.
     routeForHost(hostParam: string) {
+      const datePart = this.date ? `/${this.date}` : '';
       return {
-        path: `/activity/${hostParam}/${this.periodLength}/${this._date}/${this.subview}/${this.currentViewId}`,
+        path: `/activity/${hostParam}/${this.periodLength}${datePart}/${this.subview}/${this.currentViewId}`,
         query: this.$route.query,
       };
     },
