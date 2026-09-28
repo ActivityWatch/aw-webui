@@ -165,6 +165,8 @@ describe('multidevice path for custom ranges and All time', () => {
     bucket('aw-watcher-android-test', 'currentwindow', 'phone'),
   ] as any;
 
+  afterEach(() => jest.restoreAllMocks());
+
   function spies() {
     const names = [
       'query_multidevice_full',
@@ -178,9 +180,8 @@ describe('multidevice path for custom ranges and All time', () => {
     );
   }
 
-  test('skips period-usage history when asked, and clears progress', async () => {
+  test('skips period-usage history when asked', async () => {
     const s = spies();
-    activityStore.progress = { done: 1, total: 2 };
     await activityStore.ensure_loaded_multidevice(
       {
         host: '@all',
@@ -191,8 +192,6 @@ describe('multidevice path for custom ranges and All time', () => {
     );
     expect(s.query_active_history_multidevice).not.toHaveBeenCalled();
     expect(s.query_category_time_by_period).toHaveBeenCalled();
-    expect(activityStore.progress).toBeNull();
-    jest.restoreAllMocks();
   });
 
   test('long ranges take the barchart from the query chunks instead', async () => {
@@ -206,6 +205,5 @@ describe('multidevice path for custom ranges and All time', () => {
     );
     expect(s.query_active_history_multidevice).toHaveBeenCalled();
     expect(s.query_category_time_by_period).not.toHaveBeenCalled();
-    jest.restoreAllMocks();
   });
 });

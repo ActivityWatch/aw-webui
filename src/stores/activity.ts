@@ -165,7 +165,7 @@ const ANDROID_MAX_DAYS_PER_REQUEST = 92;
 // after merging.
 const CHUNKED_QUERY_LIMIT = 1000;
 
-// host -> first day with data (YYYY-MM-DD), see get_earliest_date
+// hosts/day start/buckets -> first day with data (YYYY-MM-DD), see get_earliest_date
 const earliestDateCache = new Map<string, string | null>();
 
 function sumDurations(results: { duration?: number }[]): number {
@@ -392,85 +392,94 @@ export const useActivityStore = defineStore('activity', {
 
   actions: {
     async ensure_loaded(query_options: QueryOptions) {
-      const settingsStore = useSettingsStore();
-      await settingsStore.ensureLoaded();
-
-      const bucketsStore = useBucketsStore();
+      await useSettingsStore().ensureLoaded();
 
       console.info('Query options: ', query_options);
       if (this.loaded) {
         getClient().abort();
       }
       if (!this.loaded || this.query_options !== query_options || query_options.force) {
-        this.start_loading(query_options);
-        if (!query_options.timeperiod) {
-          query_options.timeperiod = dateToTimeperiod(query_options.date, settingsStore.startOfDay);
+        try {
+          await this.load(query_options);
+        } finally {
+          // Also when a query fails, so the progress bar doesn't get stuck.
+          // Not when a newer load has taken over (its progress is still live).
+          if (this.query_options === query_options) {
+            this.progress = null;
+          }
         }
-
-        await bucketsStore.ensureLoaded();
-
-        // The `host` option is the Activity route's `:host` param: a single
-        // hostname, a comma-separated list, or "@all" (see util/multidevice.ts).
-        const multiHosts = this.resolve_multidevice_hosts(query_options.host);
-        if (multiHosts.length > 1) {
-          await this.ensure_loaded_multidevice(query_options, multiHosts);
-          return;
-        }
-        // A selection that resolves to a single device (e.g. "all devices"
-        // when only one host has data) uses the full single-device view.
-        if (multiHosts.length === 1) {
-          query_options = { ...query_options, host: multiHosts[0] };
-        }
-        this.query_hosts = [query_options.host];
-
-        await this.get_buckets(query_options);
-        this.set_history_key();
-
-        // TODO: These queries can actually run in parallel, but since server won't process them in parallel anyway we won't.
-        this.set_available();
-
-        if (this.window.available) {
-          await this.query_desktop_full(query_options);
-        } else if (this.android.available) {
-          await this.query_android(query_options);
-        } else {
-          console.log(
-            'Cannot query windows as we are missing either an afk/window bucket pair or an android bucket'
-          );
-          this.query_window_completed();
-          this.query_category_time_by_period_completed();
-        }
-
-        if (query_options.skip_active_history) {
-          // Period-usage bars not shown
-        } else if (this.active.available) {
-          await this.query_active_history(query_options);
-        } else if (this.android.available) {
-          await this.query_active_history_android(query_options);
-        } else {
-          console.log('Cannot call query_active_history as we do not have an afk bucket');
-          await this.query_active_history_completed();
-        }
-
-        if (this.editor.available) {
-          await this.query_editor(query_options);
-        } else {
-          console.log('Cannot call query_editor as we do not have any editor buckets');
-          await this.query_editor_completed();
-        }
-
-        // Perform this last, as it takes the longest.
-        // Skipped when query_desktop_full already derived it (long ranges).
-        const derivedByPeriod =
-          this.window.available && usesMonthlyBuckets(query_options.timeperiod);
-        if ((this.window.available || this.android.available) && !derivedByPeriod) {
-          await this.query_category_time_by_period(query_options);
-        }
-        this.progress = null;
       } else {
         console.warn(
           'ensure_loaded called twice with same query_options but without query_options.force = true, skipping...'
         );
+      }
+    },
+
+    async load(query_options: QueryOptions) {
+      const settingsStore = useSettingsStore();
+      const bucketsStore = useBucketsStore();
+      this.start_loading(query_options);
+      if (!query_options.timeperiod) {
+        query_options.timeperiod = dateToTimeperiod(query_options.date, settingsStore.startOfDay);
+      }
+
+      await bucketsStore.ensureLoaded();
+
+      // The `host` option is the Activity route's `:host` param: a single
+      // hostname, a comma-separated list, or "@all" (see util/multidevice.ts).
+      const multiHosts = this.resolve_multidevice_hosts(query_options.host);
+      if (multiHosts.length > 1) {
+        await this.ensure_loaded_multidevice(query_options, multiHosts);
+        return;
+      }
+      // A selection that resolves to a single device (e.g. "all devices"
+      // when only one host has data) uses the full single-device view.
+      if (multiHosts.length === 1) {
+        query_options = { ...query_options, host: multiHosts[0] };
+      }
+      this.query_hosts = [query_options.host];
+
+      await this.get_buckets(query_options);
+      this.set_history_key();
+
+      // TODO: These queries can actually run in parallel, but since server won't process them in parallel anyway we won't.
+      this.set_available();
+
+      if (this.window.available) {
+        await this.query_desktop_full(query_options);
+      } else if (this.android.available) {
+        await this.query_android(query_options);
+      } else {
+        console.log(
+          'Cannot query windows as we are missing either an afk/window bucket pair or an android bucket'
+        );
+        this.query_window_completed();
+        this.query_category_time_by_period_completed();
+      }
+
+      if (query_options.skip_active_history) {
+        // Period-usage bars not shown
+      } else if (this.active.available) {
+        await this.query_active_history(query_options);
+      } else if (this.android.available) {
+        await this.query_active_history_android(query_options);
+      } else {
+        console.log('Cannot call query_active_history as we do not have an afk bucket');
+        await this.query_active_history_completed();
+      }
+
+      if (this.editor.available) {
+        await this.query_editor(query_options);
+      } else {
+        console.log('Cannot call query_editor as we do not have any editor buckets');
+        await this.query_editor_completed();
+      }
+
+      // Perform this last, as it takes the longest.
+      // Skipped when query_desktop_full already derived it (long ranges).
+      const derivedByPeriod = this.window.available && usesMonthlyBuckets(query_options.timeperiod);
+      if ((this.window.available || this.android.available) && !derivedByPeriod) {
+        await this.query_category_time_by_period(query_options);
       }
     },
 
@@ -535,7 +544,6 @@ export const useActivityStore = defineStore('activity', {
       if (!usesMonthlyBuckets(query_options.timeperiod)) {
         await this.query_category_time_by_period(query_options);
       }
-      this.progress = null;
     },
 
     get_buckets_multidevice(this: State, hosts: string[]) {
@@ -779,18 +787,19 @@ export const useActivityStore = defineStore('activity', {
     /**
      * Start of the earliest day with data in any bucket the Activity view may
      * query for `host` (all hosts when multidevice is on), or null if there is
-     * none. Cached per host and day-start offset.
+     * none. `approximate` is set when the lookup failed and bucket creation
+     * dates were used instead (not cached, see below).
      */
-    async get_earliest_date(host: string): Promise<string | null> {
+    async get_earliest_date(
+      host: string,
+      { force = false }: { force?: boolean } = {}
+    ): Promise<{ date: string | null; approximate: boolean }> {
       const settingsStore = useSettingsStore();
       const bucketsStore = useBucketsStore();
       await bucketsStore.ensureLoaded();
       // The devices the Activity query will include (see resolve_multidevice_hosts)
       const selected = this.resolve_multidevice_hosts(host);
       const hosts = selected.length > 0 ? selected : [host];
-      const key = [hosts.join(','), settingsStore.startOfDay].join('|');
-      if (earliestDateCache.has(key)) return earliestDateCache.get(key);
-
       const ids = _.uniq(
         _.flatMap(hosts, h => [
           ...bucketsStore.bucketsWindow(h),
@@ -801,6 +810,13 @@ export const useActivityStore = defineStore('activity', {
           ...bucketsStore.bucketsStopwatch(h),
         ])
       );
+      // Keyed on the bucket IDs too, so e.g. importing a bucket with older
+      // events (which reloads the buckets store) is picked up.
+      const key = JSON.stringify([hosts, settingsStore.startOfDay, [...ids].sort()]);
+      if (!force && earliestDateCache.has(key)) {
+        return { date: earliestDateCache.get(key), approximate: false };
+      }
+
       const buckets = ids.map(id => bucketsStore.getBucket(id)).filter(b => b);
       const client = getClient();
       let earliest: Date | null;
@@ -812,11 +828,13 @@ export const useActivityStore = defineStore('activity', {
         // Fall back to bucket creation dates (not cached, so a refresh retries)
         console.warn('Failed to find earliest event, using bucket creation dates', e);
         const created = buckets.map(b => b.first_seen).filter(d => d);
-        return created.length > 0
-          ? moment(_.min(created.map(d => new Date(d).getTime())))
-              .subtract(get_offset_duration(settingsStore.startOfDay))
-              .format('YYYY-MM-DD')
-          : null;
+        const date =
+          created.length > 0
+            ? moment(_.min(created.map(d => new Date(d).getTime())))
+                .subtract(get_offset_duration(settingsStore.startOfDay))
+                .format('YYYY-MM-DD')
+            : null;
+        return { date, approximate: true };
       }
       const date = earliest
         ? moment(earliest)
@@ -824,7 +842,7 @@ export const useActivityStore = defineStore('activity', {
             .format('YYYY-MM-DD')
         : null;
       earliestDateCache.set(key, date);
-      return date;
+      return { date, approximate: false };
     },
 
     async query_active_history({ timeperiod }: QueryOptions) {

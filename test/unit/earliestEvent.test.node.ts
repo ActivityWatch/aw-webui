@@ -1,4 +1,8 @@
-import { earliestEventInBucket, earliestEventInBuckets } from '~/util/earliestEvent';
+import {
+  earliestEventInBucket,
+  earliestEventInBuckets,
+  nextEarliestDate,
+} from '~/util/earliestEvent';
 
 // Fake events endpoint: returns the latest event at or before `end` (limit 1)
 function fakeGetEvents(timestamps: Record<string, string[]>) {
@@ -38,6 +42,14 @@ describe('earliestEventInBucket', () => {
     expect(calls.length).toBeLessThan(25);
   });
 
+  it('finds events from before 2000 (e.g. imported data)', async () => {
+    const { getEvents } = fakeGetEvents({ b: ['1995-06-01T12:00:00Z', '2026-01-01T00:00:00Z'] });
+    const res = await earliestEventInBucket({ id: 'b' } as any, getEvents);
+    const first = new Date('1995-06-01T12:00:00Z').getTime();
+    expect(res.getTime()).toBeLessThanOrEqual(first);
+    expect(first - res.getTime()).toBeLessThanOrEqual(24 * 60 * 60 * 1000);
+  });
+
   it('returns null for an empty bucket', async () => {
     const { getEvents } = fakeGetEvents({ b: [] });
     expect(await earliestEventInBucket({ id: 'b' } as any, getEvents)).toBeNull();
@@ -58,5 +70,24 @@ describe('earliestEventInBuckets', () => {
     const first = new Date('2023-06-01T12:00:00Z').getTime();
     expect(res.getTime()).toBeLessThanOrEqual(first);
     expect(first - res.getTime()).toBeLessThanOrEqual(24 * 60 * 60 * 1000);
+  });
+});
+
+describe('nextEarliestDate', () => {
+  it('takes the lookup result on first load', () => {
+    expect(nextEarliestDate(null, '2024-06-01')).toBe('2024-06-01');
+  });
+
+  it('never moves a known start later on an approximate (fallback) result', () => {
+    expect(nextEarliestDate('2019-01-01', '2024-06-01', { approximate: true })).toBe('2019-01-01');
+  });
+
+  it('moves the start later on an exact result (e.g. old buckets deleted)', () => {
+    expect(nextEarliestDate('2019-01-01', '2024-06-01')).toBe('2024-06-01');
+  });
+
+  it('moves the start earlier either way', () => {
+    expect(nextEarliestDate('2024-06-01', '2019-01-01', { approximate: true })).toBe('2019-01-01');
+    expect(nextEarliestDate('2024-06-01', '2019-01-01')).toBe('2019-01-01');
   });
 });

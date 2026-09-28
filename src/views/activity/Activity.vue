@@ -331,6 +331,8 @@ import {
   resolveHostSelection,
   toggleHostInSelection,
 } from '~/util/multidevice';
+import { getClient } from '~/util/awclient';
+import { nextEarliestDate } from '~/util/earliestEvent';
 
 export default {
   name: 'Activity',
@@ -735,6 +737,13 @@ export default {
         // current period, or a clicked period in the period-usage bar).
         // The end is clipped to today so e.g. "this week" doesn't reach
         // into the future.
+        if (!this.timeperiod) {
+          // All time's earliest-date lookup is still in flight, so there is
+          // no current period to take the length from: start from one day.
+          const d = momentJsDate.format('YYYY-MM-DD');
+          this.setRange(d, d);
+          return;
+        }
         const days = Math.max(
           1,
           Math.round(
@@ -787,17 +796,38 @@ export default {
       this.pushPeriod(periodLength, new_date);
     },
 
-    loadEarliestDate: async function () {
-      if (this.periodLength !== 'all' || this.earliestDate) return;
+    // `reload` redoes the lookup even when a date is known, e.g. on Refresh:
+    // the lookup may have fallen back to (late) bucket creation dates, or
+    // older data may have been imported since. Returns whether the date
+    // changed.
+    loadEarliestDate: async function (reload = false) {
+      if (this.periodLength !== 'all' || (this.earliestDate && !reload)) return false;
       const host = this.host;
-      const date = await this.activityStore.get_earliest_date(host);
-      if (host === this.host) {
-        // No data at all: fall back to today
-        this.earliestDate = date || get_today_with_offset(this.settingsStore.startOfDay);
-      }
+      const { date: found, approximate } = await this.activityStore.get_earliest_date(host, {
+        force: reload,
+      });
+      if (host !== this.host) return false;
+      // No data at all: fall back to today
+      const date = nextEarliestDate(
+        this.earliestDate,
+        found || get_today_with_offset(this.settingsStore.startOfDay),
+        { approximate }
+      );
+      const changed = date !== this.earliestDate;
+      this.earliestDate = date;
+      return changed;
     },
 
     refresh: async function (force) {
+      if (force && this.periodLength === 'all') {
+        // Cancel the running All time query now rather than after the lookup
+        getClient().abort();
+        if (await this.loadEarliestDate(true)) {
+          // The new date changes the timeperiod, whose watcher loads it;
+          // loading here as well would start a second, competing load.
+          return;
+        }
+      }
       if (!this.timeperiod) {
         // All time before the earliest date is known; the timeperiod watcher refreshes later
         return;
