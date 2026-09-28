@@ -737,6 +737,13 @@ export default {
         // current period, or a clicked period in the period-usage bar).
         // The end is clipped to today so e.g. "this week" doesn't reach
         // into the future.
+        if (!this.timeperiod) {
+          // All time's earliest-date lookup is still in flight, so there is
+          // no current period to take the length from: start from one day.
+          const d = momentJsDate.format('YYYY-MM-DD');
+          this.setRange(d, d);
+          return;
+        }
         const days = Math.max(
           1,
           Math.round(
