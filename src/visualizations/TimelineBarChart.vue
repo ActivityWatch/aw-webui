@@ -1,7 +1,10 @@
 <template lang="pug">
+// Fixed height: avoids elements jumping when loading the Activity view, and the
+// chart (maintainAspectRatio: false) sizes itself to this container.
 div(v-if="datasets && datasets.length > 0")
   // Height set here to avoid elements jumping when loading Activity view
-  bar(:data="chartData" :options="chartOptions" :height="height")
+  div(:style="{ position: 'relative', height: height + 'px' }")
+    bar(:data="chartData" :options="chartOptions")
 div.small(v-else-if="datasets === null", style="font-size: 16pt; color: #aaa;")
   | {{ $t('visualizations.noData') }}
 div.small(v-else, style="font-size: 16pt; color: #aaa;")
@@ -140,6 +143,7 @@ export default {
       const singleDay = resolution.startsWith('day') && count === 1;
       return {
         responsive: true,
+        // Fill the fixed-height container instead of keeping an aspect ratio
         maintainAspectRatio: false,
         plugins: {
           tooltip: {

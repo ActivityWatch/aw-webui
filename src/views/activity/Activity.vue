@@ -1,7 +1,7 @@
 <template lang="pug">
 div
   h3.mb-0 {{ $t('activity.title') }} #[span.d-sm-inline.d-none {{ $t('activity.for') }} ]
-    span.text-muted.d-sm-inline-block.d-block
+    span.text-muted.d-sm-inline-block.d-block.ms-sm-2
       span(v-if="periodIsBrowseable") {{ friendlyperiod(timeperiod) }}
       span(v-else) {{ periodLengthTitle }}
 
@@ -12,11 +12,11 @@ div
         span(v-if="selectableHosts.length <= 1 && !isMultidevice") {{ host }}
         // Device selector: a single device, a subset, or "All devices".
         // The selection is encoded in the route's :host param, see util/multidevice.ts.
-        b-dropdown.host-selector(
+        b-dropdown.host-selector.d-inline-flex(
           v-else
           size="sm"
           variant="link"
-          toggle-class="p-0 text-muted host-selector-toggle"
+          toggle-class="p-0 text-muted text-decoration-none host-selector-toggle"
           data-testid="host-selector"
         )
           template(v-slot:button-content="")
@@ -35,7 +35,7 @@ div
               :key="h"
             )
               b-form-checkbox.me-3(
-                :checked="selectedHosts.includes(h)"
+                :model-value="selectedHosts.includes(h)"
                 :disabled="selectedHosts.length === 1 && selectedHosts.includes(h)"
                 @change="toggleHost(h)"
                 :data-testid="'host-selector-host-' + h"
@@ -51,7 +51,7 @@ div
               :key="'unavailable-' + h"
               :data-testid="'host-selector-unavailable-' + h"
             )
-              b-form-checkbox.me-3(:checked="false" disabled)
+              b-form-checkbox.me-3(:model-value="false" disabled)
                 | {{ h }} {{ $t('visualizations.noData') }}
       li.list-group-item.ps-0.pe-3.py-0.border-0(:title="$t('activity.timeActiveTooltip')")
         b.me-1 {{ $t('activity.timeActive') }}
@@ -69,7 +69,7 @@ div
         b.me-1 {{ $t('activity.queryRange') }}
         span {{ periodReadableRange }}
 
-  b-alert(v-if="invalidRange" variant="warning" show) {{ $t('activity.invalidRange') }}
+  b-alert(v-if="invalidRange" variant="warning" :model-value="true") {{ $t('activity.invalidRange') }}
   b-alert.activity-diagnostic(
     v-if="activityDiagnostic"
     variant="warning"
@@ -108,7 +108,7 @@ div
         variant="outline-secondary"
         toggle-class="border-0"
         no-caret
-        right
+        end
         :title="$t('ui.activity.moreRanges')"
         :aria-label="$t('ui.activity.moreDateRanges')"
       )
@@ -122,12 +122,11 @@ div
         ) {{ opt.text }}
 
     b-input-group.me-2(v-if="!invalidRange && periodLength !== 'all'" size="sm" style="width: auto")
-      b-input-group-prepend
-        b-button.px-2(:to="{ path: link_prefix + '/' + previousPeriod() + '/' + subview + '/' + currentViewId, query: $route.query }",
-                 variant="outline-dark",
-                 :title="$t('activity.previousPeriod', { period: periodLength })",
-                 :aria-label="$t('activity.previousPeriod', { period: periodLength })")
-          icon(name="arrow-left")
+      b-button.px-2(:to="{ path: link_prefix + '/' + previousPeriod() + '/' + subview + '/' + currentViewId, query: $route.query }",
+               variant="outline-dark",
+               :title="$t('activity.previousPeriod', { period: periodLength })",
+               :aria-label="$t('activity.previousPeriod', { period: periodLength })")
+        icon(name="arrow-left")
       template(v-if="dateRange")
         input.form-control.form-control-sm.activity-dateinput(
           type="date"
@@ -154,12 +153,11 @@ div
         :title="periodIsBrowseable ? periodReadableRange : ''"
         @change="setDate($event.target.value, periodLength)"
       )
-      b-input-group-append
-        b-button.px-2(:to="{ path: link_prefix + '/' + nextPeriod() + '/' + subview + '/' + currentViewId, query: $route.query }",
-                      :disabled="nextDisabled", variant="outline-dark",
-                      :title="$t('activity.nextPeriod', { period: periodLength })",
-                      :aria-label="$t('activity.nextPeriod', { period: periodLength })")
-          icon(name="arrow-right")
+      b-button.px-2(:to="{ path: link_prefix + '/' + nextPeriod() + '/' + subview + '/' + currentViewId, query: $route.query }",
+                    :disabled="nextDisabled", variant="outline-dark",
+                    :title="$t('activity.nextPeriod', { period: periodLength })",
+                    :aria-label="$t('activity.nextPeriod', { period: periodLength })")
+        icon(name="arrow-right")
 
     div.ms-auto
       b-button-group(size="sm")
@@ -216,7 +214,7 @@ div
   aw-watcher-liveness-banner(v-if="host" :host="host")
   aw-uncategorized-notification(:periodLength="periodLength")
 
-  ul.row.nav.nav-tabs.mt-4
+  ul.nav.nav-tabs.mt-4
     li.nav-item(v-for="view in views")
       router-link.nav-link(:to="{ name: 'activity-view', params: {...$route.params, view_id: view.id}, query: $route.query}" :class="{'router-link-exact-active': currentView.id == view.id}")
         h6 {{view.name}}
@@ -239,7 +237,7 @@ div
     router-view
 
     aw-devonly
-      b-btn(id="load-demo", @click="load_demo")
+      b-button(id="load-demo", @click="load_demo")
         | {{ $t('activity.loadDemo') }}
 </template>
 
@@ -309,6 +307,7 @@ div
 </style>
 
 <script lang="ts">
+import { defineAsyncComponent } from 'vue';
 import { mapState } from 'pinia';
 import moment from 'moment';
 import { get_day_start_with_offset, get_today_with_offset } from '~/util/time';
@@ -352,8 +351,12 @@ import {
 export default {
   name: 'Activity',
   components: {
-    'aw-uncategorized-notification': () => import('~/components/UncategorizedNotification.vue'),
-    'aw-watcher-liveness-banner': () => import('~/components/WatcherLivenessBanner.vue'),
+    'aw-uncategorized-notification': defineAsyncComponent(
+      () => import('~/components/UncategorizedNotification.vue')
+    ),
+    'aw-watcher-liveness-banner': defineAsyncComponent(
+      () => import('~/components/WatcherLivenessBanner.vue')
+    ),
   },
   props: {
     host: String,

@@ -4,9 +4,9 @@ div
     div
       h5.mt-1.mb-2.mb-sm-0 {{ $t('settings.privacyFilters.title') }}
     div
-      b-btn.ms-1(@click="resetEditor" variant="outline-warning" size="sm" :disabled="!hasUnsavedChanges || isSaving")
+      b-button.ms-1(@click="resetEditor" variant="outline-warning" size="sm" :disabled="!hasUnsavedChanges || isSaving")
         | {{ $t('settings.privacyFilters.discard') }}
-      b-btn.ms-1(@click="savePrivacyFilters" variant="success" size="sm" :disabled="!canSave")
+      b-button.ms-1(@click="savePrivacyFilters" variant="success" size="sm" :disabled="!canSave")
         | {{ $t('settings.privacyFilters.save') }}
   p.mt-2.mb-2
     | {{ $t('settings.privacyFilters.help') }}
@@ -14,14 +14,14 @@ div
   small.text-muted
     | {{ $t('settings.privacyFilters.disabledHelp') }}
 
-  b-alert.mt-3(:show="saveError !== ''" variant="danger")
+  b-alert.mt-3(:model-value="saveError !== ''" variant="danger")
     | {{ saveError }}
 
-  b-alert.mt-3(:show="validationErrors.length > 0" variant="danger")
+  b-alert.mt-3(:model-value="validationErrors.length > 0" variant="danger")
     div(v-for="error in validationErrors" :key="error")
       | {{ error }}
 
-  b-alert.mt-3(:show="hasUnsavedChanges && validationErrors.length === 0" variant="warning")
+  b-alert.mt-3(:model-value="hasUnsavedChanges && validationErrors.length === 0" variant="warning")
     | {{ $t('settings.privacyFilters.unsavedChanges') }}
 
   b-form-textarea.mt-3(

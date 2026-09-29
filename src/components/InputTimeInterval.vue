@@ -1,9 +1,9 @@
 <template lang="pug">
 div
   div
-    b-alert(v-if="invalidDaterange", variant="warning", show)
+    b-alert(v-if="invalidDaterange", variant="warning", :model-value="true")
       | {{ $t('ui.timeInterval.invalidRange') }}
-    b-alert(v-if="daterangeTooLong", variant="warning", show)
+    b-alert(v-if="daterangeTooLong", variant="warning", :model-value="true")
       | {{ $t('ui.timeInterval.tooLong', { days: maxDuration/(24*60*60) }) }}
 
   div.input-time-interval.d-flex.flex-wrap.align-items-start.justify-content-between

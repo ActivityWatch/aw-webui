@@ -1,5 +1,5 @@
 <template lang="pug">
-b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEditModal", :title="$t('ui.eventEditor.editTitle')", centered, hide-footer, :no-close-on-backdrop="busy", :no-close-on-esc="busy", :hide-header-close="busy")
+b-modal(v-if="event && event.id", :model-value="open", @update:model-value="onOpenChange", :title="$t('ui.eventEditor.editTitle')", centered, no-footer, :no-close-on-backdrop="busy", :no-close-on-esc="busy", :no-header-close="busy")
   div(v-if="!editedEvent")
     | {{ $t('ui.eventEditor.loading') }}
 
@@ -31,11 +31,11 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
         th {{ $t('ui.eventEditor.value') }}
       tr(v-for="(v, k) in editedEvent.data" :key="k")
         td
-          b-input(disabled, :value="k", size="sm")
+          b-form-input(disabled, :model-value="k", size="sm")
         td
-          b-checkbox(v-if="typeof event.data[k] === typeof true", v-model="editedEvent.data[k]", :disabled="busy", style="margin: 0.25em")
-          b-input(v-if="typeof event.data[k] === typeof 'string'", v-model="editedEvent.data[k]", :disabled="busy", size="sm")
-          b-input(v-if="typeof event.data[k] === 'number'", v-model.number="editedEvent.data[k]", :disabled="busy", size="sm", type="number")
+          b-form-checkbox(v-if="typeof event.data[k] === typeof true", v-model="editedEvent.data[k]", :disabled="busy", style="margin: 0.25em")
+          b-form-input(v-if="typeof event.data[k] === typeof 'string'", v-model="editedEvent.data[k]", :disabled="busy", size="sm")
+          b-form-input(v-if="typeof event.data[k] === 'number'", v-model.number="editedEvent.data[k]", :disabled="busy", size="sm", type="number")
 
     hr
 
@@ -75,7 +75,10 @@ export default {
   props: {
     event: { type: Object },
     bucket_id: { type: String, required: true },
+    // Whether the editor dialog is shown (v-model:open)
+    open: { type: Boolean, default: false },
   },
+  emits: ['save', 'delete', 'close', 'update:open'],
   data() {
     return {
       editedEvent: null,
@@ -174,11 +177,9 @@ export default {
       const verb = name === 'delete' ? 'delete' : 'save';
       return serverMessage || (e && e.message) || `Failed to ${verb} event.`;
     },
-    // Hiding is best-effort: the modal may already be gone if a parent
-    // re-rendered or destroyed this component.
+    // The parent owns the open state (v-model:open).
     hideModal() {
-      const modal = this.$refs.eventEditModal;
-      if (modal) modal.hide();
+      this.$emit('update:open', false);
     },
     async getEvent() {
       if (this.bucket_id && this.event && this.event.id) {
@@ -191,6 +192,10 @@ export default {
       if (this.pending) return;
       this.hideModal();
       this.$emit('close', this.event);
+    },
+    onOpenChange(isOpen: boolean) {
+      if (isOpen) this.$emit('update:open', true);
+      else this.close();
     },
   },
 };

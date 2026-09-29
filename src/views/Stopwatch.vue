@@ -17,16 +17,15 @@ div
       | {{ $t('stopwatch.aboutBody') }}
 
   b-input-group(size="lg")
-    b-input(
+    b-form-input(
       v-model="label"
       :placeholder="$t('stopwatch.placeholder')"
       :aria-label="$t('stopwatch.placeholder')"
       @keyup.enter="startTimer(label)"
     )
-    b-input-group-append
-      b-button(@click="startTimer(label)", variant="success")
-        icon(name="play")
-        | {{ $t('stopwatch.start') }}
+    b-button(@click="startTimer(label)", variant="success")
+      icon(name="play")
+      | {{ $t('stopwatch.start') }}
 
   hr
 

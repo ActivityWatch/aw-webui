@@ -1,9 +1,9 @@
 <template lang="pug">
 div
-  b-alert(v-if="$isAndroid" show)
+  b-alert(variant="info" v-if="$isAndroid" :model-value="true")
     | #[b {{ $t('home.note') }}] {{ $t('home.androidNote') }}
 
-  b-alert.supporter-nudge(v-if="supporterNudgeVisible" show variant="success" dismissible @dismissed="snoozeSupporterNudge")
+  b-alert.supporter-nudge(v-if="supporterNudgeVisible" :model-value="true" variant="success" dismissible @close="snoozeSupporterNudge")
     span {{ $t('home.supporterNudge.message') }}
     b-button.ms-2(size="sm" variant="primary" :href="supporterNudgeHref" target="_blank" @click="onSupporterNudgeSupport") {{ $t('home.supporterNudge.support') }}
     b-button.ms-1(size="sm" variant="link" @click="snoozeSupporterNudge") {{ $t('home.supporterNudge.notNow') }}

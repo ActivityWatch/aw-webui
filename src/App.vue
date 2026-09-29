@@ -10,6 +10,8 @@ div#wrapper(v-if="loaded")
         router-view
 
   aw-footer
+  // Renders toasts shown with bootstrap-vue-next's useToastController()
+  b-toast-orchestrator
 </template>
 
 <script lang="ts">

@@ -5,6 +5,7 @@ import { createApp, defineAsyncComponent } from 'vue';
 
 // Load the Bootstrap CSS
 import { createBootstrap } from 'bootstrap-vue-next';
+import bootstrapComponents from './plugins/bootstrap';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue-next/dist/bootstrap-vue-next.css';
 
@@ -47,6 +48,7 @@ const app = createApp(App);
 
 // Register plugins
 app.use(createBootstrap());
+app.use(bootstrapComponents);
 app.use(router);
 app.use(pinia);
 app.use(i18n);

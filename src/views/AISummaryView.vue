@@ -2,7 +2,7 @@
 div
   h3.mb-3 {{ $t('ui.aiSummary.title') }}
 
-  b-alert(variant="info" show)
+  b-alert(variant="info" :model-value="true")
     | {{ $t('ui.aiSummary.privacy') }}
 
   div.row.mb-3
@@ -60,7 +60,7 @@ div
       @click="dataVisible = !dataVisible"
     ) {{ dataVisible ? $t('ui.aiSummary.hideRaw') : $t('ui.aiSummary.showRaw') }}
 
-  b-alert(v-if="error" variant="danger" show dismissible @dismissed="error = ''")
+  b-alert(v-if="error" variant="danger" :model-value="true" dismissible @close="error = ''")
     | {{ error }}
 
   div(v-if="dataVisible && aggregatedText")

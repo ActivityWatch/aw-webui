@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  b-alert(show variant="warning") #[b {{ $t('settings.developer.note') }}] {{ $t('settings.developer.noteBody') }}
+  b-alert(:model-value="true" variant="warning") #[b {{ $t('settings.developer.note') }}] {{ $t('settings.developer.noteBody') }}
 
   div.d-flex.justify-content-between.align-items-center
     div
@@ -14,7 +14,7 @@ div
     div
       h5.mt-1.mb-2.mb-sm-0#request-timeout-label {{ $t('settings.developer.requestTimeout') }}
     div
-      b-input(v-model="requestTimeout" type="number" size="sm" aria-labelledby="request-timeout-label")
+      b-form-input(v-model="requestTimeout" type="number" size="sm" aria-labelledby="request-timeout-label")
   small.text-muted
     | {{ $t('settings.developer.requestTimeoutHelp') }}
 

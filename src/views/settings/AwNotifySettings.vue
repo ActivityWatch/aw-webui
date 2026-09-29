@@ -4,11 +4,11 @@ div
     div
       h5.mb-1 {{ $t('settings.notifications.activityTitle') }}
       small.text-muted {{ $t('settings.notifications.activityHelp') }}
-    b-btn(@click="save" size="sm" variant="primary" :disabled="saving || loading")
+    b-button(@click="save" size="sm" variant="primary" :disabled="saving || loading")
       | {{ saving ? $t('settings.notifications.saving') : $t('common.save') }}
 
-  b-alert(v-if="error" show variant="danger") {{ error }}
-  b-alert(v-if="success" show variant="success" dismissible @dismissed="success = false") {{ $t('settings.notifications.saved') }}
+  b-alert(v-if="error" :model-value="true" variant="danger") {{ error }}
+  b-alert(v-if="success" :model-value="true" variant="success" dismissible @close="success = false") {{ $t('settings.notifications.saved') }}
 
   div(v-if="loading")
     b-spinner(small) {{ $t('common.loading') }}
@@ -30,9 +30,9 @@ div
         div.d-flex.align-items-start
           div.flex-grow-1
             b-form-group(:label="$t('settings.notifications.label')" label-cols-sm="3" label-size="sm")
-              b-input(v-model="alert.label" size="sm" :placeholder="$t('settings.notifications.labelPlaceholder')")
+              b-form-input(v-model="alert.label" size="sm" :placeholder="$t('settings.notifications.labelPlaceholder')")
             b-form-group(:label="$t('settings.notifications.category')" label-cols-sm="3" label-size="sm")
-              b-input(
+              b-form-input(
                 v-model="alert.category"
                 size="sm"
                 :placeholder="$t('settings.notifications.all')"
@@ -46,7 +46,7 @@ div
               :invalid-feedback="thresholdError(alert.thresholdStr)"
               :state="thresholdState(alert.thresholdStr)"
             )
-              b-input(
+              b-form-input(
                 v-model="alert.thresholdStr"
                 size="sm"
                 :placeholder="$t('settings.notifications.thresholdsPlaceholder')"
@@ -55,10 +55,10 @@ div
               small.form-text.text-muted {{ $t('settings.notifications.thresholdsHelp') }}
             b-form-group(:label="$t('settings.notifications.type')" label-cols-sm="3" label-size="sm")
               b-form-radio-group(v-model="alert.positive" :options="goalOptions" size="sm")
-          b-btn.ms-2(@click="removeAlert(idx)" variant="outline-danger" size="sm" :title="$t('settings.notifications.removeAlert')")
+          b-button.ms-2(@click="removeAlert(idx)" variant="outline-danger" size="sm" :title="$t('settings.notifications.removeAlert')")
             icon(name="trash")
 
-      b-btn.mt-1(@click="addAlert" variant="outline-secondary" size="sm")
+      b-button.mt-1(@click="addAlert" variant="outline-secondary" size="sm")
         icon(name="plus")
         |  {{ $t('settings.notifications.addAlert') }}
 </template>

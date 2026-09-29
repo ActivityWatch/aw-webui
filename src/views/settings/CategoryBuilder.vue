@@ -97,7 +97,7 @@ div
                       @ok="createRuleOk()"
                       @hidden="createRuleCancel()")
 
-  b-modal(id="appendRule" :title="$t('ui.categoryBuilder.appendRule')" @ok="handleOk" :ok-disabled="!valid")
+  b-modal(v-model="showAppendModal" :title="$t('ui.categoryBuilder.appendRule')" @ok="handleOk" :ok-disabled="!valid")
     b-form(ref="form" @submit.stop.prevent="handleSubmit")
       b-form-group(:label="$t('ui.categoryBuilder.rule')"
                    label-for="append-category"
@@ -196,6 +196,7 @@ export default {
 
       words: new Map(),
       showing_events: [],
+      showAppendModal: false,
 
       show_ignored: false,
 
@@ -436,7 +437,7 @@ export default {
     appendRule(word) {
       console.log('Opening modal to append rule with word: ' + word);
       this.append.word = _.escapeRegExp(word);
-      this.$bvModal.show('appendRule');
+      this.showAppendModal = true;
     },
     async appendRuleOk() {
       console.log('Appending rule with word: ' + this.append.word);
@@ -462,7 +463,7 @@ export default {
 
       // Hide the modal manually
       this.$nextTick(() => {
-        this.$bvModal.hide('appendRule');
+        this.showAppendModal = false;
       });
 
       this.appendRuleOk();

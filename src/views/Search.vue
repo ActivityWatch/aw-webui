@@ -2,15 +2,14 @@
 div
   h3 {{ $t('search.title') }}
 
-  b-alert(v-if="error" show variant="danger")
+  b-alert(v-if="error" :model-value="true" variant="danger")
     | {{error}}
 
   b-input-group(size="lg")
-    b-input(v-model="pattern" v-on:keyup.enter="search()" :placeholder="$t('ui.search.regexPlaceholder')")
-    b-input-group-append
-      b-button(type="button", @click="search()" variant="success")
-        icon.me-1(name="search")
-        | {{ $t('search.searchBtn') }}
+    b-form-input(v-model="pattern" v-on:keyup.enter="search()" :placeholder="$t('ui.search.regexPlaceholder')")
+    b-button(type="button", @click="search()" variant="success")
+      icon.me-1(name="search")
+      | {{ $t('search.searchBtn') }}
 
   div.d-flex.mt-1
     span.me-auto.small.text-muted {{ $t('ui.search.hostname') }}: {{queryOptions.hostname}}

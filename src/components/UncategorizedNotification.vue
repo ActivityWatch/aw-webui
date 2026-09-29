@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  b-alert.my-2(v-if="isVisible", variant="info", show dismissible @dismissed="onDismiss")
+  b-alert.my-2(v-if="isVisible", variant="info", :model-value="true" dismissible @close="onDismiss")
     p.mb-0
       | #[b {{ $t('uncategorized.title') }}]
       router-link.ms-1.uncategorized-hint__cog(

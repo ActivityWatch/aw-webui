@@ -6,13 +6,13 @@ div
   // TODO: Support 'less than' goals
   // TODO: Send notifications when goals met
 
-  b-alert(variant="warning" show)
+  b-alert(variant="warning" :model-value="true")
     | {{ $t('ui.alerts.earlyDev') }}
 
-  b-alert(v-if="error" show variant="danger")
+  b-alert(v-if="error" :model-value="true" variant="danger")
     | {{error}}
 
-  b-alert(v-if="hostnames.length === 0" show variant="info")
+  b-alert(v-if="hostnames.length === 0" :model-value="true" variant="info")
     | {{ $t('ui.alerts.noHost') }}
 
   b-card(v-for="alert in alerts", :key="alert.name")
@@ -28,7 +28,7 @@ div
         icon.text-muted(name="times")
 
   div.d-flex.align-items-center.mt-3
-    b-btn(@click="check" variant="success" :disabled="!hostname") {{ $t('ui.alerts.check') }}
+    b-button(@click="check" variant="success" :disabled="!hostname") {{ $t('ui.alerts.check') }}
     b-form-checkbox.ms-3.mb-0(v-model="autorefresh", @change="toggleAutoRefresh", switch) {{ $t('ui.alerts.autoRefresh') }}
 
   small.text-muted(v-if="last_updated")
@@ -39,16 +39,16 @@ div
   div
     h4 {{ $t('ui.alerts.newAlert') }}
     b-form-group(:label="$t('ui.alerts.name')" label-cols-md=2)
-      b-input(v-model="editing_alert.name")
+      b-form-input(v-model="editing_alert.name")
     b-form-group(:label="$t('ui.alerts.category')" label-cols-md=2)
-      b-select(v-model="editing_alert.category")
+      b-form-select(v-model="editing_alert.category")
         option(v-for="category in categories" :value="category.value") {{ category.text }}
     b-form-group(:label="$t('ui.alerts.goal')" label-cols-md=2)
       b-input-group(:append="$t('ui.alerts.minutes')")
-        b-input(v-model="editing_alert.goal" type="number")
+        b-form-input(v-model="editing_alert.goal" type="number")
 
     div
-      b-btn(@click="addAlert" variant="success" :disabled="saving")
+      b-button(@click="addAlert" variant="success" :disabled="saving")
         icon(name="plus")
         | {{ $t('ui.alerts.add') }}
 </template>

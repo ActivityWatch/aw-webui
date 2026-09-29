@@ -9,7 +9,7 @@ div.mx-3
         option(value="timeGridDay") {{ $t('ui.calendar.day') }}
         option(value="timeGridWeek") {{ $t('ui.calendar.week') }}
     b-form-group
-      b-checkbox(v-model="fitToActive")
+      b-form-checkbox(v-model="fitToActive")
         | {{ $t('ui.calendar.fitActive') }}
   FullCalendar(ref="fullCalendar", :options="calendarOptions")
 </template>

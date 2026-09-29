@@ -3,7 +3,7 @@ div.container(style="color: #555; font-size: 0.9em")
   div.mb-2
     | {{ $t('footer.madeWith') }}
     a(href="https://activitywatch.net/donate/", target="_blank" rel="noopener noreferrer")
-      icon(name="heart" scale=0.75 style="fill: #E55")
+      icon(name="heart" scale=0.75 style="color: #E55")
     | {{ $t('footer.byDevs') }}
     div
       span.mt-2(v-if="info", style="color: #888; font-size: 0.8em")

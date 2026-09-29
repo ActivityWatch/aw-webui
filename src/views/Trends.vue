@@ -15,7 +15,7 @@ div
     b-form-select.me-2.mb-1(
       v-if="bucketsStore.knownHosts.length > 1"
       size="sm"
-      :value="host"
+      :model-value="host"
       :options="hostOptions"
       @change="onHostChange"
       style="width: auto"
@@ -25,7 +25,7 @@ div
       | {{ $t('ui.trends.comparing') }} #[b {{ currentRangeLabel }}] {{ $t('ui.trends.vs') }} #[b {{ previousRangeLabel }}]
 
   div(v-if="!host")
-    b-alert(show variant="info")
+    b-alert(:model-value="true" variant="info")
       | {{ $t('ui.trends.noHost') }}
       | #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") aw-watcher-window and aw-watcher-afk]
       | {{ $t('extraViews.trends.toUse') }}
@@ -68,8 +68,7 @@ div
       responsive
       :items="categoryTrends"
       :fields="categoryFields"
-      sort-by="absDelta"
-      :sort-desc="true"
+      :sort-by="[{ key: 'absDelta', order: 'desc' }]"
     )
       template(#cell(category)="row")
         | {{ row.item.category.join(' > ') || $t('common.uncategorized') }}

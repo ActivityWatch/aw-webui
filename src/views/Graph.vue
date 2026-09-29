@@ -2,12 +2,12 @@
 div
   h3 {{ $t('nav.graph') }}
 
-  b-alert(show variant="warning")
+  b-alert(:model-value="true" variant="warning")
     | {{ $t('ui.graph.earlyDev') }}
 
   p {{ $t('ui.graph.description') }}
 
-  b-alert(v-if="error" show variant="danger")
+  b-alert(v-if="error" :model-value="true" variant="danger")
     | {{error}}
 
   // Specify max category depth
@@ -59,6 +59,7 @@ div
 <style scoped lang="scss"></style>
 
 <script lang="ts">
+import { defineAsyncComponent } from 'vue';
 import _ from 'lodash';
 import moment from 'moment';
 
@@ -72,7 +73,7 @@ import { getClient } from '~/util/awclient';
 export default {
   name: 'Graph',
   components: {
-    'aw-force-graph': () => import('~/visualizations/ForceGraph.vue'),
+    'aw-force-graph': defineAsyncComponent(() => import('~/visualizations/ForceGraph.vue')),
   },
   data() {
     return {

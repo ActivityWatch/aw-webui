@@ -26,10 +26,10 @@ div
           :placeholder="$t('ui.topBucket.fieldPlaceholder')",
           :disabled="loading"
         )
-  b-alert.mt-2(v-if="error", show, variant="danger") {{ error }}
-  b-alert.mt-2(v-else-if="!selectedBucketId" show variant="info")
+  b-alert.mt-2(v-if="error", :model-value="true", variant="danger") {{ error }}
+  b-alert.mt-2(v-else-if="!selectedBucketId" :model-value="true" variant="info")
     | {{ $t('ui.topBucket.selectWatcher') }}
-  b-alert.mt-2(v-else-if="!loading && aggregated.length === 0" show variant="warning")
+  b-alert.mt-2(v-else-if="!loading && aggregated.length === 0" :model-value="true" variant="warning")
     | {{ $t('ui.topBucket.noEvents') }}
 
   div.mt-2

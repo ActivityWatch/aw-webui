@@ -6,7 +6,7 @@
       i {{ $t('ui.timeline.bucketsNoEvents') }}
 
     div(v-if="editingEvent")
-      EventEditor(:event="editingEvent" :bucket_id="editingEventBucket" @saved="onEventSaved")
+      EventEditor(v-model:open="editorOpen" :event="editingEvent" :bucket_id="editingEventBucket" @saved="onEventSaved")
 </template>
 
 <style lang="scss">
@@ -70,6 +70,7 @@ div#visualization {
 </style>
 
 <script lang="ts">
+import { useToastController } from 'bootstrap-vue-next';
 import _ from 'lodash';
 import { markRaw } from 'vue';
 import Color from 'color';
@@ -109,8 +110,12 @@ export default {
     swimlane: { type: String },
     updateTimelineWindow: { type: Boolean },
   },
+  setup() {
+    return { toastController: useToastController() };
+  },
   data() {
     return {
+      editorOpen: false,
       timeline: null,
       filterShortEvents: true,
       items: [],
@@ -283,7 +288,7 @@ export default {
       event.stopImmediatePropagation();
     },
     openEditor: function () {
-      this.$bvModal.show('edit-modal-' + this.editingEvent.id);
+      this.editorOpen = true;
     },
     displayEvent: function (bucketId: string, event: IEvent): IEvent {
       return this.eventOverrides[`${bucketId}\0${event.id}`] || event;

@@ -17,10 +17,10 @@ div
       b-button.mx-1(v-if="!event.data.running", @click="$emit('new')", variant="outline-primary", size="sm")
         icon.ms-0.me-1(name="play")
         | {{ $t('ui.stopwatchEntry.startNew') }}
-      b-button.mx-1(v-b-modal="'edit-modal-' + event.id", variant="outline-dark", size="sm")
+      b-button.mx-1(@click="editorOpen = true", variant="outline-dark", size="sm")
         icon.ms-0.me-1(name="edit")
         | {{ $t('ui.stopwatchEntry.edit') }}
-  event-editor(:event="event", :bucket_id="bucket_id", @saved="save", @deleted="delete_")
+  event-editor(v-model:open="editorOpen", :event="event", :bucket_id="bucket_id", @saved="save", @deleted="delete_")
 </template>
 
 <style scoped lang="scss">
@@ -55,6 +55,11 @@ export default {
       type: moment,
       default: moment(),
     },
+  },
+  data() {
+    return {
+      editorOpen: false,
+    };
   },
   methods: {
     stop: async function () {
