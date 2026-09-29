@@ -26,10 +26,10 @@ div
           placeholder="e.g. data.title",
           :disabled="loading"
         )
-  b-alert.mt-2(v-if="error", show, variant="danger") {{ error }}
-  b-alert.mt-2(v-else-if="!selectedBucketId" show variant="info")
+  b-alert.mt-2(v-if="error", :model-value="true", variant="danger") {{ error }}
+  b-alert.mt-2(v-else-if="!selectedBucketId" :model-value="true" variant="info")
     | Select a watcher to load events for this period.
-  b-alert.mt-2(v-else-if="!loading && aggregated.length === 0" show variant="warning")
+  b-alert.mt-2(v-else-if="!loading && aggregated.length === 0" :model-value="true" variant="warning")
     | No events found for this watcher and time range.
 
   div.mt-2

@@ -29,7 +29,7 @@ div.sunburst(ref="container", @mouseleave="hovered = null")
       div.parent {{ hovered.data.parent ? hovered.data.parent.join(' > ') : ' ' }}
       div.name {{ hovered.data.name }}
       div {{ friendlyduration(hovered.value) }}
-      div ({{ Math.round((100 * hovered.value) / root.value) }}%)
+      div(v-if="root") ({{ Math.round((100 * hovered.value) / root.value) }}%)
 </template>
 
 <script lang="ts">
@@ -112,6 +112,8 @@ export default {
   },
   computed: {
     root() {
+      // null while the data is still loading
+      if (!this.data) return null;
       const root = hierarchy(this.data)
         .sum(d => d.size)
         .sort((a, b) => b.value - a.value);
@@ -141,6 +143,7 @@ export default {
         .outerRadius(d => Math.max(0, y(d.y1)));
     },
     visibleNodes() {
+      if (!this.root) return [];
       const { x, y } = this.scales;
       return this.root
         .descendants()

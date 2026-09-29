@@ -20,16 +20,15 @@ div
       | #[b Top Stopwatch Events].
 
   b-input-group(size="lg")
-    b-input(
+    b-form-input(
       v-model="label"
       placeholder="What are you working on?"
       aria-label="What are you working on?"
       @keyup.enter="startTimer(label)"
     )
-    b-input-group-append
-      b-button(@click="startTimer(label)", variant="success")
-        icon(name="play")
-        | Start
+    b-button(@click="startTimer(label)", variant="success")
+      icon(name="play")
+      | Start
 
   hr
 

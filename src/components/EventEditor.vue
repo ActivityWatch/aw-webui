@@ -1,5 +1,5 @@
 <template lang="pug">
-b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEditModal", title="Edit event", centered, hide-footer)
+b-modal(v-if="event && event.id", :model-value="open", @update:model-value="onOpenChange", title="Edit event", centered, no-footer)
   div(v-if="!editedEvent")
     | Loading event...
 
@@ -31,11 +31,11 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
         th Value
       tr(v-for="(v, k) in editedEvent.data" :key="k")
         td
-          b-input(disabled, :value="k", size="sm")
+          b-form-input(disabled, :model-value="k", size="sm")
         td
-          b-checkbox(v-if="typeof event.data[k] === typeof true", v-model="editedEvent.data[k]", style="margin: 0.25em")
-          b-input(v-if="typeof event.data[k] === typeof 'string'", v-model="editedEvent.data[k]", size="sm")
-          b-input(v-if="typeof event.data[k] === 'number'", v-model.number="editedEvent.data[k]", size="sm", type="number")
+          b-form-checkbox(v-if="typeof event.data[k] === typeof true", v-model="editedEvent.data[k]", style="margin: 0.25em")
+          b-form-input(v-if="typeof event.data[k] === typeof 'string'", v-model="editedEvent.data[k]", size="sm")
+          b-form-input(v-if="typeof event.data[k] === 'number'", v-model.number="editedEvent.data[k]", size="sm", type="number")
 
     hr
 
@@ -71,7 +71,10 @@ export default {
   props: {
     event: { type: Object },
     bucket_id: { type: String, required: true },
+    // Whether the editor dialog is shown (v-model:open)
+    open: { type: Boolean, default: false },
   },
+  emits: ['save', 'delete', 'close', 'update:open'],
   data() {
     return {
       editedEvent: null,
@@ -128,8 +131,12 @@ export default {
       }
     },
     close() {
-      this.$refs.eventEditModal.hide();
+      this.$emit('update:open', false);
       this.$emit('close', this.event);
+    },
+    onOpenChange(isOpen: boolean) {
+      if (isOpen) this.$emit('update:open', true);
+      else this.close();
     },
   },
 };

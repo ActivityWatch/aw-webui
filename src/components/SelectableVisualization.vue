@@ -4,7 +4,7 @@ div(v-if="editable || !activityStore.buckets.loaded || has_prerequisites || !set
     icon.handle(name="bars" v-if="editable" style="opacity: 0.6; cursor: grab;")
     | {{ visualizations[type].title }}
   div(v-if="editable").vis-style-dropdown-btn
-    b-dropdown.me-1(size="sm" variant="outline-secondary" right)
+    b-dropdown.me-1(size="sm" variant="outline-secondary" end)
       template(v-slot:button-content)
         icon(name="cog")
       b-dropdown-item(v-for="t in types" :key="t" variant="outline-secondary" @click="$emit('onTypeChange', id, t)")
@@ -13,13 +13,13 @@ div(v-if="editable || !activityStore.buckets.loaded || has_prerequisites || !set
       icon(name="times")
 
   div(v-if="!supports_period")
-    b-alert.small.px-2.py-1(show variant="warning")
+    b-alert.small.px-2.py-1(:model-value="true" variant="warning")
       | This feature doesn't support the current time period.
 
   div(v-if="activityStore.buckets.loaded")
     // Check data prerequisites
     div(v-if="!has_prerequisites")
-      b-alert.small.px-2.py-1(show variant="warning")
+      b-alert.small.px-2.py-1(:model-value="true" variant="warning")
         | This feature is missing data from a required watcher.
         | You can find a list of all watchers in #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") the documentation].
 
@@ -38,7 +38,7 @@ div(v-if="editable || !activityStore.buckets.loaded || has_prerequisites || !set
                  :namefunc="e => e.data.classname",
                  :colorfunc="e => e.data.app",
                  with_limit)
-    b-alert.small.px-2.py-1(v-if="isBrowserVis && browserAllowlistMiss" show variant="info")
+    b-alert.small.px-2.py-1(v-if="isBrowserVis && browserAllowlistMiss" :model-value="true" variant="info")
       | {{ $t('activity.browserAllowlistMiss') }}
       |  (#[a(href="https://github.com/ActivityWatch/aw-webui/issues/927") #927])
     div(v-if="type == 'top_domains'")

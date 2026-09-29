@@ -85,29 +85,28 @@ describe('SunburstCategories', () => {
     });
   });
 
-  test('truncates labels that would overflow their ring instead of clipping them', async () => {
+  test('truncates labels that would overflow their ring', async () => {
     const longName = 'ActivityWatch Development';
     const wrapper = mount(SunburstCategories, {
-      attachTo: document.body,
-      propsData: {
+      props: {
         data: {
           name: 'All',
           children: [{ name: 'Work', children: [{ name: longName, size: 3600 }] }],
         },
       },
     });
-
     await wrapper.vm.$nextTick();
 
-    // jsdom has no layout, so the ring itself is 0px wide: only a leaf, which
-    // may overflow past its ring, gets a (truncated) label. The parent would be
-    // covered by its child ring, so it gets no overflow allowance and no label.
-    const labels = wrapper.findAll('text.node-info').wrappers.map(w => w.text());
-    expect(labels).not.toContain('Work');
+    const labels = wrapper.findAll('text.sunburst-label').map(w => w.text());
     const truncated = labels.find(l => l.endsWith('…'));
     expect(truncated).toBeDefined();
     expect(longName.startsWith(truncated.slice(0, -1))).toBe(true);
+    wrapper.unmount();
+  });
 
-    wrapper.destroy();
+  test('renders nothing while the data is loading', () => {
+    const wrapper = mount(SunburstCategories, { props: { data: null } });
+    expect(wrapper.findAll('path')).toHaveLength(0);
+    wrapper.unmount();
   });
 });

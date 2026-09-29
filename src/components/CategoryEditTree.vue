@@ -22,9 +22,9 @@ div
             |  [{{ _class.rule.select_keys.join(', ') }}]
         span.text-muted(v-else) No rule
       span.float-end
-        b-btn.ms-1.border-0(size="sm", variant="outline-secondary", @click="showEditModal(_class.id)" pill)
+        b-button.ms-1.border-0(size="sm", variant="outline-secondary", @click="showEditModal(_class.id)" pill)
           icon(name="edit")
-        b-btn.ms-1.border-0(size="sm", variant="outline-success", @click="addSubclass(_class); expanded = true" pill)
+        b-button.ms-1.border-0(size="sm", variant="outline-success", @click="addSubclass(_class); expanded = true" pill)
           icon(name="plus")
   div
     div.pa-2(v-for="child in _class.children", style="background: rgba(0, 0, 0, 0);", v-show="expanded")

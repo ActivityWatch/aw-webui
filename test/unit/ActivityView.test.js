@@ -61,7 +61,16 @@ describe('ActivityView view switching', () => {
       global: {
         mocks: { $route: { params: {}, path: '/activity/view/default' }, $t: key => key },
         stubs: {
-          draggable: { template: '<div><slot /></div>' },
+          // Renders the #item slot per element, keyed by item-key like vuedraggable does
+          draggable: {
+            props: ['modelValue', 'itemKey'],
+            template: `<div>
+              <template v-for="(el, i) in modelValue" :key="itemKey(el)">
+                <slot name="item" :element="el" :index="i" />
+              </template>
+              <slot name="footer" />
+            </div>`,
+          },
           'aw-selectable-vis': visStub,
           // Globally registered in main.js, so not resolvable from a bare mount
           'b-button': passthroughStub,

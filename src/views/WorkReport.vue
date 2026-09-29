@@ -11,7 +11,7 @@ div
     div.col-md-3
       b-form-group(label="Categories" label-class="fw-bold")
         b-form-select(
-          :value="''"
+          :model-value="''"
           :options="addableCategoryOptions"
           size="sm"
           @change="addCategory"
@@ -19,12 +19,12 @@ div
         div.mt-2(v-if="selectedCategories.length > 0")
           span.badge.text-bg-info.me-1.mb-1(v-for="(cat, idx) in selectedCategories" :key="idx")
             | {{ JSON.parse(cat).join(' > ') }}
-            button.ms-1.close.small(
+            button.btn-close.btn-close-white.ms-1(
               type="button"
               aria-label="Remove category"
-              style="font-size: 0.85rem; line-height: 1"
+              style="font-size: 0.5rem"
               @click="removeCategory(idx)"
-            ) &times;
+            )
         small.text-muted.d-block.mt-1 Subcategories are included automatically (e.g. "Work" also covers "Work > Programming").
 
     div.col-md-3

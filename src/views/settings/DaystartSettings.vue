@@ -4,7 +4,7 @@ div
     div
       h5.mt-1.mb-2.mb-sm-0 Start of day
     div
-      b-input(type="time" size="sm" :value="startOfDay" @change="startOfDay = $event")
+      b-form-input(type="time" size="sm" :model-value="startOfDay" @change="startOfDay = $event")
   small.text-muted
     | The time at which days "start", since humans don't always go to bed before midnight.
     | Set to 04:00 by default.

@@ -37,3 +37,14 @@ describe('activity route host param', () => {
     expect(resolved.params.host).toBe(host);
   });
 });
+
+describe('activity route default view', () => {
+  test.each(['/activity/host1', '/activity/host1/day/2026-09-26'])(
+    '%s redirects to the activity view',
+    async path => {
+      await router.push(path);
+      expect(router.currentRoute.value.name).toBe('activity-view');
+      expect(router.currentRoute.value.params.host).toBe('host1');
+    }
+  );
+});

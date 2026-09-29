@@ -34,6 +34,15 @@ iframe {
   color-scheme: normal;
 }
 
+// Bootstrap 5 underlines links by default; keep Bootstrap 4's look (underline on hover)
+a {
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 // To make icons a little less crowded
 .fa-icon {
   margin-top: -0.125em;

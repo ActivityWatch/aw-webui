@@ -28,6 +28,12 @@ const Dev = () => import('./views/Dev.vue');
 const Graph = () => import('./views/Graph.vue');
 const NotFound = () => import('./views/NotFound.vue');
 
+// Like `props: true`, but leaves out absent optional params: vue-router 4 passes
+// those as '' rather than undefined, which would override the prop defaults.
+function paramsAsProps(route) {
+  return Object.fromEntries(Object.entries(route.params).filter(([, v]) => v !== ''));
+}
+
 const router = createRouter({
   history: createWebHashHistory(),
   routes: [
@@ -41,20 +47,21 @@ const router = createRouter({
     {
       path: '/activity/:host/:periodLength?/:date?',
       component: Activity,
-      props: true,
+      props: paramsAsProps,
       children: [
         {
           path: 'view/:view_id?',
           meta: { subview: 'view' },
           name: 'activity-view',
           component: ActivityView,
-          props: true,
+          props: paramsAsProps,
         },
         // Unspecified should redirect to summary view is the summary view
         // (needs to be last since otherwise it'll always match first)
         {
           path: '',
-          redirect: 'view/',
+          // vue-router 4 doesn't resolve relative redirect strings like 'view/'
+          redirect: to => ({ name: 'activity-view', params: to.params, query: to.query }),
         },
       ],
     },

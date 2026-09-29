@@ -5,14 +5,14 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
     b-input-group.my-1(prepend="Name")
       b-form-input(v-model="editing.name")
     b-input-group(prepend="Parent")
-      b-select(v-model="editing.parent", :options="allCategories")
+      b-form-select(v-model="editing.parent", :options="allCategories")
     //| ID: {{editing.id}}
 
   hr
   div.my-1
     b Rule
     b-input-group.my-1(prepend="Type")
-      b-select(v-model="editing.rule.type", :options="allRuleTypes")
+      b-form-select(v-model="editing.rule.type", :options="allRuleTypes")
     div(v-if="editing.rule.type === 'regex'")
       b-input-group.my-1(prepend="Pattern")
         b-form-input(v-model="editing.rule.regex")
@@ -64,7 +64,7 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
 
   hr
   div.my-1
-    b-btn(variant="danger", @click="removeClass(categoryId); $refs.edit.hide()")
+    b-button(variant="danger", @click="removeClass(categoryId); $refs.edit.hide()")
       icon(name="trash")
       | Remove category
 </template>

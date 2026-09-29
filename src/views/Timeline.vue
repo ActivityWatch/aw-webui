@@ -66,7 +66,7 @@ div
               div.mt-1(v-if="filter_categories.length > 0")
                 span.badge.text-bg-info.me-1(v-for="(cat, idx) in filter_categories", :key="idx")
                   | {{ cat.join(' > ') }}
-                  button.ms-1.close.small(@click="removeCategory(idx)", type="button", aria-label="Remove category", style="font-size: 0.85rem; line-height: 1") &times;
+                  button.btn-close.btn-close-white.ms-1(@click="removeCategory(idx)", type="button", aria-label="Remove category", style="font-size: 0.5rem")
 
     // Display options (swimlanes, future visual toggles) tucked behind a
     // ghost kebab so they don't compete visually with Filters.
@@ -75,7 +75,7 @@ div
       variant="outline-secondary"
       toggle-class="border-0"
       no-caret
-      right
+      end
       title="Display options"
       aria-label="Display options"
     )
@@ -95,7 +95,7 @@ div
     small.text-muted.ms-auto
       | {{ $t('timeline.scrollHint') }}
 
-  b-alert.mb-2(v-if="buckets !== null && num_events === 0", variant="warning", show)
+  b-alert.mb-2(v-if="buckets !== null && num_events === 0", variant="warning", :model-value="true")
     | {{ $t('timeline.noEvents') }}
 
   div(v-if="buckets !== null")

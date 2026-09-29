@@ -4,7 +4,7 @@ div
     div
       h5.mt-1.mb-2.mb-sm-0 {{ $t('settings.language.title') }}
     div
-      b-select.landingpage(v-if="_loaded" size="sm" :value="locale", @change="locale = $event")
+      b-form-select.landingpage(v-if="_loaded" size="sm" :model-value="locale", @change="locale = $event")
         option(value="en") {{ $t('common.languageEn') }}
         option(value="uk") {{ $t('common.languageUk') }}
         option(value="de") {{ $t('common.languageDe') }}
