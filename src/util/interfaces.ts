@@ -6,6 +6,7 @@ export interface IEvent {
 
 export interface IBucket {
   id: string;
+  client?: string;
   hostname: string;
   device_id: string;
   type: string;
