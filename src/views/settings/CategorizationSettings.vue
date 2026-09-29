@@ -13,7 +13,7 @@ div
       span.fw-bold(style="white-space: nowrap") {{ $t('settings.categorization.categorySet') }}
       b-form-select(
         v-model="activeSetId"
-        @change="onSetChange"
+        @update:model-value="onSetChange"
         style="max-width: 220px"
         size="sm"
       )

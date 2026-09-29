@@ -1,11 +1,19 @@
-import { h } from 'vue';
+import { h, reactive } from 'vue';
 import { shallowMount } from '@vue/test-utils';
 import ActivityView from '~/views/activity/ActivityView.vue';
 
-const mockViews = [
+const mockViews = reactive([
   { id: 'default', name: 'Default', elements: [{ type: 'top_apps', props: {} }] },
   { id: 'second', name: 'Second', elements: [{ type: 'top_bucket_data', props: {} }] },
-];
+  {
+    id: 'multi',
+    name: 'Multi',
+    elements: [
+      { type: 'top_apps', props: {} },
+      { type: 'top_titles', props: {} },
+    ],
+  },
+]);
 
 jest.mock('~/stores/views', () => ({
   useViewsStore: () => ({
@@ -49,15 +57,21 @@ describe('ActivityView view switching', () => {
   const visStub = {
     name: 'aw-selectable-vis',
     props: ['id', 'type', 'props', 'viewId', 'editable'],
+    data() {
+      // The type this instance was created for, to detect instance reuse
+      return { createdType: this.type };
+    },
     created() {
       created.push(`${this.viewId}:${this.id}:${this.type}`);
     },
-    render: () => h('div'),
+    render() {
+      return h('div', { class: 'vis', 'data-created': this.createdType, 'data-type': this.type });
+    },
   };
 
-  function mountView() {
+  function mountView(view_id = 'default') {
     return shallowMount(ActivityView, {
-      props: { view_id: 'default' },
+      props: { view_id },
       global: {
         mocks: { $route: { params: {}, path: '/activity/view/default' }, $t: key => key },
         stubs: {
@@ -102,6 +116,20 @@ describe('ActivityView view switching', () => {
     await wrapper.setProps({ view_id: 'default' });
 
     expect(created).toEqual(['default:0:top_apps']);
+    wrapper.unmount();
+  });
+
+  test('keeps each visualization instance with its element when reordering', async () => {
+    const wrapper = mountView('multi');
+    mockViews[2].elements.reverse();
+    await wrapper.vm.$nextTick();
+
+    const vis = wrapper.findAll('.vis');
+    expect(vis.map(v => v.attributes('data-type'))).toEqual(['top_titles', 'top_apps']);
+    // Keyed by position, the instance created for top_apps would now render top_titles
+    for (const v of vis) {
+      expect(v.attributes('data-created')).toBe(v.attributes('data-type'));
+    }
     wrapper.unmount();
   });
 });

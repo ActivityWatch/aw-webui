@@ -37,6 +37,8 @@ import { markRaw } from 'vue';
 import { arc, hierarchy, interpolate, partition, scaleLinear, scaleSqrt, timer } from 'd3';
 import { getColorFromCategory } from '~/util/color';
 import { friendlyduration } from '~/util/filters';
+import { detectPreferredTheme } from '~/util/theme';
+import { useSettingsStore } from '~/stores/settings';
 
 import { useCategoryStore } from '~/stores/categories';
 
@@ -112,7 +114,11 @@ export default {
         .sum(d => d.size)
         .sort((a, b) => b.value - a.value);
       // d3 nodes are large, cyclic, and never mutated after layout: keep them out of reactivity.
-      return markRaw(partition()(root));
+      partition()(root);
+      // Mark every node raw, not just the root: nodes also end up in reactive
+      // state (hovered, zoomed), and a reactive proxy never === the raw node.
+      root.each(node => markRaw(node));
+      return root;
     },
     radius(): number {
       return Math.max(0, Math.min(this.width, this.height) / 2);
@@ -186,8 +192,12 @@ export default {
     },
     colorfunc(s: string): string {
       // 'All' needs to be bright if light theme, and dark if dark theme
-      // (as applied, since the setting can be 'auto')
-      if (s == 'All') return document.documentElement.classList.contains('dark') ? '#333' : '#fff';
+      // (as applied: the setting can be 'auto')
+      if (s == 'All') {
+        const theme = useSettingsStore().theme;
+        const dark = (theme === 'auto' ? detectPreferredTheme() : theme) === 'dark';
+        return dark ? '#333' : '#fff';
+      }
 
       const categoryStore = useCategoryStore();
       const cat = categoryStore.get_category(s.split(SEP));

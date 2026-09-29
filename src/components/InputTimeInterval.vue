@@ -16,7 +16,7 @@ div
       label.col-form-label.col-form-label-sm.mb-0(for="time-mode") Mode
       b-form-radio-group#time-mode(
         v-model="mode",
-        @change="valueChanged",
+        @update:model-value="valueChanged",
         buttons,
         button-variant="outline-secondary",
         size="sm",
