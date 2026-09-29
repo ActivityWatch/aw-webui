@@ -31,6 +31,10 @@ export default {
   mounted() {
     this.drawGraph(this.data);
   },
+  beforeDestroy() {
+    this.cancelPromise && this.cancelPromise();
+    this.cancelPromise = null;
+  },
   methods: {
     drawGraph({ nodes, links }) {
       console.log('rendering...');
