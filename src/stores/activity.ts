@@ -288,6 +288,21 @@ interface State {
   };
 }
 
+// Stands in for a period of active history that hasn't been fetched yet
+const HISTORY_PLACEHOLDER = Symbol('history placeholder');
+
+function historyPlaceholder(timeperiod: string): IEvent {
+  const event = { timestamp: moment(timeperiod.split('/')[0]).format(), duration: 0, data: {} };
+  Object.defineProperty(event, HISTORY_PLACEHOLDER, { value: true });
+  return event;
+}
+
+// Whether any period of an active history (as from getActiveHistoryAroundTimeperiod)
+// has been fetched, rather than all being placeholders
+export function hasFetchedHistory(periods: IEvent[][]): boolean {
+  return periods.some(events => !(events.length === 1 && events[0][HISTORY_PLACEHOLDER]));
+}
+
 export const useActivityStore = defineStore('activity', {
   // initial state
   state: (): State => ({
@@ -369,7 +384,7 @@ export const useActivityStore = defineStore('activity', {
             return this.active.history[tp];
           } else {
             // A zero-duration placeholder until new data has been fetched
-            return [{ timestamp: moment(tp.split('/')[0]).format(), duration: 0, data: {} }];
+            return [historyPlaceholder(tp)];
           }
         });
         return _history;

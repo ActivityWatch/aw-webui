@@ -18,6 +18,7 @@ svg {
 //       Code should generally go in the framework-independent file.
 
 import periodusage from './periodusage';
+import { hasFetchedHistory } from '~/stores/activity';
 
 export default {
   name: 'aw-periodusage',
@@ -34,8 +35,9 @@ export default {
   mounted: function () {
     periodusage.create(this.$el);
     // The data may already have loaded before this (async) component mounted,
-    // in which case the watcher won't fire for it.
-    if (this.periodusage_arr && this.periodusage_arr.length > 0) {
+    // in which case the watcher won't fire for it. Placeholders for periods
+    // that are still being fetched don't count: they'd draw as no activity.
+    if (this.periodusage_arr && hasFetchedHistory(this.periodusage_arr)) {
       periodusage.update(this.$el, this.periodusage_arr, this.onPeriodClicked);
     } else {
       periodusage.set_status(this.$el, 'Loading...');
