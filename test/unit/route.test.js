@@ -32,7 +32,7 @@ describe('activity route host param', () => {
     // list items are encoded twice so a ',' inside a hostname survives
     ['/activity/self,a%252Cb/day', 'self,a%2Cb'],
   ])('%s resolves to the activity view with host %s', (path, host) => {
-    const resolved = router.resolve(path + '/view/').route;
+    const resolved = router.resolve(path + '/view/');
     expect(resolved.name).toBe('activity-view');
     expect(resolved.params.host).toBe(host);
   });

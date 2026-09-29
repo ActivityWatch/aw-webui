@@ -59,7 +59,6 @@ div
 </template>
 
 <script lang="ts">
-
 import { getClient } from '~/util/awclient';
 import {
   AwNotifyAlert,

@@ -302,7 +302,6 @@ import {
 } from '~/util/timeperiod';
 import _ from 'lodash';
 
-
 import { useSettingsStore } from '~/stores/settings';
 import { useCategoryStore } from '~/stores/categories';
 import { useActivityStore, QueryOptions } from '~/stores/activity';
