@@ -1,3 +1,4 @@
+import { h } from 'vue';
 import { shallowMount } from '@vue/test-utils';
 import ActivityView from '~/views/activity/ActivityView.vue';
 
@@ -51,20 +52,22 @@ describe('ActivityView view switching', () => {
     created() {
       created.push(`${this.viewId}:${this.id}:${this.type}`);
     },
-    render: h => h('div'),
+    render: () => h('div'),
   };
 
   function mountView() {
     return shallowMount(ActivityView, {
-      propsData: { view_id: 'default' },
-      mocks: { $route: { params: {}, path: '/activity/view/default' }, $t: key => key },
-      stubs: {
-        draggable: { template: '<div><slot /></div>' },
-        'aw-selectable-vis': visStub,
-        // Globally registered in main.js, so not resolvable from a bare mount
-        'b-button': passthroughStub,
-        'b-modal': passthroughStub,
-        icon: passthroughStub,
+      props: { view_id: 'default' },
+      global: {
+        mocks: { $route: { params: {}, path: '/activity/view/default' }, $t: key => key },
+        stubs: {
+          draggable: { template: '<div><slot /></div>' },
+          'aw-selectable-vis': visStub,
+          // Globally registered in main.js, so not resolvable from a bare mount
+          'b-button': passthroughStub,
+          'b-modal': passthroughStub,
+          icon: passthroughStub,
+        },
       },
     });
   }
@@ -82,7 +85,7 @@ describe('ActivityView view switching', () => {
     // Without the view id in the key this stays at one entry: Vue patches the
     // props of the instance already sitting at index 0 rather than rebuilding.
     expect(created).toEqual(['default:0:top_apps', 'second:0:top_bucket_data']);
-    wrapper.destroy();
+    wrapper.unmount();
   });
 
   test('does not rebuild visualizations while staying on the same view', async () => {
@@ -90,6 +93,6 @@ describe('ActivityView view switching', () => {
     await wrapper.setProps({ view_id: 'default' });
 
     expect(created).toEqual(['default:0:top_apps']);
-    wrapper.destroy();
+    wrapper.unmount();
   });
 });

@@ -92,7 +92,6 @@ import {
   WorkReportHostBuckets,
 } from '~/util/workReport';
 
-
 interface CategoryRow {
   key: string; // JSON.stringify(parts) — unambiguous identity for rate lookup
   category: string; // parts.join(' > ') — display label in UI and CSV

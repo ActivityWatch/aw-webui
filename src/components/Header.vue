@@ -121,7 +121,7 @@ import { IBucket } from '~/util/interfaces';
 import { ALL_DEVICES, formatHostParam } from '~/util/multidevice';
 
 export default {
-  name: 'Header',
+  name: 'AwHeader',
   data() {
     return {
       activityViews: null,

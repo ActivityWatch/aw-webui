@@ -80,7 +80,6 @@ import _ from 'lodash';
 import moment from 'moment';
 import Papa from 'papaparse';
 
-
 import { canonicalEvents, querystr_to_array } from '~/queries';
 import { buildBarchartDataset } from '~/util/datasets';
 

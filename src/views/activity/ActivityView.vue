@@ -74,7 +74,6 @@ div(v-else-if="view")
 </template>
 
 <script lang="ts">
-
 import draggable from 'vuedraggable';
 
 import { useViewsStore } from '~/stores/views';

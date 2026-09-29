@@ -225,7 +225,6 @@ div
 </style>
 
 <script lang="ts">
-
 import _ from 'lodash';
 import moment from 'moment';
 
