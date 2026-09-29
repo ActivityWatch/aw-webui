@@ -29,7 +29,7 @@ div
 
   div.d-flex.align-items-center.mt-3
     b-button(@click="check" variant="success" :disabled="!hostname") {{ $t('ui.alerts.check') }}
-    b-form-checkbox.ms-3.mb-0(v-model="autorefresh", @change="toggleAutoRefresh", switch) {{ $t('ui.alerts.autoRefresh') }}
+    b-form-checkbox.ms-3.mb-0(v-model="autorefresh", @update:model-value="toggleAutoRefresh", switch) {{ $t('ui.alerts.autoRefresh') }}
 
   small.text-muted(v-if="last_updated")
     | {{ $t('ui.alerts.lastUpdated') }} #[time(:datetime="last_updated && last_updated.toISOString && last_updated.toISOString()") {{ friendlytime(last_updated) }}]

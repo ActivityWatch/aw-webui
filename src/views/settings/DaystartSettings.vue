@@ -4,7 +4,7 @@ div
     div
       h5.mt-1.mb-2.mb-sm-0 {{ $t('settings.daystart.startOfDay') }}
     div
-      b-form-input(type="time" size="sm" :model-value="startOfDay" @change="startOfDay = $event")
+      b-form-input(type="time" size="sm" v-model="startOfDay" lazy)
   small.text-muted
     | {{ $t('settings.daystart.startOfDayHelp') }}
 

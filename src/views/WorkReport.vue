@@ -14,7 +14,7 @@ div
           :model-value="''"
           :options="addableCategoryOptions"
           size="sm"
-          @change="addCategory"
+          @update:model-value="addCategory"
         )
         div.mt-2(v-if="selectedCategories.length > 0")
           span.badge.text-bg-info.me-1.mb-1(v-for="(cat, idx) in selectedCategories" :key="idx")
