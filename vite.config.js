@@ -85,6 +85,13 @@ export default defineConfig(({ mode }) => {
         includeAssets: [],
       }),
     ],
+    optimizeDeps: {
+      // Scan every source file for dependencies at startup. By default Vite only
+      // follows index.html and discovers the dependencies of lazily loaded routes
+      // on first visit, then re-optimizes and force-reloads the page, which on a
+      // cold cache (e.g. in CI) leaves views stuck loading.
+      entries: ['index.html', 'src/**/*.{vue,js,ts}'],
+    },
     server: {
       host: '127.0.0.1',
       port: 27180,
