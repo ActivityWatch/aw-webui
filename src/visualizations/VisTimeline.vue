@@ -338,6 +338,11 @@ export default {
       if (!this.timeline) return;
 
       const index = this.eventIndex;
+      // The window to show, applied after the data is synced below: vis-timeline
+      // lays out items one by one (forcing a reflow each) when they are added
+      // inside the visible window, but in batches when the window moves onto them.
+      let nextWindow: [number, number] | null = null;
+      let bounds: [number, number] | null = null;
       if (resetWindow) {
         const start = this.queriedInterval?.[0]?.valueOf() ?? index.entries[0]?.start;
         const end = this.queriedInterval?.[1]?.valueOf() ?? index.ends[index.ends.length - 1];
@@ -352,15 +357,13 @@ export default {
             // of range. Reset the window when the bounds move, but keep the
             // user's zoom when the same interval is re-rendered.
             boundsChanged = this.options.min !== start || this.options.max !== end;
-            this.options.min = start;
-            this.options.max = end;
-            this.timeline.setOptions(this.options);
+            bounds = [start, end];
           }
           // Only items near the window are rendered, so the first render
           // needs one even when there are no bounds to apply.
           if (this.updateTimelineWindow || boundsChanged || !this.hasInitialRange) {
             this.hasInitialRange = true;
-            this.timeline.setWindow(start, end, { animation: false });
+            nextWindow = [start, end];
           }
         }
       }
@@ -415,8 +418,10 @@ export default {
       });
 
       const timelineWindow = this.timeline.getWindow();
-      const start = timelineWindow.start.valueOf();
-      const end = timelineWindow.end.valueOf();
+      const [start, end] = nextWindow ?? [
+        timelineWindow.start.valueOf(),
+        timelineWindow.end.valueOf(),
+      ];
       const buffer = (end - start) / 2;
       const visible = visibleTimelineEvents(index, start - buffer, end + buffer);
       this.itemEvents = new Map(visible.map(item => [item.id, item]));
@@ -432,7 +437,11 @@ export default {
           start: item.start,
           end: item.end,
           style: `background-color: ${color}; border-color: ${colors.get(color)}`,
-          subgroup: getSwimlane(item.bucket, color, this.swimlane, item.event),
+          // Only with swimlanes: vis-timeline re-measures a subgroup on every
+          // item removed from it, which makes large removals quadratic.
+          subgroup: this.swimlane
+            ? getSwimlane(item.bucket, color, this.swimlane, item.event)
+            : undefined,
         };
       });
 
@@ -448,11 +457,18 @@ export default {
           start: this.queriedInterval[0].valueOf(),
           end: this.queriedInterval[1].valueOf(),
           style: 'background-color: #aaa; height: 10px',
-          subgroup: '',
         });
       }
       syncTimelineData(this.groupData, groups);
       syncTimelineData(this.itemData, items);
+      if (bounds) {
+        this.options.min = bounds[0];
+        this.options.max = bounds[1];
+        this.timeline.setOptions(this.options);
+      }
+      if (nextWindow) {
+        this.timeline.setWindow(nextWindow[0], nextWindow[1], { animation: false });
+      }
       this.items = items;
       this.groups = groups;
     },

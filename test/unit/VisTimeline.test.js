@@ -11,6 +11,9 @@
  */
 
 import VisTimeline from '~/visualizations/VisTimeline.vue';
+import { DataSet } from 'vis-data';
+
+const DataSetUpdate = DataSet.prototype.update;
 
 // vis-timeline creates a real DOM timeline; mock the entire import so unit
 // tests run in jsdom without a full browser canvas/resize-observer stack.
@@ -334,5 +337,66 @@ describe('VisTimeline scroll bounds (#996)', () => {
     expect(vm.options.min).toBeUndefined();
     expect(vm.options.max).toBeUndefined();
     expect(vm.timeline.setOptions).not.toHaveBeenCalled();
+  });
+});
+
+describe('VisTimeline rendering cost', () => {
+  const moment = require('moment');
+  const dayStart = moment('2026-09-24T00:00:00Z');
+  const dayEnd = moment(dayStart).add(1, 'day');
+
+  function makeVm(overrides = {}) {
+    const vm = {
+      ...VisTimeline.data(),
+      ...VisTimeline.methods,
+      showRowLabels: false,
+      queriedInterval: [dayStart, dayEnd],
+      ...overrides,
+    };
+    VisTimeline.created.call(vm);
+    vm.bucketsFromEither = [
+      {
+        id: 'aw-watcher-afk_host',
+        type: 'afkstatus',
+        events: [
+          { id: 1, timestamp: '2026-09-24T10:00:00Z', duration: 60, data: { status: 'afk' } },
+        ],
+      },
+    ];
+    vm.eventIndex = VisTimeline.computed.eventIndex.call(vm);
+    vm.timeline = {
+      setOptions: jest.fn(),
+      setWindow: jest.fn(),
+      // Still on the previous day: the items must come from the new window
+      getWindow: () => ({
+        start: moment(dayStart).subtract(1, 'day').toDate(),
+        end: dayStart.toDate(),
+      }),
+    };
+    return vm;
+  }
+
+  test('syncs the items for the new window before moving the window', () => {
+    const vm = makeVm();
+    const calls = [];
+    jest.spyOn(vm.itemData, 'update').mockImplementation(items => {
+      calls.push(['items', items.length]);
+      return DataSetUpdate.call(vm.itemData, items);
+    });
+    vm.timeline.setWindow.mockImplementation(() => calls.push(['window']));
+
+    vm.update();
+
+    expect(calls).toEqual([['items', 1], ['window']]);
+  });
+
+  test('only sets subgroups when grouping into swimlanes', () => {
+    const vm = makeVm();
+    vm.update();
+    expect(vm.itemData.get()[0].subgroup).toBeUndefined();
+
+    vm.swimlane = 'bucketType';
+    vm.update();
+    expect(vm.itemData.get()[0].subgroup).toBe('unknown');
   });
 });
