@@ -101,7 +101,6 @@ import {
   summarizeWorkSessions,
 } from '~/util/workReport';
 
-
 interface DailyData {
   date: string;
   duration: number;

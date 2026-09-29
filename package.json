@@ -71,7 +71,6 @@
     "vite": "^6.4.2",
     "vue": "^3.5",
     "vue-chartjs": "^5.3.1",
-    "vue-d3-sunburst": "git+https://github.com/ErikBjare/Vue.D3.sunburst.git#patch-1",
     "vue-i18n": "^11.1.0",
     "vue-router": "^4.4.5",
     "vuedraggable": "^4.1.0",

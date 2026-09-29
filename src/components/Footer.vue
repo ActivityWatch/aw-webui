@@ -41,12 +41,11 @@ div.container(style="color: #555; font-size: 0.9em")
 </template>
 
 <script lang="ts">
-
 import { mapState } from 'pinia';
 import { useServerStore } from '~/stores/server';
 
 export default {
-  name: 'Footer',
+  name: 'AwFooter',
   computed: {
     ...mapState(useServerStore, ['info']),
   },

@@ -187,7 +187,7 @@ import { ALL_DEVICES, formatHostParam } from '~/util/multidevice';
 import { connectNativeBridge, NATIVE_MENU_ACTIONS, NativeBridge } from '~/util/nativeBridge';
 
 export default {
-  name: 'Header',
+  name: 'AwHeader',
   data() {
     return {
       activityViews: null,

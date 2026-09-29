@@ -127,7 +127,6 @@ div
 import moment from 'moment';
 export default {
   name: 'input-timeinterval',
-  emits: ['update:modelValue'],
   props: {
     defaultDuration: {
       type: Number,
@@ -142,6 +141,7 @@ export default {
       default: true,
     },
   },
+  emits: ['update:modelValue'],
   data() {
     return {
       duration: null,

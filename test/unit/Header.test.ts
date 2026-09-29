@@ -33,22 +33,24 @@ describe('Header research edition badge', () => {
     }
 
     return shallowMount(Header, {
-      mocks: {
-        $isAndroid: false,
-        $t: key => key,
-      },
-      stubs: {
-        'b-navbar': passthroughStub,
-        'b-navbar-nav': passthroughStub,
-        'b-navbar-brand': passthroughStub,
-        'b-navbar-toggle': passthroughStub,
-        'b-collapse': passthroughStub,
-        'b-nav-item': passthroughStub,
-        'b-nav-item-dropdown': passthroughStub,
-        'b-dropdown-item': passthroughStub,
-        'b-badge': passthroughStub,
-        'b-sidebar': true,
-        icon: passthroughStub,
+      global: {
+        mocks: {
+          $isAndroid: false,
+          $t: key => key,
+        },
+        stubs: {
+          'b-navbar': passthroughStub,
+          'b-navbar-nav': passthroughStub,
+          'b-navbar-brand': passthroughStub,
+          'b-navbar-toggle': passthroughStub,
+          'b-collapse': passthroughStub,
+          'b-nav-item': passthroughStub,
+          'b-nav-item-dropdown': passthroughStub,
+          'b-dropdown-item': passthroughStub,
+          'b-badge': passthroughStub,
+          'b-sidebar': true,
+          icon: passthroughStub,
+        },
       },
     });
   }

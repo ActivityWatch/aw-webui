@@ -8,8 +8,6 @@ import { DARK_THEME_HREF } from '~/util/theme';
 // Tests call Options API members directly, which the Vue constructor type doesn't expose.
 const SunburstCategories: any = SunburstCategoriesComponent;
 
-jest.mock('vue-d3-sunburst/dist/vue-d3-sunburst.css', () => ({}));
-
 describe('SunburstCategories', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
@@ -34,10 +32,10 @@ describe('SunburstCategories', () => {
     ]);
   });
 
-  test('renders the vue-d3-sunburst graph with the overridden d3-color dependency', async () => {
+  test('renders the sunburst graph', async () => {
     const wrapper = mount(SunburstCategories, {
       attachTo: document.body,
-      propsData: {
+      props: {
         data: {
           name: 'All',
           children: [
@@ -55,7 +53,7 @@ describe('SunburstCategories', () => {
     expect(wrapper.find('svg').exists()).toBe(true);
     expect(wrapper.findAll('path').length).toBeGreaterThan(0);
 
-    wrapper.destroy();
+    wrapper.unmount();
   });
 
   describe('root ("All") color', () => {
