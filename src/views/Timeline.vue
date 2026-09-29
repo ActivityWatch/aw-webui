@@ -335,7 +335,9 @@ export default {
         buckets = this._applyMergeSimilar(buckets);
       }
 
-      this.buckets = buckets;
+      // Filters replace the snapshot rather than mutating it. Keep the event
+      // graph out of Vue's deep observation, including on the first load.
+      this.buckets = Object.freeze(buckets);
     },
 
     // Merges adjacent events with the same app name within window buckets.

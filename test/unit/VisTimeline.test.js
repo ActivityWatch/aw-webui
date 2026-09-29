@@ -400,3 +400,80 @@ describe('VisTimeline rendering cost', () => {
     expect(vm.itemData.get()[0].subgroup).toBe('unknown');
   });
 });
+
+describe('panning within the rendered buffer', () => {
+  function makeVm() {
+    const vm = { ...VisTimeline.data(), ...VisTimeline.methods };
+    VisTimeline.created.call(vm);
+    vm.bucketsFromEither = [
+      {
+        id: 'afk',
+        type: 'afkstatus',
+        events: Array.from({ length: 40 }, (_, i) => ({
+          id: i,
+          timestamp: new Date(i * 1000).toISOString(),
+          duration: 2,
+          data: { status: 'afk' },
+        })),
+      },
+    ];
+    vm.eventIndex = VisTimeline.computed.eventIndex.call(vm);
+    vm.hasInitialRange = true;
+    vm.timeline = {
+      getWindow: () => ({ start: new Date(10000), end: new Date(20000) }),
+    };
+    vm.update();
+    return vm;
+  }
+
+  function move(vm, start, end = start + 10000) {
+    vm.timeline.getWindow = () => ({ start: new Date(start), end: new Date(end) });
+    vm.update(false);
+    // Every event intersecting the actual viewport must remain available.
+    for (const item of vm.eventIndex.entries) {
+      if (item.start <= end && item.end >= start) {
+        expect(vm.itemData.get(item.id)).not.toBeNull();
+        expect(vm.itemEvents.get(item.id)).toBe(item);
+      }
+    }
+  }
+
+  test.each([1, -1])(
+    'reuses the buffer then refills it when panning in direction %s',
+    direction => {
+      const vm = makeVm();
+      const originalItems = vm.items;
+      const originalEvents = vm.itemEvents;
+      move(vm, 10000 + direction * 3000);
+      expect(vm.items).toBe(originalItems);
+      expect(vm.itemEvents).toBe(originalEvents);
+      move(vm, 10000 + direction * 4100);
+      expect(vm.items).not.toBe(originalItems);
+      expect(vm.groupData.getIds()).toEqual(['afk']);
+    }
+  );
+
+  test('syncs every zoom even when the viewport fits inside the old buffer', () => {
+    const vm = makeVm();
+    const originalItems = vm.items;
+    move(vm, 11000, 19000);
+    expect(vm.items).not.toBe(originalItems);
+    const zoomedItems = vm.items;
+    move(vm, 10000, 20000);
+    expect(vm.items).not.toBe(zoomedItems);
+  });
+
+  test('data and swimlane refreshes bypass buffer reuse', () => {
+    const vm = makeVm();
+    vm.bucketsFromEither[0].events = [
+      { id: 99, timestamp: new Date(12000).toISOString(), duration: 3, data: { status: 'afk' } },
+    ];
+    vm.eventIndex = VisTimeline.computed.eventIndex.call(vm);
+    vm.update();
+    expect(vm.itemData.get()).toHaveLength(1);
+    expect(vm.itemEvents.values().next().value.event.id).toBe(99);
+    vm.swimlane = 'bucketType';
+    vm.update();
+    expect(vm.itemData.get()[0].subgroup).toBe('unknown');
+  });
+});

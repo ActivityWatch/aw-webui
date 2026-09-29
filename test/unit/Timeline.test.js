@@ -1,3 +1,4 @@
+import Vue from 'vue';
 import Timeline from '~/views/Timeline.vue';
 import { useBucketsStore } from '~/stores/buckets';
 
@@ -81,4 +82,27 @@ test('applies duration filtering after AFK results and reuses the query', async 
   expect(vm.buckets[0].events).toHaveLength(2);
   expect(vm._queryAfkFilteredEvents).toHaveBeenCalledTimes(1);
   expect(store.getBucketWithEvents).not.toHaveBeenCalled();
+});
+
+test('replacement snapshots avoid deep observation and still update local filters', async () => {
+  const { vm } = setup();
+  const state = Vue.observable({ buckets: null });
+  Object.defineProperty(vm, 'buckets', {
+    get: () => state.buckets,
+    set: buckets => {
+      state.buckets = buckets;
+    },
+  });
+  await vm.getBuckets();
+  const original = vm.buckets;
+  expect(original[0].events[0].__ob__).toBeUndefined();
+  vm.filter_duration = 10;
+  await vm.getBuckets();
+  expect(vm.buckets).not.toBe(original);
+  expect(vm.buckets[0].events).toHaveLength(1);
+  expect(original[0].events).toHaveLength(2);
+  expect(vm.buckets[0].events[0].__ob__).toBeUndefined();
+  vm.filter_duration = null;
+  await vm.getBuckets();
+  expect(vm.buckets[0].events).toEqual(original[0].events);
 });

@@ -174,6 +174,7 @@ export default {
     this.preparedItems = new Map();
     this.hasInitialRange = false;
     this.viewportFrame = null;
+    this.renderedViewport = null;
   },
   mounted() {
     this.$nextTick(() => {
@@ -200,6 +201,7 @@ export default {
     if (this.viewportFrame != null) cancelAnimationFrame(this.viewportFrame);
     this.itemEvents?.clear();
     this.preparedItems?.clear();
+    this.renderedViewport = null;
     const el = this.$el.querySelector('#visualization');
     if (el) {
       el.removeEventListener('wheel', this.onHorizontalWheel, { capture: true });
@@ -369,6 +371,26 @@ export default {
       }
       this.updateHasRun = true;
 
+      const timelineWindow = this.timeline.getWindow();
+      const [start, end] = nextWindow ?? [
+        timelineWindow.start.valueOf(),
+        timelineWindow.end.valueOf(),
+      ];
+      const buffer = (end - start) / 2;
+      const previous = this.renderedViewport;
+      // Reuse the loaded buffer for small pans, leaving 10% of a window as
+      // overscan before refilling it. Zooms still sync every frame: deferring
+      // them adds too many visible items at once and causes expensive reflows.
+      if (
+        !resetWindow &&
+        previous?.index === index &&
+        previous.width === end - start &&
+        start >= previous.start &&
+        end <= previous.end
+      ) {
+        return;
+      }
+
       // Build groups
       const buckets = this.bucketsFromEither;
 
@@ -417,12 +439,6 @@ export default {
         return { id: bucket.id, content: label };
       });
 
-      const timelineWindow = this.timeline.getWindow();
-      const [start, end] = nextWindow ?? [
-        timelineWindow.start.valueOf(),
-        timelineWindow.end.valueOf(),
-      ];
-      const buffer = (end - start) / 2;
       const visible = visibleTimelineEvents(index, start - buffer, end + buffer);
       this.itemEvents = new Map(visible.map(item => [item.id, item]));
       const colors = new Map();
@@ -461,6 +477,12 @@ export default {
       }
       syncTimelineData(this.groupData, groups);
       syncTimelineData(this.itemData, items);
+      this.renderedViewport = {
+        index,
+        width: end - start,
+        start: start - buffer * 0.8,
+        end: end + buffer * 0.8,
+      };
       if (bounds) {
         this.options.min = bounds[0];
         this.options.max = bounds[1];
