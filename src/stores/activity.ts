@@ -324,6 +324,19 @@ interface State {
   };
 }
 
+// Marks a period of active history that hasn't been fetched yet
+const HISTORY_PLACEHOLDER = Symbol('history placeholder');
+
+function markHistoryPlaceholder(entry: object): void {
+  Object.defineProperty(entry, HISTORY_PLACEHOLDER, { value: true });
+}
+
+// Whether any period of an active history (as from getActiveHistoryAroundTimeperiod)
+// has been fetched, rather than all still being placeholders
+export function hasFetchedHistory(periods: object[]): boolean {
+  return periods.some(entry => !entry[HISTORY_PLACEHOLDER]);
+}
+
 export const useActivityStore = defineStore('activity', {
   // initial state
   state: (): State => ({
@@ -401,10 +414,13 @@ export const useActivityStore = defineStore('activity', {
   getters: {
     getActiveHistoryAroundTimeperiod(this: State) {
       return (timeperiod: TimePeriod) => {
-        return timeperiodsAroundTimeperiod(timeperiod).map(period => ({
-          period,
-          events: this.active.history[timeperiodToStr(period)] || [],
-        }));
+        return timeperiodsAroundTimeperiod(timeperiod).map(period => {
+          const key = timeperiodToStr(period);
+          const entry = { period, events: this.active.history[key] || [] };
+          // Not fetched yet: mark it so it isn't drawn as a period without activity
+          if (!_.has(this.active.history, key)) markHistoryPlaceholder(entry);
+          return entry;
+        });
       };
     },
     uncategorizedDuration(this: State): [number, number] | null {
