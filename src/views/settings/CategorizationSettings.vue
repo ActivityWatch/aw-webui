@@ -11,23 +11,23 @@ div
   div.my-3.p-3.bg-light.rounded
     div.d-flex.align-items-center.flex-wrap(style="gap: 0.5rem;")
       span.fw-bold(style="white-space: nowrap") {{ $t('settings.categorization.categorySet') }}
-      b-select(
+      b-form-select(
         v-model="activeSetId"
         @change="onSetChange"
         style="max-width: 220px"
         size="sm"
       )
-        b-select-option(
+        b-form-select-option(
           v-for="set in categoryStore.category_sets"
           :key="set.id"
           :value="set.id"
         ) {{ set.id }}
-      b-btn(
+      b-button(
         @click="createSet"
         variant="outline-primary"
         size="sm"
       ) {{ $t('settings.categorization.newSet') }}
-      b-btn(
+      b-button(
         v-if="categoryStore.category_sets.length > 1"
         @click="deleteActiveSet"
         variant="outline-danger"
@@ -39,22 +39,22 @@ div
   div.d-flex.align-items-center.flex-wrap.mt-4
     h5.mb-0 {{ $t('settings.categorization.categories') }}
     div.ms-auto
-      b-btn.ms-1(@click="restoreDefaultClasses", variant="outline-warning" size="sm")
+      b-button.ms-1(@click="restoreDefaultClasses", variant="outline-warning" size="sm")
         icon(name="undo")
         | {{ $t('settings.categorization.restoreDefaults') }}
       label.btn.btn-sm.ms-1.btn-outline-primary(style="margin: 0")
         | {{ $t('common.import') }}
         input(type="file" accept=".json,application/json" @change="importCategories" hidden)
-      b-btn.ms-1(@click="exportClasses", variant="outline-primary" size="sm")
+      b-button.ms-1(@click="exportClasses", variant="outline-primary" size="sm")
         | {{ $t('common.export') }}
 
   div.my-3
-    b-alert(variant="warning" :show="classes_unsaved_changes")
+    b-alert(variant="warning" :model-value="classes_unsaved_changes")
       | {{ $t('settings.categorization.unsavedChanges') }}
       div.float-end(style="margin-top: -0.15em; margin-right: -0.6em")
-        b-btn.ms-2(@click="saveClasses", variant="success" size="sm")
+        b-button.ms-2(@click="saveClasses", variant="success" size="sm")
           | {{ $t('common.save') }}
-        b-btn.ms-2(@click="resetClasses", variant="warning" size="sm")
+        b-button.ms-2(@click="resetClasses", variant="warning" size="sm")
           | {{ $t('settings.categorization.discard') }}
     div(v-for="_class in classes_hierarchy")
       CategoryEditTree(:_class="_class")
@@ -63,17 +63,17 @@ div
 
   div.row
     div.col-sm-12
-      b-btn(@click="addClass")
+      b-button(@click="addClass")
         icon.me-2(name="plus")
         | {{ $t('settings.categorization.addCategory') }}
-      b-btn.float-end(@click="saveClasses", variant="success" :disabled="!classes_unsaved_changes")
+      b-button.float-end(@click="saveClasses", variant="success" :disabled="!classes_unsaved_changes")
         | {{ $t('common.save') }}
 
   div.mt-4(ref="builderSection")
     div.d-flex.align-items-center.flex-wrap
       h5.mb-0 {{ $t('settings.categorization.builderTitle') }}
       small.text-muted.ms-2 {{ $t('settings.categorization.builderSubtitle') }}
-      b-btn.ms-auto(
+      b-button.ms-auto(
         variant="outline-primary"
         size="sm"
         @click="builderOpen = !builderOpen"
@@ -101,6 +101,7 @@ div
       )
 </template>
 <script lang="ts">
+import { defineAsyncComponent } from 'vue';
 import { mapState, mapGetters } from 'pinia';
 import CategoryEditTree from '~/components/CategoryEditTree.vue';
 import CategoryEditModal from '~/components/CategoryEditModal.vue';
@@ -115,7 +116,7 @@ export default {
   components: {
     CategoryEditTree,
     CategoryEditModal,
-    CategoryBuilder: () => import('~/views/settings/CategoryBuilder.vue'),
+    CategoryBuilder: defineAsyncComponent(() => import('~/views/settings/CategoryBuilder.vue')),
   },
   data: () => ({
     categoryStore: useCategoryStore(),

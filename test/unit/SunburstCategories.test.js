@@ -51,4 +51,10 @@ describe('SunburstCategories', () => {
 
     wrapper.unmount();
   });
+
+  test('renders nothing while the data is loading', () => {
+    const wrapper = mount(SunburstCategories, { props: { data: null } });
+    expect(wrapper.findAll('path')).toHaveLength(0);
+    wrapper.unmount();
+  });
 });

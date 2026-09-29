@@ -4,10 +4,10 @@ div
 
   | Generate a report of time spent on a certain category of device activity.
 
-  b-alert.mt-2(variant="warning" show)
+  b-alert.mt-2(variant="warning" :model-value="true")
     | This feature is still in early development.
 
-  b-alert(v-if="error" show variant="danger")
+  b-alert(v-if="error" :model-value="true" variant="danger")
     | {{error}}
 
   aw-select-categories-or-pattern(v-model="filterCategories")
@@ -40,15 +40,13 @@ div
         | Found {{ events.length }} events in {{ (queryTime / 1000).toFixed(2) }} seconds
       div
         b-input-group(size="sm")
-          b-input-group-prepend
-            b-input-group-text
-              icon(name="save")
-              .mx-1 Export as:
-          b-input-group-append
-            b-button(type="button", @click="export_csv()" variant="outline-dark")
-              | CSV
-            b-button(type="button", @click="export_json()" variant="outline-dark")
-              | JSON
+          b-input-group-text
+            icon(name="save")
+            .mx-1 Export as:
+          b-button(type="button", @click="export_csv()" variant="outline-dark")
+            | CSV
+          b-button(type="button", @click="export_json()" variant="outline-dark")
+            | JSON
 
     hr
 

@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => {
         if (!html.includes(pattern)) {
           throw new Error(`Could not find pattern ${pattern} in the html file`);
         }
-        return html.replace(pattern, CSP);
+        return html.replaceAll(pattern, CSP);
       },
     };
   };

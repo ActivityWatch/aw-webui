@@ -4,6 +4,7 @@ div
   //       Currently, more than one event-editor on the same view can lead to multiple event-editors opening.
   event-editor(
     v-if="editable"
+    v-model:open="editorOpen"
     :event="editableEvent", :bucket_id="bucket_id",
     @save="(e) => $emit('save', e)", @delete="removeEvent"
   )
@@ -32,7 +33,7 @@ div
               // TODO: Add some kind of highlighting to key
               | {{ key }}: {{ val }}
             span(v-if="editable")
-              b-btn.field(@click="() => {editEvent(event)}" variant="outline-dark" size="sm" style="padding: 0 0.2em 0 0.2em")
+              b-button.field(@click="() => {editEvent(event)}" variant="outline-dark" size="sm" style="padding: 0 0.2em 0 0.2em")
                 icon(name="edit")
                 | Edit
 </template>
@@ -133,6 +134,7 @@ export default {
   },
   data: function () {
     return {
+      editorOpen: false,
       isListExpanded: false,
       limit: 100,
       editableEvent: null,
@@ -149,7 +151,7 @@ export default {
     editEvent: function (event) {
       this.editableEvent = event;
       this.$nextTick(() => {
-        this.$bvModal.show('edit-modal-' + event.id);
+        this.editorOpen = true;
       });
     },
     expandList: function () {

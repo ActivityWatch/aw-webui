@@ -1,7 +1,9 @@
 <template lang="pug">
+// Fixed height: avoids elements jumping when loading the Activity view, and the
+// chart (maintainAspectRatio: false) sizes itself to this container.
 div(v-if="datasets && datasets.length > 0")
-  // Height set here to avoid elements jumping when loading Activity view
-  bar(:data="chartData" :options="chartOptions" :height="330")
+  div(style="position: relative; height: 330px")
+    bar(:data="chartData" :options="chartOptions")
 div.small(v-else-if="datasets === null", style="font-size: 16pt; color: #aaa;")
   | No data
 div.small(v-else, style="font-size: 16pt; color: #aaa;")
@@ -112,14 +114,15 @@ export default {
           display: true,
           text: 'Timeline',
         },
-        responsive: true,
-        maintainAspectRatio: false,
       };
     },
     chartOptions(): ChartOptions {
       const [count, resolution] = this.timeperiod_length;
       const monthlyBuckets = resolution.startsWith('day') && count > MAX_DAILY_BUCKETS;
       return {
+        responsive: true,
+        // Fill the fixed-height container instead of keeping an aspect ratio
+        maintainAspectRatio: false,
         plugins: {
           tooltip: {
             mode: 'point',

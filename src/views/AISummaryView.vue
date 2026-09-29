@@ -2,7 +2,7 @@
 div
   h3.mb-3 AI Activity Summary
 
-  b-alert(variant="info" show)
+  b-alert(variant="info" :model-value="true")
     | Your API key is kept only in this page's memory and sent directly to the LLM provider.
     |  It is cleared when the page reloads and ActivityWatch does not receive it.
     |  For deeper analysis with agents, see the
@@ -64,7 +64,7 @@ div
       @click="dataVisible = !dataVisible"
     ) {{ dataVisible ? 'Hide context' : 'Show context sent' }}
 
-  b-alert(v-if="error" variant="danger" show dismissible @dismissed="error = ''")
+  b-alert(v-if="error" variant="danger" :model-value="true" dismissible @close="error = ''")
     | {{ error }}
 
   div(v-if="dataVisible && aggregatedText")

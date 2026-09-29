@@ -9,7 +9,7 @@ div.mx-3
         option(value="timeGridDay") Day
         option(value="timeGridWeek") Week
     b-form-group
-      b-checkbox(v-model="fitToActive")
+      b-form-checkbox(v-model="fitToActive")
         | Fit to active
   FullCalendar(ref="fullCalendar", :options="calendarOptions")
 </template>

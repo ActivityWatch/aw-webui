@@ -37,7 +37,7 @@ div
     | Loading...
 
   div(v-if="errorMessage")
-    b-alert(variant="danger" show) {{ errorMessage }}
+    b-alert(variant="danger" :model-value="true") {{ errorMessage }}
 
   div(v-if="hasData && !loading")
     div.row.mb-2

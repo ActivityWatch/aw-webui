@@ -1,9 +1,9 @@
 <template lang="pug">
 div
   div
-    b-alert(v-if="invalidDaterange", variant="warning", show)
+    b-alert(v-if="invalidDaterange", variant="warning", :model-value="true")
       | The selected date range is invalid. The second date must be greater or equal to the first date.
-    b-alert(v-if="daterangeTooLong", variant="warning", show)
+    b-alert(v-if="daterangeTooLong", variant="warning", :model-value="true")
       | The selected date range is too long. The maximum is {{ maxDuration/(24*60*60) }} days.
 
   div.input-time-interval.d-flex.flex-wrap.align-items-start.justify-content-between

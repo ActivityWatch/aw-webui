@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  b-alert(show variant="warning") #[b Note:] These settings are meant for developers who (hopefully) know what they are doing, and as such, may break things unexpectedly.
+  b-alert(:model-value="true" variant="warning") #[b Note:] These settings are meant for developers who (hopefully) know what they are doing, and as such, may break things unexpectedly.
 
   b-form-group(label="Force devmode" label-cols-md=3 description="Devmode enables some features that are still work-in-progress.")
     div
@@ -8,7 +8,7 @@ div
 
   b-form-group(label="Request timeout" label-cols-md=3 description="The maximum amount of time a server request can take before timing out. Setting this to a high value can be useful for large queries. Note that you need to reload the web UI for it to apply.")
     div
-      b-input.float-end.ms-2(v-model="requestTimeout" type="number")
+      b-form-input.float-end.ms-2(v-model="requestTimeout" type="number")
 
   b-form-group(label="Hide unsupported visualizations" label-cols-md=3 description="Hide visualizations that lack required data instead of showing a warning. Disabled by default.")
     div

@@ -1,24 +1,26 @@
 <template lang="pug">
 div(v-if="viewMissing")
-  b-alert.mt-3(show variant="warning")
+  b-alert.mt-3(:model-value="true" variant="warning")
     | This view ("#[code {{ view_id }}]") doesn't exist on this dashboard.
     |
     router-link(:to="{ name: 'activity-view', params: {...$route.params, view_id: 'default'} }")
       | Go to the default view
     | .
 div(v-else-if="view")
-  draggable.row(v-model="elements" handle=".handle")
-    // TODO: Handle large/variable sized visualizations better
-    //- Key on the view id as well as the position, so that switching views
-      rebuilds the visualizations instead of reusing the instance that sat at
-      the same index in the previous view (which kept its stale local state).
-    div.col-md-6.col-lg-4.p-3(v-for="el, index in elements", :key="view.id + '-' + index", :class="{'col-md-12': isVisLarge(el), 'col-lg-12': isVisLarge(el)}")
-      aw-selectable-vis(:id="index" :type="el.type" :props="el.props" :view-id="view.id" @onTypeChange="onTypeChange" @onRemove="onRemove" :editable="editing")
+  // TODO: Handle large/variable sized visualizations better
+  //- Key on the view id as well as the position, so that switching views
+    rebuilds the visualizations instead of reusing the instance that sat at
+    the same index in the previous view (which kept its stale local state).
+  draggable.row(v-model="elements" handle=".handle" :item-key="visKey")
+    template(#item="{ element: el, index }")
+      div.col-md-6.col-lg-4.p-3(:class="{'col-md-12': isVisLarge(el), 'col-lg-12': isVisLarge(el)}")
+        aw-selectable-vis(:id="index" :type="el.type" :props="el.props" :view-id="view.id" @onTypeChange="onTypeChange" @onRemove="onRemove" :editable="editing")
 
-    div.col-md-6.col-lg-4.p-3(v-if="editing")
-      b-button(@click="addVisualization" variant="outline-dark" block size="lg")
-        icon(name="plus")
-        span Add visualization
+    template(#footer)
+      div.col-md-6.col-lg-4.p-3(v-if="editing")
+        b-button.w-100(@click="addVisualization" variant="outline-dark" size="lg")
+          icon(name="plus")
+          span Add visualization
 
   div(v-if="editing").mt-2
     div.d-flex.flex-row-reverse
@@ -32,7 +34,7 @@ div(v-else-if="view")
       b-button(variant="warning" size="sm" @click="restoreDefaults();")
         icon(name="undo")
         span Restore defaults
-      b-button.me-2(variant="danger" size="sm" v-b-modal="'remove-view-modal-' + view.id")
+      b-button.me-2(variant="danger" size="sm" @click="showRemoveModal = true")
         icon(name="trash")
         span Remove
   div(v-else).d-flex.flex-row-reverse.mt-2
@@ -42,7 +44,7 @@ div(v-else-if="view")
 
   b-modal(
     v-if="view"
-    :id="'remove-view-modal-' + view.id"
+    v-model="showRemoveModal"
     title="Remove this view?"
     centered
     ok-title="Remove view"
@@ -90,6 +92,7 @@ export default {
     return {
       editing: false,
       showCustomVisModal: false,
+      showRemoveModal: false,
       customVisWatcherName: 'aw-watcher-',
       customVisTitle: '',
       pendingCustomVisId: null as number | null,
@@ -178,6 +181,9 @@ export default {
     },
     async onRemove(id) {
       await useViewsStore().removeVisualization({ view_id: this.view.id, el_id: id });
+    },
+    visKey(el) {
+      return this.view.id + '-' + this.elements.indexOf(el);
     },
     isVisLarge(el) {
       return el.type == 'sunburst_clock' || el.type == 'vis_timeline';

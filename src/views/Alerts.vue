@@ -7,13 +7,13 @@ div
   // TODO: Send notifications when goals met
   // TODO: Query from day start, not 24h ago
 
-  b-alert(variant="warning" show)
+  b-alert(variant="warning" :model-value="true")
     | This feature is still in early development.
 
-  b-alert(v-if="error" show variant="danger")
+  b-alert(v-if="error" :model-value="true" variant="danger")
     | {{error}}
 
-  b-alert(v-if="hostnames.length === 0" show variant="info")
+  b-alert(v-if="hostnames.length === 0" :model-value="true" variant="info")
     | No host with both window and AFK buckets is available, so alerts can't run yet.
     | Install #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") aw-watcher-window and aw-watcher-afk] to enable this view.
 
@@ -30,7 +30,7 @@ div
         icon.text-muted(name="times")
 
   div.d-flex.align-items-center.mt-3
-    b-btn(@click="check" variant="success" :disabled="!hostname") Check
+    b-button(@click="check" variant="success" :disabled="!hostname") Check
     b-form-checkbox.ms-3.mb-0(v-model="autorefresh", @change="toggleAutoRefresh", switch) Auto-refresh every 10s
 
   small.text-muted(v-if="last_updated")
@@ -41,16 +41,16 @@ div
   div
     h4 New alert
     b-form-group(label="Name" label-cols-md=2)
-      b-input(v-model="editing_alert.name")
+      b-form-input(v-model="editing_alert.name")
     b-form-group(label="Category" label-cols-md=2)
-      b-select(v-model="editing_alert.category")
+      b-form-select(v-model="editing_alert.category")
         option(v-for="category in categories" :value="category.value") {{ category.text }}
     b-form-group(label="Goal" label-cols-md=2)
       b-input-group(append="minutes")
-        b-input(v-model="editing_alert.goal" type="number")
+        b-form-input(v-model="editing_alert.goal" type="number")
 
     div
-      b-btn(@click="addAlert" variant="success")
+      b-button(@click="addAlert" variant="success")
         icon(name="plus")
         | Add alert
 </template>

@@ -59,13 +59,21 @@ import {
   faTrash,
   faTriangleExclamation,
   faCheckToSlot,
+  faBriefcase,
+  faCopy,
+  faDollarSign,
+  faEllipsisVertical,
+  faLayerGroup,
+  faMoon,
+  faRobot,
+  faSun,
 } from '@fortawesome/free-solid-svg-icons';
 
 // Regular icons
 import { faSquareMinus, faSquarePlus } from '@fortawesome/free-regular-svg-icons';
 
 // Brand icons
-import { faGithub, faTwitter } from '@fortawesome/free-brands-svg-icons';
+import { faGithub, faReddit, faTwitter } from '@fortawesome/free-brands-svg-icons';
 
 // Register all icons with the library
 library.add(
@@ -122,7 +130,16 @@ library.add(
   faSquareMinus,
   faSquarePlus,
   faGithub,
-  faTwitter
+  faReddit,
+  faTwitter,
+  faBriefcase,
+  faCopy,
+  faDollarSign,
+  faEllipsisVertical,
+  faLayerGroup,
+  faMoon,
+  faRobot,
+  faSun
 );
 
 // Map vue-awesome icon names to Font Awesome 6 icon specs
@@ -133,7 +150,9 @@ const iconMap = {
   'arrow-right': ['fas', 'arrow-right'],
   bars: ['fas', 'bars'],
   'brands/github': ['fab', 'github'],
+  'brands/reddit': ['fab', 'reddit'],
   'brands/twitter': ['fab', 'twitter'],
+  briefcase: ['fas', 'briefcase'],
   bug: ['fas', 'bug'],
   calendar: ['fas', 'calendar'],
   'calendar-day': ['fas', 'calendar-day'],
@@ -146,12 +165,15 @@ const iconMap = {
   'circle-nodes': ['fas', 'circle-nodes'],
   clock: ['fas', 'clock'],
   code: ['fas', 'code'],
+  copy: ['fas', 'copy'],
   cog: ['fas', 'gear'],
   database: ['fas', 'database'],
   desktop: ['fas', 'desktop'],
+  'dollar-sign': ['fas', 'dollar-sign'],
   download: ['fas', 'download'],
   edit: ['fas', 'pen-to-square'],
   'ellipsis-h': ['fas', 'ellipsis'],
+  'ellipsis-v': ['fas', 'ellipsis-vertical'],
   'exclamation-triangle': ['fas', 'triangle-exclamation'],
   filter: ['fas', 'filter'],
   'flag-checkered': ['fas', 'flag-checkered'],
@@ -160,7 +182,9 @@ const iconMap = {
   heart: ['fas', 'heart'],
   history: ['fas', 'clock-rotate-left'],
   'info-circle': ['fas', 'circle-info'],
+  'layer-group': ['fas', 'layer-group'],
   mobile: ['fas', 'mobile-screen-button'],
+  moon: ['fas', 'moon'],
   play: ['fas', 'play'],
   plus: ['fas', 'plus'],
   'project-diagram': ['fas', 'diagram-project'],
@@ -168,12 +192,14 @@ const iconMap = {
   'question-circle': ['fas', 'circle-question'],
   'regular/minus-square': ['far', 'square-minus'],
   'regular/plus-square': ['far', 'square-plus'],
+  robot: ['fas', 'robot'],
   save: ['fas', 'floppy-disk'],
   search: ['fas', 'magnifying-glass'],
   spinner: ['fas', 'spinner'],
   stop: ['fas', 'stop'],
   stopwatch: ['fas', 'stopwatch'],
   stream: ['fas', 'bars-staggered'],
+  sun: ['fas', 'sun'],
   sync: ['fas', 'arrows-rotate'],
   tags: ['fas', 'tags'],
   times: ['fas', 'xmark'],

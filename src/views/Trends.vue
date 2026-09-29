@@ -15,7 +15,7 @@ div
     b-form-select.me-2.mb-1(
       v-if="bucketsStore.hosts.length > 1"
       size="sm"
-      :value="host"
+      :model-value="host"
       :options="hostOptions"
       @change="onHostChange"
       style="width: auto"
@@ -25,7 +25,7 @@ div
       | Comparing #[b {{ currentRangeLabel }}] vs #[b {{ previousRangeLabel }}].
 
   div(v-if="!host")
-    b-alert(show variant="info")
+    b-alert(:model-value="true" variant="info")
       | No host with window/AFK buckets available. Install
       | #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") aw-watcher-window and aw-watcher-afk]
       | to use this view.
@@ -67,8 +67,7 @@ div
       hover
       :items="categoryTrends"
       :fields="categoryFields"
-      sort-by="absDelta"
-      :sort-desc="true"
+      :sort-by="[{ key: 'absDelta', order: 'desc' }]"
     )
       template(#cell(category)="row")
         | {{ row.item.category.join(' > ') || 'Uncategorized' }}

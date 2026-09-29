@@ -4,7 +4,7 @@ div
     div
       h5.mt-1.mb-2.mb-sm-0 Landing page
     div
-      b-select.landingpage(v-if="loaded" size="sm" :value="landingpage", @change="landingpage = $event")
+      b-form-select.landingpage(v-if="loaded" size="sm" :model-value="landingpage", @change="landingpage = $event")
         option(value="/home") Home
         option(:value="'/activity/' + hostParam(hostname) + '/view/'" v-for="hostname in hostnames") Activity ({{hostname}})
         option(v-if="hostnames.length > 1" value="/activity/@all/view/") Activity ({{ $t('activity.allDevices') }})
