@@ -19,7 +19,7 @@ div
 
     div.col-md-4
       b-form-group(label="LLM Provider" label-class="fw-bold")
-        b-form-select(v-model="provider" :options="providerOptions" @change="onProviderChange")
+        b-form-select(v-model="provider" :options="providerOptions" @update:model-value="onProviderChange")
 
   div.row.mb-3
     div.col-md-6

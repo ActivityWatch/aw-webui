@@ -109,4 +109,26 @@ describe('SunburstCategories', () => {
     expect(wrapper.findAll('path')).toHaveLength(0);
     wrapper.unmount();
   });
+
+  test('keeps the hovered arc highlighted', async () => {
+    const wrapper = mount(SunburstCategories, {
+      props: {
+        data: {
+          name: 'All',
+          children: [
+            { name: 'Work', children: [{ name: 'Code', size: 3600 }] },
+            { name: 'Code', size: 1800 },
+          ],
+        },
+      },
+    });
+    const arcs = wrapper.findAll('path');
+    const hovered = arcs[arcs.length - 1];
+    await hovered.trigger('mouseover');
+
+    expect(hovered.attributes('fill-opacity')).toBe('1');
+    // Arcs outside the hovered one's ancestry are dimmed
+    expect(arcs.some(a => a.attributes('fill-opacity') !== '1')).toBe(true);
+    wrapper.unmount();
+  });
 });

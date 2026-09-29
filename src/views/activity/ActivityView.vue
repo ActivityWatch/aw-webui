@@ -76,9 +76,19 @@ div(v-else-if="view")
 </template>
 
 <script lang="ts">
+import { toRaw } from 'vue';
 import draggable from 'vuedraggable';
 
 import { useViewsStore } from '~/stores/views';
+
+// Identity for view elements, which have no id of their own
+const elementIds = new WeakMap<object, number>();
+let nextElementId = 0;
+function elementId(el: object): number {
+  const raw = toRaw(el);
+  if (!elementIds.has(raw)) elementIds.set(raw, nextElementId++);
+  return elementIds.get(raw);
+}
 
 export default {
   name: 'ActivityView',
@@ -183,7 +193,9 @@ export default {
       await useViewsStore().removeVisualization({ view_id: this.view.id, el_id: id });
     },
     visKey(el) {
-      return this.view.id + '-' + this.elements.indexOf(el);
+      // A stable per-element id, so reordering (dragging) keeps each
+      // visualization's instance, while switching views rebuilds them.
+      return this.view.id + '-' + elementId(el);
     },
     isVisLarge(el) {
       return el.type == 'sunburst_clock' || el.type == 'vis_timeline';

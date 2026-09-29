@@ -37,7 +37,7 @@ div
               b-form-checkbox.me-3(
                 :model-value="selectedHosts.includes(h)"
                 :disabled="selectedHosts.length === 1 && selectedHosts.includes(h)"
-                @change="toggleHost(h)"
+                @update:model-value="toggleHost(h)"
                 :data-testid="'host-selector-host-' + h"
               )
                 icon.me-1(:name="isMobileHost(h) ? 'mobile' : 'desktop'" scale="0.8")
@@ -153,7 +153,7 @@ div
 
     div.ms-auto
       b-button-group(size="sm")
-        b-button.px-2(:pressed.sync="showOptions", variant="outline-dark", title="Filters", aria-label="Filters")
+        b-button.px-2(v-model:pressed="showOptions", variant="outline-dark", title="Filters", aria-label="Filters")
           icon(name="filter")
           span.d-none.d-md-inline
             |  {{ $t('activity.filters') }}

@@ -118,7 +118,11 @@ export default {
         .sum(d => d.size)
         .sort((a, b) => b.value - a.value);
       // d3 nodes are large, cyclic, and never mutated after layout: keep them out of reactivity.
-      return markRaw(partition()(root));
+      partition()(root);
+      // Mark every node raw, not just the root: nodes also end up in reactive
+      // state (hovered, zoomed), and a reactive proxy never === the raw node.
+      root.each(node => markRaw(node));
+      return root;
     },
     radius(): number {
       return Math.max(0, Math.min(this.width, this.height) / 2);

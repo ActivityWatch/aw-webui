@@ -17,7 +17,7 @@ div
       size="sm"
       :model-value="host"
       :options="hostOptions"
-      @change="onHostChange"
+      @update:model-value="onHostChange"
       style="width: auto"
     )
 

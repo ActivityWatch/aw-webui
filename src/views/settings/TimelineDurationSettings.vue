@@ -4,7 +4,7 @@ div
     div
       h5.mb-2.mb-sm-0 Duration default value
     div
-      b-form-select(size="sm" :model-value="durationDefault", @change="durationDefault = $event")
+      b-form-select(size="sm" v-model="durationDefault")
           option(:value="15*60") 15min
           option(:value="30*60") 30min
           option(:value="60*60") 1h

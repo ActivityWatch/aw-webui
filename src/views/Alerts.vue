@@ -31,7 +31,7 @@ div
 
   div.d-flex.align-items-center.mt-3
     b-button(@click="check" variant="success" :disabled="!hostname") Check
-    b-form-checkbox.ms-3.mb-0(v-model="autorefresh", @change="toggleAutoRefresh", switch) Auto-refresh every 10s
+    b-form-checkbox.ms-3.mb-0(v-model="autorefresh", @update:model-value="toggleAutoRefresh", switch) Auto-refresh every 10s
 
   small.text-muted(v-if="last_updated")
     | Last updated #[time(:datetime="last_updated && last_updated.toISOString && last_updated.toISOString()") {{ friendlytime(last_updated) }}]
