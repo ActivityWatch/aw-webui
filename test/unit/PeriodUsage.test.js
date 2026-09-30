@@ -102,6 +102,7 @@ test.each(['last7d', 'last30d'])('%s route retains the supplied anchor', periodL
     currentViewId: 'default',
     $route: { path: '', query: { test: 'value' } },
     $router: { push: jest.fn() },
+    pushPeriod: Activity.methods.pushPeriod,
   };
   Activity.methods.setDate.call(vm, '2026-09-07');
   expect(vm.$router.push).toHaveBeenCalledWith({
