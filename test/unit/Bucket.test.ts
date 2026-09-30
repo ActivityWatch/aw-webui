@@ -1,6 +1,9 @@
 import Vue from 'vue';
 import { shallowMount } from '@vue/test-utils';
-import Bucket from '~/views/Bucket.vue';
+import BucketComponent from '~/views/Bucket.vue';
+
+// Tests call Options API members directly, which the Vue constructor type doesn't expose.
+const Bucket: any = BucketComponent;
 
 const mockCountEvents = jest.fn();
 const mockGetBucketWithEvents = jest.fn();
@@ -36,7 +39,7 @@ const InputTimeIntervalStub = {
   },
 };
 
-function mountBucket(id) {
+function mountBucket(id): any {
   return shallowMount(Bucket, {
     propsData: { id },
     stubs: {

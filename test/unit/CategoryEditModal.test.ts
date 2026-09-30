@@ -1,4 +1,7 @@
-import CategoryEditModal from '~/components/CategoryEditModal.vue';
+import CategoryEditModalComponent from '~/components/CategoryEditModal.vue';
+
+// Tests call Options API members directly, which the Vue constructor type doesn't expose.
+const CategoryEditModal: any = CategoryEditModalComponent;
 
 // Enter inside the category edit modal should submit it, same as pressing OK.
 // See https://github.com/ActivityWatch/aw-webui/issues/232
@@ -83,7 +86,7 @@ describe('CategoryEditModal field-scoped rules', () => {
   // destroy this modal before the deferred hide runs, leaving $refs.edit undefined.
   test('does not throw when the modal was destroyed before the deferred hide', () => {
     const { vm, updateClass } = ctx([]);
-    vm.$refs = {};
+    vm.$refs = {} as any;
     expect(() => handleSubmit(vm)).not.toThrow();
     expect(updateClass).toHaveBeenCalled();
   });
@@ -115,7 +118,10 @@ describe('CategoryEditModal field-scoped rules', () => {
 describe('CategoryEditModal rule priority', () => {
   const handleSubmit = vm => CategoryEditModal.methods.handleSubmit.call(vm);
 
-  function ctx({ rule = { type: 'regex', regex: 'Firefox', weight: 7 }, priority = null } = {}) {
+  function ctx({
+    rule = { type: 'regex', regex: 'Firefox', weight: 7 } as Record<string, any>,
+    priority = null,
+  } = {}) {
     const updateClass = jest.fn();
     const vm = {
       editing: {
@@ -131,11 +137,12 @@ describe('CategoryEditModal rule priority', () => {
         priority,
       },
       checkFormValidity: () => true,
-      categoryStore: { updateClass },
+      categoryStore: { updateClass } as Record<string, any>,
       $nextTick: callback => callback(),
       $refs: { edit: { hide: jest.fn() } },
       priorityFromInput: CategoryEditModal.methods.priorityFromInput,
       priorityFromRule: CategoryEditModal.methods.priorityFromRule,
+      categoryId: null as number | null,
     };
     return { vm, updateClass };
   }

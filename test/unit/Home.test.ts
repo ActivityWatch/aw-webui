@@ -1,4 +1,7 @@
-import Home from '~/views/Home.vue';
+import HomeComponent from '~/views/Home.vue';
+
+// Tests call Options API members directly, which the Vue constructor type doesn't expose.
+const Home: any = HomeComponent;
 
 describe('Home supporter nudge', () => {
   test('does not show after another tab snoozes during async evaluation', () => {
@@ -16,7 +19,7 @@ describe('Home supporter nudge', () => {
   });
 
   test('hides a visible nudge when another tab snoozes it', () => {
-    const listeners = {};
+    const listeners: Record<string, any> = {};
     const addEventListenerSpy = jest
       .spyOn(window, 'addEventListener')
       .mockImplementation((type, listener) => {

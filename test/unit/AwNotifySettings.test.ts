@@ -25,7 +25,7 @@ describe('AwNotifySettings', () => {
     ['a 404 response', () => mockGet.mockRejectedValue({ response: { status: 404 } })],
   ])('falls back to default alerts on %s', async (_name, setup) => {
     setup();
-    const wrapper = shallowMount(AwNotifySettings);
+    const wrapper: any = shallowMount(AwNotifySettings);
     await flushPromises();
 
     expect(wrapper.vm.error).toBe('');
@@ -34,7 +34,7 @@ describe('AwNotifySettings', () => {
 
   test('shows an error for a malformed saved setting', async () => {
     mockGet.mockResolvedValue({ data: { alerts: 'bad' } });
-    const wrapper = shallowMount(AwNotifySettings);
+    const wrapper: any = shallowMount(AwNotifySettings);
     await flushPromises();
 
     expect(wrapper.vm.error).toMatch('unsupported format');
@@ -44,7 +44,7 @@ describe('AwNotifySettings', () => {
     mockGet.mockResolvedValue({
       data: { enabled: true, alerts: [] },
     });
-    const wrapper = shallowMount(AwNotifySettings);
+    const wrapper: any = shallowMount(AwNotifySettings);
     await flushPromises();
 
     expect(wrapper.vm.enabled).toBe(true);
@@ -52,7 +52,7 @@ describe('AwNotifySettings', () => {
 
   test('defaults enabled to false when the key is absent', async () => {
     mockGet.mockResolvedValue({ data: { alerts: [] } });
-    const wrapper = shallowMount(AwNotifySettings);
+    const wrapper: any = shallowMount(AwNotifySettings);
     await flushPromises();
 
     expect(wrapper.vm.enabled).toBe(false);
@@ -61,7 +61,7 @@ describe('AwNotifySettings', () => {
   test('save() writes enabled: true and preserves existing alerts', async () => {
     const savedAlert = { label: null, category: 'All', thresholds_minutes: [60], positive: false };
     mockGet.mockResolvedValue({ data: { enabled: false, alerts: [savedAlert] } });
-    const wrapper = shallowMount(AwNotifySettings);
+    const wrapper: any = shallowMount(AwNotifySettings);
     await flushPromises();
 
     wrapper.vm.enabled = true;
@@ -81,7 +81,7 @@ describe('AwNotifySettings', () => {
   test('save() with enabled: false succeeds even when a hidden alert edit is invalid', async () => {
     const savedAlert = { label: null, category: 'Work', thresholds_minutes: [120], positive: true };
     mockGet.mockResolvedValue({ data: { enabled: true, alerts: [savedAlert] } });
-    const wrapper = shallowMount(AwNotifySettings);
+    const wrapper: any = shallowMount(AwNotifySettings);
     await flushPromises();
 
     // Simulate a pending invalid edit in the (now-hidden) alert row
@@ -104,7 +104,7 @@ describe('AwNotifySettings', () => {
     // pending edit — valid or not — is dropped. Documented in save().
     const savedAlert = { label: null, category: 'Work', thresholds_minutes: [120], positive: true };
     mockGet.mockResolvedValue({ data: { enabled: true, alerts: [savedAlert] } });
-    const wrapper = shallowMount(AwNotifySettings);
+    const wrapper: any = shallowMount(AwNotifySettings);
     await flushPromises();
 
     // A valid pending edit that was never saved
@@ -125,7 +125,7 @@ describe('AwNotifySettings', () => {
     // disable-save on the same page would send this.config.alerts (stale load),
     // not the newly-added alerts.
     mockGet.mockResolvedValue({ data: { enabled: true, alerts: [] } });
-    const wrapper = shallowMount(AwNotifySettings);
+    const wrapper: any = shallowMount(AwNotifySettings);
     await flushPromises();
 
     // Add an alert and save (enabled=true) — this should update this.config.
@@ -146,7 +146,7 @@ describe('AwNotifySettings', () => {
 
   test('save() preserves unknown config keys (e.g. http_port)', async () => {
     mockGet.mockResolvedValue({ data: { enabled: false, alerts: [], http_port: 5600 } });
-    const wrapper = shallowMount(AwNotifySettings);
+    const wrapper: any = shallowMount(AwNotifySettings);
     await flushPromises();
 
     await wrapper.vm.save();
