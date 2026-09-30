@@ -1,4 +1,7 @@
-import Search from '~/views/Search.vue';
+import SearchComponent from '~/views/Search.vue';
+
+// Tests call Options API members directly, which the Vue constructor type doesn't expose.
+const Search: any = SearchComponent;
 
 const mockBuckets = {
   ensureLoaded: jest.fn(),

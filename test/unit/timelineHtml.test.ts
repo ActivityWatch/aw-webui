@@ -143,7 +143,7 @@ describe('output at the vis-timeline sink', () => {
   const downstream = new FilterXSS();
   const afterSink = html => parse(downstream.process(html));
   const handlerAttrs = el =>
-    Array.from(el.querySelectorAll('*'))
+    Array.from(el.querySelectorAll('*') as NodeListOf<Element>)
       .flatMap(n => Array.from(n.attributes).map(a => a.name))
       .filter(n => n.startsWith('on'));
 

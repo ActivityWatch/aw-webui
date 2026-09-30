@@ -1,8 +1,11 @@
 import { createLocalVue, mount } from '@vue/test-utils';
 import BootstrapVue, { BModal } from 'bootstrap-vue';
 import { createPinia, PiniaVuePlugin, setActivePinia } from 'pinia';
-import CategoryEditModal from '~/components/CategoryEditModal.vue';
+import CategoryEditModalComponent from '~/components/CategoryEditModal.vue';
 import { useCategoryStore } from '~/stores/categories';
+
+// Tests call Options API members directly, which the Vue constructor type doesn't expose.
+const CategoryEditModal: any = CategoryEditModalComponent;
 
 // Enter inside the category edit modal should submit it, same as pressing OK.
 // See https://github.com/ActivityWatch/aw-webui/issues/232
@@ -87,7 +90,7 @@ describe('CategoryEditModal field-scoped rules', () => {
   // destroy this modal before the deferred hide runs, leaving $refs.edit undefined.
   test('does not throw when the modal was destroyed before the deferred hide', () => {
     const { vm, updateClass } = ctx([]);
-    vm.$refs = {};
+    vm.$refs = {} as any;
     expect(() => handleSubmit(vm)).not.toThrow();
     expect(updateClass).toHaveBeenCalled();
   });
@@ -119,9 +122,12 @@ describe('CategoryEditModal field-scoped rules', () => {
 describe('CategoryEditModal rule priority', () => {
   const handleSubmit = vm => CategoryEditModal.methods.handleSubmit.call(vm);
 
-  function ctx({ rule = { type: 'regex', regex: 'Firefox', weight: 7 }, priority = null } = {}) {
+  function ctx({
+    rule = { type: 'regex', regex: 'Firefox', weight: 7 } as Record<string, any>,
+    priority = null,
+  } = {}) {
     const updateClass = jest.fn();
-    const vm = {
+    const vm: any = {
       editing: {
         id: 1,
         name: 'Browser',
@@ -135,11 +141,12 @@ describe('CategoryEditModal rule priority', () => {
         priority,
       },
       checkFormValidity: () => true,
-      categoryStore: { updateClass },
+      categoryStore: { updateClass } as Record<string, any>,
       $nextTick: callback => callback(),
       $refs: { edit: { hide: jest.fn() } },
       priorityFromInput: CategoryEditModal.methods.priorityFromInput,
       priorityFromRule: CategoryEditModal.methods.priorityFromRule,
+      categoryId: null as number | null,
     };
     return { vm, updateClass };
   }
@@ -228,7 +235,7 @@ describe('CategoryEditModal score round trip', () => {
       rule: { type: 'none' },
       data: { score, color: '#123456' },
     };
-    const vm = {
+    const vm: any = {
       categoryId: 2,
       categoryStore: { get_category_by_id: () => category, updateClass },
       priorityFromRule: CategoryEditModal.methods.priorityFromRule,
@@ -285,21 +292,21 @@ describe('CategoryEditModal mounted score round trip', () => {
       const scoreCheckbox = wrapper
         .findAllComponents({ name: 'BFormCheckbox' })
         .wrappers.find(checkbox => checkbox.text().includes('ui.categoryEditor.inheritScore'));
-      expect(scoreCheckbox.find('input').element.checked).toBe(false);
+      expect((scoreCheckbox.find('input').element as HTMLInputElement).checked).toBe(false);
       const scoreInput = wrapper
         .findAllComponents({ name: 'BInputGroup' })
         .wrappers.find(group => group.text().includes('ui.categoryEditor.score'))
         .find('input');
-      expect(scoreInput.element.value).toBe('0');
-      wrapper.vm.$refs.edit.$emit('ok', { preventDefault: jest.fn() });
+      expect((scoreInput.element as HTMLInputElement).value).toBe('0');
+      (wrapper.vm.$refs.edit as any).$emit('ok', { preventDefault: jest.fn() });
       await localVue.nextTick();
       expect(store.get_category(['Parent', 'Child']).data.score).toBe(0);
       expect(store.get_category_score(['Parent', 'Child'])).toBe(0);
 
       wrapper.destroy();
       wrapper = await openModal();
-      expect(wrapper.vm.editing.inherit_score).toBe(false);
-      expect(wrapper.vm.editing.score).toBe(0);
+      expect((wrapper.vm as any).editing.inherit_score).toBe(false);
+      expect((wrapper.vm as any).editing.score).toBe(0);
     } finally {
       wrapper.destroy();
     }

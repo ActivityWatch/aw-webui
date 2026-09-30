@@ -289,7 +289,9 @@ describe('categories store: multiple active sets', () => {
         { id: 'mine', categories: [{ name: ['Work'], rule: { type: 'regex', regex: 'code' } }] },
         {
           id: 'shared',
-          categories: [{ name: ['Media', 'Video'], rule: { type: 'regex', regex: 'YouTube' } }],
+          categories: [
+            { name: ['Media', 'Video'], rule: { type: 'regex' as const, regex: 'YouTube' } },
+          ],
         },
       ],
       active_set_ids: ['mine'],
@@ -409,7 +411,10 @@ describe('categories store: multiple active sets', () => {
     store.removeClass(video.id);
     store.save();
     store.discardChanges();
-    store.addClass({ name: ['Media', 'Video'], rule: { type: 'regex', regex: 'YouTube' } });
+    store.addClass({
+      name: ['Media', 'Video'],
+      rule: { type: 'regex' as const, regex: 'YouTube' },
+    });
     store.save();
     store.discardChanges();
     expect(store.classes.map(c => c.name)).toContainEqual(['Media', 'Video']);
@@ -480,7 +485,7 @@ describe('import add-on-top via setActiveSets', () => {
 
   test('importing a new set on top adds it to category_sets and active_set_ids', () => {
     const importedCategories = [
-      { name: ['Media', 'Video'], rule: { type: 'regex', regex: 'YouTube' } },
+      { name: ['Media', 'Video'], rule: { type: 'regex' as const, regex: 'YouTube' } },
     ];
     store.category_sets.push({ id: 'shared', categories: importedCategories });
     store.setActiveSets(['mine', 'shared']);
@@ -494,7 +499,7 @@ describe('import add-on-top via setActiveSets', () => {
 
   test('primary set is unchanged after adding imported set on top', () => {
     const importedCategories = [
-      { name: ['Media', 'Video'], rule: { type: 'regex', regex: 'YouTube' } },
+      { name: ['Media', 'Video'], rule: { type: 'regex' as const, regex: 'YouTube' } },
     ];
     store.category_sets.push({ id: 'shared', categories: importedCategories });
     store.setActiveSets(['mine', 'shared']);

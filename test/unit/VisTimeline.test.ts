@@ -10,14 +10,19 @@
  *      built-in horizontal-scroll path.
  */
 
-import VisTimeline from '~/visualizations/VisTimeline.vue';
-import EventEditor from '~/components/EventEditor.vue';
-import StopwatchEntry from '~/components/StopwatchEntry.vue';
+import VisTimelineComponent from '~/visualizations/VisTimeline.vue';
+import EventEditorComponent from '~/components/EventEditor.vue';
+import StopwatchEntryComponent from '~/components/StopwatchEntry.vue';
 import moment from 'moment';
 import { createPinia, setActivePinia } from 'pinia';
 import { DataSet } from 'vis-data';
 
 const DataSetUpdate = DataSet.prototype.update;
+
+// Tests call Options API members directly, which the Vue constructor type doesn't expose.
+const VisTimeline: any = VisTimelineComponent;
+const EventEditor: any = EventEditorComponent;
+const StopwatchEntry: any = StopwatchEntryComponent;
 
 // vis-timeline creates a real DOM timeline; mock the entire import so unit
 // tests run in jsdom without a full browser canvas/resize-observer stack.
@@ -72,13 +77,13 @@ describe('timeline event editing (#984)', () => {
     };
     let finishWrite;
     const replaceEvent = jest.fn(
-      () =>
+      (_bucketId: string, _event: any) =>
         new Promise(resolve => {
           finishWrite = resolve;
         })
     );
     const emit = jest.fn();
-    const vm = editorVm({
+    const vm: any = editorVm({
       bucket_id: 'aw-stopwatch_test',
       editedEvent,
       $aw: { replaceEvent },
@@ -92,7 +97,7 @@ describe('timeline event editing (#984)', () => {
     StopwatchEntry.methods.save.call({ $emit: stopwatchEmit }, snapshot);
     const updatedEvent = stopwatchEmit.mock.calls[0][1];
     // Match the running-counter arithmetic in the StopwatchEntry template.
-    expect((moment('2026-10-16T10:01:00Z') - updatedEvent.timestamp) / 1000).toBe(60);
+    expect(moment('2026-10-16T10:01:00Z').diff(updatedEvent.timestamp) / 1000).toBe(60);
     expect(snapshot.timestamp).toBeInstanceOf(timestamp.constructor);
     expect(snapshot.timestamp).not.toBe(timestamp);
 
@@ -379,7 +384,7 @@ describe('VisTimeline scroll bounds (#996)', () => {
   const dayEnd = moment(dayStart).add(1, 'day');
 
   function makeVm(overrides = {}) {
-    const vm = {
+    const vm: any = {
       ...VisTimeline.data(),
       ...VisTimeline.methods,
       showRowLabels: false,
@@ -572,7 +577,7 @@ describe('VisTimeline rendering cost', () => {
   test('syncs the items for the new window before moving the window', () => {
     const vm = makeVm();
     const calls = [];
-    jest.spyOn(vm.itemData, 'update').mockImplementation(items => {
+    jest.spyOn(vm.itemData, 'update').mockImplementation((items: any) => {
       calls.push(['items', items.length]);
       return DataSetUpdate.call(vm.itemData, items);
     });

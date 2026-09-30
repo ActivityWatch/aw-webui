@@ -3,7 +3,10 @@ import { BootstrapVue } from 'bootstrap-vue';
 import moment from 'moment';
 import Stopwatch from '~/views/Stopwatch.vue';
 import StopwatchEntry from '~/components/StopwatchEntry.vue';
-import EventEditor from '~/components/EventEditor.vue';
+import EventEditorComponent from '~/components/EventEditor.vue';
+
+// Tests call Options API members directly, which the Vue constructor type doesn't expose.
+const EventEditor: any = EventEditorComponent;
 
 const localVue = createLocalVue();
 localVue.use(BootstrapVue);
@@ -46,7 +49,7 @@ function button(wrapper, label) {
 
 describe('Stopwatch retrieval', () => {
   let wrapper;
-  beforeEach(() => jest.spyOn(global, 'setInterval').mockImplementation(() => 1));
+  beforeEach(() => jest.spyOn(global, 'setInterval').mockImplementation(() => 1 as any));
   afterEach(() => {
     if (wrapper) wrapper.destroy();
     jest.restoreAllMocks();

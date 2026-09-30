@@ -2,11 +2,15 @@ import Vue from 'vue';
 import moment from 'moment';
 import { createLocalVue, shallowMount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
-import Trends from '~/views/Trends.vue';
+import TrendsComponent from '~/views/Trends.vue';
 import { useBucketsStore } from '~/stores/buckets';
-import { getClient } from '~/util/awclient';
+import { getClient as getClientImpl } from '~/util/awclient';
 
 jest.mock('~/util/awclient', () => ({ getClient: jest.fn() }));
+
+// Tests call Options API members directly, which the Vue constructor type doesn't expose.
+const Trends: any = TrendsComponent;
+const getClient = getClientImpl as jest.Mock;
 
 const localVue = createLocalVue();
 localVue.filter('friendlyduration', value => String(value));
@@ -133,7 +137,7 @@ describe('Trends view', () => {
         .fn()
         .mockResolvedValue([{ cat_events: [{ data: { $category: ['Work'] }, duration: 600 }] }]);
       getClient.mockReturnValue({ query });
-      const vm = {
+      const vm: any = {
         settingsStore: { startOfDay: '04:00' },
         buildCategoryQuery: () => ['RETURN = {};'],
       };

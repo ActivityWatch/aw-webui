@@ -1,6 +1,9 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
-import Settings from '~/views/settings/Settings.vue';
+import SettingsComponent from '~/views/settings/Settings.vue';
+
+// Tests call Options API members directly, which the Vue constructor type doesn't expose.
+const Settings: any = SettingsComponent;
 
 const mockCategoryStore = { classes_unsaved_changes: true };
 jest.mock('~/stores/categories', () => ({

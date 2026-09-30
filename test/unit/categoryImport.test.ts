@@ -1,6 +1,9 @@
 import { createPinia, setActivePinia } from 'pinia';
-import CategorizationSettings from '~/views/settings/CategorizationSettings.vue';
+import CategorizationSettingsComponent from '~/views/settings/CategorizationSettings.vue';
 import { useCategoryStore } from '~/stores/categories';
+
+// Tests call Options API members directly, which the Vue constructor type doesn't expose.
+const CategorizationSettings: any = CategorizationSettingsComponent;
 
 function importOnTop(store, id, categories) {
   const context = {

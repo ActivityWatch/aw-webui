@@ -1,5 +1,8 @@
 import { shallowMount } from '@vue/test-utils';
-import ActivityView from '~/views/activity/ActivityView.vue';
+import ActivityViewComponent from '~/views/activity/ActivityView.vue';
+
+// Tests call Options API members directly, which the Vue constructor type doesn't expose.
+const ActivityView: any = ActivityViewComponent;
 
 const mockViews = [
   { id: 'default', name: 'Default', elements: [{ type: 'top_apps', props: {} }] },

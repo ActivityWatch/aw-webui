@@ -7,7 +7,7 @@ import Calendar from '~/visualizations/Calendar.vue';
 const stubs = ['b-form', 'b-form-group', 'b-checkbox'];
 
 test('renders an empty FullCalendar safely when fitting without a selected bucket', async () => {
-  const wrapper = mount(Calendar, { propsData: { buckets: [] }, stubs });
+  const wrapper: any = mount(Calendar, { propsData: { buckets: [] }, stubs });
   try {
     await wrapper.setData({ fitToActive: true });
     expect(wrapper.vm.events).toEqual([]);
@@ -19,7 +19,7 @@ test('renders an empty FullCalendar safely when fitting without a selected bucke
 });
 
 test('renders fitted day/week grids and recovers when the selected bucket disappears', async () => {
-  const wrapper = mount(Calendar, {
+  const wrapper: any = mount(Calendar, {
     propsData: {
       buckets: [
         {
@@ -57,7 +57,7 @@ test('renders fitted day/week grids and recovers when the selected bucket disapp
 });
 
 test('renders both daily segments of an overnight event in the week grid', async () => {
-  const wrapper = mount(Calendar, {
+  const wrapper: any = mount(Calendar, {
     propsData: {
       buckets: [
         {

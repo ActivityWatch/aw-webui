@@ -4,9 +4,14 @@ import { createPinia, setActivePinia, PiniaVuePlugin } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
 import { createLocalVue, shallowMount } from '@vue/test-utils';
 import { useSettingsStore } from '~/stores/settings';
-import { getClient } from '~/util/awclient';
-import WorkReport from '~/views/WorkReport.vue';
-import BillingView from '~/views/BillingView.vue';
+import { getClient as getClientImpl } from '~/util/awclient';
+import WorkReportComponent from '~/views/WorkReport.vue';
+import BillingViewComponent from '~/views/BillingView.vue';
+const getClient = getClientImpl as jest.Mock;
+
+// Tests call Options API members directly, which the Vue constructor type doesn't expose.
+const WorkReport: any = WorkReportComponent;
+const BillingView: any = BillingViewComponent;
 
 jest.mock('~/util/awclient', () => ({ getClient: jest.fn() }));
 
@@ -125,7 +130,7 @@ describe('report calendar week start', () => {
       const firstDate = { Saturday: '2026-10-17', Sunday: '2026-10-18', Monday: '2026-10-19' }[
         startOfWeek
       ];
-      const queried = {};
+      const queried: Record<string, any> = {};
       const localVue = createLocalVue();
       localVue.use(PiniaVuePlugin);
       const stubs = [
@@ -142,7 +147,7 @@ describe('report calendar week start', () => {
         'icon',
       ];
       for (const component of [WorkReport, BillingView]) {
-        const wrapper = shallowMount(component, { localVue, pinia, stubs });
+        const wrapper: any = shallowMount(component, { localVue, pinia, stubs });
         try {
           // Allow the real mounted hook to select supported hosts.
           await wrapper.vm.$nextTick();

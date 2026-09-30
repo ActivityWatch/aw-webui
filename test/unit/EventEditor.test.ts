@@ -44,14 +44,14 @@ function makeEvent(id = 1) {
 
 // Mounts the editor with a stubbed client. getEvent resolves immediately with a
 // copy, mirroring the real flow where the editor re-fetches the event.
-function mountEditor({ event = makeEvent(), replaceEvent, deleteEvent } = {}) {
+function mountEditor({ event = makeEvent(), replaceEvent, deleteEvent }: any = {}) {
   const $aw = {
     getEvent: jest.fn().mockImplementation(async () => JSON.parse(JSON.stringify(event))),
     replaceEvent: replaceEvent || jest.fn().mockResolvedValue(undefined),
     deleteEvent: deleteEvent || jest.fn().mockResolvedValue(undefined),
   };
 
-  const wrapper = mount(EventEditor, {
+  const wrapper: any = mount(EventEditor, {
     localVue,
     propsData: { event, bucket_id: 'test-bucket' },
     mocks: { $aw },
@@ -382,7 +382,7 @@ describe('EventEditor inside a parent that reacts to success', () => {
 
   // Mirrors VisTimeline/EventList: the editor is rendered behind a v-if on the
   // event being edited, so a parent clearing it on save destroys the editor.
-  function mountParent({ replaceEvent } = {}) {
+  function mountParent({ replaceEvent }: any = {}) {
     const $aw = {
       getEvent: jest.fn().mockImplementation(async () => makeEvent()),
       replaceEvent: replaceEvent || jest.fn().mockResolvedValue(undefined),
@@ -417,7 +417,7 @@ describe('EventEditor inside a parent that reacts to success', () => {
       },
     };
 
-    const wrapper = mount(Parent, {
+    const wrapper: any = mount(Parent, {
       localVue,
       mocks: { $aw },
       stubs: { datetime: true, icon: true },

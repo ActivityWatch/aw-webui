@@ -3,9 +3,12 @@ import { createPinia, setActivePinia } from 'pinia';
 import moment from 'moment';
 import PeriodUsage from '~/visualizations/PeriodUsage.vue';
 import periodusage from '~/visualizations/periodusage';
-import Activity from '~/views/activity/Activity.vue';
+import ActivityComponent from '~/views/activity/Activity.vue';
 import { useActivityStore } from '~/stores/activity';
 import { timeperiodToStr } from '~/util/timeperiod';
+
+// Tests call Options API members directly, which the Vue constructor type doesn't expose.
+const Activity: any = ActivityComponent;
 
 beforeEach(() => {
   setActivePinia(createPinia());
@@ -13,7 +16,7 @@ beforeEach(() => {
 });
 afterEach(() => jest.useRealTimers());
 
-const period = (start, periodLength = [1, 'day']) => ({ start, length: periodLength });
+const period = (start, periodLength: any = [1, 'day']): any => ({ start, length: periodLength });
 const entry = (p, events = []) => ({ period: p, events });
 
 test.each([
@@ -37,7 +40,7 @@ test.each([
 
 test('renders provided data on mount, sums events, and emits the original period', () => {
   const p = period('2026-09-09T04:00:00');
-  const wrapper = mount(PeriodUsage, {
+  const wrapper: any = mount(PeriodUsage, {
     propsData: {
       periodusage_arr: [
         entry(p, [
@@ -62,7 +65,7 @@ test('renders provided data on mount, sums events, and emits the original period
 
 test('empty periods remain clickable and Today is end-exclusive and refreshed', async () => {
   const current = period('2026-09-03T04:00:00', [7, 'days']);
-  const wrapper = mount(PeriodUsage, { propsData: { periodusage_arr: [entry(current)] } });
+  const wrapper: any = mount(PeriodUsage, { propsData: { periodusage_arr: [entry(current)] } });
   try {
     expect(wrapper.find('rect title').text()).toContain('2026-09-03 – 2026-09-09');
     expect(wrapper.findAll('line')).toHaveLength(1);

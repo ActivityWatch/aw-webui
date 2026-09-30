@@ -1,9 +1,12 @@
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
-import SunburstCategories from '~/visualizations/SunburstCategories.vue';
+import SunburstCategoriesComponent from '~/visualizations/SunburstCategories.vue';
 import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
 import { DARK_THEME_HREF } from '~/util/theme';
+
+// Tests call Options API members directly, which the Vue constructor type doesn't expose.
+const SunburstCategories: any = SunburstCategoriesComponent;
 
 jest.mock('vue-d3-sunburst/dist/vue-d3-sunburst.css', () => ({}));
 

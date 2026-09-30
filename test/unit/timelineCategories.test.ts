@@ -1,6 +1,9 @@
-import Timeline from '~/views/Timeline.vue';
+import TimelineComponent from '~/views/Timeline.vue';
 import moment from 'moment';
 import { categoryTimelineQuery, mergeCategoryIntervals } from '~/util/timelineCategories';
+
+// Tests call Options API members directly, which the Vue constructor type doesn't expose.
+const Timeline: any = TimelineComponent;
 
 const mockQuery = jest.fn().mockResolvedValue([[]]);
 const mockGetBucketsWithEvents = jest.fn();

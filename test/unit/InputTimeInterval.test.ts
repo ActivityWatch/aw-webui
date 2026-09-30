@@ -1,5 +1,8 @@
 import moment from 'moment';
-import InputTimeInterval from '~/components/InputTimeInterval.vue';
+import InputTimeIntervalComponent from '~/components/InputTimeInterval.vue';
+
+// Tests call Options API members directly, which the Vue constructor type doesn't expose.
+const InputTimeInterval: any = InputTimeIntervalComponent;
 
 describe('date range shifts', () => {
   function makeVm(start = null, end = null) {

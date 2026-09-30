@@ -1,15 +1,19 @@
 import { createLocalVue, mount, shallowMount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 import { PiniaVuePlugin, setActivePinia, createPinia } from 'pinia';
-import CategoryBuilder from '~/views/settings/CategoryBuilder.vue';
+import CategoryBuilderComponent from '~/views/settings/CategoryBuilder.vue';
 import Settings from '~/views/settings/Settings.vue';
 import QueryOptions from '~/components/QueryOptions.vue';
 import { useBucketsStore } from '~/stores/buckets';
 import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
-import { getClient } from '~/util/awclient';
+import { getClient as getClientImpl } from '~/util/awclient';
 
 jest.mock('~/util/awclient', () => ({ getClient: jest.fn() }));
+
+// Tests call Options API members directly, which the Vue constructor type doesn't expose.
+const CategoryBuilder: any = CategoryBuilderComponent;
+const getClient = getClientImpl as jest.Mock;
 
 const localVue = createLocalVue();
 localVue.use(PiniaVuePlugin);
@@ -236,7 +240,6 @@ describe('CategoryBuilder loading', () => {
     expect(wrapper.find('[role="alert"]').exists()).toBe(false);
   });
 });
-
 // "Ignore" used to only push to component state, so ignored words came back on
 // reload. They now persist via the settings store.
 // See https://github.com/ActivityWatch/aw-webui/issues/486
@@ -248,7 +251,7 @@ describe('CategoryBuilder ignored words', () => {
       $patch: jest.fn(state => Object.assign(settingsStore, state)),
       update: jest.fn(async state => Object.assign(settingsStore, state)),
     };
-    const vm = { settingsStore, show_ignored: true, fetchWords: jest.fn() };
+    const vm: any = { settingsStore, show_ignored: true, fetchWords: jest.fn() };
     vm.persistIgnoredWords = next => CategoryBuilder.methods.persistIgnoredWords.call(vm, next);
     // The component reads ignored_words through this computed.
     Object.defineProperty(vm, 'ignored_words', {
@@ -348,7 +351,7 @@ describe('CategoryBuilder ignored words with the real settings store', () => {
     });
     const settingsStore = useSettingsStore();
     settingsStore.$patch({ _loaded: true });
-    const vm = { settingsStore, show_ignored: true, fetchWords: jest.fn() };
+    const vm: any = { settingsStore, show_ignored: true, fetchWords: jest.fn() };
     vm.persistIgnoredWords = next => CategoryBuilder.methods.persistIgnoredWords.call(vm, next);
     Object.defineProperty(vm, 'ignored_words', {
       get: () => CategoryBuilder.computed.ignored_words.call(vm),

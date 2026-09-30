@@ -16,7 +16,7 @@ localVue.filter('friendlytime', v => String(v));
 
 // Mounts the view with a stubbed $aw client. Buckets are pre-seeded so
 // mounted() resolves a hostname without reaching for the global AWClient.
-function mountAlerts({ startOfDay = '04:00', storedAlerts = undefined } = {}) {
+function mountAlerts({ startOfDay = '04:00', storedAlerts = undefined }: any = {}) {
   const query = jest.fn().mockResolvedValue([[]]);
 
   const settingsStore = useSettingsStore();
@@ -32,12 +32,12 @@ function mountAlerts({ startOfDay = '04:00', storedAlerts = undefined } = {}) {
     .mockImplementation(async patch => settingsStore.$patch(patch));
 
   useCategoryStore().load([]);
-  useBucketsStore().update_buckets([
+  useBucketsStore().update_buckets(<any[]>[
     { id: 'aw-watcher-window_testhost', type: 'currentwindow', hostname: 'testhost', data: {} },
     { id: 'aw-watcher-afk_testhost', type: 'afkstatus', hostname: 'testhost', data: {} },
   ]);
 
-  const wrapper = shallowMount(Alerts, {
+  const wrapper: any = shallowMount(Alerts, {
     localVue,
     mocks: { $aw: { query } },
     stubs: { icon: true },

@@ -1,8 +1,12 @@
 import moment from 'moment';
 import { createPinia, setActivePinia } from 'pinia';
 import { get_day_start_with_offset, get_day_end_with_offset, get_day_period } from '~/util/time';
-import WorkReport from '~/views/WorkReport.vue';
-import BillingView from '~/views/BillingView.vue';
+import WorkReportComponent from '~/views/WorkReport.vue';
+import BillingViewComponent from '~/views/BillingView.vue';
+
+// Tests call Options API members directly, which the Vue constructor type doesn't expose.
+const WorkReport: any = WorkReportComponent;
+const BillingView: any = BillingViewComponent;
 
 // A refresh instant with nonzero seconds and milliseconds. Report boundaries
 // built from "now" must not inherit them.

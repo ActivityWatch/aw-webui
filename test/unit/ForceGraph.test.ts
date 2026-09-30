@@ -23,7 +23,7 @@ describe('ForceGraph', () => {
     jest.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(function () {
       return this.id === 'forcegraph' ? containerWidth : 0;
     });
-    global.ResizeObserver = class {
+    (global as any).ResizeObserver = class {
       constructor(cb) {
         resizeCallback = cb;
       }
