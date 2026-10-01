@@ -59,22 +59,28 @@ describe('SunburstCategories', () => {
       useSettingsStore().theme = theme;
       return SunburstCategories.methods.colorfunc('All');
     };
-    const mockPrefersDark = dark => {
-      window.matchMedia = jest.fn().mockImplementation(query => ({
-        matches: dark && query === '(prefers-color-scheme: dark)',
-        media: query,
-      }));
+    // Mimic how App.vue/Theme.vue apply the dark theme: by adding/removing
+    // the dark stylesheet <link> in the document head.
+    const setDarkApplied = dark => {
+      document.querySelector('head link[href="/dark.css"]')?.remove();
+      if (dark) {
+        const link = document.createElement('link');
+        link.href = '/dark.css';
+        link.rel = 'stylesheet';
+        document.head.appendChild(link);
+      }
     };
+    afterEach(() => setDarkApplied(false));
 
     test('is light in light theme and dark in dark theme', () => {
       expect(rootColor('light')).toBe('#fff');
       expect(rootColor('dark')).toBe('#333');
     });
 
-    test("follows the system preference when theme is 'auto'", () => {
-      mockPrefersDark(false);
+    test("follows the theme applied to the page when theme is 'auto'", () => {
+      setDarkApplied(false);
       expect(rootColor('auto')).toBe('#fff');
-      mockPrefersDark(true);
+      setDarkApplied(true);
       expect(rootColor('auto')).toBe('#333');
     });
   });
