@@ -127,6 +127,11 @@ export default {
       try {
         const client = getClient();
         const resp = await client.req.get(`/0/settings/${SETTINGS_KEY}`);
+        if (resp.data == null) {
+          this.config = {} as AwNotifyConfig;
+          this.alerts = this.defaultAlerts();
+          return;
+        }
         const config = parseAwNotifyConfig(resp.data);
         if (!config) {
           throw new Error('The saved aw-notify setting has an unsupported format.');
