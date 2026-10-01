@@ -161,7 +161,7 @@ jobs:
       uses: DevExpress/testcafe-action@latest
       with:
         # NOTE: --skip-js-errors should be removed when things work properly
-        args: "--skip-js-errors chrome test/e2e/"
+        args: "--skip-js-errors --ts-config-path test/e2e/tsconfig.json chrome test/e2e/"
     - name: Move screenshots to subdir
       # Run this step even if e2e tests flag failure
       if: ${{ success() || steps.e2e.conclusion == 'failure'}}
