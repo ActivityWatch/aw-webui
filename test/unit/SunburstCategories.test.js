@@ -53,4 +53,29 @@ describe('SunburstCategories', () => {
 
     wrapper.destroy();
   });
+
+  describe('root ("All") color', () => {
+    const rootColor = theme => {
+      useSettingsStore().theme = theme;
+      return SunburstCategories.methods.colorfunc('All');
+    };
+    const mockPrefersDark = dark => {
+      window.matchMedia = jest.fn().mockImplementation(query => ({
+        matches: dark && query === '(prefers-color-scheme: dark)',
+        media: query,
+      }));
+    };
+
+    test('is light in light theme and dark in dark theme', () => {
+      expect(rootColor('light')).toBe('#fff');
+      expect(rootColor('dark')).toBe('#333');
+    });
+
+    test("follows the system preference when theme is 'auto'", () => {
+      mockPrefersDark(false);
+      expect(rootColor('auto')).toBe('#fff');
+      mockPrefersDark(true);
+      expect(rootColor('auto')).toBe('#333');
+    });
+  });
 });

@@ -35,6 +35,7 @@ import { getColorFromCategory } from '~/util/color';
 
 import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
+import { detectPreferredTheme } from '~/util/theme';
 
 const example_data = {
   name: 'flare',
@@ -83,8 +84,12 @@ export default {
     },
     colorfunc: function (s) {
       // 'All' needs to be bright if light theme, and dark if dark theme
-      const settings = useSettingsStore();
-      if (s == 'All') return settings.theme == 'light' ? '#fff' : '#333';
+      // ('auto' resolves to the system preference, like App.vue does)
+      if (s == 'All') {
+        const theme = useSettingsStore().theme;
+        const resolved = theme === 'auto' ? detectPreferredTheme() : theme;
+        return resolved === 'dark' ? '#333' : '#fff';
+      }
 
       const categoryStore = useCategoryStore();
       const cat = categoryStore.get_category(s.split(SEP));
