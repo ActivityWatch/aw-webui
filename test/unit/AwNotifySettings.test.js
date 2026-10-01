@@ -4,6 +4,10 @@ import { getClient } from '~/util/awclient';
 jest.mock('~/util/awclient', () => ({ getClient: jest.fn() }));
 
 describe('AwNotifySettings load', () => {
+  const expectedDefaults = [
+    { label: 'All', category: 'All', thresholdStr: '60, 240, 480', positive: false },
+    { label: '💼 Work', category: 'Work', thresholdStr: '60, 120, 240', positive: true },
+  ];
   let vm;
   let get;
   let post;
@@ -21,7 +25,7 @@ describe('AwNotifySettings load', () => {
     await vm.load();
 
     expect(get).toHaveBeenCalledWith('/0/settings/aw-notify');
-    expect(vm.alerts).toEqual(vm.defaultAlerts());
+    expect(vm.alerts).toEqual(expectedDefaults);
     expect(vm.config).toEqual({});
     expect(vm.error).toBe('');
     expect(vm.loading).toBe(false);
@@ -33,7 +37,7 @@ describe('AwNotifySettings load', () => {
 
     await vm.load();
 
-    expect(vm.alerts).toEqual(vm.defaultAlerts());
+    expect(vm.alerts).toEqual(expectedDefaults);
     expect(vm.config).toEqual({});
     expect(vm.error).toBe('');
     expect(vm.loading).toBe(false);
