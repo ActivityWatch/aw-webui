@@ -316,6 +316,10 @@ export default {
   watch: {
     import_file: async function (_new_value, _old_value) {
       if (this.import_file != null) {
+        // Clear the previous outcome up-front so a stale success/error alert
+        // isn't shown beside the spinner while the new import is in flight.
+        this.import_success = false;
+        this.import_error = null;
         try {
           await importBuckets(this.$aw, this.import_file);
           this.import_error = null;

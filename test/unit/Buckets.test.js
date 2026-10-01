@@ -47,6 +47,14 @@ describe('Buckets.vue bucket import', () => {
     expect(src).toMatch(/response\?\.data\?\.message/);
   });
 
+  test('clears the previous outcome before a new import starts', () => {
+    // A new import must not render the previous run's success/error alert
+    // beside the importing spinner.
+    expect(src).toMatch(
+      /this\.import_success = false;\s*\n\s*this\.import_error = null;\s*\n\s*try \{/
+    );
+  });
+
   test('issues the import outside component methods', () => {
     // asyncErrorCapturedMixin wraps every async component method so its
     // rejection is reported to the global ErrorBoundary and the promise it
