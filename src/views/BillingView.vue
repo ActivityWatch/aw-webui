@@ -4,16 +4,16 @@ div
 
   div.row.mb-4
     div.col-md-4
-      b-form-group(label="Hosts" label-class="font-weight-bold")
+      b-form-group(label="Hosts" label-class="fw-bold")
         b-form-select(v-model="selectedHosts" :options="hostOptions" multiple :select-size="4")
         small.text-muted Select devices to include
 
     div.col-md-4
-      b-form-group(label="Date Range" label-class="font-weight-bold")
+      b-form-group(label="Date Range" label-class="fw-bold")
         b-form-select(v-model="dateRange" :options="dateRangeOptions")
 
     div.col-md-4
-      b-form-group(label="Hourly Rate (optional)" label-class="font-weight-bold")
+      b-form-group(label="Hourly Rate (optional)" label-class="fw-bold")
         b-input-group(prepend="$")
           b-form-input(
             v-model.number="defaultRate"
@@ -28,16 +28,16 @@ div
     b-button(@click="loadData" variant="primary" :disabled="loading")
       icon(name="sync")
       |  Calculate Hours
-    b-button.ml-2(@click="exportCSV" variant="outline-secondary" :disabled="!hasData")
+    b-button.ms-2(@click="exportCSV" variant="outline-secondary" :disabled="!hasData")
       icon(name="download")
       |  Export CSV
 
   div(v-if="loading")
-    b-spinner.mr-2
+    b-spinner.me-2
     | Loading...
 
   div(v-if="errorMessage")
-    b-alert(variant="danger" show) {{ errorMessage }}
+    b-alert(variant="danger" :model-value="true") {{ errorMessage }}
 
   div(v-if="hasData && !loading")
     div.row.mb-2
@@ -50,16 +50,16 @@ div
       thead
         tr
           th Category
-          th.text-right Hours
-          th.text-right Rate ($/h)
-          th.text-right Amount
+          th.text-end Hours
+          th.text-end Rate ($/h)
+          th.text-end Amount
       tbody
         tr(v-for="row in categoryRows" :key="row.key")
           td
-            span.badge.mr-1(:style="{ background: '#6c757d', color: 'white' }") {{ row.depth > 0 ? '↳ ' : '' }}
+            span.badge.me-1(:style="{ background: '#6c757d', color: 'white' }") {{ row.depth > 0 ? '↳ ' : '' }}
             | {{ row.label }}
-          td.text-right {{ formatHours(row.duration) }}
-          td.text-right
+          td.text-end {{ formatHours(row.duration) }}
+          td.text-end
             b-form-input(
               v-model.number="categoryRates[row.key]"
               type="number"
@@ -69,13 +69,13 @@ div
               style="width: 80px; display: inline-block"
               :placeholder="defaultRate > 0 ? String(defaultRate) : '0.00'"
             )
-          td.text-right {{ formatAmount(getAmount(row)) }}
+          td.text-end {{ formatAmount(getAmount(row)) }}
       tfoot
-        tr.font-weight-bold
+        tr.fw-bold
           td Total
-          td.text-right {{ formatHours(totalDuration) }}
-          td.text-right —
-          td.text-right {{ formatAmount(totalAmount) }}
+          td.text-end {{ formatHours(totalDuration) }}
+          td.text-end —
+          td.text-end {{ formatAmount(totalAmount) }}
 </template>
 
 <script lang="ts">
@@ -90,9 +90,6 @@ import {
   getWorkReportHostOptions,
   getUnsupportedWorkReportHosts,
 } from '~/util/workReport';
-
-import 'vue-awesome/icons/sync';
-import 'vue-awesome/icons/download';
 
 interface CategoryRow {
   key: string; // JSON.stringify(parts) — unambiguous identity for rate lookup

@@ -21,16 +21,18 @@ describe('QueryOptions', () => {
 
   test('renders date range values in native date inputs', async () => {
     const wrapper = shallowMount(QueryOptions, {
-      propsData: {
+      props: {
         queryOptions: {
           start: '2026-08-15',
           stop: '2026-08-16',
         },
       },
-      stubs: {
-        'b-form-group': { template: '<div><slot /></div>' },
-        'b-form-select': true,
-        'b-form-checkbox': true,
+      global: {
+        stubs: {
+          'b-form-group': { template: '<div><slot /></div>' },
+          'b-form-select': true,
+          'b-form-checkbox': true,
+        },
       },
     });
 

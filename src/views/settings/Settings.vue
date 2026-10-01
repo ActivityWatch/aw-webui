@@ -15,8 +15,8 @@ div
         ) {{ group.label }}
 
     div.settings-content
-      template(v-for="group in groups")
-        section.settings-section(v-show="activeGroup === group.id" :key="group.id")
+      template(v-for="group in groups" :key="group.id")
+        section.settings-section(v-show="activeGroup === group.id")
           h4.settings-section__title {{ group.label }}
           p.text-muted.small.mb-3(v-if="group.help") {{ group.help }}
           component(v-for="comp in group.components" :key="comp.name" :is="comp.name")

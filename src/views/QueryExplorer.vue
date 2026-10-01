@@ -23,8 +23,8 @@ div
             | {{savedQuery.name}}
       div.form-group.col-lg-6
         div.saved-query-actions
-          button.btn.btn-success.mr-2(type="button", @click="saveCurrentQuery()") Save Current
-          button.btn.btn-secondary.mr-2(type="button", @click="renameSelectedQuery()", :disabled="!selected_saved_query_id") Rename
+          button.btn.btn-success.me-2(type="button", @click="saveCurrentQuery()") Save Current
+          button.btn.btn-secondary.me-2(type="button", @click="renameSelectedQuery()", :disabled="!selected_saved_query_id") Rename
           button.btn.btn-danger(type="button", @click="deleteSelectedQuery()", :disabled="!selected_saved_query_id")
             icon(name="trash")
             |  Delete
@@ -87,7 +87,6 @@ div
 </style>
 
 <script lang="ts">
-import 'vue-awesome/icons/trash';
 import moment from 'moment';
 import _ from 'lodash';
 import { querystr_to_array } from '~/queries';

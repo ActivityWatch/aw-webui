@@ -6,7 +6,7 @@
       i Buckets with no events in the queried range will be hidden.
 
     div(v-if="editingEvent")
-      EventEditor(:event="editingEvent" :bucket_id="editingEventBucket")
+      EventEditor(v-model:open="editorOpen" :event="editingEvent" :bucket_id="editingEventBucket")
 </template>
 
 <style lang="scss">
@@ -57,6 +57,7 @@ div#visualization {
 </style>
 
 <script lang="ts">
+import { useToastController } from 'bootstrap-vue-next';
 import _ from 'lodash';
 import moment from 'moment';
 import Color from 'color';
@@ -97,8 +98,12 @@ export default {
     swimlane: { type: String },
     updateTimelineWindow: { type: Boolean },
   },
+  setup() {
+    return { toastController: useToastController() };
+  },
   data() {
     return {
+      editorOpen: false,
       timeline: null,
       filterShortEvents: true,
       items: [],
@@ -210,7 +215,7 @@ export default {
       this.ensureUpdate();
     });
   },
-  beforeDestroy() {
+  beforeUnmount() {
     const el = this.$el.querySelector('#visualization');
     if (el) {
       el.removeEventListener('wheel', this.onHorizontalWheel, { capture: true });
@@ -240,7 +245,7 @@ export default {
       event.stopImmediatePropagation();
     },
     openEditor: function () {
-      this.$bvModal.show('edit-modal-' + this.editingEvent.id);
+      this.editorOpen = true;
     },
     onSelect: async function (properties) {
       if (properties.items.length == 0) {
@@ -276,11 +281,14 @@ export default {
           // edit flow. Persist the dismissal via localStorage so the user
           // doesn't see it every session.
           if (!this.editRefreshHintDismissed()) {
-            this.$bvToast.toast('Your edit is saved. Refresh the timeline to see it reflected.', {
-              title: 'Heads up',
-              variant: 'info',
-              autoHideDelay: 6000,
-              solid: true,
+            this.toastController.show?.({
+              props: {
+                title: 'Heads up',
+                body: 'Your edit is saved. Refresh the timeline to see it reflected.',
+                variant: 'info',
+                value: 6000,
+                solid: true,
+              },
             });
             this.markEditRefreshHintDismissed();
           }

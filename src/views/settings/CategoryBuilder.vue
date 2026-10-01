@@ -34,7 +34,7 @@ div
 
   h5 Common words in "{{category.join(" > ")}}" events
   div(v-if="loading")
-    b-spinner.mr-2(small)
+    b-spinner.me-2(small)
     span.text-muted Loading...
   div(v-else-if="hostnameEmptyKind === 'no-hosts'")
     p.text-muted.mb-0
@@ -56,11 +56,11 @@ div
             div.flex-grow-1
               | {{ word.word }} ({{ Math.round(word.duration) }}s)
             div.flex-grow-0
-              b-button.mr-1(size="sm" @click="createRule(word.word)" variant="success")
+              b-button.me-1(size="sm" @click="createRule(word.word)" variant="success")
                 | New rule
-              b-button.mr-1(size="sm" @click="appendRule(word.word)" variant="warning")
+              b-button.me-1(size="sm" @click="appendRule(word.word)" variant="warning")
                 | Append rule
-              b-button.mr-1(size="sm" @click="ignoreWord(word.word)")
+              b-button.me-1(size="sm" @click="ignoreWord(word.word)")
                 | Ignore
               b-button(size="sm" @click="showEvents(word)" variant="outline-dark")
                 span(v-if="showing_events[0] != word") Show events
@@ -69,15 +69,15 @@ div
             table.table.table-sm.table-striped
               tr
                 th Title
-                th.text-right Duration
+                th.text-end Duration
               tr(v-for="event in showing_events[1]")
                 td {{ event.data.title || event.data.app }}
-                td.text-right {{ Math.round(event.duration) }}s
+                td.text-end {{ Math.round(event.duration) }}s
             hr
       div.d-flex.align-items-center.mt-3(v-if="hasMoreWords")
         small.text-muted
           | Showing {{ words_visible.length }} of {{ words_by_duration.length }} words
-        b-button.ml-auto(
+        b-button.ms-auto(
           size="sm"
           variant="outline-primary"
           @click="visible_count += page_size"
@@ -88,7 +88,7 @@ div
                       @ok="createRuleOk()"
                       @hidden="createRuleCancel()")
 
-  b-modal(id="appendRule" title="Append rule" @ok="handleOk" :ok-disabled="!valid")
+  b-modal(v-model="showAppendModal" title="Append rule" @ok="handleOk" :ok-disabled="!valid")
     b-form(ref="form" @submit.stop.prevent="handleSubmit")
       b-form-group(label="Rule"
                    label-for="append-category"
@@ -159,6 +159,7 @@ export default {
 
       words: {},
       showing_events: [],
+      showAppendModal: false,
 
       // TODO: load from settings
       ignored_words: [],
@@ -219,7 +220,7 @@ export default {
     await this.categoryStore.load();
     const sole = selectSoleKnownHostname(bucketsStore.hosts);
     if (sole && !this.queryOptions.hostname) {
-      this.$set(this.queryOptions, 'hostname', sole);
+      this.queryOptions.hostname = sole;
       // Deep watch on queryOptions calls fetchWords.
     } else {
       await this.fetchWords();
@@ -238,7 +239,7 @@ export default {
         // silently querying the first device.
         const sole = selectSoleKnownHostname(useBucketsStore().hosts);
         if (sole) {
-          this.$set(this.queryOptions, 'hostname', sole);
+          this.queryOptions.hostname = sole;
           // Deep watch re-enters fetchWords with hostname set.
           return;
         }
@@ -354,7 +355,7 @@ export default {
     appendRule(word) {
       console.log('Opening modal to append rule with word: ' + word);
       this.append.word = _.escapeRegExp(word);
-      this.$bvModal.show('appendRule');
+      this.showAppendModal = true;
     },
     async appendRuleOk() {
       console.log('Appending rule with word: ' + this.append.word);
@@ -380,7 +381,7 @@ export default {
 
       // Hide the modal manually
       this.$nextTick(() => {
-        this.$bvModal.hide('appendRule');
+        this.showAppendModal = false;
       });
 
       this.appendRuleOk();

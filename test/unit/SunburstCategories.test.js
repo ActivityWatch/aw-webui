@@ -4,8 +4,6 @@ import SunburstCategories from '~/visualizations/SunburstCategories.vue';
 import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
 
-jest.mock('vue-d3-sunburst/dist/vue-d3-sunburst.css', () => ({}));
-
 describe('SunburstCategories', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
@@ -30,10 +28,10 @@ describe('SunburstCategories', () => {
     ]);
   });
 
-  test('renders the vue-d3-sunburst graph with the overridden d3-color dependency', async () => {
+  test('renders the sunburst graph', async () => {
     const wrapper = mount(SunburstCategories, {
       attachTo: document.body,
-      propsData: {
+      props: {
         data: {
           name: 'All',
           children: [
@@ -51,6 +49,34 @@ describe('SunburstCategories', () => {
     expect(wrapper.find('svg').exists()).toBe(true);
     expect(wrapper.findAll('path').length).toBeGreaterThan(0);
 
-    wrapper.destroy();
+    wrapper.unmount();
+  });
+
+  test('renders nothing while the data is loading', () => {
+    const wrapper = mount(SunburstCategories, { props: { data: null } });
+    expect(wrapper.findAll('path')).toHaveLength(0);
+    wrapper.unmount();
+  });
+
+  test('keeps the hovered arc highlighted', async () => {
+    const wrapper = mount(SunburstCategories, {
+      props: {
+        data: {
+          name: 'All',
+          children: [
+            { name: 'Work', children: [{ name: 'Code', size: 3600 }] },
+            { name: 'Code', size: 1800 },
+          ],
+        },
+      },
+    });
+    const arcs = wrapper.findAll('path');
+    const hovered = arcs[arcs.length - 1];
+    await hovered.trigger('mouseover');
+
+    expect(hovered.attributes('fill-opacity')).toBe('1');
+    // Arcs outside the hovered one's ancestry are dimmed
+    expect(arcs.some(a => a.attributes('fill-opacity') !== '1')).toBe(true);
+    wrapper.unmount();
   });
 });

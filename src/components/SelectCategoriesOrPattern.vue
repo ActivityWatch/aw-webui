@@ -10,18 +10,17 @@ div
   // select which categories, by having a form select and a "plus" button to include them
   b-input-group
     aw-select-categories(v-if="mode == 'categories'", v-model="filterCategoriesData")
-    b-input(v-if="mode == 'custom'" v-model="pattern" v-on:keyup.enter="generate()" placeholder="Regex pattern to search for")
-    b-input-group-append
-      slot(name="input-group-append")
+    b-form-input(v-if="mode == 'custom'" v-model="pattern" v-on:keyup.enter="generate()" placeholder="Regex pattern to search for")
+    slot(name="input-group-append")
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import { useCategoryStore } from '~/stores/categories';
 
 const SEP = ' > ';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'SelectCategoriesOrPattern',
   props: {
     filterCategories: {
@@ -69,11 +68,11 @@ export default Vue.extend({
       this.filterCategoriesData = [...this.filterCategoriesData, ...this.filterCategories];
     },
     filterCategoriesData() {
-      this.$emit('input', this.categoriesWithRules);
+      this.$emit('update:modelValue', this.categoriesWithRules);
       console.log(this.categoriesWithRules);
     },
     pattern() {
-      this.$emit('input', this.categoriesWithRules);
+      this.$emit('update:modelValue', this.categoriesWithRules);
       console.log(this.categoriesWithRules);
     },
   },

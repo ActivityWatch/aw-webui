@@ -7,28 +7,28 @@ div
   // Toolbar: filters (primary), display kebab (swimlanes etc.), event count,
   // and keyboard hint. Flex-wrap so it doesn't overlap at narrow widths.
   div.timeline-toolbar.d-flex.flex-wrap.align-items-center
-    details.timeline-filters.mr-2(ref="filtersDetails")
+    details.timeline-filters.me-2(ref="filtersDetails")
       summary.timeline-chip.timeline-chip--clickable
-        icon.mr-1(name="filter")
+        icon.me-1(name="filter")
         b Filters: {{ filter_summary }}
       div.timeline-filters-panel.shadow-sm
         table
           tr
-            th.pt-2.pr-3
+            th.pt-2.pe-3
               label(for="timeline-filter-host") Host:
             td
               select#timeline-filter-host.form-control.form-control-sm(v-model="filter_hostname")
                 option(:value='null') All
                 option(v-for="host in hosts", :value="host") {{ host }}
           tr
-            th.pt-2.pr-3
+            th.pt-2.pe-3
               label(for="timeline-filter-client") Client:
             td
               select#timeline-filter-client.form-control.form-control-sm(v-model="filter_client")
                 option(:value='null') All
                 option(v-for="client in clients", :value="client") {{ client }}
           tr
-            th.pt-2.pr-3
+            th.pt-2.pe-3
               label(for="timeline-filter-duration") Duration:
             td
               select#timeline-filter-duration.form-control.form-control-sm(v-model="filter_duration")
@@ -45,37 +45,37 @@ div
                 option(:value='1 * 60 * 60') 1+ hrs
                 option(:value='2 * 60 * 60') 2+ hrs
           tr
-            th.pt-2.pr-3
+            th.pt-2.pe-3
               label AFK:
             td
               b-form-checkbox(v-model="filter_afk" size="sm" switch)
                 | {{ $t('timeline.filterAfk') }}
           tr
-            th.pt-2.pr-3
+            th.pt-2.pe-3
               label Merge:
             td
               b-form-checkbox(v-model="filter_merge_similar" size="sm" switch)
                 | {{ $t('timeline.mergeByApp') }}
           tr
-            th.pt-2.pr-3
+            th.pt-2.pe-3
               label(for="timeline-filter-categories") Categories:
             td
               select#timeline-filter-categories.form-control.form-control-sm(@change="onCategorySelect($event)", :value="''")
                 option(value="" disabled) {{ filter_categories.length > 0 ? 'Add category...' : 'All' }}
                 option(v-for="cat in category_options", :key="cat.text", :value="cat.text") {{ cat.text }}
               div.mt-1(v-if="filter_categories.length > 0")
-                span.badge.badge-info.mr-1(v-for="(cat, idx) in filter_categories", :key="idx")
+                span.badge.text-bg-info.me-1(v-for="(cat, idx) in filter_categories", :key="idx")
                   | {{ cat.join(' > ') }}
-                  button.ml-1.close.small(@click="removeCategory(idx)", type="button", aria-label="Remove category", style="font-size: 0.85rem; line-height: 1") &times;
+                  button.btn-close.btn-close-white.ms-1(@click="removeCategory(idx)", type="button", aria-label="Remove category", style="font-size: 0.5rem")
 
     // Display options (swimlanes, future visual toggles) tucked behind a
     // ghost kebab so they don't compete visually with Filters.
-    b-dropdown.kebab-dropdown.mr-2(
+    b-dropdown.kebab-dropdown.me-2(
       size="sm"
       variant="outline-secondary"
       toggle-class="border-0"
       no-caret
-      right
+      end
       title="Display options"
       aria-label="Display options"
     )
@@ -89,13 +89,13 @@ div
         @click="swimlane = opt.value"
       ) {{ opt.text }}
 
-    div.timeline-chip.mr-2.text-muted
+    div.timeline-chip.me-2.text-muted
       | {{ num_events }} {{ $t('timeline.eventsShown') }}
 
-    small.text-muted.ml-auto
+    small.text-muted.ms-auto
       | {{ $t('timeline.scrollHint') }}
 
-  b-alert.mb-2(v-if="buckets !== null && num_events === 0", variant="warning", show)
+  b-alert.mb-2(v-if="buckets !== null && num_events === 0", variant="warning", :model-value="true")
     | {{ $t('timeline.noEvents') }}
 
   div(v-if="buckets !== null")
@@ -108,8 +108,6 @@ div
 </template>
 
 <script lang="ts">
-import 'vue-awesome/icons/filter';
-import 'vue-awesome/icons/ellipsis-v';
 import _ from 'lodash';
 import { mapState } from 'pinia';
 import { useSettingsStore } from '~/stores/settings';
