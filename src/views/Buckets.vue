@@ -242,6 +242,19 @@ import { useBucketsStore } from '~/stores/buckets';
 import { getStoredApiToken } from '~/util/awclient';
 import { androidExportFromUrl, downloadBlob } from '~/util/export';
 
+// NOTE: keep this out of the component's `methods`. The global
+// `asyncErrorCapturedMixin` wraps every async method so that its rejection is
+// reported to the global `ErrorBoundary` and the *returned* promise resolves.
+// A wrapped `importBuckets` would therefore never reject inside the
+// `import_file` watcher below, and a failed import would still set
+// `import_success = true` (showing a success alert next to the error).
+async function importBuckets(aw, importFile) {
+  const formData = new FormData();
+  formData.append('buckets.json', importFile);
+  const headers = { 'Content-Type': 'multipart/form-data' };
+  return aw.req.post('/0/import', formData, { headers });
+}
+
 export default {
   name: 'Buckets',
   components: {
@@ -304,7 +317,7 @@ export default {
     import_file: async function (_new_value, _old_value) {
       if (this.import_file != null) {
         try {
-          await this.importBuckets(this.import_file);
+          await importBuckets(this.$aw, this.import_file);
           this.import_error = null;
           this.import_success = true;
         } catch (err) {
@@ -385,12 +398,6 @@ export default {
       } finally {
         this.deleting_host = false;
       }
-    },
-    importBuckets: async function (importFile) {
-      const formData = new FormData();
-      formData.append('buckets.json', importFile);
-      const headers = { 'Content-Type': 'multipart/form-data' };
-      return this.$aw.req.post('/0/import', formData, { headers });
     },
 
     async export_bucket_json(bucketId: string) {
