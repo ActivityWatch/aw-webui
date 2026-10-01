@@ -126,7 +126,9 @@ div
 
   b-card-group.deck
     b-card(:header="$t('buckets.importBuckets')")
-      b-alert(v-if="import_error" show variant="danger" dismissible)
+      b-alert(v-if="import_success" show variant="success" dismissible @dismissed="import_success = false")
+        | {{ $t('buckets.importSuccess') }}
+      b-alert(v-if="import_error" show variant="danger" dismissible @dismissed="import_error = null")
         | {{ import_error }}
       b-form-file(v-model="import_file"
                   :placeholder="$t('buckets.importPlaceholder')"
@@ -240,6 +242,19 @@ import { useBucketsStore } from '~/stores/buckets';
 import { getStoredApiToken } from '~/util/awclient';
 import { androidExportFromUrl, downloadBlob } from '~/util/export';
 
+// NOTE: keep this out of the component's `methods`. The global
+// `asyncErrorCapturedMixin` wraps every async method so that its rejection is
+// reported to the global `ErrorBoundary` and the *returned* promise resolves.
+// A wrapped `importBuckets` would therefore never reject inside the
+// `import_file` watcher below, and a failed import would still set
+// `import_success = true` (showing a success alert next to the error).
+async function importBuckets(aw, importFile) {
+  const formData = new FormData();
+  formData.append('buckets.json', importFile);
+  const headers = { 'Content-Type': 'multipart/form-data' };
+  return aw.req.post('/0/import', formData, { headers });
+}
+
 export default {
   name: 'Buckets',
   components: {
@@ -254,6 +269,7 @@ export default {
 
       import_file: null,
       import_error: null,
+      import_success: false,
       delete_bucket_selected: null,
       delete_host_selected: null,
       deleting_host: false,
@@ -300,11 +316,18 @@ export default {
   watch: {
     import_file: async function (_new_value, _old_value) {
       if (this.import_file != null) {
+        // Clear the previous outcome up-front so a stale success/error alert
+        // isn't shown beside the spinner while the new import is in flight.
+        this.import_success = false;
+        this.import_error = null;
         try {
-          await this.importBuckets(this.import_file);
+          await importBuckets(this.$aw, this.import_file);
           this.import_error = null;
+          this.import_success = true;
         } catch (err) {
-          this.import_error = 'Import failed, see aw-server logs for more info';
+          const serverMessage = err?.response?.data?.message;
+          this.import_error = serverMessage || this.$t('buckets.importFailedGeneric');
+          this.import_success = false;
         }
         await this.bucketsStore.loadBuckets();
         this.import_file = null;
@@ -379,12 +402,6 @@ export default {
       } finally {
         this.deleting_host = false;
       }
-    },
-    importBuckets: async function (importFile) {
-      const formData = new FormData();
-      formData.append('buckets.json', importFile);
-      const headers = { 'Content-Type': 'multipart/form-data' };
-      return this.$aw.req.post('/0/import', formData, { headers });
     },
 
     async export_bucket_json(bucketId: string) {

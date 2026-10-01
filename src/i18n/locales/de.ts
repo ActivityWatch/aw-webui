@@ -239,6 +239,8 @@ export default {
     bucketsToDelete: 'Buckets, die gelöscht werden:',
     deleting: 'Wird gelöscht…',
     importing: 'Importiere…',
+    importSuccess: 'Import erfolgreich abgeschlossen!',
+    importFailedGeneric: 'Import fehlgeschlagen, siehe aw-server-Logs für weitere Informationen',
     importHelpNew:
       'JSON-Datei aus einem oder mehreren Buckets. Der Import schlägt fehl, wenn bereits ein Bucket mit derselben ID existiert.',
     exportHelp: 'Alle Buckets auf diesem Server als eine JSON-Datei herunterladen. Für Backups.',

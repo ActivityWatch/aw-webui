@@ -236,6 +236,8 @@ export default {
     bucketsToDelete: 'Bucket-и, які будуть видалені:',
     deleting: 'Видалення…',
     importing: 'Імпорт…',
+    importSuccess: 'Імпорт успішно завершено!',
+    importFailedGeneric: 'Імпорт не вдався, подробиці в логах aw-server',
     importHelpNew:
       'Потрібен JSON, експортований з одного або кількох bucket-ів. Імпорт не вдасться, якщо bucket з таким ID уже існує.',
     exportHelp: 'Завантажити всі bucket-и з цього сервера одним JSON-файлом. Для резервних копій.',

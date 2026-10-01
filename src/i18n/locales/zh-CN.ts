@@ -233,6 +233,8 @@ export default {
     bucketsToDelete: '将被删除的存储桶：',
     deleting: '删除中...',
     importing: '导入中...',
+    importSuccess: '导入成功完成！',
+    importFailedGeneric: '导入失败，详情请查看 aw-server 日志',
     importHelpNew: '请提供从单个或多个存储桶导出的 JSON 文件。',
     exportHelp: '将此服务器上的每个存储桶下载为单个 JSON 文件。',
     currentDevice: '（当前设备）',

@@ -243,6 +243,8 @@ export default {
     bucketsToDelete: 'Buckets som kommer att tas bort:',
     deleting: 'Tar bort...',
     importing: 'Importerar...',
+    importSuccess: 'Importen slutfördes!',
+    importFailedGeneric: 'Importen misslyckades, se aw-server-loggen för mer information',
     importHelpNew:
       'Ange en JSON-fil som exporterats från en enskild bucket eller från flera buckets. Importen misslyckas om en bucket med samma ID redan finns.',
     exportHelp:
