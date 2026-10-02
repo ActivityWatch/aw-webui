@@ -683,4 +683,5 @@ export default {
   screentimeNamesQuery,
   categoryQuery,
   editorActivityQuery,
+  canonicalEvents,
 };
