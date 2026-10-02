@@ -111,10 +111,55 @@ describe('Bucket view', () => {
   });
 });
 
+describe('Bucket view navigation', () => {
+  const bucketA = { ...knownBucket, id: 'bucket-a' };
+  const bucketB = { ...knownBucket, id: 'bucket-b' };
+  const eventsFor = id => [
+    { id: 1, timestamp: '2026-10-02T10:00:00Z', duration: 1, data: { from: id } },
+  ];
+
+  beforeEach(() => {
+    mockState.buckets = [bucketA, bucketB];
+    mockCountEvents.mockReset().mockImplementation(async id => (id === 'bucket-a' ? 10 : 20));
+    mockLoadBuckets.mockReset().mockResolvedValue(undefined);
+    mockGetBucketWithEvents
+      .mockReset()
+      .mockImplementation(async ({ id }) => ({ id, events: eventsFor(id) }));
+  });
+
+  test('reloads events and count when navigating to another bucket', async () => {
+    const wrapper = mountBucket('bucket-a');
+    await flush();
+    expect(wrapper.vm.events[0].data.from).toBe('bucket-a');
+    expect(wrapper.vm.eventcount).toBe(10);
+
+    // The router reuses the component, only changing the prop.
+    await wrapper.setProps({ id: 'bucket-b' });
+    await flush();
+    expect(wrapper.vm.events[0].data.from).toBe('bucket-b');
+    expect(wrapper.vm.eventcount).toBe(20);
+  });
+
+  test('shows the not-found state when navigating to an unknown bucket', async () => {
+    const wrapper = mountBucket('bucket-a');
+    await flush();
+    mockCountEvents.mockClear();
+    mockGetBucketWithEvents.mockClear();
+
+    await wrapper.setProps({ id: 'does-not-exist' });
+    await flush();
+    expect(mockLoadBuckets).toHaveBeenCalled();
+    expect(mockCountEvents).not.toHaveBeenCalled();
+    expect(mockGetBucketWithEvents).not.toHaveBeenCalled();
+    expect(wrapper.find('.alert').text()).toContain('No bucket named "does-not-exist"');
+  });
+});
+
 const range = () => [{ format: () => 'start' }, { format: () => 'end' }];
 
 function makeVm(getBucketWithEvents, daterange = range()) {
   return {
+    id: 'b',
     daterange,
     events: [],
     showingMostRecent: false,

@@ -81,6 +81,23 @@ export default {
     daterange: async function () {
       await this.getEvents(this.id);
     },
+    // The router reuses this component when navigating between buckets, so
+    // reload everything for the new bucket instead of showing the old one's events.
+    id: async function (bucket_id) {
+      this.events = [];
+      this.eventcount = '?';
+      this.showingMostRecent = false;
+      if (!this.bucket) {
+        await this.bucketsStore.loadBuckets();
+        if (bucket_id !== this.id || !this.bucket) return;
+      }
+      // Without a daterange yet, the time interval input emits one and the
+      // daterange watcher loads the events.
+      await Promise.all([
+        this.daterange ? this.getEvents(bucket_id) : null,
+        this.getEventCount(bucket_id),
+      ]);
+    },
   },
   mounted: async function () {
     await this.bucketsStore.ensureLoaded();
@@ -102,7 +119,8 @@ export default {
         start: daterange[0].format(),
         end: daterange[1].format(),
       });
-      if (this.daterange !== daterange) return;
+      // Also ignore responses for a bucket we've since navigated away from.
+      if (this.daterange !== daterange || bucket_id !== this.id) return;
       this.events = bucket.events;
       this.showingMostRecent = false;
 
@@ -115,7 +133,7 @@ export default {
             id: bucket_id,
             limit: 100,
           });
-          if (this.daterange !== daterange) return;
+          if (this.daterange !== daterange || bucket_id !== this.id) return;
           if (recent.events.length > 0) {
             this.events = recent.events;
             // The API returns newest first.
@@ -129,6 +147,7 @@ export default {
     },
     getEventCount: async function (bucket_id) {
       const count = await getClient().countEvents(bucket_id);
+      if (bucket_id !== this.id) return;
       // aw-client already unwraps the response body, except that 0.3.x returns the
       // raw response when the body is falsy (a count of 0).
       this.eventcount = typeof count === 'number' ? count : count.data;
