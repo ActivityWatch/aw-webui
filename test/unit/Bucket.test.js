@@ -45,13 +45,13 @@ describe('Bucket.vue getEvents fallback', () => {
       return { events: [] };
     });
     const vm = makeVm(get);
-    const pending = Bucket.methods.getEvents.call(vm, 'b');
+    const inFlight = Bucket.methods.getEvents.call(vm, 'b');
     // User picks a new interval and its events arrive while the fallback is in flight.
     await Promise.resolve();
     vm.daterange = range();
     vm.events = [{ timestamp: 'fresh' }];
     release();
-    await pending;
+    await inFlight;
     expect(vm.events).toEqual([{ timestamp: 'fresh' }]);
     expect(vm.showingMostRecent).toBe(false);
   });
