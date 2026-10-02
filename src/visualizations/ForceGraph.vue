@@ -22,6 +22,8 @@ export default {
   },
   data: () => ({
     cancelPromise: null,
+    drawnWidth: 0,
+    resizeObserver: null,
   }),
   watch: {
     // Watch for changes in the data and update the graph
@@ -31,8 +33,23 @@ export default {
   },
   mounted() {
     this.drawGraph(this.data);
+    // Redraw at the new width when the container is resized (e.g. window resize or
+    // rotating a phone), otherwise the old drawing gets scaled down again.
+    if (typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        if (this.graphWidth() !== this.drawnWidth) this.drawGraph(this.data);
+      });
+      this.resizeObserver.observe(this.$el);
+    }
+  },
+  beforeDestroy() {
+    this.resizeObserver && this.resizeObserver.disconnect();
+    this.cancelPromise && this.cancelPromise();
   },
   methods: {
+    graphWidth() {
+      return Math.min(640, this.$el.clientWidth || 640);
+    },
     drawGraph({ nodes, links }) {
       console.log('rendering...');
       this.cancelPromise && this.cancelPromise();
@@ -42,7 +59,8 @@ export default {
 
       // Draw at the container's width (up to the default 640px) instead of scaling
       // a 640px-wide drawing down, which made nodes tiny on narrow screens.
-      const width = Math.min(640, this.$el.clientWidth || 640);
+      const width = this.graphWidth();
+      this.drawnWidth = width;
       const svgEl = ForceGraph(
         { nodes, links },
         { width, nodeTitle: d => d.id, invalidation: promise }
@@ -229,7 +247,12 @@ function ForceGraph(
       .attr('y2', d => (d as any).target.y);
 
     node.attr('cx', d => (d as any).x).attr('cy', d => (d as any).y);
-    label.attr('x', d => (d as any).x + d.radius + 3).attr('y', d => (d as any).y);
+    // Put each label on the side of its node facing the center, so labels of nodes
+    // near the left/right edge stay inside the graph.
+    label
+      .attr('text-anchor', d => ((d as any).x > 0 ? 'end' : 'start'))
+      .attr('x', d => (d as any).x + ((d as any).x > 0 ? -1 : 1) * (d.radius + 3))
+      .attr('y', d => (d as any).y);
   }
 
   function drag(_simulation) {
