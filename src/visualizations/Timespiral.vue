@@ -136,10 +136,13 @@ export default {
       const min_radius = thickness + spacing + 20;
 
       // Init d3
+      // Draw in a fixed coordinate space and let the viewBox scale it down to fit narrow screens.
       const svg = d3
         .select('svg#timespiral')
-        .style('height', `${height}px`)
-        .style('width', `${width}px`);
+        .attr('viewBox', `0 0 ${width} ${height}`)
+        .style('width', '100%')
+        .style('max-width', `${width}px`)
+        .style('height', 'auto');
 
       const g = svg.append('g').attr('transform', `translate(${width / 2}, ${width / 2})`);
 
