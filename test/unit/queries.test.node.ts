@@ -471,7 +471,9 @@ describe('appQuery merge key regression', () => {
     // The canonical-events step must reference "title" for the iOS path
     expect(joined).toContain('merge_events_by_keys(events, ["app", "title"])');
     // The title_events step must merge on ["app", "title"] for iOS (no "classname" — ScreenTime events lack it)
-    expect(joined).toContain('"app", "title"');
+    expect(joined).toContain(
+      'title_events = sort_by_duration(merge_events_by_keys(events, ["app", "title"]));'
+    );
     expect(joined).not.toContain('"app", "classname", "title"');
   });
 });
