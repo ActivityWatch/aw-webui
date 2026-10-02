@@ -13,7 +13,7 @@ div
       ) {{ opt.text }}
 
     b-form-select.mr-2.mb-1(
-      v-if="bucketsStore.hosts.length > 1"
+      v-if="bucketsStore.knownHosts.length > 1"
       size="sm"
       :value="host"
       :options="hostOptions"
@@ -145,11 +145,11 @@ export default {
 
   computed: {
     host(): string | undefined {
-      return this.$route.params.host || this.bucketsStore.hosts[0];
+      return this.$route.params.host || this.bucketsStore.knownHosts[0];
     },
 
     hostOptions(): { value: string; text: string }[] {
-      return this.bucketsStore.hosts.map(h => ({ value: h, text: h }));
+      return this.bucketsStore.knownHosts.map(h => ({ value: h, text: h }));
     },
 
     today(): string {

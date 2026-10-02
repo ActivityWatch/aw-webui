@@ -5,7 +5,7 @@ describe('Trends view', () => {
     test('returns the :host route param when present', () => {
       const vm = {
         $route: { params: { host: 'laptop' } },
-        bucketsStore: { hosts: ['desktop'] },
+        bucketsStore: { knownHosts: ['desktop'] },
       };
       expect(Trends.computed.host.call(vm)).toBe('laptop');
     });
@@ -17,7 +17,7 @@ describe('Trends view', () => {
       // bid_window=undefined.
       const vm = {
         $route: { params: {} },
-        bucketsStore: { hosts: ['desktop', 'laptop'] },
+        bucketsStore: { knownHosts: ['desktop', 'laptop'] },
       };
       expect(Trends.computed.host.call(vm)).toBe('desktop');
     });
@@ -25,9 +25,14 @@ describe('Trends view', () => {
     test('returns undefined when there are no hosts at all', () => {
       const vm = {
         $route: { params: {} },
-        bucketsStore: { hosts: [] },
+        bucketsStore: { knownHosts: [] },
       };
       expect(Trends.computed.host.call(vm)).toBeUndefined();
+    });
+
+    test('offers only real devices in the host select', () => {
+      const vm = { bucketsStore: { knownHosts: ['desktop'], hosts: ['unknown', 'desktop'] } };
+      expect(Trends.computed.hostOptions.call(vm)).toEqual([{ value: 'desktop', text: 'desktop' }]);
     });
   });
 
