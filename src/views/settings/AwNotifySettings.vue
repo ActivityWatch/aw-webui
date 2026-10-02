@@ -127,6 +127,12 @@ export default {
       try {
         const client = getClient();
         const resp = await client.req.get(`/0/settings/${SETTINGS_KEY}`);
+        // aw-server-rust answers 200 with an empty body (null) for a key that was
+        // never set, rather than 404; treat both the same.
+        if (resp.data === null || resp.data === undefined || resp.data === '') {
+          this.useDefaults();
+          return;
+        }
         const config = parseAwNotifyConfig(resp.data);
         if (!config) {
           throw new Error('The saved aw-notify setting has an unsupported format.');
@@ -135,14 +141,17 @@ export default {
         this.alerts = config.alerts.map(dtoToRow);
       } catch (e: any) {
         if (e?.response?.status === 404) {
-          this.config = {} as AwNotifyConfig;
-          this.alerts = this.defaultAlerts();
+          this.useDefaults();
         } else {
           this.error = `Failed to load settings: ${e?.message ?? e}`;
         }
       } finally {
         this.loading = false;
       }
+    },
+    useDefaults() {
+      this.config = {} as AwNotifyConfig;
+      this.alerts = this.defaultAlerts();
     },
     async save() {
       this.error = '';
