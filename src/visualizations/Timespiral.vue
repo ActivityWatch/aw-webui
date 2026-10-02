@@ -111,6 +111,14 @@ export default {
   },
   mounted() {
     this.renderChart();
+    // Keep the label size in step with the rendered width (e.g. window resize).
+    if (typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => this.updateTextScale());
+      this.resizeObserver.observe(this.$el.querySelector('svg#timespiral'));
+    }
+  },
+  beforeDestroy() {
+    this.resizeObserver && this.resizeObserver.disconnect();
   },
   updated() {
     this.renderChart();
@@ -120,6 +128,16 @@ export default {
     svg.selectAll('*').remove();
   },
   methods: {
+    // Scaling the 600px drawing down also shrinks its text, so enlarge the labels
+    // to compensate (capped so they don't crowd the spiral).
+    updateTextScale() {
+      const svg = this.$el.querySelector('svg#timespiral');
+      const g = svg && svg.querySelector(':scope > g');
+      if (!g) return;
+      const renderedWidth = svg.getBoundingClientRect().width || 600;
+      const textScale = Math.min(Math.max(600 / renderedWidth, 1), 1.4);
+      g.setAttribute('font-size', `${textScale}em`);
+    },
     renderChart() {
       if (this.events.length == 0) return;
 
@@ -147,15 +165,8 @@ export default {
         // narrow screens; let them draw into the page gutter instead of clipping.
         .style('overflow', 'visible');
 
-      // Scaling the drawing down also shrinks its text, so enlarge the labels to
-      // compensate (capped so they don't crowd the spiral).
-      const renderedWidth = (svg.node() as SVGSVGElement).getBoundingClientRect().width || width;
-      const textScale = Math.min(Math.max(width / renderedWidth, 1), 1.4);
-
-      const g = svg
-        .append('g')
-        .attr('transform', `translate(${width / 2}, ${width / 2})`)
-        .attr('font-size', `${textScale}em`);
+      const g = svg.append('g').attr('transform', `translate(${width / 2}, ${width / 2})`);
+      this.updateTextScale();
 
       // The domain is the range of the data.
       // We need to stretch it such that it ranges all the days in events, from start of day to end of day.
