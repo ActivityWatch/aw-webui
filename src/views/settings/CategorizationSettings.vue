@@ -35,6 +35,17 @@ div
       ) {{ $t('settings.categorization.deleteSet') }}
     div.mt-1.small.text-muted(v-if="categoryStore.category_sets.length > 1")
       | {{ $t('settings.categorization.setsAvailable', { count: categoryStore.category_sets.length }) }}
+    div.mt-2.d-flex.align-items-center.flex-wrap(v-if="otherSets.length > 0" style="gap: 0.75rem;")
+      span.small.font-weight-bold(style="white-space: nowrap") {{ $t('settings.categorization.alsoApply') }}
+      b-form-checkbox(
+        v-for="set in otherSets"
+        :key="set.id"
+        :checked="extraSetIds.includes(set.id)"
+        @change="toggleExtraSet(set.id, $event)"
+        size="sm"
+      ) {{ set.id }}
+    div.mt-1.small.text-muted(v-if="extraSetIds.length > 0")
+      | {{ $t('settings.categorization.alsoApplyHelp', { primary: activeSetId }) }}
 
   div.d-flex.align-items-center.flex-wrap.mt-4
     h5.mb-0 {{ $t('settings.categorization.categories') }}
@@ -132,6 +143,12 @@ export default {
   computed: {
     ...mapState(useCategoryStore, ['classes_unsaved_changes']),
     ...mapGetters(useCategoryStore, ['classes_hierarchy']),
+    otherSets: function () {
+      return this.categoryStore.category_sets.filter(s => s.id !== this.activeSetId);
+    },
+    extraSetIds: function (): string[] {
+      return this.categoryStore.active_set_ids.slice(1);
+    },
   },
   watch: {
     builderOpen(v: boolean) {
@@ -280,6 +297,14 @@ export default {
         this.categoryStore.discardChanges();
       }
       this.categoryStore.switchToSet(setId);
+    },
+    toggleExtraSet: function (setId: string, enabled: boolean) {
+      const extras = new Set(this.extraSetIds);
+      if (enabled) extras.add(setId);
+      else extras.delete(setId);
+      // Keep extras in category-set order: earlier sets win on name clashes.
+      const ordered = this.otherSets.map(s => s.id).filter(id => extras.has(id));
+      this.categoryStore.setActiveSets([this.activeSetId, ...ordered]);
     },
     beforeUnload: function (e) {
       if (this.classes_unsaved_changes) {
