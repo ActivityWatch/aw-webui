@@ -1,5 +1,6 @@
 import { createPinia, setActivePinia } from 'pinia';
 import moment from 'moment';
+import 'moment/locale/de';
 
 import {
   MAX_DAILY_BUCKETS,
@@ -24,6 +25,7 @@ describe('periodStartDate', () => {
   it.each([
     ['Monday', 'week', '2026-09-28'],
     ['Sunday', 'week', '2026-09-27'],
+    ['Saturday', 'week', '2026-09-26'],
     ['Monday', 'month', '2026-10-01'],
     ['Monday', 'year', '2026-01-01'],
     ['Monday', 'day', '2026-10-02'],
@@ -32,9 +34,25 @@ describe('periodStartDate', () => {
     expect(periodStartDate('2026-10-02', period)).toBe(expected);
   });
 
-  it('keeps a date that is already the start of the period', () => {
-    useSettingsStore().startOfWeek = 'Monday';
-    expect(periodStartDate('2026-09-28', 'week')).toBe('2026-09-28');
+  it.each([
+    ['Monday', '2026-09-28'],
+    ['Sunday', '2026-09-27'],
+    ['Saturday', '2026-09-26'],
+  ])('keeps a date that is already the start of a %s week', (startOfWeek, date) => {
+    useSettingsStore().startOfWeek = startOfWeek;
+    expect(periodStartDate(date, 'week')).toBe(date);
+  });
+
+  it('does not depend on the moment locale', () => {
+    useSettingsStore().startOfWeek = 'Sunday';
+    const previousLocale = moment.locale();
+    moment.locale('de'); // weeks start on Monday in the German locale
+    try {
+      expect(moment.locale()).toBe('de');
+      expect(periodStartDate('2026-10-02', 'week')).toBe('2026-09-27');
+    } finally {
+      moment.locale(previousLocale);
+    }
   });
 });
 

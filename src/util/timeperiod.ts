@@ -68,10 +68,21 @@ export function periodLengthConvertMoment(periodLength: string) {
   }
 }
 
-// Snaps a YYYY-MM-DD date to the first day of the day/week/month/year containing it,
-// honoring the configured start of week.
+const WEEKDAY_INDEX = { Sunday: 0, Monday: 1, Saturday: 6 };
+
+// Snaps a YYYY-MM-DD date to the first day of the day/week/month/year containing it.
+// Weeks start on the configured start of week, independent of moment's locale.
 export function periodStartDate(date: string, periodLength: string): string {
-  return moment(date).startOf(periodLengthConvertMoment(periodLength)).format('YYYY-MM-DD');
+  const m = moment(date);
+  if (periodLength === 'week') {
+    const settingsStore = useSettingsStore();
+    const weekStart = WEEKDAY_INDEX[settingsStore.startOfWeek] ?? WEEKDAY_INDEX.Monday;
+    return m
+      .subtract((m.day() - weekStart + 7) % 7, 'days')
+      .startOf('day')
+      .format('YYYY-MM-DD');
+  }
+  return m.startOf(periodLengthConvertMoment(periodLength)).format('YYYY-MM-DD');
 }
 
 export function timeperiodsAroundTimeperiod(timeperiod: TimePeriod): TimePeriod[] {
