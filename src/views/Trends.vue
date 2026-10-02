@@ -65,6 +65,7 @@ div
       v-else
       small
       hover
+      responsive
       :items="categoryTrends"
       :fields="categoryFields"
       sort-by="absDelta"
@@ -135,9 +136,9 @@ export default {
 
       categoryFields: [
         { key: 'category', label: 'Category', sortable: true },
-        { key: 'current', label: 'Current', class: 'text-right', sortable: true },
-        { key: 'previous', label: 'Previous', class: 'text-right', sortable: true },
-        { key: 'delta', label: 'Change', class: 'text-right', sortable: true },
+        { key: 'current', label: 'Current', class: 'text-right text-nowrap', sortable: true },
+        { key: 'previous', label: 'Previous', class: 'text-right text-nowrap', sortable: true },
+        { key: 'delta', label: 'Change', class: 'text-right text-nowrap', sortable: true },
         { key: 'absDelta', label: '', class: 'd-none', sortable: true },
       ],
     };
