@@ -1,5 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`browserSearchQuery with browser bucket generates valid query 1`] = `
+"browser_results = [];
+events_firefox = flood(query_bucket("aw-watcher-web-firefox_testhost"));
+events_firefox = split_url_events(events_firefox);
+url_firefox = filter_keyvals_regex(events_firefox, "url", "github\\.com");
+title_firefox = filter_keyvals_regex(events_firefox, "title", "github\\.com");
+events_firefox = sort_by_timestamp(concat(url_firefox, title_firefox));
+browser_results = concat(browser_results, events_firefox);
+browser_results = sort_by_timestamp(browser_results);
+RETURN = browser_results;"
+`;
+
 exports[`generate fullDesktopQuery 1`] = `
 "events = flood(query_bucket("aw-watcher-window_testhost"));
 not_afk = flood(query_bucket("aw-watcher-afk_testhost"));
