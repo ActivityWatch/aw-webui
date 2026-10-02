@@ -13,6 +13,7 @@ export default {
     tools: 'Інструменти',
     search: 'Пошук',
     workReport: 'Звіт про роботу',
+    aiSummary: 'ШІ-підсумок',
     trends: 'Тренди',
     report: 'Звіт',
     alerts: 'Сповіщення',
@@ -260,6 +261,7 @@ export default {
       'Потрібен JSON: експорт одного bucket-а або кількох. Якщо імена збігаються — імпорт не вдасться.',
     exportBuckets: 'Експорт bucket-ів',
     exportAllJson: 'Експорт усіх bucket-ів у JSON',
+    exporting: 'Експорт…',
     tools: 'Інструменти',
   },
   activity: {
@@ -298,6 +300,15 @@ export default {
     rangeStart: 'Дата початку',
     rangeEnd: 'Дата завершення',
     invalidRange: 'Недійсний діапазон дат в URL, показано сьогодні.',
+    diagnosticMissingWindow:
+      'Немає bucket-а вікон для {host}. Запустіть aw-watcher-window і оновіть сторінку.',
+    diagnosticMissingAfk:
+      'Немає AFK-bucket-а для {host}. Запустіть aw-watcher-afk і оновіть сторінку.',
+    diagnosticAmbiguousWindow:
+      'Кілька bucket-ів вікон можуть описувати {host}: {buckets}. Виберіть потрібний пристрій вище або перегляньте необроблені дані.',
+    diagnosticNoWindowEvents:
+      'За цей період активності вікон не знайдено. Перевірте, що aw-watcher-window запущено. У Wayland спробуйте awatcher.',
+    diagnosticOpenRawData: 'Відкрити необроблені дані.',
     periodAllTime: 'увесь час',
     allTimeSlowHint: 'Завантаження за весь час може тривати довго на великих базах даних.',
     filterAfkTooltip: 'Приховати час, коли AFK-watcher не фіксував введення з клавіатури чи миші.',

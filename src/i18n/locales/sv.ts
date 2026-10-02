@@ -268,6 +268,7 @@ export default {
       'En giltig fil för import är en JSON-fil från antingen en export av en enskild bucket eller en export av flera buckets. Om det redan finns buckets med samma namn misslyckas importen.',
     exportBuckets: 'Exportera buckets',
     exportAllJson: 'Exportera alla buckets som JSON',
+    exporting: 'Exporterar...',
     tools: 'Verktyg',
   },
   activity: {
@@ -305,6 +306,15 @@ export default {
     rangeStart: 'Startdatum',
     rangeEnd: 'Slutdatum',
     invalidRange: 'Ogiltigt datumintervall i URL:en, visar idag istället.',
+    diagnosticMissingWindow:
+      'Ingen fönsterbucket för {host}. Starta aw-watcher-window och uppdatera sedan sidan.',
+    diagnosticMissingAfk:
+      'Ingen AFK-bucket för {host}. Starta aw-watcher-afk och uppdatera sedan sidan.',
+    diagnosticAmbiguousWindow:
+      'Flera fönsterbuckets kan beskriva {host}: {buckets}. Välj rätt enhet ovan eller granska rådata.',
+    diagnosticNoWindowEvents:
+      'Ingen fönsteraktivitet hittades för denna period. Kontrollera att aw-watcher-window körs. På Wayland, prova awatcher.',
+    diagnosticOpenRawData: 'Öppna rådata.',
     periodAllTime: 'all tid',
     allTimeSlowHint: 'All tid kan ta en stund med stora databaser.',
     filterAfkTooltip: 'Filtrera bort tid då AFK-bevakaren inte upptäckte någon inmatning.',
