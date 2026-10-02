@@ -142,9 +142,20 @@ export default {
         .attr('viewBox', `0 0 ${width} ${height}`)
         .style('width', '100%')
         .style('max-width', `${width}px`)
-        .style('height', 'auto');
+        .style('height', 'auto')
+        // The enlarged 06:00/18:00 labels below can poke a few px past the edge on
+        // narrow screens; let them draw into the page gutter instead of clipping.
+        .style('overflow', 'visible');
 
-      const g = svg.append('g').attr('transform', `translate(${width / 2}, ${width / 2})`);
+      // Scaling the drawing down also shrinks its text, so enlarge the labels to
+      // compensate (capped so they don't crowd the spiral).
+      const renderedWidth = (svg.node() as SVGSVGElement).getBoundingClientRect().width || width;
+      const textScale = Math.min(Math.max(width / renderedWidth, 1), 1.4);
+
+      const g = svg
+        .append('g')
+        .attr('transform', `translate(${width / 2}, ${width / 2})`)
+        .attr('font-size', `${textScale}em`);
 
       // The domain is the range of the data.
       // We need to stretch it such that it ranges all the days in events, from start of day to end of day.
