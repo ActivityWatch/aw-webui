@@ -48,14 +48,34 @@ describe('activityDiagnostic', () => {
     ).toEqual({ kind: 'missing-afk', host: 'laptop' });
   });
 
-  test('points at hostname variants when the selected host has no exact bucket', () => {
-    // The exact-match query cannot see "laptop.local" when "laptop" is
-    // selected, so the view is blank; the fix is to choose the variant, not to
-    // start a watcher that is already running.
+  test('reports missing AFK when no exact window bucket and no AFK watcher for device', () => {
+    // "laptop.local" window bucket exists but no AFK watcher at all: choosing
+    // the "laptop.local" device variant still won't fix the blank view because
+    // set_available needs an afkstatus bucket. Report the watcher as missing.
     expect(
       activityDiagnostic({
         host: 'laptop',
         buckets: [bucket('aw-watcher-window_laptop.local', 'laptop.local', 'currentwindow')],
+        isMultidevice: false,
+        isMobile: false,
+        queryComplete: true,
+        rawWindowDuration: 0,
+      })
+    ).toEqual({ kind: 'missing-afk', host: 'laptop' });
+  });
+
+  test('points at hostname variants when the selected host has no exact bucket', () => {
+    // The exact-match query cannot see "laptop.local" when "laptop" is
+    // selected, so the view is blank; the fix is to choose the variant, not to
+    // start a watcher that is already running. AFK must also be present (as a
+    // .local variant) so that selecting the right device will actually fix it.
+    expect(
+      activityDiagnostic({
+        host: 'laptop',
+        buckets: [
+          bucket('aw-watcher-window_laptop.local', 'laptop.local', 'currentwindow'),
+          bucket('aw-watcher-afk_laptop.local', 'laptop.local', 'afkstatus'),
+        ],
         isMultidevice: false,
         isMobile: false,
         queryComplete: true,
