@@ -492,8 +492,9 @@ export default {
         host: this.host,
         buckets: this.bucketsStore.buckets,
         isMultidevice: this.isMultidevice,
+        isMobile: this.isMobileHost(this.host),
         queryComplete: this.activityStore.loaded && this.activityStore.window.top_apps !== null,
-        windowDuration: this.activityStore.active.duration,
+        rawWindowDuration: this.activityStore.window.raw_duration,
       });
     },
     activityDiagnosticMessage: function (): string {

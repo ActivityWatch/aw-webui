@@ -17,6 +17,8 @@ export interface WindowQueryResult {
   cat_events?: IEvent[];
   active_events?: IEvent[];
   duration?: number;
+  // Window-bucket activity before the AFK/category filters (see queries.ts).
+  raw_duration?: number;
 }
 
 export interface BrowserQueryResult {
@@ -182,6 +184,7 @@ export function mergeFullDesktopResults(results: FullDesktopQueryResult[]): Full
       cat_events: mergeEventsByKeys(concatEvents(windows.map(w => w.cat_events)), ['$category']),
       active_events: concatEvents(windows.map(w => w.active_events)),
       duration: sumDurations(windows.map(w => w.duration)),
+      raw_duration: sumDurations(windows.map(w => w.raw_duration)),
     },
     browser: {
       domains: mergeEventsByKeys(
