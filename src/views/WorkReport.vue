@@ -96,6 +96,7 @@ import {
   getWorkReportHostOptions,
   getUnsupportedWorkReportHosts,
   buildWorkReportQuery,
+  summarizeWorkSessions,
 } from '~/util/workReport';
 
 import 'vue-awesome/icons/sync';
@@ -107,21 +108,6 @@ interface DailyData {
   sessions: number;
   avgSession: number;
   events: any[];
-}
-
-// Sum of gaps between adjacent events that are <= breakTimeSeconds.
-function bridgeGaps(events: any[], breakTimeSeconds: number): number {
-  if (!events || events.length < 2 || breakTimeSeconds <= 0) return 0;
-  const sorted = [...events].sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-  );
-  let extra = 0;
-  for (let i = 1; i < sorted.length; i++) {
-    const prevEnd = new Date(sorted[i - 1].timestamp).getTime() + sorted[i - 1].duration * 1000;
-    const gap = (new Date(sorted[i].timestamp).getTime() - prevEnd) / 1000;
-    if (gap > 0 && gap <= breakTimeSeconds) extra += gap;
-  }
-  return extra;
 }
 
 export default {
@@ -293,15 +279,16 @@ export default {
           // Bridge sub-breakTime gaps between adjacent events so a quick
           // context-switch still counts as continuous work time. aw-query's
           // flood() only deduplicates overlap, so we add the bridging here.
-          const bridged = baseDuration + bridgeGaps(events, breakTimeSeconds);
+          const { bridgedSeconds, sessions } = summarizeWorkSessions(events, breakTimeSeconds);
+          const bridged = baseDuration + bridgedSeconds;
 
           const startDate = tp.split('/')[0];
 
           return {
             date: moment(startDate).format('YYYY-MM-DD'),
             duration: bridged,
-            sessions: events.length,
-            avgSession: events.length > 0 ? bridged / events.length : 0,
+            sessions,
+            avgSession: sessions > 0 ? bridged / sessions : 0,
             events,
           };
         });
