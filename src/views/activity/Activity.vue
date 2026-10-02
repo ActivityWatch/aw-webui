@@ -19,7 +19,7 @@ div
           toggle-class="p-0 text-muted host-selector-toggle"
           data-testid="host-selector"
         )
-          template(v-slot:button-content)
+          template(v-slot:button-content="")
             span {{ hostLabel }}
           b-dropdown-item(
             :to="routeForHost(allDevicesParam)"
@@ -97,7 +97,7 @@ div
         title="More ranges"
         aria-label="More date ranges"
       )
-        template(v-slot:button-content)
+        template(v-slot:button-content="")
           icon(name="ellipsis-v")
         b-dropdown-item-button(
           v-for="opt in extendedPeriods"
@@ -192,7 +192,7 @@ div
     )
   // Neighbouring periods of a custom range aren't meaningful, and 31 of
   // them can span decades of AFK data for long ranges.
-  aw-periodusage(v-else-if="periodLength !== 'range'", :periodusage_arr="periodusage", @update="setDate")
+  aw-periodusage(v-else-if="periodLength !== 'range'", :periodusage_arr="periodusage", @update="setUsagePeriod")
 
   aw-uncategorized-notification(:periodLength="periodLength")
 
@@ -294,6 +294,7 @@ import moment from 'moment';
 import { get_day_start_with_offset, get_today_with_offset } from '~/util/time';
 import {
   DateRange,
+  TimePeriod,
   dateRangeToTimeperiod,
   formatDateRange,
   parseDateRange,
@@ -715,6 +716,14 @@ export default {
       }
     },
 
+    setUsagePeriod: function (period: TimePeriod) {
+      const anchor = moment(period.start);
+      if (this.periodLength === 'last7d' || this.periodLength === 'last30d') {
+        anchor.add(period.length[0] - 1, 'days');
+      }
+      this.setDate(anchor.format('YYYY-MM-DD'));
+    },
+
     setDate: function (date, periodLength) {
       // periodLength is an optional argument, default to this.periodLength
       if (!periodLength) {
@@ -789,6 +798,8 @@ export default {
       } else if (periodLength == '30 days') {
         periodLength = 'last30d';
         new_date = anchorDate.clone().add(1, 'days').format('YYYY-MM-DD');
+      } else if (periodLength === 'last7d' || periodLength === 'last30d') {
+        new_date = anchorDate.format('YYYY-MM-DD');
       } else {
         const new_period_length_moment = periodLengthConvertMoment(periodLength);
         new_date = anchorDate.clone().startOf(new_period_length_moment).format('YYYY-MM-DD');
