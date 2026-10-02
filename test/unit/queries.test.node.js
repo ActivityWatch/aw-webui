@@ -38,6 +38,24 @@ function expectBracketsClosed(query) {
   expect(openBraces && openBraces.length).toEqual(closeBraces && closeBraces.length);
 }
 
+test('browserSearchQuery with no buckets returns empty array', () => {
+  const result = queries.browserSearchQuery([], 'github\\.com');
+  expect(result).toEqual([]);
+});
+
+test('browserSearchQuery with browser bucket generates valid query', () => {
+  const buckets = ['aw-watcher-web-firefox_testhost'];
+  const query = queries.browserSearchQuery(buckets, 'github\\.com').join('\n');
+  expect(query).toMatchSnapshot();
+  expectBracketsClosed(query);
+  // Must query the bucket, split urls, filter on both url and title
+  expect(query).toContain('query_bucket("aw-watcher-web-firefox_testhost")');
+  expect(query).toContain('split_url_events');
+  expect(query).toContain('"url"');
+  expect(query).toContain('"title"');
+  expect(query).toContain('RETURN = browser_results');
+});
+
 test('generate fullDesktopQuery', () => {
   let query = queries.fullDesktopQuery(queryParams).join('\n');
   expect(query).toMatchSnapshot();

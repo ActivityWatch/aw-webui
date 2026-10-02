@@ -27,10 +27,32 @@ div
   div(v-if="status == 'searching'")
     div #[icon(name="spinner" pulse)] Searching...
 
-  div(v-if="events != null")
+  div(v-if="events != null || browserEvents != null")
     hr
 
-    aw-selectable-eventview(:events="events")
+    div(v-if="events && events.length > 0")
+      h5 Window events ({{ events.length }})
+      aw-selectable-eventview(:events="events")
+
+    div(v-if="browserEvents && browserEvents.length > 0")
+      h5 Browser events ({{ browserEvents.length }})
+      table.table.table-sm.table-hover
+        thead
+          tr
+            th Timestamp
+            th Duration
+            th URL
+            th Title
+        tbody
+          tr(v-for="e in browserEvents" :key="e.id || e.timestamp")
+            td {{ e.timestamp | moment("YYYY-MM-DD HH:mm:ss") }}
+            td {{ e.duration | friendlyDuration }}
+            td
+              a(:href="e.data.url" target="_blank" rel="noopener") {{ e.data.url }}
+            td {{ e.data.title }}
+
+    div(v-if="events && events.length === 0 && (!browserEvents || browserEvents.length === 0)")
+      p.text-muted No results found.
 
     div
       | Didn't find what you were looking for?
@@ -41,7 +63,7 @@ div
 <script lang="ts">
 import _ from 'lodash';
 import moment from 'moment';
-import { canonicalEvents, querystr_to_array } from '~/queries';
+import { canonicalEvents, browserSearchQuery, querystr_to_array } from '~/queries';
 import { useBucketsStore } from '~/stores/buckets';
 
 import 'vue-awesome/icons/search';
@@ -55,6 +77,7 @@ export default {
     return {
       pattern: '',
       events: null,
+      browserEvents: null,
 
       status: null,
       error: '',
@@ -69,29 +92,46 @@ export default {
   },
   methods: {
     search: async function () {
-      let query = canonicalEvents({
+      const timeperiods = [
+        moment(this.queryOptions.start).format() + '/' + moment(this.queryOptions.stop).format(),
+      ];
+
+      // Window search query
+      let windowQuery = canonicalEvents({
         ...useBucketsStore().desktopBucketIds(this.queryOptions.hostname),
         filter_afk: this.queryOptions.filter_afk,
         categories: [[['searched'], { type: 'regex', regex: this.pattern, ignore_case: true }]],
         filter_categories: [['searched']],
       });
-      query += '; RETURN = events;';
+      windowQuery += '; RETURN = events;';
+      const windowQueryArray = querystr_to_array(windowQuery);
 
-      const query_array = querystr_to_array(query);
-      const timeperiods = [
-        moment(this.queryOptions.start).format() + '/' + moment(this.queryOptions.stop).format(),
-      ];
+      // Browser search query — look up available browser buckets for this host
+      const bucketsStore = useBucketsStore();
+      await bucketsStore.ensureLoaded();
+      const browserBuckets = bucketsStore.bucketsBrowser(this.queryOptions.hostname);
+      const browserQueryArray = browserSearchQuery(browserBuckets, this.pattern);
+
       try {
         this.status = 'searching';
-        const data = await this.$aw.query(timeperiods, query_array);
-        // Every hit carries the synthetic `searched` category the query uses
-        // for filtering; it is not a real category, so drop it from results.
-        const events = data[0].map(e => ({ ...e, data: _.omit(e.data, '$category') }));
-        this.events = _.orderBy(events, ['timestamp'], ['desc']);
         this.error = '';
+
+        // Run both queries; browser query is skipped if no browser buckets
+        const queries: Promise<any>[] = [this.$aw.query(timeperiods, windowQueryArray)];
+        if (browserQueryArray.length > 0) {
+          queries.push(this.$aw.query(timeperiods, browserQueryArray));
+        }
+        const results = await Promise.all(queries);
+
+        // Every window hit carries the synthetic `searched` category the query
+        // uses for filtering; it is not a real category, so drop it from results.
+        const windowEvents = results[0][0].map(e => ({ ...e, data: _.omit(e.data, '$category') }));
+        this.events = _.orderBy(windowEvents, ['timestamp'], ['desc']);
+        this.browserEvents =
+          browserQueryArray.length > 0 ? _.orderBy(results[1][0], ['timestamp'], ['desc']) : [];
       } catch (e) {
         console.error(e);
-        this.error = e.response.data.message;
+        this.error = e.response?.data?.message ?? String(e);
       } finally {
         this.status = null;
       }
