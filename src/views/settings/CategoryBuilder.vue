@@ -356,9 +356,11 @@ export default {
       await this.settingsStore.update({ category_builder_ignored_words: next });
     },
     async unignoreWord(word: string) {
-      await this.settingsStore.update({
-        category_builder_ignored_words: this.ignored_words.filter(w => w !== word),
-      });
+      const next = this.ignored_words.filter(w => w !== word);
+      // Patch synchronously before the async save so overlapping unignore calls
+      // each read the already-updated list, not a stale snapshot (mirrors ignoreWord).
+      this.settingsStore.$patch({ category_builder_ignored_words: next });
+      await this.settingsStore.update({ category_builder_ignored_words: next });
       // findCommonPhrases skipped the word, so it needs a refetch to reappear.
       await this.fetchWords();
     },
