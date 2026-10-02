@@ -95,25 +95,30 @@ export default {
   },
   methods: {
     getEvents: async function (bucket_id) {
+      // A newer daterange selection supersedes this request; drop late responses.
+      const daterange = this.daterange;
       const bucket = await this.bucketsStore.getBucketWithEvents({
         id: bucket_id,
-        start: this.daterange[0].format(),
-        end: this.daterange[1].format(),
+        start: daterange[0].format(),
+        end: daterange[1].format(),
       });
+      if (this.daterange !== daterange) return;
       this.events = bucket.events;
       this.showingMostRecent = false;
 
       // Stale or imported buckets have nothing in the selected range (#136):
       // fall back to the latest events so the view stays useful for debugging.
-      const lastEnd = this.bucket.metadata && this.bucket.metadata.end;
-      if (this.events.length == 0 && lastEnd) {
+      const hasData = this.bucket.metadata && this.bucket.metadata.end;
+      if (this.events.length == 0 && hasData) {
         const recent = await this.bucketsStore.getBucketWithEvents({
           id: bucket_id,
           limit: 100,
         });
+        if (this.daterange !== daterange) return;
         if (recent.events.length > 0) {
           this.events = recent.events;
-          this.lastEventTime = lastEnd;
+          // The API returns newest first.
+          this.lastEventTime = recent.events[0].timestamp;
           this.showingMostRecent = true;
         }
       }
