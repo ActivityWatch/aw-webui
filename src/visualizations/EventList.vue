@@ -35,6 +35,9 @@ div
               b-btn.field(@click="() => {editEvent(event)}" variant="outline-dark" size="sm" style="padding: 0 0.2em 0 0.2em")
                 icon(name="edit")
                 | Edit
+    div.text-center.p-2(v-if="events.length > displayed_events.length")
+      b-button.show-more(@click="showMore", size="sm", variant="outline-dark")
+        | Show {{ Math.min(pageSize, events.length - displayed_events.length) }} more
 </template>
 
 <style scoped lang="scss">
@@ -138,6 +141,7 @@ export default {
   data: function () {
     return {
       isListExpanded: false,
+      pageSize: 100,
       limit: 100,
       editableEvent: null,
     };
@@ -147,12 +151,20 @@ export default {
       return this.events.slice(0, this.limit);
     },
   },
+  watch: {
+    events() {
+      this.limit = this.pageSize;
+    },
+  },
   methods: {
     editEvent: function (event) {
       this.editableEvent = event;
       this.$nextTick(() => {
         this.$bvModal.show('edit-modal-' + event.id);
       });
+    },
+    showMore: function () {
+      this.limit += this.pageSize;
     },
     expandList: function () {
       this.isListExpanded = !this.isListExpanded;
