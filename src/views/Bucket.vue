@@ -33,6 +33,9 @@ div
 
     input-timeinterval(v-model="daterange", :maxDuration="maxDuration")
 
+    b-alert(v-if="showingMostRecent", variant="info", show)
+      | No events in the selected range. The last event in this bucket is from {{ lastEventTime | friendlytime }}, showing the {{ events.length }} most recent events instead.
+
     vis-timeline(:buckets="[bucket_with_events]", :showRowLabels="false")
 
     aw-eventlist(:bucket_id="id", @save="updateEvent", :events="events" editable=true)
@@ -54,6 +57,8 @@ export default {
       events: [],
       eventcount: '?',
       loaded: false,
+      showingMostRecent: false,
+      lastEventTime: null,
       daterange: null,
       maxDuration: 31 * 24 * 60 * 60,
     };
@@ -96,6 +101,22 @@ export default {
         end: this.daterange[1].format(),
       });
       this.events = bucket.events;
+      this.showingMostRecent = false;
+
+      // Stale or imported buckets have nothing in the selected range (#136):
+      // fall back to the latest events so the view stays useful for debugging.
+      const lastEnd = this.bucket.metadata && this.bucket.metadata.end;
+      if (this.events.length == 0 && lastEnd) {
+        const recent = await this.bucketsStore.getBucketWithEvents({
+          id: bucket_id,
+          limit: 100,
+        });
+        if (recent.events.length > 0) {
+          this.events = recent.events;
+          this.lastEventTime = lastEnd;
+          this.showingMostRecent = true;
+        }
+      }
     },
     getEventCount: async function (bucket_id) {
       const count = await getClient().countEvents(bucket_id);
