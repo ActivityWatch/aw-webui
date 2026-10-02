@@ -2,7 +2,7 @@ import _ from 'lodash';
 import { Category, matchString, loadClasses } from './classes';
 import Color from 'color';
 import * as d3 from 'd3';
-import { IEvent, IBucket } from './interfaces';
+import { IEvent } from './interfaces';
 
 // See here for examples:
 //   https://bl.ocks.org/pstuffa/3393ff2711a53975040077b7453781a9
@@ -140,7 +140,10 @@ export function getTitleAttr(bucket: { type?: string }, e: IEvent) {
   }
 }
 
-export function getCategorizationStringFromEvent(bucket: IBucket, e: IEvent): string | null {
+export function getCategorizationStringFromEvent(
+  bucket: { type?: string },
+  e: IEvent
+): string | null {
   if (bucket.type == 'currentwindow') {
     // using linebreak and "m" regex flag to make `$` and `^` work
     return e.data.app + '\n' + e.data.title;
@@ -156,7 +159,7 @@ export function getCategorizationStringFromEvent(bucket: IBucket, e: IEvent): st
   return null;
 }
 
-export function getCategoryColorFromEvent(bucket: IBucket, e: IEvent) {
+export function getCategoryColorFromEvent(bucket: { type?: string }, e: IEvent) {
   const categorizationString = getCategorizationStringFromEvent(bucket, e);
   if (categorizationString !== null) {
     const allCats = loadClasses();
