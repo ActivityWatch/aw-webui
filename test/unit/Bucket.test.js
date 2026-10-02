@@ -39,4 +39,54 @@ describe('Bucket', () => {
     expect(wrapper.vm.events[0].data.from).toBe('bucket-b');
     expect(wrapper.vm.eventcount).toBe(20);
   });
+
+  // Returns a promise plus a function to resolve it later.
+  function deferred() {
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+    return { promise, resolve };
+  }
+
+  test('ignores late responses for a bucket the user navigated away from', async () => {
+    const lateEvents = deferred();
+    const lateCount = deferred();
+    bucketsStore.getBucketWithEvents.mockImplementationOnce(() => lateEvents.promise);
+    mockCountEvents.mockImplementationOnce(() => lateCount.promise);
+
+    const wrapper = shallowMount(Bucket, { propsData: { id: 'bucket-a' } });
+    wrapper.setData({ daterange: [moment().subtract(1, 'hour'), moment()] });
+    await flushPromises();
+
+    await wrapper.setProps({ id: 'bucket-b' });
+    await flushPromises();
+    expect(wrapper.vm.events[0].data.from).toBe('bucket-b');
+    expect(wrapper.vm.eventcount).toBe(20);
+
+    // bucket-a's first requests finish only now.
+    lateEvents.resolve({ id: 'bucket-a', events: [{ id: 9, data: { from: 'late bucket-a' } }] });
+    lateCount.resolve({ data: 999 });
+    await flushPromises();
+    expect(wrapper.vm.events[0].data.from).toBe('bucket-b');
+    expect(wrapper.vm.eventcount).toBe(20);
+  });
+
+  test('ignores a late response for an older time range of the same bucket', async () => {
+    const lateEvents = deferred();
+    bucketsStore.getBucketWithEvents.mockImplementationOnce(() => lateEvents.promise);
+
+    const wrapper = shallowMount(Bucket, { propsData: { id: 'bucket-a' } });
+    wrapper.setData({ daterange: [moment().subtract(1, 'hour'), moment()] });
+    await flushPromises();
+
+    // A -> B -> A with a new time range, while the first A request is still pending.
+    await wrapper.setProps({ id: 'bucket-b' });
+    await wrapper.setProps({ id: 'bucket-a' });
+    wrapper.setData({ daterange: [moment().subtract(1, 'day'), moment()] });
+    await flushPromises();
+    expect(wrapper.vm.events[0].data.from).toBe('bucket-a');
+
+    lateEvents.resolve({ id: 'bucket-a', events: [{ id: 9, data: { from: 'stale range' } }] });
+    await flushPromises();
+    expect(wrapper.vm.events[0].data.from).toBe('bucket-a');
+  });
 });

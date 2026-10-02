@@ -50,6 +50,9 @@ export default {
       eventcount: '?',
       daterange: null,
       maxDuration: 31 * 24 * 60 * 60,
+      // Incremented per request, so only the latest response is applied.
+      eventsRequestId: 0,
+      countRequestId: 0,
     };
   },
   computed: {
@@ -82,18 +85,20 @@ export default {
   },
   methods: {
     getEvents: async function (bucket_id) {
+      const requestId = ++this.eventsRequestId;
       const bucket = await this.bucketsStore.getBucketWithEvents({
         id: bucket_id,
         start: this.daterange[0].format(),
         end: this.daterange[1].format(),
       });
-      // Ignore responses for a bucket we've since navigated away from.
-      if (bucket_id !== this.id) return;
+      // Ignore responses superseded by a newer request (other bucket or time range).
+      if (requestId !== this.eventsRequestId) return;
       this.events = bucket.events;
     },
     getEventCount: async function (bucket_id) {
+      const requestId = ++this.countRequestId;
       const count = (await getClient().countEvents(bucket_id)).data;
-      if (bucket_id !== this.id) return;
+      if (requestId !== this.countRequestId) return;
       this.eventcount = count;
     },
     updateEvent: function (event) {
