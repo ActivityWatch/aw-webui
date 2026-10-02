@@ -456,7 +456,10 @@ function browserEvents(params: DesktopQueryParams): string {
 // the user visited in the period, not just while the browser was focused.
 export function browserSearchQuery(browserBuckets: string[], pattern: string): string[] {
   if (browserBuckets.length === 0) return [];
-  const escapedPattern = JSON.stringify(pattern);
+  // JSON.stringify escapes regex backslashes twice; the AW query language only
+  // needs a single backslash, so patterns like '\d' must be un-escaped to match
+  // (same treatment as `categories_str` in canonicalEvents).
+  const escapedPattern = JSON.stringify(pattern).replace(/\\\\/g, '\\');
   let code = 'browser_results = [];';
   _.each(browsersWithBuckets(browserBuckets), ([browserName, bucketId]) => {
     code += `

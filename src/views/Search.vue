@@ -45,8 +45,8 @@ div
             th Title
         tbody
           tr(v-for="e in browserEvents" :key="e.id || e.timestamp")
-            td {{ e.timestamp | moment("YYYY-MM-DD HH:mm:ss") }}
-            td {{ e.duration | friendlyDuration }}
+            td {{ e.timestamp | shortdate }} {{ e.timestamp | shorttime }}
+            td {{ e.duration | friendlyduration }}
             td
               a(:href="e.data.url" target="_blank" rel="noopener") {{ e.data.url }}
             td {{ e.data.title }}
@@ -107,26 +107,43 @@ export default {
       windowQuery += '; RETURN = events;';
       const windowQueryArray = querystr_to_array(windowQuery);
 
-      // Browser search query — look up available browser buckets for this host
-      const bucketsStore = useBucketsStore();
-      await bucketsStore.ensureLoaded();
-      const browserBuckets = bucketsStore.bucketsBrowser(this.queryOptions.hostname);
-      const browserQueryArray = browserSearchQuery(browserBuckets, this.pattern);
-
       try {
         this.status = 'searching';
         this.error = '';
 
-        // Run both queries; browser query is skipped if no browser buckets
-        const queries: Promise<any>[] = [this.$aw.query(timeperiods, windowQueryArray)];
-        if (browserQueryArray.length > 0) {
-          queries.push(this.$aw.query(timeperiods, browserQueryArray));
+        // Look up browser buckets for this host. A failure here (e.g. the bucket
+        // list cannot be loaded) must not block the window-only search.
+        let browserQueryArray: string[] = [];
+        try {
+          const bucketsStore = useBucketsStore();
+          await bucketsStore.ensureLoaded();
+          const browserBuckets = bucketsStore.bucketsBrowser(this.queryOptions.hostname);
+          browserQueryArray = browserSearchQuery(browserBuckets, this.pattern);
+        } catch (e) {
+          console.error('Failed to load browser buckets for search', e);
         }
-        const results = await Promise.all(queries);
+
+        // Run both queries; the browser query is skipped if no browser buckets.
+        // Tolerate a browser-query failure so valid window results still render.
+        const results = await Promise.all([
+          this.$aw.query(timeperiods, windowQueryArray),
+          browserQueryArray.length > 0
+            ? this.$aw.query(timeperiods, browserQueryArray).catch(e => {
+                console.error('Browser search failed', e);
+                return null;
+              })
+            : Promise.resolve(null),
+        ]);
 
         this.events = _.orderBy(results[0][0], ['timestamp'], ['desc']);
-        this.browserEvents =
-          browserQueryArray.length > 0 ? _.orderBy(results[1][0], ['timestamp'], ['desc']) : [];
+        const browserResults = results[1] ? results[1][0] : [];
+        // An event can match the pattern in both its url and title, which the
+        // query concatenates into two entries; keep one row per event.
+        this.browserEvents = _.orderBy(
+          _.uniqBy(browserResults, (e: any) => `${e.timestamp}|${e.data?.url}`),
+          ['timestamp'],
+          ['desc']
+        );
       } catch (e) {
         console.error(e);
         this.error = e.response?.data?.message ?? String(e);
