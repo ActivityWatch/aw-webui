@@ -21,14 +21,14 @@ div
       div
         small Range: {{ queryOptions.start }} - {{ queryOptions.stop }}
     div.flex-grow-0
-      b-button(variant="outline-dark" @click="show_options = !show_options" size="sm")
+      b-button(variant="outline-dark" @click="show_options = !show_options" size="sm" :disabled="!bucketsReady")
         span(v-if="!show_options") Show options
         span(v-else) Hide options
 
   div(v-if="show_options")
     hr
     h4 Options
-    aw-query-options(v-model="queryOptions")
+    aw-query-options(:query-options="queryOptions" @input="queryOptions = $event")
 
   hr
 
@@ -36,9 +36,16 @@ div
   div(v-if="loading")
     b-spinner.mr-2(small)
     span.text-muted Loading...
+  div(v-else-if="loadError" role="alert")
+    p.text-danger {{ loadError }}
+    b-button(size="sm" variant="outline-primary" @click="fetchWords") Retry
+  div(v-else-if="noActivityBuckets")
+    p.text-muted.mb-0
+      | No activity data is available for this host.
+      | Select another hostname under #[b Show options].
   div(v-else-if="hostnameEmptyKind === 'no-hosts'")
     p.text-muted.mb-0
-      | No host with window/AFK buckets is available. Install
+      | No host with activity buckets is available. Install
       | #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") a watcher]
       | to start collecting data.
   div(v-else-if="hostnameEmptyKind === 'hostname-unselected'")
@@ -137,6 +144,10 @@ export default {
   data() {
     return {
       loading: true,
+      loadError: '',
+      bucketsReady: false,
+      noActivityBuckets: false,
+      requestId: 0,
 
       categoryStore: useCategoryStore(),
 
@@ -150,6 +161,7 @@ export default {
       show_options: false,
       queryOptions: {
         hostname: '',
+        filter_afk: true,
         start: moment().subtract(1, 'day').format('YYYY-MM-DD'),
         stop: moment().add(1, 'day').format('YYYY-MM-DD'),
       },
@@ -157,7 +169,7 @@ export default {
       // TODO: Support inspecting a different category than Uncategorized (e.g. to make some category more precise)
       category: ['Uncategorized'],
 
-      words: {},
+      words: new Map(),
       showing_events: [],
 
       // TODO: load from settings
@@ -213,87 +225,84 @@ export default {
     },
   },
   async mounted() {
-    // Make sure we don't have stale unsaved changes in categoryStore
-    const bucketsStore = useBucketsStore();
-    await bucketsStore.ensureLoaded();
-    await this.categoryStore.load();
-    const sole = selectSoleKnownHostname(bucketsStore.hosts);
-    if (sole && !this.queryOptions.hostname) {
-      this.$set(this.queryOptions, 'hostname', sole);
-      // Deep watch on queryOptions calls fetchWords.
-    } else {
-      await this.fetchWords();
-    }
+    await this.fetchWords();
+  },
+  beforeDestroy() {
+    // Ignore results from requests that outlive this view.
+    this.requestId++;
   },
   methods: {
     async fetchWords() {
+      const requestId = ++this.requestId;
+      const options = { ...this.queryOptions };
       this.loading = true;
-      // Reset pagination so the user sees the top of the new ranking
-      // after every requery.
+      this.loadError = '';
+      this.noActivityBuckets = false;
       this.visible_count = this.page_size;
-      if (!this.queryOptions.hostname) {
-        // Auto-select only when there is exactly one real hostname. Several
-        // known hosts (or only "unknown") stay unset so the empty-state copy
-        // can point at Show options / the hostname picker instead of
-        // silently querying the first device.
-        const sole = selectSoleKnownHostname(useBucketsStore().hosts);
-        if (sole) {
-          this.$set(this.queryOptions, 'hostname', sole);
-          // Deep watch re-enters fetchWords with hostname set.
+      this.showing_events = [];
+      try {
+        const bucketsStore = useBucketsStore();
+        await bucketsStore.ensureLoaded();
+        if (requestId !== this.requestId) return;
+        this.bucketsReady = true;
+
+        if (!options.hostname) {
+          const hosts = bucketsStore.hosts.filter(Boolean);
+          // Keep the explicit choice for multiple known hosts, but allow legacy
+          // Android installations whose only hostname is "unknown".
+          const sole = selectSoleKnownHostname(hosts) || (hosts.length === 1 && hosts[0]);
+          if (sole) {
+            this.queryOptions.hostname = sole;
+            // The watcher starts a new request with the selected hostname.
+          }
           return;
         }
-        this.loading = false;
-        return;
+
+        const windowBuckets = bucketsStore.bucketsWindow(options.hostname);
+        const afkBuckets = bucketsStore.bucketsAFK(options.hostname);
+        const windowAvail = windowBuckets.length > 0 && afkBuckets.length > 0;
+        const androidBuckets = bucketsStore.bucketsAndroid(options.hostname);
+        let bucketParams;
+        if (windowAvail) {
+          bucketParams = {
+            bid_window: windowBuckets[0],
+            bid_afk: afkBuckets[0],
+            filter_afk: options.filter_afk,
+          };
+        } else if (androidBuckets.length > 0) {
+          const screentimeBucket = androidBuckets.find(id => id.startsWith('aw-import-screentime'));
+          bucketParams = {
+            bid_android: screentimeBucket || androidBuckets[0],
+            // ScreenTime events have titles; Android events do not.
+            isIos: !!screentimeBucket,
+          };
+        } else {
+          this.noActivityBuckets = true;
+          return;
+        }
+
+        // Make sure we don't query with stale unsaved category changes.
+        await this.categoryStore.load();
+        if (requestId !== this.requestId) return;
+        const query =
+          canonicalEvents({
+            ...bucketParams,
+            categories: this.categoryStore.classes_for_query,
+            filter_categories: [this.category],
+          }) + 'RETURN = limit_events(sort_by_duration(events), 1000);';
+        const data = await getClient().query(
+          [{ start: new Date(options.start), end: new Date(options.stop) }],
+          query.split('\n')
+        );
+        if (requestId !== this.requestId) return;
+        this.words = findCommonPhrases(data[0], this.ignored_words);
+      } catch (error) {
+        if (requestId !== this.requestId) return;
+        console.error('Could not load category builder words', error);
+        this.loadError = 'Could not load uncategorized words. Please try again.';
+      } finally {
+        if (requestId === this.requestId) this.loading = false;
       }
-      await this.categoryStore.load();
-      const awclient = getClient();
-
-      // Hosts without a window/AFK bucket pair (Android, iOS/ScreenTime import)
-      // need to be queried through their android-style bucket instead, mirroring
-      // query_android in the activity store (which also prefers the ScreenTime
-      // bucket when both exist for a host).
-      const bucketsStore = useBucketsStore();
-      const hostname = this.queryOptions.hostname;
-      const windowAvail =
-        bucketsStore.bucketsWindow(hostname).length > 0 &&
-        bucketsStore.bucketsAFK(hostname).length > 0;
-      const androidBuckets = bucketsStore.bucketsAndroid(hostname);
-      let bucketParams;
-      if (!windowAvail && androidBuckets.length > 0) {
-        const screentimeBucket = androidBuckets.find(id => id.startsWith('aw-import-screentime'));
-        bucketParams = {
-          bid_android: screentimeBucket || androidBuckets[0],
-          // ScreenTime (iOS) events carry a "title" key; aw-watcher-android events do not.
-          // Pass isIos so canonicalEvents uses the correct merge keys and titles are preserved.
-          isIos: !!screentimeBucket,
-        };
-      } else {
-        bucketParams = {
-          bid_window: 'aw-watcher-window_' + hostname,
-          bid_afk: 'aw-watcher-afk_' + hostname,
-          filter_afk: this.queryOptions.filter_afk,
-        };
-      }
-
-      const query =
-        canonicalEvents({
-          ...bucketParams,
-          categories: this.categoryStore.classes_for_query,
-          filter_categories: [this.category],
-        }) + 'RETURN = limit_events(sort_by_duration(events), 1000);';
-      const data = await awclient.query(
-        [
-          {
-            start: new Date(this.queryOptions.start),
-            end: new Date(this.queryOptions.stop),
-          },
-        ],
-        query.split('\n')
-      );
-
-      const events = data[0];
-      this.words = findCommonPhrases(events, this.ignored_words);
-      this.loading = false;
     },
     showEvents(word) {
       // If already showing events, hide them and return
