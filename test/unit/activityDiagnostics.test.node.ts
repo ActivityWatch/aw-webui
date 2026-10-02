@@ -29,6 +29,25 @@ describe('activityDiagnostic', () => {
     ).toEqual({ kind: 'missing-afk', host: 'laptop' });
   });
 
+  test('reports missing AFK before hostname variants when both apply', () => {
+    // Without an afkstatus bucket set_available keeps the Activity query from
+    // running, so the duplicate window buckets cannot be what hides the data;
+    // the missing watcher is the actual cause and must win the ordering.
+    expect(
+      activityDiagnostic({
+        host: 'laptop',
+        buckets: [
+          bucket('aw-watcher-window_laptop', 'laptop', 'currentwindow'),
+          bucket('aw-watcher-window_laptop.local', 'laptop.local', 'currentwindow'),
+        ],
+        isMultidevice: false,
+        isMobile: false,
+        queryComplete: true,
+        rawWindowDuration: 0,
+      })
+    ).toEqual({ kind: 'missing-afk', host: 'laptop' });
+  });
+
   test('reports hostname variants only when there is no window activity', () => {
     expect(
       activityDiagnostic({

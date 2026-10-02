@@ -58,6 +58,21 @@ export function activityDiagnostic({
 
   const hasWindowActivity = (rawWindowDuration ?? 0) > 0;
 
+  // The exact window bucket is the precondition for the desktop query: without
+  // it there is no window data to explain.
+  if (!windows.some(exactHost)) {
+    return { kind: 'missing-window', host };
+  }
+
+  // Without an afkstatus bucket `set_available` keeps the Activity query from
+  // running at all, so duplicate window buckets cannot be what is hiding the
+  // data. Report the missing watcher first, otherwise the ambiguous message
+  // sends the user chasing a device choice that would not fix the blank view.
+  const hasAfk = buckets.some(bucket => bucket.type === 'afkstatus' && exactHost(bucket));
+  if (!hasAfk) {
+    return { kind: 'missing-afk', host };
+  }
+
   // Only flag hostname variants when they could explain missing activity: a
   // view that queries its exact bucket and shows data is healthy, even when
   // a "name.local" sibling bucket exists.
@@ -67,15 +82,6 @@ export function activityDiagnostic({
       host,
       bucketIds: windows.map(bucket => bucket.id),
     };
-  }
-
-  if (!windows.some(exactHost)) {
-    return { kind: 'missing-window', host };
-  }
-
-  const hasAfk = buckets.some(bucket => bucket.type === 'afkstatus' && exactHost(bucket));
-  if (!hasAfk) {
-    return { kind: 'missing-afk', host };
   }
 
   if (!hasWindowActivity) {
