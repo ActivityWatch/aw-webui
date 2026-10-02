@@ -1,4 +1,7 @@
-import QueryExplorer from '~/views/QueryExplorer.vue';
+import QueryExplorerComponent from '~/views/QueryExplorer.vue';
+
+// Tests call Options API members directly, which the Vue constructor type doesn't expose.
+const QueryExplorer: any = QueryExplorerComponent;
 
 describe('QueryExplorer saveCurrentQuery', () => {
   test('canceling an overwrite confirm aborts without opening the save-as-new prompt', async () => {

@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import vue from '@vitejs/plugin-vue2';
 import { VitePWA } from 'vite-plugin-pwa';
 
@@ -8,10 +8,10 @@ export default defineConfig(({ mode }) => {
   const CSP = PRODUCTION ? '' : '*:5600 *:5666 ws://*:27180';
 
   // Sets the CSP
-  const setCsp = () => {
+  const setCsp = (): Plugin => {
     return {
       name: 'html-transform',
-      transformIndexHtml(html) {
+      transformIndexHtml(html: string) {
         const pattern = '<%= htmlWebpackPlugin.options.templateParameters.cspDefaultSrc %>';
         // check if the pattern exists in the html, if not, throw error
         if (!html.includes(pattern)) {
@@ -22,13 +22,13 @@ export default defineConfig(({ mode }) => {
     };
   };
 
-  // Auto-injects /src/main.js into index.html on a new line after the one which has VITE_AUTOINJECT
-  const autoInject = () => {
+  // Auto-injects /src/main.ts into index.html on a new line after the one which has VITE_AUTOINJECT
+  const autoInject = (): Plugin => {
     return {
       name: 'html-transform',
       transformIndexHtml: {
         order: 'pre',
-        handler(html) {
+        handler(html: string) {
           const pattern = /<!--.*VITE_AUTOINJECT.*-->/;
           // check if the pattern exists in the html, if not, throw error
           if (!pattern.test(html)) {
@@ -36,7 +36,7 @@ export default defineConfig(({ mode }) => {
           }
           return html.replace(
             pattern,
-            '<!-- Vite injected! --><script type="module" src="/src/main.js"></script>'
+            '<!-- Vite injected! --><script type="module" src="/src/main.ts"></script>'
           );
         },
       },

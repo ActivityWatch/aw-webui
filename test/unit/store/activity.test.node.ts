@@ -41,7 +41,7 @@ describe('activity store', () => {
     expect(categoryStore.classes_hierarchy).not.toHaveLength(0);
   });
 
-  test.each([
+  test.each<[string, [number, string], number | null]>([
     ['day', [1, 'day'], 1],
     ['week', [1, 'week'], 1],
     ['month', [1, 'month'], 3],
@@ -59,7 +59,7 @@ describe('activity store', () => {
       timeperiod: { start: '2020-01-01T00:00:00+00:00', length: periodLength },
     });
 
-    const requested = querySpy.mock.calls.flatMap(call => call[0]);
+    const requested = querySpy.mock.calls.flatMap(call => call[0] as string[]);
     expect(querySpy).toHaveBeenCalledTimes(calls ?? requested.length);
     expect(Object.keys(activityStore.active.history).sort()).toEqual([...requested].sort());
     querySpy.mockRestore();
@@ -77,7 +77,7 @@ describe('activity store', () => {
     });
     const querySpy = jest
       .spyOn(getClient(), 'query')
-      .mockImplementation(async periods => periods.map(p => [eventFor(p)]));
+      .mockImplementation(async periods => periods.map(p => [eventFor(p as string)]));
 
     await activityStore.query_active_history({
       host: 'test',
@@ -85,7 +85,7 @@ describe('activity store', () => {
     });
 
     expect(querySpy.mock.calls.length).toBeGreaterThan(1);
-    const requested = querySpy.mock.calls.flatMap(call => call[0]);
+    const requested = querySpy.mock.calls.flatMap(call => call[0] as string[]);
     for (const period of requested) {
       expect(activityStore.active.history[period]).toEqual([eventFor(period)]);
     }

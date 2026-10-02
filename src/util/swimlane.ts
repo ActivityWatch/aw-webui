@@ -1,8 +1,14 @@
 import DOMPurify from 'dompurify';
+import { IEvent, IBucket } from './interfaces';
 
 const sanitize = DOMPurify.sanitize;
 
-export function getSwimlane(bucket, color, groupBy, e) {
+export function getSwimlane(
+  bucket: Pick<IBucket, 'type'>,
+  color: any,
+  groupBy: string,
+  e: IEvent
+): string {
   // WARNING: XSS risk, make sure to sanitize properly
   // FIXME: Not actually tested against XSS attacks, implementation needs to be verified in tests.
   let subgroup = 'unknown';
