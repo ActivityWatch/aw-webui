@@ -171,6 +171,11 @@ export default {
       return this.events.slice(0, this.limit);
     },
   },
+  watch: {
+    events() {
+      this.limit = this.pageSize;
+    },
+  },
   methods: {
     editEvent: function (event) {
       this.editableEvent = event;

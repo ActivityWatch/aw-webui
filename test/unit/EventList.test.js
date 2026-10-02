@@ -5,6 +5,11 @@ const localVue = createLocalVue();
 localVue.filter('friendlytime', v => String(v));
 localVue.filter('friendlyduration', v => String(v));
 
+// Transparent stub so @click on <b-button> is forwarded to the native button.
+const ClickableBButton = {
+  template: '<button v-on="$listeners" v-bind="$props"><slot></slot></button>',
+};
+
 function makeEvents(n) {
   return Array.from({ length: n }, (_, i) => ({
     id: i,
@@ -18,7 +23,13 @@ function mountList(n) {
   return shallowMount(EventList, {
     localVue,
     propsData: { events: makeEvents(n), bucket_id: 'test-bucket' },
-    stubs: { 'b-card': true, 'b-button': true, 'b-btn': true, icon: true, 'event-editor': true },
+    stubs: {
+      'b-card': true,
+      'b-button': ClickableBButton,
+      'b-btn': true,
+      icon: true,
+      'event-editor': true,
+    },
   });
 }
 
@@ -42,5 +53,19 @@ describe('EventList', () => {
 
   test('no show-more button for short lists', () => {
     expect(mountList(5).find('.show-more').exists()).toBe(false);
+  });
+
+  test('clicking show-more button advances the page', async () => {
+    const wrapper = mountList(250);
+    await wrapper.find('button.show-more').trigger('click');
+    expect(wrapper.vm.displayed_events).toHaveLength(200);
+  });
+
+  test('paging resets when events prop changes', async () => {
+    const wrapper = mountList(250);
+    wrapper.vm.showMore();
+    expect(wrapper.vm.displayed_events).toHaveLength(200);
+    await wrapper.setProps({ events: makeEvents(150) });
+    expect(wrapper.vm.displayed_events).toHaveLength(100);
   });
 });
