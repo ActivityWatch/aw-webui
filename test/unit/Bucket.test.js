@@ -153,6 +153,55 @@ describe('Bucket view navigation', () => {
     expect(mockGetBucketWithEvents).not.toHaveBeenCalled();
     expect(wrapper.find('.alert').text()).toContain('No bucket named "does-not-exist"');
   });
+
+  // Returns a promise plus a function to resolve it later.
+  function deferred() {
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+    return { promise, resolve };
+  }
+
+  test('ignores late responses for a bucket the user navigated away from', async () => {
+    const lateEvents = deferred();
+    const lateCount = deferred();
+    mockGetBucketWithEvents.mockImplementationOnce(() => lateEvents.promise);
+    mockCountEvents.mockImplementationOnce(() => lateCount.promise);
+
+    const wrapper = mountBucket('bucket-a');
+    await flush();
+
+    await wrapper.setProps({ id: 'bucket-b' });
+    await flush();
+    expect(wrapper.vm.events[0].data.from).toBe('bucket-b');
+    expect(wrapper.vm.eventcount).toBe(20);
+
+    // bucket-a's first requests finish only now.
+    lateEvents.resolve({ id: 'bucket-a', events: [{ id: 9, data: { from: 'late bucket-a' } }] });
+    lateCount.resolve(999);
+    await flush();
+    expect(wrapper.vm.events[0].data.from).toBe('bucket-b');
+    expect(wrapper.vm.eventcount).toBe(20);
+  });
+
+  test('ignores a late response for an older time range of the same bucket', async () => {
+    const lateEvents = deferred();
+    mockGetBucketWithEvents.mockImplementationOnce(() => lateEvents.promise);
+
+    const wrapper = mountBucket('bucket-a');
+    await flush();
+
+    // A -> B -> A with a new time range, while the first A request is still pending.
+    await wrapper.setProps({ id: 'bucket-b' });
+    await wrapper.setProps({ id: 'bucket-a' });
+    const t = iso => ({ format: () => iso });
+    wrapper.setData({ daterange: [t('2026-09-30T00:00:00Z'), t('2026-10-02T00:00:00Z')] });
+    await flush();
+    expect(wrapper.vm.events[0].data.from).toBe('bucket-a');
+
+    lateEvents.resolve({ id: 'bucket-a', events: [{ id: 9, data: { from: 'stale range' } }] });
+    await flush();
+    expect(wrapper.vm.events[0].data.from).toBe('bucket-a');
+  });
 });
 
 const range = () => [{ format: () => 'start' }, { format: () => 'end' }];
@@ -161,6 +210,7 @@ function makeVm(getBucketWithEvents, daterange = range()) {
   return {
     id: 'b',
     daterange,
+    eventsRequestId: 0,
     events: [],
     showingMostRecent: false,
     lastEventTime: null,
@@ -215,7 +265,9 @@ describe('Bucket.vue getEvents fallback', () => {
     const inFlight = Bucket.methods.getEvents.call(vm, 'b');
     // User picks a new interval and its events arrive while the fallback is in flight.
     await Promise.resolve();
+    // The new selection starts its own request, superseding this one.
     vm.daterange = range();
+    vm.eventsRequestId++;
     vm.events = [{ timestamp: 'fresh' }];
     release();
     await inFlight;

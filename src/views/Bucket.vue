@@ -61,6 +61,9 @@ export default {
       lastEventTime: null,
       daterange: null,
       maxDuration: 31 * 24 * 60 * 60,
+      // Incremented per request, so only the latest response is applied.
+      eventsRequestId: 0,
+      countRequestId: 0,
     };
   },
   computed: {
@@ -112,15 +115,15 @@ export default {
   },
   methods: {
     getEvents: async function (bucket_id) {
-      // A newer daterange selection supersedes this request; drop late responses.
+      // A newer request (other bucket or time range) supersedes this one; drop late responses.
+      const requestId = ++this.eventsRequestId;
       const daterange = this.daterange;
       const bucket = await this.bucketsStore.getBucketWithEvents({
         id: bucket_id,
         start: daterange[0].format(),
         end: daterange[1].format(),
       });
-      // Also ignore responses for a bucket we've since navigated away from.
-      if (this.daterange !== daterange || bucket_id !== this.id) return;
+      if (requestId !== this.eventsRequestId) return;
       this.events = bucket.events;
       this.showingMostRecent = false;
 
@@ -133,7 +136,7 @@ export default {
             id: bucket_id,
             limit: 100,
           });
-          if (this.daterange !== daterange || bucket_id !== this.id) return;
+          if (requestId !== this.eventsRequestId) return;
           if (recent.events.length > 0) {
             this.events = recent.events;
             // The API returns newest first.
@@ -146,8 +149,9 @@ export default {
       }
     },
     getEventCount: async function (bucket_id) {
+      const requestId = ++this.countRequestId;
       const count = await getClient().countEvents(bucket_id);
-      if (bucket_id !== this.id) return;
+      if (requestId !== this.countRequestId) return;
       // aw-client already unwraps the response body, except that 0.3.x returns the
       // raw response when the body is falsy (a count of 0).
       this.eventcount = typeof count === 'number' ? count : count.data;
