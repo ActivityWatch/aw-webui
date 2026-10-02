@@ -58,9 +58,10 @@ div
         small.text-muted(v-else) {{ $t('buckets.noEvents') }}
       template(v-slot:cell(actions)="data")
         b-button-group(size="sm")
-          b-button(variant="primary", :to="'/buckets/' + data.item.id", :title="$t('buckets.openBucket')")
-            icon.d-none.d-md-inline-block.mr-1(name="folder-open")
-            | {{ $t('common.open') }}
+          //- Icon-only below md so the column fits every translation of "Open" on phones.
+          b-button.text-nowrap(variant="primary", :to="'/buckets/' + data.item.id", :title="$t('buckets.openBucket')", :aria-label="$t('buckets.openBucket')")
+            icon(name="folder-open")
+            span.d-none.d-md-inline.ml-1 {{ $t('common.open') }}
           b-dropdown.kebab-dropdown(variant="outline-secondary", toggle-class="border-0", size="sm", right, no-caret, boundary="window", :title="$t('common.more')")
             template(v-slot:button-content)
               icon(name="ellipsis-v")
@@ -195,11 +196,12 @@ div
 }
 
 ::v-deep .bucket-actions-col {
-  width: 6rem;
+  width: 5rem;
 
-  // The "Open" button shows a folder icon from md up (see template).
+  // From md up the "Open" button also shows its label (see template); leave room
+  // for the longest translation (e.g. uk "Відкрити").
   @media (min-width: 768px) {
-    width: 7.5rem;
+    width: 10rem;
   }
 }
 
