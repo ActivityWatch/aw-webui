@@ -168,7 +168,7 @@ export default {
   },
   methods: {
     showModal() {
-      this.$refs.edit.show();
+      this.$refs.edit?.show();
     },
     hidden() {
       this.$emit('hidden');
@@ -263,9 +263,10 @@ export default {
       };
       this.categoryStore.updateClass(new_class);
 
-      // Hide the modal manually
+      // Hide the modal manually. Saving a rename or reparent re-renders the category
+      // tree, which may destroy this component before the tick (activitywatch#1144).
       this.$nextTick(() => {
-        this.$refs.edit.hide();
+        this.$refs.edit?.hide();
       });
     },
     resetModal() {
