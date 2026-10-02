@@ -85,3 +85,39 @@ export function buildWorkReportQuery(
     .map(line => line.replace(/\s+$/, ''))
     .join('\n');
 }
+
+export interface WorkSessionSummary {
+  // Total length of the gaps (<= breakTimeSeconds) bridged between events.
+  bridgedSeconds: number;
+  // Number of work sessions, where a gap longer than breakTimeSeconds starts a new one.
+  sessions: number;
+}
+
+// Groups events (with durations in seconds) into work sessions: gaps of up to
+// breakTimeSeconds count as part of the same session, longer gaps are breaks.
+export function summarizeWorkSessions(
+  events: { timestamp: string; duration: number }[],
+  breakTimeSeconds: number
+): WorkSessionSummary {
+  if (!events || events.length === 0) return { bridgedSeconds: 0, sessions: 0 };
+
+  const sorted = [...events].sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  );
+  let bridgedSeconds = 0;
+  let sessions = 1;
+  // Track the latest end so far, so an event nested inside a longer one
+  // doesn't make the following gap look bigger than it is.
+  let sessionEnd = new Date(sorted[0].timestamp).getTime() + sorted[0].duration * 1000;
+  for (let i = 1; i < sorted.length; i++) {
+    const start = new Date(sorted[i].timestamp).getTime();
+    const gap = (start - sessionEnd) / 1000;
+    if (gap > breakTimeSeconds) {
+      sessions++;
+    } else if (gap > 0) {
+      bridgedSeconds += gap;
+    }
+    sessionEnd = Math.max(sessionEnd, start + sorted[i].duration * 1000);
+  }
+  return { bridgedSeconds, sessions };
+}
