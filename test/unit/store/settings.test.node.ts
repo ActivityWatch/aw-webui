@@ -34,6 +34,17 @@ describe('settings store', () => {
     expect(settingsStore.loaded).toBe(true);
   });
 
+  test('category builder ignored words default to empty and persist via update', async () => {
+    expect(settingsStore.category_builder_ignored_words).toEqual([]);
+    const save = jest.spyOn(settingsStore, 'save').mockResolvedValue();
+    jest.spyOn(settingsStore, 'ensureLoaded').mockResolvedValue();
+
+    await settingsStore.update({ category_builder_ignored_words: ['github'] });
+
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(settingsStore.category_builder_ignored_words).toEqual(['github']);
+  });
+
   test('update waits for settings to load before patching state', async () => {
     const savedQueries = [
       {
