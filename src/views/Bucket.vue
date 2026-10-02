@@ -79,6 +79,10 @@ export default {
   },
   mounted: async function () {
     await this.bucketsStore.ensureLoaded();
+    if (!this.bucket) {
+      // The cached list may predate this bucket, so refresh before calling it missing.
+      await this.bucketsStore.loadBuckets();
+    }
     this.loaded = true;
     if (this.bucket) {
       await this.getEventCount(this.id);
