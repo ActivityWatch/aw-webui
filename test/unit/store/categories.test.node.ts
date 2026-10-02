@@ -45,6 +45,17 @@ describe('categories store', () => {
     expect(categoryStore.all_categories).toHaveLength(1);
   });
 
+  test('classes_for_query sends blank-regex rules as none (#382)', () => {
+    categoryStore.load([
+      { name: ['Work'], rule: { type: 'regex', regex: '' } },
+      { name: ['Work', 'Programming'], rule: { type: 'regex', regex: 'vim' } },
+    ]);
+    expect(categoryStore.classes_for_query).toEqual([
+      [['Work'], { type: 'none' }],
+      [['Work', 'Programming'], { type: 'regex', regex: 'vim' }],
+    ]);
+  });
+
   test('updateClass preserves regex select_keys', () => {
     categoryStore.load([
       {

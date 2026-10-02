@@ -458,6 +458,19 @@ function categoryRank(category: Category): number {
   return category.name.length * 10;
 }
 
+/**
+ * True if the category has a regex rule that can actually match.
+ *
+ * A blank regex would match every string, so it is treated as "no rule", the
+ * same as aw-core's server-side categorize() does. Without this, views that
+ * classify client-side (Top Applications, Top Window Titles) put everything
+ * into a blank-regex category while server-categorized views (Sunburst,
+ * Timeline, Top Categories) ignore it (#382).
+ */
+export function hasMatchableRegex(c: Category): boolean {
+  return c.rule.type == 'regex' && !!c.rule.regex;
+}
+
 function pickHighestRanked(categories: Category[]) {
   return _.maxBy(categories, categoryRank);
 }
@@ -475,13 +488,11 @@ export function matchString(
   }
 
   // Compile regexes
-  const regexes: [Category, RegExp][] = categories
-    .filter(c => c.rule.type == 'regex')
-    .map(c => {
-      // using 'm' flag to make `$` and `^` in rules work
-      const re = RegExp(c.rule.regex, (c.rule.ignore_case ? 'i' : '') + 'm');
-      return [c, re];
-    });
+  const regexes: [Category, RegExp][] = categories.filter(hasMatchableRegex).map(c => {
+    // using 'm' flag to make `$` and `^` in rules work
+    const re = RegExp(c.rule.regex, (c.rule.ignore_case ? 'i' : '') + 'm');
+    return [c, re];
+  });
 
   // Find the matching category.
   // If several categories match, explicit priority wins; otherwise depth wins.
@@ -503,12 +514,10 @@ export function matchString(
 
 // this is used only in tests
 export function classifyEvents(events: IEvent[], categories: Category[]): IEvent[] {
-  const regexes: [Category, RegExp][] = categories
-    .filter(c => c.rule.type == 'regex')
-    .map(c => {
-      const re = RegExp(c.rule.regex, c.rule.ignore_case ? 'i' : '');
-      return [c, re];
-    });
+  const regexes: [Category, RegExp][] = categories.filter(hasMatchableRegex).map(c => {
+    const re = RegExp(c.rule.regex, c.rule.ignore_case ? 'i' : '');
+    return [c, re];
+  });
 
   return events.map((e: IEvent) => {
     const matchingCats = regexes.filter(([category, re]) => {
