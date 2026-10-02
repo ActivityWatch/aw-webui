@@ -366,6 +366,8 @@ export default {
     },
     async resetIgnoredWords() {
       this.show_ignored = false;
+      // Patch synchronously so concurrent ignoreWord calls see the cleared list.
+      this.settingsStore.$patch({ category_builder_ignored_words: [] });
       await this.settingsStore.update({ category_builder_ignored_words: [] });
       await this.fetchWords();
     },
