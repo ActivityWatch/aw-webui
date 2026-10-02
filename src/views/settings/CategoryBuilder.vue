@@ -47,9 +47,9 @@ div
       | #[b Show options]
       | to load uncategorized words. The hostname picker is hidden until you open options.
   div(v-else)
-    div(v-if="words_by_duration.length == 0")
+    div(v-if="words_by_duration.length == 0 && ignored_words.length == 0")
       | No words with significant duration. You're good to go!
-    div(v-else)
+    div(v-else-if="words_by_duration.length > 0")
       div.row.category-builder-word(v-for="word in words_visible" :key="word.word")
         div.col.hover-highlight
           div.d-flex.flex-row.py-2
@@ -82,17 +82,17 @@ div
           variant="outline-primary"
           @click="visible_count += page_size"
         ) Show more
-      div.mt-3(v-if="ignored_words.length > 0")
-        small.text-muted
-          | {{ ignored_words.length }} ignored {{ ignored_words.length == 1 ? 'word' : 'words' }}
-        b-button.ml-2(size="sm" variant="link" @click="show_ignored = !show_ignored")
-          span(v-if="!show_ignored") Show
-          span(v-else) Hide
-        b-button(size="sm" variant="link" @click="resetIgnoredWords()") Reset
-        div(v-if="show_ignored")
-          div.d-flex.flex-row.align-items-center.py-1(v-for="word in ignored_words" :key="word")
-            span.flex-grow-1 {{ word }}
-            b-button(size="sm" variant="outline-dark" @click="unignoreWord(word)") Unignore
+    div.mt-3(v-if="ignored_words.length > 0")
+      small.text-muted
+        | {{ ignored_words.length }} ignored {{ ignored_words.length == 1 ? 'word' : 'words' }}
+      b-button.ml-2(size="sm" variant="link" @click="show_ignored = !show_ignored")
+        span(v-if="!show_ignored") Show
+        span(v-else) Hide
+      b-button(size="sm" variant="link" @click="resetIgnoredWords()") Reset
+      div(v-if="show_ignored")
+        div.d-flex.flex-row.align-items-center.py-1(v-for="word in ignored_words" :key="word")
+          span.flex-grow-1 {{ word }}
+          b-button(size="sm" variant="outline-dark" @click="unignoreWord(word)") Unignore
 
   div(v-if="create.categoryId !== null")
     CategoryEditModal(:categoryId="create.categoryId",
@@ -349,9 +349,11 @@ export default {
     async ignoreWord(word: string) {
       console.log('Ignoring word: ' + word);
       if (this.ignored_words.includes(word)) return;
-      await this.settingsStore.update({
-        category_builder_ignored_words: [...this.ignored_words, word],
-      });
+      // Patch store synchronously before the async save so that any overlapping
+      // ignoreWord call reads the already-updated list, not a stale snapshot.
+      const next = [...this.ignored_words, word];
+      this.settingsStore.$patch({ category_builder_ignored_words: next });
+      await this.settingsStore.update({ category_builder_ignored_words: next });
     },
     async unignoreWord(word: string) {
       await this.settingsStore.update({
