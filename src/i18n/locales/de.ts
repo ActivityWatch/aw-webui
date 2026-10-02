@@ -392,6 +392,15 @@ export default {
     rangeStart: 'Startdatum',
     rangeEnd: 'Enddatum',
     invalidRange: 'Ungültiger Zeitraum in der URL, stattdessen wird heute angezeigt.',
+    diagnosticMissingWindow:
+      'Kein Fenster-Bucket für {host}. Starten Sie aw-watcher-window und laden Sie die Seite neu.',
+    diagnosticMissingAfk:
+      'Kein AFK-Bucket für {host}. Starten Sie aw-watcher-afk und laden Sie die Seite neu.',
+    diagnosticAmbiguousWindow:
+      'Mehrere Fenster-Buckets können {host} beschreiben: {buckets}. Wählen Sie oben das richtige Gerät oder prüfen Sie die Rohdaten.',
+    diagnosticNoWindowEvents:
+      'Für diesen Zeitraum wurden keine Fensteraktivitäten gefunden. Prüfen Sie, ob aw-watcher-window läuft. Unter Wayland versuchen Sie awatcher.',
+    diagnosticOpenRawData: 'Rohdaten öffnen.',
     periodAllTime: 'gesamter Zeitraum',
     previousPeriod: 'Previous {period}',
     nextPeriod: 'Next {period}',
