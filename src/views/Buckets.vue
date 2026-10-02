@@ -194,6 +194,15 @@ div
   table-layout: fixed;
 }
 
+::v-deep .bucket-actions-col {
+  width: 6rem;
+
+  // The "Open" button shows a folder icon from md up (see template).
+  @media (min-width: 768px) {
+    width: 7.5rem;
+  }
+}
+
 ::v-deep .bucket-table td {
   vertical-align: middle;
 }
@@ -288,18 +297,19 @@ export default {
           key: 'id',
           label: this.$t('buckets.bucketId'),
           sortable: true,
-          thStyle: { width: '65%' },
         },
         {
           key: 'last_updated',
           label: this.$t('buckets.updated'),
           sortable: true,
-          thStyle: { width: '20%' },
+          // Fixed widths (rather than percentages) keep these columns usable on
+          // narrow screens; the bucket ID column takes the remaining space.
+          thStyle: { width: '6.5rem', whiteSpace: 'nowrap' },
         },
         {
           key: 'actions',
           label: '',
-          thStyle: { width: '15%' },
+          thClass: 'bucket-actions-col',
           tdClass: 'text-right',
         },
       ];
