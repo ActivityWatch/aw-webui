@@ -300,6 +300,14 @@ export default {
     rangeStart: 'Start date',
     rangeEnd: 'End date',
     invalidRange: 'Invalid date range in URL, showing today instead.',
+    diagnosticMissingWindow:
+      'No window bucket for {host}. Start aw-watcher-window, then refresh this page.',
+    diagnosticMissingAfk: 'No AFK bucket for {host}. Start aw-watcher-afk, then refresh this page.',
+    diagnosticAmbiguousWindow:
+      'Multiple window buckets may describe {host}: {buckets}. Choose the correct device above or inspect Raw Data.',
+    diagnosticNoWindowEvents:
+      'No window activity was found for this period. Check that aw-watcher-window is running. On Wayland, try awatcher.',
+    diagnosticOpenRawData: 'Open Raw Data.',
     periodAllTime: 'all time',
     allTimeSlowHint: 'All time can take a while on large databases.',
     filterAfkTooltip: 'Filter away time where the AFK watcher did not detect any input.',

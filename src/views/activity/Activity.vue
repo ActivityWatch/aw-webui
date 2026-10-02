@@ -63,6 +63,14 @@ div
         span {{ periodReadableRange }}
 
   b-alert(v-if="invalidRange" variant="warning" show) {{ $t('activity.invalidRange') }}
+  b-alert.activity-diagnostic(
+    v-if="activityDiagnostic"
+    variant="warning"
+    show
+    data-testid="activity-diagnostic"
+  )
+    span {{ activityDiagnosticMessage }}
+    router-link.ml-1(to="/buckets") {{ $t('activity.diagnosticOpenRawData') }}
 
   div.activity-toolbar.d-flex.flex-wrap.align-items-center
     div.d-flex.mr-2
@@ -333,6 +341,10 @@ import {
 } from '~/util/multidevice';
 import { getClient } from '~/util/awclient';
 import { nextEarliestDate } from '~/util/earliestEvent';
+import {
+  ActivityDiagnostic,
+  activityDiagnostic as diagnoseActivity,
+} from '~/util/activityDiagnostics';
 
 export default {
   name: 'Activity',
@@ -474,6 +486,31 @@ export default {
     },
     invalidRange: function () {
       return this.periodLength === 'range' && !this.dateRange;
+    },
+    activityDiagnostic: function (): ActivityDiagnostic | null {
+      return diagnoseActivity({
+        host: this.host,
+        buckets: this.bucketsStore.buckets,
+        isMultidevice: this.isMultidevice,
+        queryComplete: this.activityStore.loaded && this.activityStore.window.top_apps !== null,
+        windowDuration: this.activityStore.active.duration,
+      });
+    },
+    activityDiagnosticMessage: function (): string {
+      if (!this.activityDiagnostic) return '';
+      const params = { host: this.activityDiagnostic.host };
+      if (this.activityDiagnostic.kind === 'ambiguous-window') {
+        return this.$t('activity.diagnosticAmbiguousWindow', {
+          ...params,
+          buckets: this.activityDiagnostic.bucketIds.join(', '),
+        }).toString();
+      }
+      const key = {
+        'missing-window': 'diagnosticMissingWindow',
+        'missing-afk': 'diagnosticMissingAfk',
+        'no-window-events': 'diagnosticNoWindowEvents',
+      }[this.activityDiagnostic.kind];
+      return this.$t(`activity.${key}`, params).toString();
     },
     _date: function () {
       const offset = this.settingsStore.startOfDay;
