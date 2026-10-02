@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import SunburstCategories from '~/visualizations/SunburstCategories.vue';
 import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
+import { DARK_THEME_HREF } from '~/util/theme';
 
 jest.mock('vue-d3-sunburst/dist/vue-d3-sunburst.css', () => ({}));
 
@@ -60,12 +61,13 @@ describe('SunburstCategories', () => {
       return SunburstCategories.methods.colorfunc('All');
     };
     // Mimic how App.vue/Theme.vue apply the dark theme: by adding/removing
-    // the dark stylesheet <link> in the document head.
+    // the dark stylesheet <link> in the document head. Shares DARK_THEME_HREF
+    // with production so this tracks the real stylesheet path, not a copy.
     const setDarkApplied = dark => {
-      document.querySelector('head link[href="/dark.css"]')?.remove();
+      document.querySelector(`head link[href="${DARK_THEME_HREF}"]`)?.remove();
       if (dark) {
         const link = document.createElement('link');
-        link.href = '/dark.css';
+        link.href = DARK_THEME_HREF;
         link.rel = 'stylesheet';
         document.head.appendChild(link);
       }
