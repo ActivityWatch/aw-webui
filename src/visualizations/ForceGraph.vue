@@ -5,6 +5,7 @@ div#forcegraph
 <style>
 #forcegraph > svg {
   border: 1px solid #555;
+  box-sizing: border-box;
 }
 </style>
 
@@ -39,7 +40,13 @@ export default {
         this.cancelPromise = resolve;
       });
 
-      const svgEl = ForceGraph({ nodes, links }, { invalidation: promise });
+      // Draw at the container's width (up to the default 640px) instead of scaling
+      // a 640px-wide drawing down, which made nodes tiny on narrow screens.
+      const width = Math.min(640, this.$el.clientWidth || 640);
+      const svgEl = ForceGraph(
+        { nodes, links },
+        { width, nodeTitle: d => d.id, invalidation: promise }
+      );
       const svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, undefined> =
         d3.select('#forcegraph');
       //clear
@@ -195,6 +202,19 @@ function ForceGraph(
   //if (G) node.attr('fill', ({ index: i }) => color(G[i]));
   node.attr('fill', (({ index: i }) => nodes[i].color) as any);
   if (T) node.append('title').text((({ index: i }) => T[i]) as any);
+
+  // Label each node with the last segment of its category (ids look like "Work>Programming"),
+  // since titles only show on hover, which isn't available on touch devices.
+  const label = svg
+    .append('g')
+    .attr('fill', 'currentColor')
+    .attr('font-size', 10)
+    .attr('pointer-events', 'none')
+    .selectAll('text')
+    .data(nodes)
+    .join('text')
+    .attr('dy', '0.35em')
+    .text(d => String(d.id).split('>').pop());
   if (invalidation != null) invalidation.then(() => simulation.stop());
 
   function intern(value) {
@@ -209,6 +229,7 @@ function ForceGraph(
       .attr('y2', d => (d as any).target.y);
 
     node.attr('cx', d => (d as any).x).attr('cy', d => (d as any).y);
+    label.attr('x', d => (d as any).x + d.radius + 3).attr('y', d => (d as any).y);
   }
 
   function drag(_simulation) {
