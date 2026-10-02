@@ -275,6 +275,8 @@ export default {
     multideviceNote:
       'Дані браузера та секундоміра доступні лише під час перегляду одного пристрою.',
     timeActive: 'Активний час:',
+    timeActiveTooltip:
+      'Active window time in the queried range, after the filters below. The bars in the period chart show raw device active time, so they can be slightly higher.',
     queryRange: 'Діапазон запиту:',
     filters: 'Фільтри',
     filtersTitle: 'Фільтри',

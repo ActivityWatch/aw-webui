@@ -301,7 +301,9 @@ export function appQuery(
 
   // aw-watcher-android events have no "title" key; only ScreenTime (iOS) does.
   // Merging on "title" when it is absent drops every event (see canonicalEvents).
-  const titleMergeKeys = isIos ? '["app", "classname", "title"]' : '["app", "classname"]';
+  // ScreenTime (iOS) events carry "app" and "title" but NOT "classname";
+  // merging on "classname" when absent drops every event.
+  const titleMergeKeys = isIos ? '["app", "title"]' : '["app", "classname"]';
 
   const code = `
     ${canonicalEvents(params)}

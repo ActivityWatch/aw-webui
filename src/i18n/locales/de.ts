@@ -278,6 +278,8 @@ export default {
     multideviceNote:
       'Browser- und Stoppuhrdaten sind nur bei Auswahl eines einzelnen Geräts verfügbar.',
     timeActive: 'Aktive Zeit:',
+    timeActiveTooltip:
+      'Active window time in the queried range, after the filters below. The bars in the period chart show raw device active time, so they can be slightly higher.',
     queryRange: 'Abfragezeitraum:',
     filters: 'Filter',
     filtersTitle: 'Filter',

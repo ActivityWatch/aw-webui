@@ -53,7 +53,7 @@ div
             )
               b-form-checkbox.mr-3(:checked="false" disabled)
                 | {{ h }} {{ $t('visualizations.noData') }}
-      li.list-group-item.pl-0.pr-3.py-0.border-0
+      li.list-group-item.pl-0.pr-3.py-0.border-0(:title="$t('activity.timeActiveTooltip')")
         b.mr-1 {{ $t('activity.timeActive') }}
         span {{ activityStore.active.duration | friendlyduration }}
     div(v-if="isMultidevice") {{ $t('activity.multideviceNote') }}
