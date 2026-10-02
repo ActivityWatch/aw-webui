@@ -1,4 +1,5 @@
 import {
+  deviceHostnames,
   preferKnownHostnames,
   selectSoleKnownHostname,
   categoryBuilderHostnameEmptyKind,
@@ -69,5 +70,20 @@ describe('categoryBuilderHostnameEmptyKind', () => {
 
   test('treats empty string hostname as unselected when hosts exist', () => {
     expect(categoryBuilderHostnameEmptyKind(['laptop'], '')).toBe('hostname-unselected');
+  });
+});
+
+describe('deviceHostnames', () => {
+  test('drops the unknown pseudo-host when a real host exists', () => {
+    expect(deviceHostnames(['laptop', 'unknown'])).toEqual(['laptop']);
+    expect(deviceHostnames(['unknown', 'desktop', 'laptop'])).toEqual(['desktop', 'laptop']);
+  });
+
+  test('keeps unknown when it is the only host', () => {
+    expect(deviceHostnames(['unknown'])).toEqual(['unknown']);
+  });
+
+  test('returns an empty list when there are no hosts', () => {
+    expect(deviceHostnames([])).toEqual([]);
   });
 });

@@ -4,6 +4,7 @@ import { IBucket } from '~/util/interfaces';
 import { defineStore } from 'pinia';
 import { getClient } from '~/util/awclient';
 import { useServerStore } from '~/stores/server';
+import { deviceHostnames } from '~/util/hostnames';
 
 function select_buckets(
   buckets: IBucket[],
@@ -56,6 +57,10 @@ export const useBucketsStore = defineStore('buckets', {
         ['desc', 'desc', 'desc']
       );
       return hosts;
+    },
+    // Hosts to offer in device pickers (excludes the "unknown" pseudo-host).
+    knownHosts(): string[] {
+      return deviceHostnames(this.hosts);
     },
     // Uses device_id instead of hostname
     devices(this: State): string[] {

@@ -13,7 +13,7 @@ div
       ) {{ opt.text }}
 
     b-form-select.mr-2.mb-1(
-      v-if="bucketsStore.hosts.length > 1"
+      v-if="bucketsStore.knownHosts.length > 1"
       size="sm"
       :value="host"
       :options="hostOptions"
@@ -145,11 +145,16 @@ export default {
 
   computed: {
     host(): string | undefined {
-      return this.$route.params.host || this.bucketsStore.hosts[0];
+      // Ignore a :host param that is no longer offered in the select (e.g. a
+      // stale /trends/unknown URL, or a device that disappeared). Otherwise the
+      // select is hidden and the user is stuck querying a host they cannot see.
+      const routeHost = this.$route.params.host;
+      const hosts = this.bucketsStore.knownHosts;
+      return routeHost && hosts.includes(routeHost) ? routeHost : hosts[0];
     },
 
     hostOptions(): { value: string; text: string }[] {
-      return this.bucketsStore.hosts.map(h => ({ value: h, text: h }));
+      return this.bucketsStore.knownHosts.map(h => ({ value: h, text: h }));
     },
 
     today(): string {
