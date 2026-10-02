@@ -299,4 +299,37 @@ describe('categories store: multiple active sets', () => {
       'YouTube'
     );
   });
+
+  test('primary priority is respected even when sets appear in a different array order', () => {
+    // Regression: the merge used `category_sets` array order instead of
+    // `active_set_ids` priority, so a checked set appearing first in the array
+    // could win and overwrite the primary set's override on save.
+    store.$patch({
+      category_sets: [
+        {
+          id: 'shared',
+          categories: [{ name: ['Work'], rule: { type: 'regex', regex: 'shared' } }],
+        },
+        { id: 'mine', categories: [{ name: ['Work'], rule: { type: 'regex', regex: 'mine' } }] },
+      ],
+      active_set_ids: ['mine', 'shared'],
+      classes: [],
+      classes_unsaved_changes: false,
+    });
+    store.discardChanges();
+
+    expect(store.get_category(['Work']).rule.regex).toBe('mine');
+
+    store.save();
+    expect(store.category_sets.find(s => s.id === 'mine')?.categories[0].rule.regex).toBe('mine');
+  });
+
+  test('an edit that only adds empty data does not create a primary override', () => {
+    // The edit modal adds `data: { color: undefined, score: undefined }` even
+    // when nothing is changed. That must not be treated as an edit.
+    const video = store.get_category(['Media', 'Video']) as Category;
+    store.updateClass({ ...video, data: { color: undefined, score: undefined } });
+    store.save();
+    expect(names('mine')).toEqual([['Work']]);
+  });
 });
