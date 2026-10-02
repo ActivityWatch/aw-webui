@@ -64,23 +64,30 @@ export function activityDiagnostic({
     return { kind: 'missing-window', host };
   }
 
+  // Without an afkstatus bucket `set_available` keeps the Activity query from
+  // running at all, so duplicate window buckets cannot be what is hiding the
+  // data. Check whether the AFK watcher is present for any same-device
+  // hostname before deciding whether to point at a hostname variant: if the
+  // watcher isn't running at all, choosing a variant will not fix the blank
+  // view, and the missing-watcher message is the actionable one.
+  const hasAfk = buckets.some(bucket => bucket.type === 'afkstatus' && exactHost(bucket));
+  const hasAfkForDevice = buckets.some(bucket => bucket.type === 'afkstatus' && sameDevice(bucket));
+
   // A same-device window bucket exists but under a different hostname string
   // ("laptop.local" vs "laptop"). The desktop query matches the host exactly,
-  // so the view is blank; point the user at the variant to select rather than
-  // claiming a watcher is missing.
+  // so the view is blank; point the user at the variant to select — but only
+  // when the AFK watcher is actually running, otherwise the variant choice
+  // still won't fix the blank view.
   if (!hasExactWindow) {
+    if (!hasAfkForDevice) {
+      return { kind: 'missing-afk', host };
+    }
     return {
       kind: 'ambiguous-window',
       host,
       bucketIds: windows.map(bucket => bucket.id),
     };
   }
-
-  // Without an afkstatus bucket `set_available` keeps the Activity query from
-  // running at all, so duplicate window buckets cannot be what is hiding the
-  // data. Report the missing watcher first, otherwise the ambiguous message
-  // sends the user chasing a device choice that would not fix the blank view.
-  const hasAfk = buckets.some(bucket => bucket.type === 'afkstatus' && exactHost(bucket));
   if (!hasAfk) {
     return { kind: 'missing-afk', host };
   }
