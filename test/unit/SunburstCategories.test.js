@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import SunburstCategories from '~/visualizations/SunburstCategories.vue';
 import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
+import { DARK_THEME_HREF } from '~/util/theme';
 
 jest.mock('vue-d3-sunburst/dist/vue-d3-sunburst.css', () => ({}));
 
@@ -52,5 +53,37 @@ describe('SunburstCategories', () => {
     expect(wrapper.findAll('path').length).toBeGreaterThan(0);
 
     wrapper.destroy();
+  });
+
+  describe('root ("All") color', () => {
+    const rootColor = theme => {
+      useSettingsStore().theme = theme;
+      return SunburstCategories.methods.colorfunc('All');
+    };
+    // Mimic how App.vue/Theme.vue apply the dark theme: by adding/removing
+    // the dark stylesheet <link> in the document head. Shares DARK_THEME_HREF
+    // with production so this tracks the real stylesheet path, not a copy.
+    const setDarkApplied = dark => {
+      document.querySelector(`head link[href="${DARK_THEME_HREF}"]`)?.remove();
+      if (dark) {
+        const link = document.createElement('link');
+        link.href = DARK_THEME_HREF;
+        link.rel = 'stylesheet';
+        document.head.appendChild(link);
+      }
+    };
+    afterEach(() => setDarkApplied(false));
+
+    test('is light in light theme and dark in dark theme', () => {
+      expect(rootColor('light')).toBe('#fff');
+      expect(rootColor('dark')).toBe('#333');
+    });
+
+    test("follows the theme applied to the page when theme is 'auto'", () => {
+      setDarkApplied(false);
+      expect(rootColor('auto')).toBe('#fff');
+      setDarkApplied(true);
+      expect(rootColor('auto')).toBe('#333');
+    });
   });
 });
