@@ -48,6 +48,26 @@ describe('activityDiagnostic', () => {
     ).toEqual({ kind: 'missing-afk', host: 'laptop' });
   });
 
+  test('points at hostname variants when the selected host has no exact bucket', () => {
+    // The exact-match query cannot see "laptop.local" when "laptop" is
+    // selected, so the view is blank; the fix is to choose the variant, not to
+    // start a watcher that is already running.
+    expect(
+      activityDiagnostic({
+        host: 'laptop',
+        buckets: [bucket('aw-watcher-window_laptop.local', 'laptop.local', 'currentwindow')],
+        isMultidevice: false,
+        isMobile: false,
+        queryComplete: true,
+        rawWindowDuration: 0,
+      })
+    ).toEqual({
+      kind: 'ambiguous-window',
+      host: 'laptop',
+      bucketIds: ['aw-watcher-window_laptop.local'],
+    });
+  });
+
   test('reports hostname variants only when there is no window activity', () => {
     expect(
       activityDiagnostic({
