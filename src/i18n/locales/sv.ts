@@ -282,6 +282,8 @@ export default {
     onlyThisDevice: 'endast',
     multideviceNote: 'Webbläsar- och stoppursdata visas bara när en enskild enhet är vald.',
     timeActive: 'Aktiv tid:',
+    timeActiveTooltip:
+      'Active window time in the queried range, after the filters below. The bars in the period chart show raw device active time, so they can be slightly higher.',
     queryRange: 'Frågeintervall:',
     filters: 'Filter',
     filtersTitle: 'Filter',

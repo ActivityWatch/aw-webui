@@ -111,11 +111,12 @@ function update(svg_elem: SVGElement, usage_arr, onPeriodClicked) {
       .on('click', function () {
         onPeriodClicked(date);
       });
-    // This is raw AFK-watcher active time; the "Time active" headline additionally
-    // intersects with window events and applies the active filters (see #722).
+    // This is raw device active time (AFK-watcher on desktop, usage events on mobile);
+    // the "Time active" headline additionally intersects with window events and
+    // applies the active filters (see #722), so bars can be slightly higher.
     rect
       .append('title')
-      .text(date + '\n' + seconds_to_duration(usage_time) + '\n(AFK watcher active time)');
+      .text(date + '\n' + seconds_to_duration(usage_time) + '\n(device active time)');
   });
 }
 
