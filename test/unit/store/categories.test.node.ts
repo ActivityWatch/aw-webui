@@ -245,3 +245,58 @@ describe('categories store', () => {
     expect(categoryStore.classes_unsaved_changes).toBe(false);
   });
 });
+
+describe('categories store: multiple active sets', () => {
+  setActivePinia(createPinia());
+  const store = useCategoryStore();
+  const names = (id: string) =>
+    (store.category_sets.find(s => s.id === id)?.categories ?? []).map(c => c.name);
+
+  beforeEach(() => {
+    store.$patch({
+      category_sets: [
+        { id: 'mine', categories: [{ name: ['Work'], rule: { type: 'regex', regex: 'code' } }] },
+        {
+          id: 'shared',
+          categories: [{ name: ['Media', 'Video'], rule: { type: 'regex', regex: 'YouTube' } }],
+        },
+      ],
+      active_set_ids: ['mine'],
+      classes: [],
+      classes_unsaved_changes: false,
+    });
+    store.discardChanges();
+    store.setActiveSets(['mine', 'shared']);
+  });
+
+  test('shows the categories of all active sets', () => {
+    const effective = store.classes.map(c => c.name);
+    expect(effective).toContainEqual(['Work']);
+    expect(effective).toContainEqual(['Media', 'Video']);
+  });
+
+  test('a category added while layered is saved to the primary set only', () => {
+    store.addClass({ name: ['Writing'], rule: { type: 'regex', regex: 'Obsidian' } } as Category);
+    store.save();
+    expect(names('mine')).toEqual([['Work'], ['Writing']]);
+    expect(names('shared')).toEqual([['Media', 'Video']]);
+  });
+
+  test('unchanged secondary categories and synthesized parents stay out of the primary set', () => {
+    store.save();
+    expect(names('mine')).toEqual([['Work']]);
+  });
+
+  test('editing a secondary category stores an override in the primary set', () => {
+    const video = store.get_category(['Media', 'Video']) as Category;
+    store.updateClass({ ...video, rule: { type: 'regex', regex: 'YouTube|Vimeo' } });
+    store.save();
+    const override = store.category_sets
+      .find(s => s.id === 'mine')
+      ?.categories.find(c => isEqual(c.name, ['Media', 'Video']));
+    expect(override?.rule.regex).toBe('YouTube|Vimeo');
+    expect(store.category_sets.find(s => s.id === 'shared')?.categories[0].rule.regex).toBe(
+      'YouTube'
+    );
+  });
+});
