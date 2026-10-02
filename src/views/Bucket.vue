@@ -68,6 +68,13 @@ export default {
     daterange: async function () {
       await this.getEvents(this.id);
     },
+    // The router reuses this component when navigating between buckets, so
+    // reload everything for the new bucket instead of showing the old one's events.
+    id: async function (bucket_id) {
+      this.events = [];
+      this.eventcount = '?';
+      await Promise.all([this.getEvents(bucket_id), this.getEventCount(bucket_id)]);
+    },
   },
   mounted: async function () {
     await this.bucketsStore.ensureLoaded();
@@ -80,10 +87,14 @@ export default {
         start: this.daterange[0].format(),
         end: this.daterange[1].format(),
       });
+      // Ignore responses for a bucket we've since navigated away from.
+      if (bucket_id !== this.id) return;
       this.events = bucket.events;
     },
     getEventCount: async function (bucket_id) {
-      this.eventcount = (await getClient().countEvents(bucket_id)).data;
+      const count = (await getClient().countEvents(bucket_id)).data;
+      if (bucket_id !== this.id) return;
+      this.eventcount = count;
     },
     updateEvent: function (event) {
       const i = this.events.findIndex(e => e.id == event.id);
