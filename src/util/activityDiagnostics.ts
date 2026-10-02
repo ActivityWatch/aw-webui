@@ -56,12 +56,24 @@ export function activityDiagnostic({
     canonicalHostname(bucketHost(bucket)) === canonicalHostname(host);
   const windows = buckets.filter(bucket => bucket.type === 'currentwindow' && sameDevice(bucket));
 
+  const hasExactWindow = windows.some(exactHost);
   const hasWindowActivity = (rawWindowDuration ?? 0) > 0;
 
-  // The exact window bucket is the precondition for the desktop query: without
-  // it there is no window data to explain.
-  if (!windows.some(exactHost)) {
+  // No window bucket for this device at all: the watcher is not reporting.
+  if (windows.length === 0) {
     return { kind: 'missing-window', host };
+  }
+
+  // A same-device window bucket exists but under a different hostname string
+  // ("laptop.local" vs "laptop"). The desktop query matches the host exactly,
+  // so the view is blank; point the user at the variant to select rather than
+  // claiming a watcher is missing.
+  if (!hasExactWindow) {
+    return {
+      kind: 'ambiguous-window',
+      host,
+      bucketIds: windows.map(bucket => bucket.id),
+    };
   }
 
   // Without an afkstatus bucket `set_available` keeps the Activity query from
