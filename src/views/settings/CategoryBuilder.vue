@@ -346,29 +346,42 @@ export default {
 
       this.showing_events = [word, events];
     },
+    // Persist `next` as the ignored-words list. Saves are serialized and always
+    // write the latest requested list: settingsStore.save() ends with a load()
+    // that patches server state back over local state, so overlapping updates
+    // could otherwise revert a newer word to an older server value.
+    async persistIgnoredWords(next: string[]) {
+      this.settingsStore.$patch({ category_builder_ignored_words: next });
+      this._pending_ignored = next;
+      this._persist_queue = (this._persist_queue || Promise.resolve())
+        // A failed save was already reported to its own caller; don't poison the queue.
+        .catch(e => console.warn('Previous ignored-words save failed', e))
+        .then(() =>
+          this.settingsStore.update({ category_builder_ignored_words: this._pending_ignored })
+        );
+      const queued = this._persist_queue;
+      try {
+        await queued;
+      } finally {
+        // Queue drained: later reads come from the store again.
+        if (this._persist_queue === queued) this._pending_ignored = null;
+      }
+    },
     async ignoreWord(word: string) {
       console.log('Ignoring word: ' + word);
-      if (this.ignored_words.includes(word)) return;
-      // Patch store synchronously before the async save so that any overlapping
-      // ignoreWord call reads the already-updated list, not a stale snapshot.
-      const next = [...this.ignored_words, word];
-      this.settingsStore.$patch({ category_builder_ignored_words: next });
-      await this.settingsStore.update({ category_builder_ignored_words: next });
+      const current = this._pending_ignored || this.ignored_words;
+      if (current.includes(word)) return;
+      await this.persistIgnoredWords([...current, word]);
     },
     async unignoreWord(word: string) {
-      const next = this.ignored_words.filter(w => w !== word);
-      // Patch synchronously before the async save so overlapping unignore calls
-      // each read the already-updated list, not a stale snapshot (mirrors ignoreWord).
-      this.settingsStore.$patch({ category_builder_ignored_words: next });
-      await this.settingsStore.update({ category_builder_ignored_words: next });
+      const current = this._pending_ignored || this.ignored_words;
+      await this.persistIgnoredWords(current.filter(w => w !== word));
       // findCommonPhrases skipped the word, so it needs a refetch to reappear.
       await this.fetchWords();
     },
     async resetIgnoredWords() {
       this.show_ignored = false;
-      // Patch synchronously so concurrent ignoreWord calls see the cleared list.
-      this.settingsStore.$patch({ category_builder_ignored_words: [] });
-      await this.settingsStore.update({ category_builder_ignored_words: [] });
+      await this.persistIgnoredWords([]);
       await this.fetchWords();
     },
     createRule(word: string) {
