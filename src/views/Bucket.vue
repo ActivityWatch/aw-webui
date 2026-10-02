@@ -50,6 +50,9 @@ export default {
       eventcount: '?',
       daterange: null,
       maxDuration: 31 * 24 * 60 * 60,
+      // Incremented per request, so only the latest response is applied.
+      eventsRequestId: 0,
+      countRequestId: 0,
     };
   },
   computed: {
@@ -68,6 +71,13 @@ export default {
     daterange: async function () {
       await this.getEvents(this.id);
     },
+    // The router reuses this component when navigating between buckets, so
+    // reload everything for the new bucket instead of showing the old one's events.
+    id: async function (bucket_id) {
+      this.events = [];
+      this.eventcount = '?';
+      await Promise.all([this.getEvents(bucket_id), this.getEventCount(bucket_id)]);
+    },
   },
   mounted: async function () {
     await this.bucketsStore.ensureLoaded();
@@ -75,15 +85,21 @@ export default {
   },
   methods: {
     getEvents: async function (bucket_id) {
+      const requestId = ++this.eventsRequestId;
       const bucket = await this.bucketsStore.getBucketWithEvents({
         id: bucket_id,
         start: this.daterange[0].format(),
         end: this.daterange[1].format(),
       });
+      // Ignore responses superseded by a newer request (other bucket or time range).
+      if (requestId !== this.eventsRequestId) return;
       this.events = bucket.events;
     },
     getEventCount: async function (bucket_id) {
-      this.eventcount = (await getClient().countEvents(bucket_id)).data;
+      const requestId = ++this.countRequestId;
+      const count = (await getClient().countEvents(bucket_id)).data;
+      if (requestId !== this.countRequestId) return;
+      this.eventcount = count;
     },
     updateEvent: function (event) {
       const i = this.events.findIndex(e => e.id == event.id);
