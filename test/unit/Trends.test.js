@@ -5,9 +5,20 @@ describe('Trends view', () => {
     test('returns the :host route param when present', () => {
       const vm = {
         $route: { params: { host: 'laptop' } },
-        bucketsStore: { knownHosts: ['desktop'] },
+        bucketsStore: { knownHosts: ['desktop', 'laptop'] },
       };
       expect(Trends.computed.host.call(vm)).toBe('laptop');
+    });
+
+    test('ignores a stale :host param that is no longer selectable', () => {
+      // e.g. a previously selectable /trends/unknown URL on an install where
+      // only the stopwatch pseudo-host plus one real device exist: the select
+      // is hidden, so honouring the stale param would trap the user.
+      const vm = {
+        $route: { params: { host: 'unknown' } },
+        bucketsStore: { knownHosts: ['desktop'] },
+      };
+      expect(Trends.computed.host.call(vm)).toBe('desktop');
     });
 
     test('falls back to the first available host when no :host param', () => {

@@ -145,7 +145,12 @@ export default {
 
   computed: {
     host(): string | undefined {
-      return this.$route.params.host || this.bucketsStore.knownHosts[0];
+      // Ignore a :host param that is no longer offered in the select (e.g. a
+      // stale /trends/unknown URL, or a device that disappeared). Otherwise the
+      // select is hidden and the user is stuck querying a host they cannot see.
+      const routeHost = this.$route.params.host;
+      const hosts = this.bucketsStore.knownHosts;
+      return routeHost && hosts.includes(routeHost) ? routeHost : hosts[0];
     },
 
     hostOptions(): { value: string; text: string }[] {
