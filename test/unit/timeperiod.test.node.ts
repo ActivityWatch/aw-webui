@@ -7,14 +7,35 @@ import {
   dateRangeToTimeperiod,
   formatDateRange,
   parseDateRange,
+  periodStartDate,
   shiftDateRange,
   splitTimeperiodStrs,
   timeperiodsCalendarMonthsOfPeriod,
   timeperiodsForBarchart,
 } from '~/util/timeperiod';
+import { useSettingsStore } from '~/stores/settings';
 
 beforeEach(() => {
   setActivePinia(createPinia());
+});
+
+describe('periodStartDate', () => {
+  // 2026-10-02 is a Friday.
+  it.each([
+    ['Monday', 'week', '2026-09-28'],
+    ['Sunday', 'week', '2026-09-27'],
+    ['Monday', 'month', '2026-10-01'],
+    ['Monday', 'year', '2026-01-01'],
+    ['Monday', 'day', '2026-10-02'],
+  ])('with weeks starting %s, snaps to the start of the %s', (startOfWeek, period, expected) => {
+    useSettingsStore().startOfWeek = startOfWeek;
+    expect(periodStartDate('2026-10-02', period)).toBe(expected);
+  });
+
+  it('keeps a date that is already the start of the period', () => {
+    useSettingsStore().startOfWeek = 'Monday';
+    expect(periodStartDate('2026-09-28', 'week')).toBe('2026-09-28');
+  });
 });
 
 describe('parseDateRange', () => {

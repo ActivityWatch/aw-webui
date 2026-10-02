@@ -298,6 +298,7 @@ import {
   formatDateRange,
   parseDateRange,
   periodLengthConvertMoment,
+  periodStartDate,
   shiftDateRange,
 } from '~/util/timeperiod';
 import _ from 'lodash';
@@ -575,8 +576,13 @@ export default {
           length: [1, 'day'],
         };
       } else if (this.periodIsBrowseable) {
+        // The URL date isn't necessarily aligned to the period (e.g. /week with no
+        // date falls back to today), so snap it to the start of the week/month/year.
         return {
-          start: get_day_start_with_offset(this._date, settingsStore.startOfDay),
+          start: get_day_start_with_offset(
+            periodStartDate(this._date, this.periodLength),
+            settingsStore.startOfDay
+          ),
           length: [1, this.periodLength],
         };
       } else {

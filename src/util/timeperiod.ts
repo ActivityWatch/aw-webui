@@ -68,6 +68,12 @@ export function periodLengthConvertMoment(periodLength: string) {
   }
 }
 
+// Snaps a YYYY-MM-DD date to the first day of the day/week/month/year containing it,
+// honoring the configured start of week.
+export function periodStartDate(date: string, periodLength: string): string {
+  return moment(date).startOf(periodLengthConvertMoment(periodLength)).format('YYYY-MM-DD');
+}
+
 export function timeperiodsAroundTimeperiod(timeperiod: TimePeriod): TimePeriod[] {
   const periods = [];
   for (let i = -15; i <= 15; i++) {
