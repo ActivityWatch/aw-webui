@@ -58,9 +58,10 @@ div
         small.text-muted(v-else) {{ $t('buckets.noEvents') }}
       template(v-slot:cell(actions)="data")
         b-button-group(size="sm")
-          b-button(variant="primary", :to="'/buckets/' + data.item.id", :title="$t('buckets.openBucket')")
-            icon.d-none.d-md-inline-block.mr-1(name="folder-open")
-            | {{ $t('common.open') }}
+          //- Icon-only below md so the column fits every translation of "Open" on phones.
+          b-button.text-nowrap(variant="primary", :to="'/buckets/' + data.item.id", :title="$t('buckets.openBucket')", :aria-label="$t('buckets.openBucket')")
+            icon(name="folder-open")
+            span.d-none.d-md-inline.ml-1 {{ $t('common.open') }}
           b-dropdown.kebab-dropdown(variant="outline-secondary", toggle-class="border-0", size="sm", right, no-caret, boundary="window", :title="$t('common.more')")
             template(v-slot:button-content)
               icon(name="ellipsis-v")
@@ -194,6 +195,16 @@ div
   table-layout: fixed;
 }
 
+::v-deep .bucket-actions-col {
+  width: 5rem;
+
+  // From md up the "Open" button also shows its label (see template); leave room
+  // for the longest translation (e.g. uk "Відкрити").
+  @media (min-width: 768px) {
+    width: 10rem;
+  }
+}
+
 ::v-deep .bucket-table td {
   vertical-align: middle;
 }
@@ -288,18 +299,19 @@ export default {
           key: 'id',
           label: this.$t('buckets.bucketId'),
           sortable: true,
-          thStyle: { width: '65%' },
         },
         {
           key: 'last_updated',
           label: this.$t('buckets.updated'),
           sortable: true,
-          thStyle: { width: '20%' },
+          // Fixed widths (rather than percentages) keep these columns usable on
+          // narrow screens; the bucket ID column takes the remaining space.
+          thStyle: { width: '6.5rem', whiteSpace: 'nowrap' },
         },
         {
           key: 'actions',
           label: '',
-          thStyle: { width: '15%' },
+          thClass: 'bucket-actions-col',
           tdClass: 'text-right',
         },
       ];
