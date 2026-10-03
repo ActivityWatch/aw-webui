@@ -25,9 +25,11 @@ body {
   background-color: $backgroundColor;
 }
 
-// Custom visualizations load in iframes. Without this, the browser renders
-// the iframe with the system color-scheme (which may be light even when AW's
-// dark theme is active), producing a white background. See aw-webui#1049.
+// Custom visualizations load in iframes. The iframe inherits `color-scheme`
+// from the page (see static/dark.css) but its embedded document still paints
+// a light default canvas, so it shows a white background under the dark theme.
+// Resetting the iframe's own color-scheme to `normal` fixes this.
+// See aw-webui#1049.
 iframe {
   color-scheme: normal;
 }
