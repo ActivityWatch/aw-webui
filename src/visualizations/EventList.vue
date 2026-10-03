@@ -9,14 +9,14 @@ div
   )
   b-card.event-container(no-block=true)
     span(slot="header")
-      h4.card-title Events
+      h4.card-title {{ $t('ui.eventList.title') }}
       span.pagination-header
-        | Showing {{ displayed_events.length }} events #[span(v-if="events.length > displayed_events.length") (out of {{ events.length }})]
+        | {{ $t('ui.eventList.showing', { shown: displayed_events.length, total: events.length }) }}
       b-button(@click="expandList", size="sm", style="float: right;")
         span(v-if="!isListExpanded")
-          | Expand list
+          | {{ $t('ui.eventList.expand') }}
         span(v-else)
-          | Condense list
+          | {{ $t('ui.eventList.condense') }}
 
     ul.event-list(:class="{ 'expand': isListExpanded }")
       li(v-for="event in displayed_events")
@@ -34,7 +34,7 @@ div
             span(v-if="editable")
               b-btn.field(@click="() => {editEvent(event)}" variant="outline-dark" size="sm" style="padding: 0 0.2em 0 0.2em")
                 icon(name="edit")
-                | Edit
+                | {{ $t('ui.eventList.edit') }}
 </template>
 
 <style scoped lang="scss">

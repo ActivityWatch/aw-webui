@@ -94,8 +94,8 @@ div
         toggle-class="border-0"
         no-caret
         right
-        title="More ranges"
-        aria-label="More date ranges"
+        :title="$t('ui.activity.moreRanges')"
+        :aria-label="$t('ui.activity.moreDateRanges')"
       )
         template(v-slot:button-content)
           icon(name="ellipsis-v")
@@ -148,12 +148,12 @@ div
 
     div.ml-auto
       b-button-group(size="sm")
-        b-button.px-2(:pressed.sync="showOptions", variant="outline-dark", title="Filters", aria-label="Filters")
+        b-button.px-2(:pressed.sync="showOptions", variant="outline-dark", :title="$t('activity.filters')" :aria-label="$t('activity.filters')")
           icon(name="filter")
           span.d-none.d-md-inline
             |  {{ $t('activity.filters') }}
             b-badge(pill, variant="secondary" v-if="filters_set > 0").ml-2 {{ filters_set }}
-        b-button.px-2(@click="refresh(true)", variant="outline-dark", title="Refresh", aria-label="Refresh")
+        b-button.px-2(@click="refresh(true)", variant="outline-dark", :title="$t('activity.refresh')" :aria-label="$t('activity.refresh')")
           icon(name="sync")
           span.d-none.d-md-inline
             |  {{ $t('activity.refresh') }}

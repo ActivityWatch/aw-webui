@@ -5,7 +5,7 @@ div
   div(:style='{"visibility": visible_more ? "visible" : "hidden"}')
     b-button.mt-1.mr-2(v-if="fields && (limit_ < fields.length)", size="sm", variant="outline-secondary", @click="limit_ += 5")
       icon(name="angle-double-down")
-      | Show more
+      | {{ $t('ui.summary.showMore') }}
     b-button.mt-1(v-if="limit_ != limit" size="sm", variant="outline-secondary", @click="limit_ = limit")
       icon(name="angle-double-up")
 </template>
@@ -82,7 +82,7 @@ export default {
           this.linkfunc
         );
       } else {
-        summary.set_status(el, 'Loading...');
+        summary.set_status(el, this.$t('common.loading'));
       }
     },
   },

@@ -17,10 +17,10 @@ div
     div.col-4.col-md-8
       span.d-none.d-md-inline
         span(v-if="_class.rule.type === 'regex'")
-          | Rule ({{_class.rule.type}}): #[code {{_class.rule.regex}}]
+          | {{ $t('ui.categoryEditor.rule') }} ({{_class.rule.type}}): #[code {{_class.rule.regex}}]
           span.text-muted(v-if="_class.rule.select_keys && _class.rule.select_keys.length")
             |  [{{ _class.rule.select_keys.join(', ') }}]
-        span.text-muted(v-else) No rule
+        span.text-muted(v-else) {{ $t('ui.categoryEditor.noRule') }}
       span.float-right
         b-btn.ml-1.border-0(size="sm", variant="outline-secondary", @click="showEditModal(_class.id)" pill)
           icon(name="edit")

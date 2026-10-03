@@ -1,31 +1,31 @@
 <template lang="pug">
 // The category edit modal
-b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="hidden" @ok="handleOk" @keydown.native.enter="handleEnter" :ok-disabled="!canSubmit")
+b-modal(id="edit" ref="edit" :title="$t('ui.categoryEditor.editTitle')" @show="resetModal" @hidden="hidden" @ok="handleOk" @keydown.native.enter="handleEnter" :ok-disabled="!canSubmit")
   div.my-1
-    b-input-group.my-1(prepend="Name")
+    b-input-group.my-1(:prepend="$t('ui.categoryEditor.name')")
       b-form-input(v-model="editing.name")
-    b-input-group(prepend="Parent")
+    b-input-group(:prepend="$t('ui.categoryEditor.parent')")
       b-select(v-model="editing.parent", :options="allCategories")
     //| ID: {{editing.id}}
 
   hr
   div.my-1
-    b Rule
-    b-input-group.my-1(prepend="Type")
+    b {{ $t('ui.categoryEditor.rule') }}
+    b-input-group.my-1(:prepend="$t('ui.categoryEditor.type')")
       b-select(v-model="editing.rule.type", :options="allRuleTypes")
     div(v-if="editing.rule.type === 'regex'")
-      b-input-group.my-1(prepend="Pattern")
+      b-input-group.my-1(:prepend="$t('ui.categoryEditor.pattern')")
         b-form-input(v-model="editing.rule.regex")
       div.d-flex
         div.flex-grow-1
           b-form-checkbox(v-model="editing.rule.ignore_case" switch)
-            | Case insensitive
+            | {{ $t('ui.categoryEditor.caseInsensitive') }}
         div.flex-grow-1
           small.text-right
-            div.text-danger(v-if="!validPattern") Invalid pattern
-            div.text-warning(v-if="validPattern && broad_pattern") Pattern too broad
+            div.text-danger(v-if="!validPattern") {{ $t('settings.activePattern.invalid') }}
+            div.text-warning(v-if="validPattern && broad_pattern") {{ $t('settings.activePattern.tooBroad') }}
       div.mt-2
-        small.text-muted Match fields
+        small.text-muted {{ $t('ui.categoryEditor.matchFields') }}
         div.d-flex.flex-wrap
           b-form-checkbox.mr-3(
             v-for="key in fieldOptions"
@@ -33,7 +33,7 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
             v-model="editing.match_fields"
             :value="key"
           ) {{ key }}
-        small.text-muted Leave blank to match every string field (default).
+        small.text-muted {{ $t('ui.categoryEditor.matchFieldsHelp') }}
       b-input-group.my-1(:prepend="$t('settings.categorization.priority')")
         b-form-input(
           v-model="editing.priority"
@@ -47,26 +47,26 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
 
   hr
   div.my-1
-    b Color
+    b {{ $t('ui.categoryEditor.color') }}
 
     b-form-checkbox(v-model="editing.inherit_color" switch)
-      | Inherit parent color
+      | {{ $t('ui.categoryEditor.inheritColor') }}
     div.mt-1(v-show="!editing.inherit_color")
       color-picker(v-model="editing.color")
 
   hr
   div.my-1
-    b Productivity score
+    b {{ $t('ui.categoryEditor.productivityScore') }}
     b-form-checkbox(v-model="editing.inherit_score" switch)
-      | Inherit parent score
-    b-input-group.my-1(prepend="Score" v-if="!editing.inherit_score")
+      | {{ $t('ui.categoryEditor.inheritScore') }}
+    b-input-group.my-1(:prepend="$t('ui.categoryEditor.score')" v-if="!editing.inherit_score")
       b-form-input(v-model="editing.score")
 
   hr
   div.my-1
     b-btn(variant="danger", @click="removeClass(categoryId); $refs.edit.hide()")
       icon(name="trash")
-      | Remove category
+      | {{ $t('ui.categoryEditor.remove') }}
 </template>
 
 <script lang="ts">

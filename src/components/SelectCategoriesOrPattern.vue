@@ -10,7 +10,7 @@ div
   // select which categories, by having a form select and a "plus" button to include them
   b-input-group
     aw-select-categories(v-if="mode == 'categories'", v-model="filterCategoriesData")
-    b-input(v-if="mode == 'custom'" v-model="pattern" v-on:keyup.enter="generate()" placeholder="Regex pattern to search for")
+    b-input(v-if="mode == 'custom'" v-model="pattern" v-on:keyup.enter="generate()" :placeholder="$t('ui.search.regexPlaceholder')")
     b-input-group-append
       slot(name="input-group-append")
 </template>

@@ -8,8 +8,8 @@
       button(type="button", class="close", @click="isVisible=false") &times;
 
     b-alert(v-if="isFollowUpVisible", variant="success", show)
-      | Checking for new releases is now disabled, you can re-enable it in the
-      | #[router-link(to="/settings" class="alert-link" @click.native="isFollowUpVisible=false") settings page].
+      | {{ $t('ui.release.disabled') }}
+      | #[router-link(to="/settings" class="alert-link" @click.native="isFollowUpVisible=false") {{ $t('ui.release.settingsPage') }}].
       button(type="button", class="close", @click="isFollowUpVisible=false") &times;
 </template>
 

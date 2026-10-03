@@ -2,7 +2,7 @@
 div
   div.d-sm-flex.justify-content-between.align-items-center
     div
-      h5.mt-1.mb-2.mb-sm-0 Theme
+      h5.mt-1.mb-2.mb-sm-0 {{ $t('settings.theme.title') }}
     div
       b-button-group(v-if="_loaded" size="sm")
         b-button(
@@ -13,11 +13,11 @@ div
           variant="outline-dark"
         )
           icon.mr-1(:name="opt.icon")
-          | {{ opt.label }}
+          | {{ $t(`settings.theme.${opt.value}`) }}
       span(v-else)
-        .aw-loading Loading...
+        .aw-loading {{ $t('common.loading') }}
   small.text-muted
-    | Change the color theme. Category colors are picked separately — you may want to adjust them when switching to dark mode.
+    | {{ $t('settings.theme.help') }}
 </template>
 
 <script lang="ts">
@@ -33,9 +33,9 @@ export default {
   data() {
     return {
       themeOptions: [
-        { value: 'auto', label: 'System', icon: 'desktop' },
-        { value: 'light', label: 'Light', icon: 'sun' },
-        { value: 'dark', label: 'Dark', icon: 'moon' },
+        { value: 'auto', icon: 'desktop' },
+        { value: 'light', icon: 'sun' },
+        { value: 'dark', icon: 'moon' },
       ],
     };
   },

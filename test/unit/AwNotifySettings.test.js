@@ -22,7 +22,9 @@ describe('AwNotifySettings', () => {
     ['a 404 response', () => mockGet.mockRejectedValue({ response: { status: 404 } })],
   ])('falls back to default alerts on %s', async (_name, setup) => {
     setup();
-    const wrapper = shallowMount(AwNotifySettings);
+    const wrapper = shallowMount(AwNotifySettings, {
+      mocks: { $t: key => key },
+    });
     await flushPromises();
 
     expect(wrapper.vm.error).toBe('');
@@ -31,9 +33,11 @@ describe('AwNotifySettings', () => {
 
   test('shows an error for a malformed saved setting', async () => {
     mockGet.mockResolvedValue({ data: { alerts: 'bad' } });
-    const wrapper = shallowMount(AwNotifySettings);
+    const wrapper = shallowMount(AwNotifySettings, {
+      mocks: { $t: key => key },
+    });
     await flushPromises();
 
-    expect(wrapper.vm.error).toMatch('unsupported format');
+    expect(wrapper.vm.error).toBe('settings.notifications.loadFailed');
   });
 });

@@ -88,16 +88,16 @@ div
 
   b-modal(
     v-model="showCreateSetModal"
-    title="New Category Set"
-    ok-title="Create"
+    :title="$t('settings.categorization.newSetModalTitle')"
+    :ok-title="$t('settings.categorization.createSet')"
     @ok="onCreateSetConfirm"
     @shown="$refs.newSetNameInput && $refs.newSetNameInput.focus()"
   )
-    b-form-group(label="Name for the new category set:")
+    b-form-group(:label="$t('settings.categorization.newSetNameLabel')")
       b-form-input(
         ref="newSetNameInput"
         v-model="newSetName"
-        placeholder="Category set name"
+        :placeholder="$t('settings.categorization.newSetNamePlaceholder')"
       )
 </template>
 <script lang="ts">

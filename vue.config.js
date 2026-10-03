@@ -50,7 +50,7 @@ export default {
       new webpack.IgnorePlugin({ resourceRegExp: /^@unicode\/unicode-13\.0\.0/ }),
       new webpack.DefinePlugin({
         PRODUCTION: process.env.NODE_ENV === 'production',
-        AW_SERVER_URL: process.env.AW_SERVER_URL,
+        AW_SERVER_URL: JSON.stringify(process.env.AW_SERVER_URL || ''),
         COMMIT_HASH: JSON.stringify(_COMMIT_HASH),
         AW_RESEARCH_EDITION: process.env.AW_RESEARCH_EDITION === 'true',
         // Optional JSON preset category sets shipped by this build (see src/util/presetCategories.ts)

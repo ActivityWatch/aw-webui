@@ -66,7 +66,7 @@ div
               div.mt-1(v-if="filter_categories.length > 0")
                 span.badge.badge-info.mr-1(v-for="(cat, idx) in filter_categories", :key="idx")
                   | {{ cat.join(' > ') }}
-                  button.ml-1.close.small(@click="removeCategory(idx)", type="button", aria-label="Remove category", style="font-size: 0.85rem; line-height: 1") &times;
+                  button.ml-1.close.small(@click="removeCategory(idx)", type="button", :aria-label="$t('ui.workReport.removeCategory')", style="font-size: 0.85rem; line-height: 1") &times;
 
     // Display options (swimlanes, future visual toggles) tucked behind a
     // ghost kebab so they don't compete visually with Filters.
@@ -76,12 +76,12 @@ div
       toggle-class="border-0"
       no-caret
       right
-      title="Display options"
-      aria-label="Display options"
+      :title="$t('ui.timeline.displayOptions')"
+      :aria-label="$t('ui.timeline.displayOptions')"
     )
       template(v-slot:button-content)
         icon(name="ellipsis-v")
-      b-dropdown-header Swimlanes
+      b-dropdown-header {{ $t('ui.timeline.swimlanes') }}
       b-dropdown-item-button(
         v-for="opt in swimlaneOptions"
         :key="String(opt.value)"

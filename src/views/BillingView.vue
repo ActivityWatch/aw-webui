@@ -1,19 +1,19 @@
 <template lang="pug">
 div
-  h3.mb-3 Billable Hours Export
+  h3.mb-3 {{ $t('ui.billing.title') }}
 
   div.row.mb-4
     div.col-md-4
-      b-form-group(label="Hosts" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.billing.hosts')" label-class="font-weight-bold")
         b-form-select(v-model="selectedHosts" :options="hostOptions" multiple :select-size="4")
-        small.text-muted Select devices to include
+        small.text-muted {{ $t('ui.billing.selectDevices') }}
 
     div.col-md-4
-      b-form-group(label="Date Range" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.billing.dateRange')" label-class="font-weight-bold")
         b-form-select(v-model="dateRange" :options="dateRangeOptions")
 
     div.col-md-4
-      b-form-group(label="Hourly Rate (optional)" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.billing.hourlyRate')" label-class="font-weight-bold")
         b-input-group(prepend="$")
           b-form-input(
             v-model.number="defaultRate"
@@ -22,19 +22,19 @@ div
             step="0.01"
             placeholder="0.00"
           )
-        small.text-muted Default rate applied to all categories. Override per row below.
+        small.text-muted {{ $t('ui.billing.defaultRateHelp') }}
 
   div.mb-3
     b-button(@click="loadData" variant="primary" :disabled="loading")
       icon(name="sync")
-      |  Calculate Hours
+      |  {{ $t('ui.billing.calculate') }}
     b-button.ml-2(@click="exportCSV" variant="outline-secondary" :disabled="!hasData")
       icon(name="download")
-      |  Export CSV
+      |  {{ $t('ui.billing.exportCsv') }}
 
   div(v-if="loading")
     b-spinner.mr-2
-    | Loading...
+    | {{ $t('common.loading') }}
 
   div(v-if="errorMessage")
     b-alert(variant="danger" show) {{ errorMessage }}
@@ -43,16 +43,16 @@ div
     div.row.mb-2
       div.col
         small.text-muted
-          | Period: {{ periodLabel }} · Total: {{ formatDuration(totalDuration) }}
-          span(v-if="defaultRate > 0")  · Est. Total: {{ formatAmount(totalAmount) }}
+          | {{ $t('ui.billing.period') }}: {{ periodLabel }} · {{ $t('ui.billing.total') }}: {{ formatDuration(totalDuration) }}
+          span(v-if="defaultRate > 0")  · {{ $t('ui.billing.estimatedTotal') }}: {{ formatAmount(totalAmount) }}
 
     table.table.table-sm.table-hover
       thead
         tr
-          th Category
-          th.text-right Hours
-          th.text-right Rate ($/h)
-          th.text-right Amount
+          th {{ $t('ui.billing.category') }}
+          th.text-right {{ $t('ui.billing.hours') }}
+          th.text-right {{ $t('ui.billing.rate') }}
+          th.text-right {{ $t('ui.billing.amount') }}
       tbody
         tr(v-for="row in categoryRows" :key="row.key")
           td
@@ -72,7 +72,7 @@ div
           td.text-right {{ formatAmount(getAmount(row)) }}
       tfoot
         tr.font-weight-bold
-          td Total
+          td {{ $t('ui.billing.total') }}
           td.text-right {{ formatHours(totalDuration) }}
           td.text-right —
           td.text-right {{ formatAmount(totalAmount) }}
