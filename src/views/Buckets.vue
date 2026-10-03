@@ -16,7 +16,7 @@ div
           span.font-weight-bold {{ device.hostname }}
           b-badge.ml-2(v-if="serverStore.info && serverStore.info.hostname == device.hostname" variant="info") {{ $t('buckets.thisDevice') }}
           div.small.text-muted(v-if="device.device_id && device.hostname !== device.device_id")
-            | ID: {{ device.device_id }}
+            | {{ $t('ui.buckets.id') }}: {{ device.device_id }}
           div.small(v-if="deviceHasEvents(device)")
             span.text-muted {{ $t('buckets.lastUpdatedInline') }}&nbsp;
             time(:class="{'text-success': isRecent(device.last_updated)}",
@@ -155,7 +155,7 @@ div
   b-alert(show)
     | {{ $t('buckets.moreWatchers') }} #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") {{ $t('buckets.docsLink') }}].
 
-  aw-devonly(reason="This section is still under development")
+  aw-devonly(:reason="$t('ui.devOnly.bucketTools')")
     h4.p-2 {{ $t('buckets.tools') }}
 
     hr
@@ -397,8 +397,7 @@ export default {
         });
         this.$root.$emit('bv::hide::modal', 'delete-host-modal');
       } catch (err) {
-        this.delete_host_error =
-          err?.message || 'Deletion failed. Some buckets may not have been deleted.';
+        this.delete_host_error = err?.message || this.$t('buckets.deleteFailed');
       } finally {
         this.deleting_host = false;
       }
@@ -430,7 +429,7 @@ export default {
         await downloadBlob(filename, response.data, 'application/json');
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
-        this.export_error = `Export failed: ${msg}`;
+        this.export_error = this.$t('buckets.exportFailed', { error: msg });
         console.error('JSON export failed:', e);
       } finally {
         this.export_inflight = Math.max(0, this.export_inflight - 1);
@@ -470,7 +469,7 @@ export default {
         await downloadBlob(filename, response.data, 'text/csv');
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
-        this.export_error = `Export failed: ${msg}`;
+        this.export_error = this.$t('buckets.exportFailed', { error: msg });
         console.error('CSV export failed:', e);
       } finally {
         this.export_inflight = Math.max(0, this.export_inflight - 1);

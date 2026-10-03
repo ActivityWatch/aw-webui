@@ -17,10 +17,10 @@ div
     div.col-4.col-md-8
       span.d-none.d-md-inline
         span(v-if="_class.rule.type === 'regex'")
-          | Rule ({{_class.rule.type}}): #[code {{_class.rule.regex}}]
+          | {{ $t('ui.categoryEditor.rule') }} ({{_class.rule.type}}): #[code {{_class.rule.regex}}]
           span.text-muted(v-if="_class.rule.select_keys && _class.rule.select_keys.length")
             |  [{{ _class.rule.select_keys.join(', ') }}]
-        span.text-muted(v-else) No rule
+        span.text-muted(v-else) {{ $t('ui.categoryEditor.noRule') }}
       span.float-right
         b-btn.ml-1.border-0(size="sm", variant="outline-secondary", @click="showEditModal(_class.id)" pill)
           icon(name="edit")
@@ -79,7 +79,7 @@ export default {
   methods: {
     addSubclass: function (parent) {
       // Generate a unique default name to prevent duplicate name conflicts (#702)
-      const baseName = 'New class';
+      const baseName = this.$t('ui.categoryEditor.newClass');
       let name = baseName;
       let counter = 2;
       const existingNames = this.categoryStore.classes.map(c => JSON.stringify(c.name));
@@ -90,7 +90,7 @@ export default {
 
       const lastId = this.categoryStore.addClass({
         name: parent.name.concat([name]),
-        rule: { type: 'regex', regex: 'FILL ME' },
+        rule: { type: 'regex', regex: this.$t('ui.categoryEditor.regexPlaceholder') },
       });
 
       this.editingId = lastId;

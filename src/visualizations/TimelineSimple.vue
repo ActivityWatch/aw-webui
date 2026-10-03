@@ -24,7 +24,12 @@ export default {
   },
   watch: {
     events: function () {
-      timeline_simple.update(this.$el, this.events, this.event_type);
+      timeline_simple.update(
+        this.$el,
+        this.events,
+        this.event_type,
+        this.$t('visualizations.noData')
+      );
     },
   },
   mounted: function () {

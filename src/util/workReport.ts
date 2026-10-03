@@ -21,13 +21,16 @@ function getAFKHosts(buckets: IBucket[]): Set<string> {
   );
 }
 
-export function getWorkReportHostOptions(buckets: IBucket[]): WorkReportHostOption[] {
+export function getWorkReportHostOptions(
+  buckets: IBucket[],
+  requiresAfkLabel = 'requires aw-watcher-afk'
+): WorkReportHostOption[] {
   const afkHosts = getAFKHosts(buckets);
   return getWindowHosts(buckets).map(host => {
     const hasAFK = afkHosts.has(host);
     return {
       value: host,
-      text: hasAFK ? host : `${host} (requires aw-watcher-afk)`,
+      text: hasAFK ? host : `${host} (${requiresAfkLabel})`,
       disabled: !hasAFK,
     };
   });

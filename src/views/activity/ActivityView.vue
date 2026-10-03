@@ -1,10 +1,10 @@
 <template lang="pug">
 div(v-if="viewMissing")
   b-alert.mt-3(show variant="warning")
-    | This view ("#[code {{ view_id }}]") doesn't exist on this dashboard.
+    | {{ $t('ui.activity.missingView', { view: view_id }) }}
     |
     router-link(:to="{ name: 'activity-view', params: {...$route.params, view_id: 'default'} }")
-      | Go to the default view
+      | {{ $t('ui.activity.goDefault') }}
     | .
 div(v-else-if="view")
   draggable.row(v-model="elements" handle=".handle")
@@ -18,58 +18,58 @@ div(v-else-if="view")
     div.col-md-6.col-lg-4.p-3(v-if="editing")
       b-button(@click="addVisualization" variant="outline-dark" block size="lg")
         icon(name="plus")
-        span Add visualization
+        span {{ $t('activityView.addVisualization') }}
 
   div(v-if="editing").mt-2
     div.d-flex.flex-row-reverse
       b-button(variant="outline-dark" @click="discard(); editing = !editing;")
         icon(name="times")
-        span Cancel
+        span {{ $t('activityView.cancel') }}
       b-button.mr-2(variant="success" @click="save(); editing = !editing;")
         icon(name="save")
-        span Save
+        span {{ $t('activityView.save') }}
     div.mt-2.d-flex.flex-row-reverse
       b-button(variant="warning" size="sm" @click="restoreDefaults();")
         icon(name="undo")
-        span Restore defaults
+        span {{ $t('activityView.restoreDefaults') }}
       b-button.mr-2(variant="danger" size="sm" v-b-modal="'remove-view-modal-' + view.id")
         icon(name="trash")
-        span Remove
+        span {{ $t('activityView.remove') }}
   div(v-else).d-flex.flex-row-reverse.mt-2
     b-button(variant="outline-dark" size="sm" @click="editing = !editing")
       icon(name="edit")
-      span Edit view
+      span {{ $t('activityView.editView') }}
 
   b-modal(
     v-if="view"
     :id="'remove-view-modal-' + view.id"
-    title="Remove this view?"
+    :title="$t('activityView.removeViewTitle')"
     centered
-    ok-title="Remove view"
+    :ok-title="$t('activityView.removeViewOk')"
     ok-variant="danger"
     cancel-variant="outline-secondary"
     @ok="remove"
   )
-    | Are you sure you want to remove "#[b {{ view.name || view.id }}]"?
+    | {{ $t('activityView.removeViewConfirm') }} "{{ view.name || view.id }}"?
     br
     br
-    | This will delete the view's configuration. You can run #[b Restore defaults] to bring built-in views back.
+    | {{ $t('activityView.removeViewHint') }} #[b {{ $t('activityView.restoreDefaults') }}] {{ $t('activityView.removeViewRestoreHint') }}
 
   b-modal(
     v-model="showCustomVisModal"
-    title="Add Custom Visualization"
-    ok-title="Add"
+    :title="$t('ui.activity.addCustomVisualization')"
+    :ok-title="$t('ui.activity.add')"
     @ok="onCustomVisConfirm"
   )
-    b-form-group(label="Watcher name:")
+    b-form-group(:label="$t('ui.activity.watcherName')")
       b-form-input(
         v-model="customVisWatcherName"
         placeholder="aw-watcher-"
       )
-    b-form-group(label="Visualization title:")
+    b-form-group(:label="$t('ui.activity.visualizationTitle')")
       b-form-input(
         v-model="customVisTitle"
-        placeholder="My Visualization"
+        :placeholder="$t('ui.activity.myVisualization')"
       )
 </template>
 
@@ -142,9 +142,7 @@ export default {
     },
     restoreDefaults() {
       useViewsStore().restoreDefaults();
-      alert(
-        "All views have been restored to defaults. Changes won't be saved until you click 'Save'."
-      );
+      alert(this.$t('activityView.restoreAlert'));
       // If we're on an URL that might become invalid, navigate to the main/default view
       if (!this.$route.path.includes('default')) {
         this.$router.replace('./default');

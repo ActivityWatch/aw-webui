@@ -1,21 +1,21 @@
 <template lang="pug">
 div
-  b-alert(show variant="warning") #[b Note:] These settings are meant for developers who (hopefully) know what they are doing, and as such, may break things unexpectedly.
+  b-alert(show variant="warning") #[b {{ $t('settings.developer.note') }}] {{ $t('settings.developer.noteBody') }}
 
-  b-form-group(label="Force devmode" label-cols-md=3 description="Devmode enables some features that are still work-in-progress.")
+  b-form-group(:label="$t('settings.developer.forceDevmode')" label-cols-md=3 :description="$t('settings.developer.forceDevmodeHelp')")
     div
       b-form-checkbox.float-right.ml-2(v-model="devmode" switch)
 
-  b-form-group(label="Request timeout" label-cols-md=3 description="The maximum amount of time a server request can take before timing out. Setting this to a high value can be useful for large queries. Note that you need to reload the web UI for it to apply.")
+  b-form-group(:label="$t('settings.developer.requestTimeout')" label-cols-md=3 :description="$t('settings.developer.requestTimeoutHelp')")
     div
       b-input.float-right.ml-2(v-model="requestTimeout" type="number")
 
-  b-form-group(label="Hide unsupported visualizations" label-cols-md=3 description="Hide visualizations that lack required data instead of showing a warning. Disabled by default.")
+  b-form-group(:label="$t('settings.developer.hideUnsupported')" label-cols-md=3 :description="$t('settings.developer.hideUnsupportedHelp')")
     div
       b-form-checkbox.float-right.ml-2(v-model="hideUnsupportedVisualizations" switch)
 
   div
-    | Web UI commit hash: {{ COMMIT_HASH }}
+    | {{ $t('settings.developer.commitHash') }} {{ COMMIT_HASH }}
 </template>
 
 <script lang="ts">
