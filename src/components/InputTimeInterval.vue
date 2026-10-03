@@ -132,13 +132,15 @@ export default {
         { seconds: 24 * 60 * 60, label: '24h' },
         { seconds: 48 * 60 * 60, label: '48h' },
       ],
-      modeOptions: [
-        { text: this.$t('ui.timeInterval.lastDuration'), value: 'last_duration' },
-        { text: this.$t('ui.timeInterval.dateRange'), value: 'range' },
-      ],
     };
   },
   computed: {
+    modeOptions() {
+      return [
+        { text: this.$t('ui.timeInterval.lastDuration'), value: 'last_duration' },
+        { text: this.$t('ui.timeInterval.dateRange'), value: 'range' },
+      ];
+    },
     value: {
       get() {
         if (this.mode == 'range' && this.start) {

@@ -451,7 +451,9 @@ export default {
   },
   query: {
     title: '查询浏览器',
-    docsHelp: '查看文档了解如何编写查询。',
+    docsHelpPrefix: '请查看',
+    docsHelpLink: '文档',
+    docsHelpSuffix: '，了解如何编写查询。',
     start: '开始',
     end: '结束',
   },
@@ -490,6 +492,8 @@ export default {
       watcherName: 'Watcher 名称：',
       visualizationTitle: '可视化标题：',
       myVisualization: '我的可视化',
+      moreRanges: '更多范围',
+      moreDateRanges: '更多日期范围',
     },
     search: {
       regexPlaceholder: '输入要搜索的正则表达式',
@@ -571,8 +575,8 @@ export default {
     score: {
       helpTitle: '得分如何计算？',
       help: '得分 = 小时数 × 分类得分之和。可在“设置 > 分类”中设置分类得分。正分奖励希望增加的活动，负分惩罚分散注意力的活动。',
-      for: '得分（',
-      productive: '高效）',
+      for: '得分：',
+      productive: '高效',
       topProductive: '高效活动排行',
       noProductive: '尚未记录高效分类。',
       topDistracting: '分散注意力活动排行',
@@ -673,6 +677,7 @@ export default {
       timePerDay: '每日时间',
       topChanges: '分类变化排行',
       noData: '没有可供比较的分类数据。',
+      uncategorized: '未分类',
     },
     categoryBuilder: {
       title: '分类助手',

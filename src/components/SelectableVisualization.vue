@@ -21,7 +21,7 @@ div(v-if="editable || !activityStore.buckets.loaded || has_prerequisites || !set
     div(v-if="!has_prerequisites")
       b-alert.small.px-2.py-1(show variant="warning")
         | {{ $t('visualizations.missingWatcher') }}
-        | {{ $t('visualizations.docLink') }}
+        | #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") {{ $t('visualizations.docLink') }}]
 
     div(v-if="type == 'top_apps'")
       aw-summary(:fields="activityStore.window.top_apps",

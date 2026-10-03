@@ -467,7 +467,9 @@ export default {
   },
   query: {
     title: 'Обозреватель запросов',
-    docsHelp: 'Справка по написанию запросов — в документации.',
+    docsHelpPrefix: 'Справка по написанию запросов — в ',
+    docsHelpLink: 'документации',
+    docsHelpSuffix: '.',
     start: 'Начало',
     end: 'Конец',
   },
@@ -506,6 +508,8 @@ export default {
       watcherName: 'Watcher name:',
       visualizationTitle: 'Visualization title:',
       myVisualization: 'My Visualization',
+      moreRanges: 'More ranges',
+      moreDateRanges: 'More date ranges',
     },
     search: {
       regexPlaceholder: 'Regex pattern to search for',
@@ -691,6 +695,7 @@ export default {
       timePerDay: 'Time per day',
       topChanges: 'Top changes by category',
       noData: 'No categorized data to compare.',
+      uncategorized: 'Без категории',
     },
     categoryBuilder: {
       title: 'Categorization helper',

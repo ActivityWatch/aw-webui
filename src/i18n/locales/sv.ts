@@ -472,7 +472,9 @@ export default {
   },
   query: {
     title: 'Frågeutforskare',
-    docsHelp: 'Se dokumentationen för hjälp med hur frågor skrivs.',
+    docsHelpPrefix: 'Se ',
+    docsHelpLink: 'dokumentationen',
+    docsHelpSuffix: ' för hjälp med hur frågor skrivs.',
     start: 'Start',
     end: 'Slut',
   },
@@ -511,6 +513,8 @@ export default {
       watcherName: 'Watcher name:',
       visualizationTitle: 'Visualization title:',
       myVisualization: 'My Visualization',
+      moreRanges: 'Fler intervall',
+      moreDateRanges: 'Fler datumintervall',
     },
     search: {
       regexPlaceholder: 'Regex pattern to search for',
@@ -696,6 +700,7 @@ export default {
       timePerDay: 'Time per day',
       topChanges: 'Top changes by category',
       noData: 'No categorized data to compare.',
+      uncategorized: 'Okategoriserat',
     },
     categoryBuilder: {
       title: 'Categorization helper',

@@ -69,7 +69,7 @@ div
       :sort-desc="true"
     )
       template(#cell(category)="row")
-        | {{ row.item.category.join(' > ') || $t('uncategorized.title') }}
+        | {{ row.item.category.join(' > ') || $t('ui.trends.uncategorized') }}
       template(#cell(current)="row")
         | {{ row.item.current | friendlyduration }}
       template(#cell(previous)="row")

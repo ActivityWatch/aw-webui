@@ -466,7 +466,9 @@ export default {
   },
   query: {
     title: 'Оглядач запитів',
-    docsHelp: 'Довідка з написання запитів — у документації.',
+    docsHelpPrefix: 'Довідка з написання запитів — у ',
+    docsHelpLink: 'документації',
+    docsHelpSuffix: '.',
     start: 'Початок',
     end: 'Кінець',
   },
@@ -505,6 +507,8 @@ export default {
       watcherName: 'Watcher name:',
       visualizationTitle: 'Visualization title:',
       myVisualization: 'My Visualization',
+      moreRanges: 'More ranges',
+      moreDateRanges: 'More date ranges',
     },
     search: {
       regexPlaceholder: 'Regex pattern to search for',
@@ -690,6 +694,7 @@ export default {
       timePerDay: 'Time per day',
       topChanges: 'Top changes by category',
       noData: 'No categorized data to compare.',
+      uncategorized: 'Без категорії',
     },
     categoryBuilder: {
       title: 'Categorization helper',
