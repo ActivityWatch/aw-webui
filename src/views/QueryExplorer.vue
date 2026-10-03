@@ -3,7 +3,7 @@
 div
   h3 {{ $t('query.title') }}
 
-  | {{ $t('query.docsHelp') }}
+  | {{ $t('query.docsHelpPrefix') }}#[a(href="https://docs.activitywatch.net/en/latest/examples/querying-data.html") {{ $t('query.docsHelpLink') }}]{{ $t('query.docsHelpSuffix') }}
 
   hr
 

@@ -477,7 +477,9 @@ export default {
   },
   query: {
     title: 'Abfrage-Explorer',
-    docsHelp: 'Hilfe zum Schreiben von Abfragen finden Sie in der Dokumentation.',
+    docsHelpPrefix: 'Hilfe zum Schreiben von Abfragen finden Sie in der ',
+    docsHelpLink: 'Dokumentation',
+    docsHelpSuffix: '.',
     start: 'Beginn',
     end: 'Ende',
   },
@@ -516,6 +518,8 @@ export default {
       watcherName: 'Watcher name:',
       visualizationTitle: 'Visualization title:',
       myVisualization: 'My Visualization',
+      moreRanges: 'Weitere Zeiträume',
+      moreDateRanges: 'Weitere Datumsbereiche',
     },
     search: {
       regexPlaceholder: 'Regex pattern to search for',
@@ -701,6 +705,7 @@ export default {
       timePerDay: 'Time per day',
       topChanges: 'Top changes by category',
       noData: 'No categorized data to compare.',
+      uncategorized: 'Nicht kategorisiert',
     },
     categoryBuilder: {
       title: 'Categorization helper',

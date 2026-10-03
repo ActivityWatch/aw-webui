@@ -45,7 +45,7 @@ div
           | {{ $t('ui.bucketValidate.overlapsFound', { count: overlappingEvents.length }) }}
           br
           span(v-if="overlapDurationSameData > 0")
-            | {{ $t('ui.bucketValidate.sameData', { duration: overlapDurationSameData / 1000 }) }}
+            | {{ $t('ui.bucketValidate.sameData', { duration: formatDuration(overlapDurationSameData / 1000) }) }}
           p.mt-2(v-for="event in overlappingEvents")
             ul
               li {{ event[0].start.toISOString() }}/{{ event[0].end.toISOString() }} - (id: {{ event[0].event.id }}): {{ JSON.stringify(event[0].event.data) }}
@@ -77,6 +77,7 @@ import 'vue-awesome/icons/exclamation-triangle';
 import 'vue-awesome/icons/info-circle';
 import { getClient } from '~/util/awclient';
 import { overlappingEvents } from '~/util/transforms';
+import { seconds_to_duration } from '~/util/time';
 import _ from 'lodash';
 
 export default {
@@ -158,6 +159,9 @@ export default {
     this.getBuckets();
   },
   methods: {
+    formatDuration(seconds: number) {
+      return seconds_to_duration(seconds);
+    },
     getBuckets: async function () {
       const client = getClient();
       const buckets = await client.getBuckets();
