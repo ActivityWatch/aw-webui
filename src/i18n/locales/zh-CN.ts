@@ -754,7 +754,11 @@ export default {
     devOnly: { notProduction: '此内容不会出现在生产版本中', hide: '隐藏' },
     release: { disabled: '新版本检查已禁用，你可以在', settingsPage: '设置页面' },
     dev: { intro: '用于开发和调试的一些工具。', empty: '目前没有可显示的内容...' },
-    queryOptions: { hostname: '主机名', toggles: '开关' },
+    queryOptions: {
+      hostname: '主机名',
+      toggles: '开关',
+      excludeAfkHelp: '排除离开电脑的时间',
+    },
     timeline: { displayOptions: '显示选项', swimlanes: '泳道' },
     buckets: { id: 'ID' },
     userPoll: {

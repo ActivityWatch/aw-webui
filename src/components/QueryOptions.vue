@@ -10,7 +10,7 @@ div
     input.form-control(type="date" v-model="queryOptionsData.stop")
   b-form-group(:label="$t('ui.queryOptions.toggles')" label-cols=2)
     b-form-checkbox(type="checkbox" v-model="queryOptionsData.filter_afk" :label="$t('activity.excludeAfk')" description="")
-      label Exclude time away from computer
+      label {{ $t('ui.queryOptions.excludeAfkHelp') }}
 </template>
 
 <script lang="ts">

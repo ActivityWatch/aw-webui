@@ -783,7 +783,11 @@ export default {
       intro: 'Just some tools to aid in development and debugging.',
       empty: 'Nothing to see here right now...',
     },
-    queryOptions: { hostname: 'Hostname', toggles: 'Toggles' },
+    queryOptions: {
+      hostname: 'Hostname',
+      toggles: 'Toggles',
+      excludeAfkHelp: 'Exclude time away from computer',
+    },
     timeline: { displayOptions: 'Display options', swimlanes: 'Swimlanes' },
     buckets: { id: 'ID' },
     userPoll: {
