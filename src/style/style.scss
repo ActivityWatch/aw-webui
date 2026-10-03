@@ -25,6 +25,13 @@ body {
   background-color: $backgroundColor;
 }
 
+// Custom visualizations load in iframes. Without this, the browser renders
+// the iframe with the system color-scheme (which may be light even when AW's
+// dark theme is active), producing a white background. See aw-webui#1049.
+iframe {
+  color-scheme: normal;
+}
+
 // To make icons a little less crowded
 .fa-icon {
   margin-top: -0.125em;
