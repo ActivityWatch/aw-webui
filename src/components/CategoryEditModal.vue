@@ -73,7 +73,6 @@ b-modal(id="edit" ref="edit" :title="$t('ui.categoryEditor.editTitle')" @show="r
 import _ from 'lodash';
 import ColorPicker from '~/components/ColorPicker.vue';
 import { useCategoryStore } from '~/stores/categories';
-import { mapState } from 'pinia';
 import { validateRegex, isRegexBroad } from '~/util/validate';
 import { CANONICAL_SELECT_KEYS, normalizeSelectKeys } from '~/util/classes';
 
@@ -106,13 +105,16 @@ export default {
     };
   },
   computed: {
-    ...mapState(useCategoryStore, {
-      allCategories: state => [{ value: [], text: 'None' }].concat(state.allCategoriesSelect),
-    }),
+    allCategories() {
+      return [
+        { value: [], text: this.$t('ui.categoryEditor.none') },
+        ...this.categoryStore.allCategoriesSelect,
+      ];
+    },
     allRuleTypes: function () {
       return [
-        { value: 'none', text: 'None' },
-        { value: 'regex', text: 'Regular Expression' },
+        { value: 'none', text: this.$t('ui.categoryEditor.none') },
+        { value: 'regex', text: this.$t('ui.categoryEditor.regularExpression') },
         //{ value: 'glob', text: 'Glob pattern' },
       ];
     },

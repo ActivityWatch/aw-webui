@@ -105,6 +105,10 @@ import {
 const today = moment().startOf('day');
 const tomorrow = moment(today).add(24, 'hours');
 
+function queryMessage(vm: any, key: string, params?: Record<string, unknown>, fallback = '') {
+  return typeof vm.$t === 'function' ? vm.$t(key, params) : fallback;
+}
+
 export default {
   name: 'QueryExplorer',
   data() {
@@ -150,7 +154,8 @@ RETURN = sort_by_duration(merged_events);
       return this.savedQueries.find(query => query.id === this.selected_saved_query_id) || null;
     },
     eventcount_str: function () {
-      if (Array.isArray(this.events)) return 'Number of events: ' + this.events.length;
+      if (Array.isArray(this.events))
+        return this.$t('ui.query.eventCount', { count: this.events.length });
       else return '';
     },
   },
@@ -166,7 +171,12 @@ RETURN = sort_by_duration(merged_events);
         return true;
       } catch (e) {
         console.error('Failed to save query presets', e);
-        this.saved_query_error = 'Failed to save query presets.';
+        this.saved_query_error = queryMessage(
+          this,
+          'ui.query.saveError',
+          undefined,
+          'Failed to save query.'
+        );
         return false;
       }
     },
@@ -186,7 +196,16 @@ RETURN = sort_by_duration(merged_events);
       const current = this.selectedSavedQuery;
 
       if (current) {
-        if (!confirm(`Update saved query "${current.name}"?`)) {
+        if (
+          !confirm(
+            queryMessage(
+              this,
+              'ui.query.updateConfirm',
+              { name: current.name },
+              `Update saved query "${current.name}"?`
+            )
+          )
+        ) {
           return;
         }
 
@@ -219,7 +238,12 @@ RETURN = sort_by_duration(merged_events);
 
       const trimmedName = this.saveQueryName.trim();
       if (_.isEmpty(trimmedName)) {
-        this.saved_query_error = 'Saved query name cannot be empty.';
+        this.saved_query_error = queryMessage(
+          this,
+          'ui.query.emptyName',
+          undefined,
+          'Saved query name cannot be empty.'
+        );
         return;
       }
 
@@ -259,7 +283,12 @@ RETURN = sort_by_duration(merged_events);
 
       const trimmedName = this.renameQueryName.trim();
       if (_.isEmpty(trimmedName)) {
-        this.saved_query_error = 'Saved query name cannot be empty.';
+        this.saved_query_error = queryMessage(
+          this,
+          'ui.query.emptyName',
+          undefined,
+          'Saved query name cannot be empty.'
+        );
         return;
       }
 
@@ -278,9 +307,7 @@ RETURN = sort_by_duration(merged_events);
         return;
       }
 
-      if (
-        !confirm(`Delete saved query "${this.selectedSavedQuery.name}"? This cannot be undone.`)
-      ) {
+      if (!confirm(this.$t('ui.query.deleteConfirm', { name: this.selectedSavedQuery.name }))) {
         return;
       }
 
@@ -299,7 +326,7 @@ RETURN = sort_by_duration(merged_events);
         const categoryRules = useCategoryStore().classes_for_query;
 
         if (useCategoryStore().classes_for_query.length === 0) {
-          this.error = '__CATEGORIES__ was used in query but no categories have been defined yet.';
+          this.error = this.$t('ui.query.noCategories');
           return;
         }
 
@@ -315,7 +342,7 @@ RETURN = sort_by_duration(merged_events);
         this.events = data[0];
         this.error = '';
       } catch (e) {
-        this.error = e.response.data.message;
+        this.error = e?.response?.data?.message || e?.message || this.$t('ui.query.requestError');
       }
     },
   },

@@ -5,7 +5,7 @@ div(v-if="datasets && datasets.length > 0")
 div.small(v-else-if="datasets === null", style="font-size: 16pt; color: #aaa;")
   | {{ $t('visualizations.noData') }}
 div.small(v-else, style="font-size: 16pt; color: #aaa;")
-  .aw-loading Loading...
+  .aw-loading {{ $t('common.loading') }}
 </template>
 
 <script lang="ts">
@@ -107,7 +107,13 @@ export default {
     chartData() {
       return {
         labels: this.labels,
-        datasets: _.sortBy(this.datasets, d => d.label),
+        datasets: _.sortBy(
+          this.datasets.map(d => ({
+            ...d,
+            label: d.label === 'Total time' ? this.$t('ui.timeline.totalTime') : d.label,
+          })),
+          d => d.label
+        ),
         title: {
           display: true,
           text: this.$t('timeline.title'),

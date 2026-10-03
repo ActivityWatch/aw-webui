@@ -133,7 +133,7 @@ export default {
         this.events = _.orderBy(data[0], ['timestamp'], ['desc']);
       } catch (e) {
         console.error(e);
-        this.error = e.response.data.message;
+        this.error = e?.response?.data?.message || e?.message || this.$t('common.requestFailed');
       } finally {
         this.status = null;
       }

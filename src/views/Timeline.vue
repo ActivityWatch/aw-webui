@@ -10,58 +10,58 @@ div
     details.timeline-filters.mr-2(ref="filtersDetails")
       summary.timeline-chip.timeline-chip--clickable
         icon.mr-1(name="filter")
-        b Filters: {{ filter_summary }}
+        b {{ $t('ui.timeline.filters') }}: {{ filter_summary }}
       div.timeline-filters-panel.shadow-sm
         table
           tr
             th.pt-2.pr-3
-              label(for="timeline-filter-host") Host:
+              label(for="timeline-filter-host") {{ $t('ui.timeline.host') }}
             td
               select#timeline-filter-host.form-control.form-control-sm(v-model="filter_hostname")
-                option(:value='null') All
+                option(:value='null') {{ $t('ui.timeline.all') }}
                 option(v-for="host in hosts", :value="host") {{ host }}
           tr
             th.pt-2.pr-3
-              label(for="timeline-filter-client") Client:
+              label(for="timeline-filter-client") {{ $t('ui.timeline.client') }}
             td
               select#timeline-filter-client.form-control.form-control-sm(v-model="filter_client")
-                option(:value='null') All
+                option(:value='null') {{ $t('ui.timeline.all') }}
                 option(v-for="client in clients", :value="client") {{ client }}
           tr
             th.pt-2.pr-3
-              label(for="timeline-filter-duration") Duration:
+              label(for="timeline-filter-duration") {{ $t('ui.timeline.duration') }}
             td
               select#timeline-filter-duration.form-control.form-control-sm(v-model="filter_duration")
-                option(:value='null') All
-                option(:value='2') 2+ secs
-                option(:value='5') 5+ secs
-                option(:value='10') 10+ secs
-                option(:value='30') 30+ sec
-                option(:value='1 * 60') 1+ mins
-                option(:value='2 * 60') 2+ mins
-                option(:value='3 * 60') 3+ mins
-                option(:value='10 * 60') 10+ mins
-                option(:value='30 * 60') 30+ mins
-                option(:value='1 * 60 * 60') 1+ hrs
-                option(:value='2 * 60 * 60') 2+ hrs
+                option(:value='null') {{ $t('ui.timeline.all') }}
+                option(:value='2') {{ $t('ui.timeline.seconds', { count: 2 }) }}
+                option(:value='5') {{ $t('ui.timeline.seconds', { count: 5 }) }}
+                option(:value='10') {{ $t('ui.timeline.seconds', { count: 10 }) }}
+                option(:value='30') {{ $t('ui.timeline.seconds', { count: 30 }) }}
+                option(:value='1 * 60') {{ $t('ui.timeline.minutes', { count: 1 }) }}
+                option(:value='2 * 60') {{ $t('ui.timeline.minutes', { count: 2 }) }}
+                option(:value='3 * 60') {{ $t('ui.timeline.minutes', { count: 3 }) }}
+                option(:value='10 * 60') {{ $t('ui.timeline.minutes', { count: 10 }) }}
+                option(:value='30 * 60') {{ $t('ui.timeline.minutes', { count: 30 }) }}
+                option(:value='1 * 60 * 60') {{ $t('ui.timeline.hours', { count: 1 }) }}
+                option(:value='2 * 60 * 60') {{ $t('ui.timeline.hours', { count: 2 }) }}
           tr
             th.pt-2.pr-3
-              label AFK:
+              label {{ $t('activity.excludeAfk') }}：
             td
               b-form-checkbox(v-model="filter_afk" size="sm" switch)
                 | {{ $t('timeline.filterAfk') }}
           tr
             th.pt-2.pr-3
-              label Merge:
+              label {{ $t('ui.timeline.merge') }}：
             td
               b-form-checkbox(v-model="filter_merge_similar" size="sm" switch)
                 | {{ $t('timeline.mergeByApp') }}
           tr
             th.pt-2.pr-3
-              label(for="timeline-filter-categories") Categories:
+              label(for="timeline-filter-categories") {{ $t('ui.timeline.categories') }}
             td
               select#timeline-filter-categories.form-control.form-control-sm(@change="onCategorySelect($event)", :value="''")
-                option(value="" disabled) {{ filter_categories.length > 0 ? 'Add category...' : 'All' }}
+                option(value="" disabled) {{ filter_categories.length > 0 ? $t('ui.workReport.addCategory') : $t('ui.timeline.all') }}
                 option(v-for="cat in category_options", :key="cat.text", :value="cat.text") {{ cat.text }}
               div.mt-1(v-if="filter_categories.length > 0")
                 span.badge.badge-info.mr-1(v-for="(cat, idx) in filter_categories", :key="idx")
@@ -101,7 +101,7 @@ div
   div(v-if="buckets !== null")
     vis-timeline(:buckets="buckets", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane", :updateTimelineWindow='updateTimelineWindow')
 
-    aw-devonly(reason="Not ready for production, still experimenting")
+    aw-devonly(:reason="$t('ui.devOnly.timelineExperiment')")
       aw-calendar(:buckets="buckets")
   div(v-else)
     h1.aw-loading {{ $t('common.loading') }}
@@ -138,16 +138,18 @@ export default {
       filter_merge_similar: false,
       filter_categories: [],
       swimlane: null,
-      swimlaneOptions: [
-        { value: null, text: 'None' },
-        { value: 'category', text: 'Group by category' },
-        { value: 'bucketType', text: 'Group by bucket type' },
-      ],
       updateTimelineWindow: true,
     };
   },
   computed: {
     ...mapState(useSettingsStore, ['always_active_pattern']),
+    swimlaneOptions() {
+      return [
+        { value: null, text: this.$t('ui.timeline.none') },
+        { value: 'category', text: this.$t('ui.timeline.groupByCategory') },
+        { value: 'bucketType', text: this.$t('ui.timeline.groupByBucketType') },
+      ];
+    },
     timeintervalDefaultDuration() {
       const settingsStore = useSettingsStore();
       return Number(settingsStore.durationDefault);
@@ -172,23 +174,19 @@ export default {
         desc.push(seconds_to_duration(this.filter_duration));
       }
       if (this.filter_afk) {
-        desc.push('AFK filtered');
+        desc.push(this.$t('ui.timeline.afkFiltered'));
       }
       if (this.filter_merge_similar) {
-        desc.push('merged by app');
+        desc.push(this.$t('ui.timeline.mergedByApp'));
       }
       if (this.filter_categories.length > 0) {
-        desc.push(
-          this.filter_categories.length +
-            ' categor' +
-            (this.filter_categories.length === 1 ? 'y' : 'ies')
-        );
+        desc.push(this.$t('ui.timeline.categoriesCount', { count: this.filter_categories.length }));
       }
 
       if (desc.length > 0) {
         return desc.join(', ');
       }
-      return 'none';
+      return this.$t('ui.timeline.none');
     },
   },
   watch: {

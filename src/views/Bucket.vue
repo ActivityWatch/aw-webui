@@ -3,27 +3,27 @@ div
   h3 {{ id }}
   table
     tr
-      th Type:
+      th {{ $t('ui.bucketDetail.type') }}
       td {{ bucket.type }}
     tr
-      th Client:
+      th {{ $t('ui.bucketDetail.client') }}
       td {{ bucket.client }}
     tr
-      th Hostname:
+      th {{ $t('ui.bucketDetail.hostname') }}
       td {{ bucket.hostname }}
     tr
-      th Created:
+      th {{ $t('ui.bucketDetail.created') }}
       td {{ bucket.created | iso8601 }}
     tr(v-if="bucket.metadata")
-      th First/last event:
+      th {{ $t('ui.bucketDetail.firstLastEvent') }}
       td
         | {{ bucket.metadata.start}} /
         | {{ bucket.metadata.end }}
     tr
-      th Eventcount:
+      th {{ $t('ui.bucketDetail.eventCount') }}
       td {{ eventcount }}
     tr
-      th Data:
+      th {{ $t('ui.bucketDetail.data') }}
       td {{ bucket.data }}
 
   input-timeinterval(v-model="daterange", :maxDuration="maxDuration")

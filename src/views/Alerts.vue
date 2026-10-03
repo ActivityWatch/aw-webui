@@ -103,7 +103,7 @@ export default {
   },
   computed: {
     categories: function () {
-      return this.categoryStore.category_select(true);
+      return this.categoryStore.category_select(true, key => this.$t(key) as string);
     },
     alertTime: function () {
       return cat => {
@@ -176,7 +176,7 @@ export default {
         this.error = '';
       } catch (e) {
         console.error(e);
-        this.error = e.response.data.message;
+        this.error = e?.response?.data?.message || e?.message || this.$t('common.requestFailed');
         return;
       } finally {
         this.status = null;

@@ -91,7 +91,7 @@ export default {
         this.error = '';
       } catch (e) {
         console.error(e);
-        this.error = e.response.data.message;
+        this.error = e?.response?.data?.message || e?.message || this.$t('common.requestFailed');
       } finally {
         this.status = null;
       }

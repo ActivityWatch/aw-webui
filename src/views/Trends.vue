@@ -116,11 +116,6 @@ export default {
       settingsStore: useSettingsStore(),
 
       periodDays: 7,
-      periodOptions: [
-        { value: 7, text: '7 days' },
-        { value: 30, text: '30 days' },
-        { value: 90, text: '90 days' },
-      ],
 
       loading: false,
 
@@ -130,18 +125,43 @@ export default {
       // Per-category totals for current and previous periods.
       currentTotals: {} as CategoryTotals,
       previousTotals: {} as CategoryTotals,
-
-      categoryFields: [
-        { key: 'category', label: 'Category', sortable: true },
-        { key: 'current', label: 'Current', class: 'text-right', sortable: true },
-        { key: 'previous', label: 'Previous', class: 'text-right', sortable: true },
-        { key: 'delta', label: 'Change', class: 'text-right', sortable: true },
-        { key: 'absDelta', label: '', class: 'd-none', sortable: true },
-      ],
     };
   },
 
   computed: {
+    periodOptions() {
+      return [
+        { value: 7, text: this.$t('ui.trends.period7d') },
+        { value: 30, text: this.$t('ui.trends.period30d') },
+        { value: 90, text: this.$t('ui.trends.period90d') },
+      ];
+    },
+
+    categoryFields() {
+      return [
+        { key: 'category', label: this.$t('ui.trends.tableCategory'), sortable: true },
+        {
+          key: 'current',
+          label: this.$t('ui.trends.tableCurrent'),
+          class: 'text-right',
+          sortable: true,
+        },
+        {
+          key: 'previous',
+          label: this.$t('ui.trends.tablePrevious'),
+          class: 'text-right',
+          sortable: true,
+        },
+        {
+          key: 'delta',
+          label: this.$t('ui.trends.tableChange'),
+          class: 'text-right',
+          sortable: true,
+        },
+        { key: 'absDelta', label: '', class: 'd-none', sortable: true },
+      ];
+    },
+
     host(): string | undefined {
       return this.$route.params.host || this.bucketsStore.hosts[0];
     },
@@ -277,7 +297,7 @@ export default {
 
     formatDelta(current: number, previous: number): string {
       const delta = current - previous;
-      if (previous === 0) return delta > 0 ? '+new' : '0';
+      if (previous === 0) return delta > 0 ? `+${this.$t('ui.trends.new')}` : '0';
       const pct = (delta / previous) * 100;
       const sign = delta >= 0 ? '+' : '';
       return `${sign}${pct.toFixed(0)}%`;

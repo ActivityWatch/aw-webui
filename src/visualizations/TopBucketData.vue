@@ -89,12 +89,12 @@ export default {
     bucketOptions(): { value: string; text: string }[] {
       return this.bucketsStore.buckets.map(b => ({
         value: b.id,
-        text: `${b.id} (${b.type || 'unknown'})`,
+        text: `${b.id} (${b.type || this.$t('common.unknown')})`,
       }));
     },
     fieldSelectOptions(): { value: string; text: string }[] {
       const options = this.fieldOptions.map(f => ({ value: f, text: f }));
-      options.push({ value: '__custom', text: 'Custom field…' });
+      options.push({ value: '__custom', text: this.$t('ui.topBucket.customField') });
       return options;
     },
     selectedFieldValue(): string {
@@ -180,7 +180,7 @@ export default {
         console.error(err);
         this.events = [];
         this.fieldOptions = [];
-        this.error = err?.message || 'Failed to load events for the selected watcher.';
+        this.error = err?.message || this.$t('ui.topBucket.loadError');
       } finally {
         this.loading = false;
       }

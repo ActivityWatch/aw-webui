@@ -31,12 +31,12 @@ function set_status(svg_el, text) {
     .attr('fill', 'black');
 }
 
-function update(svg_el, events, event_type: string) {
+function update(svg_el, events, event_type: string, noDataLabel = 'No data') {
   const timeline = d3.select(svg_el);
   timeline.selectAll('*').remove();
 
   if (events.length <= 0) {
-    set_status(svg_el, 'No data');
+    set_status(svg_el, noDataLabel);
     return;
   }
 

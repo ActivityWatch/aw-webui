@@ -71,14 +71,15 @@ function update(
   events: IEvent[],
   showAFK: boolean,
   chunkfunc: (event: IEvent) => string,
-  eventfunc: (subevent: IEvent) => string
+  eventfunc: (subevent: IEvent) => string,
+  noDataLabel = 'No data'
 ): HTMLElement {
   const timeline = d3.select(container.querySelector('.apptimeline')).html(null);
   const titleinfo_list = d3.select(container.querySelector('.titleinfo-list')).html(null);
   d3.select(container.querySelector('.titleinfo-container')).html(null);
 
   if (events.length <= 0) {
-    set_status(container, 'No data');
+    set_status(container, noDataLabel);
     return container;
   }
 

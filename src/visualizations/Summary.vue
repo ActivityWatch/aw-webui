@@ -79,7 +79,8 @@ export default {
           this.namefunc,
           this.hoverfunc,
           this.colorfunc,
-          this.linkfunc
+          this.linkfunc,
+          this.$t('visualizations.noData')
         );
       } else {
         summary.set_status(el, this.$t('common.loading'));

@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  h3 Developer zone
+  h3 {{ $t('ui.dev.title') }}
   | {{ $t('ui.dev.intro') }}
 
   p

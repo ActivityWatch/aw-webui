@@ -148,14 +148,17 @@ export default {
   },
   computed: {
     hostOptions() {
-      return getWorkReportHostOptions(this.bucketsStore.buckets || []);
+      return getWorkReportHostOptions(
+        this.bucketsStore.buckets || [],
+        this.$t('common.requiresAfk') as string
+      );
     },
     dateRangeOptions() {
       return [
-        { value: 'thisMonth', text: 'This month' },
-        { value: 'last30d', text: 'Last 30 days' },
-        { value: 'thisWeek', text: 'This week' },
-        { value: 'last7d', text: 'Last 7 days' },
+        { value: 'thisMonth', text: this.$t('common.thisMonth') },
+        { value: 'last30d', text: this.$t('common.last30d') },
+        { value: 'thisWeek', text: this.$t('common.thisWeek') },
+        { value: 'last7d', text: this.$t('common.last7d') },
       ];
     },
     hasData() {
@@ -205,7 +208,7 @@ export default {
         const client = getClient();
 
         if (this.selectedHosts.length === 0) {
-          this.errorMessage = 'Please select at least one host.';
+          this.errorMessage = this.$t('common.selectHost');
           return;
         }
 
@@ -218,9 +221,9 @@ export default {
           this.bucketsStore.buckets || []
         );
         if (hostsToQuery.length === 0) {
-          this.errorMessage = `No supported hosts (require aw-watcher-afk): ${unsupported.join(
-            ', '
-          )}`;
+          this.errorMessage = this.$t('ui.billing.noSupportedHosts', {
+            hosts: unsupported.join(', '),
+          });
           return;
         }
 
@@ -259,7 +262,7 @@ export default {
             };
           });
       } catch (err: any) {
-        this.errorMessage = `Error loading data: ${err?.message || err}`;
+        this.errorMessage = this.$t('ui.billing.loadError', { error: err?.message || err });
         console.error(err);
       } finally {
         this.loading = false;

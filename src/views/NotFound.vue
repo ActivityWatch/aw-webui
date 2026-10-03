@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  h3 Woops, this page was not found!
+  h3 {{ $t('notFound.title') }}
   p.mb-0
     | {{ $t('notFound.hint') }}
 </template>

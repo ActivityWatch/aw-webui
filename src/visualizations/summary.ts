@@ -46,10 +46,10 @@ interface Entry {
   category?: string;
 }
 
-function update(container: HTMLElement, apps: Entry[]) {
+function update(container: HTMLElement, apps: Entry[], noDataLabel = 'No data') {
   // No apps, sets status to "No data"
   if (apps.length <= 0) {
-    set_status(container, 'No data');
+    set_status(container, noDataLabel);
     return container;
   }
 
@@ -147,7 +147,8 @@ function updateSummedEvents(
   titleKeyFunc: (event: IEvent) => string,
   hoverKeyFunc: (event: IEvent) => string,
   colorKeyFunc: (event: IEvent) => string,
-  linkKeyFunc: (event: IEvent) => string = () => null
+  linkKeyFunc: (event: IEvent) => string = () => null,
+  noDataLabel = 'No data'
 ) {
   if (hoverKeyFunc == null) {
     hoverKeyFunc = titleKeyFunc;
@@ -163,7 +164,7 @@ function updateSummedEvents(
       category: e.data['$category'],
     } as Entry;
   });
-  update(container, apps);
+  update(container, apps, noDataLabel);
 }
 
 export default {

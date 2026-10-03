@@ -30,7 +30,7 @@
         li
           | {{ $t('ui.userPoll.social') }} #[a(href="https://twitter.com/ActivityWatchIt") Twitter] / #[a(href="https://www.facebook.com/ActivityWatch") Facebook]
         //li
-          | Fill out the #[a(href="https://forms.gle/q2N9K5RoERBV8kqPA") feedback form].
+          | {{ $t('ui.userPoll.feedbackPrefix') }} #[a(href="https://forms.gle/q2N9K5RoERBV8kqPA") {{ $t('ui.userPoll.feedbackForm') }}].
         li
           | {{ $t('ui.userPoll.rate') }} #[a(href="https://alternativeto.net/software/activitywatch/about/") AlternativeTo] / #[a(href="https://play.google.com/store/apps/details?id=net.activitywatch.android") Google Play Store]
         li

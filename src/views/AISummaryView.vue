@@ -34,18 +34,17 @@ div
         b-form-input(v-model="model" placeholder="e.g. gpt-4o-mini" @blur="persistConfig")
 
   div.mb-3
-    b-form-group(label="Privacy" label-class="font-weight-bold")
+    b-form-group(:label="$t('ui.aiSummary.privacyTitle')" label-class="font-weight-bold")
       b-form-checkbox(v-model="excludeUncategorized")
-        | Exclude uncategorized activity
+        | {{ $t('ui.aiSummary.excludeUncategorized') }}
       b-form-checkbox(v-model="excludePrivateCategories")
-        | Exclude categories marked private
+        | {{ $t('ui.aiSummary.excludePrivate') }}
         span.text-muted.ml-1(v-if="privateCategories.length")
           | ({{ privateCategories.map(c => c.join(' > ')).join(', ') }})
         span.text-muted.ml-1(v-else)
-          | (none marked yet — set #[code private: true] in a category's data)
+          | ({{ $t('ui.aiSummary.noPrivateCategories') }} — #[code private: true])
       small.text-muted
-        | Browser domains are omitted entirely while either filter is on, since browser
-        |  events carry no category and cannot be filtered by it.
+        | {{ $t('ui.aiSummary.browserPrivacyHelp') }}
 
   div.mb-3
     b-form-group(:label="$t('ui.aiSummary.prompt')" label-class="font-weight-bold")
@@ -141,9 +140,9 @@ export default {
     },
     dateRangeOptions() {
       return [
-        { value: 'last7d', text: 'Last 7 days' },
-        { value: 'last30d', text: 'Last 30 days' },
-        { value: 'last90d', text: 'Last 90 days' },
+        { value: 'last7d', text: this.$t('common.last7d') },
+        { value: 'last30d', text: this.$t('common.last30d') },
+        { value: 'last90d', text: this.$t('common.last90d') },
       ];
     },
     providerOptions() {
@@ -197,11 +196,11 @@ export default {
       this.aggregatedText = '';
 
       if (!this.selectedHost) {
-        this.error = 'No host with a window-watcher bucket found.';
+        this.error = this.$t('ui.aiSummary.noHost');
         return;
       }
       if (!this.apiKey.trim()) {
-        this.error = 'Please enter your LLM API key.';
+        this.error = this.$t('ui.aiSummary.apiKeyRequired');
         return;
       }
 
@@ -304,7 +303,7 @@ export default {
           this.copied = false;
         }, 2000);
       } catch {
-        this.error = 'Could not copy to clipboard';
+        this.error = this.$t('ui.aiSummary.copyError');
       }
     },
   },
