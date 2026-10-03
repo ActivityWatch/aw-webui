@@ -90,6 +90,26 @@ export function applyApiToken(client: { req: AxiosInstance }, token: string | nu
   defaults.headers = headers as typeof defaults.headers;
 }
 
+/**
+ * The upstream client accepts either serialized time periods or objects with
+ * start/end Dates.  A transient empty item can otherwise make it reach
+ * `tp.start.toISOString()` and break every view that is loading data.
+ */
+function validQueryTimeperiods(
+  timeperiods: Parameters<AWClient['query']>[0]
+): Parameters<AWClient['query']>[0] {
+  const valid = timeperiods.filter(
+    tp =>
+      typeof tp === 'string' ||
+      (tp != null && typeof tp === 'object' && tp.start != null && tp.end != null)
+  );
+
+  if (valid.length !== timeperiods.length) {
+    console.warn('Ignoring empty time period(s) while querying ActivityWatch');
+  }
+  return valid;
+}
+
 export function createClient(force?: boolean): AWClient {
   let baseURL = '';
 
@@ -107,6 +127,14 @@ export function createClient(force?: boolean): AWClient {
       testing: !production,
       baseURL,
     });
+
+    // Keep malformed periods from crashing the upstream client's serializer.
+    if (typeof _client.query === 'function') {
+      const query = _client.query.bind(_client);
+      _client.query = ((timeperiods, queryArray, params) =>
+        query(validQueryTimeperiods(timeperiods), queryArray, params)) as AWClient['query'];
+    }
+
     applyApiToken(_client, loadApiTokenFromBrowser());
   } else {
     throw 'Tried to instantiate global AWClient twice!';

@@ -2,7 +2,7 @@
 div
   b-row
     b-col(cols="12", md="6").mb-2
-      b-form-group(label="Bucket")
+      b-form-group(:label="$t('ui.topBucket.bucket')")
         b-form-select(
           v-model="selectedBucketId",
           :options="bucketOptions",
@@ -11,9 +11,9 @@ div
     b-col(cols="12", md="6").mb-2
       b-form-group
         template(#label)
-          span Field in event data
+          span {{ $t('ui.topBucket.field') }}
           span.info-icon(
-            title="Field names come from event data. Dot notation is supported (e.g., data.title)."
+            :title="$t('ui.topBucket.fieldHelp')"
           ) i
         b-form-select(
           v-model="selectedField",
@@ -23,19 +23,19 @@ div
         b-form-input.mt-2(
           v-if="selectedField === '__custom' || fieldOptions.length === 0",
           v-model="customField",
-          placeholder="e.g. data.title",
+          :placeholder="$t('ui.topBucket.fieldPlaceholder')",
           :disabled="loading"
         )
   b-alert.mt-2(v-if="error", show, variant="danger") {{ error }}
   b-alert.mt-2(v-else-if="!selectedBucketId" show variant="info")
-    | Select a watcher to load events for this period.
+    | {{ $t('ui.topBucket.selectWatcher') }}
   b-alert.mt-2(v-else-if="!loading && aggregated.length === 0" show variant="warning")
-    | No events found for this watcher and time range.
+    | {{ $t('ui.topBucket.noEvents') }}
 
   div.mt-2
     div.text-center.py-4(v-if="loading")
-      b-spinner(small type="grow" label="Loading")
-      span.ml-2 Loading events...
+      b-spinner(small type="grow" :label="$t('common.loading')")
+      span.ml-2 {{ $t('ui.topBucket.loadingEvents') }}
     aw-summary(
       v-else-if="aggregated.length",
       :fields="aggregated",
@@ -45,7 +45,7 @@ div
       with_limit
     )
     div.text-muted.text-center.py-4(v-else)
-      | Pick a field to see results.
+      | {{ $t('ui.topBucket.pickField') }}
 </template>
 
 <script lang="ts">

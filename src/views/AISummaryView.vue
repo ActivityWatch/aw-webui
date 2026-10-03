@@ -1,29 +1,26 @@
 <template lang="pug">
 div
-  h3.mb-3 AI Activity Summary
+  h3.mb-3 {{ $t('ui.aiSummary.title') }}
 
   b-alert(variant="info" show)
-    | Your API key is kept only in this page's memory and sent directly to the LLM provider.
-    |  It is cleared when the page reloads and ActivityWatch does not receive it.
-    |  For deeper analysis with agents, see the
-    |  #[a(href="https://docs.activitywatch.net/en/latest/examples/agents-and-ai.html") ActivityWatch agents and AI guide].
+    | {{ $t('ui.aiSummary.privacy') }}
 
   div.row.mb-3
     div.col-md-4
-      b-form-group(label="Host" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.aiSummary.host')" label-class="font-weight-bold")
         b-form-select(v-model="selectedHost" :options="hostOptions")
 
     div.col-md-4
-      b-form-group(label="Date Range" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.aiSummary.dateRange')" label-class="font-weight-bold")
         b-form-select(v-model="dateRange" :options="dateRangeOptions")
 
     div.col-md-4
-      b-form-group(label="LLM Provider" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.aiSummary.provider')" label-class="font-weight-bold")
         b-form-select(v-model="provider" :options="providerOptions" @change="onProviderChange")
 
   div.row.mb-3
     div.col-md-6
-      b-form-group(label="API Key" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.aiSummary.apiKey')" label-class="font-weight-bold")
         b-form-input(
           v-model="apiKey"
           type="password"
@@ -33,7 +30,7 @@ div
         )
 
     div.col-md-6
-      b-form-group(label="Model" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.aiSummary.model')" label-class="font-weight-bold")
         b-form-input(v-model="model" placeholder="e.g. gpt-4o-mini" @blur="persistConfig")
 
   div.mb-3
@@ -51,18 +48,18 @@ div
         |  events carry no category and cannot be filtered by it.
 
   div.mb-3
-    b-form-group(label="Prompt" label-class="font-weight-bold")
+    b-form-group(:label="$t('ui.aiSummary.prompt')" label-class="font-weight-bold")
       b-form-textarea(v-model="userPrompt" rows="3" max-rows="8")
 
   div.mb-4
     b-button(@click="generate" variant="primary" :disabled="loading || !apiKey || !selectedHost")
       b-spinner.mr-2(v-if="loading" small)
-      | {{ loading ? 'Generating…' : 'Generate Summary' }}
+      | {{ loading ? $t('ui.aiSummary.generating') : $t('ui.aiSummary.generate') }}
     b-button.ml-2(
       v-if="aggregatedText"
       variant="outline-secondary"
       @click="dataVisible = !dataVisible"
-    ) {{ dataVisible ? 'Hide context' : 'Show context sent' }}
+    ) {{ dataVisible ? $t('ui.aiSummary.hideRaw') : $t('ui.aiSummary.showRaw') }}
 
   b-alert(v-if="error" variant="danger" show dismissible @dismissed="error = ''")
     | {{ error }}
@@ -70,17 +67,17 @@ div
   div(v-if="dataVisible && aggregatedText")
     b-card.mb-3
       template(slot="header")
-        strong Exact context sent to the LLM
+        strong {{ $t('ui.aiSummary.rawData') }}
       pre.mb-0(style="white-space: pre-wrap; font-size: 0.85em") {{ aggregatedText }}
 
   div(v-if="llmResponse")
     b-card
       template(slot="header")
         div.d-flex.justify-content-between.align-items-center
-          strong AI Summary
+          strong {{ $t('ui.aiSummary.title') }}
           b-button(size="sm" variant="outline-secondary" @click="copyResponse")
             icon(name="copy")
-            |  {{ copied ? 'Copied!' : 'Copy' }}
+            |  {{ copied ? $t('ui.aiSummary.copied') : $t('ui.aiSummary.copy') }}
       div(style="white-space: pre-wrap") {{ llmResponse }}
 </template>
 

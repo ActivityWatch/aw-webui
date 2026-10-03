@@ -1,15 +1,15 @@
 <template lang="pug">
 div
-  h3.mb-3 Work Time Report
+  h3.mb-3 {{ $t('workReport.title') }}
 
   div.row.mb-4
     div.col-md-3
-      b-form-group(label="Hosts" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.workReport.hosts')" label-class="font-weight-bold")
         b-form-select(v-model="selectedHosts" :options="hostOptions" multiple :select-size="4")
-        small.text-muted Select devices to include
+        small.text-muted {{ $t('ui.workReport.selectDevices') }}
 
     div.col-md-3
-      b-form-group(label="Categories" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.workReport.categories')" label-class="font-weight-bold")
         b-form-select(
           :value="''"
           :options="addableCategoryOptions"
@@ -21,14 +21,14 @@ div
             | {{ JSON.parse(cat).join(' > ') }}
             button.ml-1.close.small(
               type="button"
-              aria-label="Remove category"
+              :aria-label="$t('ui.workReport.removeCategory')"
               style="font-size: 0.85rem; line-height: 1"
               @click="removeCategory(idx)"
             ) &times;
-        small.text-muted.d-block.mt-1 Subcategories are included automatically (e.g. "Work" also covers "Work > Programming").
+        small.text-muted.d-block.mt-1 {{ $t('ui.workReport.subcategories') }}
 
     div.col-md-3
-      b-form-group(label="Break Time" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.workReport.breakTime')" label-class="font-weight-bold")
         div.d-flex.align-items-center
           b-form-input(
             v-model="breakTime"
@@ -38,46 +38,46 @@ div
             step="1"
           )
           span.ml-2.text-nowrap {{ breakTime }} min
-        small.text-muted Gaps shorter than this will be counted as work time
+        small.text-muted {{ $t('ui.workReport.breakHelp') }}
 
     div.col-md-3
-      b-form-group(label="Date Range" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.workReport.dateRange')" label-class="font-weight-bold")
         b-form-select(v-model="dateRange" :options="dateRangeOptions")
 
-  div.mb-3.report-actions
+  div.mb-3
     b-button(@click="loadData" variant="primary")
       icon(name="sync")
-      |  Calculate Work Time
-    b-button(@click="exportCSV" variant="outline-secondary" :disabled="!hasData")
+      |  {{ $t('ui.workReport.calculate') }}
+    b-button.ml-2(@click="exportCSV" variant="outline-secondary" :disabled="!hasData")
       icon(name="download")
-      |  Export CSV
-    b-button(@click="exportJSON" variant="outline-secondary" :disabled="!hasData")
+      |  {{ $t('ui.workReport.exportCsv') }}
+    b-button.ml-2(@click="exportJSON" variant="outline-secondary" :disabled="!hasData")
       icon(name="download")
-      |  Export JSON
+      |  {{ $t('ui.workReport.exportJson') }}
 
   div(v-if="loading")
     b-spinner.mr-2
-    | Loading...
+    | {{ $t('common.loading') }}
 
   div(v-if="hasData && !loading")
-    h5.mt-4 Daily Breakdown
+    h5.mt-4 {{ $t('ui.workReport.dailyBreakdown') }}
 
     table.table.table-sm.table-hover
       thead
         tr
-          th Date
-          th.text-right Work Time
-          th.text-right Sessions
-          th.text-right Avg Session
+          th {{ $t('ui.workReport.date') }}
+          th.text-right {{ $t('ui.workReport.workTime') }}
+          th.text-right {{ $t('ui.workReport.sessions') }}
+          th.text-right {{ $t('ui.workReport.avgSession') }}
       tbody
         tr(v-for="day in dailyData" :key="day.date")
-          td.text-nowrap {{ day.date }}
+          td {{ day.date }}
           td.text-right {{ formatDuration(day.duration) }}
           td.text-right {{ day.sessions }}
           td.text-right {{ formatDuration(day.avgSession) }}
       tfoot
         tr.font-weight-bold
-          td Total
+          td {{ $t('ui.workReport.total') }}
           td.text-right {{ formatDuration(totalDuration) }}
           td.text-right {{ totalSessions }}
           td.text-right {{ formatDuration(avgSessionLength) }}
@@ -93,11 +93,9 @@ import { useBucketsStore } from '~/stores/buckets';
 import { get_day_start_with_offset, get_day_end_with_offset } from '~/util/time';
 import {
   getSupportedWorkReportHosts,
-  getWorkReportHostBuckets,
   getWorkReportHostOptions,
   getUnsupportedWorkReportHosts,
   buildWorkReportQuery,
-  summarizeWorkSessions,
 } from '~/util/workReport';
 
 import 'vue-awesome/icons/sync';
@@ -109,6 +107,21 @@ interface DailyData {
   sessions: number;
   avgSession: number;
   events: any[];
+}
+
+// Sum of gaps between adjacent events that are <= breakTimeSeconds.
+function bridgeGaps(events: any[], breakTimeSeconds: number): number {
+  if (!events || events.length < 2 || breakTimeSeconds <= 0) return 0;
+  const sorted = [...events].sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  );
+  let extra = 0;
+  for (let i = 1; i < sorted.length; i++) {
+    const prevEnd = new Date(sorted[i - 1].timestamp).getTime() + sorted[i - 1].duration * 1000;
+    const gap = (new Date(sorted[i].timestamp).getTime() - prevEnd) / 1000;
+    if (gap > 0 && gap <= breakTimeSeconds) extra += gap;
+  }
+  return extra;
 }
 
 export default {
@@ -230,7 +243,7 @@ export default {
           this.selectedHosts = supportedHosts;
         }
 
-        const hostsToQuery = getWorkReportHostBuckets(
+        const hostsToQuery = getSupportedWorkReportHosts(
           this.selectedHosts,
           this.bucketsStore.buckets || []
         );
@@ -280,16 +293,15 @@ export default {
           // Bridge sub-breakTime gaps between adjacent events so a quick
           // context-switch still counts as continuous work time. aw-query's
           // flood() only deduplicates overlap, so we add the bridging here.
-          const { bridgedSeconds, sessions } = summarizeWorkSessions(events, breakTimeSeconds);
-          const bridged = baseDuration + bridgedSeconds;
+          const bridged = baseDuration + bridgeGaps(events, breakTimeSeconds);
 
           const startDate = tp.split('/')[0];
 
           return {
             date: moment(startDate).format('YYYY-MM-DD'),
             duration: bridged,
-            sessions,
-            avgSession: sessions > 0 ? bridged / sessions : 0,
+            sessions: events.length,
+            avgSession: events.length > 0 ? bridged / events.length : 0,
             events,
           };
         });
@@ -413,12 +425,5 @@ export default {
 <style scoped>
 .table {
   font-size: 0.9rem;
-}
-
-/* Use a gap rather than per-button margins so wrapped buttons line up on narrow screens. */
-.report-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
 }
 </style>

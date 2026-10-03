@@ -1,9 +1,9 @@
 <template lang="pug">
 
 div
-  h3 Query Explorer
+  h3 {{ $t('query.title') }}
 
-  | See #[a(href="https://docs.activitywatch.net/en/latest/examples/querying-data.html") the documentation] for help on how to write queries.
+  | {{ $t('query.docsHelp') }}
 
   hr
 
@@ -16,32 +16,32 @@ div
   form
     div.form-row.align-items-end
       div.form-group.col-lg-6
-        label.mb-1(for="saved-query-select") Saved Queries
+        label.mb-1(for="saved-query-select") {{ $t('ui.query.savedQueries') }}
         select#saved-query-select.form-control(v-model="selected_saved_query_id", @change="loadSelectedQuery()")
-          option(value="") Select saved query...
+          option(value="") {{ $t('ui.query.selectSaved') }}
           option(v-for="savedQuery in savedQueries", :key="savedQuery.id", :value="savedQuery.id")
             | {{savedQuery.name}}
       div.form-group.col-lg-6
         div.saved-query-actions
-          button.btn.btn-success.mr-2(type="button", @click="saveCurrentQuery()") Save Current
-          button.btn.btn-secondary.mr-2(type="button", @click="renameSelectedQuery()", :disabled="!selected_saved_query_id") Rename
+          button.btn.btn-success.mr-2(type="button", @click="saveCurrentQuery()") {{ $t('ui.query.saveCurrent') }}
+          button.btn.btn-secondary.mr-2(type="button", @click="renameSelectedQuery()", :disabled="!selected_saved_query_id") {{ $t('ui.query.rename') }}
           button.btn.btn-danger(type="button", @click="deleteSelectedQuery()", :disabled="!selected_saved_query_id")
             icon(name="trash")
-            |  Delete
+            |  {{ $t('common.delete') }}
 
     div.form-row
       div.form-group.col-md-6
-        | Start
+        | {{ $t('query.start') }}
         input.form-control(type="date", :max="today", v-model="startdate")
       div.form-group.col-md-6
-        | End
+        | {{ $t('query.end') }}
         input.form-control(type="date", :max="tomorrow", v-model="enddate")
 
     div.form-group
       textarea.form-control(v-model="query_code", @keypress.ctrl.enter="query()" style="font-family: monospace", rows=10)
     div.form-inline
       div.form-group
-        button.btn.btn-success(type="button", @click="query()") Query
+        button.btn.btn-success(type="button", @click="query()") {{ $t('ui.query.run') }}
       span(style="padding-left: 1em;")
       | {{eventcount_str}}
 
@@ -51,30 +51,30 @@ div
 
   b-modal(
     v-model="showSaveQueryModal"
-    title="Save Query"
-    ok-title="Save"
+    :title="$t('ui.query.saveTitle')"
+    :ok-title="$t('common.save')"
     @ok="onSaveQueryConfirm"
     @shown="$refs.saveQueryNameInput && $refs.saveQueryNameInput.focus()"
   )
-    b-form-group(label="Name for the saved query:")
+    b-form-group(:label="$t('ui.query.savedNameLabel')")
       b-form-input(
         ref="saveQueryNameInput"
         v-model="saveQueryName"
-        placeholder="Query name"
+        :placeholder="$t('ui.query.namePlaceholder')"
       )
 
   b-modal(
     v-model="showRenameQueryModal"
-    title="Rename Query"
-    ok-title="Rename"
+    :title="$t('ui.query.renameTitle')"
+    :ok-title="$t('ui.query.rename')"
     @ok="onRenameQueryConfirm"
     @shown="$refs.renameQueryNameInput && $refs.renameQueryNameInput.focus()"
   )
-    b-form-group(label="New name for saved query:")
+    b-form-group(:label="$t('ui.query.newNameLabel')")
       b-form-input(
         ref="renameQueryNameInput"
         v-model="renameQueryName"
-        placeholder="Query name"
+        :placeholder="$t('ui.query.namePlaceholder')"
       )
 </template>
 

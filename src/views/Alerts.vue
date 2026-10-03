@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  h3 Alerts
+  h3 {{ $t('nav.alerts') }}
 
   // TODO: Call this "goals" instead? (alerts is more general, but goals might fit the most common use better
   // TODO: Support 'less than' goals
@@ -8,51 +8,50 @@ div
   // TODO: Query from day start, not 24h ago
 
   b-alert(variant="warning" show)
-    | This feature is still in early development.
+    | {{ $t('ui.alerts.earlyDev') }}
 
   b-alert(v-if="error" show variant="danger")
     | {{error}}
 
   b-alert(v-if="hostnames.length === 0" show variant="info")
-    | No host with both window and AFK buckets is available, so alerts can't run yet.
-    | Install #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") aw-watcher-window and aw-watcher-afk] to enable this view.
+    | {{ $t('ui.alerts.noHost') }}
 
   b-card(v-for="alert in alerts", :key="alert.name")
     b-button.float-right(@click="deleteAlert(alert.name)" size="sm" variant="outline-danger")
       icon(name="trash")
 
-    div Goal name: {{ alert.name }}
-    div Category: {{ alert.category.join(" > ") }}
-    div Current: {{ alertTime(alert.category) | friendlyduration }} / {{alert.goal}} minutes
+    div {{ $t('ui.alerts.goalName') }}: {{ alert.name }}
+    div {{ $t('ui.alerts.category') }}: {{ alert.category.join(" > ") }}
+    div {{ $t('ui.alerts.current') }}: {{ alertTime(alert.category) | friendlyduration }} / {{alert.goal}} {{ $t('ui.alerts.minutes') }}
       span(v-if="alertTime(alert.category) >= alert.goal")
         icon.text-success(name="check")
       span(v-else)
         icon.text-muted(name="times")
 
   div.d-flex.align-items-center.mt-3
-    b-btn(@click="check" variant="success" :disabled="!hostname") Check
-    b-form-checkbox.ml-3.mb-0(v-model="autorefresh", @change="toggleAutoRefresh", switch) Auto-refresh every 10s
+    b-btn(@click="check" variant="success" :disabled="!hostname") {{ $t('ui.alerts.check') }}
+    b-form-checkbox.ml-3.mb-0(v-model="autorefresh", @change="toggleAutoRefresh", switch) {{ $t('ui.alerts.autoRefresh') }}
 
   small.text-muted(v-if="last_updated")
-    | Last updated #[time(:datetime="last_updated && last_updated.toISOString && last_updated.toISOString()") {{ last_updated | friendlytime }}]
+    | {{ $t('ui.alerts.lastUpdated') }} #[time(:datetime="last_updated && last_updated.toISOString && last_updated.toISOString()") {{ last_updated | friendlytime }}]
 
   hr
 
   div
-    h4 New alert
-    b-form-group(label="Name" label-cols-md=2)
+    h4 {{ $t('ui.alerts.newAlert') }}
+    b-form-group(:label="$t('ui.alerts.name')" label-cols-md=2)
       b-input(v-model="editing_alert.name")
-    b-form-group(label="Category" label-cols-md=2)
+    b-form-group(:label="$t('ui.alerts.category')" label-cols-md=2)
       b-select(v-model="editing_alert.category")
         option(v-for="category in categories" :value="category.value") {{ category.text }}
-    b-form-group(label="Goal" label-cols-md=2)
-      b-input-group(append="minutes")
+    b-form-group(:label="$t('ui.alerts.goal')" label-cols-md=2)
+      b-input-group(:append="$t('ui.alerts.minutes')")
         b-input(v-model="editing_alert.goal" type="number")
 
     div
       b-btn(@click="addAlert" variant="success")
         icon(name="plus")
-        | Add alert
+        | {{ $t('ui.alerts.add') }}
 </template>
 
 <style scoped lang="scss"></style>

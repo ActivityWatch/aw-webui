@@ -1,11 +1,11 @@
 <template lang="pug">
 div
-  h3 Report
+  h3 {{ $t('report.title') }}
 
-  | Generate a report of time spent on a certain category of device activity.
+  | {{ $t('report.description') }}
 
   b-alert.mt-2(variant="warning" show)
-    | This feature is still in early development.
+    | {{ $t('report.earlyDev') }}
 
   b-alert(v-if="error" show variant="danger")
     | {{error}}
@@ -14,22 +14,22 @@ div
     template(v-slot:input-group-append)
       b-button(type="button", @click="generate()" variant="success" :disabled="!has_pattern")
         icon(name="search")
-        | Generate
+        | {{ $t('report.generate') }}
 
   div.d-flex.mt-1
-    span.mr-auto.small.text-muted Hostname: {{queryOptions.hostname}}
+    span.mr-auto.small.text-muted {{ $t('ui.search.hostname') }}: {{queryOptions.hostname}}
     b-button.border-0(size="sm", variant="outline-dark" @click="show_options = !show_options")
       span(v-if="!show_options")
-        | #[icon(name="angle-double-down")] Show options
+        | #[icon(name="angle-double-down")] {{ $t('ui.search.showOptions') }}
       span(v-else)
-        | #[icon(name="angle-double-up")] Hide options
+        | #[icon(name="angle-double-up")] {{ $t('ui.search.hideOptions') }}
 
   div(v-show="show_options")
-    h4 Options
+    h4 {{ $t('report.options') }}
     aw-query-options(v-model="queryOptions")
 
   div(v-if="status == 'searching'")
-    div #[icon(name="spinner" pulse)] Searching...
+    div #[icon(name="spinner" pulse)] {{ $t('ui.search.searching') }}
 
 
   div(v-if="events != null")
@@ -37,24 +37,24 @@ div
 
     div.d-flex
       div.flex-fill
-        | Found {{ events.length }} events in {{ (queryTime / 1000).toFixed(2) }} seconds
+        | {{ $t('report.foundEvents', { count: events.length, seconds: (queryTime / 1000).toFixed(2) }) }}
       div
         b-input-group(size="sm")
           b-input-group-prepend
             b-input-group-text
               icon(name="save")
-              .mx-1 Export as:
+              .mx-1 {{ $t('ui.report.exportAs') }}
           b-input-group-append
             b-button(type="button", @click="export_csv()" variant="outline-dark")
-              | CSV
+              | {{ $t('report.csv') }}
             b-button(type="button", @click="export_json()" variant="outline-dark")
-              | JSON
+              | {{ $t('ui.report.json') }}
 
     hr
 
     vis-timeline(:events="events.slice(0, 500)" filterShortEvents=true)
     div.small.text-muted(v-if="events.length > 500")
-      | Showing the {{ 500 }} most recent events of {{ events.length }} total.
+      | {{ $t('ui.report.recentEvents', { shown: 500, total: events.length }) }}
 
     hr
 
@@ -67,9 +67,9 @@ div
     hr
 
     div
-      | Didn't find what you were looking for?
+      | {{ $t('search.notFound') }}
       br
-      | Add a week to the search: #[b-button(size="sm" variant="outline-dark" @click="extendByWeek()") +1 week]
+      | {{ $t('search.addWeek') }} #[b-button(size="sm" variant="outline-dark" @click="extendByWeek()") {{ $t('search.addWeekBtn') }}]
 
 </template>
 
