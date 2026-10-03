@@ -240,7 +240,10 @@ export const useCategoryStore = defineStore('categories', {
       };
     },
     category_select() {
-      return (insertMeta: boolean): { text: string; value?: string[] }[] => {
+      return (
+        insertMeta: boolean,
+        translate?: (key: string) => string
+      ): { text: string; value?: string[] }[] => {
         // Useful for <select> elements enumerating categories
         let cats = this.all_categories;
         cats = cats
@@ -250,8 +253,11 @@ export const useCategoryStore = defineStore('categories', {
           .sort((a, b) => a.text > b.text);
         if (insertMeta) {
           cats = [
-            { text: 'All', value: null },
-            { text: 'Uncategorized', value: ['Uncategorized'] },
+            { text: translate?.('common.all') || 'All', value: null },
+            {
+              text: translate?.('common.uncategorized') || 'Uncategorized',
+              value: ['Uncategorized'],
+            },
           ].concat(cats);
         }
         return cats;

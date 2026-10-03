@@ -30,32 +30,10 @@ div
   div(v-if="status == 'searching'")
     div #[icon(name="spinner" pulse)] {{ $t('ui.search.searching') }}
 
-  div(v-if="events != null || browserEvents != null")
+  div(v-if="events != null")
     hr
 
-    div(v-if="events && events.length > 0")
-      h5 Window events ({{ events.length }})
-      aw-selectable-eventview(:events="events")
-
-    div(v-if="browserEvents && browserEvents.length > 0")
-      h5 Browser events ({{ browserEvents.length }})
-      table.table.table-sm.table-hover
-        thead
-          tr
-            th Timestamp
-            th Duration
-            th URL
-            th Title
-        tbody
-          tr(v-for="e in browserEvents" :key="e.id || e.timestamp")
-            td {{ e.timestamp | shortdate }} {{ e.timestamp | shorttime }}
-            td {{ e.duration | friendlyduration }}
-            td
-              a(:href="e.data.url" target="_blank" rel="noopener") {{ e.data.url }}
-            td {{ e.data.title }}
-
-    div(v-if="status !== 'searching' && events && events.length === 0 && (!browserEvents || browserEvents.length === 0)")
-      p.text-muted No results found.
+    aw-selectable-eventview(:events="events")
 
     div
       | {{ $t('search.notFound') }}
@@ -66,8 +44,7 @@ div
 <script lang="ts">
 import _ from 'lodash';
 import moment from 'moment';
-import { canonicalEvents, browserSearchQuery, querystr_to_array } from '~/queries';
-import { useBucketsStore } from '~/stores/buckets';
+import { canonicalEvents, querystr_to_array } from '~/queries';
 
 import 'vue-awesome/icons/search';
 import 'vue-awesome/icons/spinner';
@@ -80,7 +57,6 @@ export default {
     return {
       pattern: '',
       events: null,
-      browserEvents: null,
 
       status: null,
       error: '',
@@ -95,72 +71,27 @@ export default {
   },
   methods: {
     search: async function () {
-      const timeperiods = [
-        moment(this.queryOptions.start).format() + '/' + moment(this.queryOptions.stop).format(),
-      ];
-
-      // Window search query
-      let windowQuery = canonicalEvents({
-        ...useBucketsStore().desktopBucketIds(this.queryOptions.hostname),
+      let query = canonicalEvents({
+        bid_window: 'aw-watcher-window_' + this.queryOptions.hostname,
+        bid_afk: 'aw-watcher-afk_' + this.queryOptions.hostname,
         filter_afk: this.queryOptions.filter_afk,
         categories: [[['searched'], { type: 'regex', regex: this.pattern, ignore_case: true }]],
         filter_categories: [['searched']],
       });
-      windowQuery += '; RETURN = events;';
-      const windowQueryArray = querystr_to_array(windowQuery);
+      query += '; RETURN = events;';
 
+      const query_array = querystr_to_array(query);
+      const timeperiods = [
+        moment(this.queryOptions.start).format() + '/' + moment(this.queryOptions.stop).format(),
+      ];
       try {
         this.status = 'searching';
+        const data = await this.$aw.query(timeperiods, query_array);
+        this.events = _.orderBy(data[0], ['timestamp'], ['desc']);
         this.error = '';
-
-        // Look up browser buckets for this host. A failure here (e.g. the bucket
-        // list cannot be loaded) must not block the window-only search.
-        let browserQueryArray: string[] = [];
-        try {
-          const bucketsStore = useBucketsStore();
-          await bucketsStore.ensureLoaded();
-          const browserBuckets = bucketsStore.bucketsBrowser(this.queryOptions.hostname);
-          browserQueryArray = browserSearchQuery(browserBuckets, this.pattern);
-        } catch (e) {
-          console.error('Failed to load browser buckets for search', e);
-        }
-
-        // Each source can fail independently (e.g. a browser-only host has no
-        // window/AFK buckets). Keep successful matches and report partial failures.
-        const errors: string[] = [];
-        const results = await Promise.all([
-          this.$aw.query(timeperiods, windowQueryArray).catch(e => {
-            console.error('Window search failed', e);
-            errors.push(`Window search: ${e.response?.data?.message ?? String(e)}`);
-            return null;
-          }),
-          browserQueryArray.length > 0
-            ? this.$aw.query(timeperiods, browserQueryArray).catch(e => {
-                console.error('Browser search failed', e);
-                errors.push(`Browser search: ${e.response?.data?.message ?? String(e)}`);
-                return null;
-              })
-            : Promise.resolve(null),
-        ]);
-        this.error = errors.join('; ');
-
-        // Every window hit carries the synthetic `searched` category the query
-        // uses for filtering; it is not a real category, so drop it from results.
-        const windowResults = results[0] ? results[0][0] : [];
-        const windowEvents = windowResults.map(e => ({ ...e, data: _.omit(e.data, '$category') }));
-        this.events = _.orderBy(windowEvents, ['timestamp'], ['desc']);
-        const browserResults = results[1] ? results[1][0] : [];
-        // An event can match the pattern in both its url and title, which the
-        // query concatenates into two entries; dedup by event ID so each
-        // database record appears at most once.
-        this.browserEvents = _.orderBy(
-          _.uniqBy(browserResults, (e: any) => e.id),
-          ['timestamp'],
-          ['desc']
-        );
       } catch (e) {
         console.error(e);
-        this.error = e.response?.data?.message ?? String(e);
+        this.error = e?.response?.data?.message || e?.message || this.$t('common.requestFailed');
       } finally {
         this.status = null;
       }

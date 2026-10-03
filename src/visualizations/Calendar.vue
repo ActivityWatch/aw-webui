@@ -96,7 +96,7 @@ export default {
   methods: {
     onEventClick: function (arg) {
       // TODO: Open event inspector/editor here
-      alert('event click! ' + JSON.stringify(arg.event));
+      console.info('Calendar event selected:', arg.event);
     },
   },
 };

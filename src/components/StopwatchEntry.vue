@@ -2,7 +2,7 @@
 div
   div.d-flex.flex-wrap.align-items-center.px-3.py-2.stopwatch-entry
     div.flex-fill.mr-2
-      span #[b {{event.data.label || 'No label'}}]
+      span #[b {{ event.data.label || $t('ui.stopwatchEntry.noLabel') }}]
       span.text-muted &nbsp;|&nbsp;
       span(v-if="event.data.running")
         | {{ $t('ui.stopwatchEntry.runningFor') }} #[span(:title="event.timestamp") {{event.data.running ? (now - event.timestamp) / 1000 : event.duration | friendlyduration}}]

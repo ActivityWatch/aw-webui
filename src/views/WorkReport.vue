@@ -144,7 +144,10 @@ export default {
   },
   computed: {
     hostOptions() {
-      return getWorkReportHostOptions(this.bucketsStore.buckets || []);
+      return getWorkReportHostOptions(
+        this.bucketsStore.buckets || [],
+        this.$t('common.requiresAfk') as string
+      );
     },
 
     categoryOptions() {
@@ -163,7 +166,10 @@ export default {
       return [
         {
           value: '',
-          text: this.selectedCategories.length === 0 ? 'Select category…' : 'Add category…',
+          text:
+            this.selectedCategories.length === 0
+              ? this.$t('ui.workReport.selectCategory')
+              : this.$t('ui.workReport.addCategory'),
           disabled: true,
         },
         ...this.categoryOptions.filter(opt => !isCoveredBySelected(JSON.parse(opt.value))),
@@ -171,10 +177,10 @@ export default {
     },
     dateRangeOptions() {
       return [
-        { value: 'last7d', text: 'Last 7 days' },
-        { value: 'last30d', text: 'Last 30 days' },
-        { value: 'thisWeek', text: 'This week' },
-        { value: 'thisMonth', text: 'This month' },
+        { value: 'last7d', text: this.$t('common.last7d') },
+        { value: 'last30d', text: this.$t('common.last30d') },
+        { value: 'thisWeek', text: this.$t('common.thisWeek') },
+        { value: 'thisMonth', text: this.$t('common.thisMonth') },
       ];
     },
     hasData() {
@@ -205,13 +211,13 @@ export default {
         const client = getClient();
 
         if (this.selectedHosts.length === 0) {
-          alert('Please select at least one host');
+          alert(this.$t('common.selectHost'));
           this.loading = false;
           return;
         }
 
         if (this.selectedCategories.length === 0) {
-          alert('Please select at least one category');
+          alert(this.$t('ui.workReport.selectCategory'));
           this.loading = false;
           return;
         }
@@ -227,18 +233,19 @@ export default {
           );
           if (supportedHosts.length === 0) {
             alert(
-              `The selected hosts are missing aw-watcher-afk buckets and can't be included in Work Report: ${unsupportedHosts.join(
-                ', '
-              )}`
+              this.$t('ui.workReport.unsupportedHosts', {
+                hosts: unsupportedHosts.join(', '),
+              })
             );
             this.loading = false;
             return;
           }
 
           alert(
-            `Skipping hosts without aw-watcher-afk buckets: ${unsupportedHosts.join(
-              ', '
-            )}. Work Report will use: ${supportedHosts.join(', ')}`
+            this.$t('ui.workReport.skippingHosts', {
+              unsupported: unsupportedHosts.join(', '),
+              supported: supportedHosts.join(', '),
+            })
           );
           this.selectedHosts = supportedHosts;
         }
@@ -309,7 +316,7 @@ export default {
         this.rawData = results;
       } catch (error) {
         console.error('Error loading work time data:', error);
-        alert('Error loading data. See console for details.');
+        alert(this.$t('ui.workReport.loadError'));
       } finally {
         this.loading = false;
       }

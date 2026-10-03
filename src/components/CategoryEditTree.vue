@@ -79,7 +79,7 @@ export default {
   methods: {
     addSubclass: function (parent) {
       // Generate a unique default name to prevent duplicate name conflicts (#702)
-      const baseName = 'New class';
+      const baseName = this.$t('ui.categoryEditor.newClass');
       let name = baseName;
       let counter = 2;
       const existingNames = this.categoryStore.classes.map(c => JSON.stringify(c.name));
@@ -90,7 +90,7 @@ export default {
 
       const lastId = this.categoryStore.addClass({
         name: parent.name.concat([name]),
-        rule: { type: 'regex', regex: 'FILL ME' },
+        rule: { type: 'regex', regex: this.$t('ui.categoryEditor.regexPlaceholder') },
       });
 
       this.editingId = lastId;

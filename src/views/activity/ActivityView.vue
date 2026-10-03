@@ -142,9 +142,7 @@ export default {
     },
     restoreDefaults() {
       useViewsStore().restoreDefaults();
-      alert(
-        "All views have been restored to defaults. Changes won't be saved until you click 'Save'."
-      );
+      alert(this.$t('activityView.restoreAlert'));
       // If we're on an URL that might become invalid, navigate to the main/default view
       if (!this.$route.path.includes('default')) {
         this.$router.replace('./default');
