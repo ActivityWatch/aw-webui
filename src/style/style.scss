@@ -25,6 +25,15 @@ body {
   background-color: $backgroundColor;
 }
 
+// Custom visualizations load in iframes. The iframe inherits `color-scheme`
+// from the page (see static/dark.css) but its embedded document still paints
+// a light default canvas, so it shows a white background under the dark theme.
+// Resetting the iframe's own color-scheme to `normal` fixes this.
+// See aw-webui#1049.
+iframe {
+  color-scheme: normal;
+}
+
 // To make icons a little less crowded
 .fa-icon {
   margin-top: -0.125em;
