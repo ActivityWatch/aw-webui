@@ -141,8 +141,10 @@ export default {
         const browserResults = results[1] ? results[1][0] : [];
         // An event can match the pattern in both its url and title, which the
         // query concatenates into two entries; keep one row per event.
+        // Include title so genuinely distinct visits to the same URL at the
+        // same second are not incorrectly collapsed.
         this.browserEvents = _.orderBy(
-          _.uniqBy(browserResults, (e: any) => `${e.timestamp}|${e.data?.url}`),
+          _.uniqBy(browserResults, (e: any) => `${e.timestamp}|${e.data?.url}|${e.data?.title}`),
           ['timestamp'],
           ['desc']
         );
