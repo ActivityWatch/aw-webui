@@ -47,9 +47,9 @@ div
       | #[b Show options]
       | to load uncategorized words. The hostname picker is hidden until you open options.
   div(v-else)
-    div(v-if="words_by_duration.length == 0")
+    div(v-if="words_by_duration.length == 0 && ignored_words.length == 0")
       | No words with significant duration. You're good to go!
-    div(v-else)
+    div(v-else-if="words_by_duration.length > 0")
       div.row.category-builder-word(v-for="word in words_visible" :key="word.word")
         div.col.hover-highlight
           div.d-flex.flex-row.py-2
@@ -82,6 +82,17 @@ div
           variant="outline-primary"
           @click="visible_count += page_size"
         ) Show more
+    div.mt-3(v-if="ignored_words.length > 0")
+      small.text-muted
+        | {{ ignored_words.length }} ignored {{ ignored_words.length == 1 ? 'word' : 'words' }}
+      b-button.ml-2(size="sm" variant="link" @click="show_ignored = !show_ignored")
+        span(v-if="!show_ignored") Show
+        span(v-else) Hide
+      b-button(size="sm" variant="link" @click="resetIgnoredWords()") Reset
+      div(v-if="show_ignored")
+        div.d-flex.flex-row.align-items-center.py-1(v-for="word in ignored_words" :key="word")
+          span.flex-grow-1 {{ word }}
+          b-button(size="sm" variant="outline-dark" @click="unignoreWord(word)") Unignore
 
   div(v-if="create.categoryId !== null")
     CategoryEditModal(:categoryId="create.categoryId",
@@ -118,6 +129,7 @@ import { mapState } from 'pinia';
 
 import { useCategoryStore } from '~/stores/categories';
 import { useBucketsStore } from '~/stores/buckets';
+import { useSettingsStore } from '~/stores/settings';
 
 import { canonicalEvents } from '~/queries';
 import { getClient } from '~/util/awclient';
@@ -139,6 +151,7 @@ export default {
       loading: true,
 
       categoryStore: useCategoryStore(),
+      settingsStore: useSettingsStore(),
 
       // Pagination for the words list. Showing the full list directly
       // produced a 2+ screen wall of buttons on most users' data; this
@@ -160,8 +173,7 @@ export default {
       words: {},
       showing_events: [],
 
-      // TODO: load from settings
-      ignored_words: [],
+      show_ignored: false,
 
       append: {
         word: '',
@@ -175,6 +187,10 @@ export default {
   },
   computed: {
     ...mapState(useCategoryStore, ['allCategoriesSelect']),
+    // Persisted in server settings so "Ignore" survives reloads (aw-webui#486).
+    ignored_words: function (): string[] {
+      return this.settingsStore.category_builder_ignored_words || [];
+    },
     words_by_duration: function () {
       const words: { word: string; duration: number }[] = [...this.words.values()];
       return words
@@ -216,6 +232,8 @@ export default {
     // Make sure we don't have stale unsaved changes in categoryStore
     const bucketsStore = useBucketsStore();
     await bucketsStore.ensureLoaded();
+    // Ignored words must be loaded before the first fetchWords().
+    await this.settingsStore.ensureLoaded();
     await this.categoryStore.load();
     const sole = selectSoleKnownHostname(bucketsStore.hosts);
     if (sole && !this.queryOptions.hostname) {
@@ -328,9 +346,43 @@ export default {
 
       this.showing_events = [word, events];
     },
-    ignoreWord(word: string) {
+    // Persist `next` as the ignored-words list. Saves are serialized and always
+    // write the latest requested list: settingsStore.save() ends with a load()
+    // that patches server state back over local state, so overlapping updates
+    // could otherwise revert a newer word to an older server value.
+    async persistIgnoredWords(next: string[]) {
+      this.settingsStore.$patch({ category_builder_ignored_words: next });
+      this._pending_ignored = next;
+      this._persist_queue = (this._persist_queue || Promise.resolve())
+        // A failed save was already reported to its own caller; don't poison the queue.
+        .catch(e => console.warn('Previous ignored-words save failed', e))
+        .then(() =>
+          this.settingsStore.update({ category_builder_ignored_words: this._pending_ignored })
+        );
+      const queued = this._persist_queue;
+      try {
+        await queued;
+      } finally {
+        // Queue drained: later reads come from the store again.
+        if (this._persist_queue === queued) this._pending_ignored = null;
+      }
+    },
+    async ignoreWord(word: string) {
       console.log('Ignoring word: ' + word);
-      this.ignored_words.push(word);
+      const current = this._pending_ignored || this.ignored_words;
+      if (current.includes(word)) return;
+      await this.persistIgnoredWords([...current, word]);
+    },
+    async unignoreWord(word: string) {
+      const current = this._pending_ignored || this.ignored_words;
+      await this.persistIgnoredWords(current.filter(w => w !== word));
+      // findCommonPhrases skipped the word, so it needs a refetch to reappear.
+      await this.fetchWords();
+    },
+    async resetIgnoredWords() {
+      this.show_ignored = false;
+      await this.persistIgnoredWords([]);
+      await this.fetchWords();
     },
     createRule(word: string) {
       console.log('Opening modal for creating rule with word: ' + word);

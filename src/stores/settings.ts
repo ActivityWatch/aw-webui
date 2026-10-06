@@ -66,6 +66,8 @@ interface State {
   active_set_ids: string[];
   views: View[];
   saved_queries: SavedQuery[];
+  // Words the Category Builder's "Ignore" button hides from its suggestions.
+  category_builder_ignored_words: string[];
 
   // Whether to show certain WIP features
   devmode: boolean;
@@ -125,6 +127,7 @@ export const useSettingsStore = defineStore('settings', {
     active_set_ids: ['default'],
     views: defaultViews,
     saved_queries: [],
+    category_builder_ignored_words: [],
 
     // Developer settings
     // NOTE: PRODUCTION might be undefined (in tests, for example)
@@ -200,7 +203,8 @@ export const useSettingsStore = defineStore('settings', {
           key == 'classes' ||
           key == 'category_sets' ||
           key == 'active_set_ids' ||
-          key == 'saved_queries';
+          key == 'saved_queries' ||
+          key == 'category_builder_ignored_words';
         try {
           if (isJsonKey) {
             let parsed = JSON.parse(raw);
