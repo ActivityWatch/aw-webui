@@ -97,6 +97,30 @@ describe('AwNotifySettings', () => {
     );
   });
 
+  test('save() with enabled: false retains alerts added in the same session', async () => {
+    // Regression: this.config was never updated after a successful save, so a
+    // disable-save on the same page would send this.config.alerts (stale load),
+    // not the newly-added alerts.
+    mockGet.mockResolvedValue({ data: { enabled: true, alerts: [] } });
+    const wrapper = shallowMount(AwNotifySettings);
+    await flushPromises();
+
+    // Add an alert and save (enabled=true) — this should update this.config.
+    wrapper.vm.alerts.push({ label: 'Work', category: 'Work', thresholdStr: '60', positive: true });
+    await wrapper.vm.save();
+    mockPost.mockClear();
+
+    // Now disable and save again — the newly-added alert must survive.
+    wrapper.vm.enabled = false;
+    await wrapper.vm.save();
+
+    expect(wrapper.vm.error).toBe('');
+    const [, body] = mockPost.mock.calls[0];
+    expect(body.enabled).toBe(false);
+    expect(body.alerts).toHaveLength(1);
+    expect(body.alerts[0].category).toBe('Work');
+  });
+
   test('save() preserves unknown config keys (e.g. http_port)', async () => {
     mockGet.mockResolvedValue({ data: { enabled: false, alerts: [], http_port: 5600 } });
     const wrapper = shallowMount(AwNotifySettings);

@@ -190,6 +190,9 @@ export default {
         await client.req.post(`/0/settings/${SETTINGS_KEY}`, payload, {
           headers: { 'Content-Type': 'application/json' },
         });
+        // Keep this.config in sync so a subsequent disabled save uses the
+        // latest saved alerts, not the stale snapshot from page load.
+        this.config = payload;
         this.success = true;
       } catch (e: any) {
         this.error = `Failed to save settings: ${e?.message ?? e}`;
