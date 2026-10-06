@@ -110,16 +110,20 @@ export default {
       // fall back to the latest events so the view stays useful for debugging.
       const hasData = this.bucket.metadata && this.bucket.metadata.end;
       if (this.events.length == 0 && hasData) {
-        const recent = await this.bucketsStore.getBucketWithEvents({
-          id: bucket_id,
-          limit: 100,
-        });
-        if (this.daterange !== daterange) return;
-        if (recent.events.length > 0) {
-          this.events = recent.events;
-          // The API returns newest first.
-          this.lastEventTime = recent.events[0].timestamp;
-          this.showingMostRecent = true;
+        try {
+          const recent = await this.bucketsStore.getBucketWithEvents({
+            id: bucket_id,
+            limit: 100,
+          });
+          if (this.daterange !== daterange) return;
+          if (recent.events.length > 0) {
+            this.events = recent.events;
+            // The API returns newest first.
+            this.lastEventTime = recent.events[0].timestamp;
+            this.showingMostRecent = true;
+          }
+        } catch (e) {
+          console.warn('[bucket] Failed to load most recent events:', e);
         }
       }
     },

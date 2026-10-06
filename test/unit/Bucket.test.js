@@ -145,6 +145,17 @@ describe('Bucket.vue getEvents fallback', () => {
     expect(vm.showingMostRecent).toBe(false);
   });
 
+  test('silently handles a fallback fetch failure', async () => {
+    const get = jest.fn(async ({ limit }) => {
+      if (limit) throw new Error('network error');
+      return { events: [] };
+    });
+    const vm = makeVm(get);
+    await expect(Bucket.methods.getEvents.call(vm, 'b')).resolves.not.toThrow();
+    expect(vm.showingMostRecent).toBe(false);
+    expect(vm.events).toEqual([]);
+  });
+
   test('a stale fallback does not overwrite a newer range selection', async () => {
     let release;
     const gate = new Promise(r => (release = r));
