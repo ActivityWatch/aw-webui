@@ -14,48 +14,54 @@ div
     b-spinner(small) Loading…
 
   div(v-else)
-    p.text-muted.small.mb-3
-      | Alerts are checked periodically by aw-notify. Each alert fires a notification when
-      | the accumulated time crosses a threshold. The same config works in Android and aw-tauri.
+    b-form-group.mb-3
+      b-form-checkbox(v-model="enabled" switch)
+        | Enable notifications
+        small.text-muted.ml-2 aw-notify runs only when this is on; the tray toggle mirrors this setting.
 
-    div(v-if="alerts.length === 0")
-      p.text-muted.font-italic No alerts configured.
+    template(v-if="enabled")
+      p.text-muted.small.mb-3
+        | Alerts are checked periodically by aw-notify. Each alert fires a notification when
+        | the accumulated time crosses a threshold. The same config works in Android and aw-tauri.
 
-    b-card.mb-2(v-for="(alert, idx) in alerts" :key="idx")
-      div.d-flex.align-items-start
-        div.flex-grow-1
-          b-form-group(label="Label" label-cols-sm="3" label-size="sm")
-            b-input(v-model="alert.label" size="sm" placeholder="e.g. Work")
-          b-form-group(label="Category" label-cols-sm="3" label-size="sm")
-            b-input(
-              v-model="alert.category"
-              size="sm"
-              placeholder="All"
-            )
-            small.form-text.text-muted
-              | Match the category name in your AW categorization rules, or use All for total time.
-          b-form-group(
-            label="Thresholds"
-            label-cols-sm="3"
-            label-size="sm"
-            :invalid-feedback="thresholdError(alert.thresholdStr)"
-            :state="thresholdState(alert.thresholdStr)"
-          )
-            b-input(
-              v-model="alert.thresholdStr"
-              size="sm"
-              placeholder="e.g. 60, 120, 240"
+      div(v-if="alerts.length === 0")
+        p.text-muted.font-italic No alerts configured.
+
+      b-card.mb-2(v-for="(alert, idx) in alerts" :key="idx")
+        div.d-flex.align-items-start
+          div.flex-grow-1
+            b-form-group(label="Label" label-cols-sm="3" label-size="sm")
+              b-input(v-model="alert.label" size="sm" placeholder="e.g. Work")
+            b-form-group(label="Category" label-cols-sm="3" label-size="sm")
+              b-input(
+                v-model="alert.category"
+                size="sm"
+                placeholder="All"
+              )
+              small.form-text.text-muted
+                | Match the category name in your AW categorization rules, or use All for total time.
+            b-form-group(
+              label="Thresholds"
+              label-cols-sm="3"
+              label-size="sm"
+              :invalid-feedback="thresholdError(alert.thresholdStr)"
               :state="thresholdState(alert.thresholdStr)"
             )
-            small.form-text.text-muted Comma-separated positive whole minutes. A notification fires as each threshold is crossed.
-          b-form-group(label="Type" label-cols-sm="3" label-size="sm")
-            b-form-radio-group(v-model="alert.positive" :options="goalOptions" size="sm")
-        b-btn.ml-2(@click="removeAlert(idx)" variant="outline-danger" size="sm" title="Remove alert")
-          icon(name="trash")
+              b-input(
+                v-model="alert.thresholdStr"
+                size="sm"
+                placeholder="e.g. 60, 120, 240"
+                :state="thresholdState(alert.thresholdStr)"
+              )
+              small.form-text.text-muted Comma-separated positive whole minutes. A notification fires as each threshold is crossed.
+            b-form-group(label="Type" label-cols-sm="3" label-size="sm")
+              b-form-radio-group(v-model="alert.positive" :options="goalOptions" size="sm")
+          b-btn.ml-2(@click="removeAlert(idx)" variant="outline-danger" size="sm" title="Remove alert")
+            icon(name="trash")
 
-    b-btn.mt-1(@click="addAlert" variant="outline-secondary" size="sm")
-      icon(name="plus")
-      |  Add alert
+      b-btn.mt-1(@click="addAlert" variant="outline-secondary" size="sm")
+        icon(name="plus")
+        |  Add alert
 </template>
 
 <script lang="ts">
@@ -105,6 +111,7 @@ export default {
   name: 'AwNotifySettings',
   data() {
     return {
+      enabled: false,
       alerts: [] as AlertRow[],
       config: {} as AwNotifyConfig,
       loading: false,
@@ -138,6 +145,7 @@ export default {
           throw new Error('The saved aw-notify setting has an unsupported format.');
         }
         this.config = config;
+        this.enabled = config.enabled ?? false;
         this.alerts = config.alerts.map(dtoToRow);
       } catch (e: any) {
         if (e?.response?.status === 404) {
@@ -151,6 +159,7 @@ export default {
     },
     useDefaults() {
       this.config = {} as AwNotifyConfig;
+      this.enabled = false;
       this.alerts = this.defaultAlerts();
     },
     async save() {
@@ -163,7 +172,13 @@ export default {
       this.saving = true;
       try {
         const client = getClient();
-        const payload: AwNotifyConfig = { ...this.config, alerts: this.alerts.map(rowToDto) };
+        // Spread config first to preserve unknown keys (e.g. http_port, future fields),
+        // then override enabled and alerts with the form values.
+        const payload: AwNotifyConfig = {
+          ...this.config,
+          enabled: this.enabled,
+          alerts: this.alerts.map(rowToDto),
+        };
         await client.req.post(`/0/settings/${SETTINGS_KEY}`, payload, {
           headers: { 'Content-Type': 'application/json' },
         });

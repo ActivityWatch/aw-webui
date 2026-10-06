@@ -33,6 +33,21 @@ describe('parseAwNotifyConfig', () => {
     expect(parseAwNotifyConfig(config)).toEqual(config);
   });
 
+  test('accepts enabled: true', () => {
+    const config = { enabled: true, alerts: [canonicalAlert] };
+    expect(parseAwNotifyConfig(config)).toEqual(config);
+  });
+
+  test('accepts enabled: false', () => {
+    const config = { enabled: false, alerts: [] };
+    expect(parseAwNotifyConfig(config)).toEqual(config);
+  });
+
+  test('accepts missing enabled (undefined)', () => {
+    const config = { alerts: [] };
+    expect(parseAwNotifyConfig(config)).toEqual(config);
+  });
+
   test('preserves an explicitly empty alert list', () => {
     expect(parseAwNotifyConfig({ alerts: [] })).toEqual({ alerts: [] });
   });
@@ -59,6 +74,7 @@ describe('parseAwNotifyConfig', () => {
     { alerts: [{ ...canonicalAlert, thresholds_minutes: [0] }] },
     { alerts: [canonicalAlert], hourly_checkins: 'yes' },
     { alerts: [canonicalAlert], http_port: 70000 },
+    { alerts: [canonicalAlert], enabled: 'yes' },
   ])('rejects unsupported config %p', config => {
     expect(parseAwNotifyConfig(config)).toBeNull();
   });

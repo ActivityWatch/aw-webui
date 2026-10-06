@@ -36,4 +36,22 @@ describe('AwNotifySettings', () => {
 
     expect(wrapper.vm.error).toMatch('unsupported format');
   });
+
+  test('reflects enabled: true from saved config', async () => {
+    mockGet.mockResolvedValue({
+      data: { enabled: true, alerts: [] },
+    });
+    const wrapper = shallowMount(AwNotifySettings);
+    await flushPromises();
+
+    expect(wrapper.vm.enabled).toBe(true);
+  });
+
+  test('defaults enabled to false when the key is absent', async () => {
+    mockGet.mockResolvedValue({ data: { alerts: [] } });
+    const wrapper = shallowMount(AwNotifySettings);
+    await flushPromises();
+
+    expect(wrapper.vm.enabled).toBe(false);
+  });
 });
