@@ -9,6 +9,7 @@ export type ActivityDiagnostic =
   | { kind: 'missing-window'; host: string }
   | { kind: 'missing-afk'; host: string }
   | { kind: 'ambiguous-window'; host: string; bucketIds: string[] }
+  | { kind: 'mismatched-hostnames'; host: string; windowHosts: string[]; afkHosts: string[] }
   | { kind: 'no-window-events'; host: string };
 
 type ActivityDiagnosticInput = {
@@ -25,6 +26,10 @@ type ActivityDiagnosticInput = {
 
 function bucketHost(bucket: DiagnosticBucket): string {
   return bucket.hostname || bucket.data?.hostname || '';
+}
+
+function unique(values: string[]): string[] {
+  return [...new Set(values)];
 }
 
 // macOS commonly changes a hostname between "name" and "name.local".
@@ -64,42 +69,52 @@ export function activityDiagnostic({
     return { kind: 'missing-window', host };
   }
 
-  // Without an afkstatus bucket `set_available` keeps the Activity query from
-  // running at all, so duplicate window buckets cannot be what is hiding the
-  // data. Check whether the AFK watcher is present for any same-device
-  // hostname before deciding whether to point at a hostname variant: if the
-  // watcher isn't running at all, choosing a variant will not fix the blank
-  // view, and the missing-watcher message is the actionable one.
   const hasAfk = buckets.some(bucket => bucket.type === 'afkstatus' && exactHost(bucket));
-  const hasAfkForDevice = buckets.some(bucket => bucket.type === 'afkstatus' && sameDevice(bucket));
+  const afks = buckets.filter(bucket => bucket.type === 'afkstatus' && sameDevice(bucket));
+  const afkHosts = unique(afks.map(bucketHost));
+  // Window buckets under another hostname variant ("laptop.local" vs
+  // "laptop") that also has an AFK bucket: selecting that variant would
+  // give the query a complete pair.
+  const pairedWindows = windows.filter(
+    bucket => !exactHost(bucket) && afkHosts.includes(bucketHost(bucket))
+  );
 
-  // A same-device window bucket exists but under a different hostname string
-  // ("laptop.local" vs "laptop"). The desktop query matches the host exactly,
-  // so the view is blank; point the user at the variant to select — but only
-  // when the AFK watcher is actually running, otherwise the variant choice
-  // still won't fix the blank view.
-  if (!hasExactWindow) {
-    if (!hasAfkForDevice) {
-      return { kind: 'missing-afk', host };
+  // The desktop query needs a window AND an afkstatus bucket under the exact
+  // selected hostname (`set_available`). When that pair is missing, only
+  // suggest a remedy that would actually produce one.
+  if (!hasExactWindow || !hasAfk) {
+    const windowHosts = unique(windows.map(bucketHost));
+
+    if (pairedWindows.length > 0) {
+      return {
+        kind: 'ambiguous-window',
+        host,
+        bucketIds: pairedWindows.map(bucket => bucket.id),
+      };
     }
-    return {
-      kind: 'ambiguous-window',
-      host,
-      bucketIds: windows.map(bucket => bucket.id),
-    };
-  }
-  if (!hasAfk) {
-    return { kind: 'missing-afk', host };
+
+    // No AFK watcher for this device at all. Name the hostname the window
+    // watcher reports under, since that is where the AFK bucket must appear.
+    if (afks.length === 0) {
+      return { kind: 'missing-afk', host: hasExactWindow ? host : windowHosts.join(', ') };
+    }
+
+    // Both watchers run, but never under the same hostname, so no device
+    // selection can show activity.
+    return { kind: 'mismatched-hostnames', host, windowHosts, afkHosts };
   }
 
   // Only flag hostname variants when they could explain missing activity: a
   // view that queries its exact bucket and shows data is healthy, even when
-  // a "name.local" sibling bucket exists.
-  if (windows.length > 1 && !hasWindowActivity) {
+  // a "name.local" sibling bucket exists. A variant without its own AFK
+  // bucket would be just as blank, so it is not worth pointing at.
+  if (pairedWindows.length > 0 && !hasWindowActivity) {
     return {
       kind: 'ambiguous-window',
       host,
-      bucketIds: windows.map(bucket => bucket.id),
+      bucketIds: windows
+        .filter(bucket => exactHost(bucket) || pairedWindows.includes(bucket))
+        .map(bucket => bucket.id),
     };
   }
 

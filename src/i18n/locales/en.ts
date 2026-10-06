@@ -307,6 +307,8 @@ export default {
     diagnosticMissingAfk: 'No AFK bucket for {host}. Start aw-watcher-afk, then refresh this page.',
     diagnosticAmbiguousWindow:
       'Multiple window buckets may describe {host}: {buckets}. Choose the correct device above or inspect Raw Data.',
+    diagnosticMismatchedHostnames:
+      'aw-watcher-window reports {host} as {windowHosts}, but aw-watcher-afk reports it as {afkHosts}. Activity needs both under the same hostname: restart both watchers, then refresh this page.',
     diagnosticNoWindowEvents:
       'No window activity was found for this period. Check that aw-watcher-window is running. On Wayland, try awatcher.',
     diagnosticOpenRawData: 'Open Raw Data.',

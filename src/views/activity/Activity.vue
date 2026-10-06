@@ -518,6 +518,13 @@ export default {
           buckets: this.activityDiagnostic.bucketIds.join(', '),
         }).toString();
       }
+      if (this.activityDiagnostic.kind === 'mismatched-hostnames') {
+        return this.$t('activity.diagnosticMismatchedHostnames', {
+          ...params,
+          windowHosts: this.activityDiagnostic.windowHosts.join(', '),
+          afkHosts: this.activityDiagnostic.afkHosts.join(', '),
+        }).toString();
+      }
       const key = {
         'missing-window': 'diagnosticMissingWindow',
         'missing-afk': 'diagnosticMissingAfk',

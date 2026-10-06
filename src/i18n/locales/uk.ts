@@ -306,6 +306,8 @@ export default {
       'Немає AFK-bucket-а для {host}. Запустіть aw-watcher-afk і оновіть сторінку.',
     diagnosticAmbiguousWindow:
       'Кілька bucket-ів вікон можуть описувати {host}: {buckets}. Виберіть потрібний пристрій вище або перегляньте необроблені дані.',
+    diagnosticMismatchedHostnames:
+      'aw-watcher-window повідомляє {host} як {windowHosts}, а aw-watcher-afk — як {afkHosts}. Для перегляду активності обидва мають використовувати одне ім’я хоста: перезапустіть обидва watcher-и, потім оновіть сторінку.',
     diagnosticNoWindowEvents:
       'За цей період активності вікон не знайдено. Перевірте, що aw-watcher-window запущено. У Wayland спробуйте awatcher.',
     diagnosticOpenRawData: 'Відкрити необроблені дані.',

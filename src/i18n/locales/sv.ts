@@ -312,6 +312,8 @@ export default {
       'Ingen AFK-bucket för {host}. Starta aw-watcher-afk och uppdatera sedan sidan.',
     diagnosticAmbiguousWindow:
       'Flera fönsterbuckets kan beskriva {host}: {buckets}. Välj rätt enhet ovan eller granska rådata.',
+    diagnosticMismatchedHostnames:
+      'aw-watcher-window rapporterar {host} som {windowHosts}, men aw-watcher-afk rapporterar den som {afkHosts}. Aktivitetsvyn kräver båda under samma värdnamn: starta om båda watchers och ladda sedan om sidan.',
     diagnosticNoWindowEvents:
       'Ingen fönsteraktivitet hittades för denna period. Kontrollera att aw-watcher-window körs. På Wayland, prova awatcher.',
     diagnosticOpenRawData: 'Öppna rådata.',

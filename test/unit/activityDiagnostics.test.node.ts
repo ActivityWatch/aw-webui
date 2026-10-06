@@ -51,7 +51,8 @@ describe('activityDiagnostic', () => {
   test('reports missing AFK when no exact window bucket and no AFK watcher for device', () => {
     // "laptop.local" window bucket exists but no AFK watcher at all: choosing
     // the "laptop.local" device variant still won't fix the blank view because
-    // set_available needs an afkstatus bucket. Report the watcher as missing.
+    // set_available needs an afkstatus bucket. Report the watcher as missing,
+    // under the hostname the window watcher reports as.
     expect(
       activityDiagnostic({
         host: 'laptop',
@@ -61,7 +62,73 @@ describe('activityDiagnostic', () => {
         queryComplete: true,
         rawWindowDuration: 0,
       })
-    ).toEqual({ kind: 'missing-afk', host: 'laptop' });
+    ).toEqual({ kind: 'missing-afk', host: 'laptop.local' });
+  });
+
+  test('reports mismatched hostnames when no variant has a complete bucket pair', () => {
+    // Window only under "laptop.local", AFK only under "laptop": neither
+    // selection gives the exact-host query both buckets, so suggesting a
+    // variant or a watcher start would leave the view blank.
+    expect(
+      activityDiagnostic({
+        host: 'laptop',
+        buckets: [
+          bucket('aw-watcher-window_laptop.local', 'laptop.local', 'currentwindow'),
+          bucket('aw-watcher-afk_laptop', 'laptop', 'afkstatus'),
+        ],
+        isMultidevice: false,
+        isMobile: false,
+        queryComplete: true,
+        rawWindowDuration: 0,
+      })
+    ).toEqual({
+      kind: 'mismatched-hostnames',
+      host: 'laptop',
+      windowHosts: ['laptop.local'],
+      afkHosts: ['laptop'],
+    });
+  });
+
+  test('reports mismatched hostnames when the AFK watcher runs under another variant', () => {
+    expect(
+      activityDiagnostic({
+        host: 'laptop',
+        buckets: [
+          bucket('aw-watcher-window_laptop', 'laptop', 'currentwindow'),
+          bucket('aw-watcher-afk_laptop.local', 'laptop.local', 'afkstatus'),
+        ],
+        isMultidevice: false,
+        isMobile: false,
+        queryComplete: true,
+        rawWindowDuration: 0,
+      })
+    ).toEqual({
+      kind: 'mismatched-hostnames',
+      host: 'laptop',
+      windowHosts: ['laptop'],
+      afkHosts: ['laptop.local'],
+    });
+  });
+
+  test('points at a paired variant when the selected host lacks an AFK bucket', () => {
+    expect(
+      activityDiagnostic({
+        host: 'laptop',
+        buckets: [
+          bucket('aw-watcher-window_laptop', 'laptop', 'currentwindow'),
+          bucket('aw-watcher-window_laptop.local', 'laptop.local', 'currentwindow'),
+          bucket('aw-watcher-afk_laptop.local', 'laptop.local', 'afkstatus'),
+        ],
+        isMultidevice: false,
+        isMobile: false,
+        queryComplete: true,
+        rawWindowDuration: 0,
+      })
+    ).toEqual({
+      kind: 'ambiguous-window',
+      host: 'laptop',
+      bucketIds: ['aw-watcher-window_laptop.local'],
+    });
   });
 
   test('points at hostname variants when the selected host has no exact bucket', () => {
@@ -96,6 +163,7 @@ describe('activityDiagnostic', () => {
           bucket('aw-watcher-window_laptop', 'laptop', 'currentwindow'),
           bucket('aw-watcher-window_laptop.local', 'laptop.local', 'currentwindow'),
           bucket('aw-watcher-afk_laptop', 'laptop', 'afkstatus'),
+          bucket('aw-watcher-afk_laptop.local', 'laptop.local', 'afkstatus'),
         ],
         isMultidevice: false,
         isMobile: false,
@@ -142,6 +210,25 @@ describe('activityDiagnostic', () => {
         rawWindowDuration: 120,
       })
     ).toBeNull();
+  });
+
+  test('does not point at a variant that has no AFK bucket of its own', () => {
+    // Selecting "laptop.local" would be just as blank, so the empty period is
+    // reported as such instead of sending the user to that variant.
+    expect(
+      activityDiagnostic({
+        host: 'laptop',
+        buckets: [
+          bucket('aw-watcher-window_laptop', 'laptop', 'currentwindow'),
+          bucket('aw-watcher-window_laptop.local', 'laptop.local', 'currentwindow'),
+          bucket('aw-watcher-afk_laptop', 'laptop', 'afkstatus'),
+        ],
+        isMultidevice: false,
+        isMobile: false,
+        queryComplete: true,
+        rawWindowDuration: 0,
+      })
+    ).toEqual({ kind: 'no-window-events', host: 'laptop' });
   });
 
   test('reports an empty selected period after a complete desktop query', () => {
