@@ -41,7 +41,7 @@ export default {
       },
     },
     hostnames() {
-      return this.bucketsStore.hosts;
+      return this.bucketsStore.knownHosts;
     },
   },
   async mounted() {
