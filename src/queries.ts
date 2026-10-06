@@ -464,14 +464,18 @@ export function browserSearchQuery(browserBuckets: string[], pattern: string): s
   // (same treatment as `categories_str` in canonicalEvents).
   const escapedPattern = JSON.stringify(pattern).replace(/\\\\/g, '\\');
   let code = 'browser_results = [];';
-  _.each(browsersWithBuckets(browserBuckets), ([browserName, bucketId]) => {
+  // Use numeric indices as variable-name suffixes so every bucket is queried
+  // regardless of whether its name matches a known browser — this also handles
+  // multiple buckets for the same browser (e.g. two Chrome profiles).
+  browserBuckets.forEach((bucketId, idx) => {
+    const v = `b${idx}`;
     code += `
-    events_${browserName} = flood(query_bucket("${escape_doublequote(bucketId)}"));
-    events_${browserName} = split_url_events(events_${browserName});
-    url_${browserName} = filter_keyvals_regex(events_${browserName}, "url", ${escapedPattern});
-    title_${browserName} = filter_keyvals_regex(events_${browserName}, "title", ${escapedPattern});
-    events_${browserName} = sort_by_timestamp(concat(url_${browserName}, title_${browserName}));
-    browser_results = concat(browser_results, events_${browserName});
+    events_${v} = flood(query_bucket("${escape_doublequote(bucketId)}"));
+    events_${v} = split_url_events(events_${v});
+    url_${v} = filter_keyvals_regex(events_${v}, "url", ${escapedPattern});
+    title_${v} = filter_keyvals_regex(events_${v}, "title", ${escapedPattern});
+    events_${v} = sort_by_timestamp(concat(url_${v}, title_${v}));
+    browser_results = concat(browser_results, events_${v});
     browser_results = sort_by_timestamp(browser_results);`;
   });
   code += '\nRETURN = browser_results;';
