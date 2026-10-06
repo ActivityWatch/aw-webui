@@ -26,7 +26,7 @@ div(v-if="editable || !activityStore.buckets.loaded || has_prerequisites || !set
     div(v-if="type == 'top_apps'")
       aw-summary(:fields="activityStore.window.top_apps",
                  :namefunc="e => e.data.app",
-                 :colorfunc="e => e.data.app",
+                 :colorfunc="e => e.data['$category'] || e.data.app",
                  with_limit)
     div(v-if="type == 'top_titles' && !activityStore.android.available")
       aw-summary(:fields="activityStore.window.top_titles",
