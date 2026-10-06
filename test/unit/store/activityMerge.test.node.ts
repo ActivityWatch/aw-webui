@@ -1,5 +1,7 @@
 import { mergeAppQueryResults, mergeEditorResults, withDominantCategory } from '~/stores/activity';
 
+const _sum = (cats: [string[], number][]) => cats.reduce((acc, [, d]) => acc + d, 0);
+
 const ev = (data: Record<string, unknown>, duration: number) => ({
   timestamp: '2026-01-01T00:00:00Z',
   duration,
@@ -84,20 +86,43 @@ describe('withDominantCategory', () => {
     );
   });
 
-  test('picks the dominant category across merged chunks', () => {
-    const chunk = (cat: string[], d: number) => ({
-      app_events: [ev({ app: 'firefox' }, d)],
-      app_cat_events: [ev({ app: 'firefox', $category: cat }, d)],
+  test('sums category durations across merged chunks before picking', () => {
+    const chunk = (cats: [string[], number][]) => ({
+      app_events: [ev({ app: 'firefox' }, _sum(cats))],
+      app_cat_events: cats.map(([cat, d]) => ev({ app: 'firefox', $category: cat }, d)),
       title_events: [],
       cat_events: [],
-      duration: d,
+      duration: _sum(cats),
     });
-    // Media wins each of the first two chunks but Work wins overall
+    // Media is the longest single entry (20), Work only wins once summed (45)
     const merged = mergeAppQueryResults(
-      [chunk(['Media'], 10), chunk(['Media'], 10), chunk(['Work'], 30)],
+      [
+        chunk([
+          [['Work'], 15],
+          [['Media'], 20],
+        ]),
+        chunk([[['Work'], 15]]),
+        chunk([[['Work'], 15]]),
+      ],
       false
     );
     const [firefox] = withDominantCategory(merged.app_events, merged.app_cat_events);
     expect(firefox.data.$category).toEqual(['Work']);
+  });
+
+  test('keeps ScreenTime apps that share a display name apart', () => {
+    // After the ScreenTime remap both lists carry the bundle ID as classname
+    const apps = [
+      ev({ app: 'Notes', classname: 'com.apple.notes' }, 30),
+      ev({ app: 'Notes', classname: 'com.example.notes' }, 20),
+    ];
+    const appCats = [
+      ev({ app: 'Notes', classname: 'com.apple.notes', $category: ['Work'] }, 30),
+      ev({ app: 'Notes', classname: 'com.example.notes', $category: ['Media'] }, 20),
+    ];
+    expect(withDominantCategory(apps, appCats).map(e => e.data.$category)).toEqual([
+      ['Work'],
+      ['Media'],
+    ]);
   });
 });

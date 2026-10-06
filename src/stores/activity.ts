@@ -136,15 +136,18 @@ export function screentimeNameMap(events: IEvent[]): Record<string, string> {
  */
 export function withDominantCategory(appEvents: IEvent[], appCatEvents?: IEvent[]): IEvent[] {
   if (!appEvents || !appCatEvents || appCatEvents.length === 0) return appEvents;
+  // ScreenTime remaps set classname to the bundle ID on both lists, so two
+  // bundle IDs that share a display name are kept apart.
+  const appKey = (e: IEvent): string => e.data.classname ?? e.data.app;
   const dominant = new Map<string, { duration: number; category: string[] }>();
   for (const e of appCatEvents) {
-    const best = dominant.get(e.data.app);
+    const best = dominant.get(appKey(e));
     if (!best || e.duration > best.duration) {
-      dominant.set(e.data.app, { duration: e.duration, category: e.data.$category });
+      dominant.set(appKey(e), { duration: e.duration, category: e.data.$category });
     }
   }
   return appEvents.map(e => {
-    const best = dominant.get(e.data.app);
+    const best = dominant.get(appKey(e));
     return best ? { ...e, data: { ...e.data, $category: best.category } } : e;
   });
 }
