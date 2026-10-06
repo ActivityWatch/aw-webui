@@ -158,7 +158,7 @@ div
           span.d-none.d-md-inline
             |  {{ $t('activity.refresh') }}
 
-  div.row(v-if="showOptions" style="background-color: #EEE;").my-3.py-3
+  div.row.activity-options-row(v-if="showOptions").my-3.py-3
     div.col-md-12
       h5 {{ $t('activity.filtersTitle') }}
     div.col-md-6
@@ -226,6 +226,10 @@ div
 <style lang="scss" scoped>
 @import '../../style/globals';
 
+.activity-options-row {
+  background-color: #eee;
+}
+
 .activity-toolbar {
   // row-gap kicks in only when items wrap to a second line, so the
   // single-row case stays compact without piling mb-2 on every child.
@@ -278,10 +282,6 @@ div
 
         // Does nothing for Verala Round
         font-weight: bold;
-
-        &:hover {
-          background-color: #fff;
-        }
       }
     }
   }
