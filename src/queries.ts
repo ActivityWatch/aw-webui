@@ -309,12 +309,13 @@ export function appQuery(
     title_events = sort_by_duration(merge_events_by_keys(events, ${titleMergeKeys}));
     app_events   = sort_by_duration(merge_events_by_keys(title_events, ["app"]));
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
+    app_cat_events = sort_by_duration(merge_events_by_keys(events, ["app", "$category"]));
 
     events = sort_by_timestamp(events);
     app_events  = limit_events(app_events, ${limit});
     title_events  = limit_events(title_events, ${limit});
     duration = sum_durations(events);
-    RETURN  = {"app_events": app_events, "title_events": title_events, "cat_events": cat_events, "duration": duration, "active_events": app_events};
+    RETURN  = {"app_events": app_events, "app_cat_events": app_cat_events, "title_events": title_events, "cat_events": cat_events, "duration": duration, "active_events": app_events};
   `;
   return querystr_to_array(code);
 }
@@ -464,6 +465,7 @@ export function fullDesktopQuery(params: DesktopQueryParams): string[] {
     title_events = sort_by_duration(merge_events_by_keys(events, ["app", "title"]));
     app_events   = sort_by_duration(merge_events_by_keys(title_events, ["app"]));
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
+    app_cat_events = sort_by_duration(merge_events_by_keys(events, ["app", "$category"]));
 
     app_events  = limit_events(app_events, ${default_limit});
     title_events  = limit_events(title_events, ${default_limit});
@@ -488,6 +490,7 @@ export function fullDesktopQuery(params: DesktopQueryParams): string[] {
     RETURN = {
         "window": {
             "app_events": app_events,
+            "app_cat_events": app_cat_events,
             "title_events": title_events,
             "cat_events": cat_events,
             "active_events": not_afk,
@@ -533,6 +536,7 @@ export function multideviceQuery(params: MultiQueryParams): string[] {
     title_events = sort_by_duration(merge_events_by_keys(events, ["app", "title"]));
     app_events   = sort_by_duration(merge_events_by_keys(events, ["app"]));
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
+    app_cat_events = sort_by_duration(merge_events_by_keys(events, ["app", "$category"]));
 
     app_events  = limit_events(app_events, ${default_limit});
     title_events  = limit_events(title_events, ${default_limit});
@@ -541,6 +545,7 @@ export function multideviceQuery(params: MultiQueryParams): string[] {
     RETURN = {
         "window": {
             "app_events": app_events,
+            "app_cat_events": app_cat_events,
             "title_events": title_events,
             "cat_events": cat_events,
             "active_events": not_afk,

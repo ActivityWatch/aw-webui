@@ -127,6 +127,28 @@ export function screentimeNameMap(events: IEvent[]): Record<string, string> {
   return names;
 }
 
+/**
+ * Attach each app's dominant category (by duration) as `$category`, so Top
+ * Applications can color an app by what it was used for. Matching the app name
+ * against the category rules doesn't work for apps whose activity is
+ * categorized by title or URL, such as browsers, which were always shown as
+ * Uncategorized. Apps without app_cat_events keep their old (name-based) color.
+ */
+export function withDominantCategory(appEvents: IEvent[], appCatEvents?: IEvent[]): IEvent[] {
+  if (!appEvents || !appCatEvents || appCatEvents.length === 0) return appEvents;
+  const dominant = new Map<string, { duration: number; category: string[] }>();
+  for (const e of appCatEvents) {
+    const best = dominant.get(e.data.app);
+    if (!best || e.duration > best.duration) {
+      dominant.set(e.data.app, { duration: e.duration, category: e.data.$category });
+    }
+  }
+  return appEvents.map(e => {
+    const best = dominant.get(e.data.app);
+    return best ? { ...e, data: { ...e.data, $category: best.category } } : e;
+  });
+}
+
 /** Show ScreenTime apps by name, keeping the bundle ID as classname (in place). */
 export function applyScreentimeNames(events: IEvent[], bundleIdToName: Record<string, string>) {
   events.forEach(e => {
@@ -189,6 +211,7 @@ export function mergeAppQueryResults(results: Record<string, any>[], isIos: bool
   const app_events = mergeEventsByKeys(all('app_events'), ['app'], DESKTOP_QUERY_EVENT_LIMIT);
   return {
     app_events,
+    app_cat_events: mergeEventsByKeys(all('app_cat_events'), ['app', '$category']),
     title_events: mergeEventsByKeys(all('title_events'), titleKeys, DESKTOP_QUERY_EVENT_LIMIT),
     cat_events: mergeEventsByKeys(all('cat_events'), ['$category']),
     duration: sumDurations(results),
@@ -646,13 +669,14 @@ export const useActivityStore = defineStore('activity', {
         // Remap app_events directly using the lookup, preserving the server's complete aggregation.
         // Re-aggregating from title_events would corrupt totals when there are >100 distinct apps,
         // because title_events is capped at 100 entries by the query.
-        if (data[0].app_events) {
-          data[0].app_events.forEach((e: IEvent) => {
+        // app_cat_events is keyed by app too, so it needs the same remap.
+        [data[0].app_events, data[0].app_cat_events].forEach((events?: IEvent[]) => {
+          (events || []).forEach((e: IEvent) => {
             const bundleId = e.data.app;
             e.data.classname = bundleId;
             e.data.app = bundleIdToName[bundleId] || bundleId;
           });
-        }
+        });
       }
 
       this.query_window_completed(data[0]);
@@ -710,6 +734,7 @@ export const useActivityStore = defineStore('activity', {
           console.warn('Failed to look up ScreenTime app names', e);
         }
         applyScreentimeNames(windowResult.app_events, bundleIdToName);
+        applyScreentimeNames(windowResult.app_cat_events || [], bundleIdToName);
         applyScreentimeNames(windowResult.title_events || [], bundleIdToName);
       }
       this.query_window_completed(windowResult);
@@ -1201,7 +1226,13 @@ export const useActivityStore = defineStore('activity', {
 
     query_window_completed(
       this: State,
-      data = { app_events: [], title_events: [], cat_events: [], active_events: [], duration: 0 }
+      data: Record<string, any> = {
+        app_events: [],
+        title_events: [],
+        cat_events: [],
+        active_events: [],
+        duration: 0,
+      }
     ) {
       // Set $color and $score for categories
       if (data.cat_events) {
@@ -1209,7 +1240,7 @@ export const useActivityStore = defineStore('activity', {
         data.cat_events = scoreCategories(data.cat_events);
       }
 
-      this.window.top_apps = data.app_events;
+      this.window.top_apps = withDominantCategory(data.app_events, data.app_cat_events);
       this.window.top_titles = data.title_events;
       this.category.top = data.cat_events;
       this.active.duration = data.duration;
