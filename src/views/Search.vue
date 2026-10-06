@@ -42,6 +42,7 @@ div
 import _ from 'lodash';
 import moment from 'moment';
 import { canonicalEvents, querystr_to_array } from '~/queries';
+import { useBucketsStore } from '~/stores/buckets';
 
 import 'vue-awesome/icons/search';
 import 'vue-awesome/icons/spinner';
@@ -69,8 +70,7 @@ export default {
   methods: {
     search: async function () {
       let query = canonicalEvents({
-        bid_window: 'aw-watcher-window_' + this.queryOptions.hostname,
-        bid_afk: 'aw-watcher-afk_' + this.queryOptions.hostname,
+        ...useBucketsStore().desktopBucketIds(this.queryOptions.hostname),
         filter_afk: this.queryOptions.filter_afk,
         categories: [[['searched'], { type: 'regex', regex: this.pattern, ignore_case: true }]],
         filter_categories: [['searched']],

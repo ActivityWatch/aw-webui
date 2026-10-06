@@ -68,6 +68,7 @@ import 'vue-awesome/icons/angle-double-down';
 import 'vue-awesome/icons/angle-double-up';
 
 import { canonicalEvents, querystr_to_array } from '~/queries';
+import { useBucketsStore } from '~/stores/buckets';
 
 import { useCategoryStore } from '~/stores/categories';
 
@@ -109,8 +110,7 @@ export default {
     fetchEvents: async function () {
       // TODO: use full query (one per day/timeperiod) instead of canonicalEvents
       let query = canonicalEvents({
-        bid_window: 'aw-watcher-window_' + this.queryOptions.hostname,
-        bid_afk: 'aw-watcher-afk_' + this.queryOptions.hostname,
+        ...useBucketsStore().desktopBucketIds(this.queryOptions.hostname),
         filter_afk: this.queryOptions.filter_afk,
         categories: this.categoryStore.classes_for_query,
         filter_categories: this.excludeUncategorized

@@ -134,3 +134,43 @@ describe('bucketsByDevice', () => {
     expect(device.device_ids).toHaveLength(2);
   });
 });
+
+describe('desktopBucketIds', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+  });
+
+  test('returns the real ids of buckets synced from another device', () => {
+    const store = useBucketsStore();
+    store.update_buckets([
+      bucket({ id: 'aw-watcher-window_erb-m2' }),
+      bucket({ id: 'aw-watcher-afk_erb-m2', type: 'afkstatus' }),
+      bucket({
+        id: 'aw-watcher-window_home-desktop-synced-from-home-desktop',
+        hostname: 'home-desktop',
+      }),
+      bucket({
+        id: 'aw-watcher-afk_home-desktop-synced-from-home-desktop',
+        hostname: 'home-desktop',
+        type: 'afkstatus',
+      }),
+    ]);
+
+    expect(store.desktopBucketIds('home-desktop')).toEqual({
+      bid_window: 'aw-watcher-window_home-desktop-synced-from-home-desktop',
+      bid_afk: 'aw-watcher-afk_home-desktop-synced-from-home-desktop',
+    });
+    expect(store.desktopBucketIds('erb-m2')).toEqual({
+      bid_window: 'aw-watcher-window_erb-m2',
+      bid_afk: 'aw-watcher-afk_erb-m2',
+    });
+  });
+
+  test('falls back to the conventional ids when no bucket is loaded', () => {
+    const store = useBucketsStore();
+    expect(store.desktopBucketIds('laptop')).toEqual({
+      bid_window: 'aw-watcher-window_laptop',
+      bid_afk: 'aw-watcher-afk_laptop',
+    });
+  });
+});

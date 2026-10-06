@@ -369,8 +369,7 @@ export default {
       const cats = this.categoryStore.classes_for_query;
       const code =
         canonicalEvents({
-          bid_window: 'aw-watcher-window_' + this.host,
-          bid_afk: 'aw-watcher-afk_' + this.host,
+          ...this.bucketsStore.desktopBucketIds(this.host),
           filter_afk: true,
           categories: cats,
           filter_categories: null,

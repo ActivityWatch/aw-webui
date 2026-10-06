@@ -133,8 +133,7 @@ export default {
     generate: async function () {
       // TODO: use full query (one per day/timeperiod) instead of canonicalEvents
       let query = canonicalEvents({
-        bid_window: 'aw-watcher-window_' + this.queryOptions.hostname,
-        bid_afk: 'aw-watcher-afk_' + this.queryOptions.hostname,
+        ...this.bucketsStore.desktopBucketIds(this.queryOptions.hostname),
         filter_afk: this.queryOptions.filter_afk,
         categories: this.filterCategories,
         filter_categories: this.filterCategories.map(c => c[0]),

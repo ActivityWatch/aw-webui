@@ -120,6 +120,16 @@ export const useBucketsStore = defineStore('buckets', {
           (id: string) => !id.startsWith('aw-watcher-android')
         );
     },
+    // The window/afk bucket ids to query for a desktop host. Buckets synced
+    // from another device carry a "-synced-from-<device>" suffix, so the
+    // "aw-watcher-window_<host>" id only exists for local buckets. Falls back
+    // to that conventional id when no matching bucket is loaded.
+    desktopBucketIds(): (host: string) => { bid_window: string; bid_afk: string } {
+      return host => ({
+        bid_window: this.bucketsWindow(host)[0] || 'aw-watcher-window_' + host,
+        bid_afk: this.bucketsAFK(host)[0] || 'aw-watcher-afk_' + host,
+      });
+    },
     bucketsAndroid(): (host: string) => string[] {
       return host => {
         const android = this.bucketsByType(host, 'currentwindow').filter((id: string) =>
