@@ -22,7 +22,7 @@ div
     tr
       th Eventcount:
       td {{ eventcount }}
-    tr
+    tr(v-if="bucket.data && Object.keys(bucket.data).length > 0")
       th Data:
       td {{ bucket.data }}
 
@@ -83,7 +83,8 @@ export default {
       this.events = bucket.events;
     },
     getEventCount: async function (bucket_id) {
-      this.eventcount = (await getClient().countEvents(bucket_id)).data;
+      // aw-client already unwraps the response body
+      this.eventcount = await getClient().countEvents(bucket_id);
     },
     updateEvent: function (event) {
       const i = this.events.findIndex(e => e.id == event.id);
