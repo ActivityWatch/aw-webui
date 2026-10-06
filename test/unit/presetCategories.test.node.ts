@@ -782,6 +782,19 @@ describe('default palette change (#1058)', () => {
     }
   });
 
+  test('category names that are Object.prototype keys load normally', () => {
+    const settingsStore = useSettingsStore();
+    const mine: Category[] = ['constructor', 'toString', '__proto__'].map(name => ({
+      name: [name],
+      rule: { type: 'regex', regex: name },
+      data: { color: '#123456' },
+    }));
+    settingsStore.$patch({ classes: mine, _storedKeys: ['classes'] });
+
+    const { sets } = loadCategories();
+    expect(sets.find(s => s.id === 'default').categories).toEqual(mine);
+  });
+
   test('a color the user picked is kept while untouched ones move to the new palette', () => {
     const settingsStore = useSettingsStore();
     settingsStore.$patch({

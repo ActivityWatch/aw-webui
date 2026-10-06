@@ -81,15 +81,17 @@ const COLOR_UNCAT = '#CCC';
 // never changed a color has these stored. They still count as install defaults
 // (see matchesInstallDefault) and are shown in the current default color (see
 // migrateLegacyDefaultColors). A color the user picked themselves is kept.
-const LEGACY_DEFAULT_COLORS: Record<string, string> = {
-  Work: '#0F0',
-  Media: '#F33',
-  'Media>Games': '#F80',
-  'Media>Video': '#F33',
-  'Media>Social Media': '#FCC400',
-  'Media>Music': '#A8FC00',
-  Comms: '#9FF',
-};
+// A Map, not an object literal: user category names like `constructor` must
+// not resolve to inherited properties.
+const LEGACY_DEFAULT_COLORS = new Map<string, string>([
+  ['Work', '#0F0'],
+  ['Media', '#F33'],
+  ['Media>Games', '#F80'],
+  ['Media>Video', '#F33'],
+  ['Media>Social Media', '#FCC400'],
+  ['Media>Music', '#A8FC00'],
+  ['Comms', '#9FF'],
+]);
 
 // The default categories
 // Should be run through createMissingParents before being used in most cases.
@@ -346,7 +348,7 @@ function categoryColor(c: Category): string | null {
 }
 
 function isLegacyDefaultColor(c: Category): boolean {
-  const legacy = LEGACY_DEFAULT_COLORS[categoryNameKey(c)];
+  const legacy = LEGACY_DEFAULT_COLORS.get(categoryNameKey(c));
   const color = categoryColor(c);
   return legacy !== undefined && color !== null && color.toUpperCase() === legacy.toUpperCase();
 }
