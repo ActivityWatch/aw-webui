@@ -165,9 +165,17 @@ export default {
     async save() {
       this.error = '';
       this.success = false;
-      if (this.alerts.some(row => parseThresholds(row.thresholdStr) === null)) {
-        this.error = 'Thresholds must be comma-separated positive whole minutes.';
-        return;
+      // When disabling, skip form validation and use the last-saved alerts so a
+      // pending invalid edit in a hidden field cannot block the toggle.
+      let alertDtos: AwNotifyAlert[];
+      if (this.enabled) {
+        if (this.alerts.some(row => parseThresholds(row.thresholdStr) === null)) {
+          this.error = 'Thresholds must be comma-separated positive whole minutes.';
+          return;
+        }
+        alertDtos = this.alerts.map(rowToDto);
+      } else {
+        alertDtos = this.config.alerts ?? [];
       }
       this.saving = true;
       try {
@@ -177,7 +185,7 @@ export default {
         const payload: AwNotifyConfig = {
           ...this.config,
           enabled: this.enabled,
-          alerts: this.alerts.map(rowToDto),
+          alerts: alertDtos,
         };
         await client.req.post(`/0/settings/${SETTINGS_KEY}`, payload, {
           headers: { 'Content-Type': 'application/json' },
