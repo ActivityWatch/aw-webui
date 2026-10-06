@@ -2,12 +2,12 @@
 
 exports[`browserSearchQuery with browser bucket generates valid query 1`] = `
 "browser_results = [];
-events_firefox = flood(query_bucket("aw-watcher-web-firefox_testhost"));
-events_firefox = split_url_events(events_firefox);
-url_firefox = filter_keyvals_regex(events_firefox, "url", "github\\.com");
-title_firefox = filter_keyvals_regex(events_firefox, "title", "github\\.com");
-events_firefox = sort_by_timestamp(concat(url_firefox, title_firefox));
-browser_results = concat(browser_results, events_firefox);
+events_b0 = flood(query_bucket("aw-watcher-web-firefox_testhost"));
+events_b0 = split_url_events(events_b0);
+url_b0 = filter_keyvals_regex(events_b0, "url", "github\\.com");
+title_b0 = filter_keyvals_regex(events_b0, "title", "github\\.com");
+events_b0 = sort_by_timestamp(concat(url_b0, title_b0));
+browser_results = concat(browser_results, events_b0);
 browser_results = sort_by_timestamp(browser_results);
 RETURN = browser_results;"
 `;
