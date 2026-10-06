@@ -736,3 +736,63 @@ describe('categories store with presets', () => {
     expect(categoryStore.classes.length).toBeGreaterThan(defaultCategories.length - 1);
   });
 });
+
+describe('default palette change (#1058)', () => {
+  // The colors the stock categories had before the palette was softened.
+  const OLD_COLORS: Record<string, string> = {
+    Work: '#0F0',
+    Media: '#F33',
+    'Media>Games': '#F80',
+    'Media>Video': '#F33',
+    'Media>Social Media': '#FCC400',
+    'Media>Music': '#A8FC00',
+    Comms: '#9FF',
+  };
+  const withOldColors = (overrides: Record<string, string> = {}): Category[] =>
+    defaultCategories.map(c => {
+      const key = c.name.join('>');
+      const color = overrides[key] ?? OLD_COLORS[key];
+      return color ? { ...c, data: { ...c.data, color } } : c;
+    });
+  const colorOf = (cats: Category[], key: string) =>
+    cats.find(c => c.name.join('>') === key).data?.color;
+
+  test('the old stock defaults persisted by first-run save still let the preset win', () => {
+    setPresetGlobal([presetSet]);
+    const settingsStore = useSettingsStore();
+    settingsStore.$patch({
+      classes: withOldColors(),
+      category_sets: [],
+      active_set_ids: ['default'],
+      _storedKeys: ['classes', 'category_sets', 'active_set_ids'],
+    });
+
+    const { activeIds } = loadCategories();
+    expect(activeIds).toEqual(['study']);
+  });
+
+  test('stored old default colors are shown in the new palette', () => {
+    const settingsStore = useSettingsStore();
+    settingsStore.$patch({ classes: withOldColors(), _storedKeys: ['classes'] });
+
+    const { sets } = loadCategories();
+    const cats = sets.find(s => s.id === 'default').categories;
+    for (const key of Object.keys(OLD_COLORS)) {
+      expect(colorOf(cats, key)).toBe(colorOf(defaultCategories, key));
+    }
+  });
+
+  test('a color the user picked is kept while untouched ones move to the new palette', () => {
+    const settingsStore = useSettingsStore();
+    settingsStore.$patch({
+      category_sets: [{ id: 'default', categories: withOldColors({ Media: '#123456' }) }],
+      active_set_ids: ['default'],
+      _storedKeys: ['category_sets', 'active_set_ids'],
+    });
+
+    const { sets } = loadCategories();
+    const cats = sets.find(s => s.id === 'default').categories;
+    expect(colorOf(cats, 'Media')).toBe('#123456');
+    expect(colorOf(cats, 'Work')).toBe(colorOf(defaultCategories, 'Work'));
+  });
+});
