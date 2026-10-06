@@ -86,9 +86,10 @@ import { useSettingsStore } from '~/stores/settings';
 import { useBucketsStore } from '~/stores/buckets';
 import { get_day_start_with_offset, get_day_end_with_offset } from '~/util/time';
 import {
-  getSupportedWorkReportHosts,
+  getWorkReportHostBuckets,
   getWorkReportHostOptions,
   getUnsupportedWorkReportHosts,
+  WorkReportHostBuckets,
 } from '~/util/workReport';
 
 import 'vue-awesome/icons/sync';
@@ -102,13 +103,13 @@ interface CategoryRow {
   duration: number;
 }
 
-function buildBillingQuery(hosts: string[], categoriesStr: string): string {
+function buildBillingQuery(hosts: WorkReportHostBuckets[], categoriesStr: string): string {
   let query = '';
   for (let hi = 0; hi < hosts.length; hi++) {
-    const h = hosts[hi];
+    const bucketIds = hosts[hi];
     query += `
-events_${hi} = flood(query_bucket("aw-watcher-window_${h}"));
-not_afk_${hi} = flood(query_bucket("aw-watcher-afk_${h}"));
+events_${hi} = flood(query_bucket(${JSON.stringify(bucketIds.window)}));
+not_afk_${hi} = flood(query_bucket(${JSON.stringify(bucketIds.afk)}));
 not_afk_${hi} = filter_keyvals(not_afk_${hi}, "status", ["not-afk"]);
 events_${hi} = filter_period_intersect(events_${hi}, not_afk_${hi});
 events_${hi} = categorize(events_${hi}, ${categoriesStr});`;
@@ -213,7 +214,7 @@ export default {
           this.selectedHosts,
           this.bucketsStore.buckets || []
         );
-        const hostsToQuery = getSupportedWorkReportHosts(
+        const hostsToQuery = getWorkReportHostBuckets(
           this.selectedHosts,
           this.bucketsStore.buckets || []
         );
