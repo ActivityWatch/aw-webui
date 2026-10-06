@@ -93,6 +93,7 @@ import { useBucketsStore } from '~/stores/buckets';
 import { get_day_start_with_offset, get_day_end_with_offset } from '~/util/time';
 import {
   getSupportedWorkReportHosts,
+  getWorkReportHostBuckets,
   getWorkReportHostOptions,
   getUnsupportedWorkReportHosts,
   buildWorkReportQuery,
@@ -243,7 +244,7 @@ export default {
           this.selectedHosts = supportedHosts;
         }
 
-        const hostsToQuery = getSupportedWorkReportHosts(
+        const hostsToQuery = getWorkReportHostBuckets(
           this.selectedHosts,
           this.bucketsStore.buckets || []
         );
