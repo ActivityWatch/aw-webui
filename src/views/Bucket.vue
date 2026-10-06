@@ -71,6 +71,11 @@ export default {
   },
   mounted: async function () {
     await this.bucketsStore.ensureLoaded();
+    // If the bucket isn't in the cached list, the list may be stale — force a
+    // fresh load before falling back to the "not found" placeholder.
+    if (!this.bucketsStore.getBucket(this.id)) {
+      await this.bucketsStore.loadBuckets();
+    }
     await this.getEventCount(this.id);
   },
   methods: {
