@@ -22,6 +22,7 @@ import {
 } from '~/util/time';
 import { MAX_DAILY_BUCKETS, timeperiodsCalendarMonthsOfPeriod } from '~/util/timeperiod';
 import { i18n } from '~/i18n';
+import { clampStackedHours } from '~/util/timelineClamp';
 
 function hourToTick(hours: number): string {
   if (hours > 1) {
@@ -58,6 +59,13 @@ export default {
     timeperiod_length: {
       type: Array,
       default: () => [1, 'day'],
+    },
+    // Only the single-day hourly activity view should trim overlapping stacks.
+    // Other callers (Trends, Report, multi-day Activity) reuse the default
+    // `[1, 'day']` timeperiod but pass per-day values, which must not be clamped.
+    clamp_hourly: {
+      type: Boolean,
+      default: false,
     },
   },
   computed: {
@@ -105,9 +113,14 @@ export default {
       }
     },
     chartData() {
+      let datasets = _.sortBy(this.datasets, d => d.label);
+      const [count, resolution] = this.timeperiod_length;
+      if (this.clamp_hourly && resolution.startsWith('day') && count == 1) {
+        datasets = clampStackedHours(datasets);
+      }
       return {
         labels: this.labels,
-        datasets: _.sortBy(this.datasets, d => d.label),
+        datasets,
         title: {
           display: true,
           text: 'Timeline',
