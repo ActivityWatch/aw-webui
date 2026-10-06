@@ -56,7 +56,14 @@ div
       li.list-group-item.pl-0.pr-3.py-0.border-0
         b.mr-1 {{ $t('activity.timeActive') }}
         span {{ activityStore.active.duration | friendlyduration }}
-    div(v-if="isMultidevice") {{ $t('activity.multideviceNote') }}
+    b-alert.py-1.px-2.mb-1.small(
+      v-if="isMultidevice && !multideviceNoteDismissed"
+      show
+      variant="info"
+      dismissible
+      @dismissed="dismissMultideviceNote"
+      data-testid="multidevice-note"
+    ) {{ $t('activity.multideviceNote') }}
     ul.list-group.list-group-horizontal-md(v-if="periodLength != 'day'")
       li.list-group-item.pl-0.pr-3.py-0.border-0
         b.mr-1 {{ $t('activity.queryRange') }}
@@ -333,6 +340,10 @@ import {
 } from '~/util/multidevice';
 import { getClient } from '~/util/awclient';
 import { nextEarliestDate } from '~/util/earliestEvent';
+import {
+  isMultideviceNoteDismissed,
+  persistMultideviceNoteDismissed,
+} from '~/util/multideviceNote';
 
 export default {
   name: 'Activity',
@@ -364,6 +375,7 @@ export default {
 
       today: null,
       showOptions: false,
+      multideviceNoteDismissed: isMultideviceNoteDismissed(),
       // First day with data for the host, used by All time
       earliestDate: null,
 
@@ -666,6 +678,10 @@ export default {
   },
 
   methods: {
+    dismissMultideviceNote: function () {
+      this.multideviceNoteDismissed = true;
+      persistMultideviceNoteDismissed();
+    },
     previousPeriod: function () {
       if (this.dateRange) {
         return formatDateRange(shiftDateRange(this.dateRange, -1));

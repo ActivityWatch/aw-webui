@@ -84,7 +84,10 @@ export default {
       try {
         this.status = 'searching';
         const data = await this.$aw.query(timeperiods, query_array);
-        this.events = _.orderBy(data[0], ['timestamp'], ['desc']);
+        // Every hit carries the synthetic `searched` category the query uses
+        // for filtering; it is not a real category, so drop it from results.
+        const events = data[0].map(e => ({ ...e, data: _.omit(e.data, '$category') }));
+        this.events = _.orderBy(events, ['timestamp'], ['desc']);
         this.error = '';
       } catch (e) {
         console.error(e);
