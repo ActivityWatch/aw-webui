@@ -130,3 +130,23 @@ test('normalizeSelectKeys rejects empty lists', () => {
   expect(classes.normalizeSelectKeys(null)).toBeUndefined();
   expect(classes.normalizeSelectKeys(['app', 'title'])).toEqual(['app', 'title']);
 });
+
+// #382: a blank regex must not match everything client-side, matching how
+// aw-core's server-side categorize() treats it.
+test('blank regex category never matches, children still do', () => {
+  const cats: Category[] = [
+    { name: ['Work'], rule: { type: 'regex', regex: '' } },
+    { name: ['Work', 'Programming'], rule: { type: 'regex', regex: 'vim' } },
+  ];
+  expect(classes.matchString('firefox', cats)).toBeNull();
+  expect(classes.matchString('vim', cats)?.name).toEqual(['Work', 'Programming']);
+
+  const events = classes.classifyEvents(
+    [
+      { timestamp: '', duration: 1, data: { app: 'firefox', title: 'x' } },
+      { timestamp: '', duration: 1, data: { app: 'vim', title: 'x' } },
+    ] as IEvent[],
+    cats
+  );
+  expect(events.map(e => e.data.$category)).toEqual([['Uncategorized'], ['Work', 'Programming']]);
+});
