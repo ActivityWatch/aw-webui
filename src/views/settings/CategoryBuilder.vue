@@ -269,8 +269,7 @@ export default {
         };
       } else {
         bucketParams = {
-          bid_window: 'aw-watcher-window_' + hostname,
-          bid_afk: 'aw-watcher-afk_' + hostname,
+          ...bucketsStore.desktopBucketIds(hostname),
           filter_afk: this.queryOptions.filter_afk,
         };
       }
