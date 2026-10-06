@@ -79,6 +79,19 @@ describe('CategoryEditModal field-scoped rules', () => {
     };
   }
 
+  // activitywatch#1144: saving a rename/reparent re-renders the category tree, which can
+  // destroy this modal before the deferred hide runs, leaving $refs.edit undefined.
+  test('does not throw when the modal was destroyed before the deferred hide', () => {
+    const { vm, updateClass } = ctx([]);
+    vm.$refs = {};
+    expect(() => handleSubmit(vm)).not.toThrow();
+    expect(updateClass).toHaveBeenCalled();
+  });
+
+  test('showModal is a no-op when the modal ref is gone', () => {
+    expect(() => CategoryEditModal.methods.showModal.call({ $refs: {} })).not.toThrow();
+  });
+
   test('blank field selection keeps the legacy unrestricted rule', () => {
     const { vm, updateClass } = ctx([]);
     handleSubmit(vm);
