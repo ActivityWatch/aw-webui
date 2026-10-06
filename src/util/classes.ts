@@ -76,13 +76,26 @@ export function mergeCategorySets(sets: CategorySet[]): Category[] {
 
 const COLOR_UNCAT = '#CCC';
 
+// Colors the built-in categories shipped with before the current palette.
+// First-run settings.save() persists `classes`, so most installs store these;
+// they must still count as install defaults (see matchesInstallDefault).
+const LEGACY_DEFAULT_COLORS: Record<string, string[]> = {
+  Work: ['#0F0'],
+  Media: ['#F33'],
+  'Media>Games': ['#F80'],
+  'Media>Video': ['#F33'],
+  'Media>Social Media': ['#FCC400'],
+  'Media>Music': ['#A8FC00'],
+  Comms: ['#9FF'],
+};
+
 // The default categories
 // Should be run through createMissingParents before being used in most cases.
 export const defaultCategories: Category[] = [
   {
     name: ['Work'],
     rule: { type: 'regex', regex: 'Google Docs|libreoffice|ReText' },
-    data: { color: '#0F0', score: 10 },
+    data: { color: '#66BB6A', score: 10 },
   },
   {
     name: ['Work', 'Programming'],
@@ -102,17 +115,17 @@ export const defaultCategories: Category[] = [
   {
     name: ['Media'],
     rule: { type: 'none' },
-    data: { color: '#F33' },
+    data: { color: '#EF5350' },
   },
   {
     name: ['Media', 'Games'],
     rule: { type: 'regex', regex: 'Minecraft|RimWorld' },
-    data: { color: '#F80' },
+    data: { color: '#FFA726' },
   },
   {
     name: ['Media', 'Video'],
     rule: { type: 'regex', regex: 'YouTube|Plex|VLC' },
-    data: { color: '#F33' },
+    data: { color: '#EF5350' },
   },
   {
     name: ['Media', 'Social Media'],
@@ -121,7 +134,7 @@ export const defaultCategories: Category[] = [
       regex: 'reddit|Facebook|Twitter|Instagram|devRant',
       ignore_case: true,
     },
-    data: { color: '#FCC400' },
+    data: { color: '#FFCA28' },
   },
   {
     name: ['Media', 'Music'],
@@ -130,12 +143,12 @@ export const defaultCategories: Category[] = [
       regex: 'Spotify|Deezer',
       ignore_case: true,
     },
-    data: { color: '#A8FC00' },
+    data: { color: '#9CCC65' },
   },
   {
     name: ['Comms'],
     rule: { type: 'none' },
-    data: { color: '#9FF' },
+    data: { color: '#4DD0E1' },
   },
   {
     name: ['Comms', 'IM'],
@@ -344,7 +357,11 @@ function categoryColor(c: Category): string | null {
  * Duplicate stored names are treated as user edits (one-to-one name matching
  * is required, mirroring the uniqueness check on the reference side).
  */
-function matchesInstallDefault(stored: Category[], reference: Category[]): boolean {
+function matchesInstallDefault(
+  stored: Category[],
+  reference: Category[],
+  legacyColors: Record<string, string[]> = {}
+): boolean {
   if (stored.length !== reference.length) return false;
   const refByName = new Map(reference.map(c => [categoryNameKey(c), c]));
   if (refByName.size !== reference.length) return false;
@@ -357,7 +374,9 @@ function matchesInstallDefault(stored: Category[], reference: Category[]): boole
     if (!ref) return false;
     if (ruleSignature(cat) !== ruleSignature(ref)) return false;
     const storedColor = categoryColor(cat);
-    if (storedColor !== null && storedColor !== categoryColor(ref)) return false;
+    const legacy = legacyColors[categoryNameKey(cat)] ?? [];
+    if (storedColor !== null && storedColor !== categoryColor(ref) && !legacy.includes(storedColor))
+      return false;
     // Only treat score as a user edit if it is explicitly set to a different
     // value.  A missing/undefined stored score is indistinguishable from legacy
     // data (persisted before scores existed), so we do not block on it.
@@ -371,7 +390,7 @@ export function classesLookUnconfigured(classes: Category[] | undefined | null):
   // Empty array is a deliberate "no categories" save, not an install default.
   if (classes == null) return true;
   if (classes.length === 0) return false;
-  if (matchesInstallDefault(classes, defaultCategories)) return true;
+  if (matchesInstallDefault(classes, defaultCategories, LEGACY_DEFAULT_COLORS)) return true;
   return getPresetCategorySets().some(p => matchesInstallDefault(classes, p.categories));
 }
 

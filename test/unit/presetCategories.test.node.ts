@@ -374,6 +374,23 @@ describe('loadCategories with presets', () => {
     expect(sets.map(s => s.id)).toEqual(['study']);
   });
 
+  test('stock defaults stored with the previous palette still let the preset win', () => {
+    // Installs that ran first-run settings.save() before the palette change
+    // store the old colors; that is not a user customization.
+    const legacy = { Work: '#0F0', Media: '#F33', Comms: '#9FF' };
+    const stored = defaultCategories.map(c =>
+      c.name.length === 1 && legacy[c.name[0]]
+        ? { ...c, data: { ...c.data, color: legacy[c.name[0]] } }
+        : c
+    );
+    setPresetGlobal([presetSet]);
+    const settingsStore = useSettingsStore();
+    settingsStore.$patch({ classes: stored, _storedKeys: ['classes'] });
+
+    const { activeIds } = loadCategories();
+    expect(activeIds).toEqual(['study']);
+  });
+
   test('a recolored default category is kept as a custom taxonomy', () => {
     setPresetGlobal([presetSet]);
     const edited = defaultCategories.map(c =>
