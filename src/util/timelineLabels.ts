@@ -62,13 +62,19 @@ export function formatTimelineBucketLabelHtml(
   if (syncIdx !== -1) {
     const basePart = bucketId.slice(0, syncIdx);
     const remotePart = bucketId.slice(syncIdx + syncMarker.length);
-    // Strip optional '_<hostname>' suffix from the base part, which is present
-    // when the source bucket follows the conventional aw-watcher-type_host format.
+    // Shorten the watcher name (strip aw-watcher- / aw- prefix and the
+    // optional _<hostname> suffix) so synced buckets use the same
+    // "short @ host" format as local ones:
+    //   aw-watcher-afk_host-synced-from-remote → "afk @ remote"
+    //   aw-watcher-afk_host                    → "afk @ host"
     const underscoreIdx = basePart.indexOf('_');
-    const baseDisplay = underscoreIdx !== -1 ? basePart.slice(0, underscoreIdx) : basePart;
-    const baseLabel = addWrapOpportunities(escapeHtml(baseDisplay));
-    const remoteLabel = addWrapOpportunities(escapeHtml(remotePart));
-    return `<span class="timeline-label" title="${escaped}">${baseLabel} (synced from ${remoteLabel})</span>`;
+    const shortWatcher =
+      shortenBucketLabel(basePart) ??
+      (underscoreIdx !== -1 ? basePart.slice(0, underscoreIdx) : basePart);
+    const display = `${shortWatcher} @ ${remotePart}`;
+    return `<span class="timeline-label" title="${escaped}">${addWrapOpportunities(
+      escapeHtml(display)
+    )}</span>`;
   }
 
   const short = shortenBucketLabel(bucketId);
