@@ -22,9 +22,11 @@ export function fitLabel(
   measure: (s: string) => number
 ): string | null {
   if (measure(text) <= maxWidth) return text;
-  const truncated = (n: number) => text.slice(0, n).trimEnd() + ELLIPSIS;
+  // Cut on code points, not UTF-16 units, so an emoji is never split in half.
+  const chars = Array.from(text);
+  const truncated = (n: number) => chars.slice(0, n).join('').trimEnd() + ELLIPSIS;
   let lo = 0;
-  let hi = text.length - 1;
+  let hi = chars.length - 1;
   while (lo < hi) {
     const mid = Math.ceil((lo + hi) / 2);
     if (measure(truncated(mid)) <= maxWidth) lo = mid;

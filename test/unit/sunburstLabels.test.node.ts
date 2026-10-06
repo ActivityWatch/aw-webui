@@ -24,6 +24,11 @@ describe('fitLabel', () => {
     expect(fitLabel('Media Player', 7, measure)).toBe('Media…');
   });
 
+  it('never splits a surrogate pair', () => {
+    const out = fitLabel('🎮🎮🎮 Games', 3, s => Array.from(s).length);
+    expect(out).toBe('🎮🎮…');
+  });
+
   it('returns null when not even one character fits', () => {
     expect(fitLabel('Work', 1, measure)).toBeNull();
   });
