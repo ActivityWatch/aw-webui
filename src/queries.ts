@@ -410,6 +410,16 @@ export const browser_appname_regex: Record<string, string> = {
   helium: '(?i)(helium)',
 };
 
+// Serialize a regex pattern as a query-language string literal.
+// JSON.stringify doubles every backslash, and the query lexers (aw-server-rust and
+// aw-core) only unescape \" inside string tokens, so the doubled form reaches the
+// regex engine verbatim: "(?i)^arc(\\.exe)?$" means "arc, a literal backslash, any
+// char, exe" and never matches "Arc.exe" (#1080). Same treatment as the categories
+// literal in canonicalEvents.
+function regex_literal(pattern: string): string {
+  return JSON.stringify(pattern).replace(/\\\\/g, '\\');
+}
+
 // Returns a list of active browser events (where the browser was the active window) from all browser buckets
 function browserEvents(params: DesktopQueryParams): string {
   const browsers = browsersWithBuckets(params.bid_browsers);
@@ -440,7 +450,7 @@ function browserEvents(params: DesktopQueryParams): string {
     }
     if (pattern) {
       code += `
-       window_${browserName}_re = filter_keyvals_regex(events, "app", ${JSON.stringify(pattern)});
+       window_${browserName}_re = filter_keyvals_regex(events, "app", ${regex_literal(pattern)});
        window_${browserName} = sort_by_timestamp(concat(window_${browserName}, window_${browserName}_re));`;
     }
 
