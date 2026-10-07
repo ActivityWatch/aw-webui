@@ -698,7 +698,7 @@ export const useActivityStore = defineStore('activity', {
       const q = queries.browserOnlyQuery(this.buckets.browser);
       this.progress_add(1);
       const result = await getClient()
-        .query([timeperiod], q, { name: 'browserOnlyQuery' })
+        .query([timeperiodToStr(timeperiod)], q, { name: 'browserOnlyQuery' })
         .catch(this.errorHandler);
       this.progress_tick();
       if (result && result[0] && result[0].browser) {
