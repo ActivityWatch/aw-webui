@@ -475,6 +475,15 @@ export const useActivityStore = defineStore('activity', {
         await this.query_desktop_full(query_options);
       } else if (this.android.available) {
         await this.query_android(query_options);
+        // Android hosts may also have browser buckets from aw-watcher-web.
+        if (this.browser.available) {
+          await this.query_browser_only(query_options);
+        }
+      } else if (this.browser.available) {
+        // Browser-only mode: device with aw-watcher-web but no window/afk/android watcher.
+        await this.query_browser_only(query_options);
+        this.query_window_completed();
+        this.query_category_time_by_period_completed();
       } else {
         console.log(
           'Cannot query windows as we are missing either an afk/window bucket pair or an android bucket'
@@ -683,6 +692,20 @@ export const useActivityStore = defineStore('activity', {
       }
 
       this.query_window_completed(data[0]);
+    },
+
+    async query_browser_only({ timeperiod }: QueryOptions) {
+      const q = queries.browserOnlyQuery(this.buckets.browser);
+      this.progress_add(1);
+      const result = await getClient()
+        .query([timeperiodToStr(timeperiod)], q, { name: 'browserOnlyQuery' })
+        .catch(this.errorHandler);
+      this.progress_tick();
+      if (result && result[0] && result[0].browser) {
+        this.query_browser_completed(result[0].browser);
+      } else {
+        this.query_browser_completed({});
+      }
     },
 
     async reset() {
@@ -1074,10 +1097,7 @@ export const useActivityStore = defineStore('activity', {
     set_available(this: State) {
       // TODO: Move to bucketStore on a per-host basis?
       this.window.available = this.buckets.afk.length > 0 && this.buckets.window.length > 0;
-      this.browser.available =
-        this.buckets.afk.length > 0 &&
-        this.buckets.window.length > 0 &&
-        this.buckets.browser.length > 0;
+      this.browser.available = this.buckets.browser.length > 0;
       this.active.available = this.buckets.afk.length > 0;
       this.editor.available = this.buckets.editor.length > 0;
       this.android.available = this.buckets.android.length > 0;
