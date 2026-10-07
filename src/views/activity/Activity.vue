@@ -304,7 +304,7 @@ import {
   dateRangeToTimeperiod,
   formatDateRange,
   parseDateRange,
-  periodLengthConvertMoment,
+  periodStartDate,
   shiftDateRange,
 } from '~/util/timeperiod';
 import _ from 'lodash';
@@ -587,8 +587,13 @@ export default {
           length: [1, 'day'],
         };
       } else if (this.periodIsBrowseable) {
+        // The URL date isn't necessarily aligned to the period (e.g. /week with no
+        // date falls back to today), so snap it to the start of the week/month/year.
         return {
-          start: get_day_start_with_offset(this._date, settingsStore.startOfDay),
+          start: get_day_start_with_offset(
+            periodStartDate(this._date, this.periodLength),
+            settingsStore.startOfDay
+          ),
           length: [1, this.periodLength],
         };
       } else {
@@ -686,7 +691,9 @@ export default {
       if (this.dateRange) {
         return formatDateRange(shiftDateRange(this.dateRange, -1));
       }
-      return moment(this._date)
+      // Step from the period start the view shows, not the (possibly mid-period) URL date.
+      const base = this.periodIsBrowseable ? moment(this.timeperiod.start) : moment(this._date);
+      return base
         .subtract(
           this.timeperiod.length[0],
           this.timeperiod.length[1] as moment.unitOfTime.DurationConstructor
@@ -702,7 +709,9 @@ export default {
         }
         return formatDateRange(next);
       }
-      return moment(this._date)
+      // Step from the period start the view shows, not the (possibly mid-period) URL date.
+      const base = this.periodIsBrowseable ? moment(this.timeperiod.start) : moment(this._date);
+      return base
         .add(
           this.timeperiod.length[0],
           this.timeperiod.length[1] as moment.unitOfTime.DurationConstructor
@@ -786,13 +795,12 @@ export default {
       let anchorDate = momentJsDate;
       const today = moment(get_today_with_offset(this.settingsStore.startOfDay));
       if (this.periodIsBrowseable) {
-        const sourceUnit = periodLengthConvertMoment(this.periodLength);
-        const sourceStart = momentJsDate.clone().startOf(sourceUnit);
-        // moment.add() rejects "isoWeek" as a DurationConstructor (even
-        // though startOf() accepts it). Cast — runtime handles both spellings.
+        const sourceStart = moment(
+          periodStartDate(momentJsDate.format('YYYY-MM-DD'), this.periodLength)
+        );
         const sourceEnd = sourceStart
           .clone()
-          .add(1, sourceUnit as moment.unitOfTime.DurationConstructor);
+          .add(1, this.periodLength as moment.unitOfTime.DurationConstructor);
         if (today.isSameOrAfter(sourceStart) && today.isBefore(sourceEnd)) {
           anchorDate = today;
         }
@@ -806,8 +814,7 @@ export default {
         periodLength = 'last30d';
         new_date = anchorDate.clone().add(1, 'days').format('YYYY-MM-DD');
       } else {
-        const new_period_length_moment = periodLengthConvertMoment(periodLength);
-        new_date = anchorDate.clone().startOf(new_period_length_moment).format('YYYY-MM-DD');
+        new_date = periodStartDate(anchorDate.format('YYYY-MM-DD'), periodLength);
       }
       this.pushPeriod(periodLength, new_date);
     },
