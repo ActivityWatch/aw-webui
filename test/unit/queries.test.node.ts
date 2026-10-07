@@ -64,6 +64,7 @@ import {
   browser_appname_regex,
   browser_appnames,
   activityQuery,
+  browserOnlyQuery,
   canonicalEvents,
   categoryQuery,
   chromeAppnameRegex,
@@ -518,4 +519,33 @@ test('canonicalEvents serializes select_keys into categorize()', () => {
   });
   expect(query).toContain('"select_keys":["app"]');
   expect(query).toContain('"regex":"Firefox"');
+});
+
+describe('browserOnlyQuery', () => {
+  test('returns a non-empty query array', () => {
+    const q = browserOnlyQuery(['aw-watcher-web-firefox']);
+    expect(q.length).toBeGreaterThan(0);
+  });
+
+  test('queries all provided browser buckets', () => {
+    const buckets = ['aw-watcher-web-firefox', 'aw-watcher-web-chrome'];
+    const joined = browserOnlyQuery(buckets).join('\n');
+    expect(joined).toContain('"aw-watcher-web-firefox"');
+    expect(joined).toContain('"aw-watcher-web-chrome"');
+  });
+
+  test('returns browser domains, urls, and titles in RETURN', () => {
+    const joined = browserOnlyQuery(['aw-watcher-web-firefox']).join('\n');
+    expect(joined).toContain('"domains"');
+    expect(joined).toContain('"urls"');
+    expect(joined).toContain('"titles"');
+    expect(joined).toContain('"duration"');
+  });
+
+  test('no inline or block comments in generated query', () => {
+    const joined = browserOnlyQuery(['aw-watcher-web-firefox']).join('\n');
+    const stripped = joined.replace(/"[^"]*"/g, '""');
+    expect(stripped).not.toMatch(/\/\//);
+    expect(stripped).not.toMatch(/\/\*/);
+  });
 });
