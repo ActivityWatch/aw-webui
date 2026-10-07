@@ -290,21 +290,7 @@ export default {
     onImportAddOnTop: function () {
       this.showImportModal = false;
       if (!this.pendingImportSetId || !this.pendingImportCategories) return;
-      const setId = this.pendingImportSetId;
-      const cats = this.pendingImportCategories;
-      const primaryId = this.categoryStore.active_set_ids[0] || '';
-      const existing = this.categoryStore.category_sets.find(s => s.id === setId);
-      if (existing) {
-        existing.categories = cats;
-      } else {
-        this.categoryStore.category_sets.push({ id: setId, categories: cats });
-      }
-      const newIds = [primaryId, ...this.categoryStore.active_set_ids.slice(1)];
-      if (!newIds.includes(setId)) {
-        newIds.push(setId);
-      }
-      this.categoryStore.setActiveSets(newIds);
-      this.categoryStore.classes_unsaved_changes = true;
+      this.categoryStore.importSetOnTop(this.pendingImportSetId, this.pendingImportCategories);
       this.pendingImportSetId = '';
       this.pendingImportCategories = null;
     },
