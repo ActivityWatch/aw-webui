@@ -110,6 +110,16 @@ div
         v-model="newSetName"
         placeholder="Category set name"
       )
+
+  b-modal(
+    v-model="showImportModal"
+    :title="$t('settings.categorization.importSetTitle')"
+    hide-footer
+  )
+    p {{ $t('settings.categorization.importSetPrompt', { id: pendingImportSetId }) }}
+    div.d-flex.flex-wrap(style="gap: 0.5rem;")
+      b-btn(variant="outline-primary" @click="onImportReplace") {{ $t('settings.categorization.importReplace') }}
+      b-btn(variant="primary" @click="onImportAddOnTop") {{ $t('settings.categorization.importAddOnTop') }}
 </template>
 <script lang="ts">
 import { mapState, mapGetters } from 'pinia';
@@ -139,6 +149,9 @@ export default {
     builderMounted: false,
     showCreateSetModal: false,
     newSetName: '',
+    showImportModal: false,
+    pendingImportSetId: '',
+    pendingImportCategories: null as any[] | null,
   }),
   computed: {
     ...mapState(useCategoryStore, ['classes_unsaved_changes']),
@@ -239,29 +252,61 @@ export default {
       if (import_obj.categories && !import_obj.id) {
         this.categoryStore.import(import_obj.categories);
       } else if (import_obj.id && import_obj.categories) {
-        let setId = import_obj.id;
-        while (
-          this.categoryStore.category_sets.find(
-            s => s.id === setId && s.id !== (this.categoryStore.active_set_ids[0] || '')
-          )
-        ) {
-          setId = setId + '-imported';
-        }
-        const existing = this.categoryStore.category_sets.find(s => s.id === setId);
-        if (existing) {
-          existing.categories = import_obj.categories;
-          const isActiveSet = setId === (this.categoryStore.active_set_ids[0] || '');
-          if (isActiveSet) {
-            this.categoryStore.discardChanges();
-          } else {
-            this.categoryStore.switchToSet(setId);
-          }
+        // For a named set, ask whether to replace the primary or layer on top.
+        this.pendingImportSetId = import_obj.id;
+        this.pendingImportCategories = import_obj.categories;
+        this.showImportModal = true;
+      }
+    },
+    onImportReplace: function () {
+      this.showImportModal = false;
+      if (!this.pendingImportSetId || !this.pendingImportCategories) return;
+      let setId = this.pendingImportSetId;
+      const cats = this.pendingImportCategories;
+      while (
+        this.categoryStore.category_sets.find(
+          s => s.id === setId && s.id !== (this.categoryStore.active_set_ids[0] || '')
+        )
+      ) {
+        setId = setId + '-imported';
+      }
+      const existing = this.categoryStore.category_sets.find(s => s.id === setId);
+      if (existing) {
+        existing.categories = cats;
+        const isActiveSet = setId === (this.categoryStore.active_set_ids[0] || '');
+        if (isActiveSet) {
+          this.categoryStore.discardChanges();
         } else {
-          this.categoryStore.category_sets.push({ id: setId, categories: import_obj.categories });
           this.categoryStore.switchToSet(setId);
         }
-        this.categoryStore.classes_unsaved_changes = true;
+      } else {
+        this.categoryStore.category_sets.push({ id: setId, categories: cats });
+        this.categoryStore.switchToSet(setId);
       }
+      this.categoryStore.classes_unsaved_changes = true;
+      this.pendingImportSetId = '';
+      this.pendingImportCategories = null;
+    },
+    onImportAddOnTop: function () {
+      this.showImportModal = false;
+      if (!this.pendingImportSetId || !this.pendingImportCategories) return;
+      const setId = this.pendingImportSetId;
+      const cats = this.pendingImportCategories;
+      const primaryId = this.categoryStore.active_set_ids[0] || '';
+      const existing = this.categoryStore.category_sets.find(s => s.id === setId);
+      if (existing) {
+        existing.categories = cats;
+      } else {
+        this.categoryStore.category_sets.push({ id: setId, categories: cats });
+      }
+      const newIds = [primaryId, ...this.categoryStore.active_set_ids.slice(1)];
+      if (!newIds.includes(setId)) {
+        newIds.push(setId);
+      }
+      this.categoryStore.setActiveSets(newIds);
+      this.categoryStore.classes_unsaved_changes = true;
+      this.pendingImportSetId = '';
+      this.pendingImportCategories = null;
     },
     createSet: function () {
       this.newSetName = '';
