@@ -332,6 +332,37 @@ describe('categories store: multiple active sets', () => {
     expect(store.classes.map(c => c.name)).not.toContainEqual(['Media', 'Video']);
   });
 
+  test.each(['save', 'switch'])(
+    'deleted inherited child keeps no generated parent after %s',
+    action => {
+      store.removeClass((store.get_category(['Media', 'Video']) as Category).id);
+      store.save();
+      if (action === 'save') store.save();
+      store.setActiveSets(['mine']);
+      store.save();
+      store.category_sets = JSON.parse(JSON.stringify(store.category_sets));
+      store.discardChanges();
+      expect(names('mine')).toEqual([['Work']]);
+      expect(store.classes.map(c => c.name)).not.toContainEqual(['Media']);
+      expect(names('shared')).toEqual([['Media', 'Video']]);
+      store.setActiveSets(['mine', 'shared']);
+      expect(store.classes.map(c => c.name)).not.toContainEqual(['Media']);
+      expect(store.classes.map(c => c.name)).not.toContainEqual(['Media', 'Video']);
+    }
+  );
+
+  test('an edited generated parent survives deletion of its last inherited child', () => {
+    const parent = store.get_category(['Media']) as Category;
+    store.updateClass({ ...parent, data: { color: '#123456' } });
+    store.removeClass((store.get_category(['Media', 'Video']) as Category).id);
+    store.save();
+    store.save();
+    store.setActiveSets(['mine']);
+    store.discardChanges();
+    expect(names('mine')).toEqual([['Work'], ['Media']]);
+    expect(store.get_category(['Media']).data.color).toBe('#123456');
+  });
+
   test('renaming a synthesized parent masks the original descendant names', () => {
     const parent = store.get_category(['Media']) as Category;
     store.updateClass({ ...parent, name: ['Entertainment'] });

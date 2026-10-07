@@ -154,6 +154,9 @@ function syncToPrimarySet(state: State) {
       _.isEqual(_.omit(comparableCategory(inherited), 'id'), _.omit(comparableCategory(c), 'id'))
     );
   });
+  // Masks can remove the last child of an untouched generated parent. Rebuild
+  // the view now so a later save/switch cannot promote that orphan to primary.
+  state.classes = computeEffectiveClasses(state.category_sets, state.active_set_ids);
 }
 
 export const useCategoryStore = defineStore('categories', {
