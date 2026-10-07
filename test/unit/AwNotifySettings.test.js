@@ -90,9 +90,32 @@ describe('AwNotifySettings', () => {
     await wrapper.vm.save();
 
     expect(wrapper.vm.error).toBe('');
+    // The hidden invalid edit must be ignored: the payload carries the
+    // last-saved snapshot, not the pending form state.
     expect(mockPost).toHaveBeenCalledWith(
       expect.stringContaining('aw-notify'),
-      expect.objectContaining({ enabled: false }),
+      expect.objectContaining({ enabled: false, alerts: [savedAlert] }),
+      expect.anything()
+    );
+  });
+
+  test('save() with enabled: false discards even valid unsaved edits (reverts to last-saved state)', async () => {
+    // Intentional contract: disabling sends the last-saved snapshot, so any
+    // pending edit — valid or not — is dropped. Documented in save().
+    const savedAlert = { label: null, category: 'Work', thresholds_minutes: [120], positive: true };
+    mockGet.mockResolvedValue({ data: { enabled: true, alerts: [savedAlert] } });
+    const wrapper = shallowMount(AwNotifySettings);
+    await flushPromises();
+
+    // A valid pending edit that was never saved
+    wrapper.vm.alerts[0].thresholdStr = '30';
+    wrapper.vm.enabled = false;
+    await wrapper.vm.save();
+
+    expect(wrapper.vm.error).toBe('');
+    expect(mockPost).toHaveBeenCalledWith(
+      expect.stringContaining('aw-notify'),
+      expect.objectContaining({ enabled: false, alerts: [savedAlert] }),
       expect.anything()
     );
   });
