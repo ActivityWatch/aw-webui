@@ -492,7 +492,11 @@ export default {
       if (this.periodLength === 'range') {
         return this.dateRange ? this.dateRange.start : get_today_with_offset(offset);
       }
-      return this.date || get_today_with_offset(offset);
+      const baseDate = this.date || get_today_with_offset(offset);
+      if (['week', 'month', 'year'].includes(this.periodLength)) {
+        return periodStartDate(baseDate, this.periodLength);
+      }
+      return baseDate;
     },
     todayDate: function () {
       return get_today_with_offset(this.settingsStore.startOfDay);

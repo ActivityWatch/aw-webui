@@ -1,7 +1,7 @@
 <template lang="pug">
 div(v-if="datasets && datasets.length > 0")
   // Height set here to avoid elements jumping when loading Activity view
-  bar(:chart-data="chartData" :chart-options="chartOptions" :height="330")
+  bar(:chart-data="chartData" :chart-options="chartOptions" :height="height")
 div.small(v-else-if="datasets === null", style="font-size: 16pt; color: #aaa;")
   | No data
 div.small(v-else, style="font-size: 16pt; color: #aaa;")
@@ -15,7 +15,6 @@ import 'chart.js/auto';
 import { Bar } from 'vue-chartjs/legacy';
 import {
   format_date_short,
-  format_day_of_month,
   format_weekday_short,
   get_hour_offset,
   get_short_month_labels,
@@ -67,6 +66,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    height: {
+      type: Number,
+      default: 330,
+    },
   },
   computed: {
     labels() {
@@ -98,12 +101,11 @@ export default {
           return format_weekday_short(date);
         });
       } else if (resolution.startsWith('month')) {
-        // FIXME: Needs access to the timeperiod start to know which month
         // How many days are in the given month?
         const date = new Date(start);
         const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
         return _.range(1, daysInMonth + 1).map(d =>
-          format_day_of_month(new Date(date.getFullYear(), date.getMonth(), d, 12))
+          format_date_short(new Date(date.getFullYear(), date.getMonth(), d, 12))
         );
       } else if (resolution == 'year') {
         return get_short_month_labels();
