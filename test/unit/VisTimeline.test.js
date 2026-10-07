@@ -11,6 +11,7 @@
  */
 
 import VisTimeline from '~/visualizations/VisTimeline.vue';
+import EventEditor from '~/components/EventEditor.vue';
 
 // vis-timeline creates a real DOM timeline; mock the entire import so unit
 // tests run in jsdom without a full browser canvas/resize-observer stack.
@@ -24,6 +25,79 @@ jest.mock('vis-timeline/esnext', () => ({
   })),
 }));
 jest.mock('vis-timeline/styles/vis-timeline-graph2d.css', () => ({}));
+
+describe('timeline event editing (#984)', () => {
+  test('EventEditor reports a saved event only after the server accepts it', async () => {
+    const editedEvent = { id: 7, data: { title: 'updated' } };
+    const replaceEvent = jest.fn().mockResolvedValue(undefined);
+    const emit = jest.fn();
+
+    await EventEditor.methods.save.call({
+      bucket_id: 'aw-watcher-window_test',
+      editedEvent,
+      $aw: { replaceEvent },
+      $emit: emit,
+    });
+
+    expect(replaceEvent).toHaveBeenCalledWith('aw-watcher-window_test', editedEvent);
+    expect(emit).toHaveBeenNthCalledWith(1, 'save', editedEvent);
+    expect(emit).toHaveBeenNthCalledWith(2, 'saved', editedEvent);
+  });
+
+  test('does not report a saved event when the server rejects the update', async () => {
+    const editedEvent = { id: 7, data: { title: 'updated' } };
+    const emit = jest.fn();
+
+    await expect(
+      EventEditor.methods.save.call({
+        bucket_id: 'aw-watcher-window_test',
+        editedEvent,
+        $aw: { replaceEvent: jest.fn().mockRejectedValue(new Error('offline')) },
+        $emit: emit,
+      })
+    ).rejects.toThrow('offline');
+
+    expect(emit).toHaveBeenCalledTimes(1);
+    expect(emit).toHaveBeenCalledWith('save', editedEvent);
+  });
+
+  test('uses a successfully saved event when rebuilding the timeline', () => {
+    const original = {
+      id: 7,
+      timestamp: new Date('2026-09-17T10:00:00Z'),
+      duration: 60,
+      data: { title: 'before' },
+    };
+    const saved = { ...original, data: { title: 'after' } };
+    const vm = {
+      eventOverrides: { ['aw-watcher-window_test\0' + original.id]: saved },
+    };
+
+    expect(VisTimeline.methods.displayEvent.call(vm, 'aw-watcher-window_test', original)).toBe(
+      saved
+    );
+    expect(VisTimeline.methods.displayEvent.call(vm, 'other-bucket', original)).toBe(original);
+  });
+
+  test('stores the saved event and immediately rebuilds the timeline', () => {
+    const saved = { id: 7, data: { title: 'after' } };
+    const vm = {
+      editingEventBucket: 'aw-watcher-window_test',
+      editingEvent: null,
+      eventOverrides: {},
+      $set: jest.fn((target, key, value) => {
+        target[key] = value;
+      }),
+      update: jest.fn(),
+    };
+
+    VisTimeline.methods.onEventSaved.call(vm, saved);
+
+    expect(vm.eventOverrides['aw-watcher-window_test\0' + saved.id]).toBe(saved);
+    expect(vm.editingEvent).toBe(saved);
+    expect(vm.update).toHaveBeenCalledTimes(1);
+  });
+});
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 

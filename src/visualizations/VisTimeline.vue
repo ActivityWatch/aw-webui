@@ -6,7 +6,7 @@
       i Buckets with no events in the queried range will be hidden.
 
     div(v-if="editingEvent")
-      EventEditor(:event="editingEvent" :bucket_id="editingEventBucket")
+      EventEditor(:event="editingEvent" :bucket_id="editingEventBucket" @saved="onEventSaved")
 </template>
 
 <style lang="scss">
@@ -70,7 +70,6 @@ import { Timeline } from 'vis-timeline/esnext';
 import 'vis-timeline/styles/vis-timeline-graph2d.css';
 import EventEditor from '~/components/EventEditor.vue';
 
-let isAlertWarningShown = false;
 const PIXELS_PER_WHEEL_LINE = 40;
 const PIXELS_PER_WHEEL_PAGE = 800;
 
@@ -122,6 +121,7 @@ export default {
       },
       editingEvent: null,
       editingEventBucket: null,
+      eventOverrides: {} as Record<string, IEvent>,
 
       updateHasRun: false,
     };
@@ -158,7 +158,8 @@ export default {
           console.log(`Filtered ${bucket.events.length - events.length} events`);
         }
         events.sort((a, b) => a.timestamp.valueOf() - b.timestamp.valueOf());
-        _.each(events, e => {
+        _.each(events, sourceEvent => {
+          const e = this.displayEvent(bucket.id, sourceEvent);
           data.push({
             bucketId: bucket.id,
             title: getTitleAttr(bucket, e),
@@ -182,6 +183,7 @@ export default {
         return;
       }
 
+      this.eventOverrides = {};
       this.update();
     },
     events() {
@@ -189,6 +191,7 @@ export default {
         return;
       }
 
+      this.eventOverrides = {};
       this.update();
     },
   },
@@ -242,6 +245,15 @@ export default {
     openEditor: function () {
       this.$bvModal.show('edit-modal-' + this.editingEvent.id);
     },
+    displayEvent: function (bucketId: string, event: IEvent): IEvent {
+      return this.eventOverrides[`${bucketId}\0${event.id}`] || event;
+    },
+    onEventSaved: function (event: IEvent) {
+      const key = `${this.editingEventBucket}\0${event.id}`;
+      this.$set(this.eventOverrides, key, event);
+      this.editingEvent = event;
+      this.update();
+    },
     onSelect: async function (properties) {
       if (properties.items.length == 0) {
         return;
@@ -270,22 +282,6 @@ export default {
           console.log('Editing event', event, ', in bucket', bucketId);
           this.openEditor();
         });
-        if (!isAlertWarningShown) {
-          // Show a one-time inline toast instead of a blocking alert(),
-          // which fired on top of the editor and rudely interrupted the
-          // edit flow. Persist the dismissal via localStorage so the user
-          // doesn't see it every session.
-          if (!this.editRefreshHintDismissed()) {
-            this.$bvToast.toast('Your edit is saved. Refresh the timeline to see it reflected.', {
-              title: 'Heads up',
-              variant: 'info',
-              autoHideDelay: 6000,
-              solid: true,
-            });
-            this.markEditRefreshHintDismissed();
-          }
-          isAlertWarningShown = true;
-        }
       } else {
         alert('selected multiple items: ' + JSON.stringify(properties.items));
       }
@@ -295,20 +291,6 @@ export default {
       // labels directly via formatTimelineBucketLabelHtml so it can pass
       // the multi-host hint.
       return formatTimelineBucketLabelHtml(bucketId);
-    },
-    editRefreshHintDismissed(): boolean {
-      try {
-        return localStorage.getItem('aw.timeline.editRefreshHintDismissed') === '1';
-      } catch (e) {
-        return false;
-      }
-    },
-    markEditRefreshHintDismissed(): void {
-      try {
-        localStorage.setItem('aw.timeline.editRefreshHintDismissed', '1');
-      } catch (e) {
-        /* localStorage disabled — fine, fall back to the in-memory flag */
-      }
     },
     ensureUpdate() {
       // Will only run update() if data available and never ran before
