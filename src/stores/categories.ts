@@ -102,11 +102,8 @@ function comparableCategory(c: Category): Category {
  * edited secondary categories, which become primary-set overrides) goes to
  * the primary set. Secondary sets are never written.
  *
- * Known limitation: because secondary sets are never written, renaming (or
- * deleting) a category that comes only from a secondary set leaves the
- * original name in that set — the rename persists as a primary override, but
- * the old name reappears alongside it on reload. Masking it needs a tombstone
- * list in the primary set (schema change); see the follow-up issue.
+ * Removed secondary names are masked by tombstones on the primary set, so
+ * renames/deletions survive reload without modifying the source set.
  */
 function syncToPrimarySet(state: State) {
   if (state.active_set_ids.length === 0 || state.category_sets.length === 0) return;
@@ -133,6 +130,16 @@ function syncToPrimarySet(state: State) {
   // state.classes (computeEffectiveClasses) exactly.
   const merged = mergeCategorySets(orderedActiveSets(state.category_sets, state.active_set_ids));
   const mergedNames = new Set(merged.map(key));
+  const currentNames = new Set(current.map(key));
+  const tombstones = new Set(primarySet.tombstones ?? []);
+  for (const name of secondary.keys()) {
+    if (mergedNames.has(name) && !currentNames.has(name)) tombstones.add(name);
+  }
+  // Explicitly adding a previously hidden name restores it; changing the active
+  // set selection alone leaves masks intact.
+  for (const name of currentNames) tombstones.delete(name);
+  if (tombstones.size > 0) primarySet.tombstones = [...tombstones];
+  else delete primarySet.tombstones;
   const synthesized = new Map<string, Category>();
   for (const c of createMissingParents(_.cloneDeep(merged))) {
     if (!mergedNames.has(key(c))) synthesized.set(key(c), cleanCategory(c));

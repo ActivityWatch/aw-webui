@@ -52,6 +52,8 @@ export interface Category {
 export interface CategorySet {
   id: string;
   categories: Category[];
+  /** JSON-encoded category paths hidden from secondary sets when this set is primary. */
+  tombstones?: string[];
 }
 
 /**
@@ -61,11 +63,12 @@ export interface CategorySet {
  */
 export function mergeCategorySets(sets: CategorySet[]): Category[] {
   const seen = new Set<string>();
+  const hidden = new Set(sets[0]?.tombstones ?? []);
   const merged: Category[] = [];
-  for (const set of sets) {
+  for (const [index, set] of sets.entries()) {
     for (const cat of set.categories) {
       const key = JSON.stringify(cat.name);
-      if (!seen.has(key)) {
+      if (!seen.has(key) && (index === 0 || !hidden.has(key))) {
         seen.add(key);
         merged.push(cat);
       }
