@@ -79,7 +79,7 @@ export const useBucketsStore = defineStore('buckets', {
       // Returns a map of which kinds of buckets are available
       //
       // 'window' requires ((currentwindow + afkstatus) or android) buckets
-      // 'browser' requires (currentwindow + afk + browser) buckets
+      // 'browser' requires browser buckets (aw-watcher-web); independent of window/afk
       // 'editor' requires editor buckets
       return hostname => {
         const windowAvail =
@@ -88,7 +88,7 @@ export const useBucketsStore = defineStore('buckets', {
 
         return {
           window: windowAvail,
-          browser: windowAvail && this.bucketsBrowser(hostname).length > 0,
+          browser: this.bucketsBrowser(hostname).length > 0,
           editor: this.bucketsEditor(hostname).length > 0,
           android: androidAvail,
           category: windowAvail || androidAvail,

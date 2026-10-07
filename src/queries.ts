@@ -679,6 +679,42 @@ export function categoryQuery(
   return querystr_to_array(q);
 }
 
+// Query browser buckets standalone, without requiring window/afk watchers.
+// Used on Android and other platforms where only aw-watcher-web is running.
+export function browserOnlyQuery(browserbuckets: string[]): string[] {
+  const escaped = browserbuckets.map(escape_doublequote);
+
+  let code = `browser_events = [];`;
+  escaped.forEach((bucketId, i) => {
+    code += `
+    events_browser_${i} = flood(query_bucket("${bucketId}"));
+    browser_events = concat(browser_events, events_browser_${i});`;
+  });
+
+  code += `
+    browser_events = split_url_events(browser_events);
+    browser_urls = merge_events_by_keys(browser_events, ["url"]);
+    browser_urls = sort_by_duration(browser_urls);
+    browser_urls = limit_events(browser_urls, ${default_limit});
+    browser_domains = merge_events_by_keys(browser_events, ["$domain"]);
+    browser_domains = sort_by_duration(browser_domains);
+    browser_domains = limit_events(browser_domains, ${default_limit});
+    browser_titles = merge_events_by_keys(browser_events, ["title"]);
+    browser_titles = sort_by_duration(browser_titles);
+    browser_titles = limit_events(browser_titles, ${default_limit});
+    browser_duration = sum_durations(browser_events);
+    RETURN = {
+      "browser": {
+        "domains": browser_domains,
+        "urls": browser_urls,
+        "titles": browser_titles,
+        "duration": browser_duration
+      }
+    };`;
+
+  return querystr_to_array(code);
+}
+
 export default {
   fullDesktopQuery,
   analysisContextQuery,
@@ -690,4 +726,5 @@ export default {
   screentimeNamesQuery,
   categoryQuery,
   editorActivityQuery,
+  browserOnlyQuery,
 };

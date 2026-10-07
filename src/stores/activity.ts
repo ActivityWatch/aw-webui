@@ -475,6 +475,11 @@ export const useActivityStore = defineStore('activity', {
         await this.query_desktop_full(query_options);
       } else if (this.android.available) {
         await this.query_android(query_options);
+      } else if (this.browser.available) {
+        // Browser-only mode: device with aw-watcher-web but no window/afk/android watcher.
+        await this.query_browser_only(query_options);
+        this.query_window_completed();
+        this.query_category_time_by_period_completed();
       } else {
         console.log(
           'Cannot query windows as we are missing either an afk/window bucket pair or an android bucket'
