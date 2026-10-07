@@ -142,6 +142,9 @@ export default {
       newSet: 'New set',
       deleteSet: 'Delete set',
       setsAvailable: '{count} sets available — switch sets to use different rule profiles.',
+      alsoApply: 'Also apply:',
+      alsoApplyHelp:
+        'Categories from the checked sets are applied on top of "{primary}". Edits are saved to "{primary}"; editing a category from another set saves an override in "{primary}".',
       unsavedChanges: 'You have unsaved changes!',
       discard: 'Discard',
       addCategory: 'Add category',

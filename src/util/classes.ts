@@ -309,9 +309,11 @@ export function saveCategories(sets: CategorySet[], activeIds: string[]) {
   }
   const settingsStore = useSettingsStore();
   const cleanSets = sets.map(s => ({ ...s, categories: s.categories.map(cleanCategory) }));
-  const effectiveClasses = mergeCategorySets(sets.filter(s => activeIds.includes(s.id))).map(
-    cleanCategory
-  );
+  // Merge in active_set_ids priority order (first = highest), matching the store.
+  const orderedSets = activeIds
+    .map(id => sets.find(s => s.id === id))
+    .filter((s): s is CategorySet => !!s);
+  const effectiveClasses = mergeCategorySets(orderedSets).map(cleanCategory);
   return settingsStore.update({
     category_sets: cleanSets,
     active_set_ids: activeIds,
