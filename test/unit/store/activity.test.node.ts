@@ -106,4 +106,67 @@ describe('activity store', () => {
     ]);
     expect(chunkPeriodsBySpan([])).toEqual([]);
   });
+
+  describe('query_browser_only', () => {
+    const timeperiod = {
+      start: '2024-01-01T00:00:00+00:00',
+      length: [1, 'day'] as [number, string],
+    };
+
+    test('populates browser state from API response', async () => {
+      activityStore.$patch(s => {
+        s.buckets.browser = ['aw-watcher-firefox_test'];
+      });
+      const browserData = {
+        domains: [{ data: { $domain: 'example.com' }, duration: 300 }],
+        urls: [{ data: { url: 'https://example.com/' }, duration: 300 }],
+        titles: [{ data: { title: 'Example Domain' }, duration: 300 }],
+        duration: 300,
+      };
+      const querySpy = jest
+        .spyOn(getClient(), 'query')
+        .mockResolvedValueOnce([{ browser: browserData }]);
+
+      await activityStore.query_browser_only({ host: 'test', timeperiod });
+
+      expect(querySpy).toHaveBeenCalledTimes(1);
+      expect(activityStore.browser.top_domains).toEqual(browserData.domains);
+      expect(activityStore.browser.top_urls).toEqual(browserData.urls);
+      expect(activityStore.browser.top_titles).toEqual(browserData.titles);
+      expect(activityStore.browser.duration).toEqual(300);
+      querySpy.mockRestore();
+    });
+
+    test('clears browser state when API returns empty result', async () => {
+      activityStore.$patch(s => {
+        s.buckets.browser = ['aw-watcher-firefox_test'];
+      });
+      activityStore.$patch(s => {
+        s.browser.duration = 999;
+      });
+      const querySpy = jest.spyOn(getClient(), 'query').mockResolvedValueOnce([{}]);
+
+      await activityStore.query_browser_only({ host: 'test', timeperiod });
+
+      expect(activityStore.browser.duration).toBeUndefined();
+      querySpy.mockRestore();
+    });
+
+    test('passes all browser bucket IDs to the query', async () => {
+      activityStore.$patch(s => {
+        s.buckets.browser = ['aw-watcher-chrome_test', 'aw-watcher-firefox_test'];
+      });
+      const querySpy = jest
+        .spyOn(getClient(), 'query')
+        .mockResolvedValueOnce([{ browser: { domains: [], urls: [], titles: [], duration: 0 } }]);
+
+      await activityStore.query_browser_only({ host: 'test', timeperiod });
+
+      expect(querySpy).toHaveBeenCalledTimes(1);
+      const queryStr = (querySpy.mock.calls[0][1] as string[]).join('\n');
+      expect(queryStr).toContain('aw-watcher-chrome_test');
+      expect(queryStr).toContain('aw-watcher-firefox_test');
+      querySpy.mockRestore();
+    });
+  });
 });
