@@ -127,14 +127,14 @@ export default {
           display: true,
           text: 'Timeline',
         },
-        responsive: true,
-        maintainAspectRatio: false,
       };
     },
     chartOptions(): ChartOptions {
       const [count, resolution] = this.timeperiod_length;
-      const monthlyBuckets = resolution.startsWith('day') && count > MAX_DAILY_BUCKETS;
+      const singleDay = resolution.startsWith('day') && count === 1;
       return {
+        responsive: true,
+        maintainAspectRatio: false,
         plugins: {
           tooltip: {
             mode: 'point',
@@ -164,10 +164,10 @@ export default {
           y: {
             stacked: true,
             min: 0,
-            suggestedMax: resolution.startsWith('day') ? 1 : undefined,
+            suggestedMax: singleDay ? 1 : undefined,
             ticks: {
               callback: hourToTick,
-              stepSize: monthlyBuckets ? undefined : resolution.startsWith('day') ? 0.25 : 1,
+              stepSize: singleDay ? 0.25 : undefined,
             },
           },
         },
