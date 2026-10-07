@@ -6,6 +6,7 @@ export interface AwNotifyAlert {
 }
 
 export interface AwNotifyConfig {
+  enabled?: boolean;
   alerts: AwNotifyAlert[];
   hourly_checkins?: boolean;
   new_day_greetings?: boolean;
@@ -73,6 +74,7 @@ export function parseAwNotifyConfig(value: unknown): AwNotifyConfig | null {
     if (
       Array.isArray(config.alerts) &&
       config.alerts.every(isAwNotifyAlert) &&
+      hasOptionalBoolean(config, 'enabled') &&
       hasOptionalBoolean(config, 'hourly_checkins') &&
       hasOptionalBoolean(config, 'new_day_greetings') &&
       hasOptionalBoolean(config, 'server_monitoring') &&
