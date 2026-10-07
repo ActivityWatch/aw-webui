@@ -865,6 +865,7 @@ export default {
         filter_categories: this.filter_categories,
         always_active_pattern: this.always_active_pattern,
         skip_active_history: this.periodLength === 'range' || this.periodLength === 'all',
+        all_time: this.periodLength === 'all',
       };
       await this.activityStore.ensure_loaded(queryOptions);
     },

@@ -51,6 +51,7 @@ div
 <script lang="ts">
 import _ from 'lodash';
 import moment from 'moment';
+import { earliestEventInBucket, rangeCoveringEarliest } from '~/util/earliestEvent';
 import { useActivityStore } from '~/stores/activity';
 import { useBucketsStore } from '~/stores/buckets';
 import { getClient } from '~/util/awclient';
@@ -81,6 +82,8 @@ export default {
       fieldOptions: [] as string[],
       events: [] as any[],
       aggregated: [] as AggregatedEvent[],
+      // bucket id -> earliest event, for All time (see queryRange)
+      earliestByBucket: {} as Record<string, Date | null>,
       loading: false,
       error: '',
     };
@@ -158,15 +161,34 @@ export default {
         this.selectedBucketId = this.bucketsStore.buckets[0].id;
       }
     },
+    // The shared range, widened for All time to the selected bucket's own
+    // earliest event: the All time start only considers the host's standard
+    // buckets, so e.g. an older imported bucket would otherwise be cut off.
+    async queryRange(): Promise<{ start: string; end: string } | null> {
+      const range = this.timeRange;
+      const opts = this.activityStore.query_options;
+      if (!range || !opts || !opts.all_time) return range;
+      const bucketId = this.selectedBucketId;
+      if (!(bucketId in this.earliestByBucket)) {
+        const bucket = this.bucketsStore.getBucket(bucketId);
+        const client = getClient();
+        const earliest = bucket
+          ? await earliestEventInBucket(bucket, (id, params) => client.getEvents(id, params))
+          : null;
+        this.earliestByBucket = { ...this.earliestByBucket, [bucketId]: earliest };
+      }
+      return rangeCoveringEarliest(range, this.earliestByBucket[bucketId]);
+    },
     async loadEvents() {
       if (!this.selectedBucketId || !this.timeRange) return;
       this.loading = true;
       this.error = '';
       this.aggregated = [];
       try {
+        const range = await this.queryRange();
         this.events = await getClient().getEvents(this.selectedBucketId, {
-          start: this.timeRange.start,
-          end: this.timeRange.end,
+          start: range.start,
+          end: range.end,
           limit: -1,
         });
         this.fieldOptions = this.extractFields(this.events);

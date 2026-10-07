@@ -73,3 +73,17 @@ export function nextEarliestDate(
   if (approximate && current && current < found) return current;
   return found;
 }
+
+/**
+ * A query range that also covers `earliest` (a bucket's first event, from
+ * earliestEventInBucket) when it precedes `range.start`. Used by All time for
+ * buckets outside the host's standard set, whose data the shared All time start
+ * does not account for (ActivityWatch/aw-webui#1077). Never shortens the range.
+ */
+export function rangeCoveringEarliest(
+  range: { start: string; end: string },
+  earliest: Date | null
+): { start: string; end: string } {
+  if (!earliest || earliest.getTime() >= new Date(range.start).getTime()) return range;
+  return { start: earliest.toISOString(), end: range.end };
+}
