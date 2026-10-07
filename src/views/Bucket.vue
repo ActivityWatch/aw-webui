@@ -33,6 +33,9 @@ div
 
     input-timeinterval(v-model="daterange", :maxDuration="maxDuration")
 
+    b-alert(v-if="showingMostRecent", variant="info", show)
+      | No events in the selected range. The last event in this bucket is from {{ lastEventTime | friendlytime }}, showing the {{ events.length }} most recent events instead.
+
     vis-timeline(:buckets="[bucket_with_events]", :showRowLabels="false")
 
     aw-eventlist(:bucket_id="id", @save="updateEvent", :events="events" editable=true)
@@ -54,6 +57,8 @@ export default {
       events: [],
       eventcount: '?',
       loaded: false,
+      showingMostRecent: false,
+      lastEventTime: null,
       daterange: null,
       maxDuration: 31 * 24 * 60 * 60,
     };
@@ -90,12 +95,37 @@ export default {
   },
   methods: {
     getEvents: async function (bucket_id) {
+      // A newer daterange selection supersedes this request; drop late responses.
+      const daterange = this.daterange;
       const bucket = await this.bucketsStore.getBucketWithEvents({
         id: bucket_id,
-        start: this.daterange[0].format(),
-        end: this.daterange[1].format(),
+        start: daterange[0].format(),
+        end: daterange[1].format(),
       });
+      if (this.daterange !== daterange) return;
       this.events = bucket.events;
+      this.showingMostRecent = false;
+
+      // Stale or imported buckets have nothing in the selected range (#136):
+      // fall back to the latest events so the view stays useful for debugging.
+      const hasData = this.bucket.metadata && this.bucket.metadata.end;
+      if (this.events.length == 0 && hasData) {
+        try {
+          const recent = await this.bucketsStore.getBucketWithEvents({
+            id: bucket_id,
+            limit: 100,
+          });
+          if (this.daterange !== daterange) return;
+          if (recent.events.length > 0) {
+            this.events = recent.events;
+            // The API returns newest first.
+            this.lastEventTime = recent.events[0].timestamp;
+            this.showingMostRecent = true;
+          }
+        } catch (e) {
+          console.warn('[bucket] Failed to load most recent events:', e);
+        }
+      }
     },
     getEventCount: async function (bucket_id) {
       const count = await getClient().countEvents(bucket_id);
