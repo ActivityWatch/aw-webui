@@ -129,6 +129,7 @@ export default {
       hosts: null,
       buckets: null,
       clients: null,
+      fetchSeq: 0,
       daterange: null,
       maxDuration: 31 * 24 * 60 * 60,
       filter_hostname: null,
@@ -241,12 +242,14 @@ export default {
     getBuckets: async function () {
       if (this.daterange == null) return;
 
+      const seq = ++this.fetchSeq;
       this.all_buckets = Object.freeze(
         await useBucketsStore().getBucketsWithEvents({
           start: this.daterange[0].format(),
           end: this.daterange[1].format(),
         })
       );
+      if (seq !== this.fetchSeq) return;
 
       this.hosts = this.all_buckets
         .map(a => a.hostname)
