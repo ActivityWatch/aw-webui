@@ -108,6 +108,10 @@ describe('activity store', () => {
   });
 
   describe('query_browser_only', () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
     const timeperiod = {
       start: '2024-01-01T00:00:00+00:00',
       length: [1, 'day'] as [number, string],
@@ -134,7 +138,6 @@ describe('activity store', () => {
       expect(activityStore.browser.top_urls).toEqual(browserData.urls);
       expect(activityStore.browser.top_titles).toEqual(browserData.titles);
       expect(activityStore.browser.duration).toEqual(300);
-      querySpy.mockRestore();
     });
 
     test('clears browser state when API returns empty result', async () => {
@@ -142,14 +145,19 @@ describe('activity store', () => {
         s.buckets.browser = ['aw-watcher-firefox_test'];
       });
       activityStore.$patch(s => {
+        s.browser.top_domains = [{ data: { $domain: 'old.example.com' }, duration: 999 }];
+        s.browser.top_urls = [{ data: { url: 'https://old.example.com/' }, duration: 999 }];
+        s.browser.top_titles = [{ data: { title: 'Old Example' }, duration: 999 }];
         s.browser.duration = 999;
       });
-      const querySpy = jest.spyOn(getClient(), 'query').mockResolvedValueOnce([{}]);
+      jest.spyOn(getClient(), 'query').mockResolvedValueOnce([{}]);
 
       await activityStore.query_browser_only({ host: 'test', timeperiod });
 
+      expect(activityStore.browser.top_domains).toBeUndefined();
+      expect(activityStore.browser.top_urls).toBeUndefined();
+      expect(activityStore.browser.top_titles).toBeUndefined();
       expect(activityStore.browser.duration).toBeUndefined();
-      querySpy.mockRestore();
     });
 
     test('passes all browser bucket IDs to the query', async () => {
@@ -166,7 +174,6 @@ describe('activity store', () => {
       const queryStr = (querySpy.mock.calls[0][1] as string[]).join('\n');
       expect(queryStr).toContain('aw-watcher-chrome_test');
       expect(queryStr).toContain('aw-watcher-firefox_test');
-      querySpy.mockRestore();
     });
   });
 });
