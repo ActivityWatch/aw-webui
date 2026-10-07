@@ -99,7 +99,7 @@ div
     | {{ $t('timeline.noEvents') }}
 
   div(v-if="buckets !== null")
-    vis-timeline(:buckets="buckets", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane", :updateTimelineWindow='updateTimelineWindow')
+    vis-timeline(:buckets="buckets", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane", :updateTimelineWindow='updateTimelineWindow', @event-saved="getBuckets")
 
     aw-devonly(reason="Not ready for production, still experimenting")
       aw-calendar(:buckets="buckets")

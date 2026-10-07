@@ -41,7 +41,7 @@ describe('timeline event editing (#984)', () => {
 
     expect(replaceEvent).toHaveBeenCalledWith('aw-watcher-window_test', editedEvent);
     expect(emit).toHaveBeenNthCalledWith(1, 'save', editedEvent);
-    expect(emit).toHaveBeenNthCalledWith(2, 'saved', editedEvent);
+    expect(emit).toHaveBeenNthCalledWith(2, 'saved', editedEvent, 'aw-watcher-window_test');
   });
 
   test('does not report a saved event when the server rejects the update', async () => {
@@ -81,13 +81,17 @@ describe('timeline event editing (#984)', () => {
 
   test('stores the saved event and immediately rebuilds the timeline', () => {
     const saved = { id: 7, data: { title: 'after' } };
+    const emit = jest.fn();
     const vm = {
       editingEventBucket: 'aw-watcher-window_test',
       editingEvent: null,
       eventOverrides: {},
+      pendingWindowRestore: null,
+      timeline: null,
       $set: jest.fn((target, key, value) => {
         target[key] = value;
       }),
+      $emit: emit,
       update: jest.fn(),
     };
 
@@ -96,6 +100,7 @@ describe('timeline event editing (#984)', () => {
     expect(vm.eventOverrides['aw-watcher-window_test\0' + saved.id]).toBe(saved);
     expect(vm.editingEvent).toBe(saved);
     expect(vm.update).toHaveBeenCalledTimes(1);
+    expect(emit).toHaveBeenCalledWith('event-saved', saved);
   });
 });
 

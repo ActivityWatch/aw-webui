@@ -109,11 +109,15 @@ export default {
   },
   methods: {
     async save() {
+      // Capture before any async suspension: another selection can change
+      // this.editedEvent or this.bucket_id while replaceEvent is in-flight.
+      const savedEvent = { ...this.editedEvent };
+      const savedBucketId = this.bucket_id;
       // This emit needs to be called first, otherwise it won't occur for some reason
       // FIXME: but what if the replace fails? Then UI will incorrectly think event was replaced?
-      this.$emit('save', this.editedEvent);
-      await this.$aw.replaceEvent(this.bucket_id, this.editedEvent);
-      this.$emit('saved', this.editedEvent);
+      this.$emit('save', savedEvent);
+      await this.$aw.replaceEvent(savedBucketId, savedEvent);
+      this.$emit('saved', savedEvent, savedBucketId);
     },
     async delete_() {
       // This emit needs to be called first, otherwise it won't occur for some reason

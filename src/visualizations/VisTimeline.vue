@@ -122,6 +122,7 @@ export default {
       editingEvent: null,
       editingEventBucket: null,
       eventOverrides: {} as Record<string, IEvent>,
+      pendingWindowRestore: null as { start: Date; end: Date } | null,
 
       updateHasRun: false,
     };
@@ -248,11 +249,17 @@ export default {
     displayEvent: function (bucketId: string, event: IEvent): IEvent {
       return this.eventOverrides[`${bucketId}\0${event.id}`] || event;
     },
-    onEventSaved: function (event: IEvent) {
-      const key = `${this.editingEventBucket}\0${event.id}`;
+    onEventSaved: function (event: IEvent, bucketId?: string) {
+      const bucket = bucketId || this.editingEventBucket;
+      const key = `${bucket}\0${event.id}`;
       this.$set(this.eventOverrides, key, event);
       this.editingEvent = event;
+      if (this.timeline) {
+        const w = this.timeline.getWindow();
+        this.pendingWindowRestore = { start: w.start, end: w.end };
+      }
       this.update();
+      this.$emit('event-saved', event);
     },
     onSelect: async function (properties) {
       if (properties.items.length == 0) {
@@ -443,6 +450,12 @@ export default {
         this.timeline.setData({ groups: [], items: [] });
         this.items = [];
         this.groups = [];
+      }
+      if (this.pendingWindowRestore) {
+        this.timeline.setWindow(this.pendingWindowRestore.start, this.pendingWindowRestore.end, {
+          animation: false,
+        });
+        this.pendingWindowRestore = null;
       }
     },
   },
