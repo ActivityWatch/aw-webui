@@ -113,6 +113,37 @@ describe('watcher liveness banner', () => {
       bucket('other-afk', 'afkstatus', 10, 'other'),
     ];
     await wrapper.setProps({ host: 'other' });
+    await flush();
+    expect(wrapper.vm.staleWatchers).toHaveLength(1);
+  });
+
+  test('waits for fresh metadata after a host change before judging buckets', async () => {
+    store.buckets = [bucket('window-synced', 'currentwindow', 0), bucket('afk', 'afkstatus', 10)];
+    wrapper = mount();
+    await flush();
+    expect(wrapper.vm.staleWatchers).toHaveLength(1);
+
+    // A host switch must not reuse the previous host's clock: hold the refresh
+    // pending and confirm the banner is suppressed until fresh metadata lands.
+    let resolve;
+    store.loadBuckets.mockClear();
+    store.loadBuckets.mockImplementationOnce(
+      () =>
+        new Promise(done => {
+          resolve = done;
+        })
+    );
+    store.buckets = [
+      bucket('other-window', 'currentwindow', 0, 'other'),
+      bucket('other-afk', 'afkstatus', 10, 'other'),
+    ];
+    wrapper.setProps({ host: 'other' });
+    await Vue.nextTick();
+    expect(store.loadBuckets).toHaveBeenCalledTimes(1);
+    expect(wrapper.vm.metadataFresh).toBe(false);
+    expect(wrapper.vm.staleWatchers).toEqual([]);
+    resolve();
+    await flush();
     expect(wrapper.vm.staleWatchers).toHaveLength(1);
   });
 });

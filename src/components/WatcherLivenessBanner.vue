@@ -103,6 +103,15 @@ export default Vue.extend({
       return result;
     },
   },
+  watch: {
+    // Activity.vue reuses this component across host changes (the template has
+    // no :key), so `now`/`metadataFresh` would otherwise still reflect the
+    // previous host. Reset and re-fetch before judging the new host's buckets.
+    host() {
+      this.metadataFresh = false;
+      void this.refreshMetadata();
+    },
+  },
   mounted() {
     try {
       const saved = JSON.parse(sessionStorage.getItem('aw-watcher-dismissals') || '[]');
