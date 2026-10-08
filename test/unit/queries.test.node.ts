@@ -357,6 +357,45 @@ describe('chrome fork matching in generated query', () => {
   });
 });
 
+describe('browser regex escaping in generated query', () => {
+  const params = {
+    bid_window: 'aw-watcher-window_testhost',
+    bid_afk: 'aw-watcher-afk_testhost',
+    filter_afk: true,
+    include_audible: false,
+    categories: [],
+    filter_categories: [],
+  };
+
+  test('arc bucket query emits single-backslash regex (not double-escaped)', () => {
+    // Regression test for #1080: JSON.stringify was doubling backslashes, so
+    // arc(\.exe)?$ became arc(\\.exe)?$ in the query text — aw-server-rust then
+    // treated \\.exe as a literal backslash + any char + exe, so Arc.exe on
+    // Windows never matched.
+    const query = fullDesktopQuery({
+      ...params,
+      bid_browsers: ['aw-watcher-web-arc_testhost'],
+    }).join('\n');
+    expect(query).toContain('window_arc_re =');
+    // After fix: single backslash (\.exe), not double (\\. exe)
+    expect(query).toContain('arc(\\.exe)?$');
+    expect(query).not.toContain('arc(\\\\.exe)?$');
+  });
+
+  test('chrome bucket regex with embedded arc/dia patterns uses single backslash', () => {
+    const query = fullDesktopQuery({
+      ...params,
+      bid_browsers: ['aw-watcher-web-chrome_testhost'],
+    }).join('\n');
+    expect(query).toContain('window_chrome_re =');
+    // arc and dia are embedded in the chrome regex; both should have single backslash
+    expect(query).toContain('arc(\\.exe)?$');
+    expect(query).toContain('dia(\\.exe)?$');
+    expect(query).not.toContain('arc(\\\\.exe)?$');
+    expect(query).not.toContain('dia(\\\\.exe)?$');
+  });
+});
+
 describe('querystr_to_array', () => {
   test('splits simple multi-statement query correctly', () => {
     const query = 'events = query_bucket("aw-watcher-window_host"); RETURN = {"events": events};';
