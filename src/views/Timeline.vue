@@ -241,12 +241,16 @@ export default {
     getBuckets: async function () {
       if (this.daterange == null) return;
 
-      this.all_buckets = Object.freeze(
-        await useBucketsStore().getBucketsWithEvents({
-          start: this.daterange[0].format(),
-          end: this.daterange[1].format(),
-        })
-      );
+      // Only refetch when the range changes; filters work on copies below.
+      if (this.fetchedRange !== this.daterange) {
+        this.fetchedRange = this.daterange;
+        this.all_buckets = Object.freeze(
+          await useBucketsStore().getBucketsWithEvents({
+            start: this.daterange[0].format(),
+            end: this.daterange[1].format(),
+          })
+        );
+      }
 
       this.hosts = this.all_buckets
         .map(a => a.hostname)
@@ -255,7 +259,7 @@ export default {
         .map(a => a.client)
         .filter((value, index, array) => array.indexOf(value) === index);
 
-      let buckets = this.all_buckets;
+      let buckets = this.all_buckets.map(bucket => ({ ...bucket }));
       if (this.filter_hostname) {
         buckets = _.filter(buckets, b => b.hostname == this.filter_hostname);
       }
@@ -302,7 +306,8 @@ export default {
         buckets = this._applyMergeSimilar(buckets);
       }
 
-      this.buckets = buckets;
+      // Frozen to keep the event graph out of Vue's deep observation.
+      this.buckets = Object.freeze(buckets);
     },
 
     // Merges adjacent events with the same app name within window buckets.

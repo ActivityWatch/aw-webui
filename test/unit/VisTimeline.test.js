@@ -192,6 +192,18 @@ describe('VisTimeline scroll bounds (#996)', () => {
     expect(vm.timeline.setWindow).toHaveBeenCalledWith(dayStart, dayEnd);
   });
 
+  test('sets data before moving the window, with subgroups only for swimlanes', () => {
+    const vm = makeVm();
+    vm.chartData[0].swimlane = 'app';
+    const calls = [];
+    vm.timeline.setData.mockImplementation(({ items }) => calls.push(items[0].subgroup));
+    vm.timeline.setWindow.mockImplementation(() => calls.push('window'));
+    update.call(vm);
+    vm.swimlane = 'app';
+    update.call(vm);
+    expect(calls).toEqual([undefined, 'window', 'app']);
+  });
+
   test('keeps the zoomed window when the same interval is re-rendered', () => {
     const vm = makeVm();
     update.call(vm);
