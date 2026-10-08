@@ -15,6 +15,7 @@ div
 </template>
 
 <script lang="ts">
+import Vue from 'vue';
 import { mapStores } from 'pinia';
 import { useBucketsStore } from '~/stores/buckets';
 
@@ -27,7 +28,7 @@ interface StaleWatcher {
   minutesAgo: number;
 }
 
-export default {
+export default Vue.extend({
   name: 'aw-watcher-liveness-banner',
   props: {
     host: {
@@ -38,12 +39,17 @@ export default {
   data() {
     return {
       dismissed: [] as string[],
+      now: Date.now(),
+      refreshTimer: null as ReturnType<typeof setInterval> | null,
+      refreshing: false,
+      metadataFresh: false,
     };
   },
   computed: {
     ...mapStores(useBucketsStore),
     staleWatchers(): StaleWatcher[] {
-      const now = new Date();
+      if (!this.metadataFresh) return [];
+      const now = new Date(this.now);
       const staleMs = STALE_THRESHOLD_MINUTES * 60 * 1000;
 
       const pairs = [
@@ -71,7 +77,7 @@ export default {
 
       const result: StaleWatcher[] = [];
       for (const pair of pairs) {
-        if (this.dismissed.includes(pair.type)) continue;
+        if (this.dismissed.includes(`${this.host}:${pair.type}`)) continue;
         if (pair.ids.length === 0) continue;
 
         const mostRecentMs = Math.max(
@@ -97,10 +103,42 @@ export default {
       return result;
     },
   },
+  mounted() {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem('aw-watcher-dismissals') || '[]');
+      if (Array.isArray(saved)) this.dismissed = saved.filter(key => typeof key === 'string');
+    } catch {
+      // Storage may be unavailable; in-memory dismissal still works.
+    }
+    void this.refreshMetadata();
+    this.refreshTimer = setInterval(() => void this.refreshMetadata(), 60000);
+  },
+  beforeDestroy() {
+    if (this.refreshTimer !== null) clearInterval(this.refreshTimer);
+  },
   methods: {
+    async refreshMetadata() {
+      if (this.refreshing) return;
+      this.refreshing = true;
+      try {
+        await this.bucketsStore.loadBuckets();
+        this.now = Date.now();
+        this.metadataFresh = true;
+      } catch {
+        // A disconnected server is not evidence that one watcher stopped.
+        this.metadataFresh = false;
+      } finally {
+        this.refreshing = false;
+      }
+    },
     dismiss(type: string) {
-      this.dismissed.push(type);
+      this.dismissed.push(`${this.host}:${type}`);
+      try {
+        sessionStorage.setItem('aw-watcher-dismissals', JSON.stringify(this.dismissed));
+      } catch {
+        // Keep the in-memory dismissal when storage is unavailable.
+      }
     },
   },
-};
+});
 </script>
