@@ -39,6 +39,10 @@ import {
   periodsForFullDesktopQuery,
 } from '~/util/desktopQuerySplit';
 
+// The history request started by ensure_category_history, shared so that
+// switching views back and forth doesn't repeat it.
+let historyRequest: { query_options: QueryOptions; promise: Promise<void> } | null = null;
+
 function timeperiodStrsAroundTimeperiod(timeperiod: TimePeriod): string[] {
   return timeperiodsAroundTimeperiod(timeperiod).map(timeperiodToStr);
 }
@@ -541,14 +545,22 @@ export const useActivityStore = defineStore('activity', {
       ) {
         return;
       }
-      try {
-        await this.query_category_time_by_period(query_options);
-      } finally {
-        // Not part of a load, so ensure_loaded won't clear the progress bar.
-        if (this.query_options === query_options) {
-          this.progress = null;
-        }
+      if (historyRequest?.query_options === query_options) {
+        return historyRequest.promise;
       }
+      const promise = (async () => {
+        try {
+          await this.query_category_time_by_period(query_options);
+        } finally {
+          // Not part of a load, so ensure_loaded won't clear the progress bar.
+          if (this.query_options === query_options) {
+            this.progress = null;
+          }
+          if (historyRequest?.promise === promise) historyRequest = null;
+        }
+      })();
+      historyRequest = { query_options, promise };
+      return promise;
     },
 
     /**

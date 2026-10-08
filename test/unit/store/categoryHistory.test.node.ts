@@ -51,6 +51,14 @@ test('ensure_category_history loads skipped history once', async () => {
   expect(query).toHaveBeenCalledTimes(2);
 });
 
+test('concurrent ensure_category_history calls share one request', async () => {
+  const { store, query, options } = setup();
+  await store.ensure_loaded({ ...options, include_category_history: false });
+  await Promise.all([store.ensure_category_history(), store.ensure_category_history()]);
+  // One query per day, not per call
+  expect(query).toHaveBeenCalledTimes(2);
+});
+
 test('ensure_category_history leaves history derived from the full query alone', async () => {
   const { store, query } = setup();
   await store.ensure_loaded({
