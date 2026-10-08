@@ -23,9 +23,11 @@ div#visualization {
     // Position tooltip above the cursor instead of overlapping the timeline bars
     transform: translateY(-100%);
     margin-top: -15px;
-    // Ensure tooltip is readable
-    max-width: 400px;
+    // Ensure tooltip is readable; overflow-wrap breaks long JSON strings and
+    // URLs at any character boundary so the tooltip never widens the page
+    max-width: min(400px, 90vw);
     pointer-events: none;
+    overflow-wrap: anywhere;
   }
 
   .vis-labelset .vis-label .vis-inner {
