@@ -150,3 +150,21 @@ test('blank regex category never matches, children still do', () => {
   );
   expect(events.map(e => e.data.$category)).toEqual([['Uncategorized'], ['Work', 'Programming']]);
 });
+
+test('reuses regex objects while respecting in-place rule edits', () => {
+  const cats: Category[] = [{ name: ['Work'], rule: { type: 'regex', regex: '^vim$' } }];
+  const construct = jest.spyOn(global, 'RegExp');
+  try {
+    expect(classes.matchString('vim', cats)).toBe(cats[0]);
+    expect(classes.matchString('other', cats)).toBeNull();
+    expect(construct).toHaveBeenCalledTimes(1);
+    cats[0].rule.ignore_case = true;
+    expect(classes.matchString('VIM', cats)).toBe(cats[0]);
+    cats[0].rule.regex = '^code$';
+    expect(classes.matchString('vim', cats)).toBeNull();
+    expect(classes.matchString('CODE', cats)).toBe(cats[0]);
+    expect(construct).toHaveBeenCalledTimes(3);
+  } finally {
+    construct.mockRestore();
+  }
+});

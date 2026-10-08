@@ -523,6 +523,19 @@ function pickHighestRanked(categories: Category[]) {
   return _.maxBy(categories, categoryRank);
 }
 
+// Rules can be edited in place by the category editor, so a cached regex is
+// only reused while the rule's pattern and flags are unchanged.
+const regexCache = new WeakMap<Rule, { source: string; flags: string; re: RegExp }>();
+function ruleRegExp(rule: Rule): RegExp {
+  // using 'm' flag to make `$` and `^` in rules work
+  const flags = (rule.ignore_case ? 'i' : '') + 'm';
+  const cached = regexCache.get(rule);
+  if (cached && cached.source === rule.regex && cached.flags === flags) return cached.re;
+  const re = new RegExp(rule.regex, flags);
+  regexCache.set(rule, { source: rule.regex, flags, re });
+  return re;
+}
+
 export function matchString(
   str: string,
   categories: Category[] | null,
@@ -537,9 +550,7 @@ export function matchString(
 
   // Compile regexes
   const regexes: [Category, RegExp][] = categories.filter(hasMatchableRegex).map(c => {
-    // using 'm' flag to make `$` and `^` in rules work
-    const re = RegExp(c.rule.regex, (c.rule.ignore_case ? 'i' : '') + 'm');
-    return [c, re];
+    return [c, ruleRegExp(c.rule)];
   });
 
   // Find the matching category.
