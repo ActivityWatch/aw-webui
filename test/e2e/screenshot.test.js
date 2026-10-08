@@ -140,6 +140,11 @@ test.clientScripts({
     .click(Selector('label').withText('12h'))
     .expect(Selector('input[value="43200"]').checked)
     .eql(true);
+  // Tooltips are built on hover
+  await t
+    .hover(Selector('.vis-item.vis-range'))
+    .expect(Selector('.vis-tooltip').innerText)
+    .contains('Duration');
 
   await t.takeScreenshot({
     path: 'timeline.png',

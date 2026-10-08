@@ -242,15 +242,23 @@ export default {
       if (this.daterange == null) return;
 
       // Only refetch when the range changes; filters work on copies below.
-      if (this.fetchedRange !== this.daterange) {
-        this.fetchedRange = this.daterange;
-        this.all_buckets = Object.freeze(
-          await useBucketsStore().getBucketsWithEvents({
-            start: this.daterange[0].format(),
-            end: this.daterange[1].format(),
-          })
-        );
+      const range = this.daterange;
+      if (this.fetchedRange !== range) {
+        this.fetchedRange = range;
+        this.bucketsRequest = useBucketsStore().getBucketsWithEvents({
+          start: range[0].format(),
+          end: range[1].format(),
+        });
+        // Let the next call retry a failed fetch
+        this.bucketsRequest.catch(() => {
+          if (this.fetchedRange === range) this.fetchedRange = null;
+        });
       }
+      const request = this.bucketsRequest;
+      const fetched = await request;
+      // A newer range took over while this one was loading
+      if (request !== this.bucketsRequest) return;
+      this.all_buckets = Object.freeze(fetched);
 
       this.hosts = this.all_buckets
         .map(a => a.hostname)
