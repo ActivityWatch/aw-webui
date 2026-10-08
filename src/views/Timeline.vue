@@ -253,20 +253,22 @@ export default {
 
       const seq = ++this.fetchSeq;
       // Only refetch when the range changes; filters work on copies below.
-      if (this.fetchedRange !== this.daterange) {
-        const range = this.daterange;
-        const all_buckets = Object.freeze(
-          await useBucketsStore().getBucketsWithEvents({
-            start: range[0].format(),
-            end: range[1].format(),
-          })
-        );
-        if (seq !== this.fetchSeq) return;
-        // Record the range only once its buckets are in place, so a superseded
-        // fetch never leaves a later call reusing buckets from another range.
+      const range = this.daterange;
+      if (this.fetchedRange !== range) {
         this.fetchedRange = range;
-        this.all_buckets = all_buckets;
+        this.bucketsRequest = useBucketsStore().getBucketsWithEvents({
+          start: range[0].format(),
+          end: range[1].format(),
+        });
+        // Let the next call retry a failed fetch
+        this.bucketsRequest.catch(() => {
+          if (this.fetchedRange === range) this.fetchedRange = null;
+        });
       }
+      const fetched = await this.bucketsRequest;
+      // A newer call (range or filter change) took over while this one was loading
+      if (seq !== this.fetchSeq) return;
+      this.all_buckets = Object.freeze(fetched);
 
       this.hosts = this.all_buckets
         .map(a => a.hostname)
