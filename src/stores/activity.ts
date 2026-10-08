@@ -229,6 +229,9 @@ export interface QueryOptions {
   filter_afk?: boolean;
   include_audible?: boolean;
   include_stopwatch?: boolean;
+  // Load the per-period category history (the timeline barchart). It is the
+  // slowest part of a load, so views that don't show it can skip it.
+  include_category_history?: boolean;
   filter_categories?: string[][];
   dont_query_inactive?: boolean;
   // Skip the active-time history around the period (the period-usage bars),
@@ -511,10 +514,40 @@ export const useActivityStore = defineStore('activity', {
       }
 
       // Perform this last, as it takes the longest.
-      // Skipped when query_desktop_full already derived it (long ranges).
-      const derivedByPeriod = this.window.available && usesMonthlyBuckets(query_options.timeperiod);
-      if ((this.window.available || this.android.available) && !derivedByPeriod) {
+      if (
+        query_options.include_category_history !== false &&
+        this.queries_category_history(query_options)
+      ) {
         await this.query_category_time_by_period(query_options);
+      }
+    },
+
+    // Whether category.by_period is queried separately. Long ranges derive it
+    // from the chunk results of the full query instead.
+    queries_category_history(query_options: QueryOptions): boolean {
+      const monthly = usesMonthlyBuckets(query_options.timeperiod);
+      if (this.query_hosts.length > 1 || this.window.available) return !monthly;
+      return this.android.available;
+    },
+
+    // Load category history for the current query if a load skipped it,
+    // e.g. when switching to a view that shows the timeline barchart.
+    async ensure_category_history() {
+      const query_options = this.query_options;
+      if (
+        !query_options?.timeperiod ||
+        this.category.by_period ||
+        !this.queries_category_history(query_options)
+      ) {
+        return;
+      }
+      try {
+        await this.query_category_time_by_period(query_options);
+      } finally {
+        // Not part of a load, so ensure_loaded won't clear the progress bar.
+        if (this.query_options === query_options) {
+          this.progress = null;
+        }
       }
     },
 
@@ -576,7 +609,10 @@ export const useActivityStore = defineStore('activity', {
         await this.query_editor_completed();
       }
       // Long ranges derive it from the chunk results in query_multidevice_full
-      if (!usesMonthlyBuckets(query_options.timeperiod)) {
+      if (
+        query_options.include_category_history !== false &&
+        this.queries_category_history(query_options)
+      ) {
         await this.query_category_time_by_period(query_options);
       }
     },
@@ -945,6 +981,7 @@ export const useActivityStore = defineStore('activity', {
       periods = periods.filter(period => new Date(period.split('/')[0]) < new Date());
       this.progress_add(periods.length);
 
+      const loading = this.query_options;
       const signal = getClient().controller.signal;
       let cancelled = false;
       signal.onabort = () => {
@@ -1025,6 +1062,8 @@ export const useActivityStore = defineStore('activity', {
       // Filter out values that are undefined (no longer needed, only used when visualization was progressive (looks buggy))
       by_period = _.fromPairs(_.toPairs(by_period).filter(o => o[1]));
 
+      // A newer load took over; drop this result.
+      if (this.query_options !== loading) return;
       this.query_category_time_by_period_completed({ by_period });
     },
 
