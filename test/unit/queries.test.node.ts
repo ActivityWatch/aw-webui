@@ -304,8 +304,8 @@ describe('chrome fork matching in generated query', () => {
       bid_browsers: ['aw-watcher-web-chrome_testhost'],
     }).join('\n');
     expect(query).toContain('company.thebrowser.dia');
-    // JSON.stringify doubles the regex backslash, so the query text has \\.
-    expect(query).toContain('dia(\\\\.exe)?$');
+    // After fix: JSON.stringify double-escaping is undone, so query has single \.
+    expect(query).toContain('dia(\\.exe)?$');
   });
 
   test('mixed chrome and Arc buckets: Arc bucket owns Arc events, chrome stream excludes Arc', () => {
@@ -318,12 +318,12 @@ describe('chrome fork matching in generated query', () => {
       query.indexOf('events_chrome = filter_period_intersect')
     );
     // The chrome stream must NOT match Arc when a dedicated Arc bucket exists.
-    expect(chromeWindowFilter).not.toContain('arc(\\\\.exe)?$');
+    expect(chromeWindowFilter).not.toContain('arc(\\.exe)?$');
     // Dia has no dedicated bucket and still writes to chrome — keep matching it.
-    expect(chromeWindowFilter).toContain('dia(\\\\.exe)?$');
+    expect(chromeWindowFilter).toContain('dia(\\.exe)?$');
     // The Arc bucket keeps its own matching path.
     expect(query).toContain('window_arc_re =');
-    expect(query).toContain('arc(\\\\.exe)?$');
+    expect(query).toContain('arc(\\.exe)?$');
     // Streams concat plainly; no overlap-masking that would drop real activity.
     expect(query).toContain('browser_events = concat(browser_events, events_chrome);');
     expect(query).toContain('browser_events = concat(browser_events, events_arc);');
