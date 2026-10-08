@@ -85,7 +85,7 @@ div
     div.mt-3(v-if="ignored_words.length > 0")
       small.text-muted
         | {{ ignored_words.length }} ignored {{ ignored_words.length == 1 ? 'word' : 'words' }}
-      b-button.ml-2(size="sm" variant="link" @click="show_ignored = !show_ignored")
+      b-button.ms-2(size="sm" variant="link" @click="show_ignored = !show_ignored")
         span(v-if="!show_ignored") Show
         span(v-else) Hide
       b-button(size="sm" variant="link" @click="resetIgnoredWords()") Reset

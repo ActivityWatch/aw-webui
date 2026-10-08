@@ -1,7 +1,7 @@
 <template lang="pug">
 div
   h3 {{ id }}
-  b-alert(v-if="notFound", show, variant="warning")
+  b-alert(v-if="notFound", :model-value="true", variant="warning")
     | No bucket named "{{ id }}".
     |
     router-link(to="/buckets") See all buckets
@@ -33,8 +33,8 @@ div
 
     input-timeinterval(v-model="daterange", :maxDuration="maxDuration")
 
-    b-alert(v-if="showingMostRecent", variant="info", show)
-      | No events in the selected range. The last event in this bucket is from {{ lastEventTime | friendlytime }}, showing the {{ events.length }} most recent events instead.
+    b-alert(v-if="showingMostRecent", variant="info", :model-value="true")
+      | No events in the selected range. The last event in this bucket is from {{ friendlytime(lastEventTime) }}, showing the {{ events.length }} most recent events instead.
 
     vis-timeline(:buckets="[bucket_with_events]", :showRowLabels="false")
 

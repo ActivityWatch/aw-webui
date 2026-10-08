@@ -17,7 +17,7 @@ div
     b-form-group.mb-3
       b-form-checkbox(v-model="enabled" switch)
         | Enable notifications
-        small.text-muted.ml-2 aw-notify runs only when this is on; the tray toggle mirrors this setting.
+        small.text-muted.ms-2 aw-notify runs only when this is on; the tray toggle mirrors this setting.
 
     template(v-if="enabled")
       p.text-muted.small.mb-3
@@ -25,7 +25,7 @@ div
         | the accumulated time crosses a threshold. The same config works in Android and aw-tauri.
 
       div(v-if="alerts.length === 0")
-        p.text-muted.font-italic No alerts configured.
+        p.text-muted.fst-italic No alerts configured.
 
       b-card.mb-2(v-for="(alert, idx) in alerts" :key="idx")
         div.d-flex.align-items-start
