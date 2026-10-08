@@ -58,10 +58,10 @@ div
         span {{ friendlyduration(activityStore.active.duration) }}
     b-alert.py-1.px-2.mb-1.small(
       v-if="isMultidevice && !multideviceNoteDismissed"
-      show
+      :model-value="true"
       variant="info"
       dismissible
-      @dismissed="dismissMultideviceNote"
+      @close="dismissMultideviceNote"
       data-testid="multidevice-note"
     ) {{ $t('activity.multideviceNote') }}
     ul.list-group.list-group-horizontal-md(v-if="periodLength != 'day'")

@@ -17,14 +17,14 @@ div
     b-form-group.mb-3
       b-form-checkbox(v-model="enabled" switch)
         | {{ $t('extraViews.notifications.enabled') }}
-        small.text-muted.ml-2 {{ $t('extraViews.notifications.enabledHelp') }}
+        small.text-muted.ms-2 {{ $t('extraViews.notifications.enabledHelp') }}
 
     template(v-if="enabled")
       p.text-muted.small.mb-3
         | {{ $t('settings.notifications.alertsHelp') }}
 
       div(v-if="alerts.length === 0")
-        p.text-muted.font-italic {{ $t('settings.notifications.noAlerts') }}
+        p.text-muted.fst-italic {{ $t('settings.notifications.noAlerts') }}
 
       b-card.mb-2(v-for="(alert, idx) in alerts" :key="idx")
         div.d-flex.align-items-start

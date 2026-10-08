@@ -36,7 +36,7 @@ div
     div.mt-1.small.text-muted(v-if="categoryStore.category_sets.length > 1")
       | {{ $t('settings.categorization.setsAvailable', { count: categoryStore.category_sets.length }) }}
     div.mt-2.d-flex.align-items-center.flex-wrap(v-if="otherSets.length > 0" style="gap: 0.75rem;")
-      span.small.font-weight-bold(style="white-space: nowrap") {{ $t('settings.categorization.alsoApply') }}
+      span.small.fw-bold(style="white-space: nowrap") {{ $t('settings.categorization.alsoApply') }}
       b-form-checkbox(
         v-for="set in otherSets"
         :key="set.id"

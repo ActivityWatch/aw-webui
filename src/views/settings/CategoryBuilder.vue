@@ -83,7 +83,7 @@ div
     div.mt-3(v-if="ignored_words.length > 0")
       small.text-muted
         | {{ $t('extraViews.categoryBuilder.ignoredWords', { count: ignored_words.length }) }}
-      b-button.ml-2(size="sm" variant="link" @click="show_ignored = !show_ignored")
+      b-button.ms-2(size="sm" variant="link" @click="show_ignored = !show_ignored")
         span(v-if="!show_ignored") {{ $t('extraViews.categoryBuilder.show') }}
         span(v-else) {{ $t('extraViews.categoryBuilder.hide') }}
       b-button(size="sm" variant="link" @click="resetIgnoredWords()") {{ $t('extraViews.categoryBuilder.reset') }}
