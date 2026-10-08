@@ -252,13 +252,21 @@ export default {
       if (this.daterange == null) return;
 
       const seq = ++this.fetchSeq;
-      this.all_buckets = Object.freeze(
-        await useBucketsStore().getBucketsWithEvents({
-          start: this.daterange[0].format(),
-          end: this.daterange[1].format(),
-        })
-      );
-      if (seq !== this.fetchSeq) return;
+      // Only refetch when the range changes; filters work on copies below.
+      if (this.fetchedRange !== this.daterange) {
+        const range = this.daterange;
+        const all_buckets = Object.freeze(
+          await useBucketsStore().getBucketsWithEvents({
+            start: range[0].format(),
+            end: range[1].format(),
+          })
+        );
+        if (seq !== this.fetchSeq) return;
+        // Record the range only once its buckets are in place, so a superseded
+        // fetch never leaves a later call reusing buckets from another range.
+        this.fetchedRange = range;
+        this.all_buckets = all_buckets;
+      }
 
       this.hosts = this.all_buckets
         .map(a => a.hostname)
@@ -267,7 +275,7 @@ export default {
         .map(a => a.client)
         .filter((value, index, array) => array.indexOf(value) === index);
 
-      let buckets = this.all_buckets;
+      let buckets = this.all_buckets.map(bucket => ({ ...bucket }));
       if (this.filter_hostname) {
         buckets = _.filter(buckets, b => b.hostname == this.filter_hostname);
       }
@@ -348,7 +356,8 @@ export default {
       // Clear the old category row so it can never be paired with a new range.
       this.categorizedEvents = [];
       this.categoryError = false;
-      this.buckets = buckets;
+      // Frozen to keep the event graph out of Vue's deep observation.
+      this.buckets = Object.freeze(buckets);
 
       const categoryResult = await categoryPromise;
       if (seq !== this.fetchSeq) return;
