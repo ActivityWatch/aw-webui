@@ -198,6 +198,30 @@ div
   vertical-align: middle;
 }
 
+// Phones: just enough for the short labels. md+: room for the folder icon
+// and longer translations of "Open".
+::v-deep .bucket-table .col-updated {
+  width: 7rem;
+}
+
+::v-deep .bucket-table .col-actions {
+  width: 6.5rem;
+}
+
+@media (min-width: 768px) {
+  ::v-deep .bucket-table .col-updated {
+    width: 9rem;
+  }
+
+  ::v-deep .bucket-table .col-actions {
+    width: 10rem;
+  }
+}
+
+::v-deep .bucket-table td .btn {
+  white-space: nowrap;
+}
+
 ::v-deep .bucket-id {
   display: inline-block;
   max-width: 100%;
@@ -289,19 +313,20 @@ export default {
           label: this.$t('buckets.bucketId'),
           sortable: true,
         },
-        // Fixed widths for the narrow columns: with table-layout: fixed,
-        // percentages squeezed the Open + kebab group past the card edge on
-        // phones. The ID column takes the rest and ellipsizes.
+        // Fixed widths for the narrow columns (see .col-* styles): with
+        // table-layout: fixed, percentages squeezed the Open + kebab group
+        // past the card edge on phones. The ID column takes the rest and
+        // ellipsizes.
         {
           key: 'last_updated',
           label: this.$t('buckets.updated'),
           sortable: true,
-          thStyle: { width: '7rem' },
+          thClass: 'col-updated',
         },
         {
           key: 'actions',
           label: '',
-          thStyle: { width: '6rem' },
+          thClass: 'col-actions',
           tdClass: 'text-right',
         },
       ];
