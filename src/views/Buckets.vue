@@ -288,18 +288,20 @@ export default {
           key: 'id',
           label: this.$t('buckets.bucketId'),
           sortable: true,
-          thStyle: { width: '65%' },
         },
+        // Fixed widths for the narrow columns: with table-layout: fixed,
+        // percentages squeezed the Open + kebab group past the card edge on
+        // phones. The ID column takes the rest and ellipsizes.
         {
           key: 'last_updated',
           label: this.$t('buckets.updated'),
           sortable: true,
-          thStyle: { width: '20%' },
+          thStyle: { width: '7rem' },
         },
         {
           key: 'actions',
           label: '',
-          thStyle: { width: '15%' },
+          thStyle: { width: '6rem' },
           tdClass: 'text-right',
         },
       ];
