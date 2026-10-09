@@ -1,5 +1,5 @@
 import { setActivePinia, createPinia } from 'pinia';
-import { useViewsStore, androidViews, migrateStoredViews } from '~/stores/views';
+import { useViewsStore, androidViews, defaultViews, migrateStoredViews } from '~/stores/views';
 
 describe('views store', () => {
   setActivePinia(createPinia());
@@ -77,6 +77,19 @@ describe('migrateStoredViews', () => {
     expect(migrateStoredViews(stored, true)).toEqual(androidViews);
   });
 
+  test('historical matching is independent of future desktop default changes', () => {
+    const original = defaultViews[0].elements.slice();
+    try {
+      defaultViews[0].elements.push({ type: 'future_visualization', size: 3 });
+      const stored = storedDesktopDefault();
+      expect(migrateStoredViews(stored, true)).toEqual(androidViews);
+      stored[2].elements = stored[2].elements.filter(el => el.type !== 'top_browser_titles');
+      expect(migrateStoredViews(stored, true)).toEqual(androidViews);
+    } finally {
+      defaultViews[0].elements = original;
+    }
+  });
+
   test('keeps the stored desktop default off Android', () => {
     const stored = storedDesktopDefault();
     expect(migrateStoredViews(stored, false)).toBe(stored);
@@ -104,7 +117,11 @@ describe('migrateStoredViews', () => {
 describe('views store on an Android build', () => {
   const OLD_ENV = process.env.VUE_APP_ON_ANDROID;
   afterEach(() => {
-    process.env.VUE_APP_ON_ANDROID = OLD_ENV;
+    if (OLD_ENV === undefined) {
+      delete process.env.VUE_APP_ON_ANDROID;
+    } else {
+      process.env.VUE_APP_ON_ANDROID = OLD_ENV;
+    }
   });
 
   // Fresh module instances, so `onAndroid` is read from the env set here.
@@ -121,15 +138,44 @@ describe('views store on an Android build', () => {
       };
     });
     mods.pinia.setActivePinia(mods.pinia.createPinia());
-    mods.settings.useSettingsStore().$patch({ views: stored, _loaded: true });
+    const settingsStore = mods.settings.useSettingsStore();
+    settingsStore.$patch({ views: stored, _loaded: true });
+    const save = jest.spyOn(settingsStore, 'save').mockResolvedValue(undefined);
+    const update = jest.spyOn(settingsStore, 'update');
     const viewsStore = mods.views.useViewsStore();
     await viewsStore.load();
-    return { views: viewsStore.views, expected: mods.views.androidViews };
+    return {
+      views: viewsStore.views,
+      expected: mods.views.androidViews,
+      viewsStore,
+      settingsStore,
+      save,
+      update,
+    };
   }
 
   test('load() shows the Android views when a desktop default is stored', async () => {
-    const { views, expected } = await loadOnAndroid(storedDesktopDefault());
+    const stored = storedDesktopDefault();
+    const { views, expected, settingsStore, save, update } = await loadOnAndroid(stored);
     expect(views).toEqual(expected);
+    expect(settingsStore.views).toEqual(storedDesktopDefault());
+    expect(save).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  test('saving an edit persists the migrated Android layout', async () => {
+    const { viewsStore, settingsStore, expected, save, update } = await loadOnAndroid(
+      storedDesktopDefault()
+    );
+    viewsStore.addVisualization({ view_id: 'summary', type: 'top_titles' });
+    await viewsStore.save();
+    const edited = JSON.parse(JSON.stringify(expected));
+    edited[0].elements.push({ type: 'top_titles' });
+    expect(update).toHaveBeenCalledWith({ views: edited });
+    expect(settingsStore.views).toEqual(edited);
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(viewsStore.views).toEqual(edited);
+    expect(expected[0].elements).not.toContainEqual({ type: 'top_titles' });
   });
 
   test('load() keeps stored views the user edited', async () => {
