@@ -652,12 +652,16 @@ describe('androidBrowserQuery', () => {
   });
 
   test('queries every bucket when a browser has multiple profiles', () => {
-    const buckets = ['aw-watcher-web-firefox_profile1', 'aw-watcher-web-firefox_profile2'];
+    const buckets = [
+      'aw-watcher-web-firefox_profile1',
+      'aw-watcher-web-firefox_profile2',
+      'aw-watcher-web-firefox-synced-from-phone',
+    ];
     const joined = androidBrowserQuery('aw-watcher-android_device', buckets, [], []).join('\n');
     for (const bucket of buckets) {
       expect(joined).toContain(`query_bucket("${bucket}")`);
     }
-    expect(joined.match(/filter_period_intersect/g)).toHaveLength(2);
+    expect(joined.match(/filter_period_intersect/g)).toHaveLength(3);
   });
 
   test('keeps all browser aggregates until chunks have been merged', () => {

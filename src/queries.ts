@@ -795,7 +795,8 @@ export function androidBrowserQuery(
         .filter(
           bucketId =>
             bucketId === `aw-watcher-web-${browserName}` ||
-            bucketId.startsWith(`aw-watcher-web-${browserName}_`)
+            bucketId.startsWith(`aw-watcher-web-${browserName}_`) ||
+            bucketId.startsWith(`aw-watcher-web-${browserName}-synced-from-`)
         )
         .map(bucketId => [browserName, bucketId] as [string, string])
     );
