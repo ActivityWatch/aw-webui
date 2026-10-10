@@ -474,11 +474,9 @@ export const useActivityStore = defineStore('activity', {
       if (this.window.available) {
         await this.query_desktop_full(query_options);
       } else if (this.android.available) {
+        // Browser enrichment (when aw-watcher-web is present) is handled
+        // inside query_android via androidBrowserQuery.
         await this.query_android(query_options);
-        // Android hosts may also have browser buckets from aw-watcher-web.
-        if (this.browser.available) {
-          await this.query_browser_only(query_options);
-        }
       } else if (this.browser.available) {
         // Browser-only mode: device with aw-watcher-web but no window/afk/android watcher.
         await this.query_browser_only(query_options);
@@ -692,6 +690,30 @@ export const useActivityStore = defineStore('activity', {
       }
 
       this.query_window_completed(data[0]);
+
+      // Blend browser URL data when aw-watcher-web buckets are also present.
+      // androidBrowserQuery intersects URL events with the periods when a
+      // browser app was in the foreground, mirroring fullDesktopQuery's
+      // window+browser blending on desktop.
+      if (this.browser.available) {
+        const bq = queries.androidBrowserQuery(
+          selectedBucket,
+          this.buckets.browser,
+          categoryStore.classes_for_query,
+          filter_categories,
+          isIos
+        );
+        this.progress_add(1);
+        const bResult = await getClient()
+          .query([timeperiodToStr(timeperiod)], bq, { name: 'androidBrowserQuery' })
+          .catch(this.errorHandler);
+        this.progress_tick();
+        if (bResult && bResult[0] && bResult[0].browser) {
+          this.query_browser_completed(bResult[0].browser);
+        } else {
+          this.query_browser_completed({});
+        }
+      }
     },
 
     async query_browser_only({ timeperiod }: QueryOptions) {
