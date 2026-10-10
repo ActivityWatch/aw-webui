@@ -140,6 +140,19 @@ test.clientScripts({
     .click(Selector('label').withText('12h'))
     .expect(Selector('input[value="43200"]').checked)
     .eql(true);
+  // Tooltips are built on hover. Items just outside the window are also in
+  // the DOM, so pick one that is fully on screen, and hover again if the 12h
+  // reload replaced it under the cursor.
+  const visibleItem = Selector('.vis-item.vis-range').filter(node => {
+    const rect = node.getBoundingClientRect();
+    return rect.left >= 0 && rect.right <= window.innerWidth && rect.width >= 10;
+  });
+  const tooltip = Selector('.vis-tooltip');
+  const tooltipText = async () => ((await tooltip.exists) ? await tooltip.innerText : '');
+  for (let i = 0; i < 5 && !(await tooltipText()).includes('Duration'); i++) {
+    await t.hover(visibleItem).wait(1000);
+  }
+  await t.expect(await tooltipText()).contains('Duration');
 
   await t.takeScreenshot({
     path: 'timeline.png',
