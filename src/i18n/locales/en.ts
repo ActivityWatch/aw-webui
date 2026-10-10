@@ -255,8 +255,6 @@ export default {
     currentDevice: '(the current device)',
     lastUpdated: 'Last updated:',
     firstSeen: 'First seen:',
-    bucketId: 'Bucket ID',
-    updated: 'Updated',
     exportBucketJson: 'Export bucket as JSON',
     exportEventsCsv: 'Export events as CSV',
     deleteBucket: 'Delete bucket',

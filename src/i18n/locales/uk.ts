@@ -244,8 +244,6 @@ export default {
     currentDevice: '(поточний пристрій)',
     lastUpdated: 'Оновлено:',
     firstSeen: 'Вперше виявлено:',
-    bucketId: 'ID bucket-а',
-    updated: 'Оновлено',
     exportBucketJson: 'Експорт bucket-а в JSON',
     exportEventsCsv: 'Експорт подій у CSV',
     deleteBucket: 'Видалити bucket',

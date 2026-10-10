@@ -173,6 +173,18 @@ test.clientScripts({
   await checkNoError(t);
 });
 
+test('Buckets have no horizontal page overflow on mobile', async t => {
+  await t.resizeWindow(360, 800);
+  await hide_devonly(t);
+  // Wait for the async bucket list (Buckets.vue mounted -> loadBuckets()) to
+  // render before measuring layout. A fixed wait can elapse before the response
+  // arrives, making the overflow check pass vacuously against an empty list.
+  await t
+    .expect(Selector('.bucket-row').count)
+    .gt(0, 'bucket rows should render', { timeout: 10000 });
+  await checkNoHorizontalOverflow(t);
+});
+
 fixture(`Setting view`).page(`${baseURL}/#/settings/`).requestHooks(HTTPLogger);
 
 test.clientScripts({

@@ -240,8 +240,6 @@ export default {
     currentDevice: '（当前设备）',
     lastUpdated: '最后更新：',
     firstSeen: '首次出现：',
-    bucketId: '存储桶 ID',
-    updated: '已更新',
     exportBucketJson: '导出存储桶为 JSON',
     exportEventsCsv: '导出事件为 CSV',
     deleteBucket: '删除存储桶',
