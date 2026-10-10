@@ -437,3 +437,67 @@ describe('categories store: multiple active sets', () => {
     expect(names('mine')).toEqual([['Work']]);
   });
 });
+
+describe('import add-on-top via setActiveSets', () => {
+  setActivePinia(createPinia());
+  const store = useCategoryStore();
+
+  beforeEach(() => {
+    store.clearAll();
+    store.$patch({
+      category_sets: [
+        {
+          id: 'mine',
+          categories: [{ name: ['Work'], rule: { type: 'regex', regex: 'code' } }],
+        },
+      ],
+      active_set_ids: ['mine'],
+      classes: [],
+      classes_unsaved_changes: false,
+    });
+    store.discardChanges();
+  });
+
+  test('importing a new set on top adds it to category_sets and active_set_ids', () => {
+    const importedCategories = [
+      { name: ['Media', 'Video'], rule: { type: 'regex', regex: 'YouTube' } },
+    ];
+    store.category_sets.push({ id: 'shared', categories: importedCategories });
+    store.setActiveSets(['mine', 'shared']);
+
+    expect(store.active_set_ids).toEqual(['mine', 'shared']);
+    expect(store.category_sets).toHaveLength(2);
+    // Both Work (from mine) and Media/Video (from shared) are visible
+    expect(store.get_category(['Work'])).toBeDefined();
+    expect(store.get_category(['Media', 'Video'])).toBeDefined();
+  });
+
+  test('primary set is unchanged after adding imported set on top', () => {
+    const importedCategories = [
+      { name: ['Media', 'Video'], rule: { type: 'regex', regex: 'YouTube' } },
+    ];
+    store.category_sets.push({ id: 'shared', categories: importedCategories });
+    store.setActiveSets(['mine', 'shared']);
+    store.save();
+
+    expect(store.category_sets.find(s => s.id === 'mine')?.categories).toHaveLength(1);
+    expect(store.category_sets.find(s => s.id === 'mine')?.categories[0].name).toEqual(['Work']);
+  });
+
+  test('updating an existing imported set on top replaces its categories', () => {
+    store.category_sets.push({
+      id: 'shared',
+      categories: [{ name: ['Dev'], rule: { type: 'regex', regex: 'code' } }],
+    });
+    store.setActiveSets(['mine', 'shared']);
+
+    // Re-import with updated categories (simulates "Add on top" with existing set)
+    const existing = store.category_sets.find(s => s.id === 'shared');
+    if (existing)
+      existing.categories = [{ name: ['Dev'], rule: { type: 'regex', regex: 'editor' } }];
+    // active_set_ids unchanged since it already included 'shared'
+    expect(store.active_set_ids).toEqual(['mine', 'shared']);
+    store.discardChanges();
+    expect(store.get_category(['Dev'])?.rule.regex).toBe('editor');
+  });
+});
