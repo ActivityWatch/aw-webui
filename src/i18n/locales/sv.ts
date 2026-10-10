@@ -252,8 +252,6 @@ export default {
     currentDevice: '(den aktuella enheten)',
     lastUpdated: 'Senast uppdaterad:',
     firstSeen: 'Först sedd:',
-    bucketId: 'Bucket-ID',
-    updated: 'Uppdaterad',
     exportBucketJson: 'Exportera bucket som JSON',
     exportEventsCsv: 'Exportera händelser som CSV',
     deleteBucket: 'Ta bort bucket',

@@ -247,8 +247,6 @@ export default {
     currentDevice: '(aktuelles Gerät)',
     lastUpdated: 'Zuletzt aktualisiert:',
     firstSeen: 'Zuerst gesehen:',
-    bucketId: 'Bucket-ID',
-    updated: 'Aktualisiert',
     exportBucketJson: 'Bucket als JSON exportieren',
     exportEventsCsv: 'Ereignisse als CSV exportieren',
     deleteBucket: 'Bucket löschen',

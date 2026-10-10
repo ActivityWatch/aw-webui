@@ -45,39 +45,32 @@ div
           icon.mr-1(name="trash")
           | {{ $t('buckets.deleteAllForHost') }}
 
-    b-table.mb-0.bucket-table(
-      small, hover,
-      :items="device.buckets",
-      :fields="fields"
-    )
-      template(v-slot:cell(id)="data")
-        small.text-monospace.bucket-id(:title="data.item.id") {{ data.item.id }}
-      template(v-slot:cell(last_updated)="data")
-        time.small.bucket-updated(v-if="bucketHasEvents(data.item)",
-                                 :class="{'text-success': isRecent(data.item.last_updated)}",
-                                 :datetime="data.item.last_updated",
-                                 :title="data.item.last_updated")
-          span.d-md-none {{ compactRelativeTime(data.item.last_updated, true) }}
-          span.d-none.d-md-inline {{ compactRelativeTime(data.item.last_updated) }}
-        small.text-muted(v-else) {{ $t('buckets.noEvents') }}
-      template(v-slot:cell(actions)="data")
-        b-button-group(size="sm")
-          b-button(variant="primary", :to="'/buckets/' + data.item.id", :title="$t('buckets.openBucket')")
-            icon.d-none.d-md-inline-block.mr-1(name="folder-open")
-            | {{ $t('common.open') }}
-          b-dropdown.kebab-dropdown(variant="outline-secondary", toggle-class="border-0", size="sm", right, no-caret, boundary="window", :title="$t('common.more')")
-            template(v-slot:button-content)
-              icon(name="ellipsis-v")
-            b-dropdown-item(@click="export_bucket_json(data.item.id)", :title="$t('buckets.exportBucketJson')")
-              icon.mr-1(name="download")
-              | {{ $t('buckets.exportBucketJson') }}
-            b-dropdown-item(@click="export_csv(data.item.id)", :title="$t('buckets.exportEventsCsv')")
-              icon.mr-1(name="download")
-              | {{ $t('buckets.exportEventsCsv') }}
-            b-dropdown-divider
-            b-dropdown-item-button(@click="openDeleteBucketModal(data.item.id)", :title="$t('buckets.deleteBucket')", button-class="text-danger")
-              icon.mr-1(name="trash")
-              | {{ $t('buckets.deleteBucket') }}
+    //- A list rather than a table: the name opens the bucket, the timestamp
+    //- takes only the width it needs, and per-bucket actions live in the kebab.
+    ul.list-unstyled.mb-0.bucket-list
+      li.bucket-row(v-for="bucket in sortedBuckets(device)", :key="bucket.id")
+        router-link.bucket-link(:to="'/buckets/' + bucket.id", :title="$t('buckets.openBucket') + ': ' + bucket.id")
+          small.text-monospace.bucket-id {{ bucket.id }}
+          time.small.bucket-updated(v-if="bucketHasEvents(bucket)",
+                                   :class="{'text-success': isRecent(bucket.last_updated)}",
+                                   :datetime="bucket.last_updated",
+                                   :title="bucket.last_updated")
+            span.d-md-none {{ compactRelativeTime(bucket.last_updated, true) }}
+            span.d-none.d-md-inline {{ compactRelativeTime(bucket.last_updated) }}
+          small.text-muted.bucket-updated(v-else) {{ $t('buckets.noEvents') }}
+        b-dropdown.kebab-dropdown(variant="outline-secondary", toggle-class="border-0", size="sm", right, no-caret, boundary="window", :title="$t('common.more')")
+          template(v-slot:button-content)
+            icon(name="ellipsis-v")
+          b-dropdown-item(@click="export_bucket_json(bucket.id)", :title="$t('buckets.exportBucketJson')")
+            icon.mr-1(name="download")
+            | {{ $t('buckets.exportBucketJson') }}
+          b-dropdown-item(@click="export_csv(bucket.id)", :title="$t('buckets.exportEventsCsv')")
+            icon.mr-1(name="download")
+            | {{ $t('buckets.exportEventsCsv') }}
+          b-dropdown-divider
+          b-dropdown-item-button(@click="openDeleteBucketModal(bucket.id)", :title="$t('buckets.deleteBucket')", button-class="text-danger")
+            icon.mr-1(name="trash")
+            | {{ $t('buckets.deleteBucket') }}
 
     div(v-for="msg in runChecks(device)" :key="msg")
       b-alert.mt-2.mb-0.py-1.px-2.small(show variant="warning")
@@ -194,49 +187,45 @@ div
   background: #fbfbfb;
 }
 
-.bucket-table {
-  table-layout: fixed;
+.bucket-row {
+  display: flex;
+  align-items: center;
+  border-top: 1px solid #dee2e6;
 }
 
-::v-deep .bucket-table td {
-  vertical-align: middle;
+.bucket-row:hover {
+  background: rgba(0, 0, 0, 0.04);
 }
 
-// Phones: just enough for the short labels. md+: room for the folder icon
-// and longer translations of "Open".
-::v-deep .bucket-table .col-updated {
-  width: 7rem;
+.bucket-link {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: baseline;
+  min-width: 0;
+  padding: 0.4rem 0.3rem;
+  color: inherit;
 }
 
-::v-deep .bucket-table .col-actions {
-  width: 6.5rem;
+.bucket-link:hover {
+  text-decoration: none;
 }
 
-@media (min-width: 768px) {
-  ::v-deep .bucket-table .col-updated {
-    width: 9rem;
-  }
-
-  ::v-deep .bucket-table .col-actions {
-    width: 10rem;
-  }
+.bucket-link:hover .bucket-id {
+  text-decoration: underline;
 }
 
-.bucket-updated {
-  white-space: nowrap;
-}
-
-::v-deep .bucket-table td .btn {
-  white-space: nowrap;
-}
-
-::v-deep .bucket-id {
-  display: inline-block;
-  max-width: 100%;
+.bucket-id {
+  flex: 1 1 auto;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  vertical-align: middle;
+}
+
+.bucket-updated {
+  flex: none;
+  margin-left: 0.75rem;
+  white-space: nowrap;
 }
 
 ::v-deep .kebab-dropdown > .btn {
@@ -315,31 +304,6 @@ export default {
     exporting() {
       return this.export_inflight > 0;
     },
-    fields() {
-      return [
-        {
-          key: 'id',
-          label: this.$t('buckets.bucketId'),
-          sortable: true,
-        },
-        // Fixed widths for the narrow columns (see .col-* styles): with
-        // table-layout: fixed, percentages squeezed the Open + kebab group
-        // past the card edge on phones. The ID column takes the rest and
-        // ellipsizes.
-        {
-          key: 'last_updated',
-          label: this.$t('buckets.updated'),
-          sortable: true,
-          thClass: 'col-updated',
-        },
-        {
-          key: 'actions',
-          label: '',
-          thClass: 'col-actions',
-          tdClass: 'text-right',
-        },
-      ];
-    },
     deleteHostModalTitle() {
       if (this.delete_host_selected) {
         return this.$t('buckets.deleteHostTitleNamed', {
@@ -374,6 +338,9 @@ export default {
     await this.bucketsStore.loadBuckets();
   },
   methods: {
+    sortedBuckets: function (device) {
+      return [...device.buckets].sort((a, b) => a.id.localeCompare(b.id));
+    },
     compactRelativeTime: function (timestamp: string, unitOnly = false) {
       return compact_relative_time(timestamp, this.$i18n.locale, unitOnly);
     },

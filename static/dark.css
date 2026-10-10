@@ -212,6 +212,14 @@ hr {
   border-color: #282c32 !important;
 }
 
+.bucket-row {
+  border-color: #454d55 !important;
+}
+
+.bucket-row:hover {
+  background-color: hsla(0, 0%, 100%, .075) !important;
+}
+
 .list-group-item {
   background-color: transparent !important;
   border-color: #282c32 !important;
