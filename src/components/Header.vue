@@ -1,4 +1,90 @@
 <template lang="pug">
+//- Navigation entries are defined once and rendered twice: inline in the
+//- desktop navbar, and in the phone drawer below the lg breakpoint.
+mixin navMain
+  // If only a single view (the default) is available
+  b-nav-item(v-if="activityViews && activityViews.length === 1", v-for="view in activityViews", :key="view.name", :to="view.pathUrl")
+    div.px-2.px-lg-1
+      icon(name="calendar-day")
+      | {{ $t('nav.activity') }}
+
+  // If multiple (or no) activity views are available
+  b-nav-item-dropdown(v-if="!activityViews || activityViews.length !== 1")
+    template(slot="button-content")
+      div.d-inline.px-2.px-lg-1
+        icon(name="calendar-day")
+        | {{ $t('nav.activity') }}
+    b-dropdown-item(v-if="activityViews === null", disabled)
+      span.text-muted {{ $t('nav.loading') }}
+      br
+    b-dropdown-item(v-else-if="activityViews && activityViews.length <= 0", disabled)
+      | {{ $t('nav.noActivityReports') }}
+    b-dropdown-item(v-for="view in activityViews", :key="view.name", :to="view.pathUrl")
+      icon(:name="view.icon")
+      | {{ view.name }}
+    // Combined view of every device (incl. synced and mobile ones)
+    template(v-if="activityViews && activityViews.length > 1")
+      b-dropdown-divider
+      b-dropdown-item(:to="allDevicesPathUrl" data-testid="nav-all-devices")
+        icon(name="layer-group")
+        | {{ $t('activity.allDevices') }}
+
+  b-nav-item(to="/timeline" style="font-color: #000;")
+    div.px-2.px-lg-1
+      icon(name="stream")
+      | {{ $t('nav.timeline') }}
+
+  b-nav-item(to="/stopwatch")
+    div.px-2.px-lg-1
+      icon(name="stopwatch")
+      | {{ $t('nav.stopwatch') }}
+
+mixin navTools
+  b-nav-item-dropdown
+    template(slot="button-content")
+      div.d-inline.px-2.px-lg-1
+        icon(name="tools")
+        | {{ $t('nav.tools') }}
+    b-dropdown-item(to="/search")
+      icon(name="search")
+      | {{ $t('nav.search') }}
+    b-dropdown-item(to="/work-report")
+      icon(name="briefcase")
+      | {{ $t('nav.workReport') }}
+    b-dropdown-item(to="/billing")
+      icon(name="dollar-sign")
+      | Billable Hours
+    b-dropdown-item(to="/analysis/activity" v-if="devmode")
+      icon(name="robot")
+      | {{ $t('nav.aiSummary') }}
+    b-dropdown-item(to="/trends" v-if="devmode")
+      icon(name="chart-line")
+      | {{ $t('nav.trends') }}
+    b-dropdown-item(to="/report" v-if="devmode")
+      icon(name="chart-pie")
+      | {{ $t('nav.report') }}
+    b-dropdown-item(to="/alerts" v-if="devmode")
+      icon(name="flag-checkered")
+      | {{ $t('nav.alerts') }}
+    b-dropdown-item(to="/timespiral" v-if="devmode")
+      icon(name="history")
+      | {{ $t('nav.timespiral') }}
+    b-dropdown-item(to="/query")
+      icon(name="code")
+      | {{ $t('nav.query') }}
+    b-dropdown-item(to="/graph" v-if="devmode")
+      icon(name="project-diagram")
+      | {{ $t('nav.graph') }}
+
+  b-nav-item(to="/buckets")
+    div.px-2.px-lg-1
+      icon(name="database")
+      | {{ $t('nav.rawData') }}
+  b-nav-item(to="/settings")
+    div.px-2.px-lg-1
+      icon(name="cog")
+      | {{ $t('nav.settings') }}
+
 div(:class="{'fixed-top-padding': fixedTopMenu}")
   b-navbar.aw-navbar(toggleable="lg" :fixed="fixedTopMenu ? 'top' : null")
     // Brand on mobile
@@ -8,46 +94,13 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
         span.ml-2.align-middle(style="font-size: 1em; color: #000;") {{ $t('app.name') }}
         b-badge.ml-2.align-middle(v-if="researchEdition" variant="info" data-testid="research-edition-badge") {{ $t('app.researchEdition') }}
 
-    b-navbar-toggle(target="nav-collapse")
+    // Opens the drawer (b-sidebar listens to the same toggle event as b-collapse)
+    b-navbar-toggle(target="nav-drawer" data-testid="nav-drawer-toggle")
 
+    // Desktop: inline navigation. Never toggled open below lg; phones use the drawer.
     b-collapse#nav-collapse(is-nav)
       b-navbar-nav
-        // If only a single view (the default) is available
-        b-nav-item(v-if="activityViews && activityViews.length === 1", v-for="view in activityViews", :key="view.name", :to="view.pathUrl")
-          div.px-2.px-lg-1
-            icon(name="calendar-day")
-            | {{ $t('nav.activity') }}
-
-        // If multiple (or no) activity views are available
-        b-nav-item-dropdown(v-if="!activityViews || activityViews.length !== 1")
-          template(slot="button-content")
-            div.d-inline.px-2.px-lg-1
-              icon(name="calendar-day")
-              | {{ $t('nav.activity') }}
-          b-dropdown-item(v-if="activityViews === null", disabled)
-            span.text-muted {{ $t('nav.loading') }}
-            br
-          b-dropdown-item(v-else-if="activityViews && activityViews.length <= 0", disabled)
-            | {{ $t('nav.noActivityReports') }}
-          b-dropdown-item(v-for="view in activityViews", :key="view.name", :to="view.pathUrl")
-            icon(:name="view.icon")
-            | {{ view.name }}
-          // Combined view of every device (incl. synced and mobile ones)
-          template(v-if="activityViews && activityViews.length > 1")
-            b-dropdown-divider
-            b-dropdown-item(:to="allDevicesPathUrl" data-testid="nav-all-devices")
-              icon(name="layer-group")
-              | {{ $t('activity.allDevices') }}
-
-        b-nav-item(to="/timeline" style="font-color: #000;")
-          div.px-2.px-lg-1
-            icon(name="stream")
-            | {{ $t('nav.timeline') }}
-
-        b-nav-item(to="/stopwatch")
-          div.px-2.px-lg-1
-            icon(name="stopwatch")
-            | {{ $t('nav.stopwatch') }}
+        +navMain
 
       // Brand on large screens (centered)
       b-navbar-nav.abs-center.d-none.d-lg-block
@@ -57,50 +110,23 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
           b-badge.ml-2.align-middle(v-if="researchEdition" variant="info" data-testid="research-edition-badge") {{ $t('app.researchEdition') }}
 
       b-navbar-nav.ml-auto
-        b-nav-item-dropdown
-          template(slot="button-content")
-            div.d-inline.px-2.px-lg-1
-              icon(name="tools")
-              | {{ $t('nav.tools') }}
-          b-dropdown-item(to="/search")
-            icon(name="search")
-            | {{ $t('nav.search') }}
-          b-dropdown-item(to="/work-report")
-            icon(name="briefcase")
-            | {{ $t('nav.workReport') }}
-          b-dropdown-item(to="/billing")
-            icon(name="dollar-sign")
-            | Billable Hours
-          b-dropdown-item(to="/analysis/activity" v-if="devmode")
-            icon(name="robot")
-            | {{ $t('nav.aiSummary') }}
-          b-dropdown-item(to="/trends" v-if="devmode")
-            icon(name="chart-line")
-            | {{ $t('nav.trends') }}
-          b-dropdown-item(to="/report" v-if="devmode")
-            icon(name="chart-pie")
-            | {{ $t('nav.report') }}
-          b-dropdown-item(to="/alerts" v-if="devmode")
-            icon(name="flag-checkered")
-            | {{ $t('nav.alerts') }}
-          b-dropdown-item(to="/timespiral" v-if="devmode")
-            icon(name="history")
-            | {{ $t('nav.timespiral') }}
-          b-dropdown-item(to="/query")
-            icon(name="code")
-            | {{ $t('nav.query') }}
-          b-dropdown-item(to="/graph" v-if="devmode")
-            icon(name="project-diagram")
-            | {{ $t('nav.graph') }}
+        +navTools
 
-        b-nav-item(to="/buckets")
-          div.px-2.px-lg-1
-            icon(name="database")
-            | {{ $t('nav.rawData') }}
-        b-nav-item(to="/settings")
-          div.px-2.px-lg-1
-            icon(name="cog")
-            | {{ $t('nav.settings') }}
+    // Phone/tablet: modal side drawer. Closes on route change, Escape and
+    // backdrop tap; traps focus while open and returns it to the toggle.
+    b-sidebar#nav-drawer.aw-nav-drawer(
+      v-model="drawerOpen"
+      :title="$t('app.name')"
+      backdrop
+      lazy
+      shadow
+      width="min(85vw, 320px)"
+      bg-variant="white"
+      data-testid="nav-drawer"
+    )
+      b-navbar-nav.px-2
+        +navMain
+        +navTools
 </template>
 
 <style lang="scss" scoped>
@@ -152,12 +178,21 @@ export default {
       fixedTopMenu: true,
       researchEdition: typeof AW_RESEARCH_EDITION !== 'undefined' && AW_RESEARCH_EDITION,
       allDevicesPathUrl: `/activity/${ALL_DEVICES}`,
+      drawerOpen: false,
+      desktopQuery: null,
     };
   },
   computed: {
     ...mapState(useSettingsStore, ['devmode']),
   },
   mounted: async function () {
+    // The drawer only exists below the lg breakpoint: close it (and its backdrop)
+    // when the viewport grows to desktop width.
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      this.desktopQuery = window.matchMedia('(min-width: 992px)');
+      this.desktopQuery.addEventListener('change', this.onDesktopQueryChange);
+    }
+
     const bucketStore = useBucketsStore();
     await bucketStore.ensureLoaded();
     const buckets: IBucket[] = bucketStore.buckets;
@@ -194,6 +229,18 @@ export default {
 
     this.activityViews = activityViews;
   },
+  beforeDestroy() {
+    if (this.desktopQuery) {
+      this.desktopQuery.removeEventListener('change', this.onDesktopQueryChange);
+    }
+  },
+  methods: {
+    onDesktopQueryChange(e: MediaQueryListEvent) {
+      if (e.matches) {
+        this.drawerOpen = false;
+      }
+    },
+  },
 };
 </script>
 
@@ -215,6 +262,20 @@ export default {
 
   &:hover {
     background-color: #ddd;
+  }
+}
+
+.aw-nav-drawer ::v-deep {
+  .nav-link,
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+  }
+
+  .nav-item {
+    margin-left: 0;
+    margin-right: 0;
   }
 }
 
