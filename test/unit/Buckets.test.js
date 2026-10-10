@@ -64,3 +64,16 @@ describe('Buckets.vue bucket import', () => {
     expect(src).toMatch(/await importBuckets\(this\.\$aw/);
   });
 });
+
+describe('Buckets.vue bucket rows', () => {
+  const src = fs.readFileSync(path.join(__dirname, '../../src/views/Buckets.vue'), 'utf8');
+
+  test('lists buckets as links with a content-sized timestamp, not a button table', () => {
+    // A fixed-layout table gave the timestamp column a set width, wasting space
+    // while bucket IDs were ellipsized; rows now flex around the timestamp.
+    expect(src).not.toMatch(/b-table/);
+    expect(src).toMatch(/router-link\.bucket-link\(:to="'\/buckets\/' \+ bucket\.id"/);
+    expect(src).toMatch(/\.bucket-updated \{\s*flex: none;/);
+    expect(src).toMatch(/\.bucket-id \{\s*flex: 1 1 auto;\s*min-width: 0;/);
+  });
+});
