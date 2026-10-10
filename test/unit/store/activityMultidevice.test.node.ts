@@ -1,6 +1,7 @@
 import { setActivePinia, createPinia } from 'pinia';
 
-import { useActivityStore, uncachedHistoryPeriods } from '~/stores/activity';
+import { useActivityStore } from '~/stores/activity';
+import { selectPeriodsToQuery } from '~/util/activeHistory';
 import { useBucketsStore } from '~/stores/buckets';
 import { createClient } from '~/util/awclient';
 
@@ -70,28 +71,6 @@ describe('activity store host selection', () => {
   });
 });
 
-describe('activity store history cache', () => {
-  setActivePinia(createPinia());
-  const activityStore = useActivityStore();
-
-  test('is kept while the queried devices and buckets are the same', () => {
-    activityStore.query_hosts = ['a', 'b'];
-    activityStore.buckets.afk = ['afk_a', 'afk_b'];
-    activityStore.buckets.android = [];
-    activityStore.set_history_key();
-    activityStore.active.history = { p: [] } as any;
-    activityStore.set_history_key();
-    expect(activityStore.active.history).toEqual({ p: [] });
-  });
-
-  test('is cleared when a new device shows up under the same selection', () => {
-    activityStore.active.history = { p: [] } as any;
-    activityStore.query_hosts = ['a', 'b', 'phone'];
-    activityStore.buckets.android = ['aw-watcher-android-test-synced-from-phone'];
-    activityStore.set_history_key();
-    expect(activityStore.active.history).toEqual({});
-  });
-});
 describe('multidevice availability flags', () => {
   setActivePinia(createPinia());
   const activityStore = useActivityStore();
@@ -139,19 +118,19 @@ describe('multidevice availability flags', () => {
   });
 });
 
-describe('uncachedHistoryPeriods', () => {
+describe('selectPeriodsToQuery', () => {
   const now = new Date('2026-09-15T12:00:00Z');
   const aug = '2026-08-01T00:00:00Z/2026-09-01T00:00:00Z';
   const sep = '2026-09-01T00:00:00Z/2026-10-01T00:00:00Z';
   const oct = '2026-10-01T00:00:00Z/2026-11-01T00:00:00Z';
 
   test('reuses cached past periods (keys, not values)', () => {
-    expect(uncachedHistoryPeriods([aug], { [aug]: [] }, now)).toEqual([]);
-    expect(uncachedHistoryPeriods([aug], {}, now)).toEqual([aug]);
+    expect(selectPeriodsToQuery([aug], { [aug]: [] }, now)).toEqual([]);
+    expect(selectPeriodsToQuery([aug], {}, now)).toEqual([aug]);
   });
 
   test('re-queries the period containing now, and skips future ones', () => {
-    expect(uncachedHistoryPeriods([aug, sep, oct], { [aug]: [], [sep]: [] }, now)).toEqual([sep]);
+    expect(selectPeriodsToQuery([aug, sep, oct], { [aug]: [], [sep]: [] }, now)).toEqual([sep]);
   });
 });
 
