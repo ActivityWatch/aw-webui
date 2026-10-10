@@ -21,6 +21,9 @@ export default {
     graph: '图谱',
     rawData: '原始数据',
     settings: '设置',
+    syncSettings: '同步设置',
+    apiAuthentication: 'API 认证',
+    openInBrowser: '在浏览器中打开',
   },
   footer: {
     madeWith: '由',

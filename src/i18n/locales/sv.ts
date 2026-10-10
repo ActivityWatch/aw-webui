@@ -22,6 +22,9 @@ export default {
     graph: 'Graf',
     rawData: 'Rådata',
     settings: 'Inställningar',
+    syncSettings: 'Synkinställningar',
+    apiAuthentication: 'API-autentisering',
+    openInBrowser: 'Öppna i webbläsare',
   },
   footer: {
     madeWith: 'Skapad med',

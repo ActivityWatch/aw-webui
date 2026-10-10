@@ -21,6 +21,9 @@ export default {
     graph: 'Граф',
     rawData: 'Сирі дані',
     settings: 'Налаштування',
+    syncSettings: 'Налаштування синхронізації',
+    apiAuthentication: 'Автентифікація API',
+    openInBrowser: 'Відкрити в браузері',
   },
   footer: {
     madeWith: 'Зроблено з',

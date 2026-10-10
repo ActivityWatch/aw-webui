@@ -20,6 +20,9 @@ export default {
     graph: 'Граф',
     rawData: 'Сырые данные',
     settings: 'Настройки',
+    syncSettings: 'Настройки синхронизации',
+    apiAuthentication: 'Аутентификация API',
+    openInBrowser: 'Открыть в браузере',
   },
   footer: {
     madeWith: 'Сделано с',
