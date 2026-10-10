@@ -100,7 +100,7 @@ div.sunburst
 }
 </style>
 
-<script>
+<script lang="ts">
 import sunburst from './sunburst-clock';
 import moment from 'moment';
 import _ from 'lodash';
@@ -146,7 +146,7 @@ export default {
     },
 
     visualize: function () {
-      function buildHierarchy(parents, children) {
+      function buildHierarchy(parents: any[], children: any[]) {
         parents = _.sortBy(parents, 'timestamp', 'desc');
         children = _.sortBy(children, 'timestamp', 'desc');
 
@@ -191,8 +191,8 @@ export default {
         // Build the root node
         //console.log(parents);
         const m_start = moment(_.first(parents).timestamp);
-        const m_end = moment(_.tail(parents).timestamp);
-        const duration = (m_end - m_start) / 1000;
+        const m_end = moment((_.tail(parents) as any).timestamp);
+        const duration = (m_end.valueOf() - m_start.valueOf()) / 1000;
         return {
           timestamp: _.first(parents).timestamp,
           // TODO: If we want a 12/24h clock, this has to change

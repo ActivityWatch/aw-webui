@@ -1,24 +1,25 @@
-const queries = require('~/queries');
+import * as queries from '~/queries';
 
 // test data
 const hostname = 'testhost';
 const bid_window = 'aw-watcher-window_' + hostname;
 const bid_afk = 'aw-watcher-afk_' + hostname;
-const bid_browsers = [];
+const bid_browsers: string[] = [];
 const filter_afk = true;
 const always_active_pattern = /meow|nyaan|specials: \w(\\)/.toString().substring(1).slice(0, -1);
-const queryParams = {
+const queryParams: queries.DesktopQueryParams = {
   bid_window,
   bid_afk,
   bid_browsers,
   filter_afk,
   categories: [],
-  filter_categories: true,
+  // The query builder only tests truthiness here
+  filter_categories: true as any,
   include_audible: true,
   always_active_pattern,
 };
 
-function expectBracketsClosed(query) {
+function expectBracketsClosed(query: string) {
   // Checks that there are matching parens, brackets, braces, etc
   // Doesn't actually check placement, just matching open/closed count.
 

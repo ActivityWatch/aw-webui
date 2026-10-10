@@ -1,8 +1,12 @@
 import moment from 'moment';
 import { createPinia, setActivePinia } from 'pinia';
 import { shallowMount } from '@vue/test-utils';
-import QueryOptions from '~/components/QueryOptions.vue';
-import Search from '~/views/Search.vue';
+import QueryOptionsComponent from '~/components/QueryOptions.vue';
+import SearchComponent from '~/views/Search.vue';
+
+// Tests call Options API members directly, which the Vue constructor type doesn't expose.
+const QueryOptions: any = QueryOptionsComponent;
+const Search: any = SearchComponent;
 
 const mockEnsureLoaded = jest.fn().mockResolvedValue(undefined);
 
@@ -39,8 +43,8 @@ describe('QueryOptions', () => {
 
     const dateInputs = wrapper.findAll('input[type="date"]');
     expect(dateInputs).toHaveLength(2);
-    expect(dateInputs.at(0).element.value).toBe('2026-08-15');
-    expect(dateInputs.at(1).element.value).toBe('2026-08-16');
+    expect((dateInputs.at(0).element as HTMLInputElement).value).toBe('2026-08-15');
+    expect((dateInputs.at(1).element as HTMLInputElement).value).toBe('2026-08-16');
   });
 
   test.each([Search])('initializes date ranges as YYYY-MM-DD strings', view => {

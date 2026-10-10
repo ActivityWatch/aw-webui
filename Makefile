@@ -39,7 +39,7 @@ test:
 	npm test
 
 test-e2e:
-	npx testcafe chrome test/e2e/ -s takeOnFails=true
+	npx testcafe --ts-config-path test/e2e/tsconfig.json chrome test/e2e/ -s takeOnFails=true
 
 typing-coverage:
 	npx typescript-coverage-report

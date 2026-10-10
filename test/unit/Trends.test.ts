@@ -1,4 +1,7 @@
-import Trends from '~/views/Trends.vue';
+import TrendsComponent from '~/views/Trends.vue';
+
+// Tests call Options API members directly, which the Vue constructor type doesn't expose.
+const Trends: any = TrendsComponent;
 
 describe('Trends view', () => {
   describe('host computed', () => {

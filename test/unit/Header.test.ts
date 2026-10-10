@@ -14,7 +14,7 @@ jest.mock('~/stores/buckets', () => ({
 
 describe('Header research edition badge', () => {
   afterEach(() => {
-    delete global.AW_RESEARCH_EDITION;
+    delete (global as any).AW_RESEARCH_EDITION;
   });
 
   beforeEach(() => {
@@ -24,9 +24,9 @@ describe('Header research edition badge', () => {
 
   function mountHeader(buildFlag) {
     if (buildFlag === undefined) {
-      delete global.AW_RESEARCH_EDITION;
+      delete (global as any).AW_RESEARCH_EDITION;
     } else {
-      global.AW_RESEARCH_EDITION = buildFlag;
+      (global as any).AW_RESEARCH_EDITION = buildFlag;
     }
 
     return shallowMount(Header, {

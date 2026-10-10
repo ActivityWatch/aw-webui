@@ -10,7 +10,10 @@
  *      built-in horizontal-scroll path.
  */
 
-import VisTimeline from '~/visualizations/VisTimeline.vue';
+import VisTimelineComponent from '~/visualizations/VisTimeline.vue';
+
+// Tests call Options API members directly, which the Vue constructor type doesn't expose.
+const VisTimeline: any = VisTimelineComponent;
 
 // vis-timeline creates a real DOM timeline; mock the entire import so unit
 // tests run in jsdom without a full browser canvas/resize-observer stack.
@@ -160,7 +163,7 @@ describe('VisTimeline scroll bounds (#996)', () => {
   function makeVm(overrides = {}) {
     return {
       timeline: { setOptions: jest.fn(), setWindow: jest.fn(), setData: jest.fn() },
-      options: {},
+      options: {} as { min?: unknown; max?: unknown },
       bucketsFromEither: [{ id: 'aw-watcher-window_host' }],
       chartData: [
         {

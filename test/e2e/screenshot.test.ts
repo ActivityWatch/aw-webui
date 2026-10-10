@@ -34,7 +34,7 @@ async function waitForLoading(t) {
     refresh_count = 0;
 
   console.log('Waiting for loading to disappear...');
-  let start = new Date();
+  let start = Date.now();
   do {
     $loading = await Selector('.aw-loading, text', { timeout: 500 }).withText(/Loading[.]{3}/g)();
 
@@ -42,15 +42,15 @@ async function waitForLoading(t) {
     if ($loading) {
       console.log(`Found loading element with contents - "${$loading.textContent}"`);
 
-      if (new Date() - start > REFRESH_TIMEPERIOD && refresh_count < MAX_REFRESH) {
+      if (Date.now() - start > REFRESH_TIMEPERIOD && refresh_count < MAX_REFRESH) {
         console.log('Refreshing page....');
-        await t.eval(() => location.reload(true));
+        await t.eval(() => location.reload());
         refresh_count++;
-        start = new Date();
+        start = Date.now();
       }
 
       // If taking >20s, throw an error
-      if (new Date() - start > MAX_WAIT_TIME && refresh_count >= MAX_REFRESH) {
+      if (Date.now() - start > MAX_WAIT_TIME && refresh_count >= MAX_REFRESH) {
         console.log(await t.getBrowserConsoleMessages());
         console.log(JSON.stringify(HTTPLogger.requests, null, '\t'));
         throw new Error('Timeout while waiting for loading to disappear');
