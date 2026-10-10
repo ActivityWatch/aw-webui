@@ -319,6 +319,13 @@ test.clientScripts({
   await checkNoError(t);
 });
 
+test('Buckets have no horizontal page overflow on mobile', async t => {
+  await t.resizeWindow(360, 800);
+  await hide_devonly(t);
+  await t.wait(1000);
+  await checkNoHorizontalOverflow(t);
+});
+
 test.clientScripts({
   content: logJsErrorCode,
 })('Screenshot buckets: light mobile', async t => {
