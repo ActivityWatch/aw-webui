@@ -53,8 +53,12 @@ div
       template(v-slot:cell(id)="data")
         small.text-monospace.bucket-id(:title="data.item.id") {{ data.item.id }}
       template(v-slot:cell(last_updated)="data")
-        small(v-if="bucketHasEvents(data.item)", :class="{'text-success': isRecent(data.item.last_updated)}")
-          | {{ data.item.last_updated | friendlytime }}
+        time.small.bucket-updated(v-if="bucketHasEvents(data.item)",
+                                 :class="{'text-success': isRecent(data.item.last_updated)}",
+                                 :datetime="data.item.last_updated",
+                                 :title="data.item.last_updated")
+          span.d-md-none {{ compactRelativeTime(data.item.last_updated, true) }}
+          span.d-none.d-md-inline {{ compactRelativeTime(data.item.last_updated) }}
         small.text-muted(v-else) {{ $t('buckets.noEvents') }}
       template(v-slot:cell(actions)="data")
         b-button-group(size="sm")
@@ -198,6 +202,34 @@ div
   vertical-align: middle;
 }
 
+// Phones: just enough for the short labels. md+: room for the folder icon
+// and longer translations of "Open".
+::v-deep .bucket-table .col-updated {
+  width: 7rem;
+}
+
+::v-deep .bucket-table .col-actions {
+  width: 6.5rem;
+}
+
+@media (min-width: 768px) {
+  ::v-deep .bucket-table .col-updated {
+    width: 9rem;
+  }
+
+  ::v-deep .bucket-table .col-actions {
+    width: 10rem;
+  }
+}
+
+.bucket-updated {
+  white-space: nowrap;
+}
+
+::v-deep .bucket-table td .btn {
+  white-space: nowrap;
+}
+
 ::v-deep .bucket-id {
   display: inline-block;
   max-width: 100%;
@@ -241,6 +273,7 @@ import { useServerStore } from '~/stores/server';
 import { useBucketsStore } from '~/stores/buckets';
 import { getStoredApiToken } from '~/util/awclient';
 import { androidExportFromUrl, downloadBlob } from '~/util/export';
+import { compact_relative_time } from '~/util/time';
 
 // NOTE: keep this out of the component's `methods`. The global
 // `asyncErrorCapturedMixin` wraps every async method so that its rejection is
@@ -288,18 +321,21 @@ export default {
           key: 'id',
           label: this.$t('buckets.bucketId'),
           sortable: true,
-          thStyle: { width: '65%' },
         },
+        // Fixed widths for the narrow columns (see .col-* styles): with
+        // table-layout: fixed, percentages squeezed the Open + kebab group
+        // past the card edge on phones. The ID column takes the rest and
+        // ellipsizes.
         {
           key: 'last_updated',
           label: this.$t('buckets.updated'),
           sortable: true,
-          thStyle: { width: '20%' },
+          thClass: 'col-updated',
         },
         {
           key: 'actions',
           label: '',
-          thStyle: { width: '15%' },
+          thClass: 'col-actions',
           tdClass: 'text-right',
         },
       ];
@@ -338,6 +374,9 @@ export default {
     await this.bucketsStore.loadBuckets();
   },
   methods: {
+    compactRelativeTime: function (timestamp: string, unitOnly = false) {
+      return compact_relative_time(timestamp, this.$i18n.locale, unitOnly);
+    },
     isRecent: function (date) {
       return moment().diff(date) / 1000 < 120;
     },
