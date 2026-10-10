@@ -2,7 +2,7 @@
 // We want to use another colorscheme than the default 'schemeAccent',
 // unfortunately it seems like the color-scheme prop is broken.
 // See this issue: https://github.com/David-Desmaisons/Vue.D3.sunburst/issues/11
-sunburst(:data="data", :colorScale="colorfunc", :getCategoryForColor="categoryForColor", :colorScheme="null" :showLabels="labelFor", ref="sunburst")
+sunburst.sunburst-categories(:data="data", :colorScale="colorfunc", :getCategoryForColor="categoryForColor", :colorScheme="null" :showLabels="labelFor", ref="sunburst")
   // Add behaviors
   template(slot-scope="{ on, actions }")
     highlightOnHover(v-bind="{ on, actions }")
@@ -118,6 +118,14 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+// Labels on the outermost ring may extend past the chart radius by up to the
+// sunburst's maxLabelText (45px by default). The chart sizes itself to fit the
+// container, so reserve that space on the sides or the labels get clipped when
+// the container is narrow (e.g. on phones).
+.sunburst-categories {
+  padding: 0 45px;
+}
+
 .info {
   width: 300px;
   height: 100px;
