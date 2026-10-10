@@ -40,6 +40,37 @@ export function friendlydate(timestamp: string | Moment) {
   return sinceNow.humanize(true);
 }
 
+// Narrow, localized labels on desktop; unit-only ages where table space is tight.
+export function compact_relative_time(
+  timestamp: string,
+  locale: string,
+  unitOnly = false,
+  now = new Date()
+) {
+  const seconds = (new Date(timestamp).getTime() - now.getTime()) / 1000;
+  const units: [Intl.RelativeTimeFormatUnit, string, number][] = [
+    ['year', 'y', 365 * 86400],
+    ['month', 'mo', 30 * 86400],
+    ['day', 'd', 86400],
+    ['hour', 'h', 3600],
+    ['minute', 'min', 60],
+    ['second', 's', 1],
+  ];
+  const [unit, label, divisor] = units.find(([, , size]) => Math.abs(seconds) >= size) || units[5];
+  const value = Math.trunc(seconds / divisor);
+  if (unitOnly) {
+    return `${value > 0 ? '+' : ''}${Math.abs(value)}${label}`;
+  }
+  if (locale.split('-')[0] === 'en') {
+    const age = `${Math.abs(value)}${label}`;
+    return value > 0 ? `in ${age}` : `${age} ago`;
+  }
+  return new Intl.RelativeTimeFormat(locale, { numeric: 'always', style: 'narrow' }).format(
+    value === 0 ? -0 : value,
+    unit
+  );
+}
+
 export function get_day_start_with_offset(dateParam: Moment | string, offset?: string) {
   if (!offset) {
     offset = getStartOfDayOffset();

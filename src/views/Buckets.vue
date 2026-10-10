@@ -53,8 +53,12 @@ div
       template(v-slot:cell(id)="data")
         small.text-monospace.bucket-id(:title="data.item.id") {{ data.item.id }}
       template(v-slot:cell(last_updated)="data")
-        small(v-if="bucketHasEvents(data.item)", :class="{'text-success': isRecent(data.item.last_updated)}")
-          | {{ data.item.last_updated | friendlytime }}
+        time.small.bucket-updated(v-if="bucketHasEvents(data.item)",
+                                 :class="{'text-success': isRecent(data.item.last_updated)}",
+                                 :datetime="data.item.last_updated",
+                                 :title="data.item.last_updated")
+          span.d-md-none {{ compactRelativeTime(data.item.last_updated, true) }}
+          span.d-none.d-md-inline {{ compactRelativeTime(data.item.last_updated) }}
         small.text-muted(v-else) {{ $t('buckets.noEvents') }}
       template(v-slot:cell(actions)="data")
         b-button-group(size="sm")
@@ -218,6 +222,10 @@ div
   }
 }
 
+.bucket-updated {
+  white-space: nowrap;
+}
+
 ::v-deep .bucket-table td .btn {
   white-space: nowrap;
 }
@@ -265,6 +273,7 @@ import { useServerStore } from '~/stores/server';
 import { useBucketsStore } from '~/stores/buckets';
 import { getStoredApiToken } from '~/util/awclient';
 import { androidExportFromUrl, downloadBlob } from '~/util/export';
+import { compact_relative_time } from '~/util/time';
 
 // NOTE: keep this out of the component's `methods`. The global
 // `asyncErrorCapturedMixin` wraps every async method so that its rejection is
@@ -365,6 +374,9 @@ export default {
     await this.bucketsStore.loadBuckets();
   },
   methods: {
+    compactRelativeTime: function (timestamp: string, unitOnly = false) {
+      return compact_relative_time(timestamp, this.$i18n.locale, unitOnly);
+    },
     isRecent: function (date) {
       return moment().diff(date) / 1000 < 120;
     },
