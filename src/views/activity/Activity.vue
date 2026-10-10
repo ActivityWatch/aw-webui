@@ -101,8 +101,8 @@ div
         toggle-class="border-0"
         no-caret
         right
-        title="More ranges"
-        aria-label="More date ranges"
+        :title="$t('ui.activity.moreRanges')"
+        :aria-label="$t('ui.activity.moreDateRanges')"
       )
         template(v-slot:button-content)
           icon(name="ellipsis-v")
@@ -117,8 +117,8 @@ div
       b-input-group-prepend
         b-button.px-2(:to="link_prefix + '/' + previousPeriod() + '/' + subview + '/' + currentViewId",
                  variant="outline-dark",
-                 :title="'Previous ' + periodLength",
-                 :aria-label="'Previous ' + periodLength")
+                 :title="$t('activity.previousPeriod', { period: periodLength })",
+                 :aria-label="$t('activity.previousPeriod', { period: periodLength })")
           icon(name="arrow-left")
       template(v-if="dateRange")
         input.form-control.form-control-sm.activity-dateinput(
@@ -149,18 +149,18 @@ div
       b-input-group-append
         b-button.px-2(:to="link_prefix + '/' + nextPeriod() + '/' + subview + '/' + currentViewId",
                       :disabled="nextDisabled", variant="outline-dark",
-                      :title="'Next ' + periodLength",
-                      :aria-label="'Next ' + periodLength")
+                      :title="$t('activity.nextPeriod', { period: periodLength })",
+                      :aria-label="$t('activity.nextPeriod', { period: periodLength })")
           icon(name="arrow-right")
 
     div.ml-auto
       b-button-group(size="sm")
-        b-button.px-2(:pressed.sync="showOptions", variant="outline-dark", title="Filters", aria-label="Filters")
+        b-button.px-2(:pressed.sync="showOptions", variant="outline-dark", :title="$t('activity.filters')" :aria-label="$t('activity.filters')")
           icon(name="filter")
           span.d-none.d-md-inline
             |  {{ $t('activity.filters') }}
             b-badge(pill, variant="secondary" v-if="filters_set > 0").ml-2 {{ filters_set }}
-        b-button.px-2(@click="refresh(true)", variant="outline-dark", title="Refresh", aria-label="Refresh")
+        b-button.px-2(@click="refresh(true)", variant="outline-dark", :title="$t('activity.refresh')" :aria-label="$t('activity.refresh')")
           icon(name="sync")
           span.d-none.d-md-inline
             |  {{ $t('activity.refresh') }}
@@ -186,7 +186,7 @@ div
 
     div.col-md-6.mt-2.mt-md-0
       b-form-group(:label="$t('activity.showCategory')" label-cols="5" label-cols-lg="4" style="font-size: 0.88em")
-        b-form-select(v-model="filter_category", :options="categoryStore.category_select(true)" size="sm")
+        b-form-select(v-model="filter_category", :options="categoryOptions" size="sm")
 
 
   div.mb-2.small.text-muted(v-if="periodLength === 'all'")
@@ -393,6 +393,10 @@ export default {
     };
   },
   computed: {
+    categoryOptions() {
+      return this.categoryStore.category_select(true, key => this.$t(key) as string);
+    },
+
     views(): import('~/stores/views').View[] {
       return this.viewsStore.viewsForHost(this.host);
     },

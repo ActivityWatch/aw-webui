@@ -2,17 +2,17 @@
 div
   div.d-sm-flex.justify-content-between
     div
-      h5.mt-1.mb-2.mb-sm-0 Privacy filters
+      h5.mt-1.mb-2.mb-sm-0 {{ $t('settings.privacyFilters.title') }}
     div
       b-btn.ml-1(@click="resetEditor" variant="outline-warning" size="sm" :disabled="!hasUnsavedChanges || isSaving")
-        | Discard
+        | {{ $t('settings.privacyFilters.discard') }}
       b-btn.ml-1(@click="savePrivacyFilters" variant="success" size="sm" :disabled="!canSave")
-        | Save
+        | {{ $t('settings.privacyFilters.save') }}
   p.mt-2.mb-2
-    | Regex-based rules that drop or redact sensitive event data before it is stored.
-    | Rules are saved to the server setting #[code privacy_filters] and used by aw-server-rust.
+    | {{ $t('settings.privacyFilters.help') }}
+    | {{ $t('settings.privacyFilters.settingHelp') }} #[code privacy_filters] {{ $t('settings.privacyFilters.serverHelp') }}
   small.text-muted
-    | Leave the editor empty or save <code>[]</code> to disable the feature.
+    | {{ $t('settings.privacyFilters.disabledHelp') }}
 
   b-alert.mt-3(:show="saveError !== ''" variant="danger")
     | {{ saveError }}
@@ -22,7 +22,7 @@ div
       | {{ error }}
 
   b-alert.mt-3(:show="hasUnsavedChanges && validationErrors.length === 0" variant="warning")
-    | You have unsaved changes.
+    | {{ $t('settings.privacyFilters.unsavedChanges') }}
 
   b-form-textarea.mt-3(
     v-model="editorText"
@@ -33,11 +33,11 @@ div
   )
 
   small.d-block.text-muted.mt-2
-    | Each rule needs #[code enabled], #[code pattern], #[code action], and #[code field].
-    | Redact rules also need #[code replacement].
-    | Regex syntax is validated by the server when you save.
+    | {{ $t('settings.privacyFilters.ruleHelp') }} #[code enabled], #[code pattern], #[code action], {{ $t('settings.privacyFilters.and') }} #[code field].
+    | {{ $t('settings.privacyFilters.redactHelp') }} #[code replacement].
+    | {{ $t('settings.privacyFilters.regexHelp') }}
 
-  small.d-block.text-muted.mt-3 Example
+  small.d-block.text-muted.mt-3 {{ $t('settings.privacyFilters.example') }}
   pre.mt-3.mb-0.small(style="white-space: pre-wrap") {{ exampleText }}
 </template>
 

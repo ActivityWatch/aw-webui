@@ -117,7 +117,7 @@ export default {
     return {
       starttime: moment(),
       endtime: moment(),
-      centerMsg: 'Loading...',
+      centerMsg: '',
     };
   },
 
@@ -129,6 +129,7 @@ export default {
     },
   },
   mounted: function () {
+    this.centerMsg = this.$t('common.loading');
     sunburst.create(this.$el);
     this.starttime = moment(this.date);
     this.endtime = moment(this.date).add(1, 'days');
@@ -207,7 +208,7 @@ export default {
           let hierarchy = null;
           if (events_afk.length > 0 && events_window.length > 0) {
             hierarchy = buildHierarchy(events_afk, events_window);
-            this.centerMsg = 'Hover to inspect';
+            this.centerMsg = this.$t('ui.sunburstClock.hoverToInspect');
           } else {
             // FIXME: This should do the equivalent of "No data" when such is the case, but it doesn't.
             hierarchy = {
@@ -217,7 +218,7 @@ export default {
               data: { title: 'ROOT' },
               children: [],
             };
-            this.centerMsg = 'No data';
+            this.centerMsg = this.$t('visualizations.noData');
           }
           sunburst.update(this.$el, hierarchy, this.starttime);
         });

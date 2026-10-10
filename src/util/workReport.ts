@@ -39,7 +39,10 @@ function getHostBuckets(buckets: IBucket[]): Map<string, { window?: string; afk?
   return byHost;
 }
 
-export function getWorkReportHostOptions(buckets: IBucket[]): WorkReportHostOption[] {
+export function getWorkReportHostOptions(
+  buckets: IBucket[],
+  requiresAfkLabel = 'requires aw-watcher-afk'
+): WorkReportHostOption[] {
   const windowHosts = [...new Set(buckets.filter(b => b.type === 'currentwindow').map(bucketHost))];
   const byHost = getHostBuckets(buckets);
   return windowHosts.map(host => {
@@ -47,7 +50,7 @@ export function getWorkReportHostOptions(buckets: IBucket[]): WorkReportHostOpti
     const supported = !!(entry.window && entry.afk);
     return {
       value: host,
-      text: supported ? host : `${host} (requires aw-watcher-afk)`,
+      text: supported ? host : `${host} (${requiresAfkLabel})`,
       disabled: !supported,
     };
   });

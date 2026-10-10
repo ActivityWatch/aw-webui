@@ -30,6 +30,15 @@ const deferred = () => {
   return { promise, resolve, reject };
 };
 
+const translate = key =>
+  ({
+    'ui.categoryBuilder.retry': 'Retry',
+    'ui.categoryBuilder.noHost': 'No host with activity buckets is available.',
+    'ui.categoryBuilder.selectHost': 'Select a hostname under Show options',
+    'ui.categoryBuilder.noActivity': 'No activity data is available for this host.',
+    'common.loading': 'Loading...',
+  })[key] || key;
+
 describe('CategoryBuilder loading', () => {
   let wrapper, pinia, buckets, categories, query;
 
@@ -64,6 +73,7 @@ describe('CategoryBuilder loading', () => {
         'b-form-input': true,
         'b-form-checkbox': true,
       },
+      mocks: { $t: translate },
     });
     return wrapper;
   }

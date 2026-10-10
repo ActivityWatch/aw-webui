@@ -14,7 +14,7 @@ b-form-tags#tags-component-select(
     )
       template(#first)
         // This is required to prevent bugs with Safari
-        option(disabled value="") Choose a tag...
+        option(disabled value="") {{ $t('ui.selectCategories.chooseTag') }}
     ul.list-inline.d-inline-block.my-2(v-if="tags.length > 0")
       li.list-inline-item(v-for="tag in tags" :key="tag")
         b-form-tag(

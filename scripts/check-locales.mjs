@@ -10,6 +10,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const LOCALES_DIR = path.join(__dirname, '../src/i18n/locales');
 const LOCALES = ['en', 'uk', 'de', 'ru', 'zh-CN', 'sv'];
+const SRC_DIR = path.join(__dirname, '../src');
 
 /** Substrings: identical en/value is OK when value contains any of these (case-insensitive). */
 const ALLOWLIST_SUBSTRINGS = [
@@ -130,9 +131,42 @@ function isAllowlistedIdentical(enValue, targetValue) {
   return ALLOWLIST_SUBSTRINGS.some(sub => lower.includes(sub));
 }
 
+function sourceFiles(dir) {
+  const files = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const filePath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...sourceFiles(filePath));
+    } else if (
+      /\.(vue|ts|js)$/.test(entry.name) &&
+      !filePath.includes(`${path.sep}i18n${path.sep}locales${path.sep}`)
+    ) {
+      files.push(filePath);
+    }
+  }
+  return files;
+}
+
+function usedStaticTranslationKeys() {
+  const keys = new Set();
+  const pattern = /\$(?:t|tc|te)\(\s*['"]([^'"]+)['"]/g;
+  for (const filePath of sourceFiles(SRC_DIR)) {
+    const source = fs.readFileSync(filePath, 'utf8');
+    for (const match of source.matchAll(pattern)) keys.add(match[1]);
+  }
+  return keys;
+}
+
 let failed = false;
 
 const enFlat = flatten(loadLocale('en'));
+
+const missingInEnglish = [...usedStaticTranslationKeys()].filter(key => !(key in enFlat));
+if (missingInEnglish.length) {
+  failed = true;
+  console.error(`\n[en] Missing keys used by source (${missingInEnglish.length}):`);
+  missingInEnglish.sort().forEach(key => console.error(`  - ${key}`));
+}
 
 for (const code of LOCALES) {
   if (code === 'en') continue;
