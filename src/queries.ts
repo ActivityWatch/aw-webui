@@ -332,19 +332,46 @@ export const browser_appnames: Record<string, string[]> = {
   // web events land in the chrome bucket. Reverse-domain identifiers don't
   // match the process-name regex below and have to live here (#927).
   chrome: [
+    // Desktop (Flatpak / macOS bundle IDs)
     'com.google.Chrome',
     'com.google.ChromeDev',
     'org.chromium.Chromium',
     'company.thebrowser.dia',
+    // Android package names — Chromium-based browsers that use the chrome extension bucket
+    'com.android.chrome',
+    'com.chrome.beta',
+    'com.chrome.dev',
+    'com.chrome.canary',
+    'org.bromite.cromite', // Cromite is a Chromium fork; its extension identifies as chrome
   ],
-  firefox: ['org.mozilla.firefox', 'io.gitlab.librewolf-community', 'net.waterfox.waterfox'],
-  opera: ['com.opera.Opera'],
-  brave: ['com.brave.Browser'],
-  edge: ['com.microsoft.Edge', 'com.microsoft.EdgeDev'],
+  firefox: [
+    // Desktop
+    'org.mozilla.firefox',
+    'io.gitlab.librewolf-community',
+    'net.waterfox.waterfox',
+    // Android
+    'org.mozilla.fenix',
+    'org.mozilla.firefox_beta',
+    'org.mozilla.focus',
+  ],
+  opera: ['com.opera.Opera', 'com.opera.browser', 'com.opera.browser.beta'],
+  brave: [
+    'com.brave.Browser',
+    'com.brave.browser',
+    'com.brave.browser_beta',
+    'com.brave.browser_nightly',
+  ],
+  edge: [
+    'com.microsoft.Edge',
+    'com.microsoft.EdgeDev',
+    'com.microsoft.emmx',
+    'com.microsoft.emmx.beta',
+    'com.microsoft.emmx.dev',
+  ],
   arc: [],
-  vivaldi: ['com.vivaldi.Vivaldi'],
+  vivaldi: ['com.vivaldi.Vivaldi', 'com.vivaldi.browser'],
   orion: ['Orion'],
-  yandex: ['ru.yandex.Browser'],
+  yandex: ['ru.yandex.Browser', 'ru.yandex.browser'],
   zen: ['app.zen_browser.zen'],
   floorp: ['one.ablaze.floorp'],
   helium: ['net.imput.helium'],
@@ -725,11 +752,117 @@ export function browserOnlyQuery(browserbuckets: string[]): string[] {
   return querystr_to_array(code);
 }
 
+// Query that blends Android app data with browser URL data (intersection).
+// For each browser that has both an aw-watcher-web bucket AND matching Android
+// app events, URL events are filtered to the periods when the browser was in
+// the foreground on the Android device.  This mirrors how fullDesktopQuery
+// blends window focus + browser URLs on desktop.
+//
+// Returns { browser: { domains, urls, titles, duration } } — the same shape
+// as query_browser_only / fullDesktopQuery so query_browser_completed can
+// consume it unchanged.
+export function androidBrowserQuery(
+  bid_android: string,
+  bid_browsers: string[],
+  categories: Category[],
+  filter_categories: string[][],
+  isIos = false
+): string[] {
+  bid_android = escape_doublequote(bid_android);
+  const escaped_browsers = bid_browsers.map(escape_doublequote);
+  // keep_event_timestamps: merge_events_by_keys collapses each app into one
+  // event at its first timestamp with summed duration, so URL intersection
+  // would match the wrong clock times (Chrome 09:00–09:10 and 10:00–10:10
+  // become a 20-minute event starting at 09:00). Same flag the multidevice
+  // path uses when combining Android events with another timeline.
+  // filter_categories is accepted for signature parity with appQuery but
+  // must not apply here: selecting a category that excludes the browser app
+  // would drop its foreground periods (and therefore its URLs) even when
+  // those sites belong to the selected category. Desktop selects browser
+  // periods before the category filter; the previous Android browser-only
+  // query ignored it too.
+  const params: AndroidQueryParams = {
+    bid_android,
+    categories,
+    filter_categories,
+    isIos,
+    keep_event_timestamps: true,
+  };
+  // Unlike the desktop selector, keep every profile bucket for each browser.
+  const browsers: [string, string][] = Object.keys(browser_appnames)
+    .filter(browserName => browser_appnames[browserName].length > 0)
+    .flatMap(browserName =>
+      escaped_browsers
+        .filter(
+          bucketId =>
+            bucketId === `aw-watcher-web-${browserName}` ||
+            bucketId.startsWith(`aw-watcher-web-${browserName}_`) ||
+            bucketId.startsWith(`aw-watcher-web-${browserName}-synced-from-`)
+        )
+        .map(bucketId => [browserName, bucketId] as [string, string])
+    );
+
+  // Mirror browserEvents() but rely on the `events` variable set by
+  // canonicalEvents(AndroidQueryParams) — which holds the android app events.
+  // Exact filter_keyvals matching against "package" therefore selects the
+  // periods when a browser was in the foreground on the Android device, giving
+  // a proper intersection rather than raw URL totals.
+  let browser_code = `browser_events = [];`;
+  _.each(browsers, ([browserName, bucketId]) => {
+    const appnames_str = JSON.stringify(browser_appnames[browserName]);
+    browser_code += `
+      events_${browserName} = flood(query_bucket("${bucketId}"));
+      window_${browserName} = filter_keyvals(events, "package", ${appnames_str});`;
+    // Mobile watcher events put display labels in app and exact IDs in package.
+    // Desktop substring regexes
+    // can select a different browser (e.g. Firefox's "nightly" matches Brave Nightly).
+    browser_code += `
+      events_${browserName} = filter_period_intersect(events_${browserName}, window_${browserName});
+      events_${browserName} = split_url_events(events_${browserName});
+      browser_events = concat(browser_events, events_${browserName});
+      browser_events = sort_by_timestamp(browser_events);`;
+  });
+
+  // A custom extension name has no known package mapping. Preserve the
+  // previous browser-only behavior for those buckets instead of dropping them.
+  const matchedBuckets = new Set(browsers.map(([, bucketId]) => bucketId));
+  escaped_browsers
+    .filter(bucketId => !matchedBuckets.has(bucketId))
+    .forEach((bucketId, i) => {
+      browser_code += `
+      events_custom_${i} = flood(query_bucket("${bucketId}"));
+      events_custom_${i} = split_url_events(events_custom_${i});
+      browser_events = concat(browser_events, events_custom_${i});`;
+    });
+
+  const code = `
+    ${canonicalEvents({ ...params, filter_categories: [] })}
+    ${browser_code}
+    browser_urls = merge_events_by_keys(browser_events, ["url"]);
+    browser_urls = sort_by_duration(browser_urls);
+    browser_domains = merge_events_by_keys(browser_events, ["$domain"]);
+    browser_domains = sort_by_duration(browser_domains);
+    browser_titles = merge_events_by_keys(browser_events, ["title"]);
+    browser_titles = sort_by_duration(browser_titles);
+    browser_duration = sum_durations(browser_events);
+    RETURN = {
+      "browser": {
+        "domains": browser_domains,
+        "urls": browser_urls,
+        "titles": browser_titles,
+        "duration": browser_duration
+      }
+    };
+  `;
+  return querystr_to_array(code);
+}
+
 export default {
   fullDesktopQuery,
   analysisContextQuery,
   multideviceQuery,
   appQuery,
+  androidBrowserQuery,
   activityQuery,
   activityQueryAndroid,
   multideviceActivityQuery,

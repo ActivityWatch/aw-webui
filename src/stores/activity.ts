@@ -474,11 +474,9 @@ export const useActivityStore = defineStore('activity', {
       if (this.window.available) {
         await this.query_desktop_full(query_options);
       } else if (this.android.available) {
+        // Browser enrichment (when aw-watcher-web is present) is handled
+        // inside query_android via androidBrowserQuery.
         await this.query_android(query_options);
-        // Android hosts may also have browser buckets from aw-watcher-web.
-        if (this.browser.available) {
-          await this.query_browser_only(query_options);
-        }
       } else if (this.browser.available) {
         // Browser-only mode: device with aw-watcher-web but no window/afk/android watcher.
         await this.query_browser_only(query_options);
@@ -651,6 +649,7 @@ export const useActivityStore = defineStore('activity', {
         if (!(result && result[0])) {
           // Don't show partial totals as if they covered the whole period
           this.query_window_completed();
+          this.query_browser_completed({ domains: [], urls: [], titles: [], duration: 0 });
           return;
         }
         chunks.push(result[0]);
@@ -692,9 +691,51 @@ export const useActivityStore = defineStore('activity', {
       }
 
       this.query_window_completed(data[0]);
+
+      // Blend browser URL data when aw-watcher-web buckets are also present.
+      // androidBrowserQuery intersects URL events with the periods when a
+      // browser app was in the foreground, mirroring fullDesktopQuery's
+      // window+browser blending on desktop.
+      if (this.browser.available) {
+        // ScreenTime imports don't provide a reliable browser foreground
+        // timeline. Preserve their existing browser-only behavior.
+        if (isIos) {
+          await this.query_browser_only({ timeperiod });
+          return;
+        }
+        const bq = queries.androidBrowserQuery(
+          selectedBucket,
+          this.buckets.browser,
+          categoryStore.classes_for_query,
+          filter_categories,
+          isIos
+        );
+        // Chunk like the app query above: a single request covering the whole
+        // timeperiod floods the Android and web buckets and can exceed the
+        // server's request timeout on long ranges (All time). Merge the
+        // per-chunk browser results with the same helper the desktop path uses.
+        this.progress_add(periods.length);
+        const bChunks = [];
+        for (const period of periods) {
+          const bResult = await getClient()
+            .query([period], bq, { name: 'androidBrowserQuery' })
+            .catch(this.errorHandler);
+          this.progress_tick();
+          if (!(bResult && bResult[0] && bResult[0].browser)) {
+            // Don't show partial browser totals as if they covered the whole period
+            this.query_browser_completed();
+            return;
+          }
+          bChunks.push(bResult[0]);
+        }
+        // Apply the display limit only after merging every chunk's aggregates;
+        // a site below the cutoff in each chunk can still lead overall.
+        const bMerged = mergeFullDesktopResults(bChunks);
+        this.query_browser_completed(bMerged.browser);
+      }
     },
 
-    async query_browser_only({ timeperiod }: QueryOptions) {
+    async query_browser_only({ timeperiod }: Pick<QueryOptions, 'timeperiod'>) {
       const q = queries.browserOnlyQuery(this.buckets.browser);
       this.progress_add(1);
       const result = await getClient()

@@ -66,6 +66,7 @@ import {
   browser_appname_regex,
   browser_appnames,
   activityQuery,
+  androidBrowserQuery,
   browserOnlyQuery,
   canonicalEvents,
   categoryQuery,
@@ -600,6 +601,136 @@ test('canonicalEvents serializes select_keys into categorize()', () => {
   });
   expect(query).toContain('"select_keys":["app"]');
   expect(query).toContain('"regex":"Firefox"');
+});
+
+describe('androidBrowserQuery', () => {
+  test('matches mobile packages exactly without desktop substring regexes', () => {
+    const joined = androidBrowserQuery(
+      'aw-watcher-android_device',
+      ['aw-watcher-web-firefox', 'aw-watcher-web-brave'],
+      [],
+      []
+    ).join('\n');
+    expect(joined).toContain('org.mozilla.fenix');
+    expect(joined).toContain('com.brave.browser_nightly');
+    // aw-android records display labels in app and identifiers in package.
+    expect(joined).toContain('window_firefox = filter_keyvals(events, "package",');
+    expect(joined).not.toContain('filter_keyvals(events, "app",');
+    // Firefox's desktop "nightly" alternative would also match Brave Nightly.
+    expect(joined).not.toContain('filter_keyvals_regex(events, "app"');
+  });
+
+  test.each([
+    ['yandex', 'ru.yandex.browser'],
+    ['edge', 'com.microsoft.emmx.dev'],
+  ])('matches the Android package for %s without losing URL events', (browser, androidPackage) => {
+    const joined = androidBrowserQuery(
+      'aw-watcher-android_device',
+      [`aw-watcher-web-${browser}_phone`],
+      [],
+      []
+    ).join('\n');
+    const foregroundFilter = joined
+      .split('\n')
+      .find(line => line.includes(`window_${browser} = filter_keyvals(events, "package",`));
+    expect(foregroundFilter).toContain(`"${androidPackage}"`);
+    expect(joined).toContain(`filter_period_intersect(events_${browser}, window_${browser})`);
+  });
+
+  test('does not treat browser names in a hostname or profile as bucket identifiers', () => {
+    const joined = androidBrowserQuery(
+      'aw-watcher-android_device',
+      ['aw-watcher-web-firefox_chromephone', 'aw-watcher-web-brave_firefox-profile'],
+      [],
+      []
+    ).join('\n');
+    expect(joined.match(/filter_period_intersect/g)).toHaveLength(2);
+    expect(joined).not.toContain('events_chrome =');
+    expect(joined).toContain(
+      'events_firefox = flood(query_bucket("aw-watcher-web-firefox_chromephone"))'
+    );
+    expect(joined).toContain(
+      'events_brave = flood(query_bucket("aw-watcher-web-brave_firefox-profile"))'
+    );
+  });
+
+  test('preserves browser-only data for unknown custom browser names', () => {
+    const joined = androidBrowserQuery(
+      'aw-watcher-android_device',
+      ['aw-watcher-web-cromite_phone', 'aw-watcher-web-personal_phone', 'aw-watcher-web-arc_phone'],
+      [],
+      []
+    ).join('\n');
+    expect(joined).toContain('query_bucket("aw-watcher-web-cromite_phone")');
+    expect(joined).toContain('query_bucket("aw-watcher-web-personal_phone")');
+    expect(joined).toContain('query_bucket("aw-watcher-web-arc_phone")');
+    expect(joined).not.toContain('filter_period_intersect');
+    expect(joined).toContain('split_url_events');
+  });
+
+  test('queries every bucket when a browser has multiple profiles', () => {
+    const buckets = [
+      'aw-watcher-web-firefox_profile1',
+      'aw-watcher-web-firefox_profile2',
+      'aw-watcher-web-firefox-synced-from-phone',
+    ];
+    const joined = androidBrowserQuery('aw-watcher-android_device', buckets, [], []).join('\n');
+    for (const bucket of buckets) {
+      expect(joined).toContain(`query_bucket("${bucket}")`);
+    }
+    expect(joined.match(/filter_period_intersect/g)).toHaveLength(3);
+  });
+
+  test('keeps all browser aggregates until chunks have been merged', () => {
+    const joined = androidBrowserQuery(
+      'aw-watcher-android_device',
+      ['aw-watcher-web-chrome'],
+      [],
+      []
+    ).join('\n');
+    expect(joined).not.toContain('limit_events(browser_');
+  });
+
+  test('keeps event timestamps so URL intersection uses real foreground periods', () => {
+    const joined = androidBrowserQuery(
+      'aw-watcher-android_device',
+      ['aw-watcher-web-chrome'],
+      [],
+      [],
+      false
+    ).join('\n');
+    // Without keep_event_timestamps, canonicalEvents merges by app and
+    // collapses Chrome 09:00–09:10 + 10:00–10:10 into one 20-minute event.
+    expect(joined).not.toContain('merge_events_by_keys(events, ["app"])');
+    expect(joined).not.toContain('merge_events_by_keys(events, ["app", "title"])');
+    expect(joined).toContain('filter_period_intersect');
+  });
+
+  test('does not apply category filter before selecting browser foreground periods', () => {
+    const joined = androidBrowserQuery(
+      'aw-watcher-android_device',
+      ['aw-watcher-web-chrome'],
+      [[['Work'], { type: 'regex', regex: 'Chrome' }]],
+      [['Work']],
+      false
+    ).join('\n');
+    expect(joined).not.toContain('filter_keyvals(events, "$category"');
+    expect(joined).toContain('com.android.chrome');
+  });
+
+  test('returns browser domains, urls, and titles in RETURN', () => {
+    const joined = androidBrowserQuery(
+      'aw-watcher-android_device',
+      ['aw-watcher-web-chrome'],
+      [],
+      [],
+      false
+    ).join('\n');
+    expect(joined).toContain('"domains"');
+    expect(joined).toContain('"urls"');
+    expect(joined).toContain('"titles"');
+    expect(joined).toContain('"duration"');
+  });
 });
 
 describe('browserOnlyQuery', () => {
