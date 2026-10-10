@@ -604,6 +604,19 @@ test('canonicalEvents serializes select_keys into categorize()', () => {
 });
 
 describe('androidBrowserQuery', () => {
+  test('matches mobile packages exactly without desktop substring regexes', () => {
+    const joined = androidBrowserQuery(
+      'aw-watcher-android_device',
+      ['aw-watcher-web-firefox', 'aw-watcher-web-brave'],
+      [],
+      []
+    ).join('\n');
+    expect(joined).toContain('org.mozilla.fenix');
+    expect(joined).toContain('com.brave.browser_nightly');
+    // Firefox's desktop "nightly" alternative would also match Brave Nightly.
+    expect(joined).not.toContain('filter_keyvals_regex(events, "app"');
+  });
+
   test('queries every bucket when a browser has multiple profiles', () => {
     const buckets = ['aw-watcher-web-firefox_profile1', 'aw-watcher-web-firefox_profile2'];
     const joined = androidBrowserQuery('aw-watcher-android_device', buckets, [], []).join('\n');

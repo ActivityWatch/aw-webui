@@ -697,6 +697,12 @@ export const useActivityStore = defineStore('activity', {
       // browser app was in the foreground, mirroring fullDesktopQuery's
       // window+browser blending on desktop.
       if (this.browser.available) {
+        // ScreenTime imports don't provide a reliable browser foreground
+        // timeline. Preserve their existing browser-only behavior.
+        if (isIos) {
+          await this.query_browser_only({ timeperiod });
+          return;
+        }
         const bq = queries.androidBrowserQuery(
           selectedBucket,
           this.buckets.browser,

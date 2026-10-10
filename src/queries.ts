@@ -796,32 +796,17 @@ export function androidBrowserQuery(
 
   // Mirror browserEvents() but rely on the `events` variable set by
   // canonicalEvents(AndroidQueryParams) — which holds the android app events.
-  // filter_keyvals / filter_keyvals_regex against "app" therefore selects the
+  // Exact filter_keyvals matching against "app" therefore selects the
   // periods when a browser was in the foreground on the Android device, giving
   // a proper intersection rather than raw URL totals.
-  const dedicatedChromeForks = browsers
-    .map(([name]) => name)
-    .filter(name => name in CHROME_FORK_ALTS);
-
   let browser_code = `browser_events = [];`;
   _.each(browsers, ([browserName, bucketId]) => {
     const appnames_str = JSON.stringify(browser_appnames[browserName]);
     browser_code += `
       events_${browserName} = flood(query_bucket("${bucketId}"));
       window_${browserName} = filter_keyvals(events, "app", ${appnames_str});`;
-    // Regex patterns cover desktop process-name variants but not Android
-    // package names — exact matches above handle Android; skip regex for
-    // Android-only bucket names to avoid over-matching.
-    let pattern = browser_appname_regex[browserName];
-    if (browserName === 'chrome' && dedicatedChromeForks.length > 0) {
-      pattern = chromeAppnameRegex(dedicatedChromeForks);
-    }
-    if (pattern) {
-      const pattern_str = JSON.stringify(pattern).replace(/\\\\/g, '\\');
-      browser_code += `
-        window_${browserName}_re = filter_keyvals_regex(events, "app", ${pattern_str});
-        window_${browserName} = sort_by_timestamp(concat(window_${browserName}, window_${browserName}_re));`;
-    }
+    // Mobile watcher events use exact package IDs. Desktop substring regexes
+    // can select a different browser (e.g. Firefox's "nightly" matches Brave Nightly).
     browser_code += `
       events_${browserName} = filter_period_intersect(events_${browserName}, window_${browserName});
       events_${browserName} = split_url_events(events_${browserName});
