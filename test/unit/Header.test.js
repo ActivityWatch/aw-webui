@@ -203,3 +203,141 @@ describe('Header phone navigation drawer', () => {
     wrapper.destroy();
   });
 });
+
+describe('Header native Android actions', () => {
+  let bridge;
+
+  // Mirrors the object aw-android injects through WebMessageListener.
+  function installBridge({ actions } = {}) {
+    const listeners = [];
+    bridge = {
+      sent: [],
+      postMessage: jest.fn(msg => {
+        bridge.sent.push(JSON.parse(msg));
+        if (actions && JSON.parse(msg).type === 'hello') {
+          const reply = JSON.stringify({ type: 'capabilities', version: 1, actions });
+          listeners.forEach(fn => fn({ data: reply }));
+        }
+      }),
+      addEventListener: jest.fn((_type, fn) => listeners.push(fn)),
+      removeEventListener: jest.fn(),
+      emit: data => listeners.forEach(fn => fn({ data })),
+    };
+    window.awNativeBridge = bridge;
+  }
+
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    window.matchMedia = jest.fn().mockReturnValue({
+      matches: false,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+    });
+  });
+
+  afterEach(() => {
+    delete window.awNativeBridge;
+    delete window.matchMedia;
+  });
+
+  function mountWithDrawer() {
+    const localVue = createLocalVue();
+    localVue.use(BootstrapVue);
+    return mount(Header, {
+      localVue,
+      attachTo: document.body,
+      mocks: { $isAndroid: false, $t: key => key },
+      stubs: { icon: true },
+    });
+  }
+
+  test('browsers without the bridge show no native actions', async () => {
+    const wrapper = mountWithDrawer();
+    await wrapper.setData({ drawerOpen: true });
+    await flushPromises();
+
+    expect(wrapper.findAll('[data-testid^="nav-native-"]')).toHaveLength(0);
+    wrapper.destroy();
+  });
+
+  test('a bridge that reports no capabilities shows no native actions', async () => {
+    installBridge();
+    const wrapper = mountWithDrawer();
+    await wrapper.setData({ drawerOpen: true });
+    await flushPromises();
+
+    expect(bridge.sent[0]).toEqual({ type: 'hello' });
+    expect(wrapper.findAll('[data-testid^="nav-native-"]')).toHaveLength(0);
+    wrapper.destroy();
+  });
+
+  test('shows only the reported, known actions and runs them on tap', async () => {
+    installBridge({ actions: ['sync-settings', 'open-in-browser', 'open-url'] });
+    const wrapper = mountWithDrawer();
+    await wrapper.setData({ drawerOpen: true });
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="nav-native-sync-settings"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="nav-native-open-in-browser"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="nav-native-auth-settings"]').exists()).toBe(false);
+    expect(wrapper.findAll('[data-testid="nav-native-open-url"]')).toHaveLength(0);
+
+    await wrapper.find('[data-testid="nav-native-sync-settings"] a').trigger('click');
+    await flushPromises();
+
+    expect(bridge.sent).toContainEqual({ type: 'action', action: 'sync-settings' });
+    expect(wrapper.vm.drawerOpen).toBe(false);
+    wrapper.destroy();
+  });
+
+  test('native actions render in the phone drawer as well as the desktop navbar', () => {
+    installBridge({ actions: ['sync-settings', 'auth-settings', 'open-in-browser'] });
+    const wrapper = shallowMount(Header, {
+      mocks: { $isAndroid: false, $t: key => key },
+      stubs: {
+        'b-navbar': passthroughStub,
+        'b-navbar-nav': passthroughStub,
+        'b-collapse': passthroughStub,
+        'b-sidebar': passthroughStub,
+        'b-nav-item': passthroughStub,
+        'b-nav-item-dropdown': passthroughStub,
+        'b-dropdown-item': passthroughStub,
+        'b-navbar-brand': true,
+        'b-navbar-toggle': true,
+        icon: true,
+      },
+    });
+    for (const selector of ['#nav-collapse', '#nav-drawer']) {
+      const text = wrapper.find(selector).text();
+      for (const key of ['nav.syncSettings', 'nav.apiAuthentication', 'nav.openInBrowser']) {
+        expect(text).toContain(key);
+      }
+    }
+  });
+
+  test('reports drawer state and closes on a native close-menu request', async () => {
+    installBridge({ actions: ['sync-settings'] });
+    const wrapper = mountWithDrawer();
+    await flushPromises();
+
+    await wrapper.setData({ drawerOpen: true });
+    await flushPromises();
+    expect(bridge.sent).toContainEqual({ type: 'menu', open: true });
+
+    bridge.emit(JSON.stringify({ type: 'close-menu' }));
+    await flushPromises();
+    expect(wrapper.vm.drawerOpen).toBe(false);
+    expect(bridge.sent).toContainEqual({ type: 'menu', open: false });
+
+    // Malformed or unexpected messages are ignored.
+    await wrapper.setData({ drawerOpen: true });
+    bridge.emit('not json');
+    bridge.emit(JSON.stringify({ type: 'capabilities', version: 2, actions: ['auth-settings'] }));
+    await flushPromises();
+    expect(wrapper.vm.drawerOpen).toBe(true);
+    expect(wrapper.findAll('[data-testid="nav-native-auth-settings"]')).toHaveLength(0);
+
+    wrapper.destroy();
+    expect(bridge.removeEventListener).toHaveBeenCalled();
+  });
+});

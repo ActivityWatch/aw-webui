@@ -84,6 +84,21 @@ mixin navTools
     div.px-2.px-lg-1
       icon(name="cog")
       | {{ $t('nav.settings') }}
+  +navNative
+
+//- Actions only the Android app can perform. Rendered only after the app's
+//- native bridge reports them, so browsers never show entries they can't run.
+mixin navNative
+  b-nav-item(
+    v-for="action in nativeMenuActions"
+    :key="action.id"
+    href="#"
+    @click.prevent="runNativeAction(action.id)"
+    :data-testid="'nav-native-' + action.id"
+  )
+    div.px-2.px-lg-1
+      icon(:name="action.icon")
+      | {{ $t(action.label) }}
 
 div(:class="{'fixed-top-padding': fixedTopMenu}")
   b-navbar.aw-navbar(toggleable="lg" :fixed="fixedTopMenu ? 'top' : null")
@@ -158,6 +173,9 @@ import 'vue-awesome/icons/ellipsis-h';
 import 'vue-awesome/icons/mobile';
 import 'vue-awesome/icons/desktop';
 import 'vue-awesome/icons/layer-group';
+import 'vue-awesome/icons/sync';
+import 'vue-awesome/icons/key';
+import 'vue-awesome/icons/external-link-alt';
 
 import _ from 'lodash';
 
@@ -166,6 +184,7 @@ import { useSettingsStore } from '~/stores/settings';
 import { useBucketsStore } from '~/stores/buckets';
 import { IBucket } from '~/util/interfaces';
 import { ALL_DEVICES, formatHostParam } from '~/util/multidevice';
+import { connectNativeBridge, NATIVE_MENU_ACTIONS, NativeBridge } from '~/util/nativeBridge';
 
 export default {
   name: 'Header',
@@ -180,10 +199,31 @@ export default {
       allDevicesPathUrl: `/activity/${ALL_DEVICES}`,
       drawerOpen: false,
       desktopQuery: null,
+      nativeBridge: null as NativeBridge | null,
+      nativeActions: [] as string[],
     };
   },
   computed: {
     ...mapState(useSettingsStore, ['devmode']),
+    nativeMenuActions() {
+      return NATIVE_MENU_ACTIONS.filter(a => this.nativeActions.includes(a.id));
+    },
+  },
+  watch: {
+    drawerOpen(isOpen: boolean) {
+      // Lets Android Back dismiss the drawer before leaving the page.
+      this.nativeBridge?.reportMenu(isOpen);
+    },
+  },
+  created() {
+    this.nativeBridge = connectNativeBridge({
+      onCapabilities: (actions: string[]) => {
+        this.nativeActions = actions;
+      },
+      onCloseMenu: () => {
+        this.drawerOpen = false;
+      },
+    });
   },
   mounted: async function () {
     // The drawer only exists below the lg breakpoint: close it (and its backdrop)
@@ -230,11 +270,16 @@ export default {
     this.activityViews = activityViews;
   },
   beforeDestroy() {
+    this.nativeBridge?.disconnect();
     if (this.desktopQuery) {
       this.desktopQuery.removeEventListener('change', this.onDesktopQueryChange);
     }
   },
   methods: {
+    runNativeAction(id: string) {
+      this.drawerOpen = false;
+      this.nativeBridge?.runAction(id);
+    },
     onDesktopQueryChange(e: MediaQueryListEvent) {
       if (e.matches) {
         this.drawerOpen = false;
