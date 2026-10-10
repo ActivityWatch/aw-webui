@@ -788,15 +788,17 @@ export function androidBrowserQuery(
     keep_event_timestamps: true,
   };
   // Unlike the desktop selector, keep every profile bucket for each browser.
-  const browsers: [string, string][] = Object.keys(browser_appnames).flatMap(browserName =>
-    escaped_browsers
-      .filter(
-        bucketId =>
-          bucketId === `aw-watcher-web-${browserName}` ||
-          bucketId.startsWith(`aw-watcher-web-${browserName}_`)
-      )
-      .map(bucketId => [browserName, bucketId] as [string, string])
-  );
+  const browsers: [string, string][] = Object.keys(browser_appnames)
+    .filter(browserName => browser_appnames[browserName].length > 0)
+    .flatMap(browserName =>
+      escaped_browsers
+        .filter(
+          bucketId =>
+            bucketId === `aw-watcher-web-${browserName}` ||
+            bucketId.startsWith(`aw-watcher-web-${browserName}_`)
+        )
+        .map(bucketId => [browserName, bucketId] as [string, string])
+    );
 
   // Mirror browserEvents() but rely on the `events` variable set by
   // canonicalEvents(AndroidQueryParams) — which holds the android app events.

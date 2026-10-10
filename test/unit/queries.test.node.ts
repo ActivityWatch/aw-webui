@@ -640,12 +640,13 @@ describe('androidBrowserQuery', () => {
   test('preserves browser-only data for unknown custom browser names', () => {
     const joined = androidBrowserQuery(
       'aw-watcher-android_device',
-      ['aw-watcher-web-cromite_phone', 'aw-watcher-web-personal_phone'],
+      ['aw-watcher-web-cromite_phone', 'aw-watcher-web-personal_phone', 'aw-watcher-web-arc_phone'],
       [],
       []
     ).join('\n');
     expect(joined).toContain('query_bucket("aw-watcher-web-cromite_phone")');
     expect(joined).toContain('query_bucket("aw-watcher-web-personal_phone")');
+    expect(joined).toContain('query_bucket("aw-watcher-web-arc_phone")');
     expect(joined).not.toContain('filter_period_intersect');
     expect(joined).toContain('split_url_events');
   });

@@ -735,7 +735,7 @@ export const useActivityStore = defineStore('activity', {
       }
     },
 
-    async query_browser_only({ timeperiod }: QueryOptions) {
+    async query_browser_only({ timeperiod }: Pick<QueryOptions, 'timeperiod'>) {
       const q = queries.browserOnlyQuery(this.buckets.browser);
       this.progress_add(1);
       const result = await getClient()
