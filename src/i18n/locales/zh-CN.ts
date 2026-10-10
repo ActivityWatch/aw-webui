@@ -13,6 +13,7 @@ export default {
     tools: '工具',
     search: '搜索',
     workReport: '工作报告',
+    aiSummary: 'AI 摘要',
     trends: '趋势',
     report: '报告',
     alerts: '提醒',
@@ -255,6 +256,7 @@ export default {
     importHelp: '有效的导入文件是从单个或多个存储桶导出的 JSON 文件。',
     exportBuckets: '导出存储桶',
     exportAllJson: '导出所有存储桶为 JSON',
+    exporting: '正在导出...',
     tools: '工具',
   },
   activity: {
@@ -292,6 +294,15 @@ export default {
     rangeStart: '开始日期',
     rangeEnd: '结束日期',
     invalidRange: 'URL 中的日期范围无效，改为显示今天。',
+    diagnosticMissingWindow: '{host} 没有窗口存储桶。请启动 aw-watcher-window，然后刷新此页面。',
+    diagnosticMissingAfk: '{host} 没有 AFK 存储桶。请启动 aw-watcher-afk，然后刷新此页面。',
+    diagnosticAmbiguousWindow:
+      '多个窗口存储桶可能都对应 {host}：{buckets}。请在上方选择正确的设备，或查看原始数据。',
+    diagnosticMismatchedHostnames:
+      'aw-watcher-window 将 {host} 报告为 {windowHosts}，而 aw-watcher-afk 将其报告为 {afkHosts}。活动视图要求两者使用相同的主机名：请重启这两个监视器，然后刷新此页面。',
+    diagnosticNoWindowEvents:
+      '未找到该时间段的窗口活动。请确认 aw-watcher-window 正在运行。在 Wayland 上可尝试 awatcher。',
+    diagnosticOpenRawData: '打开原始数据。',
     periodAllTime: '全部时间',
     allTimeSlowHint: '数据库较大时，加载全部时间可能需要一段时间。',
     filterAfkTooltip: '过滤掉 AFK watcher 未检测到任何输入的时间。',

@@ -245,6 +245,9 @@ interface State {
     available: boolean;
     top_apps: IEvent[];
     top_titles: IEvent[];
+    // Unfiltered window-bucket activity (see queries.ts). Zero when no events
+    // exist for the period, whatever the AFK/category filters did.
+    raw_duration: number;
   };
 
   browser: {
@@ -323,6 +326,7 @@ export const useActivityStore = defineStore('activity', {
       available: false,
       top_apps: [],
       top_titles: [],
+      raw_duration: 0,
     },
 
     browser: {
@@ -1153,6 +1157,7 @@ export const useActivityStore = defineStore('activity', {
 
       this.query_window_completed({
         duration: _.sumBy(window_events, 'duration'),
+        raw_duration: _.sumBy(window_events, 'duration'),
         app_events,
         title_events,
         cat_events,
@@ -1255,6 +1260,7 @@ export const useActivityStore = defineStore('activity', {
         cat_events: [],
         active_events: [],
         duration: 0,
+        raw_duration: 0,
       }
     ) {
       // Set $color and $score for categories
@@ -1265,6 +1271,7 @@ export const useActivityStore = defineStore('activity', {
 
       this.window.top_apps = withDominantCategory(data.app_events, data.app_cat_events);
       this.window.top_titles = data.title_events;
+      this.window.raw_duration = data.raw_duration || 0;
       this.category.top = data.cat_events;
       this.active.duration = data.duration;
       this.active.events = data.active_events;

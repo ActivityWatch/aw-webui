@@ -207,6 +207,12 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
         ? 'events = merge_events_by_keys(events, ["app", "title"]);'
         : 'events = merge_events_by_keys(events, ["app"]);'
       : '',
+    // Snapshot the raw window/app events before the AFK, category and
+    // stopwatch steps below rewrite `events`. The Activity view uses this to
+    // tell a genuinely empty period apart from one that filters hid: filtered
+    // active time is zero both when the bucket has no events and when the
+    // user was AFK or picked a category with no matches.
+    'raw_window_events = events;',
     // Fetch not-afk events. When there is no AFK bucket (bid_afk is empty),
     // emit an empty not_afk list so later references to the variable
     // (including `return_variable_suffix`, used by the multidevice query)
@@ -472,6 +478,7 @@ export function fullDesktopQuery(params: DesktopQueryParams): string[] {
     app_events  = limit_events(app_events, ${default_limit});
     title_events  = limit_events(title_events, ${default_limit});
     duration = sum_durations(events);
+    raw_window_duration = sum_durations(raw_window_events);
     ` + // Browser events are retrieved in canonicalQuery
       `
     browser_events = split_url_events(browser_events);
@@ -496,7 +503,8 @@ export function fullDesktopQuery(params: DesktopQueryParams): string[] {
             "title_events": title_events,
             "cat_events": cat_events,
             "active_events": not_afk,
-            "duration": duration
+            "duration": duration,
+            "raw_duration": raw_window_duration
         },
         "browser": {
             "domains": browser_domains,
