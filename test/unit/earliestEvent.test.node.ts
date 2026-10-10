@@ -2,6 +2,7 @@ import {
   earliestEventInBucket,
   earliestEventInBuckets,
   nextEarliestDate,
+  rangeCoveringEarliest,
 } from '~/util/earliestEvent';
 
 // Fake events endpoint: returns the latest event at or before `end` (limit 1)
@@ -89,5 +90,22 @@ describe('nextEarliestDate', () => {
   it('moves the start earlier either way', () => {
     expect(nextEarliestDate('2024-06-01', '2019-01-01', { approximate: true })).toBe('2019-01-01');
     expect(nextEarliestDate('2024-06-01', '2019-01-01')).toBe('2019-01-01');
+  });
+});
+
+describe('rangeCoveringEarliest', () => {
+  const range = { start: '2025-03-14T00:00:00.000Z', end: '2026-10-07T00:00:00.000Z' };
+
+  it('widens the start to an earlier first event (bucket older than the host data, #1077)', () => {
+    const res = rangeCoveringEarliest(range, new Date('2023-05-10T08:00:00Z'));
+    expect(res).toEqual({ start: '2023-05-10T08:00:00.000Z', end: range.end });
+  });
+
+  it('keeps the range when the first event is inside it', () => {
+    expect(rangeCoveringEarliest(range, new Date('2025-06-01T00:00:00Z'))).toBe(range);
+  });
+
+  it('keeps the range for an empty bucket', () => {
+    expect(rangeCoveringEarliest(range, null)).toBe(range);
   });
 });
