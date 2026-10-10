@@ -173,10 +173,16 @@ export default {
       // imported while the page stayed open are not left out of All time.
       if (opts.force || !(bucketId in this.earliestByBucket)) {
         const bucket = this.bucketsStore.getBucket(bucketId);
+        // A miss (store still loading, or restored initialBucketId not in
+        // the list yet) must not poison the cache with null — Refresh would
+        // then be the only retry. Empty buckets still cache null below.
+        if (!bucket) {
+          return range;
+        }
         const client = getClient();
-        const earliest = bucket
-          ? await earliestEventInBucket(bucket, (id, params) => client.getEvents(id, params))
-          : null;
+        const earliest = await earliestEventInBucket(bucket, (id, params) =>
+          client.getEvents(id, params)
+        );
         this.earliestByBucket = { ...this.earliestByBucket, [bucketId]: earliest };
       }
       return rangeCoveringEarliest(range, this.earliestByBucket[bucketId]);
