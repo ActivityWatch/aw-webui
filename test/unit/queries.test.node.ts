@@ -634,6 +634,19 @@ describe('androidBrowserQuery', () => {
     );
   });
 
+  test('preserves browser-only data for unknown custom browser names', () => {
+    const joined = androidBrowserQuery(
+      'aw-watcher-android_device',
+      ['aw-watcher-web-cromite_phone', 'aw-watcher-web-personal_phone'],
+      [],
+      []
+    ).join('\n');
+    expect(joined).toContain('query_bucket("aw-watcher-web-cromite_phone")');
+    expect(joined).toContain('query_bucket("aw-watcher-web-personal_phone")');
+    expect(joined).not.toContain('filter_period_intersect');
+    expect(joined).toContain('split_url_events');
+  });
+
   test('queries every bucket when a browser has multiple profiles', () => {
     const buckets = ['aw-watcher-web-firefox_profile1', 'aw-watcher-web-firefox_profile2'];
     const joined = androidBrowserQuery('aw-watcher-android_device', buckets, [], []).join('\n');

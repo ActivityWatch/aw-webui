@@ -62,6 +62,10 @@ describe('Android browser completion', () => {
     store.buckets.android = ['aw-watcher-android_device'];
     store.buckets.browser = ['aw-watcher-web-chrome'];
     store.browser.available = true;
+    store.browser.top_domains = null;
+    store.browser.top_urls = null;
+    store.browser.top_titles = null;
+    store.browser.duration = 123;
     jest
       .spyOn(getClient(), 'query')
       .mockResolvedValueOnce([

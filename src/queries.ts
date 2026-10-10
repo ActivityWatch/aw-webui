@@ -818,6 +818,18 @@ export function androidBrowserQuery(
       browser_events = sort_by_timestamp(browser_events);`;
   });
 
+  // A custom extension name has no known package mapping. Preserve the
+  // previous browser-only behavior for those buckets instead of dropping them.
+  const matchedBuckets = new Set(browsers.map(([, bucketId]) => bucketId));
+  escaped_browsers
+    .filter(bucketId => !matchedBuckets.has(bucketId))
+    .forEach((bucketId, i) => {
+      browser_code += `
+      events_custom_${i} = flood(query_bucket("${bucketId}"));
+      events_custom_${i} = split_url_events(events_custom_${i});
+      browser_events = concat(browser_events, events_custom_${i});`;
+    });
+
   const code = `
     ${canonicalEvents({ ...params, filter_categories: [] })}
     ${browser_code}
