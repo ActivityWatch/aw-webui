@@ -35,6 +35,17 @@ div
       ) {{ $t('settings.categorization.deleteSet') }}
     div.mt-1.small.text-muted(v-if="categoryStore.category_sets.length > 1")
       | {{ $t('settings.categorization.setsAvailable', { count: categoryStore.category_sets.length }) }}
+    div.mt-2.d-flex.align-items-center.flex-wrap(v-if="otherSets.length > 0" style="gap: 0.75rem;")
+      span.small.font-weight-bold(style="white-space: nowrap") {{ $t('settings.categorization.alsoApply') }}
+      b-form-checkbox(
+        v-for="set in otherSets"
+        :key="set.id"
+        :checked="extraSetIds.includes(set.id)"
+        @change="toggleExtraSet(set.id, $event)"
+        size="sm"
+      ) {{ set.id }}
+    div.mt-1.small.text-muted(v-if="extraSetIds.length > 0")
+      | {{ $t('settings.categorization.alsoApplyHelp', { primary: activeSetId }) }}
 
   div.d-flex.align-items-center.flex-wrap.mt-4
     h5.mb-0 {{ $t('settings.categorization.categories') }}
@@ -99,6 +110,16 @@ div
         v-model="newSetName"
         :placeholder="$t('settings.categorization.newSetNamePlaceholder')"
       )
+
+  b-modal(
+    v-model="showImportModal"
+    :title="$t('settings.categorization.importSetTitle')"
+    hide-footer
+  )
+    p {{ $t('settings.categorization.importSetPrompt', { id: pendingImportSetId }) }}
+    div.d-flex.flex-wrap(style="gap: 0.5rem;")
+      b-btn(variant="outline-primary" @click="onImportReplace") {{ $t('settings.categorization.importReplace') }}
+      b-btn(variant="primary" @click="onImportAddOnTop") {{ $t('settings.categorization.importAddOnTop') }}
 </template>
 <script lang="ts">
 import { mapState, mapGetters } from 'pinia';
@@ -128,10 +149,19 @@ export default {
     builderMounted: false,
     showCreateSetModal: false,
     newSetName: '',
+    showImportModal: false,
+    pendingImportSetId: '',
+    pendingImportCategories: null as any[] | null,
   }),
   computed: {
     ...mapState(useCategoryStore, ['classes_unsaved_changes']),
     ...mapGetters(useCategoryStore, ['classes_hierarchy']),
+    otherSets: function () {
+      return this.categoryStore.category_sets.filter(s => s.id !== this.activeSetId);
+    },
+    extraSetIds: function (): string[] {
+      return this.categoryStore.active_set_ids.slice(1);
+    },
   },
   watch: {
     builderOpen(v: boolean) {
@@ -224,29 +254,47 @@ export default {
       if (import_obj.categories && !import_obj.id) {
         this.categoryStore.import(import_obj.categories);
       } else if (import_obj.id && import_obj.categories) {
-        let setId = import_obj.id;
-        while (
-          this.categoryStore.category_sets.find(
-            s => s.id === setId && s.id !== (this.categoryStore.active_set_ids[0] || '')
-          )
-        ) {
-          setId = setId + '-imported';
-        }
-        const existing = this.categoryStore.category_sets.find(s => s.id === setId);
-        if (existing) {
-          existing.categories = import_obj.categories;
-          const isActiveSet = setId === (this.categoryStore.active_set_ids[0] || '');
-          if (isActiveSet) {
-            this.categoryStore.discardChanges();
-          } else {
-            this.categoryStore.switchToSet(setId);
-          }
+        // For a named set, ask whether to replace the primary or layer on top.
+        this.pendingImportSetId = import_obj.id;
+        this.pendingImportCategories = import_obj.categories;
+        this.showImportModal = true;
+      }
+    },
+    onImportReplace: function () {
+      this.showImportModal = false;
+      if (!this.pendingImportSetId || !this.pendingImportCategories) return;
+      let setId = this.pendingImportSetId;
+      const cats = this.pendingImportCategories;
+      while (
+        this.categoryStore.category_sets.find(
+          s => s.id === setId && s.id !== (this.categoryStore.active_set_ids[0] || '')
+        )
+      ) {
+        setId = setId + '-imported';
+      }
+      const existing = this.categoryStore.category_sets.find(s => s.id === setId);
+      if (existing) {
+        existing.categories = cats;
+        const isActiveSet = setId === (this.categoryStore.active_set_ids[0] || '');
+        if (isActiveSet) {
+          this.categoryStore.discardChanges();
         } else {
-          this.categoryStore.category_sets.push({ id: setId, categories: import_obj.categories });
           this.categoryStore.switchToSet(setId);
         }
-        this.categoryStore.classes_unsaved_changes = true;
+      } else {
+        this.categoryStore.category_sets.push({ id: setId, categories: cats });
+        this.categoryStore.switchToSet(setId);
       }
+      this.categoryStore.classes_unsaved_changes = true;
+      this.pendingImportSetId = '';
+      this.pendingImportCategories = null;
+    },
+    onImportAddOnTop: function () {
+      this.showImportModal = false;
+      if (!this.pendingImportSetId || !this.pendingImportCategories) return;
+      this.categoryStore.importSetOnTop(this.pendingImportSetId, this.pendingImportCategories);
+      this.pendingImportSetId = '';
+      this.pendingImportCategories = null;
     },
     createSet: function () {
       this.newSetName = '';
@@ -282,6 +330,14 @@ export default {
         this.categoryStore.discardChanges();
       }
       this.categoryStore.switchToSet(setId);
+    },
+    toggleExtraSet: function (setId: string, enabled: boolean) {
+      const extras = new Set(this.extraSetIds);
+      if (enabled) extras.add(setId);
+      else extras.delete(setId);
+      // Keep extras in category-set order: earlier sets win on name clashes.
+      const ordered = this.otherSets.map(s => s.id).filter(id => extras.has(id));
+      this.categoryStore.setActiveSets([this.activeSetId, ...ordered]);
     },
     beforeUnload: function (e) {
       if (this.classes_unsaved_changes) {

@@ -9,6 +9,13 @@ export function knownHostnames(hosts: string[]): string[] {
   return hosts.filter(host => Boolean(host) && host !== 'unknown');
 }
 
+// Hosts to offer in device pickers: everything except the "unknown" pseudo-host
+// (e.g. the stopwatch bucket), unless no real host exists.
+export function deviceHostnames(hosts: string[]): string[] {
+  const known = knownHostnames(hosts);
+  return known.length > 0 ? known : hosts;
+}
+
 export function selectSoleKnownHostname(hosts: string[]): string | undefined {
   const known = knownHostnames(hosts);
   return known.length === 1 ? known[0] : undefined;

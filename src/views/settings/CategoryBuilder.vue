@@ -17,14 +17,14 @@ div
       div
         small {{ $t('ui.timeInterval.range') }}: {{ queryOptions.start }} - {{ queryOptions.stop }}
     div.flex-grow-0
-      b-button(variant="outline-dark" @click="show_options = !show_options" size="sm")
+      b-button(variant="outline-dark" @click="show_options = !show_options" size="sm" :disabled="!bucketsReady")
         span(v-if="!show_options") {{ $t('ui.search.showOptions') }}
         span(v-else) {{ $t('ui.search.hideOptions') }}
 
   div(v-if="show_options")
     hr
     h4 {{ $t('report.options') }}
-    aw-query-options(v-model="queryOptions")
+    aw-query-options(:query-options="queryOptions" @input="queryOptions = $event")
 
   hr
 
@@ -32,6 +32,13 @@ div
   div(v-if="loading")
     b-spinner.mr-2(small)
     span.text-muted {{ $t('common.loading') }}
+  div(v-else-if="loadError" role="alert")
+    p.text-danger {{ loadError }}
+    b-button(size="sm" variant="outline-primary" @click="fetchWords") {{ $t('ui.categoryBuilder.retry') }}
+  div(v-else-if="noActivityBuckets")
+    p.text-muted.mb-0
+      | {{ $t('ui.categoryBuilder.noActivity') }}
+      | {{ $t('ui.categoryBuilder.selectHost') }}
   div(v-else-if="hostnameEmptyKind === 'no-hosts'")
     p.text-muted.mb-0
       | {{ $t('ui.categoryBuilder.noHost') }}
@@ -39,9 +46,9 @@ div
     p.text-muted.mb-0
       | {{ $t('ui.categoryBuilder.selectHost') }}
   div(v-else)
-    div(v-if="words_by_duration.length == 0")
+    div(v-if="words_by_duration.length == 0 && ignored_words.length == 0")
       | {{ $t('ui.categoryBuilder.noWords') }}
-    div(v-else)
+    div(v-else-if="words_by_duration.length > 0")
       div.row.category-builder-word(v-for="word in words_visible" :key="word.word")
         div.col.hover-highlight
           div.d-flex.flex-row.py-2
@@ -74,6 +81,17 @@ div
           variant="outline-primary"
           @click="visible_count += page_size"
         ) {{ $t('ui.summary.showMore') }}
+    div.mt-3(v-if="ignored_words.length > 0")
+      small.text-muted
+        | {{ $t('ui.categoryBuilder.ignoredCount', { count: ignored_words.length }) }}
+      b-button.ml-2(size="sm" variant="link" @click="show_ignored = !show_ignored")
+        span(v-if="!show_ignored") {{ $t('ui.categoryBuilder.showIgnored') }}
+        span(v-else) {{ $t('ui.categoryBuilder.hideIgnored') }}
+      b-button(size="sm" variant="link" @click="resetIgnoredWords()") {{ $t('ui.categoryBuilder.resetIgnored') }}
+      div(v-if="show_ignored")
+        div.d-flex.flex-row.align-items-center.py-1(v-for="word in ignored_words" :key="word")
+          span.flex-grow-1 {{ word }}
+          b-button(size="sm" variant="outline-dark" @click="unignoreWord(word)") {{ $t('ui.categoryBuilder.unignore') }}
 
   div(v-if="create.categoryId !== null")
     CategoryEditModal(:categoryId="create.categoryId",
@@ -110,6 +128,7 @@ import { mapState } from 'pinia';
 
 import { useCategoryStore } from '~/stores/categories';
 import { useBucketsStore } from '~/stores/buckets';
+import { useSettingsStore } from '~/stores/settings';
 
 import { canonicalEvents } from '~/queries';
 import { getClient } from '~/util/awclient';
@@ -129,8 +148,13 @@ export default {
   data() {
     return {
       loading: true,
+      loadError: '',
+      bucketsReady: false,
+      noActivityBuckets: false,
+      requestId: 0,
 
       categoryStore: useCategoryStore(),
+      settingsStore: useSettingsStore(),
 
       // Pagination for the words list. Showing the full list directly
       // produced a 2+ screen wall of buttons on most users' data; this
@@ -142,6 +166,7 @@ export default {
       show_options: false,
       queryOptions: {
         hostname: '',
+        filter_afk: true,
         start: moment().subtract(1, 'day').format('YYYY-MM-DD'),
         stop: moment().add(1, 'day').format('YYYY-MM-DD'),
       },
@@ -149,11 +174,10 @@ export default {
       // TODO: Support inspecting a different category than Uncategorized (e.g. to make some category more precise)
       category: ['Uncategorized'],
 
-      words: {},
+      words: new Map(),
       showing_events: [],
 
-      // TODO: load from settings
-      ignored_words: [],
+      show_ignored: false,
 
       append: {
         word: '',
@@ -167,6 +191,10 @@ export default {
   },
   computed: {
     ...mapState(useCategoryStore, ['allCategoriesSelect']),
+    // Persisted in server settings so "Ignore" survives reloads (aw-webui#486).
+    ignored_words: function (): string[] {
+      return this.settingsStore.category_builder_ignored_words || [];
+    },
     words_by_duration: function () {
       const words: { word: string; duration: number }[] = [...this.words.values()];
       return words
@@ -205,87 +233,84 @@ export default {
     },
   },
   async mounted() {
-    // Make sure we don't have stale unsaved changes in categoryStore
-    const bucketsStore = useBucketsStore();
-    await bucketsStore.ensureLoaded();
-    await this.categoryStore.load();
-    const sole = selectSoleKnownHostname(bucketsStore.hosts);
-    if (sole && !this.queryOptions.hostname) {
-      this.$set(this.queryOptions, 'hostname', sole);
-      // Deep watch on queryOptions calls fetchWords.
-    } else {
-      await this.fetchWords();
-    }
+    await this.fetchWords();
+  },
+  beforeDestroy() {
+    // Ignore results from requests that outlive this view.
+    this.requestId++;
   },
   methods: {
     async fetchWords() {
+      const requestId = ++this.requestId;
+      const options = { ...this.queryOptions };
       this.loading = true;
-      // Reset pagination so the user sees the top of the new ranking
-      // after every requery.
+      this.loadError = '';
+      this.noActivityBuckets = false;
       this.visible_count = this.page_size;
-      if (!this.queryOptions.hostname) {
-        // Auto-select only when there is exactly one real hostname. Several
-        // known hosts (or only "unknown") stay unset so the empty-state copy
-        // can point at Show options / the hostname picker instead of
-        // silently querying the first device.
-        const sole = selectSoleKnownHostname(useBucketsStore().hosts);
-        if (sole) {
-          this.$set(this.queryOptions, 'hostname', sole);
-          // Deep watch re-enters fetchWords with hostname set.
+      this.showing_events = [];
+      try {
+        const bucketsStore = useBucketsStore();
+        // Ignored words must be loaded before the words are computed.
+        await Promise.all([bucketsStore.ensureLoaded(), this.settingsStore.ensureLoaded()]);
+        if (requestId !== this.requestId) return;
+        this.bucketsReady = true;
+
+        if (!options.hostname) {
+          const hosts = bucketsStore.hosts.filter(Boolean);
+          // Keep the explicit choice for multiple known hosts, but allow legacy
+          // Android installations whose only hostname is "unknown".
+          const sole = selectSoleKnownHostname(hosts) || (hosts.length === 1 && hosts[0]);
+          if (sole) {
+            this.queryOptions.hostname = sole;
+            // The watcher starts a new request with the selected hostname.
+          }
           return;
         }
-        this.loading = false;
-        return;
+
+        const windowBuckets = bucketsStore.bucketsWindow(options.hostname);
+        const afkBuckets = bucketsStore.bucketsAFK(options.hostname);
+        const windowAvail = windowBuckets.length > 0 && afkBuckets.length > 0;
+        const androidBuckets = bucketsStore.bucketsAndroid(options.hostname);
+        let bucketParams;
+        if (windowAvail) {
+          bucketParams = {
+            ...bucketsStore.desktopBucketIds(options.hostname),
+            filter_afk: options.filter_afk,
+          };
+        } else if (androidBuckets.length > 0) {
+          const screentimeBucket = androidBuckets.find(id => id.startsWith('aw-import-screentime'));
+          bucketParams = {
+            bid_android: screentimeBucket || androidBuckets[0],
+            // ScreenTime events have titles; Android events do not.
+            isIos: !!screentimeBucket,
+          };
+        } else {
+          this.noActivityBuckets = true;
+          return;
+        }
+
+        // Make sure we don't query with stale unsaved category changes.
+        await this.categoryStore.load();
+        if (requestId !== this.requestId) return;
+        const query =
+          canonicalEvents({
+            ...bucketParams,
+            categories: this.categoryStore.classes_for_query,
+            filter_categories: [this.category],
+          }) + 'RETURN = limit_events(sort_by_duration(events), 1000);';
+        const data = await getClient().query(
+          [{ start: new Date(options.start), end: new Date(options.stop) }],
+          query.split('\n')
+        );
+        if (requestId !== this.requestId) return;
+        this.words = findCommonPhrases(data[0], this.ignored_words);
+      } catch (error) {
+        if (requestId !== this.requestId) return;
+        console.error('Could not load category builder words', error);
+        this.loadError = 'Could not load uncategorized words. Please try again.';
+      } finally {
+        if (requestId === this.requestId) this.loading = false;
       }
-      await this.categoryStore.load();
-      const awclient = getClient();
-
-      // Hosts without a window/AFK bucket pair (Android, iOS/ScreenTime import)
-      // need to be queried through their android-style bucket instead, mirroring
-      // query_android in the activity store (which also prefers the ScreenTime
-      // bucket when both exist for a host).
-      const bucketsStore = useBucketsStore();
-      const hostname = this.queryOptions.hostname;
-      const windowAvail =
-        bucketsStore.bucketsWindow(hostname).length > 0 &&
-        bucketsStore.bucketsAFK(hostname).length > 0;
-      const androidBuckets = bucketsStore.bucketsAndroid(hostname);
-      let bucketParams;
-      if (!windowAvail && androidBuckets.length > 0) {
-        const screentimeBucket = androidBuckets.find(id => id.startsWith('aw-import-screentime'));
-        bucketParams = {
-          bid_android: screentimeBucket || androidBuckets[0],
-          // ScreenTime (iOS) events carry a "title" key; aw-watcher-android events do not.
-          // Pass isIos so canonicalEvents uses the correct merge keys and titles are preserved.
-          isIos: !!screentimeBucket,
-        };
-      } else {
-        bucketParams = {
-          bid_window: 'aw-watcher-window_' + hostname,
-          bid_afk: 'aw-watcher-afk_' + hostname,
-          filter_afk: this.queryOptions.filter_afk,
-        };
-      }
-
-      const query =
-        canonicalEvents({
-          ...bucketParams,
-          categories: this.categoryStore.classes_for_query,
-          filter_categories: [this.category],
-        }) + 'RETURN = limit_events(sort_by_duration(events), 1000);';
-      const data = await awclient.query(
-        [
-          {
-            start: new Date(this.queryOptions.start),
-            end: new Date(this.queryOptions.stop),
-          },
-        ],
-        query.split('\n')
-      );
-
-      const events = data[0];
-      this.words = findCommonPhrases(events, this.ignored_words);
-      this.loading = false;
     },
     showEvents(word) {
       // If already showing events, hide them and return
@@ -320,9 +345,43 @@ export default {
 
       this.showing_events = [word, events];
     },
-    ignoreWord(word: string) {
+    // Persist `next` as the ignored-words list. Saves are serialized and always
+    // write the latest requested list: settingsStore.save() ends with a load()
+    // that patches server state back over local state, so overlapping updates
+    // could otherwise revert a newer word to an older server value.
+    async persistIgnoredWords(next: string[]) {
+      this.settingsStore.$patch({ category_builder_ignored_words: next });
+      this._pending_ignored = next;
+      this._persist_queue = (this._persist_queue || Promise.resolve())
+        // A failed save was already reported to its own caller; don't poison the queue.
+        .catch(e => console.warn('Previous ignored-words save failed', e))
+        .then(() =>
+          this.settingsStore.update({ category_builder_ignored_words: this._pending_ignored })
+        );
+      const queued = this._persist_queue;
+      try {
+        await queued;
+      } finally {
+        // Queue drained: later reads come from the store again.
+        if (this._persist_queue === queued) this._pending_ignored = null;
+      }
+    },
+    async ignoreWord(word: string) {
       console.log('Ignoring word: ' + word);
-      this.ignored_words.push(word);
+      const current = this._pending_ignored || this.ignored_words;
+      if (current.includes(word)) return;
+      await this.persistIgnoredWords([...current, word]);
+    },
+    async unignoreWord(word: string) {
+      const current = this._pending_ignored || this.ignored_words;
+      await this.persistIgnoredWords(current.filter(w => w !== word));
+      // findCommonPhrases skipped the word, so it needs a refetch to reappear.
+      await this.fetchWords();
+    },
+    async resetIgnoredWords() {
+      this.show_ignored = false;
+      await this.persistIgnoredWords([]);
+      await this.fetchWords();
     },
     createRule(word: string) {
       console.log('Opening modal for creating rule with word: ' + word);

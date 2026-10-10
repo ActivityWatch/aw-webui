@@ -154,8 +154,7 @@ export default {
     // Check current time of alert goals
     check: async function () {
       let query = canonicalEvents({
-        bid_window: 'aw-watcher-window_' + this.hostname,
-        bid_afk: 'aw-watcher-afk_' + this.hostname,
+        ...this.bucketsStore.desktopBucketIds(this.hostname),
         filter_afk: this.filter_afk,
         categories: useCategoryStore().classes_for_query,
         filter_categories: null, // classes.map(c => c[0]),

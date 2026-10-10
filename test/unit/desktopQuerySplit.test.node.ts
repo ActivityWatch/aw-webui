@@ -149,6 +149,7 @@ describe('mergeFullDesktopResults', () => {
       {
         window: {
           app_events: [ev({ app: 'Firefox' }, 10)],
+          app_cat_events: [ev({ app: 'Firefox', $category: ['Work'] }, 10)],
           title_events: [ev({ app: 'Firefox', title: 'A' }, 10)],
           cat_events: [ev({ $category: ['Work'] }, 10)],
           active_events: [ev({ status: 'not-afk' }, 10, '2026-02-01T00:00:00Z')],
@@ -165,6 +166,10 @@ describe('mergeFullDesktopResults', () => {
       {
         window: {
           app_events: [ev({ app: 'Firefox' }, 7), ev({ app: 'Code' }, 3)],
+          app_cat_events: [
+            ev({ app: 'Firefox', $category: ['Work'] }, 7),
+            ev({ app: 'Code', $category: ['Work'] }, 3),
+          ],
           title_events: [ev({ app: 'Firefox', title: 'A' }, 7)],
           cat_events: [ev({ $category: ['Work'] }, 7), ev({ $category: ['Media'] }, 3)],
           active_events: [ev({ status: 'not-afk' }, 7, '2026-02-02T00:00:00Z')],
@@ -191,6 +196,12 @@ describe('mergeFullDesktopResults', () => {
       ])
     );
     expect(merged.window?.cat_events).toHaveLength(2);
+    expect(
+      merged.window?.app_cat_events?.map(e => [e.data.app, e.data.$category, e.duration])
+    ).toEqual([
+      ['Firefox', ['Work'], 17],
+      ['Code', ['Work'], 3],
+    ]);
     expect(merged.window?.active_events).toHaveLength(2);
     expect(merged.browser?.duration).toBe(6);
     expect(merged.browser?.domains?.[0].duration).toBe(6);

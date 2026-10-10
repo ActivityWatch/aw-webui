@@ -1,6 +1,6 @@
 <template lang="pug">
 div
-  div.d-sm-flex.justify-content-between.align-items-center
+  div.d-flex.justify-content-between.align-items-center
     div
       h5.mb-0 {{ $t('settings.uncategorizedHint.title') }}
     div

@@ -1,7 +1,7 @@
 <template lang="pug">
 div(v-if="datasets && datasets.length > 0")
   // Height set here to avoid elements jumping when loading Activity view
-  bar(:chart-data="chartData" :chart-options="chartOptions" :height="330")
+  bar(:chart-data="chartData" :chart-options="chartOptions" :height="height")
 div.small(v-else-if="datasets === null", style="font-size: 16pt; color: #aaa;")
   | {{ $t('visualizations.noData') }}
 div.small(v-else, style="font-size: 16pt; color: #aaa;")
@@ -15,13 +15,13 @@ import 'chart.js/auto';
 import { Bar } from 'vue-chartjs/legacy';
 import {
   format_date_short,
-  format_day_of_month,
   format_weekday_short,
   get_hour_offset,
   get_short_month_labels,
 } from '~/util/time';
 import { MAX_DAILY_BUCKETS, timeperiodsCalendarMonthsOfPeriod } from '~/util/timeperiod';
 import { i18n } from '~/i18n';
+import { clampStackedHours } from '~/util/timelineClamp';
 
 function hourToTick(hours: number): string {
   if (hours > 1) {
@@ -59,6 +59,17 @@ export default {
       type: Array,
       default: () => [1, 'day'],
     },
+    // Only the single-day hourly activity view should trim overlapping stacks.
+    // Other callers (Trends, Report, multi-day Activity) reuse the default
+    // `[1, 'day']` timeperiod but pass per-day values, which must not be clamped.
+    clamp_hourly: {
+      type: Boolean,
+      default: false,
+    },
+    height: {
+      type: Number,
+      default: 330,
+    },
   },
   computed: {
     labels() {
@@ -90,12 +101,11 @@ export default {
           return format_weekday_short(date);
         });
       } else if (resolution.startsWith('month')) {
-        // FIXME: Needs access to the timeperiod start to know which month
         // How many days are in the given month?
         const date = new Date(start);
         const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
         return _.range(1, daysInMonth + 1).map(d =>
-          format_day_of_month(new Date(date.getFullYear(), date.getMonth(), d, 12))
+          format_date_short(new Date(date.getFullYear(), date.getMonth(), d, 12))
         );
       } else if (resolution == 'year') {
         return get_short_month_labels();
@@ -105,27 +115,32 @@ export default {
       }
     },
     chartData() {
+      let datasets = _.sortBy(
+        this.datasets.map(d => ({
+          ...d,
+          label: d.label === 'Total time' ? this.$t('ui.timeline.totalTime') : d.label,
+        })),
+        d => d.label
+      );
+      const [count, resolution] = this.timeperiod_length;
+      if (this.clamp_hourly && resolution.startsWith('day') && count == 1) {
+        datasets = clampStackedHours(datasets);
+      }
       return {
         labels: this.labels,
-        datasets: _.sortBy(
-          this.datasets.map(d => ({
-            ...d,
-            label: d.label === 'Total time' ? this.$t('ui.timeline.totalTime') : d.label,
-          })),
-          d => d.label
-        ),
+        datasets,
         title: {
           display: true,
           text: this.$t('timeline.title'),
         },
-        responsive: true,
-        maintainAspectRatio: false,
       };
     },
     chartOptions(): ChartOptions {
       const [count, resolution] = this.timeperiod_length;
-      const monthlyBuckets = resolution.startsWith('day') && count > MAX_DAILY_BUCKETS;
+      const singleDay = resolution.startsWith('day') && count === 1;
       return {
+        responsive: true,
+        maintainAspectRatio: false,
         plugins: {
           tooltip: {
             mode: 'point',
@@ -155,10 +170,10 @@ export default {
           y: {
             stacked: true,
             min: 0,
-            suggestedMax: resolution.startsWith('day') ? 1 : undefined,
+            suggestedMax: singleDay ? 1 : undefined,
             ticks: {
               callback: hourToTick,
-              stepSize: monthlyBuckets ? undefined : resolution.startsWith('day') ? 0.25 : 1,
+              stepSize: singleDay ? 0.25 : undefined,
             },
           },
         },

@@ -44,7 +44,7 @@ div
       b-form-group(:label="$t('ui.workReport.dateRange')" label-class="font-weight-bold")
         b-form-select(v-model="dateRange" :options="dateRangeOptions")
 
-  div.mb-3
+  div.mb-3.report-actions
     b-button(@click="loadData" variant="primary")
       icon(name="sync")
       |  {{ $t('ui.workReport.calculate') }}
@@ -71,7 +71,7 @@ div
           th.text-right {{ $t('ui.workReport.avgSession') }}
       tbody
         tr(v-for="day in dailyData" :key="day.date")
-          td {{ day.date }}
+          td.text-nowrap {{ day.date }}
           td.text-right {{ formatDuration(day.duration) }}
           td.text-right {{ day.sessions }}
           td.text-right {{ formatDuration(day.avgSession) }}
@@ -93,9 +93,11 @@ import { useBucketsStore } from '~/stores/buckets';
 import { get_day_start_with_offset, get_day_end_with_offset } from '~/util/time';
 import {
   getSupportedWorkReportHosts,
+  getWorkReportHostBuckets,
   getWorkReportHostOptions,
   getUnsupportedWorkReportHosts,
   buildWorkReportQuery,
+  summarizeWorkSessions,
 } from '~/util/workReport';
 
 import 'vue-awesome/icons/sync';
@@ -107,21 +109,6 @@ interface DailyData {
   sessions: number;
   avgSession: number;
   events: any[];
-}
-
-// Sum of gaps between adjacent events that are <= breakTimeSeconds.
-function bridgeGaps(events: any[], breakTimeSeconds: number): number {
-  if (!events || events.length < 2 || breakTimeSeconds <= 0) return 0;
-  const sorted = [...events].sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-  );
-  let extra = 0;
-  for (let i = 1; i < sorted.length; i++) {
-    const prevEnd = new Date(sorted[i - 1].timestamp).getTime() + sorted[i - 1].duration * 1000;
-    const gap = (new Date(sorted[i].timestamp).getTime() - prevEnd) / 1000;
-    if (gap > 0 && gap <= breakTimeSeconds) extra += gap;
-  }
-  return extra;
 }
 
 export default {
@@ -250,7 +237,7 @@ export default {
           this.selectedHosts = supportedHosts;
         }
 
-        const hostsToQuery = getSupportedWorkReportHosts(
+        const hostsToQuery = getWorkReportHostBuckets(
           this.selectedHosts,
           this.bucketsStore.buckets || []
         );
@@ -300,15 +287,16 @@ export default {
           // Bridge sub-breakTime gaps between adjacent events so a quick
           // context-switch still counts as continuous work time. aw-query's
           // flood() only deduplicates overlap, so we add the bridging here.
-          const bridged = baseDuration + bridgeGaps(events, breakTimeSeconds);
+          const { bridgedSeconds, sessions } = summarizeWorkSessions(events, breakTimeSeconds);
+          const bridged = baseDuration + bridgedSeconds;
 
           const startDate = tp.split('/')[0];
 
           return {
             date: moment(startDate).format('YYYY-MM-DD'),
             duration: bridged,
-            sessions: events.length,
-            avgSession: events.length > 0 ? bridged / events.length : 0,
+            sessions,
+            avgSession: sessions > 0 ? bridged / sessions : 0,
             events,
           };
         });
@@ -432,5 +420,12 @@ export default {
 <style scoped>
 .table {
   font-size: 0.9rem;
+}
+
+/* Use a gap rather than per-button margins so wrapped buttons line up on narrow screens. */
+.report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 </style>

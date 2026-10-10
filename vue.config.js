@@ -1,9 +1,9 @@
 import path from 'path';
 import webpack from 'webpack';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
-import argv from 'yargs';
 import child_process from 'child_process';
 import { fileURLToPath } from 'url';
+import { parseArgs } from 'util';
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -12,6 +12,18 @@ const awServerUrl = (process.env.AW_SERVER_URL || '').replace(/^(['"])(.*)\1$/, 
 // get git info from command line
 const _COMMIT_HASH = child_process.execSync('git rev-parse --short HEAD').toString().trim();
 console.info('Commit hash:', _COMMIT_HASH);
+
+// `make build ON_ANDROID=1` runs `vue-cli-service build --os=android`.
+// The ESM default export of yargs is its factory, not parsed argv, so the
+// previous `import argv from 'yargs'; argv.os` was always undefined and every
+// Android build shipped the desktop defaults (aw-android#321).
+const { values: cliArgs } = parseArgs({
+  args: process.argv.slice(2),
+  options: { os: { type: 'string' } },
+  strict: false,
+  allowPositionals: true,
+});
+const onAndroid = cliArgs.os === 'android';
 
 export default {
   pages: {
@@ -25,7 +37,7 @@ export default {
   },
   chainWebpack: config => {
     config.plugin('define').tap(options => {
-      options[0]['process.env'].VUE_APP_ON_ANDROID = argv.os == 'android';
+      options[0]['process.env'].VUE_APP_ON_ANDROID = onAndroid;
       return options;
     });
   },

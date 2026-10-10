@@ -11,6 +11,7 @@ import {
   Category,
   CategorySet,
   Rule,
+  hasMatchableRegex,
 } from '~/util/classes';
 import { getColorFromCategory } from '~/util/color';
 import { defineStore } from 'pinia';
@@ -56,31 +57,106 @@ function assignIds(classes: Category[]): Category[] {
   return classes.map(c => Object.assign(c, { id: i++ }));
 }
 
+/**
+ * Return the active sets in priority order: `activeSetIds[0]` is the primary
+ * set and wins per name, then the rest in order. The `category_sets` array
+ * order is unrelated to priority, so never merge it directly.
+ */
+function orderedActiveSets(categorySets: CategorySet[], activeSetIds: string[]): CategorySet[] {
+  return activeSetIds
+    .map(id => categorySets.find(s => s.id === id))
+    .filter((s): s is CategorySet => !!s);
+}
+
 /** Recompute the effective `classes` list from the provided active sets. */
 function computeEffectiveClasses(categorySets: CategorySet[], activeSetIds: string[]): Category[] {
-  const activeSets = categorySets.filter(s => activeSetIds.includes(s.id));
-  const merged = mergeCategorySets(activeSets);
+  const merged = mergeCategorySets(orderedActiveSets(categorySets, activeSetIds));
   return assignIds(createMissingParents(merged));
+}
+
+/**
+ * Normalize a category for provenance comparison.
+ *
+ * The edit modal can attach `data: { color: undefined, score: undefined }`
+ * without the user changing anything; treat an all-undefined `data` object as
+ * absent so an untouched category is not mistaken for an edit.
+ */
+function comparableCategory(c: Category): Category {
+  const clean = cleanCategory(c);
+  if (clean.data) {
+    const data = _.pickBy(clean.data, v => v !== undefined);
+    if (Object.keys(data).length === 0) delete clean.data;
+    else clean.data = data;
+  }
+  return clean;
 }
 
 /**
  * Copy current effective classes back into the primary active set.
  *
- * Only safe when exactly one set is active: with multiple sets `state.classes`
- * is the merged result of all active sets and cannot be split back into
- * individual sets, so we skip the sync to avoid corrupting secondary sets.
+ * With one active set, `state.classes` is that set. With several, it is the
+ * merged view (first set wins per name), so it is split back by provenance:
+ * a category is kept out of the primary set only when it is an unchanged copy
+ * of a secondary set's category, or a parent synthesized by
+ * `createMissingParents` for one. Everything else (new categories, edits,
+ * edited secondary categories, which become primary-set overrides) goes to
+ * the primary set. Secondary sets are never written.
+ *
+ * Removed secondary names are masked by tombstones on the primary set, so
+ * renames/deletions survive reload without modifying the source set.
  */
 function syncToPrimarySet(state: State) {
   if (state.active_set_ids.length === 0 || state.category_sets.length === 0) return;
-  // Skip when multiple sets are active — state.classes is a merged result
-  // and writing it back to only the primary set would absorb all secondary
-  // sets' categories into it (data corruption).
-  if (state.active_set_ids.length > 1) return;
   const primaryId = state.active_set_ids[0];
   const primarySet = state.category_sets.find(s => s.id === primaryId);
-  if (primarySet) {
-    primarySet.categories = state.classes.map(cleanCategory);
+  if (!primarySet) return;
+  const current = state.classes.map(cleanCategory);
+  if (state.active_set_ids.length === 1) {
+    primarySet.categories = current;
+    return;
   }
+
+  const key = (c: Category) => JSON.stringify(c.name);
+  const primaryNames = new Set(primarySet.categories.map(key));
+  const secondary = new Map<string, Category>();
+  for (const id of state.active_set_ids.slice(1)) {
+    const set = state.category_sets.find(s => s.id === id);
+    for (const c of set ? set.categories : []) {
+      if (!secondary.has(key(c))) secondary.set(key(c), cleanCategory(c));
+    }
+  }
+  // Parents createMissingParents adds for the merged sets, as they look untouched.
+  // Merge in active_set_ids priority order so the "inherited" view matches
+  // state.classes (computeEffectiveClasses) exactly.
+  const merged = mergeCategorySets(orderedActiveSets(state.category_sets, state.active_set_ids));
+  const mergedNames = new Set(merged.map(key));
+  const currentNames = new Set(current.map(key));
+  const tombstones = new Set(primarySet.tombstones ?? []);
+  for (const name of secondary.keys()) {
+    if (mergedNames.has(name) && !currentNames.has(name)) tombstones.add(name);
+  }
+  // Explicitly adding a previously hidden name restores it; changing the active
+  // set selection alone leaves masks intact.
+  for (const name of currentNames) tombstones.delete(name);
+  if (tombstones.size > 0) primarySet.tombstones = [...tombstones];
+  else delete primarySet.tombstones;
+  const synthesized = new Map<string, Category>();
+  for (const c of createMissingParents(_.cloneDeep(merged))) {
+    if (!mergedNames.has(key(c))) synthesized.set(key(c), cleanCategory(c));
+  }
+
+  primarySet.categories = current.filter(c => {
+    const k = key(c);
+    if (primaryNames.has(k)) return true;
+    const inherited = secondary.get(k) || synthesized.get(k);
+    return !(
+      inherited &&
+      _.isEqual(_.omit(comparableCategory(inherited), 'id'), _.omit(comparableCategory(c), 'id'))
+    );
+  });
+  // Masks can remove the last child of an untouched generated parent. Rebuild
+  // the view now so a later save/switch cannot promote that orphan to primary.
+  state.classes = computeEffectiveClasses(state.category_sets, state.active_set_ids);
 }
 
 export const useCategoryStore = defineStore('categories', {
@@ -104,7 +180,11 @@ export const useCategoryStore = defineStore('categories', {
       return this.classes
         .filter(c => c.rule.type !== null)
         .map(c => {
-          return [c.name, c.rule];
+          // Blank regexes never match (see hasMatchableRegex). Send them as
+          // 'none' so every server treats them the same way.
+          const rule: Rule =
+            c.rule.type === 'regex' && !hasMatchableRegex(c) ? { type: 'none' } : c.rule;
+          return [c.name, rule];
         });
     },
     all_categories(): string[][] {
@@ -300,6 +380,25 @@ export const useCategoryStore = defineStore('categories', {
     setActiveSets(this: State, ids: string[]) {
       syncToPrimarySet(this);
       this.active_set_ids = ids;
+      this.classes = computeEffectiveClasses(this.category_sets, this.active_set_ids);
+      this.classes_unsaved_changes = true;
+    },
+
+    /** Import a secondary set without mistaking the old effective view for local edits. */
+    importSetOnTop(this: State, id: string, categories: Category[]) {
+      // Preserve local edits against the old sets, before replacing any contents.
+      syncToPrimarySet(this);
+      const primaryId = this.active_set_ids[0];
+      if (id === primaryId) {
+        do {
+          id += '-imported';
+        } while (this.category_sets.some(s => s.id === id));
+      }
+      const existing = this.category_sets.find(s => s.id === id);
+      if (existing) existing.categories = categories;
+      else this.category_sets.push({ id, categories });
+      if (!this.active_set_ids.includes(id)) this.active_set_ids.push(id);
+      // Do not call setActiveSets: it would sync the stale pre-import view again.
       this.classes = computeEffectiveClasses(this.category_sets, this.active_set_ids);
       this.classes_unsaved_changes = true;
     },

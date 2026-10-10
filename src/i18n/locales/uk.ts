@@ -119,6 +119,8 @@ export default {
       help: 'Configure shared aw-notify alert thresholds for Android and desktop.',
       activityTitle: 'Activity Notifications',
       activityHelp: 'Configure aw-notify alerts for Android and desktop',
+      enabled: 'Enable notifications',
+      enabledHelp: 'aw-notify runs only when enabled; the tray toggle mirrors this setting.',
       saving: 'Saving…',
       saved: 'Settings saved.',
       alertsHelp:
@@ -208,6 +210,13 @@ export default {
       newSet: 'Новий набір',
       deleteSet: 'Видалити набір',
       setsAvailable: 'Доступно наборів: {count} — перемикайте профілі правил.',
+      alsoApply: 'Also apply:',
+      alsoApplyHelp:
+        'Categories from the checked sets are applied on top of "{primary}". Edits are saved to "{primary}"; editing a category from another set saves an override in "{primary}".',
+      importSetTitle: 'Import category set',
+      importSetPrompt: 'How would you like to apply the imported set "{id}"?',
+      importReplace: 'Use instead of mine',
+      importAddOnTop: 'Add on top of mine',
       unsavedChanges: 'Є незбережені зміни!',
       discard: 'Відкинути',
       addCategory: 'Додати категорію',
@@ -359,6 +368,8 @@ export default {
     multideviceNote:
       'Дані браузера та секундоміра доступні лише під час перегляду одного пристрою.',
     timeActive: 'Активний час:',
+    timeActiveTooltip:
+      'Active window time in the queried range, after the filters below. The bars in the period chart show raw device active time, so they can be slightly higher.',
     queryRange: 'Діапазон запиту:',
     filters: 'Фільтри',
     filtersTitle: 'Фільтри',
@@ -554,6 +565,8 @@ export default {
       firstLastEvent: 'First/last event:',
       eventCount: 'Event count:',
       data: 'Data:',
+      notFound: 'No bucket named "{id}".',
+      seeAll: 'See all buckets',
     },
     sunburstClock: { hoverToInspect: 'Hover to inspect' },
     search: {
@@ -786,6 +799,8 @@ export default {
       commonWords: 'Common words in "{category}" events',
       noHost:
         'No host with window/AFK buckets is available. Install a watcher to start collecting data.',
+      noActivity: 'No activity data is available for this host. ',
+      retry: 'Retry',
       selectHost:
         'Select a hostname under Show options to load uncategorized words. The hostname picker is hidden until you open options.',
       noWords: "No words with significant duration. You're good to go!",
@@ -797,6 +812,11 @@ export default {
       titleColumn: 'Title',
       duration: 'Duration',
       showingWords: 'Showing {shown} of {total} words',
+      ignoredCount: 'Ignored words: {count}',
+      showIgnored: 'Show',
+      hideIgnored: 'Hide',
+      resetIgnored: 'Reset',
+      unignore: 'Unignore',
       rule: 'Rule',
       categoryRequired: 'Category is required',
       word: 'Word',

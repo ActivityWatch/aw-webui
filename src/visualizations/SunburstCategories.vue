@@ -2,7 +2,7 @@
 // We want to use another colorscheme than the default 'schemeAccent',
 // unfortunately it seems like the color-scheme prop is broken.
 // See this issue: https://github.com/David-Desmaisons/Vue.D3.sunburst/issues/11
-sunburst(:data="data", :colorScale="colorfunc", :getCategoryForColor="categoryForColor", :colorScheme="null" :showLabels="true")
+sunburst.sunburst-categories(:data="data", :colorScale="colorfunc", :getCategoryForColor="categoryForColor", :colorScheme="null" :showLabels="labelFor", ref="sunburst")
   // Add behaviors
   template(slot-scope="{ on, actions }")
     highlightOnHover(v-bind="{ on, actions }")
@@ -32,9 +32,11 @@ import {
 } from 'vue-d3-sunburst';
 import 'vue-d3-sunburst/dist/vue-d3-sunburst.css';
 import { getColorFromCategory } from '~/util/color';
+import { fitLabel, measureText, sunburstLabelFontPx } from '~/util/sunburstLabels';
 
 import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
+import { isDarkThemeApplied } from '~/util/theme';
 
 const example_data = {
   name: 'flare',
@@ -77,14 +79,34 @@ export default {
     },
   },
   methods: {
+    // Called by vue-d3-sunburst for each arc with the node and its zoom context.
+    // Truncates the name to the radial space where it stays visible: the ring
+    // itself when child arcs are drawn over the next ring, otherwise the ring
+    // plus the library's maxLabelText overflow (minus its 5px text offset).
+    labelFor: function (node) {
+      const name = node.data.name;
+      const chart = this.$refs.sunburst;
+      if (!chart || !chart.scaleY) return name;
+      const { scaleY, maxLabelText } = chart;
+      const overflow = node.children ? 0 : maxLabelText;
+      const maxWidth = scaleY(node.y1) - scaleY(node.y0) + overflow - 6;
+      const fontPx = sunburstLabelFontPx(node.context.relativeDepth);
+      const fontFamily = getComputedStyle(chart.$el).fontFamily;
+      return fitLabel(name, maxWidth, s => measureText(s, fontPx, fontFamily));
+    },
     categoryForColor: function (d) {
       const category = d.parent ? d.parent.concat([d.name]) : [d.name];
       return category.join(SEP);
     },
     colorfunc: function (s) {
       // 'All' needs to be bright if light theme, and dark if dark theme
-      const settings = useSettingsStore();
-      if (s == 'All') return settings.theme == 'light' ? '#fff' : '#333';
+      // ('auto' resolves to the theme actually applied to the page, so it
+      // stays in sync with the dark stylesheet managed by App.vue/Theme.vue)
+      if (s == 'All') {
+        const theme = useSettingsStore().theme;
+        const resolved = theme === 'auto' ? (isDarkThemeApplied() ? 'dark' : 'light') : theme;
+        return resolved === 'dark' ? '#333' : '#fff';
+      }
 
       const categoryStore = useCategoryStore();
       const cat = categoryStore.get_category(s.split(SEP));
@@ -96,6 +118,14 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+// Labels on the outermost ring may extend past the chart radius by up to the
+// sunburst's maxLabelText (45px by default). The chart sizes itself to fit the
+// container, so reserve that space on the sides or the labels get clipped when
+// the container is narrow (e.g. on phones).
+.sunburst-categories {
+  padding: 0 45px;
+}
+
 .info {
   width: 300px;
   height: 100px;

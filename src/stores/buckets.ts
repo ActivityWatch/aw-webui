@@ -4,6 +4,7 @@ import { IBucket } from '~/util/interfaces';
 import { defineStore } from 'pinia';
 import { getClient } from '~/util/awclient';
 import { useServerStore } from '~/stores/server';
+import { deviceHostnames } from '~/util/hostnames';
 
 function select_buckets(
   buckets: IBucket[],
@@ -57,6 +58,10 @@ export const useBucketsStore = defineStore('buckets', {
       );
       return hosts;
     },
+    // Hosts to offer in device pickers (excludes the "unknown" pseudo-host).
+    knownHosts(): string[] {
+      return deviceHostnames(this.hosts);
+    },
     // Uses device_id instead of hostname
     devices(this: State): string[] {
       // TODO: Include consideration of device_id UUID
@@ -74,7 +79,7 @@ export const useBucketsStore = defineStore('buckets', {
       // Returns a map of which kinds of buckets are available
       //
       // 'window' requires ((currentwindow + afkstatus) or android) buckets
-      // 'browser' requires (currentwindow + afk + browser) buckets
+      // 'browser' requires browser buckets (aw-watcher-web); independent of window/afk
       // 'editor' requires editor buckets
       return hostname => {
         const windowAvail =
@@ -83,7 +88,7 @@ export const useBucketsStore = defineStore('buckets', {
 
         return {
           window: windowAvail,
-          browser: windowAvail && this.bucketsBrowser(hostname).length > 0,
+          browser: this.bucketsBrowser(hostname).length > 0,
           editor: this.bucketsEditor(hostname).length > 0,
           android: androidAvail,
           category: windowAvail || androidAvail,
@@ -114,6 +119,16 @@ export const useBucketsStore = defineStore('buckets', {
         this.bucketsByType(host, 'currentwindow').filter(
           (id: string) => !id.startsWith('aw-watcher-android')
         );
+    },
+    // The window/afk bucket ids to query for a desktop host. Buckets synced
+    // from another device carry a "-synced-from-<device>" suffix, so the
+    // "aw-watcher-window_<host>" id only exists for local buckets. Falls back
+    // to that conventional id when no matching bucket is loaded.
+    desktopBucketIds(): (host: string) => { bid_window: string; bid_afk: string } {
+      return host => ({
+        bid_window: this.bucketsWindow(host)[0] || 'aw-watcher-window_' + host,
+        bid_afk: this.bucketsAFK(host)[0] || 'aw-watcher-afk_' + host,
+      });
     },
     bucketsAndroid(): (host: string) => string[] {
       return host => {

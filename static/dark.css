@@ -213,7 +213,7 @@ hr {
 }
 
 .list-group-item {
-  background-color: #282c32 !important;
+  background-color: transparent !important;
   border-color: #282c32 !important;
   color: #e9ebf0 !important;
   padding-left: 15px !important;
@@ -415,6 +415,11 @@ div[style="color: rgb(85, 85, 85); font-size: 0.9em;"] {
 .settings-nav .nav-link.active:hover {
   background-color: #e9ebf0 !important;
   color: #0f131a !important;
+}
+
+/* Activity filters row */
+.activity-options-row {
+  background-color: #282c32 !important;
 }
 
 /* Activity period button-group */

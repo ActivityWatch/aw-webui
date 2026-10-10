@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [ master ]
 
+# One run per workflow and ref. On PRs a new push cancels the superseded run.
+# On master the running build finishes, and queued intermediates collapse to
+# the newest commit, so a burst of merges doesn't queue a full build each.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   build-webpack:
     name: Build webpack (node-${{ matrix.node-version }})
@@ -105,7 +112,7 @@ jobs:
 
     - name: Download aw-server-rust nightly
       if: ${{ matrix.aw-server == 'aw-server-rust' && matrix.aw-version == 'master' }}
-      uses: dawidd6/action-download-artifact@v25
+      uses: dawidd6/action-download-artifact@v27
       with:
         repo: ActivityWatch/aw-server-rust
         # Required, workflow file name or ID
@@ -144,6 +151,8 @@ jobs:
     - name: Install
       run: npm ci
     - name: Run tests
+      env:
+        AW_QUERY_TEST_SERVER_URL: http://localhost:5666
       run: |
         npm test
     - uses: codecov/codecov-action@v7

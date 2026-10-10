@@ -53,10 +53,17 @@ div
             )
               b-form-checkbox.mr-3(:checked="false" disabled)
                 | {{ h }} {{ $t('visualizations.noData') }}
-      li.list-group-item.pl-0.pr-3.py-0.border-0
+      li.list-group-item.pl-0.pr-3.py-0.border-0(:title="$t('activity.timeActiveTooltip')")
         b.mr-1 {{ $t('activity.timeActive') }}
         span {{ activityStore.active.duration | friendlyduration }}
-    div(v-if="isMultidevice") {{ $t('activity.multideviceNote') }}
+    b-alert.py-1.px-2.mb-1.small(
+      v-if="isMultidevice && !multideviceNoteDismissed"
+      show
+      variant="info"
+      dismissible
+      @dismissed="dismissMultideviceNote"
+      data-testid="multidevice-note"
+    ) {{ $t('activity.multideviceNote') }}
     ul.list-group.list-group-horizontal-md(v-if="periodLength != 'day'")
       li.list-group-item.pl-0.pr-3.py-0.border-0
         b.mr-1 {{ $t('activity.queryRange') }}
@@ -158,7 +165,7 @@ div
           span.d-none.d-md-inline
             |  {{ $t('activity.refresh') }}
 
-  div.row(v-if="showOptions" style="background-color: #EEE;").my-3.py-3
+  div.row.activity-options-row(v-if="showOptions").my-3.py-3
     div.col-md-12
       h5 {{ $t('activity.filtersTitle') }}
     div.col-md-6
@@ -226,6 +233,10 @@ div
 <style lang="scss" scoped>
 @import '../../style/globals';
 
+.activity-options-row {
+  background-color: #eee;
+}
+
 .activity-toolbar {
   // row-gap kicks in only when items wrap to a second line, so the
   // single-row case stays compact without piling mb-2 on every child.
@@ -278,10 +289,6 @@ div
 
         // Does nothing for Verala Round
         font-weight: bold;
-
-        &:hover {
-          background-color: #fff;
-        }
       }
     }
   }
@@ -297,7 +304,7 @@ import {
   dateRangeToTimeperiod,
   formatDateRange,
   parseDateRange,
-  periodLengthConvertMoment,
+  periodStartDate,
   shiftDateRange,
 } from '~/util/timeperiod';
 import _ from 'lodash';
@@ -333,6 +340,10 @@ import {
 } from '~/util/multidevice';
 import { getClient } from '~/util/awclient';
 import { nextEarliestDate } from '~/util/earliestEvent';
+import {
+  isMultideviceNoteDismissed,
+  persistMultideviceNoteDismissed,
+} from '~/util/multideviceNote';
 
 export default {
   name: 'Activity',
@@ -364,6 +375,7 @@ export default {
 
       today: null,
       showOptions: false,
+      multideviceNoteDismissed: isMultideviceNoteDismissed(),
       // First day with data for the host, used by All time
       earliestDate: null,
 
@@ -484,7 +496,11 @@ export default {
       if (this.periodLength === 'range') {
         return this.dateRange ? this.dateRange.start : get_today_with_offset(offset);
       }
-      return this.date || get_today_with_offset(offset);
+      const baseDate = this.date || get_today_with_offset(offset);
+      if (['week', 'month', 'year'].includes(this.periodLength)) {
+        return periodStartDate(baseDate, this.periodLength);
+      }
+      return baseDate;
     },
     todayDate: function () {
       return get_today_with_offset(this.settingsStore.startOfDay);
@@ -579,8 +595,13 @@ export default {
           length: [1, 'day'],
         };
       } else if (this.periodIsBrowseable) {
+        // The URL date isn't necessarily aligned to the period (e.g. /week with no
+        // date falls back to today), so snap it to the start of the week/month/year.
         return {
-          start: get_day_start_with_offset(this._date, settingsStore.startOfDay),
+          start: get_day_start_with_offset(
+            periodStartDate(this._date, this.periodLength),
+            settingsStore.startOfDay
+          ),
           length: [1, this.periodLength],
         };
       } else {
@@ -670,11 +691,17 @@ export default {
   },
 
   methods: {
+    dismissMultideviceNote: function () {
+      this.multideviceNoteDismissed = true;
+      persistMultideviceNoteDismissed();
+    },
     previousPeriod: function () {
       if (this.dateRange) {
         return formatDateRange(shiftDateRange(this.dateRange, -1));
       }
-      return moment(this._date)
+      // Step from the period start the view shows, not the (possibly mid-period) URL date.
+      const base = this.periodIsBrowseable ? moment(this.timeperiod.start) : moment(this._date);
+      return base
         .subtract(
           this.timeperiod.length[0],
           this.timeperiod.length[1] as moment.unitOfTime.DurationConstructor
@@ -690,7 +717,9 @@ export default {
         }
         return formatDateRange(next);
       }
-      return moment(this._date)
+      // Step from the period start the view shows, not the (possibly mid-period) URL date.
+      const base = this.periodIsBrowseable ? moment(this.timeperiod.start) : moment(this._date);
+      return base
         .add(
           this.timeperiod.length[0],
           this.timeperiod.length[1] as moment.unitOfTime.DurationConstructor
@@ -774,13 +803,12 @@ export default {
       let anchorDate = momentJsDate;
       const today = moment(get_today_with_offset(this.settingsStore.startOfDay));
       if (this.periodIsBrowseable) {
-        const sourceUnit = periodLengthConvertMoment(this.periodLength);
-        const sourceStart = momentJsDate.clone().startOf(sourceUnit);
-        // moment.add() rejects "isoWeek" as a DurationConstructor (even
-        // though startOf() accepts it). Cast — runtime handles both spellings.
+        const sourceStart = moment(
+          periodStartDate(momentJsDate.format('YYYY-MM-DD'), this.periodLength)
+        );
         const sourceEnd = sourceStart
           .clone()
-          .add(1, sourceUnit as moment.unitOfTime.DurationConstructor);
+          .add(1, this.periodLength as moment.unitOfTime.DurationConstructor);
         if (today.isSameOrAfter(sourceStart) && today.isBefore(sourceEnd)) {
           anchorDate = today;
         }
@@ -794,8 +822,7 @@ export default {
         periodLength = 'last30d';
         new_date = anchorDate.clone().add(1, 'days').format('YYYY-MM-DD');
       } else {
-        const new_period_length_moment = periodLengthConvertMoment(periodLength);
-        new_date = anchorDate.clone().startOf(new_period_length_moment).format('YYYY-MM-DD');
+        new_date = periodStartDate(anchorDate.format('YYYY-MM-DD'), periodLength);
       }
       this.pushPeriod(periodLength, new_date);
     },
