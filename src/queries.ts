@@ -454,6 +454,34 @@ function browserEvents(params: DesktopQueryParams): string {
   return code;
 }
 
+// Search all browser buckets for events whose url OR title matches a regex.
+// Unlike browserEvents(), no window-intersection is applied — we want any URL
+// the user visited in the period, not just while the browser was focused.
+export function browserSearchQuery(browserBuckets: string[], pattern: string): string[] {
+  if (browserBuckets.length === 0) return [];
+  // JSON.stringify escapes regex backslashes twice; the AW query language only
+  // needs a single backslash, so patterns like '\d' must be un-escaped to match
+  // (same treatment as `categories_str` in canonicalEvents).
+  const escapedPattern = JSON.stringify(pattern).replace(/\\\\/g, '\\');
+  let code = 'browser_results = [];';
+  // Use numeric indices as variable-name suffixes so every bucket is queried
+  // regardless of whether its name matches a known browser — this also handles
+  // multiple buckets for the same browser (e.g. two Chrome profiles).
+  browserBuckets.forEach((bucketId, idx) => {
+    const v = `b${idx}`;
+    code += `
+    events_${v} = flood(query_bucket("${escape_doublequote(bucketId)}"));
+    events_${v} = split_url_events(events_${v});
+    url_${v} = filter_keyvals_regex(events_${v}, "url", ${escapedPattern});
+    title_${v} = filter_keyvals_regex(events_${v}, "title", ${escapedPattern});
+    events_${v} = sort_by_timestamp(concat(url_${v}, title_${v}));
+    browser_results = concat(browser_results, events_${v});
+    browser_results = sort_by_timestamp(browser_results);`;
+  });
+  code += '\nRETURN = browser_results;';
+  return querystr_to_array(code);
+}
+
 export function fullDesktopQuery(params: DesktopQueryParams): string[] {
   return querystr_to_array(
     `
