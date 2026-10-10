@@ -703,16 +703,26 @@ export const useActivityStore = defineStore('activity', {
           filter_categories,
           isIos
         );
-        this.progress_add(1);
-        const bResult = await getClient()
-          .query([timeperiodToStr(timeperiod)], bq, { name: 'androidBrowserQuery' })
-          .catch(this.errorHandler);
-        this.progress_tick();
-        if (bResult && bResult[0] && bResult[0].browser) {
-          this.query_browser_completed(bResult[0].browser);
-        } else {
-          this.query_browser_completed({});
+        // Chunk like the app query above: a single request covering the whole
+        // timeperiod floods the Android and web buckets and can exceed the
+        // server's request timeout on long ranges (All time). Merge the
+        // per-chunk browser results with the same helper the desktop path uses.
+        this.progress_add(periods.length);
+        const bChunks = [];
+        for (const period of periods) {
+          const bResult = await getClient()
+            .query([period], bq, { name: 'androidBrowserQuery' })
+            .catch(this.errorHandler);
+          this.progress_tick();
+          if (!(bResult && bResult[0] && bResult[0].browser)) {
+            // Don't show partial browser totals as if they covered the whole period
+            this.query_browser_completed({});
+            return;
+          }
+          bChunks.push(bResult[0]);
         }
+        const bMerged = mergeFullDesktopResults(bChunks);
+        this.query_browser_completed(bMerged.browser);
       }
     },
 
