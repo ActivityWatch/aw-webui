@@ -620,6 +620,23 @@ describe('androidBrowserQuery', () => {
     expect(joined).not.toContain('filter_keyvals_regex(events, "app"');
   });
 
+  test.each([
+    ['yandex', 'ru.yandex.browser'],
+    ['edge', 'com.microsoft.emmx.dev'],
+  ])('matches the Android package for %s without losing URL events', (browser, androidPackage) => {
+    const joined = androidBrowserQuery(
+      'aw-watcher-android_device',
+      [`aw-watcher-web-${browser}_phone`],
+      [],
+      []
+    ).join('\n');
+    const foregroundFilter = joined
+      .split('\n')
+      .find(line => line.includes(`window_${browser} = filter_keyvals(events, "package",`));
+    expect(foregroundFilter).toContain(`"${androidPackage}"`);
+    expect(joined).toContain(`filter_period_intersect(events_${browser}, window_${browser})`);
+  });
+
   test('does not treat browser names in a hostname or profile as bucket identifiers', () => {
     const joined = androidBrowserQuery(
       'aw-watcher-android_device',
