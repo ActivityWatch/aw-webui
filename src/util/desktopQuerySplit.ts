@@ -64,10 +64,10 @@ export interface FullDesktopQueryResult {
  * into days. A year is also split into days: month-sized chunks are the
  * timeout. Future-starting periods are dropped so we don't query incomplete days.
  *
- * Long custom ranges (monthly barchart buckets) are split into days too. Days
- * never cross a calendar month, so their cat_events are summed into the
- * monthly barchart without a second round of month-sized category queries
- * (see categoryByPeriodFromChunks). Week-sized chunks were tried on a 1.7 GB
+ * Long custom ranges and the Year view (monthly barchart buckets) are split
+ * into days too. Days never cross a calendar month, so their cat_events are
+ * summed into the monthly barchart without a second round of month-sized
+ * category queries (see categoryByPeriodFromChunks). Week-sized chunks were tried on a 1.7 GB
  * aw-server v0.14 database (2026-09-26): no faster overall, and single
  * requests reached 20 s, too close to the 30 s timeout.
  */

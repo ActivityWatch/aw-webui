@@ -244,15 +244,25 @@ export function timeperiodsForBarchart(timeperiod: TimePeriod): TimePeriod[] {
   ) {
     return timeperiodsDaysOfPeriod(timeperiod);
   } else if (res.startsWith('year') && count === 1) {
-    return timeperiodsMonthsOfPeriod(timeperiod);
+    // Calendar months, the same keys categoryByPeriodFromChunks produces.
+    return timeperiodsCalendarMonthsOfPeriod(timeperiod);
   }
   throw new Error(`Unknown timeperiod length: ${timeperiod.length}`);
 }
 
-/** Whether the barchart (and category-by-period data) uses calendar-month buckets. */
+/**
+ * Whether the barchart (and category-by-period data) uses calendar-month
+ * buckets: long custom ranges and the Year view. For these the per-month
+ * category data is summed from the day-chunked desktop query results
+ * (`categoryByPeriodFromChunks`) instead of one month-sized category request
+ * per month, which took 10-38 s each on a 1.7 GB database
+ * (ActivityWatch/aw-webui#1094).
+ */
 export function usesMonthlyBuckets(timeperiod: TimePeriod): boolean {
   const [count, res] = timeperiod.length;
-  return res.startsWith('day') && count > MAX_DAILY_BUCKETS;
+  return (
+    (res.startsWith('day') && count > MAX_DAILY_BUCKETS) || (res.startsWith('year') && count === 1)
+  );
 }
 
 /**

@@ -191,12 +191,15 @@ div
 
   div.mb-2.small.text-muted(v-if="periodLength === 'all'")
     span(:title="$t('activity.allTimeSlowHint')") 🐌 {{ $t('activity.allTimeSlowHint') }}
-    b-progress.mt-1(
-      v-if="activityStore.progress && activityStore.progress.total > 0"
-      :value="activityStore.progress.done"
-      :max="activityStore.progress.total"
-      height="0.5rem"
-    )
+  // Multi-request loads (Year, All time, long custom ranges, and the
+  // day-split week/month views) report their progress; show it for all of
+  // them, not only for All time.
+  b-progress.mb-2(
+    v-if="activityStore.progress && activityStore.progress.total > 1"
+    :value="activityStore.progress.done"
+    :max="activityStore.progress.total"
+    height="0.5rem"
+  )
   // Neighbouring periods of a custom range aren't meaningful, and 31 of
   // them can span decades of AFK data for long ranges.
   aw-periodusage(v-else-if="periodLength !== 'range'", :periodusage_arr="periodusage", @update="setDate")
