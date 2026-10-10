@@ -439,8 +439,11 @@ function browserEvents(params: DesktopQueryParams): string {
       pattern = chromeAppnameRegex(dedicatedChromeForks);
     }
     if (pattern) {
+      // JSON.stringify adds extra unnecessary escaping for backslashes (e.g. '\.' becomes '\\.')
+      // which breaks regex patterns like arc(\.exe)?$ on Windows. Undo the double-escaping.
+      const pattern_str = JSON.stringify(pattern).replace(/\\\\/g, '\\');
       code += `
-       window_${browserName}_re = filter_keyvals_regex(events, "app", ${JSON.stringify(pattern)});
+       window_${browserName}_re = filter_keyvals_regex(events, "app", ${pattern_str});
        window_${browserName} = sort_by_timestamp(concat(window_${browserName}, window_${browserName}_re));`;
     }
 

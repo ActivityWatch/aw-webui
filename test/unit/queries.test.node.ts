@@ -304,8 +304,8 @@ describe('chrome fork matching in generated query', () => {
       bid_browsers: ['aw-watcher-web-chrome_testhost'],
     }).join('\n');
     expect(query).toContain('company.thebrowser.dia');
-    // JSON.stringify doubles the regex backslash, so the query text has \\.
-    expect(query).toContain('dia(\\\\.exe)?$');
+    // After fix: JSON.stringify double-escaping is undone, so query has single \.
+    expect(query).toContain('dia(\\.exe)?$');
   });
 
   test('mixed chrome and Arc buckets: Arc bucket owns Arc events, chrome stream excludes Arc', () => {
@@ -318,12 +318,12 @@ describe('chrome fork matching in generated query', () => {
       query.indexOf('events_chrome = filter_period_intersect')
     );
     // The chrome stream must NOT match Arc when a dedicated Arc bucket exists.
-    expect(chromeWindowFilter).not.toContain('arc(\\\\.exe)?$');
+    expect(chromeWindowFilter).not.toContain('arc(\\.exe)?$');
     // Dia has no dedicated bucket and still writes to chrome — keep matching it.
-    expect(chromeWindowFilter).toContain('dia(\\\\.exe)?$');
+    expect(chromeWindowFilter).toContain('dia(\\.exe)?$');
     // The Arc bucket keeps its own matching path.
     expect(query).toContain('window_arc_re =');
-    expect(query).toContain('arc(\\\\.exe)?$');
+    expect(query).toContain('arc(\\.exe)?$');
     // Streams concat plainly; no overlap-masking that would drop real activity.
     expect(query).toContain('browser_events = concat(browser_events, events_chrome);');
     expect(query).toContain('browser_events = concat(browser_events, events_arc);');
@@ -354,6 +354,45 @@ describe('chrome fork matching in generated query', () => {
     expect(query).toContain('browser_events = concat(browser_events, events_chrome);');
     expect(query).toContain('browser_events = concat(browser_events, events_firefox);');
     expect(query).not.toContain('union_no_overlap');
+  });
+});
+
+describe('browser regex escaping in generated query', () => {
+  const params = {
+    bid_window: 'aw-watcher-window_testhost',
+    bid_afk: 'aw-watcher-afk_testhost',
+    filter_afk: true,
+    include_audible: false,
+    categories: [],
+    filter_categories: [],
+  };
+
+  test('arc bucket query emits single-backslash regex (not double-escaped)', () => {
+    // Regression test for #1080: JSON.stringify was doubling backslashes, so
+    // arc(\.exe)?$ became arc(\\.exe)?$ in the query text — aw-server-rust then
+    // treated \\.exe as a literal backslash + any char + exe, so Arc.exe on
+    // Windows never matched.
+    const query = fullDesktopQuery({
+      ...params,
+      bid_browsers: ['aw-watcher-web-arc_testhost'],
+    }).join('\n');
+    expect(query).toContain('window_arc_re =');
+    // After fix: single backslash (\.exe), not double (\\. exe)
+    expect(query).toContain('arc(\\.exe)?$');
+    expect(query).not.toContain('arc(\\\\.exe)?$');
+  });
+
+  test('chrome bucket regex with embedded arc/dia patterns uses single backslash', () => {
+    const query = fullDesktopQuery({
+      ...params,
+      bid_browsers: ['aw-watcher-web-chrome_testhost'],
+    }).join('\n');
+    expect(query).toContain('window_chrome_re =');
+    // arc and dia are embedded in the chrome regex; both should have single backslash
+    expect(query).toContain('arc(\\.exe)?$');
+    expect(query).toContain('dia(\\.exe)?$');
+    expect(query).not.toContain('arc(\\\\.exe)?$');
+    expect(query).not.toContain('dia(\\\\.exe)?$');
   });
 });
 
