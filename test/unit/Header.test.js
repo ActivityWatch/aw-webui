@@ -1,5 +1,6 @@
 import { createLocalVue, mount, shallowMount } from '@vue/test-utils';
 import BootstrapVue from 'bootstrap-vue';
+import VueRouter from 'vue-router';
 const flushPromises = () => new Promise(resolve => setTimeout(resolve));
 import { createPinia, setActivePinia } from 'pinia';
 import Header from '~/components/Header.vue';
@@ -89,11 +90,15 @@ describe('Header phone navigation drawer', () => {
     delete window.matchMedia;
   });
 
-  function mountFullHeader() {
+  function mountFullHeader(router) {
     const localVue = createLocalVue();
     localVue.use(BootstrapVue);
+    if (router) {
+      localVue.use(VueRouter);
+    }
     return mount(Header, {
       localVue,
+      router,
       attachTo: document.body,
       mocks: {
         $isAndroid: false,
@@ -151,6 +156,26 @@ describe('Header phone navigation drawer', () => {
       expect(desktopText).toContain(key);
       expect(drawerText).toContain(key);
     }
+  });
+
+  test('navigating to another page closes the drawer', async () => {
+    const router = new VueRouter({
+      routes: [
+        { path: '/', component: { render: h => h('div') } },
+        { path: '/stopwatch', component: { render: h => h('div') } },
+      ],
+    });
+    const wrapper = mountFullHeader(router);
+    await flushPromises();
+    await wrapper.setData({ drawerOpen: true });
+    await flushPromises();
+
+    await router.push('/stopwatch');
+    await flushPromises();
+
+    expect(wrapper.vm.$route.path).toBe('/stopwatch');
+    expect(wrapper.vm.drawerOpen).toBe(false);
+    wrapper.destroy();
   });
 
   test('Escape closes the drawer', async () => {
