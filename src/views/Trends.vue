@@ -56,7 +56,7 @@ div
           div.small.text-muted.mt-1(v-if="busiestDay") {{ busiestDay.duration | friendlyduration }} on this day
 
     h5.mt-3 Time per day
-    aw-timeline-barchart(:datasets="datasets" :height="100")
+    aw-timeline-barchart(:datasets="datasets" :height="100" :timeperiod_start="currentStart.toISOString()" :timeperiod_length="[periodDays, 'days']")
 
     h5.mt-4 Top changes by category
     p.small.text-muted(v-if="categoryTrends.length === 0")
@@ -65,6 +65,7 @@ div
       v-else
       small
       hover
+      responsive
       :items="categoryTrends"
       :fields="categoryFields"
       sort-by="absDelta"
@@ -135,9 +136,9 @@ export default {
 
       categoryFields: [
         { key: 'category', label: 'Category', sortable: true },
-        { key: 'current', label: 'Current', class: 'text-right', sortable: true },
-        { key: 'previous', label: 'Previous', class: 'text-right', sortable: true },
-        { key: 'delta', label: 'Change', class: 'text-right', sortable: true },
+        { key: 'current', label: 'Current', class: 'text-right text-nowrap', sortable: true },
+        { key: 'previous', label: 'Previous', class: 'text-right text-nowrap', sortable: true },
+        { key: 'delta', label: 'Change', class: 'text-right text-nowrap', sortable: true },
         { key: 'absDelta', label: '', class: 'd-none', sortable: true },
       ],
     };

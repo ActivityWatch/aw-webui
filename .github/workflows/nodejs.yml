@@ -144,6 +144,8 @@ jobs:
     - name: Install
       run: npm ci
     - name: Run tests
+      env:
+        AW_QUERY_TEST_SERVER_URL: http://localhost:5666
       run: |
         npm test
     - uses: codecov/codecov-action@v7

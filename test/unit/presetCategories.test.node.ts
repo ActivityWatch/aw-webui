@@ -258,6 +258,34 @@ describe('mergeCategorySets', () => {
     expect(merged).toHaveLength(2);
   });
 
+  test('only the primary masks inherited names, without masking its own categories', () => {
+    const primary = {
+      ...setA,
+      tombstones: [JSON.stringify(['Shared']), JSON.stringify(['OnlyB'])],
+    };
+    const secondary = { ...setB, tombstones: [JSON.stringify(['OnlyA'])] };
+    expect(mergeCategorySets([primary, secondary]).map(c => c.name[0])).toEqual([
+      'Shared',
+      'OnlyA',
+    ]);
+    // Masks are contextual: the untouched source can still be used alone.
+    expect(mergeCategorySets([secondary]).map(c => c.name[0])).toEqual(['Shared', 'OnlyB']);
+  });
+
+  test('tombstones distinguish a literal separator from nested category paths', () => {
+    const sets: CategorySet[] = [
+      { id: 'mine', categories: [], tombstones: [JSON.stringify(['Work', 'Email'])] },
+      {
+        id: 'shared',
+        categories: [
+          { name: ['Work', 'Email'], rule: { type: 'none' } },
+          { name: ['Work>Email'], rule: { type: 'none' } },
+        ],
+      },
+    ];
+    expect(mergeCategorySets(sets).map(c => c.name)).toEqual([['Work>Email']]);
+  });
+
   test('empty input yields no categories', () => {
     expect(mergeCategorySets([])).toEqual([]);
   });

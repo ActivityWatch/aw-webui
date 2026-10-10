@@ -145,6 +145,10 @@ export default {
       alsoApply: 'Also apply:',
       alsoApplyHelp:
         'Categories from the checked sets are applied on top of "{primary}". Edits are saved to "{primary}"; editing a category from another set saves an override in "{primary}".',
+      importSetTitle: 'Import category set',
+      importSetPrompt: 'How would you like to apply the imported set "{id}"?',
+      importReplace: 'Use instead of mine',
+      importAddOnTop: 'Add on top of mine',
       unsavedChanges: 'You have unsaved changes!',
       discard: 'Discard',
       addCategory: 'Add category',
