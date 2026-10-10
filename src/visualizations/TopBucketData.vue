@@ -126,6 +126,12 @@ export default {
   watch: {
     selectedBucketId: function () {
       this.emitSelection();
+      // Drop the cached earliest for the newly selected bucket: it may have
+      // gained older events since it was last viewed (an import while the page
+      // stayed open), and a plain switch should reflect that without a Refresh.
+      const rest = { ...this.earliestByBucket };
+      delete rest[this.selectedBucketId];
+      this.earliestByBucket = rest;
       this.loadEvents();
     },
     selectedField: function () {
