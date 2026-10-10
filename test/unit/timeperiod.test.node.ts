@@ -13,6 +13,8 @@ import {
   splitTimeperiodStrs,
   timeperiodsCalendarMonthsOfPeriod,
   timeperiodsForBarchart,
+  usesMonthlyBuckets,
+  timeperiodToStr,
 } from '~/util/timeperiod';
 import { useSettingsStore } from '~/stores/settings';
 
@@ -138,8 +140,18 @@ describe('timeperiodsForBarchart', () => {
     expect(periods.every(p => moment(p.start).format('D HH:mm') === '1 04:00')).toBe(true);
   });
 
-  it('uses months for a year', () => {
-    expect(timeperiodsForBarchart({ start, length: [1, 'year'] })).toHaveLength(12);
+  it('uses calendar months for a year, matching the chunk-derived keys', () => {
+    // The Year view always starts on January 1 (periodStartDate).
+    const yearStart = moment(start).startOf('year').hours(moment(start).hours()).format();
+    const periods = timeperiodsForBarchart({ start: yearStart, length: [1, 'year'] });
+    expect(periods).toHaveLength(12);
+    expect(periods.map(timeperiodToStr)).toEqual(
+      timeperiodsCalendarMonthsOfPeriod({ start: yearStart, length: [1, 'year'] }).map(
+        timeperiodToStr
+      )
+    );
+    expect(usesMonthlyBuckets({ start, length: [1, 'year'] })).toBe(true);
+    expect(usesMonthlyBuckets({ start, length: [1, 'month'] })).toBe(false);
   });
 });
 
