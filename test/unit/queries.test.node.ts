@@ -325,7 +325,7 @@ describe('chrome fork matching in generated query', () => {
       ...params,
       bid_browsers: ['aw-watcher-web-chrome_testhost'],
     }).join('\n');
-    expect(query).toContain('helium(\\\\.exe)?$');
+    expect(query).toContain('helium(\\.exe)?$');
   });
 
   test('mixed chrome and Helium buckets: Helium bucket owns Helium events, chrome stream excludes Helium', () => {
@@ -338,9 +338,9 @@ describe('chrome fork matching in generated query', () => {
       query.indexOf('events_chrome = filter_period_intersect')
     );
     // The chrome stream must NOT match Helium when a dedicated Helium bucket exists.
-    expect(chromeWindowFilter).not.toContain('helium(\\\\.exe)?$');
+    expect(chromeWindowFilter).not.toContain('helium(\\.exe)?$');
     // Dia has no dedicated bucket and still writes to chrome — keep matching it.
-    expect(chromeWindowFilter).toContain('dia(\\\\.exe)?$');
+    expect(chromeWindowFilter).toContain('dia(\\.exe)?$');
     // The Helium bucket keeps its own matching path.
     expect(query).toContain('window_helium_re =');
     expect(query).toContain('(?i)(helium)');
