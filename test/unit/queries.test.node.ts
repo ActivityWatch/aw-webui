@@ -66,6 +66,7 @@ import {
   browser_appname_regex,
   browser_appnames,
   activityQuery,
+  androidBrowserQuery,
   browserOnlyQuery,
   canonicalEvents,
   categoryQuery,
@@ -600,6 +601,49 @@ test('canonicalEvents serializes select_keys into categorize()', () => {
   });
   expect(query).toContain('"select_keys":["app"]');
   expect(query).toContain('"regex":"Firefox"');
+});
+
+describe('androidBrowserQuery', () => {
+  test('keeps event timestamps so URL intersection uses real foreground periods', () => {
+    const joined = androidBrowserQuery(
+      'aw-watcher-android_device',
+      ['aw-watcher-web-chrome'],
+      [],
+      [],
+      false
+    ).join('\n');
+    // Without keep_event_timestamps, canonicalEvents merges by app and
+    // collapses Chrome 09:00–09:10 + 10:00–10:10 into one 20-minute event.
+    expect(joined).not.toContain('merge_events_by_keys(events, ["app"])');
+    expect(joined).not.toContain('merge_events_by_keys(events, ["app", "title"])');
+    expect(joined).toContain('filter_period_intersect');
+  });
+
+  test('does not apply category filter before selecting browser foreground periods', () => {
+    const joined = androidBrowserQuery(
+      'aw-watcher-android_device',
+      ['aw-watcher-web-chrome'],
+      [[['Work'], { type: 'regex', regex: 'Chrome' }]],
+      [['Work']],
+      false
+    ).join('\n');
+    expect(joined).not.toContain('filter_keyvals(events, "$category"');
+    expect(joined).toContain('com.android.chrome');
+  });
+
+  test('returns browser domains, urls, and titles in RETURN', () => {
+    const joined = androidBrowserQuery(
+      'aw-watcher-android_device',
+      ['aw-watcher-web-chrome'],
+      [],
+      [],
+      false
+    ).join('\n');
+    expect(joined).toContain('"domains"');
+    expect(joined).toContain('"urls"');
+    expect(joined).toContain('"titles"');
+    expect(joined).toContain('"duration"');
+  });
 });
 
 describe('browserOnlyQuery', () => {

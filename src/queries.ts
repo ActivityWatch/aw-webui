@@ -769,7 +769,24 @@ export function androidBrowserQuery(
 ): string[] {
   bid_android = escape_doublequote(bid_android);
   const escaped_browsers = bid_browsers.map(escape_doublequote);
-  const params: AndroidQueryParams = { bid_android, categories, filter_categories, isIos };
+  // keep_event_timestamps: merge_events_by_keys collapses each app into one
+  // event at its first timestamp with summed duration, so URL intersection
+  // would match the wrong clock times (Chrome 09:00–09:10 and 10:00–10:10
+  // become a 20-minute event starting at 09:00). Same flag the multidevice
+  // path uses when combining Android events with another timeline.
+  // filter_categories is accepted for signature parity with appQuery but
+  // must not apply here: selecting a category that excludes the browser app
+  // would drop its foreground periods (and therefore its URLs) even when
+  // those sites belong to the selected category. Desktop selects browser
+  // periods before the category filter; the previous Android browser-only
+  // query ignored it too.
+  const params: AndroidQueryParams = {
+    bid_android,
+    categories,
+    filter_categories,
+    isIos,
+    keep_event_timestamps: true,
+  };
   const browsers = browsersWithBuckets(escaped_browsers);
 
   // Mirror browserEvents() but rely on the `events` variable set by
@@ -808,7 +825,7 @@ export function androidBrowserQuery(
   });
 
   const code = `
-    ${canonicalEvents(params)}
+    ${canonicalEvents({ ...params, filter_categories: [] })}
     ${browser_code}
     browser_urls = merge_events_by_keys(browser_events, ["url"]);
     browser_urls = sort_by_duration(browser_urls);
