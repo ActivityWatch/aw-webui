@@ -800,7 +800,7 @@ export function androidBrowserQuery(
 
   // Mirror browserEvents() but rely on the `events` variable set by
   // canonicalEvents(AndroidQueryParams) — which holds the android app events.
-  // Exact filter_keyvals matching against "app" therefore selects the
+  // Exact filter_keyvals matching against "package" therefore selects the
   // periods when a browser was in the foreground on the Android device, giving
   // a proper intersection rather than raw URL totals.
   let browser_code = `browser_events = [];`;
@@ -808,8 +808,9 @@ export function androidBrowserQuery(
     const appnames_str = JSON.stringify(browser_appnames[browserName]);
     browser_code += `
       events_${browserName} = flood(query_bucket("${bucketId}"));
-      window_${browserName} = filter_keyvals(events, "app", ${appnames_str});`;
-    // Mobile watcher events use exact package IDs. Desktop substring regexes
+      window_${browserName} = filter_keyvals(events, "package", ${appnames_str});`;
+    // Mobile watcher events put display labels in app and exact IDs in package.
+    // Desktop substring regexes
     // can select a different browser (e.g. Firefox's "nightly" matches Brave Nightly).
     browser_code += `
       events_${browserName} = filter_period_intersect(events_${browserName}, window_${browserName});

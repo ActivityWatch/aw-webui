@@ -613,6 +613,9 @@ describe('androidBrowserQuery', () => {
     ).join('\n');
     expect(joined).toContain('org.mozilla.fenix');
     expect(joined).toContain('com.brave.browser_nightly');
+    // aw-android records display labels in app and identifiers in package.
+    expect(joined).toContain('window_firefox = filter_keyvals(events, "package",');
+    expect(joined).not.toContain('filter_keyvals(events, "app",');
     // Firefox's desktop "nightly" alternative would also match Brave Nightly.
     expect(joined).not.toContain('filter_keyvals_regex(events, "app"');
   });
