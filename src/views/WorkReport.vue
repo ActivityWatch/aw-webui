@@ -44,14 +44,14 @@ div
       b-form-group(label="Date Range" label-class="font-weight-bold")
         b-form-select(v-model="dateRange" :options="dateRangeOptions")
 
-  div.mb-3
+  div.mb-3.report-actions
     b-button(@click="loadData" variant="primary")
       icon(name="sync")
       |  Calculate Work Time
-    b-button.ml-2(@click="exportCSV" variant="outline-secondary" :disabled="!hasData")
+    b-button(@click="exportCSV" variant="outline-secondary" :disabled="!hasData")
       icon(name="download")
       |  Export CSV
-    b-button.ml-2(@click="exportJSON" variant="outline-secondary" :disabled="!hasData")
+    b-button(@click="exportJSON" variant="outline-secondary" :disabled="!hasData")
       icon(name="download")
       |  Export JSON
 
@@ -71,7 +71,7 @@ div
           th.text-right Avg Session
       tbody
         tr(v-for="day in dailyData" :key="day.date")
-          td {{ day.date }}
+          td.text-nowrap {{ day.date }}
           td.text-right {{ formatDuration(day.duration) }}
           td.text-right {{ day.sessions }}
           td.text-right {{ formatDuration(day.avgSession) }}
@@ -413,5 +413,12 @@ export default {
 <style scoped>
 .table {
   font-size: 0.9rem;
+}
+
+/* Use a gap rather than per-button margins so wrapped buttons line up on narrow screens. */
+.report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 </style>
