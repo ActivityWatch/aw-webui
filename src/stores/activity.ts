@@ -723,7 +723,7 @@ export const useActivityStore = defineStore('activity', {
           this.progress_tick();
           if (!(bResult && bResult[0] && bResult[0].browser)) {
             // Don't show partial browser totals as if they covered the whole period
-            this.query_browser_completed({});
+            this.query_browser_completed();
             return;
           }
           bChunks.push(bResult[0]);

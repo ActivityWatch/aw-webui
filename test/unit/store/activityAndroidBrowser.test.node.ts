@@ -57,6 +57,29 @@ describe('Android browser completion', () => {
     expect(store.browser.top_titles).toEqual([]);
   });
 
+  test('completes empty browser state when a browser chunk fails', async () => {
+    const store = useActivityStore();
+    store.buckets.android = ['aw-watcher-android_device'];
+    store.buckets.browser = ['aw-watcher-web-chrome'];
+    store.browser.available = true;
+    jest
+      .spyOn(getClient(), 'query')
+      .mockResolvedValueOnce([
+        { app_events: [], app_cat_events: [], title_events: [], cat_events: [] },
+      ])
+      .mockResolvedValueOnce([]);
+
+    await store.query_android({
+      timeperiod: { start: '2024-01-01T00:00:00Z', length: [1, 'day'] },
+      filter_categories: [],
+    } as any);
+
+    expect(store.browser.top_domains).toEqual([]);
+    expect(store.browser.top_urls).toEqual([]);
+    expect(store.browser.top_titles).toEqual([]);
+    expect(store.browser.duration).toBe(0);
+  });
+
   test('ranks a shared domain above chunk-local leaders after merging', async () => {
     const store = useActivityStore();
     store.buckets.android = ['aw-watcher-android_device'];

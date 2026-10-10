@@ -790,7 +790,11 @@ export function androidBrowserQuery(
   // Unlike the desktop selector, keep every profile bucket for each browser.
   const browsers: [string, string][] = Object.keys(browser_appnames).flatMap(browserName =>
     escaped_browsers
-      .filter(bucketId => bucketId.includes(browserName))
+      .filter(
+        bucketId =>
+          bucketId === `aw-watcher-web-${browserName}` ||
+          bucketId.startsWith(`aw-watcher-web-${browserName}_`)
+      )
       .map(bucketId => [browserName, bucketId] as [string, string])
   );
 

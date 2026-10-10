@@ -617,6 +617,23 @@ describe('androidBrowserQuery', () => {
     expect(joined).not.toContain('filter_keyvals_regex(events, "app"');
   });
 
+  test('does not treat browser names in a hostname or profile as bucket identifiers', () => {
+    const joined = androidBrowserQuery(
+      'aw-watcher-android_device',
+      ['aw-watcher-web-firefox_chromephone', 'aw-watcher-web-brave_firefox-profile'],
+      [],
+      []
+    ).join('\n');
+    expect(joined.match(/filter_period_intersect/g)).toHaveLength(2);
+    expect(joined).not.toContain('events_chrome =');
+    expect(joined).toContain(
+      'events_firefox = flood(query_bucket("aw-watcher-web-firefox_chromephone"))'
+    );
+    expect(joined).toContain(
+      'events_brave = flood(query_bucket("aw-watcher-web-brave_firefox-profile"))'
+    );
+  });
+
   test('queries every bucket when a browser has multiple profiles', () => {
     const buckets = ['aw-watcher-web-firefox_profile1', 'aw-watcher-web-firefox_profile2'];
     const joined = androidBrowserQuery('aw-watcher-android_device', buckets, [], []).join('\n');
