@@ -1,5 +1,5 @@
 <template lang="pug">
-b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEditModal", title="Edit event", centered, hide-footer)
+b-modal(v-if="event && event.id", :model-value="open", @update:model-value="onOpenChange", title="Edit event", centered, no-footer)
   div(v-if="!editedEvent")
     | Loading event...
 
@@ -13,13 +13,15 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
         td {{ event.id }}
       tr
         th Start
-        datetime(type="datetime" v-model="start")
+        td
+          input(type="datetime-local" step="1" v-model="start")
       tr
         th End
-        datetime(type="datetime" v-model="end")
+        td
+          input(type="datetime-local" step="1" v-model="end")
       tr
         th Duration
-        td {{ editedEvent.duration | friendlyduration }}
+        td {{ friendlyduration(editedEvent.duration) }}
 
     hr
 
@@ -29,19 +31,19 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
         th Value
       tr(v-for="(v, k) in editedEvent.data" :key="k")
         td
-          b-input(disabled, :value="k", size="sm")
+          b-form-input(disabled, :model-value="k", size="sm")
         td
-          b-checkbox(v-if="typeof event.data[k] === typeof true", v-model="editedEvent.data[k]", style="margin: 0.25em")
-          b-input(v-if="typeof event.data[k] === typeof 'string'", v-model="editedEvent.data[k]", size="sm")
-          b-input(v-if="typeof event.data[k] === 'number'", v-model.number="editedEvent.data[k]", size="sm", type="number")
+          b-form-checkbox(v-if="typeof event.data[k] === typeof true", v-model="editedEvent.data[k]", style="margin: 0.25em")
+          b-form-input(v-if="typeof event.data[k] === typeof 'string'", v-model="editedEvent.data[k]", size="sm")
+          b-form-input(v-if="typeof event.data[k] === 'number'", v-model.number="editedEvent.data[k]", size="sm", type="number")
 
     hr
 
-    div.float-left
+    div.float-start
       b-button.mx-1(@click="delete_(); close();" variant="danger")
         icon.mx-1(name="trash")
         | Delete
-    div.float-right
+    div.float-end
       b-button.mx-1(@click="close")
         icon.mx-1(name="times")
         | Cancel
@@ -62,17 +64,17 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
 //  - Search (soon)
 
 import moment from 'moment';
-
-import 'vue-awesome/icons/times';
-import 'vue-awesome/icons/save';
-import 'vue-awesome/icons/trash';
+import { friendlyduration } from '~/util/filters';
 
 export default {
   name: 'EventEditor',
   props: {
     event: { type: Object },
     bucket_id: { type: String, required: true },
+    // Whether the editor dialog is shown (v-model:open)
+    open: { type: Boolean, default: false },
   },
+  emits: ['save', 'delete', 'close', 'update:open'],
   data() {
     return {
       editedEvent: null,
@@ -81,7 +83,7 @@ export default {
   computed: {
     start: {
       get: function () {
-        return moment(this.editedEvent.timestamp).format();
+        return moment(this.editedEvent.timestamp).format('YYYY-MM-DDTHH:mm:ss');
       },
       set: function (dt) {
         // Duration needs to be set first since otherwise the computed for end will use the new timestamp
@@ -92,7 +94,7 @@ export default {
     end: {
       get: function () {
         const end = moment(this.editedEvent.timestamp).add(this.editedEvent.duration, 'seconds');
-        return end.format();
+        return end.format('YYYY-MM-DDTHH:mm:ss');
       },
       set: function (dt) {
         this.editedEvent.duration = moment(dt).diff(this.editedEvent.timestamp, 'seconds');
@@ -108,6 +110,7 @@ export default {
     await this.getEvent();
   },
   methods: {
+    friendlyduration,
     async save() {
       // This emit needs to be called first, otherwise it won't occur for some reason
       // FIXME: but what if the replace fails? Then UI will incorrectly think event was replaced?
@@ -128,8 +131,12 @@ export default {
       }
     },
     close() {
-      this.$refs.eventEditModal.hide();
+      this.$emit('update:open', false);
       this.$emit('close', this.event);
+    },
+    onOpenChange(isOpen: boolean) {
+      if (isOpen) this.$emit('update:open', true);
+      else this.close();
     },
   },
 };

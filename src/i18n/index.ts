@@ -1,5 +1,4 @@
-import Vue from 'vue';
-import VueI18n from 'vue-i18n';
+import { createI18n } from 'vue-i18n';
 import moment from 'moment';
 import 'moment/locale/uk';
 import 'moment/locale/de';
@@ -13,8 +12,6 @@ import de from './locales/de';
 import ru from './locales/ru';
 import sv from './locales/sv';
 import zhCN from './locales/zh-CN';
-
-Vue.use(VueI18n);
 
 export type AppLocale = 'en' | 'uk' | 'de' | 'ru' | 'zh-CN' | 'sv';
 
@@ -70,18 +67,25 @@ const MOMENT_LOCALE: Record<AppLocale, string> = {
 
 const initialLocale = getInitialLocale();
 
-export const i18n = new VueI18n({
+export const i18n = createI18n({
+  legacy: false,
+  globalInjection: true,
   locale: initialLocale,
   fallbackLocale: 'en',
   messages: { en, uk, de, ru, 'zh-CN': zhCN, sv },
-  silentTranslationWarn: process.env.NODE_ENV === 'production',
+  missingWarn: process.env.NODE_ENV !== 'production',
+  fallbackWarn: process.env.NODE_ENV !== 'production',
 });
+
+export function getAppLocale(): string {
+  return i18n.global.locale.value;
+}
 
 moment.locale(MOMENT_LOCALE[initialLocale]);
 
 export function setAppLocale(locale: string): void {
   const next = isAppLocale(locale) ? locale : 'en';
-  i18n.locale = next;
+  i18n.global.locale.value = next;
   moment.locale(MOMENT_LOCALE[next]);
   document.documentElement.lang = HTML_LANG[next];
   try {

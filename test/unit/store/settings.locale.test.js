@@ -12,7 +12,7 @@ jest.mock('~/util/awclient', () => ({
 
 import { setActivePinia, createPinia } from 'pinia';
 import { useSettingsStore } from '~/stores/settings';
-import { i18n } from '~/i18n';
+import { getAppLocale, setAppLocale } from '~/i18n';
 
 describe('settings store locale loading', () => {
   let settingsStore;
@@ -24,7 +24,7 @@ describe('settings store locale loading', () => {
     settingsStore.$patch({ _loaded: false });
     mockGetSettings.mockReset();
     mockGetSettings.mockResolvedValue({});
-    i18n.locale = 'en';
+    setAppLocale('en');
     localStorage.clear();
   });
 
@@ -47,7 +47,7 @@ describe('settings store locale loading', () => {
     await settingsStore.load();
 
     expect(settingsStore.locale).toBe('de');
-    expect(i18n.locale).toBe('de');
+    expect(getAppLocale()).toBe('de');
     expect(document.documentElement.lang).toBe('de');
     expect(settingsStore.loaded).toBe(true);
   });
@@ -70,7 +70,7 @@ describe('settings store locale loading', () => {
     await settingsStore.load();
 
     expect(settingsStore.locale).toBe('zh-CN');
-    expect(i18n.locale).toBe('zh-CN');
+    expect(getAppLocale()).toBe('zh-CN');
   });
 
   test('load ignores invalid locale from localStorage', async () => {

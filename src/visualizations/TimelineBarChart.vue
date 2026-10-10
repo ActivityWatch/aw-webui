@@ -1,7 +1,9 @@
 <template lang="pug">
+// Fixed height: avoids elements jumping when loading the Activity view, and the
+// chart (maintainAspectRatio: false) sizes itself to this container.
 div(v-if="datasets && datasets.length > 0")
-  // Height set here to avoid elements jumping when loading Activity view
-  bar(:chart-data="chartData" :chart-options="chartOptions" :height="330")
+  div(style="position: relative; height: 330px")
+    bar(:data="chartData" :options="chartOptions")
 div.small(v-else-if="datasets === null", style="font-size: 16pt; color: #aaa;")
   | No data
 div.small(v-else, style="font-size: 16pt; color: #aaa;")
@@ -12,7 +14,7 @@ div.small(v-else, style="font-size: 16pt; color: #aaa;")
 import _ from 'lodash';
 import { ChartOptions } from 'chart.js';
 import 'chart.js/auto';
-import { Bar } from 'vue-chartjs/legacy';
+import { Bar } from 'vue-chartjs';
 import {
   format_date_short,
   format_day_of_month,
@@ -21,7 +23,7 @@ import {
   get_short_month_labels,
 } from '~/util/time';
 import { MAX_DAILY_BUCKETS, timeperiodsCalendarMonthsOfPeriod } from '~/util/timeperiod';
-import { i18n } from '~/i18n';
+import { getAppLocale } from '~/i18n';
 import { clampStackedHours } from '~/util/timelineClamp';
 
 function hourToTick(hours: number): string {
@@ -77,7 +79,7 @@ export default {
         return _.range(0, 24).map(h => `${(h + hourOffset) % 24}`);
       } else if (resolution.startsWith('day') && count > MAX_DAILY_BUCKETS) {
         // Long custom ranges are bucketed by calendar month (see timeperiodsForBarchart)
-        const fmt = new Intl.DateTimeFormat(i18n.locale, { month: 'short', year: 'numeric' });
+        const fmt = new Intl.DateTimeFormat(getAppLocale(), { month: 'short', year: 'numeric' });
         return timeperiodsCalendarMonthsOfPeriod({
           start,
           length: [count, resolution],
@@ -87,7 +89,7 @@ export default {
           const date = new Date(start);
           date.setHours(12, 0, 0, 0);
           date.setDate(date.getDate() + d);
-          return format_date_short(date, i18n.locale);
+          return format_date_short(date, getAppLocale());
         });
       } else if (resolution.startsWith('week')) {
         // Look up days of the week from `start`
@@ -125,14 +127,15 @@ export default {
           display: true,
           text: 'Timeline',
         },
-        responsive: true,
-        maintainAspectRatio: false,
       };
     },
     chartOptions(): ChartOptions {
       const [count, resolution] = this.timeperiod_length;
       const monthlyBuckets = resolution.startsWith('day') && count > MAX_DAILY_BUCKETS;
       return {
+        responsive: true,
+        // Fill the fixed-height container instead of keeping an aspect ratio
+        maintainAspectRatio: false,
         plugins: {
           tooltip: {
             mode: 'point',

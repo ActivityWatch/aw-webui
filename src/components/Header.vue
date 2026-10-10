@@ -5,8 +5,8 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
     b-navbar-nav.d-block.d-lg-none
       b-navbar-brand(to="/" style="background-color: transparent;")
         img.aligh-middle(src="/logo.png" style="height: 1.5em;")
-        span.ml-2.align-middle(style="font-size: 1em; color: #000;") {{ $t('app.name') }}
-        b-badge.ml-2.align-middle(v-if="researchEdition" variant="info" data-testid="research-edition-badge") {{ $t('app.researchEdition') }}
+        span.ms-2.align-middle(style="font-size: 1em; color: #000;") {{ $t('app.name') }}
+        b-badge.ms-2.align-middle(v-if="researchEdition" variant="info" data-testid="research-edition-badge") {{ $t('app.researchEdition') }}
 
     b-navbar-toggle(target="nav-collapse")
 
@@ -20,7 +20,7 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
 
         // If multiple (or no) activity views are available
         b-nav-item-dropdown(v-if="!activityViews || activityViews.length !== 1")
-          template(slot="button-content")
+          template(#button-content)
             div.d-inline.px-2.px-lg-1
               icon(name="calendar-day")
               | {{ $t('nav.activity') }}
@@ -52,13 +52,13 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
       // Brand on large screens (centered)
       b-navbar-nav.abs-center.d-none.d-lg-block
         b-navbar-brand(to="/" style="background-color: transparent;")
-          img.ml-0.aligh-middle(src="/logo.png" style="height: 1.5em;")
-          span.ml-2.align-middle(style="font-size: 1.0em; color: #000;") {{ $t('app.name') }}
-          b-badge.ml-2.align-middle(v-if="researchEdition" variant="info" data-testid="research-edition-badge") {{ $t('app.researchEdition') }}
+          img.ms-0.aligh-middle(src="/logo.png" style="height: 1.5em;")
+          span.ms-2.align-middle(style="font-size: 1.0em; color: #000;") {{ $t('app.name') }}
+          b-badge.ms-2.align-middle(v-if="researchEdition" variant="info" data-testid="research-edition-badge") {{ $t('app.researchEdition') }}
 
-      b-navbar-nav.ml-auto
+      b-navbar-nav.ms-auto
         b-nav-item-dropdown
-          template(slot="button-content")
+          template(#button-content)
             div.d-inline.px-2.px-lg-1
               icon(name="tools")
               | {{ $t('nav.tools') }}
@@ -111,27 +111,6 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
 
 <script lang="ts">
 // only import the icons you use to reduce bundle size
-import 'vue-awesome/icons/calendar-day';
-import 'vue-awesome/icons/briefcase';
-import 'vue-awesome/icons/dollar-sign';
-import 'vue-awesome/icons/calendar-week';
-import 'vue-awesome/icons/stream';
-import 'vue-awesome/icons/database';
-import 'vue-awesome/icons/search';
-import 'vue-awesome/icons/code';
-import 'vue-awesome/icons/chart-line';
-import 'vue-awesome/icons/chart-pie';
-import 'vue-awesome/icons/flag-checkered';
-import 'vue-awesome/icons/stopwatch';
-import 'vue-awesome/icons/robot';
-import 'vue-awesome/icons/cog';
-import 'vue-awesome/icons/tools';
-import 'vue-awesome/icons/history';
-import 'vue-awesome/icons/project-diagram';
-import 'vue-awesome/icons/ellipsis-h';
-import 'vue-awesome/icons/mobile';
-import 'vue-awesome/icons/desktop';
-import 'vue-awesome/icons/layer-group';
 
 import _ from 'lodash';
 
@@ -142,7 +121,7 @@ import { IBucket } from '~/util/interfaces';
 import { ALL_DEVICES, formatHostParam } from '~/util/multidevice';
 
 export default {
-  name: 'Header',
+  name: 'AwHeader',
   data() {
     return {
       activityViews: null,

@@ -32,8 +32,19 @@ describe('activity route host param', () => {
     // list items are encoded twice so a ',' inside a hostname survives
     ['/activity/self,a%252Cb/day', 'self,a%2Cb'],
   ])('%s resolves to the activity view with host %s', (path, host) => {
-    const resolved = router.resolve(path + '/view/').route;
+    const resolved = router.resolve(path + '/view/');
     expect(resolved.name).toBe('activity-view');
     expect(resolved.params.host).toBe(host);
   });
+});
+
+describe('activity route default view', () => {
+  test.each(['/activity/host1', '/activity/host1/day/2026-09-26'])(
+    '%s redirects to the activity view',
+    async path => {
+      await router.push(path);
+      expect(router.currentRoute.value.name).toBe('activity-view');
+      expect(router.currentRoute.value.params.host).toBe('host1');
+    }
+  );
 });

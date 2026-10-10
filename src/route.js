@@ -1,5 +1,4 @@
-import Vue from 'vue';
-import VueRouter from 'vue-router';
+import { createRouter, createWebHashHistory } from 'vue-router';
 
 const Home = () => import('./views/Home.vue');
 
@@ -29,9 +28,14 @@ const Dev = () => import('./views/Dev.vue');
 const Graph = () => import('./views/Graph.vue');
 const NotFound = () => import('./views/NotFound.vue');
 
-Vue.use(VueRouter);
+// Like `props: true`, but leaves out absent optional params: vue-router 4 passes
+// those as '' rather than undefined, which would override the prop defaults.
+function paramsAsProps(route) {
+  return Object.fromEntries(Object.entries(route.params).filter(([, v]) => v !== ''));
+}
 
-const router = new VueRouter({
+const router = createRouter({
+  history: createWebHashHistory(),
   routes: [
     {
       path: '/',
@@ -43,20 +47,21 @@ const router = new VueRouter({
     {
       path: '/activity/:host/:periodLength?/:date?',
       component: Activity,
-      props: true,
+      props: paramsAsProps,
       children: [
         {
           path: 'view/:view_id?',
           meta: { subview: 'view' },
           name: 'activity-view',
           component: ActivityView,
-          props: true,
+          props: paramsAsProps,
         },
         // Unspecified should redirect to summary view is the summary view
         // (needs to be last since otherwise it'll always match first)
         {
           path: '',
-          redirect: 'view/',
+          // vue-router 4 doesn't resolve relative redirect strings like 'view/'
+          redirect: to => ({ name: 'activity-view', params: to.params, query: to.query }),
         },
       ],
     },
@@ -89,9 +94,9 @@ const router = new VueRouter({
     { path: '/search', component: Search },
     { path: '/graph', component: Graph },
     { path: '/dev', component: Dev },
-    // NOTE: Will break with Vue 3: https://stackoverflow.com/questions/40193634/vue-router-redirect-on-page-not-found-404/64186073#64186073
+    // Vue Router 4: catch-all uses :pathMatch(.*)*
     {
-      path: '*',
+      path: '/:pathMatch(.*)*',
       component: NotFound,
     },
   ],

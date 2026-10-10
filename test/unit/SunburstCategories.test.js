@@ -5,8 +5,6 @@ import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
 import { DARK_THEME_HREF } from '~/util/theme';
 
-jest.mock('vue-d3-sunburst/dist/vue-d3-sunburst.css', () => ({}));
-
 describe('SunburstCategories', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
@@ -31,10 +29,10 @@ describe('SunburstCategories', () => {
     ]);
   });
 
-  test('renders the vue-d3-sunburst graph with the overridden d3-color dependency', async () => {
+  test('renders the sunburst graph', async () => {
     const wrapper = mount(SunburstCategories, {
       attachTo: document.body,
-      propsData: {
+      props: {
         data: {
           name: 'All',
           children: [
@@ -52,7 +50,7 @@ describe('SunburstCategories', () => {
     expect(wrapper.find('svg').exists()).toBe(true);
     expect(wrapper.findAll('path').length).toBeGreaterThan(0);
 
-    wrapper.destroy();
+    wrapper.unmount();
   });
 
   describe('root ("All") color', () => {
@@ -87,29 +85,50 @@ describe('SunburstCategories', () => {
     });
   });
 
-  test('truncates labels that would overflow their ring instead of clipping them', async () => {
+  test('truncates labels that would overflow their ring', async () => {
     const longName = 'ActivityWatch Development';
     const wrapper = mount(SunburstCategories, {
-      attachTo: document.body,
-      propsData: {
+      props: {
         data: {
           name: 'All',
           children: [{ name: 'Work', children: [{ name: longName, size: 3600 }] }],
         },
       },
     });
-
     await wrapper.vm.$nextTick();
 
-    // jsdom has no layout, so the ring itself is 0px wide: only a leaf, which
-    // may overflow past its ring, gets a (truncated) label. The parent would be
-    // covered by its child ring, so it gets no overflow allowance and no label.
-    const labels = wrapper.findAll('text.node-info').wrappers.map(w => w.text());
-    expect(labels).not.toContain('Work');
+    const labels = wrapper.findAll('text.sunburst-label').map(w => w.text());
     const truncated = labels.find(l => l.endsWith('…'));
     expect(truncated).toBeDefined();
     expect(longName.startsWith(truncated.slice(0, -1))).toBe(true);
+    wrapper.unmount();
+  });
 
-    wrapper.destroy();
+  test('renders nothing while the data is loading', () => {
+    const wrapper = mount(SunburstCategories, { props: { data: null } });
+    expect(wrapper.findAll('path')).toHaveLength(0);
+    wrapper.unmount();
+  });
+
+  test('keeps the hovered arc highlighted', async () => {
+    const wrapper = mount(SunburstCategories, {
+      props: {
+        data: {
+          name: 'All',
+          children: [
+            { name: 'Work', children: [{ name: 'Code', size: 3600 }] },
+            { name: 'Code', size: 1800 },
+          ],
+        },
+      },
+    });
+    const arcs = wrapper.findAll('path');
+    const hovered = arcs[arcs.length - 1];
+    await hovered.trigger('mouseover');
+
+    expect(hovered.attributes('fill-opacity')).toBe('1');
+    // Arcs outside the hovered one's ancestry are dimmed
+    expect(arcs.some(a => a.attributes('fill-opacity') !== '1')).toBe(true);
+    wrapper.unmount();
   });
 });

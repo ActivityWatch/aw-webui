@@ -1,18 +1,18 @@
 <template lang="pug">
 // The category edit modal
-b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="hidden" @ok="handleOk" @keydown.native.enter="handleEnter" :ok-disabled="!canSubmit")
+b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="hidden" @ok="handleOk" @keydown.enter="handleEnter" :ok-disabled="!canSubmit")
   div.my-1
     b-input-group.my-1(prepend="Name")
       b-form-input(v-model="editing.name")
     b-input-group(prepend="Parent")
-      b-select(v-model="editing.parent", :options="allCategories")
+      b-form-select(v-model="editing.parent", :options="allCategories")
     //| ID: {{editing.id}}
 
   hr
   div.my-1
     b Rule
     b-input-group.my-1(prepend="Type")
-      b-select(v-model="editing.rule.type", :options="allRuleTypes")
+      b-form-select(v-model="editing.rule.type", :options="allRuleTypes")
     div(v-if="editing.rule.type === 'regex'")
       b-input-group.my-1(prepend="Pattern")
         b-form-input(v-model="editing.rule.regex")
@@ -21,13 +21,13 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
           b-form-checkbox(v-model="editing.rule.ignore_case" switch)
             | Case insensitive
         div.flex-grow-1
-          small.text-right
+          small.text-end
             div.text-danger(v-if="!validPattern") Invalid pattern
             div.text-warning(v-if="validPattern && broad_pattern") Pattern too broad
       div.mt-2
         small.text-muted Match fields
         div.d-flex.flex-wrap
-          b-form-checkbox.mr-3(
+          b-form-checkbox.me-3(
             v-for="key in fieldOptions"
             :key="key"
             v-model="editing.match_fields"
@@ -64,7 +64,7 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
 
   hr
   div.my-1
-    b-btn(variant="danger", @click="removeClass(categoryId); $refs.edit.hide()")
+    b-button(variant="danger", @click="removeClass(categoryId); $refs.edit.hide()")
       icon(name="trash")
       | Remove category
 </template>
@@ -76,8 +76,6 @@ import { useCategoryStore } from '~/stores/categories';
 import { mapState } from 'pinia';
 import { validateRegex, isRegexBroad } from '~/util/validate';
 import { CANONICAL_SELECT_KEYS, normalizeSelectKeys } from '~/util/classes';
-
-import 'vue-awesome/icons/trash';
 
 export default {
   name: 'CategoryEditModal',

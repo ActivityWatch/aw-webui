@@ -1,7 +1,6 @@
 <template lang="pug">
   div
-    b-alert(v-if="isPollVisible", variant="info", show)
-      button(type="button", class="close", @click="isPollVisible=false") &times;
+    b-alert(v-if="isPollVisible", variant="info", :model-value="true", dismissible, @close="isPollVisible = false")
       form
         p
           | Hey there! You've been using ActivityWatch for a while. How likely are you to recommend it to a friend/colleague on a scale 1-10? (with 10 being the most likely)
@@ -16,8 +15,7 @@
           | Don't show again
         input(type="submit" value="Submit" @click="submit")
 
-    b-alert(v-if="isPosFollowUpVisible", variant="info" show)
-      button(type="button", class="close", @click="isPosFollowUpVisible=false") &times;
+    b-alert(v-if="isPosFollowUpVisible", variant="info" :model-value="true", dismissible, @close="isPosFollowUpVisible = false")
       p
         | We're happy to hear you enjoy using ActivityWatch, but we can do better!
         br
@@ -38,8 +36,7 @@
         li
           | Sign up for the #[a(href="http://eepurl.com/cTU6QX") newsletter] (we rarely send anything).
 
-    b-alert(v-if="isNegFollowUpVisible", variant="info" show)
-      button(type="button", class="close", @click="isNegFollowUpVisible=false") &times;
+    b-alert(v-if="isNegFollowUpVisible", variant="info" :model-value="true", dismissible, @close="isNegFollowUpVisible = false")
       | We are sorry to hear that you did not like ActivityWatch, but we want to improve! We would be very thankful if you helped us by:
       ul
         li

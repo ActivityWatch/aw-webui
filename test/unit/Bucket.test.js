@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import { reactive } from 'vue';
 import { shallowMount } from '@vue/test-utils';
 import Bucket from '~/views/Bucket.vue';
 
@@ -12,7 +12,7 @@ const knownBucket = {
   client: 'test',
 };
 // Reactive like the real Pinia store, so the view's `bucket` computed sees a refresh.
-const mockState = Vue.observable({ buckets: [] });
+const mockState = reactive({ buckets: [] });
 
 jest.mock('~/util/awclient', () => ({
   getClient: () => ({ countEvents: mockCountEvents }),
@@ -32,21 +32,23 @@ const InputTimeIntervalStub = {
   template: '<div class="timeinterval" />',
   mounted() {
     const t = iso => ({ format: () => iso });
-    this.$emit('input', [t('2026-10-01T00:00:00Z'), t('2026-10-02T00:00:00Z')]);
+    this.$emit('update:modelValue', [t('2026-10-01T00:00:00Z'), t('2026-10-02T00:00:00Z')]);
   },
 };
 
 function mountBucket(id) {
   return shallowMount(Bucket, {
-    propsData: { id },
-    stubs: {
-      'b-alert': { template: '<div class="alert"><slot /></div>' },
-      'router-link': { template: '<a><slot /></a>' },
-      'input-timeinterval': InputTimeIntervalStub,
-      'vis-timeline': true,
-      'aw-eventlist': true,
+    props: { id },
+    global: {
+      stubs: {
+        'b-alert': { template: '<div class="alert"><slot /></div>' },
+        'router-link': { template: '<a><slot /></a>' },
+        'input-timeinterval': InputTimeIntervalStub,
+        'vis-timeline': true,
+        'aw-eventlist': true,
+      },
+      mocks: { friendlytime: v => v },
     },
-    filters: { iso8601: v => v },
   });
 }
 

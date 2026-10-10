@@ -4,11 +4,11 @@ div
     div
       h5.mb-1 Activity Notifications
       small.text-muted Configure aw-notify alerts for Android and desktop
-    b-btn(@click="save" size="sm" variant="primary" :disabled="saving || loading")
+    b-button(@click="save" size="sm" variant="primary" :disabled="saving || loading")
       | {{ saving ? 'Saving…' : 'Save' }}
 
-  b-alert(v-if="error" show variant="danger") {{ error }}
-  b-alert(v-if="success" show variant="success" dismissible @dismissed="success = false") Settings saved.
+  b-alert(v-if="error" :model-value="true" variant="danger") {{ error }}
+  b-alert(v-if="success" :model-value="true" variant="success" dismissible @close="success = false") Settings saved.
 
   div(v-if="loading")
     b-spinner(small) Loading…
@@ -17,7 +17,7 @@ div
     b-form-group.mb-3
       b-form-checkbox(v-model="enabled" switch)
         | Enable notifications
-        small.text-muted.ml-2 aw-notify runs only when this is on; the tray toggle mirrors this setting.
+        small.text-muted.ms-2 aw-notify runs only when this is on; the tray toggle mirrors this setting.
 
     template(v-if="enabled")
       p.text-muted.small.mb-3
@@ -25,15 +25,15 @@ div
         | the accumulated time crosses a threshold. The same config works in Android and aw-tauri.
 
       div(v-if="alerts.length === 0")
-        p.text-muted.font-italic No alerts configured.
+        p.text-muted.fst-italic No alerts configured.
 
       b-card.mb-2(v-for="(alert, idx) in alerts" :key="idx")
         div.d-flex.align-items-start
           div.flex-grow-1
             b-form-group(label="Label" label-cols-sm="3" label-size="sm")
-              b-input(v-model="alert.label" size="sm" placeholder="e.g. Work")
+              b-form-input(v-model="alert.label" size="sm" placeholder="e.g. Work")
             b-form-group(label="Category" label-cols-sm="3" label-size="sm")
-              b-input(
+              b-form-input(
                 v-model="alert.category"
                 size="sm"
                 placeholder="All"
@@ -47,7 +47,7 @@ div
               :invalid-feedback="thresholdError(alert.thresholdStr)"
               :state="thresholdState(alert.thresholdStr)"
             )
-              b-input(
+              b-form-input(
                 v-model="alert.thresholdStr"
                 size="sm"
                 placeholder="e.g. 60, 120, 240"
@@ -56,18 +56,15 @@ div
               small.form-text.text-muted Comma-separated positive whole minutes. A notification fires as each threshold is crossed.
             b-form-group(label="Type" label-cols-sm="3" label-size="sm")
               b-form-radio-group(v-model="alert.positive" :options="goalOptions" size="sm")
-          b-btn.ml-2(@click="removeAlert(idx)" variant="outline-danger" size="sm" title="Remove alert")
+          b-button.ms-2(@click="removeAlert(idx)" variant="outline-danger" size="sm" title="Remove alert")
             icon(name="trash")
 
-      b-btn.mt-1(@click="addAlert" variant="outline-secondary" size="sm")
+      b-button.mt-1(@click="addAlert" variant="outline-secondary" size="sm")
         icon(name="plus")
         |  Add alert
 </template>
 
 <script lang="ts">
-import 'vue-awesome/icons/plus';
-import 'vue-awesome/icons/trash';
-
 import { getClient } from '~/util/awclient';
 import {
   AwNotifyAlert,

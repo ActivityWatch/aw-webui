@@ -2,18 +2,17 @@
 div
   h3 Search
 
-  b-alert(v-if="error" show variant="danger")
+  b-alert(v-if="error" :model-value="true" variant="danger")
     | {{error}}
 
   b-input-group(size="lg")
-    b-input(v-model="pattern" v-on:keyup.enter="search()" placeholder="Regex pattern to search for")
-    b-input-group-append
-      b-button(type="button", @click="search()" variant="success")
-        icon.mr-1(name="search")
-        | Search
+    b-form-input(v-model="pattern" v-on:keyup.enter="search()" placeholder="Regex pattern to search for")
+    b-button(type="button", @click="search()" variant="success")
+      icon.me-1(name="search")
+      | Search
 
   div.d-flex.mt-1
-    span.mr-auto.small.text-muted Hostname: {{queryOptions.hostname}}
+    span.me-auto.small.text-muted Hostname: {{queryOptions.hostname}}
     b-button.border-0(size="sm", variant="outline-dark" @click="show_options = !show_options")
       span(v-if="!show_options")
         | #[icon(name="angle-double-down")] Show options
@@ -43,11 +42,6 @@ import _ from 'lodash';
 import moment from 'moment';
 import { canonicalEvents, querystr_to_array } from '~/queries';
 import { useBucketsStore } from '~/stores/buckets';
-
-import 'vue-awesome/icons/search';
-import 'vue-awesome/icons/spinner';
-import 'vue-awesome/icons/angle-double-down';
-import 'vue-awesome/icons/angle-double-up';
 
 export default {
   name: 'Search',

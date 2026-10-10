@@ -13,12 +13,12 @@ div
   div.mt-3(v-if="isEnabled")
     b-form-group(label="Minimum total tracked time" label-cols-md=4 label-class="small text-muted"
                  description="The hint stays hidden when total tracked time in the period is below this many minutes.")
-      b-input(type="number" min="0" size="sm" v-model.number="minTotalMinutes")
+      b-form-input(type="number" min="0" size="sm" v-model.number="minTotalMinutes")
 
     b-form-group.mb-0(label="Minimum uncategorized share" label-cols-md=4 label-class="small text-muted"
                      description="The hint appears once the uncategorized fraction crosses this percentage.")
       b-input-group(size="sm" append="%")
-        b-input(type="number" min="0" max="100" v-model.number="minRatioPct")
+        b-form-input(type="number" min="0" max="100" v-model.number="minRatioPct")
 </template>
 
 <script lang="ts">

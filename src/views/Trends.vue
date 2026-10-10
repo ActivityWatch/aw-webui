@@ -1,9 +1,9 @@
 <template lang="pug">
 div
   div.d-flex.flex-wrap.align-items-center.mb-3
-    h3.mb-0.mr-3 Trends
+    h3.mb-0.me-3 Trends
 
-    b-button-group.mr-2.mb-1(size="sm")
+    b-button-group.me-2.mb-1(size="sm")
       b-button.px-3(
         v-for="opt in periodOptions"
         :key="opt.value"
@@ -12,26 +12,26 @@ div
         variant="outline-dark"
       ) {{ opt.text }}
 
-    b-form-select.mr-2.mb-1(
+    b-form-select.me-2.mb-1(
       v-if="bucketsStore.knownHosts.length > 1"
       size="sm"
-      :value="host"
+      :model-value="host"
       :options="hostOptions"
-      @change="onHostChange"
+      @update:model-value="onHostChange"
       style="width: auto"
     )
 
-    small.text-muted.ml-auto.mb-1
+    small.text-muted.ms-auto.mb-1
       | Comparing #[b {{ currentRangeLabel }}] vs #[b {{ previousRangeLabel }}].
 
   div(v-if="!host")
-    b-alert(show variant="info")
+    b-alert(:model-value="true" variant="info")
       | No host with window/AFK buckets available. Install
       | #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") aw-watcher-window and aw-watcher-afk]
       | to use this view.
 
   div(v-else-if="loading")
-    b-spinner.mr-2(small)
+    b-spinner.me-2(small)
     span.text-muted Computing trends over {{ periodDays }} + {{ periodDays }} days…
 
   div(v-else)
@@ -39,13 +39,13 @@ div
       b-col(md="4")
         b-card.h-100
           small.text-muted Active time
-          h4.mb-0 {{ totalCurrent | friendlyduration }}
+          h4.mb-0 {{ friendlyduration(totalCurrent) }}
           div.small.mt-1(:class="deltaClass(totalDelta)")
             | {{ formatDelta(totalCurrent, totalPrevious) }} vs previous {{ periodDays }} days
       b-col(md="4")
         b-card.h-100
           small.text-muted Daily average
-          h4.mb-0 {{ avgPerDay | friendlyduration }}
+          h4.mb-0 {{ friendlyduration(avgPerDay) }}
           div.small.mt-1(:class="deltaClass(avgDelta)")
             | {{ formatDelta(avgPerDay, avgPerDayPrevious) }} per day
       b-col(md="4")
@@ -53,7 +53,7 @@ div
           small.text-muted Most-active day
           h4.mb-0(v-if="busiestDay") {{ busiestDay.label }}
           h4.mb-0.text-muted(v-else) —
-          div.small.text-muted.mt-1(v-if="busiestDay") {{ busiestDay.duration | friendlyduration }} on this day
+          div.small.text-muted.mt-1(v-if="busiestDay") {{ friendlyduration(busiestDay.duration) }} on this day
 
     h5.mt-3 Time per day
     aw-timeline-barchart(:datasets="datasets" :height="100")
@@ -67,15 +67,14 @@ div
       hover
       :items="categoryTrends"
       :fields="categoryFields"
-      sort-by="absDelta"
-      :sort-desc="true"
+      :sort-by="[{ key: 'absDelta', order: 'desc' }]"
     )
       template(#cell(category)="row")
         | {{ row.item.category.join(' > ') || 'Uncategorized' }}
       template(#cell(current)="row")
-        | {{ row.item.current | friendlyduration }}
+        | {{ friendlyduration(row.item.current) }}
       template(#cell(previous)="row")
-        | {{ row.item.previous | friendlyduration }}
+        | {{ friendlyduration(row.item.previous) }}
       template(#cell(delta)="row")
         span(:class="deltaClass(row.item.delta)")
           | {{ formatDelta(row.item.current, row.item.previous) }}
@@ -135,9 +134,9 @@ export default {
 
       categoryFields: [
         { key: 'category', label: 'Category', sortable: true },
-        { key: 'current', label: 'Current', class: 'text-right', sortable: true },
-        { key: 'previous', label: 'Previous', class: 'text-right', sortable: true },
-        { key: 'delta', label: 'Change', class: 'text-right', sortable: true },
+        { key: 'current', label: 'Current', class: 'text-end', sortable: true },
+        { key: 'previous', label: 'Previous', class: 'text-end', sortable: true },
+        { key: 'delta', label: 'Change', class: 'text-end', sortable: true },
         { key: 'absDelta', label: '', class: 'd-none', sortable: true },
       ],
     };

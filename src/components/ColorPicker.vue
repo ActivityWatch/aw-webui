@@ -7,14 +7,13 @@ div
       @input="updateFromInput"
       placeholder="#FF00FF"
     )
-    b-input-group-append
-      b-button.px-2(variant="outline-secondary" style="border-color: #AAA; border-left: 0; border-right: 0" @click="togglePicker()")
-        div.current-color(:style="'background-color: ' + colorValue")
-      b-btn.px-1(variant="outline-secondary", style="border-color: #AAA", @click="randomColor()" title="Randomize")
-        icon(name="sync" scale="1")
+    b-button.px-2(variant="outline-secondary" style="border-color: #AAA; border-left: 0; border-right: 0" @click="togglePicker()")
+      div.current-color(:style="'background-color: ' + colorValue")
+    b-button.px-1(variant="outline-secondary", style="border-color: #AAA", @click="randomColor()" title="Randomize")
+      icon(name="sync" scale="1")
 
   div(style="position: relative")
-    picker(:value="colors" @input="updateFromPicker" v-if="displayPicker")
+    picker(:modelValue="colors" @update:modelValue="updateFromPicker" v-if="displayPicker")
 </template>
 
 <style>
@@ -34,15 +33,13 @@ div
 
 <script lang="ts">
 // Based on https://codepen.io/Brownsugar/pen/NaGPKy
-import 'vue-awesome/icons/sync';
-
-import { Compact } from 'vue-color';
+import { Compact } from '@ckpack/vue-color';
 
 export default {
   components: {
     picker: Compact,
   },
-  props: { value: { type: String, default: '#000000' } },
+  props: { modelValue: { type: String, default: '#000000' } },
   data() {
     return {
       colors: {
@@ -56,12 +53,18 @@ export default {
     colorValue(val) {
       if (val) {
         this.updateColors(val);
-        this.$emit('input', val);
+        this.$emit('update:modelValue', val);
+      }
+    },
+    modelValue(val) {
+      const nextColor = val || '#000000';
+      if (nextColor !== this.colorValue) {
+        this.setColor(nextColor);
       }
     },
   },
   mounted() {
-    this.setColor(this.value);
+    this.setColor(this.modelValue || '#000000');
   },
   methods: {
     setColor(color) {

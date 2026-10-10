@@ -1,7 +1,7 @@
 <template lang="pug">
 div
   h3 Timespiral
-  b-alert(show, variant="warning")
+  b-alert(:model-value="true", variant="warning")
     | This is a work-in-progress experiment.
 
   div(v-if="!bucketId")

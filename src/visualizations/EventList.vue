@@ -4,11 +4,12 @@ div
   //       Currently, more than one event-editor on the same view can lead to multiple event-editors opening.
   event-editor(
     v-if="editable"
+    v-model:open="editorOpen"
     :event="editableEvent", :bucket_id="bucket_id",
     @save="(e) => $emit('save', e)", @delete="removeEvent"
   )
   b-card.event-container(no-block=true)
-    span(slot="header")
+    template(#header)
       h4.card-title Events
       span.pagination-header
         | Showing {{ displayed_events.length }} events #[span(v-if="events.length > displayed_events.length") (out of {{ events.length }})]
@@ -23,16 +24,16 @@ div
           span.event
             span.field(:title="event.timestamp")
               icon(name="calendar")
-              | {{ event.timestamp | friendlytime }}
+              | {{ friendlytime(event.timestamp) }}
             span.field
               icon(name="clock")
-              | {{ event.duration | friendlyduration }}
+              | {{ friendlyduration(event.duration) }}
             span(v-for="(val, key) in event.data").field
               icon(name="tags")
               // TODO: Add some kind of highlighting to key
               | {{ key }}: {{ val }}
             span(v-if="editable")
-              b-btn.field(@click="() => {editEvent(event)}" variant="outline-dark" size="sm" style="padding: 0 0.2em 0 0.2em")
+              b-button.field(@click="() => {editEvent(event)}" variant="outline-dark" size="sm" style="padding: 0 0.2em 0 0.2em")
                 icon(name="edit")
                 | Edit
 </template>
@@ -115,12 +116,8 @@ $border-color: #ddd;
 </style>
 
 <script lang="ts">
-import 'vue-awesome/icons/edit';
-import 'vue-awesome/icons/tags';
-import 'vue-awesome/icons/clock';
-import 'vue-awesome/icons/calendar';
-
 import EventEditor from '~/components/EventEditor.vue';
+import { friendlytime, friendlyduration } from '~/util/filters';
 
 export default {
   name: 'EventList',
@@ -137,6 +134,7 @@ export default {
   },
   data: function () {
     return {
+      editorOpen: false,
       isListExpanded: false,
       limit: 100,
       editableEvent: null,
@@ -148,10 +146,12 @@ export default {
     },
   },
   methods: {
+    friendlytime,
+    friendlyduration,
     editEvent: function (event) {
       this.editableEvent = event;
       this.$nextTick(() => {
-        this.$bvModal.show('edit-modal-' + event.id);
+        this.editorOpen = true;
       });
     },
     expandList: function () {

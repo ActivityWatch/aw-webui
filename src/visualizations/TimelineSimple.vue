@@ -29,6 +29,11 @@ export default {
   },
   mounted: function () {
     timeline_simple.create(this.$el);
+    // The events may already have loaded before this (async) component
+    // mounted, in which case the watcher won't fire for them.
+    if (this.events) {
+      timeline_simple.update(this.$el, this.events, this.event_type);
+    }
   },
 };
 </script>

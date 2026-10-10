@@ -12,7 +12,7 @@ div
           @click="theme = opt.value"
           variant="outline-dark"
         )
-          icon.mr-1(:name="opt.icon")
+          icon.me-1(:name="opt.icon")
           | {{ opt.label }}
       span(v-else)
         .aw-loading Loading...
@@ -21,9 +21,6 @@ div
 </template>
 
 <script lang="ts">
-import 'vue-awesome/icons/desktop';
-import 'vue-awesome/icons/sun';
-import 'vue-awesome/icons/moon';
 import { mapState } from 'pinia';
 import { useSettingsStore } from '~/stores/settings';
 import { DARK_THEME_HREF, detectPreferredTheme } from '~/util/theme';

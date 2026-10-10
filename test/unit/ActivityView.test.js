@@ -1,10 +1,19 @@
+import { h, reactive } from 'vue';
 import { shallowMount } from '@vue/test-utils';
 import ActivityView from '~/views/activity/ActivityView.vue';
 
-const mockViews = [
+const mockViews = reactive([
   { id: 'default', name: 'Default', elements: [{ type: 'top_apps', props: {} }] },
   { id: 'second', name: 'Second', elements: [{ type: 'top_bucket_data', props: {} }] },
-];
+  {
+    id: 'multi',
+    name: 'Multi',
+    elements: [
+      { type: 'top_apps', props: {} },
+      { type: 'top_titles', props: {} },
+    ],
+  },
+]);
 
 jest.mock('~/stores/views', () => ({
   useViewsStore: () => ({
@@ -48,23 +57,40 @@ describe('ActivityView view switching', () => {
   const visStub = {
     name: 'aw-selectable-vis',
     props: ['id', 'type', 'props', 'viewId', 'editable'],
+    data() {
+      // The type this instance was created for, to detect instance reuse
+      return { createdType: this.type };
+    },
     created() {
       created.push(`${this.viewId}:${this.id}:${this.type}`);
     },
-    render: h => h('div'),
+    render() {
+      return h('div', { class: 'vis', 'data-created': this.createdType, 'data-type': this.type });
+    },
   };
 
-  function mountView() {
+  function mountView(view_id = 'default') {
     return shallowMount(ActivityView, {
-      propsData: { view_id: 'default' },
-      mocks: { $route: { params: {}, path: '/activity/view/default' }, $t: key => key },
-      stubs: {
-        draggable: { template: '<div><slot /></div>' },
-        'aw-selectable-vis': visStub,
-        // Globally registered in main.js, so not resolvable from a bare mount
-        'b-button': passthroughStub,
-        'b-modal': passthroughStub,
-        icon: passthroughStub,
+      props: { view_id },
+      global: {
+        mocks: { $route: { params: {}, path: '/activity/view/default' }, $t: key => key },
+        stubs: {
+          // Renders the #item slot per element, keyed by item-key like vuedraggable does
+          draggable: {
+            props: ['modelValue', 'itemKey'],
+            template: `<div>
+              <template v-for="(el, i) in modelValue" :key="itemKey(el)">
+                <slot name="item" :element="el" :index="i" />
+              </template>
+              <slot name="footer" />
+            </div>`,
+          },
+          'aw-selectable-vis': visStub,
+          // Globally registered in main.js, so not resolvable from a bare mount
+          'b-button': passthroughStub,
+          'b-modal': passthroughStub,
+          icon: passthroughStub,
+        },
       },
     });
   }
@@ -82,7 +108,7 @@ describe('ActivityView view switching', () => {
     // Without the view id in the key this stays at one entry: Vue patches the
     // props of the instance already sitting at index 0 rather than rebuilding.
     expect(created).toEqual(['default:0:top_apps', 'second:0:top_bucket_data']);
-    wrapper.destroy();
+    wrapper.unmount();
   });
 
   test('does not rebuild visualizations while staying on the same view', async () => {
@@ -90,6 +116,20 @@ describe('ActivityView view switching', () => {
     await wrapper.setProps({ view_id: 'default' });
 
     expect(created).toEqual(['default:0:top_apps']);
-    wrapper.destroy();
+    wrapper.unmount();
+  });
+
+  test('keeps each visualization instance with its element when reordering', async () => {
+    const wrapper = mountView('multi');
+    mockViews[2].elements.reverse();
+    await wrapper.vm.$nextTick();
+
+    const vis = wrapper.findAll('.vis');
+    expect(vis.map(v => v.attributes('data-type'))).toEqual(['top_titles', 'top_apps']);
+    // Keyed by position, the instance created for top_apps would now render top_titles
+    for (const v of vis) {
+      expect(v.attributes('data-created')).toBe(v.attributes('data-type'));
+    }
+    wrapper.unmount();
   });
 });

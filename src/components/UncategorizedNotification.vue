@@ -1,9 +1,9 @@
 <template lang="pug">
 div
-  b-alert.my-2(v-if="isVisible", variant="info", show dismissible @dismissed="onDismiss")
+  b-alert.my-2(v-if="isVisible", variant="info", :model-value="true" dismissible @close="onDismiss")
     p.mb-0
       | #[b {{ $t('uncategorized.title') }}]
-      router-link.ml-1.uncategorized-hint__cog(
+      router-link.ms-1.uncategorized-hint__cog(
         :to="{ path: '/settings/general' }"
         :title="$t('uncategorized.settingsCogTitle')"
         :aria-label="$t('uncategorized.settingsCogTitle')"
@@ -16,7 +16,6 @@ div
 </template>
 
 <script lang="ts">
-import 'vue-awesome/icons/cog';
 import { mapState } from 'pinia';
 import { useActivityStore } from '~/stores/activity';
 import { useSettingsStore } from '~/stores/settings';

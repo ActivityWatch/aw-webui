@@ -4,9 +4,9 @@ div
     div
       h5.mt-1.mb-2.mb-sm-0 Privacy filters
     div
-      b-btn.ml-1(@click="resetEditor" variant="outline-warning" size="sm" :disabled="!hasUnsavedChanges || isSaving")
+      b-button.ms-1(@click="resetEditor" variant="outline-warning" size="sm" :disabled="!hasUnsavedChanges || isSaving")
         | Discard
-      b-btn.ml-1(@click="savePrivacyFilters" variant="success" size="sm" :disabled="!canSave")
+      b-button.ms-1(@click="savePrivacyFilters" variant="success" size="sm" :disabled="!canSave")
         | Save
   p.mt-2.mb-2
     | Regex-based rules that drop or redact sensitive event data before it is stored.
@@ -14,14 +14,14 @@ div
   small.text-muted
     | Leave the editor empty or save <code>[]</code> to disable the feature.
 
-  b-alert.mt-3(:show="saveError !== ''" variant="danger")
+  b-alert.mt-3(:model-value="saveError !== ''" variant="danger")
     | {{ saveError }}
 
-  b-alert.mt-3(:show="validationErrors.length > 0" variant="danger")
+  b-alert.mt-3(:model-value="validationErrors.length > 0" variant="danger")
     div(v-for="error in validationErrors" :key="error")
       | {{ error }}
 
-  b-alert.mt-3(:show="hasUnsavedChanges && validationErrors.length === 0" variant="warning")
+  b-alert.mt-3(:model-value="hasUnsavedChanges && validationErrors.length === 0" variant="warning")
     | You have unsaved changes.
 
   b-form-textarea.mt-3(
