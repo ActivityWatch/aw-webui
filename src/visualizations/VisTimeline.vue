@@ -59,6 +59,7 @@ div#visualization {
 <script lang="ts">
 import _ from 'lodash';
 import moment from 'moment';
+import { markRaw } from 'vue';
 import Color from 'color';
 import { buildTooltip } from '../util/tooltip.js';
 import { getCategoryColorFromEvent, getTitleAttr } from '../util/color';
@@ -77,7 +78,7 @@ const PIXELS_PER_WHEEL_PAGE = 800;
 interface IChartDataItem {
   bucketId: string;
   title: string;
-  tooltip: string;
+  tooltip: () => string;
   start: Date;
   end: Date;
   color: string;
@@ -111,6 +112,8 @@ export default {
           followMouse: true,
           overflowMethod: 'flip',
           delay: 0,
+          // Built on hover rather than for every item up front
+          template: item => (typeof item.title === 'function' ? item.title() : item.title),
         },
         // Keep vertical wheel input as zoom-only. Without preferZoom, vis-timeline
         // zooms around the cursor and then pans the same wheel event when
@@ -162,7 +165,7 @@ export default {
           data.push({
             bucketId: bucket.id,
             title: getTitleAttr(bucket, e),
-            tooltip: buildTooltip(bucket, e),
+            tooltip: () => buildTooltip(bucket, e),
             start: new Date(e.timestamp),
             end: new Date(moment(e.timestamp).add(e.duration, 'seconds').valueOf()),
             color: getCategoryColorFromEvent(bucket, e),
@@ -199,7 +202,7 @@ export default {
         capture: true,
         passive: false,
       });
-      this.timeline = new Timeline(el, [], [], this.options);
+      this.timeline = markRaw(new Timeline(el, [], [], this.options));
       this.timeline.on('select', properties => {
         // Sends both 'press' and 'tap' events, only one should trigger
         if (properties.event.type == 'tap') {
@@ -383,10 +386,12 @@ export default {
           group: item.bucketId,
           content: item.title,
           title: item.tooltip,
-          start: moment(item.start),
-          end: moment(item.end),
+          start: item.start,
+          end: item.end,
           style: `background-color: ${bgColor}; border-color: ${borderColor}`,
-          subgroup: item.swimlane,
+          // Only with swimlanes: vis-timeline re-measures a subgroup on every
+          // item removed from it, which makes large removals quadratic.
+          subgroup: this.swimlane ? item.swimlane : undefined,
         };
       });
 
@@ -413,6 +418,19 @@ export default {
           });
         }
 
+        // Hide buckets with no events in the queried range
+        const count = _.countBy(items, i => i.group);
+        groups = _.filter(groups, g => {
+          return count[g.id] && count[g.id] > 0;
+        });
+        // Set before moving the window: vis-timeline lays out items added
+        // inside the visible window one at a time, but in a batch when the
+        // window moves onto them.
+        this.timeline.setData({ groups: groups, items: items });
+
+        this.items = Object.freeze(items);
+        this.groups = groups;
+
         // Always bound scrolling to the queried interval when one is given, even
         // if the caller doesn't want the visible window reset (e.g. the Daily
         // Timeline on the Activity page, see #996).
@@ -437,16 +455,6 @@ export default {
             this.timeline.setWindow(start, end);
           }
         }
-
-        // Hide buckets with no events in the queried range
-        const count = _.countBy(items, i => i.group);
-        groups = _.filter(groups, g => {
-          return count[g.id] && count[g.id] > 0;
-        });
-        this.timeline.setData({ groups: groups, items: items });
-
-        this.items = items;
-        this.groups = groups;
       } else {
         // update the timeline range (only if a queried interval is provided;
         // some callers like the Bucket detail view don't pass one)

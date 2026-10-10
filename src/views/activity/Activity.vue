@@ -388,6 +388,8 @@ export default {
       // stopwatch run produced "No data" unless they also flipped the
       // dev-only "Include manually logged events" checkbox.
       include_stopwatch: true,
+      refreshing: false,
+      refreshGeneration: 0,
       filter_afk: true,
       new_view: {},
     };
@@ -468,6 +470,9 @@ export default {
     },
     currentView: function () {
       return this.views.find(v => v.id == this.$route.params.view_id) || this.views[0];
+    },
+    needsCategoryHistory() {
+      return !!this.currentView?.elements.some(el => el.type === 'timeline_barchart');
     },
     currentViewId: function () {
       // If localStore is not yet initialized, then currentView can be undefined. In that case, we return an empty string (which should route to the default view)
@@ -641,6 +646,12 @@ export default {
     },
   },
   watch: {
+    async needsCategoryHistory(needed) {
+      // Switched to a view with the timeline barchart after a load that skipped it
+      if (needed && !this.refreshing) {
+        await this.activityStore.ensure_category_history();
+      }
+    },
     host: function () {
       this.earliestDate = null;
       this.loadEarliestDate();
@@ -862,11 +873,22 @@ export default {
         filter_afk: this.filter_afk,
         include_audible: this.include_audible,
         include_stopwatch: this.include_stopwatch,
+        include_category_history: this.needsCategoryHistory,
         filter_categories: this.filter_categories,
         always_active_pattern: this.always_active_pattern,
         skip_active_history: this.periodLength === 'range' || this.periodLength === 'all',
       };
-      await this.activityStore.ensure_loaded(queryOptions);
+      const generation = ++this.refreshGeneration;
+      this.refreshing = true;
+      try {
+        await this.activityStore.ensure_loaded(queryOptions);
+        // The view may have changed to one that shows it while loading.
+        if (generation === this.refreshGeneration && this.needsCategoryHistory) {
+          await this.activityStore.ensure_category_history();
+        }
+      } finally {
+        if (generation === this.refreshGeneration) this.refreshing = false;
+      }
     },
 
     hostParamFor(hosts: string[]): string {
