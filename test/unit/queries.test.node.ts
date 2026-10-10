@@ -604,6 +604,25 @@ test('canonicalEvents serializes select_keys into categorize()', () => {
 });
 
 describe('androidBrowserQuery', () => {
+  test('queries every bucket when a browser has multiple profiles', () => {
+    const buckets = ['aw-watcher-web-firefox_profile1', 'aw-watcher-web-firefox_profile2'];
+    const joined = androidBrowserQuery('aw-watcher-android_device', buckets, [], []).join('\n');
+    for (const bucket of buckets) {
+      expect(joined).toContain(`query_bucket("${bucket}")`);
+    }
+    expect(joined.match(/filter_period_intersect/g)).toHaveLength(2);
+  });
+
+  test('keeps all browser aggregates until chunks have been merged', () => {
+    const joined = androidBrowserQuery(
+      'aw-watcher-android_device',
+      ['aw-watcher-web-chrome'],
+      [],
+      []
+    ).join('\n');
+    expect(joined).not.toContain('limit_events(browser_');
+  });
+
   test('keeps event timestamps so URL intersection uses real foreground periods', () => {
     const joined = androidBrowserQuery(
       'aw-watcher-android_device',

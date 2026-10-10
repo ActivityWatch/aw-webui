@@ -649,6 +649,7 @@ export const useActivityStore = defineStore('activity', {
         if (!(result && result[0])) {
           // Don't show partial totals as if they covered the whole period
           this.query_window_completed();
+          this.query_browser_completed({ domains: [], urls: [], titles: [], duration: 0 });
           return;
         }
         chunks.push(result[0]);
@@ -721,6 +722,8 @@ export const useActivityStore = defineStore('activity', {
           }
           bChunks.push(bResult[0]);
         }
+        // Apply the display limit only after merging every chunk's aggregates;
+        // a site below the cutoff in each chunk can still lead overall.
         const bMerged = mergeFullDesktopResults(bChunks);
         this.query_browser_completed(bMerged.browser);
       }

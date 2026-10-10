@@ -787,7 +787,12 @@ export function androidBrowserQuery(
     isIos,
     keep_event_timestamps: true,
   };
-  const browsers = browsersWithBuckets(escaped_browsers);
+  // Unlike the desktop selector, keep every profile bucket for each browser.
+  const browsers: [string, string][] = Object.keys(browser_appnames).flatMap(browserName =>
+    escaped_browsers
+      .filter(bucketId => bucketId.includes(browserName))
+      .map(bucketId => [browserName, bucketId] as [string, string])
+  );
 
   // Mirror browserEvents() but rely on the `events` variable set by
   // canonicalEvents(AndroidQueryParams) — which holds the android app events.
@@ -829,13 +834,10 @@ export function androidBrowserQuery(
     ${browser_code}
     browser_urls = merge_events_by_keys(browser_events, ["url"]);
     browser_urls = sort_by_duration(browser_urls);
-    browser_urls = limit_events(browser_urls, ${default_limit});
     browser_domains = merge_events_by_keys(browser_events, ["$domain"]);
     browser_domains = sort_by_duration(browser_domains);
-    browser_domains = limit_events(browser_domains, ${default_limit});
     browser_titles = merge_events_by_keys(browser_events, ["title"]);
     browser_titles = sort_by_duration(browser_titles);
-    browser_titles = limit_events(browser_titles, ${default_limit});
     browser_duration = sum_durations(browser_events);
     RETURN = {
       "browser": {
