@@ -169,7 +169,9 @@ export default {
       const opts = this.activityStore.query_options;
       if (!range || !opts || !opts.all_time) return range;
       const bucketId = this.selectedBucketId;
-      if (!(bucketId in this.earliestByBucket)) {
+      // A forced refresh must re-check the bucket's earliest event, so events
+      // imported while the page stayed open are not left out of All time.
+      if (opts.force || !(bucketId in this.earliestByBucket)) {
         const bucket = this.bucketsStore.getBucket(bucketId);
         const client = getClient();
         const earliest = bucket
