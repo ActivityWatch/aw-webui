@@ -105,8 +105,8 @@ function update(svg_elem: SVGElement, usage_arr, onPeriodClicked) {
       .on('mouseover', () => {
         rect.style('fill', diagramcolor_focused);
       })
-      .on('mouseout', e => {
-        rect.style('fill', e.target.attributes.color.value);
+      .on('mouseout', () => {
+        rect.style('fill', color);
       })
       .on('click', function () {
         onPeriodClicked(date);
