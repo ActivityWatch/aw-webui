@@ -133,7 +133,7 @@ export default {
       categories: '分类',
       priority: '优先级',
       priorityDefault: '默认',
-      priorityInteger: '优先级必须是整数。',
+      priorityInteger: '优先级必须是非负整数。',
       builderTitle: '分类构建器',
       builderSubtitle: '从未分类活动生成规则',
       openBuilder: '打开构建器',

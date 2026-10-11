@@ -147,7 +147,7 @@ export default {
       categories: 'Категории',
       priority: 'Приоритет',
       priorityDefault: 'По умолчанию',
-      priorityInteger: 'Приоритет должен быть целым числом.',
+      priorityInteger: 'Приоритет должен быть неотрицательным целым числом.',
       builderTitle: 'Конструктор категорий',
       builderSubtitle: 'Создание правил из некатегоризированной активности',
       openBuilder: 'Открыть конструктор',

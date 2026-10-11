@@ -147,7 +147,7 @@ export default {
       categories: 'Категорії',
       priority: 'Пріоритет',
       priorityDefault: 'Типовий',
-      priorityInteger: 'Пріоритет має бути цілим числом.',
+      priorityInteger: 'Пріоритет має бути невід’ємним цілим числом.',
       builderTitle: 'Конструктор категорій',
       builderSubtitle: 'Створення правил із некатегоризованої активності',
       openBuilder: 'Відкрити конструктор',

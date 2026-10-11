@@ -38,6 +38,7 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
         b-form-input(
           v-model="editing.priority"
           type="number"
+          min="0"
           step="1"
           :placeholder="$t('settings.categorization.priorityDefault')"
           :state="priorityState"
@@ -298,7 +299,7 @@ export default {
         return null;
       }
       const priority = Number(value);
-      return Number.isInteger(priority) ? priority : undefined;
+      return Number.isInteger(priority) && priority >= 0 ? priority : undefined;
     },
     priorityFromRule(rule) {
       const value = rule.priority !== undefined ? rule.priority : rule.weight;

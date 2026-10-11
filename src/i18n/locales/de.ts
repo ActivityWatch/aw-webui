@@ -148,7 +148,7 @@ export default {
       categories: 'Kategorien',
       priority: 'Priorität',
       priorityDefault: 'Standard',
-      priorityInteger: 'Die Priorität muss eine ganze Zahl sein.',
+      priorityInteger: 'Die Priorität muss eine nicht negative ganze Zahl sein.',
       builderTitle: 'Kategorie-Builder',
       builderSubtitle: 'Regeln aus unkategorisierter Aktivität erzeugen',
       openBuilder: 'Builder öffnen',
