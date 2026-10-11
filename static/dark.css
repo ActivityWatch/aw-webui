@@ -51,6 +51,19 @@ hr {
   border-color: #282c32 !important;
 }
 
+/* Phone navigation drawer: b-sidebar renders .bg-white/.text-dark, which
+   would leave the light nav-link color above on a white panel. */
+.aw-nav-drawer .b-sidebar {
+  background-color: #1a1d24 !important;
+  border-color: #282c32 !important;
+  color: #e9ebf0 !important;
+}
+
+.aw-nav-drawer .b-sidebar-header,
+.aw-nav-drawer .b-sidebar-header .close {
+  color: #e9ebf0 !important;
+}
+
 /* Bootstrap popovers/tooltips render white-on-white in dark mode because
    .popover .popover-body inherits .body color but keeps its default
    white background. Patch all three layers (arrow, header, body). */
