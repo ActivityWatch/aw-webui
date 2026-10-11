@@ -21,6 +21,10 @@ export default {
     graph: 'Graph',
     rawData: 'Rohdaten',
     settings: 'Einstellungen',
+    syncSettings: 'Synchronisierungseinstellungen',
+    apiAuthentication: 'API-Authentifizierung',
+    openInBrowser: 'Im Browser öffnen',
+    app: 'App',
   },
   footer: {
     madeWith: 'Gemacht mit',
