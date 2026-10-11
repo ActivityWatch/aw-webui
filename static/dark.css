@@ -30,6 +30,12 @@ hr {
   border-color: #282c32 !important;
 }
 
+.aw-nav-drawer {
+  background-color: #1a1d24 !important;
+  border-color: #282c32 !important;
+  color: #e9ebf0 !important;
+}
+
 .nav-item a.nav-link {
   color: #e9ebf0 !important;
 }
