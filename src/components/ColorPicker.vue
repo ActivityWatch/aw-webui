@@ -10,7 +10,7 @@ div
     b-input-group-append
       b-button.px-2(variant="outline-secondary" style="border-color: #AAA; border-left: 0; border-right: 0" @click="togglePicker()")
         div.current-color(:style="'background-color: ' + colorValue")
-      b-btn.px-1(variant="outline-secondary", style="border-color: #AAA", @click="randomColor()" title="Randomize")
+      b-btn.px-1(variant="outline-secondary", style="border-color: #AAA", @click="randomColor()" :title="$t('ui.colorPicker.randomize')")
         icon(name="sync" scale="1")
 
   div(style="position: relative")

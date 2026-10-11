@@ -4,7 +4,7 @@
       button(type="button", class="close", @click="isPollVisible=false") &times;
       form
         p
-          | Hey there! You've been using ActivityWatch for a while. How likely are you to recommend it to a friend/colleague on a scale 1-10? (with 10 being the most likely)
+          | {{ $t('ui.userPoll.question') }}
         div(class="radio-options")
           div(v-for="i in options", class="option-group")
             input(type="radio", :id="'option' + i", name="rating", :value="i", v-model="rating")
@@ -13,39 +13,39 @@
               | {{ i }}
       div(style="display: flex; justify-content: space-between")
         a(@click="dontShowAgain" href="#")
-          | Don't show again
-        input(type="submit" value="Submit" @click="submit")
+          | {{ $t('ui.userPoll.dontShowAgain') }}
+        input(type="submit" :value="$t('ui.userPoll.submit')" @click="submit")
 
     b-alert(v-if="isPosFollowUpVisible", variant="info" show)
       button(type="button", class="close", @click="isPosFollowUpVisible=false") &times;
       p
-        | We're happy to hear you enjoy using ActivityWatch, but we can do better!
+        | {{ $t('ui.userPoll.positiveIntro') }}
         br
-        | To help us help you, here are a few things you can do:
+        | {{ $t('ui.userPoll.positiveHelp') }}
       ul.small
         li
-          | Support us on #[a(href="https://www.patreon.com/erikbjare") Patreon] or #[a(href="https://opencollective.com/activitywatch") Open Collective] (or by #[a(href="https://activitywatch.net/donate/") other donation methods]).
+          | {{ $t('ui.userPoll.support') }} #[a(href="https://www.patreon.com/erikbjare") Patreon] / #[a(href="https://opencollective.com/activitywatch") Open Collective]
         li
-          | Tell your friends and colleagues!
+          | {{ $t('ui.userPoll.tellFriends') }}
         li
-          | Post about it on social media, we are on #[a(href="https://twitter.com/ActivityWatchIt") Twitter] and #[a(href="https://www.facebook.com/ActivityWatch") Facebook].
+          | {{ $t('ui.userPoll.social') }} #[a(href="https://twitter.com/ActivityWatchIt") Twitter] / #[a(href="https://www.facebook.com/ActivityWatch") Facebook]
         //li
-          | Fill out the #[a(href="https://forms.gle/q2N9K5RoERBV8kqPA") feedback form].
+          | {{ $t('ui.userPoll.feedbackPrefix') }} #[a(href="https://forms.gle/q2N9K5RoERBV8kqPA") {{ $t('ui.userPoll.feedbackForm') }}].
         li
-          | Rate us on #[a(href="https://alternativeto.net/software/activitywatch/about/") AlternativeTo] and #[a(href="https://play.google.com/store/apps/details?id=net.activitywatch.android") Google Play Store].
+          | {{ $t('ui.userPoll.rate') }} #[a(href="https://alternativeto.net/software/activitywatch/about/") AlternativeTo] / #[a(href="https://play.google.com/store/apps/details?id=net.activitywatch.android") Google Play Store]
         li
-          | Join our #[a(href="https://discord.gg/vDskV9q") Discord server].
+          | {{ $t('ui.userPoll.join') }} #[a(href="https://discord.gg/vDskV9q") Discord]
         li
-          | Sign up for the #[a(href="http://eepurl.com/cTU6QX") newsletter] (we rarely send anything).
+          | {{ $t('ui.userPoll.newsletter') }} #[a(href="http://eepurl.com/cTU6QX") newsletter]
 
     b-alert(v-if="isNegFollowUpVisible", variant="info" show)
       button(type="button", class="close", @click="isNegFollowUpVisible=false") &times;
-      | We are sorry to hear that you did not like ActivityWatch, but we want to improve! We would be very thankful if you helped us by:
+      | {{ $t('ui.userPoll.negativeIntro') }}
       ul
         li
-          | Fill out the #[a(href="https://forms.gle/q2N9K5RoERBV8kqPA") feedback form].
+          | {{ $t('ui.userPoll.feedback') }} #[a(href="https://forms.gle/q2N9K5RoERBV8kqPA") feedback form]
         li
-          | Vote for new features on the #[a(href="https://forum.activitywatch.net/c/features") forum].
+          | {{ $t('ui.userPoll.vote') }} #[a(href="https://forum.activitywatch.net/c/features") forum]
 </template>
 
 <style scoped>

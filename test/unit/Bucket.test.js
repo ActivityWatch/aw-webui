@@ -36,6 +36,12 @@ const InputTimeIntervalStub = {
   },
 };
 
+const translate = (key, params) => {
+  if (key === 'ui.bucketDetail.notFound') return `No bucket named "${params.id}".`;
+  if (key === 'ui.bucketDetail.seeAll') return 'See all buckets';
+  return key;
+};
+
 function mountBucket(id) {
   return shallowMount(Bucket, {
     propsData: { id },
@@ -47,6 +53,7 @@ function mountBucket(id) {
       'aw-eventlist': true,
     },
     filters: { iso8601: v => v },
+    mocks: { $t: translate },
   });
 }
 

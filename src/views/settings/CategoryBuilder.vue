@@ -4,58 +4,50 @@ div
   // CategorizationSettings) omits the header so it doesn't double up
   // with the section title that wraps the embed.
   div(v-if="!embedded")
-    h3 Categorization helper
+    h3 {{ $t('ui.categoryBuilder.title') }}
     p
-      | This tool helps you create categories from your uncategorized time.
-      | It scans a recent window for the most common app/title words (by
-      | time, not count) so you can promote each one into a new category,
-      | append it to an existing rule, or ignore it. Words under 60s are
-      | hidden.
+      | {{ $t('ui.categoryBuilder.intro') }}
 
   div.d-flex
     div.flex-grow-1
       div
-        b Options
+        b {{ $t('report.options') }}
       div
-        small Hostname: {{ queryOptions.hostname || '(not selected)' }}
+        small {{ $t('ui.search.hostname') }}: {{ queryOptions.hostname || $t('ui.categoryBuilder.notSelected') }}
       div
-        small Range: {{ queryOptions.start }} - {{ queryOptions.stop }}
+        small {{ $t('ui.timeInterval.range') }}: {{ queryOptions.start }} - {{ queryOptions.stop }}
     div.flex-grow-0
       b-button(variant="outline-dark" @click="show_options = !show_options" size="sm" :disabled="!bucketsReady")
-        span(v-if="!show_options") Show options
-        span(v-else) Hide options
+        span(v-if="!show_options") {{ $t('ui.search.showOptions') }}
+        span(v-else) {{ $t('ui.search.hideOptions') }}
 
   div(v-if="show_options")
     hr
-    h4 Options
+    h4 {{ $t('report.options') }}
     aw-query-options(:query-options="queryOptions" @input="queryOptions = $event")
 
   hr
 
-  h5 Common words in "{{category.join(" > ")}}" events
+  h5 {{ $t('ui.categoryBuilder.commonWords', { category: category.join(' > ') }) }}
   div(v-if="loading")
     b-spinner.mr-2(small)
-    span.text-muted Loading...
+    span.text-muted {{ $t('common.loading') }}
   div(v-else-if="loadError" role="alert")
     p.text-danger {{ loadError }}
-    b-button(size="sm" variant="outline-primary" @click="fetchWords") Retry
+    b-button(size="sm" variant="outline-primary" @click="fetchWords") {{ $t('ui.categoryBuilder.retry') }}
   div(v-else-if="noActivityBuckets")
     p.text-muted.mb-0
-      | No activity data is available for this host.
-      | Select another hostname under #[b Show options].
+      | {{ $t('ui.categoryBuilder.noActivity') }}
+      | {{ $t('ui.categoryBuilder.selectHost') }}
   div(v-else-if="hostnameEmptyKind === 'no-hosts'")
     p.text-muted.mb-0
-      | No host with activity buckets is available. Install
-      | #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") a watcher]
-      | to start collecting data.
+      | {{ $t('ui.categoryBuilder.noHost') }}
   div(v-else-if="hostnameEmptyKind === 'hostname-unselected'")
     p.text-muted.mb-0
-      | Select a hostname under
-      | #[b Show options]
-      | to load uncategorized words. The hostname picker is hidden until you open options.
+      | {{ $t('ui.categoryBuilder.selectHost') }}
   div(v-else)
     div(v-if="words_by_duration.length == 0 && ignored_words.length == 0")
-      | No words with significant duration. You're good to go!
+      | {{ $t('ui.categoryBuilder.noWords') }}
     div(v-else-if="words_by_duration.length > 0")
       div.row.category-builder-word(v-for="word in words_visible" :key="word.word")
         div.col.hover-highlight
@@ -64,63 +56,63 @@ div
               | {{ word.word }} ({{ Math.round(word.duration) }}s)
             div.flex-grow-0
               b-button.mr-1(size="sm" @click="createRule(word.word)" variant="success")
-                | New rule
+                | {{ $t('ui.categoryBuilder.newRule') }}
               b-button.mr-1(size="sm" @click="appendRule(word.word)" variant="warning")
-                | Append rule
+                | {{ $t('ui.categoryBuilder.appendRule') }}
               b-button.mr-1(size="sm" @click="ignoreWord(word.word)")
-                | Ignore
+                | {{ $t('ui.categoryBuilder.ignore') }}
               b-button(size="sm" @click="showEvents(word)" variant="outline-dark")
-                span(v-if="showing_events[0] != word") Show events
-                span(v-else) Hide events
+                span(v-if="showing_events[0] != word") {{ $t('ui.categoryBuilder.showEvents') }}
+                span(v-else) {{ $t('ui.categoryBuilder.hideEvents') }}
           div(v-if="showing_events && showing_events[0] == word")
             table.table.table-sm.table-striped
               tr
-                th Title
-                th.text-right Duration
+                th {{ $t('ui.categoryBuilder.titleColumn') }}
+                th.text-right {{ $t('ui.categoryBuilder.duration') }}
               tr(v-for="event in showing_events[1]")
                 td {{ event.data.title || event.data.app }}
                 td.text-right {{ Math.round(event.duration) }}s
             hr
       div.d-flex.align-items-center.mt-3(v-if="hasMoreWords")
         small.text-muted
-          | Showing {{ words_visible.length }} of {{ words_by_duration.length }} words
+          | {{ $t('ui.categoryBuilder.showingWords', { shown: words_visible.length, total: words_by_duration.length }) }}
         b-button.ml-auto(
           size="sm"
           variant="outline-primary"
           @click="visible_count += page_size"
-        ) Show more
+        ) {{ $t('ui.summary.showMore') }}
     div.mt-3(v-if="ignored_words.length > 0")
       small.text-muted
-        | {{ ignored_words.length }} ignored {{ ignored_words.length == 1 ? 'word' : 'words' }}
+        | {{ $t('ui.categoryBuilder.ignoredCount', { count: ignored_words.length }) }}
       b-button.ml-2(size="sm" variant="link" @click="show_ignored = !show_ignored")
-        span(v-if="!show_ignored") Show
-        span(v-else) Hide
-      b-button(size="sm" variant="link" @click="resetIgnoredWords()") Reset
+        span(v-if="!show_ignored") {{ $t('ui.categoryBuilder.showIgnored') }}
+        span(v-else) {{ $t('ui.categoryBuilder.hideIgnored') }}
+      b-button(size="sm" variant="link" @click="resetIgnoredWords()") {{ $t('ui.categoryBuilder.resetIgnored') }}
       div(v-if="show_ignored")
         div.d-flex.flex-row.align-items-center.py-1(v-for="word in ignored_words" :key="word")
           span.flex-grow-1 {{ word }}
-          b-button(size="sm" variant="outline-dark" @click="unignoreWord(word)") Unignore
+          b-button(size="sm" variant="outline-dark" @click="unignoreWord(word)") {{ $t('ui.categoryBuilder.unignore') }}
 
   div(v-if="create.categoryId !== null")
     CategoryEditModal(:categoryId="create.categoryId",
                       @ok="createRuleOk()"
                       @hidden="createRuleCancel()")
 
-  b-modal(id="appendRule" title="Append rule" @ok="handleOk" :ok-disabled="!valid")
+  b-modal(id="appendRule" :title="$t('ui.categoryBuilder.appendRule')" @ok="handleOk" :ok-disabled="!valid")
     b-form(ref="form" @submit.stop.prevent="handleSubmit")
-      b-form-group(label="Rule"
+      b-form-group(:label="$t('ui.categoryBuilder.rule')"
                    label-for="append-category"
-                   invalid-feedback="Category is required"
+                   :invalid-feedback="$t('ui.categoryBuilder.categoryRequired')"
                    :state="validCategory"
                    required)
         b-form-select#append-category(v-model="append.category")
           b-form-select-option(v-for="cat in allCategoriesSelect" :value="cat.value" :key="cat.id") {{ cat.text }}
-      b-form-group(label="Word")
+      b-form-group(:label="$t('ui.categoryBuilder.word')")
         b-form-input(v-model="append.word")
         small
-          div.text-success(v-if="validPattern") Valid
-          div.text-danger(v-else) Invalid pattern
-          div(v-if="validPattern && broad_pattern" style="color: orange") Pattern too broad
+          div.text-success(v-if="validPattern") {{ $t('ui.categoryBuilder.valid') }}
+          div.text-danger(v-else) {{ $t('settings.activePattern.invalid') }}
+          div(v-if="validPattern && broad_pattern" style="color: orange") {{ $t('settings.activePattern.tooBroad') }}
 </template>
 
 <style>
