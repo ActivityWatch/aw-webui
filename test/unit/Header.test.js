@@ -191,6 +191,26 @@ describe('Header phone navigation drawer', () => {
     wrapper.destroy();
   });
 
+  test('falls back to the legacy MediaQueryList listener API', async () => {
+    const legacyListeners = [];
+    const removeListener = jest.fn();
+    window.matchMedia = jest.fn().mockReturnValue({
+      matches: false,
+      addListener: fn => legacyListeners.push(fn),
+      removeListener,
+    });
+    const wrapper = mountFullHeader();
+    await flushPromises();
+    await wrapper.setData({ drawerOpen: true });
+
+    legacyListeners.forEach(fn => fn({ matches: true }));
+    await flushPromises();
+
+    expect(wrapper.vm.drawerOpen).toBe(false);
+    wrapper.destroy();
+    expect(removeListener).toHaveBeenCalledWith(legacyListeners[0]);
+  });
+
   test('growing to desktop width closes the drawer', async () => {
     const wrapper = mountFullHeader();
     await flushPromises();

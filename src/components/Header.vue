@@ -251,7 +251,12 @@ export default {
     // when the viewport grows to desktop width.
     if (typeof window !== 'undefined' && window.matchMedia) {
       this.desktopQuery = window.matchMedia('(min-width: 992px)');
-      this.desktopQuery.addEventListener('change', this.onDesktopQueryChange);
+      // Safari < 14 and old WebViews only have the legacy addListener API.
+      if (typeof this.desktopQuery.addEventListener === 'function') {
+        this.desktopQuery.addEventListener('change', this.onDesktopQueryChange);
+      } else if (typeof this.desktopQuery.addListener === 'function') {
+        this.desktopQuery.addListener(this.onDesktopQueryChange);
+      }
     }
 
     const bucketStore = useBucketsStore();
@@ -293,7 +298,11 @@ export default {
   beforeDestroy() {
     this.nativeBridge?.disconnect();
     if (this.desktopQuery) {
-      this.desktopQuery.removeEventListener('change', this.onDesktopQueryChange);
+      if (typeof this.desktopQuery.removeEventListener === 'function') {
+        this.desktopQuery.removeEventListener('change', this.onDesktopQueryChange);
+      } else if (typeof this.desktopQuery.removeListener === 'function') {
+        this.desktopQuery.removeListener(this.onDesktopQueryChange);
+      }
     }
   },
   methods: {
