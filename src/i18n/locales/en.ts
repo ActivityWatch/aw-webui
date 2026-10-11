@@ -155,7 +155,7 @@ export default {
       categories: 'Categories',
       priority: 'Priority',
       priorityDefault: 'Default',
-      priorityInteger: 'Priority must be an integer.',
+      priorityInteger: 'Priority must be a non-negative integer.',
       builderTitle: 'Category builder',
       builderSubtitle: 'Generate rules from uncategorized activity',
       openBuilder: 'Open builder',
