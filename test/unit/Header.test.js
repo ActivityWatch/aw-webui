@@ -256,7 +256,7 @@ describe('Header native Android actions', () => {
     await wrapper.setData({ drawerOpen: true });
     await flushPromises();
 
-    expect(wrapper.findAll('[data-testid^="nav-native-"]')).toHaveLength(0);
+    expect(wrapper.findAll('[data-testid*="native-"]')).toHaveLength(0);
     wrapper.destroy();
   });
 
@@ -267,7 +267,7 @@ describe('Header native Android actions', () => {
     await flushPromises();
 
     expect(bridge.sent[0]).toEqual({ type: 'hello' });
-    expect(wrapper.findAll('[data-testid^="nav-native-"]')).toHaveLength(0);
+    expect(wrapper.findAll('[data-testid*="native-"]')).toHaveLength(0);
     wrapper.destroy();
   });
 
@@ -277,12 +277,15 @@ describe('Header native Android actions', () => {
     await wrapper.setData({ drawerOpen: true });
     await flushPromises();
 
-    expect(wrapper.find('[data-testid="nav-native-sync-settings"]').exists()).toBe(true);
-    expect(wrapper.find('[data-testid="nav-native-open-in-browser"]').exists()).toBe(true);
-    expect(wrapper.find('[data-testid="nav-native-auth-settings"]').exists()).toBe(false);
-    expect(wrapper.findAll('[data-testid="nav-native-open-url"]')).toHaveLength(0);
+    // jsdom never runs the lazy drawer's open transition, so this checks the
+    // desktop entries; the shallow test below covers the drawer's copy.
+    expect(wrapper.find('[data-testid="navbar-native-sync-settings"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="navbar-native-open-in-browser"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="navbar-native-auth-settings"]').exists()).toBe(false);
+    expect(wrapper.findAll('[data-testid="navbar-native-open-url"]')).toHaveLength(0);
 
-    await wrapper.find('[data-testid="nav-native-sync-settings"] a').trigger('click');
+    const entry = wrapper.find('[data-testid="navbar-native-sync-settings"]');
+    await (entry.element.tagName === 'A' ? entry : entry.find('a')).trigger('click');
     await flushPromises();
 
     expect(bridge.sent).toContainEqual({ type: 'action', action: 'sync-settings' });
@@ -315,6 +318,31 @@ describe('Header native Android actions', () => {
     }
   });
 
+  test('the desktop navbar groups native actions in one dropdown', async () => {
+    installBridge({ actions: ['sync-settings', 'auth-settings', 'open-in-browser'] });
+    const wrapper = mountWithDrawer();
+    await flushPromises();
+
+    const navbar = wrapper.find('#nav-collapse');
+    const menu = navbar.find('[data-testid="navbar-native-menu"]');
+    expect(menu.exists()).toBe(true);
+    expect(menu.findAll('[data-testid^="navbar-native-"]').length).toBeGreaterThanOrEqual(3);
+    // No inline native links next to the centered brand.
+    expect(navbar.findAll('[data-testid^="nav-native-"]')).toHaveLength(0);
+
+    await menu.find('[data-testid="navbar-native-open-in-browser"]').trigger('click');
+    await flushPromises();
+    expect(bridge.sent).toContainEqual({ type: 'action', action: 'open-in-browser' });
+    wrapper.destroy();
+  });
+
+  test('the desktop navbar shows no native dropdown without the bridge', async () => {
+    const wrapper = mountWithDrawer();
+    await flushPromises();
+    expect(wrapper.find('[data-testid="navbar-native-menu"]').exists()).toBe(false);
+    wrapper.destroy();
+  });
+
   test('reports drawer state and closes on a native close-menu request', async () => {
     installBridge({ actions: ['sync-settings'] });
     const wrapper = mountWithDrawer();
@@ -335,7 +363,7 @@ describe('Header native Android actions', () => {
     bridge.emit(JSON.stringify({ type: 'capabilities', version: 2, actions: ['auth-settings'] }));
     await flushPromises();
     expect(wrapper.vm.drawerOpen).toBe(true);
-    expect(wrapper.findAll('[data-testid="nav-native-auth-settings"]')).toHaveLength(0);
+    expect(wrapper.findAll('[data-testid$="native-auth-settings"]')).toHaveLength(0);
 
     wrapper.destroy();
     expect(bridge.removeEventListener).toHaveBeenCalled();

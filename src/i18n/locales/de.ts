@@ -24,6 +24,7 @@ export default {
     syncSettings: 'Synchronisierungseinstellungen',
     apiAuthentication: 'API-Authentifizierung',
     openInBrowser: 'Im Browser öffnen',
+    app: 'App',
   },
   footer: {
     madeWith: 'Gemacht mit',

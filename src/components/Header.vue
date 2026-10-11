@@ -39,7 +39,7 @@ mixin navMain
       icon(name="stopwatch")
       | {{ $t('nav.stopwatch') }}
 
-mixin navTools
+mixin navTools(desktop)
   b-nav-item-dropdown
     template(slot="button-content")
       div.d-inline.px-2.px-lg-1
@@ -84,10 +84,31 @@ mixin navTools
     div.px-2.px-lg-1
       icon(name="cog")
       | {{ $t('nav.settings') }}
-  +navNative
+  if desktop
+    +navNativeDropdown
+  else
+    +navNative
 
 //- Actions only the Android app can perform. Rendered only after the app's
 //- native bridge reports them, so browsers never show entries they can't run.
+//- Flat entries in the drawer; one dropdown in the desktop navbar, where three
+//- more inline links would run into the absolutely centered brand.
+mixin navNativeDropdown
+  b-nav-item-dropdown(v-if="nativeMenuActions.length" right data-testid="navbar-native-menu")
+    template(slot="button-content")
+      div.d-inline.px-2.px-lg-1
+        icon(name="mobile")
+        | {{ $t('nav.app') }}
+    b-dropdown-item(
+      v-for="action in nativeMenuActions"
+      :key="action.id"
+      href="#"
+      @click.prevent="runNativeAction(action.id)"
+      :data-testid="'navbar-native-' + action.id"
+    )
+      icon(:name="action.icon")
+      | {{ $t(action.label) }}
+
 mixin navNative
   b-nav-item(
     v-for="action in nativeMenuActions"
@@ -125,7 +146,7 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
           b-badge.ml-2.align-middle(v-if="researchEdition" variant="info" data-testid="research-edition-badge") {{ $t('app.researchEdition') }}
 
       b-navbar-nav.ml-auto
-        +navTools
+        +navTools(true)
 
     // Phone/tablet: modal side drawer. Closes on route change, Escape and
     // backdrop tap; traps focus while open and returns it to the toggle.

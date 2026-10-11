@@ -24,6 +24,7 @@ export default {
     syncSettings: 'Налаштування синхронізації',
     apiAuthentication: 'Автентифікація API',
     openInBrowser: 'Відкрити в браузері',
+    app: 'Застосунок',
   },
   footer: {
     madeWith: 'Зроблено з',

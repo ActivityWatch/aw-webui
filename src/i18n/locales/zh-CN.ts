@@ -24,6 +24,7 @@ export default {
     syncSettings: '同步设置',
     apiAuthentication: 'API 认证',
     openInBrowser: '在浏览器中打开',
+    app: '应用',
   },
   footer: {
     madeWith: '由',

@@ -23,6 +23,7 @@ export default {
     syncSettings: 'Настройки синхронизации',
     apiAuthentication: 'Аутентификация API',
     openInBrowser: 'Открыть в браузере',
+    app: 'Приложение',
   },
   footer: {
     madeWith: 'Сделано с',
