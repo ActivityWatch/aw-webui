@@ -150,7 +150,7 @@ export default {
       categories: 'Kategorier',
       priority: 'Prioritet',
       priorityDefault: 'Standard',
-      priorityInteger: 'Prioriteten måste vara ett heltal.',
+      priorityInteger: 'Prioriteten måste vara ett icke-negativt heltal.',
       builderTitle: 'Kategoribyggare',
       builderSubtitle: 'Skapa regler från okategoriserad aktivitet',
       openBuilder: 'Öppna byggaren',

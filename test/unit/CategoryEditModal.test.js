@@ -173,6 +173,37 @@ describe('CategoryEditModal rule priority', () => {
     expect(vm.editing.priority).toBe(7);
   });
 
+  test.each([
+    ['', null],
+    ['0', 0],
+    ['3', 3],
+    ['-1', undefined],
+    ['1.5', undefined],
+  ])('parses priority %j as %j', (input, expected) => {
+    expect(CategoryEditModal.methods.priorityFromInput(input)).toBe(expected);
+  });
+
+  test('negative priorities disable submission and cannot be saved', () => {
+    const { vm, updateClass } = ctx({ priority: '-1' });
+    vm.validPattern = true;
+    vm.validPriority = CategoryEditModal.computed.validPriority.call(vm);
+    vm.canSubmit = CategoryEditModal.computed.canSubmit.call(vm);
+    vm.checkFormValidity = () => CategoryEditModal.methods.checkFormValidity.call(vm);
+
+    expect(vm.validPriority).toBe(false);
+    expect(CategoryEditModal.computed.priorityState.call(vm)).toBe(false);
+    expect(vm.canSubmit).toBe(false);
+    handleSubmit(vm);
+    expect(updateClass).not.toHaveBeenCalled();
+
+    vm.handleSubmit = jest.fn();
+    vm.$emit = jest.fn();
+    const event = { target: { tagName: 'INPUT' }, preventDefault: jest.fn() };
+    CategoryEditModal.methods.handleEnter.call(vm, event);
+    expect(vm.handleSubmit).not.toHaveBeenCalled();
+    expect(vm.$emit).not.toHaveBeenCalled();
+  });
+
   test('decimal priorities are invalid', () => {
     const vm = {
       editing: { rule: { type: 'regex' }, priority: '1.5' },
