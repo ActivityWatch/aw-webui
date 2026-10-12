@@ -79,10 +79,22 @@ async function checkNoHorizontalOverflow(t) {
     .lte(await t.eval(() => document.documentElement.clientWidth));
 }
 
-// Set localStorage['theme'] and reload so App.vue picks it up.
-// App.vue reads the key on startup and appends /dark.css to <head> when it is 'dark'.
+// Set theme in both localStorage and the server settings, then reload.
+// The settings store (ensureLoaded) gives server values priority over localStorage
+// (used.has(key) guard), so localStorage alone cannot override a persisted server
+// value. Saving to the API first ensures the reload picks up the requested theme.
 async function applyTheme(t, theme) {
-  await t.eval(() => window.localStorage.setItem('theme', theme), { dependencies: { theme } });
+  await t.eval(
+    async () => {
+      window.localStorage.setItem('theme', theme);
+      await fetch('/api/0/settings/theme', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(theme),
+      });
+    },
+    { dependencies: { theme } }
+  );
   await t.eval(() => location.reload(true));
   await t.wait(1000);
 }
@@ -139,6 +151,21 @@ test('Screenshot home: dark mobile', async t => {
   await hide_devonly(t);
   await t.takeScreenshot({
     path: 'home-dark-mobile.png',
+    fullPage: true,
+  });
+});
+
+// Dark drawer: click the toggle so the side-drawer appears in the dark screenshot.
+// This is the regression the matrix exists to catch — a dark-mode drawer styling
+// defect is invisible in any capture that never opens the drawer.
+test('Screenshot home: dark mobile drawer open', async t => {
+  await applyTheme(t, 'dark');
+  await t.resizeWindow(360, 800);
+  await hide_devonly(t);
+  await t.click(Selector('[data-testid="nav-drawer-toggle"]'));
+  await t.expect(Selector('[data-testid="nav-drawer"]').visible).ok({ timeout: 3000 });
+  await t.takeScreenshot({
+    path: 'home-dark-mobile-drawer.png',
     fullPage: true,
   });
 });
