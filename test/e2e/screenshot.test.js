@@ -85,9 +85,9 @@ async function checkNoHorizontalOverflow(t) {
 // value. Saving to the API first ensures the reload picks up the requested theme.
 async function applyTheme(t, theme) {
   await t.eval(
-    async () => {
+    () => {
       window.localStorage.setItem('theme', theme);
-      await fetch('/api/0/settings/theme', {
+      return fetch('/api/0/settings/theme', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(theme),
