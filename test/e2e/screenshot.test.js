@@ -87,16 +87,31 @@ async function applyTheme(t, theme) {
   await t.eval(
     () => {
       window.localStorage.setItem('theme', theme);
-      return fetch('/api/0/settings/theme', {
+      // Match createClient()'s default development/test API, not the webui
+      // dev server at baseURL, which does not proxy /api requests.
+      return fetch('http://127.0.0.1:5666/api/0/settings/theme', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(theme),
+      }).then(response => {
+        if (!response.ok) {
+          throw new Error(`Saving screenshot theme failed: HTTP ${response.status}`);
+        }
       });
     },
     { dependencies: { theme } }
   );
   await t.eval(() => location.reload(true));
-  await t.wait(1000);
+  // App.vue only renders the wrapper after settings have loaded and the theme
+  // link has been applied. Wait for that, not a fixed delay that can race startup.
+  await t.expect(Selector('#wrapper').visible).ok();
+  const darkStylesheet = Selector('head link[href="/dark.css"]').addCustomDOMProperties({
+    loaded: link => !!link.sheet,
+  });
+  await t.expect(darkStylesheet.exists).eql(theme === 'dark');
+  if (theme === 'dark') {
+    await t.expect(darkStylesheet.loaded).ok();
+  }
 }
 
 const logJsErrorCode = `
