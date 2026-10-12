@@ -79,10 +79,21 @@ async function checkNoHorizontalOverflow(t) {
     .lte(await t.eval(() => document.documentElement.clientWidth));
 }
 
+// Set localStorage['theme'] and reload so App.vue picks it up.
+// App.vue reads the key on startup and appends /dark.css to <head> when it is 'dark'.
+async function applyTheme(t, theme) {
+  await t.eval(() => window.localStorage.setItem('theme', theme), { dependencies: { theme } });
+  await t.eval(() => location.reload(true));
+  await t.wait(1000);
+}
+
 const logJsErrorCode = `
   window.addEventListener('error', function (e) {
       console.error(e.message);
   });`;
+
+// ─── Home view ─────────────────────────────────────────────────────────────
+// 4-cell matrix: light/dark × desktop/mobile (360×800)
 
 fixture(`Home view`).page(baseURL);
 
@@ -94,14 +105,8 @@ test.clientScripts({
   console.log(await t.getBrowserConsoleMessages());
 });
 
-test('Screenshot the home view', async t => {
-  // TODO: Detect CI instead of never resizing
-  // For resizeWindow to work tests needs to run with a ICCCM/EWMH-compliant window manager
-  // Since CI just runs plain xvfb, it doesn't have that, so we don't.
-  // The resolution is the one used by the testcafe-action:
-  //   https://github.com/DevExpress/testcafe-action/blob/0989d5f8ad852d71298ce3b770442cdec309d479/index.js#L59-L60
-  // await t.resizeWindow(1280, 720);
-
+test('Screenshot home: light desktop', async t => {
+  await applyTheme(t, 'light');
   await hide_devonly(t);
   await t.takeScreenshot({
     path: 'home.png',
@@ -109,11 +114,44 @@ test('Screenshot the home view', async t => {
   });
 });
 
+test('Screenshot home: dark desktop', async t => {
+  await applyTheme(t, 'dark');
+  await hide_devonly(t);
+  await t.takeScreenshot({
+    path: 'home-dark.png',
+    fullPage: true,
+  });
+});
+
+test('Screenshot home: light mobile', async t => {
+  await applyTheme(t, 'light');
+  await t.resizeWindow(360, 800);
+  await hide_devonly(t);
+  await t.takeScreenshot({
+    path: 'home-mobile.png',
+    fullPage: true,
+  });
+});
+
+test('Screenshot home: dark mobile', async t => {
+  await applyTheme(t, 'dark');
+  await t.resizeWindow(360, 800);
+  await hide_devonly(t);
+  await t.takeScreenshot({
+    path: 'home-dark-mobile.png',
+    fullPage: true,
+  });
+});
+
+// ─── Activity view ──────────────────────────────────────────────────────────
+// 4-cell matrix: light/dark × desktop/mobile
+
 fixture(`Activity view`).page(`${baseURL}/#/activity/fakedata`).requestHooks(HTTPLogger);
 
 test.clientScripts({
   content: logJsErrorCode,
-})('Screenshot the activity view', async t => {
+})('Screenshot activity: light desktop', async t => {
+  await applyTheme(t, 'light');
   await hide_devonly(t);
   await waitForLoading(t);
   await t.takeScreenshot({
@@ -121,9 +159,52 @@ test.clientScripts({
     fullPage: true,
   });
   await checkNoError(t);
-
-  // TODO: resize to mobile size and take another screenshot
 });
+
+test.clientScripts({
+  content: logJsErrorCode,
+})('Screenshot activity: dark desktop', async t => {
+  await applyTheme(t, 'dark');
+  await hide_devonly(t);
+  await waitForLoading(t);
+  await t.takeScreenshot({
+    path: 'activity-dark.png',
+    fullPage: true,
+  });
+  await checkNoError(t);
+});
+
+test.clientScripts({
+  content: logJsErrorCode,
+})('Screenshot activity: light mobile', async t => {
+  await applyTheme(t, 'light');
+  await t.resizeWindow(360, 800);
+  await hide_devonly(t);
+  await waitForLoading(t);
+  await t.takeScreenshot({
+    path: 'activity-mobile.png',
+    fullPage: true,
+  });
+  await checkNoError(t);
+});
+
+test.clientScripts({
+  content: logJsErrorCode,
+})('Screenshot activity: dark mobile', async t => {
+  await applyTheme(t, 'dark');
+  await t.resizeWindow(360, 800);
+  await hide_devonly(t);
+  await waitForLoading(t);
+  await t.takeScreenshot({
+    path: 'activity-dark-mobile.png',
+    fullPage: true,
+  });
+  await checkNoError(t);
+});
+
+// ─── Timeline view ──────────────────────────────────────────────────────────
+// Kept as a single fixture; the mobile-overflow test already covers the mobile
+// layout assertion, and timeline-initial.png captures the loading state.
 
 fixture(`Timeline view`).page(`${baseURL}/#/timeline`).requestHooks(HTTPLogger);
 
@@ -159,11 +240,15 @@ test('Timeline has no horizontal page overflow on mobile', async t => {
   // console.log(JSON.stringify(HTTPLogger.requests, null, '\t'));
 });
 
+// ─── Buckets view ───────────────────────────────────────────────────────────
+// 4-cell matrix: light/dark × desktop/mobile
+
 fixture(`Buckets view`).page(`${baseURL}/#/buckets/`).requestHooks(HTTPLogger);
 
 test.clientScripts({
   content: logJsErrorCode,
-})('Screenshot the buckets view', async t => {
+})('Screenshot buckets: light desktop', async t => {
+  await applyTheme(t, 'light');
   await hide_devonly(t);
   await t.wait(1000);
   await t.takeScreenshot({
@@ -173,11 +258,56 @@ test.clientScripts({
   await checkNoError(t);
 });
 
-fixture(`Setting view`).page(`${baseURL}/#/settings/`).requestHooks(HTTPLogger);
+test.clientScripts({
+  content: logJsErrorCode,
+})('Screenshot buckets: dark desktop', async t => {
+  await applyTheme(t, 'dark');
+  await hide_devonly(t);
+  await t.wait(1000);
+  await t.takeScreenshot({
+    path: 'buckets-dark.png',
+    fullPage: true,
+  });
+  await checkNoError(t);
+});
 
 test.clientScripts({
   content: logJsErrorCode,
-})('Screenshot the settings view', async t => {
+})('Screenshot buckets: light mobile', async t => {
+  await applyTheme(t, 'light');
+  await t.resizeWindow(360, 800);
+  await hide_devonly(t);
+  await t.wait(1000);
+  await t.takeScreenshot({
+    path: 'buckets-mobile.png',
+    fullPage: true,
+  });
+  await checkNoError(t);
+});
+
+test.clientScripts({
+  content: logJsErrorCode,
+})('Screenshot buckets: dark mobile', async t => {
+  await applyTheme(t, 'dark');
+  await t.resizeWindow(360, 800);
+  await hide_devonly(t);
+  await t.wait(1000);
+  await t.takeScreenshot({
+    path: 'buckets-dark-mobile.png',
+    fullPage: true,
+  });
+  await checkNoError(t);
+});
+
+// ─── Settings view ──────────────────────────────────────────────────────────
+// 4-cell matrix: light/dark × desktop/mobile
+
+fixture(`Settings view`).page(`${baseURL}/#/settings/`).requestHooks(HTTPLogger);
+
+test.clientScripts({
+  content: logJsErrorCode,
+})('Screenshot settings: light desktop', async t => {
+  await applyTheme(t, 'light');
   await hide_devonly(t);
   await t.takeScreenshot({
     path: 'settings.png',
@@ -186,15 +316,98 @@ test.clientScripts({
   await checkNoError(t);
 });
 
+test.clientScripts({
+  content: logJsErrorCode,
+})('Screenshot settings: dark desktop', async t => {
+  await applyTheme(t, 'dark');
+  await hide_devonly(t);
+  await t.takeScreenshot({
+    path: 'settings-dark.png',
+    fullPage: true,
+  });
+  await checkNoError(t);
+});
+
+test.clientScripts({
+  content: logJsErrorCode,
+})('Screenshot settings: light mobile', async t => {
+  await applyTheme(t, 'light');
+  await t.resizeWindow(360, 800);
+  await hide_devonly(t);
+  await t.takeScreenshot({
+    path: 'settings-mobile.png',
+    fullPage: true,
+  });
+  await checkNoError(t);
+});
+
+test.clientScripts({
+  content: logJsErrorCode,
+})('Screenshot settings: dark mobile', async t => {
+  await applyTheme(t, 'dark');
+  await t.resizeWindow(360, 800);
+  await hide_devonly(t);
+  await t.takeScreenshot({
+    path: 'settings-dark-mobile.png',
+    fullPage: true,
+  });
+  await checkNoError(t);
+});
+
+// ─── Stopwatch view ─────────────────────────────────────────────────────────
+// 4-cell matrix: light/dark × desktop/mobile
+
 fixture(`Stopwatch view`).page(`${baseURL}/#/stopwatch/`).requestHooks(HTTPLogger);
 
 test.clientScripts({
   content: logJsErrorCode,
-})('Screenshot the stopwatch view', async t => {
+})('Screenshot stopwatch: light desktop', async t => {
+  await applyTheme(t, 'light');
   await hide_devonly(t);
   await waitForLoading(t);
   await t.takeScreenshot({
     path: 'stopwatch.png',
+    fullPage: true,
+  });
+  await checkNoError(t);
+});
+
+test.clientScripts({
+  content: logJsErrorCode,
+})('Screenshot stopwatch: dark desktop', async t => {
+  await applyTheme(t, 'dark');
+  await hide_devonly(t);
+  await waitForLoading(t);
+  await t.takeScreenshot({
+    path: 'stopwatch-dark.png',
+    fullPage: true,
+  });
+  await checkNoError(t);
+});
+
+test.clientScripts({
+  content: logJsErrorCode,
+})('Screenshot stopwatch: light mobile', async t => {
+  await applyTheme(t, 'light');
+  await t.resizeWindow(360, 800);
+  await hide_devonly(t);
+  await waitForLoading(t);
+  await t.takeScreenshot({
+    path: 'stopwatch-mobile.png',
+    fullPage: true,
+  });
+  await checkNoError(t);
+});
+
+test.clientScripts({
+  content: logJsErrorCode,
+})('Screenshot stopwatch: dark mobile', async t => {
+  await applyTheme(t, 'dark');
+  await t.resizeWindow(360, 800);
+  await hide_devonly(t);
+  await waitForLoading(t);
+  await t.takeScreenshot({
+    path: 'stopwatch-dark-mobile.png',
     fullPage: true,
   });
   await checkNoError(t);
