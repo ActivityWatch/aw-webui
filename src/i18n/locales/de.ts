@@ -68,6 +68,9 @@ export default {
   settings: {
     title: 'Einstellungen',
     unsavedCategoriesLeave: 'Ihre Kategorien haben ungespeicherte Änderungen. Wirklich verlassen?',
+    discardUnsavedTitle: 'Ungespeicherte Änderungen verwerfen?',
+    discardAndLeave: 'Verwerfen und verlassen',
+    stay: 'Bleiben',
     daystart: {
       startOfDay: 'Tagesbeginn',
       startOfDayHelp:

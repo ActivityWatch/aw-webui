@@ -2,6 +2,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import CategorizationSettings from '~/views/settings/CategorizationSettings.vue';
 import Settings from '~/views/settings/Settings.vue';
 import { useCategoryStore } from '~/stores/categories';
+import { i18n } from '~/i18n';
 
 describe('BootstrapVue confirmation modals', () => {
   test.each([
@@ -49,6 +50,31 @@ describe('BootstrapVue confirmation modals', () => {
     expect(vm.activeSetId).toBe(expected);
     expect(categoryStore.discardChanges).toHaveBeenCalledTimes(discards ? 1 : 0);
     expect(categoryStore.switchToSet).toHaveBeenCalledTimes(discards ? 1 : 0);
+  });
+
+  test('settings leave dialog translates its title and both choices', async () => {
+    setActivePinia(createPinia());
+    useCategoryStore().classes_unsaved_changes = true;
+    const previousLocale = i18n.locale;
+    i18n.locale = 'sv';
+    const vm = {
+      $t: key => i18n.t(key),
+      $bvModal: { msgBoxConfirm: jest.fn().mockResolvedValue(false) },
+    };
+
+    try {
+      await Settings.beforeRouteLeave.call(vm, {}, {}, jest.fn());
+      expect(vm.$bvModal.msgBoxConfirm).toHaveBeenCalledWith(
+        i18n.t('settings.unsavedCategoriesLeave'),
+        expect.objectContaining({
+          title: 'Kasta osparade ändringar?',
+          okTitle: 'Kasta och lämna',
+          cancelTitle: 'Stanna',
+        })
+      );
+    } finally {
+      i18n.locale = previousLocale;
+    }
   });
 
   test.each([

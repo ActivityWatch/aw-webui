@@ -283,12 +283,14 @@ RETURN = sort_by_duration(merged_events);
       }
     },
     deleteSelectedQuery: async function () {
-      if (!this.selectedSavedQuery) {
+      const selectedQuery = this.selectedSavedQuery;
+      if (!selectedQuery) {
         return;
       }
+      const selectedQueryId = selectedQuery.id;
 
       const confirmed = await this.$bvModal.msgBoxConfirm(
-        `Delete saved query "${this.selectedSavedQuery.name}"? This cannot be undone.`,
+        `Delete saved query "${selectedQuery.name}"? This cannot be undone.`,
         {
           title: 'Delete saved query',
           okTitle: 'Delete',
@@ -302,9 +304,9 @@ RETURN = sort_by_duration(merged_events);
       }
 
       const didPersist = await this.persistSavedQueries(
-        this.savedQueries.filter(savedQuery => savedQuery.id !== this.selected_saved_query_id)
+        this.savedQueries.filter(savedQuery => savedQuery.id !== selectedQueryId)
       );
-      if (didPersist) {
+      if (didPersist && this.selected_saved_query_id === selectedQueryId) {
         this.selected_saved_query_id = '';
       }
     },

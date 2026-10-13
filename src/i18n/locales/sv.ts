@@ -70,6 +70,9 @@ export default {
     title: 'Inställningar',
     unsavedCategoriesLeave:
       'Dina kategorier har osparade ändringar. Är du säker på att du vill lämna sidan?',
+    discardUnsavedTitle: 'Kasta osparade ändringar?',
+    discardAndLeave: 'Kasta och lämna',
+    stay: 'Stanna',
     daystart: {
       startOfDay: 'Dagens början',
       startOfDayHelp:

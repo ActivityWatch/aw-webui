@@ -67,6 +67,58 @@ describe('QueryExplorer saveCurrentQuery', () => {
     expect(vm.selected_saved_query_id).toBe(selectedSavedQuery.id);
   });
 
+  test('deletes the confirmed query when a pending save changes the selection', async () => {
+    const queryA = { id: 'a', name: 'Query A' };
+    const queryB = { id: 'b', name: 'Query B' };
+    let confirmDelete;
+    const vm = {
+      persistSavedQueries: jest.fn().mockResolvedValue(true),
+      savedQueries: [queryA, queryB],
+      selectedSavedQuery: queryB,
+      selected_saved_query_id: queryB.id,
+      $bvModal: {
+        msgBoxConfirm: jest.fn().mockReturnValue(
+          new Promise(resolve => {
+            confirmDelete = resolve;
+          })
+        ),
+      },
+    };
+
+    const deletion = QueryExplorer.methods.deleteSelectedQuery.call(vm);
+    expect(vm.$bvModal.msgBoxConfirm).toHaveBeenCalledWith(
+      'Delete saved query "Query B"? This cannot be undone.',
+      expect.any(Object)
+    );
+    // A pending save finishes while B's confirmation dialog is open.
+    vm.selected_saved_query_id = queryA.id;
+    vm.selectedSavedQuery = queryA;
+    confirmDelete(true);
+    await deletion;
+
+    expect(vm.persistSavedQueries).toHaveBeenCalledWith([queryA]);
+    expect(vm.selected_saved_query_id).toBe(queryA.id);
+  });
+
+  test.each([true, false])(
+    'delete clears selection only after persistence succeeds=%s',
+    async didPersist => {
+      const selectedSavedQuery = { id: 'a', name: 'Query A' };
+      const vm = {
+        persistSavedQueries: jest.fn().mockResolvedValue(didPersist),
+        savedQueries: [selectedSavedQuery],
+        selectedSavedQuery,
+        selected_saved_query_id: selectedSavedQuery.id,
+        $bvModal: { msgBoxConfirm: jest.fn().mockResolvedValue(true) },
+      };
+
+      await QueryExplorer.methods.deleteSelectedQuery.call(vm);
+
+      expect(vm.persistSavedQueries).toHaveBeenCalledWith([]);
+      expect(vm.selected_saved_query_id).toBe(didPersist ? '' : selectedSavedQuery.id);
+    }
+  );
+
   test('keeps save modal open when the query name is blank', async () => {
     const event = { preventDefault: jest.fn() };
     const vm = {

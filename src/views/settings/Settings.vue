@@ -70,10 +70,10 @@ export default {
       const confirmed = await this.$bvModal.msgBoxConfirm(
         this.$t('settings.unsavedCategoriesLeave'),
         {
-          title: 'Discard unsaved changes?',
-          okTitle: 'Discard and leave',
+          title: this.$t('settings.discardUnsavedTitle'),
+          okTitle: this.$t('settings.discardAndLeave'),
           okVariant: 'danger',
-          cancelTitle: 'Stay',
+          cancelTitle: this.$t('settings.stay'),
           centered: true,
         }
       );
