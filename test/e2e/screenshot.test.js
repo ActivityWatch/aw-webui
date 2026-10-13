@@ -248,7 +248,13 @@ test.clientScripts({
 // Kept as a single fixture; the mobile-overflow test already covers the mobile
 // layout assertion, and timeline-initial.png captures the loading state.
 
-fixture(`Timeline view`).page(`${baseURL}/#/timeline`).requestHooks(HTTPLogger);
+fixture(`Timeline view`)
+  .page(`${baseURL}/#/timeline`)
+  .requestHooks(HTTPLogger)
+  .beforeEach(async t => {
+    // Matrix tests persist their theme on the server; keep Timeline captures light.
+    await applyTheme(t, 'light');
+  });
 
 test.clientScripts({
   content: logJsErrorCode,
