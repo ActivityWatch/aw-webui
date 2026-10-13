@@ -2,8 +2,8 @@ import QueryExplorer from '~/views/QueryExplorer.vue';
 
 describe('QueryExplorer saveCurrentQuery', () => {
   test('canceling an overwrite confirm aborts without opening the save-as-new prompt', async () => {
-    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(false);
     const promptSpy = jest.spyOn(window, 'prompt').mockReturnValue('Should not be used');
+    const msgBoxConfirm = jest.fn().mockResolvedValue(false);
 
     const persistSavedQueries = jest.fn();
     const vm = {
@@ -31,16 +31,40 @@ describe('QueryExplorer saveCurrentQuery', () => {
       },
       selected_saved_query_id: 'daily-coding-time',
       startdate: '2026-05-20',
+      $bvModal: { msgBoxConfirm },
     };
 
     await QueryExplorer.methods.saveCurrentQuery.call(vm);
 
-    expect(confirmSpy).toHaveBeenCalledWith('Update saved query "Daily Coding Time"?');
+    expect(msgBoxConfirm).toHaveBeenCalledWith(
+      'Update saved query "Daily Coding Time"?',
+      expect.objectContaining({ okTitle: 'Update' })
+    );
     expect(promptSpy).not.toHaveBeenCalled();
     expect(persistSavedQueries).not.toHaveBeenCalled();
 
-    confirmSpy.mockRestore();
     promptSpy.mockRestore();
+  });
+
+  test('canceling delete keeps the selected query', async () => {
+    const selectedSavedQuery = { id: 'daily-coding-time', name: 'Daily Coding Time' };
+    const persistSavedQueries = jest.fn();
+    const vm = {
+      persistSavedQueries,
+      savedQueries: [selectedSavedQuery],
+      selectedSavedQuery,
+      selected_saved_query_id: selectedSavedQuery.id,
+      $bvModal: { msgBoxConfirm: jest.fn().mockResolvedValue(false) },
+    };
+
+    await QueryExplorer.methods.deleteSelectedQuery.call(vm);
+
+    expect(vm.$bvModal.msgBoxConfirm).toHaveBeenCalledWith(
+      'Delete saved query "Daily Coding Time"? This cannot be undone.',
+      expect.objectContaining({ okTitle: 'Delete', okVariant: 'danger' })
+    );
+    expect(persistSavedQueries).not.toHaveBeenCalled();
+    expect(vm.selected_saved_query_id).toBe(selectedSavedQuery.id);
   });
 
   test('keeps save modal open when the query name is blank', async () => {
