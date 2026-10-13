@@ -1,25 +1,24 @@
 <template lang="pug">
 div
-  div.d-sm-flex.justify-content-between
-    div
-      h5.mb-2.mb-sm-0 Always count as active pattern
+  div
+    h5.mb-2 Always count as active pattern
 
-      small.text-muted
-        | Apps or titles matching this regular expression will never be counted as AFK.
-        |
-        | Can be used to count time as active, despite no input (like meetings, or games with controllers). An empty string disables it.
-        |
-        span
-          | Example expression:&nbsp;
-          code(style="background-color: rgba(200, 200, 200, 0.3); padding: 2px 4px; border-radius: 2px;")
-            | Zoom Meeting|Google Meet|Microsoft Teams
-    div
-      b-form-input(size="sm" v-model="always_active_pattern_editing" :state="(enabled || null) && valid")
-      small.text-right
-        div.text-success(v-if="enabled && valid") Enabled
-        div.text-danger(v-else-if="enabled") Invalid pattern
-        div.text-muted(v-else) Disabled
-        div.text-danger(v-if="enabled && valid && broad_pattern") Pattern too broad
+    small.text-muted
+      | Apps or titles matching this regular expression will never be counted as AFK.
+      |
+      | Can be used to count time as active, despite no input (like meetings, or games with controllers). An empty string disables it.
+      |
+      span
+        | Example expression:&nbsp;
+        code(style="background-color: rgba(200, 200, 200, 0.3); padding: 2px 4px; border-radius: 2px;")
+          | Zoom Meeting|Google Meet|Microsoft Teams
+  div.mt-2
+    b-form-input(size="sm" v-model="always_active_pattern_editing" :state="(enabled || null) && valid")
+    small.text-right
+      div.text-success(v-if="enabled && valid") Enabled
+      div.text-danger(v-else-if="enabled") Invalid pattern
+      div.text-muted(v-else) Disabled
+      div.text-danger(v-if="enabled && valid && broad_pattern") Pattern too broad
 
 </template>
 
