@@ -355,7 +355,7 @@ export default {
     swimlanes: '泳道：',
     filterAfk: '过滤 AFK',
     mergeByApp: '按应用合并',
-    noEvents: '没有符合筛选条件的事件。未更新时间线。',
+    noEvents: '没有符合筛选条件的事件。',
     scrollHint: '滚动缩放，滑动/水平滚动平移，方向键导航',
     loading: '加载中...',
     filters: {

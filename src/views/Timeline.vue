@@ -79,7 +79,12 @@ div
                   input(type="checkbox", :checked="all_pending_hosts_selected", @change="toggleAllPendingHosts")
                   span.timeline-filter-option-label {{ $t('timeline.filters.all') }}
                 label.timeline-filter-option(v-for="host in hosts", :key="host", :title="host")
-                  input(type="checkbox", v-model="pending_filter_hostnames", :value="host")
+                  input(
+                    type="checkbox"
+                    v-model="pending_filter_hostnames"
+                    :value="host"
+                    @change="markPendingHostSelectionCustom"
+                  )
                   span.timeline-filter-option-label {{ host }}
           tr
             th.pr-3
@@ -90,7 +95,12 @@ div
                   input(type="checkbox", :checked="all_pending_clients_selected", @change="toggleAllPendingClients")
                   span.timeline-filter-option-label {{ $t('timeline.filters.all') }}
                 label.timeline-filter-option(v-for="client in clients", :key="client", :title="client")
-                  input(type="checkbox", v-model="pending_filter_clients", :value="client")
+                  input(
+                    type="checkbox"
+                    v-model="pending_filter_clients"
+                    :value="client"
+                    @change="markPendingClientSelectionCustom"
+                  )
                   span.timeline-filter-option-label {{ client }}
           tr
             th.pr-3
@@ -173,6 +183,10 @@ export default {
       pending_filter_clients: [],
       host_filter_initialized: false,
       client_filter_initialized: false,
+      host_filter_all_mode: false,
+      client_filter_all_mode: false,
+      pending_host_filter_all_mode: false,
+      pending_client_filter_all_mode: false,
       filter_duration_min: null,
       filter_duration_max: null,
       filter_duration_min_unit: 'seconds',
@@ -223,18 +237,10 @@ export default {
       ];
     },
     all_hosts_selected() {
-      return (
-        this.hosts.length > 0 &&
-        this.filter_hostnames.length === this.hosts.length &&
-        this.hosts.every(host => this.filter_hostnames.includes(host))
-      );
+      return this.isAllSelected(this.hosts, this.filter_hostnames);
     },
     all_clients_selected() {
-      return (
-        this.clients.length > 0 &&
-        this.filter_clients.length === this.clients.length &&
-        this.clients.every(client => this.filter_clients.includes(client))
-      );
+      return this.isAllSelected(this.clients, this.filter_clients);
     },
     all_categories_selected() {
       return (
@@ -244,18 +250,10 @@ export default {
       );
     },
     all_pending_hosts_selected() {
-      return (
-        this.hosts.length > 0 &&
-        this.pending_filter_hostnames.length === this.hosts.length &&
-        this.hosts.every(host => this.pending_filter_hostnames.includes(host))
-      );
+      return this.isAllSelected(this.hosts, this.pending_filter_hostnames);
     },
     all_pending_clients_selected() {
-      return (
-        this.clients.length > 0 &&
-        this.pending_filter_clients.length === this.clients.length &&
-        this.clients.every(client => this.pending_filter_clients.includes(client))
-      );
+      return this.isAllSelected(this.clients, this.pending_filter_clients);
     },
     all_pending_categories_selected() {
       return (
@@ -417,6 +415,8 @@ export default {
       this.duration_range_error_visible = false;
       this.pending_filter_hostnames = [...this.filter_hostnames];
       this.pending_filter_clients = [...this.filter_clients];
+      this.pending_host_filter_all_mode = this.host_filter_all_mode;
+      this.pending_client_filter_all_mode = this.client_filter_all_mode;
       this.pending_filter_duration_min_unit = this.filter_duration_min_unit;
       this.pending_filter_duration_max_unit = this.filter_duration_max_unit;
       this.pending_filter_duration_min = this.durationInUnit(
@@ -444,6 +444,8 @@ export default {
       if (!_.isEqual(this.filter_clients, this.pending_filter_clients)) {
         this.filter_clients = [...this.pending_filter_clients];
       }
+      this.host_filter_all_mode = this.pending_host_filter_all_mode;
+      this.client_filter_all_mode = this.pending_client_filter_all_mode;
       const pendingDurationMin = this.normalizeDuration(
         this.pending_filter_duration_min,
         this.pending_filter_duration_min_unit
@@ -474,6 +476,8 @@ export default {
     resetFilterChanges() {
       this.pending_filter_hostnames = [...this.hosts];
       this.pending_filter_clients = [...this.clients];
+      this.pending_host_filter_all_mode = true;
+      this.pending_client_filter_all_mode = true;
       this.pending_filter_duration_min = null;
       this.pending_filter_duration_max = null;
       this.pending_filter_duration_min_unit = 'seconds';
@@ -518,11 +522,35 @@ export default {
       const duration = Number(value) * this.durationUnitFactor(unit);
       return Number.isFinite(duration) && duration >= 0 ? duration : null;
     },
+    isAllSelected(options, selected) {
+      return (
+        options.length > 0 &&
+        options.length === selected.length &&
+        options.every(option => selected.includes(option)) &&
+        selected.every(option => options.includes(option))
+      );
+    },
     toggleAllPendingHosts() {
-      this.pending_filter_hostnames = this.all_pending_hosts_selected ? [] : [...this.hosts];
+      const selectAll = !this.all_pending_hosts_selected;
+      this.pending_filter_hostnames = selectAll ? [...this.hosts] : [];
+      this.pending_host_filter_all_mode = selectAll;
     },
     toggleAllPendingClients() {
-      this.pending_filter_clients = this.all_pending_clients_selected ? [] : [...this.clients];
+      const selectAll = !this.all_pending_clients_selected;
+      this.pending_filter_clients = selectAll ? [...this.clients] : [];
+      this.pending_client_filter_all_mode = selectAll;
+    },
+    markPendingHostSelectionCustom() {
+      this.pending_host_filter_all_mode = this.isAllSelected(
+        this.hosts,
+        this.pending_filter_hostnames
+      );
+    },
+    markPendingClientSelectionCustom() {
+      this.pending_client_filter_all_mode = this.isAllSelected(
+        this.clients,
+        this.pending_filter_clients
+      );
     },
     isCategorySelected(category) {
       return this.filter_categories.some(filterCategory => _.isEqual(filterCategory, category));
@@ -565,16 +593,12 @@ export default {
         })
       );
 
-      const previousAllHostsSelected =
-        this.host_filter_initialized &&
-        this.hosts.length > 0 &&
-        this.filter_hostnames.length === this.hosts.length &&
-        this.hosts.every(host => this.filter_hostnames.includes(host));
+      // Keep the explicit all-mode separate from the currently available
+      // options. Otherwise a partial selection can be mistaken for "all"
+      // when the current interval happens to contain only those selections.
+      const previousAllHostsSelected = this.host_filter_initialized && this.host_filter_all_mode;
       const previousAllClientsSelected =
-        this.client_filter_initialized &&
-        this.clients.length > 0 &&
-        this.filter_clients.length === this.clients.length &&
-        this.clients.every(client => this.filter_clients.includes(client));
+        this.client_filter_initialized && this.client_filter_all_mode;
 
       this.hosts = this.all_buckets
         .map(a => a.hostname)
@@ -589,17 +613,13 @@ export default {
           if (!_.isEqual(this.filter_hostnames, nextHostnames)) {
             this.filter_hostnames = nextHostnames;
           }
+          this.host_filter_all_mode = true;
         } else {
-          const nextHostnames = this.filter_hostnames.filter(host => this.hosts.includes(host));
-          if (!_.isEqual(this.filter_hostnames, nextHostnames)) {
-            this.filter_hostnames = nextHostnames;
-          }
+          // Keep selections that are temporarily unavailable so they can be
+          // restored when the user returns to an interval containing them.
+          this.host_filter_all_mode = false;
         }
         this.host_filter_initialized = true;
-      } else {
-        if (this.filter_hostnames.length > 0) {
-          this.filter_hostnames = [];
-        }
       }
 
       if (this.clients.length > 0) {
@@ -608,17 +628,13 @@ export default {
           if (!_.isEqual(this.filter_clients, nextClients)) {
             this.filter_clients = nextClients;
           }
+          this.client_filter_all_mode = true;
         } else {
-          const nextClients = this.filter_clients.filter(client => this.clients.includes(client));
-          if (!_.isEqual(this.filter_clients, nextClients)) {
-            this.filter_clients = nextClients;
-          }
+          // Keep selections that are temporarily unavailable so they can be
+          // restored when the user returns to an interval containing them.
+          this.client_filter_all_mode = false;
         }
         this.client_filter_initialized = true;
-      } else {
-        if (this.filter_clients.length > 0) {
-          this.filter_clients = [];
-        }
       }
 
       let buckets = this.all_buckets;
@@ -668,11 +684,10 @@ export default {
             if (str === null) return true; // Keep events from unknown bucket types
             const matched = matchString(str, allCats, e);
             const eventCat = matched ? matched.name : ['Uncategorized'];
-            // Check if the event's category matches any selected filter category
-            // (including parent matches: selecting "Work" also shows "Work > Programming")
-            return this.filter_categories.some(filterCat =>
-              _.isEqual(eventCat.slice(0, filterCat.length), filterCat)
-            );
+            // Category checkboxes represent independent category rules. Match
+            // the complete category path so selecting a parent does not also
+            // select its children, or vice versa.
+            return this.filter_categories.some(filterCat => _.isEqual(eventCat, filterCat));
           });
         }
       }

@@ -366,7 +366,7 @@ export default {
     swimlanes: 'Schwimmbahnen:',
     filterAfk: 'AFK filtern',
     mergeByApp: 'Nach App zusammenführen',
-    noEvents: 'Keine Ereignisse entsprechen den Kriterien. Zeitleiste nicht aktualisiert.',
+    noEvents: 'Keine Ereignisse entsprechen den ausgewählten Kriterien.',
     scrollHint: 'Scrollen zum Zoomen, Wischen zum Schwenken, Pfeiltasten zur Navigation',
     loading: 'Laden…',
     filters: {

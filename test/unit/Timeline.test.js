@@ -29,6 +29,8 @@ function makeVm(overrides = {}) {
     filter_clients: [],
     host_filter_initialized: true,
     client_filter_initialized: true,
+    host_filter_all_mode: false,
+    client_filter_all_mode: false,
     filter_duration_min: null,
     filter_duration_max: null,
     filter_afk: false,
@@ -285,8 +287,8 @@ describe('Timeline filters', () => {
       filter_clients: ['client-1'],
       host_filter_initialized: true,
       client_filter_initialized: true,
-      all_hosts_selected: true,
-      all_clients_selected: true,
+      host_filter_all_mode: true,
+      client_filter_all_mode: true,
     });
 
     await Timeline.methods.getBuckets.call(vm);
@@ -296,6 +298,82 @@ describe('Timeline filters', () => {
 
     expect(vm.filter_hostnames).toBe(hostSelection);
     expect(vm.filter_clients).toBe(clientSelection);
+  });
+
+  test('preserves partial host and client selections across intervals', async () => {
+    mockBucketsStore.getBucketsWithEvents
+      .mockResolvedValueOnce([
+        { hostname: 'host-b', client: 'client-2', events: [] },
+      ])
+      .mockResolvedValueOnce([
+        { hostname: 'host-a', client: 'client-1', events: [] },
+      ]);
+
+    const vm = makeVm({
+      hosts: ['host-a', 'host-b'],
+      clients: ['client-1', 'client-2'],
+      filter_hostnames: ['host-a'],
+      filter_clients: ['client-1'],
+      host_filter_initialized: true,
+      client_filter_initialized: true,
+    });
+
+    await Timeline.methods.getBuckets.call(vm);
+    expect(vm.filter_hostnames).toEqual(['host-a']);
+    expect(vm.filter_clients).toEqual(['client-1']);
+    expect(vm.buckets).toEqual([]);
+
+    await Timeline.methods.getBuckets.call(vm);
+    expect(vm.filter_hostnames).toEqual(['host-a']);
+    expect(vm.filter_clients).toEqual(['client-1']);
+    expect(vm.buckets).toHaveLength(1);
+  });
+
+  test('restores all host and client selections after an empty interval', async () => {
+    mockBucketsStore.getBucketsWithEvents
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        { hostname: 'host-b', client: 'client-2', events: [] },
+      ]);
+
+    const vm = makeVm({
+      hosts: ['host-a'],
+      clients: ['client-1'],
+      filter_hostnames: ['host-a'],
+      filter_clients: ['client-1'],
+      host_filter_initialized: true,
+      client_filter_initialized: true,
+      host_filter_all_mode: true,
+      client_filter_all_mode: true,
+    });
+
+    await Timeline.methods.getBuckets.call(vm);
+    expect(vm.filter_hostnames).toEqual(['host-a']);
+    expect(vm.filter_clients).toEqual(['client-1']);
+
+    await Timeline.methods.getBuckets.call(vm);
+    expect(vm.filter_hostnames).toEqual(['host-b']);
+    expect(vm.filter_clients).toEqual(['client-2']);
+  });
+
+  test('keeps an explicitly empty host and client selection across intervals', async () => {
+    mockBucketsStore.getBucketsWithEvents.mockResolvedValue([
+      { hostname: 'host-a', client: 'client-1', events: [] },
+    ]);
+
+    const vm = makeVm({
+      hosts: ['host-a'],
+      clients: ['client-1'],
+      filter_hostnames: [],
+      filter_clients: [],
+      host_filter_initialized: true,
+      client_filter_initialized: true,
+    });
+
+    await Timeline.methods.getBuckets.call(vm);
+    expect(vm.filter_hostnames).toEqual([]);
+    expect(vm.filter_clients).toEqual([]);
+    expect(vm.buckets).toEqual([]);
   });
 
   test('summarizes multi-selection counts in the filter title', () => {
@@ -351,5 +429,53 @@ describe('Timeline filters', () => {
 
     Timeline.methods.togglePendingCategory.call(vm, ['Work']);
     expect(vm.pending_filter_categories).toEqual([['Personal']]);
+  });
+
+  test('matches parent and child categories independently', async () => {
+    mockCategoryStore.classes = [
+      { name: ['Work'], rule: { type: 'regex', regex: '^Work$' } },
+      {
+        name: ['Work', 'Programming'],
+        rule: { type: 'regex', regex: '^Programming$' },
+      },
+    ];
+    const categorizedBuckets = () => [
+      {
+        hostname: 'host-a',
+        client: 'client-1',
+        type: 'currentwindow',
+        events: [
+          { duration: 1, data: { app: 'Work', title: 'Overview' } },
+          { duration: 1, data: { app: 'Work', title: 'Programming' } },
+        ],
+      },
+    ];
+    mockBucketsStore.getBucketsWithEvents
+      .mockResolvedValueOnce(categorizedBuckets())
+      .mockResolvedValueOnce(categorizedBuckets())
+      .mockResolvedValueOnce(categorizedBuckets());
+
+    const vm = makeVm({
+      hosts: ['host-a'],
+      clients: ['client-1'],
+      filter_hostnames: ['host-a'],
+      filter_clients: ['client-1'],
+      filter_categories: [['Work']],
+      category_filter_initialized: true,
+      all_categories_selected: false,
+    });
+
+    await Timeline.methods.getBuckets.call(vm);
+    expect(vm.buckets[0].events).toHaveLength(1);
+    expect(vm.buckets[0].events[0].data.title).toBe('Overview');
+
+    vm.filter_categories = [['Work', 'Programming']];
+    await Timeline.methods.getBuckets.call(vm);
+    expect(vm.buckets[0].events).toHaveLength(1);
+    expect(vm.buckets[0].events[0].data.title).toBe('Programming');
+
+    vm.filter_categories = [['Work'], ['Work', 'Programming']];
+    await Timeline.methods.getBuckets.call(vm);
+    expect(vm.buckets[0].events).toHaveLength(2);
   });
 });

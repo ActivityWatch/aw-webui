@@ -371,7 +371,7 @@ export default {
     swimlanes: 'Banor:',
     filterAfk: 'Filtrera AFK',
     mergeByApp: 'Slå ihop efter program',
-    noEvents: 'Inga händelser matchar de valda kriterierna. Tidslinjen har inte uppdaterats.',
+    noEvents: 'Inga händelser matchar de valda kriterierna.',
     scrollHint:
       'Rulla för att zooma, svep/rulla horisontellt för att panorera, använd piltangenterna för att navigera',
     loading: 'Läser in...',

@@ -367,7 +367,7 @@ export default {
     swimlanes: 'Swimlanes:',
     filterAfk: 'Filter AFK',
     mergeByApp: 'Merge by app',
-    noEvents: 'No events match selected criteria. Timeline is not updated.',
+    noEvents: 'No events match selected criteria.',
     scrollHint: 'Scroll to zoom, swipe/horizontal-scroll to pan, arrow keys to navigate',
     loading: 'Loading...',
     filters: {
