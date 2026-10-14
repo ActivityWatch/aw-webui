@@ -2,19 +2,31 @@
 div
   b-alert(show variant="warning") #[b Note:] These settings are meant for developers who (hopefully) know what they are doing, and as such, may break things unexpectedly.
 
-  b-form-group(label="Force devmode" label-cols-md=3 description="Devmode enables some features that are still work-in-progress.")
+  div.d-flex.justify-content-between.align-items-center
     div
-      b-form-checkbox.float-right.ml-2(v-model="devmode" switch)
-
-  b-form-group(label="Request timeout" label-cols-md=3 description="The maximum amount of time a server request can take before timing out. Setting this to a high value can be useful for large queries. Note that you need to reload the web UI for it to apply.")
+      h5.mb-0#devmode-label Force devmode
     div
-      b-input.float-right.ml-2(v-model="requestTimeout" type="number")
+      b-form-checkbox(v-model="devmode" switch aria-labelledby="devmode-label")
+  small.text-muted
+    | Devmode enables some features that are still work-in-progress.
 
-  b-form-group(label="Hide unsupported visualizations" label-cols-md=3 description="Hide visualizations that lack required data instead of showing a warning. Disabled by default.")
+  div.mt-3.d-sm-flex.justify-content-between
     div
-      b-form-checkbox.float-right.ml-2(v-model="hideUnsupportedVisualizations" switch)
+      h5.mt-1.mb-2.mb-sm-0#request-timeout-label Request timeout
+    div
+      b-input(v-model="requestTimeout" type="number" size="sm" aria-labelledby="request-timeout-label")
+  small.text-muted
+    | The maximum amount of time a server request can take before timing out. Setting this to a high value can be useful for large queries. Note that you need to reload the web UI for it to apply.
 
-  div
+  div.mt-3.d-flex.justify-content-between.align-items-center
+    div.mr-2
+      h5.mb-0#hide-unsupported-label Hide unsupported visualizations
+    div
+      b-form-checkbox(v-model="hideUnsupportedVisualizations" switch aria-labelledby="hide-unsupported-label")
+  small.text-muted
+    | Hide visualizations that lack required data instead of showing a warning. Disabled by default.
+
+  div.mt-3
     | Web UI commit hash: {{ COMMIT_HASH }}
 </template>
 
