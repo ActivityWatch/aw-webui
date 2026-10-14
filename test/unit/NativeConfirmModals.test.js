@@ -29,6 +29,44 @@ describe('BootstrapVue confirmation modals', () => {
     expect(categoryStore.save).toHaveBeenCalledTimes(mutates ? 1 : 0);
   });
 
+  test('failed category-set deletion restores the set and unsaved edits', async () => {
+    setActivePinia(createPinia());
+    const categoryStore = useCategoryStore();
+    categoryStore.$patch({
+      category_sets: [
+        { id: 'work', categories: [{ id: 0, name: ['Work'], rule: { type: 'none' } }] },
+        { id: 'personal', categories: [] },
+      ],
+      active_set_ids: ['work'],
+      classes: [{ id: 0, name: ['Unsaved work edit'], rule: { type: 'none' } }],
+      classes_unsaved_changes: true,
+    });
+    const before = JSON.parse(JSON.stringify(categoryStore.$state));
+    const save = jest.spyOn(categoryStore, 'save').mockRejectedValue(new Error('offline'));
+    const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => undefined);
+    const vm = {
+      categoryStore,
+      $bvModal: { msgBoxConfirm: jest.fn().mockResolvedValue(true) },
+    };
+
+    try {
+      await CategorizationSettings.methods.deleteActiveSet.call(vm);
+
+      expect(save).toHaveBeenCalledTimes(1);
+      expect(categoryStore.$state).toEqual(before);
+      expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('Failed to delete'));
+
+      save.mockRestore();
+      await categoryStore.save();
+      expect(categoryStore.category_sets.map(set => set.id)).toEqual(['work', 'personal']);
+      expect(categoryStore.classes[0].name).toEqual(['Unsaved work edit']);
+      expect(categoryStore.classes_unsaved_changes).toBe(false);
+    } finally {
+      save.mockRestore();
+      alertSpy.mockRestore();
+    }
+  });
+
   test.each([
     [false, 'current', false],
     [true, 'next', true],
@@ -87,11 +125,21 @@ describe('BootstrapVue confirmation modals', () => {
     const next = jest.fn();
     const vm = {
       $t: jest.fn().mockReturnValue('Discard changes?'),
-      $bvModal: { msgBoxConfirm: jest.fn().mockResolvedValue(confirmed) },
+      $bvModal: { msgBoxConfirm: jest.fn() },
     };
+    let resolveConfirmation;
+    const confirmation = new Promise(resolve => {
+      resolveConfirmation = resolve;
+    });
+    vm.$bvModal.msgBoxConfirm.mockReturnValue(confirmation);
 
-    await Settings.beforeRouteLeave.call(vm, {}, {}, next);
+    Settings.beforeRouteLeave.call(vm, {}, {}, next);
+    await Promise.resolve();
+    expect(next).not.toHaveBeenCalled();
 
+    resolveConfirmation(confirmed);
+    await confirmation;
+    expect(next).toHaveBeenCalledTimes(1);
     if (nextArg === undefined) expect(next).toHaveBeenCalledWith();
     else expect(next).toHaveBeenCalledWith(nextArg);
   });

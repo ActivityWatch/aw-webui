@@ -123,6 +123,7 @@ div
 </template>
 <script lang="ts">
 import { mapState, mapGetters } from 'pinia';
+import cloneDeep from 'lodash/cloneDeep';
 import CategoryEditTree from '~/components/CategoryEditTree.vue';
 import CategoryEditModal from '~/components/CategoryEditModal.vue';
 import 'vue-awesome/icons/undo';
@@ -326,13 +327,13 @@ export default {
         }
       );
       if (!confirmed) return;
+      const previousState = cloneDeep(this.categoryStore.$state);
       this.categoryStore.deleteSet(id);
       try {
         await this.categoryStore.save();
       } catch (e) {
-        // The set is already gone from the in-memory store; surface the
-        // persistence failure instead of leaving an unhandled rejection.
-        this.categoryStore.classes_unsaved_changes = true;
+        // Restore the set, selection, and any edits that were unsaved before deletion.
+        this.categoryStore.$patch(previousState);
         alert(`Failed to delete category set "${id}": ${e}`);
       }
     },
