@@ -64,10 +64,14 @@ export default {
     PrivacyFilterSettings,
     AwNotifySettings,
   },
-  beforeRouteLeave(to, from, next) {
+  async beforeRouteLeave(to, from, next) {
     const categoryStore = useCategoryStore();
     if (categoryStore.classes_unsaved_changes) {
-      if (confirm(this.$t('settings.unsavedCategoriesLeave'))) {
+      const confirmed = await this.$bvModal.msgBoxConfirm(
+        this.$t('settings.unsavedCategoriesLeave'),
+        { title: 'Unsaved Changes', okTitle: 'Leave', cancelTitle: 'Stay', centered: true }
+      );
+      if (confirmed) {
         next();
       } else {
         next(false);

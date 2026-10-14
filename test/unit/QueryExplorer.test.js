@@ -2,11 +2,10 @@ import QueryExplorer from '~/views/QueryExplorer.vue';
 
 describe('QueryExplorer saveCurrentQuery', () => {
   test('canceling an overwrite confirm aborts without opening the save-as-new prompt', async () => {
-    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(false);
-    const promptSpy = jest.spyOn(window, 'prompt').mockReturnValue('Should not be used');
-
+    const msgBoxConfirm = jest.fn().mockResolvedValue(false);
     const persistSavedQueries = jest.fn();
     const vm = {
+      $bvModal: { msgBoxConfirm },
       enddate: '2026-05-21',
       event_type: 'currentwindow',
       persistSavedQueries,
@@ -35,12 +34,11 @@ describe('QueryExplorer saveCurrentQuery', () => {
 
     await QueryExplorer.methods.saveCurrentQuery.call(vm);
 
-    expect(confirmSpy).toHaveBeenCalledWith('Update saved query "Daily Coding Time"?');
-    expect(promptSpy).not.toHaveBeenCalled();
+    expect(msgBoxConfirm).toHaveBeenCalledWith(
+      'Update saved query "Daily Coding Time"?',
+      expect.objectContaining({ title: 'Update Query' })
+    );
     expect(persistSavedQueries).not.toHaveBeenCalled();
-
-    confirmSpy.mockRestore();
-    promptSpy.mockRestore();
   });
 
   test('keeps save modal open when the query name is blank', async () => {
