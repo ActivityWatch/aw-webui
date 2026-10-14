@@ -327,7 +327,7 @@ export default {
       );
       if (!confirmed) return;
       this.categoryStore.deleteSet(id);
-      this.categoryStore.save();
+      await this.categoryStore.save();
     },
     onSetChange: async function (setId: string) {
       if (this.classes_unsaved_changes) {
