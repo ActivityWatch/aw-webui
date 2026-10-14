@@ -76,7 +76,7 @@ export default {
           centered: true,
         })
         .then(confirmed => {
-          next(confirmed ? undefined : false);
+          confirmed ? next() : next(false);
         });
     } else {
       next();
