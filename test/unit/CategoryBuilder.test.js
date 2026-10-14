@@ -2,6 +2,7 @@ import { createLocalVue, mount, shallowMount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 import { PiniaVuePlugin, setActivePinia, createPinia } from 'pinia';
 import CategoryBuilder from '~/views/settings/CategoryBuilder.vue';
+import Settings from '~/views/settings/Settings.vue';
 import QueryOptions from '~/components/QueryOptions.vue';
 import { useBucketsStore } from '~/stores/buckets';
 import { useCategoryStore } from '~/stores/categories';
@@ -67,6 +68,34 @@ describe('CategoryBuilder loading', () => {
     });
     return wrapper;
   }
+
+  test('the mounted unload listener uses the component state and is removed on destroy', async () => {
+    const addListener = jest.spyOn(window, 'addEventListener');
+    const removeListener = jest.spyOn(window, 'removeEventListener');
+    mountBuilder();
+    wrapper.vm.$t = key => key;
+    await flush();
+    const handler = addListener.mock.calls.find(([type]) => type === 'beforeunload')[1];
+    expect(handler).toBe(wrapper.vm.beforeUnload);
+
+    categories.classes_unsaved_changes = false;
+    const clean = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(clean);
+    expect(clean.defaultPrevented).toBe(false);
+
+    wrapper.vm.categoryStore.classes_unsaved_changes = true;
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.classes_unsaved_changes).toBe(true);
+    const dirty = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(dirty);
+    expect(dirty.defaultPrevented).toBe(true);
+
+    wrapper.destroy();
+    expect(removeListener).toHaveBeenCalledWith('beforeunload', handler);
+    const afterDestroy = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(afterDestroy);
+    expect(afterDestroy.defaultPrevented).toBe(false);
+  });
 
   test('loads an Android-only unknown host without opening options or querying AFK', async () => {
     mountBuilder();
@@ -366,7 +395,10 @@ describe('CategoryBuilder navigation guards', () => {
     setActivePinia(createTestingPinia({ createSpy: jest.fn }));
   });
 
-  describe('beforeRouteLeave', () => {
+  describe.each([
+    ['standalone CategoryBuilder', CategoryBuilder],
+    ['Settings parent of the embedded builder', Settings],
+  ])('%s beforeRouteLeave', (_name, component) => {
     function makeVm(unsavedChanges) {
       const categoryStore = useCategoryStore();
       categoryStore.classes_unsaved_changes = unsavedChanges;
@@ -376,7 +408,7 @@ describe('CategoryBuilder navigation guards', () => {
     test('calls next() immediately when there are no unsaved changes', () => {
       const vm = makeVm(false);
       const next = jest.fn();
-      CategoryBuilder.beforeRouteLeave.call(vm, {}, {}, next);
+      component.beforeRouteLeave.call(vm, {}, {}, next);
       expect(next).toHaveBeenCalledWith();
       expect(next).toHaveBeenCalledTimes(1);
     });
@@ -385,7 +417,7 @@ describe('CategoryBuilder navigation guards', () => {
       const vm = makeVm(true);
       const next = jest.fn();
       jest.spyOn(window, 'confirm').mockReturnValue(true);
-      CategoryBuilder.beforeRouteLeave.call(vm, {}, {}, next);
+      component.beforeRouteLeave.call(vm, {}, {}, next);
       expect(window.confirm).toHaveBeenCalled();
       expect(next).toHaveBeenCalledWith();
     });
@@ -394,7 +426,7 @@ describe('CategoryBuilder navigation guards', () => {
       const vm = makeVm(true);
       const next = jest.fn();
       jest.spyOn(window, 'confirm').mockReturnValue(false);
-      CategoryBuilder.beforeRouteLeave.call(vm, {}, {}, next);
+      component.beforeRouteLeave.call(vm, {}, {}, next);
       expect(window.confirm).toHaveBeenCalled();
       expect(next).toHaveBeenCalledWith(false);
     });
