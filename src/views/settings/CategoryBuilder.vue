@@ -148,6 +148,18 @@ import { categoryBuilderHostnameEmptyKind, selectSoleKnownHostname } from '~/uti
 export default {
   name: 'CategoryBuilder',
   components: { CategoryEditModal },
+  beforeRouteLeave(to, from, next) {
+    const categoryStore = useCategoryStore();
+    if (categoryStore.classes_unsaved_changes) {
+      if (confirm(this.$t('settings.unsavedCategoriesLeave'))) {
+        next();
+      } else {
+        next(false);
+      }
+    } else {
+      next();
+    }
+  },
   props: {
     // When embedded inside CategorizationSettings, drop the standalone
     // page chrome so the embed reads as a subsection of the parent.
@@ -198,7 +210,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(useCategoryStore, ['allCategoriesSelect']),
+    ...mapState(useCategoryStore, ['allCategoriesSelect', 'classes_unsaved_changes']),
     // Persisted in server settings so "Ignore" survives reloads (aw-webui#486).
     ignored_words: function (): string[] {
       return this.settingsStore.category_builder_ignored_words || [];
@@ -241,13 +253,24 @@ export default {
     },
   },
   async mounted() {
+    window.addEventListener('beforeunload', this.beforeUnload);
     await this.fetchWords();
   },
   beforeDestroy() {
+    window.removeEventListener('beforeunload', this.beforeUnload);
     // Ignore results from requests that outlive this view.
     this.requestId++;
   },
   methods: {
+    beforeUnload(e: BeforeUnloadEvent) {
+      if (this.classes_unsaved_changes) {
+        const msg = this.$t('settings.unsavedCategoriesLeave');
+        e = e || window.event;
+        e.preventDefault();
+        e.returnValue = msg;
+        return msg;
+      }
+    },
     async fetchWords() {
       const requestId = ++this.requestId;
       const options = { ...this.queryOptions };

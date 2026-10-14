@@ -16,6 +16,7 @@ export default {
     report: 'Отчёт',
     alerts: 'Уведомления',
     timespiral: 'Timespiral',
+    categoryBuilder: 'Конструктор категорий',
     query: 'Запросы',
     graph: 'Граф',
     rawData: 'Сырые данные',
@@ -156,6 +157,7 @@ export default {
       builderSubtitle: 'Создание правил из некатегоризированной активности',
       openBuilder: 'Открыть конструктор',
       hideBuilder: 'Скрыть конструктор',
+      openBuilderFullPage: 'Открыть на отдельной странице',
     },
     developer: {
       title: 'Настройки разработчика',
