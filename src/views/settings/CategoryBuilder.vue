@@ -148,14 +148,14 @@ import { categoryBuilderHostnameEmptyKind, selectSoleKnownHostname } from '~/uti
 export default {
   name: 'CategoryBuilder',
   components: { CategoryEditModal },
-  beforeRouteLeave(to, from, next) {
+  async beforeRouteLeave(to, from, next) {
     const categoryStore = useCategoryStore();
     if (categoryStore.classes_unsaved_changes) {
-      if (confirm(this.$t('settings.unsavedCategoriesLeave'))) {
-        next();
-      } else {
-        next(false);
-      }
+      const confirmed = await this.$bvModal.msgBoxConfirm(
+        this.$t('settings.unsavedCategoriesLeave'),
+        { title: 'Unsaved changes', okVariant: 'warning', okTitle: 'Leave anyway' }
+      );
+      next(confirmed ? undefined : false);
     } else {
       next();
     }

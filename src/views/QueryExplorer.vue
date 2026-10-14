@@ -186,7 +186,11 @@ RETURN = sort_by_duration(merged_events);
       const current = this.selectedSavedQuery;
 
       if (current) {
-        if (!confirm(`Update saved query "${current.name}"?`)) {
+        const confirmed = await this.$bvModal.msgBoxConfirm(
+          `Update saved query "${current.name}"?`,
+          { title: 'Update query', okTitle: 'Update' }
+        );
+        if (!confirmed) {
           return;
         }
 
@@ -278,9 +282,11 @@ RETURN = sort_by_duration(merged_events);
         return;
       }
 
-      if (
-        !confirm(`Delete saved query "${this.selectedSavedQuery.name}"? This cannot be undone.`)
-      ) {
+      const confirmed = await this.$bvModal.msgBoxConfirm(
+        `Delete saved query "${this.selectedSavedQuery.name}"? This cannot be undone.`,
+        { title: 'Delete query', okVariant: 'danger', okTitle: 'Delete' }
+      );
+      if (!confirmed) {
         return;
       }
 

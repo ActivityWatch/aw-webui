@@ -318,16 +318,24 @@ export default {
       this.categoryStore.createSet(name);
       this.categoryStore.switchToSet(name);
     },
-    deleteActiveSet: function () {
+    deleteActiveSet: async function () {
       const id = this.categoryStore.active_set_ids[0];
       if (!id) return;
-      if (!confirm(`Delete category set "${id}"? This cannot be undone.`)) return;
+      const confirmed = await this.$bvModal.msgBoxConfirm(
+        `Delete category set "${id}"? This cannot be undone.`,
+        { title: 'Delete category set', okVariant: 'danger', okTitle: 'Delete' }
+      );
+      if (!confirmed) return;
       this.categoryStore.deleteSet(id);
       this.categoryStore.save();
     },
-    onSetChange: function (setId: string) {
+    onSetChange: async function (setId: string) {
       if (this.classes_unsaved_changes) {
-        if (!confirm('You have unsaved changes. Switch sets anyway? (Changes will be discarded)')) {
+        const confirmed = await this.$bvModal.msgBoxConfirm(
+          'You have unsaved changes. Switch sets anyway? (Changes will be discarded)',
+          { title: 'Unsaved changes', okVariant: 'warning', okTitle: 'Discard changes' }
+        );
+        if (!confirmed) {
           this.activeSetId = this.categoryStore.active_set_ids[0] || 'default';
           return;
         }
