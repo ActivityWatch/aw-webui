@@ -69,6 +69,9 @@ export default {
   settings: {
     title: '设置',
     unsavedCategoriesLeave: '分类有未保存的更改，确定要离开吗？',
+    unsavedCategoriesLeaveTitle: '未保存的更改',
+    unsavedCategoriesLeaveOk: '离开',
+    unsavedCategoriesLeaveCancel: '留下',
     daystart: {
       startOfDay: '每日开始时间',
       startOfDayHelp: '一天从这个时间开始，因为人们并不总是在午夜前睡觉。默认设置为 04:00。',

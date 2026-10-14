@@ -69,6 +69,9 @@ export default {
   settings: {
     title: 'Налаштування',
     unsavedCategoriesLeave: 'У категоріях є незбережені зміни. Справді вийти?',
+    unsavedCategoriesLeaveTitle: 'Незбережені зміни',
+    unsavedCategoriesLeaveOk: 'Вийти',
+    unsavedCategoriesLeaveCancel: 'Залишитися',
     daystart: {
       startOfDay: 'Початок дня',
       startOfDayHelp:

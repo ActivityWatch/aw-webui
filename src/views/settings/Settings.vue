@@ -69,7 +69,12 @@ export default {
     if (categoryStore.classes_unsaved_changes) {
       const confirmed = await this.$bvModal.msgBoxConfirm(
         this.$t('settings.unsavedCategoriesLeave'),
-        { title: 'Unsaved Changes', okTitle: 'Leave', cancelTitle: 'Stay', centered: true }
+        {
+          title: this.$t('settings.unsavedCategoriesLeaveTitle'),
+          okTitle: this.$t('settings.unsavedCategoriesLeaveOk'),
+          cancelTitle: this.$t('settings.unsavedCategoriesLeaveCancel'),
+          centered: true,
+        }
       );
       if (confirmed) {
         next();

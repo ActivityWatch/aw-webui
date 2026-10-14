@@ -70,6 +70,9 @@ export default {
   settings: {
     title: 'Settings',
     unsavedCategoriesLeave: 'Your categories have unsaved changes, are you sure you want to leave?',
+    unsavedCategoriesLeaveTitle: 'Unsaved Changes',
+    unsavedCategoriesLeaveOk: 'Leave',
+    unsavedCategoriesLeaveCancel: 'Stay',
     daystart: {
       startOfDay: 'Start of day',
       startOfDayHelp:
