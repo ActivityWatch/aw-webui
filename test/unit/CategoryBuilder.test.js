@@ -360,3 +360,72 @@ describe('CategoryBuilder ignored words with the real settings store', () => {
     expect(server[KEY]).toEqual(expect.arrayContaining(['bar']));
   });
 });
+
+describe('CategoryBuilder navigation guards', () => {
+  beforeEach(() => {
+    setActivePinia(createTestingPinia({ createSpy: jest.fn }));
+  });
+
+  describe('beforeRouteLeave', () => {
+    function makeVm(unsavedChanges) {
+      const categoryStore = useCategoryStore();
+      categoryStore.classes_unsaved_changes = unsavedChanges;
+      return { $t: key => key };
+    }
+
+    test('calls next() immediately when there are no unsaved changes', () => {
+      const vm = makeVm(false);
+      const next = jest.fn();
+      CategoryBuilder.beforeRouteLeave.call(vm, {}, {}, next);
+      expect(next).toHaveBeenCalledWith();
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    test('calls next() when user confirms leaving with unsaved changes', () => {
+      const vm = makeVm(true);
+      const next = jest.fn();
+      jest.spyOn(window, 'confirm').mockReturnValue(true);
+      CategoryBuilder.beforeRouteLeave.call(vm, {}, {}, next);
+      expect(window.confirm).toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith();
+    });
+
+    test('calls next(false) when user cancels leaving with unsaved changes', () => {
+      const vm = makeVm(true);
+      const next = jest.fn();
+      jest.spyOn(window, 'confirm').mockReturnValue(false);
+      CategoryBuilder.beforeRouteLeave.call(vm, {}, {}, next);
+      expect(window.confirm).toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith(false);
+    });
+
+    afterEach(() => jest.restoreAllMocks());
+  });
+
+  describe('beforeUnload', () => {
+    function makeVm(unsavedChanges) {
+      return {
+        classes_unsaved_changes: unsavedChanges,
+        $t: key => key,
+      };
+    }
+
+    test('does nothing when there are no unsaved changes', () => {
+      const vm = makeVm(false);
+      const e = { preventDefault: jest.fn(), returnValue: '' };
+      const result = CategoryBuilder.methods.beforeUnload.call(vm, e);
+      expect(e.preventDefault).not.toHaveBeenCalled();
+      expect(e.returnValue).toBe('');
+      expect(result).toBeUndefined();
+    });
+
+    test('sets returnValue and returns the message when there are unsaved changes', () => {
+      const vm = makeVm(true);
+      const e = { preventDefault: jest.fn(), returnValue: '' };
+      const result = CategoryBuilder.methods.beforeUnload.call(vm, e);
+      expect(e.preventDefault).toHaveBeenCalled();
+      expect(e.returnValue).toBe('settings.unsavedCategoriesLeave');
+      expect(result).toBe('settings.unsavedCategoriesLeave');
+    });
+  });
+});
