@@ -48,6 +48,9 @@ mixin navTools(desktop)
     b-dropdown-item(to="/search")
       icon(name="search")
       | {{ $t('nav.search') }}
+    b-dropdown-item(to="/category-builder" data-testid="nav-category-builder")
+      icon(name="tags")
+      | {{ $t('nav.categoryBuilder') }}
     b-dropdown-item(to="/work-report")
       icon(name="briefcase")
       | {{ $t('nav.workReport') }}
@@ -181,6 +184,7 @@ import 'vue-awesome/icons/stream';
 import 'vue-awesome/icons/database';
 import 'vue-awesome/icons/search';
 import 'vue-awesome/icons/code';
+import 'vue-awesome/icons/tags';
 import 'vue-awesome/icons/chart-line';
 import 'vue-awesome/icons/chart-pie';
 import 'vue-awesome/icons/flag-checkered';

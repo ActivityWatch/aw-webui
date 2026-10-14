@@ -84,7 +84,13 @@ div
     div.d-flex.align-items-center.flex-wrap
       h5.mb-0 {{ $t('settings.categorization.builderTitle') }}
       small.text-muted.ml-2 {{ $t('settings.categorization.builderSubtitle') }}
-      b-btn.ml-auto(
+      b-btn.ml-auto.mr-1(
+        variant="outline-secondary"
+        size="sm"
+        to="/category-builder"
+        tag="router-link"
+      ) {{ $t('settings.categorization.openBuilderFullPage') }}
+      b-btn(
         variant="outline-primary"
         size="sm"
         @click="builderOpen = !builderOpen"

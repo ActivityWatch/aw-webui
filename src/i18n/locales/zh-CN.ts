@@ -17,6 +17,7 @@ export default {
     report: '报告',
     alerts: '提醒',
     timespiral: '时间螺旋',
+    categoryBuilder: '分类构建器',
     query: '查询',
     graph: '图谱',
     rawData: '原始数据',
@@ -142,6 +143,7 @@ export default {
       builderSubtitle: '从未分类活动生成规则',
       openBuilder: '打开构建器',
       hideBuilder: '隐藏构建器',
+      openBuilderFullPage: '在独立页面打开',
     },
     developer: {
       title: '开发者设置',

@@ -65,6 +65,14 @@ describe('Header research edition badge', () => {
     expect(wrapper.findAll('[data-testid="research-edition-badge"]')).toHaveLength(0);
   });
 
+  test('links to the standalone Category Builder from the tools menu', () => {
+    const wrapper = mountHeader(false);
+
+    expect(wrapper.find('[data-testid="nav-category-builder"]').attributes('to')).toBe(
+      '/category-builder'
+    );
+  });
+
   test('renders no badge when the build flag is absent', () => {
     const wrapper = mountHeader(undefined);
 

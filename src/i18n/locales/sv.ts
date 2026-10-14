@@ -18,6 +18,7 @@ export default {
     report: 'Rapport',
     alerts: 'Aviseringar',
     timespiral: 'Tidsspiral',
+    categoryBuilder: 'Kategoribyggare',
     query: 'Fråga',
     graph: 'Graf',
     rawData: 'Rådata',
@@ -159,6 +160,7 @@ export default {
       builderSubtitle: 'Skapa regler från okategoriserad aktivitet',
       openBuilder: 'Öppna byggaren',
       hideBuilder: 'Dölj byggaren',
+      openBuilderFullPage: 'Öppna som egen sida',
     },
     developer: {
       title: 'Utvecklarinställningar',

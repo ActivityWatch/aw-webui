@@ -18,6 +18,7 @@ export default {
     report: 'Report',
     alerts: 'Alerts',
     timespiral: 'Timespiral',
+    categoryBuilder: 'Category Builder',
     query: 'Query',
     graph: 'Graph',
     rawData: 'Raw Data',
@@ -164,6 +165,7 @@ export default {
       builderSubtitle: 'Generate rules from uncategorized activity',
       openBuilder: 'Open builder',
       hideBuilder: 'Hide builder',
+      openBuilderFullPage: 'Open as full page',
     },
     developer: {
       title: 'Developer settings',

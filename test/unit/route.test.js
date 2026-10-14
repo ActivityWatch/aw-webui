@@ -15,6 +15,15 @@ describe('router', () => {
     expect(rootRoute.redirect({})).toBe('/home');
   });
 
+  test('opens Category Builder as a standalone page and redirects its legacy URL', () => {
+    const builderRoute = router.options.routes.find(route => route.path === '/category-builder');
+
+    expect(builderRoute).toBeTruthy();
+    expect(typeof builderRoute.component).toBe('function');
+    expect(router.resolve('/settings/category-builder').route.path).toBe('/category-builder');
+    expect(router.resolve('/settings/categorization').route.path).toBe('/settings/categorization');
+  });
+
   test('includes the work report route', () => {
     const workReportRoute = router.options.routes.find(route => route.path === '/work-report');
 
