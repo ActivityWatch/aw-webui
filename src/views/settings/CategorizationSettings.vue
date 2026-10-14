@@ -327,7 +327,14 @@ export default {
       );
       if (!confirmed) return;
       this.categoryStore.deleteSet(id);
-      await this.categoryStore.save();
+      try {
+        await this.categoryStore.save();
+      } catch (e) {
+        // The set is already gone from the in-memory store; surface the
+        // persistence failure instead of leaving an unhandled rejection.
+        this.categoryStore.classes_unsaved_changes = true;
+        alert(`Failed to delete category set "${id}": ${e}`);
+      }
     },
     onSetChange: async function (setId: string) {
       if (this.classes_unsaved_changes) {
