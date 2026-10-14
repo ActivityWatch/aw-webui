@@ -92,6 +92,42 @@ describe('buildActivityContext — aggregation', () => {
     ]);
   });
 
+  test('reuses one date formatter across events and midnight-search probes', () => {
+    const formatter = jest.spyOn(Intl, 'DateTimeFormat');
+    try {
+      const ctx = build([
+        event('vim', 3600, { timestamp: '2026-08-01T23:30:00Z' }),
+        event('vim', 100, { timestamp: '2026-08-02T09:00:00Z' }),
+      ]);
+      expect(ctx.daily.map(d => d.date)).toEqual(['2026-08-01', '2026-08-02']);
+      expect(ctx.daily.reduce((sum, d) => sum + d.duration, 0)).toBeCloseTo(3700, 0);
+      expect(formatter).toHaveBeenCalledTimes(1);
+    } finally {
+      formatter.mockRestore();
+    }
+  });
+
+  test('falls back to UTC day splitting when the timezone is invalid', () => {
+    const ctx = build([event('vim', 3600, { timestamp: '2026-08-01T23:30:00Z' })], {
+      timezone: 'Invalid/Timezone',
+    });
+    expect(ctx.daily.map(d => d.date)).toEqual(['2026-08-01', '2026-08-02']);
+    expect(ctx.daily[0].duration).toBeCloseTo(1800, 0);
+    expect(ctx.daily[1].duration).toBeCloseTo(1800, 0);
+  });
+
+  test('assembles date keys from parts without using locale-ordered format output', () => {
+    const format = jest.spyOn(Intl.DateTimeFormat.prototype, 'format', 'get');
+    format.mockImplementation(() => () => '8/1/2026');
+    try {
+      const ctx = build([event('vim', 100)]);
+      expect(ctx.daily).toEqual([{ date: '2026-08-01', duration: 100 }]);
+      expect(format).not.toHaveBeenCalled();
+    } finally {
+      format.mockRestore();
+    }
+  });
+
   test('day grouping honours a non-UTC timezone', () => {
     const ctx = build([event('vim', 100, { timestamp: '2026-08-01T23:30:00+00:00' })], {
       timezone: 'Europe/Stockholm',
