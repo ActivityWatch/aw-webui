@@ -12,6 +12,7 @@ const Bucket = () => import('./views/Bucket.vue');
 const QueryExplorer = () => import('./views/QueryExplorer.vue');
 const Timeline = () => import('./views/Timeline.vue');
 const Trends = () => import('./views/Trends.vue');
+const FocusDashboard = () => import('./views/FocusDashboard.vue');
 const Settings = () => import('./views/settings/Settings.vue');
 const CategoryBuilder = () => import('./views/settings/CategoryBuilder.vue');
 const Stopwatch = () => import('./views/Stopwatch.vue');
@@ -62,6 +63,8 @@ const router = new VueRouter({
     { path: '/timeline', component: Timeline, meta: { fullContainer: true } },
     { path: '/trends', component: Trends, meta: { fullContainer: true } },
     { path: '/trends/:host', component: Trends, meta: { fullContainer: true } },
+    { path: '/focus', component: FocusDashboard },
+    { path: '/focus/:host', component: FocusDashboard, props: true },
     { path: '/report', component: Report },
     { path: '/query', component: QueryExplorer },
     { path: '/alerts', component: Alerts },

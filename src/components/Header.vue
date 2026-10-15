@@ -54,6 +54,9 @@ mixin navTools(desktop)
     b-dropdown-item(to="/work-report")
       icon(name="briefcase")
       | {{ $t('nav.workReport') }}
+    b-dropdown-item(to="/focus")
+      icon(name="bullseye")
+      | Focus Dashboard
     b-dropdown-item(to="/billing")
       icon(name="dollar-sign")
       | Billable Hours
