@@ -65,6 +65,11 @@ b-modal(id="edit" ref="edit" title="Edit category" @show="resetModal" @hidden="h
 
   hr
   div.my-1
+    b Focus class
+    b-select(v-model="editing.class" :options="allClassOptions")
+
+  hr
+  div.my-1
     b-btn(variant="danger", @click="removeClass(categoryId); $refs.edit.hide()")
       icon(name="trash")
       | Remove category
@@ -103,6 +108,7 @@ export default {
         score: null,
         match_fields: [],
         priority: null,
+        class: null as string | null,
       },
     };
   },
@@ -147,6 +153,14 @@ export default {
         return null;
       }
       return this.validPriority;
+    },
+    allClassOptions: function () {
+      return [
+        { value: null, text: '(inherit / unset)' },
+        { value: 'focus', text: 'Focus' },
+        { value: 'operational', text: 'Operational' },
+        { value: 'distraction', text: 'Distraction' },
+      ];
     },
     fieldOptions: function () {
       const extra = (this.editing.match_fields || []).filter(
@@ -260,6 +274,7 @@ export default {
         data: {
           color: this.editing.inherit_color === true ? undefined : this.editing.color,
           score: this.editing.inherit_score === true ? undefined : this.editing.score,
+          class: this.editing.class || undefined,
         },
       };
       this.categoryStore.updateClass(new_class);
@@ -289,6 +304,7 @@ export default {
         inherit_score,
         match_fields: storedKeys ? [...storedKeys] : [],
         priority: this.priorityFromRule(rule),
+        class: (cat.data ? cat.data.class : null) ?? null,
       };
     },
     priorityFromInput(value) {
