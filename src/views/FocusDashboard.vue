@@ -124,6 +124,7 @@ div
 
 <script lang="ts">
 import moment from 'moment';
+import { canonicalEvents, querystr_to_array } from '~/queries';
 import { useBucketsStore } from '~/stores/buckets';
 import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
@@ -348,36 +349,21 @@ export default {
       this.timeline = [];
 
       try {
-        const client = getClient();
-        const endDate = get_today_with_offset(0);
         const startDate = get_today_with_offset(-this.periodDays);
 
-        // Find window and AFK buckets for this host
-        await this.bucketsStore.loadBuckets();
-        const buckets: any = this.bucketsStore.buckets;
-        const windowBucket = Object.values(buckets).find(
-          (b: any) => b.type === 'currentwindow' && b.hostname === this.host
-        ) as any;
-        const afkBucket = Object.values(buckets).find(
-          (b: any) => b.type === 'afkstatus' && b.hostname === this.host
-        ) as any;
+        // Build query using the same canonical approach as other views
+        const cats = this.categoryStore.classes_for_query;
+        const queryCode =
+          canonicalEvents({
+            ...this.bucketsStore.desktopBucketIds(this.host),
+            filter_afk: true,
+            categories: cats,
+            filter_categories: null,
+            always_active_pattern: this.settingsStore.always_active_pattern || undefined,
+          }) + 'RETURN = events;';
+        const query = querystr_to_array(queryCode);
 
-        if (!windowBucket) {
-          this.error = `No window watcher bucket found for host "${this.host}"`;
-          return;
-        }
-
-        // Query events over the period
-        const query = [
-          'events = flood(query_bucket(find_bucket("aw-watcher-window_" + hostname)));',
-          afkBucket
-            ? 'afk_events = flood(query_bucket(find_bucket("aw-watcher-afk_" + hostname)));' +
-              'events = filter_period_intersect(events, filter_keyvals(afk_events, "status", ["not-afk"]));'
-            : '',
-          'events = categorize(events, CATEGORIES);',
-          'RETURN = events;',
-        ].join('\n');
-
+        // Query one timeperiod per day for the period
         const timeperiods: string[][] = [];
         for (let d = 0; d < this.periodDays; d++) {
           const start = moment(startDate).add(d, 'days').toISOString();
@@ -387,7 +373,7 @@ export default {
           timeperiods.push([start, end]);
         }
 
-        const result = await client.query(timeperiods, [query]);
+        const result = await getClient().query(timeperiods, query);
 
         // Flatten events and compute class spans
         const spans: typeof this.spans = [];
