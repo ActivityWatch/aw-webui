@@ -45,28 +45,28 @@ div
       b-col(md="3" sm="6")
         b-card.h-100.text-center
           div.text-success.mb-1
-            b-icon(icon="check-circle-fill" scale="1.5")
+            icon(name="check-circle" scale="1.5")
           small.text-muted Focus
           h4.mb-0.text-success {{ pct(focusSecs, totalSecs) }}
           div.small.text-muted {{ friendlyduration(focusSecs) }}
       b-col(md="3" sm="6")
         b-card.h-100.text-center
           div.text-danger.mb-1
-            b-icon(icon="x-circle-fill" scale="1.5")
+            icon(name="times-circle" scale="1.5")
           small.text-muted Distraction
           h4.mb-0.text-danger {{ pct(distractionSecs, totalSecs) }}
           div.small.text-muted {{ friendlyduration(distractionSecs) }}
       b-col(md="3" sm="6")
         b-card.h-100.text-center
           div.text-secondary.mb-1
-            b-icon(icon="gear-fill" scale="1.5")
+            icon(name="cog" scale="1.5")
           small.text-muted Operational
           h4.mb-0 {{ pct(operationalSecs, totalSecs) }}
           div.small.text-muted {{ friendlyduration(operationalSecs) }}
       b-col(md="3" sm="6")
         b-card.h-100.text-center
           div.text-muted.mb-1
-            b-icon(icon="question-circle-fill" scale="1.5")
+            icon(name="question-circle" scale="1.5")
           small.text-muted Unclassified
           h4.mb-0.text-muted {{ pct(unclassifiedSecs, totalSecs) }}
           div.small.text-muted {{ friendlyduration(unclassifiedSecs) }}
@@ -129,7 +129,13 @@ import { useBucketsStore } from '~/stores/buckets';
 import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
 import { getClient } from '~/util/awclient';
-import { get_today_with_offset } from '~/util/time';
+import { get_day_start_with_offset, get_day_end_with_offset } from '~/util/time';
+
+// Font Awesome icons used by the summary cards (vue-awesome registers globally)
+import 'vue-awesome/icons/check-circle';
+import 'vue-awesome/icons/times-circle';
+import 'vue-awesome/icons/cog';
+import 'vue-awesome/icons/question-circle';
 
 type FocusClass = 'focus' | 'operational' | 'distraction' | null;
 
@@ -167,7 +173,13 @@ export default {
       spans: [] as { cat: string[]; cls: FocusClass; duration: number }[],
 
       // For context-switch / attention-span metrics
-      timeline: [] as { timestamp: string; cls: FocusClass }[],
+      timeline: [] as {
+        timestamp: string;
+        startMs: number;
+        endMs: number;
+        duration: number;
+        cls: FocusClass;
+      }[],
     };
   },
 
@@ -227,21 +239,30 @@ export default {
       return switches;
     },
 
-    /** Average focus span duration in seconds */
+    /** Focus runs: contiguous focus events (gap <= 5 min), as durations in seconds */
     focusSpans(): number[] {
       const spans: number[] = [];
-      let current: string | null = null;
-      let start = 0;
-      for (const [i, t] of this.timeline.entries()) {
-        if (t.cls === 'focus' && current !== 'focus') {
-          start = i;
-          current = 'focus';
-        } else if (t.cls !== 'focus' && current === 'focus') {
-          // approximation: count events in span
-          spans.push(i - start);
-          current = null;
+      const breakMs = 5 * 60 * 1000;
+      let runSecs = 0;
+      let runEndMs: number | null = null;
+      for (const ev of this.timeline) {
+        if (ev.cls === 'focus') {
+          if (runEndMs === null || ev.startMs - runEndMs <= breakMs) {
+            runSecs += ev.duration;
+          } else {
+            // A gap longer than the break tolerance starts a new run
+            spans.push(runSecs);
+            runSecs = ev.duration;
+          }
+          runEndMs = Math.max(runEndMs ?? 0, ev.endMs);
+        } else if (runEndMs !== null) {
+          spans.push(runSecs);
+          runSecs = 0;
+          runEndMs = null;
         }
       }
+      // Close an open final run (timeline ending in focus)
+      if (runEndMs !== null) spans.push(runSecs);
       return spans;
     },
     focusSpanCount(): number {
@@ -249,10 +270,8 @@ export default {
     },
     avgFocusSpanSecs(): number {
       if (this.focusSpans.length === 0) return 0;
-      // Use actual seconds from spans
-      const totalFocus = this.focusSecs;
-      const count = this.focusSpans.length;
-      return count > 0 ? totalFocus / count : 0;
+      const total = this.focusSpans.reduce((a, b) => a + b, 0);
+      return total / this.focusSpans.length;
     },
 
     /** Category breakdown rows for table */
@@ -295,7 +314,13 @@ export default {
   async mounted() {
     await this.bucketsStore.loadBuckets();
     await this.categoryStore.load();
-    if (this.host) this.refresh();
+    if (this.host) {
+      this.refresh();
+    } else if (this.bucketsStore.knownHosts.length > 0) {
+      // Default to an available host so single-host users load data instead of
+      // seeing the installation warning with no way to pick a computer.
+      this.$router.replace(`/focus/${this.bucketsStore.knownHosts[0]}`);
+    }
   },
 
   methods: {
@@ -349,7 +374,7 @@ export default {
       this.timeline = [];
 
       try {
-        const startDate = get_today_with_offset(-this.periodDays);
+        const offset = this.settingsStore.startOfDay;
 
         // Build query using the same canonical approach as other views
         const cats = this.categoryStore.classes_for_query;
@@ -363,14 +388,13 @@ export default {
           }) + 'RETURN = events;';
         const query = querystr_to_array(queryCode);
 
-        // Query one timeperiod per day for the period
-        const timeperiods: string[][] = [];
-        for (let d = 0; d < this.periodDays; d++) {
-          const start = moment(startDate).add(d, 'days').toISOString();
-          const end = moment(startDate)
-            .add(d + 1, 'days')
-            .toISOString();
-          timeperiods.push([start, end]);
+        // Query one timeperiod per day for the period (start/end string form)
+        const timeperiods: string[] = [];
+        for (let d = this.periodDays - 1; d >= 0; d--) {
+          const date = moment().subtract(d, 'days');
+          timeperiods.push(
+            get_day_start_with_offset(date, offset) + '/' + get_day_end_with_offset(date, offset)
+          );
         }
 
         const result = await getClient().query(timeperiods, query);
@@ -384,7 +408,14 @@ export default {
             const cls = this.resolveClass(cat);
             const duration = ev.duration ?? 0;
             spans.push({ cat, cls, duration });
-            timeline.push({ timestamp: ev.timestamp, cls });
+            const startMs = moment(ev.timestamp).valueOf();
+            timeline.push({
+              timestamp: ev.timestamp,
+              startMs,
+              endMs: startMs + duration * 1000,
+              duration,
+              cls,
+            });
           }
         }
 
