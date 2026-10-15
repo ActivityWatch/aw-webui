@@ -158,6 +158,7 @@ jobs:
           sleep 3  # give a few seconds
     - name: Run e2e tests with testcafe
       id: e2e
+      timeout-minutes: 10
       uses: DevExpress/testcafe-action@latest
       with:
         # NOTE: --skip-js-errors should be removed when things work properly
