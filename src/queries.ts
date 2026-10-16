@@ -506,7 +506,8 @@ export function browserSearchQuery(browserBuckets: string[], pattern: string): s
   // JSON.stringify escapes regex backslashes twice; the AW query language only
   // needs a single backslash, so patterns like '\d' must be un-escaped to match
   // (same treatment as `categories_str` in canonicalEvents).
-  const escapedPattern = JSON.stringify(pattern).replace(/\\\\/g, '\\');
+  // Match window search's ignore_case rule for both URL and title matches.
+  const escapedPattern = JSON.stringify('(?i)' + pattern).replace(/\\\\/g, '\\');
   let code = 'browser_results = [];';
   // Use numeric indices as variable-name suffixes so every bucket is queried
   // regardless of whether its name matches a known browser — this also handles

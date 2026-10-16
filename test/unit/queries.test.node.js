@@ -56,6 +56,14 @@ test('browserSearchQuery with browser bucket generates valid query', () => {
   expect(query).toContain('RETURN = browser_results');
 });
 
+test('browserSearchQuery ignores case in both URL and title searches', () => {
+  const query = queries.browserSearchQuery(['aw-watcher-web-firefox_testhost'], 'github\\.com');
+  expect(query).toContain('url_b0 = filter_keyvals_regex(events_b0, "url", "(?i)github\\.com");');
+  expect(query).toContain(
+    'title_b0 = filter_keyvals_regex(events_b0, "title", "(?i)github\\.com");'
+  );
+});
+
 test('generate fullDesktopQuery', () => {
   let query = queries.fullDesktopQuery(queryParams).join('\n');
   expect(query).toMatchSnapshot();
