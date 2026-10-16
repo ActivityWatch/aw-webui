@@ -182,8 +182,9 @@ div
   margin-bottom: 1em;
 }
 
+// No `opacity` here: opacity < 1 makes the card a stacking context, which
+// traps its dropdown menus underneath the cards below it.
 .bucket-card--unknown {
-  opacity: 0.85;
   background: #fbfbfb;
 }
 
