@@ -165,13 +165,27 @@ jobs:
       run: |
           npm run serve &
           sleep 3  # give a few seconds
+    # Run e2e on Chrome for Testing, not the runner image's preinstalled Chrome
+    # (aw-webui#1122). Image 20261012 ships Google Chrome 155.0.8059.39, which
+    # intermittently wedges TestCafe native automation: the run goes silent
+    # between two tests until the step timeout. The same build from Chrome for
+    # Testing hangs too, while the later 155.0.8059.84 point release runs clean,
+    # so this is a defect in that one Chrome build. Tracking the CfT stable
+    # channel keeps CI off whatever stale build the image happens to carry.
+    - name: Set up Chrome for e2e
+      id: setup-chrome
+      uses: browser-actions/setup-chrome@v2
+      with:
+        chrome-version: stable
     - name: Run e2e tests with testcafe
       id: e2e
       timeout-minutes: 10
       uses: DevExpress/testcafe-action@latest
       with:
         # NOTE: --skip-js-errors should be removed when things work properly
-        args: "--skip-js-errors chrome test/e2e/"
+        # NOTE: --no-sandbox is needed for a Chrome for Testing binary on
+        # Ubuntu 24.04 runners; without it the browser never connects.
+        args: "--skip-js-errors \"chrome:${{ steps.setup-chrome.outputs.chrome-path }} --no-sandbox\" test/e2e/"
     - name: Move screenshots to subdir
       # Run this step even if e2e tests flag failure
       if: ${{ success() || steps.e2e.conclusion == 'failure'}}
