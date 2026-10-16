@@ -51,7 +51,7 @@ div
               a(:href="e.data.url" target="_blank" rel="noopener") {{ e.data.url }}
             td {{ e.data.title }}
 
-    div(v-if="events && events.length === 0 && (!browserEvents || browserEvents.length === 0)")
+    div(v-if="status !== 'searching' && events && events.length === 0 && (!browserEvents || browserEvents.length === 0)")
       p.text-muted No results found.
 
     div
@@ -109,8 +109,6 @@ export default {
       try {
         this.status = 'searching';
         this.error = '';
-        this.events = [];
-        this.browserEvents = [];
 
         // Look up browser buckets for this host. A failure here (e.g. the bucket
         // list cannot be loaded) must not block the window-only search.
