@@ -50,6 +50,35 @@ div
           @click="applyRange"
         ) Apply
 
+      template(v-if="mode === 'range'")
+        label.col-form-label.col-form-label-sm.mb-0 Shift
+        div.btn-group(role="group" aria-label="Shift date range")
+          input.btn.btn-light.btn-sm(
+            type="button" value="-1w"
+            @click="shiftDays(-7); $event.target.blur()"
+            aria-label="Shift back one week"
+          )
+          input.btn.btn-light.btn-sm(
+            type="button" value="-1d"
+            @click="shiftDays(-1); $event.target.blur()"
+            aria-label="Shift back one day"
+          )
+          input.btn.btn-light.btn-sm(
+            type="button" value="Today"
+            @click="setToday(); $event.target.blur()"
+            aria-label="Jump to today"
+          )
+          input.btn.btn-light.btn-sm(
+            type="button" value="+1d"
+            @click="shiftDays(1); $event.target.blur()"
+            aria-label="Shift forward one day"
+          )
+          input.btn.btn-light.btn-sm(
+            type="button" value="+1w"
+            @click="shiftDays(7); $event.target.blur()"
+            aria-label="Shift forward one week"
+          )
+
     div.text-right.d-none.d-md-block(v-if="showUpdate")
       b-button.px-2(@click="refresh()", variant="outline-dark", size="sm")
         icon.mr-1(name="sync")
@@ -203,6 +232,25 @@ export default {
     },
     applyLastDuration() {
       this.mode = 'last_duration';
+      this.valueChanged();
+    },
+    setToday() {
+      const today = moment().format('YYYY-MM-DD');
+      this.start = today;
+      this.end = today;
+      this.mode = 'range';
+      this.duration = 0;
+      this.valueChanged();
+    },
+    shiftDays(days: number) {
+      const newStart = moment(this.start || undefined)
+        .add(days, 'days')
+        .format('YYYY-MM-DD');
+      const newEnd = this.end ? moment(this.end).add(days, 'days').format('YYYY-MM-DD') : null;
+      this.start = newStart;
+      this.end = newEnd;
+      this.mode = 'range';
+      this.duration = 0;
       this.valueChanged();
     },
   },
