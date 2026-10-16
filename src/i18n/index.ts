@@ -59,6 +59,17 @@ export function getInitialLocale(): AppLocale {
   return detectBrowserLocale() ?? 'en';
 }
 
+// Russian and Ukrainian use three cardinal forms for the filter count summary.
+function russianUkrainianPlural(choice: number, choicesLength: number): number {
+  const number = Math.abs(choice);
+  if (choicesLength === 2) return number === 1 ? 0 : 1;
+  if (number % 10 === 1 && number % 100 !== 11) return 0;
+  if (number % 10 >= 2 && number % 10 <= 4 && (number % 100 < 10 || number % 100 >= 20)) {
+    return 1;
+  }
+  return 2;
+}
+
 const MOMENT_LOCALE: Record<AppLocale, string> = {
   en: 'en',
   uk: 'uk',
@@ -74,6 +85,10 @@ export const i18n = new VueI18n({
   locale: initialLocale,
   fallbackLocale: 'en',
   messages: { en, uk, de, ru, 'zh-CN': zhCN, sv },
+  pluralizationRules: {
+    ru: russianUkrainianPlural,
+    uk: russianUkrainianPlural,
+  },
   silentTranslationWarn: process.env.NODE_ENV === 'production',
 });
 
