@@ -205,6 +205,7 @@ div
   // them can span decades of AFK data for long ranges.
   aw-periodusage(v-else-if="periodLength !== 'range'", :periodusage_arr="periodusage", @update="setDate")
 
+  aw-watcher-liveness-banner(v-if="host" :host="host")
   aw-uncategorized-notification(:periodLength="periodLength")
 
   ul.row.nav.nav-tabs.mt-4
@@ -353,6 +354,7 @@ export default {
   name: 'Activity',
   components: {
     'aw-uncategorized-notification': () => import('~/components/UncategorizedNotification.vue'),
+    'aw-watcher-liveness-banner': () => import('~/components/WatcherLivenessBanner.vue'),
   },
   props: {
     host: String,
