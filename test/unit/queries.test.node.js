@@ -38,6 +38,32 @@ function expectBracketsClosed(query) {
   expect(openBraces && openBraces.length).toEqual(closeBraces && closeBraces.length);
 }
 
+test('browserSearchQuery with no buckets returns empty array', () => {
+  const result = queries.browserSearchQuery([], 'github\\.com');
+  expect(result).toEqual([]);
+});
+
+test('browserSearchQuery with browser bucket generates valid query', () => {
+  const buckets = ['aw-watcher-web-firefox_testhost'];
+  const query = queries.browserSearchQuery(buckets, 'github\\.com').join('\n');
+  expect(query).toMatchSnapshot();
+  expectBracketsClosed(query);
+  // Must query the bucket, split urls, filter on both url and title
+  expect(query).toContain('query_bucket("aw-watcher-web-firefox_testhost")');
+  expect(query).toContain('split_url_events');
+  expect(query).toContain('"url"');
+  expect(query).toContain('"title"');
+  expect(query).toContain('RETURN = browser_results');
+});
+
+test('browserSearchQuery ignores case in both URL and title searches', () => {
+  const query = queries.browserSearchQuery(['aw-watcher-web-firefox_testhost'], 'github\\.com');
+  expect(query).toContain('url_b0 = filter_keyvals_regex(events_b0, "url", "(?i)github\\.com");');
+  expect(query).toContain(
+    'title_b0 = filter_keyvals_regex(events_b0, "title", "(?i)github\\.com");'
+  );
+});
+
 test('generate fullDesktopQuery', () => {
   let query = queries.fullDesktopQuery(queryParams).join('\n');
   expect(query).toMatchSnapshot();
