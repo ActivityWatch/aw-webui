@@ -2,6 +2,7 @@
 
 exports[`generate fullDesktopQuery 1`] = `
 "events = flood(query_bucket("aw-watcher-window_testhost"));
+raw_window_events = events;
 not_afk = flood(query_bucket("aw-watcher-afk_testhost"));
 not_afk = filter_keyvals(not_afk, "status", ["not-afk"]);
 not_treat_as_afk = filter_keyvals_regex(events, "app", "meow|nyaan|specials: \\w(\\\\)");
@@ -21,6 +22,7 @@ app_cat_events = sort_by_duration(merge_events_by_keys(events, ["app", "$categor
 app_events  = limit_events(app_events, 100);
 title_events  = limit_events(title_events, 100);
 duration = sum_durations(events);
+raw_window_duration = sum_durations(raw_window_events);
 browser_events = split_url_events(browser_events);
 browser_urls = merge_events_by_keys(browser_events, ["url"]);
 browser_urls = sort_by_duration(browser_urls);
@@ -42,7 +44,8 @@ RETURN = {
             "title_events": title_events,
             "cat_events": cat_events,
             "active_events": not_afk,
-            "duration": duration
+            "duration": duration,
+            "raw_duration": raw_window_duration
         },
         "browser": {
             "domains": browser_domains,
