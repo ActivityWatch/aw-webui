@@ -12,6 +12,8 @@
 
 import VisTimeline from '~/visualizations/VisTimeline.vue';
 import EventEditor from '~/components/EventEditor.vue';
+import StopwatchEntry from '~/components/StopwatchEntry.vue';
+import moment from 'moment';
 
 // vis-timeline creates a real DOM timeline; mock the entire import so unit
 // tests run in jsdom without a full browser canvas/resize-observer stack.
@@ -42,6 +44,59 @@ describe('timeline event editing (#984)', () => {
     expect(replaceEvent).toHaveBeenCalledWith('aw-watcher-window_test', editedEvent);
     expect(emit).toHaveBeenNthCalledWith(1, 'save', editedEvent);
     expect(emit).toHaveBeenNthCalledWith(2, 'saved', editedEvent, 'aw-watcher-window_test');
+  });
+
+  test.each([
+    ['Date', new Date('2026-10-16T10:00:00Z')],
+    ['Moment', moment('2026-10-16T10:00:00Z')],
+  ])('preserves a %s timestamp and isolates the in-flight save snapshot', async (_, timestamp) => {
+    const editedEvent = {
+      id: 7,
+      timestamp,
+      duration: 60,
+      data: { running: true, label: 'original', nested: { value: 'original' } },
+    };
+    let finishWrite;
+    const replaceEvent = jest.fn(
+      () =>
+        new Promise(resolve => {
+          finishWrite = resolve;
+        })
+    );
+    const emit = jest.fn();
+    const vm = {
+      bucket_id: 'aw-stopwatch_test',
+      editedEvent,
+      $aw: { replaceEvent },
+      $emit: emit,
+    };
+    const saving = EventEditor.methods.save.call(vm);
+    const snapshot = replaceEvent.mock.calls[0][1];
+
+    expect(emit).toHaveBeenCalledTimes(1);
+    expect(emit).toHaveBeenCalledWith('save', snapshot);
+    const stopwatchEmit = jest.fn();
+    StopwatchEntry.methods.save.call({ $emit: stopwatchEmit }, snapshot);
+    const updatedEvent = stopwatchEmit.mock.calls[0][1];
+    // Match the running-counter arithmetic in the StopwatchEntry template.
+    expect((moment('2026-10-16T10:01:00Z') - updatedEvent.timestamp) / 1000).toBe(60);
+    expect(snapshot.timestamp).toBeInstanceOf(timestamp.constructor);
+    expect(snapshot.timestamp).not.toBe(timestamp);
+
+    editedEvent.data.nested.value = 'changed';
+    if (timestamp instanceof Date) {
+      timestamp.setTime(0);
+    } else {
+      timestamp.add(1, 'hour');
+    }
+    vm.editedEvent = { id: 8, data: { label: 'another event' } };
+    vm.bucket_id = 'aw-stopwatch_other';
+    finishWrite();
+    await saving;
+
+    expect(snapshot.timestamp.valueOf()).toBe(Date.parse('2026-10-16T10:00:00Z'));
+    expect(snapshot.data.nested.value).toBe('original');
+    expect(emit).toHaveBeenNthCalledWith(2, 'saved', snapshot, 'aw-stopwatch_test');
   });
 
   test('does not report a saved event when the server rejects the update', async () => {
@@ -231,7 +286,6 @@ describe('VisTimeline zoom-anchor regression (#847)', () => {
 });
 
 describe('VisTimeline scroll bounds (#996)', () => {
-  const moment = require('moment');
   const { update } = VisTimeline.methods;
   const dayStart = moment('2026-09-24T00:00:00Z');
   const dayEnd = moment(dayStart).add(1, 'day');
