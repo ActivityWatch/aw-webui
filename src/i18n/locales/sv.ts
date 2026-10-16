@@ -71,6 +71,9 @@ export default {
     title: 'Inställningar',
     unsavedCategoriesLeave:
       'Dina kategorier har osparade ändringar. Är du säker på att du vill lämna sidan?',
+    unsavedCategoriesLeaveTitle: 'Osparade ändringar',
+    unsavedCategoriesLeaveOk: 'Lämna',
+    unsavedCategoriesLeaveCancel: 'Stanna',
     daystart: {
       startOfDay: 'Dagens början',
       startOfDayHelp:

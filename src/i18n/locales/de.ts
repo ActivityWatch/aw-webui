@@ -69,6 +69,9 @@ export default {
   settings: {
     title: 'Einstellungen',
     unsavedCategoriesLeave: 'Ihre Kategorien haben ungespeicherte Änderungen. Wirklich verlassen?',
+    unsavedCategoriesLeaveTitle: 'Ungespeicherte Änderungen',
+    unsavedCategoriesLeaveOk: 'Verlassen',
+    unsavedCategoriesLeaveCancel: 'Bleiben',
     daystart: {
       startOfDay: 'Tagesbeginn',
       startOfDayHelp:
