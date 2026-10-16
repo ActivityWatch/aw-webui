@@ -51,6 +51,7 @@ div
 <script lang="ts">
 import _ from 'lodash';
 import moment from 'moment';
+import { earliestEventInBucket, rangeCoveringEarliest } from '~/util/earliestEvent';
 import { useActivityStore } from '~/stores/activity';
 import { useBucketsStore } from '~/stores/buckets';
 import { getClient } from '~/util/awclient';
@@ -81,6 +82,8 @@ export default {
       fieldOptions: [] as string[],
       events: [] as any[],
       aggregated: [] as AggregatedEvent[],
+      // bucket id -> earliest event, for All time (see queryRange)
+      earliestByBucket: {} as Record<string, Date | null>,
       loading: false,
       error: '',
     };
@@ -123,6 +126,12 @@ export default {
   watch: {
     selectedBucketId: function () {
       this.emitSelection();
+      // Drop the cached earliest for the newly selected bucket: it may have
+      // gained older events since it was last viewed (an import while the page
+      // stayed open), and a plain switch should reflect that without a Refresh.
+      const rest = { ...this.earliestByBucket };
+      delete rest[this.selectedBucketId];
+      this.earliestByBucket = rest;
       this.loadEvents();
     },
     selectedField: function () {
@@ -158,17 +167,50 @@ export default {
         this.selectedBucketId = this.bucketsStore.buckets[0].id;
       }
     },
+    // The shared range, widened for All time to the selected bucket's own
+    // earliest event: the All time start only considers the host's standard
+    // buckets, so e.g. an older imported bucket would otherwise be cut off.
+    async queryRange(bucketId: string): Promise<{ start: string; end: string } | null> {
+      const range = this.timeRange;
+      const opts = this.activityStore.query_options;
+      if (!range || !opts || !opts.all_time) return range;
+      // A forced refresh must re-check the bucket's earliest event, so events
+      // imported while the page stayed open are not left out of All time.
+      if (opts.force || !(bucketId in this.earliestByBucket)) {
+        const bucket = this.bucketsStore.getBucket(bucketId);
+        // A miss (store still loading, or restored initialBucketId not in
+        // the list yet) must not poison the cache with null — Refresh would
+        // then be the only retry. Empty buckets still cache null below.
+        if (!bucket) {
+          return range;
+        }
+        const client = getClient();
+        const earliest = await earliestEventInBucket(bucket, (id, params) =>
+          client.getEvents(id, params)
+        );
+        this.earliestByBucket = { ...this.earliestByBucket, [bucketId]: earliest };
+      }
+      return rangeCoveringEarliest(range, this.earliestByBucket[bucketId]);
+    },
     async loadEvents() {
-      if (!this.selectedBucketId || !this.timeRange) return;
+      // Capture the bucket at call time: the earliest-event lookup below can
+      // await, and the selectedBucketId watcher may fire a newer loadEvents in
+      // the meantime. Reusing the captured id keeps the widened range and the
+      // fetched events in agreement, and drops this run if it was superseded.
+      const bucketId = this.selectedBucketId;
+      if (!bucketId || !this.timeRange) return;
       this.loading = true;
       this.error = '';
       this.aggregated = [];
       try {
-        this.events = await getClient().getEvents(this.selectedBucketId, {
-          start: this.timeRange.start,
-          end: this.timeRange.end,
+        const range = await this.queryRange(bucketId);
+        if (!range || bucketId !== this.selectedBucketId) return;
+        this.events = await getClient().getEvents(bucketId, {
+          start: range.start,
+          end: range.end,
           limit: -1,
         });
+        if (bucketId !== this.selectedBucketId) return;
         this.fieldOptions = this.extractFields(this.events);
         if (!this.selectedField && this.fieldOptions.length > 0) {
           this.selectedField = this.fieldOptions[0];
@@ -178,11 +220,15 @@ export default {
         this.aggregate();
       } catch (err) {
         console.error(err);
+        // A superseded run must not clobber the results of a newer one.
+        if (bucketId !== this.selectedBucketId) return;
         this.events = [];
         this.fieldOptions = [];
         this.error = err?.message || 'Failed to load events for the selected watcher.';
       } finally {
-        this.loading = false;
+        // Only clear the spinner for the run that is still the selected bucket;
+        // a superseded run must not hide a newer in-flight load.
+        if (bucketId === this.selectedBucketId) this.loading = false;
       }
     },
     extractFields(events: any[]): string[] {

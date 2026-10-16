@@ -234,6 +234,10 @@ export interface QueryOptions {
   // Skip the active-time history around the period (the period-usage bars),
   // e.g. for custom ranges and All time where neighbouring periods aren't shown.
   skip_active_history?: boolean;
+  // The period is All time: visualizations that query a bucket outside the
+  // host's standard buckets (Top Bucket Data) widen their start to that
+  // bucket's own earliest event, since `timeperiod` only covers the standard ones.
+  all_time?: boolean;
   force?: boolean;
   always_active_pattern?: string;
 }
