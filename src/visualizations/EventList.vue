@@ -104,6 +104,26 @@ $border-color: #ddd;
   }
 }
 
+// On phones a single nowrap row pushes the event data (titles, URLs, ...)
+// off-screen, so let the fields wrap within the list instead.
+@media (max-width: 575.98px) {
+  .event-list {
+    white-space: normal;
+  }
+
+  .event {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .field {
+    margin: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+}
+
 /* Flips the outer element once, then all direct children once,
    leaving the scrollbar in the first flipped yet the content correct */
 .scrollbar-flipped,
