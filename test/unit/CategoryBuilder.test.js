@@ -399,39 +399,36 @@ describe('CategoryBuilder navigation guards', () => {
     ['standalone CategoryBuilder', CategoryBuilder],
     ['Settings parent of the embedded builder', Settings],
   ])('%s beforeRouteLeave', (_name, component) => {
-    function makeVm(unsavedChanges) {
+    function makeVm(unsavedChanges, msgBoxConfirmResult) {
       const categoryStore = useCategoryStore();
       categoryStore.classes_unsaved_changes = unsavedChanges;
-      return { $t: key => key };
+      const msgBoxConfirm = jest.fn().mockResolvedValue(msgBoxConfirmResult);
+      return { $t: key => key, $bvModal: { msgBoxConfirm } };
     }
 
-    test('calls next() immediately when there are no unsaved changes', () => {
-      const vm = makeVm(false);
+    test('calls next() immediately when there are no unsaved changes', async () => {
+      const vm = makeVm(false, undefined);
       const next = jest.fn();
-      component.beforeRouteLeave.call(vm, {}, {}, next);
+      await component.beforeRouteLeave.call(vm, {}, {}, next);
       expect(next).toHaveBeenCalledWith();
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    test('calls next() when user confirms leaving with unsaved changes', () => {
-      const vm = makeVm(true);
+    test('calls next() when user confirms leaving with unsaved changes', async () => {
+      const vm = makeVm(true, true);
       const next = jest.fn();
-      jest.spyOn(window, 'confirm').mockReturnValue(true);
-      component.beforeRouteLeave.call(vm, {}, {}, next);
-      expect(window.confirm).toHaveBeenCalled();
+      await component.beforeRouteLeave.call(vm, {}, {}, next);
+      expect(vm.$bvModal.msgBoxConfirm).toHaveBeenCalled();
       expect(next).toHaveBeenCalledWith();
     });
 
-    test('calls next(false) when user cancels leaving with unsaved changes', () => {
-      const vm = makeVm(true);
+    test('calls next(false) when user cancels leaving with unsaved changes', async () => {
+      const vm = makeVm(true, false);
       const next = jest.fn();
-      jest.spyOn(window, 'confirm').mockReturnValue(false);
-      component.beforeRouteLeave.call(vm, {}, {}, next);
-      expect(window.confirm).toHaveBeenCalled();
+      await component.beforeRouteLeave.call(vm, {}, {}, next);
+      expect(vm.$bvModal.msgBoxConfirm).toHaveBeenCalled();
       expect(next).toHaveBeenCalledWith(false);
     });
-
-    afterEach(() => jest.restoreAllMocks());
   });
 
   describe('beforeUnload', () => {
