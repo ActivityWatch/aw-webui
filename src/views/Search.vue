@@ -109,6 +109,8 @@ export default {
       try {
         this.status = 'searching';
         this.error = '';
+        this.events = [];
+        this.browserEvents = [];
 
         // Look up browser buckets for this host. A failure here (e.g. the bucket
         // list cannot be loaded) must not block the window-only search.
@@ -122,21 +124,29 @@ export default {
           console.error('Failed to load browser buckets for search', e);
         }
 
-        // Run both queries; the browser query is skipped if no browser buckets.
-        // Tolerate a browser-query failure so valid window results still render.
+        // Each source can fail independently (e.g. a browser-only host has no
+        // window/AFK buckets). Keep successful matches and report partial failures.
+        const errors: string[] = [];
         const results = await Promise.all([
-          this.$aw.query(timeperiods, windowQueryArray),
+          this.$aw.query(timeperiods, windowQueryArray).catch(e => {
+            console.error('Window search failed', e);
+            errors.push(`Window search: ${e.response?.data?.message ?? String(e)}`);
+            return null;
+          }),
           browserQueryArray.length > 0
             ? this.$aw.query(timeperiods, browserQueryArray).catch(e => {
                 console.error('Browser search failed', e);
+                errors.push(`Browser search: ${e.response?.data?.message ?? String(e)}`);
                 return null;
               })
             : Promise.resolve(null),
         ]);
+        this.error = errors.join('; ');
 
         // Every window hit carries the synthetic `searched` category the query
         // uses for filtering; it is not a real category, so drop it from results.
-        const windowEvents = results[0][0].map(e => ({ ...e, data: _.omit(e.data, '$category') }));
+        const windowResults = results[0] ? results[0][0] : [];
+        const windowEvents = windowResults.map(e => ({ ...e, data: _.omit(e.data, '$category') }));
         this.events = _.orderBy(windowEvents, ['timestamp'], ['desc']);
         const browserResults = results[1] ? results[1][0] : [];
         // An event can match the pattern in both its url and title, which the
