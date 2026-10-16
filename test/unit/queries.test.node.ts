@@ -19,6 +19,10 @@
  *             (macOS bundle ID retained as exact: 'company.thebrowser.dia')
  *             Helium running the Chrome Web Store extension build (#898):
  *             'Helium', 'helium.exe'
+ *             Ungoogled Chromium, which also runs the Chrome Web Store extension
+ *             build but whose process name does not start with 'chromium':
+ *             'ungoogled-chromium', 'ungoogled_chromium', 'Ungoogled Chromium',
+ *             'ungoogled-chromium-bin'
  *
  *   Firefox:  'Firefox', 'Firefox.exe', 'firefox', 'firefox.exe',
  *             'Firefox Developer Edition', 'firefoxdeveloperedition',
@@ -113,6 +117,12 @@ describe('browser_appname_regex', () => {
       // Helium running the Chrome Web Store extension build (#898)
       'Helium',
       'helium.exe',
+      // Ungoogled Chromium via the Chrome Web Store extension build; its process
+      // name does not start with 'chromium' so the base alternatives miss it.
+      'ungoogled-chromium',
+      'ungoogled_chromium',
+      'Ungoogled Chromium',
+      'ungoogled-chromium-bin',
     ];
     for (const name of knownNames) {
       expect(re.test(name)).toBe(true);

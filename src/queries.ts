@@ -380,11 +380,18 @@ function browsersWithBuckets(browserbuckets: string[]): [string, string][] {
 // the same way (#898). It's listed here rather than in browser_appname_regex.helium
 // so it gets the same dedicated-bucket exclusion as Arc/Dia below.
 //
+// Ungoogled Chromium runs the Chrome Web Store extension build the same way as the
+// other forks, so its events land in the chrome bucket too. Its process name
+// ("ungoogled-chromium", "ungoogled_chromium", "Ungoogled Chromium") does not start
+// with "chromium", so the base alternatives below miss it. It has no dedicated
+// bucket, so it belongs with the base alternatives rather than the $-anchored,
+// excludable fork list.
+//
 // When a dedicated fork bucket participates (today: settings-override Arc, or a
 // standalone Helium bucket), only that fork is stripped from the chrome stream so
 // the dedicated bucket owns those events without dropping other chrome-bucket
 // forks (Dia has no dedicated bucket).
-const CHROME_BASE_ALTS = ['google[-_ ]?chrome', 'chrome', 'chromium'];
+const CHROME_BASE_ALTS = ['google[-_ ]?chrome', 'chrome', 'chromium', 'ungoogled[-_ ]?chromium'];
 const CHROME_FORK_ALTS: Record<string, string> = {
   arc: 'arc(\\.exe)?$',
   dia: 'dia(\\.exe)?$',
