@@ -1,4 +1,5 @@
 export interface IEvent {
+  id?: number;
   timestamp: string;
   duration: number;
   data: Record<string, any>;
