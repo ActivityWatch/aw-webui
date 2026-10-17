@@ -243,9 +243,8 @@ export default {
       this.valueChanged();
     },
     shiftDays(days: number) {
-      const newStart = moment(this.start || undefined)
-        .add(days, 'days')
-        .format('YYYY-MM-DD');
+      if (!this.start) return;
+      const newStart = moment(this.start).add(days, 'days').format('YYYY-MM-DD');
       const newEnd = this.end ? moment(this.end).add(days, 'days').format('YYYY-MM-DD') : null;
       this.start = newStart;
       this.end = newEnd;
