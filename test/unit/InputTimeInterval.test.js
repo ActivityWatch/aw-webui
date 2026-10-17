@@ -47,13 +47,18 @@ describe('date range shifts', () => {
   });
 
   test('Today explicitly initializes an empty range', () => {
-    const vm = makeVm();
-    const today = moment().format('YYYY-MM-DD');
+    jest.useFakeTimers().setSystemTime(new Date(2026, 9, 17, 12));
+    try {
+      const vm = makeVm();
+      const today = moment().format('YYYY-MM-DD');
 
-    InputTimeInterval.methods.setToday.call(vm);
+      InputTimeInterval.methods.setToday.call(vm);
 
-    expect(vm.start).toBe(today);
-    expect(vm.end).toBe(today);
-    expect(vm.valueChanged).toHaveBeenCalledTimes(1);
+      expect(vm.start).toBe(today);
+      expect(vm.end).toBe(today);
+      expect(vm.valueChanged).toHaveBeenCalledTimes(1);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });
