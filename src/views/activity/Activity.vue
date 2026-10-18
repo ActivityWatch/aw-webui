@@ -115,7 +115,7 @@ div
 
     b-input-group.mr-2(v-if="!invalidRange && periodLength !== 'all'" size="sm" style="width: auto")
       b-input-group-prepend
-        b-button.px-2(:to="link_prefix + '/' + previousPeriod() + '/' + subview + '/' + currentViewId",
+        b-button.px-2(:to="{ path: link_prefix + '/' + previousPeriod() + '/' + subview + '/' + currentViewId, query: $route.query }",
                  variant="outline-dark",
                  :title="'Previous ' + periodLength",
                  :aria-label="'Previous ' + periodLength")
@@ -147,7 +147,7 @@ div
         @change="setDate($event.target.value, periodLength)"
       )
       b-input-group-append
-        b-button.px-2(:to="link_prefix + '/' + nextPeriod() + '/' + subview + '/' + currentViewId",
+        b-button.px-2(:to="{ path: link_prefix + '/' + nextPeriod() + '/' + subview + '/' + currentViewId, query: $route.query }",
                       :disabled="nextDisabled", variant="outline-dark",
                       :title="'Next ' + periodLength",
                       :aria-label="'Next ' + periodLength")
