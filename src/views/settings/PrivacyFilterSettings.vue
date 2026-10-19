@@ -45,6 +45,7 @@ div
 import { useSettingsStore } from '~/stores/settings';
 import { getClient } from '~/util/awclient';
 import {
+  PrivacyFilterRule,
   DEFAULT_PRIVACY_FILTERS,
   formatPrivacyFilters,
   validatePrivacyFiltersInput,
@@ -144,7 +145,9 @@ export default {
         // cannot be asked. The draft stays in the editor for a retry.
         let persisted = confirmed;
         try {
-          const serverSettings = await getClient().get_settings();
+          const serverSettings = (await getClient().get_settings()) as {
+            privacy_filters?: PrivacyFilterRule[];
+          };
           if (serverSettings.privacy_filters !== undefined) {
             persisted = serverSettings.privacy_filters;
           }
