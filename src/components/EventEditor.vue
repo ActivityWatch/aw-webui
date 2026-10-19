@@ -1,5 +1,5 @@
 <template lang="pug">
-b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEditModal", :title="$t('ui.eventEditor.editTitle')", centered, hide-footer)
+b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEditModal", :title="$t('ui.eventEditor.editTitle')", centered, hide-footer, :no-close-on-backdrop="busy", :no-close-on-esc="busy", :hide-header-close="busy")
   div(v-if="!editedEvent")
     | {{ $t('ui.eventEditor.loading') }}
 
@@ -13,10 +13,10 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
         td {{ event.id }}
       tr
         th {{ $t('ui.eventEditor.start') }}
-        datetime(type="datetime" v-model="start")
+        datetime(type="datetime" v-model="start" :disabled="busy")
       tr
         th {{ $t('ui.eventEditor.end') }}
-        datetime(type="datetime" v-model="end")
+        datetime(type="datetime" v-model="end" :disabled="busy")
       tr
         th {{ $t('ui.eventEditor.duration') }}
         td {{ editedEvent.duration | friendlyduration }}
@@ -31,21 +31,24 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
         td
           b-input(disabled, :value="k", size="sm")
         td
-          b-checkbox(v-if="typeof event.data[k] === typeof true", v-model="editedEvent.data[k]", style="margin: 0.25em")
-          b-input(v-if="typeof event.data[k] === typeof 'string'", v-model="editedEvent.data[k]", size="sm")
-          b-input(v-if="typeof event.data[k] === 'number'", v-model.number="editedEvent.data[k]", size="sm", type="number")
+          b-checkbox(v-if="typeof event.data[k] === typeof true", v-model="editedEvent.data[k]", :disabled="busy", style="margin: 0.25em")
+          b-input(v-if="typeof event.data[k] === typeof 'string'", v-model="editedEvent.data[k]", :disabled="busy", size="sm")
+          b-input(v-if="typeof event.data[k] === 'number'", v-model.number="editedEvent.data[k]", :disabled="busy", size="sm", type="number")
 
     hr
 
+    b-alert(v-if="error" show variant="danger")
+      | {{ error }}
+
     div.float-left
-      b-button.mx-1(@click="delete_(); close();" variant="danger")
+      b-button.mx-1(@click="delete_", variant="danger", :disabled="busy")
         icon.mx-1(name="trash")
         | {{ $t('common.delete') }}
     div.float-right
-      b-button.mx-1(@click="close")
+      b-button.mx-1(@click="close", :disabled="busy")
         icon.mx-1(name="times")
         | {{ $t('common.cancel') }}
-      b-button.mx-1(@click="save(); close();", variant="primary")
+      b-button.mx-1(@click="save", variant="primary", :disabled="busy")
         icon.mx-1(name="save")
         | {{ $t('common.save') }}
 </template>
@@ -77,9 +80,15 @@ export default {
   data() {
     return {
       editedEvent: null,
+      // Name of the mutation in flight ('save' / 'delete'), else null.
+      pending: null,
+      error: '',
     };
   },
   computed: {
+    busy() {
+      return this.pending !== null;
+    },
     start: {
       get: function () {
         return moment(this.editedEvent.timestamp).format();
@@ -102,6 +111,7 @@ export default {
   },
   watch: {
     async event() {
+      this.error = '';
       await this.getEvent();
     },
   },
@@ -110,24 +120,65 @@ export default {
   },
   methods: {
     async save() {
+      if (!this.editedEvent) return;
       // Capture before any async suspension: another selection can change
       // this.editedEvent or this.bucket_id while replaceEvent is in-flight.
       const savedEvent = _.cloneDeep(this.editedEvent);
-      const savedBucketId = this.bucket_id;
-      // This emit needs to be called first, otherwise it won't occur for some reason
-      // FIXME: but what if the replace fails? Then UI will incorrectly think event was replaced?
-      this.$emit('save', savedEvent);
-      await this.$aw.replaceEvent(savedBucketId, savedEvent);
-      this.$emit('saved', savedEvent, savedBucketId);
+      const bucketId = this.bucket_id;
+      await this.runMutation('save', savedEvent, bucketId, () =>
+        this.$aw.replaceEvent(bucketId, savedEvent)
+      );
     },
     async delete_() {
-      // This emit needs to be called first, otherwise it won't occur for some reason
-      // FIXME: but what if the replace fails? Then UI will incorrectly think event was deleted?
-      const deletedEvent = _.cloneDeep(this.event);
-      const deletedBucketId = this.bucket_id;
-      this.$emit('delete', deletedEvent);
-      await this.$aw.deleteEvent(deletedBucketId, deletedEvent.id);
-      this.$emit('deleted', deletedEvent, deletedBucketId);
+      const event = this.event;
+      const bucketId = this.bucket_id;
+      await this.runMutation('delete', event, bucketId, () =>
+        this.$aw.deleteEvent(bucketId, event.id)
+      );
+    },
+    // Runs one mutation against the server. Parents are told it succeeded only
+    // once the request actually has, so a failure leaves the editor open with
+    // the user's input intact and retryable.
+    //
+    // The modal is hidden before the success event is emitted: a parent
+    // reacting to it may destroy this component (it is usually rendered behind
+    // a v-if on the event being edited), and the ref would be gone by then.
+    async runMutation(name, payload, bucketId, request) {
+      if (this.pending) return;
+      const editingId = this.event && this.event.id;
+      this.pending = name;
+      this.error = '';
+      try {
+        await request();
+      } catch (e) {
+        console.error(e);
+        this.error = this.requestErrorMessage(e, name);
+        return;
+      } finally {
+        this.pending = null;
+      }
+
+      // The editor may have been pointed at a different event while the
+      // request was in flight; a late response must not act on the new one.
+      if (this.event && this.event.id === editingId) {
+        this.hideModal();
+        this.$emit(name, payload);
+      }
+      // The server did change, so this is reported even after the editor moved
+      // on. It carries the bucket, for parents that patch their view in place.
+      this.$emit(name === 'save' ? 'saved' : 'deleted', payload, bucketId);
+    },
+    requestErrorMessage(e, name) {
+      const response = e && e.response;
+      const serverMessage = response && response.data && response.data.message;
+      const verb = name === 'delete' ? 'delete' : 'save';
+      return serverMessage || (e && e.message) || `Failed to ${verb} event.`;
+    },
+    // Hiding is best-effort: the modal may already be gone if a parent
+    // re-rendered or destroyed this component.
+    hideModal() {
+      const modal = this.$refs.eventEditModal;
+      if (modal) modal.hide();
     },
     async getEvent() {
       if (this.bucket_id && this.event && this.event.id) {
@@ -137,7 +188,8 @@ export default {
       }
     },
     close() {
-      this.$refs.eventEditModal.hide();
+      if (this.pending) return;
+      this.hideModal();
       this.$emit('close', this.event);
     },
   },

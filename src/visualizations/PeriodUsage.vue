@@ -14,7 +14,7 @@ svg {
 </style>
 
 <script lang="ts">
-// NOTE: This is just a Vue.js component wrapper for periodusage.js
+// NOTE: This is just a Vue.js component wrapper for periodusage.ts
 //       Code should generally go in the framework-independent file.
 
 import periodusage from './periodusage';
@@ -24,21 +24,22 @@ export default {
   props: {
     periodusage_arr: {
       type: Array,
+      default: () => [],
     },
   },
   watch: {
     periodusage_arr: function () {
-      periodusage.update(this.$el, this.periodusage_arr, this.onPeriodClicked, {
-        noData: this.$t('visualizations.noData'),
-        today: this.$t('common.today'),
-      });
+      periodusage.update(this.$el, this.periodusage_arr, this.onPeriodClicked, this.chartLabels());
     },
   },
   mounted: function () {
     periodusage.create(this.$el);
-    periodusage.set_status(this.$el, this.$t('common.loading'));
+    periodusage.update(this.$el, this.periodusage_arr, this.onPeriodClicked, this.chartLabels());
   },
   methods: {
+    chartLabels() {
+      return { noData: this.$t('visualizations.noData'), today: this.$t('common.today') };
+    },
     onPeriodClicked: function (period) {
       this.$emit('update', period);
     },

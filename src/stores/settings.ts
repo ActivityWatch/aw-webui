@@ -3,6 +3,7 @@ import moment, { Moment } from 'moment';
 import { getClient } from '~/util/awclient';
 import { Category, CategorySet, getDefaultClasses, cleanCategory } from '~/util/classes';
 import { SavedQuery } from '~/util/savedQueries';
+import { AlertGoal, cleanAlertGoals } from '~/util/alerts';
 import { View, defaultViews } from '~/stores/views';
 import type { PrivacyFilterRule } from '~/util/privacyFilters';
 import { isEqual } from 'lodash';
@@ -68,6 +69,9 @@ interface State {
   saved_queries: SavedQuery[];
   // Words the Category Builder's "Ignore" button hides from its suggestions.
   category_builder_ignored_words: string[];
+  // Alert goals for the Alerts view. Empty by default; `hasStoredAlerts`
+  // distinguishes "user saved an empty list" from "never saved".
+  alerts: AlertGoal[];
 
   // Whether to show certain WIP features
   devmode: boolean;
@@ -128,6 +132,7 @@ export const useSettingsStore = defineStore('settings', {
     views: defaultViews,
     saved_queries: [],
     category_builder_ignored_words: [],
+    alerts: [],
 
     // Developer settings
     // NOTE: PRODUCTION might be undefined (in tests, for example)
@@ -146,6 +151,11 @@ export const useSettingsStore = defineStore('settings', {
     /** Whether the user has a stored categorization of their own (as opposed to defaults). */
     hasStoredCategories(state: State) {
       return state._storedKeys.includes('classes') || state._storedKeys.includes('category_sets');
+    },
+    /** Whether alert goals have ever been stored, so a saved empty list is not
+     * mistaken for a first run (which seeds sample goals). */
+    hasStoredAlerts(state: State) {
+      return state._storedKeys.includes('alerts');
     },
   },
 
@@ -186,7 +196,8 @@ export const useSettingsStore = defineStore('settings', {
           console.warn('Ignoring invalid locale from server:', server_settings[key]);
           continue;
         }
-        storage[key] = server_settings[key];
+        storage[key] =
+          key === 'alerts' ? cleanAlertGoals(server_settings[key]) : server_settings[key];
         used.add(key);
       }
 
@@ -204,12 +215,15 @@ export const useSettingsStore = defineStore('settings', {
           key == 'category_sets' ||
           key == 'active_set_ids' ||
           key == 'saved_queries' ||
-          key == 'category_builder_ignored_words';
+          key == 'category_builder_ignored_words' ||
+          key == 'alerts';
         try {
           if (isJsonKey) {
             let parsed = JSON.parse(raw);
             if (key == 'classes') {
               parsed = parsed.map(cleanCategory);
+            } else if (key == 'alerts') {
+              parsed = cleanAlertGoals(parsed);
             }
             storage[key] = parsed;
           } else if (raw === 'true' || raw === 'false') {
@@ -246,7 +260,7 @@ export const useSettingsStore = defineStore('settings', {
         await this.save();
       }
     },
-    async save() {
+    async save(explicitKeys: string[] = []) {
       // Important check, to avoid saving settings before they are loaded (potentially overwriting them with defaults)
       if (!this.loaded) {
         console.error('Settings not loaded, not saving');
@@ -267,6 +281,17 @@ export const useSettingsStore = defineStore('settings', {
       for (const key of Object.keys(this.$state)) {
         // Skip keys starting with underscore, as they are local to the vuex store.
         if (key.startsWith('_')) {
+          continue;
+        }
+
+        // A never-saved alerts list keeps its default. Saving it with some other
+        // setting would make the Alerts view read it as deliberately emptied
+        // (see hasStoredAlerts) and hide the sample goals.
+        if (
+          key === 'alerts' &&
+          !this._storedKeys.includes('alerts') &&
+          !explicitKeys.includes('alerts')
+        ) {
           continue;
         }
 
@@ -306,7 +331,9 @@ export const useSettingsStore = defineStore('settings', {
       console.log('Updating state', new_state);
       await this.ensureLoaded();
       this.$patch(new_state);
-      await this.save();
+      // Explicitly updated keys are saved even if never stored before. A
+      // successful save reloads _storedKeys from the server.
+      await this.save(Object.keys(new_state));
     },
   },
 });

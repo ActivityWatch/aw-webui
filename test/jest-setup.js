@@ -1,5 +1,8 @@
 import Vue from 'vue';
 import en from '~/i18n/locales/en';
+// Install vue-i18n now: modules importing ~/i18n later (e.g. the settings store)
+// would otherwise replace the $t stub below with the real, instance-bound one.
+import '~/i18n';
 
 function lookup(obj, keys) {
   const [head, ...rest] = keys;

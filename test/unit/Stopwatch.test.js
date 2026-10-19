@@ -232,6 +232,13 @@ describe('Stopwatch retrieval', () => {
 });
 
 describe('Stopwatch editor completion', () => {
+  const editorVm = overrides => ({
+    ...EventEditor.data(),
+    ...EventEditor.methods,
+    $refs: {},
+    ...overrides,
+  });
+
   test.each([
     ['save', 'saved', 'update'],
     ['delete', 'deleted', 'delete'],
@@ -255,30 +262,34 @@ describe('Stopwatch editor completion', () => {
     const mutation = new Promise(resolve => {
       complete = resolve;
     });
-    const vm = {
+    const vm = editorVm({
       event: oldRunning,
       bucket_id: 'aw-stopwatch',
       $emit: jest.fn(),
       $aw: { deleteEvent: jest.fn().mockReturnValue(mutation) },
-    };
+    });
     const deleting = EventEditor.methods.delete_.call(vm);
-    expect(vm.$emit.mock.calls).toEqual([['delete', oldRunning]]);
+    expect(vm.$emit).not.toHaveBeenCalled();
     expect(vm.$aw.deleteEvent).toHaveBeenCalledWith('aw-stopwatch', oldRunning.id);
     vm.event = event(999);
     vm.bucket_id = 'another-bucket';
     complete();
     await deleting;
-    expect(vm.$emit.mock.calls[1]).toEqual(['deleted', oldRunning, 'aw-stopwatch']);
+    // The editor moved on, so only the completion for the original target is reported.
+    expect(vm.$emit.mock.calls).toEqual([['deleted', oldRunning, 'aw-stopwatch']]);
   });
 
   test('does not emit completion when deletion fails', async () => {
-    const vm = {
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const vm = editorVm({
       event: oldRunning,
       bucket_id: 'aw-stopwatch',
       $emit: jest.fn(),
       $aw: { deleteEvent: jest.fn().mockRejectedValue(new Error('offline')) },
-    };
-    await expect(EventEditor.methods.delete_.call(vm)).rejects.toThrow('offline');
-    expect(vm.$emit.mock.calls).toEqual([['delete', oldRunning]]);
+    });
+    await EventEditor.methods.delete_.call(vm);
+    expect(vm.$emit).not.toHaveBeenCalled();
+    expect(vm.error).toBe('offline');
+    jest.restoreAllMocks();
   });
 });

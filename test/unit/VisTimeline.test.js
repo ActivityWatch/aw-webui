@@ -33,17 +33,27 @@ jest.mock('vis-timeline/esnext', () => ({
 jest.mock('vis-timeline/styles/vis-timeline-graph2d.css', () => ({}));
 
 describe('timeline event editing (#984)', () => {
+  const editorVm = overrides => ({
+    ...EventEditor.data(),
+    ...EventEditor.methods,
+    event: { id: 7 },
+    $refs: {},
+    ...overrides,
+  });
+
   test('EventEditor reports a saved event only after the server accepts it', async () => {
     const editedEvent = { id: 7, data: { title: 'updated' } };
     const replaceEvent = jest.fn().mockResolvedValue(undefined);
     const emit = jest.fn();
 
-    await EventEditor.methods.save.call({
-      bucket_id: 'aw-watcher-window_test',
-      editedEvent,
-      $aw: { replaceEvent },
-      $emit: emit,
-    });
+    await EventEditor.methods.save.call(
+      editorVm({
+        bucket_id: 'aw-watcher-window_test',
+        editedEvent,
+        $aw: { replaceEvent },
+        $emit: emit,
+      })
+    );
 
     expect(replaceEvent).toHaveBeenCalledWith('aw-watcher-window_test', editedEvent);
     expect(emit).toHaveBeenNthCalledWith(1, 'save', editedEvent);
@@ -68,17 +78,16 @@ describe('timeline event editing (#984)', () => {
         })
     );
     const emit = jest.fn();
-    const vm = {
+    const vm = editorVm({
       bucket_id: 'aw-stopwatch_test',
       editedEvent,
       $aw: { replaceEvent },
       $emit: emit,
-    };
+    });
     const saving = EventEditor.methods.save.call(vm);
     const snapshot = replaceEvent.mock.calls[0][1];
 
-    expect(emit).toHaveBeenCalledTimes(1);
-    expect(emit).toHaveBeenCalledWith('save', snapshot);
+    expect(emit).not.toHaveBeenCalled();
     const stopwatchEmit = jest.fn();
     StopwatchEntry.methods.save.call({ $emit: stopwatchEmit }, snapshot);
     const updatedEvent = stopwatchEmit.mock.calls[0][1];
@@ -100,24 +109,26 @@ describe('timeline event editing (#984)', () => {
 
     expect(snapshot.timestamp.valueOf()).toBe(Date.parse('2026-10-16T10:00:00Z'));
     expect(snapshot.data.nested.value).toBe('original');
+    expect(emit).toHaveBeenNthCalledWith(1, 'save', snapshot);
     expect(emit).toHaveBeenNthCalledWith(2, 'saved', snapshot, 'aw-stopwatch_test');
   });
 
   test('does not report a saved event when the server rejects the update', async () => {
     const editedEvent = { id: 7, data: { title: 'updated' } };
     const emit = jest.fn();
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const vm = editorVm({
+      bucket_id: 'aw-watcher-window_test',
+      editedEvent,
+      $aw: { replaceEvent: jest.fn().mockRejectedValue(new Error('offline')) },
+      $emit: emit,
+    });
 
-    await expect(
-      EventEditor.methods.save.call({
-        bucket_id: 'aw-watcher-window_test',
-        editedEvent,
-        $aw: { replaceEvent: jest.fn().mockRejectedValue(new Error('offline')) },
-        $emit: emit,
-      })
-    ).rejects.toThrow('offline');
+    await EventEditor.methods.save.call(vm);
 
-    expect(emit).toHaveBeenCalledTimes(1);
-    expect(emit).toHaveBeenCalledWith('save', editedEvent);
+    expect(emit).not.toHaveBeenCalled();
+    expect(vm.error).toBe('offline');
+    jest.restoreAllMocks();
   });
 
   test('uses a successfully saved event when rebuilding the timeline', () => {
