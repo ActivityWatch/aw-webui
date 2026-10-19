@@ -813,7 +813,7 @@ export default {
     trends: {
       comparing: 'Comparando',
       vs: 'vs',
-      noHost: 'Nenhum host com buckets de janela/AFK disponível.',
+      noHost: 'Nenhum host com buckets de janela/AFK disponível. Instale',
       computing: 'Calculando tendências de {days} + {days} dias…',
       activeTime: 'Tempo ativo',
       vsPrevious: 'vs {days} dias anteriores',
