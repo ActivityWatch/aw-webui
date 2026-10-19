@@ -2,46 +2,45 @@
 div
   div.d-flex.justify-content-between.align-items-center.mb-3
     div
-      h5.mb-1 Activity Notifications
-      small.text-muted Configure aw-notify alerts for Android and desktop
+      h5.mb-1 {{ $t('settings.notifications.activityTitle') }}
+      small.text-muted {{ $t('settings.notifications.activityHelp') }}
     b-btn(@click="save" size="sm" variant="primary" :disabled="saving || loading")
-      | {{ saving ? 'Saving…' : 'Save' }}
+      | {{ saving ? $t('settings.notifications.saving') : $t('common.save') }}
 
   b-alert(v-if="error" show variant="danger") {{ error }}
-  b-alert(v-if="success" show variant="success" dismissible @dismissed="success = false") Settings saved.
+  b-alert(v-if="success" show variant="success" dismissible @dismissed="success = false") {{ $t('settings.notifications.saved') }}
 
   div(v-if="loading")
-    b-spinner(small) Loading…
+    b-spinner(small) {{ $t('common.loading') }}
 
   div(v-else)
     b-form-group.mb-3
       b-form-checkbox(v-model="enabled" switch)
-        | Enable notifications
-        small.text-muted.ml-2 aw-notify runs only when this is on; the tray toggle mirrors this setting.
+        | {{ $t('extraViews.notifications.enabled') }}
+        small.text-muted.ml-2 {{ $t('extraViews.notifications.enabledHelp') }}
 
     template(v-if="enabled")
       p.text-muted.small.mb-3
-        | Alerts are checked periodically by aw-notify. Each alert fires a notification when
-        | the accumulated time crosses a threshold. The same config works in Android and aw-tauri.
+        | {{ $t('settings.notifications.alertsHelp') }}
 
       div(v-if="alerts.length === 0")
-        p.text-muted.font-italic No alerts configured.
+        p.text-muted.font-italic {{ $t('settings.notifications.noAlerts') }}
 
       b-card.mb-2(v-for="(alert, idx) in alerts" :key="idx")
         div.d-flex.align-items-start
           div.flex-grow-1
-            b-form-group(label="Label" label-cols-sm="3" label-size="sm")
-              b-input(v-model="alert.label" size="sm" placeholder="e.g. Work")
-            b-form-group(label="Category" label-cols-sm="3" label-size="sm")
+            b-form-group(:label="$t('settings.notifications.label')" label-cols-sm="3" label-size="sm")
+              b-input(v-model="alert.label" size="sm" :placeholder="$t('settings.notifications.labelPlaceholder')")
+            b-form-group(:label="$t('settings.notifications.category')" label-cols-sm="3" label-size="sm")
               b-input(
                 v-model="alert.category"
                 size="sm"
-                placeholder="All"
+                :placeholder="$t('settings.notifications.all')"
               )
               small.form-text.text-muted
-                | Match the category name in your AW categorization rules, or use All for total time.
+                | {{ $t('settings.notifications.categoryHelp') }}
             b-form-group(
-              label="Thresholds"
+              :label="$t('settings.notifications.thresholds')"
               label-cols-sm="3"
               label-size="sm"
               :invalid-feedback="thresholdError(alert.thresholdStr)"
@@ -50,18 +49,18 @@ div
               b-input(
                 v-model="alert.thresholdStr"
                 size="sm"
-                placeholder="e.g. 60, 120, 240"
+                :placeholder="$t('settings.notifications.thresholdsPlaceholder')"
                 :state="thresholdState(alert.thresholdStr)"
               )
-              small.form-text.text-muted Comma-separated positive whole minutes. A notification fires as each threshold is crossed.
-            b-form-group(label="Type" label-cols-sm="3" label-size="sm")
+              small.form-text.text-muted {{ $t('settings.notifications.thresholdsHelp') }}
+            b-form-group(:label="$t('settings.notifications.type')" label-cols-sm="3" label-size="sm")
               b-form-radio-group(v-model="alert.positive" :options="goalOptions" size="sm")
-          b-btn.ml-2(@click="removeAlert(idx)" variant="outline-danger" size="sm" title="Remove alert")
+          b-btn.ml-2(@click="removeAlert(idx)" variant="outline-danger" size="sm" :title="$t('settings.notifications.removeAlert')")
             icon(name="trash")
 
       b-btn.mt-1(@click="addAlert" variant="outline-secondary" size="sm")
         icon(name="plus")
-        |  Add alert
+        |  {{ $t('settings.notifications.addAlert') }}
 </template>
 
 <script lang="ts">
@@ -119,8 +118,8 @@ export default {
       error: '',
       success: false,
       goalOptions: [
-        { text: 'Warning (exceeded limit)', value: false },
-        { text: 'Goal (reached target)', value: true },
+        { text: this.$t('settings.notifications.goalWarning'), value: false },
+        { text: this.$t('settings.notifications.goalReached'), value: true },
       ],
     };
   },

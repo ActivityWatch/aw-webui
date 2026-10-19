@@ -56,7 +56,7 @@ mixin navTools(desktop)
       | {{ $t('nav.workReport') }}
     b-dropdown-item(to="/billing")
       icon(name="dollar-sign")
-      | Billable Hours
+      | {{ $t('ui.header.billableHours') }}
     b-dropdown-item(to="/analysis/activity" v-if="devmode")
       icon(name="robot")
       | {{ $t('nav.aiSummary') }}

@@ -2,39 +2,39 @@
 div
   h3 {{ id }}
   b-alert(v-if="notFound", show, variant="warning")
-    | No bucket named "{{ id }}".
+    | {{ $t('extraViews.bucket.notFound', { id }) }}
     |
-    router-link(to="/buckets") See all buckets
+    router-link(to="/buckets") {{ $t('extraViews.bucket.seeAll') }}
   div(v-else-if="bucket")
     table
       tr
-        th Type:
+        th {{ $t('ui.bucketDetail.type') }}
         td {{ bucket.type }}
       tr
-        th Client:
+        th {{ $t('ui.bucketDetail.client') }}
         td {{ bucket.client }}
       tr
-        th Hostname:
+        th {{ $t('ui.bucketDetail.hostname') }}
         td {{ bucket.hostname }}
       tr
-        th Created:
+        th {{ $t('ui.bucketDetail.created') }}
         td {{ bucket.created | iso8601 }}
       tr(v-if="bucket.metadata")
-        th First/last event:
+        th {{ $t('ui.bucketDetail.firstLastEvent') }}
         td
           | {{ bucket.metadata.start}} /
           | {{ bucket.metadata.end }}
       tr
-        th Eventcount:
+        th {{ $t('ui.bucketDetail.eventCount') }}
         td {{ eventcount }}
       tr
-        th Data:
+        th {{ $t('ui.bucketDetail.data') }}
         td {{ bucket.data }}
 
     input-timeinterval(v-model="daterange", :maxDuration="maxDuration")
 
     b-alert(v-if="showingMostRecent", variant="info", show)
-      | No events in the selected range. The last event in this bucket is from {{ lastEventTime | friendlytime }}, showing the {{ events.length }} most recent events instead.
+      | {{ $t('extraViews.bucket.noEventsPrefix') }} {{ lastEventTime | friendlytime }}{{ $t('extraViews.bucket.noEventsSuffix', { count: events.length }) }}
 
     vis-timeline(:buckets="[bucket_with_events]", :showRowLabels="false")
 
