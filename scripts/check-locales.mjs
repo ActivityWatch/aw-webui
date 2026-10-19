@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const LOCALES_DIR = path.join(__dirname, '../src/i18n/locales');
-const LOCALES = ['en', 'uk', 'de', 'ru', 'zh-CN', 'sv', 'es'];
+const LOCALES = ['en', 'uk', 'de', 'ru', 'zh-CN', 'sv', 'es', 'ar'];
 const SRC_DIR = path.join(__dirname, '../src');
 const verbose = process.argv.includes('--verbose');
 
@@ -77,6 +77,7 @@ const IDENTICAL_OK = {
     'Score',
   ],
   sv: ['App', 'Version:', 'Forum', 'Buckets', 'Data:', 'Period', 'Prompt'],
+  ar: ['Buckets'],
 };
 
 function loadLocale(code) {

@@ -59,6 +59,7 @@ export default {
     languageSv: 'Svenska',
     languageZhCN: '简体中文',
     languageEs: 'Español',
+    languageAr: 'العربية',
     rangeTo: 'bis',
     last7d: 'Letzte 7 Tage',
     last30d: 'Letzte 30 Tage',

@@ -47,3 +47,30 @@ iframe {
   border: 1px solid $lightBorderColor;
   border-radius: 5px;
 }
+
+// Bootstrap 4 is LTR-only. Under dir="rtl": its reboot pins `body` to
+// text-align: left, and its auto-margin utilities are physical, so they push
+// items toward the wrong edge (the navbar's right-hand group collided with the
+// centered brand). Mirror both; Bootstrap 5's ms-auto/me-auto do this natively.
+[dir='rtl'] {
+  body {
+    text-align: right;
+  }
+  // The d3 visualizations position labels with LTR coordinates; under rtl,
+  // text-anchor: start flips to the right edge and labels run out of the chart.
+  svg {
+    direction: ltr;
+  }
+  // ...but let each label pick its own bidi order, so '1س 38د' is not reordered.
+  svg text {
+    unicode-bidi: plaintext;
+  }
+  .ml-auto {
+    margin-left: 0 !important;
+    margin-right: auto !important;
+  }
+  .mr-auto {
+    margin-right: 0 !important;
+    margin-left: auto !important;
+  }
+}

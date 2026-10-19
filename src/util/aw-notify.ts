@@ -23,7 +23,9 @@ interface LegacyAwNotifyAlert {
 }
 
 export function parseThresholds(input: string): number[] | null {
-  const values = input.split(',').map(s => s.trim());
+  // Accept the Arabic comma (U+060C) as well: Arabic keyboards produce it, and
+  // the Arabic locale's own placeholder example uses it.
+  const values = input.split(/[,،]/).map(s => s.trim());
   if (values.some(part => !/^[1-9]\d*$/.test(part))) {
     return null;
   }
