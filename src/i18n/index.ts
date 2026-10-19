@@ -8,6 +8,7 @@ import 'moment/locale/sv';
 import 'moment/locale/zh-cn';
 import 'moment/locale/es';
 import 'moment/locale/ar';
+import 'moment/locale/hi';
 
 import en from './locales/en';
 import uk from './locales/uk';
@@ -17,12 +18,13 @@ import sv from './locales/sv';
 import zhCN from './locales/zh-CN';
 import es from './locales/es';
 import ar from './locales/ar';
+import hi from './locales/hi';
 
 Vue.use(VueI18n);
 
-export type AppLocale = 'en' | 'uk' | 'de' | 'ru' | 'zh-CN' | 'sv' | 'es' | 'ar';
+export type AppLocale = 'en' | 'uk' | 'de' | 'ru' | 'zh-CN' | 'sv' | 'es' | 'ar' | 'hi';
 
-const SUPPORTED: AppLocale[] = ['en', 'uk', 'de', 'ru', 'zh-CN', 'sv', 'es', 'ar'];
+const SUPPORTED: AppLocale[] = ['en', 'uk', 'de', 'ru', 'zh-CN', 'sv', 'es', 'ar', 'hi'];
 
 export function isAppLocale(value: string | null | undefined): value is AppLocale {
   return SUPPORTED.includes(value as AppLocale);
@@ -37,6 +39,7 @@ const HTML_LANG: Record<AppLocale, string> = {
   sv: 'sv',
   es: 'es',
   ar: 'ar',
+  hi: 'hi',
 };
 
 function detectBrowserLocale(): AppLocale | null {
@@ -51,6 +54,7 @@ function detectBrowserLocale(): AppLocale | null {
   if (lang.startsWith('sv')) return 'sv';
   if (lang.startsWith('es')) return 'es';
   if (lang.startsWith('ar')) return 'ar';
+  if (lang.startsWith('hi')) return 'hi';
   if (lang.startsWith('en')) return 'en';
   return null;
 }
@@ -76,6 +80,7 @@ const MOMENT_LOCALE: Record<AppLocale, string> = {
   sv: 'sv',
   es: 'es',
   ar: 'ar',
+  hi: 'hi',
 };
 
 const initialLocale = getInitialLocale();
@@ -83,7 +88,7 @@ const initialLocale = getInitialLocale();
 export const i18n = new VueI18n({
   locale: initialLocale,
   fallbackLocale: 'en',
-  messages: { en, uk, de, ru, 'zh-CN': zhCN, sv, es, ar },
+  messages: { en, uk, de, ru, 'zh-CN': zhCN, sv, es, ar, hi },
   silentTranslationWarn: process.env.NODE_ENV === 'production',
 });
 
@@ -91,6 +96,14 @@ export const i18n = new VueI18n({
 // and every number the app formats itself use Western digits. Keep dates consistent.
 // updateLocale also activates `ar` globally, so it must run before the line below.
 moment.updateLocale('ar', {
+  preparse: (s: string) => s,
+  postformat: (s: string) => s,
+});
+
+// moment's `hi` locale renders Devanagari digits, while CLDR's default number
+// system for Hindi (and the rest of this UI) is Latin digits. Keep dates consistent.
+// updateLocale also activates `hi` globally, so it must run before the line below.
+moment.updateLocale('hi', {
   preparse: (s: string) => s,
   postformat: (s: string) => s,
 });
