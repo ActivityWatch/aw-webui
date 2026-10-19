@@ -260,7 +260,7 @@ export const useSettingsStore = defineStore('settings', {
         await this.save();
       }
     },
-    async save() {
+    async save(explicitKeys: string[] = []) {
       // Important check, to avoid saving settings before they are loaded (potentially overwriting them with defaults)
       if (!this.loaded) {
         console.error('Settings not loaded, not saving');
@@ -287,7 +287,11 @@ export const useSettingsStore = defineStore('settings', {
         // A never-saved alerts list keeps its default. Saving it with some other
         // setting would make the Alerts view read it as deliberately emptied
         // (see hasStoredAlerts) and hide the sample goals.
-        if (key === 'alerts' && !this._storedKeys.includes('alerts')) {
+        if (
+          key === 'alerts' &&
+          !this._storedKeys.includes('alerts') &&
+          !explicitKeys.includes('alerts')
+        ) {
           continue;
         }
 
@@ -326,17 +330,10 @@ export const useSettingsStore = defineStore('settings', {
     async update(new_state: Record<string, any>) {
       console.log('Updating state', new_state);
       await this.ensureLoaded();
-      // Explicitly updated keys count as stored, so save() persists them.
-      const previousStoredKeys = this._storedKeys;
-      const storedKeys = [...new Set([...previousStoredKeys, ...Object.keys(new_state)])];
-      this.$patch({ ...new_state, _storedKeys: storedKeys });
-      try {
-        await this.save();
-      } catch (e) {
-        // Nothing new was stored, e.g. alerts still have their never-saved default.
-        this.$patch({ _storedKeys: previousStoredKeys });
-        throw e;
-      }
+      this.$patch(new_state);
+      // Explicitly updated keys are saved even if never stored before. A
+      // successful save reloads _storedKeys from the server.
+      await this.save(Object.keys(new_state));
     },
   },
 });

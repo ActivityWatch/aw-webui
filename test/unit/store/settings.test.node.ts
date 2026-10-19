@@ -92,8 +92,13 @@ describe('settings store', () => {
         .spyOn(getClient(), 'get_settings')
         .mockResolvedValue({ theme: 'light' } as Record<string, unknown>);
       (getClient() as any).req = { post, defaults: {} };
-      // Keep the store state; save() reloads from the server afterwards.
-      jest.spyOn(settingsStore, 'load').mockResolvedValue();
+      // save() reloads afterwards; the server then has every posted key.
+      jest.spyOn(settingsStore, 'load').mockImplementation(async () => {
+        const posted = post.mock.calls.map(([url]) => url.split('/').pop());
+        settingsStore.$patch({
+          _storedKeys: [...new Set([...settingsStore._storedKeys, ...posted])],
+        });
+      });
       settingsStore.$patch({ _loaded: true, _storedKeys: ['theme'] });
       return post;
     }
@@ -119,6 +124,28 @@ describe('settings store', () => {
       post.mockRejectedValueOnce(new Error('offline'));
       await expect(settingsStore.update({ alerts: [] })).rejects.toThrow('offline');
       expect(settingsStore.hasStoredAlerts).toBe(false);
+    });
+
+    test('an older failing update cannot unmark alerts saved meanwhile', async () => {
+      const post = fakeServer();
+      let failOld!: (e: Error) => void;
+      post.mockImplementation(async url => {
+        if (url === '/0/settings/theme') {
+          await new Promise((_resolve, reject) => {
+            failOld = reject;
+          });
+        }
+        return {};
+      });
+      settingsStore.$patch({ theme: 'dark' });
+      const older = settingsStore.update({ theme: 'dark' });
+      await new Promise(resolve => setTimeout(resolve, 0));
+      settingsStore.$patch({ theme: 'light' });
+      post.mockResolvedValue({});
+      await settingsStore.update({ alerts: [] });
+      failOld(new Error('offline'));
+      await expect(older).rejects.toThrow('offline');
+      expect(settingsStore.hasStoredAlerts).toBe(true);
     });
   });
 });
