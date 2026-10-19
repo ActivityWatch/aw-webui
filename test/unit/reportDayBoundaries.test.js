@@ -1,4 +1,5 @@
 import moment from 'moment';
+import { createPinia, setActivePinia } from 'pinia';
 import { get_day_start_with_offset, get_day_end_with_offset, get_day_period } from '~/util/time';
 import WorkReport from '~/views/WorkReport.vue';
 import BillingView from '~/views/BillingView.vue';
@@ -23,6 +24,7 @@ function expectPeriodsOnBoundary(periods, hour, minute) {
 
 describe('configured day boundaries', () => {
   beforeEach(() => {
+    setActivePinia(createPinia());
     jest.useFakeTimers();
     jest.setSystemTime(NOW);
   });
