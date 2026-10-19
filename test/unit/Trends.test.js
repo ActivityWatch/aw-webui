@@ -1,3 +1,4 @@
+import moment from 'moment';
 import Trends from '~/views/Trends.vue';
 
 describe('Trends view', () => {
@@ -44,6 +45,37 @@ describe('Trends view', () => {
     test('offers only real devices in the host select', () => {
       const vm = { bucketsStore: { knownHosts: ['desktop'], hosts: ['unknown', 'desktop'] } };
       expect(Trends.computed.hostOptions.call(vm)).toEqual([{ value: 'desktop', text: 'desktop' }]);
+    });
+  });
+
+  describe('dayPeriods', () => {
+    test('slices days at the configured start of day, not calendar midnight', () => {
+      // Regression: with startOfDay 04:00 the Activity view counts 00:00-04:00
+      // as the previous day, but Trends sliced every period at midnight, so
+      // after-midnight activity fell outside the current window and each bar
+      // was offset by four hours.
+      const vm = { settingsStore: { startOfDay: '04:00' } };
+      const periods = Trends.methods.dayPeriods.call(
+        vm,
+        moment('2026-10-18'),
+        moment('2026-10-20')
+      );
+      expect(periods).toEqual([
+        `${moment('2026-10-18T04:00:00').format()}/${moment('2026-10-19T04:00:00').format()}`,
+        `${moment('2026-10-19T04:00:00').format()}/${moment('2026-10-20T04:00:00').format()}`,
+      ]);
+    });
+
+    test('keeps midnight slices when start of day is 00:00', () => {
+      const vm = { settingsStore: { startOfDay: '00:00' } };
+      const periods = Trends.methods.dayPeriods.call(
+        vm,
+        moment('2026-10-19'),
+        moment('2026-10-20')
+      );
+      expect(periods).toEqual([
+        `${moment('2026-10-19').format()}/${moment('2026-10-20').format()}`,
+      ]);
     });
   });
 

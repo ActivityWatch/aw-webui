@@ -90,7 +90,12 @@ div
 
 <script lang="ts">
 import moment from 'moment';
-import { get_today_with_offset, format_date_short, format_date_with_weekday } from '~/util/time';
+import {
+  get_today_with_offset,
+  get_day_start_with_offset,
+  format_date_short,
+  format_date_with_weekday,
+} from '~/util/time';
 import { buildBarchartDataset } from '~/util/datasets';
 import { canonicalEvents, querystr_to_array } from '~/queries';
 import { getClient } from '~/util/awclient';
@@ -318,6 +323,23 @@ export default {
       }
     },
 
+    // Day windows honour the configured start of day (default 04:00) like the
+    // Activity view does. Slicing at calendar midnight dropped the user's
+    // after-midnight activity from the current window and shifted every bar.
+    dayPeriods(start: moment.Moment, end: moment.Moment): string[] {
+      const offset = this.settingsStore.startOfDay;
+      const periods: string[] = [];
+      const day = start.clone();
+      while (day.isBefore(end)) {
+        const nextDay = day.clone().add(1, 'day');
+        periods.push(
+          `${get_day_start_with_offset(day, offset)}/${get_day_start_with_offset(nextDay, offset)}`
+        );
+        day.add(1, 'day');
+      }
+      return periods;
+    },
+
     // Returns { byPeriod, totals } where byPeriod is the per-day event list
     // (for the barchart) and totals is the summed seconds per category over
     // the whole window.
@@ -325,13 +347,7 @@ export default {
       start: moment.Moment,
       end: moment.Moment
     ): Promise<{ byPeriod: Record<string, any>; totals: CategoryTotals }> {
-      const periods: string[] = [];
-      const day = start.clone();
-      while (day.isBefore(end)) {
-        const nextDay = day.clone().add(1, 'day');
-        periods.push(`${day.format()}/${nextDay.format()}`);
-        day.add(1, 'day');
-      }
+      const periods = this.dayPeriods(start, end);
       const query = this.buildCategoryQuery();
       const results: any[] = [];
       for (const period of periods) {
@@ -355,7 +371,11 @@ export default {
     // Single-query totals (no day breakdown) for the previous window.
     async queryTotals(start: moment.Moment, end: moment.Moment): Promise<CategoryTotals> {
       const query = this.buildCategoryQuery();
-      const period = `${start.format()}/${end.format()}`;
+      const offset = this.settingsStore.startOfDay;
+      const period = `${get_day_start_with_offset(start, offset)}/${get_day_start_with_offset(
+        end,
+        offset
+      )}`;
       const r = await getClient().query([period], query, { name: 'trendsTotals', verbose: true });
       const events = (r[0] && r[0].cat_events) || [];
       const totals: CategoryTotals = {};
