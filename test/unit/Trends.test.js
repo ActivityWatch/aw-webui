@@ -8,6 +8,47 @@ import { getClient } from '~/util/awclient';
 
 jest.mock('~/util/awclient', () => ({ getClient: jest.fn() }));
 
+const localVue = createLocalVue();
+localVue.filter('friendlyduration', value => String(value));
+
+const STUBS = [
+  'b-button-group',
+  'b-button',
+  'b-form-select',
+  'b-alert',
+  'b-spinner',
+  'b-row',
+  'b-col',
+  'b-card',
+  'b-table',
+  'aw-timeline-barchart',
+];
+
+const flush = async () => {
+  for (let i = 0; i < 10; i++) await Promise.resolve();
+  await Vue.nextTick();
+};
+
+const deferred = () => {
+  let resolve;
+  let reject;
+  const promise = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+};
+
+const bucket = (host, type) => ({
+  id: `aw-watcher-${type}_${host}`,
+  type: type === 'window' ? 'currentwindow' : 'afkstatus',
+  hostname: host,
+  last_updated: '2026-10-19T10:00:00+00:00',
+  data: {},
+});
+
+const workEvent = seconds => ({ data: { $category: ['Work'] }, duration: seconds });
+
 describe('Trends view', () => {
   describe('host computed', () => {
     test('returns the :host route param when present', () => {
