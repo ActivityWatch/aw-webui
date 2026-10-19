@@ -67,6 +67,7 @@ export default {
     languageJa: 'জাপানি',
     languageBn: 'বাংলা',
     languageFr: 'ফরাসি',
+    languagePtBR: 'ব্রাজিলীয় পর্তুগিজ',
     rangeTo: 'থেকে',
     last7d: 'গত 7 দিন',
     last30d: 'গত 30 দিন',

@@ -267,6 +267,8 @@ describe('i18n', () => {
       }
     };
     walk(en, ptBR, '');
+  });
+
   test.each(['bn-BD', 'bn-IN', 'bn'])('initial locale detects Bengali browser language %s', tag => {
     Object.defineProperty(navigator, 'language', {
       value: tag,
@@ -297,6 +299,12 @@ describe('i18n', () => {
     expect(document.documentElement.lang).toBe('bn');
     expect(document.documentElement.dir).toBe('ltr');
     expect(localStorage.getItem('locale')).toBe('bn');
+  });
+
+  test('Bengali notification help preserves the literal total-time category', () => {
+    const { setAppLocale, i18n } = loadI18n();
+    setAppLocale('bn');
+    expect(i18n.t('settings.notifications.categoryHelp')).toContain('"All"');
   });
 
   test('switching from Arabic to Bengali restores ltr', () => {
