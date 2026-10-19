@@ -570,11 +570,18 @@ export default {
   },
   timespiral: {
     title: 'Timespiral',
-    wip: 'Ceci est une expérience en cours de développement.',
-    noAfkBucket: 'Aucun bucket AFK trouvé sur cet hôte. Installez',
-    noAfkBucketSuffix: 'pour utiliser Timespiral.',
-    bucketLabel: 'Bucket :',
-    eventsLabel: 'Événements :',
+    device: 'Appareil',
+    noData:
+      "Aucun appareil avec une activité de fenêtres ou d'applications n'a été trouvé. Pour la suivre, installez",
+    now: 'Maintenant',
+    prevDay: 'Jour précédent',
+    nextDay: 'Jour suivant',
+    rotate: 'Tourner avec le temps',
+    depth: 'Profondeur de la spirale',
+    yesterday: 'Hier',
+    noActivity: 'Aucune activité',
+    help: 'Faites défiler pour vous déplacer dans le temps (maintenez Maj pour des jours entiers), faites glisser pour tourner, double-cliquez pour y aller. Cliquez sur une catégorie pour la mettre en évidence.',
+    keys: 'Touches : ←/→ heure, ↑/↓ jour, PgUp/PgDn semaine, N maintenant, Échap annuler la mise en évidence.',
   },
   ui: {
     activity: {

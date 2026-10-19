@@ -558,11 +558,18 @@ export default {
   },
   timespiral: {
     title: 'タイムスパイラル',
-    wip: 'これは開発中の実験的な機能です。',
-    noAfkBucket: 'このホストに AFK バケットが見つかりません。次をインストールしてください：',
-    noAfkBucketSuffix: 'タイムスパイラルを使用するために必要です。',
-    bucketLabel: 'バケット：',
-    eventsLabel: 'イベント：',
+    device: 'デバイス',
+    noData:
+      'ウィンドウまたはアプリのアクティビティがあるデバイスが見つかりません。記録するには次をインストールしてください：',
+    now: '現在',
+    prevDay: '前の日',
+    nextDay: '次の日',
+    rotate: '時間とともに回転',
+    depth: 'らせんの深さ',
+    yesterday: '昨日',
+    noActivity: 'アクティビティなし',
+    help: 'スクロールで時間を移動（Shift で1日単位）、ドラッグで回転、ダブルクリックでその時刻へ移動します。カテゴリをクリックすると強調表示します。',
+    keys: 'キー：←/→ 1時間、↑/↓ 1日、PgUp/PgDn 1週間、N 現在、Esc 強調解除。',
   },
   ui: {
     activity: {
