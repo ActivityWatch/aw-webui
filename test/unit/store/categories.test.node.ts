@@ -45,6 +45,26 @@ describe('categories store', () => {
     expect(categoryStore.all_categories).toHaveLength(1);
   });
 
+  describe.each([1, -1])('score inheritance from parent %s', parentScore => {
+    test.each([0, 0.5, -0.5, null, undefined])('resolves child score %s', score => {
+      categoryStore.load([
+        { name: ['Parent'], rule: { type: 'none' }, data: { score: parentScore } },
+        { name: ['Parent', 'Child'], rule: { type: 'none' }, data: { score } },
+      ]);
+
+      expect(categoryStore.get_category_score(['Parent', 'Child'])).toBe(score ?? parentScore);
+    });
+
+    test('inherits when child data is absent', () => {
+      categoryStore.load([
+        { name: ['Parent'], rule: { type: 'none' }, data: { score: parentScore } },
+        { name: ['Parent', 'Child'], rule: { type: 'none' } },
+      ]);
+
+      expect(categoryStore.get_category_score(['Parent', 'Child'])).toBe(parentScore);
+    });
+  });
+
   test('classes_for_query sends blank-regex rules as none (#382)', () => {
     categoryStore.load([
       { name: ['Work'], rule: { type: 'regex', regex: '' } },

@@ -28,7 +28,7 @@ interface State {
 function getScoreFromCategory(c: Category, allCats: Category[]): number {
   // Returns the score for a certain category, falling back to parents if none set
   // Very similar to getColorFromCategory
-  if (c && c.data && c.data.score) {
+  if (c && c.data && c.data.score !== null && c.data.score !== undefined) {
     return c.data.score;
   } else if (c && c.name.slice(0, -1).length > 0) {
     // If no color is set on category, traverse parents until one is found

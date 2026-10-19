@@ -275,7 +275,7 @@ export default {
       const color = cat.data ? cat.data.color : undefined;
       const inherit_color = !color;
       const score = cat.data ? cat.data.score : undefined;
-      const inherit_score = !score;
+      const inherit_score = score === null || score === undefined;
       const rule = _.cloneDeep(cat.rule) || {};
       const storedKeys = normalizeSelectKeys(rule.select_keys);
       this.editing = {
