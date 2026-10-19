@@ -61,6 +61,7 @@ export default {
     languageRu: 'Русский',
     languageSv: 'Svenska',
     languageZhCN: '简体中文',
+    languageEs: 'Español',
     rangeTo: 'до',
     last7d: 'Останні 7 днів',
     last30d: 'Останні 30 днів',

@@ -20,6 +20,7 @@ describe('i18n', () => {
     expect(isAppLocale('de')).toBe(true);
     expect(isAppLocale('ru')).toBe(true);
     expect(isAppLocale('zh-CN')).toBe(true);
+    expect(isAppLocale('es')).toBe(true);
     expect(isAppLocale('fr')).toBe(false);
     expect(isAppLocale('')).toBe(false);
     expect(isAppLocale(null)).toBe(false);
@@ -47,6 +48,25 @@ describe('i18n', () => {
     });
     const { i18n } = loadI18n();
     expect(i18n.locale).toBe('zh-CN');
+  });
+
+  test('initial locale detects Spanish browser language', () => {
+    Object.defineProperty(navigator, 'language', {
+      value: 'es-MX',
+      configurable: true,
+    });
+    const { i18n } = loadI18n();
+    expect(i18n.locale).toBe('es');
+  });
+
+  test('setAppLocale switches to Spanish messages', () => {
+    const { setAppLocale, i18n } = loadI18n();
+    setAppLocale('es');
+    expect(i18n.locale).toBe('es');
+    expect(i18n.t('common.languageEs')).toBe('Español');
+    expect(i18n.t('common.save')).not.toBe('Save');
+    expect(document.documentElement.lang).toBe('es');
+    expect(localStorage.getItem('locale')).toBe('es');
   });
 
   test('initial locale falls back to en', () => {

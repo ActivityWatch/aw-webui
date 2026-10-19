@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const LOCALES_DIR = path.join(__dirname, '../src/i18n/locales');
-const LOCALES = ['en', 'uk', 'de', 'ru', 'zh-CN', 'sv'];
+const LOCALES = ['en', 'uk', 'de', 'ru', 'zh-CN', 'sv', 'es'];
 const SRC_DIR = path.join(__dirname, '../src');
 const verbose = process.argv.includes('--verbose');
 
