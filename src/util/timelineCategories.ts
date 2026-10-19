@@ -10,12 +10,14 @@ interface TimelineBucket {
 
 /** Use the Activity view's canonical stream, not independently classified raw buckets.
  * Earlier visible sources win overlaps, just as in the multidevice Activity query.
- * AFK buckets remain available even when the client filter hides their raw rows.
+ * Like Activity's default, desktop sources are always AFK-filtered when the host has an
+ * AFK bucket; the Timeline AFK switch only affects raw rows. AFK buckets remain available
+ * even when the client filter hides their raw rows.
  */
 export function categoryTimelineQuery(
   visible: TimelineBucket[],
   all: TimelineBucket[],
-  params: BaseQueryParams & { filter_afk: boolean; always_active_pattern?: string }
+  params: BaseQueryParams & { always_active_pattern?: string }
 ): string[] | null {
   const sources = visible.filter(
     b => b.type === 'currentwindow' || (b.type === 'app' && b.id.startsWith('aw-import-screentime'))
@@ -39,7 +41,7 @@ export function categoryTimelineQuery(
       ...common,
       bid_window: bucket.id,
       bid_afk: afk?.id || '',
-      filter_afk: params.filter_afk && !!afk,
+      filter_afk: !!afk,
     });
   });
   queries.push('events = [];');

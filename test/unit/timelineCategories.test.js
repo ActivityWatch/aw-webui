@@ -63,11 +63,21 @@ test('queries all visible window buckets and merges only contiguous final catego
   expect(vm.categorizedEvents[0].id).toBeUndefined();
 });
 
+test('categorized row is AFK-filtered by default while raw rows stay unfiltered', async () => {
+  const vm = context();
+  vm._applyAfkFilter = jest.fn(async rows => rows);
+  expect(vm.filter_afk).toBe(false);
+  await vm.getBuckets();
+  const code = mockQuery.mock.calls[0][1].join('\n');
+  expect(code).toContain('afk_laptop');
+  expect(code).toContain('filter_period_intersect');
+  expect(vm._applyAfkFilter).not.toHaveBeenCalled();
+});
+
 test('host/client filters restrict sources but AFK lookup retains the matching host bucket', async () => {
   const vm = context();
   vm.filter_hostname = 'laptop';
   vm.filter_client = 'window';
-  vm.filter_afk = true;
   await vm.getBuckets();
   const code = mockQuery.mock.calls[0][1].join('\n');
   expect(code).toContain('window_laptop');
@@ -207,7 +217,6 @@ test('mobile canonical queries retain timestamps, use actual synced IDs, and omi
   const code = categoryTimelineQuery(sources, sources, {
     categories: [],
     filter_categories: [],
-    filter_afk: true,
   }).join('\n');
   expect(code).toContain('aw-watcher-android-synced-from-phone');
   expect(code).toContain('aw-import-screentime_phone');
@@ -219,7 +228,6 @@ test('parent category filters include descendants after resolving source overlap
   const code = categoryTimelineQuery(buckets(), buckets(), {
     categories: [[['Work', 'Programming'], { type: 'regex', regex: 'Code' }]],
     filter_categories: [['Work']],
-    filter_afk: false,
   }).join('\n');
   expect(code).toContain('filter_keyvals(events, "$category", [["Work"],["Work","Programming"]])');
   expect(code.indexOf('filter_keyvals(events, "$category"')).toBeGreaterThan(
