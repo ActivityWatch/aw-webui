@@ -1,33 +1,33 @@
 <template lang="pug">
 div
-  b-alert(show variant="warning") #[b Note:] These settings are meant for developers who (hopefully) know what they are doing, and as such, may break things unexpectedly.
+  b-alert(show variant="warning") #[b {{ $t('settings.developer.note') }}] {{ $t('settings.developer.noteBody') }}
 
   div.d-flex.justify-content-between.align-items-center
     div
-      h5.mb-0#devmode-label Force devmode
+      h5.mb-0#devmode-label {{ $t('settings.developer.forceDevmode') }}
     div
       b-form-checkbox(v-model="devmode" switch aria-labelledby="devmode-label")
   small.text-muted
-    | Devmode enables some features that are still work-in-progress.
+    | {{ $t('settings.developer.forceDevmodeHelp') }}
 
   div.mt-3.d-sm-flex.justify-content-between
     div
-      h5.mt-1.mb-2.mb-sm-0#request-timeout-label Request timeout
+      h5.mt-1.mb-2.mb-sm-0#request-timeout-label {{ $t('settings.developer.requestTimeout') }}
     div
       b-input(v-model="requestTimeout" type="number" size="sm" aria-labelledby="request-timeout-label")
   small.text-muted
-    | The maximum amount of time a server request can take before timing out. Setting this to a high value can be useful for large queries. Note that you need to reload the web UI for it to apply.
+    | {{ $t('settings.developer.requestTimeoutHelp') }}
 
   div.mt-3.d-flex.justify-content-between.align-items-center
     div.mr-2
-      h5.mb-0#hide-unsupported-label Hide unsupported visualizations
+      h5.mb-0#hide-unsupported-label {{ $t('settings.developer.hideUnsupported') }}
     div
       b-form-checkbox(v-model="hideUnsupportedVisualizations" switch aria-labelledby="hide-unsupported-label")
   small.text-muted
-    | Hide visualizations that lack required data instead of showing a warning. Disabled by default.
+    | {{ $t('settings.developer.hideUnsupportedHelp') }}
 
   div.mt-3
-    | Web UI commit hash: {{ COMMIT_HASH }}
+    | {{ $t('settings.developer.commitHash') }} {{ COMMIT_HASH }}
 </template>
 
 <script lang="ts">

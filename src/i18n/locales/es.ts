@@ -75,6 +75,9 @@ export default {
     uncategorized: 'Sin categoría',
     requiresAfk: 'requiere aw-watcher-afk',
     unknown: 'desconocido',
+    durationHours: 'h',
+    durationMinutes: 'min',
+    durationSeconds: 's',
   },
   notFound: {
     title: '¡Vaya, no se ha encontrado esta página!',
@@ -426,6 +429,16 @@ export default {
     errIdNotUnique: 'El ID no es único',
     errMissingId: 'Falta el ID',
     errMissingName: 'Falta el nombre',
+    diagnosticMissingWindow:
+      'No window bucket for {host}. Start aw-watcher-window, then refresh this page.',
+    diagnosticMissingAfk: 'No AFK bucket for {host}. Start aw-watcher-afk, then refresh this page.',
+    diagnosticAmbiguousWindow:
+      'Multiple window buckets may describe {host}: {buckets}. Choose the correct device above or inspect Raw Data.',
+    diagnosticMismatchedHostnames:
+      'aw-watcher-window reports {host} as {windowHosts}, but aw-watcher-afk reports it as {afkHosts}. Activity needs both under the same hostname: restart both watchers, then refresh this page.',
+    diagnosticNoWindowEvents:
+      'No window activity was found for this period. Check that aw-watcher-window is running. On Wayland, try awatcher.',
+    diagnosticOpenRawData: 'Open Raw Data.',
   },
   activityView: {
     addVisualization: 'Añadir visualización',
@@ -968,6 +981,49 @@ export default {
       vote: 'Vote por nuevas funciones en el',
       feedbackPrefix: 'Complete el',
       feedbackForm: 'formulario de comentarios',
+    },
+  },
+  extraViews: {
+    bucket: {
+      notFound: 'No bucket named "{id}" was found.',
+      seeAll: 'See all buckets',
+      noEventsPrefix: 'There are no events in the selected range. The last event was recorded',
+      noEventsSuffix: '. Showing the {count} most recent events instead.',
+    },
+    search: {
+      windowEvents: 'Window events',
+      browserEvents: 'Browser events',
+      timestamp: 'Timestamp',
+      duration: 'Duration',
+      title: 'Title',
+      noResults: 'No results found.',
+    },
+    trends: { toUse: 'to use this view.' },
+    workReport: {
+      selectCategoryError: 'Select at least one category.',
+    },
+    categoryBuilder: {
+      range: 'Date range',
+      showOptions: 'Show options',
+      hideOptions: 'Hide options',
+      retry: 'Retry',
+      noActivityBuckets:
+        'This device has no activity data. Choose another device in the options above.',
+      noHostPrefix: 'No device with activity buckets is available. Install',
+      noHostSuffix: 'to start collecting activity data.',
+      watcher: 'a watcher',
+      showMore: 'Show more',
+      ignoredWords: '{count} ignored keywords',
+      show: 'Show',
+      hide: 'Hide',
+      reset: 'Reset',
+      unignore: 'Stop ignoring',
+      invalid: 'Invalid pattern',
+      tooBroad: 'Pattern is too broad',
+    },
+    notifications: {
+      enabled: 'Enable notifications',
+      enabledHelp: 'aw-notify runs only while enabled. The tray menu toggle follows this setting.',
     },
   },
 };

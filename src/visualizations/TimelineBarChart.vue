@@ -3,9 +3,9 @@ div(v-if="datasets && datasets.length > 0")
   // Height set here to avoid elements jumping when loading Activity view
   bar(:chart-data="chartData" :chart-options="chartOptions" :height="height")
 div.small(v-else-if="datasets === null", style="font-size: 16pt; color: #aaa;")
-  | No data
+  | {{ $t('visualizations.noData') }}
 div.small(v-else, style="font-size: 16pt; color: #aaa;")
-  .aw-loading Loading...
+  .aw-loading {{ $t('common.loading') }}
 </template>
 
 <script lang="ts">
@@ -49,7 +49,7 @@ export default {
       type: Array,
       default: () => [
         {
-          label: 'Total time',
+          label: i18n.t('ui.timeline.totalTime'),
           backgroundColor: '#6699ff',
           data: Array.from({ length: 40 }, () => Math.floor(Math.random() * 40)),
         },
@@ -131,7 +131,7 @@ export default {
         datasets,
         title: {
           display: true,
-          text: 'Timeline',
+          text: i18n.t('timeline.title'),
         },
       };
     },
