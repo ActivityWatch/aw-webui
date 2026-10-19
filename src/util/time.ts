@@ -78,7 +78,14 @@ export function get_day_start_with_offset(dateParam: Moment | string, offset?: s
   const dateMoment = dateParam ? moment(dateParam) : moment().startOf('day');
   const start_of_day_hours = parseInt(offset.split(':')[0]);
   const start_of_day_minutes = parseInt(offset.split(':')[1]);
-  return dateMoment.hour(start_of_day_hours).minute(start_of_day_minutes).format();
+  // Zero seconds/ms too: callers pass "now"-derived Moments, and a boundary that
+  // inherits the refresh instant's seconds shifts every report day by up to 59 s.
+  return dateMoment
+    .hour(start_of_day_hours)
+    .minute(start_of_day_minutes)
+    .second(0)
+    .millisecond(0)
+    .format();
 }
 
 // Return the startOfDay offset as a number of hours
