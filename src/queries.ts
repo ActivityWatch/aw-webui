@@ -1,5 +1,7 @@
 import _ from 'lodash';
 
+import { supportsMergeSubwatcherFields } from '~/util/serverCapabilities';
+
 // TODO: Sanitize string input of buckets
 
 export function querystr_to_array(querystr: string): string[] {
@@ -252,11 +254,15 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
          events = union_no_overlap(stopwatch_events, events);`
       : 'stopwatch_events = [];',
     // Enrich window events with browser url/$domain so URL-based category rules
-    // fire on the main events stream. Requires aw-server-rust >= 0.15 (added in
-    // aw-server-rust#824). Omitted when no browser buckets are configured, so
-    // queries against older servers work unchanged when the browser watcher is
-    // not installed.
-    isDesktopParams(params) && params.bid_browsers && params.bid_browsers.length > 0
+    // fire on the main events stream. `merge_subwatcher_fields` was added in
+    // aw-server-rust#824, which is newer than the server floor this webui
+    // supports, so only emit it when the startup capability probe found it
+    // (see util/serverCapabilities). Otherwise the query fails server-side with
+    // VariableNotDefined and the whole Activity view breaks.
+    isDesktopParams(params) &&
+    params.bid_browsers &&
+    params.bid_browsers.length > 0 &&
+    supportsMergeSubwatcherFields()
       ? 'events = merge_subwatcher_fields(events, browser_events, ["url", "$domain"], "sub_wins");'
       : '',
     // Categorize
