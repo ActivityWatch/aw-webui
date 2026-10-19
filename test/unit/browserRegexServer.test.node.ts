@@ -1,10 +1,32 @@
 import { fullDesktopQuery } from '~/queries';
+import { setSupportsMergeSubwatcherFields } from '~/util/serverCapabilities';
 
 // CI runs this against both supported servers; local unit runs need no server.
 const server = process.env.AW_QUERY_TEST_SERVER_URL;
 const describeWithServer = server ? describe : describe.skip;
 
 describeWithServer('browser regex matching through the server', () => {
+  // Older servers (the supported floor) lack merge_subwatcher_fields; enabling
+  // the capability only when the server resolves it keeps this suite green
+  // there while still exercising URL enrichment against newer servers.
+  beforeAll(async () => {
+    try {
+      const response = await fetch(`${server}/api/0/query/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          timeperiods: ['2000-01-01T00:00:00Z/2000-01-01T00:00:01Z'],
+          query: ['x = merge_subwatcher_fields([], [], ["url"], "sub_wins");'],
+        }),
+      });
+      setSupportsMergeSubwatcherFields(response.ok);
+    } catch {
+      setSupportsMergeSubwatcherFields(false);
+    }
+  });
+
+  afterAll(() => setSupportsMergeSubwatcherFields(false));
+
   async function request(path: string, method: string, body?: unknown): Promise<any> {
     const response = await fetch(`${server}/api/0${path}`, {
       method,

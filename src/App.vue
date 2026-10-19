@@ -70,6 +70,10 @@ export default {
         //theme === 'dark' ? document.querySelector('head').appendChild(style) : '';
       }
     }
+    // Server info also runs the query-capability probe, and the views query
+    // the server as soon as they mount — so fetch it before rendering them.
+    const serverStore = useServerStore();
+    await serverStore.getInfo();
     this.loaded = true;
   },
 
@@ -87,11 +91,6 @@ export default {
       if (previousSize) root.style.setProperty('font-size', previousSize, previousPriority);
       else root.style.removeProperty('font-size');
     });
-  },
-
-  mounted: async function () {
-    const serverStore = useServerStore();
-    await serverStore.getInfo();
   },
 };
 </script>
