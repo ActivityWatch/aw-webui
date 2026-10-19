@@ -146,10 +146,6 @@ export default {
     CategoryEditModal,
     CategoryBuilder: defineAsyncComponent(() => import('~/views/settings/CategoryBuilder.vue')),
   },
-  created() {
-    // A plain instance property: setup() bindings would change what tests see as wrapper.vm.
-    this.modalController = useModalController();
-  },
   data: () => ({
     categoryStore: useCategoryStore(),
     editingId: null,
@@ -184,6 +180,10 @@ export default {
       },
       immediate: true,
     },
+  },
+  created() {
+    // A plain instance property: setup() bindings would change what tests see as wrapper.vm.
+    this.modalController = useModalController();
   },
   mounted() {
     this.categoryStore.load();

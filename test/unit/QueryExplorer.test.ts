@@ -5,10 +5,10 @@ const QueryExplorer: any = QueryExplorerComponent;
 
 describe('QueryExplorer saveCurrentQuery', () => {
   test('canceling an overwrite confirm aborts without opening the save-as-new prompt', async () => {
-    const confirm = jest.fn().mockResolvedValue(false);
+    const confirmModal = jest.fn().mockResolvedValue(false);
     const persistSavedQueries = jest.fn();
     const vm = {
-      modalController: { confirm },
+      modalController: { confirm: confirmModal },
       enddate: '2026-05-21',
       event_type: 'currentwindow',
       persistSavedQueries,
@@ -37,7 +37,7 @@ describe('QueryExplorer saveCurrentQuery', () => {
 
     await QueryExplorer.methods.saveCurrentQuery.call(vm);
 
-    expect(confirm).toHaveBeenCalledWith({
+    expect(confirmModal).toHaveBeenCalledWith({
       props: expect.objectContaining({
         body: 'Update saved query "Daily Coding Time"?',
         title: 'Update Query',

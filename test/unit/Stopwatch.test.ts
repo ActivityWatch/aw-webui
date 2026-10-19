@@ -33,7 +33,8 @@ function mountStopwatch(result = { running: [oldRunning], history: stoppedEvents
         icon: true,
         'b-button': {
           emits: ['click'],
-          template: '<button :disabled="$attrs.disabled" @click="$emit(\'click\')"><slot /></button>',
+          template:
+            '<button :disabled="$attrs.disabled" @click="$emit(\'click\')"><slot /></button>',
         },
       },
     },

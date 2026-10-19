@@ -23,7 +23,7 @@ describe('Settings route leave confirmation', () => {
     [null, '/settings'],
   ])('waits for the modal, then respects %s', async (confirmed, expectedPath) => {
     let resolveModal;
-    const confirm = jest.fn(
+    const confirmModal = jest.fn(
       () =>
         new Promise(resolve => {
           resolveModal = resolve;
@@ -37,7 +37,7 @@ describe('Settings route leave confirmation', () => {
           component: {
             render: () => h('div'),
             beforeRouteLeave: Settings.beforeRouteLeave,
-            setup: () => ({ modalController: { confirm } }),
+            setup: () => ({ modalController: { confirm: confirmModal } }),
           },
         },
         { path: '/next', component: { render: () => h('div') } },
@@ -52,7 +52,7 @@ describe('Settings route leave confirmation', () => {
       await nextTick();
       const navigation = router.push('/next');
       await nextTick();
-      expect(confirm).toHaveBeenCalledTimes(1);
+      expect(confirmModal).toHaveBeenCalledTimes(1);
       expect(router.currentRoute.value.path).toBe('/settings');
 
       resolveModal(confirmed);

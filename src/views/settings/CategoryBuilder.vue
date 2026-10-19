@@ -168,10 +168,6 @@ export default {
     // page chrome so the embed reads as a subsection of the parent.
     embedded: { type: Boolean, default: false },
   },
-  created() {
-    // A plain instance property: setup() bindings would change what tests see as wrapper.vm.
-    this.modalController = useModalController();
-  },
   data() {
     return {
       loading: true,
@@ -259,6 +255,10 @@ export default {
       },
       deep: true,
     },
+  },
+  created() {
+    // A plain instance property: setup() bindings would change what tests see as wrapper.vm.
+    this.modalController = useModalController();
   },
   async mounted() {
     window.addEventListener('beforeunload', this.beforeUnload);

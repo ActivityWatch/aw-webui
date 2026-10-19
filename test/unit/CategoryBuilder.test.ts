@@ -426,8 +426,8 @@ describe('CategoryBuilder navigation guards', () => {
     function makeVm(unsavedChanges, confirmResult) {
       const categoryStore = useCategoryStore();
       categoryStore.classes_unsaved_changes = unsavedChanges;
-      const confirm = jest.fn().mockResolvedValue(confirmResult);
-      return { $t: key => key, modalController: { confirm } };
+      const confirmModal = jest.fn().mockResolvedValue(confirmResult);
+      return { $t: key => key, modalController: { confirm: confirmModal } };
     }
 
     test('calls next() immediately when there are no unsaved changes', async () => {

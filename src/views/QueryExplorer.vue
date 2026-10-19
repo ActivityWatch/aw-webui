@@ -108,10 +108,6 @@ const tomorrow = moment(today).add(24, 'hours');
 
 export default {
   name: 'QueryExplorer',
-  created() {
-    // A plain instance property: setup() bindings would change what tests see as wrapper.vm.
-    this.modalController = useModalController();
-  },
   data() {
     const settingsStore = useSettingsStore();
 
@@ -158,6 +154,10 @@ RETURN = sort_by_duration(merged_events);
       if (Array.isArray(this.events)) return 'Number of events: ' + this.events.length;
       else return '';
     },
+  },
+  created() {
+    // A plain instance property: setup() bindings would change what tests see as wrapper.vm.
+    this.modalController = useModalController();
   },
   mounted: async function () {
     await this.settingsStore.ensureLoaded();
