@@ -39,7 +39,7 @@ export default {
     // in which case the watcher won't fire for it. Placeholders for periods
     // that are still being fetched don't count: they'd draw as no activity.
     if (this.periodusage_arr && hasFetchedHistory(this.periodusage_arr)) {
-      periodusage.update(this.$el, this.periodusage_arr, this.onPeriodClicked);
+      periodusage.update(this.$el, this.periodusage_arr, this.onPeriodClicked, this.chartLabels());
     } else {
       periodusage.update(this.$el, this.periodusage_arr, this.onPeriodClicked, this.chartLabels());
     }
