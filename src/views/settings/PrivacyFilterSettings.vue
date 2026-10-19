@@ -43,6 +43,7 @@ div
 
 <script lang="ts">
 import { useSettingsStore } from '~/stores/settings';
+import { getClient } from '~/util/awclient';
 import {
   DEFAULT_PRIVACY_FILTERS,
   formatPrivacyFilters,
@@ -87,11 +88,6 @@ export default {
     'settingsStore.privacy_filters': {
       deep: true,
       handler() {
-        // The store is patched optimistically before a save is confirmed; only
-        // the save's own outcome may move the saved baseline.
-        if (this.isSaving) {
-          return;
-        }
         this.syncFromStore(false);
       },
     },
@@ -116,23 +112,27 @@ export default {
         return;
       }
 
-      const confirmed = JSON.parse(JSON.stringify(this.settingsStore.privacy_filters));
+      const rules = this.validationResult.rules || [];
       const submittedText = this.editorText;
       this.isSaving = true;
       this.saveError = '';
       try {
-        await this.settingsStore.update({
-          privacy_filters: this.validationResult.rules || [],
+        await this.settingsStore.ensureLoaded();
+        // Persist first, then update the store: the store (and with it the
+        // saved baseline) must only ever hold rules the server accepted, so a
+        // failed save stays retryable and Discard restores the persisted rules.
+        await getClient().req.post('/0/settings/privacy_filters', rules, {
+          headers: { 'Content-Type': 'application/json' },
         });
-        // Keep edits made while the save was pending.
-        this.syncFromStore(this.editorText === submittedText);
-      } catch (error) {
-        // Roll back the optimistic patch so Discard and later saves of other
-        // settings use the persisted rules; the draft stays dirty for retry.
+        this.savedText = formatPrivacyFilters(rules);
+        if (this.editorText === submittedText) {
+          // Keep edits made while the save was pending.
+          this.editorText = this.savedText;
+        }
         this.settingsStore.$patch(state => {
-          state.privacy_filters = confirmed;
+          state.privacy_filters = rules;
         });
-        this.savedText = formatPrivacyFilters(confirmed);
+      } catch (error) {
         this.saveError = error instanceof Error ? error.message : String(error);
       } finally {
         this.isSaving = false;
