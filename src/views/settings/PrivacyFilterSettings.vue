@@ -156,7 +156,11 @@ export default {
             persisted = serverSettings.privacy_filters;
           }
         } catch {
-          // Keep the last confirmed rules.
+          // The write outcome is unknown. Keep the last confirmed rules for
+          // the editor, but force the next update to reload before writing
+          // anything: otherwise another setting could write this fallback
+          // over privacy rules that actually reached the server.
+          this.settingsStore.$patch({ _loaded: false });
         }
         this.settingsStore.$patch(state => {
           state.privacy_filters = persisted;

@@ -92,7 +92,7 @@ describe('PrivacyFilterSettings save outcomes', () => {
     await flush();
 
     expect(read).toHaveBeenCalledTimes(2);
-    expect(store.loaded).toBe(true);
+    expect(store.loaded).toBe(false);
     expect(store.privacy_filters).toEqual([rule('old-secret')]);
     expect(wrapper.vm.savedText).toBe(formatPrivacyFilters([rule('old-secret')]));
     expect(wrapper.vm.editorText).toContain('new-secret');
@@ -104,6 +104,42 @@ describe('PrivacyFilterSettings save outcomes', () => {
     wrapper.vm.resetEditor();
     expect(wrapper.vm.editorText).toBe(formatPrivacyFilters([rule('old-secret')]));
   });
+
+  it.each([false, true])(
+    'reloads before another settings update when recovery fails (write landed: %s)',
+    async landed => {
+      post.mockImplementationOnce(async (path, value) => {
+        if (landed) server.privacy_filters = value;
+        throw new Error('response lost');
+      });
+      const read = jest
+        .fn()
+        .mockRejectedValueOnce(new Error('recovery offline'))
+        .mockRejectedValueOnce(new Error('still offline'))
+        .mockImplementation(async () => JSON.parse(JSON.stringify(server)));
+      getClient().get_settings = read;
+
+      await wrapper.vm.savePrivacyFilters();
+      await flush();
+      expect(wrapper.vm.saveError).toBe('response lost');
+      expect(wrapper.vm.editorText).toContain('new-secret');
+      expect(wrapper.vm.canSave).toBe(true);
+      post.mockClear();
+
+      await expect(store.update({ theme: 'dark' })).rejects.toThrow('still offline');
+      expect(post).not.toHaveBeenCalled();
+      await store.update({ theme: 'dark' });
+      await flush();
+
+      const persistedRules = [rule(landed ? 'new-secret' : 'old-secret')];
+      expect(server.theme).toBe('dark');
+      expect(server.privacy_filters).toEqual(persistedRules);
+      expect(store.privacy_filters).toEqual(persistedRules);
+      expect(post.mock.calls.map(([path]) => path)).not.toContain('/0/settings/privacy_filters');
+      wrapper.vm.resetEditor();
+      expect(wrapper.vm.editorText).toBe(formatPrivacyFilters(persistedRules));
+    }
+  );
 
   it('retries a failed draft and then confirms it as the baseline', async () => {
     post.mockRejectedValueOnce(new Error('synthetic offline'));
