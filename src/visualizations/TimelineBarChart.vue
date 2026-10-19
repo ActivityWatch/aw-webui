@@ -125,7 +125,7 @@ export default {
         datasets,
         title: {
           display: true,
-          text: this.$t('timeline.title'),
+          text: i18n.t('timeline.title'),
         },
       };
     },
