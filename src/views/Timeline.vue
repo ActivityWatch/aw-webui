@@ -284,7 +284,6 @@ export default {
       const categoryQuery = categoryTimelineQuery(buckets, this.all_buckets, {
         categories: useCategoryStore().classes_for_query,
         filter_categories: this.filter_categories,
-        filter_afk: this.filter_afk,
         always_active_pattern: this.always_active_pattern || undefined,
       });
       if (categoryQuery) {
