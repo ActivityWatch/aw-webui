@@ -47,70 +47,99 @@ type OverlapPart = {
 };
 type Overlap = [OverlapPart, OverlapPart];
 
-function eventBounds(event): { start: Date; end: Date; end_ms: number } {
+type EventBounds = {
+  start: Date;
+  end: Date;
+  start_ms: number;
+  end_ms: number;
+  event: object;
+};
+
+function eventBounds(event): EventBounds {
   const start = new Date(event.timestamp);
-  const end_ms = start.valueOf() + 1000 * event.duration;
-  return { start, end: new Date(end_ms), end_ms };
+  const start_ms = start.valueOf();
+  const end_ms = start_ms + 1000 * event.duration;
+  return { start, end: new Date(end_ms), start_ms, end_ms, event };
+}
+
+function toOverlapPart(bounds: EventBounds): OverlapPart {
+  return { start: bounds.start, end: bounds.end, event: bounds.event };
+}
+
+function intersects(a: EventBounds, b: EventBounds): boolean {
+  // Half-open intervals overlap when each starts before the other ends. This is
+  // symmetric, so containment in either direction and equal bounds are both
+  // detected; merely touching endpoints is not an overlap, and a zero-length
+  // event spans no time, so it must not block a merge.
+  return (
+    a.start_ms < a.end_ms && b.start_ms < b.end_ms && a.start_ms < b.end_ms && b.start_ms < a.end_ms
+  );
+}
+
+function dropEnded(active: EventBounds[], now_ms: number) {
+  // Everything still active started at or before `now_ms`; one that ended by
+  // then can never overlap a later event, so it is safe to forget.
+  let kept = 0;
+  for (const bounds of active) {
+    if (bounds.end_ms > now_ms) {
+      active[kept++] = bounds;
+    }
+  }
+  active.length = kept;
 }
 
 export function overlappingEvents(events1, events2): Overlap[] {
   // Compared before sorting, since sorting a copy keeps the caller's lists untouched.
   const same_list = events1 === events2;
 
-  const sorted1 = [...events1].sort(
-    (a, b) => new Date(a.timestamp).valueOf() - new Date(b.timestamp).valueOf()
-  );
-  const sorted2 = same_list
-    ? sorted1
-    : [...events2].sort(
-        (a, b) => new Date(a.timestamp).valueOf() - new Date(b.timestamp).valueOf()
-      );
+  const sorted1 = events1.map(eventBounds).sort((a, b) => a.start_ms - b.start_ms);
 
-  let i = 0;
-  let j = 0;
-  const overlapping = [];
-  while (i < sorted1.length && j < sorted2.length) {
-    const e1 = sorted1[i];
-    const e2 = sorted2[j];
+  // Every pair is compared exactly once, so internally overlapping input lists
+  // are enumerated exactly instead of only as far as a one-pointer-per-step
+  // sweep happens to reach.
+  const overlapping: Overlap[] = [];
+  const active1: EventBounds[] = [];
 
-    // If `events1` and `events2` are the same list, we need to check if we are comparing the same event
-    if (same_list && e1 === e2) {
-      i++;
-      continue;
+  if (same_list) {
+    // Compare each event only against the still-open events before it, which
+    // yields each unordered pair once and never an event against itself.
+    for (const current of sorted1) {
+      dropEnded(active1, current.start_ms);
+      for (const other of active1) {
+        if (intersects(other, current)) {
+          overlapping.push([toOverlapPart(other), toOverlapPart(current)]);
+        }
+      }
+      active1.push(current);
     }
+  } else {
+    const sorted2 = events2.map(eventBounds).sort((a, b) => a.start_ms - b.start_ms);
+    const active2: EventBounds[] = [];
+    let i = 0;
+    let j = 0;
 
-    const e1_bounds = eventBounds(e1);
-    const e2_bounds = eventBounds(e2);
+    // Sweep both lists in start order, keeping the still-open intervals of each
+    // list so every cross pair is visited.
+    while (i < sorted1.length || j < sorted2.length) {
+      // Ties go to the first list so the second list's event sees it as active.
+      const take_first =
+        j >= sorted2.length || (i < sorted1.length && sorted1[i].start_ms <= sorted2[j].start_ms);
+      const current = take_first ? sorted1[i++] : sorted2[j++];
 
-    // Check for overlap. Two half-open intervals overlap when each starts
-    // before the other ends; this is symmetric, so containment in either
-    // direction and equal bounds are both detected. Merely touching
-    // (one ends where the other starts) is not an overlap, and neither is a
-    // zero-length event: it spans no time, so it must not block a merge.
-    if (
-      e1_bounds.start.valueOf() < e1_bounds.end_ms &&
-      e2_bounds.start.valueOf() < e2_bounds.end_ms &&
-      e1_bounds.start.valueOf() < e2_bounds.end_ms &&
-      e2_bounds.start.valueOf() < e1_bounds.end_ms
-    ) {
-      const overlap1 = {
-        start: e1_bounds.start,
-        end: e1_bounds.end,
-        event: e1,
-      };
-      const overlap2 = {
-        start: e2_bounds.start,
-        end: e2_bounds.end,
-        event: e2,
-      };
-      overlapping.push([overlap1, overlap2]);
-    }
+      dropEnded(active1, current.start_ms);
+      dropEnded(active2, current.start_ms);
 
-    // Advance whichever interval ends first; the other may still overlap later ones.
-    if (e2_bounds.end_ms > e1_bounds.end_ms) {
-      i++;
-    } else {
-      j++;
+      const others = take_first ? active2 : active1;
+      for (const other of others) {
+        if (intersects(current, other)) {
+          overlapping.push(
+            take_first
+              ? [toOverlapPart(current), toOverlapPart(other)]
+              : [toOverlapPart(other), toOverlapPart(current)]
+          );
+        }
+      }
+      (take_first ? active1 : active2).push(current);
     }
   }
 
