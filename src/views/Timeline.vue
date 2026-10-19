@@ -102,7 +102,7 @@ div
     | Categorized timeline unavailable. Raw bucket events are still shown.
 
   div(v-if="buckets !== null")
-    vis-timeline(:buckets="buckets", :categorizedEvents="categorizedEvents", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane", :updateTimelineWindow='updateTimelineWindow', @event-saved="getBuckets")
+    vis-timeline(:buckets="buckets", :categorizedEvents="categorizedEvents", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane", :updateTimelineWindow='updateTimelineWindow', @event-saved="onEventSaved")
 
     aw-devonly(:reason="$t('ui.devOnly.timelineExperiment')")
       aw-calendar(:buckets="buckets")
@@ -246,17 +246,32 @@ export default {
     removeCategory(idx) {
       this.filter_categories = this.filter_categories.filter((_cat, i) => i !== idx);
     },
+    // A saved edit changed the server's events, so the cached range is stale.
+    onEventSaved: function () {
+      this.fetchedRange = null;
+      this.getBuckets();
+    },
     getBuckets: async function () {
       if (this.daterange == null) return;
 
       const seq = ++this.fetchSeq;
-      this.all_buckets = Object.freeze(
-        await useBucketsStore().getBucketsWithEvents({
-          start: this.daterange[0].format(),
-          end: this.daterange[1].format(),
-        })
-      );
+      // Only refetch when the range changes; filters work on copies below.
+      const range = this.daterange;
+      if (this.fetchedRange !== range) {
+        this.fetchedRange = range;
+        this.bucketsRequest = useBucketsStore().getBucketsWithEvents({
+          start: range[0].format(),
+          end: range[1].format(),
+        });
+        // Let the next call retry a failed fetch
+        this.bucketsRequest.catch(() => {
+          if (this.fetchedRange === range) this.fetchedRange = null;
+        });
+      }
+      const fetched = await this.bucketsRequest;
+      // A newer call (range or filter change) took over while this one was loading
       if (seq !== this.fetchSeq) return;
+      this.all_buckets = Object.freeze(fetched);
 
       this.hosts = this.all_buckets
         .map(a => a.hostname)
@@ -265,7 +280,7 @@ export default {
         .map(a => a.client)
         .filter((value, index, array) => array.indexOf(value) === index);
 
-      let buckets = this.all_buckets;
+      let buckets = this.all_buckets.map(bucket => ({ ...bucket }));
       if (this.filter_hostname) {
         buckets = _.filter(buckets, b => b.hostname == this.filter_hostname);
       }
@@ -346,7 +361,8 @@ export default {
       // Clear the old category row so it can never be paired with a new range.
       this.categorizedEvents = [];
       this.categoryError = false;
-      this.buckets = buckets;
+      // Frozen to keep the event graph out of Vue's deep observation.
+      this.buckets = Object.freeze(buckets);
 
       const categoryResult = await categoryPromise;
       if (seq !== this.fetchSeq) return;

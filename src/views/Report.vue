@@ -151,6 +151,9 @@ export default {
         this.events = _.orderBy(data[0], ['timestamp'], ['desc']);
         this.error = '';
         this.queryTime = moment().diff(time);
+        // The chart reads the store's category history, which Activity views
+        // without a timeline barchart no longer load.
+        await this.activityStore.ensure_category_history();
       } catch (e) {
         console.error(e);
         this.error = e?.response?.data?.message || e?.message || this.$t('common.requestFailed');

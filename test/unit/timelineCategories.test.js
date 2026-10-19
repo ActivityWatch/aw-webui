@@ -146,6 +146,8 @@ test.each(['resolve', 'reject'])(
     const vm = context();
     await vm.getBuckets();
     expect(vm.categorizedEvents).not.toHaveLength(0);
+    // Only a range change refetches raw buckets.
+    vm.daterange = [moment.utc('2026-10-19'), moment.utc('2026-10-20')];
     const raw = buckets();
     raw[0].events = [event(60, 15)];
     mockGetBucketsWithEvents.mockResolvedValueOnce(raw);
@@ -161,7 +163,7 @@ test.each(['resolve', 'reject'])(
     // The category request remains pending throughout these assertions.
     await Promise.resolve();
     await Promise.resolve();
-    expect(vm.buckets).toBe(raw);
+    expect(vm.buckets).toEqual(raw);
     expect(vm.buckets[0].events).toEqual([event(60, 15)]);
     expect(vm.categorizedEvents).toEqual([]);
     expect(vm.categoryError).toBe(false);
@@ -196,6 +198,7 @@ test('an obsolete raw AFK response cannot replace the new range or its category 
   const old = vm.getBuckets();
   await Promise.resolve();
   await Promise.resolve();
+  vm.daterange = [moment.utc('2026-10-19'), moment.utc('2026-10-20')];
   const newRaw = buckets();
   newRaw[0].events = [event(60, 30, ['Play'])];
   mockGetBucketsWithEvents.mockResolvedValueOnce(newRaw);
@@ -204,7 +207,7 @@ test('an obsolete raw AFK response cannot replace the new range or its category 
   finishOldCategory([[event(0, 10)]]);
   finishOldAfk(buckets());
   await old;
-  expect(vm.buckets).toBe(newRaw);
+  expect(vm.buckets).toEqual(newRaw);
   expect(vm.categorizedEvents[0].data.$category).toEqual(['Play']);
   expect(vm.categoryError).toBe(false);
 });
@@ -254,4 +257,20 @@ test('merging preserves real gaps, category boundaries, and immutable source dat
   expect(events).toEqual(original);
   const uncategorized = mergeCategoryIntervals([{ ...event(0, 1), data: {} }]);
   expect(uncategorized[0].data.$category).toEqual(['Uncategorized']);
+});
+
+test('a saved edit refetches the raw buckets for the same range', async () => {
+  const vm = context();
+  vm.getBuckets = Timeline.methods.getBuckets.bind(vm);
+  await vm.getBuckets();
+  await vm.getBuckets();
+  expect(mockGetBucketsWithEvents).toHaveBeenCalledTimes(1);
+  const edited = buckets();
+  edited[0].events = [event(0, 99)];
+  mockGetBucketsWithEvents.mockResolvedValueOnce(edited);
+  Timeline.methods.onEventSaved.call(vm);
+  await vm.bucketsRequest;
+  await new Promise(resolve => setTimeout(resolve, 0));
+  expect(mockGetBucketsWithEvents).toHaveBeenCalledTimes(2);
+  expect(vm.buckets[0].events[0].duration).toBe(99);
 });
