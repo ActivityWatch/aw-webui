@@ -123,10 +123,12 @@ div
   )
     p {{ $t('settings.categorization.importSetPrompt', { id: pendingImportSetId }) }}
     div.d-flex.flex-wrap(style="gap: 0.5rem;")
-      b-btn(variant="outline-primary" @click="onImportReplace") {{ $t('settings.categorization.importReplace') }}
-      b-btn(variant="primary" @click="onImportAddOnTop") {{ $t('settings.categorization.importAddOnTop') }}
+      b-button(variant="outline-primary" @click="onImportReplace") {{ $t('settings.categorization.importReplace') }}
+      b-button(variant="primary" @click="onImportAddOnTop") {{ $t('settings.categorization.importAddOnTop') }}
 </template>
 <script lang="ts">
+import { useModalController } from 'bootstrap-vue-next';
+import { msgBoxConfirm } from '~/util/confirm';
 import { defineAsyncComponent } from 'vue';
 import { mapState, mapGetters } from 'pinia';
 import CategoryEditTree from '~/components/CategoryEditTree.vue';
@@ -143,6 +145,10 @@ export default {
     CategoryEditTree,
     CategoryEditModal,
     CategoryBuilder: defineAsyncComponent(() => import('~/views/settings/CategoryBuilder.vue')),
+  },
+  created() {
+    // A plain instance property: setup() bindings would change what tests see as wrapper.vm.
+    this.modalController = useModalController();
   },
   data: () => ({
     categoryStore: useCategoryStore(),
@@ -318,7 +324,8 @@ export default {
     deleteActiveSet: async function () {
       const id = this.categoryStore.active_set_ids[0];
       if (!id) return;
-      const confirmed = await this.$bvModal.msgBoxConfirm(
+      const confirmed = await msgBoxConfirm(
+        this.modalController,
         `Delete category set "${id}"? This cannot be undone.`,
         {
           title: 'Delete Category Set',
@@ -334,7 +341,8 @@ export default {
     },
     onSetChange: async function (setId: string) {
       if (this.classes_unsaved_changes) {
-        const confirmed = await this.$bvModal.msgBoxConfirm(
+        const confirmed = await msgBoxConfirm(
+          this.modalController,
           'You have unsaved changes. Switch sets anyway? (Changes will be discarded)',
           { title: 'Unsaved Changes', okTitle: 'Switch', cancelTitle: 'Cancel', centered: true }
         );

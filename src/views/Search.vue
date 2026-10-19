@@ -44,8 +44,8 @@ div
             th {{ $t('extraViews.search.title') }}
         tbody
           tr(v-for="e in browserEvents" :key="e.id || e.timestamp")
-            td {{ e.timestamp | shortdate }} {{ e.timestamp | shorttime }}
-            td {{ e.duration | friendlyduration }}
+            td {{ shortdate(e.timestamp) }} {{ shorttime(e.timestamp) }}
+            td {{ friendlyduration(e.duration) }}
             td
               a(:href="e.data.url" target="_blank" rel="noopener") {{ e.data.url }}
             td {{ e.data.title }}

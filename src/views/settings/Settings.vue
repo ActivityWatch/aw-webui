@@ -23,6 +23,8 @@ div
 </template>
 
 <script lang="ts">
+import { useModalController } from 'bootstrap-vue-next';
+import { msgBoxConfirm } from '~/util/confirm';
 import { useSettingsStore } from '~/stores/settings';
 import { useCategoryStore } from '~/stores/categories';
 
@@ -67,7 +69,8 @@ export default {
   async beforeRouteLeave(to, from, next) {
     const categoryStore = useCategoryStore();
     if (categoryStore.classes_unsaved_changes) {
-      const confirmed = await this.$bvModal.msgBoxConfirm(
+      const confirmed = await msgBoxConfirm(
+        this.modalController,
         this.$t('settings.unsavedCategoriesLeave'),
         {
           title: this.$t('settings.unsavedCategoriesLeaveTitle'),
@@ -142,6 +145,8 @@ export default {
     },
   },
   async created() {
+    // A plain instance property: setup() bindings would change what tests see as wrapper.vm.
+    this.modalController = useModalController();
     await this.init();
   },
   methods: {

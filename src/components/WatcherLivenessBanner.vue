@@ -4,9 +4,9 @@ div
     v-for="stale in staleWatchers"
     :key="stale.type"
     variant="warning"
-    show
+    :model-value="true"
     dismissible
-    @dismissed="dismiss(stale.type)"
+    @close="dismiss(stale.type)"
   )
     | #[b Watcher stopped:]
     |  {{ stale.name }} last reported {{ stale.minutesAgo }} minute{{ stale.minutesAgo === 1 ? '' : 's' }} ago.
@@ -15,7 +15,7 @@ div
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import { mapStores } from 'pinia';
 import { useBucketsStore } from '~/stores/buckets';
 
@@ -28,7 +28,7 @@ interface StaleWatcher {
   minutesAgo: number;
 }
 
-export default Vue.extend({
+export default defineComponent({
   name: 'aw-watcher-liveness-banner',
   props: {
     host: {
@@ -122,7 +122,7 @@ export default Vue.extend({
     void this.refreshMetadata();
     this.refreshTimer = setInterval(() => void this.refreshMetadata(), 60000);
   },
-  beforeDestroy() {
+  beforeUnmount() {
     if (this.refreshTimer !== null) clearInterval(this.refreshTimer);
   },
   methods: {

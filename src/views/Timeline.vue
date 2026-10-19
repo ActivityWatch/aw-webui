@@ -98,7 +98,7 @@ div
   b-alert.mb-2(v-if="buckets !== null && num_events === 0", variant="warning", :model-value="true")
     | {{ $t('timeline.noEvents') }}
 
-  b-alert.mb-2(v-if="categoryError", variant="warning", show)
+  b-alert.mb-2(v-if="categoryError", variant="warning", :model-value="true")
     | Categorized timeline unavailable. Raw bucket events are still shown.
 
   div(v-if="buckets !== null")

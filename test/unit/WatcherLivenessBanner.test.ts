@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import { nextTick } from 'vue';
 import { shallowMount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 import WatcherLivenessBanner from '~/components/WatcherLivenessBanner.vue';
@@ -14,7 +14,7 @@ const bucket = (id, type, age, hostname = 'desktop') => ({
 const flush = async () => {
   await Promise.resolve();
   await Promise.resolve();
-  await Vue.nextTick();
+  await nextTick();
 };
 
 describe('watcher liveness banner', () => {
@@ -28,11 +28,11 @@ describe('watcher liveness banner', () => {
     store.buckets = [bucket('window-synced', 'currentwindow', 0), bucket('afk', 'afkstatus', 0)];
   });
   afterEach(() => {
-    if (wrapper) wrapper.destroy();
+    if (wrapper) wrapper.unmount();
     jest.useRealTimers();
   });
   const mount = (host = 'desktop') =>
-    shallowMount(WatcherLivenessBanner, { propsData: { host }, stubs: ['b-alert'] });
+    shallowMount(WatcherLivenessBanner, { props: { host }, global: { stubs: ['b-alert'] } });
 
   test('does not overlap slow requests and hides warnings after a failed refresh', async () => {
     let resolve;
@@ -80,7 +80,7 @@ describe('watcher liveness banner', () => {
     jest.advanceTimersByTime(60000);
     await flush();
     expect(wrapper.vm.staleWatchers).toEqual([]);
-    wrapper.destroy();
+    wrapper.unmount();
     const calls = store.loadBuckets.mock.calls.length;
     jest.advanceTimersByTime(60000);
     await flush();
@@ -102,9 +102,9 @@ describe('watcher liveness banner', () => {
     await flush();
     expect(wrapper.vm.staleWatchers).toHaveLength(1);
     wrapper.vm.dismiss('afk');
-    await Vue.nextTick();
+    await nextTick();
     expect(wrapper.vm.staleWatchers).toEqual([]);
-    wrapper.destroy();
+    wrapper.unmount();
     wrapper = mount();
     await flush();
     expect(wrapper.vm.staleWatchers).toEqual([]);
@@ -138,7 +138,7 @@ describe('watcher liveness banner', () => {
       bucket('other-afk', 'afkstatus', 10, 'other'),
     ];
     wrapper.setProps({ host: 'other' });
-    await Vue.nextTick();
+    await nextTick();
     expect(store.loadBuckets).toHaveBeenCalledTimes(1);
     expect(wrapper.vm.metadataFresh).toBe(false);
     expect(wrapper.vm.staleWatchers).toEqual([]);

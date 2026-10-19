@@ -19,7 +19,7 @@ div
     | {{ $t('settings.developer.requestTimeoutHelp') }}
 
   div.mt-3.d-flex.justify-content-between.align-items-center
-    div.mr-2
+    div.me-2
       h5.mb-0#hide-unsupported-label {{ $t('settings.developer.hideUnsupported') }}
     div
       b-form-checkbox(v-model="hideUnsupportedVisualizations" switch aria-labelledby="hide-unsupported-label")

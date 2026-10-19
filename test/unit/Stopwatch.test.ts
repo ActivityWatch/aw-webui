@@ -1,5 +1,4 @@
-import { createLocalVue, shallowMount } from '@vue/test-utils';
-import { BootstrapVue } from 'bootstrap-vue';
+import { shallowMount } from '@vue/test-utils';
 import moment from 'moment';
 import Stopwatch from '~/views/Stopwatch.vue';
 import StopwatchEntry from '~/components/StopwatchEntry.vue';
@@ -7,9 +6,6 @@ import EventEditorComponent from '~/components/EventEditor.vue';
 
 // Tests call Options API members directly, which the Vue constructor type doesn't expose.
 const EventEditor: any = EventEditorComponent;
-
-const localVue = createLocalVue();
-localVue.use(BootstrapVue);
 
 const event = (id, running = false) => ({
   id,
@@ -31,12 +27,14 @@ function mountStopwatch(result = { running: [oldRunning], history: stoppedEvents
     req: { post: jest.fn().mockResolvedValue({ data: [result] }) },
   };
   const wrapper = shallowMount(Stopwatch, {
-    localVue,
-    mocks: { $aw: aw },
-    stubs: {
-      icon: true,
-      'b-button': {
-        template: '<button :disabled="$attrs.disabled" @click="$emit(\'click\')"><slot /></button>',
+    global: {
+      mocks: { $aw: aw },
+      stubs: {
+        icon: true,
+        'b-button': {
+          emits: ['click'],
+          template: '<button :disabled="$attrs.disabled" @click="$emit(\'click\')"><slot /></button>',
+        },
       },
     },
   });
@@ -44,14 +42,14 @@ function mountStopwatch(result = { running: [oldRunning], history: stoppedEvents
 }
 
 function button(wrapper, label) {
-  return wrapper.findAll('button').wrappers.find(b => b.text() === label);
+  return wrapper.findAll('button').find(b => b.text() === label);
 }
 
 describe('Stopwatch retrieval', () => {
   let wrapper;
   beforeEach(() => jest.spyOn(global, 'setInterval').mockImplementation(() => 1 as any));
   afterEach(() => {
-    if (wrapper) wrapper.destroy();
+    if (wrapper) wrapper.unmount();
     jest.restoreAllMocks();
   });
 
@@ -135,7 +133,7 @@ describe('Stopwatch retrieval', () => {
     aw.req.post.mockResolvedValue({
       data: [{ running: [], history: [...stoppedEvents, stopped] }],
     });
-    await wrapper.findAllComponents({ name: 'StopwatchEntry' }).at(0).vm.$emit('update', stopped);
+    await wrapper.findAllComponents({ name: 'StopwatchEntry' })[0].vm.$emit('update', stopped);
     await flush();
     expect(wrapper.vm.runningTimers).toHaveLength(0);
     expect(wrapper.vm.stoppedTimers.find(e => e.id === 1)).toEqual({
@@ -247,17 +245,18 @@ describe('Stopwatch editor completion', () => {
     ['delete', 'deleted', 'delete'],
   ])('forwards %s only after its completed event', async (early, completed, forwarded) => {
     const wrapper = shallowMount(StopwatchEntry, {
-      localVue,
-      propsData: { event: oldRunning, bucket_id: 'aw-stopwatch', now: moment() },
-      stubs: { icon: true },
-      filters: { shorttime: v => v, friendlyduration: v => v },
+      props: { event: oldRunning, bucket_id: 'aw-stopwatch', now: moment() },
+      global: {
+        stubs: { icon: true },
+        mocks: { shorttime: v => v, friendlyduration: v => v },
+      },
     });
     const editor = wrapper.findComponent(EventEditor);
     editor.vm.$emit(early, oldRunning);
     expect(wrapper.emitted(forwarded)).toBeUndefined();
     editor.vm.$emit(completed, oldRunning, 'aw-stopwatch');
     expect(wrapper.emitted(forwarded)).toEqual([[oldRunning]]);
-    wrapper.destroy();
+    wrapper.unmount();
   });
 
   test('emits deleted only after the request succeeds, retaining the original target', async () => {

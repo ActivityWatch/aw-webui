@@ -29,9 +29,9 @@ div
 
   hr
 
-  b-alert(v-if="error" show variant="danger")
+  b-alert(v-if="error" :model-value="true" variant="danger")
     | {{ error }}
-    b-button.ml-2(size="sm" :disabled="refreshing" @click="getEvents()") Retry
+    b-button.ms-2(size="sm" :disabled="refreshing" @click="getEvents()") Retry
 
   div(v-if="loading")
     b-spinner.me-2(small)

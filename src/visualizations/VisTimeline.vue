@@ -70,7 +70,6 @@ div#visualization {
 </style>
 
 <script lang="ts">
-import { useToastController } from 'bootstrap-vue-next';
 import _ from 'lodash';
 import { markRaw } from 'vue';
 import Color from 'color';
@@ -109,9 +108,6 @@ export default {
     showQueriedInterval: { type: Boolean },
     swimlane: { type: String },
     updateTimelineWindow: { type: Boolean },
-  },
-  setup() {
-    return { toastController: useToastController() };
   },
   data() {
     return {
@@ -296,7 +292,7 @@ export default {
     onEventSaved: function (event: IEvent, bucketId?: string) {
       const bucket = bucketId || this.editingEventBucket;
       const key = `${bucket}\0${event.id}`;
-      this.$set(this.eventOverrides, key, event);
+      this.eventOverrides[key] = event;
       this.editingEvent = event;
       if (this.timeline) {
         const w = this.timeline.getWindow();

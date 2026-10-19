@@ -17,13 +17,15 @@ describe('router', () => {
     expect(rootRoute.redirect({})).toBe('/home');
   });
 
-  test('opens Category Builder as a standalone page and redirects its legacy URL', () => {
+  test('opens Category Builder as a standalone page and redirects its legacy URL', async () => {
     const builderRoute = router.options.routes.find(route => route.path === '/category-builder');
 
     expect(builderRoute).toBeTruthy();
     expect(typeof (builderRoute as any).component).toBe('function');
-    expect(router.resolve('/settings/category-builder').route.path).toBe('/category-builder');
-    expect(router.resolve('/settings/categorization').route.path).toBe('/settings/categorization');
+    // resolve() doesn't follow redirects in Vue Router 4; navigating does.
+    await router.push('/settings/category-builder');
+    expect(router.currentRoute.value.path).toBe('/category-builder');
+    expect(router.resolve('/settings/categorization').path).toBe('/settings/categorization');
   });
 
   test('includes the work report route', () => {

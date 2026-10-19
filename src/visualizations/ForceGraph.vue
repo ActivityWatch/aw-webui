@@ -42,7 +42,7 @@ export default {
       this.resizeObserver.observe(this.$el);
     }
   },
-  beforeDestroy() {
+  beforeUnmount() {
     this.resizeObserver && this.resizeObserver.disconnect();
     this.cancelPromise && this.cancelPromise();
   },

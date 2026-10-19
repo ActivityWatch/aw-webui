@@ -117,7 +117,7 @@ export default {
       this.resizeObserver.observe(this.$el.querySelector('svg#timespiral'));
     }
   },
-  beforeDestroy() {
+  beforeUnmount() {
     this.resizeObserver && this.resizeObserver.disconnect();
   },
   updated() {

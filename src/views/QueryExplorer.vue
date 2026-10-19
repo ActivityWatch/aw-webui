@@ -87,6 +87,8 @@ div
 </style>
 
 <script lang="ts">
+import { useModalController } from 'bootstrap-vue-next';
+import { msgBoxConfirm } from '~/util/confirm';
 import moment from 'moment';
 import _ from 'lodash';
 import { querystr_to_array } from '~/queries';
@@ -106,6 +108,10 @@ const tomorrow = moment(today).add(24, 'hours');
 
 export default {
   name: 'QueryExplorer',
+  created() {
+    // A plain instance property: setup() bindings would change what tests see as wrapper.vm.
+    this.modalController = useModalController();
+  },
   data() {
     const settingsStore = useSettingsStore();
 
@@ -185,7 +191,8 @@ RETURN = sort_by_duration(merged_events);
       const current = this.selectedSavedQuery;
 
       if (current) {
-        const confirmed = await this.$bvModal.msgBoxConfirm(
+        const confirmed = await msgBoxConfirm(
+          this.modalController,
           `Update saved query "${current.name}"?`,
           { title: 'Update Query', okTitle: 'Update', cancelTitle: 'Cancel', centered: true }
         );
@@ -281,7 +288,8 @@ RETURN = sort_by_duration(merged_events);
         return;
       }
 
-      const confirmed = await this.$bvModal.msgBoxConfirm(
+      const confirmed = await msgBoxConfirm(
+        this.modalController,
         `Delete saved query "${this.selectedSavedQuery.name}"? This cannot be undone.`,
         {
           title: 'Delete Query',

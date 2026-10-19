@@ -121,6 +121,8 @@ div
 </style>
 
 <script lang="ts">
+import { useModalController } from 'bootstrap-vue-next';
+import { msgBoxConfirm } from '~/util/confirm';
 import _ from 'lodash';
 import moment from 'moment';
 import { mapState } from 'pinia';
@@ -142,7 +144,8 @@ export default {
   async beforeRouteLeave(to, from, next) {
     const categoryStore = useCategoryStore();
     if (categoryStore.classes_unsaved_changes) {
-      const confirmed = await this.$bvModal.msgBoxConfirm(
+      const confirmed = await msgBoxConfirm(
+        this.modalController,
         this.$t('settings.unsavedCategoriesLeave'),
         {
           title: this.$t('settings.unsavedCategoriesLeaveTitle'),
@@ -164,6 +167,10 @@ export default {
     // When embedded inside CategorizationSettings, drop the standalone
     // page chrome so the embed reads as a subsection of the parent.
     embedded: { type: Boolean, default: false },
+  },
+  created() {
+    // A plain instance property: setup() bindings would change what tests see as wrapper.vm.
+    this.modalController = useModalController();
   },
   data() {
     return {
@@ -257,7 +264,7 @@ export default {
     window.addEventListener('beforeunload', this.beforeUnload);
     await this.fetchWords();
   },
-  beforeDestroy() {
+  beforeUnmount() {
     window.removeEventListener('beforeunload', this.beforeUnload);
     // Ignore results from requests that outlive this view.
     this.requestId++;

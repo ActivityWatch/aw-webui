@@ -1,5 +1,11 @@
-import Vue from 'vue';
-import VueRouter from 'vue-router';
+import { createApp, h, nextTick } from 'vue';
+import {
+  createMemoryHistory,
+  createRouter,
+  isNavigationFailure,
+  NavigationFailureType,
+  RouterView,
+} from 'vue-router';
 import SettingsComponent from '~/views/settings/Settings.vue';
 
 // Tests call Options API members directly, which the Vue constructor type doesn't expose.
@@ -10,8 +16,6 @@ jest.mock('~/stores/categories', () => ({
   useCategoryStore: () => mockCategoryStore,
 }));
 
-Vue.use(VueRouter);
-
 describe('Settings route leave confirmation', () => {
   test.each([
     [true, '/next'],
@@ -19,47 +23,46 @@ describe('Settings route leave confirmation', () => {
     [null, '/settings'],
   ])('waits for the modal, then respects %s', async (confirmed, expectedPath) => {
     let resolveModal;
-    const msgBoxConfirm = jest.fn(
+    const confirm = jest.fn(
       () =>
         new Promise(resolve => {
           resolveModal = resolve;
         })
     );
-    const router = new VueRouter({
-      mode: 'abstract',
+    const router = createRouter({
+      history: createMemoryHistory(),
       routes: [
         {
           path: '/settings',
           component: {
-            render: h => h('div'),
+            render: () => h('div'),
             beforeRouteLeave: Settings.beforeRouteLeave,
-            created() {
-              this.$bvModal = { msgBoxConfirm };
-              this.$t = key => key;
-            },
+            setup: () => ({ modalController: { confirm } }),
           },
         },
-        { path: '/next', component: { render: h => h('div') } },
+        { path: '/next', component: { render: () => h('div') } },
       ],
     });
-    const app = new Vue({ router, render: h => h('router-view') }).$mount();
+    const app = createApp({ render: () => h(RouterView) });
+    app.config.globalProperties.$t = key => key;
+    app.use(router);
+    app.mount(document.createElement('div'));
     try {
       await router.push('/settings');
-      await Vue.nextTick();
-      const navigation = router.push('/next').catch(error => error);
-      expect(msgBoxConfirm).toHaveBeenCalledTimes(1);
-      expect(router.currentRoute.path).toBe('/settings');
+      await nextTick();
+      const navigation = router.push('/next');
+      await nextTick();
+      expect(confirm).toHaveBeenCalledTimes(1);
+      expect(router.currentRoute.value.path).toBe('/settings');
 
       resolveModal(confirmed);
       const result = await navigation;
-      expect(router.currentRoute.path).toBe(expectedPath);
+      expect(router.currentRoute.value.path).toBe(expectedPath);
       if (!confirmed) {
-        expect(VueRouter.isNavigationFailure(result, VueRouter.NavigationFailureType.aborted)).toBe(
-          true
-        );
+        expect(isNavigationFailure(result, NavigationFailureType.aborted)).toBe(true);
       }
     } finally {
-      app.$destroy();
+      app.unmount();
     }
   });
 });

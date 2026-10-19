@@ -10,7 +10,7 @@ mixin navMain
 
   // If multiple (or no) activity views are available
   b-nav-item-dropdown(v-if="!activityViews || activityViews.length !== 1")
-    template(slot="button-content")
+    template(#button-content)
       div.d-inline.px-2.px-lg-1
         icon(name="calendar-day")
         | {{ $t('nav.activity') }}
@@ -41,7 +41,7 @@ mixin navMain
 
 mixin navTools(desktop)
   b-nav-item-dropdown
-    template(slot="button-content")
+    template(#button-content)
       div.d-inline.px-2.px-lg-1
         icon(name="tools")
         | {{ $t('nav.tools') }}
@@ -97,8 +97,8 @@ mixin navTools(desktop)
 //- Flat entries in the drawer; one dropdown in the desktop navbar, where three
 //- more inline links would run into the absolutely centered brand.
 mixin navNativeDropdown
-  b-nav-item-dropdown(v-if="nativeMenuActions.length" right data-testid="navbar-native-menu")
-    template(slot="button-content")
+  b-nav-item-dropdown(v-if="nativeMenuActions.length" end data-testid="navbar-native-menu")
+    template(#button-content)
       div.d-inline.px-2.px-lg-1
         icon(name="mobile")
         | {{ $t('nav.app') }}
@@ -133,8 +133,14 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
         span.ms-2.align-middle(style="font-size: 1em; color: #000;") {{ $t('app.name') }}
         b-badge.ms-2.align-middle(v-if="researchEdition" variant="info" data-testid="research-edition-badge") {{ $t('app.researchEdition') }}
 
-    // Opens the drawer (b-sidebar listens to the same toggle event as b-collapse)
-    b-navbar-toggle(target="nav-drawer" data-testid="nav-drawer-toggle")
+    // Opens the drawer. Not a `target` toggle: the lazy offcanvas has no
+    // element to find by id until it is first shown.
+    b-navbar-toggle(
+      @click="drawerOpen = !drawerOpen"
+      aria-controls="nav-drawer"
+      :aria-expanded="drawerOpen ? 'true' : 'false'"
+      data-testid="nav-drawer-toggle"
+    )
 
     // Desktop: inline navigation. Never toggled open below lg; phones use the drawer.
     b-collapse#nav-collapse(is-nav)
@@ -153,14 +159,13 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
 
     // Phone/tablet: modal side drawer. Closes on route change, Escape and
     // backdrop tap; traps focus while open and returns it to the toggle.
-    b-sidebar#nav-drawer.aw-nav-drawer(
+    b-offcanvas#nav-drawer.aw-nav-drawer.bg-white(
       v-model="drawerOpen"
       :title="$t('app.name')"
-      backdrop
+      placement="start"
       lazy
       shadow
       width="min(85vw, 320px)"
-      bg-variant="white"
       data-testid="nav-drawer"
     )
       b-navbar-nav.px-2
@@ -210,6 +215,10 @@ export default {
     },
   },
   watch: {
+    // bootstrap-vue's b-sidebar closed itself on navigation; b-offcanvas doesn't.
+    $route() {
+      this.drawerOpen = false;
+    },
     drawerOpen(isOpen: boolean) {
       // Lets Android Back dismiss the drawer before leaving the page.
       this.nativeBridge?.reportMenu(isOpen);
@@ -274,7 +283,7 @@ export default {
 
     this.activityViews = activityViews;
   },
-  beforeDestroy() {
+  beforeUnmount() {
     this.nativeBridge?.disconnect();
     if (this.desktopQuery) {
       if (typeof this.desktopQuery.removeEventListener === 'function') {
