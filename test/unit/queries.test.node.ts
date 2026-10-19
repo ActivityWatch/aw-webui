@@ -82,6 +82,7 @@ import {
 } from '~/queries';
 import type { DesktopQueryParams, MultiQueryParams } from '~/queries';
 import type { Rule } from '~/util/classes';
+import { setSupportsMergeSubwatcherFields } from '~/util/serverCapabilities';
 
 // Convert ActivityWatch (?i) patterns to JS RegExp with i flag for testing.
 // AW server uses Python-style (?i) inline flag; JS uses RegExp 'i' flag instead.
@@ -782,6 +783,9 @@ describe('canonicalEvents URL enrichment via merge_subwatcher_fields', () => {
     filter_categories: [],
   };
 
+  beforeEach(() => setSupportsMergeSubwatcherFields(true));
+  afterEach(() => setSupportsMergeSubwatcherFields(false));
+
   test('emits merge_subwatcher_fields when browser buckets are present', () => {
     const query = canonicalEvents({
       ...baseParams,
@@ -792,16 +796,28 @@ describe('canonicalEvents URL enrichment via merge_subwatcher_fields', () => {
     );
   });
 
-  test('merge call appears after categorize input is built (after stopwatch, before categorize)', () => {
+  test('merge call runs after the stopwatch union and before categorize', () => {
     const query = canonicalEvents({
       ...baseParams,
       bid_browsers: ['aw-watcher-web-chrome_testhost'],
+      bid_stopwatch: 'aw-stopwatch_testhost',
       categories: [[['Work'], { type: 'regex', regex: 'github' }]],
     });
-    const mergeIdx = query.indexOf('merge_subwatcher_fields');
+    const stopwatchIdx = query.indexOf('events = union_no_overlap(stopwatch_events, events);');
+    const mergeIdx = query.indexOf('events = merge_subwatcher_fields(');
     const categorizeIdx = query.indexOf('events = categorize(');
-    expect(mergeIdx).toBeGreaterThan(0);
-    expect(mergeIdx).toBeLessThan(categorizeIdx);
+    expect(stopwatchIdx).toBeGreaterThan(0);
+    expect(mergeIdx).toBeGreaterThan(stopwatchIdx);
+    expect(categorizeIdx).toBeGreaterThan(mergeIdx);
+  });
+
+  test('omits merge_subwatcher_fields when the server lacks the function', () => {
+    setSupportsMergeSubwatcherFields(false);
+    const query = canonicalEvents({
+      ...baseParams,
+      bid_browsers: ['aw-watcher-web-chrome_testhost'],
+    });
+    expect(query).not.toContain('merge_subwatcher_fields');
   });
 
   test('omits merge_subwatcher_fields when no browser buckets configured', () => {
