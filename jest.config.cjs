@@ -3,6 +3,9 @@
 // File names that end with .test.node.js will be run in the node testEnvironment
 
 module.exports = {
+  // CPU-derived defaults overcommit memory in containers on high-core hosts.
+  // Keep a bounded default; developers can still override it with --maxWorkers.
+  maxWorkers: 2,
   collectCoverage: true,
   collectCoverageFrom: ['src/**/*.{js,ts}'],
   projects: [
