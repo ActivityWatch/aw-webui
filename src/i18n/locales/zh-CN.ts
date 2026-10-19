@@ -532,11 +532,17 @@ export default {
   },
   timespiral: {
     title: '时间螺旋',
-    wip: '这是一个正在开发中的实验功能。',
-    noAfkBucket: '此主机上未找到 AFK 存储桶。请安装',
-    noAfkBucketSuffix: '以使用时间螺旋。',
-    bucketLabel: '存储桶：',
-    eventsLabel: '事件：',
+    device: '设备',
+    noData: '未找到有窗口或应用活动的设备。请安装',
+    now: '现在',
+    prevDay: '前一天',
+    nextDay: '后一天',
+    rotate: '随时间旋转',
+    depth: '螺旋深度',
+    yesterday: '昨天',
+    noActivity: '无活动',
+    help: '滚动以在时间中移动（按住 Shift 按整天移动），拖动以旋转，双击跳转到该处。点击类别可将其高亮。',
+    keys: '快捷键：←/→ 小时，↑/↓ 天，PgUp/PgDn 周，N 现在，Esc 取消高亮。',
   },
   ui: {
     activity: {

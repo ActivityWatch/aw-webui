@@ -559,11 +559,17 @@ export default {
   },
   timespiral: {
     title: 'Tidsspiral',
-    wip: 'Det här är ett experiment under utveckling.',
-    noAfkBucket: 'Ingen AFK-bucket hittades på den här värden. Installera',
-    noAfkBucketSuffix: 'för att använda Tidsspiralen.',
-    bucketLabel: 'Bucket:',
-    eventsLabel: 'Händelser:',
+    device: 'Enhet',
+    noData: 'Ingen enhet med fönster- eller appaktivitet hittades. Installera',
+    now: 'Nu',
+    prevDay: 'Föregående dag',
+    nextDay: 'Nästa dag',
+    rotate: 'Rotera med tiden',
+    depth: 'Spiralens djup',
+    yesterday: 'Igår',
+    noActivity: 'Ingen aktivitet',
+    help: 'Scrolla för att röra dig genom tiden (håll Skift för hela dagar), dra för att snurra, dubbelklicka för att hoppa dit. Klicka på en kategori för att markera den.',
+    keys: 'Tangenter: ←/→ timme, ↑/↓ dag, PgUp/PgDn vecka, N nu, Esc rensa markering.',
   },
   ui: {
     activity: {

@@ -550,11 +550,17 @@ export default {
   },
   timespiral: {
     title: 'Timespiral',
-    wip: 'This is a work-in-progress experiment.',
-    noAfkBucket: 'No AFK bucket found on this host. Install',
-    noAfkBucketSuffix: 'to use the Timespiral.',
-    bucketLabel: 'Bucket:',
-    eventsLabel: 'Events:',
+    device: 'Device',
+    noData: 'No device with window or app activity was found. To track it, install',
+    now: 'Now',
+    prevDay: 'Previous day',
+    nextDay: 'Next day',
+    rotate: 'Rotate with time',
+    depth: 'Spiral depth',
+    yesterday: 'Yesterday',
+    noActivity: 'No activity',
+    help: 'Scroll to move through time (hold Shift for whole days), drag to spin, double-click to jump there. Click a category to highlight it.',
+    keys: 'Keys: ←/→ hour, ↑/↓ day, PgUp/PgDn week, N now, Esc clear highlight.',
   },
   ui: {
     activity: {
