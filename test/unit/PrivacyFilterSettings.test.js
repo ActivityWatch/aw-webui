@@ -183,6 +183,23 @@ describe('PrivacyFilterSettings save outcomes', () => {
     expect(wrapper.vm.saveError).toBe('');
   });
 
+  it('recognizes a persisted write when the recovery read reorders object keys', async () => {
+    post.mockImplementationOnce(async (path, value) => {
+      // Rust serializes JSON object keys in sorted order, not input order.
+      server.privacy_filters = value.map(item =>
+        Object.fromEntries(Object.entries(item).sort(([a], [b]) => a.localeCompare(b)))
+      );
+      throw new Error('connection reset');
+    });
+    await wrapper.vm.savePrivacyFilters();
+    await flush();
+
+    expect(store.privacy_filters).toEqual([rule('new-secret')]);
+    expect(wrapper.vm.saveError).toBe('');
+    expect(wrapper.vm.hasUnsavedChanges).toBe(false);
+    expect(wrapper.vm.editorText).toBe(wrapper.vm.savedText);
+  });
+
   it('another setting saved during the request does not write old rules back', async () => {
     const saveGate = deferred();
     post.mockImplementationOnce(async (path, value) => {

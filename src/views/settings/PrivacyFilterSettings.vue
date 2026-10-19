@@ -42,6 +42,7 @@ div
 </template>
 
 <script lang="ts">
+import { isEqual } from 'lodash';
 import { useSettingsStore } from '~/stores/settings';
 import { getClient } from '~/util/awclient';
 import {
@@ -161,7 +162,9 @@ export default {
           state.privacy_filters = persisted;
         });
         this.savedText = formatPrivacyFilters(persisted);
-        if (this.savedText === formatPrivacyFilters(rules)) {
+        // Compare the JSON payload structurally: the server may reorder object
+        // keys, and JSON omits the validator's undefined optional fields.
+        if (isEqual(persisted, JSON.parse(JSON.stringify(rules)))) {
           // The write landed; only the response was lost.
           if (this.editorText === submittedText) {
             this.editorText = this.savedText;
