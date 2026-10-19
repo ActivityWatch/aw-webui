@@ -102,7 +102,7 @@ div
     | Categorized timeline unavailable. Raw bucket events are still shown.
 
   div(v-if="buckets !== null")
-    vis-timeline(:buckets="buckets", :categorizedEvents="categorizedEvents", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane", :updateTimelineWindow='updateTimelineWindow', @event-saved="getBuckets")
+    vis-timeline(:buckets="buckets", :categorizedEvents="categorizedEvents", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane", :updateTimelineWindow='updateTimelineWindow', @event-saved="onEventSaved")
 
     aw-devonly(reason="Not ready for production, still experimenting")
       aw-calendar(:buckets="buckets")
@@ -247,6 +247,11 @@ export default {
     },
     removeCategory(idx) {
       this.filter_categories = this.filter_categories.filter((_cat, i) => i !== idx);
+    },
+    // A saved edit changed the server's events, so the cached range is stale.
+    onEventSaved: function () {
+      this.fetchedRange = null;
+      this.getBuckets();
     },
     getBuckets: async function () {
       if (this.daterange == null) return;

@@ -258,3 +258,19 @@ test('merging preserves real gaps, category boundaries, and immutable source dat
   const uncategorized = mergeCategoryIntervals([{ ...event(0, 1), data: {} }]);
   expect(uncategorized[0].data.$category).toEqual(['Uncategorized']);
 });
+
+test('a saved edit refetches the raw buckets for the same range', async () => {
+  const vm = context();
+  vm.getBuckets = Timeline.methods.getBuckets.bind(vm);
+  await vm.getBuckets();
+  await vm.getBuckets();
+  expect(mockGetBucketsWithEvents).toHaveBeenCalledTimes(1);
+  const edited = buckets();
+  edited[0].events = [event(0, 99)];
+  mockGetBucketsWithEvents.mockResolvedValueOnce(edited);
+  Timeline.methods.onEventSaved.call(vm);
+  await vm.bucketsRequest;
+  await new Promise(resolve => setTimeout(resolve, 0));
+  expect(mockGetBucketsWithEvents).toHaveBeenCalledTimes(2);
+  expect(vm.buckets[0].events[0].duration).toBe(99);
+});
