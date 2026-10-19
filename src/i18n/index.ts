@@ -7,6 +7,7 @@ import 'moment/locale/de';
 import 'moment/locale/es';
 import 'moment/locale/fr';
 import 'moment/locale/hi';
+import 'moment/locale/id';
 import 'moment/locale/ja';
 import 'moment/locale/pt-br';
 import 'moment/locale/ru';
@@ -22,6 +23,7 @@ import en from './locales/en';
 import es from './locales/es';
 import fr from './locales/fr';
 import hi from './locales/hi';
+import id from './locales/id';
 import ja from './locales/ja';
 import ptBR from './locales/pt-BR';
 import ru from './locales/ru';
@@ -40,6 +42,7 @@ export type AppLocale =
   | 'es'
   | 'fr'
   | 'hi'
+  | 'id'
   | 'ja'
   | 'pt-BR'
   | 'ru'
@@ -56,6 +59,7 @@ export const SUPPORTED: AppLocale[] = [
   'es',
   'fr',
   'hi',
+  'id',
   'ja',
   'pt-BR',
   'ru',
@@ -99,6 +103,7 @@ const HTML_LANG: Record<AppLocale, string> = {
   es: 'es',
   fr: 'fr',
   hi: 'hi',
+  id: 'id',
   ja: 'ja',
   'pt-BR': 'pt-BR',
   ru: 'ru',
@@ -120,6 +125,8 @@ function detectBrowserLocale(): AppLocale | null {
   if (lang.startsWith('es')) return 'es';
   if (lang.startsWith('fr')) return 'fr';
   if (lang.startsWith('hi')) return 'hi';
+  // 'in' is the legacy ISO 639 code that Java (and older Android WebViews) report.
+  if (lang.startsWith('id') || lang === 'in' || lang.startsWith('in-')) return 'id';
   if (lang.startsWith('ja')) return 'ja';
   // Brazilian Portuguese is the only Portuguese variant; pt-PT users get it too.
   if (lang.startsWith('pt')) return 'pt-BR';
@@ -151,6 +158,7 @@ const MOMENT_LOCALE: Record<AppLocale, string> = {
   es: 'es',
   fr: 'fr',
   hi: 'hi',
+  id: 'id',
   ja: 'ja',
   'pt-BR': 'pt-br',
   ru: 'ru',
@@ -173,6 +181,7 @@ export const i18n = new VueI18n({
     es,
     fr,
     hi,
+    id,
     ja,
     'pt-BR': ptBR,
     ru,

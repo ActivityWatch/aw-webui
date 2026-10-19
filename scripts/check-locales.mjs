@@ -106,6 +106,18 @@ const IDENTICAL_OK = {
   hi: ['Buckets', 'All'],
   ja: ['Raw JSON'],
   'pt-BR': ['App', 'h', 's', 'Buckets', 'Hosts', 'Total', 'Prompt', 'download'],
+  id: [
+    'Stopwatch',
+    'Label',
+    'Forum',
+    'Filter AFK',
+    'Data:',
+    'Mode',
+    'Total',
+    'Model',
+    'Prompt',
+    'Valid',
+  ],
   sv: ['App', 'Version:', 'Forum', 'Buckets', 'Data:', 'Period', 'Prompt'],
 };
 
