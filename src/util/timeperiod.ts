@@ -96,16 +96,51 @@ export function timeperiodsAroundTimeperiod(timeperiod: TimePeriod): TimePeriod[
   return periods;
 }
 
+/**
+ * Hourly intervals covering `timeperiod` exactly, clipping the final interval
+ * so there is never any overrun. A calendar day is not always 24 elapsed hours
+ * (23/25 across DST, 23.5/24.5 with a 30-minute shift, or fractional-hour
+ * starts), so step by an hour until the bound instead of assuming a count of 24.
+ */
 export function timeperiodsHoursOfPeriod(timeperiod: TimePeriod): TimePeriod[] {
-  const periods = [];
-  const _length: [number, string] = [1, 'hour'];
-  for (let i = 0; i < 24; i++) {
-    const start = moment(timeperiod.start)
-      .add(i * _length[0], _length[1] as moment.unitOfTime.DurationConstructor)
-      .format();
-    periods.push({ start, length: _length });
+  const start = moment(timeperiod.start);
+  const end = start
+    .clone()
+    .add(timeperiod.length[0], timeperiod.length[1] as moment.unitOfTime.DurationConstructor);
+  const periods: TimePeriod[] = [];
+  let cur = start.clone();
+  while (cur.isBefore(end)) {
+    let next = cur.clone().add(1, 'hour');
+    let hours = 1;
+    if (next.isAfter(end)) {
+      next = end.clone();
+      hours = next.diff(cur, 'hours', true);
+    }
+    periods.push({ start: cur.format(), length: [hours, 'hour'] });
+    cur = next;
   }
   return periods;
+}
+
+/**
+ * One label per interval from `timeperiodsHoursOfPeriod`, so the count matches
+ * the intervals (24 normally, 23/25 across DST). Labels are bare hours, or
+ * `H:mm` when a start has non-zero minutes. A repeated wall-clock label (the
+ * fall-back hour) gets its UTC offset appended, e.g. `2 (+02:00)`.
+ */
+export function hourlyLabels(timeperiod: TimePeriod): string[] {
+  const periods = timeperiodsHoursOfPeriod(timeperiod);
+  const labels = periods.map(p => {
+    const m = moment(p.start);
+    return m.minute() === 0 ? m.format('H') : m.format('H:mm');
+  });
+  const counts = labels.reduce<Record<string, number>>((acc, label) => {
+    acc[label] = (acc[label] || 0) + 1;
+    return acc;
+  }, {});
+  return periods.map((p, i) =>
+    counts[labels[i]] > 1 ? `${labels[i]} (${moment(p.start).format('Z')})` : labels[i]
+  );
 }
 
 export function timeperiodsDaysOfPeriod(timeperiod: TimePeriod): TimePeriod[] {

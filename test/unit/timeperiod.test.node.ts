@@ -7,12 +7,14 @@ import {
   dateRangeDays,
   dateRangeToTimeperiod,
   formatDateRange,
+  hourlyLabels,
   parseDateRange,
   periodStartDate,
   shiftDateRange,
   splitTimeperiodStrs,
   timeperiodsCalendarMonthsOfPeriod,
   timeperiodsForBarchart,
+  timeperiodsHoursOfPeriod,
   usesMonthlyBuckets,
   timeperiodToStr,
 } from '~/util/timeperiod';
@@ -152,6 +154,68 @@ describe('timeperiodsForBarchart', () => {
     );
     expect(usesMonthlyBuckets({ start, length: [1, 'year'] })).toBe(true);
     expect(usesMonthlyBuckets({ start, length: [1, 'month'] })).toBe(false);
+  });
+});
+
+describe('timeperiodsHoursOfPeriod', () => {
+  const start = moment('2026-01-15T00:00:00').format();
+
+  it('produces 24 one-hour periods on an ordinary day', () => {
+    const periods = timeperiodsHoursOfPeriod({ start, length: [1, 'day'] });
+    expect(periods).toHaveLength(24);
+    expect(periods.every(p => p.length[0] === 1 && p.length[1] === 'hour')).toBe(true);
+  });
+
+  it('covers the whole interval contiguously with no gaps or overrun', () => {
+    const periods = timeperiodsHoursOfPeriod({ start, length: [1, 'day'] });
+    const startM = moment(start);
+    const endM = startM.clone().add(1, 'day');
+
+    expect(periods[0].start).toBe(startM.format());
+    for (let i = 1; i < periods.length; i++) {
+      const prev = periods[i - 1];
+      const prevEnd = moment(prev.start).add(
+        prev.length[0],
+        prev.length[1] as moment.unitOfTime.DurationConstructor
+      );
+      expect(prevEnd.format()).toBe(moment(periods[i].start).format());
+    }
+    const last = periods[periods.length - 1];
+    const lastEnd = moment(last.start).add(
+      last.length[0],
+      last.length[1] as moment.unitOfTime.DurationConstructor
+    );
+    expect(lastEnd.format()).toBe(endM.format());
+
+    // Total elapsed time must equal the bound interval exactly.
+    let total = 0;
+    for (const p of periods) {
+      total += moment(p.start)
+        .add(p.length[0], p.length[1] as moment.unitOfTime.DurationConstructor)
+        .diff(moment(p.start), 'hours', true);
+    }
+    expect(total).toBeCloseTo(endM.diff(startM, 'hours', true), 6);
+  });
+
+  it('does not mutate the input timeperiod', () => {
+    const periodLength: [number, string] = [1, 'day'];
+    const tp = { start, length: periodLength };
+    const snapshot = JSON.stringify(tp);
+    timeperiodsHoursOfPeriod(tp);
+    expect(periodLength).toEqual([1, 'day']);
+    expect(JSON.stringify(tp)).toBe(snapshot);
+  });
+});
+
+describe('hourlyLabels', () => {
+  const start = moment('2026-01-15T00:00:00').format();
+
+  it('emits one label per hourly interval', () => {
+    const tp = { start, length: [1, 'day'] as [number, string] };
+    const labels = hourlyLabels(tp);
+    expect(labels).toHaveLength(timeperiodsHoursOfPeriod(tp).length);
+    // Ordinary days keep bare hours, derived from each interval's local clock.
+    expect(labels).toEqual(timeperiodsHoursOfPeriod(tp).map(p => String(moment(p.start).hour())));
   });
 });
 
