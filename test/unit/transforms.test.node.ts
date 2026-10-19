@@ -71,6 +71,17 @@ describe('overlappingEvents', () => {
     expect(overlappingEvents(two_empty, two_empty)).toHaveLength(0);
   });
 
+  test('an empty list yields no pairs, even when the other list is internally overlapping', () => {
+    const events = [
+      ev('2026-10-19T00:00:00Z', 100, 'A'),
+      ev('2026-10-19T00:00:10Z', 10, 'B'),
+      ev('2026-10-19T00:00:15Z', 35, 'C'),
+    ];
+
+    expect(overlappingEvents(events, [])).toHaveLength(0);
+    expect(overlappingEvents([], events)).toHaveLength(0);
+  });
+
   test('finds every pair when one interval contains several others', () => {
     const outer = [ev('2026-10-19T00:00:00Z', 100, 'outer')];
     const inner = [
