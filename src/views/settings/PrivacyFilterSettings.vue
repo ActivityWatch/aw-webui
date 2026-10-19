@@ -87,6 +87,11 @@ export default {
     'settingsStore.privacy_filters': {
       deep: true,
       handler() {
+        // The store is patched optimistically before a save is confirmed; only
+        // the save's own outcome may move the saved baseline.
+        if (this.isSaving) {
+          return;
+        }
         this.syncFromStore(false);
       },
     },
@@ -111,14 +116,23 @@ export default {
         return;
       }
 
+      const confirmed = JSON.parse(JSON.stringify(this.settingsStore.privacy_filters));
+      const submittedText = this.editorText;
       this.isSaving = true;
       this.saveError = '';
       try {
         await this.settingsStore.update({
           privacy_filters: this.validationResult.rules || [],
         });
-        this.syncFromStore(true);
+        // Keep edits made while the save was pending.
+        this.syncFromStore(this.editorText === submittedText);
       } catch (error) {
+        // Roll back the optimistic patch so Discard and later saves of other
+        // settings use the persisted rules; the draft stays dirty for retry.
+        this.settingsStore.$patch(state => {
+          state.privacy_filters = confirmed;
+        });
+        this.savedText = formatPrivacyFilters(confirmed);
         this.saveError = error instanceof Error ? error.message : String(error);
       } finally {
         this.isSaving = false;
