@@ -147,7 +147,7 @@ describe('PrivacyFilterSettings save outcomes', () => {
     expect(store.privacy_filters).toEqual([rule('new-secret')]);
     expect(wrapper.vm.savedText).toContain('new-secret');
     expect(wrapper.vm.hasUnsavedChanges).toBe(false);
-    expect(wrapper.vm.saveError).toBe('connection reset');
+    expect(wrapper.vm.saveError).toBe('');
   });
 
   it('another setting saved during the request does not write old rules back', async () => {

@@ -158,7 +158,14 @@ export default {
           state.privacy_filters = persisted;
         });
         this.savedText = formatPrivacyFilters(persisted);
-        this.saveError = error instanceof Error ? error.message : String(error);
+        if (this.savedText === formatPrivacyFilters(rules)) {
+          // The write landed; only the response was lost.
+          if (this.editorText === submittedText) {
+            this.editorText = this.savedText;
+          }
+        } else {
+          this.saveError = error instanceof Error ? error.message : String(error);
+        }
       } finally {
         this.isSaving = false;
       }
