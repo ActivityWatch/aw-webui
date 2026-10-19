@@ -9,6 +9,7 @@ import 'moment/locale/zh-cn';
 import 'moment/locale/es';
 import 'moment/locale/ar';
 import 'moment/locale/hi';
+import 'moment/locale/ja';
 
 import en from './locales/en';
 import uk from './locales/uk';
@@ -19,12 +20,13 @@ import zhCN from './locales/zh-CN';
 import es from './locales/es';
 import ar from './locales/ar';
 import hi from './locales/hi';
+import ja from './locales/ja';
 
 Vue.use(VueI18n);
 
-export type AppLocale = 'en' | 'uk' | 'de' | 'ru' | 'zh-CN' | 'sv' | 'es' | 'ar' | 'hi';
+export type AppLocale = 'en' | 'uk' | 'de' | 'ru' | 'zh-CN' | 'sv' | 'es' | 'ar' | 'hi' | 'ja';
 
-const SUPPORTED: AppLocale[] = ['en', 'uk', 'de', 'ru', 'zh-CN', 'sv', 'es', 'ar', 'hi'];
+const SUPPORTED: AppLocale[] = ['en', 'uk', 'de', 'ru', 'zh-CN', 'sv', 'es', 'ar', 'hi', 'ja'];
 
 export function isAppLocale(value: string | null | undefined): value is AppLocale {
   return SUPPORTED.includes(value as AppLocale);
@@ -40,6 +42,7 @@ const HTML_LANG: Record<AppLocale, string> = {
   es: 'es',
   ar: 'ar',
   hi: 'hi',
+  ja: 'ja',
 };
 
 function detectBrowserLocale(): AppLocale | null {
@@ -55,6 +58,7 @@ function detectBrowserLocale(): AppLocale | null {
   if (lang.startsWith('es')) return 'es';
   if (lang.startsWith('ar')) return 'ar';
   if (lang.startsWith('hi')) return 'hi';
+  if (lang.startsWith('ja')) return 'ja';
   if (lang.startsWith('en')) return 'en';
   return null;
 }
@@ -81,6 +85,7 @@ const MOMENT_LOCALE: Record<AppLocale, string> = {
   es: 'es',
   ar: 'ar',
   hi: 'hi',
+  ja: 'ja',
 };
 
 const initialLocale = getInitialLocale();
@@ -88,7 +93,7 @@ const initialLocale = getInitialLocale();
 export const i18n = new VueI18n({
   locale: initialLocale,
   fallbackLocale: 'en',
-  messages: { en, uk, de, ru, 'zh-CN': zhCN, sv, es, ar, hi },
+  messages: { en, uk, de, ru, 'zh-CN': zhCN, sv, es, ar, hi, ja },
   silentTranslationWarn: process.env.NODE_ENV === 'production',
 });
 

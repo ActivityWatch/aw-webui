@@ -24,6 +24,8 @@ describe('i18n', () => {
     expect(isAppLocale('es')).toBe(true);
     expect(isAppLocale('ar')).toBe(true);
     expect(isAppLocale('hi')).toBe(true);
+    expect(isAppLocale('ja')).toBe(true);
+    expect(isAppLocale('ja-JP')).toBe(false);
     expect(isAppLocale('fr')).toBe(false);
     expect(isAppLocale('')).toBe(false);
     expect(isAppLocale(null)).toBe(false);
@@ -133,6 +135,82 @@ describe('i18n', () => {
     const formatted = moment('2026-10-19T19:23:00').format('LLLL');
     expect(formatted).toContain('19');
     expect(formatted).not.toMatch(/[०-९]/);
+  });
+
+  test('Arabic UI translates the Japanese endonym and Japanese UI translates the Arabic one', () => {
+    const { setAppLocale, i18n } = loadI18n();
+    setAppLocale('ar');
+    expect(i18n.t('common.languageJa')).toBe('日本語');
+    setAppLocale('ja');
+    expect(i18n.t('common.languageAr')).toBe('العربية');
+  });
+
+  test('initial locale detects Japanese browser language', () => {
+    Object.defineProperty(navigator, 'language', {
+      value: 'ja-JP',
+      configurable: true,
+    });
+    const { i18n } = loadI18n();
+    expect(i18n.locale).toBe('ja');
+    expect(document.documentElement.lang).toBe('ja');
+    expect(document.documentElement.dir).toBe('ltr');
+  });
+
+  test('saved Japanese preference wins over the browser language', () => {
+    Object.defineProperty(navigator, 'language', {
+      value: 'de-DE',
+      configurable: true,
+    });
+    localStorage.setItem('locale', 'ja');
+    const { i18n } = loadI18n();
+    expect(i18n.locale).toBe('ja');
+    expect(document.documentElement.lang).toBe('ja');
+  });
+
+  test('setAppLocale switches to Japanese messages', () => {
+    const { setAppLocale, i18n } = loadI18n();
+    setAppLocale('ja');
+    expect(i18n.locale).toBe('ja');
+    expect(i18n.t('common.languageJa')).toBe('日本語');
+    expect(i18n.t('common.save')).toBe('保存');
+    expect(document.documentElement.lang).toBe('ja');
+    expect(document.documentElement.dir).toBe('ltr');
+    expect(localStorage.getItem('locale')).toBe('ja');
+  });
+
+  test('switching from Arabic to Japanese restores ltr', () => {
+    const { setAppLocale } = loadI18n();
+    setAppLocale('ar');
+    expect(document.documentElement.dir).toBe('rtl');
+    setAppLocale('ja');
+    expect(document.documentElement.lang).toBe('ja');
+    expect(document.documentElement.dir).toBe('ltr');
+  });
+
+  test('Japanese dates use the ja Moment locale', () => {
+    const { setAppLocale } = loadI18n();
+    const moment = require('moment');
+    setAppLocale('ja');
+    expect(moment.locale()).toBe('ja');
+    const formatted = moment('2026-10-19T19:23:00').format('LL');
+    expect(formatted).toBe('2026年10月19日');
+    expect(moment('2026-10-19T19:23:00').format('dddd')).toBe('月曜日');
+  });
+
+  test('Japanese messages keep every interpolation placeholder from English', () => {
+    const en = require('~/i18n/locales/en').default;
+    const ja = require('~/i18n/locales/ja').default;
+    const placeholders = v => (v.match(/\{[^}]+\}/g) || []).sort();
+    const walk = (a, b, path) => {
+      for (const [k, v] of Object.entries(a)) {
+        if (typeof v === 'string') {
+          expect([path + k, placeholders(b[k] ?? '')]).toEqual([path + k, placeholders(v)]);
+        } else {
+          walk(v, b[k] ?? {}, path + k + '.');
+        }
+      }
+    };
+    walk(en, ja, '');
   });
 
   test('initial locale falls back to en', () => {

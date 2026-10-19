@@ -64,6 +64,7 @@ export default {
     languageEs: 'Español',
     languageAr: 'العربية',
     languageHi: 'हिन्दी',
+    languageJa: '日本語',
     rangeTo: 'إلى',
     last7d: 'آخر 7 أيام',
     last30d: 'آخر 30 يومًا',
