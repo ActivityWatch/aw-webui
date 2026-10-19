@@ -284,6 +284,13 @@ export const useSettingsStore = defineStore('settings', {
           continue;
         }
 
+        // A never-saved alerts list keeps its default. Saving it with some other
+        // setting would make the Alerts view read it as deliberately emptied
+        // (see hasStoredAlerts) and hide the sample goals.
+        if (key === 'alerts' && !this._storedKeys.includes('alerts')) {
+          continue;
+        }
+
         const value = this.$state[key];
 
         // Save to localStorage
@@ -319,7 +326,9 @@ export const useSettingsStore = defineStore('settings', {
     async update(new_state: Record<string, any>) {
       console.log('Updating state', new_state);
       await this.ensureLoaded();
-      this.$patch(new_state);
+      // Explicitly updated keys count as stored, so save() persists them.
+      const storedKeys = [...new Set([...this._storedKeys, ...Object.keys(new_state)])];
+      this.$patch({ ...new_state, _storedKeys: storedKeys });
       await this.save();
     },
   },

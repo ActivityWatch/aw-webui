@@ -1,6 +1,7 @@
 import { setActivePinia, createPinia } from 'pinia';
 
 import { useSettingsStore } from '~/stores/settings';
+import { createClient, getClient } from '~/util/awclient';
 
 describe('settings store', () => {
   setActivePinia(createPinia());
@@ -73,5 +74,44 @@ describe('settings store', () => {
 
     expect(steps).toEqual(['ensureLoaded', 'save']);
     expect(settingsStore.saved_queries).toEqual(savedQueries);
+  });
+
+  describe('saving alert goals', () => {
+    beforeAll(() => {
+      createClient();
+      // save() always mirrors the theme and landing page to localStorage.
+      (global as any).localStorage = { setItem: jest.fn() };
+    });
+    afterAll(() => {
+      delete (global as any).localStorage;
+    });
+
+    function fakeServer() {
+      const post = jest.fn().mockResolvedValue({});
+      jest
+        .spyOn(getClient(), 'get_settings')
+        .mockResolvedValue({ theme: 'light' } as Record<string, unknown>);
+      (getClient() as any).req = { post, defaults: {} };
+      // Keep the store state; save() reloads from the server afterwards.
+      jest.spyOn(settingsStore, 'load').mockResolvedValue();
+      settingsStore.$patch({ _loaded: true, _storedKeys: ['theme'] });
+      return post;
+    }
+    const postedKeys = (post: jest.Mock) => post.mock.calls.map(([url]) => url);
+
+    test('an unrelated save leaves never-saved alerts unsaved', async () => {
+      const post = fakeServer();
+      settingsStore.$patch({ theme: 'dark' });
+      await settingsStore.save();
+      expect(postedKeys(post)).toContain('/0/settings/theme');
+      expect(postedKeys(post)).not.toContain('/0/settings/alerts');
+    });
+
+    test('an explicit update saves alerts, even when emptied', async () => {
+      const post = fakeServer();
+      await settingsStore.update({ alerts: [] });
+      expect(post).toHaveBeenCalledWith('/0/settings/alerts', [], expect.anything());
+      expect(settingsStore.hasStoredAlerts).toBe(true);
+    });
   });
 });

@@ -68,7 +68,7 @@ import 'vue-awesome/icons/trash';
 import { useBucketsStore } from '~/stores/buckets';
 import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
-import { get_day_start_with_offset, get_offset_duration } from '~/util/time';
+import { get_day_start_with_offset } from '~/util/time';
 import { cleanAlertGoal, cleanAlertGoals, getDefaultAlertGoals } from '~/util/alerts';
 
 export default {
@@ -211,9 +211,13 @@ export default {
       // so before that boundary we are still on the previous calendar day.
       // `now` is captured once so the interval stays consistent even if the
       // query straddles the boundary.
+      // Build today's boundary on the calendar, rather than subtracting the
+      // offset as elapsed time, which picks the wrong day around DST changes.
       const now = moment();
-      const activity_day = moment(now).subtract(get_offset_duration()).startOf('day');
-      const start = moment(get_day_start_with_offset(activity_day));
+      let start = moment(get_day_start_with_offset(moment(now).startOf('day')));
+      if (start.isAfter(now)) {
+        start = moment(get_day_start_with_offset(moment(now).startOf('day').subtract(1, 'day')));
+      }
       const timeperiods = [start.format() + '/' + now.format()];
 
       try {
