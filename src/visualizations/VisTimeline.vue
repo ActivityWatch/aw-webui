@@ -31,6 +31,19 @@ div#visualization {
     white-space: normal;
     overflow-wrap: anywhere;
     pointer-events: none;
+
+    // Keep labels on one line; only the values should wrap, otherwise long
+    // titles/URLs squeeze the label column down to a few characters.
+    th {
+      white-space: nowrap;
+      overflow-wrap: normal;
+      vertical-align: top;
+      padding-right: 0.5em;
+    }
+
+    td {
+      vertical-align: top;
+    }
   }
 
   .vis-labelset .vis-label .vis-inner {
