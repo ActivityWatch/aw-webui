@@ -7,6 +7,7 @@ describe('i18n', () => {
   beforeEach(() => {
     localStorage.clear();
     document.documentElement.removeAttribute('lang');
+    document.documentElement.removeAttribute('dir');
   });
 
   afterEach(() => {
@@ -21,6 +22,7 @@ describe('i18n', () => {
     expect(isAppLocale('ru')).toBe(true);
     expect(isAppLocale('zh-CN')).toBe(true);
     expect(isAppLocale('es')).toBe(true);
+    expect(isAppLocale('ar')).toBe(true);
     expect(isAppLocale('fr')).toBe(false);
     expect(isAppLocale('')).toBe(false);
     expect(isAppLocale(null)).toBe(false);
@@ -67,6 +69,40 @@ describe('i18n', () => {
     expect(i18n.t('common.save')).not.toBe('Save');
     expect(document.documentElement.lang).toBe('es');
     expect(localStorage.getItem('locale')).toBe('es');
+  });
+
+  test('initial Arabic locale sets lang and rtl direction on load', () => {
+    Object.defineProperty(navigator, 'language', {
+      value: 'ar-EG',
+      configurable: true,
+    });
+    const { i18n } = loadI18n();
+    expect(i18n.locale).toBe('ar');
+    expect(document.documentElement.lang).toBe('ar');
+    expect(document.documentElement.dir).toBe('rtl');
+  });
+
+  test('switching to Arabic sets rtl and switching back restores ltr', () => {
+    const { setAppLocale, i18n } = loadI18n();
+    setAppLocale('ar');
+    expect(i18n.locale).toBe('ar');
+    expect(i18n.t('common.languageAr')).toBe('العربية');
+    expect(i18n.t('common.save')).not.toBe('Save');
+    expect(document.documentElement.lang).toBe('ar');
+    expect(document.documentElement.dir).toBe('rtl');
+    expect(localStorage.getItem('locale')).toBe('ar');
+    setAppLocale('en');
+    expect(document.documentElement.dir).toBe('ltr');
+  });
+
+  test('Arabic dates keep Western digits', () => {
+    const { setAppLocale } = loadI18n();
+    const moment = require('moment');
+    setAppLocale('ar');
+    expect(moment.locale()).toBe('ar');
+    const formatted = moment('2026-10-19T19:23:00').format('LLLL');
+    expect(formatted).toContain('19');
+    expect(formatted).not.toMatch(/[٠-٩]/);
   });
 
   test('initial locale falls back to en', () => {
