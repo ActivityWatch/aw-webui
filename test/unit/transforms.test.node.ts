@@ -53,10 +53,22 @@ describe('overlappingEvents', () => {
   });
 
   test('zero-duration events do not overlap anything', () => {
-    const a = [ev('2026-10-19T00:00:00Z', 0, 'a')];
-    const b = [ev('2026-10-19T00:00:00Z', 10, 'b')];
+    const empty_at_start = [ev('2026-10-19T00:00:00Z', 0, 'empty-start')];
+    const empty_inside = [ev('2026-10-19T00:00:05Z', 0, 'empty-inside')];
+    const empty_at_end = [ev('2026-10-19T00:00:10Z', 0, 'empty-end')];
+    const span = [ev('2026-10-19T00:00:00Z', 10, 'span')];
 
-    expect(overlappingEvents(a, b)).toHaveLength(0);
+    // A zero-length event spans no time, so it must not block a bucket merge.
+    for (const empty of [empty_at_start, empty_inside, empty_at_end]) {
+      expect(overlappingEvents(empty, span)).toHaveLength(0);
+      expect(overlappingEvents(span, empty)).toHaveLength(0);
+    }
+
+    const two_empty = [
+      ev('2026-10-19T00:00:05Z', 0, 'empty-a'),
+      ev('2026-10-19T00:00:05Z', 0, 'empty-b'),
+    ];
+    expect(overlappingEvents(two_empty, two_empty)).toHaveLength(0);
   });
 
   test('finds every pair when one interval contains several others', () => {

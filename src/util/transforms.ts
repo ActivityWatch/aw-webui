@@ -85,8 +85,11 @@ export function overlappingEvents(events1, events2): Overlap[] {
     // Check for overlap. Two half-open intervals overlap when each starts
     // before the other ends; this is symmetric, so containment in either
     // direction and equal bounds are both detected. Merely touching
-    // (one ends where the other starts) is not an overlap.
+    // (one ends where the other starts) is not an overlap, and neither is a
+    // zero-length event: it spans no time, so it must not block a merge.
     if (
+      e1_bounds.start.valueOf() < e1_bounds.end_ms &&
+      e2_bounds.start.valueOf() < e2_bounds.end_ms &&
       e1_bounds.start.valueOf() < e2_bounds.end_ms &&
       e2_bounds.start.valueOf() < e1_bounds.end_ms
     ) {
