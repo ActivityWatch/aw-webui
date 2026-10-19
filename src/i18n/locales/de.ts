@@ -61,6 +61,7 @@ export default {
     languageEs: 'Español',
     languageAr: 'العربية',
     languageHi: 'हिन्दी',
+    languageUr: 'اردو',
     languageJa: '日本語',
     languageFr: 'Français',
     languagePtBR: 'Português (Brasil)',

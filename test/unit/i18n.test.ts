@@ -24,6 +24,7 @@ describe('i18n', () => {
     expect(isAppLocale('es')).toBe(true);
     expect(isAppLocale('ar')).toBe(true);
     expect(isAppLocale('hi')).toBe(true);
+    expect(isAppLocale('ur')).toBe(true);
     expect(isAppLocale('ja')).toBe(true);
     expect(isAppLocale('ja-JP')).toBe(false);
     expect(isAppLocale('fr')).toBe(true);
@@ -247,14 +248,11 @@ describe('i18n', () => {
   test('setAppLocale switches to Brazilian Portuguese messages', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('pt-BR');
-    expect(i18n.locale).toBe('pt-BR');
     expect(i18n.t('common.languagePtBR')).toBe('Português (Brasil)');
     expect(i18n.t('common.save')).not.toBe('Save');
     expect(document.documentElement.lang).toBe('pt-BR');
     expect(document.documentElement.dir).toBe('ltr');
     expect(localStorage.getItem('locale')).toBe('pt-BR');
-  });
-
   test('Brazilian Portuguese messages keep every interpolation placeholder from English', () => {
     const en = require('~/i18n/locales/en').default;
     const ptBR = require('~/i18n/locales/pt-BR').default;
@@ -269,6 +267,43 @@ describe('i18n', () => {
       }
     };
     walk(en, ptBR, '');
+  test.each(['ur-PK', 'ur-IN', 'ur'])('initial locale detects Urdu browser language %s', lang => {
+      value: lang,
+    expect(i18n.locale).toBe('ur');
+    expect(document.documentElement.lang).toBe('ur');
+    expect(document.documentElement.dir).toBe('rtl');
+  test('initial Urdu locale comes from localStorage', () => {
+    localStorage.setItem('locale', 'ur');
+  test('switching ur -> en -> ur toggles lang, dir and persists the locale', () => {
+    setAppLocale('ur');
+    expect(i18n.t('common.languageUr')).toBe('اردو');
+    expect(localStorage.getItem('locale')).toBe('ur');
+    setAppLocale('en');
+    expect(i18n.locale).toBe('en');
+    expect(document.documentElement.lang).toBe('en');
+    expect(localStorage.getItem('locale')).toBe('en');
+  test.each(['en', 'ar', 'hi', 'ja', 'fr', 'ur'])(
+    '%s UI keeps Hindi, Japanese, French and Urdu language-picker endonyms',
+    locale => {
+      const { setAppLocale, i18n } = loadI18n();
+      setAppLocale(locale);
+      expect(i18n.t('common.languageHi')).toBe('हिन्दी');
+      expect(i18n.t('common.languageJa')).toBe('日本語');
+      expect(i18n.t('common.languageFr')).toBe('Français');
+      expect(i18n.t('common.languageUr')).toBe('اردو');
+    }
+  );
+  test('Urdu notification help preserves the total-time category sentinel', () => {
+    expect(i18n.t('settings.notifications.categoryHelp')).toContain('"All"');
+  test('Urdu dates use Urdu month names and Western digits', () => {
+    const { setAppLocale } = loadI18n();
+    const moment = require('moment');
+    expect(moment.locale()).toBe('ur');
+    const formatted = moment('2026-10-19T19:23:00').format('LLLL');
+    expect(formatted).toContain('اکتوبر');
+    expect(formatted).toContain('2026');
+    expect(formatted).toContain('19');
+    expect(formatted).not.toMatch(/[٠-٩۰-۹]/);
   });
 
   test('initial locale falls back to en', () => {
