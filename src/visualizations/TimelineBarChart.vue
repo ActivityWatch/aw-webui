@@ -19,7 +19,11 @@ import {
   get_hour_offset,
   get_short_month_labels,
 } from '~/util/time';
-import { MAX_DAILY_BUCKETS, timeperiodsCalendarMonthsOfPeriod } from '~/util/timeperiod';
+import {
+  MAX_DAILY_BUCKETS,
+  hourlyLabels,
+  timeperiodsCalendarMonthsOfPeriod,
+} from '~/util/timeperiod';
 import { i18n } from '~/i18n';
 import { clampStackedHours } from '~/util/timelineClamp';
 
@@ -76,6 +80,8 @@ export default {
       const start = this.timeperiod_start;
       const [count, resolution] = this.timeperiod_length;
       if (resolution.startsWith('day') && count == 1) {
+        if (start) return hourlyLabels({ start, length: [count, resolution] });
+        // Reports aggregate by wall-clock hour without a selected calendar day.
         const hourOffset = get_hour_offset();
         return _.range(0, 24).map(h => `${(h + hourOffset) % 24}`);
       } else if (resolution.startsWith('day') && count > MAX_DAILY_BUCKETS) {
