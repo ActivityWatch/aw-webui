@@ -31,6 +31,25 @@ export function buildTooltip(bucket, e) {
       <tr><th>Title</th><td>${sanitize(e.data.title)}</td></tr>
       <tr><th>URL</th><td><a href=${sanitize(e.data.url)}>${sanitize(e.data.url)}</a></td></tr>
       `;
+    if (e.data.gmail_activity) {
+      inner += `<tr><th>Gmail Activity</th><td>${sanitize(e.data.gmail_activity)}</td></tr>`;
+      if (e.data.from)
+        inner += `<tr><th>From</th><td>${sanitize(e.data.from)}</td></tr>`;
+      if (e.data.subject)
+        inner += `<tr><th>Subject</th><td>${sanitize(e.data.subject)}</td></tr>`;
+      if (e.data.to && e.data.to.length > 0)
+        inner += `<tr><th>To</th><td>${sanitize(
+          Array.isArray(e.data.to) ? e.data.to.join(', ') : e.data.to
+        )}</td></tr>`;
+      if (e.data.cc && e.data.cc.length > 0)
+        inner += `<tr><th>CC</th><td>${sanitize(
+          Array.isArray(e.data.cc) ? e.data.cc.join(', ') : e.data.cc
+        )}</td></tr>`;
+      if (e.data.bcc && e.data.bcc.length > 0)
+        inner += `<tr><th>BCC</th><td>${sanitize(
+          Array.isArray(e.data.bcc) ? e.data.bcc.join(', ') : e.data.bcc
+        )}</td></tr>`;
+    }
   } else if (bucket.type.startsWith('app.editor')) {
     inner = `
       <tr><th>Filename</th><td>${sanitize(_.last(e.data.file.split('/')))}</td></tr>
