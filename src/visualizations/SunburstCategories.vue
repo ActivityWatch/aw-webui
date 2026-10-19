@@ -166,6 +166,8 @@ export default {
   },
   watch: {
     data() {
+      // A running zoom animation would otherwise reapply the old slice.
+      if (this.zoomTimer) this.zoomTimer.stop();
       this.zoomed = null;
       this.hovered = null;
       this.domain = { x0: 0, x1: 1, y0: 0 };

@@ -24,7 +24,7 @@ div
   div(v-if="show_options")
     hr
     h4 {{ $t('search.options') }}
-    aw-query-options(:query-options="queryOptions" @input="queryOptions = $event")
+    aw-query-options(:query-options="queryOptions" @update:model-value="queryOptions = $event")
 
   hr
 

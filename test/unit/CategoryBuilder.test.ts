@@ -192,6 +192,18 @@ describe('CategoryBuilder loading', () => {
     expect(code).toContain('merge_events_by_keys(events, ["app", "title"])');
   });
 
+  test('applies options chosen in the options form', async () => {
+    buckets.buckets = ['phone', 'tablet'].map(hostname => ({ ...androidBucket, hostname }));
+    mountBuilder();
+    await flush();
+    await wrapper.setData({ show_options: true });
+    const chosen = { ...wrapper.vm.queryOptions, hostname: 'tablet' };
+    wrapper.findComponent(QueryOptions).vm.$emit('update:modelValue', chosen);
+    await flush();
+    expect(wrapper.vm.queryOptions).toEqual(chosen);
+    expect(query).toHaveBeenCalledTimes(1);
+  });
+
   test('preserves the chosen host and dates when reopening options', async () => {
     buckets.buckets = ['phone', 'tablet'].map(hostname => ({ ...androidBucket, hostname }));
     mountBuilder(true);
