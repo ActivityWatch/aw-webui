@@ -1,19 +1,19 @@
 <template lang="pug">
 div
-  h3.mb-3 {{ $t('ui.billing.title') }}
+  h3.mb-3 Billable Hours Export
 
   div.row.mb-4
     div.col-md-4
-      b-form-group(:label="$t('ui.billing.hosts')" label-class="font-weight-bold")
+      b-form-group(label="Hosts" label-class="font-weight-bold")
         b-form-select(v-model="selectedHosts" :options="hostOptions" multiple :select-size="4")
-        small.text-muted {{ $t('ui.billing.selectDevices') }}
+        small.text-muted Select devices to include
 
     div.col-md-4
-      b-form-group(:label="$t('ui.billing.dateRange')" label-class="font-weight-bold")
+      b-form-group(label="Date Range" label-class="font-weight-bold")
         b-form-select(v-model="dateRange" :options="dateRangeOptions")
 
     div.col-md-4
-      b-form-group(:label="$t('ui.billing.hourlyRate')" label-class="font-weight-bold")
+      b-form-group(label="Hourly Rate (optional)" label-class="font-weight-bold")
         b-input-group(prepend="$")
           b-form-input(
             v-model.number="defaultRate"
@@ -22,19 +22,19 @@ div
             step="0.01"
             placeholder="0.00"
           )
-        small.text-muted {{ $t('ui.billing.defaultRateHelp') }}
+        small.text-muted Default rate applied to all categories. Override per row below.
 
   div.mb-3
     b-button(@click="loadData" variant="primary" :disabled="loading")
       icon(name="sync")
-      |  {{ $t('ui.billing.calculate') }}
+      |  Calculate Hours
     b-button.ml-2(@click="exportCSV" variant="outline-secondary" :disabled="!hasData")
       icon(name="download")
-      |  {{ $t('ui.billing.exportCsv') }}
+      |  Export CSV
 
   div(v-if="loading")
     b-spinner.mr-2
-    | {{ $t('common.loading') }}
+    | Loading...
 
   div(v-if="errorMessage")
     b-alert(variant="danger" show) {{ errorMessage }}
@@ -43,16 +43,16 @@ div
     div.row.mb-2
       div.col
         small.text-muted
-          | {{ $t('ui.billing.period') }}: {{ periodLabel }} · {{ $t('ui.billing.total') }}: {{ formatDuration(totalDuration) }}
-          span(v-if="defaultRate > 0")  · {{ $t('ui.billing.estimatedTotal') }}: {{ formatAmount(totalAmount) }}
+          | Period: {{ periodLabel }} · Total: {{ formatDuration(totalDuration) }}
+          span(v-if="defaultRate > 0")  · Est. Total: {{ formatAmount(totalAmount) }}
 
     table.table.table-sm.table-hover
       thead
         tr
-          th {{ $t('ui.billing.category') }}
-          th.text-right {{ $t('ui.billing.hours') }}
-          th.text-right {{ $t('ui.billing.rate') }}
-          th.text-right {{ $t('ui.billing.amount') }}
+          th Category
+          th.text-right Hours
+          th.text-right Rate ($/h)
+          th.text-right Amount
       tbody
         tr(v-for="row in categoryRows" :key="row.key")
           td
@@ -72,7 +72,7 @@ div
           td.text-right {{ formatAmount(getAmount(row)) }}
       tfoot
         tr.font-weight-bold
-          td {{ $t('ui.billing.total') }}
+          td Total
           td.text-right {{ formatHours(totalDuration) }}
           td.text-right —
           td.text-right {{ formatAmount(totalAmount) }}
@@ -149,17 +149,14 @@ export default {
   },
   computed: {
     hostOptions() {
-      return getWorkReportHostOptions(
-        this.bucketsStore.buckets || [],
-        this.$t('common.requiresAfk') as string
-      );
+      return getWorkReportHostOptions(this.bucketsStore.buckets || []);
     },
     dateRangeOptions() {
       return [
-        { value: 'thisMonth', text: this.$t('common.thisMonth') },
-        { value: 'last30d', text: this.$t('common.last30d') },
-        { value: 'thisWeek', text: this.$t('common.thisWeek') },
-        { value: 'last7d', text: this.$t('common.last7d') },
+        { value: 'thisMonth', text: 'This month' },
+        { value: 'last30d', text: 'Last 30 days' },
+        { value: 'thisWeek', text: 'This week' },
+        { value: 'last7d', text: 'Last 7 days' },
       ];
     },
     hasData() {
@@ -209,7 +206,7 @@ export default {
         const client = getClient();
 
         if (this.selectedHosts.length === 0) {
-          this.errorMessage = this.$t('common.selectHost');
+          this.errorMessage = 'Please select at least one host.';
           return;
         }
 
@@ -222,9 +219,9 @@ export default {
           this.bucketsStore.buckets || []
         );
         if (hostsToQuery.length === 0) {
-          this.errorMessage = this.$t('ui.billing.noSupportedHosts', {
-            hosts: unsupported.join(', '),
-          });
+          this.errorMessage = `No supported hosts (require aw-watcher-afk): ${unsupported.join(
+            ', '
+          )}`;
           return;
         }
 
@@ -263,7 +260,7 @@ export default {
             };
           });
       } catch (err: any) {
-        this.errorMessage = this.$t('ui.billing.loadError', { error: err?.message || err });
+        this.errorMessage = `Error loading data: ${err?.message || err}`;
         console.error(err);
       } finally {
         this.loading = false;

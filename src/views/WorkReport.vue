@@ -1,15 +1,15 @@
 <template lang="pug">
 div
-  h3.mb-3 {{ $t('workReport.title') }}
+  h3.mb-3 Work Time Report
 
   div.row.mb-4
     div.col-md-3
-      b-form-group(:label="$t('ui.workReport.hosts')" label-class="font-weight-bold")
+      b-form-group(label="Hosts" label-class="font-weight-bold")
         b-form-select(v-model="selectedHosts" :options="hostOptions" multiple :select-size="4")
-        small.text-muted {{ $t('ui.workReport.selectDevices') }}
+        small.text-muted Select devices to include
 
     div.col-md-3
-      b-form-group(:label="$t('ui.workReport.categories')" label-class="font-weight-bold")
+      b-form-group(label="Categories" label-class="font-weight-bold")
         b-form-select(
           :value="''"
           :options="addableCategoryOptions"
@@ -21,14 +21,14 @@ div
             | {{ JSON.parse(cat).join(' > ') }}
             button.ml-1.close.small(
               type="button"
-              :aria-label="$t('ui.workReport.removeCategory')"
+              aria-label="Remove category"
               style="font-size: 0.85rem; line-height: 1"
               @click="removeCategory(idx)"
             ) &times;
-        small.text-muted.d-block.mt-1 {{ $t('ui.workReport.subcategories') }}
+        small.text-muted.d-block.mt-1 Subcategories are included automatically (e.g. "Work" also covers "Work > Programming").
 
     div.col-md-3
-      b-form-group(:label="$t('ui.workReport.breakTime')" label-class="font-weight-bold")
+      b-form-group(label="Break Time" label-class="font-weight-bold")
         div.d-flex.align-items-center
           b-form-input(
             v-model="breakTime"
@@ -38,46 +38,46 @@ div
             step="1"
           )
           span.ml-2.text-nowrap {{ breakTime }} min
-        small.text-muted {{ $t('ui.workReport.breakHelp') }}
+        small.text-muted Gaps shorter than this will be counted as work time
 
     div.col-md-3
-      b-form-group(:label="$t('ui.workReport.dateRange')" label-class="font-weight-bold")
+      b-form-group(label="Date Range" label-class="font-weight-bold")
         b-form-select(v-model="dateRange" :options="dateRangeOptions")
 
-  div.mb-3
+  div.mb-3.report-actions
     b-button(@click="loadData" variant="primary")
       icon(name="sync")
-      |  {{ $t('ui.workReport.calculate') }}
-    b-button.ml-2(@click="exportCSV" variant="outline-secondary" :disabled="!hasData")
+      |  Calculate Work Time
+    b-button(@click="exportCSV" variant="outline-secondary" :disabled="!hasData")
       icon(name="download")
-      |  {{ $t('ui.workReport.exportCsv') }}
-    b-button.ml-2(@click="exportJSON" variant="outline-secondary" :disabled="!hasData")
+      |  Export CSV
+    b-button(@click="exportJSON" variant="outline-secondary" :disabled="!hasData")
       icon(name="download")
-      |  {{ $t('ui.workReport.exportJson') }}
+      |  Export JSON
 
   div(v-if="loading")
     b-spinner.mr-2
-    | {{ $t('common.loading') }}
+    | Loading...
 
   div(v-if="hasData && !loading")
-    h5.mt-4 {{ $t('ui.workReport.dailyBreakdown') }}
+    h5.mt-4 Daily Breakdown
 
     table.table.table-sm.table-hover
       thead
         tr
-          th {{ $t('ui.workReport.date') }}
-          th.text-right {{ $t('ui.workReport.workTime') }}
-          th.text-right {{ $t('ui.workReport.sessions') }}
-          th.text-right {{ $t('ui.workReport.avgSession') }}
+          th Date
+          th.text-right Work Time
+          th.text-right Sessions
+          th.text-right Avg Session
       tbody
         tr(v-for="day in dailyData" :key="day.date")
-          td {{ day.date }}
+          td.text-nowrap {{ day.date }}
           td.text-right {{ formatDuration(day.duration) }}
           td.text-right {{ day.sessions }}
           td.text-right {{ formatDuration(day.avgSession) }}
       tfoot
         tr.font-weight-bold
-          td {{ $t('ui.workReport.total') }}
+          td Total
           td.text-right {{ formatDuration(totalDuration) }}
           td.text-right {{ totalSessions }}
           td.text-right {{ formatDuration(avgSessionLength) }}
@@ -93,9 +93,11 @@ import { useBucketsStore } from '~/stores/buckets';
 import { get_day_start_with_offset, get_day_end_with_offset } from '~/util/time';
 import {
   getSupportedWorkReportHosts,
+  getWorkReportHostBuckets,
   getWorkReportHostOptions,
   getUnsupportedWorkReportHosts,
   buildWorkReportQuery,
+  summarizeWorkSessions,
 } from '~/util/workReport';
 
 import 'vue-awesome/icons/sync';
@@ -107,21 +109,6 @@ interface DailyData {
   sessions: number;
   avgSession: number;
   events: any[];
-}
-
-// Sum of gaps between adjacent events that are <= breakTimeSeconds.
-function bridgeGaps(events: any[], breakTimeSeconds: number): number {
-  if (!events || events.length < 2 || breakTimeSeconds <= 0) return 0;
-  const sorted = [...events].sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-  );
-  let extra = 0;
-  for (let i = 1; i < sorted.length; i++) {
-    const prevEnd = new Date(sorted[i - 1].timestamp).getTime() + sorted[i - 1].duration * 1000;
-    const gap = (new Date(sorted[i].timestamp).getTime() - prevEnd) / 1000;
-    if (gap > 0 && gap <= breakTimeSeconds) extra += gap;
-  }
-  return extra;
 }
 
 export default {
@@ -144,10 +131,7 @@ export default {
   },
   computed: {
     hostOptions() {
-      return getWorkReportHostOptions(
-        this.bucketsStore.buckets || [],
-        this.$t('common.requiresAfk') as string
-      );
+      return getWorkReportHostOptions(this.bucketsStore.buckets || []);
     },
 
     categoryOptions() {
@@ -166,10 +150,7 @@ export default {
       return [
         {
           value: '',
-          text:
-            this.selectedCategories.length === 0
-              ? this.$t('ui.workReport.selectCategory')
-              : this.$t('ui.workReport.addCategory'),
+          text: this.selectedCategories.length === 0 ? 'Select category…' : 'Add category…',
           disabled: true,
         },
         ...this.categoryOptions.filter(opt => !isCoveredBySelected(JSON.parse(opt.value))),
@@ -177,10 +158,10 @@ export default {
     },
     dateRangeOptions() {
       return [
-        { value: 'last7d', text: this.$t('common.last7d') },
-        { value: 'last30d', text: this.$t('common.last30d') },
-        { value: 'thisWeek', text: this.$t('common.thisWeek') },
-        { value: 'thisMonth', text: this.$t('common.thisMonth') },
+        { value: 'last7d', text: 'Last 7 days' },
+        { value: 'last30d', text: 'Last 30 days' },
+        { value: 'thisWeek', text: 'This week' },
+        { value: 'thisMonth', text: 'This month' },
       ];
     },
     hasData() {
@@ -211,13 +192,13 @@ export default {
         const client = getClient();
 
         if (this.selectedHosts.length === 0) {
-          alert(this.$t('common.selectHost'));
+          alert('Please select at least one host');
           this.loading = false;
           return;
         }
 
         if (this.selectedCategories.length === 0) {
-          alert(this.$t('ui.workReport.selectCategory'));
+          alert('Please select at least one category');
           this.loading = false;
           return;
         }
@@ -233,24 +214,23 @@ export default {
           );
           if (supportedHosts.length === 0) {
             alert(
-              this.$t('ui.workReport.unsupportedHosts', {
-                hosts: unsupportedHosts.join(', '),
-              })
+              `The selected hosts are missing aw-watcher-afk buckets and can't be included in Work Report: ${unsupportedHosts.join(
+                ', '
+              )}`
             );
             this.loading = false;
             return;
           }
 
           alert(
-            this.$t('ui.workReport.skippingHosts', {
-              unsupported: unsupportedHosts.join(', '),
-              supported: supportedHosts.join(', '),
-            })
+            `Skipping hosts without aw-watcher-afk buckets: ${unsupportedHosts.join(
+              ', '
+            )}. Work Report will use: ${supportedHosts.join(', ')}`
           );
           this.selectedHosts = supportedHosts;
         }
 
-        const hostsToQuery = getSupportedWorkReportHosts(
+        const hostsToQuery = getWorkReportHostBuckets(
           this.selectedHosts,
           this.bucketsStore.buckets || []
         );
@@ -300,15 +280,16 @@ export default {
           // Bridge sub-breakTime gaps between adjacent events so a quick
           // context-switch still counts as continuous work time. aw-query's
           // flood() only deduplicates overlap, so we add the bridging here.
-          const bridged = baseDuration + bridgeGaps(events, breakTimeSeconds);
+          const { bridgedSeconds, sessions } = summarizeWorkSessions(events, breakTimeSeconds);
+          const bridged = baseDuration + bridgedSeconds;
 
           const startDate = tp.split('/')[0];
 
           return {
             date: moment(startDate).format('YYYY-MM-DD'),
             duration: bridged,
-            sessions: events.length,
-            avgSession: events.length > 0 ? bridged / events.length : 0,
+            sessions,
+            avgSession: sessions > 0 ? bridged / sessions : 0,
             events,
           };
         });
@@ -316,7 +297,7 @@ export default {
         this.rawData = results;
       } catch (error) {
         console.error('Error loading work time data:', error);
-        alert(this.$t('ui.workReport.loadError'));
+        alert('Error loading data. See console for details.');
       } finally {
         this.loading = false;
       }
@@ -432,5 +413,12 @@ export default {
 <style scoped>
 .table {
   font-size: 0.9rem;
+}
+
+/* Use a gap rather than per-button margins so wrapped buttons line up on narrow screens. */
+.report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 </style>

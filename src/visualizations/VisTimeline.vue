@@ -6,7 +6,7 @@
       i {{ $t('ui.timeline.bucketsNoEvents') }}
 
     div(v-if="editingEvent")
-      EventEditor(:event="editingEvent" :bucket_id="editingEventBucket")
+      EventEditor(:event="editingEvent" :bucket_id="editingEventBucket" @saved="onEventSaved")
 </template>
 
 <style lang="scss">
@@ -74,7 +74,8 @@ import _ from 'lodash';
 import moment from 'moment';
 import Color from 'color';
 import { buildTooltip } from '../util/tooltip.js';
-import { getCategoryColorFromEvent, getTitleAttr } from '../util/color';
+import { getCategoryColorFromEvent, getColorFromCategory, getTitleAttr } from '../util/color';
+import { useCategoryStore } from '~/stores/categories';
 import { getSwimlane } from '../util/swimlane.js';
 import { IEvent } from '../util/interfaces';
 import { formatTimelineBucketLabelHtml, shortenBucketLabel } from '../util/timelineLabels';
@@ -83,7 +84,6 @@ import { Timeline } from 'vis-timeline/esnext';
 import 'vis-timeline/styles/vis-timeline-graph2d.css';
 import EventEditor from '~/components/EventEditor.vue';
 
-let isAlertWarningShown = false;
 const PIXELS_PER_WHEEL_LINE = 40;
 const PIXELS_PER_WHEEL_PAGE = 800;
 
@@ -104,6 +104,7 @@ export default {
   props: {
     buckets: { type: Array },
     events: { type: Array },
+    categorizedEvents: { type: Array, default: () => [] },
     showRowLabels: { type: Boolean },
     queriedInterval: { type: Array },
     showQueriedInterval: { type: Boolean },
@@ -135,6 +136,8 @@ export default {
       },
       editingEvent: null,
       editingEventBucket: null,
+      eventOverrides: {} as Record<string, IEvent>,
+      pendingWindowRestore: null as { start: Date; end: Date } | null,
 
       updateHasRun: false,
     };
@@ -159,6 +162,24 @@ export default {
     },
     chartData(): IChartDataItem[] {
       const data: IChartDataItem[] = [];
+      const categories = this.categorizedEvents || [];
+      if (categories.length) {
+        const allCats = useCategoryStore().classes;
+        for (const event of categories) {
+          const name = event.data.$category;
+          const category = allCats.find(c => _.isEqual(c.name, name));
+          data.push({
+            bucketId: '__categorized__',
+            title: name.join(' > '),
+            tooltip: buildTooltip({ type: 'categorized' }, event),
+            start: new Date(event.timestamp),
+            end: new Date(moment(event.timestamp).add(event.duration, 'seconds').valueOf()),
+            color: getColorFromCategory(category, allCats),
+            event,
+            swimlane: '',
+          });
+        }
+      }
       _.each(this.bucketsFromEither, bucket => {
         if (bucket.events === undefined) {
           return;
@@ -171,7 +192,8 @@ export default {
           console.log(`Filtered ${bucket.events.length - events.length} events`);
         }
         events.sort((a, b) => a.timestamp.valueOf() - b.timestamp.valueOf());
-        _.each(events, e => {
+        _.each(events, sourceEvent => {
+          const e = this.displayEvent(bucket.id, sourceEvent);
           data.push({
             bucketId: bucket.id,
             title: getTitleAttr(bucket, e),
@@ -188,6 +210,9 @@ export default {
     },
   },
   watch: {
+    categorizedEvents() {
+      this.update();
+    },
     buckets() {
       // For some reason, an object is passed here, after which the correct array arrives
       if (this.buckets.length === undefined) {
@@ -195,6 +220,7 @@ export default {
         return;
       }
 
+      this.eventOverrides = {};
       this.update();
     },
     events() {
@@ -202,6 +228,7 @@ export default {
         return;
       }
 
+      this.eventOverrides = {};
       this.update();
     },
   },
@@ -255,6 +282,21 @@ export default {
     openEditor: function () {
       this.$bvModal.show('edit-modal-' + this.editingEvent.id);
     },
+    displayEvent: function (bucketId: string, event: IEvent): IEvent {
+      return this.eventOverrides[`${bucketId}\0${event.id}`] || event;
+    },
+    onEventSaved: function (event: IEvent, bucketId?: string) {
+      const bucket = bucketId || this.editingEventBucket;
+      const key = `${bucket}\0${event.id}`;
+      this.$set(this.eventOverrides, key, event);
+      this.editingEvent = event;
+      if (this.timeline) {
+        const w = this.timeline.getWindow();
+        this.pendingWindowRestore = { start: w.start, end: w.end };
+      }
+      this.update();
+      this.$emit('event-saved', event);
+    },
     onSelect: async function (properties) {
       if (properties.items.length == 0) {
         return;
@@ -283,24 +325,8 @@ export default {
           console.log('Editing event', event, ', in bucket', bucketId);
           this.openEditor();
         });
-        if (!isAlertWarningShown) {
-          // Show a one-time inline toast instead of a blocking alert(),
-          // which fired on top of the editor and rudely interrupted the
-          // edit flow. Persist the dismissal via localStorage so the user
-          // doesn't see it every session.
-          if (!this.editRefreshHintDismissed()) {
-            this.$bvToast.toast(this.$t('ui.timeline.editSaved'), {
-              title: this.$t('ui.timeline.editSavedTitle'),
-              variant: 'info',
-              autoHideDelay: 6000,
-              solid: true,
-            });
-            this.markEditRefreshHintDismissed();
-          }
-          isAlertWarningShown = true;
-        }
       } else {
-        console.info('Selected multiple timeline items:', properties.items);
+        alert('selected multiple items: ' + JSON.stringify(properties.items));
       }
     },
     abbreviateBucketName(bucketId: string): string {
@@ -308,20 +334,6 @@ export default {
       // labels directly via formatTimelineBucketLabelHtml so it can pass
       // the multi-host hint.
       return formatTimelineBucketLabelHtml(bucketId);
-    },
-    editRefreshHintDismissed(): boolean {
-      try {
-        return localStorage.getItem('aw.timeline.editRefreshHintDismissed') === '1';
-      } catch (e) {
-        return false;
-      }
-    },
-    markEditRefreshHintDismissed(): void {
-      try {
-        localStorage.setItem('aw.timeline.editRefreshHintDismissed', '1');
-      } catch (e) {
-        /* localStorage disabled — fine, fall back to the in-memory flag */
-      }
     },
     ensureUpdate() {
       // Will only run update() if data available and never ran before
@@ -386,6 +398,10 @@ export default {
         }
         return { id: bucket.id, content: label };
       });
+
+      if (this.categorizedEvents?.length) {
+        groups.unshift({ id: '__categorized__', content: this.showRowLabels ? 'Categorized' : '' });
+      }
 
       // Build items
       const items = _.map(this.chartData, (item, i) => {
@@ -474,6 +490,12 @@ export default {
         this.timeline.setData({ groups: [], items: [] });
         this.items = [];
         this.groups = [];
+      }
+      if (this.pendingWindowRestore) {
+        this.timeline.setWindow(this.pendingWindowRestore.start, this.pendingWindowRestore.end, {
+          animation: false,
+        });
+        this.pendingWindowRestore = null;
       }
     },
   },

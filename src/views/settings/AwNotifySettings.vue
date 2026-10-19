@@ -151,7 +151,7 @@ export default {
         if (e?.response?.status === 404) {
           this.useDefaults();
         } else {
-          this.error = `Failed to load settings: ${e?.message ?? e}`;
+          this.error = this.$t('settings.notifications.loadFailed', { error: e?.message ?? e });
         }
       } finally {
         this.loading = false;

@@ -1,7 +1,7 @@
 <template lang="pug">
 div
   div.d-flex.flex-wrap.align-items-center.mb-3
-    h3.mb-0.mr-3 {{ $t('nav.trends') }}
+    h3.mb-0.mr-3 Trends
 
     b-button-group.mr-2.mb-1(size="sm")
       b-button.px-3(
@@ -13,7 +13,7 @@ div
       ) {{ opt.text }}
 
     b-form-select.mr-2.mb-1(
-      v-if="bucketsStore.hosts.length > 1"
+      v-if="bucketsStore.knownHosts.length > 1"
       size="sm"
       :value="host"
       :options="hostOptions"
@@ -22,54 +22,57 @@ div
     )
 
     small.text-muted.ml-auto.mb-1
-      | {{ $t('ui.trends.comparing') }} #[b {{ currentRangeLabel }}] {{ $t('ui.trends.vs') }} #[b {{ previousRangeLabel }}].
+      | Comparing #[b {{ currentRangeLabel }}] vs #[b {{ previousRangeLabel }}].
 
   div(v-if="!host")
     b-alert(show variant="info")
-      | {{ $t('ui.trends.noHost') }}
+      | No host with window/AFK buckets available. Install
+      | #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") aw-watcher-window and aw-watcher-afk]
+      | to use this view.
 
   div(v-else-if="loading")
     b-spinner.mr-2(small)
-    span.text-muted {{ $t('ui.trends.computing', { days: periodDays }) }}
+    span.text-muted Computing trends over {{ periodDays }} + {{ periodDays }} days…
 
   div(v-else)
     b-row.mb-3
       b-col(md="4")
         b-card.h-100
-          small.text-muted {{ $t('ui.trends.activeTime') }}
+          small.text-muted Active time
           h4.mb-0 {{ totalCurrent | friendlyduration }}
           div.small.mt-1(:class="deltaClass(totalDelta)")
-            | {{ formatDelta(totalCurrent, totalPrevious) }} {{ $t('ui.trends.vsPrevious', { days: periodDays }) }}
+            | {{ formatDelta(totalCurrent, totalPrevious) }} vs previous {{ periodDays }} days
       b-col(md="4")
         b-card.h-100
-          small.text-muted {{ $t('ui.trends.dailyAverage') }}
+          small.text-muted Daily average
           h4.mb-0 {{ avgPerDay | friendlyduration }}
           div.small.mt-1(:class="deltaClass(avgDelta)")
-            | {{ formatDelta(avgPerDay, avgPerDayPrevious) }} {{ $t('ui.trends.perDay') }}
+            | {{ formatDelta(avgPerDay, avgPerDayPrevious) }} per day
       b-col(md="4")
         b-card.h-100
-          small.text-muted {{ $t('ui.trends.mostActiveDay') }}
+          small.text-muted Most-active day
           h4.mb-0(v-if="busiestDay") {{ busiestDay.label }}
           h4.mb-0.text-muted(v-else) —
-          div.small.text-muted.mt-1(v-if="busiestDay") {{ busiestDay.duration | friendlyduration }} {{ $t('ui.trends.onThisDay') }}
+          div.small.text-muted.mt-1(v-if="busiestDay") {{ busiestDay.duration | friendlyduration }} on this day
 
-    h5.mt-3 {{ $t('ui.trends.timePerDay') }}
-    aw-timeline-barchart(:datasets="datasets" :height="100")
+    h5.mt-3 Time per day
+    aw-timeline-barchart(:datasets="datasets" :height="100" :timeperiod_start="currentStart.toISOString()" :timeperiod_length="[periodDays, 'days']")
 
-    h5.mt-4 {{ $t('ui.trends.topChanges') }}
+    h5.mt-4 Top changes by category
     p.small.text-muted(v-if="categoryTrends.length === 0")
-      | {{ $t('ui.trends.noData') }}
+      | No categorized data to compare.
     b-table.mt-2(
       v-else
       small
       hover
+      responsive
       :items="categoryTrends"
       :fields="categoryFields"
       sort-by="absDelta"
       :sort-desc="true"
     )
       template(#cell(category)="row")
-        | {{ row.item.category.join(' > ') || $t('ui.trends.uncategorized') }}
+        | {{ row.item.category.join(' > ') || 'Uncategorized' }}
       template(#cell(current)="row")
         | {{ row.item.current | friendlyduration }}
       template(#cell(previous)="row")
@@ -116,6 +119,11 @@ export default {
       settingsStore: useSettingsStore(),
 
       periodDays: 7,
+      periodOptions: [
+        { value: 7, text: '7 days' },
+        { value: 30, text: '30 days' },
+        { value: 90, text: '90 days' },
+      ],
 
       loading: false,
 
@@ -125,49 +133,29 @@ export default {
       // Per-category totals for current and previous periods.
       currentTotals: {} as CategoryTotals,
       previousTotals: {} as CategoryTotals,
+
+      categoryFields: [
+        { key: 'category', label: 'Category', sortable: true },
+        { key: 'current', label: 'Current', class: 'text-right text-nowrap', sortable: true },
+        { key: 'previous', label: 'Previous', class: 'text-right text-nowrap', sortable: true },
+        { key: 'delta', label: 'Change', class: 'text-right text-nowrap', sortable: true },
+        { key: 'absDelta', label: '', class: 'd-none', sortable: true },
+      ],
     };
   },
 
   computed: {
-    periodOptions() {
-      return [
-        { value: 7, text: this.$t('ui.trends.period7d') },
-        { value: 30, text: this.$t('ui.trends.period30d') },
-        { value: 90, text: this.$t('ui.trends.period90d') },
-      ];
-    },
-
-    categoryFields() {
-      return [
-        { key: 'category', label: this.$t('ui.trends.tableCategory'), sortable: true },
-        {
-          key: 'current',
-          label: this.$t('ui.trends.tableCurrent'),
-          class: 'text-right',
-          sortable: true,
-        },
-        {
-          key: 'previous',
-          label: this.$t('ui.trends.tablePrevious'),
-          class: 'text-right',
-          sortable: true,
-        },
-        {
-          key: 'delta',
-          label: this.$t('ui.trends.tableChange'),
-          class: 'text-right',
-          sortable: true,
-        },
-        { key: 'absDelta', label: '', class: 'd-none', sortable: true },
-      ];
-    },
-
     host(): string | undefined {
-      return this.$route.params.host || this.bucketsStore.hosts[0];
+      // Ignore a :host param that is no longer offered in the select (e.g. a
+      // stale /trends/unknown URL, or a device that disappeared). Otherwise the
+      // select is hidden and the user is stuck querying a host they cannot see.
+      const routeHost = this.$route.params.host;
+      const hosts = this.bucketsStore.knownHosts;
+      return routeHost && hosts.includes(routeHost) ? routeHost : hosts[0];
     },
 
     hostOptions(): { value: string; text: string }[] {
-      return this.bucketsStore.hosts.map(h => ({ value: h, text: h }));
+      return this.bucketsStore.knownHosts.map(h => ({ value: h, text: h }));
     },
 
     today(): string {
@@ -297,7 +285,7 @@ export default {
 
     formatDelta(current: number, previous: number): string {
       const delta = current - previous;
-      if (previous === 0) return delta > 0 ? `+${this.$t('ui.trends.new')}` : '0';
+      if (previous === 0) return delta > 0 ? '+new' : '0';
       const pct = (delta / previous) * 100;
       const sign = delta >= 0 ? '+' : '';
       return `${sign}${pct.toFixed(0)}%`;
@@ -382,8 +370,7 @@ export default {
       const cats = this.categoryStore.classes_for_query;
       const code =
         canonicalEvents({
-          bid_window: 'aw-watcher-window_' + this.host,
-          bid_afk: 'aw-watcher-afk_' + this.host,
+          ...this.bucketsStore.desktopBucketIds(this.host),
           filter_afk: true,
           categories: cats,
           filter_categories: null,
