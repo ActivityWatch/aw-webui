@@ -325,7 +325,7 @@ export default {
       this.loading = true;
       try {
         const [currentByDay, previous] = await Promise.all([
-          this.queryByDay(host, startCurrent, endCurrent),
+          this.queryByDay(host, startCurrent, endCurrent, isCurrent),
           this.queryTotals(host, startPrevious, endPrevious),
         ]);
 
@@ -368,7 +368,8 @@ export default {
     async queryByDay(
       host: string,
       start: moment.Moment,
-      end: moment.Moment
+      end: moment.Moment,
+      isCurrent: () => boolean = () => true
     ): Promise<{ byPeriod: Record<string, any>; totals: CategoryTotals }> {
       const periods = this.dayPeriods(start, end);
       const query = this.buildCategoryQuery(host);
@@ -376,6 +377,9 @@ export default {
       for (const period of periods) {
         const r = await getClient().query([period], query, { name: 'trendsByDay', verbose: true });
         results.push(r[0]);
+        // The refresh was superseded (host removed or selection changed):
+        // stop spending day queries on a response that will be discarded.
+        if (!isCurrent()) break;
       }
       const byPeriod: Record<string, any> = {};
       const totals: CategoryTotals = {};

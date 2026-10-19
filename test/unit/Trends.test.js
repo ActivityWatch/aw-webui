@@ -192,9 +192,9 @@ describe('Trends refresh ownership', () => {
   // Resolve the most recently started refresh. Older refreshes are blocked on
   // their own first day query, so the newest pending per-day call belongs to
   // the newest refresh.
-  const resolveNewest = async ({ dayEvents = [], totalsEvents = [] } = {}) => {
+  const resolveNewest = async (days, { dayEvents = [], totalsEvents = [] } = {}) => {
     let firstDay = true;
-    for (let guard = 0; guard < 200; guard++) {
+    for (let k = 0; k < days; k++) {
       const pendingDays = calls.filter(call => !call.settled && call.name === 'trendsByDay');
       if (!pendingDays.length) break;
       const call = pendingDays[pendingDays.length - 1];
@@ -354,12 +354,12 @@ describe('Trends refresh ownership', () => {
     expect(calls.filter(call => !call.settled)).toHaveLength(6);
 
     // The newest (90 days) finishes first, then the older ones land.
-    await resolveNewest({ dayEvents: [workEvent(90)], totalsEvents: [workEvent(80)] });
+    await resolveNewest(90, { dayEvents: [workEvent(90)], totalsEvents: [workEvent(80)] });
     expect(wrapper.vm.currentTotals).toEqual({ '["Work"]': 90 });
     expect(wrapper.vm.loading).toBe(false);
 
-    await resolveNewest({ dayEvents: [workEvent(30)], totalsEvents: [workEvent(20)] });
-    await resolveNewest({ dayEvents: [workEvent(7)], totalsEvents: [workEvent(5)] });
+    await resolveNewest(30, { dayEvents: [workEvent(30)], totalsEvents: [workEvent(20)] });
+    await resolveNewest(7, { dayEvents: [workEvent(7)], totalsEvents: [workEvent(5)] });
     expect(wrapper.vm.currentTotals).toEqual({ '["Work"]': 90 });
     expect(wrapper.vm.previousTotals).toEqual({ '["Work"]': 80 });
     expect(wrapper.vm.loading).toBe(false);
@@ -392,25 +392,40 @@ describe('Trends refresh ownership', () => {
     expect(wrapper.vm.loading).toBe(false);
   });
 
-  test('in-flight day queries use the host snapshotted at refresh start', async () => {
+  test('query construction uses the explicit host, not the current selection', () => {
+    const vm = {
+      host: 'b',
+      bucketsStore: {
+        desktopBucketIds: host => ({ bid_window: `window_${host}`, bid_afk: `afk_${host}` }),
+      },
+      categoryStore: { classes_for_query: [[], []] },
+      settingsStore: { always_active_pattern: '' },
+    };
+    const query = Trends.methods.buildCategoryQuery.call(vm, 'a').join(' ');
+    expect(query).toContain('window_a');
+    expect(query).not.toContain('window_b');
+  });
+
+  test('removing the last host clears loading and ignores the pending response', async () => {
     await mount();
-    const day2Start = wrapper.vm.currentStart.clone().add(1, 'day').format();
+    expect(callsFor('a', 'trendsByDay')).toHaveLength(1);
 
-    // Switch host mid-refresh. The old refresh keeps running; its remaining
-    // per-day queries must keep querying host a.
-    route.params.host = 'b';
+    // The only host disappears while its refresh is in flight.
+    store.buckets = [];
     await flush();
+    expect(wrapper.vm.host).toBeUndefined();
+    expect(wrapper.vm.loading).toBe(false);
+    const queriesAfterRemoval = calls.length;
 
-    const firstDay = callsFor('a', 'trendsByDay')[0];
-    firstDay.settled = true;
-    firstDay.deferred.resolve([{ cat_events: [] }]);
-    await flush();
-
-    const day2 = calls.find(
-      call => call.periods && call.periods[0] && call.periods[0].startsWith(day2Start)
-    );
-    expect(day2).toBeDefined();
-    expect(day2.query.join(' ')).toContain('aw-watcher-window_a');
-    expect(day2.query.join(' ')).not.toContain('aw-watcher-window_b');
+    // The pending response settles: no further day queries are issued and
+    // nothing is rendered.
+    await resolveRefresh('a', {
+      dayEvents: [workEvent(42)],
+      totalsEvents: [workEvent(40)],
+    });
+    expect(calls.length).toBe(queriesAfterRemoval);
+    expect(wrapper.vm.currentTotals).toEqual({});
+    expect(wrapper.vm.byPeriod).toBeNull();
+    expect(wrapper.vm.loading).toBe(false);
   });
 });
