@@ -133,7 +133,7 @@ describe('CategoryBuilder loading', () => {
     mountBuilder();
     await flush();
     expect(query).not.toHaveBeenCalled();
-    expect(wrapper.text()).toContain('No host');
+    expect(wrapper.text()).toContain('No device');
     expect(wrapper.text()).not.toContain('Loading...');
   });
 
@@ -151,7 +151,7 @@ describe('CategoryBuilder loading', () => {
     mountBuilder();
     await flush();
     expect(query).not.toHaveBeenCalled();
-    expect(wrapper.text()).toContain('No activity data is available for this host.');
+    expect(wrapper.text()).toContain('This device has no activity data.');
     expect(wrapper.text()).not.toContain('Loading...');
   });
 

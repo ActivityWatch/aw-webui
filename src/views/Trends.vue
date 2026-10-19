@@ -124,11 +124,6 @@ export default {
       settingsStore: useSettingsStore(),
 
       periodDays: 7,
-      periodOptions: [
-        { value: 7, text: this.$t('ui.trends.period7d') },
-        { value: 30, text: this.$t('ui.trends.period30d') },
-        { value: 90, text: this.$t('ui.trends.period90d') },
-      ],
 
       loading: false,
 
@@ -142,8 +137,20 @@ export default {
       // Per-category totals for current and previous periods.
       currentTotals: {} as CategoryTotals,
       previousTotals: {} as CategoryTotals,
+    };
+  },
 
-      categoryFields: [
+  computed: {
+    periodOptions(): { value: number; text: string }[] {
+      return [
+        { value: 7, text: this.$t('ui.trends.period7d') },
+        { value: 30, text: this.$t('ui.trends.period30d') },
+        { value: 90, text: this.$t('ui.trends.period90d') },
+      ];
+    },
+
+    categoryFields(): object[] {
+      return [
         { key: 'category', label: this.$t('ui.trends.tableCategory'), sortable: true },
         {
           key: 'current',
@@ -164,11 +171,9 @@ export default {
           sortable: true,
         },
         { key: 'absDelta', label: '', class: 'd-none', sortable: true },
-      ],
-    };
-  },
+      ];
+    },
 
-  computed: {
     host(): string | undefined {
       // Ignore a :host param that is no longer offered in the select (e.g. a
       // stale /trends/unknown URL, or a device that disappeared). Otherwise the
