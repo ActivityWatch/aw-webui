@@ -60,7 +60,32 @@ describe('TimelineBarChart hourly labels', () => {
 
   test('uses actual interval starts, not the current day-start setting', () => {
     const start = moment('2026-01-15T07:30:00').format();
-    expect(chartLabels(start)).toEqual(hourlyLabels({ start, length: [1, 'day'] }));
+    expect(chartLabels(start)).toEqual([
+      '7:30',
+      '8:30',
+      '9:30',
+      '10:30',
+      '11:30',
+      '12:30',
+      '13:30',
+      '14:30',
+      '15:30',
+      '16:30',
+      '17:30',
+      '18:30',
+      '19:30',
+      '20:30',
+      '21:30',
+      '22:30',
+      '23:30',
+      '0:30',
+      '1:30',
+      '2:30',
+      '3:30',
+      '4:30',
+      '5:30',
+      '6:30',
+    ]);
   });
 
   test('keeps 24 hourly labels for no-start callers (Report)', () => {
