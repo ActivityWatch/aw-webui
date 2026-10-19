@@ -63,8 +63,11 @@ export default defineConfig(({ mode }) => {
         },
       }),
       VitePWA({
+        // No service worker on the dev server (the webpack build only registered
+        // one in production): under TestCafe's proxy it hangs every navigation
+        // after the first page load, failing the e2e screenshot tests.
         devOptions: {
-          enabled: true,
+          enabled: false,
         },
         // NOTE: logo.png is gitignored — it is copied from the aw-media package at release build
         // time. The PWA manifest references it but it doesn't need to be present during dev builds.
