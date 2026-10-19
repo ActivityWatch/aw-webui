@@ -1,5 +1,6 @@
 import moment, { Moment, Duration } from 'moment';
 import { useSettingsStore } from '~/stores/settings';
+import { i18n } from '~/i18n';
 
 function getStartOfDayOffset() {
   const settingsStore = useSettingsStore();
@@ -15,15 +16,18 @@ export function seconds_to_duration(seconds: number) {
   const hrs = Math.floor(seconds / 60 / 60);
   const min = Math.floor((seconds / 60) % 60);
   const sec = Math.floor(seconds % 60);
+  const hourUnit = String(i18n.t('common.durationHours'));
+  const minuteUnit = String(i18n.t('common.durationMinutes'));
+  const secondUnit = String(i18n.t('common.durationSeconds'));
   const l = [];
 
   if (hrs > 0) {
-    l.push(hrs + 'h');
-    l.push(min + 'm');
+    l.push(hrs + hourUnit);
+    l.push(min + minuteUnit);
   } else if (min > 0) {
-    l.push(min + 'm');
+    l.push(min + minuteUnit);
   }
-  l.push(sec + 's');
+  l.push(sec + secondUnit);
 
   return l.join(' ');
 }

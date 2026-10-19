@@ -1,48 +1,48 @@
 <template lang="pug">
 div
-  h3 Search
+  h3 {{ $t('search.title') }}
 
   b-alert(v-if="error" show variant="danger")
     | {{error}}
 
   b-input-group(size="lg")
-    b-input(v-model="pattern" v-on:keyup.enter="search()" placeholder="Regex pattern to search for")
+    b-input(v-model="pattern" v-on:keyup.enter="search()" :placeholder="$t('ui.search.regexPlaceholder')")
     b-input-group-append
       b-button(type="button", @click="search()" variant="success")
         icon.mr-1(name="search")
-        | Search
+        | {{ $t('search.searchBtn') }}
 
   div.d-flex.mt-1
-    span.mr-auto.small.text-muted Hostname: {{queryOptions.hostname}}
+    span.mr-auto.small.text-muted {{ $t('ui.search.hostname') }}: {{queryOptions.hostname}}
     b-button.border-0(size="sm", variant="outline-dark" @click="show_options = !show_options")
       span(v-if="!show_options")
-        | #[icon(name="angle-double-down")] Show options
+        | #[icon(name="angle-double-down")] {{ $t('ui.search.showOptions') }}
       span(v-else)
-        | #[icon(name="angle-double-up")] Hide options
+        | #[icon(name="angle-double-up")] {{ $t('ui.search.hideOptions') }}
 
   div(v-show="show_options")
-    h4 Options
+    h4 {{ $t('search.options') }}
     aw-query-options(v-model="queryOptions")
 
   div(v-if="status == 'searching'")
-    div #[icon(name="spinner" pulse)] Searching...
+    div #[icon(name="spinner" pulse)] {{ $t('ui.search.searching') }}
 
   div(v-if="events != null || browserEvents != null")
     hr
 
     div(v-if="events && events.length > 0")
-      h5 Window events ({{ events.length }})
+      h5 {{ $t('extraViews.search.windowEvents') }} ({{ events.length }})
       aw-selectable-eventview(:events="events")
 
     div(v-if="browserEvents && browserEvents.length > 0")
-      h5 Browser events ({{ browserEvents.length }})
+      h5 {{ $t('extraViews.search.browserEvents') }} ({{ browserEvents.length }})
       table.table.table-sm.table-hover
         thead
           tr
-            th Timestamp
-            th Duration
+            th {{ $t('extraViews.search.timestamp') }}
+            th {{ $t('extraViews.search.duration') }}
             th URL
-            th Title
+            th {{ $t('extraViews.search.title') }}
         tbody
           tr(v-for="e in browserEvents" :key="e.id || e.timestamp")
             td {{ e.timestamp | shortdate }} {{ e.timestamp | shorttime }}
@@ -52,12 +52,12 @@ div
             td {{ e.data.title }}
 
     div(v-if="status !== 'searching' && events && events.length === 0 && (!browserEvents || browserEvents.length === 0)")
-      p.text-muted No results found.
+      p.text-muted {{ $t('extraViews.search.noResults') }}
 
     div
-      | Didn't find what you were looking for?
+      | {{ $t('search.notFound') }}
       br
-      | Add a week to the search: #[b-button(size="sm" variant="outline-dark" @click="extendByWeek()") +1 week]
+      | {{ $t('search.addWeek') }} #[b-button(size="sm" variant="outline-dark" @click="extendByWeek()") {{ $t('search.addWeekBtn') }}]
 </template>
 
 <script lang="ts">
