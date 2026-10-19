@@ -1,6 +1,9 @@
 import { defineStore } from 'pinia';
 import { getClient } from '~/util/awclient';
-import { setSupportsMergeSubwatcherFields } from '~/util/serverCapabilities';
+import {
+  MERGE_SUBWATCHER_FIELDS_PROBE_QUERY,
+  setSupportsMergeSubwatcherFields,
+} from '~/util/serverCapabilities';
 
 interface State {
   info?: {
@@ -25,7 +28,7 @@ async function probeMergeSubwatcherFields(): Promise<void> {
   try {
     await getClient().query(
       ['2000-01-01T00:00:00Z/2000-01-01T00:00:01Z'],
-      ['x = merge_subwatcher_fields([], [], ["url"], "sub_wins");']
+      [MERGE_SUBWATCHER_FIELDS_PROBE_QUERY]
     );
     setSupportsMergeSubwatcherFields(true);
   } catch {
