@@ -117,11 +117,15 @@ export default {
       saving: false,
       error: '',
       success: false,
-      goalOptions: [
+    };
+  },
+  computed: {
+    goalOptions() {
+      return [
         { text: this.$t('settings.notifications.goalWarning'), value: false },
         { text: this.$t('settings.notifications.goalReached'), value: true },
-      ],
-    };
+      ];
+    },
   },
   async mounted() {
     await this.load();
