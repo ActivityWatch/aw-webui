@@ -289,6 +289,8 @@ describe('i18n', () => {
     expect(document.documentElement.lang).toBe('pt-BR');
     expect(document.documentElement.dir).toBe('ltr');
     expect(localStorage.getItem('locale')).toBe('pt-BR');
+  });
+
   test('Brazilian Portuguese messages keep every interpolation placeholder from English', () => {
     const en = require('~/i18n/locales/en').default;
     const ptBR = require('~/i18n/locales/pt-BR').default;
@@ -303,7 +305,10 @@ describe('i18n', () => {
       }
     };
     walk(en, ptBR, '');
+  });
+
   test('setAppLocale switches to Indonesian messages', () => {
+    const { setAppLocale, i18n } = loadI18n();
     setAppLocale('id');
     expect(i18n.locale).toBe('id');
     expect(i18n.t('common.languageId')).toBe('Bahasa Indonesia');
@@ -311,6 +316,8 @@ describe('i18n', () => {
     expect(i18n.t('common.save')).toBe('Simpan');
     expect(document.documentElement.lang).toBe('id');
     expect(localStorage.getItem('locale')).toBe('id');
+  });
+
   test('every locale shows the Indonesian endonym', () => {
     const { i18n, setAppLocale } = loadI18n();
     for (const locale of [
@@ -325,18 +332,30 @@ describe('i18n', () => {
       'hi',
       'ja',
       'fr',
+      'pt-BR',
       'id',
     ]) {
       setAppLocale(locale);
-      expect(i18n.t('common.languageId')).toBe('Bahasa Indonesia');
+      expect(i18n.getLocaleMessage(locale).common.languageId).toBe('Bahasa Indonesia');
     }
+  });
+
   test('switching from Arabic to Indonesian restores ltr', () => {
     const { setAppLocale } = loadI18n();
     setAppLocale('ar');
     expect(document.documentElement.dir).toBe('rtl');
+    setAppLocale('id');
+    expect(document.documentElement.lang).toBe('id');
+    expect(document.documentElement.dir).toBe('ltr');
+    setAppLocale('ar');
+    expect(document.documentElement.dir).toBe('rtl');
     expect(document.documentElement.lang).toBe('ar');
+  });
+
   test('Indonesian dates use Indonesian names and Western digits', () => {
+    const { setAppLocale } = loadI18n();
     const moment = require('moment');
+    setAppLocale('id');
     expect(moment.locale()).toBe('id');
     // 2026-10-19 is a Monday
     const formatted = moment('2026-10-19T19:23:00').format('LLLL');
@@ -344,6 +363,8 @@ describe('i18n', () => {
     expect(formatted).toContain('Oktober');
     expect(formatted).toContain('19');
     // switching away from Arabic must not leak its digit overrides into id
+    setAppLocale('ar');
+    setAppLocale('id');
     expect(moment('2026-10-19T19:23:00').format('LLLL')).toBe(formatted);
   });
 
