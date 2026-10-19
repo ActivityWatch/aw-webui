@@ -5,7 +5,11 @@ describe('parseThresholds', () => {
     expect(parseThresholds('15, 30, 60')).toEqual([15, 30, 60]);
   });
 
-  test.each(['', '60.5', '60, abc', '60, -5', '60, 0', '60,'])(
+  test('accepts the Arabic comma separator', () => {
+    expect(parseThresholds('60، 120، 240')).toEqual([60, 120, 240]);
+  });
+
+  test.each(['', '60.5', '60, abc', '60, -5', '60, 0', '60,', '60،'])(
     'rejects invalid threshold input %p',
     input => {
       expect(parseThresholds(input)).toBeNull();
