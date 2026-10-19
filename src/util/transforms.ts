@@ -126,10 +126,15 @@ export function overlappingEvents(events1, events2): Overlap[] {
         j >= sorted2.length || (i < sorted1.length && sorted1[i].start_ms <= sorted2[j].start_ms);
       const current = take_first ? sorted1[i++] : sorted2[j++];
 
-      dropEnded(active1, current.start_ms);
-      dropEnded(active2, current.start_ms);
-
+      // Only the list being compared against needs expiring. An event that has
+      // already ended cannot overlap a later one, and expiring the current
+      // event's own list would rescan every live event without ever producing a
+      // pair (quadratic when one bucket is internally overlapping and the other
+      // is empty). The own list is expired when the sweep reaches the point
+      // where it is the one being scanned.
       const others = take_first ? active2 : active1;
+      dropEnded(others, current.start_ms);
+
       for (const other of others) {
         if (intersects(current, other)) {
           overlapping.push(
