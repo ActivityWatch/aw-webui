@@ -22,7 +22,10 @@ async function mountWith(fromEvents, toEvents) {
   mockGetEvents.mockImplementation(async bucket_id =>
     bucket_id === 'from' ? fromEvents : toEvents
   );
-  const wrapper = shallowMount(BucketMerge);
+  // The template uses $t; without an installed i18n instance the global
+  // vue-i18n mixin throws on `this._i18n._t`. Mock the key lookup so the test
+  // does not depend on whether another module happened to install the plugin.
+  const wrapper = shallowMount(BucketMerge, { mocks: { $t: key => key } });
   await flushPromises();
   await wrapper.vm.$nextTick();
   wrapper.vm.bucket_from = 'from';
