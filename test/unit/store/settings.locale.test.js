@@ -54,11 +54,11 @@ describe('settings store locale loading', () => {
 
   test('load ignores invalid locale from server', async () => {
     const warn = jest.spyOn(console, 'warn').mockImplementation(jest.fn());
-    mockGetSettings.mockResolvedValue({ locale: 'fr' });
+    mockGetSettings.mockResolvedValue({ locale: 'pt' });
 
     await settingsStore.load();
 
-    expect(warn).toHaveBeenCalledWith('Ignoring invalid locale from server:', 'fr');
+    expect(warn).toHaveBeenCalledWith('Ignoring invalid locale from server:', 'pt');
     expect(settingsStore.locale).toBe('en');
     warn.mockRestore();
   });

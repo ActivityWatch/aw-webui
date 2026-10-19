@@ -10,6 +10,7 @@ import 'moment/locale/es';
 import 'moment/locale/ar';
 import 'moment/locale/hi';
 import 'moment/locale/ja';
+import 'moment/locale/fr';
 
 import en from './locales/en';
 import uk from './locales/uk';
@@ -21,12 +22,36 @@ import es from './locales/es';
 import ar from './locales/ar';
 import hi from './locales/hi';
 import ja from './locales/ja';
+import fr from './locales/fr';
 
 Vue.use(VueI18n);
 
-export type AppLocale = 'en' | 'uk' | 'de' | 'ru' | 'zh-CN' | 'sv' | 'es' | 'ar' | 'hi' | 'ja';
+export type AppLocale =
+  | 'en'
+  | 'uk'
+  | 'de'
+  | 'ru'
+  | 'zh-CN'
+  | 'sv'
+  | 'es'
+  | 'ar'
+  | 'hi'
+  | 'ja'
+  | 'fr';
 
-const SUPPORTED: AppLocale[] = ['en', 'uk', 'de', 'ru', 'zh-CN', 'sv', 'es', 'ar', 'hi', 'ja'];
+const SUPPORTED: AppLocale[] = [
+  'en',
+  'uk',
+  'de',
+  'ru',
+  'zh-CN',
+  'sv',
+  'es',
+  'ar',
+  'hi',
+  'ja',
+  'fr',
+];
 
 export function isAppLocale(value: string | null | undefined): value is AppLocale {
   return SUPPORTED.includes(value as AppLocale);
@@ -43,6 +68,7 @@ const HTML_LANG: Record<AppLocale, string> = {
   ar: 'ar',
   hi: 'hi',
   ja: 'ja',
+  fr: 'fr',
 };
 
 function detectBrowserLocale(): AppLocale | null {
@@ -59,6 +85,7 @@ function detectBrowserLocale(): AppLocale | null {
   if (lang.startsWith('ar')) return 'ar';
   if (lang.startsWith('hi')) return 'hi';
   if (lang.startsWith('ja')) return 'ja';
+  if (lang.startsWith('fr')) return 'fr';
   if (lang.startsWith('en')) return 'en';
   return null;
 }
@@ -86,6 +113,7 @@ const MOMENT_LOCALE: Record<AppLocale, string> = {
   ar: 'ar',
   hi: 'hi',
   ja: 'ja',
+  fr: 'fr',
 };
 
 const initialLocale = getInitialLocale();
@@ -93,7 +121,7 @@ const initialLocale = getInitialLocale();
 export const i18n = new VueI18n({
   locale: initialLocale,
   fallbackLocale: 'en',
-  messages: { en, uk, de, ru, 'zh-CN': zhCN, sv, es, ar, hi, ja },
+  messages: { en, uk, de, ru, 'zh-CN': zhCN, sv, es, ar, hi, ja, fr },
   silentTranslationWarn: process.env.NODE_ENV === 'production',
 });
 

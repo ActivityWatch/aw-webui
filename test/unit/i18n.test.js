@@ -26,7 +26,8 @@ describe('i18n', () => {
     expect(isAppLocale('hi')).toBe(true);
     expect(isAppLocale('ja')).toBe(true);
     expect(isAppLocale('ja-JP')).toBe(false);
-    expect(isAppLocale('fr')).toBe(false);
+    expect(isAppLocale('fr')).toBe(true);
+    expect(isAppLocale('fr-FR')).toBe(false);
     expect(isAppLocale('')).toBe(false);
     expect(isAppLocale(null)).toBe(false);
   });
@@ -213,9 +214,28 @@ describe('i18n', () => {
     walk(en, ja, '');
   });
 
+  test('initial locale detects French browser language', () => {
+    Object.defineProperty(navigator, 'language', {
+      value: 'fr-CA',
+      configurable: true,
+    });
+    const { i18n } = loadI18n();
+    expect(i18n.locale).toBe('fr');
+  });
+
+  test('setAppLocale switches to French messages', () => {
+    const { setAppLocale, i18n } = loadI18n();
+    setAppLocale('fr');
+    expect(i18n.locale).toBe('fr');
+    expect(i18n.t('common.languageFr')).toBe('Français');
+    expect(i18n.t('common.save')).not.toBe('Save');
+    expect(document.documentElement.lang).toBe('fr');
+    expect(localStorage.getItem('locale')).toBe('fr');
+  });
+
   test('initial locale falls back to en', () => {
     Object.defineProperty(navigator, 'language', {
-      value: 'fr-FR',
+      value: 'ko-KR',
       configurable: true,
     });
     const { i18n } = loadI18n();
