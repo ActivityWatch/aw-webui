@@ -105,7 +105,7 @@ function useColorFallbackEnabled(): boolean {
     return useSettingsStore().useColorFallback;
   } catch {
     // No active Pinia (standalone tools/tests): fall back to the legacy key.
-    return localStorage !== undefined ? localStorage.useColorFallback === 'true' : true;
+    return typeof localStorage !== 'undefined' ? localStorage.useColorFallback === 'true' : true;
   }
 }
 
