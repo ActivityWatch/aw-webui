@@ -1,5 +1,9 @@
+import Vue from 'vue';
 import moment from 'moment';
+import { createLocalVue, shallowMount } from '@vue/test-utils';
+import { createTestingPinia } from '@pinia/testing';
 import Trends from '~/views/Trends.vue';
+import { useBucketsStore } from '~/stores/buckets';
 import { getClient } from '~/util/awclient';
 
 jest.mock('~/util/awclient', () => ({ getClient: jest.fn() }));
@@ -96,11 +100,13 @@ describe('Trends view', () => {
 
       const previous = await Trends.methods.queryTotals.call(
         vm,
+        'host-a',
         moment('2026-10-05'),
         moment('2026-10-12')
       );
       const current = await Trends.methods.queryByDay.call(
         vm,
+        'host-a',
         moment('2026-10-12'),
         moment('2026-10-19')
       );
@@ -143,5 +149,268 @@ describe('Trends view', () => {
     // no longer exists — Trends now queries the aw-server directly via
     // getClient() and ensure_loaded() is not involved. The host-fallback
     // and no-host-bail-out tests above still cover the bug class.
+  });
+});
+
+describe('Trends refresh ownership', () => {
+  let wrapper;
+  let route;
+  let calls;
+  let store;
+
+  const hostOf = call => {
+    const query = (call.query || []).join(' ');
+    if (query.includes('aw-watcher-window_b')) return 'b';
+    if (query.includes('aw-watcher-window_a')) return 'a';
+    return undefined;
+  };
+
+  const callsFor = (host, name) =>
+    calls.filter(call => !call.settled && hostOf(call) === host && call.name === name);
+
+  // Resolve every query belonging to `host`, in order. The first per-day query
+  // returns `dayEvents`, all following days are empty, and the totals query
+  // returns `totalsEvents`.
+  const resolveRefresh = async (host, { dayEvents = [], totalsEvents = [] } = {}) => {
+    let firstDay = true;
+    for (let guard = 0; guard < 200; guard++) {
+      const dayCall = callsFor(host, 'trendsByDay')[0];
+      if (!dayCall) break;
+      dayCall.settled = true;
+      dayCall.deferred.resolve([{ cat_events: firstDay ? dayEvents : [] }]);
+      firstDay = false;
+      await flush();
+    }
+    const totalsCall = callsFor(host, 'trendsTotals')[0];
+    if (totalsCall) {
+      totalsCall.settled = true;
+      totalsCall.deferred.resolve([{ cat_events: totalsEvents }]);
+      await flush();
+    }
+  };
+
+  // Resolve the most recently started refresh. Older refreshes are blocked on
+  // their own first day query, so the newest pending per-day call belongs to
+  // the newest refresh.
+  const resolveNewest = async ({ dayEvents = [], totalsEvents = [] } = {}) => {
+    let firstDay = true;
+    for (let guard = 0; guard < 200; guard++) {
+      const pendingDays = calls.filter(call => !call.settled && call.name === 'trendsByDay');
+      if (!pendingDays.length) break;
+      const call = pendingDays[pendingDays.length - 1];
+      call.settled = true;
+      call.deferred.resolve([{ cat_events: firstDay ? dayEvents : [] }]);
+      firstDay = false;
+      await flush();
+    }
+    const pendingTotals = calls.filter(call => !call.settled && call.name === 'trendsTotals');
+    if (pendingTotals.length) {
+      const totals = pendingTotals[pendingTotals.length - 1];
+      totals.settled = true;
+      totals.deferred.resolve([{ cat_events: totalsEvents }]);
+      await flush();
+    }
+  };
+
+  const rejectRefresh = async host => {
+    const dayCall = callsFor(host, 'trendsByDay')[0];
+    if (dayCall) {
+      dayCall.settled = true;
+      dayCall.deferred.reject(new Error('network down'));
+      await flush();
+    }
+  };
+
+  beforeEach(async () => {
+    calls = [];
+    createTestingPinia({
+      initialState: {
+        buckets: {
+          buckets: [
+            bucket('a', 'window'),
+            bucket('a', 'afk'),
+            bucket('b', 'window'),
+            bucket('b', 'afk'),
+          ],
+        },
+      },
+    });
+    store = useBucketsStore();
+    getClient.mockReturnValue({
+      query: jest.fn((periods, query, options) => {
+        const call = {
+          periods,
+          query,
+          name: options && options.name,
+          settled: false,
+          deferred: deferred(),
+        };
+        calls.push(call);
+        return call.deferred.promise;
+      }),
+    });
+    route = Vue.observable({ params: { host: 'a' } });
+  });
+
+  afterEach(() => {
+    if (wrapper) wrapper.destroy();
+    wrapper = null;
+    jest.clearAllMocks();
+  });
+
+  const mount = async () => {
+    wrapper = shallowMount(Trends, {
+      localVue,
+      mocks: { $route: route },
+      stubs: STUBS,
+    });
+    await flush();
+    return wrapper;
+  };
+
+  test('a stale success does not overwrite the newly selected host and range', async () => {
+    await mount();
+    // First refresh is host a / 7 days.
+    expect(callsFor('a', 'trendsByDay')).toHaveLength(1);
+    expect(callsFor('a', 'trendsTotals')).toHaveLength(1);
+
+    // The user switches to host b and a 30-day range while the first refresh
+    // is still in flight.
+    wrapper.vm.periodDays = 30;
+    route.params.host = 'b';
+    await flush();
+    expect(callsFor('b', 'trendsByDay')).toHaveLength(1);
+
+    // B finishes first and renders.
+    await resolveRefresh('b', {
+      dayEvents: [workEvent(30)],
+      totalsEvents: [workEvent(20)],
+    });
+    expect(wrapper.vm.currentTotals).toEqual({ '["Work"]': 30 });
+    expect(wrapper.vm.previousTotals).toEqual({ '["Work"]': 20 });
+    const renderedPeriod = Object.keys(wrapper.vm.byPeriod)[0];
+    const renderedByPeriod = JSON.parse(JSON.stringify(wrapper.vm.byPeriod));
+
+    // The stale A response lands last. It must not touch the rendered state.
+    await resolveRefresh('a', {
+      dayEvents: [workEvent(7)],
+      totalsEvents: [workEvent(5)],
+    });
+    expect(wrapper.vm.currentTotals).toEqual({ '["Work"]': 30 });
+    expect(wrapper.vm.previousTotals).toEqual({ '["Work"]': 20 });
+    expect(wrapper.vm.byPeriod).toEqual(renderedByPeriod);
+    expect(wrapper.vm.byPeriod[renderedPeriod].cat_events).toEqual([workEvent(30)]);
+    expect(wrapper.vm.loading).toBe(false);
+  });
+
+  test('an older refresh finishing does not clear loading while a newer one is pending', async () => {
+    await mount();
+    wrapper.vm.periodDays = 30;
+    route.params.host = 'b';
+    await flush();
+
+    // The older A refresh settles completely while B is still pending.
+    await resolveRefresh('a', {
+      dayEvents: [workEvent(7)],
+      totalsEvents: [workEvent(5)],
+    });
+    expect(wrapper.vm.loading).toBe(true);
+    expect(wrapper.vm.currentTotals).toEqual({});
+
+    await resolveRefresh('b', {
+      dayEvents: [workEvent(30)],
+      totalsEvents: [workEvent(20)],
+    });
+    expect(wrapper.vm.loading).toBe(false);
+    expect(wrapper.vm.currentTotals).toEqual({ '["Work"]': 30 });
+  });
+
+  test('a stale failure does not clear the newer results', async () => {
+    await mount();
+    wrapper.vm.periodDays = 30;
+    route.params.host = 'b';
+    await flush();
+
+    await resolveRefresh('b', {
+      dayEvents: [workEvent(30)],
+      totalsEvents: [workEvent(20)],
+    });
+    expect(wrapper.vm.currentTotals).toEqual({ '["Work"]': 30 });
+
+    await rejectRefresh('a');
+    expect(wrapper.vm.currentTotals).toEqual({ '["Work"]': 30 });
+    expect(wrapper.vm.previousTotals).toEqual({ '["Work"]': 20 });
+    expect(wrapper.vm.byPeriod).not.toEqual({});
+    expect(wrapper.vm.loading).toBe(false);
+  });
+
+  test('rapid period changes keep the last selected range', async () => {
+    await mount();
+    wrapper.vm.setPeriod(30);
+    wrapper.vm.setPeriod(90);
+    await flush();
+
+    // Three refreshes are in flight: 7, 30 and 90 days.
+    expect(calls.filter(call => !call.settled)).toHaveLength(6);
+
+    // The newest (90 days) finishes first, then the older ones land.
+    await resolveNewest({ dayEvents: [workEvent(90)], totalsEvents: [workEvent(80)] });
+    expect(wrapper.vm.currentTotals).toEqual({ '["Work"]': 90 });
+    expect(wrapper.vm.loading).toBe(false);
+
+    await resolveNewest({ dayEvents: [workEvent(30)], totalsEvents: [workEvent(20)] });
+    await resolveNewest({ dayEvents: [workEvent(7)], totalsEvents: [workEvent(5)] });
+    expect(wrapper.vm.currentTotals).toEqual({ '["Work"]': 90 });
+    expect(wrapper.vm.previousTotals).toEqual({ '["Work"]': 80 });
+    expect(wrapper.vm.loading).toBe(false);
+  });
+
+  test('removing the selected host ignores its in-flight response', async () => {
+    route.params.host = 'b';
+    await mount();
+    expect(callsFor('b', 'trendsByDay')).toHaveLength(1);
+
+    // Host b disappears; the computed host falls back to a and refreshes.
+    store.buckets = [bucket('a', 'window'), bucket('a', 'afk')];
+    await flush();
+    expect(wrapper.vm.host).toBe('a');
+    expect(callsFor('a', 'trendsByDay')).toHaveLength(1);
+
+    // The removed host's response lands while the fallback refresh is pending.
+    await resolveRefresh('b', {
+      dayEvents: [workEvent(42)],
+      totalsEvents: [workEvent(40)],
+    });
+    expect(wrapper.vm.currentTotals).toEqual({});
+    expect(wrapper.vm.loading).toBe(true);
+
+    await resolveRefresh('a', {
+      dayEvents: [workEvent(10)],
+      totalsEvents: [workEvent(8)],
+    });
+    expect(wrapper.vm.currentTotals).toEqual({ '["Work"]': 10 });
+    expect(wrapper.vm.loading).toBe(false);
+  });
+
+  test('in-flight day queries use the host snapshotted at refresh start', async () => {
+    await mount();
+    const day2Start = wrapper.vm.currentStart.clone().add(1, 'day').format();
+
+    // Switch host mid-refresh. The old refresh keeps running; its remaining
+    // per-day queries must keep querying host a.
+    route.params.host = 'b';
+    await flush();
+
+    const firstDay = callsFor('a', 'trendsByDay')[0];
+    firstDay.settled = true;
+    firstDay.deferred.resolve([{ cat_events: [] }]);
+    await flush();
+
+    const day2 = calls.find(
+      call => call.periods && call.periods[0] && call.periods[0].startsWith(day2Start)
+    );
+    expect(day2).toBeDefined();
+    expect(day2.query.join(' ')).toContain('aw-watcher-window_a');
+    expect(day2.query.join(' ')).not.toContain('aw-watcher-window_b');
   });
 });

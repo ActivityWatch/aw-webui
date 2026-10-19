@@ -132,6 +132,10 @@ export default {
 
       loading: false,
 
+      // Incremented for every refresh. Only the latest refresh may write the
+      // rendered state; older in-flight responses are discarded.
+      refreshGeneration: 0,
+
       // Per-day events for the current period (used for the barchart).
       byPeriod: null as Record<string, any> | null,
 
@@ -297,29 +301,47 @@ export default {
     },
 
     async refresh() {
-      if (!this.host) return;
+      // Snapshot the request inputs: the selection can change while the
+      // queries are in flight, and a refresh must keep querying the host and
+      // range it started with.
+      const generation = (this.refreshGeneration || 0) + 1;
+      this.refreshGeneration = generation;
+
+      if (!this.host) {
+        this.loading = false;
+        return;
+      }
+
+      const host = this.host;
+      const periodDays = this.periodDays;
+      const today = this.today;
+      const startCurrent = this.currentStart.clone();
+      const endCurrent = moment(today).add(1, 'day');
+      const startPrevious = startCurrent.clone().subtract(periodDays, 'days');
+      const endPrevious = startCurrent.clone();
+
+      const isCurrent = () => generation === this.refreshGeneration;
+
       this.loading = true;
       try {
-        const startCurrent = this.currentStart.clone();
-        const endCurrent = moment(this.today).add(1, 'day');
-        const startPrevious = startCurrent.clone().subtract(this.periodDays, 'days');
-        const endPrevious = startCurrent.clone();
-
         const [currentByDay, previous] = await Promise.all([
-          this.queryByDay(startCurrent, endCurrent),
-          this.queryTotals(startPrevious, endPrevious),
+          this.queryByDay(host, startCurrent, endCurrent),
+          this.queryTotals(host, startPrevious, endPrevious),
         ]);
+
+        if (!isCurrent()) return;
 
         this.byPeriod = currentByDay.byPeriod;
         this.currentTotals = currentByDay.totals;
         this.previousTotals = previous;
       } catch (e) {
+        if (!isCurrent()) return;
         console.error('Trends refresh failed', e);
         this.byPeriod = {};
         this.currentTotals = {};
         this.previousTotals = {};
       } finally {
-        this.loading = false;
+        if (isCurrent()) this.loading = false;
       }
     },
 
@@ -344,11 +366,12 @@ export default {
     // (for the barchart) and totals is the summed seconds per category over
     // the whole window.
     async queryByDay(
+      host: string,
       start: moment.Moment,
       end: moment.Moment
     ): Promise<{ byPeriod: Record<string, any>; totals: CategoryTotals }> {
       const periods = this.dayPeriods(start, end);
-      const query = this.buildCategoryQuery();
+      const query = this.buildCategoryQuery(host);
       const results: any[] = [];
       for (const period of periods) {
         const r = await getClient().query([period], query, { name: 'trendsByDay', verbose: true });
@@ -369,8 +392,12 @@ export default {
     },
 
     // Single-query totals (no day breakdown) for the previous window.
-    async queryTotals(start: moment.Moment, end: moment.Moment): Promise<CategoryTotals> {
-      const query = this.buildCategoryQuery();
+    async queryTotals(
+      host: string,
+      start: moment.Moment,
+      end: moment.Moment
+    ): Promise<CategoryTotals> {
+      const query = this.buildCategoryQuery(host);
       const offset = this.settingsStore.startOfDay;
       const period = `${get_day_start_with_offset(start, offset)}/${get_day_start_with_offset(
         end,
@@ -386,11 +413,11 @@ export default {
       return totals;
     },
 
-    buildCategoryQuery(): string[] {
+    buildCategoryQuery(host: string): string[] {
       const cats = this.categoryStore.classes_for_query;
       const code =
         canonicalEvents({
-          ...this.bucketsStore.desktopBucketIds(this.host),
+          ...this.bucketsStore.desktopBucketIds(host),
           filter_afk: true,
           categories: cats,
           filter_categories: null,
