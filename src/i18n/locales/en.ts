@@ -65,6 +65,7 @@ export default {
     languageAr: 'العربية',
     languageHi: 'हिन्दी',
     languageJa: '日本語',
+    languageFr: 'Français',
     rangeTo: 'to',
     last7d: 'Last 7 days',
     last30d: 'Last 30 days',
