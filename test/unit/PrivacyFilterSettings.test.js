@@ -1,14 +1,17 @@
 import { createLocalVue, shallowMount } from '@vue/test-utils';
 import { PiniaVuePlugin, createPinia, setActivePinia } from 'pinia';
+import VueI18n from 'vue-i18n';
 import PrivacyFilterSettings from '~/views/settings/PrivacyFilterSettings.vue';
 import { useSettingsStore } from '~/stores/settings';
 import { formatPrivacyFilters } from '~/util/privacyFilters';
 import { getClient } from '~/util/awclient';
+import { i18n } from '~/i18n';
 
 jest.mock('~/util/awclient', () => ({ getClient: jest.fn() }));
 
 const localVue = createLocalVue();
 localVue.use(PiniaVuePlugin);
+localVue.use(VueI18n);
 const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 const rule = pattern => ({
   enabled: true,
@@ -44,13 +47,15 @@ describe('PrivacyFilterSettings save outcomes', () => {
       req: { post, defaults: {} },
     });
     jest.spyOn(console, 'log').mockImplementation(() => undefined);
-    wrapper = shallowMount(PrivacyFilterSettings, { localVue, pinia });
+    wrapper = shallowMount(PrivacyFilterSettings, { localVue, pinia, i18n });
     await flush();
     wrapper.vm.editorText = formatPrivacyFilters([rule('new-secret')]);
   });
 
   afterEach(() => {
-    wrapper.destroy();
+    if (wrapper) {
+      wrapper.destroy();
+    }
     jest.restoreAllMocks();
   });
 
