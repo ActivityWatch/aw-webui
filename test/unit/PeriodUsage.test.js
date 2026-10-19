@@ -72,7 +72,8 @@ test('empty periods remain clickable and Today is end-exclusive and refreshed', 
     wrapper.find('rect').element.dispatchEvent(new MouseEvent('click'));
     expect(wrapper.emitted('update')[0][0]).toEqual(current);
     await wrapper.setProps({ periodusage_arr: [] });
-    expect(wrapper.text()).toBe('No data');
+    // The component passes the translated label (en: visualizations.noData).
+    expect(wrapper.text()).toBe('(no data)');
     expect(wrapper.findAll('rect')).toHaveLength(0);
   } finally {
     wrapper.destroy();
