@@ -906,7 +906,7 @@ export default {
     },
     release: {
       newAvailable: 'En ny version, v{version}, finns tillgänglig för',
-      download: 'ladda ner',
+      download: 'nedladdning',
       disablePrefix: 'du kan också',
       disable: 'inaktivera',
       disableSuffix: 'framtida påminnelser och uppdateringskontroller.',
