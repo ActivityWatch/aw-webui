@@ -2,21 +2,19 @@
 div
   div.d-flex.justify-content-between.align-items-center
     div
-      h5.mb-0 Uncategorized-time hint
+      h5.mb-0 {{ $t('settings.uncategorizedHint.title') }}
     div
       b-form-checkbox(v-model="isEnabled" switch)
   small.text-muted
-    | Shows a banner on the Activity view when too much of your tracked
-    | time falls into the Uncategorized bucket — handy for noticing when
-    | you need to refine your categorization rules.
+    | {{ $t('settings.uncategorizedHint.help') }}
 
   div.mt-3(v-if="isEnabled")
-    b-form-group(label="Minimum total tracked time" label-cols-md=4 label-class="small text-muted"
-                 description="The hint stays hidden when total tracked time in the period is below this many minutes.")
+    b-form-group(:label="$t('settings.uncategorizedHint.minimumTotalTime')" label-cols-md=4 label-class="small text-muted"
+                 :description="$t('settings.uncategorizedHint.minimumTotalTimeHelp')")
       b-input(type="number" min="0" size="sm" v-model.number="minTotalMinutes")
 
-    b-form-group.mb-0(label="Minimum uncategorized share" label-cols-md=4 label-class="small text-muted"
-                     description="The hint appears once the uncategorized fraction crosses this percentage.")
+    b-form-group.mb-0(:label="$t('settings.uncategorizedHint.minimumShare')" label-cols-md=4 label-class="small text-muted"
+                     :description="$t('settings.uncategorizedHint.minimumShareHelp')")
       b-input-group(size="sm" append="%")
         b-input(type="number" min="0" max="100" v-model.number="minRatioPct")
 </template>

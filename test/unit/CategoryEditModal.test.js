@@ -284,11 +284,11 @@ describe('CategoryEditModal mounted score round trip', () => {
     try {
       const scoreCheckbox = wrapper
         .findAllComponents({ name: 'BFormCheckbox' })
-        .wrappers.find(checkbox => checkbox.text().includes('Inherit parent score'));
+        .wrappers.find(checkbox => checkbox.text().includes('ui.categoryEditor.inheritScore'));
       expect(scoreCheckbox.find('input').element.checked).toBe(false);
       const scoreInput = wrapper
         .findAllComponents({ name: 'BInputGroup' })
-        .wrappers.find(group => group.text().includes('Score'))
+        .wrappers.find(group => group.text().includes('ui.categoryEditor.score'))
         .find('input');
       expect(scoreInput.element.value).toBe('0');
       wrapper.vm.$refs.edit.$emit('ok', { preventDefault: jest.fn() });

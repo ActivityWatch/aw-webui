@@ -29,12 +29,17 @@ const diagramcolor = '#aaa';
 const diagramcolor_selected = '#fc5';
 const diagramcolor_focused = '#adf';
 
-function update(svg_elem: SVGElement, usage_arr, onPeriodClicked) {
+function update(
+  svg_elem: SVGElement,
+  usage_arr,
+  onPeriodClicked,
+  labels: { noData: string; today: string } = { noData: 'No data', today: 'Today' }
+) {
   const dateformat = 'YYYY-MM-DD';
 
   // No apps, sets status to "No data"
   if (usage_arr.length <= 0) {
-    set_status(svg_elem, 'No data');
+    set_status(svg_elem, labels.noData);
     return;
   }
   svg_elem.innerHTML = '';
@@ -84,7 +89,7 @@ function update(svg_elem: SVGElement, usage_arr, onPeriodClicked) {
         .append('text')
         .attr('x', x + 1.5 * width + '%')
         .attr('y', '30')
-        .text('Today');
+        .text(labels.today);
     }
 
     const rect = svg

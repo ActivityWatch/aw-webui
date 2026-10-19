@@ -32,6 +32,9 @@ describe('QueryOptions', () => {
         'b-form-select': true,
         'b-form-checkbox': true,
       },
+      mocks: {
+        $t: key => key,
+      },
     });
 
     await wrapper.vm.$nextTick();

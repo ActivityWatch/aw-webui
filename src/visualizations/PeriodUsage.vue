@@ -28,12 +28,15 @@ export default {
   },
   watch: {
     periodusage_arr: function () {
-      periodusage.update(this.$el, this.periodusage_arr, this.onPeriodClicked);
+      periodusage.update(this.$el, this.periodusage_arr, this.onPeriodClicked, {
+        noData: this.$t('visualizations.noData'),
+        today: this.$t('common.today'),
+      });
     },
   },
   mounted: function () {
     periodusage.create(this.$el);
-    periodusage.set_status(this.$el, 'Loading...');
+    periodusage.set_status(this.$el, this.$t('common.loading'));
   },
   methods: {
     onPeriodClicked: function (period) {

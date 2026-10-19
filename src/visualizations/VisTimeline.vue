@@ -3,7 +3,7 @@
     div#visualization
 
     div.small.text-muted.my-2(v-if="bucketsFromEither.length != 1")
-      i Buckets with no events in the queried range will be hidden.
+      i {{ $t('ui.timeline.bucketsNoEvents') }}
 
     div(v-if="editingEvent")
       EventEditor(:event="editingEvent" :bucket_id="editingEventBucket" @saved="onEventSaved")
