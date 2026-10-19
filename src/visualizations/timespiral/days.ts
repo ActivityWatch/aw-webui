@@ -2,6 +2,8 @@
 // that fetches the days around the focus first.
 import { ms2L, L2ms } from './time';
 
+const DAY_MS = 86_400_000;
+
 export const SEP = ' > ';
 /** Gaps shorter than this (in days) between events of the same category are bridged when drawing. */
 export const BRIDGE = 60 / 86400;
@@ -9,6 +11,7 @@ export const BRIDGE = 60 / 86400;
 export interface Seg {
   s: number; // start (local days)
   e: number; // end (local days)
+  dur: number; // elapsed time, in days (differs from e - s across DST changes)
   key: string; // full category path joined with SEP
   top: string; // top-level category
   app: string;
@@ -30,6 +33,7 @@ export interface Day {
   runs: Run[];
   /** Active time per top-level category, in days. */
   totals: Map<string, number>;
+  /** When the request for this data was made (ms). */
   loadedAt: number;
 }
 
@@ -40,18 +44,28 @@ interface QueryEvent {
 }
 
 /** Builds a day from the events of its period [start, end) (local days). */
-export function toDay(d: number, start: number, end: number, events: QueryEvent[]): Day {
+export function toDay(
+  d: number,
+  start: number,
+  end: number,
+  events: QueryEvent[],
+  loadedAt = Date.now()
+): Day {
+  const startMs = L2ms(start);
+  const endMs = L2ms(end);
   const segs: Seg[] = [];
   for (const ev of events) {
     if (!(ev.duration > 0)) continue;
-    const t0 = Date.parse(ev.timestamp);
-    const s = Math.max(start, ms2L(t0));
-    const e = Math.min(end, ms2L(t0 + ev.duration * 1000));
-    if (e <= s) continue;
+    const t0 = Math.max(startMs, Date.parse(ev.timestamp));
+    const t1 = Math.min(endMs, Date.parse(ev.timestamp) + ev.duration * 1000);
+    if (t1 <= t0) continue;
     const cat = ev.data.$category || ['Uncategorized'];
+    const s = ms2L(t0);
     segs.push({
       s,
-      e,
+      // When clocks go back, local time can run backwards during an event.
+      e: Math.max(s, ms2L(t1)),
+      dur: (t1 - t0) / DAY_MS,
       key: cat.join(SEP),
       top: cat[0],
       app: ev.data.app || '',
@@ -63,18 +77,18 @@ export function toDay(d: number, start: number, end: number, events: QueryEvent[
   const runs: Run[] = [];
   const totals = new Map<string, number>();
   for (const sg of segs) {
+    totals.set(sg.top, (totals.get(sg.top) || 0) + sg.dur);
     const last = runs[runs.length - 1];
-    // Events shouldn't overlap (they come from one flooded bucket), but clip in case.
+    // Events don't overlap in time, but can on the local clock when it goes back (DST).
     const s = last ? Math.max(sg.s, last.e) : sg.s;
     if (sg.e <= s) continue;
-    totals.set(sg.top, (totals.get(sg.top) || 0) + (sg.e - s));
     if (last && last.key === sg.key && s - last.e < BRIDGE) {
       last.e = sg.e;
     } else {
       runs.push({ s, e: sg.e, key: sg.key, top: sg.top, cat: sg.key.split(SEP) });
     }
   }
-  return { d, segs, runs, totals, loadedAt: Date.now() };
+  return { d, segs, runs, totals, loadedAt };
 }
 
 /** The run at time L, and the event in it closest to L (gaps within a run are bridged). */
@@ -171,12 +185,15 @@ export class DayLoader {
       const batch = this.queue.splice(0, batchSize);
       batch.forEach(d => this.pending.add(d));
       this.active++;
+      // Freshness counts from the request, not the reply: data requested before
+      // a day ended may be incomplete even if the reply arrives after.
+      const requestedAt = Date.now();
       this.fetchPeriods(batch.map(d => this.period(d)))
         .then(results => {
           if (this.stopped) return;
           batch.forEach((d, i) => {
             const [start, end] = this.period(d);
-            this.days.set(d, toDay(d, start, end, results[i] || []));
+            this.days.set(d, toDay(d, start, end, results[i] || [], requestedAt));
             this.failed.delete(d);
             this.opts.onLoad?.(d);
           });

@@ -210,6 +210,7 @@ export default {
       vel: 0, // fling velocity, days per second
       tween: null as null | { from: number; to: number; t0: number; dur: number; follow: boolean },
       m: 1, // animated rotation blend: 0 = fixed clock, 1 = rotate with time
+      anchor: Math.floor(now), // whole day the rotation counts from (see step)
       dragging: false,
       dragPhi: 0,
       dragT: 0,
@@ -231,6 +232,8 @@ export default {
     this.lastWant = 0;
     this.uiKey = '';
     this.reloadToken = 0;
+    this.destroyed = false;
+    this.wantTimer = 0;
   },
   mounted() {
     this.ctx = this.$refs.canvas.getContext('2d');
@@ -245,8 +248,11 @@ export default {
     this.reload();
   },
   beforeDestroy() {
+    this.destroyed = true;
+    this.reloadToken++; // cancels a reload waiting on the server
     cancelAnimationFrame(this.raf);
     clearInterval(this.timer);
+    clearTimeout(this.wantTimer);
     this.resizeObserver.disconnect();
     if (this.loader) this.loader.stop();
   },
@@ -333,7 +339,7 @@ export default {
     },
 
     invalidate() {
-      if (!this.raf) this.raf = requestAnimationFrame(t => this.frame(t));
+      if (!this.raf && !this.destroyed) this.raf = requestAnimationFrame(t => this.frame(t));
     },
 
     frame(t: number) {
@@ -391,9 +397,13 @@ export default {
         s.m += (mt - s.m) * (dt ? 1 - Math.exp(-dt * 7) : 0);
         if (Math.abs(mt - s.m) < 1e-3) s.m = mt;
         moving = true;
+      } else {
+        // Whole turns don't matter once the blend settles, but while it runs the
+        // rotation must count from a fixed day, or it jumps when F crosses midnight.
+        s.anchor = Math.floor(s.F);
       }
       this.view.F = s.F;
-      this.view.rho = s.m * (s.F - Math.floor(s.F));
+      this.view.rho = s.m * (s.F - s.anchor);
       if (this.following !== s.follow) this.following = s.follow;
       return moving;
     },
@@ -425,7 +435,16 @@ export default {
       const loader = this.loader;
       if (!loader) return;
       const t = performance.now();
-      if (t - this.lastWant < 300) return;
+      const wait = this.lastWant + 300 - t;
+      if (wait > 0) {
+        // Throttled: make sure the view we settle on is still requested.
+        if (!this.wantTimer)
+          this.wantTimer = setTimeout(() => {
+            this.wantTimer = 0;
+            this.requestData();
+          }, wait);
+        return;
+      }
       this.lastWant = t;
       const { lo, hi } = visibleRange(this.view, this.W, this.H);
       const F = this.s.F;

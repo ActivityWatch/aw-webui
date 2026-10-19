@@ -52,7 +52,7 @@ export default {
   },
   methods: {
     onHostChange(host: string) {
-      this.$router.replace(`/timespiral/${host}`);
+      this.$router.replace(`/timespiral/${encodeURIComponent(host)}`);
     },
   },
 };

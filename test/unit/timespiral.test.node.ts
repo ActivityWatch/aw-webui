@@ -176,6 +176,18 @@ describe('DayLoader', () => {
     expect(loader.fresh(past, now)).toBe(true);
   });
 
+  it('dates freshness from the request, not the reply', async () => {
+    let resolve: (v: never[][]) => void = () => undefined;
+    const loader = new DayLoader(() => new Promise(r => (resolve = r)), { offset: 0, first: 0 });
+    const t0 = Date.now();
+    loader.want([7]);
+    await new Promise(r => setTimeout(r, 20));
+    resolve([[]]);
+    await flush();
+    const day = loader.days.get(7);
+    expect(day && day.loadedAt).toBeLessThanOrEqual(t0 + 10);
+  });
+
   it('retries failed days after a while', async () => {
     let failing = true;
     const loader = new DayLoader(
