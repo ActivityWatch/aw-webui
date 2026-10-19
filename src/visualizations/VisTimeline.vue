@@ -61,7 +61,8 @@ import _ from 'lodash';
 import moment from 'moment';
 import Color from 'color';
 import { buildTooltip } from '../util/tooltip.js';
-import { getCategoryColorFromEvent, getTitleAttr } from '../util/color';
+import { getCategoryColorFromEvent, getColorFromCategory, getTitleAttr } from '../util/color';
+import { useCategoryStore } from '~/stores/categories';
 import { getSwimlane } from '../util/swimlane.js';
 import { IEvent } from '../util/interfaces';
 import { formatTimelineBucketLabelHtml, shortenBucketLabel } from '../util/timelineLabels';
@@ -90,6 +91,7 @@ export default {
   props: {
     buckets: { type: Array },
     events: { type: Array },
+    categorizedEvents: { type: Array, default: () => [] },
     showRowLabels: { type: Boolean },
     queriedInterval: { type: Array },
     showQueriedInterval: { type: Boolean },
@@ -147,6 +149,24 @@ export default {
     },
     chartData(): IChartDataItem[] {
       const data: IChartDataItem[] = [];
+      const categories = this.categorizedEvents || [];
+      if (categories.length) {
+        const allCats = useCategoryStore().classes;
+        for (const event of categories) {
+          const name = event.data.$category;
+          const category = allCats.find(c => _.isEqual(c.name, name));
+          data.push({
+            bucketId: '__categorized__',
+            title: name.join(' > '),
+            tooltip: buildTooltip({ type: 'categorized' }, event),
+            start: new Date(event.timestamp),
+            end: new Date(moment(event.timestamp).add(event.duration, 'seconds').valueOf()),
+            color: getColorFromCategory(category, allCats),
+            event,
+            swimlane: '',
+          });
+        }
+      }
       _.each(this.bucketsFromEither, bucket => {
         if (bucket.events === undefined) {
           return;
@@ -177,6 +197,9 @@ export default {
     },
   },
   watch: {
+    categorizedEvents() {
+      this.update();
+    },
     buckets() {
       // For some reason, an object is passed here, after which the correct array arrives
       if (this.buckets.length === undefined) {
@@ -362,6 +385,10 @@ export default {
         }
         return { id: bucket.id, content: label };
       });
+
+      if (this.categorizedEvents?.length) {
+        groups.unshift({ id: '__categorized__', content: this.showRowLabels ? 'Categorized' : '' });
+      }
 
       // Build items
       const items = _.map(this.chartData, (item, i) => {

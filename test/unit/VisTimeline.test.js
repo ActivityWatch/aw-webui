@@ -14,6 +14,7 @@ import VisTimeline from '~/visualizations/VisTimeline.vue';
 import EventEditor from '~/components/EventEditor.vue';
 import StopwatchEntry from '~/components/StopwatchEntry.vue';
 import moment from 'moment';
+import { createPinia, setActivePinia } from 'pinia';
 
 // vis-timeline creates a real DOM timeline; mock the entire import so unit
 // tests run in jsdom without a full browser canvas/resize-observer stack.
@@ -372,5 +373,61 @@ describe('VisTimeline scroll bounds (#996)', () => {
     expect(vm.options.min).toBeUndefined();
     expect(vm.options.max).toBeUndefined();
     expect(vm.timeline.setOptions).not.toHaveBeenCalled();
+  });
+});
+
+describe('derived category row (#700)', () => {
+  beforeEach(() => setActivePinia(createPinia()));
+  test('uses the assigned category color and keeps subsecond intervals in a single row', () => {
+    const event = {
+      timestamp: '2026-10-18T10:00:00Z',
+      duration: 0.5,
+      data: { $category: ['Uncategorized'] },
+    };
+    const vm = {
+      bucketsFromEither: [],
+      categorizedEvents: [event],
+      filterShortEvents: true,
+      displayEvent: (_id, e) => e,
+    };
+    const data = VisTimeline.computed.chartData.call(vm);
+    expect(data).toHaveLength(1);
+    expect(data[0]).toMatchObject({
+      bucketId: '__categorized__',
+      title: 'Uncategorized',
+      color: '#CCC',
+      swimlane: '',
+    });
+    expect(data[0].end - data[0].start).toBe(500);
+  });
+
+  test('creates a top-level category group without giving derived events an editor', async () => {
+    const vm = {
+      ...VisTimeline.data(),
+      ...VisTimeline.methods,
+      timeline: { setData: jest.fn(), setOptions: jest.fn(), setWindow: jest.fn() },
+      bucketsFromEither: [],
+      categorizedEvents: [
+        { timestamp: '2026-10-18T10:00:00Z', duration: 60, data: { $category: ['Work'] } },
+      ],
+      chartData: [
+        {
+          bucketId: '__categorized__',
+          title: 'Work',
+          tooltip: '',
+          color: '#CCC',
+          start: new Date('2026-10-18T10:00:00Z'),
+          end: new Date('2026-10-18T10:01:00Z'),
+          event: { data: { $category: ['Work'] } },
+          swimlane: '',
+        },
+      ],
+      showRowLabels: true,
+      $aw: { getEvent: jest.fn() },
+    };
+    vm.update();
+    expect(vm.groups[0]).toMatchObject({ id: '__categorized__', content: 'Categorized' });
+    await vm.onSelect({ items: ['0'] });
+    expect(vm.$aw.getEvent).not.toHaveBeenCalled();
   });
 });
