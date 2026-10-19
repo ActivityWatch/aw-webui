@@ -130,6 +130,75 @@ test('a slow old query cannot overwrite the newly selected day', async () => {
   expect(vm.categorizedEvents[0].data.$category).toEqual(['Play']);
 });
 
+test.each(['resolve', 'reject'])(
+  'publishes new raw rows and clears old categories before a slow category query can %s',
+  async outcome => {
+    const vm = context();
+    await vm.getBuckets();
+    expect(vm.categorizedEvents).not.toHaveLength(0);
+    const raw = buckets();
+    raw[0].events = [event(60, 15)];
+    mockGetBucketsWithEvents.mockResolvedValueOnce(raw);
+    let finishCategory;
+    mockQuery.mockImplementationOnce(
+      () =>
+        new Promise((resolve, reject) => {
+          finishCategory = outcome === 'resolve' ? resolve : reject;
+        })
+    );
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const loading = vm.getBuckets();
+    // The category request remains pending throughout these assertions.
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(vm.buckets).toBe(raw);
+    expect(vm.buckets[0].events).toEqual([event(60, 15)]);
+    expect(vm.categorizedEvents).toEqual([]);
+    expect(vm.categoryError).toBe(false);
+    finishCategory(outcome === 'resolve' ? [[event(60, 15)]] : new Error('offline'));
+    await loading;
+    expect(vm.categorizedEvents).toHaveLength(outcome === 'resolve' ? 1 : 0);
+    expect(vm.categoryError).toBe(outcome === 'reject');
+    warn.mockRestore();
+  }
+);
+
+test('an obsolete raw AFK response cannot replace the new range or its category row', async () => {
+  const vm = context();
+  vm.filter_afk = true;
+  let finishOldAfk;
+  let finishOldCategory;
+  vm._applyAfkFilter = jest
+    .fn()
+    .mockImplementationOnce(
+      () =>
+        new Promise(resolve => {
+          finishOldAfk = resolve;
+        })
+    )
+    .mockImplementation(async rows => rows);
+  mockQuery.mockImplementationOnce(
+    () =>
+      new Promise(resolve => {
+        finishOldCategory = resolve;
+      })
+  );
+  const old = vm.getBuckets();
+  await Promise.resolve();
+  await Promise.resolve();
+  const newRaw = buckets();
+  newRaw[0].events = [event(60, 30, ['Play'])];
+  mockGetBucketsWithEvents.mockResolvedValueOnce(newRaw);
+  mockQuery.mockResolvedValueOnce([[event(60, 30, ['Play'])]]);
+  await vm.getBuckets();
+  finishOldCategory([[event(0, 10)]]);
+  finishOldAfk(buckets());
+  await old;
+  expect(vm.buckets).toBe(newRaw);
+  expect(vm.categorizedEvents[0].data.$category).toEqual(['Play']);
+  expect(vm.categoryError).toBe(false);
+});
+
 test('mobile canonical queries retain timestamps, use actual synced IDs, and omit AFK', () => {
   const sources = [
     { id: 'aw-watcher-android-synced-from-phone', type: 'currentwindow', hostname: 'phone' },

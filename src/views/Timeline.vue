@@ -275,8 +275,12 @@ export default {
         buckets = _.filter(buckets, b => b.client == this.filter_client);
       }
 
-      let categorizedEvents = [];
-      let categoryError = false;
+      // Start the category query now so it runs concurrently with the raw-row
+      // filtering below, and publish raw rows without waiting for it.
+      let categoryPromise: Promise<{
+        events: ReturnType<typeof mergeCategoryIntervals>;
+        error: boolean;
+      }>;
       const categoryQuery = categoryTimelineQuery(buckets, this.all_buckets, {
         categories: useCategoryStore().classes_for_query,
         filter_categories: this.filter_categories,
@@ -284,21 +288,22 @@ export default {
         always_active_pattern: this.always_active_pattern || undefined,
       });
       if (categoryQuery) {
-        try {
-          const data = await getClient().query(
-            [`${this.daterange[0].format()}/${this.daterange[1].format()}`],
-            categoryQuery
-          );
-          categorizedEvents = mergeCategoryIntervals(data[0] || []);
-          if (this.filter_duration > 0) {
-            categorizedEvents = categorizedEvents.filter(e => e.duration >= this.filter_duration);
-          }
-        } catch (error) {
-          categoryError = true;
-          console.warn('Categorized timeline query failed:', error);
-        }
+        categoryPromise = getClient()
+          .query([`${this.daterange[0].format()}/${this.daterange[1].format()}`], categoryQuery)
+          .then(data => {
+            let events = mergeCategoryIntervals(data[0] || []);
+            if (this.filter_duration > 0) {
+              events = events.filter(e => e.duration >= this.filter_duration);
+            }
+            return { events, error: false };
+          })
+          .catch(error => {
+            console.warn('Categorized timeline query failed:', error);
+            return { events: [], error: true };
+          });
+      } else {
+        categoryPromise = Promise.resolve({ events: [], error: false });
       }
-      if (seq !== this.fetchSeq) return;
 
       if (this.filter_duration > 0) {
         for (const bucket of buckets) {
@@ -340,9 +345,16 @@ export default {
       }
 
       if (seq !== this.fetchSeq) return;
-      this.categorizedEvents = categorizedEvents;
-      this.categoryError = categoryError;
+      // Raw rows are ready; publish them before awaiting the category query.
+      // Clear the old category row so it can never be paired with a new range.
+      this.categorizedEvents = [];
+      this.categoryError = false;
       this.buckets = buckets;
+
+      const categoryResult = await categoryPromise;
+      if (seq !== this.fetchSeq) return;
+      this.categorizedEvents = categoryResult.events;
+      this.categoryError = categoryResult.error;
     },
 
     // Merges adjacent events with the same app name within window buckets.
