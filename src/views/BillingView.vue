@@ -85,6 +85,7 @@ import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
 import { useBucketsStore } from '~/stores/buckets';
 import { get_day_start_with_offset, get_day_end_with_offset } from '~/util/time';
+import { periodStartDate } from '~/util/timeperiod';
 import {
   getWorkReportHostBuckets,
   getWorkReportHostOptions,
@@ -189,7 +190,7 @@ export default {
       } else if (this.dateRange === 'last30d') {
         startDate = today.clone().subtract(29, 'days');
       } else if (this.dateRange === 'thisWeek') {
-        startDate = moment().startOf('isoWeek');
+        startDate = moment(periodStartDate(today.format('YYYY-MM-DD'), 'week'));
       } else {
         startDate = today.clone().subtract(6, 'days');
       }
