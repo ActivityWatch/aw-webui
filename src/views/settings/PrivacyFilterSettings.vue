@@ -88,6 +88,11 @@ export default {
     'settingsStore.privacy_filters': {
       deep: true,
       handler() {
+        // While saving, the store holds the submitted rules optimistically;
+        // only the save's outcome may move the saved baseline.
+        if (this.isSaving) {
+          return;
+        }
         this.syncFromStore(false);
       },
     },
@@ -113,14 +118,18 @@ export default {
       }
 
       const rules = this.validationResult.rules || [];
+      const confirmed = JSON.parse(JSON.stringify(this.settingsStore.privacy_filters));
       const submittedText = this.editorText;
       this.isSaving = true;
       this.saveError = '';
       try {
         await this.settingsStore.ensureLoaded();
-        // Persist first, then update the store: the store (and with it the
-        // saved baseline) must only ever hold rules the server accepted, so a
-        // failed save stays retryable and Discard restores the persisted rules.
+        // Hold the submitted rules in the store during the request: a
+        // concurrent save of another setting writes every key that differs
+        // from the server, and must not write the old rules back.
+        this.settingsStore.$patch(state => {
+          state.privacy_filters = rules;
+        });
         await getClient().req.post('/0/settings/privacy_filters', rules, {
           headers: { 'Content-Type': 'application/json' },
         });
@@ -129,10 +138,23 @@ export default {
           // Keep edits made while the save was pending.
           this.editorText = this.savedText;
         }
-        this.settingsStore.$patch(state => {
-          state.privacy_filters = rules;
-        });
       } catch (error) {
+        // The server decides what was persisted (the write may have landed
+        // before the error). Fall back to the last confirmed rules if it
+        // cannot be asked. The draft stays in the editor for a retry.
+        let persisted = confirmed;
+        try {
+          const serverSettings = await getClient().get_settings();
+          if (serverSettings.privacy_filters !== undefined) {
+            persisted = serverSettings.privacy_filters;
+          }
+        } catch {
+          // Keep the last confirmed rules.
+        }
+        this.settingsStore.$patch(state => {
+          state.privacy_filters = persisted;
+        });
+        this.savedText = formatPrivacyFilters(persisted);
         this.saveError = error instanceof Error ? error.message : String(error);
       } finally {
         this.isSaving = false;

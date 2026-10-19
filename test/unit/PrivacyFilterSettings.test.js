@@ -124,15 +124,46 @@ describe('PrivacyFilterSettings save outcomes', () => {
     expect(wrapper.vm.canSave).toBe(true);
   });
 
-  it('never applies unpersisted rules to the store', async () => {
+  it('restores the server rules after a rejected save', async () => {
     const saveGate = deferred();
     post.mockImplementationOnce(() => saveGate.promise);
     const saving = wrapper.vm.savePrivacyFilters();
     await flush();
-    expect(store.privacy_filters).toEqual([rule('old-secret')]);
     saveGate.reject(new Error('rejected by server'));
     await saving;
+    await flush();
     expect(store.privacy_filters).toEqual([rule('old-secret')]);
     expect(wrapper.vm.saveError).toBe('rejected by server');
+    expect(wrapper.vm.canSave).toBe(true);
+  });
+
+  it('adopts rules the server persisted before the request failed', async () => {
+    post.mockImplementationOnce(async (path, value) => {
+      server.privacy_filters = value;
+      throw new Error('connection reset');
+    });
+    await wrapper.vm.savePrivacyFilters();
+    await flush();
+    expect(store.privacy_filters).toEqual([rule('new-secret')]);
+    expect(wrapper.vm.savedText).toContain('new-secret');
+    expect(wrapper.vm.hasUnsavedChanges).toBe(false);
+    expect(wrapper.vm.saveError).toBe('connection reset');
+  });
+
+  it('another setting saved during the request does not write old rules back', async () => {
+    const saveGate = deferred();
+    post.mockImplementationOnce(async (path, value) => {
+      server.privacy_filters = value; // accepted, response still in flight
+      await saveGate.promise;
+    });
+    const saving = wrapper.vm.savePrivacyFilters();
+    await flush();
+    await store.update({ theme: 'dark' });
+    saveGate.resolve();
+    await saving;
+    await flush();
+    expect(server.theme).toBe('dark');
+    expect(server.privacy_filters).toEqual([rule('new-secret')]);
+    expect(store.privacy_filters).toEqual([rule('new-secret')]);
   });
 });
