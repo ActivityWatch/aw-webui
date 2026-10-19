@@ -1,5 +1,8 @@
 import { fullDesktopQuery } from '~/queries';
-import { setSupportsMergeSubwatcherFields } from '~/util/serverCapabilities';
+import {
+  MERGE_SUBWATCHER_FIELDS_PROBE_QUERY,
+  setSupportsMergeSubwatcherFields,
+} from '~/util/serverCapabilities';
 
 // CI runs this against both supported servers; local unit runs need no server.
 const server = process.env.AW_QUERY_TEST_SERVER_URL;
@@ -16,7 +19,7 @@ describeWithServer('browser regex matching through the server', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           timeperiods: ['2000-01-01T00:00:00Z/2000-01-01T00:00:01Z'],
-          query: ['x = merge_subwatcher_fields([], [], ["url"], "sub_wins");'],
+          query: [MERGE_SUBWATCHER_FIELDS_PROBE_QUERY],
         }),
       });
       setSupportsMergeSubwatcherFields(response.ok);

@@ -82,7 +82,10 @@ import {
 } from '~/queries';
 import type { DesktopQueryParams, MultiQueryParams } from '~/queries';
 import type { Rule } from '~/util/classes';
-import { setSupportsMergeSubwatcherFields } from '~/util/serverCapabilities';
+import {
+  MERGE_SUBWATCHER_FIELDS_PROBE_QUERY,
+  setSupportsMergeSubwatcherFields,
+} from '~/util/serverCapabilities';
 
 // Convert ActivityWatch (?i) patterns to JS RegExp with i flag for testing.
 // AW server uses Python-style (?i) inline flag; JS uses RegExp 'i' flag instead.
@@ -832,5 +835,14 @@ describe('canonicalEvents URL enrichment via merge_subwatcher_fields', () => {
       filter_categories: [],
     });
     expect(query).not.toContain('merge_subwatcher_fields');
+  });
+
+  // aw-server answers any program without a `RETURN` statement with
+  // `EmptyQuery` (HTTP 400), whether or not the called function exists. A probe
+  // missing the RETURN therefore reports "unsupported" on every server and
+  // silently disables the enrichment this PR adds.
+  test('capability probe query returns a value', () => {
+    expect(MERGE_SUBWATCHER_FIELDS_PROBE_QUERY).toMatch(/RETURN\s*=/);
+    expect(MERGE_SUBWATCHER_FIELDS_PROBE_QUERY).toContain('merge_subwatcher_fields');
   });
 });
