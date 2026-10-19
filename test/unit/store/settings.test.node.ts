@@ -113,5 +113,12 @@ describe('settings store', () => {
       expect(post).toHaveBeenCalledWith('/0/settings/alerts', [], expect.anything());
       expect(settingsStore.hasStoredAlerts).toBe(true);
     });
+
+    test('a failed update does not mark alerts as stored', async () => {
+      const post = fakeServer();
+      post.mockRejectedValueOnce(new Error('offline'));
+      await expect(settingsStore.update({ alerts: [] })).rejects.toThrow('offline');
+      expect(settingsStore.hasStoredAlerts).toBe(false);
+    });
   });
 });

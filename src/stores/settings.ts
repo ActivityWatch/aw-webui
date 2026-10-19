@@ -327,9 +327,16 @@ export const useSettingsStore = defineStore('settings', {
       console.log('Updating state', new_state);
       await this.ensureLoaded();
       // Explicitly updated keys count as stored, so save() persists them.
-      const storedKeys = [...new Set([...this._storedKeys, ...Object.keys(new_state)])];
+      const previousStoredKeys = this._storedKeys;
+      const storedKeys = [...new Set([...previousStoredKeys, ...Object.keys(new_state)])];
       this.$patch({ ...new_state, _storedKeys: storedKeys });
-      await this.save();
+      try {
+        await this.save();
+      } catch (e) {
+        // Nothing new was stored, e.g. alerts still have their never-saved default.
+        this.$patch({ _storedKeys: previousStoredKeys });
+        throw e;
+      }
     },
   },
 });
