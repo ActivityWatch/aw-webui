@@ -47,53 +47,66 @@ type OverlapPart = {
 };
 type Overlap = [OverlapPart, OverlapPart];
 
+function eventBounds(event): { start: Date; end: Date; end_ms: number } {
+  const start = new Date(event.timestamp);
+  const end_ms = start.valueOf() + 1000 * event.duration;
+  return { start, end: new Date(end_ms), end_ms };
+}
+
 export function overlappingEvents(events1, events2): Overlap[] {
-  events1 = events1.sort((a, b) => a.timestamp - b.timestamp);
-  events2 = events2.sort((a, b) => a.timestamp - b.timestamp);
+  // Compared before sorting, since sorting a copy keeps the caller's lists untouched.
+  const same_list = events1 === events2;
+
+  const sorted1 = [...events1].sort(
+    (a, b) => new Date(a.timestamp).valueOf() - new Date(b.timestamp).valueOf()
+  );
+  const sorted2 = same_list
+    ? sorted1
+    : [...events2].sort(
+        (a, b) => new Date(a.timestamp).valueOf() - new Date(b.timestamp).valueOf()
+      );
 
   let i = 0;
   let j = 0;
   const overlapping = [];
-  while (i < events1.length && j < events2.length) {
-    const e1 = events1[i];
-    const e2 = events2[j];
+  while (i < sorted1.length && j < sorted2.length) {
+    const e1 = sorted1[i];
+    const e2 = sorted2[j];
 
     // If `events1` and `events2` are the same list, we need to check if we are comparing the same event
-    if (events1 === events2 && e1 === e2) {
+    if (same_list && e1 === e2) {
       i++;
       continue;
     }
 
-    const e1_start = new Date(e1.timestamp);
-    const e2_start = new Date(e2.timestamp);
-    const e1_end = new Date(new Date(e1.timestamp).valueOf() + 1000 * e1.duration);
-    const e2_end = new Date(new Date(e2.timestamp).valueOf() + 1000 * e2.duration);
+    const e1_bounds = eventBounds(e1);
+    const e2_bounds = eventBounds(e2);
 
-    // Check for overlap
+    // Check for overlap. Two half-open intervals overlap when each starts
+    // before the other ends; this is symmetric, so containment in either
+    // direction and equal bounds are both detected. Merely touching
+    // (one ends where the other starts) is not an overlap.
     if (
-      // `e2.start` is within `e1`
-      (e1_start < e2_start && e2_start < e1_end) ||
-      // `e2.end` is within `e1`
-      (e1_start < e2_end && e2_end <= e1_end)
+      e1_bounds.start.valueOf() < e2_bounds.end_ms &&
+      e2_bounds.start.valueOf() < e1_bounds.end_ms
     ) {
       const overlap1 = {
-        start: e1_start,
-        end: e1_end,
+        start: e1_bounds.start,
+        end: e1_bounds.end,
         event: e1,
       };
       const overlap2 = {
-        start: e2_start,
-        end: e2_end,
+        start: e2_bounds.start,
+        end: e2_bounds.end,
         event: e2,
       };
       overlapping.push([overlap1, overlap2]);
     }
 
-    // If `e2` ends after `e1`, advance `i`
-    if (e2.timestamp + 1000 * e2.duration > e1.timestamp + 1000 * e1.duration) {
+    // Advance whichever interval ends first; the other may still overlap later ones.
+    if (e2_bounds.end_ms > e1_bounds.end_ms) {
       i++;
     } else {
-      // Otherwise, advance `j`
       j++;
     }
   }
