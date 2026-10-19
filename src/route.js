@@ -66,6 +66,7 @@ const router = new VueRouter({
     { path: '/query', component: QueryExplorer },
     { path: '/alerts', component: Alerts },
     { path: '/timespiral', component: TimespiralView },
+    { path: '/timespiral/:host', component: TimespiralView },
     { path: '/settings', component: Settings },
     { path: '/category-builder', component: CategoryBuilder },
     // Keep old URL working for bookmarks / external links.

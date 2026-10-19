@@ -1,21 +1,27 @@
 <template lang="pug">
 div
-  h3 {{ $t('timespiral.title') }}
-  b-alert(show, variant="warning")
-    | {{ $t('timespiral.wip') }}
+  div.d-flex.align-items-center.flex-wrap.mb-2
+    h3.mb-0.mr-3 {{ $t('timespiral.title') }}
+    b-form-select(
+      v-if="hosts.length > 1"
+      size="sm"
+      :value="host"
+      :options="hosts"
+      :aria-label="$t('timespiral.device')"
+      style="width: auto"
+      @change="onHostChange"
+    )
 
-  div(v-if="!bucketId")
-    p.text-muted
-      | {{ $t('timespiral.noAfkBucket') }}
-      | #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") aw-watcher-afk]
-      | {{ $t('timespiral.noAfkBucketSuffix') }}
-  div(v-else)
-    p.small.text-muted {{ $t('timespiral.bucketLabel') }} #[code {{ bucketId }}] &middot; {{ $t('timespiral.eventsLabel') }} {{ events.length }}
-    Timespiral(:events="events")
+  div(v-if="!loaded")
+  b-alert(v-else-if="!host" show variant="info")
+    | {{ $t('timespiral.noData') }}
+    | #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") aw-watcher-window]
+  Timespiral(v-else :host="host")
 </template>
 
 <script lang="ts">
 import { useBucketsStore } from '~/stores/buckets';
+import { useCategoryStore } from '~/stores/categories';
 import Timespiral from '~/visualizations/Timespiral.vue';
 
 export default {
@@ -24,37 +30,29 @@ export default {
     Timespiral,
   },
   data() {
-    return {
-      events: [],
-      bucketId: '',
-    };
+    return { loaded: false };
+  },
+  computed: {
+    hosts(): string[] {
+      // Devices with window or app (Android/ScreenTime) data, which is what gets drawn.
+      const buckets = useBucketsStore();
+      return buckets.knownHosts.filter(
+        (h: string) => buckets.bucketsWindow(h).length > 0 || buckets.bucketsAndroid(h).length > 0
+      );
+    },
+    host(): string | undefined {
+      const routeHost = this.$route.params.host;
+      return routeHost && this.hosts.includes(routeHost) ? routeHost : this.hosts[0];
+    },
   },
   async mounted() {
-    const bucketStore = useBucketsStore();
-    await bucketStore.ensureLoaded();
-    const buckets = bucketStore.bucketsAFK(bucketStore.hosts[0]);
-    if (buckets.length == 0) {
-      console.warn("Couldn't find suitable bucket");
-      return;
-    }
-    this.bucketId = buckets[0];
-
-    // Show the last week by default. Previously hard-coded to 2022-08-08
-    // which left most users staring at an empty chart.
-    const start = new Date();
-    start.setDate(start.getDate() - 7);
-    const bucket = await bucketStore.getBucketWithEvents({
-      id: this.bucketId,
-      start,
-    });
-    this.events = bucket.events;
-    console.log('Retrieved events:', this.events);
-    console.log('First/last event:', this.events[0], this.events[this.events.length - 1]);
+    await useBucketsStore().ensureLoaded();
+    await useCategoryStore().load();
+    this.loaded = true;
   },
   methods: {
-    onEventClick(event) {
-      this.$store.commit('setSelectedEvent', event);
-      this.$router.push({ name: 'EventView' });
+    onHostChange(host: string) {
+      this.$router.replace(`/timespiral/${host}`);
     },
   },
 };

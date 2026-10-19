@@ -549,11 +549,17 @@ export default {
   },
   timespiral: {
     title: 'Timespiral',
-    wip: 'Experimentelle Funktion in Entwicklung.',
-    noAfkBucket: 'Auf diesem Host wurde kein AFK-Bucket gefunden. Installieren Sie',
-    noAfkBucketSuffix: 'um Timespiral zu nutzen.',
-    bucketLabel: 'Bucket:',
-    eventsLabel: 'Ereignisse:',
+    device: 'Gerät',
+    noData: 'Kein Gerät mit Fenster- oder App-Aktivität gefunden. Installieren Sie',
+    now: 'Jetzt',
+    prevDay: 'Vorheriger Tag',
+    nextDay: 'Nächster Tag',
+    rotate: 'Mit der Zeit drehen',
+    depth: 'Spiraltiefe',
+    yesterday: 'Gestern',
+    noActivity: 'Keine Aktivität',
+    help: 'Scrollen, um durch die Zeit zu blättern (Umschalt halten für ganze Tage), ziehen zum Drehen, Doppelklick springt dorthin. Klicken Sie auf eine Kategorie, um sie hervorzuheben.',
+    keys: 'Tasten: ←/→ Stunde, ↑/↓ Tag, Bild↑/Bild↓ Woche, N jetzt, Esc Hervorhebung aufheben.',
   },
   ui: {
     activity: {
