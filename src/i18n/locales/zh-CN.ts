@@ -385,6 +385,15 @@ export default {
     rangeStart: '开始日期',
     rangeEnd: '结束日期',
     invalidRange: 'URL 中的日期范围无效，改为显示今天。',
+    diagnosticMissingWindow: '{host} 没有窗口存储桶。请启动 aw-watcher-window，然后刷新此页面。',
+    diagnosticMissingAfk: '{host} 没有 AFK 存储桶。请启动 aw-watcher-afk，然后刷新此页面。',
+    diagnosticAmbiguousWindow:
+      '多个窗口存储桶可能都对应 {host}：{buckets}。请在上方选择正确的设备，或查看原始数据。',
+    diagnosticMismatchedHostnames:
+      'aw-watcher-window 将 {host} 报告为 {windowHosts}，而 aw-watcher-afk 将其报告为 {afkHosts}。活动视图要求两者使用相同的主机名：请重启这两个监视器，然后刷新此页面。',
+    diagnosticNoWindowEvents:
+      '未找到该时间段的窗口活动。请确认 aw-watcher-window 正在运行。在 Wayland 上可尝试 awatcher。',
+    diagnosticOpenRawData: '打开原始数据。',
     periodAllTime: '全部时间',
     previousPeriod: '上一个{period}',
     nextPeriod: '下一个{period}',

@@ -399,6 +399,17 @@ export default {
     rangeStart: 'Дата начала',
     rangeEnd: 'Дата окончания',
     invalidRange: 'Неверный диапазон дат в URL, показан сегодняшний день.',
+    diagnosticMissingWindow:
+      'Нет bucket-а окон для {host}. Запустите aw-watcher-window и обновите страницу.',
+    diagnosticMissingAfk:
+      'Нет AFK-bucket-а для {host}. Запустите aw-watcher-afk и обновите страницу.',
+    diagnosticAmbiguousWindow:
+      'Несколько bucket-ов окон могут описывать {host}: {buckets}. Выберите нужное устройство выше или проверьте необработанные данные.',
+    diagnosticMismatchedHostnames:
+      'aw-watcher-window сообщает {host} как {windowHosts}, а aw-watcher-afk — как {afkHosts}. Для просмотра активности оба должны использовать одно имя хоста: перезапустите оба watcher-а, затем обновите страницу.',
+    diagnosticNoWindowEvents:
+      'За этот период активность окон не найдена. Проверьте, что aw-watcher-window запущен. В Wayland попробуйте awatcher.',
+    diagnosticOpenRawData: 'Открыть необработанные данные.',
     periodAllTime: 'всё время',
     previousPeriod: 'Предыдущий период: {period}',
     nextPeriod: 'Следующий период: {period}',
