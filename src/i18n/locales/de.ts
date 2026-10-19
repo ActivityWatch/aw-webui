@@ -60,6 +60,7 @@ export default {
     languageZhCN: '简体中文',
     languageEs: 'Español',
     languageAr: 'العربية',
+    languageHi: 'हिन्दी',
     rangeTo: 'bis',
     last7d: 'Letzte 7 Tage',
     last30d: 'Letzte 30 Tage',

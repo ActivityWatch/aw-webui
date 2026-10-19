@@ -63,6 +63,7 @@ export default {
     languageZhCN: '简体中文',
     languageEs: 'Español',
     languageAr: 'العربية',
+    languageHi: 'हिन्दी',
     rangeTo: 'إلى',
     last7d: 'آخر 7 أيام',
     last30d: 'آخر 30 يومًا',

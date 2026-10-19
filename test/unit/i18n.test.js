@@ -23,6 +23,7 @@ describe('i18n', () => {
     expect(isAppLocale('zh-CN')).toBe(true);
     expect(isAppLocale('es')).toBe(true);
     expect(isAppLocale('ar')).toBe(true);
+    expect(isAppLocale('hi')).toBe(true);
     expect(isAppLocale('fr')).toBe(false);
     expect(isAppLocale('')).toBe(false);
     expect(isAppLocale(null)).toBe(false);
@@ -103,6 +104,35 @@ describe('i18n', () => {
     const formatted = moment('2026-10-19T19:23:00').format('LLLL');
     expect(formatted).toContain('19');
     expect(formatted).not.toMatch(/[٠-٩]/);
+  });
+
+  test('initial locale detects Hindi browser language', () => {
+    Object.defineProperty(navigator, 'language', {
+      value: 'hi-IN',
+      configurable: true,
+    });
+    const { i18n } = loadI18n();
+    expect(i18n.locale).toBe('hi');
+  });
+
+  test('setAppLocale switches to Hindi messages', () => {
+    const { setAppLocale, i18n } = loadI18n();
+    setAppLocale('hi');
+    expect(i18n.locale).toBe('hi');
+    expect(i18n.t('common.languageHi')).toBe('हिन्दी');
+    expect(i18n.t('common.save')).not.toBe('Save');
+    expect(document.documentElement.lang).toBe('hi');
+    expect(localStorage.getItem('locale')).toBe('hi');
+  });
+
+  test('Hindi dates keep Latin digits', () => {
+    const { setAppLocale } = loadI18n();
+    const moment = require('moment');
+    setAppLocale('hi');
+    expect(moment.locale()).toBe('hi');
+    const formatted = moment('2026-10-19T19:23:00').format('LLLL');
+    expect(formatted).toContain('19');
+    expect(formatted).not.toMatch(/[०-९]/);
   });
 
   test('initial locale falls back to en', () => {
