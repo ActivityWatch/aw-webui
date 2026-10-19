@@ -1,5 +1,8 @@
 import moment from 'moment';
 import Trends from '~/views/Trends.vue';
+import { getClient } from '~/util/awclient';
+
+jest.mock('~/util/awclient', () => ({ getClient: jest.fn() }));
 
 describe('Trends view', () => {
   describe('host computed', () => {
@@ -76,6 +79,50 @@ describe('Trends view', () => {
       expect(periods).toEqual([
         `${moment('2026-10-19').format()}/${moment('2026-10-20').format()}`,
       ]);
+    });
+  });
+
+  describe('query windows', () => {
+    test('previous totals end where current day queries begin at 04:00', async () => {
+      const query = jest
+        .fn()
+        .mockResolvedValue([{ cat_events: [{ data: { $category: ['Work'] }, duration: 600 }] }]);
+      getClient.mockReturnValue({ query });
+      const vm = {
+        settingsStore: { startOfDay: '04:00' },
+        buildCategoryQuery: () => ['RETURN = {};'],
+      };
+      vm.dayPeriods = Trends.methods.dayPeriods.bind(vm);
+
+      const previous = await Trends.methods.queryTotals.call(
+        vm,
+        moment('2026-10-05'),
+        moment('2026-10-12')
+      );
+      const current = await Trends.methods.queryByDay.call(
+        vm,
+        moment('2026-10-12'),
+        moment('2026-10-19')
+      );
+
+      const boundary = moment('2026-10-12T04:00:00').format();
+      expect(query).toHaveBeenNthCalledWith(
+        1,
+        [`${moment('2026-10-05T04:00:00').format()}/${boundary}`],
+        ['RETURN = {};'],
+        { name: 'trendsTotals', verbose: true }
+      );
+      expect(query).toHaveBeenNthCalledWith(
+        2,
+        [`${boundary}/${moment('2026-10-13T04:00:00').format()}`],
+        ['RETURN = {};'],
+        { name: 'trendsByDay', verbose: true }
+      );
+      expect(query).toHaveBeenCalledTimes(8);
+      expect(query.mock.calls[0][0][0].split('/')[1]).toBe(query.mock.calls[1][0][0].split('/')[0]);
+      expect(Object.keys(current.byPeriod)).toHaveLength(7);
+      expect(previous).toEqual({ '["Work"]': 600 });
+      expect(current.totals).toEqual({ '["Work"]': 4200 });
     });
   });
 
