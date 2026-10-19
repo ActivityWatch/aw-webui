@@ -28,6 +28,8 @@ describe('i18n', () => {
     expect(isAppLocale('ja-JP')).toBe(false);
     expect(isAppLocale('fr')).toBe(true);
     expect(isAppLocale('fr-FR')).toBe(false);
+    expect(isAppLocale('pt-BR')).toBe(true);
+    expect(isAppLocale('pt')).toBe(false);
     expect(isAppLocale('')).toBe(false);
     expect(isAppLocale(null)).toBe(false);
   });
@@ -231,6 +233,42 @@ describe('i18n', () => {
     expect(i18n.t('common.save')).not.toBe('Save');
     expect(document.documentElement.lang).toBe('fr');
     expect(localStorage.getItem('locale')).toBe('fr');
+  });
+
+  test('initial locale maps any Portuguese browser language to pt-BR', () => {
+    Object.defineProperty(navigator, 'language', {
+      value: 'pt-PT',
+      configurable: true,
+    });
+    const { i18n } = loadI18n();
+    expect(i18n.locale).toBe('pt-BR');
+  });
+
+  test('setAppLocale switches to Brazilian Portuguese messages', () => {
+    const { setAppLocale, i18n } = loadI18n();
+    setAppLocale('pt-BR');
+    expect(i18n.locale).toBe('pt-BR');
+    expect(i18n.t('common.languagePtBR')).toBe('Português (Brasil)');
+    expect(i18n.t('common.save')).not.toBe('Save');
+    expect(document.documentElement.lang).toBe('pt-BR');
+    expect(document.documentElement.dir).toBe('ltr');
+    expect(localStorage.getItem('locale')).toBe('pt-BR');
+  });
+
+  test('Brazilian Portuguese messages keep every interpolation placeholder from English', () => {
+    const en = require('~/i18n/locales/en').default;
+    const ptBR = require('~/i18n/locales/pt-BR').default;
+    const placeholders = v => (v.match(/\{[^}]+\}/g) || []).sort();
+    const walk = (a, b, path) => {
+      for (const [k, v] of Object.entries(a)) {
+        if (typeof v === 'string') {
+          expect([path + k, placeholders(b[k] ?? '')]).toEqual([path + k, placeholders(v)]);
+        } else {
+          walk(v, b[k] ?? {}, path + k + '.');
+        }
+      }
+    };
+    walk(en, ptBR, '');
   });
 
   test('initial locale falls back to en', () => {

@@ -66,6 +66,7 @@ export default {
     languageHi: 'हिन्दी',
     languageJa: '日本語',
     languageFr: 'Français',
+    languagePtBR: 'Português (Brasil)',
     rangeTo: 'से',
     last7d: 'पिछले 7 दिन',
     last30d: 'पिछले 30 दिन',
