@@ -158,7 +158,7 @@ describe('Stopwatch retrieval', () => {
     expect(button(wrapper, 'Show more history')).toBeUndefined();
   });
 
-  test('retains rows and the old limit when loading more fails, then retries', async () => {
+  test('retains rows after a failed expansion and retries the requested limit', async () => {
     let aw;
     ({ wrapper, aw } = mountStopwatch());
     await flush();
@@ -169,10 +169,35 @@ describe('Stopwatch retrieval', () => {
     expect(wrapper.vm.stoppedTimers).toHaveLength(100);
     expect(wrapper.vm.historyLimit).toBe(100);
     expect(button(wrapper, 'Show more history').attributes('disabled')).toBeUndefined();
-    await button(wrapper, 'Show more history').trigger('click');
+    await button(wrapper, 'Retry').trigger('click');
     await flush();
+    expect(aw.req.post.mock.calls[2][1].query[0]).toContain(
+      'limit_events(exclude_keyvals(events, "running", [true]), 201)'
+    );
     expect(wrapper.vm.stoppedTimers).toHaveLength(101);
     expect(wrapper.text()).not.toContain('Unable to load stopwatch timers');
+  });
+
+  test('preserves a pending expansion when a timer write refreshes the lists', async () => {
+    let aw;
+    ({ wrapper, aw } = mountStopwatch());
+    await flush();
+    let resolveExpansion;
+    aw.req.post.mockImplementationOnce(
+      () =>
+        new Promise(resolve => {
+          resolveExpansion = resolve;
+        })
+    );
+    const expansion = wrapper.vm.getEvents(100, 200);
+    await wrapper.vm.startTimer('New timer');
+    expect(aw.req.post.mock.calls[2][1].query[0]).toContain(
+      'limit_events(exclude_keyvals(events, "running", [true]), 201)'
+    );
+    resolveExpansion({ data: [{ running: [oldRunning], history: stoppedEvents }] });
+    await expansion;
+    expect(wrapper.vm.historyLimit).toBe(200);
+    expect(wrapper.vm.stoppedTimers).toHaveLength(101);
   });
 
   test('does not let an older response overwrite a later refresh', async () => {

@@ -101,6 +101,8 @@ export default {
       requestId: 0,
       runningLimit: 100,
       historyLimit: 100,
+      requestedRunningLimit: 100,
+      requestedHistoryLimit: 100,
       hasMoreRunning: false,
       hasMoreHistory: false,
       bucket_id: 'aw-stopwatch',
@@ -161,7 +163,12 @@ export default {
       await this.getEvents();
     },
 
-    getEvents: async function (runningLimit = this.runningLimit, historyLimit = this.historyLimit) {
+    getEvents: async function (
+      runningLimit = this.requestedRunningLimit,
+      historyLimit = this.requestedHistoryLimit
+    ) {
+      this.requestedRunningLimit = runningLimit;
+      this.requestedHistoryLimit = historyLimit;
       const requestId = ++this.requestId;
       this.refreshing = true;
       this.error = null;
