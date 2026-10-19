@@ -148,6 +148,13 @@ export default {
       newSet: '新建分类集',
       deleteSet: '删除分类集',
       setsAvailable: '有 {count} 个分类集可用 — 切换分类集以使用不同的规则配置。',
+      alsoApply: '同时应用：',
+      alsoApplyHelp:
+        '勾选的分类集中的分类会叠加应用在“{primary}”之上。编辑会保存到“{primary}”；编辑来自其他分类集的分类时，会在“{primary}”中保存一个覆盖项。',
+      importSetTitle: '导入分类集',
+      importSetPrompt: '你希望如何应用导入的分类集“{id}”？',
+      importReplace: '替换我的分类集',
+      importAddOnTop: '叠加在我的分类集之上',
       unsavedChanges: '你有未保存的更改！',
       discard: '放弃',
       addCategory: '添加分类',
@@ -355,7 +362,7 @@ export default {
     multideviceNote: '仅在查看单个设备时显示浏览器和秒表数据。',
     timeActive: '活跃时间：',
     timeActiveTooltip:
-      'Active window time in the queried range, after the filters below. The bars in the period chart show raw device active time, so they can be slightly higher.',
+      '查询范围内的活跃窗口时间（已应用下方筛选条件）。时段图表中的柱状条显示的是设备原始活跃时间，因此可能略高。',
     queryRange: '查询范围：',
     filters: '筛选',
     filtersTitle: '筛选',

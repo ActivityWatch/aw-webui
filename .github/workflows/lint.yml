@@ -33,3 +33,5 @@ jobs:
       run: npm ci
     - name: Run linting
       run: make lint
+    - name: Check locales
+      run: npm run check:locales

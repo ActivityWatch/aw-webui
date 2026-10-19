@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Validates i18n locale files: key parity vs en, placeholder consistency, untranslated strings.
- * Usage: node scripts/check-locales.mjs
+ * Usage: node scripts/check-locales.mjs [--verbose]
  */
 import fs from 'fs';
 import path from 'path';
@@ -11,9 +11,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const LOCALES_DIR = path.join(__dirname, '../src/i18n/locales');
 const LOCALES = ['en', 'uk', 'de', 'ru', 'zh-CN', 'sv'];
 const SRC_DIR = path.join(__dirname, '../src');
+const verbose = process.argv.includes('--verbose');
 
-/** Substrings: identical en/value is OK when value contains any of these (case-insensitive). */
-const ALLOWLIST_SUBSTRINGS = [
+/**
+ * Identical en/value is OK when every word in it is one of these (case-insensitive):
+ * proper nouns, acronyms and ActivityWatch domain terms. Keep ordinary UI words out,
+ * so an untranslated "Save" or "Refresh" counts against coverage.
+ */
+const ALLOWLIST_WORDS = [
   'activitywatch',
   'discord',
   'github',
@@ -24,20 +29,6 @@ const ALLOWLIST_SUBSTRINGS = [
   'producthunt',
   'alternativeto',
   'opentelemetry',
-  'json',
-  'csv',
-  'api',
-  'host',
-  'bucket',
-  'watcher',
-  'afk',
-  'stopwatch',
-  'timespiral',
-  'devtools',
-  'devmode',
-  'hostname',
-  'http',
-  'forum',
   'liberapay',
   'opencollective',
   'mozilla',
@@ -50,52 +41,43 @@ const ALLOWLIST_SUBSTRINGS = [
   'npm',
   'vue',
   'pinia',
-  'id',
+  'timespiral',
+  'devtools',
+  'devmode',
+  'json',
+  'csv',
+  'api',
+  'http',
   'url',
+  'id',
+  'afk',
   'regex',
-  'score',
-  'timeline',
-  'graph',
-  'query',
-  'trends',
-  'report',
-  'search',
-  'settings',
-  'home',
-  'tools',
-  'theme',
-  'auto',
-  'light',
-  'dark',
-  'monday',
-  'saturday',
-  'sunday',
-  'version',
-  'experiment',
-  'wip',
-  'demo',
-  'cancel',
-  'save',
-  'open',
-  'more',
-  'delete',
-  'import',
-  'export',
-  'confirm',
-  'enabled',
-  'disabled',
-  'loading',
-  'refresh',
-  'options',
-  'filters',
-  'remove',
-  'start',
-  'end',
-  'running',
-  'history',
-  'documentation',
-  'website',
+  'vs',
+  'host',
+  'hostname',
+  'bucket',
+  'watcher',
 ];
+
+/** Per-locale values that are correctly identical to English (loanwords, proper terms). */
+const IDENTICAL_OK = {
+  de: [
+    'Name',
+    'Client:',
+    'Hosts',
+    'Buckets',
+    'Prompt',
+    'Swimlanes',
+    '(optional)',
+    'Trends',
+    'Graph',
+    'App',
+    'Version:',
+    'Forum',
+    'Score',
+  ],
+  sv: ['App', 'Version:', 'Forum', 'Buckets', 'Data:', 'Period', 'Prompt'],
+};
 
 function loadLocale(code) {
   const filePath = path.join(LOCALES_DIR, `${code}.ts`);
@@ -126,9 +108,8 @@ function placeholders(s) {
 
 function isAllowlistedIdentical(enValue, targetValue) {
   if (enValue !== targetValue) return false;
-  const lower = enValue.toLowerCase();
-  if (enValue.length <= 3) return true;
-  return ALLOWLIST_SUBSTRINGS.some(sub => lower.includes(sub));
+  const words = enValue.toLowerCase().match(/[a-z]+/g) || [];
+  return words.every(word => ALLOWLIST_WORDS.includes(word));
 }
 
 function sourceFiles(dir) {
@@ -158,6 +139,7 @@ function usedStaticTranslationKeys() {
 }
 
 let failed = false;
+const coverage = [];
 
 const enFlat = flatten(loadLocale('en'));
 
@@ -200,7 +182,11 @@ for (const code of LOCALES) {
       placeholderMismatches.push({ key, en: placeholders(enVal), got: placeholders(val) });
     }
     if (key.startsWith('common.language')) continue;
-    if (enVal === val && !isAllowlistedIdentical(enVal, val)) {
+    if (
+      enVal === val &&
+      !isAllowlistedIdentical(enVal, val) &&
+      !IDENTICAL_OK[code]?.includes(val)
+    ) {
       untranslated.push(key);
     }
   }
@@ -215,15 +201,26 @@ for (const code of LOCALES) {
 
   if (untranslated.length) {
     console.warn(`\n[${code}] Possibly untranslated (identical to en, ${untranslated.length}):`);
-    untranslated
-      .slice(0, 15)
-      .forEach(k => console.warn(`  - ${k}: "${enFlat[k].slice(0, 60)}..."`));
-    if (untranslated.length > 15) console.warn(`  ... and ${untranslated.length - 15} more`);
+    const shown = verbose ? untranslated : untranslated.slice(0, 15);
+    shown.forEach(k => console.warn(`  - ${k}: "${enFlat[k].slice(0, 60)}..."`));
+    if (untranslated.length > shown.length) {
+      console.warn(`  ... and ${untranslated.length - shown.length} more (use --verbose)`);
+    }
   }
+
+  const translated = enKeys.size - missing.length - untranslated.length;
+  coverage.push({ code, translated, total: enKeys.size });
 }
 
 const enCount = Object.keys(enFlat).length;
 console.log(`\nChecked ${LOCALES.join(', ')} — ${enCount} keys in en.`);
+console.log('\nTranslation coverage (missing or identical to en counts as untranslated):');
+for (const { code, translated, total } of coverage) {
+  const pct = ((100 * translated) / total).toFixed(1);
+  console.log(
+    `  ${code.padEnd(6)} ${String(translated).padStart(4)}/${total}  ${pct.padStart(5)}%`
+  );
+}
 
 if (failed) {
   console.error('\nLocale check FAILED.\n');
