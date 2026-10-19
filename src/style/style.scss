@@ -56,6 +56,15 @@ iframe {
   body {
     text-align: right;
   }
+  // The d3 visualizations position labels with LTR coordinates; under rtl,
+  // text-anchor: start flips to the right edge and labels run out of the chart.
+  svg {
+    direction: ltr;
+  }
+  // ...but let each label pick its own bidi order, so '1س 38د' is not reordered.
+  svg text {
+    unicode-bidi: plaintext;
+  }
   .ml-auto {
     margin-left: 0 !important;
     margin-right: auto !important;
