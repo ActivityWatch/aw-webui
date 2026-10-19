@@ -33,7 +33,7 @@ describe('PrivacyFilterSettings save outcomes', () => {
     pinia = createPinia();
     setActivePinia(pinia);
     store = useSettingsStore();
-    store.$patch({ loaded: true, privacy_filters: [rule('old-secret')] });
+    store.$patch({ _loaded: true, privacy_filters: [rule('old-secret')] });
     // Complete server snapshot, so the only changed POST is privacy_filters.
     server = JSON.parse(JSON.stringify(store.$state));
     post = jest.fn(async (path, value) => {
@@ -70,6 +70,34 @@ describe('PrivacyFilterSettings save outcomes', () => {
     wrapper.vm.resetEditor();
     expect(wrapper.vm.editorText).toContain('old-secret');
     expect(wrapper.vm.editorText).not.toContain('new-secret');
+  });
+
+  it('keeps newly loaded server rules if both the write and recovery read fail', async () => {
+    store.$patch({ _loaded: false, privacy_filters: [] });
+    await flush();
+    const read = jest
+      .fn()
+      .mockResolvedValueOnce(JSON.parse(JSON.stringify(server)))
+      .mockRejectedValueOnce(new Error('recovery offline'))
+      .mockImplementation(async () => JSON.parse(JSON.stringify(server)));
+    getClient().get_settings = read;
+    post.mockRejectedValueOnce(new Error('write offline'));
+
+    await wrapper.vm.savePrivacyFilters();
+    await flush();
+
+    expect(read).toHaveBeenCalledTimes(2);
+    expect(store.loaded).toBe(true);
+    expect(store.privacy_filters).toEqual([rule('old-secret')]);
+    expect(wrapper.vm.savedText).toBe(formatPrivacyFilters([rule('old-secret')]));
+    expect(wrapper.vm.editorText).toContain('new-secret');
+    expect(wrapper.vm.canSave).toBe(true);
+    expect(wrapper.vm.saveError).toBe('write offline');
+
+    await store.update({ theme: 'dark' });
+    expect(server.privacy_filters).toEqual([rule('old-secret')]);
+    wrapper.vm.resetEditor();
+    expect(wrapper.vm.editorText).toBe(formatPrivacyFilters([rule('old-secret')]));
   });
 
   it('retries a failed draft and then confirms it as the baseline', async () => {

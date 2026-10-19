@@ -119,12 +119,15 @@ export default {
       }
 
       const rules = this.validationResult.rules || [];
-      const confirmed = JSON.parse(JSON.stringify(this.settingsStore.privacy_filters));
+      let confirmed = JSON.parse(JSON.stringify(this.settingsStore.privacy_filters));
       const submittedText = this.editorText;
       this.isSaving = true;
       this.saveError = '';
       try {
         await this.settingsStore.ensureLoaded();
+        // Loading may have replaced defaults with persisted rules. Keep those
+        // as the fallback if both the write and the recovery read fail.
+        confirmed = JSON.parse(JSON.stringify(this.settingsStore.privacy_filters));
         // Hold the submitted rules in the store during the request: a
         // concurrent save of another setting writes every key that differs
         // from the server, and must not write the old rules back.
