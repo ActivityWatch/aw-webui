@@ -79,7 +79,7 @@ div
       title="Display options"
       aria-label="Display options"
     )
-      template(v-slot:button-content)
+      template(v-slot:button-content="")
         icon(name="ellipsis-v")
       b-dropdown-header Swimlanes
       b-dropdown-item-button(
@@ -98,8 +98,11 @@ div
   b-alert.mb-2(v-if="buckets !== null && num_events === 0", variant="warning", show)
     | {{ $t('timeline.noEvents') }}
 
+  b-alert.mb-2(v-if="categoryError", variant="warning", show)
+    | Categorized timeline unavailable. Raw bucket events are still shown.
+
   div(v-if="buckets !== null")
-    vis-timeline(:buckets="buckets", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane", :updateTimelineWindow='updateTimelineWindow', @event-saved="getBuckets")
+    vis-timeline(:buckets="buckets", :categorizedEvents="categorizedEvents", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane", :updateTimelineWindow='updateTimelineWindow', @event-saved="getBuckets")
 
     aw-devonly(reason="Not ready for production, still experimenting")
       aw-calendar(:buckets="buckets")
@@ -120,6 +123,7 @@ import { useCategoryStore } from '~/stores/categories';
 import { matchString } from '~/util/classes';
 import { getCategorizationStringFromEvent } from '~/util/color';
 import { seconds_to_duration } from '~/util/time';
+import { categoryTimelineQuery, mergeCategoryIntervals } from '~/util/timelineCategories';
 
 export default {
   name: 'Timeline',
@@ -128,6 +132,8 @@ export default {
       all_buckets: null,
       hosts: null,
       buckets: null,
+      categorizedEvents: [],
+      categoryError: false,
       clients: null,
       fetchSeq: 0,
       daterange: null,
@@ -226,6 +232,9 @@ export default {
       this.getBuckets();
     },
   },
+  created() {
+    useCategoryStore().load();
+  },
   methods: {
     onCategorySelect(event) {
       const text = event.target.value;
@@ -266,6 +275,31 @@ export default {
         buckets = _.filter(buckets, b => b.client == this.filter_client);
       }
 
+      let categorizedEvents = [];
+      let categoryError = false;
+      const categoryQuery = categoryTimelineQuery(buckets, this.all_buckets, {
+        categories: useCategoryStore().classes_for_query,
+        filter_categories: this.filter_categories,
+        filter_afk: this.filter_afk,
+        always_active_pattern: this.always_active_pattern || undefined,
+      });
+      if (categoryQuery) {
+        try {
+          const data = await getClient().query(
+            [`${this.daterange[0].format()}/${this.daterange[1].format()}`],
+            categoryQuery
+          );
+          categorizedEvents = mergeCategoryIntervals(data[0] || []);
+          if (this.filter_duration > 0) {
+            categorizedEvents = categorizedEvents.filter(e => e.duration >= this.filter_duration);
+          }
+        } catch (error) {
+          categoryError = true;
+          console.warn('Categorized timeline query failed:', error);
+        }
+      }
+      if (seq !== this.fetchSeq) return;
+
       if (this.filter_duration > 0) {
         for (const bucket of buckets) {
           bucket.events = _.filter(bucket.events, e => e.duration >= this.filter_duration);
@@ -305,6 +339,9 @@ export default {
         buckets = this._applyMergeSimilar(buckets);
       }
 
+      if (seq !== this.fetchSeq) return;
+      this.categorizedEvents = categorizedEvents;
+      this.categoryError = categoryError;
       this.buckets = buckets;
     },
 
