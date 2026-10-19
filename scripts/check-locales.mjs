@@ -78,7 +78,7 @@ const IDENTICAL_OK = {
   ],
   sv: ['App', 'Version:', 'Forum', 'Buckets', 'Data:', 'Period', 'Prompt'],
   ar: ['Buckets'],
-  hi: ['Buckets'],
+  hi: ['Buckets', 'All'],
 };
 
 function loadLocale(code) {

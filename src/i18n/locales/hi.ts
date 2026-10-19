@@ -240,9 +240,9 @@ export default {
       label: 'लेबल',
       labelPlaceholder: 'जैसे कार्य',
       category: 'श्रेणी',
-      all: 'सभी',
+      all: 'All',
       categoryHelp:
-        'अपने AW वर्गीकरण नियमों में श्रेणी का नाम मिलाएँ, या कुल समय के लिए "सभी" उपयोग करें।',
+        'अपने AW वर्गीकरण नियमों में श्रेणी का नाम मिलाएँ, या कुल समय के लिए "All" उपयोग करें।',
       thresholds: 'सीमाएँ',
       thresholdsPlaceholder: 'जैसे 60, 120, 240',
       thresholdsHelp:
