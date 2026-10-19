@@ -251,6 +251,14 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
       ? `stopwatch_events = query_bucket("${params.bid_stopwatch}");
          events = union_no_overlap(stopwatch_events, events);`
       : 'stopwatch_events = [];',
+    // Enrich window events with browser url/$domain so URL-based category rules
+    // fire on the main events stream. Requires aw-server-rust >= 0.15 (added in
+    // aw-server-rust#824). Omitted when no browser buckets are configured, so
+    // queries against older servers work unchanged when the browser watcher is
+    // not installed.
+    isDesktopParams(params) && params.bid_browsers && params.bid_browsers.length > 0
+      ? 'events = merge_subwatcher_fields(events, browser_events, ["url", "$domain"], "sub_wins");'
+      : '',
     // Categorize
     params.categories ? `events = categorize(events, ${categories_str});` : '',
     // Filter out selected categories. Only emit when the list is non-empty: an

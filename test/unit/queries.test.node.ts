@@ -771,3 +771,50 @@ describe('browserOnlyQuery', () => {
     expect(stripped).not.toMatch(/\/\*/);
   });
 });
+
+describe('canonicalEvents URL enrichment via merge_subwatcher_fields', () => {
+  const baseParams = {
+    bid_window: 'aw-watcher-window_testhost',
+    bid_afk: 'aw-watcher-afk_testhost',
+    filter_afk: true,
+    include_audible: false,
+    categories: [],
+    filter_categories: [],
+  };
+
+  test('emits merge_subwatcher_fields when browser buckets are present', () => {
+    const query = canonicalEvents({
+      ...baseParams,
+      bid_browsers: ['aw-watcher-web-chrome_testhost'],
+    });
+    expect(query).toContain(
+      'events = merge_subwatcher_fields(events, browser_events, ["url", "$domain"], "sub_wins");'
+    );
+  });
+
+  test('merge call appears after categorize input is built (after stopwatch, before categorize)', () => {
+    const query = canonicalEvents({
+      ...baseParams,
+      bid_browsers: ['aw-watcher-web-chrome_testhost'],
+      categories: [[['Work'], { type: 'regex', regex: 'github' }]],
+    });
+    const mergeIdx = query.indexOf('merge_subwatcher_fields');
+    const categorizeIdx = query.indexOf('events = categorize(');
+    expect(mergeIdx).toBeGreaterThan(0);
+    expect(mergeIdx).toBeLessThan(categorizeIdx);
+  });
+
+  test('omits merge_subwatcher_fields when no browser buckets configured', () => {
+    const query = canonicalEvents(baseParams);
+    expect(query).not.toContain('merge_subwatcher_fields');
+  });
+
+  test('omits merge_subwatcher_fields for Android queries', () => {
+    const query = canonicalEvents({
+      bid_android: 'aw-watcher-android_device',
+      categories: [],
+      filter_categories: [],
+    });
+    expect(query).not.toContain('merge_subwatcher_fields');
+  });
+});
