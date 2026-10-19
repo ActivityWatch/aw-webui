@@ -33,6 +33,10 @@ div
 
   hr
 
+  b-alert(v-if="error" show variant="danger")
+    | {{ error }}
+    b-button.ml-2(size="sm" :disabled="refreshing" @click="getEvents()") Retry
+
   div(v-if="loading")
     b-spinner.mr-2(small)
     span.text-muted Loading...
@@ -44,6 +48,12 @@ div
           @delete="removeTimer", @update="updateTimer")
     p.text-muted.mb-0(v-else) No stopwatch running. Start one above to track focused work.
 
+    b-button.mt-2(
+      v-if="hasMoreRunning" :disabled="refreshing"
+      @click="getEvents(runningLimit + 100, historyLimit)"
+      variant="outline-secondary"
+    ) Show more running timers
+
     div(v-if="stoppedTimers.length > 0")
       h3.mt-4.mb-2 History
       div(v-for="k in Object.keys(timersByDate).sort().reverse()" :key="k")
@@ -51,6 +61,11 @@ div
         div(v-for="e in timersByDate[k]" :key="e.id")
           stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
             @delete="removeTimer", @update="updateTimer", @new="startTimer(e.data.label)")
+      b-button.mt-3(
+        v-if="hasMoreHistory" :disabled="refreshing"
+        @click="getEvents(runningLimit, historyLimit + 100)"
+        variant="outline-secondary"
+      ) Show more history
 </template>
 
 <style scoped lang="scss">
@@ -81,6 +96,15 @@ export default {
   data: () => {
     return {
       loading: true,
+      refreshing: false,
+      error: null,
+      requestId: 0,
+      runningLimit: 100,
+      historyLimit: 100,
+      requestedRunningLimit: 100,
+      requestedHistoryLimit: 100,
+      hasMoreRunning: false,
+      hasMoreHistory: false,
       bucket_id: 'aw-stopwatch',
       events: [],
       label: '',
@@ -105,7 +129,6 @@ export default {
     // Create default timer bucket
     await this.$aw.ensureBucket(this.bucket_id, 'general.stopwatch', 'unknown');
 
-    // TODO: Get all timer events
     await this.getEvents();
 
     setInterval(() => (this.now = moment()), 1000);
@@ -132,15 +155,58 @@ export default {
       } else {
         console.error(':(');
       }
+      await this.getEvents();
     },
 
-    removeTimer: function (event) {
+    removeTimer: async function (event) {
       this.events = _.filter(this.events, e => e.id != event.id);
+      await this.getEvents();
     },
 
-    getEvents: async function () {
-      this.events = await this.$aw.getEvents(this.bucket_id, { limit: 100 });
-      this.loading = false;
+    getEvents: async function (
+      runningLimit = this.requestedRunningLimit,
+      historyLimit = this.requestedHistoryLimit
+    ) {
+      this.requestedRunningLimit = runningLimit;
+      this.requestedHistoryLimit = historyLimit;
+      const requestId = ++this.requestId;
+      this.refreshing = true;
+      this.error = null;
+      try {
+        // Filter before limiting: an old running timer must not compete with history.
+        // The server scans the bucket, but only the requested prefixes (+ one sentinel)
+        // cross the wire. Growing prefixes also preserve events with tied timestamps.
+        const query = `events = query_bucket(${JSON.stringify(this.bucket_id)});
+          RETURN = {
+            "running": limit_events(filter_keyvals(events, "running", [true]), ${runningLimit + 1}),
+            "history": limit_events(exclude_keyvals(events, "running", [true]), ${historyLimit + 1})
+          };`;
+        // Stay within older Rust servers' nanosecond timestamp range. A broad interval
+        // keeps real stopwatch timestamps/durations intact instead of clipping a page.
+        // Use POST directly: aw-client 0.3.x's query(cache:false) returns no results.
+        const response = await this.$aw.req.post('/0/query/', {
+          timeperiods: ['1677-09-22T00:00:00Z/2262-04-11T00:00:00Z'],
+          query: [query],
+        });
+        if (requestId !== this.requestId) return;
+        const { running, history: stopped } = response.data[0];
+        this.events = [...running.slice(0, runningLimit), ...stopped.slice(0, historyLimit)].map(
+          e => ({ ...e, timestamp: new Date(e.timestamp) })
+        );
+        this.runningLimit = runningLimit;
+        this.historyLimit = historyLimit;
+        this.hasMoreRunning = running.length > runningLimit;
+        this.hasMoreHistory = stopped.length > historyLimit;
+      } catch (error) {
+        if (requestId === this.requestId) {
+          this.error = 'Unable to load stopwatch timers. Please retry.';
+        }
+      } finally {
+        if (requestId === this.requestId) {
+          this.loading = false;
+          this.refreshing = false;
+        }
+      }
     },
   },
 };
