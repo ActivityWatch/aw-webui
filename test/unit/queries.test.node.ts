@@ -373,13 +373,13 @@ describe('Zen matching in generated query', () => {
     expect(firefoxMatch).not.toBeNull();
     const firefoxRegex = toRegex(firefoxMatch?.[1] ?? '');
     for (const name of zenNames) {
-      expect(firefoxRegex.test(name)).toBe(!dedicatedZen);
+      expect(firefoxRegex.test(name)).toBe(true);
     }
     for (const name of ['Firefox.exe', 'LibreWolf', 'Waterfox', 'Nightly']) {
       expect(firefoxRegex.test(name)).toBe(true);
     }
     expect(firefoxRegex.test('zenity')).toBe(false);
-    expect(firefoxRegex.test('app.zen_browser.zen')).toBe(!dedicatedZen);
+    expect(firefoxRegex.test('app.zen_browser.zen')).toBe(true);
     expect(firefoxRegex.test('appXzen_browserYzen')).toBe(false);
     expect(firefoxRegex.test('app.zen_browser.zen.helper')).toBe(false);
     expect(query).toContain(
@@ -394,9 +394,20 @@ describe('Zen matching in generated query', () => {
         expect(toRegex(zenMatch?.[1] ?? '').test(name)).toBe(true);
       }
       expect(query).toContain('"app.zen_browser.zen"');
-      expect(query).toContain('browser_events = concat(browser_events, events_zen);');
+      expect(query).toContain('events_firefox_zen = union_no_overlap(events_zen, events_firefox);');
+      expect(query).toContain('browser_events = concat(browser_events, events_firefox_zen);');
+      expect(query).not.toContain('browser_events = concat(browser_events, events_zen);');
+      expect(query).not.toContain('browser_events = concat(browser_events, events_firefox);');
+      expect(query.indexOf('events_firefox_zen = union_no_overlap')).toBeGreaterThan(
+        query.indexOf('events_zen = filter_period_intersect')
+      );
+      expect(query.indexOf('events_firefox_zen = union_no_overlap')).toBeGreaterThan(
+        query.indexOf('events_firefox = filter_period_intersect')
+      );
+    } else {
+      expect(query).toContain('browser_events = concat(browser_events, events_firefox);');
+      expect(query).not.toContain('events_firefox_zen');
     }
-    expect(query).toContain('browser_events = concat(browser_events, events_firefox);');
   });
 });
 

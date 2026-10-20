@@ -451,11 +451,9 @@ export function chromeAppnameRegex(excludeForks: Iterable<string> = []): string 
 
 const ZEN_APPNAME_PATTERN = '^zen([- ]browser)?(\\.exe)?$';
 
-// Zen can use the Firefox extension build, unless a dedicated Zen bucket owns it.
-function firefoxAppnameRegex(excludeZen = false): string {
-  return `(?i)(firefox|librewolf|waterfox|nightly${
-    excludeZen ? '' : `|${ZEN_APPNAME_PATTERN}|^app\\.zen_browser\\.zen$`
-  })`;
+// Zen can use the Firefox extension build, including before switching bucket names.
+function firefoxAppnameRegex(): string {
+  return `(?i)(firefox|librewolf|waterfox|nightly|${ZEN_APPNAME_PATTERN}|^app\\.zen_browser\\.zen$)`;
 }
 
 export const browser_appname_regex: Record<string, string> = {
@@ -476,6 +474,9 @@ export const browser_appname_regex: Record<string, string> = {
 // Returns a list of active browser events (where the browser was the active window) from all browser buckets
 function browserEvents(params: DesktopQueryParams): string {
   const browsers = browsersWithBuckets(params.bid_browsers);
+  const hasFirefoxAndZen = ['firefox', 'zen'].every(name =>
+    browsers.some(([browserName]) => browserName === name)
+  );
   // The chrome regex matches forks so a fork without a dedicated bucket still
   // counts (#927). A settings-override Arc bucket can coexist with the default
   // chrome bucket, and then the same Arc activity would be counted by both
@@ -501,9 +502,7 @@ function browserEvents(params: DesktopQueryParams): string {
     if (browserName === 'chrome' && dedicatedChromeForks.length > 0) {
       pattern = chromeAppnameRegex(dedicatedChromeForks);
     }
-    if (browserName === 'firefox') {
-      pattern = firefoxAppnameRegex(browsers.some(([name]) => name === 'zen'));
-    }
+
     if (pattern) {
       // JSON.stringify adds extra unnecessary escaping for backslashes (e.g. '\.' becomes '\\.')
       // which breaks regex patterns like arc(\.exe)?$ on Windows. Undo the double-escaping.
@@ -515,10 +514,23 @@ function browserEvents(params: DesktopQueryParams): string {
 
     code += `
        events_${browserName} = filter_period_intersect(events_${browserName}, window_${browserName});
-       events_${browserName} = split_url_events(events_${browserName});
+       events_${browserName} = split_url_events(events_${browserName});`;
+    if (!hasFirefoxAndZen || !['firefox', 'zen'].includes(browserName)) {
+      code += `
        browser_events = concat(browser_events, events_${browserName});
        browser_events = sort_by_timestamp(browser_events);`;
+    }
   });
+
+  if (hasFirefoxAndZen) {
+    // Bucket existence is not evidence of coverage in this time range. Keep
+    // historical Firefox-bucket Zen events, preferring dedicated events only
+    // where the filtered streams actually overlap.
+    code += `
+      events_firefox_zen = union_no_overlap(events_zen, events_firefox);
+      browser_events = concat(browser_events, events_firefox_zen);
+      browser_events = sort_by_timestamp(browser_events);`;
+  }
 
   return code;
 }
