@@ -168,3 +168,52 @@ test('reuses regex objects while respecting in-place rule edits', () => {
     construct.mockRestore();
   }
 });
+
+// #495: common apps added to the built-in default categories.
+describe('default category carry for common apps (#495)', () => {
+  test.each([
+    ['Google Sheets', ['Work']],
+    ['TextEdit', ['Work']],
+    ['Pages', ['Work']],
+    ['Obsidian', ['Work']],
+    ['iTerm', ['Work', 'Programming']],
+    ['Visual Studio Code', ['Work', 'Programming']],
+    ['LinkedIn', ['Media', 'Social Media']],
+    ['Hacker News', ['Media', 'Social Media']],
+    ['Amazon Music', ['Media', 'Music']],
+    ['Texts', ['Comms', 'IM']],
+    ['Superhuman', ['Comms', 'Email']],
+  ])('%s is categorized by defaults', (str, expected) => {
+    expect(classes.matchString(str, classes.defaultCategories)?.name).toEqual(expected);
+  });
+
+  test.each([
+    ['Google Docs', ['Work']],
+    ['GitHub', ['Work', 'Programming']],
+    ['Slack', ['Comms', 'IM']],
+    ['Gmail', ['Comms', 'Email']],
+    ['Spotify', ['Media', 'Music']],
+    ['reddit', ['Media', 'Social Media']],
+    ['YouTube', ['Media', 'Video']],
+    ['Minecraft', ['Media', 'Games']],
+    ['unknown app', null],
+  ])('existing control %s keeps its category', (str, expected) => {
+    expect(classes.matchString(str, classes.defaultCategories)?.name ?? null).toEqual(expected);
+  });
+
+  test('saved custom rules still win and matching does not mutate them', () => {
+    const custom: Category[] = [
+      { name: ['Custom', 'Notes'], rule: { type: 'regex', regex: 'Obsidian', priority: 99 } },
+    ];
+    const customBefore = JSON.stringify(custom);
+    const defaultsBefore = JSON.stringify(classes.defaultCategories);
+
+    expect(
+      classes.matchString('Obsidian', [...classes.defaultCategories, ...custom])?.name
+    ).toEqual(['Custom', 'Notes']);
+    expect(classes.matchString('Google Docs', classes.defaultCategories)?.name).toEqual(['Work']);
+
+    expect(JSON.stringify(custom)).toBe(customBefore);
+    expect(JSON.stringify(classes.defaultCategories)).toBe(defaultsBefore);
+  });
+});

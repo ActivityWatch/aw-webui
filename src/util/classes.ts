@@ -101,14 +101,18 @@ const LEGACY_DEFAULT_COLORS = new Map<string, string>([
 export const defaultCategories: Category[] = [
   {
     name: ['Work'],
-    rule: { type: 'regex', regex: 'Google Docs|libreoffice|ReText' },
+    rule: {
+      type: 'regex',
+      regex: 'Google Docs|Google Sheets|libreoffice|ReText|TextEdit|Pages|Obsidian',
+    },
     data: { color: '#4ADE80', score: 10 },
   },
   {
     name: ['Work', 'Programming'],
     rule: {
       type: 'regex',
-      regex: 'GitHub|Stack Overflow|BitBucket|Gitlab|vim|Spyder|kate|Ghidra|Scite',
+      regex:
+        'GitHub|Stack Overflow|BitBucket|Gitlab|vim|Spyder|kate|Ghidra|Scite|iTerm|Visual Studio Code',
     },
   },
   {
@@ -138,7 +142,7 @@ export const defaultCategories: Category[] = [
     name: ['Media', 'Social Media'],
     rule: {
       type: 'regex',
-      regex: 'reddit|Facebook|Twitter|Instagram|devRant',
+      regex: 'reddit|Facebook|Twitter|Instagram|devRant|LinkedIn|Hacker News',
       ignore_case: true,
     },
     data: { color: '#FACC15' },
@@ -147,7 +151,7 @@ export const defaultCategories: Category[] = [
     name: ['Media', 'Music'],
     rule: {
       type: 'regex',
-      regex: 'Spotify|Deezer',
+      regex: 'Spotify|Deezer|Amazon Music',
       ignore_case: true,
     },
     data: { color: '#A3E635' },
@@ -162,12 +166,34 @@ export const defaultCategories: Category[] = [
     rule: {
       type: 'regex',
       regex:
-        'Messenger|Telegram|Signal|WhatsApp|Rambox|Slack|Riot|Element|Discord|Nheko|NeoChat|Mattermost',
+        'Messenger|Telegram|Signal|WhatsApp|Rambox|Slack|Riot|Element|Discord|Nheko|NeoChat|Mattermost|Texts',
     },
   },
-  { name: ['Comms', 'Email'], rule: { type: 'regex', regex: 'Gmail|Thunderbird|mutt|alpine' } },
+  {
+    name: ['Comms', 'Email'],
+    rule: { type: 'regex', regex: 'Gmail|Thunderbird|mutt|alpine|Superhuman' },
+  },
   { name: ['Uncategorized'], rule: { type: null }, data: { color: COLOR_UNCAT } },
 ];
+
+// First-run settings saves persisted these exact rules before #495. Recognize
+// the complete old taxonomy for preset activation, without rewriting user data
+// or accepting arbitrary edits as defaults.
+const PRE_COMMON_APP_RULES = new Map<string, string>([
+  ['Work', 'Google Docs|libreoffice|ReText'],
+  ['Work>Programming', 'GitHub|Stack Overflow|BitBucket|Gitlab|vim|Spyder|kate|Ghidra|Scite'],
+  ['Media>Social Media', 'reddit|Facebook|Twitter|Instagram|devRant'],
+  ['Media>Music', 'Spotify|Deezer'],
+  [
+    'Comms>IM',
+    'Messenger|Telegram|Signal|WhatsApp|Rambox|Slack|Riot|Element|Discord|Nheko|NeoChat|Mattermost',
+  ],
+  ['Comms>Email', 'Gmail|Thunderbird|mutt|alpine'],
+]);
+const preCommonAppCategories = defaultCategories.map(cat => {
+  const regex = PRE_COMMON_APP_RULES.get(cat.name.join('>'));
+  return regex === undefined ? cat : { ...cat, rule: { ...cat.rule, regex } };
+});
 
 /**
  * The categories a set starts out with — what "restore defaults" restores.
@@ -420,6 +446,7 @@ export function classesLookUnconfigured(classes: Category[] | undefined | null):
   if (classes == null) return true;
   if (classes.length === 0) return false;
   if (matchesInstallDefault(classes, defaultCategories, true)) return true;
+  if (matchesInstallDefault(classes, preCommonAppCategories, true)) return true;
   return getPresetCategorySets().some(p => matchesInstallDefault(classes, p.categories));
 }
 
