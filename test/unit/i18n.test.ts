@@ -33,6 +33,8 @@ describe('i18n', () => {
     expect(isAppLocale('pt')).toBe(false);
     expect(isAppLocale('bn')).toBe(true);
     expect(isAppLocale('bn-BD')).toBe(false);
+    expect(isAppLocale('id')).toBe(true);
+    expect(isAppLocale('id-ID')).toBe(false);
     expect(isAppLocale('sw')).toBe(true);
     expect(isAppLocale('')).toBe(false);
     expect(isAppLocale(null)).toBe(false);
@@ -172,6 +174,42 @@ describe('i18n', () => {
     expect(document.documentElement.lang).toBe('ja');
   });
 
+  test('initial locale detects Indonesian browser language', () => {
+    Object.defineProperty(navigator, 'language', {
+      value: 'id-ID',
+      configurable: true,
+    });
+    const { i18n } = loadI18n();
+    expect(i18n.locale).toBe('id');
+    expect(document.documentElement.lang).toBe('id');
+    expect(document.documentElement.dir).toBe('ltr');
+  });
+
+  test.each(['in-ID', 'in', 'IN-id'])(
+    'initial locale maps legacy %s browser language to Indonesian',
+    language => {
+      Object.defineProperty(navigator, 'language', {
+        value: language,
+        configurable: true,
+      });
+      const { i18n } = loadI18n();
+      expect(i18n.locale).toBe('id');
+      expect(document.documentElement.lang).toBe('id');
+    }
+  );
+
+  test('saved Indonesian preference wins over browser language', () => {
+    Object.defineProperty(navigator, 'language', {
+      value: 'de-DE',
+      configurable: true,
+    });
+    localStorage.setItem('locale', 'id');
+    const { i18n } = loadI18n();
+    expect(i18n.locale).toBe('id');
+    expect(document.documentElement.lang).toBe('id');
+    expect(document.documentElement.dir).toBe('ltr');
+  });
+
   test('setAppLocale switches to Japanese messages', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('ja');
@@ -268,6 +306,51 @@ describe('i18n', () => {
       }
     };
     walk(en, ptBR, '');
+  });
+
+  test('setAppLocale switches to Indonesian messages', () => {
+    const { setAppLocale, i18n } = loadI18n();
+    setAppLocale('id');
+    expect(i18n.locale).toBe('id');
+    expect(i18n.t('common.save')).toBe('Simpan');
+    expect(document.documentElement.lang).toBe('id');
+    expect(localStorage.getItem('locale')).toBe('id');
+  });
+
+  test('every locale shows the Indonesian endonym', () => {
+    const { LANGUAGE_NAMES, SUPPORTED, setAppLocale } = loadI18n();
+    for (const locale of SUPPORTED) {
+      setAppLocale(locale);
+      expect(LANGUAGE_NAMES.id).toBe('Bahasa Indonesia');
+    }
+  });
+
+  test('switching from Arabic to Indonesian restores ltr', () => {
+    const { setAppLocale } = loadI18n();
+    setAppLocale('ar');
+    expect(document.documentElement.dir).toBe('rtl');
+    setAppLocale('id');
+    expect(document.documentElement.lang).toBe('id');
+    expect(document.documentElement.dir).toBe('ltr');
+    setAppLocale('ar');
+    expect(document.documentElement.dir).toBe('rtl');
+    expect(document.documentElement.lang).toBe('ar');
+  });
+
+  test('Indonesian dates use Indonesian names and Western digits', () => {
+    const { setAppLocale } = loadI18n();
+    const moment = require('moment');
+    setAppLocale('id');
+    expect(moment.locale()).toBe('id');
+    // 2026-10-19 is a Monday
+    const formatted = moment('2026-10-19T19:23:00').format('LLLL');
+    expect(formatted).toContain('Senin');
+    expect(formatted).toContain('Oktober');
+    expect(formatted).toContain('19');
+    // switching away from Arabic must not leak its digit overrides into id
+    setAppLocale('ar');
+    setAppLocale('id');
+    expect(moment('2026-10-19T19:23:00').format('LLLL')).toBe(formatted);
   });
 
   test.each(['bn-BD', 'bn-IN', 'bn'])('initial locale detects Bengali browser language %s', tag => {
