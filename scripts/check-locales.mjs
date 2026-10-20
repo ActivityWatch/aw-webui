@@ -10,7 +10,21 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const LOCALES_DIR = path.join(__dirname, '../src/i18n/locales');
-const LOCALES = ['ar', 'de', 'en', 'es', 'fr', 'hi', 'ja', 'pt-BR', 'ru', 'sv', 'uk', 'ur', 'zh-CN'];
+const LOCALES = [
+  'ar',
+  'de',
+  'en',
+  'es',
+  'fr',
+  'hi',
+  'ja',
+  'pt-BR',
+  'ru',
+  'sv',
+  'uk',
+  'ur',
+  'zh-CN',
+];
 const SRC_DIR = path.join(__dirname, '../src');
 const INDEX_PATH = path.join(SRC_DIR, 'i18n/index.ts');
 const verbose = process.argv.includes('--verbose');

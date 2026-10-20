@@ -248,6 +248,7 @@ describe('i18n', () => {
   test('setAppLocale switches to Brazilian Portuguese messages', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('pt-BR');
+    expect(i18n.locale).toBe('pt-BR');
     expect(i18n.t('common.languagePtBR')).toBe('Português (Brasil)');
     expect(i18n.t('common.save')).not.toBe('Save');
     expect(document.documentElement.lang).toBe('pt-BR');
