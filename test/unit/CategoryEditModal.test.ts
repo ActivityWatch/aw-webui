@@ -2,7 +2,7 @@ import { mount, flushPromises } from '@vue/test-utils';
 import { createBootstrap } from 'bootstrap-vue-next';
 import { createPinia, setActivePinia } from 'pinia';
 import bootstrapComponents from '~/plugins/bootstrap';
-import CategoryEditModal from '~/components/CategoryEditModal.vue';
+import CategoryEditModalComponent from '~/components/CategoryEditModal.vue';
 import { useCategoryStore } from '~/stores/categories';
 
 // Tests call Options API members directly, which the Vue constructor type doesn't expose.

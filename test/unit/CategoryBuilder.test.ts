@@ -3,7 +3,7 @@ import { createTestingPinia } from '@pinia/testing';
 import { setActivePinia, createPinia } from 'pinia';
 import { createBootstrap } from 'bootstrap-vue-next';
 import bootstrapComponents from '~/plugins/bootstrap';
-import CategoryBuilder from '~/views/settings/CategoryBuilder.vue';
+import CategoryBuilderComponent from '~/views/settings/CategoryBuilder.vue';
 import Settings from '~/views/settings/Settings.vue';
 import QueryOptions from '~/components/QueryOptions.vue';
 import { useBucketsStore } from '~/stores/buckets';

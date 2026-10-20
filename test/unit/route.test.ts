@@ -1,6 +1,6 @@
 import router from '~/route';
 
-const routes: any[] = router.options.routes;
+const routes: readonly any[] = router.options.routes;
 
 describe('router', () => {
   test('root redirect uses localStorage landingpage when set', () => {

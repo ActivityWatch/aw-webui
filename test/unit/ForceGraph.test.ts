@@ -24,6 +24,8 @@ describe('ForceGraph', () => {
       return this.id === 'forcegraph' ? containerWidth : 0;
     });
     (global as any).ResizeObserver = class {
+      observe: jest.Mock;
+      disconnect: jest.Mock;
       constructor(cb) {
         resizeCallback = cb;
         this.observe = jest.fn();
