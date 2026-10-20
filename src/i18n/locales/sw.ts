@@ -74,12 +74,12 @@ export default {
     last90d: 'Siku 90 zilizopita',
     thisWeek: 'Wiki hii',
     thisMonth: 'Mwezi huu',
-    durationHours: 's',
+    durationHours: 'saa',
     durationMinutes: 'd',
     durationSeconds: 'sek',
     selectHost: 'Tafadhali chagua mwenyeji angalau mmoja.',
     today: 'Leo',
-    requestFailed: 'Ombi limeshindwa.',
+    requestFailed: 'Hitilafu imetokea.',
     all: 'Yote',
     uncategorized: 'Isiyopangwa',
     requiresAfk: 'inahitaji aw-watcher-afk',
@@ -99,7 +99,7 @@ export default {
     daystart: {
       startOfDay: 'Mwanzo wa siku',
       startOfDayHelp:
-        'Wakati ambapo siku "zinaanza", kwani wanadamu hawakwendi kulala kabla ya usiku wa manane. Imewekwa kwa 04:00 kwa chaguo-msingi.',
+        'Wakati ambayo siku "zinaanza", kwa kuwa binadamu si kila mara hulala kabla ya saa sita usiku. Imewekwa kuwa 04:00 kwa chaguomsingi.',
       startOfWeek: 'Mwanzo wa wiki',
       startOfWeekHelp: 'Siku ya wiki ambayo inaanzisha wiki mpya.',
       saturday: 'Jumamosi',
@@ -227,7 +227,7 @@ export default {
     },
     uncategorizedHint: {
       title: 'Kidokezo cha muda usiopangwa',
-      help: 'Inaonyesha bango kwenye mwonekano wa Shughuli wakati muda mwingi sana uliofuatiliwa unaingia kwenye ndoo ya Isiyopangwa — inafaa kutambua unapohitaji kuboresha sheria zako za upangaji.',
+      help: 'Inaonyesha bango kwenye mwonekano wa Shughuli wakati muda mwingi sana uliofuatiliwa unaingia kwenye kategoria ya Isiyopangwa — inafaa kutambua unapohitaji kuboresha sheria zako za upangaji.',
       minimumTotalTime: 'Wakati wa chini wa muda uliofuatiliwa',
       minimumTotalTimeHelp:
         'Kidokezo kinabaki kufichwa wakati jumla ya wakati uliofuatiliwa katika kipindi iko chini ya dakika hizi.',
@@ -333,7 +333,7 @@ export default {
     },
   },
   buckets: {
-    title: 'Ndoo',
+    title: 'Buckets',
     moreWatchers: 'Je, unatafuta kukusanya data zaidi? Angalia',
     docsLink: 'nyaraka',
     thisDevice: 'kifaa hiki',
@@ -341,44 +341,44 @@ export default {
     noEventsYet: 'Hakuna matukio yaliyorekodiwa bado',
     noEvents: 'hakuna matukio',
     moreActionsFor: 'Vitendo zaidi kwa {hostname}',
-    deleteAllTitle: 'Futa ndoo {count} zote kwa {hostname}',
-    deleteAllForHost: 'Futa ndoo zote kwa mwenyeji huyu',
-    openBucket: 'Fungua ndoo',
-    deleteBucketTitle: 'Futa ndoo?',
-    deleteHostTitle: 'Futa ndoo?',
-    deleteHostTitleNamed: 'Futa ndoo zote kwa {hostname}?',
+    deleteAllTitle: 'Futa buckets {count} zote kwa {hostname}',
+    deleteAllForHost: 'Futa buckets zote kwa mwenyeji huyu',
+    openBucket: 'Fungua bucket',
+    deleteBucketTitle: 'Futa bucket?',
+    deleteHostTitle: 'Futa buckets?',
+    deleteHostTitleNamed: 'Futa buckets zote kwa {hostname}?',
     deleteHostConfirmPrefix: 'Je, una uhakika unataka kufuta',
-    deleteHostConfirmCount: 'ndoo {count} zote',
+    deleteHostConfirmCount: 'buckets {count} zote',
     deleteHostConfirmSuffix: 'kwa mwenyeji "{hostname}"?',
-    bucketsToDelete: 'Ndoo zitakazofutwa:',
+    bucketsToDelete: 'Buckets zitakazofutwa:',
     deleting: 'Inafuta...',
     importing: 'Inaingiza...',
     importSuccess: 'Uingizaji umefanikiwa!',
     importFailedGeneric: 'Uingizaji umeshindwa, angalia kumbukumbu za aw-server kwa maelezo zaidi',
     importHelpNew:
-      'Toa faili la JSON lililosafirishwa kutoka ndoo moja au ndoo nyingi. Uingizaji unashindwa ikiwa ndoo yenye kitambulisho sawa tayari ipo.',
+      'Toa faili la JSON lililosafirishwa kutoka bucket moja au buckets nyingi. Uingizaji unashindwa ikiwa bucket yenye kitambulisho sawa tayari ipo.',
     exportHelp:
-      'Pakua kila ndoo kwenye seva hii kama faili moja la JSON. Tumia hii kwa nakala rudufu.',
+      'Pakua kila bucket kwenye seva hii kama faili moja la JSON. Tumia hii kwa nakala rudufu.',
     currentDevice: '(kifaa cha sasa)',
     lastUpdated: 'Imesasishwa mara ya mwisho:',
     firstSeen: 'Ilionekana kwanza:',
-    exportBucketJson: 'Safirisha ndoo kama JSON',
+    exportBucketJson: 'Safirisha bucket kama JSON',
     exportEventsCsv: 'Safirisha matukio kama CSV',
-    deleteBucket: 'Futa ndoo',
+    deleteBucket: 'Futa bucket',
     deleteModalTitle: 'Hatari!',
-    deleteConfirm: 'Je, una uhakika unataka kufuta ndoo "{id}"?',
+    deleteConfirm: 'Je, una uhakika unataka kufuta bucket "{id}"?',
     deletePermanent: 'Hii ni ya kudumu na haiwezi kutenduliwa!',
-    importExportTitle: 'Ingiza na safirisha ndoo',
-    importBuckets: 'Ingiza ndoo',
+    importExportTitle: 'Ingiza na safirisha buckets',
+    importBuckets: 'Ingiza buckets',
     importPlaceholder: 'Chagua au weka faili hapa...',
     importDrop: 'Weka faili hapa...',
     importHelp:
-      'Faili halali la kuingiza ni faili la JSON kutoka usafirishaji wa ndoo moja au usafirishaji kutoka ndoo nyingi. Ikiwa kuna ndoo zenye jina sawa uingizaji utashindwa.',
-    exportBuckets: 'Safirisha ndoo',
-    exportAllJson: 'Safirisha ndoo zote kama JSON',
+      'Faili halali la kuingiza ni faili la JSON kutoka usafirishaji wa bucket moja au usafirishaji kutoka buckets nyingi. Ikiwa kuna buckets zenye jina sawa uingizaji utashindwa.',
+    exportBuckets: 'Safirisha buckets',
+    exportAllJson: 'Safirisha buckets zote kama JSON',
     exporting: 'Inasafirisha...',
     tools: 'Zana',
-    deleteFailed: 'Ufutaji umeshindwa. Baadhi ya ndoo zinaweza kuwa hazikufutwa.',
+    deleteFailed: 'Ufutaji umeshindwa. Baadhi ya buckets zinaweza kuwa hazikufutwa.',
     exportFailed: 'Usafirishaji umeshindwa: {error}',
   },
   activity: {
@@ -418,11 +418,11 @@ export default {
     rangeEnd: 'Tarehe ya kumaliza',
     invalidRange: 'Kipindi cha tarehe batili kwenye URL, inaonyesha leo badala yake.',
     diagnosticMissingWindow:
-      'Hakuna ndoo ya dirisha kwa {host}. Anzisha aw-watcher-window, kisha onyesha upya ukurasa huu.',
+      'Hakuna bucket ya dirisha kwa {host}. Anzisha aw-watcher-window, kisha onyesha upya ukurasa huu.',
     diagnosticMissingAfk:
-      'Hakuna ndoo ya AFK kwa {host}. Anzisha aw-watcher-afk, kisha onyesha upya ukurasa huu.',
+      'Hakuna bucket ya AFK kwa {host}. Anzisha aw-watcher-afk, kisha onyesha upya ukurasa huu.',
     diagnosticAmbiguousWindow:
-      'Ndoo nyingi za dirisha zinaweza kuelezea {host}: {buckets}. Chagua kifaa sahihi hapo juu au angalia Data Ghafi.',
+      'Buckets nyingi za dirisha zinaweza kuelezea {host}: {buckets}. Chagua kifaa sahihi hapo juu au angalia Data Ghafi.',
     diagnosticMismatchedHostnames:
       'aw-watcher-window inaripoti {host} kama {windowHosts}, lakini aw-watcher-afk inaripoti kama {afkHosts}. Shughuli inahitaji zote mbili chini ya jina moja la mwenyeji: anzisha upya watchers wote wawili, kisha onyesha upya ukurasa huu.',
     diagnosticNoWindowEvents:
@@ -501,7 +501,7 @@ export default {
     customVis: 'Uonyeshaji Maalum',
     score: 'Alama',
     topStopwatches: 'Matukio ya Saa ya Kuhesabu ya Juu',
-    topBucketData: 'Data ya Ndoo ya Juu',
+    topBucketData: 'Data ya Bucket ya Juu',
   },
   timeline: {
     title: 'Mstari wa Wakati',
@@ -516,7 +516,7 @@ export default {
   },
   stopwatch: {
     title: 'Saa ya Kuhesabu',
-    usingBucket: 'Inatumia ndoo:',
+    usingBucket: 'Inatumia bucket:',
     aboutTitle: 'Kuhusu saa ya kuhesabu',
     aboutBody:
       'Fuatilia vikao vilivyorekodiwa kwa mkono pamoja na ufuatiliaji wa kiotomatiki. Kuona jumla za saa yako ya kuhesabu kwenye dashibodi, fungua mwonekano wa Shughuli, bonyeza Hariri mwonekano, kisha Ongeza uonyeshaji na chagua Matukio ya Saa ya Kuhesabu ya Juu.',
@@ -565,9 +565,9 @@ export default {
   timespiral: {
     title: 'Timespiral',
     wip: 'Hii ni jaribio linaloendelea.',
-    noAfkBucket: 'Hakuna ndoo ya AFK iliyopatikana kwenye mwenyeji huu. Sakinisha',
+    noAfkBucket: 'Hakuna bucket ya AFK iliyopatikana kwenye mwenyeji huu. Sakinisha',
     noAfkBucketSuffix: 'kutumia Timespiral.',
-    bucketLabel: 'Ndoo:',
+    bucketLabel: 'Bucket:',
     eventsLabel: 'Matukio:',
   },
   ui: {
@@ -653,7 +653,7 @@ export default {
     eventEditor: {
       loading: 'Inapakia tukio...',
       editTitle: 'Hariri tukio',
-      bucket: 'Ndoo',
+      bucket: 'Bucket',
       start: 'Anza',
       end: 'Mwisho',
       duration: 'Muda',
@@ -669,14 +669,14 @@ export default {
       edit: 'Hariri',
     },
     calendar: {
-      bucket: 'Ndoo:',
+      bucket: 'Bucket:',
       show: 'Onyesha:',
       day: 'Siku',
       week: 'Wiki',
       fitActive: 'Fuata inayofanya kazi',
     },
     topBucket: {
-      bucket: 'Ndoo',
+      bucket: 'Bucket',
       field: 'Sehemu katika data ya tukio',
       fieldHelp:
         'Majina ya sehemu yanatoka kwa data ya tukio. Notesheni ya nukta inaunga mkono (mfano, data.title).',
@@ -734,9 +734,9 @@ export default {
       selectCategory: 'Chagua kategoria…',
       addCategory: 'Ongeza kategoria…',
       unsupportedHosts:
-        'Wenyeji waliochaguliwa hawana ndoo za aw-watcher-afk na hawawezi kujumuishwa katika Ripoti ya Kazi: {hosts}',
+        'Wenyeji waliochaguliwa hawana buckets za aw-watcher-afk na hawawezi kujumuishwa katika Ripoti ya Kazi: {hosts}',
       skippingHosts:
-        'Kuruka wenyeji wasio na ndoo za aw-watcher-afk: {unsupported}. Ripoti ya Kazi itatumia: {supported}',
+        'Kuruka wenyeji wasio na buckets za aw-watcher-afk: {unsupported}. Ripoti ya Kazi itatumia: {supported}',
       loadError: 'Hitilafu wakati wa kupakia data. Angalia console kwa maelezo.',
     },
     billing: {
@@ -783,14 +783,14 @@ export default {
         'hakuna iliyowekwa alama bado — weka private: true katika data ya kategoria',
       browserPrivacyHelp:
         'Vikoa vya kivinjari vinaachwa kabisa ikiwa kichujio chochote kimewashwa, kwani matukio ya kivinjari hayana kategoria na hayawezi kuchujwa nazo.',
-      noHost: 'Hakuna mwenyeji mwenye ndoo ya window-watcher iliyopatikana.',
+      noHost: 'Hakuna mwenyeji mwenye bucket ya window-watcher iliyopatikana.',
       apiKeyRequired: 'Tafadhali ingiza ufunguo wako wa API wa LLM.',
       copyError: 'Haikuweza kunakili kwenye ubao wa kunakili',
     },
     alerts: {
       earlyDev: 'Kipengele hiki bado kipo katika hatua ya awali ya maendeleo.',
       noHost:
-        'Hakuna mwenyeji mwenye ndoo za dirisha na AFK zinazopatikana, kwa hivyo tahadhari haziwezi kuendesha bado.',
+        'Hakuna mwenyeji mwenye buckets za dirisha na AFK zinazopatikana, kwa hivyo tahadhari haziwezi kuendesha bado.',
       goalName: 'Jina la lengo',
       category: 'Kategoria',
       current: 'Ya sasa',
@@ -812,7 +812,7 @@ export default {
     trends: {
       comparing: 'Inalinganisha',
       vs: 'dhidi ya',
-      noHost: 'Hakuna kifaa chenye ndoo za dirisha na AFK zinazopatikana. Sakinisha',
+      noHost: 'Hakuna kifaa chenye buckets za dirisha na AFK zinazopatikana. Sakinisha',
       computing: 'Inakokotoa mwelekeo juu ya siku {days} + {days}…',
       activeTime: 'Muda wa kufanya kazi',
       vsPrevious: 'dhidi ya siku {days} zilizopita',
@@ -840,7 +840,7 @@ export default {
       notSelected: '(haijachaguliwa)',
       commonWords: 'Maneno ya kawaida katika matukio ya "{category}"',
       noHost:
-        'Hakuna mwenyeji mwenye ndoo za dirisha/AFK zinazopatikana. Sakinisha watcher kuanza kukusanya data.',
+        'Hakuna mwenyeji mwenye buckets za dirisha/AFK zinazopatikana. Sakinisha watcher kuanza kukusanya data.',
       selectHost:
         'Chagua jina la mwenyeji chini ya Onyesha chaguzi kupakia maneno yasiyopangwa. Kichaguo cha jina la mwenyeji kimefichwa hadi ufungue chaguzi.',
       noWords: 'Hakuna maneno yenye muda muhimu. Uko tayari!',
@@ -858,14 +858,14 @@ export default {
       valid: 'Halali',
     },
     bucketMerge: {
-      title: 'Unganisha ndoo',
+      title: 'Unganisha buckets',
       intro:
-        'Wakati mwingine, unaweza kutaka kuunganisha matukio ya ndoo mbili kuwa moja. Hii ni muhimu kwa kawaida wakati jina lako la mwenyeji limebadilika na kuunda ndoo mbili kwa watcher na mwenyeji mmoja.',
-      from: 'Ndoo kutoka',
+        'Wakati mwingine, unaweza kutaka kuunganisha matukio ya buckets mbili kuwa moja. Hii ni muhimu kwa kawaida wakati jina lako la mwenyeji limebadilika na kuunda buckets mbili kwa watcher na mwenyeji mmoja.',
+      from: 'Bucket kutoka',
       fromHelp:
-        'Chagua ndoo ambayo matukio yake yataunganishwa. Ndoo hii itafutwa baada ya kuunganishwa.',
-      to: 'Ndoo kwenda',
-      toHelp: 'Chagua ndoo ambayo matukio yataungwa. Ndoo hii itabaki baada ya kuunganishwa.',
+        'Chagua bucket ambayo matukio yake yataunganishwa. Bucket hii itafutwa baada ya kuunganishwa.',
+      to: 'Bucket kwenda',
+      toHelp: 'Chagua bucket ambayo matukio yataungwa. Bucket hii itabaki baada ya kuunganishwa.',
       events: 'Matukio',
       overlapping: 'Matukio yanayopindana',
       overlapFound: 'Matukio {count} yanayofuata yanapindana:',
@@ -873,10 +873,10 @@ export default {
       merge: 'Unganisha',
     },
     bucketValidate: {
-      title: 'Thibitisha ndoo',
-      intro: 'Hii ni chombo kidogo cha kuangalia uhalali wa ndoo zako na matukio yake.',
-      bucket: 'Ndoo',
-      select: 'Chagua ndoo ya kuthibitisha.',
+      title: 'Thibitisha bucket',
+      intro: 'Hii ni chombo kidogo cha kuangalia uhalali wa buckets zako na matukio yake.',
+      bucket: 'Bucket',
+      select: 'Chagua bucket ya kuthibitisha.',
       events: 'Matukio',
       duplicates: 'Vipande Marudufu',
       noDuplicates: 'Hakuna matukio marudufu yaliyopatikana.',
@@ -956,9 +956,9 @@ export default {
       categoriesCount: 'Kategoria {count}',
       none: 'hakuna',
       groupByCategory: 'Panga kwa kategoria',
-      groupByBucketType: 'Panga kwa aina ya ndoo',
+      groupByBucketType: 'Panga kwa aina ya bucket',
       totalTime: 'Wakati wote',
-      bucketsNoEvents: 'Ndoo zisizo na matukio katika kipindi kilichoulizwa zitafichwa.',
+      bucketsNoEvents: 'Buckets zisizo na matukio katika kipindi kilichoulizwa zitafichwa.',
       editSaved: 'Uhariri wako umehifadhiwa. Onyesha upya mstari wa wakati kuuona ukirekodiwa.',
       editSavedTitle: 'Kumbuka',
     },
@@ -987,8 +987,8 @@ export default {
   },
   extraViews: {
     bucket: {
-      notFound: 'Hakuna ndoo yenye jina "{id}" iliyopatikana.',
-      seeAll: 'Ona ndoo zote',
+      notFound: 'Hakuna bucket yenye jina "{id}" iliyopatikana.',
+      seeAll: 'Ona buckets zote',
       noEventsPrefix: 'Hakuna matukio katika kipindi kilichochaguliwa. Tukio la mwisho lilirekodi',
       noEventsSuffix: '. Inaonyesha matukio {count} ya hivi karibuni zaidi badala yake.',
     },
@@ -1011,7 +1011,7 @@ export default {
       retry: 'Jaribu tena',
       noActivityBuckets:
         'Kifaa hiki hakina data ya shughuli. Chagua kifaa kingine katika chaguzi hapo juu.',
-      noHostPrefix: 'Hakuna kifaa chenye ndoo za shughuli kinacho patikana. Sakinisha',
+      noHostPrefix: 'Hakuna kifaa chenye buckets za shughuli kinacho patikana. Sakinisha',
       noHostSuffix: 'kuanza kukusanya data ya shughuli.',
       watcher: 'watcher',
       showMore: 'Onyesha zaidi',
