@@ -31,6 +31,8 @@ describe('i18n', () => {
     expect(isAppLocale('fr-FR')).toBe(false);
     expect(isAppLocale('pt-BR')).toBe(true);
     expect(isAppLocale('pt')).toBe(false);
+    expect(isAppLocale('bn')).toBe(true);
+    expect(isAppLocale('bn-BD')).toBe(false);
     expect(isAppLocale('')).toBe(false);
     expect(isAppLocale(null)).toBe(false);
   });
@@ -265,6 +267,78 @@ describe('i18n', () => {
       }
     };
     walk(en, ptBR, '');
+  });
+
+  test.each(['bn-BD', 'bn-IN', 'bn'])('initial locale detects Bengali browser language %s', tag => {
+    Object.defineProperty(navigator, 'language', {
+      value: tag,
+      configurable: true,
+    });
+    const { i18n } = loadI18n();
+    expect(i18n.locale).toBe('bn');
+    expect(document.documentElement.lang).toBe('bn');
+    expect(document.documentElement.dir).toBe('ltr');
+  });
+
+  test('saved Bengali locale wins over browser language', () => {
+    Object.defineProperty(navigator, 'language', {
+      value: 'de-DE',
+      configurable: true,
+    });
+    localStorage.setItem('locale', 'bn');
+    const { i18n } = loadI18n();
+    expect(i18n.locale).toBe('bn');
+  });
+
+  test('setAppLocale switches to Bengali messages and persists', () => {
+    const { setAppLocale, i18n, LANGUAGE_NAMES } = loadI18n();
+    setAppLocale('bn');
+    expect(i18n.locale).toBe('bn');
+    expect(LANGUAGE_NAMES.bn).toBe('বাংলা');
+    expect(i18n.t('common.save')).not.toBe('Save');
+    expect(document.documentElement.lang).toBe('bn');
+    expect(document.documentElement.dir).toBe('ltr');
+    expect(localStorage.getItem('locale')).toBe('bn');
+  });
+
+  test('Bengali notification help preserves the literal total-time category', () => {
+    const { setAppLocale, i18n } = loadI18n();
+    setAppLocale('bn');
+    expect(i18n.t('settings.notifications.categoryHelp')).toContain('"All"');
+  });
+
+  test('switching from Arabic to Bengali restores ltr', () => {
+    const { setAppLocale } = loadI18n();
+    setAppLocale('ar');
+    expect(document.documentElement.dir).toBe('rtl');
+    setAppLocale('bn');
+    expect(document.documentElement.lang).toBe('bn');
+    expect(document.documentElement.dir).toBe('ltr');
+  });
+
+  test('initial Arabic locale switches live to Bengali with ltr', () => {
+    Object.defineProperty(navigator, 'language', {
+      value: 'ar-EG',
+      configurable: true,
+    });
+    const { setAppLocale } = loadI18n();
+    expect(document.documentElement.dir).toBe('rtl');
+    setAppLocale('bn');
+    expect(document.documentElement.dir).toBe('ltr');
+  });
+
+  test('Bengali dates use Bengali month names with Western digits', () => {
+    const { setAppLocale } = loadI18n();
+    const moment = require('moment');
+    setAppLocale('bn');
+    expect(moment.locale()).toBe('bn');
+    const m = moment('2026-10-19T19:23:00');
+    expect(m.format('MMMM')).toBe('অক্টোবর');
+    const formatted = m.format('LLLL');
+    expect(formatted).toContain('অক্টোবর');
+    expect(formatted).toContain('19');
+    expect(formatted).toContain('2026');
+    expect(formatted).not.toMatch(/[০-৯]/);
   });
 
   test.each(['ur-PK', 'ur-IN', 'ur'])('initial locale detects Urdu browser language %s', lang => {

@@ -2,6 +2,7 @@ import Vue from 'vue';
 import VueI18n from 'vue-i18n';
 import moment from 'moment';
 import 'moment/locale/ar';
+import 'moment/locale/bn';
 import 'moment/locale/de';
 import 'moment/locale/es';
 import 'moment/locale/fr';
@@ -15,6 +16,7 @@ import 'moment/locale/ur';
 import 'moment/locale/zh-cn';
 
 import ar from './locales/ar';
+import bn from './locales/bn';
 import de from './locales/de';
 import en from './locales/en';
 import es from './locales/es';
@@ -32,6 +34,7 @@ Vue.use(VueI18n);
 
 export type AppLocale =
   | 'ar'
+  | 'bn'
   | 'de'
   | 'en'
   | 'es'
@@ -47,6 +50,7 @@ export type AppLocale =
 
 export const SUPPORTED: AppLocale[] = [
   'ar',
+  'bn',
   'de',
   'en',
   'es',
@@ -68,6 +72,7 @@ export const SUPPORTED: AppLocale[] = [
  */
 export const LANGUAGE_NAMES: Record<AppLocale, string> = {
   ar: 'العربية',
+  bn: 'বাংলা',
   de: 'Deutsch',
   en: 'English',
   es: 'Español',
@@ -88,6 +93,7 @@ export function isAppLocale(value: string | null | undefined): value is AppLocal
 
 const HTML_LANG: Record<AppLocale, string> = {
   ar: 'ar',
+  bn: 'bn',
   de: 'de',
   en: 'en',
   es: 'es',
@@ -108,6 +114,7 @@ function detectBrowserLocale(): AppLocale | null {
   }
   const lang = (navigator.language || '').toLowerCase();
   if (lang.startsWith('ar')) return 'ar';
+  if (lang.startsWith('bn')) return 'bn';
   if (lang.startsWith('de')) return 'de';
   if (lang.startsWith('en')) return 'en';
   if (lang.startsWith('es')) return 'es';
@@ -138,6 +145,7 @@ export function getInitialLocale(): AppLocale {
 
 const MOMENT_LOCALE: Record<AppLocale, string> = {
   ar: 'ar',
+  bn: 'bn',
   de: 'de',
   en: 'en',
   es: 'es',
@@ -159,6 +167,7 @@ export const i18n = new VueI18n({
   fallbackLocale: 'en',
   messages: {
     ar,
+    bn,
     de,
     en,
     es,
@@ -188,6 +197,13 @@ moment.updateLocale('ar', {
 // system for Hindi (and the rest of this UI) is Latin digits. Keep dates consistent.
 // updateLocale also activates `hi` globally, so it must run before the line below.
 moment.updateLocale('hi', {
+  preparse: (s: string) => s,
+  postformat: (s: string) => s,
+});
+
+// moment's `bn` locale renders Bengali digits, while the translated UI strings
+// and every number the app formats itself use Western digits. Keep dates consistent.
+moment.updateLocale('bn', {
   preparse: (s: string) => s,
   postformat: (s: string) => s,
 });
