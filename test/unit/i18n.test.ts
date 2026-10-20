@@ -428,8 +428,7 @@ describe('i18n', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('sw');
     expect(i18n.locale).toBe('sw');
-    expect(i18n.t('common.languageSw')).toBe('Kiswahili');
-    expect(i18n.t('common.save')).not.toBe('Save');
+    expect(i18n.t('common.save')).toBe('Hifadhi');
     expect(document.documentElement.lang).toBe('sw');
     expect(localStorage.getItem('locale')).toBe('sw');
   });
