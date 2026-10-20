@@ -442,10 +442,16 @@ export function chromeAppnameRegex(excludeForks: Iterable<string> = []): string 
   return `(?i)^(${alts.join('|')})`;
 }
 
+const ZEN_APPNAME_PATTERN = '^zen([- ]browser)?(\\.exe)?$';
+
+// Zen can use the Firefox extension build, unless a dedicated Zen bucket owns it.
+function firefoxAppnameRegex(excludeZen = false): string {
+  return `(?i)(firefox|librewolf|waterfox|nightly${excludeZen ? '' : `|${ZEN_APPNAME_PATTERN}`})`;
+}
+
 export const browser_appname_regex: Record<string, string> = {
   chrome: chromeAppnameRegex(),
-  // Zen can use the Firefox extension build and report to its watcher bucket.
-  firefox: '(?i)(firefox|librewolf|waterfox|nightly|zen)',
+  firefox: firefoxAppnameRegex(),
   opera: '(?i)(opera)',
   brave: '(?i)(brave)',
   edge: '(?i)^(microsoft[-_ ]?edge|msedge)',
@@ -453,7 +459,7 @@ export const browser_appname_regex: Record<string, string> = {
   vivaldi: '(?i)(vivaldi)',
   orion: '(?i)(orion)',
   yandex: '(?i)(yandex)',
-  zen: '(?i)(zen)',
+  zen: `(?i)${ZEN_APPNAME_PATTERN}`,
   floorp: '(?i)(floorp)',
   helium: '(?i)(helium)',
 };
@@ -485,6 +491,9 @@ function browserEvents(params: DesktopQueryParams): string {
     let pattern = browser_appname_regex[browserName];
     if (browserName === 'chrome' && dedicatedChromeForks.length > 0) {
       pattern = chromeAppnameRegex(dedicatedChromeForks);
+    }
+    if (browserName === 'firefox') {
+      pattern = firefoxAppnameRegex(browsers.some(([name]) => name === 'zen'));
     }
     if (pattern) {
       // JSON.stringify adds extra unnecessary escaping for backslashes (e.g. '\.' becomes '\\.')

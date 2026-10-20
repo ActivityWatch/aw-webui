@@ -214,6 +214,14 @@ describe('browser_appname_regex', () => {
     expect(re.test('Zen Browser')).toBe(true);
   });
 
+  test.each(['zenity', 'Zenmap', 'Citizen', 'Zen Browser Helper'])(
+    'Firefox and Zen patterns do not match unrelated app %s',
+    name => {
+      expect(toRegex(browser_appname_regex.firefox).test(name)).toBe(false);
+      expect(toRegex(browser_appname_regex.zen).test(name)).toBe(false);
+    }
+  );
+
   test('opera pattern matches all known Opera app names', () => {
     const re = toRegex(browser_appname_regex.opera);
     const knownNames = ['opera.exe', 'Opera.exe', 'Opera'];
@@ -314,6 +322,52 @@ describe('browser_appname_regex', () => {
     for (const name of knownNames) {
       expect(re.test(name)).toBe(true);
     }
+  });
+});
+
+describe('Zen matching in generated query', () => {
+  const params = {
+    bid_window: 'aw-watcher-window_testhost',
+    bid_afk: 'aw-watcher-afk_testhost',
+    filter_afk: true,
+    include_audible: false,
+    categories: [],
+    filter_categories: [],
+  };
+  const zenNames = ['Zen', 'Zen Browser', 'zen-browser', 'Zen.exe'];
+
+  test.each([false, true])('Firefox fallback with dedicated Zen bucket=%s', dedicatedZen => {
+    const query = fullDesktopQuery({
+      ...params,
+      bid_browsers: [
+        'aw-watcher-web-firefox_testhost',
+        ...(dedicatedZen ? ['aw-watcher-web-zen_testhost'] : []),
+      ],
+    }).join('\n');
+    const firefoxMatch = query.match(
+      /window_firefox_re = filter_keyvals_regex\(events, "app", "(.*)"\);/
+    );
+    expect(firefoxMatch).not.toBeNull();
+    const firefoxRegex = toRegex(firefoxMatch?.[1] ?? '');
+    for (const name of zenNames) {
+      expect(firefoxRegex.test(name)).toBe(!dedicatedZen);
+    }
+    for (const name of ['Firefox.exe', 'LibreWolf', 'Waterfox', 'Nightly']) {
+      expect(firefoxRegex.test(name)).toBe(true);
+    }
+    expect(firefoxRegex.test('zenity')).toBe(false);
+    if (dedicatedZen) {
+      const zenMatch = query.match(
+        /window_zen_re = filter_keyvals_regex\(events, "app", "(.*)"\);/
+      );
+      expect(zenMatch).not.toBeNull();
+      for (const name of zenNames) {
+        expect(toRegex(zenMatch?.[1] ?? '').test(name)).toBe(true);
+      }
+      expect(query).toContain('"app.zen_browser.zen"');
+      expect(query).toContain('browser_events = concat(browser_events, events_zen);');
+    }
+    expect(query).toContain('browser_events = concat(browser_events, events_firefox);');
   });
 });
 
