@@ -212,6 +212,9 @@ describe('browser_appname_regex', () => {
     const re = toRegex(browser_appname_regex.firefox);
     expect(re.test('Zen')).toBe(true);
     expect(re.test('Zen Browser')).toBe(true);
+    expect(re.test('app.zen_browser.zen')).toBe(true);
+    expect(re.test('appXzen_browserYzen')).toBe(false);
+    expect(re.test('app.zen_browser.zen.helper')).toBe(false);
   });
 
   test.each(['zenity', 'Zenmap', 'Citizen', 'Zen Browser Helper'])(
@@ -356,6 +359,12 @@ describe('Zen matching in generated query', () => {
       expect(firefoxRegex.test(name)).toBe(true);
     }
     expect(firefoxRegex.test('zenity')).toBe(false);
+    expect(firefoxRegex.test('app.zen_browser.zen')).toBe(!dedicatedZen);
+    expect(firefoxRegex.test('appXzen_browserYzen')).toBe(false);
+    expect(firefoxRegex.test('app.zen_browser.zen.helper')).toBe(false);
+    expect(query).toContain(
+      `window_firefox = filter_keyvals(events, "app", ${JSON.stringify(browser_appnames.firefox)});`
+    );
     if (dedicatedZen) {
       const zenMatch = query.match(
         /window_zen_re = filter_keyvals_regex\(events, "app", "(.*)"\);/

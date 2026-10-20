@@ -446,7 +446,9 @@ const ZEN_APPNAME_PATTERN = '^zen([- ]browser)?(\\.exe)?$';
 
 // Zen can use the Firefox extension build, unless a dedicated Zen bucket owns it.
 function firefoxAppnameRegex(excludeZen = false): string {
-  return `(?i)(firefox|librewolf|waterfox|nightly${excludeZen ? '' : `|${ZEN_APPNAME_PATTERN}`})`;
+  return `(?i)(firefox|librewolf|waterfox|nightly${
+    excludeZen ? '' : `|${ZEN_APPNAME_PATTERN}|^app\\.zen_browser\\.zen$`
+  })`;
 }
 
 export const browser_appname_regex: Record<string, string> = {
