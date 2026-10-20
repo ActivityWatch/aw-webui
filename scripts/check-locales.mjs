@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Validates i18n locale files: key parity vs en, placeholder consistency, untranslated strings.
+ * Validates i18n locale files: key parity vs en, placeholder consistency, untranslated strings,
+ * and that every locale list in src/i18n/index.ts (plus LOCALES here) stays sorted.
  * Usage: node scripts/check-locales.mjs [--verbose]
  */
 import fs from 'fs';
@@ -9,8 +10,9 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const LOCALES_DIR = path.join(__dirname, '../src/i18n/locales');
-const LOCALES = ['en', 'uk', 'de', 'ru', 'zh-CN', 'sv', 'es', 'ar', 'hi', 'ja', 'fr', 'pt-BR'];
+const LOCALES = ['ar', 'de', 'en', 'es', 'fr', 'hi', 'ja', 'pt-BR', 'ru', 'sv', 'uk', 'zh-CN'];
 const SRC_DIR = path.join(__dirname, '../src');
+const INDEX_PATH = path.join(SRC_DIR, 'i18n/index.ts');
 const verbose = process.argv.includes('--verbose');
 
 /**
@@ -160,10 +162,57 @@ function usedStaticTranslationKeys() {
   return keys;
 }
 
+/**
+ * Locale lists that must stay sorted, so a new locale has exactly one insertion
+ * slot instead of every PR appending at the tail (and conflicting with each other).
+ */
+function localeOrderErrors() {
+  const source = fs.readFileSync(INDEX_PATH, 'utf8');
+  const block = (start, end) => {
+    const i = source.indexOf(start);
+    const j = i < 0 ? -1 : source.indexOf(end, i + start.length);
+    return j < 0 ? '' : source.slice(i + start.length, j);
+  };
+  const codes = (text, re) => [...text.matchAll(re)].map(m => m[1]);
+  const quoted = /'([\w-]+)'/g;
+  const keys = /^\s*'?([\w-]+)'?\s*[:,]/gm;
+  const lists = {
+    'moment locale imports': codes(source, /^import 'moment\/locale\/([\w-]+)';/gm),
+    'locale imports': codes(source, /^import \w+ from '\.\/locales\/([\w-]+)';/gm),
+    AppLocale: codes(block('export type AppLocale =', ';'), quoted),
+    SUPPORTED: codes(block('const SUPPORTED: AppLocale[] = [', '];'), quoted),
+    HTML_LANG: codes(block('const HTML_LANG: Record<AppLocale, string> = {', '};'), keys),
+    detectBrowserLocale: codes(
+      block('function detectBrowserLocale()', 'return null;\n}'),
+      /return '([\w-]+)';/g
+    ),
+    MOMENT_LOCALE: codes(block('const MOMENT_LOCALE: Record<AppLocale, string> = {', '};'), keys),
+    messages: codes(block('messages: {', '},'), keys),
+    'LOCALES in check-locales.mjs': LOCALES,
+  };
+  const errors = [];
+  for (const [name, list] of Object.entries(lists)) {
+    if (!list.length) {
+      errors.push(`${name}: not found in src/i18n/index.ts (update this check)`);
+      continue;
+    }
+    const i = list.findIndex((code, k) => k > 0 && list[k - 1].localeCompare(code, 'en') > 0);
+    if (i > 0) errors.push(`${name}: '${list[i]}' must come before '${list[i - 1]}'`);
+  }
+  return errors;
+}
+
 let failed = false;
 const coverage = [];
 
 const enFlat = flatten(loadLocale('en'));
+
+const orderErrors = localeOrderErrors();
+if (orderErrors.length) {
+  failed = true;
+  console.error(`\nLocale registrations out of alphabetical order (${orderErrors.length}):`);
+  orderErrors.forEach(e => console.error(`  - ${e}`));
+}
 
 const missingInEnglish = [...usedStaticTranslationKeys()].filter(key => !(key in enFlat));
 if (missingInEnglish.length) {

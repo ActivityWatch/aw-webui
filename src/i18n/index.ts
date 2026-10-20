@@ -1,60 +1,60 @@
 import Vue from 'vue';
 import VueI18n from 'vue-i18n';
 import moment from 'moment';
-import 'moment/locale/uk';
-import 'moment/locale/de';
-import 'moment/locale/ru';
-import 'moment/locale/sv';
-import 'moment/locale/zh-cn';
-import 'moment/locale/es';
 import 'moment/locale/ar';
+import 'moment/locale/de';
+import 'moment/locale/es';
+import 'moment/locale/fr';
 import 'moment/locale/hi';
 import 'moment/locale/ja';
-import 'moment/locale/fr';
 import 'moment/locale/pt-br';
+import 'moment/locale/ru';
+import 'moment/locale/sv';
+import 'moment/locale/uk';
+import 'moment/locale/zh-cn';
 
-import en from './locales/en';
-import uk from './locales/uk';
-import de from './locales/de';
-import ru from './locales/ru';
-import sv from './locales/sv';
-import zhCN from './locales/zh-CN';
-import es from './locales/es';
 import ar from './locales/ar';
+import de from './locales/de';
+import en from './locales/en';
+import es from './locales/es';
+import fr from './locales/fr';
 import hi from './locales/hi';
 import ja from './locales/ja';
-import fr from './locales/fr';
 import ptBR from './locales/pt-BR';
+import ru from './locales/ru';
+import sv from './locales/sv';
+import uk from './locales/uk';
+import zhCN from './locales/zh-CN';
 
 Vue.use(VueI18n);
 
 export type AppLocale =
-  | 'en'
-  | 'uk'
-  | 'de'
-  | 'ru'
-  | 'zh-CN'
-  | 'sv'
-  | 'es'
   | 'ar'
+  | 'de'
+  | 'en'
+  | 'es'
+  | 'fr'
   | 'hi'
   | 'ja'
-  | 'fr'
-  | 'pt-BR';
+  | 'pt-BR'
+  | 'ru'
+  | 'sv'
+  | 'uk'
+  | 'zh-CN';
 
 const SUPPORTED: AppLocale[] = [
-  'en',
-  'uk',
-  'de',
-  'ru',
-  'zh-CN',
-  'sv',
-  'es',
   'ar',
+  'de',
+  'en',
+  'es',
+  'fr',
   'hi',
   'ja',
-  'fr',
   'pt-BR',
+  'ru',
+  'sv',
+  'uk',
+  'zh-CN',
 ];
 
 export function isAppLocale(value: string | null | undefined): value is AppLocale {
@@ -62,18 +62,18 @@ export function isAppLocale(value: string | null | undefined): value is AppLocal
 }
 
 const HTML_LANG: Record<AppLocale, string> = {
-  en: 'en',
-  uk: 'uk',
-  de: 'de',
-  ru: 'ru',
-  'zh-CN': 'zh-CN',
-  sv: 'sv',
-  es: 'es',
   ar: 'ar',
+  de: 'de',
+  en: 'en',
+  es: 'es',
+  fr: 'fr',
   hi: 'hi',
   ja: 'ja',
-  fr: 'fr',
   'pt-BR': 'pt-BR',
+  ru: 'ru',
+  sv: 'sv',
+  uk: 'uk',
+  'zh-CN': 'zh-CN',
 };
 
 function detectBrowserLocale(): AppLocale | null {
@@ -81,19 +81,19 @@ function detectBrowserLocale(): AppLocale | null {
     return null;
   }
   const lang = (navigator.language || '').toLowerCase();
-  if (lang.startsWith('uk')) return 'uk';
-  if (lang.startsWith('de')) return 'de';
-  if (lang.startsWith('ru')) return 'ru';
-  if (lang.startsWith('zh')) return 'zh-CN';
-  if (lang.startsWith('sv')) return 'sv';
-  if (lang.startsWith('es')) return 'es';
   if (lang.startsWith('ar')) return 'ar';
+  if (lang.startsWith('de')) return 'de';
+  if (lang.startsWith('en')) return 'en';
+  if (lang.startsWith('es')) return 'es';
+  if (lang.startsWith('fr')) return 'fr';
   if (lang.startsWith('hi')) return 'hi';
   if (lang.startsWith('ja')) return 'ja';
-  if (lang.startsWith('fr')) return 'fr';
   // Brazilian Portuguese is the only Portuguese variant; pt-PT users get it too.
   if (lang.startsWith('pt')) return 'pt-BR';
-  if (lang.startsWith('en')) return 'en';
+  if (lang.startsWith('ru')) return 'ru';
+  if (lang.startsWith('sv')) return 'sv';
+  if (lang.startsWith('uk')) return 'uk';
+  if (lang.startsWith('zh')) return 'zh-CN';
   return null;
 }
 
@@ -110,18 +110,18 @@ export function getInitialLocale(): AppLocale {
 }
 
 const MOMENT_LOCALE: Record<AppLocale, string> = {
-  en: 'en',
-  uk: 'uk',
-  de: 'de',
-  ru: 'ru',
-  'zh-CN': 'zh-cn',
-  sv: 'sv',
-  es: 'es',
   ar: 'ar',
+  de: 'de',
+  en: 'en',
+  es: 'es',
+  fr: 'fr',
   hi: 'hi',
   ja: 'ja',
-  fr: 'fr',
   'pt-BR': 'pt-br',
+  ru: 'ru',
+  sv: 'sv',
+  uk: 'uk',
+  'zh-CN': 'zh-cn',
 };
 
 const initialLocale = getInitialLocale();
@@ -129,7 +129,20 @@ const initialLocale = getInitialLocale();
 export const i18n = new VueI18n({
   locale: initialLocale,
   fallbackLocale: 'en',
-  messages: { en, uk, de, ru, 'zh-CN': zhCN, sv, es, ar, hi, ja, fr, 'pt-BR': ptBR },
+  messages: {
+    ar,
+    de,
+    en,
+    es,
+    fr,
+    hi,
+    ja,
+    'pt-BR': ptBR,
+    ru,
+    sv,
+    uk,
+    'zh-CN': zhCN,
+  },
   silentTranslationWarn: process.env.NODE_ENV === 'production',
 });
 
