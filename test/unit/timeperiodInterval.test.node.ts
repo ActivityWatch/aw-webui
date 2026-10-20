@@ -23,6 +23,7 @@ const REPO_ROOT = path.resolve(__dirname, '../..');
 const ZONE = 'Europe/Stockholm';
 
 if (!process.env.AW_INTERVAL_ZONE) {
+  // eslint-disable-next-line jest/expect-expect
   test(`interval regressions replay under TZ=${ZONE}`, () => {
     execFileSync(
       process.execPath,
@@ -90,7 +91,10 @@ describe('parseExactInterval', () => {
   });
 
   test('formats back to the same segment', () => {
-    expect(formatExactInterval(parseExactInterval(ok)!)).toBe(ok);
+    const parsed = parseExactInterval(ok);
+    expect(parsed).not.toBeNull();
+    if (!parsed) return;
+    expect(formatExactInterval(parsed)).toBe(ok);
   });
 
   test('survives URL-style encoding of +, : and ..', () => {
