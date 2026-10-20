@@ -78,7 +78,7 @@ div
         | &nbsp;
         | {{ msg }}
 
-  b-modal(v-model="showDeleteModal", :title="$t('buckets.deleteBucketTitle')", centered, no-footer)
+  b-modal(v-model="showDeleteModal", :title="$t('buckets.deleteBucketTitle')", centered, hide-footer)
     | {{ $t('buckets.deleteConfirm', { id: delete_bucket_selected }) }}
     br
     br
@@ -90,7 +90,7 @@ div
       b-button(@click="deleteBucket(delete_bucket_selected)", variant="danger")
         | {{ $t('common.confirm') }}
 
-  b-modal(v-model="showDeleteHostModal", :title="deleteHostModalTitle", centered, no-footer, @hidden="delete_host_selected = null; delete_host_error = null")
+  b-modal(v-model="showDeleteHostModal", :title="deleteHostModalTitle", centered, hide-footer, @hidden="delete_host_selected = null; delete_host_error = null")
     template(v-if="delete_host_selected")
       | {{ $t('buckets.deleteHostConfirmPrefix') }}
       |

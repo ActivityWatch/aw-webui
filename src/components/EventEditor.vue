@@ -1,5 +1,5 @@
 <template lang="pug">
-b-modal(v-if="event && event.id", :model-value="open", @update:model-value="onOpenChange", :title="$t('ui.eventEditor.editTitle')", centered, no-footer, :no-close-on-backdrop="busy", :no-close-on-esc="busy", :hide-header-close="busy")
+b-modal(v-if="event && event.id", :model-value="open", @update:model-value="onOpenChange", :title="$t('ui.eventEditor.editTitle')", centered, hide-footer, :no-close-on-backdrop="busy", :no-close-on-esc="busy", :hide-header-close="busy")
   div(v-if="!editedEvent")
     | {{ $t('ui.eventEditor.loading') }}
 
