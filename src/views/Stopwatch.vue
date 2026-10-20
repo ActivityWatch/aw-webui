@@ -28,6 +28,9 @@ div
         icon(name="play")
         | {{ $t('stopwatch.start') }}
 
+  b-form-group.mt-2(:label="$t('stopwatch.tagsLabel')" label-for="stopwatch-tags")
+    b-input(id="stopwatch-tags" data-testid="stopwatch-tags" v-model="tags" placeholder="work, meeting")
+
   hr
 
   b-alert(v-if="error" show variant="danger")
@@ -57,7 +60,7 @@ div
         h5.mt-3.mb-1 {{ k }}
         div(v-for="e in timersByDate[k]" :key="e.id")
           stopwatch-entry(:event="e", :bucket_id="bucket_id", :now="now",
-            @delete="removeTimer", @update="updateTimer", @new="startTimer(e.data.label)")
+            @delete="removeTimer", @update="updateTimer", @new="startTimer(e.data.label, e.data.tags || [])")
       b-button.mt-3(
         v-if="hasMoreHistory" :disabled="refreshing"
         @click="getEvents(runningLimit, historyLimit + 100)"
@@ -79,6 +82,7 @@ div
 <script lang="ts">
 import _ from 'lodash';
 import moment from 'moment';
+import { parseTags } from '../util/tags';
 
 import StopwatchEntry from '../components/StopwatchEntry.vue';
 import 'vue-awesome/icons/play';
@@ -105,6 +109,7 @@ export default {
       bucket_id: 'aw-stopwatch',
       events: [],
       label: '',
+      tags: '',
       now: moment(),
     };
   },
@@ -131,12 +136,13 @@ export default {
     setInterval(() => (this.now = moment()), 1000);
   },
   methods: {
-    startTimer: async function (label) {
+    startTimer: async function (label, tags = parseTags(this.tags)) {
       const event = {
         timestamp: new Date(),
         data: {
           running: true,
           label: label,
+          tags: [...tags],
         },
       };
       await this.$aw.heartbeat(this.bucket_id, 1, event);
