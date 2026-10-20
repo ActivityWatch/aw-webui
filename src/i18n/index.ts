@@ -82,6 +82,7 @@ export const LANGUAGE_NAMES: Record<AppLocale, string> = {
   es: 'Español',
   fr: 'Français',
   hi: 'हिन्दी',
+  id: 'Bahasa Indonesia',
   ja: '日本語',
   'pt-BR': 'Português (Brasil)',
   ru: 'Русский',

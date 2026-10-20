@@ -104,8 +104,6 @@ const IDENTICAL_OK = {
     'Parent',
   ],
   hi: ['Buckets', 'All'],
-  ja: ['Raw JSON'],
-  'pt-BR': ['App', 'h', 's', 'Buckets', 'Hosts', 'Total', 'Prompt', 'download'],
   id: [
     'Stopwatch',
     'Label',
@@ -118,6 +116,8 @@ const IDENTICAL_OK = {
     'Prompt',
     'Valid',
   ],
+  ja: ['Raw JSON'],
+  'pt-BR': ['App', 'h', 's', 'Buckets', 'Hosts', 'Total', 'Prompt', 'download'],
   sv: ['App', 'Version:', 'Forum', 'Buckets', 'Data:', 'Period', 'Prompt'],
 };
 
