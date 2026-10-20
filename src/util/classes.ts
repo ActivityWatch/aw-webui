@@ -103,7 +103,7 @@ export const defaultCategories: Category[] = [
     name: ['Work'],
     rule: {
       type: 'regex',
-      regex: 'Google Docs|Google Sheets|libreoffice|ReText|TextEdit|Pages|Obsidian',
+      regex: 'Google Docs|Google Sheets|libreoffice|ReText|TextEdit|^Pages$|Obsidian',
     },
     data: { color: '#4ADE80', score: 10 },
   },
@@ -166,7 +166,7 @@ export const defaultCategories: Category[] = [
     rule: {
       type: 'regex',
       regex:
-        'Messenger|Telegram|Signal|WhatsApp|Rambox|Slack|Riot|Element|Discord|Nheko|NeoChat|Mattermost|Texts',
+        'Messenger|Telegram|Signal|WhatsApp|Rambox|Slack|Riot|Element|Discord|Nheko|NeoChat|Mattermost|^Texts$',
     },
   },
   {
