@@ -388,7 +388,14 @@ function browsersWithBuckets(browserbuckets: string[]): [string, string][] {
   const browsername_to_bucketid: [string, string | undefined][] = _.map(
     Object.keys(browser_appnames),
     browserName => {
-      const bucketId = _.find(browserbuckets, bucket_id => _.includes(bucket_id, browserName));
+      const prefix = `aw-watcher-web-${browserName}`;
+      const bucketId = _.find(
+        browserbuckets,
+        bucket_id =>
+          bucket_id === prefix ||
+          bucket_id.startsWith(`${prefix}_`) ||
+          bucket_id.startsWith(`${prefix}-synced-from-`)
+      );
       return [browserName, bucketId];
     }
   );

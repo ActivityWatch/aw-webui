@@ -339,6 +339,26 @@ describe('Zen matching in generated query', () => {
   };
   const zenNames = ['Zen', 'Zen Browser', 'zen-browser', 'Zen.exe'];
 
+  test.each(['zenhost', 'firefox-zen-profile', 'arc-zen-desktop'])(
+    'does not discover dedicated browser buckets from hostname %s',
+    hostname => {
+      const query = fullDesktopQuery({
+        ...params,
+        bid_browsers: [`aw-watcher-web-chrome_${hostname}`, `aw-watcher-web-firefox_${hostname}`],
+      }).join('\n');
+      expect(query).toContain(
+        `events_firefox = flood(query_bucket("aw-watcher-web-firefox_${hostname}"));`
+      );
+      expect(query).not.toContain('events_zen =');
+      expect(query).not.toContain('events_arc =');
+      const firefoxMatch = query.match(
+        /window_firefox_re = filter_keyvals_regex\(events, "app", "(.*)"\);/
+      );
+      expect(firefoxMatch).not.toBeNull();
+      expect(toRegex(firefoxMatch?.[1] ?? '').test('app.zen_browser.zen')).toBe(true);
+    }
+  );
+
   test.each([false, true])('Firefox fallback with dedicated Zen bucket=%s', dedicatedZen => {
     const query = fullDesktopQuery({
       ...params,
