@@ -38,6 +38,9 @@ export function dateformat(periodLength: string) {
 }
 
 export function periodReadable(timeperiod: TimePeriod) {
+  if (timeperiod.length[1] === 'milliseconds') {
+    return exactIntervalReadable(timeperiod);
+  }
   if (timeperiod.length[0] === 1) {
     return moment(timeperiod.start).format(dateformat(timeperiod.length[1]));
   } else {
@@ -238,6 +241,9 @@ export function dateRangeToTimeperiod(range: DateRange, offset: string): TimePer
  */
 export const MAX_DAILY_BUCKETS = 92;
 
+/** Exact intervals up to this many elapsed milliseconds use hourly buckets. */
+export const EXACT_HOURLY_MAX_MS = 24 * 3600 * 1000;
+
 /**
  * Calendar-month periods covering `timeperiod`, with the first and last month
  * clipped to the period bounds.
@@ -268,6 +274,12 @@ export function timeperiodsCalendarMonthsOfPeriod(timeperiod: TimePeriod): TimeP
  */
 export function timeperiodsForBarchart(timeperiod: TimePeriod): TimePeriod[] {
   const [count, res] = timeperiod.length;
+  if (res === 'milliseconds') {
+    // Exact intervals: hours up to one elapsed day, clipped calendar days beyond
+    return count <= EXACT_HOURLY_MAX_MS
+      ? timeperiodsHoursOfPeriod(timeperiod)
+      : timeperiodsExactDaysOfPeriod(timeperiod);
+  }
   if (res.startsWith('day') && count === 1) {
     return timeperiodsHoursOfPeriod(timeperiod);
   } else if (res.startsWith('day') && count > MAX_DAILY_BUCKETS) {
@@ -319,4 +331,154 @@ export function splitTimeperiodStrs(timeperiod: TimePeriod, maxDays: number): st
     cur = next;
   }
   return periods;
+}
+
+/**
+ * Exact intervals are encoded in the Activity URL as one path segment,
+ * `START..END`, under the `interval` period. Both ends are whole-second RFC3339
+ * instants with a `Z` or numeric offset, and the interval is end-exclusive:
+ * `/activity/:host/interval/2026-10-20T13:00:00Z..2026-10-20T14:00:00Z/...`
+ * Unlike `range`, no start-of-day offset applies and ends are not inclusive days.
+ */
+export interface ExactInterval {
+  start: string;
+  end: string;
+}
+
+const INSTANT_RE =
+  /^\d{4}-\d{2}-\d{2}T([01]\d|2[0-3]):[0-5]\d:[0-5]\d(Z|[+-]([01]\d|2[0-3]):[0-5]\d)$/;
+const INSTANT_FORMAT = 'YYYY-MM-DDTHH:mm:ss[Z]';
+/** Exact intervals are limited to the daily-bucket budget, like date ranges. */
+export const MAX_INTERVAL_MS = MAX_DAILY_BUCKETS * 24 * 3600 * 1000;
+
+function parseInstant(str: string): moment.Moment | null {
+  if (!INSTANT_RE.test(str)) return null;
+  const m = moment.parseZone(str, moment.ISO_8601, true);
+  // Reject impossible dates/times (e.g. 2026-02-30, 24:00, offsets beyond +-23:59)
+  return m.isValid() ? m : null;
+}
+
+export function formatInstant(instant: string | moment.Moment): string {
+  return moment.utc(instant).format(INSTANT_FORMAT);
+}
+
+/**
+ * Parse a `START..END` segment. Returns null for anything but two valid
+ * offset-bearing whole-second instants with `end > start` and a span within
+ * MAX_INTERVAL_MS, so that an invalid segment can never reach a query.
+ * Bounds are returned in canonical UTC form.
+ */
+export function parseExactInterval(str: string | undefined | null): ExactInterval | null {
+  if (!str) return null;
+  const parts = str.split(DATE_RANGE_SEP);
+  if (parts.length !== 2) return null;
+  const start = parseInstant(parts[0]);
+  const end = parseInstant(parts[1]);
+  if (!start || !end) return null;
+  const span = end.valueOf() - start.valueOf();
+  if (span <= 0 || span > MAX_INTERVAL_MS) return null;
+  return { start: formatInstant(start), end: formatInstant(end) };
+}
+
+export function formatExactInterval(interval: ExactInterval): string {
+  return `${interval.start}${DATE_RANGE_SEP}${interval.end}`;
+}
+
+/** The elapsed interval as a TimePeriod, so existing query code applies as-is. */
+export function exactIntervalToTimeperiod(interval: ExactInterval): TimePeriod {
+  const start = moment(interval.start);
+  return {
+    start: start.format(),
+    length: [moment(interval.end).valueOf() - start.valueOf(), 'milliseconds'],
+  };
+}
+
+/** Shift both bounds by the elapsed duration (direction -1 = previous, +1 = next). */
+export function shiftExactInterval(interval: ExactInterval, direction: number): ExactInterval {
+  const span = moment(interval.end).valueOf() - moment(interval.start).valueOf();
+  return {
+    start: formatInstant(moment(interval.start).add(direction * span, 'milliseconds')),
+    end: formatInstant(moment(interval.end).add(direction * span, 'milliseconds')),
+  };
+}
+
+/** Whether a TimePeriod is an exact elapsed interval (as opposed to calendar units). */
+export function isExactTimeperiod(timeperiod: TimePeriod): boolean {
+  return timeperiod.length[1] === 'milliseconds';
+}
+
+const WALL_FORMAT = 'YYYY-MM-DDTHH:mm';
+
+/**
+ * UTC instants a local wall time (`YYYY-MM-DDTHH:mm`) can mean in the browser's
+ * zone: none in a spring-forward gap, one normally, two for the repeated hour
+ * when clocks go back. Callers must not silently pick an occurrence.
+ */
+export function wallTimeInstants(wall: string): string[] {
+  const naive = moment.utc(wall, WALL_FORMAT, true);
+  if (!naive.isValid()) return [];
+  const local = moment(wall, WALL_FORMAT, true);
+  const offsets = new Set<number>();
+  for (let h = -3; h <= 3; h++) offsets.add(local.clone().add(h, 'hours').utcOffset());
+  const found: string[] = [];
+  offsets.forEach(offset => {
+    const instant = naive.clone().subtract(offset, 'minutes');
+    // Only offsets that really apply at that instant produce this wall time
+    if (moment(instant.valueOf()).format(WALL_FORMAT) === wall) found.push(formatInstant(instant));
+  });
+  return found.sort();
+}
+
+/** Local wall time (`YYYY-MM-DDTHH:mm`) of an instant, for datetime-local inputs. */
+export function instantToWall(instant: string): string {
+  return moment(instant).format(WALL_FORMAT);
+}
+
+/**
+ * Human-readable label for an exact interval: local date and time, with the
+ * end date shown only when it differs. Never reads as a date-only day.
+ */
+export function exactIntervalReadable(timeperiod: TimePeriod): string {
+  const start = moment(timeperiod.start);
+  const end = start.clone().add(timeperiod.length[0], 'milliseconds');
+  const sameDay = start.format('YYYY-MM-DD') === end.format('YYYY-MM-DD');
+  const fmt = (m: moment.Moment, withDate: boolean) =>
+    m.format(withDate ? 'YYYY-MM-DD HH:mm:ss Z' : 'HH:mm:ss Z');
+  return `${fmt(start, true)} — ${fmt(end, !sameDay)}`;
+}
+
+/**
+ * Hourly buckets for an exact interval up to one elapsed day are produced by
+ * timeperiodsHoursOfPeriod; longer ones are cut into calendar-day chunks from
+ * the start instant, with the final chunk clipped to the end bound.
+ */
+export function timeperiodsExactDaysOfPeriod(timeperiod: TimePeriod): TimePeriod[] {
+  const start = moment(timeperiod.start);
+  const end = start.clone().add(timeperiod.length[0], 'milliseconds');
+  const periods: TimePeriod[] = [];
+  let cur = start.clone();
+  while (cur.isBefore(end)) {
+    let next = cur.clone().add(1, 'day');
+    let bucketLength: [number, string] = [1, 'day'];
+    if (next.isAfter(end)) {
+      next = end.clone();
+      bucketLength = [next.valueOf() - cur.valueOf(), 'milliseconds'];
+    }
+    periods.push({ start: cur.format(), length: bucketLength });
+    cur = next;
+  }
+  return periods;
+}
+
+/**
+ * One label per bucket of `timeperiodsForBarchart` for an exact interval:
+ * hour labels up to a day (repeated fall-back hours carry their offset), the
+ * chunk start date (and time when not midnight) for longer intervals.
+ */
+export function exactBucketLabels(timeperiod: TimePeriod): string[] {
+  if (timeperiod.length[0] <= EXACT_HOURLY_MAX_MS) return hourlyLabels(timeperiod);
+  return timeperiodsExactDaysOfPeriod(timeperiod).map(p => {
+    const m = moment(p.start);
+    return m.format(m.hours() === 0 && m.minutes() === 0 ? 'YYYY-MM-DD' : 'YYYY-MM-DD HH:mm');
+  });
 }

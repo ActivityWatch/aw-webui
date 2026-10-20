@@ -20,7 +20,9 @@ import {
   get_short_month_labels,
 } from '~/util/time';
 import {
+  EXACT_HOURLY_MAX_MS,
   MAX_DAILY_BUCKETS,
+  exactBucketLabels,
   hourlyLabels,
   timeperiodsCalendarMonthsOfPeriod,
 } from '~/util/timeperiod';
@@ -79,6 +81,10 @@ export default {
     labels() {
       const start = this.timeperiod_start;
       const [count, resolution] = this.timeperiod_length;
+      if (resolution === 'milliseconds') {
+        // Exact interval: the same clipped buckets the category query uses
+        return start ? exactBucketLabels({ start, length: [count, resolution] }) : [];
+      }
       if (resolution.startsWith('day') && count == 1) {
         if (start) return hourlyLabels({ start, length: [count, resolution] });
         // Reports aggregate by wall-clock hour without a selected calendar day.
@@ -137,7 +143,10 @@ export default {
     },
     chartOptions(): ChartOptions {
       const [count, resolution] = this.timeperiod_length;
-      const singleDay = resolution.startsWith('day') && count === 1;
+      // Hourly buckets: a single day, or an exact interval of at most one day
+      const singleDay =
+        (resolution.startsWith('day') && count === 1) ||
+        (resolution === 'milliseconds' && count <= EXACT_HOURLY_MAX_MS);
       return {
         responsive: true,
         maintainAspectRatio: false,

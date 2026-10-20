@@ -136,6 +136,7 @@ import { useBucketsStore } from '~/stores/buckets';
 import { useViewsStore } from '~/stores/views';
 import { useSettingsStore } from '~/stores/settings';
 import { isBrowserAllowlistMiss } from '~/util/browserAllowlist';
+import { isExactTimeperiod } from '~/util/timeperiod';
 
 import moment from 'moment';
 
@@ -335,6 +336,8 @@ export default {
     },
     timeline_daterange: function () {
       if (this.activityStore.query_options === null) return null;
+      // The timeline only supports whole days; never fetch a full day for an exact interval
+      if (isExactTimeperiod(this.activityStore.query_options.timeperiod)) return null;
 
       let date = this.activityStore.query_options.date;
       if (!date) {

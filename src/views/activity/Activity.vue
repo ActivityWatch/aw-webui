@@ -69,7 +69,17 @@ div
         b.mr-1 {{ $t('activity.queryRange') }}
         span {{ periodReadableRange }}
 
-  b-alert(v-if="invalidRange" variant="warning" show) {{ $t('activity.invalidRange') }}
+  b-alert(v-if="invalidRange" variant="warning" show) {{ periodLength === 'interval' ? $t('activity.invalidInterval') : $t('activity.invalidRange') }}
+  b-alert.py-1(v-if="intervalIssue" variant="warning" show data-testid="interval-issue")
+    span {{ intervalIssue.message }}
+    b-form-select.ml-2(
+      v-if="intervalIssue.options"
+      size="sm"
+      style="width: auto"
+      :options="intervalIssue.options"
+      :aria-label="intervalIssue.message"
+      @change="editInterval(intervalIssue.field, intervalIssue.wall, $event)"
+    )
   b-alert.activity-diagnostic(
     v-if="activityDiagnostic"
     variant="warning"
@@ -146,6 +156,25 @@ div
           :title="$t('activity.rangeEnd')"
           @change="setRange(dateRange.start, $event.target.value)"
         )
+      template(v-else-if="exactInterval")
+        input.form-control.form-control-sm.activity-datetimeinput(
+          type="datetime-local"
+          step="60"
+          :value="instantToWall(exactInterval.start)"
+          :aria-label="$t('activity.intervalStart')"
+          :title="$t('activity.intervalStart')"
+          data-testid="interval-start"
+          @change="editInterval('start', $event.target.value)"
+        )
+        input.form-control.form-control-sm.activity-datetimeinput(
+          type="datetime-local"
+          step="60"
+          :value="instantToWall(exactInterval.end)"
+          :aria-label="$t('activity.intervalEnd')"
+          :title="$t('activity.intervalEnd')"
+          data-testid="interval-end"
+          @change="editInterval('end', $event.target.value)"
+        )
       input.form-control.form-control-sm.activity-dateinput(
         v-else
         type="date"
@@ -211,7 +240,7 @@ div
     span(:title="$t('activity.allTimeSlowHint')") 🐌 {{ $t('activity.allTimeSlowHint') }}
   // Neighbouring periods of a custom range aren't meaningful, and 31 of
   // them can span decades of AFK data for long ranges.
-  aw-periodusage(v-else-if="periodLength !== 'range'", :periodusage_arr="periodusage", @update="setUsagePeriod")
+  aw-periodusage(v-else-if="periodLength !== 'range' && periodLength !== 'interval'", :periodusage_arr="periodusage", @update="setUsagePeriod")
 
   aw-watcher-liveness-banner(v-if="host" :host="host")
   aw-uncategorized-notification(:periodLength="periodLength")
@@ -260,6 +289,14 @@ div
 .host-selector-row {
   white-space: nowrap;
   line-height: 1.8;
+}
+
+.activity-datetimeinput {
+  // Wide enough for "2026-10-20 13:00" plus the native picker icon, but still
+  // allowed to shrink so both inputs fit a phone-width toolbar.
+  width: 12.5rem;
+  min-width: 0;
+  flex: 1 1 10rem;
 }
 
 .activity-dateinput {
@@ -315,9 +352,19 @@ import { get_day_start_with_offset, get_today_with_offset } from '~/util/time';
 import {
   DateRange,
   TimePeriod,
+  ExactInterval,
   dateRangeToTimeperiod,
+  exactIntervalReadable,
+  exactIntervalToTimeperiod,
   formatDateRange,
+  formatExactInterval,
+  instantToWall,
   parseDateRange,
+  parseExactInterval,
+  shiftExactInterval,
+  wallTimeInstants,
+  MAX_INTERVAL_MS,
+  formatInstant,
   periodStartDate,
   shiftDateRange,
 } from '~/util/timeperiod';
@@ -397,6 +444,8 @@ export default {
       multideviceNoteDismissed: isMultideviceNoteDismissed(),
       // First day with data for the host, used by All time
       earliestDate: null,
+      // Problem with the last exact start/end edit (nonexistent or repeated DST time, bad order)
+      intervalIssue: null,
 
       include_audible: true,
       // Include stopwatch events when a stopwatch bucket exists. The
@@ -453,6 +502,7 @@ export default {
         last7d: this.$t('activity.periodLast7d').toString(),
         last30d: this.$t('activity.periodLast30d').toString(),
         range: this.$t('activity.periodCustomRange').toString(),
+        interval: this.$t('activity.periodExactInterval').toString(),
         all: this.$t('activity.periodAllTime').toString() + ' 🐌',
       };
       return periods;
@@ -464,7 +514,7 @@ export default {
       if (this.periodLength === 'last30d') {
         return this.$t('activity.periodLast30dTitle');
       }
-      if (this.periodLength === 'range') {
+      if (this.periodLength === 'range' || this.periodLength === 'interval') {
         return this.periodReadableRange;
       }
       if (this.periodLength === 'all') {
@@ -506,6 +556,11 @@ export default {
       if (this.periodLength !== 'range') return null;
       return parseDateRange(this.date);
     },
+    // Set when periodLength is 'interval' and the :date segment is a valid exact `start..end`
+    exactInterval: function (): ExactInterval | null {
+      if (this.periodLength !== 'interval') return null;
+      return parseExactInterval(this.date);
+    },
     // All time is the range from the host's first day with data to today
     allTimeRange: function (): DateRange | null {
       if (this.periodLength !== 'all' || !this.earliestDate) return null;
@@ -513,7 +568,10 @@ export default {
       return { start: this.earliestDate < today ? this.earliestDate : today, end: today };
     },
     invalidRange: function () {
-      return this.periodLength === 'range' && !this.dateRange;
+      return (
+        (this.periodLength === 'range' && !this.dateRange) ||
+        (this.periodLength === 'interval' && !this.exactInterval)
+      );
     },
     activityDiagnostic: function (): ActivityDiagnostic | null {
       return diagnoseActivity({
@@ -553,6 +611,11 @@ export default {
       if (this.periodLength === 'range') {
         return this.dateRange ? this.dateRange.start : get_today_with_offset(offset);
       }
+      if (this.periodLength === 'interval') {
+        return this.exactInterval
+          ? moment(this.exactInterval.start).format('YYYY-MM-DD')
+          : get_today_with_offset(offset);
+      }
       const baseDate = this.date || get_today_with_offset(offset);
       if (['week', 'month', 'year'].includes(this.periodLength)) {
         return periodStartDate(baseDate, this.periodLength);
@@ -564,6 +627,9 @@ export default {
     },
     nextDisabled: function () {
       const today = this.todayDate;
+      if (this.exactInterval) {
+        return moment(shiftExactInterval(this.exactInterval, 1).start).isSameOrAfter(moment());
+      }
       if (this.dateRange) {
         return shiftDateRange(this.dateRange, 1).start > today;
       }
@@ -632,20 +698,24 @@ export default {
       return `/activity/${this.hostParam}/${this.periodLength}`;
     },
     periodusage: function () {
-      if (!this.timeperiod) return [];
+      // Neighbouring periods of an exact interval would be ±15 sub-day slices
+      if (!this.timeperiod || this.periodLength === 'interval') return [];
       return this.activityStore.getActiveHistoryAroundTimeperiod(this.timeperiod);
     },
     timeperiod: function () {
       const settingsStore = useSettingsStore();
 
-      if (this.dateRange) {
+      if (this.exactInterval) {
+        // Exact instants: no start-of-day offset applies
+        return exactIntervalToTimeperiod(this.exactInterval);
+      } else if (this.dateRange) {
         return dateRangeToTimeperiod(this.dateRange, settingsStore.startOfDay);
       } else if (this.periodLength === 'all') {
         // null until the earliest date is known; refresh() waits for it
         return this.allTimeRange
           ? dateRangeToTimeperiod(this.allTimeRange, settingsStore.startOfDay)
           : null;
-      } else if (this.periodLength === 'range') {
+      } else if (this.periodLength === 'range' || this.periodLength === 'interval') {
         // Invalid range in the URL: fall back to today (a warning is shown)
         return {
           start: get_day_start_with_offset(this._date, settingsStore.startOfDay),
@@ -673,7 +743,14 @@ export default {
       }
     },
     periodReadableRange: function () {
-      if (this.periodLength === 'range' || this.periodLength === 'all') {
+      if (this.exactInterval) {
+        return exactIntervalReadable(this.timeperiod);
+      }
+      if (
+        this.periodLength === 'range' ||
+        this.periodLength === 'interval' ||
+        this.periodLength === 'all'
+      ) {
         // Show both ends as picked/derived (end inclusive)
         const range = this.dateRange || this.allTimeRange || { start: this._date, end: this._date };
         return `${range.start}—${range.end}`;
@@ -759,6 +836,9 @@ export default {
       persistMultideviceNoteDismissed();
     },
     previousPeriod: function () {
+      if (this.exactInterval) {
+        return formatExactInterval(shiftExactInterval(this.exactInterval, -1));
+      }
       if (this.dateRange) {
         return formatDateRange(shiftDateRange(this.dateRange, -1));
       }
@@ -772,6 +852,9 @@ export default {
         .format('YYYY-MM-DD');
     },
     nextPeriod: function () {
+      if (this.exactInterval) {
+        return formatExactInterval(shiftExactInterval(this.exactInterval, 1));
+      }
       if (this.dateRange) {
         const next = shiftDateRange(this.dateRange, 1);
         // Clip at today, like setRange (only reachable when next.start <= today)
@@ -788,6 +871,47 @@ export default {
           this.timeperiod.length[1] as moment.unitOfTime.DurationConstructor
         )
         .format('YYYY-MM-DD');
+    },
+
+    instantToWall,
+
+    // Edit one end of the exact interval from a local wall time. A wall time that
+    // does not exist (spring-forward gap) is rejected, and one that happens twice
+    // (fall-back) asks which occurrence is meant instead of silently choosing.
+    editInterval: function (field: 'start' | 'end', wall: string, pick?: string) {
+      this.intervalIssue = null;
+      const current = this.exactInterval;
+      if (!current || !wall) return;
+      const candidates = wallTimeInstants(wall);
+      if (candidates.length === 0) {
+        this.intervalIssue = {
+          message: this.$t('activity.intervalNonexistentTime').toString(),
+        };
+        return;
+      }
+      if (candidates.length > 1 && !candidates.includes(pick)) {
+        this.intervalIssue = {
+          message: this.$t('activity.intervalAmbiguousTime').toString(),
+          field,
+          wall,
+          options: [
+            { value: null, text: '—', disabled: true },
+            ...candidates.map(c => ({ value: c, text: moment(c).format('HH:mm Z') })),
+          ],
+        };
+        return;
+      }
+      const next = { ...current, [field]: candidates.length > 1 ? pick : candidates[0] };
+      const span = moment(next.end).valueOf() - moment(next.start).valueOf();
+      if (span <= 0) {
+        this.intervalIssue = { message: this.$t('activity.intervalEndAfterStart').toString() };
+        return;
+      }
+      if (span > MAX_INTERVAL_MS) {
+        this.intervalIssue = { message: this.$t('activity.intervalTooLong').toString() };
+        return;
+      }
+      this.pushPeriod('interval', formatExactInterval(next));
     },
 
     setRange: function (start: string, end: string) {
@@ -832,6 +956,25 @@ export default {
 
       if (periodLength === 'all') {
         this.pushPeriod('all', null);
+        return;
+      }
+
+      if (periodLength === 'interval') {
+        // Entering exact-times mode: start from the interval the view shows now
+        // (clipped to the interval budget), so the bounds are exact and editable.
+        if (!this.timeperiod || this.periodLength === 'interval') return;
+        const start = moment(this.timeperiod.start);
+        const end = start
+          .clone()
+          .add(
+            this.timeperiod.length[0],
+            this.timeperiod.length[1] as moment.unitOfTime.DurationConstructor
+          );
+        const capped = moment.min(end, start.clone().add(MAX_INTERVAL_MS, 'milliseconds'));
+        this.pushPeriod(
+          'interval',
+          formatExactInterval({ start: formatInstant(start), end: formatInstant(capped) })
+        );
         return;
       }
 
@@ -946,7 +1089,10 @@ export default {
         include_category_history: this.needsCategoryHistory,
         filter_categories: this.filter_categories,
         always_active_pattern: this.always_active_pattern,
-        skip_active_history: this.periodLength === 'range' || this.periodLength === 'all',
+        skip_active_history:
+          this.periodLength === 'range' ||
+          this.periodLength === 'interval' ||
+          this.periodLength === 'all',
         all_time: this.periodLength === 'all',
       };
       const generation = ++this.refreshGeneration;

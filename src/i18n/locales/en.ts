@@ -395,6 +395,15 @@ export default {
     rangeStart: 'Start date',
     rangeEnd: 'End date',
     invalidRange: 'Invalid date range in URL, showing today instead.',
+    periodExactInterval: 'exact times',
+    intervalStart: 'Start time',
+    intervalEnd: 'End time (exclusive)',
+    invalidInterval: 'Invalid time interval in URL, showing today instead.',
+    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    intervalAmbiguousTime:
+      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
+    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
+    intervalEndAfterStart: 'The end time must be after the start time.',
     diagnosticMissingWindow:
       'No window bucket for {host}. Start aw-watcher-window, then refresh this page.',
     diagnosticMissingAfk: 'No AFK bucket for {host}. Start aw-watcher-afk, then refresh this page.',
@@ -453,6 +462,7 @@ export default {
     periodLast7d: 'the last 7 days',
     periodLast30d: 'the last 30 days',
     periodCustomRange: 'in the selected range',
+    periodExactInterval: 'in the selected time interval',
     periodAllTime: 'in total',
   },
   visualizations: {
