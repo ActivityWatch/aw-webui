@@ -249,17 +249,46 @@ test.clientScripts({
 // Kept as a single fixture; the mobile-overflow test already covers the mobile
 // layout assertion, and timeline-initial.png captures the loading state.
 
+const timelineBucketURL = `http://127.0.0.1:5666/api/0/buckets/aw-watcher-window_timeline-e2e-${process.pid}`;
+
 fixture(`Timeline view`)
   .page(`${baseURL}/#/timeline`)
   .requestHooks(HTTPLogger)
   .beforeEach(async t => {
+    // Generated fake data only covers daytime. Seed a recent, wide-enough event
+    // so the 12h tooltip assertion also works overnight or with old fake data.
+    const bucket = await t.request.post(timelineBucketURL, {
+      body: {
+        type: 'currentwindow',
+        client: 'aw-watcher-window',
+        hostname: 'timeline-e2e',
+      },
+    });
+    await t.expect(bucket.status).eql(200);
+    const events = await t.request.post(`${timelineBucketURL}/events`, {
+      body: [
+        {
+          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          duration: 30 * 60,
+          data: { app: 'Timeline fixture', title: 'Tooltip screenshot event' },
+        },
+      ],
+    });
+    await t.expect(events.status).eql(200);
     // Matrix tests persist their theme on the server; keep Timeline captures light.
+    // Reload after seeding so the bucket store discovers the new bucket.
     await applyTheme(t, 'light');
+  })
+  .afterEach(async t => {
+    const response = await t.request.delete(timelineBucketURL);
+    await t.expect(response.status).eql(200);
   });
 
 test.clientScripts({
   content: logJsErrorCode,
 })('Screenshot the timeline view', async t => {
+  // The preceding activity capture leaves the shared browser at mobile width.
+  await t.resizeWindow(1280, 800);
   await hide_devonly(t);
   await t.takeScreenshot({
     path: 'timeline-initial.png',
