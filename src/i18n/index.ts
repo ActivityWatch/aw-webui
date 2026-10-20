@@ -11,6 +11,7 @@ import 'moment/locale/pt-br';
 import 'moment/locale/ru';
 import 'moment/locale/sv';
 import 'moment/locale/uk';
+import 'moment/locale/ur';
 import 'moment/locale/zh-cn';
 
 import ar from './locales/ar';
@@ -24,6 +25,7 @@ import ptBR from './locales/pt-BR';
 import ru from './locales/ru';
 import sv from './locales/sv';
 import uk from './locales/uk';
+import ur from './locales/ur';
 import zhCN from './locales/zh-CN';
 
 Vue.use(VueI18n);
@@ -40,6 +42,7 @@ export type AppLocale =
   | 'ru'
   | 'sv'
   | 'uk'
+  | 'ur'
   | 'zh-CN';
 
 const SUPPORTED: AppLocale[] = [
@@ -54,6 +57,7 @@ const SUPPORTED: AppLocale[] = [
   'ru',
   'sv',
   'uk',
+  'ur',
   'zh-CN',
 ];
 
@@ -73,6 +77,7 @@ const HTML_LANG: Record<AppLocale, string> = {
   ru: 'ru',
   sv: 'sv',
   uk: 'uk',
+  ur: 'ur',
   'zh-CN': 'zh-CN',
 };
 
@@ -93,6 +98,7 @@ function detectBrowserLocale(): AppLocale | null {
   if (lang.startsWith('ru')) return 'ru';
   if (lang.startsWith('sv')) return 'sv';
   if (lang.startsWith('uk')) return 'uk';
+  if (lang.startsWith('ur')) return 'ur';
   if (lang.startsWith('zh')) return 'zh-CN';
   return null;
 }
@@ -121,6 +127,7 @@ const MOMENT_LOCALE: Record<AppLocale, string> = {
   ru: 'ru',
   sv: 'sv',
   uk: 'uk',
+  ur: 'ur',
   'zh-CN': 'zh-cn',
 };
 
@@ -141,11 +148,13 @@ export const i18n = new VueI18n({
     ru,
     sv,
     uk,
+    ur,
     'zh-CN': zhCN,
   },
   silentTranslationWarn: process.env.NODE_ENV === 'production',
 });
 
+// moment's `ur` locale already formats with Western digits, so it needs no override.
 // moment's `ar` locale renders Arabic-Indic digits, while the translated UI strings
 // and every number the app formats itself use Western digits. Keep dates consistent.
 // updateLocale also activates `ar` globally, so it must run before the line below.
@@ -162,7 +171,7 @@ moment.updateLocale('hi', {
   postformat: (s: string) => s,
 });
 
-const RTL_LOCALES: AppLocale[] = ['ar'];
+const RTL_LOCALES: AppLocale[] = ['ar', 'ur'];
 
 export function isRtlLocale(locale: AppLocale): boolean {
   return RTL_LOCALES.includes(locale);
