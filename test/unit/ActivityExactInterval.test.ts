@@ -96,7 +96,31 @@ describe('Activity exact interval period', () => {
     expect(start).toBe(Date.parse(vm.timeperiod.start));
   });
 
+  test('navigation clears a pending offset choice before refreshing the new period', () => {
+    const vm = makeVm('interval', SEGMENT, {
+      intervalIssue: { field: 'start', wall: '2026-10-25T02:30', options: [] },
+      refresh: jest.fn(),
+    });
+    vm.date = vm.nextPeriod();
+    Activity.watch.timeperiod.call(vm);
+    expect(vm.intervalIssue).toBeNull();
+    expect(vm.refresh).toHaveBeenCalledTimes(1);
+  });
+
   describe('editInterval', () => {
+    test('editing an exact second preserves both bounds at second precision', () => {
+      const pushPeriod = jest.fn();
+      const vm = makeVm('interval', '2026-10-20T13:00:45Z..2026-10-20T13:01:15Z', {
+        pushPeriod,
+      });
+      vm.editInterval('start', vm.instantToWall(vm.exactInterval.start));
+      expect(vm.intervalIssue).toBeNull();
+      expect(pushPeriod).toHaveBeenCalledWith(
+        'interval',
+        '2026-10-20T13:00:45Z..2026-10-20T13:01:15Z'
+      );
+    });
+
     test('pushes the new start with the other end unchanged', () => {
       const pushPeriod = jest.fn();
       const vm = makeVm('interval', SEGMENT, { pushPeriod });

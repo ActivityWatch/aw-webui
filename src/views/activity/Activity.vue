@@ -159,7 +159,7 @@ div
       template(v-else-if="exactInterval")
         input.form-control.form-control-sm.activity-datetimeinput(
           type="datetime-local"
-          step="60"
+          step="1"
           :value="instantToWall(exactInterval.start)"
           :aria-label="$t('activity.intervalStart')"
           :title="$t('activity.intervalStart')"
@@ -168,7 +168,7 @@ div
         )
         input.form-control.form-control-sm.activity-datetimeinput(
           type="datetime-local"
-          step="60"
+          step="1"
           :value="instantToWall(exactInterval.end)"
           :aria-label="$t('activity.intervalEnd')"
           :title="$t('activity.intervalEnd')"
@@ -798,6 +798,7 @@ export default {
       this.loadEarliestDate();
     },
     timeperiod: function () {
+      this.intervalIssue = null;
       this.refresh();
     },
     filter_category: function () {

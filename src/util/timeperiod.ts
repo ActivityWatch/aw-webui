@@ -407,29 +407,32 @@ export function isExactTimeperiod(timeperiod: TimePeriod): boolean {
   return timeperiod.length[1] === 'milliseconds';
 }
 
-const WALL_FORMAT = 'YYYY-MM-DDTHH:mm';
+const WALL_FORMAT = 'YYYY-MM-DDTHH:mm:ss';
+const WALL_INPUT_FORMATS = [WALL_FORMAT, 'YYYY-MM-DDTHH:mm'];
 
 /**
- * UTC instants a local wall time (`YYYY-MM-DDTHH:mm`) can mean in the browser's
+ * UTC instants a local wall time (`YYYY-MM-DDTHH:mm[:ss]`) can mean in the browser's
  * zone: none in a spring-forward gap, one normally, two for the repeated hour
  * when clocks go back. Callers must not silently pick an occurrence.
  */
 export function wallTimeInstants(wall: string): string[] {
-  const naive = moment.utc(wall, WALL_FORMAT, true);
+  const naive = moment.utc(wall, WALL_INPUT_FORMATS, true);
   if (!naive.isValid()) return [];
-  const local = moment(wall, WALL_FORMAT, true);
+  const local = moment(wall, WALL_INPUT_FORMATS, true);
   const offsets = new Set<number>();
   for (let h = -3; h <= 3; h++) offsets.add(local.clone().add(h, 'hours').utcOffset());
   const found: string[] = [];
   offsets.forEach(offset => {
     const instant = naive.clone().subtract(offset, 'minutes');
     // Only offsets that really apply at that instant produce this wall time
-    if (moment(instant.valueOf()).format(WALL_FORMAT) === wall) found.push(formatInstant(instant));
+    if (moment(instant.valueOf()).format(WALL_FORMAT) === naive.format(WALL_FORMAT)) {
+      found.push(formatInstant(instant));
+    }
   });
   return found.sort();
 }
 
-/** Local wall time (`YYYY-MM-DDTHH:mm`) of an instant, for datetime-local inputs. */
+/** Local wall time (`YYYY-MM-DDTHH:mm:ss`) of an instant, for datetime-local inputs. */
 export function instantToWall(instant: string): string {
   return moment(instant).format(WALL_FORMAT);
 }

@@ -265,8 +265,18 @@ describeZone('DST handling (Europe/Stockholm)', () => {
 
   test('round-trips instant -> wall -> instant', () => {
     const wall = instantToWall('2026-10-20T11:00:00Z');
-    expect(wall).toBe('2026-10-20T13:00');
+    expect(wall).toBe('2026-10-20T13:00:00');
     expect(wallTimeInstants(wall)).toContain('2026-10-20T11:00:00Z');
+  });
+
+  test('preserves seconds through ordinary, repeated and nonexistent wall times', () => {
+    expect(instantToWall('2026-10-20T11:00:45Z')).toBe('2026-10-20T13:00:45');
+    expect(wallTimeInstants('2026-10-20T13:00:45')).toEqual(['2026-10-20T11:00:45Z']);
+    expect(wallTimeInstants('2026-10-25T02:30:45')).toEqual([
+      '2026-10-25T00:30:45Z',
+      '2026-10-25T01:30:45Z',
+    ]);
+    expect(wallTimeInstants('2026-03-29T02:30:45')).toEqual([]);
   });
 
   test('a fall-back interval buckets the repeated hour once each, with distinct labels', () => {
