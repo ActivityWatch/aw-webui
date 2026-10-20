@@ -27,13 +27,16 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
       tr
         th {{ $t('ui.eventEditor.key') }}
         th {{ $t('ui.eventEditor.value') }}
-      tr(v-for="(v, k) in editedEvent.data" :key="k")
+      tr(v-for="(v, k) in editableData" :key="k")
         td
           b-input(disabled, :value="k", size="sm")
         td
           b-checkbox(v-if="typeof event.data[k] === typeof true", v-model="editedEvent.data[k]", :disabled="busy", style="margin: 0.25em")
           b-input(v-if="typeof event.data[k] === typeof 'string'", v-model="editedEvent.data[k]", :disabled="busy", size="sm")
           b-input(v-if="typeof event.data[k] === 'number'", v-model.number="editedEvent.data[k]", :disabled="busy", size="sm", type="number")
+
+    b-form-group.mt-2(v-if="editableTags" :label="$t('stopwatch.tagsLabel')" :label-for="'event-tags-' + event.id")
+      b-input(:id="'event-tags-' + event.id" data-testid="event-tags" v-model="tagsText" :disabled="busy")
 
     hr
 
@@ -66,6 +69,7 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
 
 import moment from 'moment';
 import _ from 'lodash';
+import { parseTags } from '../util/tags';
 
 import 'vue-awesome/icons/times';
 import 'vue-awesome/icons/save';
@@ -76,16 +80,22 @@ export default {
   props: {
     event: { type: Object },
     bucket_id: { type: String, required: true },
+    editableTags: { type: Boolean, default: false },
   },
   data() {
     return {
       editedEvent: null,
+      tagsText: '',
       // Name of the mutation in flight ('save' / 'delete'), else null.
       pending: null,
       error: '',
     };
   },
   computed: {
+    editableData() {
+      const data = this.editedEvent ? this.editedEvent.data : {};
+      return this.editableTags ? _.omit(data, 'tags') : data;
+    },
     busy() {
       return this.pending !== null;
     },
@@ -124,6 +134,7 @@ export default {
       // Capture before any async suspension: another selection can change
       // this.editedEvent or this.bucket_id while replaceEvent is in-flight.
       const savedEvent = _.cloneDeep(this.editedEvent);
+      if (this.editableTags) savedEvent.data.tags = parseTags(this.tagsText);
       const bucketId = this.bucket_id;
       await this.runMutation('save', savedEvent, bucketId, () =>
         this.$aw.replaceEvent(bucketId, savedEvent)
@@ -183,8 +194,12 @@ export default {
     async getEvent() {
       if (this.bucket_id && this.event && this.event.id) {
         this.editedEvent = await this.$aw.getEvent(this.bucket_id, this.event.id);
+        this.tagsText = Array.isArray(this.editedEvent.data.tags)
+          ? this.editedEvent.data.tags.join(', ')
+          : '';
       } else {
         this.editedEvent = null;
+        this.tagsText = '';
       }
     },
     close() {

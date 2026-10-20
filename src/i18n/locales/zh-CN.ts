@@ -479,6 +479,7 @@ export default {
     aboutTitle: '关于秒表',
     aboutBody: '在自动追踪的同时手动记录会话。',
     placeholder: '你在做什么？',
+    tagsLabel: '标签（逗号分隔）',
     noRunning: '没有正在运行的秒表。在上面开始一个来追踪专注的工作。',
     start: '开始',
     running: '运行中',

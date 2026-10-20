@@ -505,6 +505,7 @@ export default {
     aboutBody:
       'Lacak sesi yang dicatat manual berdampingan dengan pelacakan otomatis. Untuk melihat total stopwatch Anda di dasbor, buka tampilan Aktivitas, klik Ubah tampilan, lalu Tambah visualisasi dan pilih Event Stopwatch Teratas.',
     placeholder: 'Sedang mengerjakan apa?',
+    tagsLabel: 'Tag (dipisahkan koma)',
     noRunning:
       'Tidak ada stopwatch yang berjalan. Mulai satu di atas untuk melacak pekerjaan terfokus.',
     start: 'Mulai',

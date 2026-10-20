@@ -512,6 +512,7 @@ export default {
     aboutBody:
       'Acompanhe sessões registradas manualmente junto com o rastreamento automático. Para ver os totais do cronômetro em um painel, abra uma visualização de Atividade, clique em Editar visualização, depois em Adicionar visualização e escolha Principais eventos do cronômetro.',
     placeholder: 'No que você está trabalhando?',
+    tagsLabel: 'Tags (separadas por vírgula)',
     noRunning: 'Nenhum cronômetro em execução. Inicie um acima para acompanhar o trabalho focado.',
     start: 'Iniciar',
     running: 'Em execução',

@@ -499,6 +499,7 @@ export default {
     aboutBody:
       'Manuell erfasste Sitzungen neben der automatischen Erfassung verfolgen. Um Stoppuhr-Summen im Dashboard zu sehen, öffnen Sie eine Aktivitätsansicht, klicken Sie auf Ansicht bearbeiten, dann Visualisierung hinzufügen und wählen Sie Top-Stoppuhr-Ereignisse.',
     placeholder: 'Woran arbeiten Sie?',
+    tagsLabel: 'Tags (durch Kommas getrennt)',
     noRunning: 'Keine Stoppuhr läuft. Starten Sie oben eine, um fokussierte Arbeit zu erfassen.',
     start: 'Starten',
     running: 'Läuft',
