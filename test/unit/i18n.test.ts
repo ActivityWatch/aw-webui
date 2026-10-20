@@ -291,10 +291,10 @@ describe('i18n', () => {
   });
 
   test('setAppLocale switches to Bengali messages and persists', () => {
-    const { setAppLocale, i18n } = loadI18n();
+    const { setAppLocale, i18n, LANGUAGE_NAMES } = loadI18n();
     setAppLocale('bn');
     expect(i18n.locale).toBe('bn');
-    expect(i18n.t('common.languageBn')).toBe('বাংলা');
+    expect(LANGUAGE_NAMES.bn).toBe('বাংলা');
     expect(i18n.t('common.save')).not.toBe('Save');
     expect(document.documentElement.lang).toBe('bn');
     expect(document.documentElement.dir).toBe('ltr');
