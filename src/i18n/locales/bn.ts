@@ -397,6 +397,16 @@ export default {
     rangeStart: 'শুরুর তারিখ',
     rangeEnd: 'শেষের তারিখ',
     invalidRange: 'URL এ তারিখের সময়সীমা অবৈধ, তাই আজকের তারিখ দেখানো হচ্ছে।',
+    // English fallback until these interval strings are translated.
+    periodExactInterval: 'exact times',
+    intervalStart: 'Start time',
+    intervalEnd: 'End time (exclusive)',
+    invalidInterval: 'Invalid time interval in URL, showing today instead.',
+    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    intervalAmbiguousTime:
+      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
+    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
+    intervalEndAfterStart: 'The end time must be after the start time.',
     diagnosticMissingWindow:
       '{host} এর জন্য কোনো উইন্ডো বাকেট নেই। aw-watcher-window চালু করুন, তারপর এই পাতা রিফ্রেশ করুন।',
     diagnosticMissingAfk:
@@ -456,6 +466,7 @@ export default {
     periodLast7d: 'গত 7 দিনের',
     periodLast30d: 'গত 30 দিনের',
     periodCustomRange: 'নির্বাচিত সময়সীমার',
+    periodExactInterval: 'in the selected time interval', // English fallback
     periodAllTime: 'সর্বকালের',
   },
   visualizations: {
