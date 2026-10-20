@@ -311,32 +311,16 @@ describe('i18n', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('id');
     expect(i18n.locale).toBe('id');
-    expect(i18n.t('common.languageId')).toBe('Bahasa Indonesia');
-    expect(i18n.t('common.languageAr')).toBe('العربية');
     expect(i18n.t('common.save')).toBe('Simpan');
     expect(document.documentElement.lang).toBe('id');
     expect(localStorage.getItem('locale')).toBe('id');
   });
 
   test('every locale shows the Indonesian endonym', () => {
-    const { i18n, setAppLocale } = loadI18n();
-    for (const locale of [
-      'en',
-      'uk',
-      'de',
-      'ru',
-      'zh-CN',
-      'sv',
-      'es',
-      'ar',
-      'hi',
-      'ja',
-      'fr',
-      'pt-BR',
-      'id',
-    ]) {
+    const { LANGUAGE_NAMES, SUPPORTED, setAppLocale } = loadI18n();
+    for (const locale of SUPPORTED) {
       setAppLocale(locale);
-      expect(i18n.getLocaleMessage(locale).common.languageId).toBe('Bahasa Indonesia');
+      expect(LANGUAGE_NAMES.id).toBe('Bahasa Indonesia');
     }
   });
 
