@@ -444,7 +444,8 @@ export function chromeAppnameRegex(excludeForks: Iterable<string> = []): string 
 
 export const browser_appname_regex: Record<string, string> = {
   chrome: chromeAppnameRegex(),
-  firefox: '(?i)(firefox|librewolf|waterfox|nightly)',
+  // Zen can use the Firefox extension build and report to its watcher bucket.
+  firefox: '(?i)(firefox|librewolf|waterfox|nightly|zen)',
   opera: '(?i)(opera)',
   brave: '(?i)(brave)',
   edge: '(?i)^(microsoft[-_ ]?edge|msedge)',
