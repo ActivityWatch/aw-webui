@@ -77,7 +77,7 @@ div
     data-testid="activity-diagnostic"
   )
     span {{ activityDiagnosticMessage }}
-    router-link.ml-1(to="/buckets") {{ $t('activity.diagnosticOpenRawData') }}
+    router-link.ms-1(to="/buckets") {{ $t('activity.diagnosticOpenRawData') }}
 
   div.activity-toolbar.d-flex.flex-wrap.align-items-center
     div.d-flex.me-2

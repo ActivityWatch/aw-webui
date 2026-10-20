@@ -61,8 +61,11 @@ describe('timeline event editing (#984)', () => {
     );
 
     expect(replaceEvent).toHaveBeenCalledWith('aw-watcher-window_test', editedEvent);
-    expect(emit).toHaveBeenNthCalledWith(1, 'save', editedEvent);
-    expect(emit).toHaveBeenNthCalledWith(2, 'saved', editedEvent, 'aw-watcher-window_test');
+    // Closing the editor (update:open) is reported separately.
+    expect(emit.mock.calls.filter(([name]) => name !== 'update:open')).toEqual([
+      ['save', editedEvent],
+      ['saved', editedEvent, 'aw-watcher-window_test'],
+    ]);
   });
 
   test.each([
@@ -114,8 +117,11 @@ describe('timeline event editing (#984)', () => {
 
     expect(snapshot.timestamp.valueOf()).toBe(Date.parse('2026-10-16T10:00:00Z'));
     expect(snapshot.data.nested.value).toBe('original');
-    expect(emit).toHaveBeenNthCalledWith(1, 'save', snapshot);
-    expect(emit).toHaveBeenNthCalledWith(2, 'saved', snapshot, 'aw-stopwatch_test');
+    // Closing the editor (update:open) is reported separately.
+    expect(emit.mock.calls.filter(([name]) => name !== 'update:open')).toEqual([
+      ['save', snapshot],
+      ['saved', snapshot, 'aw-stopwatch_test'],
+    ]);
   });
 
   test('does not report a saved event when the server rejects the update', async () => {
@@ -314,13 +320,13 @@ describe('timeline teardown', () => {
       timeline: { destroy },
       onHorizontalWheel: jest.fn(),
     };
-    VisTimeline.beforeDestroy.call(vm);
+    VisTimeline.beforeUnmount.call(vm);
     expect(destroy).toHaveBeenCalledTimes(1);
     expect(vm.timeline).toBeNull();
     expect(el.removeEventListener).toHaveBeenCalledWith('wheel', vm.onHorizontalWheel, {
       capture: true,
     });
-    VisTimeline.beforeDestroy.call(vm);
+    VisTimeline.beforeUnmount.call(vm);
     expect(destroy).toHaveBeenCalledTimes(1);
   });
 

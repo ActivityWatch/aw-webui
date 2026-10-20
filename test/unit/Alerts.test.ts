@@ -1,6 +1,5 @@
-import { createLocalVue, shallowMount } from '@vue/test-utils';
+import { shallowMount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
-import BootstrapVue from 'bootstrap-vue';
 import moment from 'moment';
 
 import Alerts from '~/views/Alerts.vue';
@@ -8,11 +7,6 @@ import { useSettingsStore } from '~/stores/settings';
 import { useCategoryStore } from '~/stores/categories';
 import { useBucketsStore } from '~/stores/buckets';
 import { getDefaultAlertGoals } from '~/util/alerts';
-
-const localVue = createLocalVue();
-localVue.use(BootstrapVue);
-localVue.filter('friendlyduration', v => String(v));
-localVue.filter('friendlytime', v => String(v));
 
 // Mounts the view with a stubbed $aw client. Buckets are pre-seeded so
 // mounted() resolves a hostname without reaching for the global AWClient.
@@ -38,9 +32,14 @@ function mountAlerts({ startOfDay = '04:00', storedAlerts = undefined }: any = {
   ]);
 
   const wrapper: any = shallowMount(Alerts, {
-    localVue,
-    mocks: { $aw: { query } },
-    stubs: { icon: true },
+    global: {
+      mocks: {
+        $aw: { query },
+        friendlyduration: v => String(v),
+        friendlytime: v => String(v),
+      },
+      stubs: { icon: true },
+    },
   });
   wrapper.setData({ hostname: 'testhost' });
 
@@ -313,11 +312,11 @@ describe('Alerts goal persistence', () => {
       }
       expect(wrapper.vm.alerts).toEqual(stored);
       expect(settingsStore.alerts).toEqual(stored);
-      wrapper.destroy();
+      wrapper.unmount();
       const remounted = mountAlerts();
       await settle();
       expect(remounted.wrapper.vm.alerts).toEqual(stored);
-      remounted.wrapper.destroy();
+      remounted.wrapper.unmount();
       save.mockRestore();
       errors.mockRestore();
     }

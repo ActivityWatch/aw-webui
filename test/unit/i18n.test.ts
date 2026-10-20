@@ -70,14 +70,14 @@ describe('i18n', () => {
       configurable: true,
     });
     const { i18n } = loadI18n();
-    expect(i18n.locale).toBe('es');
+    expect(i18n.global.locale.value).toBe('es');
   });
 
   test('setAppLocale switches to Spanish messages', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('es');
-    expect(i18n.locale).toBe('es');
-    expect(i18n.t('common.save')).not.toBe('Save');
+    expect(i18n.global.locale.value).toBe('es');
+    expect(i18n.global.t('common.save')).not.toBe('Save');
     expect(document.documentElement.lang).toBe('es');
     expect(localStorage.getItem('locale')).toBe('es');
   });
@@ -88,7 +88,7 @@ describe('i18n', () => {
       configurable: true,
     });
     const { i18n } = loadI18n();
-    expect(i18n.locale).toBe('ar');
+    expect(i18n.global.locale.value).toBe('ar');
     expect(document.documentElement.lang).toBe('ar');
     expect(document.documentElement.dir).toBe('rtl');
   });
@@ -96,8 +96,8 @@ describe('i18n', () => {
   test('switching to Arabic sets rtl and switching back restores ltr', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('ar');
-    expect(i18n.locale).toBe('ar');
-    expect(i18n.t('common.save')).not.toBe('Save');
+    expect(i18n.global.locale.value).toBe('ar');
+    expect(i18n.global.t('common.save')).not.toBe('Save');
     expect(document.documentElement.lang).toBe('ar');
     expect(document.documentElement.dir).toBe('rtl');
     expect(localStorage.getItem('locale')).toBe('ar');
@@ -121,14 +121,14 @@ describe('i18n', () => {
       configurable: true,
     });
     const { i18n } = loadI18n();
-    expect(i18n.locale).toBe('hi');
+    expect(i18n.global.locale.value).toBe('hi');
   });
 
   test('setAppLocale switches to Hindi messages', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('hi');
-    expect(i18n.locale).toBe('hi');
-    expect(i18n.t('common.save')).not.toBe('Save');
+    expect(i18n.global.locale.value).toBe('hi');
+    expect(i18n.global.t('common.save')).not.toBe('Save');
     expect(document.documentElement.lang).toBe('hi');
     expect(localStorage.getItem('locale')).toBe('hi');
   });
@@ -158,7 +158,7 @@ describe('i18n', () => {
       configurable: true,
     });
     const { i18n } = loadI18n();
-    expect(i18n.locale).toBe('ja');
+    expect(i18n.global.locale.value).toBe('ja');
     expect(document.documentElement.lang).toBe('ja');
     expect(document.documentElement.dir).toBe('ltr');
   });
@@ -170,7 +170,7 @@ describe('i18n', () => {
     });
     localStorage.setItem('locale', 'ja');
     const { i18n } = loadI18n();
-    expect(i18n.locale).toBe('ja');
+    expect(i18n.global.locale.value).toBe('ja');
     expect(document.documentElement.lang).toBe('ja');
   });
 
@@ -213,8 +213,8 @@ describe('i18n', () => {
   test('setAppLocale switches to Japanese messages', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('ja');
-    expect(i18n.locale).toBe('ja');
-    expect(i18n.t('common.save')).toBe('保存');
+    expect(i18n.global.locale.value).toBe('ja');
+    expect(i18n.global.t('common.save')).toBe('保存');
     expect(document.documentElement.lang).toBe('ja');
     expect(document.documentElement.dir).toBe('ltr');
     expect(localStorage.getItem('locale')).toBe('ja');
@@ -261,14 +261,14 @@ describe('i18n', () => {
       configurable: true,
     });
     const { i18n } = loadI18n();
-    expect(i18n.locale).toBe('fr');
+    expect(i18n.global.locale.value).toBe('fr');
   });
 
   test('setAppLocale switches to French messages', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('fr');
-    expect(i18n.locale).toBe('fr');
-    expect(i18n.t('common.save')).not.toBe('Save');
+    expect(i18n.global.locale.value).toBe('fr');
+    expect(i18n.global.t('common.save')).not.toBe('Save');
     expect(document.documentElement.lang).toBe('fr');
     expect(localStorage.getItem('locale')).toBe('fr');
   });
@@ -279,14 +279,14 @@ describe('i18n', () => {
       configurable: true,
     });
     const { i18n } = loadI18n();
-    expect(i18n.locale).toBe('pt-BR');
+    expect(i18n.global.locale.value).toBe('pt-BR');
   });
 
   test('setAppLocale switches to Brazilian Portuguese messages', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('pt-BR');
-    expect(i18n.locale).toBe('pt-BR');
-    expect(i18n.t('common.save')).not.toBe('Save');
+    expect(i18n.global.locale.value).toBe('pt-BR');
+    expect(i18n.global.t('common.save')).not.toBe('Save');
     expect(document.documentElement.lang).toBe('pt-BR');
     expect(document.documentElement.dir).toBe('ltr');
     expect(localStorage.getItem('locale')).toBe('pt-BR');
@@ -431,7 +431,7 @@ describe('i18n', () => {
       configurable: true,
     });
     const { i18n } = loadI18n();
-    expect(i18n.locale).toBe('ur');
+    expect(i18n.global.locale.value).toBe('ur');
     expect(document.documentElement.lang).toBe('ur');
     expect(document.documentElement.dir).toBe('rtl');
   });
@@ -439,7 +439,7 @@ describe('i18n', () => {
   test('initial Urdu locale comes from localStorage', () => {
     localStorage.setItem('locale', 'ur');
     const { i18n } = loadI18n();
-    expect(i18n.locale).toBe('ur');
+    expect(i18n.global.locale.value).toBe('ur');
     expect(document.documentElement.lang).toBe('ur');
     expect(document.documentElement.dir).toBe('rtl');
   });
@@ -447,13 +447,13 @@ describe('i18n', () => {
   test('switching ur -> en -> ur toggles lang, dir and persists the locale', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('ur');
-    expect(i18n.locale).toBe('ur');
-    expect(i18n.t('common.save')).not.toBe('Save');
+    expect(i18n.global.locale.value).toBe('ur');
+    expect(i18n.global.t('common.save')).not.toBe('Save');
     expect(document.documentElement.lang).toBe('ur');
     expect(document.documentElement.dir).toBe('rtl');
     expect(localStorage.getItem('locale')).toBe('ur');
     setAppLocale('en');
-    expect(i18n.locale).toBe('en');
+    expect(i18n.global.locale.value).toBe('en');
     expect(document.documentElement.lang).toBe('en');
     expect(document.documentElement.dir).toBe('ltr');
     expect(localStorage.getItem('locale')).toBe('en');
@@ -466,7 +466,7 @@ describe('i18n', () => {
   test('Urdu notification help preserves the total-time category sentinel', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('ur');
-    expect(i18n.t('settings.notifications.categoryHelp')).toContain('"All"');
+    expect(i18n.global.t('settings.notifications.categoryHelp')).toContain('"All"');
   });
 
   test('Urdu dates use Urdu month names and Western digits', () => {

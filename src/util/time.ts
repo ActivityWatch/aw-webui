@@ -16,9 +16,9 @@ export function seconds_to_duration(seconds: number) {
   const hrs = Math.floor(seconds / 60 / 60);
   const min = Math.floor((seconds / 60) % 60);
   const sec = Math.floor(seconds % 60);
-  const hourUnit = String(i18n.t('common.durationHours'));
-  const minuteUnit = String(i18n.t('common.durationMinutes'));
-  const secondUnit = String(i18n.t('common.durationSeconds'));
+  const hourUnit = String(i18n.global.t('common.durationHours'));
+  const minuteUnit = String(i18n.global.t('common.durationMinutes'));
+  const secondUnit = String(i18n.global.t('common.durationSeconds'));
   const l = [];
 
   if (hrs > 0) {

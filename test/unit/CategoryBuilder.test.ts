@@ -62,7 +62,6 @@ describe('CategoryBuilder loading', () => {
           ? [createBootstrap(), bootstrapComponents, pinia]
           : [createBootstrap(), pinia],
         components: { 'aw-query-options': QueryOptions },
-        mocks: { $t: key => key },
         // Keep stubbed buttons' labels so tests can find e.g. "Retry".
         renderStubDefaultSlot: true,
         stubs: {

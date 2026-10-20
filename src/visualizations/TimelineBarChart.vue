@@ -27,7 +27,7 @@ import {
   hourlyLabels,
   timeperiodsCalendarMonthsOfPeriod,
 } from '~/util/timeperiod';
-import { getAppLocale } from '~/i18n';
+import { getAppLocale, i18n } from '~/i18n';
 import { clampStackedHours } from '~/util/timelineClamp';
 
 function hourToTick(hours: number): string {
@@ -52,7 +52,7 @@ export default {
       type: Array,
       default: () => [
         {
-          label: i18n.t('ui.timeline.totalTime'),
+          label: i18n.global.t('ui.timeline.totalTime'),
           backgroundColor: '#6699ff',
           data: Array.from({ length: 40 }, () => Math.floor(Math.random() * 40)),
         },
@@ -134,7 +134,7 @@ export default {
         datasets,
         title: {
           display: true,
-          text: i18n.t('timeline.title'),
+          text: i18n.global.t('timeline.title'),
         },
       };
     },
