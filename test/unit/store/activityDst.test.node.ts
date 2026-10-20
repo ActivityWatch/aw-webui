@@ -59,7 +59,7 @@ describeStockholm('single-day category query coverage across DST', () => {
     store.buckets.afk = ['aw-watcher-afk_test'];
     store.buckets.window = ['aw-watcher-window_test'];
     const query = jest.spyOn(getClient(), 'query').mockImplementation(async periods =>
-      periods.map(period => [
+      periods.map((period: any) => [
         {
           timestamp: period.split('/')[0],
           duration: moment.duration(1, 'hour').asSeconds(),
@@ -76,7 +76,7 @@ describeStockholm('single-day category query coverage across DST', () => {
 
     const requested = query.mock.calls.flatMap(call => call[0]);
     expect(requested).toHaveLength(hours);
-    const intervals = requested.map(period => period.split('/').map(Date.parse));
+    const intervals = requested.map((period: any) => period.split('/').map(Date.parse));
     expect(intervals[0][0]).toBe(full[0]);
     expect(intervals[intervals.length - 1][1]).toBe(full[1]);
     intervals.forEach(([from, to], index) => {

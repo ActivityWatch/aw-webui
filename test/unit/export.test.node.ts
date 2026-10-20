@@ -6,8 +6,7 @@ import { androidExportFromUrl } from '../../src/util/export';
 
 describe('androidExportFromUrl', () => {
   afterEach(() => {
-    // @ts-expect-error test cleanup
-    delete global.window;
+    delete (global as any).window;
   });
 
   test('returns false when the Android bridge is absent', () => {

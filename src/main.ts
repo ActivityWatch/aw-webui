@@ -1,0 +1,102 @@
+import 'core-js/stable';
+import 'regenerator-runtime/runtime';
+
+import Vue from 'vue';
+
+// Load the Bootstrap CSS
+import BootstrapVue from 'bootstrap-vue';
+import 'bootstrap/dist/css/bootstrap.css';
+import 'bootstrap-vue/dist/bootstrap-vue.css';
+Vue.use(BootstrapVue);
+
+import { Datetime } from 'vue-datetime';
+import 'vue-datetime/dist/vue-datetime.css';
+Vue.component('datetime', Datetime);
+
+// Load the Varela Round font
+import 'typeface-varela-round';
+
+// Load the main style
+import './style/style.scss';
+
+// Loads all the filters
+import './util/filters';
+
+// Internationalization
+import { i18n } from './i18n';
+
+// Sets up the routing and the base app (using vue-router)
+import router from './route';
+
+// Sets up the pinia store
+import pinia from './stores';
+
+// Register Font Awesome icon component
+Vue.component('icon', () => import('vue-awesome/components/Icon.vue'));
+
+// General components
+Vue.component('error-boundary', () => import('./components/ErrorBoundary.vue'));
+Vue.component('input-timeinterval', () => import('./components/InputTimeInterval.vue'));
+Vue.component('aw-header', () => import('./components/Header.vue'));
+Vue.component('aw-footer', () => import('./components/Footer.vue'));
+Vue.component('aw-devonly', () => import('./components/DevOnly.vue'));
+Vue.component('aw-selectable-vis', () => import('./components/SelectableVisualization.vue'));
+Vue.component('aw-selectable-eventview', () => import('./components/SelectableEventView.vue'));
+Vue.component('new-release-notification', () => import('./components/NewReleaseNotification.vue'));
+Vue.component('user-satisfaction-poll', () => import('./components/UserSatisfactionPoll.vue'));
+Vue.component('aw-query-options', () => import('./components/QueryOptions.vue'));
+Vue.component('aw-select-categories', () => import('./components/SelectCategories.vue'));
+Vue.component(
+  'aw-select-categories-or-pattern',
+  () => import('./components/SelectCategoriesOrPattern.vue')
+);
+
+// Visualization components
+Vue.component('aw-summary', () => import('./visualizations/Summary.vue'));
+Vue.component('aw-periodusage', () => import('./visualizations/PeriodUsage.vue'));
+Vue.component('aw-eventlist', () => import('./visualizations/EventList.vue'));
+Vue.component('aw-sunburst-categories', () => import('./visualizations/SunburstCategories.vue'));
+Vue.component('aw-top-bucket-data', () => import('./visualizations/TopBucketData.vue'));
+Vue.component('aw-sunburst-clock', () => import('./visualizations/SunburstClock.vue'));
+Vue.component('aw-timeline-inspect', () => import('./visualizations/TimelineInspect.vue'));
+Vue.component('aw-timeline', () => import('./visualizations/TimelineSimple.vue'));
+Vue.component('vis-timeline', () => import('./visualizations/VisTimeline.vue'));
+Vue.component('aw-categorytree', () => import('./visualizations/CategoryTree.vue'));
+Vue.component('aw-timeline-barchart', () => import('./visualizations/TimelineBarChart.vue'));
+Vue.component('aw-calendar', () => import('./visualizations/Calendar.vue'));
+Vue.component('aw-custom-vis', () => import('./visualizations/CustomVisualization.vue'));
+Vue.component('aw-score', () => import('./visualizations/Score.vue'));
+
+// A mixin to make async method errors propagate
+import asyncErrorCapturedMixin from './mixins/asyncErrorCaptured';
+Vue.mixin(asyncErrorCapturedMixin);
+
+// Set the PRODUCTION constant
+// FIXME: Thould follow Vue convention and start with a $.
+Vue.prototype.PRODUCTION = PRODUCTION;
+Vue.prototype.COMMIT_HASH = COMMIT_HASH;
+
+// Set the $isAndroid constant
+Vue.prototype.$isAndroid = process.env.VUE_APP_ON_ANDROID;
+
+// Create an instance of AWClient as this.$aw
+// NOTE: needs to be created before the Vue app is created,
+//       since stores rely on it having been run.
+import { createClient, getClient, configureClient } from './util/awclient';
+createClient();
+
+// Setup Vue app
+import App from './App.vue';
+new Vue({
+  el: '#app',
+  router: router,
+  i18n,
+  render: h => h(App),
+  pinia,
+});
+
+// Set the $aw global
+Vue.prototype.$aw = getClient();
+
+// Must be run after vue init since it relies on the settings store
+configureClient();

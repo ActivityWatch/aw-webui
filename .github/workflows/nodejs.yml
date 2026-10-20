@@ -185,7 +185,7 @@ jobs:
         # NOTE: --skip-js-errors should be removed when things work properly
         # NOTE: --no-sandbox is needed for a Chrome for Testing binary on
         # Ubuntu 24.04 runners; without it the browser never connects.
-        args: "--skip-js-errors \"chrome:${{ steps.setup-chrome.outputs.chrome-path }} --no-sandbox\" test/e2e/"
+        args: "--skip-js-errors --ts-config-path test/e2e/tsconfig.json \"chrome:${{ steps.setup-chrome.outputs.chrome-path }} --no-sandbox\" test/e2e/"
     - name: Move screenshots to subdir
       # Run this step even if e2e tests flag failure
       if: ${{ success() || steps.e2e.conclusion == 'failure'}}

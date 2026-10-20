@@ -1,0 +1,100 @@
+import path from 'node:path';
+import { defineConfig, type Plugin } from 'vite';
+import vue from '@vitejs/plugin-vue2';
+import { VitePWA } from 'vite-plugin-pwa';
+
+export default defineConfig(({ mode }) => {
+  const PRODUCTION = mode === 'production';
+  const CSP = PRODUCTION ? '' : '*:5600 *:5666 ws://*:27180';
+
+  // Sets the CSP
+  const setCsp = (): Plugin => {
+    return {
+      name: 'html-transform',
+      transformIndexHtml(html: string) {
+        const pattern = '<%= htmlWebpackPlugin.options.templateParameters.cspDefaultSrc %>';
+        // check if the pattern exists in the html, if not, throw error
+        if (!html.includes(pattern)) {
+          throw new Error(`Could not find pattern ${pattern} in the html file`);
+        }
+        return html.replace(pattern, CSP);
+      },
+    };
+  };
+
+  // Auto-injects /src/main.ts into index.html on a new line after the one which has VITE_AUTOINJECT
+  const autoInject = (): Plugin => {
+    return {
+      name: 'html-transform',
+      transformIndexHtml: {
+        order: 'pre',
+        handler(html: string) {
+          const pattern = /<!--.*VITE_AUTOINJECT.*-->/;
+          // check if the pattern exists in the html, if not, throw error
+          if (!pattern.test(html)) {
+            throw new Error(`Could not find pattern ${pattern} in the html file`);
+          }
+          return html.replace(
+            pattern,
+            '<!-- Vite injected! --><script type="module" src="/src/main.ts"></script>'
+          );
+        },
+      },
+    };
+  };
+
+  // Return the configuration
+  return {
+    build: {
+      // Temporary compat knob for #867/#869: the forced esbuild 0.28.x security
+      // upgrade cannot lower one destructuring pattern to the old default targets.
+      // Drop this once Vite can consume a patched esbuild line without overrides.
+      target: 'es2022',
+    },
+    plugins: [
+      setCsp(),
+      autoInject(),
+      vue(),
+      VitePWA({
+        devOptions: {
+          enabled: true,
+        },
+        manifest: {
+          name: 'ActivityWatch',
+          short_name: 'ActivityWatch',
+          description: 'Automatically track your computer usage',
+          theme_color: '#ffffff',
+          icons: [
+            {
+              src: 'logo.png',
+              sizes: '512x512',
+              type: 'image/png',
+            },
+          ],
+        },
+      }),
+    ],
+    server: {
+      port: 27180,
+      // TODO: Fix this.
+      // Breaks a bunch of style-related stuff etc.
+      // We'd need to move in the entire CSP config in here (not just the default-src) if we want to use this.
+      //headers: {
+      //  'Content-Security-Policy': PRODUCTION ? "default-src 'self'" : "default-src 'self' *:5666",
+      //},
+    },
+    publicDir: './static',
+    resolve: {
+      alias: { '~': path.resolve(__dirname, 'src') },
+    },
+    define: {
+      PRODUCTION,
+      AW_SERVER_URL: process.env.AW_SERVER_URL,
+      COMMIT_HASH: process.env.COMMIT_HASH,
+      AW_RESEARCH_EDITION: process.env.AW_RESEARCH_EDITION === 'true',
+      // Optional JSON preset category sets shipped by this build (see src/util/presetCategories.ts)
+      AW_PRESET_CATEGORY_SETS: JSON.stringify(process.env.AW_PRESET_CATEGORY_SETS || ''),
+      'process.env.VUE_APP_ON_ANDROID': process.env.VUE_APP_ON_ANDROID,
+    },
+  };
+});

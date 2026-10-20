@@ -73,10 +73,10 @@ div#visualization {
 import _ from 'lodash';
 import { markRaw } from 'vue';
 import Color from 'color';
-import { buildTooltip } from '../util/tooltip.js';
+import { buildTooltip } from '../util/tooltip';
 import { getCategoryColorFromEvent, getColorFromCategory, getTitleAttr } from '../util/color';
 import { useCategoryStore } from '~/stores/categories';
-import { getSwimlane } from '../util/swimlane.js';
+import { getSwimlane } from '../util/swimlane';
 import {
   indexTimelineEvents,
   visibleTimelineEvents,

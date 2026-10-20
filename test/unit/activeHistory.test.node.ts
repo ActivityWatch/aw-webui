@@ -66,23 +66,25 @@ describe('activeHistoryCacheKey', () => {
   });
 
   test('source discovery order does not affect the key', () => {
-    const a = [{ bid_afk: 'afk_a' }, { bid_afk: 'afk_b' }];
-    const b = [{ bid_afk: 'afk_b' }, { bid_afk: 'afk_a' }];
+    const a: any[] = [{ bid_afk: 'afk_a' }, { bid_afk: 'afk_b' }];
+    const b: any[] = [{ bid_afk: 'afk_b' }, { bid_afk: 'afk_a' }];
     expect(key({}, a)).toBe(key({}, b));
   });
 
   test('browser bucket order does not affect the key', () => {
-    const a = [{ bid_afk: 'afk', bid_browsers: ['b1', 'b2'] }];
-    const b = [{ bid_afk: 'afk', bid_browsers: ['b2', 'b1'] }];
+    const a: any[] = [{ bid_afk: 'afk', bid_browsers: ['b1', 'b2'] }];
+    const b: any[] = [{ bid_afk: 'afk', bid_browsers: ['b2', 'b1'] }];
     expect(key({}, a)).toBe(key({}, b));
   });
 
   test('a bare bucket id is equivalent to an AFK-only source', () => {
-    expect(key({}, ['afk_only'] as any)).toBe(key({}, [{ bid_afk: 'afk_only' }]));
+    expect(key({}, ['afk_only'] as any)).toBe(key({}, [{ bid_afk: 'afk_only' }] as any));
   });
 
   test('a missing browser list matches an empty one', () => {
-    expect(key({}, [{ bid_afk: 'afk' }])).toBe(key({}, [{ bid_afk: 'afk', bid_browsers: [] }]));
+    expect(key({}, [{ bid_afk: 'afk' }] as any)).toBe(
+      key({}, [{ bid_afk: 'afk', bid_browsers: [] }] as any)
+    );
   });
 
   test('an omitted filter_afk matches an explicit true', () => {

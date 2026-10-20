@@ -1,0 +1,12 @@
+{
+  // Used by testcafe (see `--ts-config-path`). TestCafe bundles its own, older TypeScript
+  // that cannot parse some of the newer declarations in node_modules/@types, so don't
+  // auto-include them like the root tsconfig does.
+  "compilerOptions": {
+    "lib": ["ES2020", "DOM"],
+    "types": [],
+    "skipLibCheck": true,
+    "esModuleInterop": true
+  },
+  "include": ["./*.ts"]
+}

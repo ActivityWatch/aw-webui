@@ -14,7 +14,7 @@ div.mx-3
   FullCalendar(ref="fullCalendar", :options="calendarOptions")
 </template>
 
-<script>
+<script lang="ts">
 import { getTitleAttr, getColorFromString } from '../util/color';
 import moment from 'moment';
 import _ from 'lodash';
@@ -37,7 +37,7 @@ export default {
   },
   computed: {
     calendarOptions: function () {
-      const events = Array.isArray(this.events) ? this.events.filter(Boolean) : [];
+      const events: any[] = Array.isArray(this.events) ? this.events.filter(Boolean) : [];
       return {
         plugins: [timeGridPlugin],
         initialView: this.view,

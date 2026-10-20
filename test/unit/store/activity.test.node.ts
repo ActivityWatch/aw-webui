@@ -41,7 +41,7 @@ describe('activity store', () => {
     expect(categoryStore.classes_hierarchy).not.toHaveLength(0);
   });
 
-  test.each([
+  test.each<[string, [number, string], number | null]>([
     ['day', [1, 'day'], 1],
     ['week', [1, 'week'], 1],
     ['month', [1, 'month'], 3],
@@ -59,7 +59,7 @@ describe('activity store', () => {
       timeperiod: { start: '2020-01-01T00:00:00+00:00', length: periodLength },
     });
 
-    const requested = querySpy.mock.calls.flatMap(call => call[0]);
+    const requested = querySpy.mock.calls.flatMap(call => call[0] as string[]);
     expect(querySpy).toHaveBeenCalledTimes(calls ?? requested.length);
     expect(Object.keys(activityStore.active.history).sort()).toEqual([...requested].sort());
     querySpy.mockRestore();
@@ -77,7 +77,7 @@ describe('activity store', () => {
     });
     const querySpy = jest
       .spyOn(getClient(), 'query')
-      .mockImplementation(async periods => periods.map(p => [eventFor(p)]));
+      .mockImplementation(async periods => periods.map(p => [eventFor(p as string)]));
 
     await activityStore.query_active_history({
       host: 'test',
@@ -85,7 +85,7 @@ describe('activity store', () => {
     });
 
     expect(querySpy.mock.calls.length).toBeGreaterThan(1);
-    const requested = querySpy.mock.calls.flatMap(call => call[0]);
+    const requested = querySpy.mock.calls.flatMap(call => call[0] as string[]);
     for (const period of requested) {
       expect(activityStore.active.history[period]).toEqual([eventFor(period)]);
     }
@@ -131,7 +131,7 @@ describe('activity store', () => {
         .spyOn(getClient(), 'query')
         .mockResolvedValueOnce([{ browser: browserData }]);
 
-      await activityStore.query_browser_only({ host: 'test', timeperiod });
+      await activityStore.query_browser_only({ timeperiod });
 
       expect(querySpy).toHaveBeenCalledTimes(1);
       expect(activityStore.browser.top_domains).toEqual(browserData.domains);
@@ -145,14 +145,14 @@ describe('activity store', () => {
         s.buckets.browser = ['aw-watcher-firefox_test'];
       });
       activityStore.$patch(s => {
-        s.browser.top_domains = [{ data: { $domain: 'old.example.com' }, duration: 999 }];
-        s.browser.top_urls = [{ data: { url: 'https://old.example.com/' }, duration: 999 }];
-        s.browser.top_titles = [{ data: { title: 'Old Example' }, duration: 999 }];
+        s.browser.top_domains = [{ data: { $domain: 'old.example.com' }, duration: 999 }] as any;
+        s.browser.top_urls = [{ data: { url: 'https://old.example.com/' }, duration: 999 }] as any;
+        s.browser.top_titles = [{ data: { title: 'Old Example' }, duration: 999 }] as any;
         s.browser.duration = 999;
       });
       jest.spyOn(getClient(), 'query').mockResolvedValueOnce([{}]);
 
-      await activityStore.query_browser_only({ host: 'test', timeperiod });
+      await activityStore.query_browser_only({ timeperiod });
 
       expect(activityStore.browser.top_domains).toBeUndefined();
       expect(activityStore.browser.top_urls).toBeUndefined();
@@ -168,7 +168,7 @@ describe('activity store', () => {
         .spyOn(getClient(), 'query')
         .mockResolvedValueOnce([{ browser: { domains: [], urls: [], titles: [], duration: 0 } }]);
 
-      await activityStore.query_browser_only({ host: 'test', timeperiod });
+      await activityStore.query_browser_only({ timeperiod });
 
       expect(querySpy).toHaveBeenCalledTimes(1);
       const queryStr = (querySpy.mock.calls[0][1] as string[]).join('\n');

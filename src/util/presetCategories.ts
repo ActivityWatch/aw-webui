@@ -15,7 +15,7 @@
  *     Android WebView, a custom launcher) before the app boots. Useful for
  *     deployments that ship presets without rebuilding the bundle.
  *  2. `AW_PRESET_CATEGORY_SETS` — a compile-time constant, defined by webpack
- *     (`vue.config.js`) and Vite (`vite.config.js`) from the environment
+ *     (`vue.config.js`) and Vite (`vite.config.ts`) from the environment
  *     variable of the same name. This is the build-variant path:
  *
  *         AW_PRESET_CATEGORY_SETS="$(cat mypreset.json)" npm run build

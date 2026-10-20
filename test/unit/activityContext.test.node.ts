@@ -117,7 +117,7 @@ describe('buildActivityContext — aggregation', () => {
   });
 
   test('assembles date keys from parts without using locale-ordered format output', () => {
-    const format = jest.spyOn(Intl.DateTimeFormat.prototype, 'format', 'get');
+    const format = jest.spyOn(Intl.DateTimeFormat.prototype as any, 'format', 'get');
     format.mockImplementation(() => () => '8/1/2026');
     try {
       const ctx = build([event('vim', 100)]);
