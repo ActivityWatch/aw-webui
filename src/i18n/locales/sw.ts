@@ -122,7 +122,7 @@ export default {
       auto: 'Kiotomatiki (Mfumo)',
       light: 'Mandhari meupe',
       dark: 'Mandhari meusi',
-      help: 'Badilisha mandhari ya rangi. Rangi za kategoria huchaguliwa tofauti — unaweza kutaka kuzirekebisha unapobadilisha hadi hali ya giza.',
+      help: 'Badilisha mandhari ya rangi. Rangi za kategoria huchaguliwa tofauti — unaweza kutaka kuzirekebisha unapobadilisha hadi mandhari meusi.',
     },
     groups: {
       general: 'Jumla',
