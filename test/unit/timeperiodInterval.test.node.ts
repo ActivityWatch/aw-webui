@@ -10,6 +10,7 @@ import {
   hourlyLabels,
   instantToWall,
   parseExactInterval,
+  splitTimeperiodStrs,
   shiftExactInterval,
   timeperiodToStr,
   timeperiodsForBarchart,
@@ -202,6 +203,20 @@ describe('exact interval buckets', () => {
       exactIntervalToTimeperiod({ start: '2026-10-20T13:00:00Z', end: '2026-10-21T13:00:01Z' })
     );
     expect(over).toHaveLength(2);
+  });
+});
+
+describe('Android/editor splitting of an exact interval', () => {
+  test('keeps the exact bounds and clips the last chunk', () => {
+    const tp = exactIntervalToTimeperiod({
+      start: '2026-10-20T13:00:00Z',
+      end: '2026-10-23T01:00:00Z',
+    });
+    const chunks = splitTimeperiodStrs(tp, 1).map(c => c.split('/').map(x => moment(x).valueOf()));
+    expect(chunks).toHaveLength(3);
+    expect(chunks[0][0]).toBe(moment('2026-10-20T13:00:00Z').valueOf());
+    expect(chunks[2][1]).toBe(moment('2026-10-23T01:00:00Z').valueOf());
+    chunks.forEach(([, to], i) => i < 2 && expect(chunks[i + 1][0]).toBe(to));
   });
 });
 
