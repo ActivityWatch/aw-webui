@@ -74,9 +74,9 @@ export default {
     last90d: 'Siku 90 zilizopita',
     thisWeek: 'Wiki hii',
     thisMonth: 'Mwezi huu',
-    durationHours: 'saa',
-    durationMinutes: 'd',
-    durationSeconds: 'sek',
+    durationHours: 'h',
+    durationMinutes: 'm',
+    durationSeconds: 's',
     selectHost: 'Tafadhali chagua mwenyeji angalau mmoja.',
     today: 'Leo',
     requestFailed: 'Hitilafu imetokea.',
@@ -120,8 +120,8 @@ export default {
     theme: {
       title: 'Mandhari',
       auto: 'Kiotomatiki (Mfumo)',
-      light: 'Mwanga',
-      dark: 'Giza',
+      light: 'Mandhari meupe',
+      dark: 'Mandhari meusi',
       help: 'Badilisha mandhari ya rangi. Rangi za kategoria huchaguliwa tofauti — unaweza kutaka kuzirekebisha unapobadilisha hadi hali ya giza.',
     },
     groups: {
