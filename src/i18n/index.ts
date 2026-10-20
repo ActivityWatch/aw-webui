@@ -45,7 +45,7 @@ export type AppLocale =
   | 'ur'
   | 'zh-CN';
 
-const SUPPORTED: AppLocale[] = [
+export const SUPPORTED: AppLocale[] = [
   'ar',
   'de',
   'en',
@@ -60,6 +60,27 @@ const SUPPORTED: AppLocale[] = [
   'ur',
   'zh-CN',
 ];
+
+/**
+ * Each language's name in that language (its endonym), shown in the language picker
+ * regardless of the active UI locale. Kept here, not in the locale files, so adding a
+ * locale only touches this list instead of every locale file.
+ */
+export const LANGUAGE_NAMES: Record<AppLocale, string> = {
+  ar: 'العربية',
+  de: 'Deutsch',
+  en: 'English',
+  es: 'Español',
+  fr: 'Français',
+  hi: 'हिन्दी',
+  ja: '日本語',
+  'pt-BR': 'Português (Brasil)',
+  ru: 'Русский',
+  sv: 'Svenska',
+  uk: 'Українська',
+  ur: 'اردو',
+  'zh-CN': '简体中文',
+};
 
 export function isAppLocale(value: string | null | undefined): value is AppLocale {
   return SUPPORTED.includes(value as AppLocale);
@@ -171,7 +192,12 @@ moment.updateLocale('hi', {
   postformat: (s: string) => s,
 });
 
-const RTL_LOCALES: AppLocale[] = ['ar', 'ur'];
+// One entry per line (prettier would join them), so RTL locale PRs never edit the same line.
+// prettier-ignore
+const RTL_LOCALES: AppLocale[] = [
+  'ar',
+  'ur',
+];
 
 export function isRtlLocale(locale: AppLocale): boolean {
   return RTL_LOCALES.includes(locale);

@@ -5,19 +5,7 @@ div
       h5.mt-1.mb-2.mb-sm-0 {{ $t('settings.language.title') }}
     div
       b-select.landingpage(v-if="_loaded" size="sm" :value="locale", @change="locale = $event")
-        option(value="en") {{ $t('common.languageEn') }}
-        option(value="uk") {{ $t('common.languageUk') }}
-        option(value="de") {{ $t('common.languageDe') }}
-        option(value="ru") {{ $t('common.languageRu') }}
-        option(value="sv") {{ $t('common.languageSv') }}
-        option(value="es") {{ $t('common.languageEs') }}
-        option(value="ar") {{ $t('common.languageAr') }}
-        option(value="hi") {{ $t('common.languageHi') }}
-        option(value="ja") {{ $t('common.languageJa') }}
-        option(value="fr") {{ $t('common.languageFr') }}
-        option(value="pt-BR") {{ $t('common.languagePtBR') }}
-        option(value="ur") {{ $t('common.languageUr') }}
-        option(value="zh-CN") {{ $t('common.languageZhCN') }}
+        option(v-for="code in locales" :key="code" :value="code") {{ languageNames[code] }}
       span(v-else)
         .aw-loading {{ $t('common.loading') }}
   small
@@ -27,10 +15,13 @@ div
 <script lang="ts">
 import { mapState } from 'pinia';
 import { useSettingsStore } from '~/stores/settings';
-import { isAppLocale, setAppLocale } from '~/i18n';
+import { LANGUAGE_NAMES, SUPPORTED, isAppLocale, setAppLocale } from '~/i18n';
 
 export default {
   name: 'LanguageSettings',
+  data() {
+    return { locales: SUPPORTED, languageNames: LANGUAGE_NAMES };
+  },
   computed: {
     ...mapState(useSettingsStore, ['_loaded']),
     locale: {
