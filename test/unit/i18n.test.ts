@@ -72,7 +72,6 @@ describe('i18n', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('es');
     expect(i18n.locale).toBe('es');
-    expect(i18n.t('common.languageEs')).toBe('Español');
     expect(i18n.t('common.save')).not.toBe('Save');
     expect(document.documentElement.lang).toBe('es');
     expect(localStorage.getItem('locale')).toBe('es');
@@ -93,7 +92,6 @@ describe('i18n', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('ar');
     expect(i18n.locale).toBe('ar');
-    expect(i18n.t('common.languageAr')).toBe('العربية');
     expect(i18n.t('common.save')).not.toBe('Save');
     expect(document.documentElement.lang).toBe('ar');
     expect(document.documentElement.dir).toBe('rtl');
@@ -125,7 +123,6 @@ describe('i18n', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('hi');
     expect(i18n.locale).toBe('hi');
-    expect(i18n.t('common.languageHi')).toBe('हिन्दी');
     expect(i18n.t('common.save')).not.toBe('Save');
     expect(document.documentElement.lang).toBe('hi');
     expect(localStorage.getItem('locale')).toBe('hi');
@@ -141,12 +138,13 @@ describe('i18n', () => {
     expect(formatted).not.toMatch(/[०-९]/);
   });
 
-  test('Arabic UI translates the Japanese endonym and Japanese UI translates the Arabic one', () => {
-    const { setAppLocale, i18n } = loadI18n();
-    setAppLocale('ar');
-    expect(i18n.t('common.languageJa')).toBe('日本語');
-    setAppLocale('ja');
-    expect(i18n.t('common.languageAr')).toBe('العربية');
+  test('every supported locale has one endonym, independent of the UI locale', () => {
+    const { LANGUAGE_NAMES, SUPPORTED } = loadI18n();
+    expect(Object.keys(LANGUAGE_NAMES)).toEqual(SUPPORTED);
+    expect(LANGUAGE_NAMES.ar).toBe('العربية');
+    expect(LANGUAGE_NAMES.ja).toBe('日本語');
+    expect(LANGUAGE_NAMES['pt-BR']).toBe('Português (Brasil)');
+    expect(LANGUAGE_NAMES.ur).toBe('اردو');
   });
 
   test('initial locale detects Japanese browser language', () => {
@@ -175,7 +173,6 @@ describe('i18n', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('ja');
     expect(i18n.locale).toBe('ja');
-    expect(i18n.t('common.languageJa')).toBe('日本語');
     expect(i18n.t('common.save')).toBe('保存');
     expect(document.documentElement.lang).toBe('ja');
     expect(document.documentElement.dir).toBe('ltr');
@@ -230,7 +227,6 @@ describe('i18n', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('fr');
     expect(i18n.locale).toBe('fr');
-    expect(i18n.t('common.languageFr')).toBe('Français');
     expect(i18n.t('common.save')).not.toBe('Save');
     expect(document.documentElement.lang).toBe('fr');
     expect(localStorage.getItem('locale')).toBe('fr');
@@ -249,7 +245,6 @@ describe('i18n', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('pt-BR');
     expect(i18n.locale).toBe('pt-BR');
-    expect(i18n.t('common.languagePtBR')).toBe('Português (Brasil)');
     expect(i18n.t('common.save')).not.toBe('Save');
     expect(document.documentElement.lang).toBe('pt-BR');
     expect(document.documentElement.dir).toBe('ltr');
@@ -295,7 +290,6 @@ describe('i18n', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('ur');
     expect(i18n.locale).toBe('ur');
-    expect(i18n.t('common.languageUr')).toBe('اردو');
     expect(i18n.t('common.save')).not.toBe('Save');
     expect(document.documentElement.lang).toBe('ur');
     expect(document.documentElement.dir).toBe('rtl');
@@ -310,18 +304,6 @@ describe('i18n', () => {
     expect(document.documentElement.dir).toBe('rtl');
     expect(localStorage.getItem('locale')).toBe('ur');
   });
-
-  test.each(['en', 'ar', 'hi', 'ja', 'fr', 'ur'])(
-    '%s UI keeps Hindi, Japanese, French and Urdu language-picker endonyms',
-    locale => {
-      const { setAppLocale, i18n } = loadI18n();
-      setAppLocale(locale);
-      expect(i18n.t('common.languageHi')).toBe('हिन्दी');
-      expect(i18n.t('common.languageJa')).toBe('日本語');
-      expect(i18n.t('common.languageFr')).toBe('Français');
-      expect(i18n.t('common.languageUr')).toBe('اردو');
-    }
-  );
 
   test('Urdu notification help preserves the total-time category sentinel', () => {
     const { setAppLocale, i18n } = loadI18n();

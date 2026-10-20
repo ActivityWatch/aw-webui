@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * Validates i18n locale files: key parity vs en, placeholder consistency, untranslated strings,
- * and that every locale list in src/i18n/index.ts (plus LOCALES here) stays sorted.
+ * that every locale list in src/i18n/index.ts (plus IDENTICAL_OK here) stays sorted, and that
+ * SUPPORTED matches the locale files.
  * Usage: node scripts/check-locales.mjs [--verbose]
  */
 import fs from 'fs';
@@ -10,21 +11,12 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const LOCALES_DIR = path.join(__dirname, '../src/i18n/locales');
-const LOCALES = [
-  'ar',
-  'de',
-  'en',
-  'es',
-  'fr',
-  'hi',
-  'ja',
-  'pt-BR',
-  'ru',
-  'sv',
-  'uk',
-  'ur',
-  'zh-CN',
-];
+// Derived from the files, so adding a locale never edits this script.
+const LOCALES = fs
+  .readdirSync(LOCALES_DIR)
+  .filter(name => name.endsWith('.ts'))
+  .map(name => name.slice(0, -'.ts'.length))
+  .sort((a, b) => a.localeCompare(b, 'en'));
 const SRC_DIR = path.join(__dirname, '../src');
 const INDEX_PATH = path.join(SRC_DIR, 'i18n/index.ts');
 const verbose = process.argv.includes('--verbose');
@@ -77,6 +69,7 @@ const ALLOWLIST_WORDS = [
 
 /** Per-locale values that are correctly identical to English (loanwords, proper terms). */
 const IDENTICAL_OK = {
+  ar: ['Buckets'],
   de: [
     'Name',
     'Client:',
@@ -92,10 +85,6 @@ const IDENTICAL_OK = {
     'Forum',
     'Score',
   ],
-  sv: ['App', 'Version:', 'Forum', 'Buckets', 'Data:', 'Period', 'Prompt'],
-  ar: ['Buckets'],
-  hi: ['Buckets', 'All'],
-  ja: ['Raw JSON'],
   fr: [
     'h',
     's',
@@ -114,7 +103,10 @@ const IDENTICAL_OK = {
     'minutes',
     'Parent',
   ],
+  hi: ['Buckets', 'All'],
+  ja: ['Raw JSON'],
   'pt-BR': ['App', 'h', 's', 'Buckets', 'Hosts', 'Total', 'Prompt', 'download'],
+  sv: ['App', 'Version:', 'Forum', 'Buckets', 'Data:', 'Period', 'Prompt'],
 };
 
 function loadLocale(code) {
@@ -201,8 +193,10 @@ function localeOrderErrors() {
       /return '([\w-]+)';/g
     ),
     MOMENT_LOCALE: codes(block('const MOMENT_LOCALE: Record<AppLocale, string> = {', '};'), keys),
+    LANGUAGE_NAMES: codes(block('const LANGUAGE_NAMES: Record<AppLocale, string> = {', '};'), keys),
     messages: codes(block('messages: {', '},'), keys),
-    'LOCALES in check-locales.mjs': LOCALES,
+    RTL_LOCALES: codes(block('const RTL_LOCALES: AppLocale[] = [', '];'), quoted),
+    'IDENTICAL_OK in check-locales.mjs': Object.keys(IDENTICAL_OK),
   };
   const errors = [];
   for (const [name, list] of Object.entries(lists)) {
@@ -212,6 +206,10 @@ function localeOrderErrors() {
     }
     const i = list.findIndex((code, k) => k > 0 && list[k - 1].localeCompare(code, 'en') > 0);
     if (i > 0) errors.push(`${name}: '${list[i]}' must come before '${list[i - 1]}'`);
+  }
+  const supported = lists.SUPPORTED.join(', ');
+  if (supported !== LOCALES.join(', ')) {
+    errors.push(`SUPPORTED [${supported}] does not match the locale files [${LOCALES.join(', ')}]`);
   }
   return errors;
 }
@@ -266,7 +264,6 @@ for (const code of LOCALES) {
     if (placeholders(enVal) !== placeholders(val)) {
       placeholderMismatches.push({ key, en: placeholders(enVal), got: placeholders(val) });
     }
-    if (key.startsWith('common.language')) continue;
     if (
       enVal === val &&
       !isAllowlistedIdentical(enVal, val) &&
