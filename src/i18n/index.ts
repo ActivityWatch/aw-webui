@@ -12,6 +12,7 @@ import 'moment/locale/ja';
 import 'moment/locale/pt-br';
 import 'moment/locale/ru';
 import 'moment/locale/sv';
+import 'moment/locale/sw';
 import 'moment/locale/uk';
 import 'moment/locale/ur';
 import 'moment/locale/zh-cn';
@@ -28,6 +29,7 @@ import ja from './locales/ja';
 import ptBR from './locales/pt-BR';
 import ru from './locales/ru';
 import sv from './locales/sv';
+import sw from './locales/sw';
 import uk from './locales/uk';
 import ur from './locales/ur';
 import zhCN from './locales/zh-CN';
@@ -47,6 +49,7 @@ export type AppLocale =
   | 'pt-BR'
   | 'ru'
   | 'sv'
+  | 'sw'
   | 'uk'
   | 'ur'
   | 'zh-CN';
@@ -64,6 +67,7 @@ export const SUPPORTED: AppLocale[] = [
   'pt-BR',
   'ru',
   'sv',
+  'sw',
   'uk',
   'ur',
   'zh-CN',
@@ -87,6 +91,7 @@ export const LANGUAGE_NAMES: Record<AppLocale, string> = {
   'pt-BR': 'Português (Brasil)',
   ru: 'Русский',
   sv: 'Svenska',
+  sw: 'Kiswahili',
   uk: 'Українська',
   ur: 'اردو',
   'zh-CN': '简体中文',
@@ -109,6 +114,7 @@ const HTML_LANG: Record<AppLocale, string> = {
   'pt-BR': 'pt-BR',
   ru: 'ru',
   sv: 'sv',
+  sw: 'sw',
   uk: 'uk',
   ur: 'ur',
   'zh-CN': 'zh-CN',
@@ -133,6 +139,7 @@ function detectBrowserLocale(): AppLocale | null {
   if (lang.startsWith('pt')) return 'pt-BR';
   if (lang.startsWith('ru')) return 'ru';
   if (lang.startsWith('sv')) return 'sv';
+  if (lang.startsWith('sw')) return 'sw';
   if (lang.startsWith('uk')) return 'uk';
   if (lang.startsWith('ur')) return 'ur';
   if (lang.startsWith('zh')) return 'zh-CN';
@@ -164,6 +171,7 @@ const MOMENT_LOCALE: Record<AppLocale, string> = {
   'pt-BR': 'pt-br',
   ru: 'ru',
   sv: 'sv',
+  sw: 'sw',
   uk: 'uk',
   ur: 'ur',
   'zh-CN': 'zh-cn',
@@ -187,6 +195,7 @@ export const i18n = new VueI18n({
     'pt-BR': ptBR,
     ru,
     sv,
+    sw,
     uk,
     ur,
     'zh-CN': zhCN,
