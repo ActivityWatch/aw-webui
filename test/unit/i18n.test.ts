@@ -180,7 +180,7 @@ describe('i18n', () => {
       configurable: true,
     });
     const { i18n } = loadI18n();
-    expect(i18n.locale).toBe('id');
+    expect(i18n.global.locale.value).toBe('id');
     expect(document.documentElement.lang).toBe('id');
     expect(document.documentElement.dir).toBe('ltr');
   });
@@ -193,7 +193,7 @@ describe('i18n', () => {
         configurable: true,
       });
       const { i18n } = loadI18n();
-      expect(i18n.locale).toBe('id');
+      expect(i18n.global.locale.value).toBe('id');
       expect(document.documentElement.lang).toBe('id');
     }
   );
@@ -205,7 +205,7 @@ describe('i18n', () => {
     });
     localStorage.setItem('locale', 'id');
     const { i18n } = loadI18n();
-    expect(i18n.locale).toBe('id');
+    expect(i18n.global.locale.value).toBe('id');
     expect(document.documentElement.lang).toBe('id');
     expect(document.documentElement.dir).toBe('ltr');
   });
@@ -311,8 +311,8 @@ describe('i18n', () => {
   test('setAppLocale switches to Indonesian messages', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('id');
-    expect(i18n.locale).toBe('id');
-    expect(i18n.t('common.save')).toBe('Simpan');
+    expect(i18n.global.locale.value).toBe('id');
+    expect(i18n.global.t('common.save')).toBe('Simpan');
     expect(document.documentElement.lang).toBe('id');
     expect(localStorage.getItem('locale')).toBe('id');
   });
@@ -359,7 +359,7 @@ describe('i18n', () => {
       configurable: true,
     });
     const { i18n } = loadI18n();
-    expect(i18n.locale).toBe('bn');
+    expect(i18n.global.locale.value).toBe('bn');
     expect(document.documentElement.lang).toBe('bn');
     expect(document.documentElement.dir).toBe('ltr');
   });
@@ -371,15 +371,15 @@ describe('i18n', () => {
     });
     localStorage.setItem('locale', 'bn');
     const { i18n } = loadI18n();
-    expect(i18n.locale).toBe('bn');
+    expect(i18n.global.locale.value).toBe('bn');
   });
 
   test('setAppLocale switches to Bengali messages and persists', () => {
     const { setAppLocale, i18n, LANGUAGE_NAMES } = loadI18n();
     setAppLocale('bn');
-    expect(i18n.locale).toBe('bn');
+    expect(i18n.global.locale.value).toBe('bn');
     expect(LANGUAGE_NAMES.bn).toBe('বাংলা');
-    expect(i18n.t('common.save')).not.toBe('Save');
+    expect(i18n.global.t('common.save')).not.toBe('Save');
     expect(document.documentElement.lang).toBe('bn');
     expect(document.documentElement.dir).toBe('ltr');
     expect(localStorage.getItem('locale')).toBe('bn');
@@ -388,7 +388,7 @@ describe('i18n', () => {
   test('Bengali notification help preserves the literal total-time category', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('bn');
-    expect(i18n.t('settings.notifications.categoryHelp')).toContain('"All"');
+    expect(i18n.global.t('settings.notifications.categoryHelp')).toContain('"All"');
   });
 
   test('switching from Arabic to Bengali restores ltr', () => {
@@ -504,14 +504,14 @@ describe('i18n', () => {
       configurable: true,
     });
     const { i18n } = loadI18n();
-    expect(i18n.locale).toBe('sw');
+    expect(i18n.global.locale.value).toBe('sw');
   });
 
   test('setAppLocale switches to Swahili messages', () => {
     const { setAppLocale, i18n } = loadI18n();
     setAppLocale('sw');
-    expect(i18n.locale).toBe('sw');
-    expect(i18n.t('common.save')).toBe('Hifadhi');
+    expect(i18n.global.locale.value).toBe('sw');
+    expect(i18n.global.t('common.save')).toBe('Hifadhi');
     expect(document.documentElement.lang).toBe('sw');
     expect(localStorage.getItem('locale')).toBe('sw');
   });
