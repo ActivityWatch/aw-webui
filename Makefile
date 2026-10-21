@@ -3,21 +3,18 @@
 .FORCE: ;
 
 # This is to disable check for new release in aw-webui for aw-android
+# (vite.config.ts reads VUE_APP_ON_ANDROID to select the mobile defaults)
 ifdef ON_ANDROID
-# The following flag will pass --android as a command line argument to vue-cli-service
-# https://docs.npmjs.com/cli/run-script
-androidflag := -- --os=android
-else
-androidflag :=
+export VUE_APP_ON_ANDROID := true
 endif
 
 prebuild: node_modules/ static/logo.png static/logo.svg
 
 build: prebuild
-	npm run build ${androidflag}
+	npm run build
 
 dev: prebuild
-	npm run serve ${androidflag}
+	npm run serve
 
 build-vite: prebuild
 	npx vite build
