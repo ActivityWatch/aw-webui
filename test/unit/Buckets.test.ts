@@ -195,6 +195,32 @@ describe('Buckets.vue CSV date range', () => {
     if (events.length) expect(parsed.data[0].title).toBe(events[0].data.title);
   });
 
+  test('preserves nested objects, arrays, and primitive CSV values', async () => {
+    const data = {
+      object: { value: 'original', nested: [1, { text: 'a, "quote"\nline' }] },
+      array: ['a', { b: true }],
+      emptyObject: {},
+      emptyArray: [],
+      nil: null,
+      flag: false,
+      zero: 0,
+      text: 'plain',
+    };
+    get.mockResolvedValue({ data: [{ timestamp: '2026-10-20T08:00:00Z', duration: 60, data }] });
+    await wrapper.vm.export_csv('bucket', '2026-10-20T00:00:00Z');
+    const blob = (downloadBlob as jest.Mock).mock.calls[0][1];
+    const csv = await new Promise<string>(resolve => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.readAsText(blob);
+    });
+    const row = Papa.parse(csv, { header: true }).data[0];
+    for (const key of ['object', 'array', 'emptyObject', 'emptyArray']) {
+      expect(JSON.parse(row[key])).toEqual(data[key]);
+    }
+    expect(row).toMatchObject({ nil: '', flag: 'false', zero: '0', text: 'plain' });
+  });
+
   test('reports request failures and clears the busy state', async () => {
     get.mockRejectedValue(new Error('offline'));
     const error = jest.spyOn(console, 'error').mockImplementation(jest.fn());
