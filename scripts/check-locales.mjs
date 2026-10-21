@@ -85,6 +85,7 @@ const IDENTICAL_OK = {
     'Forum',
     'Score',
   ],
+  es: ['h', 's', 'General', 'Buckets', 'Hosts', 'Total', 'Prompt', 'Color'],
   fr: [
     'h',
     's',
