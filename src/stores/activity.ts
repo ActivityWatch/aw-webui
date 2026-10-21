@@ -27,6 +27,8 @@ import { getClient } from '~/util/awclient';
 import {
   buildMultideviceHostParams,
   eligibleMultideviceHosts,
+  hostDurationBreakdown,
+  HostDuration,
   isMultiHostSelection,
   parseHostParam,
   resolveHostSelection,
@@ -251,6 +253,8 @@ interface State {
     // Unfiltered window-bucket activity (see queries.ts). Zero when no events
     // exist for the period, whatever the AFK/category filters did.
     raw_duration: number;
+    // Multidevice only: active time credited to each selected device.
+    host_durations: HostDuration[];
   };
 
   browser: {
@@ -334,6 +338,7 @@ export const useActivityStore = defineStore('activity', {
       top_apps: [],
       top_titles: [],
       raw_duration: 0,
+      host_durations: [],
     },
 
     browser: {
@@ -813,7 +818,12 @@ export const useActivityStore = defineStore('activity', {
       const { merged, chunks } = await queryDesktopPeriods(periods, q, 'multidevice', () =>
         this.progress_tick()
       );
-      const windowResult = merged.window || {};
+      const windowResult: Record<string, any> = merged.window || {};
+      windowResult.host_durations = hostDurationBreakdown(
+        params.hosts,
+        windowResult.host_cumulative_durations,
+        windowResult.host_raw_durations
+      );
       if (usesMonthlyBuckets(query_options.timeperiod)) {
         // As in query_desktop_full: long ranges don't keep years of active
         // events in state, and build the monthly barchart from the chunks.
@@ -1409,6 +1419,7 @@ export const useActivityStore = defineStore('activity', {
       this.window.top_apps = withDominantCategory(data.app_events, data.app_cat_events);
       this.window.top_titles = data.title_events;
       this.window.raw_duration = data.raw_duration || 0;
+      this.window.host_durations = data.host_durations || [];
       this.category.top = data.cat_events;
       this.active.duration = data.duration;
       this.active.events = data.active_events;

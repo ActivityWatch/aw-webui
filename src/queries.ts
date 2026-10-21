@@ -266,7 +266,15 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
   ].join('\n');
 }
 
-export function canonicalMultideviceEvents(params: MultiQueryParams): string {
+// With trackHostDurations, also records per-host durations for the
+// per-device breakdown: host_cumulative_<i> is the merged duration after host
+// i is added (its credited share is the difference from host i-1, so shares add
+// up to the merged total), and host_raw_<i> is the host's own duration before
+// overlap resolution.
+export function canonicalMultideviceEvents(
+  params: MultiQueryParams,
+  trackHostDurations = false
+): string {
   // First, query each device individually
   const queries: string[] = _.map(params.hosts, (_hostname, i) => {
     return canonicalEvents(get_params(params, i));
@@ -283,6 +291,12 @@ export function canonicalMultideviceEvents(params: MultiQueryParams): string {
     events = union_no_overlap(events, events_${hostVariableSuffix(params, i)});
     not_afk = union_no_overlap(not_afk, not_afk_${hostVariableSuffix(params, i)});
     `;
+    if (trackHostDurations) {
+      query += `
+    host_cumulative_${i} = sum_durations(events);
+    host_raw_${i} = sum_durations(events_${hostVariableSuffix(params, i)});
+    `;
+    }
   }
 
   return query;
@@ -613,9 +627,12 @@ export function multideviceQuery(params: MultiQueryParams): string[] {
   // title_events would silently exclude mobile hosts' app-level
   // breakdown even though their duration is counted; title breakdown
   // (which mobile hosts can't provide) stays desktop-only.
+  const hostIndexes = _.range(params.hosts.length);
+  const hostCumulative = hostIndexes.map(i => `host_cumulative_${i}`).join(', ');
+  const hostRaw = hostIndexes.map(i => `host_raw_${i}`).join(', ');
   return querystr_to_array(
     `
-    ${canonicalMultideviceEvents(params)}
+    ${canonicalMultideviceEvents(params, true)}
     title_events = sort_by_duration(merge_events_by_keys(events, ["app", "title"]));
     app_events   = sort_by_duration(merge_events_by_keys(events, ["app"]));
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
@@ -632,7 +649,9 @@ export function multideviceQuery(params: MultiQueryParams): string[] {
             "title_events": title_events,
             "cat_events": cat_events,
             "active_events": not_afk,
-            "duration": duration
+            "duration": duration,
+            "host_cumulative_durations": [${hostCumulative}],
+            "host_raw_durations": [${hostRaw}]
         }
     };`
   );
