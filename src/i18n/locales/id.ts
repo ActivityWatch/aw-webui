@@ -349,6 +349,8 @@ export default {
     firstSeen: 'Pertama terlihat:',
     exportBucketJson: 'Ekspor bucket sebagai JSON',
     exportEventsCsv: 'Ekspor event sebagai CSV',
+    exportRangeHelp:
+      'Waktu menggunakan zona waktu lokal Anda. Kosongkan salah satu kolom agar batas tersebut tidak dibatasi; kosongkan keduanya untuk mengekspor semuanya.',
     deleteBucket: 'Hapus bucket',
     deleteModalTitle: 'Bahaya!',
     deleteConfirm: 'Anda yakin ingin menghapus bucket "{id}"?',

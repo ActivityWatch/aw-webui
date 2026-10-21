@@ -347,6 +347,8 @@ export default {
     firstSeen: 'पहली बार देखा गया:',
     exportBucketJson: 'Bucket को JSON के रूप में एक्सपोर्ट करें',
     exportEventsCsv: 'इवेंट को CSV के रूप में एक्सपोर्ट करें',
+    exportRangeHelp:
+      'समय आपके स्थानीय समय क्षेत्र में हैं। संबंधित सीमा न रखने के लिए कोई भी फ़ील्ड खाली छोड़ें; सब कुछ एक्सपोर्ट करने के लिए दोनों खाली छोड़ें।',
     deleteBucket: 'Bucket हटाएँ',
     deleteModalTitle: 'खतरा!',
     deleteConfirm: 'क्या आप वाकई bucket "{id}" हटाना चाहते हैं?',
