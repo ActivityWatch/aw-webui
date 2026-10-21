@@ -249,22 +249,28 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
     isDesktopParams(params) && params.filter_afk
       ? 'events = filter_period_intersect(events, not_afk);'
       : '',
-    params.bid_stopwatch
-      ? `stopwatch_events = query_bucket("${params.bid_stopwatch}");
-         events = union_no_overlap(stopwatch_events, events);`
-      : 'stopwatch_events = [];',
     // Enrich window events with browser url/$domain so URL-based category rules
     // fire on the main events stream. `merge_subwatcher_fields` was added in
     // aw-server-rust#824, which is newer than the server floor this webui
     // supports, so only emit it when the startup capability probe found it
     // (see util/serverCapabilities). Otherwise the query fails server-side with
     // VariableNotDefined and the whole Activity view breaks.
+    // Must run BEFORE the stopwatch union: stopwatch events explicitly recorded
+    // by the user should not be split and given browser url/$domain.
+    // Incognito events are excluded — those URLs already appear in the Browser
+    // section and should not reach the category engine via this path.
+    // base_wins preserves the url already present in window events on macOS
+    // (aw-watcher-window writes url natively for supported browsers).
     isDesktopParams(params) &&
     params.bid_browsers &&
     params.bid_browsers.length > 0 &&
     supportsMergeSubwatcherFields()
-      ? 'events = merge_subwatcher_fields(events, browser_events, ["url", "$domain"], "sub_wins");'
+      ? 'events = merge_subwatcher_fields(events, exclude_keyvals(browser_events, "incognito", [true]), ["url", "$domain"], "base_wins");'
       : '',
+    params.bid_stopwatch
+      ? `stopwatch_events = query_bucket("${params.bid_stopwatch}");
+         events = union_no_overlap(stopwatch_events, events);`
+      : 'stopwatch_events = [];',
     // Categorize
     params.categories ? `events = categorize(events, ${categories_str});` : '',
     // Filter out selected categories. Only emit when the list is non-empty: an
