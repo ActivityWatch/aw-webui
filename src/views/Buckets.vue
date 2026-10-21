@@ -85,6 +85,7 @@ div
       b-form-input(id="export-start", type="datetime-local", v-model="export_start", :max="export_end || undefined")
     b-form-group(:label="$t('ui.eventEditor.end') + ' ' + $t('ui.timeInterval.optional')", label-for="export-end")
       b-form-input(id="export-end", type="datetime-local", v-model="export_end", :min="export_start || undefined")
+    p.small.text-muted {{ $t('buckets.exportRangeHelp') }}
     b-alert(v-if="invalidExportRange", show, variant="warning")
       | {{ $t('ui.timeInterval.invalidRange') }}
 
@@ -504,7 +505,14 @@ export default {
           const keys = Array.from(new Set<string>(events.flatMap(e => Object.keys(e.data)))).sort();
           const csv = Papa.unparse({
             fields: ['timestamp', 'duration', ...keys],
-            data: events.map(e => [e.timestamp, e.duration, ...keys.map(key => e.data[key])]),
+            data: events.map(e => [
+              e.timestamp,
+              e.duration,
+              ...keys.map(key => {
+                const value = e.data[key];
+                return value !== null && typeof value === 'object' ? JSON.stringify(value) : value;
+              }),
+            ]),
           });
           await downloadBlob(filename, new Blob([csv], { type: 'text/csv' }), 'text/csv');
           return;
