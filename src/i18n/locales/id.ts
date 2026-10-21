@@ -377,6 +377,9 @@ export default {
     allDevicesCount: 'Semua perangkat ({count})',
     onlyThisDevice: 'saja',
     multideviceNote: 'Data browser dan stopwatch hanya tersedia saat melihat satu perangkat.',
+    deviceBreakdownTooltip:
+      'Waktu aktif per perangkat. Saat perangkat tumpang tindih, waktu dihitung sekali, untuk perangkat yang tercantum pertama.',
+    overlap: 'tumpang tindih',
     timeActive: 'Waktu aktif:',
     timeActiveTooltip:
       'Waktu jendela aktif dalam rentang yang dikueri, setelah filter di bawah. Batang pada grafik periode menunjukkan waktu aktif perangkat mentah, sehingga bisa sedikit lebih tinggi.',

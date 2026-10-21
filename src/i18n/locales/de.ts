@@ -372,6 +372,9 @@ export default {
     onlyThisDevice: 'nur',
     multideviceNote:
       'Browser- und Stoppuhrdaten sind nur bei Auswahl eines einzelnen Geräts verfügbar.',
+    deviceBreakdownTooltip:
+      'Aktive Zeit pro Gerät. Überschneiden sich Geräte, wird die Zeit nur einmal gezählt, für das zuerst aufgeführte Gerät.',
+    overlap: 'Überschneidung',
     timeActive: 'Aktive Zeit:',
     timeActiveTooltip:
       'Aktive Fensterzeit im abgefragten Zeitraum nach Anwendung der Filter unten. Die Balken im Zeitraumdiagramm zeigen die rohe aktive Gerätezeit und können daher etwas höher liegen.',

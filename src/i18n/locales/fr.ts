@@ -385,6 +385,9 @@ export default {
     onlyThisDevice: 'uniquement',
     multideviceNote:
       'Les données du navigateur et du chronomètre ne sont disponibles que pour un seul appareil à la fois.',
+    deviceBreakdownTooltip:
+      "Temps actif par appareil. Lorsque des appareils se chevauchent, le temps est compté une seule fois, pour l'appareil listé en premier.",
+    overlap: 'chevauchement',
     timeActive: 'Temps actif :',
     timeActiveTooltip:
       'Durée de fenêtre active dans la plage interrogée, après application des filtres ci-dessous. Les barres du graphique de la période indiquent le temps actif brut de l’appareil ; elles peuvent donc être légèrement plus élevées.',
