@@ -41,7 +41,7 @@ test.each([
 test('renders provided data on mount, sums events, and emits the original period', () => {
   const p = period('2026-09-09T04:00:00');
   const wrapper: any = mount(PeriodUsage, {
-    propsData: {
+    props: {
       periodusage_arr: [
         entry(p, [
           { timestamp: '2026-09-10T01:00:00', duration: 60, data: { status: 'not-afk' } },
@@ -59,13 +59,13 @@ test('renders provided data on mount, sums events, and emits the original period
       expect(Number.isFinite(parseFloat(wrapper.find('rect').attributes(attr)))).toBe(true);
     }
   } finally {
-    wrapper.destroy();
+    wrapper.unmount();
   }
 });
 
 test('empty periods remain clickable and Today is end-exclusive and refreshed', async () => {
   const current = period('2026-09-03T04:00:00', [7, 'days']);
-  const wrapper: any = mount(PeriodUsage, { propsData: { periodusage_arr: [entry(current)] } });
+  const wrapper: any = mount(PeriodUsage, { props: { periodusage_arr: [entry(current)] } });
   try {
     expect(wrapper.find('rect title').text()).toContain('2026-09-03 – 2026-09-09');
     expect(wrapper.findAll('line')).toHaveLength(1);
@@ -79,7 +79,7 @@ test('empty periods remain clickable and Today is end-exclusive and refreshed', 
     expect(wrapper.text()).toBe('(no data)');
     expect(wrapper.findAll('rect')).toHaveLength(0);
   } finally {
-    wrapper.destroy();
+    wrapper.unmount();
   }
 });
 

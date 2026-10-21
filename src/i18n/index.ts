@@ -1,5 +1,4 @@
-import Vue from 'vue';
-import VueI18n from 'vue-i18n';
+import { createI18n } from 'vue-i18n';
 import moment from 'moment';
 import 'moment/locale/ar';
 import 'moment/locale/bn';
@@ -33,8 +32,6 @@ import sw from './locales/sw';
 import uk from './locales/uk';
 import ur from './locales/ur';
 import zhCN from './locales/zh-CN';
-
-Vue.use(VueI18n);
 
 export type AppLocale =
   | 'ar'
@@ -179,7 +176,9 @@ const MOMENT_LOCALE: Record<AppLocale, string> = {
 
 const initialLocale = getInitialLocale();
 
-export const i18n = new VueI18n({
+export const i18n = createI18n({
+  legacy: false,
+  globalInjection: true,
   locale: initialLocale,
   fallbackLocale: 'en',
   messages: {
@@ -200,7 +199,8 @@ export const i18n = new VueI18n({
     ur,
     'zh-CN': zhCN,
   },
-  silentTranslationWarn: process.env.NODE_ENV === 'production',
+  missingWarn: process.env.NODE_ENV !== 'production',
+  fallbackWarn: process.env.NODE_ENV !== 'production',
 });
 
 // moment's `ur` locale already formats with Western digits, so it needs no override.
@@ -244,12 +244,16 @@ function applyDocumentLocale(locale: AppLocale): void {
   document.documentElement.dir = isRtlLocale(locale) ? 'rtl' : 'ltr';
 }
 
+export function getAppLocale(): string {
+  return i18n.global.locale.value;
+}
+
 moment.locale(MOMENT_LOCALE[initialLocale]);
 applyDocumentLocale(initialLocale);
 
 export function setAppLocale(locale: string): void {
   const next = isAppLocale(locale) ? locale : 'en';
-  i18n.locale = next;
+  i18n.global.locale.value = next;
   moment.locale(MOMENT_LOCALE[next]);
   applyDocumentLocale(next);
   try {

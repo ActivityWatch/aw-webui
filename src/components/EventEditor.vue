@@ -1,5 +1,5 @@
 <template lang="pug">
-b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEditModal", :title="$t('ui.eventEditor.editTitle')", centered, hide-footer, :no-close-on-backdrop="busy", :no-close-on-esc="busy", :hide-header-close="busy")
+b-modal(v-if="event && event.id", :model-value="open", @update:model-value="onOpenChange", :title="$t('ui.eventEditor.editTitle')", centered, hide-footer, :no-close-on-backdrop="busy", :no-close-on-esc="busy", :hide-header-close="busy")
   div(v-if="!editedEvent")
     | {{ $t('ui.eventEditor.loading') }}
 
@@ -13,13 +13,15 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
         td {{ event.id }}
       tr
         th {{ $t('ui.eventEditor.start') }}
-        datetime(type="datetime" v-model="start" :disabled="busy")
+        td
+          input(type="datetime-local" step="1" v-model="start" :disabled="busy")
       tr
         th {{ $t('ui.eventEditor.end') }}
-        datetime(type="datetime" v-model="end" :disabled="busy")
+        td
+          input(type="datetime-local" step="1" v-model="end" :disabled="busy")
       tr
         th {{ $t('ui.eventEditor.duration') }}
-        td {{ editedEvent.duration | friendlyduration }}
+        td {{ friendlyduration(editedEvent.duration) }}
 
     hr
 
@@ -29,22 +31,22 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
         th {{ $t('ui.eventEditor.value') }}
       tr(v-for="(v, k) in editedEvent.data" :key="k")
         td
-          b-input(disabled, :value="k", size="sm")
+          b-form-input(disabled, :model-value="k", size="sm")
         td
-          b-checkbox(v-if="typeof event.data[k] === typeof true", v-model="editedEvent.data[k]", :disabled="busy", style="margin: 0.25em")
-          b-input(v-if="typeof event.data[k] === typeof 'string'", v-model="editedEvent.data[k]", :disabled="busy", size="sm")
-          b-input(v-if="typeof event.data[k] === 'number'", v-model.number="editedEvent.data[k]", :disabled="busy", size="sm", type="number")
+          b-form-checkbox(v-if="typeof event.data[k] === typeof true", v-model="editedEvent.data[k]", :disabled="busy", style="margin: 0.25em")
+          b-form-input(v-if="typeof event.data[k] === typeof 'string'", v-model="editedEvent.data[k]", :disabled="busy", size="sm")
+          b-form-input(v-if="typeof event.data[k] === 'number'", v-model.number="editedEvent.data[k]", :disabled="busy", size="sm", type="number")
 
     hr
 
-    b-alert(v-if="error" show variant="danger")
+    b-alert(v-if="error" :model-value="true" variant="danger")
       | {{ error }}
 
-    div.float-left
+    div.float-start
       b-button.mx-1(@click="delete_", variant="danger", :disabled="busy")
         icon.mx-1(name="trash")
         | {{ $t('common.delete') }}
-    div.float-right
+    div.float-end
       b-button.mx-1(@click="close", :disabled="busy")
         icon.mx-1(name="times")
         | {{ $t('common.cancel') }}
@@ -66,17 +68,17 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
 
 import moment from 'moment';
 import _ from 'lodash';
-
-import 'vue-awesome/icons/times';
-import 'vue-awesome/icons/save';
-import 'vue-awesome/icons/trash';
+import { friendlyduration } from '~/util/filters';
 
 export default {
   name: 'EventEditor',
   props: {
     event: { type: Object },
     bucket_id: { type: String, required: true },
+    // Whether the editor dialog is shown (v-model:open)
+    open: { type: Boolean, default: false },
   },
+  emits: ['save', 'delete', 'close', 'update:open'],
   data() {
     return {
       editedEvent: null,
@@ -91,7 +93,7 @@ export default {
     },
     start: {
       get: function () {
-        return moment(this.editedEvent.timestamp).format();
+        return moment(this.editedEvent.timestamp).format('YYYY-MM-DDTHH:mm:ss');
       },
       set: function (dt) {
         // Duration needs to be set first since otherwise the computed for end will use the new timestamp
@@ -102,7 +104,7 @@ export default {
     end: {
       get: function () {
         const end = moment(this.editedEvent.timestamp).add(this.editedEvent.duration, 'seconds');
-        return end.format();
+        return end.format('YYYY-MM-DDTHH:mm:ss');
       },
       set: function (dt) {
         this.editedEvent.duration = moment(dt).diff(this.editedEvent.timestamp, 'seconds');
@@ -119,6 +121,7 @@ export default {
     await this.getEvent();
   },
   methods: {
+    friendlyduration,
     async save() {
       if (!this.editedEvent) return;
       // Capture before any async suspension: another selection can change
@@ -174,11 +177,9 @@ export default {
       const verb = name === 'delete' ? 'delete' : 'save';
       return serverMessage || (e && e.message) || `Failed to ${verb} event.`;
     },
-    // Hiding is best-effort: the modal may already be gone if a parent
-    // re-rendered or destroyed this component.
+    // The parent owns the open state (v-model:open).
     hideModal() {
-      const modal = this.$refs.eventEditModal;
-      if (modal) modal.hide();
+      this.$emit('update:open', false);
     },
     async getEvent() {
       if (this.bucket_id && this.event && this.event.id) {
@@ -191,6 +192,10 @@ export default {
       if (this.pending) return;
       this.hideModal();
       this.$emit('close', this.event);
+    },
+    onOpenChange(isOpen: boolean) {
+      if (isOpen) this.$emit('update:open', true);
+      else this.close();
     },
   },
 };

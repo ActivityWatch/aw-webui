@@ -37,7 +37,7 @@ div
       summary
         icon.mx-2(name="check", style="color: #0C0", v-if="overlappingEvents.length === 0")
         icon.mx-2(name="exclamation-triangle", style="color: #CC0", v-else)
-        | {{ $t('ui.bucketValidate.overlaps', { count: overlappingEvents.length }) }} {{ overlapDuration / 1000 | friendlyduration }}
+        | {{ $t('ui.bucketValidate.overlaps', { count: overlappingEvents.length }) }} {{ friendlyduration(overlapDuration / 1000) }}
       div.p-2
         p(v-if="overlappingEvents.length === 0")
           | {{ $t('ui.bucketValidate.noOverlaps') }}
@@ -59,9 +59,9 @@ div
         icon.mx-2(name="info-circle", style="color: #09F", v-else)
         | {{ $t('ui.bucketValidate.zeroDuration') }}: {{ zeroDurationEvents.length }}
       div.p-2
-        p.ml-3(v-if="zeroDurationEvents.length === 0")
+        p.ms-3(v-if="zeroDurationEvents.length === 0")
           | {{ $t('ui.bucketValidate.noZeroDuration') }}
-        p.ml-3(v-else)
+        p.ms-3(v-else)
           | {{ $t('ui.bucketValidate.zeroFound', { count: zeroDurationEvents.length }) }}
           ul.mt-2
             li(v-for="event in zeroDurationEvents")
@@ -72,9 +72,6 @@ div
 </template>
 
 <script lang="ts">
-import 'vue-awesome/icons/check';
-import 'vue-awesome/icons/exclamation-triangle';
-import 'vue-awesome/icons/info-circle';
 import { getClient } from '~/util/awclient';
 import { overlappingEvents } from '~/util/transforms';
 import { seconds_to_duration } from '~/util/time';

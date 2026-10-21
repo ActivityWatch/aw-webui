@@ -23,8 +23,8 @@ div
             | {{savedQuery.name}}
       div.form-group.col-lg-6
         div.saved-query-actions
-          button.btn.btn-success.mr-2(type="button", @click="saveCurrentQuery()") {{ $t('ui.query.saveCurrent') }}
-          button.btn.btn-secondary.mr-2(type="button", @click="renameSelectedQuery()", :disabled="!selected_saved_query_id") {{ $t('ui.query.rename') }}
+          button.btn.btn-success.me-2(type="button", @click="saveCurrentQuery()") {{ $t('ui.query.saveCurrent') }}
+          button.btn.btn-secondary.me-2(type="button", @click="renameSelectedQuery()", :disabled="!selected_saved_query_id") {{ $t('ui.query.rename') }}
           button.btn.btn-danger(type="button", @click="deleteSelectedQuery()", :disabled="!selected_saved_query_id")
             icon(name="trash")
             |  {{ $t('common.delete') }}
@@ -87,7 +87,8 @@ div
 </style>
 
 <script lang="ts">
-import 'vue-awesome/icons/trash';
+import { useModalController } from 'bootstrap-vue-next';
+import { msgBoxConfirm } from '~/util/confirm';
 import moment from 'moment';
 import _ from 'lodash';
 import { querystr_to_array } from '~/queries';
@@ -154,6 +155,10 @@ RETURN = sort_by_duration(merged_events);
       else return '';
     },
   },
+  created() {
+    // A plain instance property: setup() bindings would change what tests see as wrapper.vm.
+    this.modalController = useModalController();
+  },
   mounted: async function () {
     await this.settingsStore.ensureLoaded();
     useCategoryStore().load();
@@ -186,7 +191,8 @@ RETURN = sort_by_duration(merged_events);
       const current = this.selectedSavedQuery;
 
       if (current) {
-        const confirmed = await this.$bvModal.msgBoxConfirm(
+        const confirmed = await msgBoxConfirm(
+          this.modalController,
           `Update saved query "${current.name}"?`,
           { title: 'Update Query', okTitle: 'Update', cancelTitle: 'Cancel', centered: true }
         );
@@ -282,7 +288,8 @@ RETURN = sort_by_duration(merged_events);
         return;
       }
 
-      const confirmed = await this.$bvModal.msgBoxConfirm(
+      const confirmed = await msgBoxConfirm(
+        this.modalController,
         `Delete saved query "${this.selectedSavedQuery.name}"? This cannot be undone.`,
         {
           title: 'Delete Query',

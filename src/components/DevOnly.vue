@@ -1,8 +1,8 @@
 <template lang="pug">
 div(v-if="show", style="border: 1px solid #aaa; border-radius: 5px")
-  b-alert(v-if="note", variant="warning" show)
-    span.float-left {{ $t('ui.devOnly.notProduction') }} #[span(v-if="reason") ({{ reason }})]
-    b-btn.float-right.hide-devonly(@click="() => { hide = true }", variant="outline-secondary", size="sm")
+  b-alert(v-if="note", variant="warning" :model-value="true")
+    span.float-start {{ $t('ui.devOnly.notProduction') }} #[span(v-if="reason") ({{ reason }})]
+    b-button.float-end.hide-devonly(@click="() => { hide = true }", variant="outline-secondary", size="sm")
       | {{ $t('ui.devOnly.hide') }}
     | .
   slot

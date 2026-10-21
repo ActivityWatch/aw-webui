@@ -2,7 +2,7 @@
 div
   div.d-flex.align-items-center.mb-3
     h3.mb-0 {{ $t('stopwatch.title') }}
-    button.btn.btn-link.p-0.ml-2.text-muted(
+    button.btn.btn-link.p-0.ms-2.text-muted(
       id="stopwatch-help"
       type="button"
       :aria-label="$t('stopwatch.aboutTitle')"
@@ -17,25 +17,24 @@ div
       | {{ $t('stopwatch.aboutBody') }}
 
   b-input-group(size="lg")
-    b-input(
+    b-form-input(
       v-model="label"
       :placeholder="$t('stopwatch.placeholder')"
       :aria-label="$t('stopwatch.placeholder')"
       @keyup.enter="startTimer(label)"
     )
-    b-input-group-append
-      b-button(@click="startTimer(label)", variant="success")
-        icon(name="play")
-        | {{ $t('stopwatch.start') }}
+    b-button(@click="startTimer(label)", variant="success")
+      icon(name="play")
+      | {{ $t('stopwatch.start') }}
 
   hr
 
-  b-alert(v-if="error" show variant="danger")
+  b-alert(v-if="error" :model-value="true" variant="danger")
     | {{ error }}
-    b-button.ml-2(size="sm" :disabled="refreshing" @click="getEvents()") Retry
+    b-button.ms-2(size="sm" :disabled="refreshing" @click="getEvents()") Retry
 
   div(v-if="loading")
-    b-spinner.mr-2(small)
+    b-spinner.me-2(small)
     span.text-muted {{ $t('common.loading') }}
   div(v-else)
     h3.mt-3 {{ $t('stopwatch.running') }}
@@ -81,9 +80,6 @@ import _ from 'lodash';
 import moment from 'moment';
 
 import StopwatchEntry from '../components/StopwatchEntry.vue';
-import 'vue-awesome/icons/play';
-import 'vue-awesome/icons/trash';
-import 'vue-awesome/icons/question-circle';
 
 export default {
   name: 'Stopwatch',
@@ -148,7 +144,7 @@ export default {
       if (i != -1) {
         // This is needed instead of this.events[i] because insides of arrays
         // are not reactive in Vue
-        this.$set(this.events, i, new_event);
+        this.events[i] = new_event;
       } else {
         console.error(':(');
       }

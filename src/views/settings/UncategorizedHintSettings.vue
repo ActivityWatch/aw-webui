@@ -11,12 +11,12 @@ div
   div.mt-3(v-if="isEnabled")
     b-form-group(:label="$t('settings.uncategorizedHint.minimumTotalTime')" label-cols-md=4 label-class="small text-muted"
                  :description="$t('settings.uncategorizedHint.minimumTotalTimeHelp')")
-      b-input(type="number" min="0" size="sm" v-model.number="minTotalMinutes")
+      b-form-input(type="number" min="0" size="sm" v-model.number="minTotalMinutes")
 
     b-form-group.mb-0(:label="$t('settings.uncategorizedHint.minimumShare')" label-cols-md=4 label-class="small text-muted"
                      :description="$t('settings.uncategorizedHint.minimumShareHelp')")
       b-input-group(size="sm" append="%")
-        b-input(type="number" min="0" max="100" v-model.number="minRatioPct")
+        b-form-input(type="number" min="0" max="100" v-model.number="minRatioPct")
 </template>
 
 <script lang="ts">

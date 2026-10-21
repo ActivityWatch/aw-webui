@@ -1,7 +1,7 @@
 <template lang="pug">
 div
   h3 {{ id }}
-  b-alert(v-if="notFound", show, variant="warning")
+  b-alert(v-if="notFound", :model-value="true", variant="warning")
     | {{ $t('extraViews.bucket.notFound', { id }) }}
     |
     router-link(to="/buckets") {{ $t('extraViews.bucket.seeAll') }}
@@ -18,7 +18,7 @@ div
         td {{ bucket.hostname }}
       tr
         th {{ $t('ui.bucketDetail.created') }}
-        td {{ bucket.created | iso8601 }}
+        td {{ iso8601(bucket.created) }}
       tr(v-if="bucket.metadata")
         th {{ $t('ui.bucketDetail.firstLastEvent') }}
         td
@@ -33,8 +33,8 @@ div
 
     input-timeinterval(v-model="daterange", :maxDuration="maxDuration")
 
-    b-alert(v-if="showingMostRecent", variant="info", show)
-      | {{ $t('extraViews.bucket.noEventsPrefix') }} {{ lastEventTime | friendlytime }}{{ $t('extraViews.bucket.noEventsSuffix', { count: events.length }) }}
+    b-alert(v-if="showingMostRecent", variant="info", :model-value="true")
+      | {{ $t('extraViews.bucket.noEventsPrefix') }} {{ friendlytime(lastEventTime) }}{{ $t('extraViews.bucket.noEventsSuffix', { count: events.length }) }}
 
     vis-timeline(:buckets="[bucket_with_events]", :showRowLabels="false")
 
@@ -44,6 +44,7 @@ div
 <script lang="ts">
 import { useBucketsStore } from '~/stores/buckets';
 import { getClient } from '~/util/awclient';
+import { iso8601 } from '~/util/filters';
 
 export default {
   name: 'Bucket',
@@ -114,6 +115,7 @@ export default {
     }
   },
   methods: {
+    iso8601,
     getEvents: async function (bucket_id) {
       // A newer request (other bucket or time range) supersedes this one; drop late responses.
       const requestId = ++this.eventsRequestId;
@@ -161,7 +163,7 @@ export default {
       if (i != -1) {
         // This is needed instead of this.events[i] because insides of arrays
         // are not reactive in Vue.
-        this.$set(this.events, i, event);
+        this.events[i] = event;
       } else {
         console.error(':(');
       }

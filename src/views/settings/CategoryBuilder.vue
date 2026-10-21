@@ -24,13 +24,13 @@ div
   div(v-if="show_options")
     hr
     h4 {{ $t('search.options') }}
-    aw-query-options(:query-options="queryOptions" @input="queryOptions = $event")
+    aw-query-options(:query-options="queryOptions" @update:model-value="queryOptions = $event")
 
   hr
 
   h5 {{ $t('ui.categoryBuilder.commonWords', { category: category.join(' > ') }) }}
   div(v-if="loading")
-    b-spinner.mr-2(small)
+    b-spinner.me-2(small)
     span.text-muted {{ $t('common.loading') }}
   div(v-else-if="loadError" role="alert")
     p.text-danger {{ loadError }}
@@ -54,11 +54,11 @@ div
             div.flex-grow-1
               | {{ word.word }} ({{ Math.round(word.duration) }}s)
             div.flex-grow-0
-              b-button.mr-1(size="sm" @click="createRule(word.word)" variant="success")
+              b-button.me-1(size="sm" @click="createRule(word.word)" variant="success")
                 | {{ $t('ui.categoryBuilder.newRule') }}
-              b-button.mr-1(size="sm" @click="appendRule(word.word)" variant="warning")
+              b-button.me-1(size="sm" @click="appendRule(word.word)" variant="warning")
                 | {{ $t('ui.categoryBuilder.appendRule') }}
-              b-button.mr-1(size="sm" @click="ignoreWord(word.word)")
+              b-button.me-1(size="sm" @click="ignoreWord(word.word)")
                 | {{ $t('ui.categoryBuilder.ignore') }}
               b-button(size="sm" @click="showEvents(word)" variant="outline-dark")
                 span(v-if="showing_events[0] != word") {{ $t('ui.categoryBuilder.showEvents') }}
@@ -67,15 +67,15 @@ div
             table.table.table-sm.table-striped
               tr
                 th {{ $t('ui.categoryBuilder.titleColumn') }}
-                th.text-right {{ $t('ui.categoryBuilder.duration') }}
+                th.text-end {{ $t('ui.categoryBuilder.duration') }}
               tr(v-for="event in showing_events[1]")
                 td {{ event.data.title || event.data.app }}
-                td.text-right {{ Math.round(event.duration) }}s
+                td.text-end {{ Math.round(event.duration) }}s
             hr
       div.d-flex.align-items-center.mt-3(v-if="hasMoreWords")
         small.text-muted
           | {{ $t('ui.categoryBuilder.showingWords', { shown: words_visible.length, total: words_by_duration.length }) }}
-        b-button.ml-auto(
+        b-button.ms-auto(
           size="sm"
           variant="outline-primary"
           @click="visible_count += page_size"
@@ -83,7 +83,7 @@ div
     div.mt-3(v-if="ignored_words.length > 0")
       small.text-muted
         | {{ $t('extraViews.categoryBuilder.ignoredWords', { count: ignored_words.length }) }}
-      b-button.ml-2(size="sm" variant="link" @click="show_ignored = !show_ignored")
+      b-button.ms-2(size="sm" variant="link" @click="show_ignored = !show_ignored")
         span(v-if="!show_ignored") {{ $t('extraViews.categoryBuilder.show') }}
         span(v-else) {{ $t('extraViews.categoryBuilder.hide') }}
       b-button(size="sm" variant="link" @click="resetIgnoredWords()") {{ $t('extraViews.categoryBuilder.reset') }}
@@ -97,7 +97,7 @@ div
                       @ok="createRuleOk()"
                       @hidden="createRuleCancel()")
 
-  b-modal(id="appendRule" :title="$t('ui.categoryBuilder.appendRule')" @ok="handleOk" :ok-disabled="!valid")
+  b-modal(v-model="showAppendModal" :title="$t('ui.categoryBuilder.appendRule')" @ok="handleOk" :ok-disabled="!valid")
     b-form(ref="form" @submit.stop.prevent="handleSubmit")
       b-form-group(:label="$t('ui.categoryBuilder.rule')"
                    label-for="append-category"
@@ -121,6 +121,8 @@ div
 </style>
 
 <script lang="ts">
+import { useModalController } from 'bootstrap-vue-next';
+import { msgBoxConfirm } from '~/util/confirm';
 import _ from 'lodash';
 import moment from 'moment';
 import { mapState } from 'pinia';
@@ -142,7 +144,8 @@ export default {
   async beforeRouteLeave(to, from, next) {
     const categoryStore = useCategoryStore();
     if (categoryStore.classes_unsaved_changes) {
-      const confirmed = await this.$bvModal.msgBoxConfirm(
+      const confirmed = await msgBoxConfirm(
+        this.modalController,
         this.$t('settings.unsavedCategoriesLeave'),
         {
           title: this.$t('settings.unsavedCategoriesLeaveTitle'),
@@ -196,6 +199,7 @@ export default {
 
       words: new Map(),
       showing_events: [],
+      showAppendModal: false,
 
       show_ignored: false,
 
@@ -252,11 +256,15 @@ export default {
       deep: true,
     },
   },
+  created() {
+    // A plain instance property: setup() bindings would change what tests see as wrapper.vm.
+    this.modalController = useModalController();
+  },
   async mounted() {
     window.addEventListener('beforeunload', this.beforeUnload);
     await this.fetchWords();
   },
-  beforeDestroy() {
+  beforeUnmount() {
     window.removeEventListener('beforeunload', this.beforeUnload);
     // Ignore results from requests that outlive this view.
     this.requestId++;
@@ -436,7 +444,7 @@ export default {
     appendRule(word) {
       console.log('Opening modal to append rule with word: ' + word);
       this.append.word = _.escapeRegExp(word);
-      this.$bvModal.show('appendRule');
+      this.showAppendModal = true;
     },
     async appendRuleOk() {
       console.log('Appending rule with word: ' + this.append.word);
@@ -462,7 +470,7 @@ export default {
 
       // Hide the modal manually
       this.$nextTick(() => {
-        this.$bvModal.hide('appendRule');
+        this.showAppendModal = false;
       });
 
       this.appendRuleOk();

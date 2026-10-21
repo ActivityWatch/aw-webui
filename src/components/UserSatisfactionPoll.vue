@@ -1,7 +1,6 @@
 <template lang="pug">
   div
-    b-alert(v-if="isPollVisible", variant="info", show)
-      button(type="button", class="close", @click="isPollVisible=false") &times;
+    b-alert(v-if="isPollVisible", variant="info", :model-value="true", dismissible, @close="isPollVisible = false")
       form
         p
           | {{ $t('ui.userPoll.question') }}
@@ -16,8 +15,7 @@
           | {{ $t('ui.userPoll.dontShowAgain') }}
         input(type="submit" :value="$t('ui.userPoll.submit')" @click="submit")
 
-    b-alert(v-if="isPosFollowUpVisible", variant="info" show)
-      button(type="button", class="close", @click="isPosFollowUpVisible=false") &times;
+    b-alert(v-if="isPosFollowUpVisible", variant="info" :model-value="true", dismissible, @close="isPosFollowUpVisible = false")
       p
         | {{ $t('ui.userPoll.positiveIntro') }}
         br
@@ -38,8 +36,7 @@
         li
           | {{ $t('ui.userPoll.newsletter') }} #[a(href="http://eepurl.com/cTU6QX") newsletter]
 
-    b-alert(v-if="isNegFollowUpVisible", variant="info" show)
-      button(type="button", class="close", @click="isNegFollowUpVisible=false") &times;
+    b-alert(v-if="isNegFollowUpVisible", variant="info" :model-value="true", dismissible, @close="isNegFollowUpVisible = false")
       | {{ $t('ui.userPoll.negativeIntro') }}
       ul
         li

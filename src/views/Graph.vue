@@ -2,12 +2,12 @@
 div
   h3 {{ $t('nav.graph') }}
 
-  b-alert(show variant="warning")
+  b-alert(:model-value="true" variant="warning")
     | {{ $t('ui.graph.earlyDev') }}
 
   p {{ $t('ui.graph.description') }}
 
-  b-alert(v-if="error" show variant="danger")
+  b-alert(v-if="error" :model-value="true" variant="danger")
     | {{error}}
 
   // Specify max category depth
@@ -19,13 +19,13 @@ div
     b-form-checkbox(v-model="excludeUncategorized")
 
   div.d-flex
-    span.mr-auto
+    span.me-auto
     b-button(type="button", @click="generate()" variant="success")
       icon(name="search")
       | {{ $t('report.generate') }}
 
   div.d-flex.mt-1
-    span.mr-auto.small.text-muted {{ $t('ui.search.hostname') }}: {{queryOptions.hostname}}
+    span.me-auto.small.text-muted {{ $t('ui.search.hostname') }}: {{queryOptions.hostname}}
     b-button.border-0(size="sm", variant="outline-dark" @click="show_options = !show_options")
       span(v-if="!show_options")
         | #[icon(name="angle-double-down")] {{ $t('ui.search.showOptions') }}
@@ -59,13 +59,9 @@ div
 <style scoped lang="scss"></style>
 
 <script lang="ts">
+import { defineAsyncComponent } from 'vue';
 import _ from 'lodash';
 import moment from 'moment';
-
-import 'vue-awesome/icons/search';
-import 'vue-awesome/icons/spinner';
-import 'vue-awesome/icons/angle-double-down';
-import 'vue-awesome/icons/angle-double-up';
 
 import { canonicalEvents, querystr_to_array } from '~/queries';
 import { useBucketsStore } from '~/stores/buckets';
@@ -77,7 +73,7 @@ import { getClient } from '~/util/awclient';
 export default {
   name: 'Graph',
   components: {
-    'aw-force-graph': () => import('~/visualizations/ForceGraph.vue'),
+    'aw-force-graph': defineAsyncComponent(() => import('~/visualizations/ForceGraph.vue')),
   },
   data() {
     return {

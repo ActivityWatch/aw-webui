@@ -9,12 +9,12 @@ div
   )
     div.d-flex.justify-content-between.align-items-start.mb-2
       div.d-flex.align-items-center
-        icon.mr-2.text-muted(v-if="device.hostname === 'unknown'" name="question" scale="1.2")
-        icon.mr-2.text-secondary(v-else-if="bucketsStore.available(device.hostname).android" name="mobile" scale="1.2")
-        icon.mr-2.text-secondary(v-else name="desktop" scale="1.2")
+        icon.me-2.text-muted(v-if="device.hostname === 'unknown'" name="question" scale="1.2")
+        icon.me-2.text-secondary(v-else-if="bucketsStore.available(device.hostname).android" name="mobile" scale="1.2")
+        icon.me-2.text-secondary(v-else name="desktop" scale="1.2")
         div
-          span.font-weight-bold {{ device.hostname }}
-          b-badge.ml-2(v-if="serverStore.info && serverStore.info.hostname == device.hostname" variant="info") {{ $t('buckets.thisDevice') }}
+          span.fw-bold {{ device.hostname }}
+          b-badge.ms-2(v-if="serverStore.info && serverStore.info.hostname == device.hostname" variant="info") {{ $t('buckets.thisDevice') }}
           div.small.text-muted(v-if="device.device_id && device.hostname !== device.device_id")
             | {{ $t('ui.buckets.id') }}: {{ device.device_id }}
           div.small(v-if="deviceHasEvents(device)")
@@ -22,7 +22,7 @@ div
             time(:class="{'text-success': isRecent(device.last_updated)}",
                  :datetime="device.last_updated",
                  :title="device.last_updated")
-              | {{ device.last_updated | friendlytime }}
+              | {{ friendlytime(device.last_updated) }}
           div.small.text-muted(v-else)
             | {{ $t('buckets.noEventsYet') }}
       b-dropdown.kebab-dropdown(
@@ -30,7 +30,7 @@ div
         variant="outline-secondary",
         toggle-class="border-0",
         no-caret,
-        right,
+        end,
         boundary="window",
         :title="$t('buckets.moreActionsFor', { hostname: device.hostname })",
         :aria-label="$t('buckets.moreActionsFor', { hostname: device.hostname })"
@@ -42,7 +42,7 @@ div
           button-class="text-danger",
           :title="$t('buckets.deleteAllTitle', { count: device.buckets.length, hostname: device.hostname })"
         )
-          icon.mr-1(name="trash")
+          icon.me-1(name="trash")
           | {{ $t('buckets.deleteAllForHost') }}
 
     //- A list rather than a table: the name opens the bucket, the timestamp
@@ -50,7 +50,7 @@ div
     ul.list-unstyled.mb-0.bucket-list
       li.bucket-row(v-for="bucket in sortedBuckets(device)", :key="bucket.id")
         router-link.bucket-link(:to="'/buckets/' + bucket.id", :title="$t('buckets.openBucket') + ': ' + bucket.id")
-          small.text-monospace.bucket-id {{ bucket.id }}
+          small.font-monospace.bucket-id {{ bucket.id }}
           time.small.bucket-updated(v-if="bucketHasEvents(bucket)",
                                    :class="{'text-success': isRecent(bucket.last_updated)}",
                                    :datetime="bucket.last_updated",
@@ -58,39 +58,39 @@ div
             span.d-md-none {{ compactRelativeTime(bucket.last_updated, true) }}
             span.d-none.d-md-inline {{ compactRelativeTime(bucket.last_updated) }}
           small.text-muted.bucket-updated(v-else) {{ $t('buckets.noEvents') }}
-        b-dropdown.kebab-dropdown(variant="outline-secondary", toggle-class="border-0", size="sm", right, no-caret, boundary="window", :title="$t('common.more')")
+        b-dropdown.kebab-dropdown(variant="outline-secondary", toggle-class="border-0", size="sm", end, no-caret, boundary="window", :title="$t('common.more')")
           template(v-slot:button-content)
             icon(name="ellipsis-v")
           b-dropdown-item(@click="export_bucket_json(bucket.id)", :title="$t('buckets.exportBucketJson')")
-            icon.mr-1(name="download")
+            icon.me-1(name="download")
             | {{ $t('buckets.exportBucketJson') }}
           b-dropdown-item(@click="export_csv(bucket.id)", :title="$t('buckets.exportEventsCsv')")
-            icon.mr-1(name="download")
+            icon.me-1(name="download")
             | {{ $t('buckets.exportEventsCsv') }}
           b-dropdown-divider
           b-dropdown-item-button(@click="openDeleteBucketModal(bucket.id)", :title="$t('buckets.deleteBucket')", button-class="text-danger")
-            icon.mr-1(name="trash")
+            icon.me-1(name="trash")
             | {{ $t('buckets.deleteBucket') }}
 
     div(v-for="msg in runChecks(device)" :key="msg")
-      b-alert.mt-2.mb-0.py-1.px-2.small(show variant="warning")
+      b-alert.mt-2.mb-0.py-1.px-2.small(:model-value="true" variant="warning")
         icon(name="exclamation-triangle")
         | &nbsp;
         | {{ msg }}
 
-  b-modal(id="delete-modal", :title="$t('buckets.deleteBucketTitle')", centered, hide-footer)
+  b-modal(v-model="showDeleteModal", :title="$t('buckets.deleteBucketTitle')", centered, hide-footer)
     | {{ $t('buckets.deleteConfirm', { id: delete_bucket_selected }) }}
     br
     br
     b {{ $t('buckets.deletePermanent') }}
     hr
-    div.float-right
-      b-button.mx-2(@click="$root.$emit('bv::hide::modal','delete-modal')")
+    div.float-end
+      b-button.mx-2(@click="showDeleteModal = false")
         | {{ $t('common.cancel') }}
       b-button(@click="deleteBucket(delete_bucket_selected)", variant="danger")
         | {{ $t('common.confirm') }}
 
-  b-modal(id="delete-host-modal", :title="deleteHostModalTitle", centered, hide-footer, @hidden="delete_host_selected = null; delete_host_error = null")
+  b-modal(v-model="showDeleteHostModal", :title="deleteHostModalTitle", centered, hide-footer, @hidden="delete_host_selected = null; delete_host_error = null")
     template(v-if="delete_host_selected")
       | {{ $t('buckets.deleteHostConfirmPrefix') }}
       |
@@ -105,11 +105,11 @@ div
         ul.mb-0
           li(v-for="bucketId in delete_host_selected.bucketIds", :key="bucketId")
             code {{ bucketId }}
-      b-alert.mt-2(v-if="delete_host_error" show variant="danger")
+      b-alert.mt-2(v-if="delete_host_error" :model-value="true" variant="danger")
         | {{ delete_host_error }}
       hr
-      div.float-right
-        b-button.mx-2(@click="$root.$emit('bv::hide::modal','delete-host-modal')")
+      div.float-end
+        b-button.mx-2(@click="showDeleteHostModal = false")
           | {{ $t('common.cancel') }}
         b-button(@click="deleteBucketsForSelectedHost()",
                  :disabled="deleting_host",
@@ -123,15 +123,15 @@ div
 
   b-card-group.deck
     b-card(:header="$t('buckets.importBuckets')")
-      b-alert(v-if="import_success" show variant="success" dismissible @dismissed="import_success = false")
+      b-alert(v-if="import_success" :model-value="true" variant="success" dismissible @close="import_success = false")
         | {{ $t('buckets.importSuccess') }}
-      b-alert(v-if="import_error" show variant="danger" dismissible @dismissed="import_error = null")
+      b-alert(v-if="import_error" :model-value="true" variant="danger" dismissible @close="import_error = null")
         | {{ import_error }}
       b-form-file(v-model="import_file"
                   :placeholder="$t('buckets.importPlaceholder')"
                   :drop-placeholder="$t('buckets.importDrop')")
       div.mt-2(v-if="import_file")
-        b-spinner.mr-2(small)
+        b-spinner.me-2(small)
         small.text-muted {{ $t('buckets.importing') }}
       small.d-block.mt-2.text-muted
         | {{ $t('buckets.importHelpNew') }}
@@ -141,15 +141,15 @@ div
                :title="$t('buckets.exportAllJson')",
                :disabled="exporting",
                variant="outline-secondary")
-        b-spinner.mr-1(v-if="exporting", small)
-        icon.mr-1(v-else, name="download")
+        b-spinner.me-1(v-if="exporting", small)
+        icon.me-1(v-else, name="download")
         | {{ exporting ? $t('buckets.exporting') : $t('buckets.exportAllJson') }}
-      b-alert.mt-2(v-if="export_error", variant="danger", show, dismissible, @dismissed="export_error = null")
+      b-alert.mt-2(v-if="export_error", variant="danger", :model-value="true", dismissible, @close="export_error = null")
         | {{ export_error }}
 
   hr
 
-  b-alert(show)
+  b-alert(variant="info" :model-value="true")
     | {{ $t('buckets.moreWatchers') }} #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") {{ $t('buckets.docsLink') }}].
 
   aw-devonly(:reason="$t('ui.devOnly.bucketTools')")
@@ -247,15 +247,7 @@ div
 </style>
 
 <script lang="ts">
-import 'vue-awesome/icons/trash';
-import 'vue-awesome/icons/download';
-import 'vue-awesome/icons/folder-open';
-import 'vue-awesome/icons/desktop';
-import 'vue-awesome/icons/mobile';
-import 'vue-awesome/icons/question';
-import 'vue-awesome/icons/exclamation-triangle';
-import 'vue-awesome/icons/ellipsis-v';
-
+import { defineAsyncComponent } from 'vue';
 import _ from 'lodash';
 import moment from 'moment';
 
@@ -281,11 +273,13 @@ async function importBuckets(aw, importFile) {
 export default {
   name: 'Buckets',
   components: {
-    'aw-bucket-merge': () => import('~/components/BucketMerge.vue'),
-    'aw-bucket-validate': () => import('~/components/BucketValidate.vue'),
+    'aw-bucket-merge': defineAsyncComponent(() => import('~/components/BucketMerge.vue')),
+    'aw-bucket-validate': defineAsyncComponent(() => import('~/components/BucketValidate.vue')),
   },
   data() {
     return {
+      showDeleteModal: false,
+      showDeleteHostModal: false,
       moment,
       bucketsStore: useBucketsStore(),
       serverStore: useServerStore(),
@@ -380,11 +374,11 @@ export default {
     },
     openDeleteBucketModal: function (bucketId: string) {
       this.delete_bucket_selected = bucketId;
-      this.$root.$emit('bv::show::modal', 'delete-modal');
+      this.showDeleteModal = true;
     },
     deleteBucket: async function (bucketId: string) {
       await this.bucketsStore.deleteBucket({ bucketId });
-      this.$root.$emit('bv::hide::modal', 'delete-modal');
+      this.showDeleteModal = false;
     },
     openDeleteHostModal: function (device) {
       this.delete_host_selected = {
@@ -392,7 +386,7 @@ export default {
         bucketCount: device.buckets.length,
         bucketIds: device.buckets.map(b => b.id),
       };
-      this.$root.$emit('bv::show::modal', 'delete-host-modal');
+      this.showDeleteHostModal = true;
     },
     deleteBucketsForSelectedHost: async function () {
       if (!this.delete_host_selected) return;
@@ -402,7 +396,7 @@ export default {
         await this.bucketsStore.deleteBucketsByHost({
           bucketIds: this.delete_host_selected.bucketIds,
         });
-        this.$root.$emit('bv::hide::modal', 'delete-host-modal');
+        this.showDeleteHostModal = false;
       } catch (err) {
         this.delete_host_error = err?.message || this.$t('buckets.deleteFailed');
       } finally {

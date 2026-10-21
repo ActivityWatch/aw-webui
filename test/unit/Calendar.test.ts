@@ -4,23 +4,23 @@
 import { mount } from '@vue/test-utils';
 import Calendar from '~/visualizations/Calendar.vue';
 
-const stubs = ['b-form', 'b-form-group', 'b-checkbox'];
+const stubs = ['b-form', 'b-form-group', 'b-form-checkbox'];
 
 test('renders an empty FullCalendar safely when fitting without a selected bucket', async () => {
-  const wrapper: any = mount(Calendar, { propsData: { buckets: [] }, stubs });
+  const wrapper: any = mount(Calendar, { props: { buckets: [] }, global: { stubs } });
   try {
     await wrapper.setData({ fitToActive: true });
     expect(wrapper.vm.events).toEqual([]);
     expect(wrapper.findAll('.fc-timegrid-slot[data-time="00:00:00"]').length).toBeGreaterThan(0);
     expect(wrapper.vm.calendarOptions.slotMaxTime).toBe('24:00:00');
   } finally {
-    wrapper.destroy();
+    wrapper.unmount();
   }
 });
 
 test('renders fitted day/week grids and recovers when the selected bucket disappears', async () => {
   const wrapper: any = mount(Calendar, {
-    propsData: {
+    props: {
       buckets: [
         {
           id: 'window',
@@ -35,7 +35,7 @@ test('renders fitted day/week grids and recovers when the selected bucket disapp
         },
       ],
     },
-    stubs,
+    global: { stubs },
   });
   try {
     await wrapper.setData({ selectedBucket: 'window', fitToActive: true });
@@ -52,13 +52,13 @@ test('renders fitted day/week grids and recovers when the selected bucket disapp
     expect(wrapper.vm.events).toEqual([]);
     expect(wrapper.vm.calendarOptions.slotMaxTime).toBe('24:00:00');
   } finally {
-    wrapper.destroy();
+    wrapper.unmount();
   }
 });
 
 test('renders both daily segments of an overnight event in the week grid', async () => {
   const wrapper: any = mount(Calendar, {
-    propsData: {
+    props: {
       buckets: [
         {
           id: 'window',
@@ -73,7 +73,7 @@ test('renders both daily segments of an overnight event in the week grid', async
         },
       ],
     },
-    stubs,
+    global: { stubs },
   });
   try {
     await wrapper.setData({ selectedBucket: 'window', fitToActive: true, view: 'timeGridWeek' });
@@ -83,6 +83,6 @@ test('renders both daily segments of an overnight event in the week grid', async
     expect(wrapper.vm.calendarOptions.slotMaxTime).toBe('24:00:00');
     expect(wrapper.findAll('.fc-timegrid-event')).toHaveLength(2);
   } finally {
-    wrapper.destroy();
+    wrapper.unmount();
   }
 });

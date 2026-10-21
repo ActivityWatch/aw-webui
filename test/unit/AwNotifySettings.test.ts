@@ -26,7 +26,7 @@ describe('AwNotifySettings', () => {
   ])('falls back to default alerts on %s', async (_name, setup) => {
     setup();
     const wrapper: any = shallowMount(AwNotifySettings, {
-      mocks: { $t: key => key },
+      global: { mocks: { $t: key => key } },
     });
     await flushPromises();
 
@@ -37,7 +37,7 @@ describe('AwNotifySettings', () => {
   test('shows an error for a malformed saved setting', async () => {
     mockGet.mockResolvedValue({ data: { alerts: 'bad' } });
     const wrapper: any = shallowMount(AwNotifySettings, {
-      mocks: { $t: key => key },
+      global: { mocks: { $t: key => key } },
     });
     await flushPromises();
 

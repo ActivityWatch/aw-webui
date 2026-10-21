@@ -6,49 +6,49 @@ div
   // TODO: Support 'less than' goals
   // TODO: Send notifications when goals met
 
-  b-alert(variant="warning" show)
+  b-alert(variant="warning" :model-value="true")
     | {{ $t('ui.alerts.earlyDev') }}
 
-  b-alert(v-if="error" show variant="danger")
+  b-alert(v-if="error" :model-value="true" variant="danger")
     | {{error}}
 
-  b-alert(v-if="hostnames.length === 0" show variant="info")
+  b-alert(v-if="hostnames.length === 0" :model-value="true" variant="info")
     | {{ $t('ui.alerts.noHost') }}
 
   b-card(v-for="alert in alerts", :key="alert.name")
-    b-button.float-right(@click="deleteAlert(alert.name)" size="sm" variant="outline-danger" :disabled="saving")
+    b-button.float-end(@click="deleteAlert(alert.name)" size="sm" variant="outline-danger" :disabled="saving")
       icon(name="trash")
 
     div {{ $t('ui.alerts.goalName') }}: {{ alert.name }}
     div {{ $t('ui.alerts.category') }}: {{ alert.category.join(" > ") }}
-    div {{ $t('ui.alerts.current') }}: {{ alertTime(alert.category) | friendlyduration }} / {{alert.goal}} {{ $t('ui.alerts.minutes') }}
+    div {{ $t('ui.alerts.current') }}: {{ friendlyduration(alertTime(alert.category)) }} / {{alert.goal}} {{ $t('ui.alerts.minutes') }}
       span(v-if="alertTime(alert.category) >= alert.goal")
         icon.text-success(name="check")
       span(v-else)
         icon.text-muted(name="times")
 
   div.d-flex.align-items-center.mt-3
-    b-btn(@click="check" variant="success" :disabled="!hostname") {{ $t('ui.alerts.check') }}
-    b-form-checkbox.ml-3.mb-0(v-model="autorefresh", @change="toggleAutoRefresh", switch) {{ $t('ui.alerts.autoRefresh') }}
+    b-button(@click="check" variant="success" :disabled="!hostname") {{ $t('ui.alerts.check') }}
+    b-form-checkbox.ms-3.mb-0(v-model="autorefresh", @update:model-value="toggleAutoRefresh", switch) {{ $t('ui.alerts.autoRefresh') }}
 
   small.text-muted(v-if="last_updated")
-    | {{ $t('ui.alerts.lastUpdated') }} #[time(:datetime="last_updated && last_updated.toISOString && last_updated.toISOString()") {{ last_updated | friendlytime }}]
+    | {{ $t('ui.alerts.lastUpdated') }} #[time(:datetime="last_updated && last_updated.toISOString && last_updated.toISOString()") {{ friendlytime(last_updated) }}]
 
   hr
 
   div
     h4 {{ $t('ui.alerts.newAlert') }}
     b-form-group(:label="$t('ui.alerts.name')" label-cols-md=2)
-      b-input(v-model="editing_alert.name")
+      b-form-input(v-model="editing_alert.name")
     b-form-group(:label="$t('ui.alerts.category')" label-cols-md=2)
-      b-select(v-model="editing_alert.category")
+      b-form-select(v-model="editing_alert.category")
         option(v-for="category in categories" :value="category.value") {{ category.text }}
     b-form-group(:label="$t('ui.alerts.goal')" label-cols-md=2)
       b-input-group(:append="$t('ui.alerts.minutes')")
-        b-input(v-model="editing_alert.goal" type="number")
+        b-form-input(v-model="editing_alert.goal" type="number")
 
     div
-      b-btn(@click="addAlert" variant="success" :disabled="saving")
+      b-button(@click="addAlert" variant="success" :disabled="saving")
         icon(name="plus")
         | {{ $t('ui.alerts.add') }}
 </template>
@@ -59,11 +59,6 @@ div
 import _ from 'lodash';
 import moment from 'moment';
 import { canonicalEvents, querystr_to_array } from '~/queries';
-
-import 'vue-awesome/icons/plus';
-import 'vue-awesome/icons/check';
-import 'vue-awesome/icons/times';
-import 'vue-awesome/icons/trash';
 
 import { useBucketsStore } from '~/stores/buckets';
 import { useCategoryStore } from '~/stores/categories';

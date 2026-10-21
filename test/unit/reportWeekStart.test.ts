@@ -1,8 +1,8 @@
 import moment from 'moment';
 import 'moment/locale/de';
-import { createPinia, setActivePinia, PiniaVuePlugin } from 'pinia';
+import { createPinia, setActivePinia } from 'pinia';
 import { createTestingPinia } from '@pinia/testing';
-import { createLocalVue, shallowMount } from '@vue/test-utils';
+import { shallowMount } from '@vue/test-utils';
 import { useSettingsStore } from '~/stores/settings';
 import { getClient as getClientImpl } from '~/util/awclient';
 import WorkReportComponent from '~/views/WorkReport.vue';
@@ -131,8 +131,6 @@ describe('report calendar week start', () => {
         startOfWeek
       ];
       const queried: Record<string, any> = {};
-      const localVue = createLocalVue();
-      localVue.use(PiniaVuePlugin);
       const stubs = [
         'b-form-group',
         'b-form-select',
@@ -147,7 +145,7 @@ describe('report calendar week start', () => {
         'icon',
       ];
       for (const component of [WorkReport, BillingView]) {
-        const wrapper: any = shallowMount(component, { localVue, pinia, stubs });
+        const wrapper: any = shallowMount(component, { global: { plugins: [pinia], stubs } });
         try {
           // Allow the real mounted hook to select supported hosts.
           await wrapper.vm.$nextTick();
@@ -157,7 +155,7 @@ describe('report calendar week start', () => {
           const periods = query.mock.calls[query.mock.calls.length - 1][0];
           queried[component.name] = periods;
         } finally {
-          wrapper.destroy();
+          wrapper.unmount();
         }
       }
       expectWindow(

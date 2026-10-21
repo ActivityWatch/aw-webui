@@ -1,4 +1,4 @@
-jest.mock('vue-chartjs/legacy', () => ({ Bar: {} }));
+jest.mock('vue-chartjs', () => ({ Bar: {} }));
 import { createPinia, setActivePinia } from 'pinia';
 import moment from 'moment';
 import { execFileSync } from 'child_process';

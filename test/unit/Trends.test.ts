@@ -1,6 +1,6 @@
-import Vue from 'vue';
+import { nextTick, reactive } from 'vue';
 import moment from 'moment';
-import { createLocalVue, shallowMount } from '@vue/test-utils';
+import { shallowMount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 import TrendsComponent from '~/views/Trends.vue';
 import { useBucketsStore } from '~/stores/buckets';
@@ -11,9 +11,6 @@ jest.mock('~/util/awclient', () => ({ getClient: jest.fn() }));
 // Tests call Options API members directly, which the Vue constructor type doesn't expose.
 const Trends: any = TrendsComponent;
 const getClient = getClientImpl as jest.Mock;
-
-const localVue = createLocalVue();
-localVue.filter('friendlyduration', value => String(value));
 
 const STUBS = [
   'b-button-group',
@@ -30,7 +27,7 @@ const STUBS = [
 
 const flush = async () => {
   for (let i = 0; i < 10; i++) await Promise.resolve();
-  await Vue.nextTick();
+  await nextTick();
 };
 
 const deferred = () => {
@@ -294,20 +291,21 @@ describe('Trends refresh ownership', () => {
         return call.deferred.promise;
       }),
     });
-    route = Vue.observable({ params: { host: 'a' } });
+    route = reactive({ params: { host: 'a' } });
   });
 
   afterEach(() => {
-    if (wrapper) wrapper.destroy();
+    if (wrapper) wrapper.unmount();
     wrapper = null;
     jest.clearAllMocks();
   });
 
   const mount = async () => {
     wrapper = shallowMount(Trends, {
-      localVue,
-      mocks: { $route: route },
-      stubs: STUBS,
+      global: {
+        mocks: { $route: route, friendlyduration: value => String(value) },
+        stubs: STUBS,
+      },
     });
     await flush();
     return wrapper;

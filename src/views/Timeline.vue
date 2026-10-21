@@ -7,28 +7,28 @@ div
   // Toolbar: filters (primary), display kebab (swimlanes etc.), event count,
   // and keyboard hint. Flex-wrap so it doesn't overlap at narrow widths.
   div.timeline-toolbar.d-flex.flex-wrap.align-items-center
-    details.timeline-filters.mr-2(ref="filtersDetails")
+    details.timeline-filters.me-2(ref="filtersDetails")
       summary.timeline-chip.timeline-chip--clickable
-        icon.mr-1(name="filter")
+        icon.me-1(name="filter")
         b {{ $t('ui.timeline.filters') }}: {{ filter_summary }}
       div.timeline-filters-panel.shadow-sm
         table
           tr
-            th.pt-2.pr-3
+            th.pt-2.pe-3
               label(for="timeline-filter-host") {{ $t('ui.timeline.host') }}
             td
               select#timeline-filter-host.form-control.form-control-sm(v-model="filter_hostname")
                 option(:value='null') {{ $t('ui.timeline.all') }}
                 option(v-for="host in hosts", :value="host") {{ host }}
           tr
-            th.pt-2.pr-3
+            th.pt-2.pe-3
               label(for="timeline-filter-client") {{ $t('ui.timeline.client') }}
             td
               select#timeline-filter-client.form-control.form-control-sm(v-model="filter_client")
                 option(:value='null') {{ $t('ui.timeline.all') }}
                 option(v-for="client in clients", :value="client") {{ client }}
           tr
-            th.pt-2.pr-3
+            th.pt-2.pe-3
               label(for="timeline-filter-duration") {{ $t('ui.timeline.duration') }}
             td
               select#timeline-filter-duration.form-control.form-control-sm(v-model="filter_duration")
@@ -45,37 +45,37 @@ div
                 option(:value='1 * 60 * 60') {{ $t('ui.timeline.hours', { count: 1 }) }}
                 option(:value='2 * 60 * 60') {{ $t('ui.timeline.hours', { count: 2 }) }}
           tr
-            th.pt-2.pr-3
+            th.pt-2.pe-3
               label {{ $t('activity.excludeAfk') }}：
             td
               b-form-checkbox(v-model="filter_afk" size="sm" switch)
                 | {{ $t('timeline.filterAfk') }}
           tr
-            th.pt-2.pr-3
+            th.pt-2.pe-3
               label {{ $t('ui.timeline.merge') }}：
             td
               b-form-checkbox(v-model="filter_merge_similar" size="sm" switch)
                 | {{ $t('timeline.mergeByApp') }}
           tr
-            th.pt-2.pr-3
+            th.pt-2.pe-3
               label(for="timeline-filter-categories") {{ $t('ui.timeline.categories') }}
             td
               select#timeline-filter-categories.form-control.form-control-sm(@change="onCategorySelect($event)", :value="''")
                 option(value="" disabled) {{ filter_categories.length > 0 ? $t('ui.workReport.addCategory') : $t('ui.timeline.all') }}
                 option(v-for="cat in category_options", :key="cat.text", :value="cat.text") {{ cat.text }}
               div.mt-1(v-if="filter_categories.length > 0")
-                span.badge.badge-info.mr-1(v-for="(cat, idx) in filter_categories", :key="idx")
+                span.badge.text-bg-info.me-1(v-for="(cat, idx) in filter_categories", :key="idx")
                   | {{ cat.join(' > ') }}
-                  button.ml-1.close.small(@click="removeCategory(idx)", type="button", :aria-label="$t('ui.workReport.removeCategory')", style="font-size: 0.85rem; line-height: 1") &times;
+                  button.btn-close.btn-close-white.ms-1(@click="removeCategory(idx)", type="button", :aria-label="$t('ui.workReport.removeCategory')", style="font-size: 0.5rem")
 
     // Display options (swimlanes, future visual toggles) tucked behind a
     // ghost kebab so they don't compete visually with Filters.
-    b-dropdown.kebab-dropdown.mr-2(
+    b-dropdown.kebab-dropdown.me-2(
       size="sm"
       variant="outline-secondary"
       toggle-class="border-0"
       no-caret
-      right
+      end
       :title="$t('ui.timeline.displayOptions')"
       :aria-label="$t('ui.timeline.displayOptions')"
     )
@@ -89,16 +89,16 @@ div
         @click="swimlane = opt.value"
       ) {{ opt.text }}
 
-    div.timeline-chip.mr-2.text-muted
+    div.timeline-chip.me-2.text-muted
       | {{ num_events }} {{ $t('timeline.eventsShown') }}
 
-    small.text-muted.ml-auto
+    small.text-muted.ms-auto
       | {{ $t('timeline.scrollHint') }}
 
-  b-alert.mb-2(v-if="buckets !== null && num_events === 0", variant="warning", show)
+  b-alert.mb-2(v-if="buckets !== null && num_events === 0", variant="warning", :model-value="true")
     | {{ $t('timeline.noEvents') }}
 
-  b-alert.mb-2(v-if="categoryError", variant="warning", show)
+  b-alert.mb-2(v-if="categoryError", variant="warning", :model-value="true")
     | Categorized timeline unavailable. Raw bucket events are still shown.
 
   div(v-if="buckets !== null")
@@ -111,8 +111,6 @@ div
 </template>
 
 <script lang="ts">
-import 'vue-awesome/icons/filter';
-import 'vue-awesome/icons/ellipsis-v';
 import _ from 'lodash';
 import { mapState } from 'pinia';
 import { useSettingsStore } from '~/stores/settings';

@@ -24,11 +24,13 @@ describe('ForceGraph', () => {
       return this.id === 'forcegraph' ? containerWidth : 0;
     });
     (global as any).ResizeObserver = class {
+      observe: jest.Mock;
+      disconnect: jest.Mock;
       constructor(cb) {
         resizeCallback = cb;
+        this.observe = jest.fn();
+        this.disconnect = jest.fn();
       }
-      observe = jest.fn();
-      disconnect = jest.fn();
     };
   });
 
@@ -38,7 +40,7 @@ describe('ForceGraph', () => {
   });
 
   test('draws at the container width and redraws when it changes', () => {
-    const wrapper = mount(ForceGraph, { propsData: { data }, attachTo: document.body });
+    const wrapper = mount(ForceGraph, { props: { data }, attachTo: document.body });
     expect(wrapper.element.querySelector('svg').getAttribute('width')).toBe('341');
 
     containerWidth = 1090;
@@ -46,11 +48,11 @@ describe('ForceGraph', () => {
     // Capped at the default 640px.
     expect(wrapper.element.querySelector('svg').getAttribute('width')).toBe('640');
     expect(wrapper.element.querySelectorAll('svg')).toHaveLength(1);
-    wrapper.destroy();
+    wrapper.unmount();
   });
 
   test('labels each node, on the side facing the center', async () => {
-    const wrapper = mount(ForceGraph, { propsData: { data }, attachTo: document.body });
+    const wrapper = mount(ForceGraph, { props: { data }, attachTo: document.body });
     // Let the force simulation tick.
     await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -73,6 +75,6 @@ describe('ForceGraph', () => {
         expect(x).toBeCloseTo(cx + r + 3);
       }
     });
-    wrapper.destroy();
+    wrapper.unmount();
   });
 });

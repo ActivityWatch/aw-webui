@@ -4,16 +4,16 @@ div
 
   div.row.mb-4
     div.col-md-4
-      b-form-group(:label="$t('ui.billing.hosts')" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.billing.hosts')" label-class="fw-bold")
         b-form-select(v-model="selectedHosts" :options="hostOptions" multiple :select-size="4")
         small.text-muted {{ $t('ui.billing.selectDevices') }}
 
     div.col-md-4
-      b-form-group(:label="$t('ui.billing.dateRange')" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.billing.dateRange')" label-class="fw-bold")
         b-form-select(v-model="dateRange" :options="dateRangeOptions")
 
     div.col-md-4
-      b-form-group(:label="$t('ui.billing.hourlyRate')" label-class="font-weight-bold")
+      b-form-group(:label="$t('ui.billing.hourlyRate')" label-class="fw-bold")
         b-input-group(prepend="$")
           b-form-input(
             v-model.number="defaultRate"
@@ -28,16 +28,16 @@ div
     b-button(@click="loadData" variant="primary" :disabled="loading")
       icon(name="sync")
       |  {{ $t('ui.billing.calculate') }}
-    b-button.ml-2(@click="exportCSV" variant="outline-secondary" :disabled="!hasData")
+    b-button.ms-2(@click="exportCSV" variant="outline-secondary" :disabled="!hasData")
       icon(name="download")
       |  {{ $t('ui.billing.exportCsv') }}
 
   div(v-if="loading")
-    b-spinner.mr-2
+    b-spinner.me-2
     | {{ $t('common.loading') }}
 
   div(v-if="errorMessage")
-    b-alert(variant="danger" show) {{ errorMessage }}
+    b-alert(variant="danger" :model-value="true") {{ errorMessage }}
 
   div(v-if="hasData && !loading")
     div.row.mb-2
@@ -50,16 +50,16 @@ div
       thead
         tr
           th {{ $t('ui.billing.category') }}
-          th.text-right {{ $t('ui.billing.hours') }}
-          th.text-right {{ $t('ui.billing.rate') }}
-          th.text-right {{ $t('ui.billing.amount') }}
+          th.text-end {{ $t('ui.billing.hours') }}
+          th.text-end {{ $t('ui.billing.rate') }}
+          th.text-end {{ $t('ui.billing.amount') }}
       tbody
         tr(v-for="row in categoryRows" :key="row.key")
           td
-            span.badge.mr-1(:style="{ background: '#6c757d', color: 'white' }") {{ row.depth > 0 ? '↳ ' : '' }}
+            span.badge.me-1(:style="{ background: '#6c757d', color: 'white' }") {{ row.depth > 0 ? '↳ ' : '' }}
             | {{ row.label }}
-          td.text-right {{ formatHours(row.duration) }}
-          td.text-right
+          td.text-end {{ formatHours(row.duration) }}
+          td.text-end
             b-form-input(
               v-model.number="categoryRates[row.key]"
               type="number"
@@ -69,13 +69,13 @@ div
               style="width: 80px; display: inline-block"
               :placeholder="defaultRate > 0 ? String(defaultRate) : '0.00'"
             )
-          td.text-right {{ formatAmount(getAmount(row)) }}
+          td.text-end {{ formatAmount(getAmount(row)) }}
       tfoot
-        tr.font-weight-bold
+        tr.fw-bold
           td {{ $t('ui.billing.total') }}
-          td.text-right {{ formatHours(totalDuration) }}
-          td.text-right —
-          td.text-right {{ formatAmount(totalAmount) }}
+          td.text-end {{ formatHours(totalDuration) }}
+          td.text-end —
+          td.text-end {{ formatAmount(totalAmount) }}
 </template>
 
 <script lang="ts">
@@ -92,9 +92,6 @@ import {
   getUnsupportedWorkReportHosts,
   WorkReportHostBuckets,
 } from '~/util/workReport';
-
-import 'vue-awesome/icons/sync';
-import 'vue-awesome/icons/download';
 
 interface CategoryRow {
   key: string; // JSON.stringify(parts) — unambiguous identity for rate lookup

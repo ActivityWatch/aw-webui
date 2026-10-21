@@ -6,7 +6,7 @@
       i {{ $t('ui.timeline.bucketsNoEvents') }}
 
     div(v-if="editingEvent")
-      EventEditor(:event="editingEvent" :bucket_id="editingEventBucket" @saved="onEventSaved")
+      EventEditor(v-model:open="editorOpen" :event="editingEvent" :bucket_id="editingEventBucket" @saved="onEventSaved")
 </template>
 
 <style lang="scss">
@@ -111,6 +111,7 @@ export default {
   },
   data() {
     return {
+      editorOpen: false,
       timeline: null,
       filterShortEvents: true,
       items: [],
@@ -224,7 +225,7 @@ export default {
       this.ensureUpdate();
     });
   },
-  beforeDestroy() {
+  beforeUnmount() {
     if (this.viewportFrame != null) cancelAnimationFrame(this.viewportFrame);
     this.itemEvents?.clear();
     this.preparedItems?.clear();
@@ -283,7 +284,7 @@ export default {
       event.stopImmediatePropagation();
     },
     openEditor: function () {
-      this.$bvModal.show('edit-modal-' + this.editingEvent.id);
+      this.editorOpen = true;
     },
     displayEvent: function (bucketId: string, event: IEvent): IEvent {
       return this.eventOverrides[`${bucketId}\0${event.id}`] || event;
@@ -291,7 +292,7 @@ export default {
     onEventSaved: function (event: IEvent, bucketId?: string) {
       const bucket = bucketId || this.editingEventBucket;
       const key = `${bucket}\0${event.id}`;
-      this.$set(this.eventOverrides, key, event);
+      this.eventOverrides[key] = event;
       this.editingEvent = event;
       if (this.timeline) {
         const w = this.timeline.getWindow();

@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
-import vue from '@vitejs/plugin-vue2';
+import vue from '@vitejs/plugin-vue';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(({ mode }) => {
@@ -10,14 +10,14 @@ export default defineConfig(({ mode }) => {
   // Sets the CSP
   const setCsp = (): Plugin => {
     return {
-      name: 'html-transform',
+      name: 'set-csp',
       transformIndexHtml(html: string) {
         const pattern = '<%= htmlWebpackPlugin.options.templateParameters.cspDefaultSrc %>';
         // check if the pattern exists in the html, if not, throw error
         if (!html.includes(pattern)) {
           throw new Error(`Could not find pattern ${pattern} in the html file`);
         }
-        return html.replace(pattern, CSP);
+        return html.replaceAll(pattern, CSP);
       },
     };
   };
@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => {
   // Auto-injects /src/main.ts into index.html on a new line after the one which has VITE_AUTOINJECT
   const autoInject = (): Plugin => {
     return {
-      name: 'html-transform',
+      name: 'auto-inject',
       transformIndexHtml: {
         order: 'pre',
         handler(html: string) {
@@ -54,11 +54,23 @@ export default defineConfig(({ mode }) => {
     plugins: [
       setCsp(),
       autoInject(),
-      vue(),
-      VitePWA({
-        devOptions: {
-          enabled: true,
+      vue({
+        // Disable asset URL transformation — the logo is served at runtime by aw-server,
+        // not bundled at build time. Using a targeted allowlist (Greptile suggestion)
+        // doesn't work because /logo.png is an absolute runtime path, not a local asset.
+        template: {
+          transformAssetUrls: false,
         },
+      }),
+      VitePWA({
+        // No service worker on the dev server (the webpack build only registered
+        // one in production): under TestCafe's proxy it hangs every navigation
+        // after the first page load, failing the e2e screenshot tests.
+        devOptions: {
+          enabled: false,
+        },
+        // NOTE: logo.png is gitignored — it is copied from the aw-media package at release build
+        // time. The PWA manifest references it but it doesn't need to be present during dev builds.
         manifest: {
           name: 'ActivityWatch',
           short_name: 'ActivityWatch',
@@ -72,9 +84,19 @@ export default defineConfig(({ mode }) => {
             },
           ],
         },
+        // Don't fail the build if the logo isn't present (it's provided at runtime by aw-media)
+        includeAssets: [],
       }),
     ],
+    optimizeDeps: {
+      // Scan every source file for dependencies at startup. By default Vite only
+      // follows index.html and discovers the dependencies of lazily loaded routes
+      // on first visit, then re-optimizes and force-reloads the page, which on a
+      // cold cache (e.g. in CI) leaves views stuck loading.
+      entries: ['index.html', 'src/**/*.{vue,js,ts}'],
+    },
     server: {
+      host: '127.0.0.1',
       port: 27180,
       // TODO: Fix this.
       // Breaks a bunch of style-related stuff etc.
@@ -94,7 +116,7 @@ export default defineConfig(({ mode }) => {
       AW_RESEARCH_EDITION: process.env.AW_RESEARCH_EDITION === 'true',
       // Optional JSON preset category sets shipped by this build (see src/util/presetCategories.ts)
       AW_PRESET_CATEGORY_SETS: JSON.stringify(process.env.AW_PRESET_CATEGORY_SETS || ''),
-      'process.env.VUE_APP_ON_ANDROID': process.env.VUE_APP_ON_ANDROID,
+      'process.env.VUE_APP_ON_ANDROID': JSON.stringify(Boolean(process.env.VUE_APP_ON_ANDROID)),
     },
   };
 });

@@ -9,7 +9,7 @@ div.mx-3
         option(value="timeGridDay") {{ $t('ui.calendar.day') }}
         option(value="timeGridWeek") {{ $t('ui.calendar.week') }}
     b-form-group
-      b-checkbox(v-model="fitToActive")
+      b-form-checkbox(v-model="fitToActive")
         | {{ $t('ui.calendar.fitActive') }}
   FullCalendar(ref="fullCalendar", :options="calendarOptions")
 </template>
@@ -18,7 +18,7 @@ div.mx-3
 import { getTitleAttr, getColorFromString } from '../util/color';
 import moment from 'moment';
 import _ from 'lodash';
-import FullCalendar from '@fullcalendar/vue';
+import FullCalendar from '@fullcalendar/vue3';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { calendarTimeBounds } from '~/util/calendar';
 

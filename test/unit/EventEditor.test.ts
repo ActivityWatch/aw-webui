@@ -1,11 +1,19 @@
-import { createLocalVue, mount } from '@vue/test-utils';
-import BootstrapVue from 'bootstrap-vue';
+import { mount } from '@vue/test-utils';
+import { h, toRaw } from 'vue';
+import { createBootstrap } from 'bootstrap-vue-next';
+import bootstrapComponents from '~/plugins/bootstrap';
 
 import EventEditor from '~/components/EventEditor.vue';
 
-const localVue = createLocalVue();
-localVue.use(BootstrapVue);
-localVue.filter('friendlyduration', v => String(v));
+const mountOptions = $aw => ({
+  plugins: [createBootstrap(), bootstrapComponents],
+  mocks: { $aw, friendlyduration: v => String(v) },
+  stubs: { datetime: true, icon: true },
+});
+
+// The editor closes by asking its parent to set `open` to false.
+const closeRequests = wrapper =>
+  (wrapper.emitted('update:open') || []).filter(([isOpen]) => !isOpen);
 
 // A promise whose settlement the test controls, so "request in flight" is an
 // observable state rather than a race.
@@ -23,10 +31,10 @@ const flush = async () => {
   for (let i = 0; i < 10; i++) await Promise.resolve();
 };
 
-// BootstrapVue renders modal body content into document.body, and only once
-// the modal is shown — so visible-text assertions have to open it first.
+// The modal renders its body into document.body, and only once it is shown —
+// so visible-text assertions have to open it first.
 async function showModal(wrapper) {
-  wrapper.vm.$refs.eventEditModal.show();
+  await wrapper.setProps({ open: true });
   await flush();
   await wrapper.vm.$nextTick();
 }
@@ -52,10 +60,8 @@ function mountEditor({ event = makeEvent(), replaceEvent, deleteEvent }: any = {
   };
 
   const wrapper: any = mount(EventEditor, {
-    localVue,
-    propsData: { event, bucket_id: 'test-bucket' },
-    mocks: { $aw },
-    stubs: { datetime: true, icon: true },
+    props: { event, bucket_id: 'test-bucket', open: false },
+    global: mountOptions($aw),
     attachTo: document.body,
   });
 
@@ -78,13 +84,12 @@ describe('EventEditor save', () => {
       replaceEvent: jest.fn().mockReturnValue(inFlight.promise),
     });
     await flush();
-    const hide = jest.spyOn(wrapper.vm.$refs.eventEditModal, 'hide');
 
     wrapper.vm.save();
     await flush();
 
     expect(wrapper.emitted('save')).toBeUndefined();
-    expect(hide).not.toHaveBeenCalled();
+    expect(closeRequests(wrapper)).toHaveLength(0);
     expect(wrapper.vm.busy).toBe(true);
 
     inFlight.resolve();
@@ -94,7 +99,6 @@ describe('EventEditor save', () => {
   test('emits save once with the edited event, then closes', async () => {
     const { wrapper, $aw } = mountEditor();
     await flush();
-    const hide = jest.spyOn(wrapper.vm.$refs.eventEditModal, 'hide');
 
     wrapper.vm.editedEvent.data.title = 'edited';
     await wrapper.vm.save();
@@ -105,7 +109,7 @@ describe('EventEditor save', () => {
     expect(wrapper.emitted('save')).toHaveLength(1);
     // Payload compatibility: save emits the edited event.
     expect(wrapper.emitted('save')[0][0].data.title).toBe('edited');
-    expect(hide).toHaveBeenCalledTimes(1);
+    expect(closeRequests(wrapper)).toHaveLength(1);
     expect(wrapper.vm.busy).toBe(false);
   });
 
@@ -125,7 +129,7 @@ describe('EventEditor save', () => {
     expect(payload.data.title).toBe('submitted');
     expect(payload.duration).toBe(60);
     expect($aw.replaceEvent.mock.calls[0][1]).toEqual(payload);
-    wrapper.destroy();
+    wrapper.unmount();
   });
 
   test('closes the modal before notifying the parent', async () => {
@@ -133,10 +137,10 @@ describe('EventEditor save', () => {
     await flush();
 
     const order = [];
-    jest
-      .spyOn(wrapper.vm.$refs.eventEditModal, 'hide')
-      .mockImplementation(() => order.push('hide'));
-    wrapper.vm.$on('save', () => order.push('emit'));
+    await wrapper.setProps({
+      'onUpdate:open': () => order.push('hide'),
+      onSave: () => order.push('emit'),
+    });
 
     await wrapper.vm.save();
     await flush();
@@ -152,7 +156,6 @@ describe('EventEditor save', () => {
     const { wrapper } = mountEditor({ replaceEvent });
     await flush();
     await showModal(wrapper);
-    const hide = jest.spyOn(wrapper.vm.$refs.eventEditModal, 'hide');
 
     wrapper.vm.editedEvent.data.title = 'edited';
     await wrapper.vm.save();
@@ -160,7 +163,7 @@ describe('EventEditor save', () => {
     await wrapper.vm.$nextTick();
 
     expect(wrapper.emitted('save')).toBeUndefined();
-    expect(hide).not.toHaveBeenCalled();
+    expect(closeRequests(wrapper)).toHaveLength(0);
     expect(wrapper.vm.error).toBe('server exploded');
     expect(visibleText()).toContain('server exploded');
     // The user's edit is still there to retry with.
@@ -257,13 +260,12 @@ describe('EventEditor delete', () => {
       deleteEvent: jest.fn().mockReturnValue(inFlight.promise),
     });
     await flush();
-    const hide = jest.spyOn(wrapper.vm.$refs.eventEditModal, 'hide');
 
     wrapper.vm.delete_();
     await flush();
 
     expect(wrapper.emitted('delete')).toBeUndefined();
-    expect(hide).not.toHaveBeenCalled();
+    expect(closeRequests(wrapper)).toHaveLength(0);
 
     inFlight.resolve();
     await flush();
@@ -273,7 +275,6 @@ describe('EventEditor delete', () => {
     const event = makeEvent();
     const { wrapper, $aw } = mountEditor({ event });
     await flush();
-    const hide = jest.spyOn(wrapper.vm.$refs.eventEditModal, 'hide');
 
     await wrapper.vm.delete_();
     await flush();
@@ -281,8 +282,8 @@ describe('EventEditor delete', () => {
     expect($aw.deleteEvent).toHaveBeenCalledWith('test-bucket', event.id);
     expect(wrapper.emitted('delete')).toHaveLength(1);
     // Payload compatibility: delete emits the original event.
-    expect(wrapper.emitted('delete')[0][0]).toBe(event);
-    expect(hide).toHaveBeenCalledTimes(1);
+    expect(toRaw(wrapper.emitted('delete')[0][0])).toBe(event);
+    expect(closeRequests(wrapper)).toHaveLength(1);
   });
 
   test('a failed delete emits nothing and surfaces the error', async () => {
@@ -317,12 +318,11 @@ describe('EventEditor cancel', () => {
   test('closes without sending a mutation request when idle', async () => {
     const { wrapper, $aw } = mountEditor();
     await flush();
-    const hide = jest.spyOn(wrapper.vm.$refs.eventEditModal, 'hide');
 
     wrapper.vm.close();
     await flush();
 
-    expect(hide).toHaveBeenCalledTimes(1);
+    expect(closeRequests(wrapper)).toHaveLength(1);
     expect(wrapper.emitted('close')).toHaveLength(1);
     expect($aw.replaceEvent).not.toHaveBeenCalled();
     expect($aw.deleteEvent).not.toHaveBeenCalled();
@@ -334,13 +334,12 @@ describe('EventEditor cancel', () => {
       replaceEvent: jest.fn().mockReturnValue(inFlight.promise),
     });
     await flush();
-    const hide = jest.spyOn(wrapper.vm.$refs.eventEditModal, 'hide');
 
     wrapper.vm.save();
     await flush();
     wrapper.vm.close();
 
-    expect(hide).not.toHaveBeenCalled();
+    expect(closeRequests(wrapper)).toHaveLength(0);
     expect(wrapper.emitted('close')).toBeUndefined();
 
     inFlight.resolve();
@@ -354,7 +353,7 @@ describe('EventEditor cancel', () => {
     });
     await flush();
 
-    const modal = wrapper.findComponent({ ref: 'eventEditModal' });
+    const modal = wrapper.findComponent({ name: 'BModal' });
     expect(modal.props('noCloseOnEsc')).toBe(false);
     expect(modal.props('noCloseOnBackdrop')).toBe(false);
 
@@ -402,14 +401,16 @@ describe('EventEditor inside a parent that reacts to success', () => {
           this.event = null;
         },
       },
-      render(h) {
+      render() {
         return h(
           'div',
           this.event
             ? [
                 h(EventEditor, {
-                  props: { event: this.event, bucket_id: 'test-bucket' },
-                  on: { save: this.onSave },
+                  event: this.event,
+                  bucket_id: 'test-bucket',
+                  open: true,
+                  onSave: this.onSave,
                 }),
               ]
             : []
@@ -418,9 +419,7 @@ describe('EventEditor inside a parent that reacts to success', () => {
     };
 
     const wrapper: any = mount(Parent, {
-      localVue,
-      mocks: { $aw },
-      stubs: { datetime: true, icon: true },
+      global: mountOptions($aw),
       attachTo: document.body,
     });
     return { wrapper, $aw, saved };
@@ -446,8 +445,8 @@ describe('EventEditor inside a parent that reacts to success', () => {
     });
     await flush();
 
+    // The parent renders the editor open.
     const editor = wrapper.findComponent(EventEditor);
-    await showModal(editor);
     await editor.vm.save();
     await flush();
     await editor.vm.$nextTick();

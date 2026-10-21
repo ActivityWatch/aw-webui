@@ -19,6 +19,9 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "preserve",
+    // vue3-jest compiles <script lang="ts"> to ES5; without this, spreading a
+    // Map or Set (e.g. [...map.values()]) silently yields [] in unit tests.
+    "downlevelIteration": true,
 
     /* Linting */
     //"strict": true,

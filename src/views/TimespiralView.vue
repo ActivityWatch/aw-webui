@@ -1,7 +1,7 @@
 <template lang="pug">
 div
   h3 {{ $t('timespiral.title') }}
-  b-alert(show, variant="warning")
+  b-alert(:model-value="true", variant="warning")
     | {{ $t('timespiral.wip') }}
 
   div(v-if="!bucketId")

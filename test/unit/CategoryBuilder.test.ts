@@ -1,6 +1,8 @@
-import { createLocalVue, mount, shallowMount } from '@vue/test-utils';
+import { mount, shallowMount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
-import { PiniaVuePlugin, setActivePinia, createPinia } from 'pinia';
+import { setActivePinia, createPinia } from 'pinia';
+import { createBootstrap } from 'bootstrap-vue-next';
+import bootstrapComponents from '~/plugins/bootstrap';
 import CategoryBuilderComponent from '~/views/settings/CategoryBuilder.vue';
 import Settings from '~/views/settings/Settings.vue';
 import QueryOptions from '~/components/QueryOptions.vue';
@@ -15,9 +17,6 @@ jest.mock('~/util/awclient', () => ({ getClient: jest.fn() }));
 const CategoryBuilder: any = CategoryBuilderComponent;
 const getClient = getClientImpl as jest.Mock;
 
-const localVue = createLocalVue();
-localVue.use(PiniaVuePlugin);
-localVue.component('aw-query-options', QueryOptions);
 const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 const androidBucket = {
   id: 'aw-watcher-android-legacy',
@@ -49,25 +48,34 @@ describe('CategoryBuilder loading', () => {
   });
 
   afterEach(() => {
-    wrapper?.destroy();
+    wrapper?.unmount();
+    wrapper = null;
     jest.restoreAllMocks();
   });
 
   function mountBuilder(realOptions = false) {
     wrapper = (realOptions ? mount : shallowMount)(CategoryBuilder, {
-      localVue,
-      pinia,
-      stubs: {
-        'aw-query-options': !realOptions,
-        'b-button': true,
-        'b-spinner': true,
-        'b-modal': true,
-        'b-form': true,
-        'b-form-group': true,
-        'b-form-select': true,
-        'b-form-select-option': true,
-        'b-form-input': true,
-        'b-form-checkbox': true,
+      global: {
+        // Bootstrap components stay unregistered in shallow mounts, so they render
+        // as plain elements with their content (and native click listeners).
+        plugins: realOptions
+          ? [createBootstrap(), bootstrapComponents, pinia]
+          : [createBootstrap(), pinia],
+        components: { 'aw-query-options': QueryOptions },
+        // Keep stubbed buttons' labels so tests can find e.g. "Retry".
+        renderStubDefaultSlot: true,
+        stubs: {
+          'aw-query-options': !realOptions,
+          'b-button': true,
+          'b-spinner': true,
+          'b-modal': true,
+          'b-form': true,
+          'b-form-group': true,
+          'b-form-select': true,
+          'b-form-select-option': true,
+          'b-form-input': true,
+          'b-form-checkbox': true,
+        },
       },
     });
     return wrapper;
@@ -77,7 +85,6 @@ describe('CategoryBuilder loading', () => {
     const addListener = jest.spyOn(window, 'addEventListener');
     const removeListener = jest.spyOn(window, 'removeEventListener');
     mountBuilder();
-    wrapper.vm.$t = key => key;
     await flush();
     const handler = addListener.mock.calls.find(([type]) => type === 'beforeunload')[1];
     expect(handler).toBe(wrapper.vm.beforeUnload);
@@ -94,7 +101,8 @@ describe('CategoryBuilder loading', () => {
     window.dispatchEvent(dirty);
     expect(dirty.defaultPrevented).toBe(true);
 
-    wrapper.destroy();
+    wrapper.unmount();
+    wrapper = null;
     expect(removeListener).toHaveBeenCalledWith('beforeunload', handler);
     const afterDestroy = new Event('beforeunload', { cancelable: true });
     window.dispatchEvent(afterDestroy);
@@ -124,8 +132,8 @@ describe('CategoryBuilder loading', () => {
       await flush();
       expect(wrapper.text()).not.toContain('Loading...');
       expect(wrapper.find('[role="alert"]').text()).toContain('Could not load');
-      const retry = wrapper.findAll('b-button-stub').wrappers.find(w => w.text() === 'Retry');
-      await retry.vm.$emit('click');
+      const retry = wrapper.findAll('b-button-stub').find(w => w.text() === 'Retry');
+      await retry.trigger('click');
       await flush();
       expect(wrapper.find('[role="alert"]').exists()).toBe(false);
       expect(wrapper.text()).toContain('Firefox');
@@ -181,6 +189,18 @@ describe('CategoryBuilder loading', () => {
     expect(code).toContain('aw-import-screentime-phone');
     expect(code).not.toContain(androidBucket.id);
     expect(code).toContain('merge_events_by_keys(events, ["app", "title"])');
+  });
+
+  test('applies options chosen in the options form', async () => {
+    buckets.buckets = ['phone', 'tablet'].map(hostname => ({ ...androidBucket, hostname }));
+    mountBuilder();
+    await flush();
+    await wrapper.setData({ show_options: true });
+    const chosen = { ...wrapper.vm.queryOptions, hostname: 'tablet' };
+    wrapper.findComponent(QueryOptions).vm.$emit('update:modelValue', chosen);
+    await flush();
+    expect(wrapper.vm.queryOptions).toEqual(chosen);
+    expect(query).toHaveBeenCalledTimes(1);
   });
 
   test('preserves the chosen host and dates when reopening options', async () => {
@@ -402,11 +422,11 @@ describe('CategoryBuilder navigation guards', () => {
     ['standalone CategoryBuilder', CategoryBuilder],
     ['Settings parent of the embedded builder', Settings],
   ])('%s beforeRouteLeave', (_name, component) => {
-    function makeVm(unsavedChanges, msgBoxConfirmResult) {
+    function makeVm(unsavedChanges, confirmResult) {
       const categoryStore = useCategoryStore();
       categoryStore.classes_unsaved_changes = unsavedChanges;
-      const msgBoxConfirm = jest.fn().mockResolvedValue(msgBoxConfirmResult);
-      return { $t: key => key, $bvModal: { msgBoxConfirm } };
+      const confirmModal = jest.fn().mockResolvedValue(confirmResult);
+      return { $t: key => key, modalController: { confirm: confirmModal } };
     }
 
     test('calls next() immediately when there are no unsaved changes', async () => {
@@ -421,7 +441,7 @@ describe('CategoryBuilder navigation guards', () => {
       const vm = makeVm(true, true);
       const next = jest.fn();
       await component.beforeRouteLeave.call(vm, {}, {}, next);
-      expect(vm.$bvModal.msgBoxConfirm).toHaveBeenCalled();
+      expect(vm.modalController.confirm).toHaveBeenCalled();
       expect(next).toHaveBeenCalledWith();
     });
 
@@ -429,7 +449,7 @@ describe('CategoryBuilder navigation guards', () => {
       const vm = makeVm(true, false);
       const next = jest.fn();
       await component.beforeRouteLeave.call(vm, {}, {}, next);
-      expect(vm.$bvModal.msgBoxConfirm).toHaveBeenCalled();
+      expect(vm.modalController.confirm).toHaveBeenCalled();
       expect(next).toHaveBeenCalledWith(false);
     });
   });

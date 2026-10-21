@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import { config } from '@vue/test-utils';
 import en from '~/i18n/locales/en';
 // Install vue-i18n now: modules importing ~/i18n later (e.g. the settings store)
 // would otherwise replace the $t stub below with the real, instance-bound one.
@@ -15,12 +15,8 @@ function lookup(obj, keys) {
 // Provide a global stub for Vue-i18n's $t so component tests that mount
 // components with i18n strings don't crash with "$t is not a function".
 // Uses the actual English translations so tests can match on readable strings.
-//
-// Note: Vue.use(VueI18n) is called at module-load time via the stores/settings
-// import chain, which overwrites Vue.prototype.$t with vue-i18n's version. That
-// version requires a _i18n instance on the component that tests don't provide.
-// Re-applying the stub in beforeEach ensures tests always see the safe version.
-const $t = (key, params) => {
+// A test's own `mocks: { $t }` still takes precedence.
+const t = (key, params) => {
   const result = lookup(en, key.split('.'));
   if (result === null) return key;
   if (!params) return result;
@@ -28,12 +24,5 @@ const $t = (key, params) => {
     params[k] !== undefined ? String(params[k]) : `{${k}}`
   );
 };
-const $tc = (key, _count, params) => $t(key, params);
-
-Vue.prototype.$t = $t;
-Vue.prototype.$tc = $tc;
-
-beforeEach(() => {
-  Vue.prototype.$t = $t;
-  Vue.prototype.$tc = $tc;
-});
+config.global.mocks.$t = t;
+config.global.mocks.$tc = (key, _count, params) => t(key, params);

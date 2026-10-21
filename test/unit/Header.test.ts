@@ -1,11 +1,27 @@
-import { createLocalVue, mount, shallowMount } from '@vue/test-utils';
-import BootstrapVue from 'bootstrap-vue';
-import VueRouter from 'vue-router';
+import { mount, shallowMount } from '@vue/test-utils';
+import { h } from 'vue';
+import { createBootstrap } from 'bootstrap-vue-next';
+import { createMemoryHistory, createRouter } from 'vue-router';
+import bootstrapComponents from '~/plugins/bootstrap';
 const flushPromises = () => new Promise(resolve => setTimeout(resolve));
 import { createPinia, setActivePinia } from 'pinia';
 import Header from '~/components/Header.vue';
 
+// bootstrap-vue-next dropdowns are positioned with floating-ui, which needs ResizeObserver.
+global.ResizeObserver =
+  global.ResizeObserver ||
+  jest.fn(() => ({ observe: jest.fn(), unobserve: jest.fn(), disconnect: jest.fn() }));
+
 const mockEnsureLoaded = jest.fn().mockResolvedValue(undefined);
+const makeRouter = () =>
+  createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      { path: '/', component: { render: () => h('div') } },
+      { path: '/stopwatch', component: { render: () => h('div') } },
+      { path: '/:pathMatch(.*)*', component: { render: () => h('div') } },
+    ],
+  });
 const passthroughStub = { template: '<div><slot /></div>' };
 
 jest.mock('~/stores/buckets', () => ({
@@ -33,22 +49,24 @@ describe('Header research edition badge', () => {
     }
 
     return shallowMount(Header, {
-      mocks: {
-        $isAndroid: false,
-        $t: key => key,
-      },
-      stubs: {
-        'b-navbar': passthroughStub,
-        'b-navbar-nav': passthroughStub,
-        'b-navbar-brand': passthroughStub,
-        'b-navbar-toggle': passthroughStub,
-        'b-collapse': passthroughStub,
-        'b-nav-item': passthroughStub,
-        'b-nav-item-dropdown': passthroughStub,
-        'b-dropdown-item': passthroughStub,
-        'b-badge': passthroughStub,
-        'b-sidebar': true,
-        icon: passthroughStub,
+      global: {
+        mocks: {
+          $isAndroid: false,
+          $t: key => key,
+        },
+        stubs: {
+          'b-navbar': passthroughStub,
+          'b-navbar-nav': passthroughStub,
+          'b-navbar-brand': passthroughStub,
+          'b-navbar-toggle': passthroughStub,
+          'b-collapse': passthroughStub,
+          'b-nav-item': passthroughStub,
+          'b-nav-item-dropdown': passthroughStub,
+          'b-dropdown-item': passthroughStub,
+          'b-badge': passthroughStub,
+          'b-offcanvas': true,
+          icon: passthroughStub,
+        },
       },
     });
   }
@@ -98,21 +116,18 @@ describe('Header phone navigation drawer', () => {
     delete window.matchMedia;
   });
 
-  function mountFullHeader(router?: VueRouter) {
-    const localVue = createLocalVue();
-    localVue.use(BootstrapVue);
-    if (router) {
-      localVue.use(VueRouter);
-    }
+  function mountFullHeader(router = makeRouter()) {
     return mount(Header, {
-      localVue,
-      router,
       attachTo: document.body,
-      mocks: {
-        $isAndroid: false,
-        $t: key => key,
+      global: {
+        plugins: [createBootstrap(), bootstrapComponents, router],
+        mocks: {
+          $isAndroid: false,
+          $t: key => key,
+        },
+        // Render the drawer in place instead of teleporting it to <body>.
+        stubs: { icon: true, teleport: true },
       },
-      stubs: { icon: true },
     });
   }
 
@@ -125,31 +140,31 @@ describe('Header phone navigation drawer', () => {
     expect(toggle.attributes('aria-expanded')).toBe('false');
     expect((wrapper.vm as any).drawerOpen).toBe(false);
 
-    // v-b-toggle attaches its click listener in requestAnimationFrame
-    await new Promise(resolve => setTimeout(resolve, 50));
     await toggle.trigger('click');
     await flushPromises();
 
     expect((wrapper.vm as any).drawerOpen).toBe(true);
     expect(toggle.attributes('aria-expanded')).toBe('true');
     expect(wrapper.find('#nav-drawer').attributes('aria-modal')).toBe('true');
-    wrapper.destroy();
+    wrapper.unmount();
   });
 
   test('the drawer lists the same entries as the desktop navbar', () => {
     const wrapper = shallowMount(Header, {
-      mocks: { $isAndroid: false, $t: key => key },
-      stubs: {
-        'b-navbar': passthroughStub,
-        'b-navbar-nav': passthroughStub,
-        'b-collapse': passthroughStub,
-        'b-sidebar': passthroughStub,
-        'b-nav-item': passthroughStub,
-        'b-nav-item-dropdown': passthroughStub,
-        'b-dropdown-item': passthroughStub,
-        'b-navbar-brand': true,
-        'b-navbar-toggle': true,
-        icon: true,
+      global: {
+        mocks: { $isAndroid: false, $t: key => key },
+        stubs: {
+          'b-navbar': passthroughStub,
+          'b-navbar-nav': passthroughStub,
+          'b-collapse': passthroughStub,
+          'b-offcanvas': passthroughStub,
+          'b-nav-item': passthroughStub,
+          'b-nav-item-dropdown': passthroughStub,
+          'b-dropdown-item': passthroughStub,
+          'b-navbar-brand': true,
+          'b-navbar-toggle': true,
+          icon: true,
+        },
       },
     });
     const desktopText = wrapper.find('#nav-collapse').text();
@@ -167,12 +182,8 @@ describe('Header phone navigation drawer', () => {
   });
 
   test('navigating to another page closes the drawer', async () => {
-    const router = new VueRouter({
-      routes: [
-        { path: '/', component: { render: h => h('div') } },
-        { path: '/stopwatch', component: { render: h => h('div') } },
-      ],
-    });
+    const router = makeRouter();
+    await router.push('/');
     const wrapper = mountFullHeader(router);
     await flushPromises();
     await wrapper.setData({ drawerOpen: true });
@@ -183,7 +194,7 @@ describe('Header phone navigation drawer', () => {
 
     expect(wrapper.vm.$route.path).toBe('/stopwatch');
     expect((wrapper.vm as any).drawerOpen).toBe(false);
-    wrapper.destroy();
+    wrapper.unmount();
   });
 
   test('Escape closes the drawer', async () => {
@@ -192,11 +203,11 @@ describe('Header phone navigation drawer', () => {
     await wrapper.setData({ drawerOpen: true });
     await flushPromises();
 
-    await wrapper.find('#nav-drawer').trigger('keydown', { keyCode: 27 });
+    await wrapper.find('#nav-drawer').trigger('keydown', { key: 'Escape' });
     await flushPromises();
 
     expect((wrapper.vm as any).drawerOpen).toBe(false);
-    wrapper.destroy();
+    wrapper.unmount();
   });
 
   test('falls back to the legacy MediaQueryList listener API', async () => {
@@ -215,7 +226,7 @@ describe('Header phone navigation drawer', () => {
     await flushPromises();
 
     expect((wrapper.vm as any).drawerOpen).toBe(false);
-    wrapper.destroy();
+    wrapper.unmount();
     expect(removeListener).toHaveBeenCalledWith(legacyListeners[0]);
   });
 
@@ -228,7 +239,7 @@ describe('Header phone navigation drawer', () => {
     await flushPromises();
 
     expect((wrapper.vm as any).drawerOpen).toBe(false);
-    wrapper.destroy();
+    wrapper.unmount();
   });
 });
 
@@ -269,13 +280,13 @@ describe('Header native Android actions', () => {
   });
 
   function mountWithDrawer() {
-    const localVue = createLocalVue();
-    localVue.use(BootstrapVue);
     return mount(Header, {
-      localVue,
       attachTo: document.body,
-      mocks: { $isAndroid: false, $t: key => key },
-      stubs: { icon: true },
+      global: {
+        plugins: [createBootstrap(), bootstrapComponents, makeRouter()],
+        mocks: { $isAndroid: false, $t: key => key },
+        stubs: { icon: true, teleport: true },
+      },
     });
   }
 
@@ -285,7 +296,7 @@ describe('Header native Android actions', () => {
     await flushPromises();
 
     expect(wrapper.findAll('[data-testid*="native-"]')).toHaveLength(0);
-    wrapper.destroy();
+    wrapper.unmount();
   });
 
   test('a bridge that reports no capabilities shows no native actions', async () => {
@@ -296,7 +307,7 @@ describe('Header native Android actions', () => {
 
     expect(bridge.sent[0]).toEqual({ type: 'hello' });
     expect(wrapper.findAll('[data-testid*="native-"]')).toHaveLength(0);
-    wrapper.destroy();
+    wrapper.unmount();
   });
 
   test('shows only the reported, known actions and runs them on tap', async () => {
@@ -318,24 +329,26 @@ describe('Header native Android actions', () => {
 
     expect(bridge.sent).toContainEqual({ type: 'action', action: 'sync-settings' });
     expect((wrapper.vm as any).drawerOpen).toBe(false);
-    wrapper.destroy();
+    wrapper.unmount();
   });
 
   test('native actions render in the phone drawer as well as the desktop navbar', () => {
     installBridge({ actions: ['sync-settings', 'auth-settings', 'open-in-browser'] });
     const wrapper = shallowMount(Header, {
-      mocks: { $isAndroid: false, $t: key => key },
-      stubs: {
-        'b-navbar': passthroughStub,
-        'b-navbar-nav': passthroughStub,
-        'b-collapse': passthroughStub,
-        'b-sidebar': passthroughStub,
-        'b-nav-item': passthroughStub,
-        'b-nav-item-dropdown': passthroughStub,
-        'b-dropdown-item': passthroughStub,
-        'b-navbar-brand': true,
-        'b-navbar-toggle': true,
-        icon: true,
+      global: {
+        mocks: { $isAndroid: false, $t: key => key },
+        stubs: {
+          'b-navbar': passthroughStub,
+          'b-navbar-nav': passthroughStub,
+          'b-collapse': passthroughStub,
+          'b-offcanvas': passthroughStub,
+          'b-nav-item': passthroughStub,
+          'b-nav-item-dropdown': passthroughStub,
+          'b-dropdown-item': passthroughStub,
+          'b-navbar-brand': true,
+          'b-navbar-toggle': true,
+          icon: true,
+        },
       },
     });
     for (const selector of ['#nav-collapse', '#nav-drawer']) {
@@ -361,14 +374,14 @@ describe('Header native Android actions', () => {
     await menu.find('[data-testid="navbar-native-open-in-browser"]').trigger('click');
     await flushPromises();
     expect(bridge.sent).toContainEqual({ type: 'action', action: 'open-in-browser' });
-    wrapper.destroy();
+    wrapper.unmount();
   });
 
   test('the desktop navbar shows no native dropdown without the bridge', async () => {
     const wrapper = mountWithDrawer();
     await flushPromises();
     expect(wrapper.find('[data-testid="navbar-native-menu"]').exists()).toBe(false);
-    wrapper.destroy();
+    wrapper.unmount();
   });
 
   test('reports drawer state and closes on a native close-menu request', async () => {
@@ -393,7 +406,7 @@ describe('Header native Android actions', () => {
     expect((wrapper.vm as any).drawerOpen).toBe(true);
     expect(wrapper.findAll('[data-testid$="native-auth-settings"]')).toHaveLength(0);
 
-    wrapper.destroy();
+    wrapper.unmount();
     expect(bridge.removeEventListener).toHaveBeenCalled();
   });
 });

@@ -1,9 +1,9 @@
 <template lang="pug">
 div
   div.d-flex.flex-wrap.align-items-center.mb-3
-    h3.mb-0.mr-3 {{ $t('nav.trends') }}
+    h3.mb-0.me-3 {{ $t('nav.trends') }}
 
-    b-button-group.mr-2.mb-1(size="sm")
+    b-button-group.me-2.mb-1(size="sm")
       b-button.px-3(
         v-for="opt in periodOptions"
         :key="opt.value"
@@ -12,26 +12,26 @@ div
         variant="outline-dark"
       ) {{ opt.text }}
 
-    b-form-select.mr-2.mb-1(
+    b-form-select.me-2.mb-1(
       v-if="bucketsStore.knownHosts.length > 1"
       size="sm"
-      :value="host"
+      :model-value="host"
       :options="hostOptions"
-      @change="onHostChange"
+      @update:model-value="onHostChange"
       style="width: auto"
     )
 
-    small.text-muted.ml-auto.mb-1
+    small.text-muted.ms-auto.mb-1
       | {{ $t('ui.trends.comparing') }} #[b {{ currentRangeLabel }}] {{ $t('ui.trends.vs') }} #[b {{ previousRangeLabel }}]
 
   div(v-if="!host")
-    b-alert(show variant="info")
+    b-alert(:model-value="true" variant="info")
       | {{ $t('ui.trends.noHost') }}
       | #[a(href="https://docs.activitywatch.net/en/latest/watchers.html") aw-watcher-window and aw-watcher-afk]
       | {{ $t('extraViews.trends.toUse') }}
 
   div(v-else-if="loading")
-    b-spinner.mr-2(small)
+    b-spinner.me-2(small)
     span.text-muted {{ $t('ui.trends.computing', { days: periodDays }) }}
 
   div(v-else)
@@ -39,13 +39,13 @@ div
       b-col(md="4")
         b-card.h-100
           small.text-muted {{ $t('ui.trends.activeTime') }}
-          h4.mb-0 {{ totalCurrent | friendlyduration }}
+          h4.mb-0 {{ friendlyduration(totalCurrent) }}
           div.small.mt-1(:class="deltaClass(totalDelta)")
             | {{ $t('ui.trends.vsPrevious', { days: periodDays }) }}: {{ formatDelta(totalCurrent, totalPrevious) }}
       b-col(md="4")
         b-card.h-100
           small.text-muted {{ $t('ui.trends.dailyAverage') }}
-          h4.mb-0 {{ avgPerDay | friendlyduration }}
+          h4.mb-0 {{ friendlyduration(avgPerDay) }}
           div.small.mt-1(:class="deltaClass(avgDelta)")
             | {{ formatDelta(avgPerDay, avgPerDayPrevious) }} {{ $t('ui.trends.perDay') }}
       b-col(md="4")
@@ -53,7 +53,7 @@ div
           small.text-muted {{ $t('ui.trends.mostActiveDay') }}
           h4.mb-0(v-if="busiestDay") {{ busiestDay.label }}
           h4.mb-0.text-muted(v-else) —
-          div.small.text-muted.mt-1(v-if="busiestDay") {{ busiestDay.duration | friendlyduration }} {{ $t('ui.trends.onThisDay') }}
+          div.small.text-muted.mt-1(v-if="busiestDay") {{ friendlyduration(busiestDay.duration) }} {{ $t('ui.trends.onThisDay') }}
 
     h5.mt-3 {{ $t('ui.trends.timePerDay') }}
     aw-timeline-barchart(:datasets="datasets" :height="100" :timeperiod_start="currentStart.toISOString()" :timeperiod_length="[periodDays, 'days']")
@@ -68,15 +68,14 @@ div
       responsive
       :items="categoryTrends"
       :fields="categoryFields"
-      sort-by="absDelta"
-      :sort-desc="true"
+      :sort-by="[{ key: 'absDelta', order: 'desc' }]"
     )
       template(#cell(category)="row")
         | {{ row.item.category.join(' > ') || $t('common.uncategorized') }}
       template(#cell(current)="row")
-        | {{ row.item.current | friendlyduration }}
+        | {{ friendlyduration(row.item.current) }}
       template(#cell(previous)="row")
-        | {{ row.item.previous | friendlyduration }}
+        | {{ friendlyduration(row.item.previous) }}
       template(#cell(delta)="row")
         span(:class="deltaClass(row.item.delta)")
           | {{ formatDelta(row.item.current, row.item.previous) }}

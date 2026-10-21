@@ -4,10 +4,10 @@ div
 
   | {{ $t('report.description') }}
 
-  b-alert.mt-2(variant="warning" show)
+  b-alert.mt-2(variant="warning" :model-value="true")
     | {{ $t('report.earlyDev') }}
 
-  b-alert(v-if="error" show variant="danger")
+  b-alert(v-if="error" :model-value="true" variant="danger")
     | {{error}}
 
   aw-select-categories-or-pattern(v-model="filterCategories")
@@ -17,7 +17,7 @@ div
         | {{ $t('report.generate') }}
 
   div.d-flex.mt-1
-    span.mr-auto.small.text-muted {{ $t('ui.search.hostname') }}: {{queryOptions.hostname}}
+    span.me-auto.small.text-muted {{ $t('ui.search.hostname') }}: {{queryOptions.hostname}}
     b-button.border-0(size="sm", variant="outline-dark" @click="show_options = !show_options")
       span(v-if="!show_options")
         | #[icon(name="angle-double-down")] {{ $t('ui.search.showOptions') }}
@@ -40,15 +40,13 @@ div
         | {{ $t('report.foundEvents', { count: events.length, seconds: (queryTime / 1000).toFixed(2) }) }}
       div
         b-input-group(size="sm")
-          b-input-group-prepend
-            b-input-group-text
-              icon(name="save")
-              .mx-1 {{ $t('ui.report.exportAs') }}
-          b-input-group-append
-            b-button(type="button", @click="export_csv()" variant="outline-dark")
-              | {{ $t('report.csv') }}
-            b-button(type="button", @click="export_json()" variant="outline-dark")
-              | {{ $t('ui.report.json') }}
+          b-input-group-text
+            icon(name="save")
+            .mx-1 {{ $t('ui.report.exportAs') }}
+          b-button(type="button", @click="export_csv()" variant="outline-dark")
+            | {{ $t('report.csv') }}
+          b-button(type="button", @click="export_json()" variant="outline-dark")
+            | {{ $t('ui.report.json') }}
 
     hr
 
@@ -79,11 +77,6 @@ div
 import _ from 'lodash';
 import moment from 'moment';
 import Papa from 'papaparse';
-
-import 'vue-awesome/icons/search';
-import 'vue-awesome/icons/spinner';
-import 'vue-awesome/icons/angle-double-down';
-import 'vue-awesome/icons/angle-double-up';
 
 import { canonicalEvents, querystr_to_array } from '~/queries';
 import { buildBarchartDataset } from '~/util/datasets';

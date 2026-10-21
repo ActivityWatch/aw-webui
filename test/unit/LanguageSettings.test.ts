@@ -12,11 +12,13 @@ describe('LanguageSettings', () => {
   test('offers every supported locale, in order, by its endonym', () => {
     useSettingsStore().$patch({ _loaded: true });
     const wrapper = shallowMount(LanguageSettings as any, {
-      stubs: { 'b-select': { template: '<select><slot /></select>' } },
-      mocks: { $t: (key: string) => key },
+      global: {
+        stubs: { 'b-form-select': { template: '<select><slot /></select>' } },
+        mocks: { $t: (key: string) => key },
+      },
     });
 
-    const options = wrapper.findAll('option').wrappers;
+    const options = wrapper.findAll('option');
     expect(options.map(o => o.attributes('value'))).toEqual(SUPPORTED);
     expect(options.map(o => o.text())).toEqual(SUPPORTED.map(code => LANGUAGE_NAMES[code]));
   });

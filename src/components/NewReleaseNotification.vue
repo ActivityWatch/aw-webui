@@ -1,16 +1,14 @@
 <template lang="pug">
   div
-    b-alert(v-if="isVisible", variant="info", show)
+    b-alert(v-if="isVisible", variant="info", :model-value="true", dismissible, @close="isVisible = false")
       | {{ $t('ui.release.newAvailable', { version: latestVersion }) }}
       | #[a(href="https://activitywatch.net/downloads/" target="_blank" class="alert-link") {{ $t('ui.release.download') }}],
       | {{ $t('ui.release.disablePrefix') }} #[a(href="javascript:void(0);" class="alert-link" @click="disableCheck") {{ $t('ui.release.disable') }}]
       | {{ $t('ui.release.disableSuffix') }}
-      button(type="button", class="close", @click="isVisible=false") &times;
 
-    b-alert(v-if="isFollowUpVisible", variant="success", show)
+    b-alert(v-if="isFollowUpVisible", variant="success", :model-value="true", dismissible, @close="isFollowUpVisible = false")
       | {{ $t('ui.release.disabled') }}
-      | #[router-link(to="/settings" class="alert-link" @click.native="isFollowUpVisible=false") {{ $t('ui.release.settingsPage') }}].
-      button(type="button", class="close", @click="isFollowUpVisible=false") &times;
+      | #[router-link(to="/settings" class="alert-link" @click="isFollowUpVisible=false") {{ $t('ui.release.settingsPage') }}].
 </template>
 
 <script lang="ts">

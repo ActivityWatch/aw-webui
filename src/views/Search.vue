@@ -2,18 +2,17 @@
 div
   h3 {{ $t('search.title') }}
 
-  b-alert(v-if="error" show variant="danger")
+  b-alert(v-if="error" :model-value="true" variant="danger")
     | {{error}}
 
   b-input-group(size="lg")
-    b-input(v-model="pattern" v-on:keyup.enter="search()" :placeholder="$t('ui.search.regexPlaceholder')")
-    b-input-group-append
-      b-button(type="button", @click="search()" variant="success")
-        icon.mr-1(name="search")
-        | {{ $t('search.searchBtn') }}
+    b-form-input(v-model="pattern" v-on:keyup.enter="search()" :placeholder="$t('ui.search.regexPlaceholder')")
+    b-button(type="button", @click="search()" variant="success")
+      icon.me-1(name="search")
+      | {{ $t('search.searchBtn') }}
 
   div.d-flex.mt-1
-    span.mr-auto.small.text-muted {{ $t('ui.search.hostname') }}: {{queryOptions.hostname}}
+    span.me-auto.small.text-muted {{ $t('ui.search.hostname') }}: {{queryOptions.hostname}}
     b-button.border-0(size="sm", variant="outline-dark" @click="show_options = !show_options")
       span(v-if="!show_options")
         | #[icon(name="angle-double-down")] {{ $t('ui.search.showOptions') }}
@@ -45,8 +44,8 @@ div
             th {{ $t('extraViews.search.title') }}
         tbody
           tr(v-for="e in browserEvents" :key="e.id || e.timestamp")
-            td {{ e.timestamp | shortdate }} {{ e.timestamp | shorttime }}
-            td {{ e.duration | friendlyduration }}
+            td {{ shortdate(e.timestamp) }} {{ shorttime(e.timestamp) }}
+            td {{ friendlyduration(e.duration) }}
             td
               a(:href="e.data.url" target="_blank" rel="noopener") {{ e.data.url }}
             td {{ e.data.title }}
@@ -65,11 +64,6 @@ import _ from 'lodash';
 import moment from 'moment';
 import { canonicalEvents, browserSearchQuery, querystr_to_array } from '~/queries';
 import { useBucketsStore } from '~/stores/buckets';
-
-import 'vue-awesome/icons/search';
-import 'vue-awesome/icons/spinner';
-import 'vue-awesome/icons/angle-double-down';
-import 'vue-awesome/icons/angle-double-up';
 
 export default {
   name: 'Search',

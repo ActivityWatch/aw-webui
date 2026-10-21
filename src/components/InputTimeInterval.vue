@@ -1,9 +1,9 @@
 <template lang="pug">
 div
   div
-    b-alert(v-if="invalidDaterange", variant="warning", show)
+    b-alert(v-if="invalidDaterange", variant="warning", :model-value="true")
       | {{ $t('ui.timeInterval.invalidRange') }}
-    b-alert(v-if="daterangeTooLong", variant="warning", show)
+    b-alert(v-if="daterangeTooLong", variant="warning", :model-value="true")
       | {{ $t('ui.timeInterval.tooLong', { days: maxDuration/(24*60*60) }) }}
 
   div.input-time-interval.d-flex.flex-wrap.align-items-start.justify-content-between
@@ -16,7 +16,7 @@ div
       label.col-form-label.col-form-label-sm.mb-0(for="time-mode") {{ $t('ui.timeInterval.mode') }}
       b-form-radio-group#time-mode(
         v-model="mode",
-        @change="valueChanged",
+        @update:model-value="valueChanged",
         buttons,
         button-variant="outline-secondary",
         size="sm",
@@ -36,11 +36,11 @@ div
             ).d-none
             label(:for="'dur' + idx" v-html="dur.label").btn.btn-light.btn-sm
       div.d-flex.flex-wrap.align-items-center(v-else)
-        input.form-control.form-control-sm.mr-1(
+        input.form-control.form-control-sm.me-1(
           type="date", v-model="start", :max="end || undefined", style="width: auto"
           :aria-label="$t('ui.timeInterval.startDate')"
         )
-        input.form-control.form-control-sm.mr-1(
+        input.form-control.form-control-sm.me-1(
           type="date", v-model="end", :min="start || undefined", :placeholder="$t('ui.timeInterval.optional')", style="width: auto"
           :aria-label="$t('ui.timeInterval.endDate')"
         )
@@ -79,13 +79,13 @@ div
             aria-label="Shift forward one week"
           )
 
-    div.text-right.d-none.d-md-block(v-if="showUpdate")
+    div.text-end.d-none.d-md-block(v-if="showUpdate")
       b-button.px-2(@click="refresh()", variant="outline-dark", size="sm")
-        icon.mr-1(name="sync")
+        icon.me-1(name="sync")
         span.d-none.d-md-inline
           | {{ $t('ui.timeInterval.refresh') }}
       div.mt-2.small.text-muted(v-if="lastUpdate")
-        | {{ $t('ui.timeInterval.lastUpdate') }}: #[time(:datetime="lastUpdate.format()") {{lastUpdate | friendlytime}}]
+        | {{ $t('ui.timeInterval.lastUpdate') }}: #[time(:datetime="lastUpdate.format()") {{ friendlytime(lastUpdate) }}]
 </template>
 
 <style scoped lang="scss">
@@ -125,7 +125,6 @@ div
 
 <script lang="ts">
 import moment from 'moment';
-import 'vue-awesome/icons/sync';
 export default {
   name: 'input-timeinterval',
   props: {
@@ -142,6 +141,7 @@ export default {
       default: true,
     },
   },
+  emits: ['update:modelValue'],
   data() {
     return {
       duration: null,
@@ -208,7 +208,7 @@ export default {
       this.lastUpdate = _lastUpdate;
     }, 500);
   },
-  beforeDestroy() {
+  beforeUnmount() {
     clearInterval(this.lastUpdateTimer);
   },
   methods: {
@@ -218,7 +218,7 @@ export default {
         (!this.emptyDaterange && !this.invalidDaterange && !this.daterangeTooLong)
       ) {
         this.lastUpdate = moment();
-        this.$emit('input', this.value);
+        this.$emit('update:modelValue', this.value);
       }
     },
     refresh() {

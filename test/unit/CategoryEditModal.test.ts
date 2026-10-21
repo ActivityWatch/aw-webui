@@ -1,6 +1,7 @@
-import { createLocalVue, mount } from '@vue/test-utils';
-import BootstrapVue, { BModal } from 'bootstrap-vue';
-import { createPinia, PiniaVuePlugin, setActivePinia } from 'pinia';
+import { mount, flushPromises } from '@vue/test-utils';
+import { createBootstrap } from 'bootstrap-vue-next';
+import { createPinia, setActivePinia } from 'pinia';
+import bootstrapComponents from '~/plugins/bootstrap';
 import CategoryEditModalComponent from '~/components/CategoryEditModal.vue';
 import { useCategoryStore } from '~/stores/categories';
 
@@ -259,9 +260,6 @@ describe('CategoryEditModal score round trip', () => {
 
 describe('CategoryEditModal mounted score round trip', () => {
   test('keeps numeric zero after showing, saving, and reopening the modal', async () => {
-    const localVue = createLocalVue();
-    localVue.use(BootstrapVue);
-    localVue.use(PiniaVuePlugin);
     const pinia = createPinia();
     setActivePinia(pinia);
     const store = useCategoryStore();
@@ -272,18 +270,15 @@ describe('CategoryEditModal mounted score round trip', () => {
     const categoryId = store.get_category(['Parent', 'Child']).id;
     const openModal = async () => {
       const wrapper = mount(CategoryEditModal, {
-        localVue,
-        pinia,
-        propsData: { categoryId },
-        mocks: { $t: key => key },
-        stubs: {
-          'color-picker': true,
-          icon: true,
-          'b-modal': { extends: BModal, props: { static: { default: true } } },
+        props: { categoryId },
+        global: {
+          plugins: [createBootstrap(), bootstrapComponents, pinia],
+          mocks: { $t: key => key },
+          // Render the modal in place instead of teleporting it to <body>.
+          stubs: { 'color-picker': true, icon: true, teleport: true },
         },
       });
-      await localVue.nextTick();
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await flushPromises();
       return wrapper;
     };
 
@@ -291,24 +286,24 @@ describe('CategoryEditModal mounted score round trip', () => {
     try {
       const scoreCheckbox = wrapper
         .findAllComponents({ name: 'BFormCheckbox' })
-        .wrappers.find(checkbox => checkbox.text().includes('ui.categoryEditor.inheritScore'));
+        .find(checkbox => checkbox.text().includes('ui.categoryEditor.inheritScore'));
       expect((scoreCheckbox.find('input').element as HTMLInputElement).checked).toBe(false);
       const scoreInput = wrapper
         .findAllComponents({ name: 'BInputGroup' })
-        .wrappers.find(group => group.text().includes('ui.categoryEditor.score'))
+        .find(group => group.text().includes('ui.categoryEditor.score'))
         .find('input');
-      expect((scoreInput.element as HTMLInputElement).value).toBe('0');
-      (wrapper.vm.$refs.edit as any).$emit('ok', { preventDefault: jest.fn() });
-      await localVue.nextTick();
+      expect(scoreInput.element.value).toBe('0');
+      wrapper.findComponent({ name: 'BModal' }).vm.$emit('ok', { preventDefault: jest.fn() });
+      await flushPromises();
       expect(store.get_category(['Parent', 'Child']).data.score).toBe(0);
       expect(store.get_category_score(['Parent', 'Child'])).toBe(0);
 
-      wrapper.destroy();
+      wrapper.unmount();
       wrapper = await openModal();
       expect((wrapper.vm as any).editing.inherit_score).toBe(false);
       expect((wrapper.vm as any).editing.score).toBe(0);
     } finally {
-      wrapper.destroy();
+      wrapper.unmount();
     }
   });
 });
