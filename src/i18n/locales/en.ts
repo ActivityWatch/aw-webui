@@ -640,6 +640,7 @@ export default {
       expand: 'Expand list',
       condense: 'Condense list',
       edit: 'Edit',
+      showMore: 'Show {count} more',
     },
     calendar: {
       bucket: 'Bucket:',
