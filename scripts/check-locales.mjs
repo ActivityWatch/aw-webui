@@ -119,7 +119,7 @@ const IDENTICAL_OK = {
   ],
   ja: ['Raw JSON'],
   'pt-BR': ['App', 'h', 's', 'Buckets', 'Hosts', 'Total', 'Prompt', 'download'],
-  sv: ['App', 'Version:', 'Forum', 'Buckets', 'Data:', 'Period', 'Prompt'],
+  sv: ['App', 'Version:', 'h', 's', 'Forum', 'Buckets', 'Data:', 'Period', 'Prompt'],
   sw: ['h', 'm', 's', 'Buckets'],
 };
 
