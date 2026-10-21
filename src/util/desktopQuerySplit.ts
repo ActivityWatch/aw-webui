@@ -168,8 +168,8 @@ function concatEvents(chunks: Array<IEvent[] | undefined>): IEvent[] {
 function sumDurationLists(lists: Array<number[] | undefined>): number[] | undefined {
   const present = lists.filter(Boolean) as number[][];
   if (present.length === 0) return undefined;
-  const length = Math.max(...present.map(l => l.length));
-  return Array.from({ length }, (_v, i) => sumDurations(present.map(l => l[i])));
+  const hostCount = Math.max(...present.map(l => l.length));
+  return Array.from({ length: hostCount }, (_v, i) => sumDurations(present.map(l => l[i])));
 }
 
 function sumDurations(values: Array<number | undefined>): number {

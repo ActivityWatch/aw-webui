@@ -63,7 +63,7 @@ div
       )
         span.mr-2(v-for="d in activityStore.window.host_durations" :key="d.host")
           | {{ d.host }}: {{ d.duration | friendlyduration }}
-          small.text-muted(v-if="d.overlap >= 60")  ({{ $t('activity.overlapRemoved', { duration: secondsToDuration(d.overlap) }) }})
+          small.text-muted(v-if="d.overlap >= 60")  ({{ secondsToDuration(d.overlap) }} {{ $t('activity.overlap') }})
     b-alert.py-1.px-2.mb-1.small(
       v-if="isMultidevice && !multideviceNoteDismissed"
       show

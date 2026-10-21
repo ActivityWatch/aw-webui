@@ -374,7 +374,7 @@ export default {
     timeActive: 'Time active:',
     deviceBreakdownTooltip:
       'Active time per device. When devices overlap, the time is counted once, for the device listed first.',
-    overlapRemoved: '{duration} overlap',
+    overlap: 'overlap',
     timeActiveTooltip:
       'Active window time in the queried range, after the filters below. The bars in the period chart show raw device active time, so they can be slightly higher.',
     queryRange: 'Query range:',
