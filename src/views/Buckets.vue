@@ -35,7 +35,7 @@ div
         :title="$t('buckets.moreActionsFor', { hostname: device.hostname })",
         :aria-label="$t('buckets.moreActionsFor', { hostname: device.hostname })"
       )
-        template(v-slot:button-content)
+        template(v-slot:button-content="")
           icon(name="ellipsis-v")
         b-dropdown-item-button(
           @click="openDeleteHostModal(device)",
@@ -59,12 +59,12 @@ div
             span.d-none.d-md-inline {{ compactRelativeTime(bucket.last_updated) }}
           small.text-muted.bucket-updated(v-else) {{ $t('buckets.noEvents') }}
         b-dropdown.kebab-dropdown(variant="outline-secondary", toggle-class="border-0", size="sm", right, no-caret, boundary="window", :title="$t('common.more')")
-          template(v-slot:button-content)
+          template(v-slot:button-content="")
             icon(name="ellipsis-v")
           b-dropdown-item(@click="export_bucket_json(bucket.id)", :title="$t('buckets.exportBucketJson')")
             icon.mr-1(name="download")
             | {{ $t('buckets.exportBucketJson') }}
-          b-dropdown-item(@click="export_csv(bucket.id)", :title="$t('buckets.exportEventsCsv')")
+          b-dropdown-item(@click="openExportCsvModal(bucket.id)", :title="$t('buckets.exportEventsCsv')")
             icon.mr-1(name="download")
             | {{ $t('buckets.exportEventsCsv') }}
           b-dropdown-divider
@@ -77,6 +77,16 @@ div
         icon(name="exclamation-triangle")
         | &nbsp;
         | {{ msg }}
+
+  b-modal(id="export-csv-modal", :title="$t('buckets.exportEventsCsv')",
+          :ok-title="$t('buckets.exportEventsCsv')", :cancel-title="$t('common.cancel')",
+          :ok-disabled="invalidExportRange || exporting", @ok="exportSelectedCsv")
+    b-form-group(:label="$t('ui.eventEditor.start') + ' ' + $t('ui.timeInterval.optional')", label-for="export-start")
+      b-form-input(id="export-start", type="datetime-local", v-model="export_start", :max="export_end || undefined")
+    b-form-group(:label="$t('ui.eventEditor.end') + ' ' + $t('ui.timeInterval.optional')", label-for="export-end")
+      b-form-input(id="export-end", type="datetime-local", v-model="export_end", :min="export_start || undefined")
+    b-alert(v-if="invalidExportRange", show, variant="warning")
+      | {{ $t('ui.timeInterval.invalidRange') }}
 
   b-modal(id="delete-modal", :title="$t('buckets.deleteBucketTitle')", centered, hide-footer)
     | {{ $t('buckets.deleteConfirm', { id: delete_bucket_selected }) }}
@@ -258,6 +268,7 @@ import 'vue-awesome/icons/ellipsis-v';
 
 import _ from 'lodash';
 import moment from 'moment';
+import Papa from 'papaparse';
 
 import { useServerStore } from '~/stores/server';
 import { useBucketsStore } from '~/stores/buckets';
@@ -297,11 +308,21 @@ export default {
       delete_host_selected: null,
       deleting_host: false,
       delete_host_error: null,
+      export_bucket_selected: null as string | null,
+      export_start: '',
+      export_end: '',
       export_inflight: 0,
       export_error: null as string | null,
     };
   },
   computed: {
+    invalidExportRange() {
+      const start = this.export_start ? new Date(this.export_start).getTime() : null;
+      const end = this.export_end ? new Date(this.export_end).getTime() : null;
+      return (
+        Number.isNaN(start) || Number.isNaN(end) || (start !== null && end !== null && start > end)
+      );
+    },
     exporting() {
       return this.export_inflight > 0;
     },
@@ -443,17 +464,51 @@ export default {
       }
     },
 
-    async export_csv(bucketId: string) {
+    openExportCsvModal(bucketId: string) {
+      this.export_bucket_selected = bucketId;
+      this.export_start = '';
+      this.export_end = '';
+      this.$root.$emit('bv::show::modal', 'export-csv-modal');
+    },
+
+    async exportSelectedCsv(event) {
+      if (this.invalidExportRange || this.exporting || !this.export_bucket_selected) {
+        event.preventDefault();
+        return;
+      }
+      const start = this.export_start ? new Date(this.export_start).toISOString() : undefined;
+      const end = this.export_end ? new Date(this.export_end).toISOString() : undefined;
+      await this.export_csv(this.export_bucket_selected, start, end);
+    },
+
+    async export_csv(bucketId: string, start?: string, end?: string) {
       const filename = `aw-events-export-${bucketId}.csv`;
       const path = `/0/buckets/${encodeURIComponent(bucketId)}/export/csv`;
       const url = `${this.$aw.req.defaults.baseURL || ''}${path}`;
       // Android WebView: native URL download so the CSV never enters JS memory.
-      if (androidExportFromUrl(url, filename)) {
+      if (!start && !end && androidExportFromUrl(url, filename)) {
         return;
       }
       this.export_inflight += 1;
       this.export_error = null;
       try {
+        if (start || end) {
+          const response = await this.$aw.req.get(
+            `/0/buckets/${encodeURIComponent(bucketId)}/events`,
+            {
+              params: { limit: -1, start, end },
+              timeout: 300_000,
+            }
+          );
+          const events = response.data;
+          const keys = Array.from(new Set<string>(events.flatMap(e => Object.keys(e.data)))).sort();
+          const csv = Papa.unparse({
+            fields: ['timestamp', 'duration', ...keys],
+            data: events.map(e => [e.timestamp, e.duration, ...keys.map(key => e.data[key])]),
+          });
+          await downloadBlob(filename, new Blob([csv], { type: 'text/csv' }), 'text/csv');
+          return;
+        }
         // Default local installs have no API token. Let the browser stream the
         // download from the server endpoint so 200 OK lands immediately and
         // the CSV never enters JS memory. Tauri cannot use <a download>, and
