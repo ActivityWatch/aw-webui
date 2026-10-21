@@ -345,6 +345,8 @@ export default {
     firstSeen: 'প্রথম দেখা গেছে:',
     exportBucketJson: 'বাকেট JSON হিসেবে এক্সপোর্ট করুন',
     exportEventsCsv: 'ইভেন্ট CSV হিসেবে এক্সপোর্ট করুন',
+    exportRangeHelp:
+      'সময় আপনার স্থানীয় সময় অঞ্চল ব্যবহার করে। সংশ্লিষ্ট সীমা না রাখতে যেকোনো ঘর খালি রাখুন; সবকিছু এক্সপোর্ট করতে দুটোই খালি রাখুন।',
     deleteBucket: 'বাকেট মুছুন',
     deleteModalTitle: 'বিপদ!',
     deleteConfirm: 'আপনি কি নিশ্চিতভাবে বাকেট "{id}" মুছতে চান?',

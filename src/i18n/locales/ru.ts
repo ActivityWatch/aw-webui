@@ -342,6 +342,8 @@ export default {
     firstSeen: 'Впервые замечено:',
     exportBucketJson: 'Экспорт bucket-а в JSON',
     exportEventsCsv: 'Экспорт событий в CSV',
+    exportRangeHelp:
+      'Время указано в вашем местном часовом поясе. Оставьте поле пустым, чтобы не ограничивать соответствующую границу; оставьте оба поля пустыми, чтобы экспортировать всё.',
     deleteBucket: 'Удалить bucket',
     deleteModalTitle: 'Опасно!',
     deleteConfirm: 'Удалить bucket «{id}»?',

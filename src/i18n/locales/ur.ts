@@ -349,6 +349,8 @@ export default {
     firstSeen: 'پہلی بار دیکھا گیا:',
     exportBucketJson: 'بکٹ کو JSON کے طور پر برآمد کریں',
     exportEventsCsv: 'ایونٹس کو CSV کے طور پر برآمد کریں',
+    exportRangeHelp:
+      'اوقات آپ کا مقامی ٹائم زون استعمال کرتے ہیں۔ متعلقہ حد نہ رکھنے کے لیے کوئی بھی خانہ خالی چھوڑیں؛ سب کچھ برآمد کرنے کے لیے دونوں خالی چھوڑیں۔',
     deleteBucket: 'بکٹ حذف کریں',
     deleteModalTitle: 'خطرہ!',
     deleteConfirm: 'کیا آپ واقعی بکٹ "{id}" کو حذف کرنا چاہتے ہیں؟',

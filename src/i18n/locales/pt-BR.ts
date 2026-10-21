@@ -354,6 +354,8 @@ export default {
     firstSeen: 'Visto pela primeira vez:',
     exportBucketJson: 'Exportar bucket como JSON',
     exportEventsCsv: 'Exportar eventos como CSV',
+    exportRangeHelp:
+      'Os horários usam seu fuso horário local. Deixe um campo vazio para não limitar esse extremo; deixe ambos vazios para exportar tudo.',
     deleteBucket: 'Excluir bucket',
     deleteModalTitle: 'Perigo!',
     deleteConfirm: 'Tem certeza de que deseja excluir o bucket "{id}"?',
