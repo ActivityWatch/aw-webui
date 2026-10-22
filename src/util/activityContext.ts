@@ -311,18 +311,20 @@ function accumulateByDay(
 /**
  * Focus statistics over the AFK-filtered timeline.
  *
- * Events are assumed to be sorted by timestamp. Consecutive events in the same app
- * are merged into one block, so `appSwitches` counts real context switches rather
- * than watcher heartbeats.
+ * Events are assumed to be sorted by timestamp. Contiguous events in the same app
+ * are merged into one block. App switches count changes between adjacent retained
+ * events; a gap in the same app starts a new block without adding a switch.
  */
 export function computeFocusStats(events: ContextEvent[]): FocusStats {
   const blocks: number[] = [];
+  let appSwitches = 0;
   let currentApp: string | null = null;
   let currentDuration = 0;
   let prevEnd: number | null = null; // seconds since epoch
 
   for (const event of events) {
     const app = event.data?.app || 'unknown';
+    if (currentApp !== null && currentApp !== app) appSwitches++;
     const start = new Date(event.timestamp).getTime() / 1000;
     const duration = event.duration || 0;
     // After AFK or privacy filtering, two events for the same app can be
@@ -349,7 +351,7 @@ export function computeFocusStats(events: ContextEvent[]): FocusStats {
     : 0;
 
   return {
-    appSwitches: Math.max(0, blocks.length - 1),
+    appSwitches,
     blockCount: blocks.length,
     longestBlockSeconds: blocks.length ? Math.max(...blocks) : 0,
     medianBlockSeconds: median,
