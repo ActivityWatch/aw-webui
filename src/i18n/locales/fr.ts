@@ -96,6 +96,9 @@ export default {
     timelineDuration: {
       title: 'Durée par défaut',
       help: 'La durée par défaut utilisée pour « afficher les derniers » dans la vue Chronologie.',
+      groupGranularity: 'Regrouper les événements courts (secondes)',
+      groupGranularityHelp:
+        'Regroupe les événements courts consécutifs en groupes de cette durée. La valeur 0 désactive le regroupement. Le filtre de durée de la chronologie reste indépendant et retire les événements avant le regroupement.',
     },
     landingPage: {
       title: 'Page d’accueil',
@@ -954,6 +957,9 @@ export default {
       none: 'aucune',
       groupByCategory: 'Grouper par catégorie',
       groupByBucketType: 'Grouper par type de bucket',
+      groupedEvents: '{count} événements · {duration}',
+      collapseGroups: 'Réduire les groupes',
+      groupBreakdown: 'Répartition des activités',
       totalTime: 'Temps total',
       bucketsNoEvents: 'Les buckets sans événement dans la plage interrogée seront masqués.',
       editSaved:

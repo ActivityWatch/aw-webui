@@ -96,6 +96,9 @@ export default {
     timelineDuration: {
       title: 'Thamani ya chaguo-msingi ya muda',
       help: "Muda wa chaguo-msingi unaotumika kwa 'onyesha mwisho' katika mwonekano wa mstari wa wakati.",
+      groupGranularity: 'Panga matukio mafupi (sekunde)',
+      groupGranularityHelp:
+        'Huunganisha matukio mafupi yanayofuatana katika makundi ya muda huu. Weka 0 kuzima upangaji. Kichujio cha muda cha ratiba hubaki huru na huondoa matukio kabla ya kuyapanga.',
     },
     landingPage: {
       title: 'Ukurasa wa kuingia',
@@ -944,6 +947,9 @@ export default {
       none: 'hakuna',
       groupByCategory: 'Panga kwa kategoria',
       groupByBucketType: 'Panga kwa aina ya bucket',
+      groupedEvents: 'Matukio {count} · {duration}',
+      collapseGroups: 'Kunja makundi',
+      groupBreakdown: 'Mchanganuo wa shughuli',
       totalTime: 'Wakati wote',
       bucketsNoEvents: 'Buckets zisizo na matukio katika kipindi kilichoulizwa zitafichwa.',
       editSaved: 'Uhariri wako umehifadhiwa. Onyesha upya mstari wa wakati kuuona ukirekodiwa.',
