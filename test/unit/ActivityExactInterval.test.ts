@@ -1,4 +1,5 @@
 import { createPinia, setActivePinia } from 'pinia';
+import Vue from 'vue';
 import ActivityComponent from '~/views/activity/Activity.vue';
 
 // Tests call Options API members directly, which the Vue constructor type doesn't expose.
@@ -17,6 +18,7 @@ function makeVm(periodLength: string, date: string | undefined, extra: any = {})
     date,
     host: 'test',
     intervalIssue: null,
+    navigationNow: Date.now(),
     settingsStore: { startOfDay: '04:00' },
     $t: (k: string) => k,
     ...Activity.methods,
@@ -79,6 +81,31 @@ describe('Activity exact interval period', () => {
     expect(late.nextDisabled).toBe(true);
   });
 
+  test('refresh re-evaluates cached Next availability after the interval ends', async () => {
+    jest.setSystemTime(new Date('2026-10-20T17:30:00Z'));
+    const vm: any = new Vue({
+      data: () => ({
+        ...Activity.data(),
+        periodLength: 'interval',
+        date: '2026-10-20T17:00:00Z..2026-10-20T18:00:00Z',
+        activityStore: { ensure_loaded: jest.fn().mockResolvedValue(undefined) },
+      }),
+      computed: {
+        exactInterval: Activity.computed.exactInterval,
+        timeperiod: Activity.computed.timeperiod,
+        todayDate: Activity.computed.todayDate,
+        nextDisabled: Activity.computed.nextDisabled,
+      },
+      methods: { refresh: Activity.methods.refresh },
+    });
+    expect(vm.nextDisabled).toBe(true);
+    jest.setSystemTime(new Date('2026-10-20T18:01:00Z'));
+    await vm.refresh(true);
+    expect(vm.activityStore.ensure_loaded).toHaveBeenCalledTimes(1);
+    expect(vm.nextDisabled).toBe(false);
+    vm.$destroy();
+  });
+
   test('the label shows times, not a date-only day', () => {
     const vm = makeVm('interval', SEGMENT);
     expect(vm.periodReadableRange).toMatch(/\d{2}:\d{2}:\d{2}/);
@@ -124,7 +151,7 @@ describe('Activity exact interval period', () => {
     test('pushes the new start with the other end unchanged', () => {
       const pushPeriod = jest.fn();
       const vm = makeVm('interval', SEGMENT, { pushPeriod });
-      vm.editInterval('start', '2026-10-20T12:00');
+      vm.editInterval('start', vm.instantToWall('2026-10-20T12:00:00Z'));
       expect(vm.intervalIssue).toBeNull();
       expect(pushPeriod).toHaveBeenCalledTimes(1);
       const [, segment] = pushPeriod.mock.calls[0];
@@ -134,7 +161,7 @@ describe('Activity exact interval period', () => {
     test('rejects an end that is not after the start', () => {
       const pushPeriod = jest.fn();
       const vm = makeVm('interval', SEGMENT, { pushPeriod });
-      vm.editInterval('end', '2026-10-20T10:00');
+      vm.editInterval('end', vm.instantToWall('2026-10-20T10:00:00Z'));
       expect(pushPeriod).not.toHaveBeenCalled();
       expect(vm.intervalIssue.message).toBe('activity.intervalEndAfterStart');
     });

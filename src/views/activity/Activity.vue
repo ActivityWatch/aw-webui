@@ -446,6 +446,7 @@ export default {
       earliestDate: null,
       // Problem with the last exact start/end edit (nonexistent or repeated DST time, bad order)
       intervalIssue: null,
+      navigationNow: Date.now(),
 
       include_audible: true,
       // Include stopwatch events when a stopwatch bucket exists. The
@@ -628,7 +629,9 @@ export default {
     nextDisabled: function () {
       const today = this.todayDate;
       if (this.exactInterval) {
-        return moment(shiftExactInterval(this.exactInterval, 1).start).isSameOrAfter(moment());
+        return moment(shiftExactInterval(this.exactInterval, 1).start).isSameOrAfter(
+          this.navigationNow
+        );
       }
       if (this.dateRange) {
         return shiftDateRange(this.dateRange, 1).start > today;
@@ -1067,6 +1070,8 @@ export default {
     },
 
     refresh: async function (force) {
+      // Invalidate the cached navigation boundary when refreshing newly recorded activity.
+      this.navigationNow = Date.now();
       if (force && this.periodLength === 'all') {
         // Cancel the running All time query now rather than after the lookup
         getClient().abort();
