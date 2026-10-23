@@ -112,7 +112,7 @@ export const defaultCategories: Category[] = [
     rule: {
       type: 'regex',
       regex:
-        'GitHub|Stack Overflow|BitBucket|Gitlab|vim|Spyder|kate|Ghidra|Scite|iTerm|Visual Studio Code',
+        'GitHub|Stack Overflow|BitBucket|Gitlab|vim|Spyder|^kate$|Ghidra|Scite|iTerm|Visual Studio Code',
     },
   },
   {
