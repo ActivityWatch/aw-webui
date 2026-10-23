@@ -177,6 +177,34 @@ describe('sunburst-clock category colors', () => {
     expect(renderColors({ app: 'firefox', title: 'Movie' }).window).toBe('#654321');
   });
 
+  test.each([
+    ['app', { app: 'Chrome', title: 'Firefox docs' }],
+    ['title', { app: 'Firefox', title: 'Other docs' }],
+  ])('does not match a category outside its selected %s field', (field, windowData) => {
+    jest.spyOn(classes, 'loadClasses').mockReturnValue([
+      {
+        name: ['Browser'],
+        rule: { type: 'regex', regex: 'Firefox', select_keys: [field] },
+        data: { color: '#abcdef' },
+      },
+    ]);
+    expect(renderColors(windowData).window).toBe('#CCC');
+  });
+
+  test.each([
+    ['app', { app: 'Firefox', title: 'Other docs' }],
+    ['title', { app: 'Chrome', title: 'Firefox docs' }],
+  ])('matches a category within its selected %s field', (field, windowData) => {
+    jest.spyOn(classes, 'loadClasses').mockReturnValue([
+      {
+        name: ['Browser'],
+        rule: { type: 'regex', regex: 'Firefox', select_keys: [field] },
+        data: { color: '#abcdef' },
+      },
+    ]);
+    expect(renderColors(windowData).window).toBe('#abcdef');
+  });
+
   test('respects the existing uncategorized fallback setting', () => {
     expect(renderColors({ app: 'unknown-app', title: 'unmatched' }).window).toBe('#CCC');
     localStorage.useColorFallback = 'true';
