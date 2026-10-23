@@ -30,11 +30,17 @@ describeWithServer('browser regex matching through the server', () => {
       if (response.ok) {
         setSupportsMergeSubwatcherFields(true);
       } else {
-        // VariableNotDefined is the expected response from an unsupported server.
-        // Any other non-OK response (5xx, auth error, …) is unexpected — record it
-        // so enrichment tests fail rather than silently skip.
+        // An unsupported server rejects the unknown function: aw-server-rust with
+        // VariableNotDefined, aw-server (Python) with QueryInterpretException
+        // "Tried to call function '…' which doesn't exist". Any other non-OK
+        // response (5xx, auth error, …) is unexpected — record it so enrichment
+        // tests fail rather than silently skip.
         const body = await response.text();
-        if (body.includes('VariableNotDefined')) {
+        const unsupported =
+          body.includes('VariableNotDefined') ||
+          (body.includes('QueryInterpretException') &&
+            body.includes("'merge_subwatcher_fields' which doesn't exist"));
+        if (unsupported) {
           setSupportsMergeSubwatcherFields(false);
         } else {
           probeError = new Error(`Unexpected probe response ${response.status}: ${body}`);
