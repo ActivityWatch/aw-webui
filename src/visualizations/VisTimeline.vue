@@ -53,6 +53,11 @@ div#visualization {
       padding-right: 0.5em;
     }
 
+    th.timeline-composite-activity {
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+
     td {
       vertical-align: top;
     }
@@ -304,9 +309,9 @@ export default {
           .sort((a, b) => b[1] - a[1])
           .map(
             ([label, duration]) =>
-              `<tr><th>${_.escape(label)}</th><td>${_.escape(
-                this.formatGroupDuration(duration)
-              )}</td></tr>`
+              `<tr><th class="timeline-composite-activity" scope="row">${_.escape(
+                label
+              )}</th><td>${_.escape(this.formatGroupDuration(duration))}</td></tr>`
           )
           .join('');
         return `<table><caption>${_.escape(

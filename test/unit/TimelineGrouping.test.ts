@@ -64,6 +64,22 @@ test('hover breakdown sums each activity and escapes untrusted app labels', () =
   expect(tooltip).toContain('<td>2s</td>');
 });
 
+test('composite activity headers support wrapping without changing ordinary tooltip labels', () => {
+  const vm = makeVm();
+  const label = 'a'.repeat(500);
+  vm.bucketsFromEither[0].events[0].data.app = label;
+  vm.update();
+  const container = document.createElement('div');
+  container.innerHTML = vm.tooltipForItem(vm.items[0].id);
+  const header = [...container.querySelectorAll('th')].find(cell => cell.textContent === label);
+  expect(header).toBeDefined();
+  expect(header.classList.contains('timeline-composite-activity')).toBe(true);
+  expect(header.getAttribute('scope')).toBe('row');
+
+  const raw = makeVm(0);
+  expect(raw.tooltipForItem(raw.items[0].id)).not.toContain('timeline-composite-activity');
+});
+
 test('composite breakdown preserves subsecond activity totals', () => {
   const vm = makeVm(1, 0.5);
   const tooltip = vm.tooltipForItem(vm.items[0].id);
