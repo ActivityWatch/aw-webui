@@ -108,7 +108,7 @@ export const defaultCategories: Category[] = [
     name: ['Work', 'Programming'],
     rule: {
       type: 'regex',
-      regex: 'GitHub|Stack Overflow|BitBucket|Gitlab|vim|Spyder|kate|Ghidra|Scite',
+      regex: 'GitHub|Stack Overflow|BitBucket|Gitlab|vim|Spyder|^kate$|Ghidra|Scite',
     },
   },
   {
