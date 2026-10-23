@@ -497,6 +497,7 @@ export default {
     aboutBody:
       'Track manually-logged sessions alongside automatic tracking. To see your stopwatch totals on a dashboard, open an Activity view, click Edit view, then Add visualization and pick Top Stopwatch Events.',
     placeholder: 'What are you working on?',
+    tagsLabel: 'Tags (comma-separated)',
     noRunning: 'No stopwatch running. Start one above to track focused work.',
     start: 'Start',
     running: 'Running',

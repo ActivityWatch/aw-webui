@@ -510,6 +510,7 @@ export default {
     aboutBody:
       'Registre sesiones manualmente junto al seguimiento automático. Para ver los totales del cronómetro en un panel, abra una vista de Actividad, haga clic en Editar vista, luego en Añadir visualización y elija Eventos de cronómetro principales.',
     placeholder: '¿En qué está trabajando?',
+    tagsLabel: 'Etiquetas (separadas por comas)',
     noRunning:
       'No hay ningún cronómetro en marcha. Inicie uno arriba para registrar trabajo concentrado.',
     start: 'Iniciar',

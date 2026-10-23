@@ -508,6 +508,7 @@ export default {
     aboutBody:
       'Fuatilia vikao vilivyorekodiwa kwa mkono pamoja na ufuatiliaji wa kiotomatiki. Kuona jumla za saa yako ya kuhesabu kwenye dashibodi, fungua mwonekano wa Shughuli, bonyeza Hariri mwonekano, kisha Ongeza uonyeshaji na chagua Matukio ya Saa ya Kuhesabu ya Juu.',
     placeholder: 'Unafanya kazi kwenye nini?',
+    tagsLabel: 'Lebo (zimetenganishwa kwa koma)',
     noRunning:
       'Hakuna saa ya kuhesabu inayoendesha. Anzisha moja hapo juu kufuatilia kazi iliyozingatia.',
     start: 'Anzisha',

@@ -506,6 +506,7 @@ export default {
     aboutBody:
       'Spåra manuellt loggade sessioner tillsammans med automatisk spårning. Om du vill se stoppurssummor på en instrumentpanel öppnar du en aktivitetsvy, klickar på Redigera vy, sedan Lägg till visualisering och väljer Vanligaste stoppurshändelserna.',
     placeholder: 'Vad arbetar du med?',
+    tagsLabel: 'Taggar (kommaseparerade)',
     noRunning: 'Inget stoppur körs. Starta ett ovan för att registrera fokuserat arbete.',
     start: 'Starta',
     running: 'Körs',

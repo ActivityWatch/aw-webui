@@ -515,6 +515,7 @@ export default {
     aboutBody:
       'Suivez des sessions saisies manuellement en complément du suivi automatique. Pour voir vos totaux de chronomètre sur un tableau de bord, ouvrez une vue Activité, cliquez sur Modifier la vue, puis sur Ajouter une visualisation et choisissez Événements de chronomètre principaux.',
     placeholder: 'Sur quoi travaillez-vous ?',
+    tagsLabel: 'Étiquettes (séparées par des virgules)',
     noRunning:
       'Aucun chronomètre en cours. Lancez-en un ci-dessus pour suivre un travail concentré.',
     start: 'Démarrer',
