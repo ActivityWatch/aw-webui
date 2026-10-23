@@ -21,6 +21,13 @@ div
       style="width: auto"
     )
 
+    b-form-group.mr-2.mb-1(:label="$t('activity.showCategory')" label-for="trends-category")
+      b-form-select#trends-category(
+        v-model="selectedCategory"
+        :options="categoryStore.category_select(true, $t.bind(this))"
+        size="sm"
+      )
+
     small.text-muted.ml-auto.mb-1
       | {{ $t('ui.trends.comparing') }} #[b {{ currentRangeLabel }}] {{ $t('ui.trends.vs') }} #[b {{ previousRangeLabel }}]
 
@@ -124,6 +131,7 @@ export default {
       settingsStore: useSettingsStore(),
 
       periodDays: 7,
+      selectedCategory: null as string[] | null,
 
       loading: false,
 
@@ -147,6 +155,15 @@ export default {
         { value: 30, text: this.$t('ui.trends.period30d') },
         { value: 90, text: this.$t('ui.trends.period90d') },
       ];
+    },
+
+    filterCategories(): string[][] | null {
+      if (!this.selectedCategory) return null;
+      const selected = this.selectedCategory;
+      const descendants = this.categoryStore.all_categories.filter(
+        path => path.length > selected.length && selected.every((part, i) => path[i] === part)
+      );
+      return [selected, ...descendants];
     },
 
     categoryFields(): object[] {
@@ -285,6 +302,9 @@ export default {
   },
 
   watch: {
+    selectedCategory() {
+      this.refresh();
+    },
     host() {
       this.refresh();
     },
@@ -444,7 +464,7 @@ export default {
           ...this.bucketsStore.desktopBucketIds(host),
           filter_afk: true,
           categories: cats,
-          filter_categories: null,
+          filter_categories: this.filterCategories,
           always_active_pattern: this.settingsStore.always_active_pattern || undefined,
         }) +
         `
