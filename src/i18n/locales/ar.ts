@@ -95,6 +95,9 @@ export default {
     timelineDuration: {
       title: 'القيمة الافتراضية للمدة',
       help: 'المدة الافتراضية المستخدمة لخيار "عرض آخر" في عرض الجدول الزمني.',
+      groupGranularity: 'تجميع الأحداث القصيرة (بالثواني)',
+      groupGranularityHelp:
+        'يجمع الأحداث القصيرة المتتالية في مجموعات بهذه المدة. اضبط القيمة على 0 لإيقاف التجميع. يظل مرشّح المدة في الخط الزمني مستقلاً ويزيل الأحداث قبل التجميع.',
     },
     landingPage: {
       title: 'صفحة البداية',
@@ -923,6 +926,9 @@ export default {
       none: 'بلا',
       groupByCategory: 'التجميع حسب الفئة',
       groupByBucketType: 'التجميع حسب نوع الـ bucket',
+      groupedEvents: '{count} أحداث · {duration}',
+      collapseGroups: 'طي المجموعات',
+      groupBreakdown: 'تفصيل الأنشطة',
       totalTime: 'الوقت الإجمالي',
       bucketsNoEvents: 'ستُخفى الـ buckets التي لا تحتوي على أحداث في النطاق المستعلم عنه.',
       editSaved: 'تم حفظ تعديلك. حدّث المخطط الزمني لرؤية التغيير.',

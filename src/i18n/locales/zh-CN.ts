@@ -112,6 +112,9 @@ export default {
     timelineDuration: {
       title: '默认时长',
       help: '时间线视图中“显示最近”默认使用的时长。',
+      groupGranularity: '合并短事件（秒）',
+      groupGranularityHelp:
+        '将连续的短事件合并为此时长的组。设为 0 可关闭分组。时间线的时长过滤器独立生效，并在分组前移除事件。',
     },
     releaseNotification: {
       title: '新版本通知',
@@ -901,6 +904,9 @@ export default {
       none: '无',
       groupByCategory: '按分类分组',
       groupByBucketType: '按存储桶类型分组',
+      groupedEvents: '{count} 个事件 · {duration}',
+      collapseGroups: '折叠分组',
+      groupBreakdown: '活动明细',
       totalTime: '总时长',
       bucketsNoEvents: '查询范围内没有事件的存储桶将被隐藏。',
       editSaved: '编辑已保存。刷新时间线后即可看到更新。',

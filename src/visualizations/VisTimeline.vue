@@ -1,5 +1,6 @@
 <template lang="pug">
   div
+    button.btn.btn-sm.btn-outline-secondary(v-if="expandedGroups.length" type="button" @click="collapseGroups") {{ $t('ui.timeline.collapseGroups') }}
     div#visualization
 
     div.small.text-muted.my-2(v-if="bucketsFromEither.length != 1")
@@ -17,6 +18,17 @@ div#visualization {
 
   .vis-timeline {
     overflow: visible;
+  }
+
+  .vis-item.timeline-composite {
+    color: white;
+    background-image: repeating-linear-gradient(
+      135deg,
+      transparent,
+      transparent 5px,
+      rgba(255, 255, 255, 0.12) 5px,
+      rgba(255, 255, 255, 0.12) 10px
+    );
   }
 
   .vis-tooltip {
@@ -39,6 +51,11 @@ div#visualization {
       overflow-wrap: normal;
       vertical-align: top;
       padding-right: 0.5em;
+    }
+
+    th.timeline-composite-activity {
+      white-space: normal;
+      overflow-wrap: anywhere;
     }
 
     td {
@@ -74,6 +91,7 @@ import _ from 'lodash';
 import { markRaw } from 'vue';
 import Color from 'color';
 import { buildTooltip } from '../util/tooltip';
+import { seconds_to_duration } from '../util/time';
 import { getCategoryColorFromEvent, getColorFromCategory, getTitleAttr } from '../util/color';
 import { useCategoryStore } from '~/stores/categories';
 import { getSwimlane } from '../util/swimlane';
@@ -108,6 +126,7 @@ export default {
     showQueriedInterval: { type: Boolean },
     swimlane: { type: String },
     updateTimelineWindow: { type: Boolean },
+    groupGranularity: { type: Number, default: 0 },
   },
   data() {
     return {
@@ -135,6 +154,7 @@ export default {
       editingEvent: null,
       editingEventBucket: null,
       eventOverrides: {} as Record<string, IEvent>,
+      expandedGroups: [] as string[],
       pendingWindowRestore: null as { start: Date; end: Date } | null,
 
       updateHasRun: false,
@@ -164,14 +184,25 @@ export default {
         rows.unshift({ id: CATEGORIZED_ROW, type: 'categorized', events: this.categorizedEvents });
       }
       // The derived category row keeps subsecond intervals, as they are already merged.
+      const seconds =
+        Number.isFinite(this.groupGranularity) && this.groupGranularity > 0
+          ? this.groupGranularity
+          : 0;
+      const granularity = bucket => (bucket.id === CATEGORIZED_ROW ? 0 : seconds);
       return indexTimelineEvents(
         rows,
-        bucket => this.filterShortEvents && bucket.id !== CATEGORIZED_ROW,
-        (bucketId, event) => this.displayEvent(bucketId, event)
+        bucket => this.filterShortEvents && bucket.id !== CATEGORIZED_ROW && !granularity(bucket),
+        (bucketId, event) => this.displayEvent(bucketId, event),
+        granularity,
+        this.expandedGroups
       );
     },
   },
   watch: {
+    groupGranularity() {
+      this.expandedGroups = [];
+      this.update(false);
+    },
     categorizedEvents() {
       this.update();
     },
@@ -183,6 +214,7 @@ export default {
       }
 
       this.eventOverrides = {};
+      this.expandedGroups = [];
       this.update();
     },
     events() {
@@ -191,6 +223,7 @@ export default {
       }
 
       this.eventOverrides = {};
+      this.expandedGroups = [];
       this.update();
     },
   },
@@ -239,6 +272,12 @@ export default {
     }
   },
   methods: {
+    formatGroupDuration(duration: number): string {
+      const seconds = Number(duration.toFixed(6));
+      return Number.isInteger(seconds)
+        ? seconds_to_duration(seconds)
+        : `${seconds}${this.$t('common.durationSeconds')}`;
+    },
     scheduleViewportUpdate() {
       if (this.viewportFrame != null) return;
       this.viewportFrame = requestAnimationFrame(() => {
@@ -258,6 +297,27 @@ export default {
         );
       }
       const item = this.itemEvents.get(id);
+      if (item?.members) {
+        const totals = new Map<string, number>();
+        for (const member of item.members) {
+          const label = String(
+            getTitleAttr(item.bucket, member.event) || JSON.stringify(member.event.data)
+          );
+          totals.set(label, (totals.get(label) || 0) + member.event.duration);
+        }
+        const rows = [...totals]
+          .sort((a, b) => b[1] - a[1])
+          .map(
+            ([label, duration]) =>
+              `<tr><th class="timeline-composite-activity" scope="row">${_.escape(
+                label
+              )}</th><td>${_.escape(this.formatGroupDuration(duration))}</td></tr>`
+          )
+          .join('');
+        return `<table><caption>${_.escape(
+          this.$t('ui.timeline.groupBreakdown')
+        )}</caption>${rows}</table>`;
+      }
       return item ? buildTooltip({ ...item.bucket, type: item.bucket.type || '' }, item.event) : '';
     },
     onHorizontalWheel: function (event: WheelEvent) {
@@ -306,6 +366,11 @@ export default {
       } else if (properties.items.length == 1) {
         const selected = this.itemEvents.get(properties.items[0]);
         if (!selected) return;
+        if (selected.members) {
+          this.expandedGroups = [...this.expandedGroups, selected.id];
+          this.update(false);
+          return;
+        }
         const event = selected.event;
         const bucketId = selected.bucket.id;
 
@@ -337,6 +402,10 @@ export default {
       // labels directly via formatTimelineBucketLabelHtml so it can pass
       // the multi-host hint.
       return formatTimelineBucketLabelHtml(bucketId);
+    },
+    collapseGroups() {
+      this.expandedGroups = [];
+      this.update(false);
     },
     ensureUpdate() {
       // Will only run update() if data available and never ran before
@@ -471,7 +540,9 @@ export default {
         if (!resetWindow && this.preparedItems.has(item.id)) return this.preparedItems.get(item.id);
         const categorized = item.bucket.id === CATEGORIZED_ROW;
         const name = item.event.data.$category;
-        const color = categorized
+        const color = item.members
+          ? '#777'
+          : categorized
           ? getColorFromCategory(
               allCats.find(c => _.isEqual(c.name, name)),
               allCats
@@ -481,14 +552,22 @@ export default {
         return {
           id: item.id,
           group: item.bucket.id,
-          content: categorized ? name.join(' > ') : getTitleAttr(item.bucket, item.event),
+          content: item.members
+            ? this.$t('ui.timeline.groupedEvents', {
+                count: item.members.length,
+                duration: this.formatGroupDuration(item.event.duration),
+              })
+            : categorized
+            ? name.join(' > ')
+            : getTitleAttr(item.bucket, item.event),
           start: item.start,
           end: item.end,
           style: `background-color: ${color}; border-color: ${colors.get(color)}`,
+          className: item.members ? 'timeline-composite' : '',
           // Only with swimlanes: vis-timeline re-measures a subgroup on every
           // item removed from it, which makes large removals quadratic.
           subgroup:
-            this.swimlane && !categorized
+            this.swimlane && !categorized && !item.members
               ? getSwimlane(item.bucket, color, this.swimlane, item.event)
               : undefined,
         };
