@@ -41,7 +41,17 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
           b-input(v-if="typeof event.data[k] === 'number'", v-model.number="editedEvent.data[k]", :disabled="busy", size="sm", type="number")
 
     b-form-group.mt-2(v-if="editableTags" :label="$t('stopwatch.tagsLabel')" :label-for="'event-tags-' + event.id")
-      b-input(:id="'event-tags-' + event.id" data-testid="event-tags" v-model="tagsText" :disabled="busy")
+      b-form-tags(
+        :input-id="'event-tags-' + event.id"
+        :input-attrs="{ 'data-testid': 'event-tags' }"
+        v-model="tags"
+        :disabled="busy"
+        separator=","
+        add-on-change
+        :placeholder="$t('stopwatch.tagsLabel')"
+        :add-button-text="$t('ui.activity.add')"
+        :tag-remove-label="$t('activityView.remove')"
+      )
 
     hr
 
@@ -72,7 +82,6 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
 
 import moment from 'moment';
 import _ from 'lodash';
-import { parseTags } from '../util/tags';
 
 import 'vue-awesome/icons/times';
 import 'vue-awesome/icons/save';
@@ -92,7 +101,7 @@ export default {
       draftSource: null,
       loadSequence: 0,
       disposed: false,
-      tagsText: '',
+      tags: [],
       // Name of the mutation in flight ('save' / 'delete'), else null.
       pending: null,
       error: '',
@@ -161,15 +170,9 @@ export default {
       // Capture before any async suspension: another selection can change
       // this.editedEvent or this.bucket_id while replaceEvent is in-flight.
       const savedEvent = _.cloneDeep(this.editedEvent);
-      if (this.editableTags) {
-        const originalJoined = Array.isArray(this.editedEvent?.data?.tags)
-          ? this.editedEvent.data.tags.join(', ')
-          : '';
-        savedEvent.data.tags =
-          this.tagsText !== originalJoined
-            ? parseTags(this.tagsText)
-            : this.editedEvent?.data?.tags ?? [];
-      }
+      // Edit the array directly: joining and reparsing would split existing
+      // tag names containing commas when an unrelated tag is added or removed.
+      if (this.editableTags) savedEvent.data.tags = [...this.tags];
       const bucketId = this.bucket_id;
       await this.runMutation('save', savedEvent, bucketId, () =>
         this.$aw.replaceEvent(bucketId, savedEvent)
@@ -246,7 +249,7 @@ export default {
       this.editedEvent = null;
       this.draftIdentity = null;
       this.draftSource = null;
-      this.tagsText = '';
+      this.tags = [];
       this.error = '';
       if (!identity || this.disposed) return;
       const bucketId = this.bucket_id;
@@ -257,9 +260,9 @@ export default {
         const event = await this.$aw.getEvent(bucketId, eventId);
         if (stillSelected()) {
           this.editedEvent = event;
-          this.tagsText = Array.isArray(this.editedEvent.data.tags)
-            ? this.editedEvent.data.tags.join(', ')
-            : '';
+          this.tags = Array.isArray(this.editedEvent.data.tags)
+            ? [...this.editedEvent.data.tags]
+            : [];
           this.draftIdentity = identity;
           this.draftSource = source.event;
         }
