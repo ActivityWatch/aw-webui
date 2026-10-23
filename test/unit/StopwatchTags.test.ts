@@ -133,8 +133,13 @@ describe('Stopwatch tags editor', () => {
       await openEditor(wrapper);
       const input = document.querySelector('[data-testid="event-tags"]') as HTMLInputElement;
       expect(input).not.toBeNull();
+      for (const button of Array.from(document.querySelectorAll('.b-form-tag-remove'))) {
+        (button as HTMLButtonElement).click();
+      }
+      await wrapper.vm.$nextTick();
       input.value = ' work, deep focus, , reading ';
       input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
       await wrapper.vm.$nextTick();
       await wrapper.vm.save();
       const saved = aw.replaceEvent.mock.calls[0][1];
@@ -147,12 +152,61 @@ describe('Stopwatch tags editor', () => {
     }
   );
 
+  test('adding a tag preserves existing comma-containing tag boundaries', async () => {
+    const past = timer(['research, development', 'work']);
+    const original = JSON.stringify(past);
+    const { wrapper, aw } = editor(past);
+    await openEditor(wrapper);
+    const input = document.querySelector('[data-testid="event-tags"]') as HTMLInputElement;
+    input.value = 'urgent';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.save();
+    expect(aw.replaceEvent.mock.calls[0][1].data.tags).toEqual([
+      'research, development',
+      'work',
+      'urgent',
+    ]);
+    expect(JSON.stringify(past)).toBe(original);
+    wrapper.destroy();
+  });
+
+  test('removing another tag preserves comma-containing tags', async () => {
+    const { wrapper, aw } = editor(timer(['research, development', 'work']));
+    await openEditor(wrapper);
+    const buttons = document.querySelectorAll('.b-form-tag-remove');
+    (buttons[1] as HTMLButtonElement).click();
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.save();
+    expect(aw.replaceEvent.mock.calls[0][1].data.tags).toEqual(['research, development']);
+    wrapper.destroy();
+  });
+
+  test('editing only the label preserves original tag identities', async () => {
+    const tags = ['research, development', 'work'];
+    const { wrapper, aw } = editor(timer(tags));
+    await openEditor(wrapper);
+    await wrapper.setData({
+      editedEvent: {
+        ...wrapper.vm.editedEvent,
+        data: {
+          ...wrapper.vm.editedEvent.data,
+          label: 'Renamed',
+        },
+      },
+    });
+    await wrapper.vm.save();
+    expect(aw.replaceEvent.mock.calls[0][1].data).toMatchObject({ label: 'Renamed', tags });
+    wrapper.destroy();
+  });
+
   test('allows clearing all tags', async () => {
     const { wrapper, aw } = editor(timer(['old']));
     await openEditor(wrapper);
-    const input = document.querySelector('[data-testid="event-tags"]') as HTMLInputElement;
-    input.value = ' , ';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    for (const button of Array.from(document.querySelectorAll('.b-form-tag-remove'))) {
+      (button as HTMLButtonElement).click();
+    }
     await wrapper.vm.$nextTick();
     await wrapper.vm.save();
     expect(aw.replaceEvent.mock.calls[0][1].data.tags).toEqual([]);
