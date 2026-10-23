@@ -134,7 +134,15 @@ export default {
       // Capture before any async suspension: another selection can change
       // this.editedEvent or this.bucket_id while replaceEvent is in-flight.
       const savedEvent = _.cloneDeep(this.editedEvent);
-      if (this.editableTags) savedEvent.data.tags = parseTags(this.tagsText);
+      if (this.editableTags) {
+        const originalJoined = Array.isArray(this.editedEvent?.data?.tags)
+          ? this.editedEvent.data.tags.join(', ')
+          : '';
+        savedEvent.data.tags =
+          this.tagsText !== originalJoined
+            ? parseTags(this.tagsText)
+            : this.editedEvent?.data?.tags ?? [];
+      }
       const bucketId = this.bucket_id;
       await this.runMutation('save', savedEvent, bucketId, () =>
         this.$aw.replaceEvent(bucketId, savedEvent)
