@@ -1377,6 +1377,7 @@ export const useActivityStore = defineStore('activity', {
       // Resets the store state while waiting for new query to finish
       this.window.top_apps = null;
       this.window.top_titles = null;
+      this.window.host_durations = [];
 
       this.browser.duration = 0;
       this.browser.top_domains = null;

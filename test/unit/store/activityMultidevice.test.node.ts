@@ -186,3 +186,39 @@ describe('multidevice path for custom ranges and All time', () => {
     expect(s.query_category_time_by_period).not.toHaveBeenCalled();
   });
 });
+
+describe('per-device duration loading lifecycle', () => {
+  beforeEach(() => setActivePinia(createPinia()));
+
+  test('clears the previous breakdown immediately when a new selection starts loading', () => {
+    const store = useActivityStore();
+    store.query_window_completed({
+      app_events: [],
+      title_events: [],
+      duration: 15,
+      host_durations: [
+        { host: 'desktop', duration: 10, overlap: 0 },
+        { host: 'phone', duration: 5, overlap: 3 },
+      ],
+    });
+    expect(store.window.host_durations).toHaveLength(2);
+
+    store.start_loading({ host: 'desktop,tablet' } as any);
+
+    expect(store.active.duration).toBeNull();
+    expect(store.window.host_durations).toEqual([]);
+
+    // Only a completed query may populate the replacement devices/durations.
+    store.query_window_completed({
+      app_events: [],
+      title_events: [],
+      duration: 7,
+      host_durations: [
+        { host: 'desktop', duration: 4, overlap: 0 },
+        { host: 'tablet', duration: 3, overlap: 0 },
+      ],
+    });
+    expect(store.window.host_durations.map(row => row.host)).toEqual(['desktop', 'tablet']);
+    expect(store.active.duration).toBe(7);
+  });
+});
