@@ -262,6 +262,7 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
     // base_wins preserves the url already present in window events on macOS
     // (aw-watcher-window writes url natively for supported browsers).
     isDesktopParams(params) &&
+    params.categories &&
     params.bid_browsers &&
     params.bid_browsers.length > 0 &&
     supportsMergeSubwatcherFields()

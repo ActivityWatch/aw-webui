@@ -816,6 +816,16 @@ describe('canonicalEvents URL enrichment via merge_subwatcher_fields', () => {
     expect(categorizeIdx).toBeGreaterThan(mergeIdx);
   });
 
+  test('omits browser enrichment when categorization is disabled', () => {
+    const query = canonicalEvents({
+      ...baseParams,
+      bid_browsers: ['aw-watcher-web-chrome_testhost'],
+      categories: null,
+    });
+    expect(query).not.toContain('merge_subwatcher_fields');
+    expect(query).not.toContain('events = categorize(');
+  });
+
   test('omits merge_subwatcher_fields when the server lacks the function', () => {
     setSupportsMergeSubwatcherFields(false);
     const query = canonicalEvents({
