@@ -795,7 +795,7 @@ describe('canonicalEvents URL enrichment via merge_subwatcher_fields', () => {
       bid_browsers: ['aw-watcher-web-chrome_testhost'],
     });
     expect(query).toContain(
-      'events = merge_subwatcher_fields(events, exclude_keyvals(browser_events, "incognito", [true]), ["url", "$domain"], "base_wins");'
+      'events = merge_subwatcher_fields(events, exclude_keyvals(browser_events, "incognito", [true]), ["url"], "base_wins");'
     );
   });
 
@@ -809,6 +809,9 @@ describe('canonicalEvents URL enrichment via merge_subwatcher_fields', () => {
     const stopwatchIdx = query.indexOf('events = union_no_overlap(stopwatch_events, events);');
     const mergeIdx = query.indexOf('events = merge_subwatcher_fields(');
     const categorizeIdx = query.indexOf('events = categorize(');
+    const splitIdx = query.indexOf('events = split_url_events(events);');
+    expect(splitIdx).toBeGreaterThan(mergeIdx);
+    expect(splitIdx).toBeLessThan(stopwatchIdx);
     expect(stopwatchIdx).toBeGreaterThan(0);
     // merge must happen BEFORE the stopwatch union to avoid splitting user-tracked stopwatch time
     expect(mergeIdx).toBeGreaterThan(0);

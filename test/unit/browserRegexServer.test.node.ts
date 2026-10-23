@@ -1,7 +1,8 @@
-import { fullDesktopQuery } from '~/queries';
+import { canonicalEvents, fullDesktopQuery } from '~/queries';
 import {
   MERGE_SUBWATCHER_FIELDS_PROBE_QUERY,
   setSupportsMergeSubwatcherFields,
+  supportsMergeSubwatcherFields,
 } from '~/util/serverCapabilities';
 
 // CI runs this against both supported servers; local unit runs need no server.
@@ -29,6 +30,67 @@ describeWithServer('browser regex matching through the server', () => {
   });
 
   afterAll(() => setSupportsMergeSubwatcherFields(false));
+
+  test.each([
+    ['https://native.example/page', 'https://native.example/page', 'native.example'],
+    [undefined, 'https://browser.example/page', 'browser.example'],
+    ['not a valid URL', 'not a valid URL', undefined],
+  ])('derives the domain from the chosen window URL %s', async (nativeUrl, url, domain) => {
+    // This regression needs the new backend function, unlike the compatibility
+    // cases below that also run against the supported server floor.
+    if (!supportsMergeSubwatcherFields()) return;
+    const suffix = `url-domain-${process.pid}-${Date.now()}`;
+    const windowBucket = `aw-watcher-window_${suffix}`;
+    const browserBucket = `aw-watcher-web-chrome_${suffix}`;
+    const created: string[] = [];
+    const windowData: Record<string, string> = { app: 'Google Chrome', title: 'Native page' };
+    if (nativeUrl !== undefined) windowData.url = nativeUrl;
+    try {
+      for (const [id, type, data] of [
+        [windowBucket, 'currentwindow', windowData],
+        [browserBucket, 'web.tab.current', { url: 'https://browser.example/page' }],
+      ] as const) {
+        await request(`/buckets/${id}`, 'POST', {
+          client: 'aw-webui-regression-test',
+          type,
+          hostname: suffix,
+        });
+        created.push(id);
+        await request(`/buckets/${id}/events`, 'POST', [
+          {
+            timestamp: '2026-01-01T12:00:00Z',
+            duration: 60,
+            data,
+          },
+        ]);
+      }
+      const query = canonicalEvents({
+        bid_window: windowBucket,
+        bid_afk: '',
+        bid_browsers: [browserBucket],
+        filter_afk: false,
+        include_audible: false,
+        categories: [],
+        filter_categories: [],
+      });
+      const result = await request('/query/', 'POST', {
+        timeperiods: ['2026-01-01T12:00:00Z/2026-01-01T12:01:00Z'],
+        query: [query, 'RETURN = events;'],
+      });
+      expect(result[0]).toHaveLength(1);
+      expect(result[0][0].duration).toBe(60);
+      expect(result[0][0].data.url).toBe(url);
+      if (domain === undefined) {
+        // Python's parser emits an empty domain for malformed URLs; Rust
+        // leaves it absent. Neither may retain the other page's domain.
+        expect(result[0][0].data.$domain).toBeFalsy();
+      } else {
+        expect(result[0][0].data.$domain).toBe(domain);
+      }
+    } finally {
+      for (const id of created) await request(`/buckets/${id}`, 'DELETE');
+    }
+  });
 
   async function request(path: string, method: string, body?: unknown): Promise<any> {
     const response = await fetch(`${server}/api/0${path}`, {
