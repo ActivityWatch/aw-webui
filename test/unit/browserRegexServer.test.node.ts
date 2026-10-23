@@ -10,6 +10,10 @@ const server = process.env.AW_QUERY_TEST_SERVER_URL;
 const describeWithServer = server ? describe : describe.skip;
 
 describeWithServer('browser regex matching through the server', () => {
+  // Tracks unexpected probe failures so enrichment tests fail loudly instead of
+  // silently skipping (e.g. a transient HTTP 500 looks like "unsupported" without this).
+  let probeError: Error | null = null;
+
   // Older servers (the supported floor) lack merge_subwatcher_fields; enabling
   // the capability only when the server resolves it keeps this suite green
   // there while still exercising URL enrichment against newer servers.
@@ -23,8 +27,22 @@ describeWithServer('browser regex matching through the server', () => {
           query: [MERGE_SUBWATCHER_FIELDS_PROBE_QUERY],
         }),
       });
-      setSupportsMergeSubwatcherFields(response.ok);
-    } catch {
+      if (response.ok) {
+        setSupportsMergeSubwatcherFields(true);
+      } else {
+        // VariableNotDefined is the expected response from an unsupported server.
+        // Any other non-OK response (5xx, auth error, …) is unexpected — record it
+        // so enrichment tests fail rather than silently skip.
+        const body = await response.text();
+        if (body.includes('VariableNotDefined')) {
+          setSupportsMergeSubwatcherFields(false);
+        } else {
+          probeError = new Error(`Unexpected probe response ${response.status}: ${body}`);
+          setSupportsMergeSubwatcherFields(false);
+        }
+      }
+    } catch (e) {
+      probeError = e instanceof Error ? e : new Error(String(e));
       setSupportsMergeSubwatcherFields(false);
     }
   });
@@ -38,6 +56,7 @@ describeWithServer('browser regex matching through the server', () => {
   ])('derives the domain from the chosen window URL %s', async (nativeUrl, url, domain) => {
     // This regression needs the new backend function, unlike the compatibility
     // cases below that also run against the supported server floor.
+    if (probeError) throw probeError;
     if (!supportsMergeSubwatcherFields()) return;
     const suffix = `url-domain-${process.pid}-${Date.now()}`;
     const windowBucket = `aw-watcher-window_${suffix}`;
