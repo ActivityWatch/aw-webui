@@ -401,6 +401,16 @@ export default {
     rangeStart: 'آغاز کی تاریخ',
     rangeEnd: 'اختتام کی تاریخ',
     invalidRange: 'URL میں تاریخ کی حد غلط ہے، اس کی بجائے آج دکھایا جا رہا ہے۔',
+    // English fallback until these interval strings are translated.
+    periodExactInterval: 'exact times',
+    intervalStart: 'Start time',
+    intervalEnd: 'End time (exclusive)',
+    invalidInterval: 'Invalid time interval in URL, showing today instead.',
+    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    intervalAmbiguousTime:
+      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
+    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
+    intervalEndAfterStart: 'The end time must be after the start time.',
     diagnosticMissingWindow:
       '{host} کے لیے کوئی ونڈو بکٹ نہیں ہے۔ aw-watcher-window شروع کریں، پھر اس صفحے کو ریفریش کریں۔',
     diagnosticMissingAfk:
@@ -460,6 +470,7 @@ export default {
     periodLast7d: 'پچھلے 7 دنوں',
     periodLast30d: 'پچھلے 30 دنوں',
     periodCustomRange: 'منتخب کردہ حد میں',
+    periodExactInterval: 'in the selected time interval', // English fallback
     periodAllTime: 'مجموعی طور پر',
   },
   visualizations: {

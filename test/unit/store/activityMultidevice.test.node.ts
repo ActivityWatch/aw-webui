@@ -173,6 +173,20 @@ describe('multidevice path for custom ranges and All time', () => {
     expect(s.query_category_time_by_period).toHaveBeenCalled();
   });
 
+  test('an exact interval keeps the category chart and its exact timeperiod', async () => {
+    const s = spies();
+    const timeperiod = { start: '2026-10-20T13:00:00Z', length: [3600000, 'milliseconds'] };
+    await activityStore.ensure_loaded_multidevice(
+      { host: '@all', skip_active_history: true, timeperiod } as any,
+      ['self', 'phone']
+    );
+    expect(s.query_active_history_multidevice).not.toHaveBeenCalled();
+    expect(s.query_category_time_by_period).toHaveBeenCalledWith(
+      expect.objectContaining({ timeperiod })
+    );
+    expect(s.query_multidevice_full).toHaveBeenCalled();
+  });
+
   test('long ranges take the barchart from the query chunks instead', async () => {
     const s = spies();
     await activityStore.ensure_loaded_multidevice(

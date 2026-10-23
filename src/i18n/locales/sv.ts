@@ -402,6 +402,16 @@ export default {
     rangeStart: 'Startdatum',
     rangeEnd: 'Slutdatum',
     invalidRange: 'Ogiltigt datumintervall i URL:en, visar idag istället.',
+    // English fallback until these interval strings are translated.
+    periodExactInterval: 'exact times',
+    intervalStart: 'Start time',
+    intervalEnd: 'End time (exclusive)',
+    invalidInterval: 'Invalid time interval in URL, showing today instead.',
+    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    intervalAmbiguousTime:
+      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
+    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
+    intervalEndAfterStart: 'The end time must be after the start time.',
     diagnosticMissingWindow:
       'Ingen fönsterbucket för {host}. Starta aw-watcher-window och uppdatera sedan sidan.',
     diagnosticMissingAfk:
@@ -461,6 +471,7 @@ export default {
     periodLast7d: 'de senaste 7 dagarna',
     periodLast30d: 'de senaste 30 dagarna',
     periodCustomRange: 'i det valda intervallet',
+    periodExactInterval: 'in the selected time interval', // English fallback
     periodAllTime: 'totalt',
   },
   visualizations: {

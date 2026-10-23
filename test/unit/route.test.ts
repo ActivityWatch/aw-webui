@@ -48,3 +48,20 @@ describe('activity route host param', () => {
     expect(resolved.params.host).toBe(host);
   });
 });
+
+describe('activity route exact interval segment', () => {
+  test.each([
+    '2026-10-20T13:00:00Z..2026-10-20T14:30:00Z',
+    '2026-10-20T15:00:00+02:00..2026-10-20T16:30:00+02:00',
+  ])('%s survives path resolution and URI encoding unchanged', segment => {
+    for (const path of [
+      `/activity/host/interval/${segment}/view/`,
+      `/activity/host/interval/${encodeURIComponent(segment)}/view/`,
+    ]) {
+      const resolved = router.resolve(path).route;
+      expect(resolved.name).toBe('activity-view');
+      expect(resolved.params.periodLength).toBe('interval');
+      expect(resolved.params.date).toBe(segment);
+    }
+  });
+});
