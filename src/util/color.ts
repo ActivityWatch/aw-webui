@@ -140,7 +140,10 @@ export function getTitleAttr(bucket: { type?: string }, e: IEvent) {
   }
 }
 
-export function getCategorizationStringFromEvent(bucket: IBucket, e: IEvent): string | null {
+export function getCategorizationStringFromEvent(
+  bucket: Pick<IBucket, 'type'>,
+  e: IEvent
+): string | null {
   if (bucket.type == 'currentwindow') {
     // using linebreak and "m" regex flag to make `$` and `^` work
     return e.data.app + '\n' + e.data.title;
@@ -156,7 +159,7 @@ export function getCategorizationStringFromEvent(bucket: IBucket, e: IEvent): st
   return null;
 }
 
-export function getCategoryColorFromEvent(bucket: IBucket, e: IEvent) {
+export function getCategoryColorFromEvent(bucket: Pick<IBucket, 'type'>, e: IEvent) {
   const categorizationString = getCategorizationStringFromEvent(bucket, e);
   if (categorizationString !== null) {
     const allCats = loadClasses();

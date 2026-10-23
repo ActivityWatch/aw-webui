@@ -1,5 +1,7 @@
 import moment from 'moment';
 import sunburst from '~/visualizations/sunburst-clock';
+import * as classes from '~/util/classes';
+import { getColorFromString } from '~/util/color';
 
 // Renders the clock into a detached element and returns the texts of all
 // markers drawn around the dial.
@@ -112,5 +114,102 @@ describe('sunburst-clock Now marker', () => {
     }
     expect(today.filter(t => t === 'Now')).toHaveLength(1);
     expect(past).not.toContain('Now');
+  });
+});
+
+// Exercise the actual SVG fill callback, not a parallel implementation of it.
+describe('sunburst-clock category colors', () => {
+  const categories: classes.Category[] = [
+    { name: ['Work'], rule: { type: 'none' }, data: { color: '#123456' } },
+    { name: ['Work', 'Code'], rule: { type: 'regex', regex: '^Project Alpha$' } },
+    {
+      name: ['Media'],
+      rule: { type: 'regex', regex: 'Movie' },
+      data: { color: '#654321' },
+    },
+  ];
+
+  beforeEach(() => {
+    jest.spyOn(classes, 'loadClasses').mockReturnValue(categories);
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+    localStorage.clear();
+  });
+
+  function renderColors(windowData) {
+    const el = document.createElement('div');
+    el.innerHTML = '<div class="legend"></div><div class="sequence"></div>';
+    sunburst.create(el);
+    const start = moment('2026-09-01T00:00:00');
+    const windowEvent = {
+      timestamp: start.clone().add(1, 'hour').toISOString(),
+      duration: 3600,
+      data: windowData,
+    };
+    const statusEvent = {
+      timestamp: start.toISOString(),
+      duration: 86400,
+      data: { status: 'not-afk' },
+      children: [windowEvent],
+    };
+    sunburst.update(
+      el,
+      { timestamp: start.toISOString(), duration: 86400, data: {}, children: [statusEvent] },
+      start
+    );
+    const paths = Array.from(el.querySelectorAll<SVGPathElement>('#container path'));
+    return {
+      status: paths[1].style.fill,
+      window: paths[2].style.fill,
+    };
+  }
+
+  test('uses the inherited category color matched by window title', () => {
+    const colors = renderColors({ app: 'editor', title: 'Project Alpha' });
+    expect(colors.window).toBe('#123456');
+    expect(colors.status).toBe(getColorFromString('not-afk'));
+  });
+
+  test('uses the explicit category color instead of the application color', () => {
+    expect(renderColors({ app: 'firefox', title: 'Movie' }).window).toBe('#654321');
+  });
+
+  test.each([
+    ['app', { app: 'Chrome', title: 'Firefox docs' }],
+    ['title', { app: 'Firefox', title: 'Other docs' }],
+  ])('does not match a category outside its selected %s field', (field, windowData) => {
+    jest.spyOn(classes, 'loadClasses').mockReturnValue([
+      {
+        name: ['Browser'],
+        rule: { type: 'regex', regex: 'Firefox', select_keys: [field] },
+        data: { color: '#abcdef' },
+      },
+    ]);
+    expect(renderColors(windowData).window).toBe('#CCC');
+  });
+
+  test.each([
+    ['app', { app: 'Firefox', title: 'Other docs' }],
+    ['title', { app: 'Chrome', title: 'Firefox docs' }],
+  ])('matches a category within its selected %s field', (field, windowData) => {
+    jest.spyOn(classes, 'loadClasses').mockReturnValue([
+      {
+        name: ['Browser'],
+        rule: { type: 'regex', regex: 'Firefox', select_keys: [field] },
+        data: { color: '#abcdef' },
+      },
+    ]);
+    expect(renderColors(windowData).window).toBe('#abcdef');
+  });
+
+  test('respects the existing uncategorized fallback setting', () => {
+    expect(renderColors({ app: 'unknown-app', title: 'unmatched' }).window).toBe('#CCC');
+    localStorage.useColorFallback = 'true';
+    expect(renderColors({ app: 'unknown-app', title: 'unmatched' }).window).toBe(
+      getColorFromString('unknown-app\nunmatched')
+    );
   });
 });

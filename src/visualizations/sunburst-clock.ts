@@ -20,7 +20,7 @@ import moment from 'moment';
 import { IEvent } from '~/util/interfaces';
 
 import { seconds_to_duration } from '../util/time';
-import { getColorFromString } from '~/util/color';
+import { getColorFromString, getCategoryColorFromEvent } from '~/util/color';
 
 // Dimensions of sunburst.
 const width = 750;
@@ -340,7 +340,9 @@ function update(
     .attr('fill-rule', 'evenodd')
     .style('fill', function (d: d3.HierarchyNode<IEvent>) {
       const e: IEvent = d.data;
-      return getColorFromString(e.data.status || e.data.app);
+      return d.depth === 2
+        ? getCategoryColorFromEvent({ type: 'currentwindow' }, e)
+        : getColorFromString(e.data.status || e.data.app);
     })
     .style('opacity', 1)
     .on('mouseover', mouseover)
