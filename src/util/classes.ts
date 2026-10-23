@@ -108,7 +108,7 @@ export const defaultCategories: Category[] = [
     name: ['Work', 'Programming'],
     rule: {
       type: 'regex',
-      regex: 'GitHub|Stack Overflow|BitBucket|Gitlab|vim|Spyder|kate|Ghidra|Scite',
+      regex: 'GitHub|Stack Overflow|BitBucket|Gitlab|vim|Spyder|^kate$|Ghidra|Scite',
     },
   },
   {
@@ -415,11 +415,26 @@ function matchesInstallDefault(
   return true;
 }
 
+// Retain the install-default signature from before the Kate whole-field fix.
+// This is only a detection reference; persisted rules are never rewritten.
+const preKateFixDefaults: Category[] = defaultCategories.map(c =>
+  categoryNameKey(c) === 'Work>Programming'
+    ? {
+        ...c,
+        rule: {
+          ...c.rule,
+          regex: 'GitHub|Stack Overflow|BitBucket|Gitlab|vim|Spyder|kate|Ghidra|Scite',
+        },
+      }
+    : c
+);
+
 export function classesLookUnconfigured(classes: Category[] | undefined | null): boolean {
   // Empty array is a deliberate "no categories" save, not an install default.
   if (classes == null) return true;
   if (classes.length === 0) return false;
   if (matchesInstallDefault(classes, defaultCategories, true)) return true;
+  if (matchesInstallDefault(classes, preKateFixDefaults, true)) return true;
   return getPresetCategorySets().some(p => matchesInstallDefault(classes, p.categories));
 }
 
