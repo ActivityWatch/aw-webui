@@ -380,6 +380,9 @@ export default {
     onlyThisDevice: 'tu',
     multideviceNote:
       'Data ya kivinjari na saa ya kuhesabu zinapatikana tu unapoangalia kifaa kimoja.',
+    deviceBreakdownTooltip:
+      'Muda amilifu kwa kila kifaa. Vifaa vinapopishana, muda huhesabiwa mara moja, kwa kifaa kilichoorodheshwa kwanza.',
+    overlap: 'mwingiliano',
     timeActive: 'Muda wa kufanya kazi:',
     timeActiveTooltip:
       'Muda wa dirisha linalofanya kazi katika kipindi kilichoulizwa, baada ya vichujio hapa chini. Mistari katika chati ya kipindi inaonyesha muda ghafi wa kufanya kazi wa kifaa, kwa hivyo inaweza kuwa kidogo juu zaidi.',

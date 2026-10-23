@@ -56,6 +56,14 @@ div
       li.list-group-item.pl-0.pr-3.py-0.border-0(:title="$t('activity.timeActiveTooltip')")
         b.mr-1 {{ $t('activity.timeActive') }}
         span {{ activityStore.active.duration | friendlyduration }}
+      li.list-group-item.pl-0.pr-3.py-0.border-0(
+        v-if="isMultidevice && activityStore.window.host_durations.length > 1"
+        :title="$t('activity.deviceBreakdownTooltip')"
+        data-testid="device-breakdown"
+      )
+        span.mr-2(v-for="d in activityStore.window.host_durations" :key="d.host")
+          | {{ d.host }}: {{ d.duration | friendlyduration }}
+          small.text-muted(v-if="d.overlap >= 60")  ({{ secondsToDuration(d.overlap) }} {{ $t('activity.overlap') }})
     b-alert.py-1.px-2.mb-1.small(
       v-if="isMultidevice && !multideviceNoteDismissed"
       show
@@ -311,7 +319,7 @@ div
 <script lang="ts">
 import { mapState } from 'pinia';
 import moment from 'moment';
-import { get_day_start_with_offset, get_today_with_offset } from '~/util/time';
+import { get_day_start_with_offset, get_today_with_offset, seconds_to_duration } from '~/util/time';
 import {
   DateRange,
   TimePeriod,
@@ -754,6 +762,9 @@ export default {
   },
 
   methods: {
+    secondsToDuration(seconds: number): string {
+      return seconds_to_duration(seconds);
+    },
     dismissMultideviceNote: function () {
       this.multideviceNoteDismissed = true;
       persistMultideviceNoteDismissed();

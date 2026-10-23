@@ -21,6 +21,9 @@ export interface WindowQueryResult {
   duration?: number;
   // Window-bucket activity before the AFK/category filters (see queries.ts).
   raw_duration?: number;
+  // Multidevice only, indexed by host (see canonicalMultideviceEvents).
+  host_cumulative_durations?: number[];
+  host_raw_durations?: number[];
 }
 
 export interface BrowserQueryResult {
@@ -161,6 +164,14 @@ function concatEvents(chunks: Array<IEvent[] | undefined>): IEvent[] {
   return out;
 }
 
+// Element-wise sum of per-host duration lists from the period chunks.
+function sumDurationLists(lists: Array<number[] | undefined>): number[] | undefined {
+  const present = lists.filter(Boolean) as number[][];
+  if (present.length === 0) return undefined;
+  const hostCount = Math.max(...present.map(l => l.length));
+  return Array.from({ length: hostCount }, (_v, i) => sumDurations(present.map(l => l[i])));
+}
+
 function sumDurations(values: Array<number | undefined>): number {
   return values.reduce((acc: number, value) => acc + (value || 0), 0);
 }
@@ -191,6 +202,8 @@ export function mergeFullDesktopResults(results: FullDesktopQueryResult[]): Full
       active_events: concatEvents(windows.map(w => w.active_events)),
       duration: sumDurations(windows.map(w => w.duration)),
       raw_duration: sumDurations(windows.map(w => w.raw_duration)),
+      host_cumulative_durations: sumDurationLists(windows.map(w => w.host_cumulative_durations)),
+      host_raw_durations: sumDurationLists(windows.map(w => w.host_raw_durations)),
     },
     browser: {
       domains: mergeEventsByKeys(

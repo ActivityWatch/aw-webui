@@ -378,6 +378,9 @@ export default {
     allDevicesCount: 'Alla enheter ({count})',
     onlyThisDevice: 'endast',
     multideviceNote: 'Webbläsar- och stoppursdata visas bara när en enskild enhet är vald.',
+    deviceBreakdownTooltip:
+      'Aktiv tid per enhet. När enheter överlappar räknas tiden en gång, för den enhet som listas först.',
+    overlap: 'överlapp',
     timeActive: 'Aktiv tid:',
     timeActiveTooltip:
       'Aktiv fönstertid i det efterfrågade intervallet, efter filtren nedan. Staplarna i periodens diagram visar enhetens råa aktiva tid och kan därför vara något högre.',
