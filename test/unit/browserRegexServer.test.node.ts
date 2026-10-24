@@ -180,4 +180,102 @@ describeWithServer('browser regex matching through the server', () => {
       }
     }
   });
+
+  // Rules scoped to the browser fields the rule editor offers (url, $domain)
+  // only see them once canonicalEvents merges browser fields into window events.
+  test.each([
+    ['url', '^https://docs\\.example\\.com/', 'https://docs.example.com/notes'],
+    ['$domain', '^docs\\.example\\.com$', 'docs.example.com'],
+  ])('a %s-scoped rule only claims focused browser time', async (key, regex, decoyTitle) => {
+    if (probeError) throw probeError;
+    const merges = supportsMergeSubwatcherFields();
+    // The decoy title would match a blank-field rule, so it proves the rule is
+    // scoped. Servers without the merge predate select_keys on aw-server-rust
+    // (they match every field), so the decoy only applies with the merge.
+    const codeTitle = merges ? decoyTitle : 'code';
+    const suffix = `urlrules-${process.pid}-${Date.now()}-${key.replace('$', '')}`;
+    const windowBucket = `aw-watcher-window_${suffix}`;
+    const afkBucket = `aw-watcher-afk_${suffix}`;
+    const browserBucket = `aw-watcher-web-edge_${suffix}`;
+    const created: string[] = [];
+    const docs = (timestamp: string, duration: number, url: string) => ({
+      timestamp,
+      duration,
+      data: { url, title: 'Docs', audible: false, incognito: false },
+    });
+    const bucketEvents = [
+      [
+        windowBucket,
+        'currentwindow',
+        [
+          {
+            timestamp: '2026-01-01T12:00:00Z',
+            duration: 60,
+            data: { app: 'msedge.exe', title: 'Edge' },
+          },
+          {
+            timestamp: '2026-01-01T12:01:00Z',
+            duration: 60,
+            data: { app: 'Code.exe', title: codeTitle },
+          },
+        ],
+      ],
+      [
+        afkBucket,
+        'afkstatus',
+        [{ timestamp: '2026-01-01T12:00:00Z', duration: 120, data: { status: 'not-afk' } }],
+      ],
+      [
+        browserBucket,
+        'web.tab.current',
+        [
+          docs('2026-01-01T12:00:00Z', 30, 'https://docs.example.com/page'),
+          // Still the active tab after the user switches to another app.
+          docs('2026-01-01T12:00:30Z', 90, 'https://docs.example.com/other'),
+        ],
+      ],
+    ] as const;
+    try {
+      for (const [id, type, events] of bucketEvents) {
+        await request(`/buckets/${id}`, 'POST', {
+          client: 'aw-webui-regression-test',
+          type,
+          hostname: suffix,
+        });
+        created.push(id);
+        await request(`/buckets/${id}/events`, 'POST', events);
+      }
+      const query = fullDesktopQuery({
+        bid_window: windowBucket,
+        bid_afk: afkBucket,
+        bid_browsers: [browserBucket],
+        filter_afk: true,
+        include_audible: false,
+        categories: [[['Docs'], { type: 'regex', regex, select_keys: [key] }]],
+        filter_categories: [],
+      });
+      const result = await request('/query/', 'POST', {
+        timeperiods: ['2026-01-01T12:00:00Z/2026-01-01T12:02:00Z'],
+        query,
+      });
+      const byApp = Object.fromEntries(
+        result[0].window.app_cat_events.map(e => [
+          `${e.data.app} ${e.data.$category.join('>')}`,
+          e.duration,
+        ])
+      );
+      // Without the merge neither key reaches window events, which is why the
+      // editor doesn't offer them there.
+      expect(byApp).toEqual(
+        merges
+          ? { 'msedge.exe Docs': 60, 'Code.exe Uncategorized': 60 }
+          : { 'msedge.exe Uncategorized': 60, 'Code.exe Uncategorized': 60 }
+      );
+      expect(result[0].window.duration).toBe(120);
+    } finally {
+      for (const id of created) {
+        await request(`/buckets/${id}`, 'DELETE');
+      }
+    }
+  });
 });

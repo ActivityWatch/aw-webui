@@ -75,7 +75,8 @@ import _ from 'lodash';
 import ColorPicker from '~/components/ColorPicker.vue';
 import { useCategoryStore } from '~/stores/categories';
 import { validateRegex, isRegexBroad } from '~/util/validate';
-import { CANONICAL_SELECT_KEYS, normalizeSelectKeys } from '~/util/classes';
+import { BROWSER_SELECT_KEYS, CANONICAL_SELECT_KEYS, normalizeSelectKeys } from '~/util/classes';
+import { supportsMergeSubwatcherFields } from '~/util/serverCapabilities';
 
 import 'vue-awesome/icons/trash';
 
@@ -151,10 +152,15 @@ export default {
       return this.validPriority;
     },
     fieldOptions: function () {
-      const extra = (this.editing.match_fields || []).filter(
-        k => !(CANONICAL_SELECT_KEYS as readonly string[]).includes(k)
-      );
-      return [...CANONICAL_SELECT_KEYS, ...extra];
+      // url/$domain only reach categorized window events when the server can
+      // merge browser fields and the query passes browser buckets (see
+      // canonicalEvents). Without the merge only macOS window events carry
+      // url, so don't offer these keys there.
+      const offered: readonly string[] = supportsMergeSubwatcherFields()
+        ? [...CANONICAL_SELECT_KEYS, ...BROWSER_SELECT_KEYS]
+        : CANONICAL_SELECT_KEYS;
+      const extra = (this.editing.match_fields || []).filter(k => !offered.includes(k));
+      return [...offered, ...extra];
     },
   },
   watch: {

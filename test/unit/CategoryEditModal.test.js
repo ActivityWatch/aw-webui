@@ -3,6 +3,7 @@ import BootstrapVue, { BModal } from 'bootstrap-vue';
 import { createPinia, PiniaVuePlugin, setActivePinia } from 'pinia';
 import CategoryEditModal from '~/components/CategoryEditModal.vue';
 import { useCategoryStore } from '~/stores/categories';
+import { setSupportsMergeSubwatcherFields } from '~/util/serverCapabilities';
 
 // Enter inside the category edit modal should submit it, same as pressing OK.
 // See https://github.com/ActivityWatch/aw-webui/issues/232
@@ -113,6 +114,33 @@ describe('CategoryEditModal field-scoped rules', () => {
       editing: { match_fields: [] },
     });
     expect(fieldOptions).toEqual(['app', 'title']);
+  });
+
+  describe('browser fields', () => {
+    const fieldOptions = match_fields =>
+      CategoryEditModal.computed.fieldOptions.call({ editing: { match_fields } });
+
+    afterEach(() => setSupportsMergeSubwatcherFields(false));
+
+    test('url and $domain are offered when the server merges browser fields', () => {
+      setSupportsMergeSubwatcherFields(true);
+      expect(fieldOptions([])).toEqual(['app', 'title', 'url', '$domain']);
+    });
+
+    test('a stored url field stays visible when the server cannot merge browser fields', () => {
+      expect(fieldOptions(['url'])).toEqual(['app', 'title', 'url']);
+    });
+
+    test('a stored url field is listed once when browser fields are offered', () => {
+      setSupportsMergeSubwatcherFields(true);
+      expect(fieldOptions(['url', 'project'])).toEqual([
+        'app',
+        'title',
+        'url',
+        '$domain',
+        'project',
+      ]);
+    });
   });
 });
 

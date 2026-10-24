@@ -10,6 +10,10 @@ const UNCATEGORIZED = ['Uncategorized'];
 /** Canonical event fields offered in the category-rule editor. */
 export const CANONICAL_SELECT_KEYS = CLASSIFY_KEYS;
 
+/** Browser fields canonicalEvents copies onto window events when the server
+ *  supports merge_subwatcher_fields (see util/serverCapabilities). */
+export const BROWSER_SELECT_KEYS = ['url', '$domain'] as const;
+
 /** ID of the implicit set holding a user's own (non-preset) categories. */
 export const DEFAULT_SET_ID = 'default';
 
