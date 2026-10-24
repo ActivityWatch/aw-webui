@@ -47,7 +47,7 @@ div
       h4 {{ $t('home.supportTitle') }}
       p
         | {{ $t('home.subscribeIntro') }}
-        |  #[a(href="https://activitywatch.net/go/?src=inapp-home") {{ $t('home.subscribeCta') }}]
+        |  #[a(:href="subscribeUrl") {{ $t('home.subscribeCta') }}]
       p
         | {{ $t('home.support1') }}
       ul
@@ -163,6 +163,12 @@ export default {
     },
     supporterNudgeHref(): string {
       return `https://activitywatch.net/go/?src=${this.supporterNudgeSrc}`;
+    },
+    // $isAndroid is a build-time constant (VUE_APP_ON_ANDROID). Desktop stays
+    // inapp-home; Android uses a distinct src so /go/ can attribute the two.
+    subscribeUrl(): string {
+      const src = this.$isAndroid ? 'inapp-home-android' : 'inapp-home';
+      return `https://activitywatch.net/go/?src=${src}`;
     },
   },
   mounted() {
