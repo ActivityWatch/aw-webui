@@ -837,3 +837,57 @@ describe('default palette change (#1058)', () => {
     expect(colorOf(cats, 'Work')).toBe(colorOf(defaultCategories, 'Work'));
   });
 });
+
+// Frozen pre-#495 regexes: comparing a fixture copied from the current defaults
+// would miss upgrade regressions whenever an install default changes.
+const preCommonAppRules = new Map<string, string>([
+  ['Work', 'Google Docs|libreoffice|ReText'],
+  ['Work>Programming', 'GitHub|Stack Overflow|BitBucket|Gitlab|vim|Spyder|kate|Ghidra|Scite'],
+  ['Media>Social Media', 'reddit|Facebook|Twitter|Instagram|devRant'],
+  ['Media>Music', 'Spotify|Deezer'],
+  [
+    'Comms>IM',
+    'Messenger|Telegram|Signal|WhatsApp|Rambox|Slack|Riot|Element|Discord|Nheko|NeoChat|Mattermost',
+  ],
+  ['Comms>Email', 'Gmail|Thunderbird|mutt|alpine'],
+]);
+
+function preCommonAppDefaults(): Category[] {
+  return JSON.parse(JSON.stringify(defaultCategories)).map((cat: Category) => {
+    const oldRegex = preCommonAppRules.get(cat.name.join('>'));
+    if (oldRegex !== undefined) cat.rule.regex = oldRegex;
+    return cat;
+  });
+}
+
+describe('persisted defaults from before the common-app expansion', () => {
+  test('still activate a shipped preset without rewriting the saved classes', () => {
+    setPresetGlobal([presetSet]);
+    const stored = preCommonAppDefaults();
+    const settingsStore = useSettingsStore();
+    settingsStore.$patch({ classes: stored, _storedKeys: ['classes'] });
+    const before = JSON.stringify(settingsStore.classes);
+
+    expect(loadCategories().activeIds).toEqual(['study']);
+    expect(JSON.stringify(settingsStore.classes)).toBe(before);
+  });
+
+  test.each(['regex', 'color', 'priority', 'score'])(
+    'keeps a legacy taxonomy with a %s edit',
+    field => {
+      setPresetGlobal([presetSet]);
+      const stored = preCommonAppDefaults();
+      const work = stored.find(cat => cat.name.join('>') === 'Work');
+      if (field === 'regex') work.rule.regex += '|MyPrivateApp';
+      if (field === 'color') work.data.color = '#123456';
+      if (field === 'priority') work.rule.priority = 99;
+      if (field === 'score') work.data.score = -7;
+      const settingsStore = useSettingsStore();
+      settingsStore.$patch({ classes: stored, _storedKeys: ['classes'] });
+
+      const loaded = loadCategories();
+      expect(loaded.activeIds).toEqual(['default']);
+      expect(loaded.sets.find(set => set.id === 'default').categories).toEqual(stored);
+    }
+  );
+});
