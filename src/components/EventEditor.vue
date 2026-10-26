@@ -145,7 +145,11 @@ export default {
       const savedEvent = _.cloneDeep(this.editedEvent);
       // Edit the array directly: joining and reparsing would split existing
       // tag names containing commas when an unrelated tag is added or removed.
-      if (this.editableTags) savedEvent.data.tags = [...this.tags];
+      // A non-array legacy value (or absent key) has no chips. Keep it until
+      // the user supplies tags, rather than erasing it on an unrelated edit.
+      if (this.editableTags && (Array.isArray(savedEvent.data.tags) || this.tags.length > 0)) {
+        savedEvent.data.tags = [...this.tags];
+      }
       const bucketId = this.bucket_id;
       await this.runMutation('save', savedEvent, bucketId, () =>
         this.$aw.replaceEvent(bucketId, savedEvent)
