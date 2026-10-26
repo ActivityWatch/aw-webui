@@ -9,6 +9,20 @@
  * See: https://github.com/ActivityWatch/aw-tauri/issues/199
  */
 
+/**
+ * Cells a spreadsheet would evaluate as a formula: a leading `=`, `+`, `-` or
+ * `@`, also after leading whitespace (Excel and LibreOffice trim it, so
+ * " =1+1" executes). Window titles come from web pages and other apps, so an
+ * exported title must never run when the CSV is opened. Matches the
+ * neutralization in aw-server-rust and aw-server's `/export/csv` endpoint.
+ */
+export const CSV_FORMULA_PATTERN = /^[ \t\r\n]*[=+\-@]/;
+
+/** Prefix a formula-like CSV cell with `'` so spreadsheets show it as text. */
+export function neutralizeCsvFormula(value: string): string {
+  return CSV_FORMULA_PATTERN.test(value) ? `'${value}` : value;
+}
+
 interface FileFilter {
   name: string;
   extensions: string[];

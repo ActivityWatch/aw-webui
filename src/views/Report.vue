@@ -93,7 +93,7 @@ import { useCategoryStore } from '~/stores/categories';
 import { useBucketsStore } from '~/stores/buckets';
 
 import { getClient } from '~/util/awclient';
-import { downloadFile } from '~/util/export';
+import { CSV_FORMULA_PATTERN, downloadFile } from '~/util/export';
 
 export default {
   name: 'Report',
@@ -173,6 +173,7 @@ export default {
       });
       const csv = Papa.unparse(data, {
         columns: ['timestamp', 'duration', 'category', 'app', 'title'],
+        escapeFormulae: CSV_FORMULA_PATTERN,
       });
       await downloadFile('events.csv', csv, 'text/csv');
     },
