@@ -3,6 +3,7 @@ import { Category, matchString, loadClasses } from './classes';
 import Color from 'color';
 import * as d3 from 'd3';
 import { IEvent, IBucket } from './interfaces';
+import { useSettingsStore } from '~/stores/settings';
 
 // See here for examples:
 //   https://bl.ocks.org/pstuffa/3393ff2711a53975040077b7453781a9
@@ -97,12 +98,20 @@ export function getCategoryColorFromString(str: string): string {
   }
 }
 
+function useColorFallbackEnabled(): boolean {
+  try {
+    // The setting is saved to the server and hydrated into the store; the
+    // localStorage key is legacy and is no longer written by the settings UI.
+    return useSettingsStore().useColorFallback;
+  } catch {
+    // No active Pinia (standalone tools/tests): fall back to the legacy key.
+    return typeof localStorage !== 'undefined' ? localStorage.useColorFallback === 'true' : true;
+  }
+}
+
 function fallbackColor(str: string): string {
   // Get fallback color
-  // TODO: Fetch setting from somewhere better, where defaults are respected
-  const useColorFallback =
-    localStorage !== undefined ? localStorage.useColorFallback === 'true' : true;
-  if (useColorFallback) {
+  if (useColorFallbackEnabled()) {
     return getColorFromString(str);
   } else {
     return COLOR_UNCAT;
