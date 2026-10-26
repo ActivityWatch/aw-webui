@@ -72,9 +72,9 @@ div
         )
           span.device-breakdown-bar
             span.device-breakdown-segment(
-              v-for="d in hostDurations"
+              v-for="(d, i) in hostDurations"
               :key="d.host"
-              :style="{ width: deviceShare(d) + '%', backgroundColor: hostColor(d.host) }"
+              :style="{ width: deviceShare(d) + '%', backgroundColor: deviceColor(i) }"
               :title="d.host + ': ' + secondsToDuration(d.duration)"
             )
           icon.ml-1(:name="showDeviceBreakdown ? 'caret-down' : 'caret-right'" scale="0.8")
@@ -82,9 +82,9 @@ div
           v-if="showDeviceBreakdown"
           data-testid="device-breakdown-table"
         )
-          tr(v-for="d in hostDurations" :key="d.host")
+          tr(v-for="(d, i) in hostDurations" :key="d.host")
             td.pl-0.text-truncate.device-breakdown-host(:title="d.host")
-              span.device-breakdown-swatch.mr-1(:style="{ backgroundColor: hostColor(d.host) }")
+              span.device-breakdown-swatch.mr-1(:style="{ backgroundColor: deviceColor(i) }")
               | {{ d.host }}
             td.text-right.text-nowrap {{ d.duration | friendlyduration }}
             td.text-muted.text-nowrap
@@ -427,7 +427,7 @@ import {
   toggleHostInSelection,
 } from '~/util/multidevice';
 import type { HostDuration } from '~/util/multidevice';
-import { getColorFromString } from '~/util/color';
+import { schemeTableau10 } from 'd3';
 import { getClient } from '~/util/awclient';
 import { nextEarliestDate } from '~/util/earliestEvent';
 import {
@@ -837,8 +837,10 @@ export default {
     secondsToDuration(seconds: number): string {
       return seconds_to_duration(seconds);
     },
-    hostColor(host: string): string {
-      return getColorFromString(host);
+    // By position rather than a hash of the hostname, so neighbouring
+    // segments never share a colour (up to ten devices).
+    deviceColor(index: number): string {
+      return schemeTableau10[index % schemeTableau10.length];
     },
     deviceShare(d: HostDuration): number {
       const total = this.hostDurations.reduce((sum, h) => sum + h.duration, 0);
