@@ -334,15 +334,46 @@ describe('computeFocusStats', () => {
     expect(stats.medianBlockSeconds).toBe(25);
   });
 
-  test('does not merge same-app events separated by a time gap', () => {
+  test('does not count a same-app gap as an app switch', () => {
     // After AFK/privacy filtering, adjacent same-app events can be hours apart.
     const stats = computeFocusStats([
       event('vim', 100, { timestamp: '2026-08-01T09:00:00+00:00' }),
       event('vim', 200, { timestamp: '2026-08-01T11:00:00+00:00' }),
     ]);
     expect(stats.blockCount).toBe(2);
-    expect(stats.appSwitches).toBe(1);
+    expect(stats.appSwitches).toBe(0);
     expect(stats.longestBlockSeconds).toBe(200);
+    expect(stats.medianBlockSeconds).toBe(150);
+  });
+
+  test('counts a change of app across a time gap as one switch', () => {
+    const stats = computeFocusStats([
+      event('vim', 100, { timestamp: '2026-08-01T09:00:00+00:00' }),
+      event('Firefox', 200, { timestamp: '2026-08-01T11:00:00+00:00' }),
+    ]);
+    expect(stats).toEqual({
+      appSwitches: 1,
+      blockCount: 2,
+      longestBlockSeconds: 200,
+      medianBlockSeconds: 150,
+    });
+  });
+
+  test('counts app switches only in the retained timeline after privacy filtering', () => {
+    const ctx = build(
+      [
+        event('vim', 100, { category: ['Work'], timestamp: '2026-08-01T09:00:00Z' }),
+        event('Signal', 100, { category: ['Private'], timestamp: '2026-08-01T09:01:40Z' }),
+        event('vim', 200, { category: ['Work'], timestamp: '2026-08-01T09:03:20Z' }),
+      ],
+      { privacy: { excludeUncategorized: false, privateCategories: [['Private']] } }
+    );
+    expect(ctx.focus).toEqual({
+      appSwitches: 0,
+      blockCount: 2,
+      longestBlockSeconds: 200,
+      medianBlockSeconds: 150,
+    });
   });
 
   test('single block means zero switches', () => {
