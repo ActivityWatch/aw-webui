@@ -76,6 +76,28 @@ describe('Stopwatch event tags', () => {
     }
   );
 
+  test.each([
+    { tags: 'work, meeting', expected: ['work', 'meeting'] },
+    { tags: { legacy: 'work' }, expected: [] },
+    { tags: null, expected: [] },
+  ])('Start New handles legacy tags without changing history: %p', async ({ tags, expected }) => {
+    const past = { ...timer(), data: { ...timer().data, tags } };
+    const original = JSON.stringify(past);
+    const { wrapper, aw } = stopwatch([past]);
+    await flush();
+    await wrapper.setData({ tags: 'unrelated draft' });
+    wrapper.findComponent(StopwatchEntry).vm.$emit('new');
+    await flush();
+    expect(aw.heartbeat).toHaveBeenCalledTimes(1);
+    expect(aw.heartbeat.mock.calls[0][2].data).toEqual({
+      label: 'Study',
+      running: true,
+      tags: expected,
+    });
+    expect(JSON.stringify(past)).toBe(original);
+    wrapper.destroy();
+  });
+
   test('shows tags and enables their editor, while Stop preserves their array', async () => {
     const past = {
       ...timer(['work', 'meeting']),
