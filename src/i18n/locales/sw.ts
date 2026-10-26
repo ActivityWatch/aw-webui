@@ -404,6 +404,16 @@ export default {
     rangeStart: 'Tarehe ya kuanza',
     rangeEnd: 'Tarehe ya kumaliza',
     invalidRange: 'Kipindi cha tarehe batili kwenye URL, inaonyesha leo badala yake.',
+    // English fallback until these interval strings are translated.
+    periodExactInterval: 'exact times',
+    intervalStart: 'Start time',
+    intervalEnd: 'End time (exclusive)',
+    invalidInterval: 'Invalid time interval in URL, showing today instead.',
+    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    intervalAmbiguousTime:
+      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
+    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
+    intervalEndAfterStart: 'The end time must be after the start time.',
     diagnosticMissingWindow:
       'Hakuna bucket ya dirisha kwa {host}. Anzisha aw-watcher-window, kisha onyesha upya ukurasa huu.',
     diagnosticMissingAfk:
@@ -463,6 +473,7 @@ export default {
     periodLast7d: 'siku 7 zilizopita',
     periodLast30d: 'siku 30 zilizopita',
     periodCustomRange: 'katika kipindi kilichochaguliwa',
+    periodExactInterval: 'in the selected time interval', // English fallback
     periodAllTime: 'kwa ujumla',
   },
   visualizations: {

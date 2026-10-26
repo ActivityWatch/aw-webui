@@ -5,7 +5,7 @@ div(v-if="editable || !activityStore.buckets.loaded || has_prerequisites || !set
     | {{ visualizations[type].title }}
   div(v-if="editable").vis-style-dropdown-btn
     b-dropdown.mr-1(size="sm" variant="outline-secondary" right)
-      template(v-slot:button-content)
+      template(v-slot:button-content="")
         icon(name="cog")
       b-dropdown-item(v-for="t in types" :key="t" variant="outline-secondary" @click="$emit('onTypeChange', id, t)")
         | {{ visualizations[t].title }} #[span.small.text-warning(v-if="!visualizations[t].available") {{ $t('visualizations.noData') }}]
@@ -85,7 +85,7 @@ div(v-if="editable || !activityStore.buckets.loaded || has_prerequisites || !set
       aw-sunburst-categories(:data="top_categories_hierarchy", style="height: 20em")
     div(v-if="type == 'timeline_barchart'")
       aw-timeline-barchart(:datasets="datasets", :timeperiod_start="activityStore.query_options.timeperiod.start", :timeperiod_length="activityStore.query_options.timeperiod.length", :clamp_hourly="true", style="height: 100")
-    div(v-if="type == 'sunburst_clock'")
+    div(v-if="type == 'sunburst_clock' && isSingleDay")
       aw-sunburst-clock(:date="date", :afkBucketId="activityStore.buckets.afk[0]", :windowBucketId="activityStore.buckets.window[0]")
     div(v-if="type == 'custom_vis'")
       aw-custom-vis(:visname="props.visname" :title="props.title")
@@ -136,6 +136,7 @@ import { useBucketsStore } from '~/stores/buckets';
 import { useViewsStore } from '~/stores/views';
 import { useSettingsStore } from '~/stores/settings';
 import { isBrowserAllowlistMiss } from '~/util/browserAllowlist';
+import { isExactTimeperiod } from '~/util/timeperiod';
 
 import moment from 'moment';
 
@@ -335,6 +336,8 @@ export default {
     },
     timeline_daterange: function () {
       if (this.activityStore.query_options === null) return null;
+      // The timeline only supports whole days; never fetch a full day for an exact interval
+      if (isExactTimeperiod(this.activityStore.query_options.timeperiod)) return null;
 
       let date = this.activityStore.query_options.date;
       if (!date) {

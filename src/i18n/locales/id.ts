@@ -401,6 +401,16 @@ export default {
     rangeStart: 'Tanggal mulai',
     rangeEnd: 'Tanggal akhir',
     invalidRange: 'Rentang tanggal di URL tidak valid, menampilkan hari ini sebagai gantinya.',
+    // English fallback until these interval strings are translated.
+    periodExactInterval: 'exact times',
+    intervalStart: 'Start time',
+    intervalEnd: 'End time (exclusive)',
+    invalidInterval: 'Invalid time interval in URL, showing today instead.',
+    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    intervalAmbiguousTime:
+      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
+    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
+    intervalEndAfterStart: 'The end time must be after the start time.',
     diagnosticMissingWindow:
       'Tidak ada bucket jendela untuk {host}. Jalankan aw-watcher-window, lalu segarkan halaman ini.',
     diagnosticMissingAfk:
@@ -460,6 +470,7 @@ export default {
     periodLast7d: '7 hari terakhir',
     periodLast30d: '30 hari terakhir',
     periodCustomRange: 'dalam rentang yang dipilih',
+    periodExactInterval: 'in the selected time interval', // English fallback
     periodAllTime: 'secara keseluruhan',
   },
   visualizations: {

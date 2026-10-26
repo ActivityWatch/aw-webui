@@ -407,6 +407,16 @@ export default {
     rangeStart: 'Data de início',
     rangeEnd: 'Data de término',
     invalidRange: 'Intervalo de datas inválido na URL; exibindo hoje no lugar.',
+    // English fallback until these interval strings are translated.
+    periodExactInterval: 'exact times',
+    intervalStart: 'Start time',
+    intervalEnd: 'End time (exclusive)',
+    invalidInterval: 'Invalid time interval in URL, showing today instead.',
+    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    intervalAmbiguousTime:
+      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
+    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
+    intervalEndAfterStart: 'The end time must be after the start time.',
     diagnosticMissingWindow:
       'Nenhum bucket de janela para {host}. Inicie o aw-watcher-window e atualize esta página.',
     diagnosticMissingAfk:
@@ -466,6 +476,7 @@ export default {
     periodLast7d: 'nos últimos 7 dias',
     periodLast30d: 'nos últimos 30 dias',
     periodCustomRange: 'no intervalo selecionado',
+    periodExactInterval: 'in the selected time interval', // English fallback
     periodAllTime: 'no total',
   },
   visualizations: {

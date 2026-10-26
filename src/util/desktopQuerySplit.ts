@@ -3,10 +3,12 @@ import moment from 'moment';
 import { default_limit as DESKTOP_QUERY_EVENT_LIMIT } from '~/queries';
 import { IEvent } from '~/util/interfaces';
 import {
+  EXACT_HOURLY_MAX_MS,
   TimePeriod,
   timeperiodToStr,
   timeperiodsCalendarMonthsOfPeriod,
   timeperiodsDaysOfPeriod,
+  timeperiodsExactDaysOfPeriod,
 } from '~/util/timeperiod';
 
 export { DESKTOP_QUERY_EVENT_LIMIT };
@@ -81,7 +83,13 @@ export function periodsForFullDesktopQuery(
   const [count, res] = timeperiod.length;
   let periods: string[];
 
-  if (res.startsWith('day') && count === 1) {
+  if (res === 'milliseconds') {
+    // Exact interval: one request up to a day, clipped day chunks beyond
+    periods =
+      count <= EXACT_HOURLY_MAX_MS
+        ? [timeperiodToStr(timeperiod)]
+        : timeperiodsExactDaysOfPeriod(timeperiod).map(timeperiodToStr);
+  } else if (res.startsWith('day') && count === 1) {
     periods = [timeperiodToStr(timeperiod)];
   } else if (
     res.startsWith('day') ||

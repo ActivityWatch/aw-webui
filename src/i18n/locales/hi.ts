@@ -399,6 +399,16 @@ export default {
     rangeStart: 'शुरुआती तारीख',
     rangeEnd: 'अंतिम तारीख',
     invalidRange: 'URL में तारीख की अवधि अमान्य है, इसलिए आज की अवधि दिखाई जा रही है।',
+    // English fallback until these interval strings are translated.
+    periodExactInterval: 'exact times',
+    intervalStart: 'Start time',
+    intervalEnd: 'End time (exclusive)',
+    invalidInterval: 'Invalid time interval in URL, showing today instead.',
+    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    intervalAmbiguousTime:
+      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
+    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
+    intervalEndAfterStart: 'The end time must be after the start time.',
     diagnosticMissingWindow:
       '{host} के लिए कोई window bucket नहीं है। aw-watcher-window शुरू करें, फिर इस पेज को रीफ़्रेश करें।',
     diagnosticMissingAfk:
@@ -458,6 +468,7 @@ export default {
     periodLast7d: 'पिछले 7 दिनों',
     periodLast30d: 'पिछले 30 दिनों',
     periodCustomRange: 'चुनी गई अवधि',
+    periodExactInterval: 'in the selected time interval', // English fallback
     periodAllTime: 'कुल',
   },
   visualizations: {

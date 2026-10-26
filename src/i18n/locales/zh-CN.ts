@@ -382,6 +382,16 @@ export default {
     rangeStart: '开始日期',
     rangeEnd: '结束日期',
     invalidRange: 'URL 中的日期范围无效，改为显示今天。',
+    // English fallback until these interval strings are translated.
+    periodExactInterval: 'exact times',
+    intervalStart: 'Start time',
+    intervalEnd: 'End time (exclusive)',
+    invalidInterval: 'Invalid time interval in URL, showing today instead.',
+    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    intervalAmbiguousTime:
+      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
+    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
+    intervalEndAfterStart: 'The end time must be after the start time.',
     diagnosticMissingWindow: '{host} 没有窗口存储桶。请启动 aw-watcher-window，然后刷新此页面。',
     diagnosticMissingAfk: '{host} 没有 AFK 存储桶。请启动 aw-watcher-afk，然后刷新此页面。',
     diagnosticAmbiguousWindow:
@@ -436,6 +446,7 @@ export default {
     periodLast7d: '最近 7 天',
     periodLast30d: '最近 30 天',
     periodCustomRange: '在所选范围内',
+    periodExactInterval: 'in the selected time interval', // English fallback
     periodAllTime: '总计',
   },
   visualizations: {

@@ -395,6 +395,16 @@ export default {
     rangeStart: 'Дата початку',
     rangeEnd: 'Дата завершення',
     invalidRange: 'Недійсний діапазон дат в URL, показано сьогодні.',
+    // English fallback until these interval strings are translated.
+    periodExactInterval: 'exact times',
+    intervalStart: 'Start time',
+    intervalEnd: 'End time (exclusive)',
+    invalidInterval: 'Invalid time interval in URL, showing today instead.',
+    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    intervalAmbiguousTime:
+      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
+    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
+    intervalEndAfterStart: 'The end time must be after the start time.',
     diagnosticMissingWindow:
       'Немає bucket-а вікон для {host}. Запустіть aw-watcher-window і оновіть сторінку.',
     diagnosticMissingAfk:
@@ -454,6 +464,7 @@ export default {
     periodLast7d: 'останні 7 днів',
     periodLast30d: 'останні 30 днів',
     periodCustomRange: 'за вибраний період',
+    periodExactInterval: 'in the selected time interval', // English fallback
     periodAllTime: 'за весь час',
   },
   visualizations: {
