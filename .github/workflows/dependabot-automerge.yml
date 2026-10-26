@@ -41,25 +41,27 @@ jobs:
               pull_number: pr.number,
             });
 
-            if (pull.state !== "open") {
+            if (pull.merged) {
+              // Re-running this job after a failed dispatch lands here: skip
+              // the merge but still dispatch the master checks below.
+              core.info(`PR #${pull.number} is already merged; dispatching checks.`);
+            } else if (pull.state !== "open") {
               core.info(`PR #${pull.number} is already ${pull.state}; nothing to do.`);
               return;
-            }
-
-            if (pull.draft) {
+            } else if (pull.draft) {
               core.info(`PR #${pull.number} is a draft; skipping.`);
               return;
+            } else {
+              await github.rest.pulls.merge({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pull.number,
+                merge_method: "squash",
+                sha: context.payload.workflow_run.head_sha,
+              });
+
+              core.info(`Merged Dependabot PR #${pull.number}.`);
             }
-
-            await github.rest.pulls.merge({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: pull.number,
-              merge_method: "squash",
-              sha: context.payload.workflow_run.head_sha,
-            });
-
-            core.info(`Merged Dependabot PR #${pull.number}.`);
 
             // A merge made with the repository token starts no `push` workflows,
             // so the squash commit would land on master without Build, Lint or
