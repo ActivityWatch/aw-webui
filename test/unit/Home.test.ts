@@ -1,3 +1,5 @@
+import { shallowMount } from '@vue/test-utils';
+import { createTestingPinia } from '@pinia/testing';
 import HomeComponent from '~/views/Home.vue';
 
 // Tests call Options API members directly, which the Vue constructor type doesn't expose.
@@ -42,5 +44,45 @@ describe('Home supporter nudge', () => {
 
     addEventListenerSpy.mockRestore();
     removeEventListenerSpy.mockRestore();
+  });
+});
+
+describe('Home subscribe CTA src', () => {
+  let wrapper: any;
+
+  afterEach(() => {
+    if (wrapper) {
+      wrapper.destroy();
+      wrapper = null;
+    }
+  });
+
+  function mountHome(isAndroid: boolean) {
+    createTestingPinia();
+    wrapper = shallowMount(Home, {
+      mocks: { $isAndroid: isAndroid },
+      stubs: ['b-alert', 'b-button', 'router-link'],
+    });
+    return wrapper;
+  }
+
+  function subscribeHref(vmWrapper: any): string {
+    const link = vmWrapper
+      .findAll('a')
+      .wrappers.find((a: any) => a.text().includes('Support ActivityWatch'));
+    expect(link).toBeTruthy();
+    return link.attributes('href');
+  }
+
+  test('desktop href uses inapp-home', () => {
+    const mounted = mountHome(false);
+    expect(mounted.vm.subscribeUrl).toBe('https://activitywatch.net/go/?src=inapp-home');
+    expect(subscribeHref(mounted)).toBe('https://activitywatch.net/go/?src=inapp-home');
+  });
+
+  test('android href uses inapp-home-android', () => {
+    const mounted = mountHome(true);
+    expect(mounted.vm.subscribeUrl).toBe('https://activitywatch.net/go/?src=inapp-home-android');
+    expect(subscribeHref(mounted)).toBe('https://activitywatch.net/go/?src=inapp-home-android');
   });
 });
