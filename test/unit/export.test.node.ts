@@ -8,6 +8,7 @@ import {
   androidExportFromUrl,
   CSV_FORMULA_PATTERN,
   neutralizeCsvFormula,
+  reportEventsCsv,
 } from '../../src/util/export';
 
 describe('androidExportFromUrl', () => {
@@ -56,5 +57,21 @@ describe('CSV formula neutralization', () => {
       escapeFormulae: CSV_FORMULA_PATTERN,
     });
     expect(csv).toBe('2026-10-26T08:00:00Z,-5,Firefox,"\' =1+1"');
+  });
+});
+
+describe('reportEventsCsv', () => {
+  test('writes a header row and neutralizes formula-like titles', () => {
+    const csv = reportEventsCsv([
+      {
+        timestamp: '2026-10-26T08:00:00Z',
+        duration: 60,
+        data: { $category: ['Work'], app: 'Firefox', title: '=1+1' },
+      },
+    ]);
+    expect(csv.split(/\r?\n/)).toEqual([
+      'timestamp,duration,category,app,title',
+      '2026-10-26T08:00:00Z,60,Work,Firefox,"\'=1+1"',
+    ]);
   });
 });

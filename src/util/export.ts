@@ -9,6 +9,10 @@
  * See: https://github.com/ActivityWatch/aw-tauri/issues/199
  */
 
+import Papa from 'papaparse';
+
+import { IEvent } from './interfaces';
+
 /**
  * Cells a spreadsheet would evaluate as a formula: a leading `=`, `+`, `-` or
  * `@`, also after leading whitespace (Excel and LibreOffice trim it, so
@@ -21,6 +25,27 @@ export const CSV_FORMULA_PATTERN = /^[ \t\r\n]*[=+\-@]/;
 /** Prefix a formula-like CSV cell with `'` so spreadsheets show it as text. */
 export function neutralizeCsvFormula(value: string): string {
   return CSV_FORMULA_PATTERN.test(value) ? `'${value}` : value;
+}
+
+/**
+ * CSV for the Report view's events: a header row, then one row per event.
+ * PapaParse ignores the `columns` option for array rows, so the header has to
+ * be passed as `fields`.
+ */
+export function reportEventsCsv(events: IEvent[]): string {
+  return Papa.unparse(
+    {
+      fields: ['timestamp', 'duration', 'category', 'app', 'title'],
+      data: events.map(e => [
+        e.timestamp,
+        e.duration,
+        e.data['$category'],
+        e.data['app'],
+        e.data['title'],
+      ]),
+    },
+    { escapeFormulae: CSV_FORMULA_PATTERN }
+  );
 }
 
 interface FileFilter {
