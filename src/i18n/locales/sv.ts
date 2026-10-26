@@ -96,6 +96,9 @@ export default {
     timelineDuration: {
       title: 'Standardvärde för varaktighet',
       help: "Standardvaraktigheten som används för 'visa senaste' i tidslinjevyn.",
+      groupGranularity: 'Gruppera korta händelser (sekunder)',
+      groupGranularityHelp:
+        'Samlar korta händelser i följd i grupper med denna längd. Ange 0 för att stänga av grupperingen. Tidslinjens längdfilter är oberoende och tar bort händelser före grupperingen.',
     },
     landingPage: {
       title: 'Startsida',
@@ -961,6 +964,9 @@ export default {
       none: 'ingen',
       groupByCategory: 'Gruppera efter kategori',
       groupByBucketType: 'Gruppera efter buckettyp',
+      groupedEvents: '{count} händelser · {duration}',
+      collapseGroups: 'Fäll ihop grupper',
+      groupBreakdown: 'Aktivitetsfördelning',
       totalTime: 'Total tid',
       bucketsNoEvents: 'Buckets utan händelser i det efterfrågade intervallet döljs.',
       editSaved: 'Din ändring har sparats. Uppdatera tidslinjen för att se den.',

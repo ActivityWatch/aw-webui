@@ -38,6 +38,7 @@ interface State {
   startOfDay: string;
   startOfWeek: string;
   durationDefault: number;
+  timelineGroupGranularity: number;
   useColorFallback: boolean;
   landingpage: string;
   theme: 'light' | 'dark' | 'auto';
@@ -101,6 +102,7 @@ export const useSettingsStore = defineStore('settings', {
     startOfDay: '04:00',
     startOfWeek: 'Monday',
     durationDefault: 4 * 60 * 60,
+    timelineGroupGranularity: 0,
     useColorFallback: false,
     landingpage: '/home',
 
@@ -226,6 +228,9 @@ export const useSettingsStore = defineStore('settings', {
               parsed = cleanAlertGoals(parsed);
             }
             storage[key] = parsed;
+          } else if (key === 'timelineGroupGranularity') {
+            const seconds = Number(raw);
+            if (Number.isFinite(seconds) && seconds >= 0) storage[key] = seconds;
           } else if (raw === 'true' || raw === 'false') {
             storage[key] = raw === 'true';
           } else if (key === 'locale') {

@@ -96,6 +96,9 @@ export default {
     timelineDuration: {
       title: '期間のデフォルト値',
       help: 'タイムラインビューの「直近を表示」で使用するデフォルトの期間です。',
+      groupGranularity: '短いイベントをまとめる（秒）',
+      groupGranularityHelp:
+        '連続する短いイベントをこの長さのグループにまとめます。0にすると無効になります。タイムラインの時間フィルターは独立して動作し、グループ化する前にイベントを除外します。',
     },
     landingPage: {
       title: '起動時のページ',
@@ -948,6 +951,9 @@ export default {
       none: 'なし',
       groupByCategory: 'カテゴリでグループ化',
       groupByBucketType: 'バケットの種類でグループ化',
+      groupedEvents: '{count}件のイベント · {duration}',
+      collapseGroups: 'グループを折りたたむ',
+      groupBreakdown: 'アクティビティの内訳',
       totalTime: '合計時間',
       bucketsNoEvents: '照会した期間にイベントがないバケットは非表示になります。',
       editSaved: '編集を保存しました。反映を確認するには、タイムラインを更新してください。',

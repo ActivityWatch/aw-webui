@@ -92,6 +92,9 @@ export default {
     timelineDuration: {
       title: 'Standarddauer',
       help: 'Standarddauer für „Zuletzt anzeigen“ in der Zeitleiste.',
+      groupGranularity: 'Kurze Ereignisse gruppieren (Sekunden)',
+      groupGranularityHelp:
+        'Fasst aufeinanderfolgende kurze Ereignisse in Gruppen dieser Dauer zusammen. 0 deaktiviert die Gruppierung. Der Dauerfilter der Zeitleiste bleibt unabhängig und entfernt Ereignisse vor der Gruppierung.',
     },
     landingPage: {
       title: 'Einstiegsseite',
@@ -944,6 +947,9 @@ export default {
       none: 'keine',
       groupByCategory: 'Nach Kategorie gruppieren',
       groupByBucketType: 'Nach Bucket-Typ gruppieren',
+      groupedEvents: '{count} Ereignisse · {duration}',
+      collapseGroups: 'Gruppen einklappen',
+      groupBreakdown: 'Aktivitätsübersicht',
       totalTime: 'Gesamtzeit',
       bucketsNoEvents: 'Buckets ohne Ereignisse im abgefragten Zeitraum werden ausgeblendet.',
       editSaved:

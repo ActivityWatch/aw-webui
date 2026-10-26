@@ -95,6 +95,9 @@ export default {
     timelineDuration: {
       title: 'Duration default value',
       help: "The default duration used for 'show last' in the timeline view.",
+      groupGranularity: 'Group short events (seconds)',
+      groupGranularityHelp:
+        'Combines consecutive short events into groups of this duration. Set to 0 to turn grouping off. The timeline duration filter remains independent and removes events before grouping.',
     },
     landingPage: {
       title: 'Landing page',
@@ -937,6 +940,9 @@ export default {
       none: 'none',
       groupByCategory: 'Group by category',
       groupByBucketType: 'Group by bucket type',
+      groupedEvents: '{count} events · {duration}',
+      collapseGroups: 'Collapse groups',
+      groupBreakdown: 'Activity breakdown',
       totalTime: 'Total time',
       bucketsNoEvents: 'Buckets with no events in the queried range will be hidden.',
       editSaved: 'Your edit is saved. Refresh the timeline to see it reflected.',

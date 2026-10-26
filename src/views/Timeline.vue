@@ -102,7 +102,7 @@ div
     | Categorized timeline unavailable. Raw bucket events are still shown.
 
   div(v-if="buckets !== null")
-    vis-timeline(:buckets="buckets", :categorizedEvents="categorizedEvents", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane", :updateTimelineWindow='updateTimelineWindow', @event-saved="onEventSaved")
+    vis-timeline(:buckets="buckets", :categorizedEvents="categorizedEvents", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane", :groupGranularity="timelineGroupGranularity", :updateTimelineWindow='updateTimelineWindow', @event-saved="onEventSaved")
 
     aw-devonly(:reason="$t('ui.devOnly.timelineExperiment')")
       aw-calendar(:buckets="buckets")
@@ -156,6 +156,9 @@ export default {
         { value: 'category', text: this.$t('ui.timeline.groupByCategory') },
         { value: 'bucketType', text: this.$t('ui.timeline.groupByBucketType') },
       ];
+    },
+    timelineGroupGranularity() {
+      return Number(useSettingsStore().timelineGroupGranularity);
     },
     timeintervalDefaultDuration() {
       const settingsStore = useSettingsStore();

@@ -96,6 +96,9 @@ export default {
     timelineDuration: {
       title: 'अवधि का डिफ़ॉल्ट मान',
       help: 'टाइमलाइन व्यू में "हाल का दिखाएँ" के लिए उपयोग की जाने वाली डिफ़ॉल्ट अवधि।',
+      groupGranularity: 'छोटे इवेंट समूहित करें (सेकंड)',
+      groupGranularityHelp:
+        'लगातार छोटे इवेंट को इस अवधि के समूहों में जोड़ता है। समूह बनाना बंद करने के लिए 0 सेट करें। टाइमलाइन का अवधि फ़िल्टर स्वतंत्र रहता है और समूह बनाने से पहले इवेंट हटाता है।',
     },
     landingPage: {
       title: 'लैंडिंग पेज',
@@ -947,6 +950,9 @@ export default {
       none: 'कोई नहीं',
       groupByCategory: 'श्रेणी के अनुसार समूहित करें',
       groupByBucketType: 'bucket प्रकार के अनुसार समूहित करें',
+      groupedEvents: '{count} इवेंट · {duration}',
+      collapseGroups: 'समूह समेटें',
+      groupBreakdown: 'गतिविधि विवरण',
       totalTime: 'कुल समय',
       bucketsNoEvents: 'चुनी गई सीमा में जिन bucket में कोई इवेंट नहीं है, वे छिपा दिए जाएँगे।',
       editSaved: 'आपका संपादन सहेज लिया गया है। इसे देखने के लिए टाइमलाइन रीफ़्रेश करें।',

@@ -95,6 +95,9 @@ export default {
     timelineDuration: {
       title: 'Duración predeterminada',
       help: "La duración predeterminada usada para 'mostrar últimos' en la vista de línea de tiempo.",
+      groupGranularity: 'Agrupar eventos cortos (segundos)',
+      groupGranularityHelp:
+        'Combina eventos cortos consecutivos en grupos de esta duración. Usa 0 para desactivar la agrupación. El filtro de duración de la línea de tiempo es independiente y elimina eventos antes de agruparlos.',
     },
     landingPage: {
       title: 'Página de inicio',
@@ -960,6 +963,9 @@ export default {
       none: 'ninguna',
       groupByCategory: 'Agrupar por categoría',
       groupByBucketType: 'Agrupar por tipo de bucket',
+      groupedEvents: '{count} eventos · {duration}',
+      collapseGroups: 'Contraer grupos',
+      groupBreakdown: 'Desglose de actividades',
       totalTime: 'Tiempo total',
       bucketsNoEvents: 'Se ocultarán los buckets sin eventos en el rango consultado.',
       editSaved: 'Su edición se ha guardado. Actualice la línea de tiempo para verla reflejada.',

@@ -96,6 +96,9 @@ export default {
     timelineDuration: {
       title: 'Nilai durasi bawaan',
       help: "Durasi bawaan yang digunakan untuk 'tampilkan terakhir' pada tampilan garis waktu.",
+      groupGranularity: 'Kelompokkan event singkat (detik)',
+      groupGranularityHelp:
+        'Menggabungkan event singkat berturut-turut menjadi kelompok dengan durasi ini. Atur ke 0 untuk menonaktifkan pengelompokan. Filter durasi linimasa tetap terpisah dan menghapus event sebelum pengelompokan.',
     },
     landingPage: {
       title: 'Halaman awal',
@@ -949,6 +952,9 @@ export default {
       none: 'tidak ada',
       groupByCategory: 'Kelompokkan menurut kategori',
       groupByBucketType: 'Kelompokkan menurut tipe bucket',
+      groupedEvents: '{count} event · {duration}',
+      collapseGroups: 'Ciutkan kelompok',
+      groupBreakdown: 'Rincian aktivitas',
       totalTime: 'Total waktu',
       bucketsNoEvents: 'Bucket tanpa event dalam rentang yang diminta akan disembunyikan.',
       editSaved: 'Perubahan Anda tersimpan. Segarkan garis waktu untuk melihatnya.',
