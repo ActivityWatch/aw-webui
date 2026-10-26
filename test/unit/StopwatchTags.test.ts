@@ -201,6 +201,44 @@ describe('Stopwatch tags editor', () => {
     wrapper.destroy();
   });
 
+  test.each([undefined, 'work, meeting', null, { legacy: 'work' }])(
+    'editing only the label preserves a non-array tags value: %p',
+    async tags => {
+      const past = {
+        ...timer(),
+        data: { ...timer().data, ...(tags !== undefined ? { tags } : {}) },
+      };
+      const original = JSON.stringify(past);
+      const { wrapper, aw } = editor(past);
+      await openEditor(wrapper);
+      await wrapper.setData({
+        editedEvent: {
+          ...wrapper.vm.editedEvent,
+          data: { ...wrapper.vm.editedEvent.data, label: 'Renamed' },
+        },
+      });
+      await wrapper.vm.save();
+      expect(aw.replaceEvent.mock.calls[0][1].data).toEqual({ ...past.data, label: 'Renamed' });
+      expect(JSON.stringify(past)).toBe(original);
+      wrapper.destroy();
+    }
+  );
+
+  test('an explicit tag edit replaces a legacy value with an array', async () => {
+    const past = { ...timer(), data: { ...timer().data, tags: 'legacy' } };
+    const { wrapper, aw } = editor(past);
+    await openEditor(wrapper);
+    const input = document.querySelector('[data-testid="event-tags"]') as HTMLInputElement;
+    input.value = 'work';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.save();
+    expect(aw.replaceEvent.mock.calls[0][1].data.tags).toEqual(['work']);
+    expect(past.data.tags).toBe('legacy');
+    wrapper.destroy();
+  });
+
   test('allows clearing all tags', async () => {
     const { wrapper, aw } = editor(timer(['old']));
     await openEditor(wrapper);
