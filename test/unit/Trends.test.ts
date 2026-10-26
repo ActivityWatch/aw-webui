@@ -538,3 +538,39 @@ describe('Trends category selection', () => {
     expect(query).toContain('[["Work"],["Work","Coding"]]');
   });
 });
+
+describe('Trends weekly grouping', () => {
+  const byPeriod: Record<string, any> = {};
+  // Thu 2026-10-15 .. Sat 2026-10-24 (ten days, two Monday-start weeks)
+  for (let d = 15; d <= 24; d++) {
+    byPeriod[`2026-10-${d}T04:00:00+02:00/2026-10-${d + 1}T04:00:00+02:00`] = {
+      cat_events: [{ duration: 3600, data: { $category: ['Work'] } }],
+    };
+  }
+  const vm = (groupBy: string) => {
+    const ctx: any = {
+      groupBy,
+      byPeriod,
+      loading: false,
+      periodDays: 10,
+      currentStart: moment('2026-10-15'),
+      settingsStore: { startOfWeek: 'Monday' },
+      categoryStore: { classes: [] },
+    };
+    ctx.weekly = Trends.computed.weekly.call(ctx);
+    return ctx;
+  };
+
+  test('day grouping keeps one bar per queried day', () => {
+    const ctx = vm('day');
+    expect(Trends.computed.barchartLength.call(ctx)).toEqual([10, 'days']);
+    expect(Trends.computed.datasets.call(ctx)[0].data).toHaveLength(10);
+  });
+
+  test('week grouping sums days into start-of-week buckets without re-querying', () => {
+    const ctx = vm('week');
+    expect(Trends.computed.barchartLength.call(ctx)).toEqual([2, 'weeks']);
+    expect(Trends.computed.barchartStart.call(ctx)).toBe(moment('2026-10-12').toISOString());
+    expect(Trends.computed.datasets.call(ctx)[0].data).toEqual([4, 6]);
+  });
+});
