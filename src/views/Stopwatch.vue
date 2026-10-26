@@ -137,6 +137,9 @@ export default {
   },
   methods: {
     startTimer: async function (label, tags = parseTags(this.tags)) {
+      // Old events may carry comma-separated text or an unsupported shape.
+      // Normalize only the new timer; never rewrite the historical event.
+      tags = Array.isArray(tags) ? tags : typeof tags === 'string' ? parseTags(tags) : [];
       const event = {
         timestamp: new Date(),
         data: {
