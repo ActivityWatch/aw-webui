@@ -386,6 +386,9 @@ export default {
     onlyThisDevice: 'somente',
     multideviceNote:
       'Os dados do navegador e do cronômetro só estão disponíveis ao visualizar um único dispositivo.',
+    deviceBreakdownTooltip:
+      'Tempo ativo por dispositivo. Quando dispositivos se sobrepõem, o tempo é contado uma vez, para o dispositivo listado primeiro.',
+    overlap: 'sobreposição',
     timeActive: 'Tempo ativo:',
     timeActiveTooltip:
       'Tempo de janela ativa no intervalo consultado, após os filtros abaixo. As barras do gráfico do período mostram o tempo ativo bruto do dispositivo, então podem ser um pouco maiores.',

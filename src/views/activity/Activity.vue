@@ -56,6 +56,39 @@ div
       li.list-group-item.pl-0.pr-3.py-0.border-0(:title="$t('activity.timeActiveTooltip')")
         b.mr-1 {{ $t('activity.timeActive') }}
         span {{ activityStore.active.duration | friendlyduration }}
+      // One compact stacked bar whatever the device count; click it for a
+      // per-device table, which grows vertically instead of wrapping.
+      li.list-group-item.pl-0.pr-3.py-0.border-0(
+        v-if="isMultidevice && hostDurations.length > 1"
+        data-testid="device-breakdown"
+      )
+        a.device-breakdown-toggle(
+          href="#"
+          role="button"
+          :aria-expanded="showDeviceBreakdown ? 'true' : 'false'"
+          :title="$t('activity.deviceBreakdownTooltip')"
+          @click.prevent="showDeviceBreakdown = !showDeviceBreakdown"
+          data-testid="device-breakdown-toggle"
+        )
+          span.device-breakdown-bar
+            span.device-breakdown-segment(
+              v-for="(d, i) in hostDurations"
+              :key="d.host"
+              :style="{ width: deviceShare(d) + '%', backgroundColor: deviceColor(i) }"
+              :title="d.host + ': ' + secondsToDuration(d.duration)"
+            )
+          icon.ml-1(:name="showDeviceBreakdown ? 'caret-down' : 'caret-right'" scale="0.8")
+        table.table.table-sm.table-borderless.small.mb-1.device-breakdown-table(
+          v-if="showDeviceBreakdown"
+          data-testid="device-breakdown-table"
+        )
+          tr(v-for="(d, i) in hostDurations" :key="d.host")
+            td.pl-0.text-truncate.device-breakdown-host(:title="d.host")
+              span.device-breakdown-swatch.mr-1(:style="{ backgroundColor: deviceColor(i) }")
+              | {{ d.host }}
+            td.text-right.text-nowrap {{ d.duration | friendlyduration }}
+            td.text-muted.text-nowrap
+              span(v-if="d.overlap >= 60") ({{ secondsToDuration(d.overlap) }} {{ $t('activity.overlap') }})
     b-alert.py-1.px-2.mb-1.small(
       v-if="isMultidevice && !multideviceNoteDismissed"
       show
@@ -286,6 +319,45 @@ div
   margin-bottom: 0.5rem;
 }
 
+.device-breakdown-toggle {
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+}
+
+.device-breakdown-bar {
+  display: inline-flex;
+  width: 10rem;
+  height: 0.6rem;
+  border-radius: 0.2rem;
+  overflow: hidden;
+  background-color: $lightBorderColor;
+}
+
+.device-breakdown-segment {
+  height: 100%;
+}
+
+.device-breakdown-table {
+  width: auto;
+
+  td {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
+.device-breakdown-host {
+  max-width: 14rem;
+}
+
+.device-breakdown-swatch {
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 0.1rem;
+}
+
 .host-selector-row {
   white-space: nowrap;
   line-height: 1.8;
@@ -348,7 +420,7 @@ div
 <script lang="ts">
 import { mapState } from 'pinia';
 import moment from 'moment';
-import { get_day_start_with_offset, get_today_with_offset } from '~/util/time';
+import { get_day_start_with_offset, get_today_with_offset, seconds_to_duration } from '~/util/time';
 import {
   DateRange,
   TimePeriod,
@@ -383,6 +455,8 @@ import 'vue-awesome/icons/ellipsis-v';
 import 'vue-awesome/icons/layer-group';
 import 'vue-awesome/icons/mobile';
 import 'vue-awesome/icons/desktop';
+import 'vue-awesome/icons/caret-down';
+import 'vue-awesome/icons/caret-right';
 
 import { useSettingsStore } from '~/stores/settings';
 import { useCategoryStore } from '~/stores/categories';
@@ -399,6 +473,8 @@ import {
   resolveHostSelection,
   toggleHostInSelection,
 } from '~/util/multidevice';
+import type { HostDuration } from '~/util/multidevice';
+import { schemeTableau10 } from 'd3';
 import { getClient } from '~/util/awclient';
 import { nextEarliestDate } from '~/util/earliestEvent';
 import {
@@ -442,6 +518,7 @@ export default {
       today: null,
       showOptions: false,
       multideviceNoteDismissed: isMultideviceNoteDismissed(),
+      showDeviceBreakdown: false,
       // First day with data for the host, used by All time
       earliestDate: null,
       // Problem with the last exact start/end edit (nonexistent or repeated DST time, bad order)
@@ -655,6 +732,9 @@ export default {
     hostSelection(): HostSelection {
       return parseHostParam(this.host, this.bucketsStore.hosts);
     },
+    hostDurations(): HostDuration[] {
+      return this.activityStore.window.host_durations;
+    },
     isMultidevice(): boolean {
       return isMultiHostSelection(this.hostSelection);
     },
@@ -835,6 +915,18 @@ export default {
   },
 
   methods: {
+    secondsToDuration(seconds: number): string {
+      return seconds_to_duration(seconds);
+    },
+    // By position rather than a hash of the hostname, so neighbouring
+    // segments never share a colour (up to ten devices).
+    deviceColor(index: number): string {
+      return schemeTableau10[index % schemeTableau10.length];
+    },
+    deviceShare(d: HostDuration): number {
+      const total = this.hostDurations.reduce((sum, h) => sum + h.duration, 0);
+      return total > 0 ? (100 * d.duration) / total : 0;
+    },
     dismissMultideviceNote: function () {
       this.multideviceNoteDismissed = true;
       persistMultideviceNoteDismissed();
