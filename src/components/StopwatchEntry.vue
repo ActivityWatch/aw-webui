@@ -10,6 +10,7 @@ div
       span(v-else)
         | {{ $t('ui.stopwatchEntry.started') }} #[span(:title="event.timestamp") {{event.timestamp | friendlytime}}]
         | &nbsp;({{event.data.running ? (now - event.timestamp) / 1000 : event.duration | friendlyduration}})
+      div.text-muted.small(v-if="Array.isArray(event.data.tags) && event.data.tags.length") {{ event.data.tags.join(', ') }}
     div.stopwatch-entry__actions
       b-button.mx-1(v-if="event.data.running", @click="stop", variant="outline-primary", size="sm")
         icon.ml-0.mr-1(name="stop")
@@ -20,7 +21,7 @@ div
       b-button.mx-1(v-b-modal="'edit-modal-' + event.id", variant="outline-dark", size="sm")
         icon.ml-0.mr-1(name="edit")
         | {{ $t('ui.stopwatchEntry.edit') }}
-  event-editor(:event="event", :bucket_id="bucket_id", @saved="save", @deleted="delete_")
+  event-editor(:event="event", :bucket_id="bucket_id", editable-tags, @saved="save", @deleted="delete_")
 </template>
 
 <style scoped lang="scss">
