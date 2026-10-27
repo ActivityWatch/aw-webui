@@ -72,7 +72,8 @@ jobs:
 
   test:
     name: Test (node-${{ matrix.node-version }}, py-${{ matrix.python-version }}, ${{ matrix.aw-server }} ${{ matrix.aw-version }})
-    runs-on: ubuntu-latest
+    # Python 3.9 is unavailable on Ubuntu 26.04 (ubuntu-latest).
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
