@@ -61,6 +61,44 @@ describe('CSV formula neutralization', () => {
 });
 
 describe('reportEventsCsv', () => {
+  test.each(['=1+1', '+1+1', '-1+1', '@SUM(A1)', ' =1+1', '\t=1+1', '\r\n@SUM(A1)'])(
+    'neutralizes array-valued category paths starting with %j',
+    category => {
+      const csv = reportEventsCsv([
+        {
+          timestamp: '2026-10-26T08:00:00Z',
+          duration: -5,
+          data: { $category: [category, 'Child'], app: 'Firefox', title: 'Example' },
+        },
+      ]);
+      const rows = Papa.parse<string[]>(csv).data;
+      expect(rows[1]).toEqual([
+        '2026-10-26T08:00:00Z',
+        '-5',
+        `'${category},Child`,
+        'Firefox',
+        'Example',
+      ]);
+    }
+  );
+
+  test.each([
+    { category: ['Work', 'Programming'], expected: 'Work,Programming' },
+    { category: [], expected: '' },
+    { category: undefined, expected: '' },
+    { category: null, expected: '' },
+    { category: '=1+1', expected: "'=1+1" },
+  ])('preserves CSV representation of $category', ({ category, expected }) => {
+    const csv = reportEventsCsv([
+      {
+        timestamp: '2026-10-26T08:00:00Z',
+        duration: 60,
+        data: { $category: category, app: 'Firefox', title: 'Example' },
+      },
+    ]);
+    expect(Papa.parse<string[]>(csv).data[1][2]).toBe(expected);
+  });
+
   test('writes a header row and neutralizes formula-like titles', () => {
     const csv = reportEventsCsv([
       {

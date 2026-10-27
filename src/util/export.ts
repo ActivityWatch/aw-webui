@@ -39,7 +39,8 @@ export function reportEventsCsv(events: IEvent[]): string {
       data: events.map(e => [
         e.timestamp,
         e.duration,
-        e.data['$category'],
+        // PapaParse checks strings before coercing arrays to comma-separated text.
+        String(e.data['$category'] ?? ''),
         e.data['app'],
         e.data['title'],
       ]),
