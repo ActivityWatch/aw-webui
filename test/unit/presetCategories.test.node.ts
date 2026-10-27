@@ -343,6 +343,7 @@ describe('loadCategories with presets', () => {
             }
           : c
       );
+      const expected = JSON.parse(JSON.stringify(legacy));
       const settingsStore = useSettingsStore();
       settingsStore.$patch({
         classes: legacy,
@@ -353,9 +354,9 @@ describe('loadCategories with presets', () => {
 
       const { sets, activeIds } = loadCategories();
       expect(activeIds).toEqual(edited ? ['default'] : ['study']);
-      if (edited) expect(sets.find(s => s.id === 'default').categories).toEqual(legacy);
+      if (edited) expect(sets.find(s => s.id === 'default').categories).toEqual(expected);
       // Detection must not rewrite persisted rules, even when activating a preset.
-      expect(settingsStore.classes).toEqual(legacy);
+      expect(settingsStore.classes).toEqual(expected);
     }
   );
 
