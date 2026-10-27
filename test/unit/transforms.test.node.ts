@@ -71,6 +71,17 @@ describe('overlappingEvents', () => {
     expect(overlappingEvents(two_empty, two_empty)).toHaveLength(0);
   });
 
+  test('an empty list yields no pairs, even when the other list is internally overlapping', () => {
+    const events = [
+      ev('2026-10-19T00:00:00Z', 100, 'A'),
+      ev('2026-10-19T00:00:10Z', 10, 'B'),
+      ev('2026-10-19T00:00:15Z', 35, 'C'),
+    ];
+
+    expect(overlappingEvents(events, [])).toHaveLength(0);
+    expect(overlappingEvents([], events)).toHaveLength(0);
+  });
+
   test('finds every pair when one interval contains several others', () => {
     const outer = [ev('2026-10-19T00:00:00Z', 100, 'outer')];
     const inner = [
@@ -123,5 +134,97 @@ describe('overlappingEvents', () => {
     const pairs = pairIds(overlappingEvents(events, events));
     expect(pairs).toHaveLength(1);
     expect(pairs[0].slice().sort()).toEqual(['inner', 'outer']);
+  });
+
+  test('enumerates every pair when the second list is internally overlapping', () => {
+    const events1 = [ev('2026-10-19T00:00:00Z', 100, 'A'), ev('2026-10-19T00:00:15Z', 35, 'B')];
+    const events2 = [ev('2026-10-19T00:00:10Z', 10, 'X')];
+
+    // B overlaps X too; a one-pointer-per-step sweep never compares them.
+    expect(
+      pairIds(overlappingEvents(events1, events2)).map(p => p.slice().sort().join('-'))
+    ).toEqual(['A-X', 'B-X']);
+  });
+
+  test('enumerates every pair when the first list is internally overlapping', () => {
+    const events1 = [ev('2026-10-19T00:00:10Z', 10, 'X')];
+    const events2 = [ev('2026-10-19T00:00:00Z', 100, 'A'), ev('2026-10-19T00:00:15Z', 35, 'B')];
+
+    expect(
+      pairIds(overlappingEvents(events1, events2)).map(p => p.slice().sort().join('-'))
+    ).toEqual(['A-X', 'B-X']);
+  });
+
+  test('self-comparison enumerates every pair among internally overlapping events', () => {
+    const events = [
+      ev('2026-10-19T00:00:00Z', 100, 'A'),
+      ev('2026-10-19T00:00:10Z', 10, 'B'),
+      ev('2026-10-19T00:00:15Z', 35, 'C'),
+    ];
+
+    const pairs = pairIds(overlappingEvents(events, events)).map(p => p.slice().sort().join('-'));
+    expect(pairs.slice().sort()).toEqual(['A-B', 'A-C', 'B-C']);
+  });
+
+  test('matches a brute-force all-pairs reference on generated input', () => {
+    // Deterministic PRNG so a failure is reproducible without a seed argument.
+    let state = 123456789;
+    const next = () => {
+      state = (1103515245 * state + 12345) % 2147483648;
+      return state / 2147483648;
+    };
+    const makeEvents = (prefix: string, count: number) =>
+      Array.from({ length: count }, (_, index) => {
+        const start = Math.floor(next() * 60);
+        const duration = Math.floor(next() * 20);
+        return ev(
+          new Date(Date.UTC(2026, 9, 19, 0, 0, start)).toISOString(),
+          duration,
+          `${prefix}${index}`
+        );
+      });
+
+    const referencePairs = (first, second) => {
+      const bounds = list =>
+        list.map(e => {
+          const start_ms = new Date(e.timestamp).valueOf();
+          return { event: e, start_ms, end_ms: start_ms + 1000 * e.duration };
+        });
+      const a = bounds(first);
+      const b = bounds(second);
+      const found = [];
+      const same = first === second;
+      for (let x = 0; x < a.length; x++) {
+        for (let y = same ? x + 1 : 0; y < b.length; y++) {
+          const one = a[x];
+          const two = b[y];
+          if (
+            one.start_ms < one.end_ms &&
+            two.start_ms < two.end_ms &&
+            one.start_ms < two.end_ms &&
+            two.start_ms < one.end_ms
+          ) {
+            found.push([one.event.id, two.event.id].slice().sort().join('-'));
+          }
+        }
+      }
+      return found.sort();
+    };
+
+    for (let trial = 0; trial < 200; trial++) {
+      const first = makeEvents('a', 1 + Math.floor(next() * 6));
+      const second = makeEvents('b', 1 + Math.floor(next() * 6));
+
+      const actual = pairIds(overlappingEvents(first, second))
+        .map(p => p.slice().sort().join('-'))
+        .sort();
+      expect(actual).toEqual(referencePairs(first, second));
+
+      const same_list = first.slice();
+      const same_actual = pairIds(overlappingEvents(same_list, same_list))
+        .map(p => p.slice().sort().join('-'))
+        .sort();
+      expect(same_actual).toEqual(referencePairs(same_list, same_list));
+    }
   });
 });
