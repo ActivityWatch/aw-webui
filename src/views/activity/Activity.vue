@@ -540,6 +540,8 @@ export default {
       viewsStore: useViewsStore(),
       settingsStore: useSettingsStore(),
       prioritySaving: false,
+      priorityRefreshPending: false,
+      priorityRefreshForce: false,
       priorityError: false,
       bucketsStore: useBucketsStore(),
 
@@ -1204,6 +1206,13 @@ export default {
     },
 
     refresh: async function (force) {
+      // Activity loads abort the shared client, including an in-flight settings
+      // read. Coalesce navigation and manual refreshes until the save settles.
+      if (this.prioritySaving) {
+        this.priorityRefreshPending = true;
+        this.priorityRefreshForce = this.priorityRefreshForce || !!force;
+        return;
+      }
       // Invalidate the cached navigation boundary when refreshing newly recorded activity.
       this.navigationNow = Date.now();
       if (force && this.periodLength === 'all') {
@@ -1284,15 +1293,20 @@ export default {
         // Keep priorities for temporarily offline devices so their settings survive.
         const offline = this.settingsStore.multideviceHostOrder.filter(h => !ordered.includes(h));
         await this.settingsStore.update({ multideviceHostOrder: [...ordered, ...offline] });
+        if (this.isMultidevice) this.priorityRefreshPending = true;
       } catch (error) {
         this.settingsStore.$patch({ multideviceHostOrder: previous });
         this.priorityError = true;
         console.error('Failed to save device overlap priority', error);
-        return;
       } finally {
         this.prioritySaving = false;
+        const refreshPending = this.priorityRefreshPending;
+        const force = this.priorityRefreshForce;
+        this.priorityRefreshPending = false;
+        this.priorityRefreshForce = false;
+        // Use the current route, even on failure or a switch to one device.
+        if (refreshPending) await this.refresh(force);
       }
-      if (this.isMultidevice) await this.refresh();
     },
 
     toggleHost(host: string) {

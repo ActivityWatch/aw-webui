@@ -12,6 +12,8 @@ function vmFor() {
       $patch: jest.fn(),
     },
     prioritySaving: false,
+    priorityRefreshPending: false,
+    priorityRefreshForce: false,
     isMultidevice: true,
     refresh: jest.fn(),
   };
@@ -51,6 +53,53 @@ describe('Activity overlap priority controls', () => {
     expect(vm.refresh).not.toHaveBeenCalled();
     log.mockRestore();
   });
+
+  test.each([false, true])(
+    'navigation during a pending save refreshes the latest selection after settling (failure=%s)',
+    async fails => {
+      const vm: any = vmFor();
+      let settle!: () => void;
+      vm.settingsStore.update.mockImplementation(
+        () =>
+          new Promise<void>((resolve, reject) => {
+            settle = () => (fails ? reject(new Error('offline')) : resolve());
+          })
+      );
+      vm.periodLength = 'day';
+      vm.timeperiod = { start: 'old', end: 'old-end' };
+      vm.host = 'all';
+      vm.refreshGeneration = 0;
+      vm.activityStore = { ensure_loaded: jest.fn().mockResolvedValue(undefined) };
+      vm.loadEarliestDate = jest.fn();
+      vm.refresh = Activity.methods.refresh.bind(vm);
+      const log = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+      try {
+        const saving = Activity.methods.moveHost.call(vm, 'phone', -1);
+        await Promise.resolve();
+        expect(vm.settingsStore.update).toHaveBeenCalledTimes(1);
+        // Both route watchers and the manual refresh button must wait; a
+        // following non-forced refresh must not lose the user's force request.
+        vm.host = 'desktop';
+        vm.isMultidevice = false;
+        Activity.watch.host.call(vm);
+        await vm.refresh(true);
+        vm.timeperiod = { start: 'new', end: 'new-end' };
+        Activity.watch.timeperiod.call(vm);
+        expect(vm.activityStore.ensure_loaded).not.toHaveBeenCalled();
+        settle();
+        await saving;
+        expect(vm.activityStore.ensure_loaded).toHaveBeenCalledTimes(1);
+        expect(vm.activityStore.ensure_loaded).toHaveBeenCalledWith(
+          expect.objectContaining({ host: 'desktop', timeperiod: vm.timeperiod, force: true })
+        );
+        expect(vm.prioritySaving).toBe(false);
+        expect(vm.priorityRefreshPending).toBe(false);
+        expect(vm.priorityRefreshForce).toBe(false);
+      } finally {
+        log.mockRestore();
+      }
+    }
+  );
 
   test('priority changes reload multi-device results, not a single-device view', () => {
     const refresh = jest.fn();
