@@ -62,12 +62,12 @@ div
         v-if="isMultidevice && hostDurations.length > 1"
         data-testid="device-breakdown"
       )
-        a.device-breakdown-toggle(
+        a.device-breakdown-toggle#device-breakdown-toggle-btn(
           href="#"
           role="button"
           :aria-expanded="showDeviceBreakdown ? 'true' : 'false'"
           :title="$t('activity.deviceBreakdownTooltip')"
-          @click.prevent="showDeviceBreakdown = !showDeviceBreakdown"
+          @click.prevent
           data-testid="device-breakdown-toggle"
         )
           span.device-breakdown-bar
@@ -78,17 +78,25 @@ div
               :title="d.host + ': ' + secondsToDuration(d.duration)"
             )
           icon.ml-1(:name="showDeviceBreakdown ? 'caret-down' : 'caret-right'" scale="0.8")
-        table.table.table-sm.table-borderless.small.mb-1.device-breakdown-table(
-          v-if="showDeviceBreakdown"
-          data-testid="device-breakdown-table"
+        b-popover(
+          target="device-breakdown-toggle-btn"
+          placement="bottomright"
+          triggers="click blur"
+          custom-class="device-breakdown-popover"
+          @show="showDeviceBreakdown = true"
+          @hide="showDeviceBreakdown = false"
+          data-testid="device-breakdown-popover"
         )
-          tr(v-for="(d, i) in hostDurations" :key="d.host")
-            td.pl-0.text-truncate.device-breakdown-host(:title="d.host")
-              span.device-breakdown-swatch.mr-1(:style="{ backgroundColor: deviceColor(i) }")
-              | {{ d.host }}
-            td.text-right.text-nowrap {{ d.duration | friendlyduration }}
-            td.text-muted.text-nowrap
-              span(v-if="d.overlap >= 60") ({{ secondsToDuration(d.overlap) }} {{ $t('activity.overlap') }})
+          table.table.table-sm.table-borderless.small.mb-0.device-breakdown-table(
+            data-testid="device-breakdown-table"
+          )
+            tr(v-for="(d, i) in hostDurations" :key="d.host")
+              td.pl-0.text-truncate.device-breakdown-host(:title="d.host")
+                span.device-breakdown-swatch.mr-1(:style="{ backgroundColor: deviceColor(i) }")
+                | {{ d.host }}
+              td.text-right.text-nowrap {{ d.duration | friendlyduration }}
+              td.text-muted.text-nowrap
+                span(v-if="d.overlap >= 60") ({{ secondsToDuration(d.overlap) }} {{ $t('activity.overlap') }})
     b-alert.py-1.px-2.mb-1.small(
       v-if="isMultidevice && !multideviceNoteDismissed"
       show
