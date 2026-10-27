@@ -42,8 +42,11 @@ div
 </template>
 
 <script lang="ts">
+import { isEqual } from 'lodash';
 import { useSettingsStore } from '~/stores/settings';
+import { getClient } from '~/util/awclient';
 import {
+  PrivacyFilterRule,
   DEFAULT_PRIVACY_FILTERS,
   formatPrivacyFilters,
   validatePrivacyFiltersInput,
@@ -87,6 +90,11 @@ export default {
     'settingsStore.privacy_filters': {
       deep: true,
       handler() {
+        // While saving, the store holds the submitted rules optimistically;
+        // only the save's outcome may move the saved baseline.
+        if (this.isSaving) {
+          return;
+        }
         this.syncFromStore(false);
       },
     },
@@ -111,15 +119,63 @@ export default {
         return;
       }
 
+      const rules = this.validationResult.rules || [];
+      let confirmed = JSON.parse(JSON.stringify(this.settingsStore.privacy_filters));
+      const submittedText = this.editorText;
       this.isSaving = true;
       this.saveError = '';
       try {
-        await this.settingsStore.update({
-          privacy_filters: this.validationResult.rules || [],
+        await this.settingsStore.ensureLoaded();
+        // Loading may have replaced defaults with persisted rules. Keep those
+        // as the fallback if both the write and the recovery read fail.
+        confirmed = JSON.parse(JSON.stringify(this.settingsStore.privacy_filters));
+        // Hold the submitted rules in the store during the request: a
+        // concurrent save of another setting writes every key that differs
+        // from the server, and must not write the old rules back.
+        this.settingsStore.$patch(state => {
+          state.privacy_filters = rules;
         });
-        this.syncFromStore(true);
+        await getClient().req.post('/0/settings/privacy_filters', rules, {
+          headers: { 'Content-Type': 'application/json' },
+        });
+        this.savedText = formatPrivacyFilters(rules);
+        if (this.editorText === submittedText) {
+          // Keep edits made while the save was pending.
+          this.editorText = this.savedText;
+        }
       } catch (error) {
-        this.saveError = error instanceof Error ? error.message : String(error);
+        // The server decides what was persisted (the write may have landed
+        // before the error). Fall back to the last confirmed rules if it
+        // cannot be asked. The draft stays in the editor for a retry.
+        let persisted = confirmed;
+        try {
+          const serverSettings = (await getClient().get_settings()) as {
+            privacy_filters?: PrivacyFilterRule[];
+          };
+          if (serverSettings.privacy_filters !== undefined) {
+            persisted = serverSettings.privacy_filters;
+          }
+        } catch {
+          // The write outcome is unknown. Keep the last confirmed rules for
+          // the editor, but force the next update to reload before writing
+          // anything: otherwise another setting could write this fallback
+          // over privacy rules that actually reached the server.
+          this.settingsStore.$patch({ _loaded: false });
+        }
+        this.settingsStore.$patch(state => {
+          state.privacy_filters = persisted;
+        });
+        this.savedText = formatPrivacyFilters(persisted);
+        // Compare the JSON payload structurally: the server may reorder object
+        // keys, and JSON omits the validator's undefined optional fields.
+        if (isEqual(persisted, JSON.parse(JSON.stringify(rules)))) {
+          // The write landed; only the response was lost.
+          if (this.editorText === submittedText) {
+            this.editorText = this.savedText;
+          }
+        } else {
+          this.saveError = error instanceof Error ? error.message : String(error);
+        }
       } finally {
         this.isSaving = false;
       }
