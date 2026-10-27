@@ -36,6 +36,8 @@ jobs:
       run: npm ci
     - name: Build
       run: make build
+    - name: Check service worker
+      run: node scripts/check-service-worker.mjs dist
     - name: Upload build
       uses: actions/upload-artifact@v7
       with:
