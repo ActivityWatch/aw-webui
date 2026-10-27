@@ -354,6 +354,8 @@ export default {
     firstSeen: 'Ilionekana kwanza:',
     exportBucketJson: 'Safirisha bucket kama JSON',
     exportEventsCsv: 'Safirisha matukio kama CSV',
+    exportRangeHelp:
+      'Saa zinatumia ukanda wako wa saa wa eneo lako. Acha sehemu yoyote tupu ili kutoweka kikomo hicho; acha zote mbili tupu ili kusafirisha kila kitu.',
     deleteBucket: 'Futa bucket',
     deleteModalTitle: 'Hatari!',
     deleteConfirm: 'Je, una uhakika unataka kufuta bucket "{id}"?',

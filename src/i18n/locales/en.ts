@@ -346,6 +346,8 @@ export default {
     firstSeen: 'First seen:',
     exportBucketJson: 'Export bucket as JSON',
     exportEventsCsv: 'Export events as CSV',
+    exportRangeHelp:
+      'Times use your local timezone. Leave either field blank for no limit; leave both blank to export everything.',
     deleteBucket: 'Delete bucket',
     deleteModalTitle: 'Danger!',
     deleteConfirm: 'Are you sure you want to delete bucket "{id}"?',

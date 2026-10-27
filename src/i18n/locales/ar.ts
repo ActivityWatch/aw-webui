@@ -344,6 +344,8 @@ export default {
     firstSeen: 'أول ظهور:',
     exportBucketJson: 'تصدير bucket بصيغة JSON',
     exportEventsCsv: 'تصدير الأحداث بصيغة CSV',
+    exportRangeHelp:
+      'تستخدم الأوقات منطقتك الزمنية المحلية. اترك أي حقل فارغًا لإلغاء الحد المقابل؛ واترك الحقلين فارغين لتصدير كل شيء.',
     deleteBucket: 'حذف bucket',
     deleteModalTitle: 'تحذير!',
     deleteConfirm: 'هل أنت متأكد من أنك تريد حذف bucket "{id}"؟',

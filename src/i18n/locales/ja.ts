@@ -351,6 +351,8 @@ export default {
     firstSeen: '初回検出：',
     exportBucketJson: 'バケットを JSON でエクスポート',
     exportEventsCsv: 'イベントを CSV でエクスポート',
+    exportRangeHelp:
+      '時刻にはローカルのタイムゾーンを使用します。空欄の側には制限がかかりません。両方を空欄にすると、すべてをエクスポートします。',
     deleteBucket: 'バケットを削除',
     deleteModalTitle: '危険！',
     deleteConfirm: 'バケット「{id}」を削除してもよろしいですか？',
