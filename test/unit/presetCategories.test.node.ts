@@ -326,6 +326,40 @@ describe('getDefaultClasses', () => {
 });
 
 describe('loadCategories with presets', () => {
+  test.each([false, true])(
+    'pre-Kate-fix defaults preserve preset activation unless customized (edited=%s)',
+    edited => {
+      setPresetGlobal([presetSet]);
+      const legacy = defaultCategories.map(c =>
+        c.name.join('>') === 'Work>Programming'
+          ? {
+              ...c,
+              rule: {
+                ...c.rule,
+                regex:
+                  'GitHub|Stack Overflow|BitBucket|Gitlab|vim|Spyder|kate|Ghidra|Scite|iTerm|Visual Studio Code' +
+                  (edited ? '|Overleaf' : ''),
+              },
+            }
+          : c
+      );
+      const expected = JSON.parse(JSON.stringify(legacy));
+      const settingsStore = useSettingsStore();
+      settingsStore.$patch({
+        classes: legacy,
+        category_sets: [],
+        active_set_ids: ['default'],
+        _storedKeys: ['classes', 'category_sets', 'active_set_ids'],
+      });
+
+      const { sets, activeIds } = loadCategories();
+      expect(activeIds).toEqual(edited ? ['default'] : ['study']);
+      if (edited) expect(sets.find(s => s.id === 'default').categories).toEqual(expected);
+      // Detection must not rewrite persisted rules, even when activating a preset.
+      expect(settingsStore.classes).toEqual(expected);
+    }
+  );
+
   test('first run with no stored settings activates the presets', () => {
     setPresetGlobal([presetSet]);
     const { sets, activeIds } = loadCategories();

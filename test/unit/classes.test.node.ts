@@ -151,6 +151,23 @@ test('blank regex category never matches, children still do', () => {
   expect(events.map(e => e.data.$category)).toEqual([['Uncategorized'], ['Work', 'Programming']]);
 });
 
+// The ambiguous 'kate' alternative must match a whole app/title field,
+// not a substring of an unrelated title ('Skateboarding tips').
+test.each<[string, string, string[] | null]>([
+  ['Firefox', 'Skateboarding tips', null],
+  ['Firefox', 'Dinner with kate', null],
+  ['kate', 'notes.txt', ['Work', 'Programming']],
+  ['vim', 'main.c', ['Work', 'Programming']],
+  ['Firefox', 'GitHub - owner/repo', ['Work', 'Programming']],
+])('default Programming rule for app=%s title=%s', (app, title, expected) => {
+  const event: IEvent = { timestamp: '', duration: 1, data: { app, title } };
+  const cat = classes.matchString(`${app}\n${title}`, classes.defaultCategories, event);
+  expect(cat?.name ?? null).toEqual(expected);
+
+  const [classified] = classes.classifyEvents([event], classes.defaultCategories);
+  expect(classified.data.$category).toEqual(expected ?? ['Uncategorized']);
+});
+
 test('reuses regex objects while respecting in-place rule edits', () => {
   const cats: Category[] = [{ name: ['Work'], rule: { type: 'regex', regex: '^vim$' } }];
   const construct = jest.spyOn(global, 'RegExp');
