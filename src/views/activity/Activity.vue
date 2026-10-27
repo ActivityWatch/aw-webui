@@ -30,8 +30,12 @@ div
             | {{ $t('activity.allDevices') }}
           b-dropdown-divider
           b-dropdown-form.host-selector-form
+            div.small.mb-2(v-if="selectableHosts.length > 1")
+              strong.d-block {{ $t('activity.overlapPriority') }}
+              span {{ $t('activity.overlapPriorityHint') }}
+            div.text-danger.small(v-if="priorityError" role="alert") {{ $t('common.requestFailed') }}
             div.d-flex.align-items-center.justify-content-between.host-selector-row(
-              v-for="h in selectableHosts"
+              v-for="(h, index) in selectableHosts"
               :key="h"
             )
               b-form-checkbox.mr-3(
@@ -42,8 +46,29 @@ div
               )
                 icon.mr-1(:name="isMobileHost(h) ? 'mobile' : 'desktop'" scale="0.8")
                 | {{ h }}
-              router-link.small(:to="routeForHost(hostParamFor([h]))")
-                | {{ $t('activity.onlyThisDevice') }}
+              div.d-flex.align-items-center
+                b-button(
+                  v-if="selectableHosts.length > 1"
+                  size="sm"
+                  variant="link"
+                  :disabled="index === 0 || prioritySaving"
+                  :aria-label="$t('activity.moveDeviceUp', { host: h })"
+                  :title="$t('activity.moveDeviceUp', { host: h })"
+                  :data-testid="'host-priority-up-' + h"
+                  @click.stop="moveHost(h, -1)"
+                ) ↑
+                b-button(
+                  v-if="selectableHosts.length > 1"
+                  size="sm"
+                  variant="link"
+                  :disabled="index === selectableHosts.length - 1 || prioritySaving"
+                  :aria-label="$t('activity.moveDeviceDown', { host: h })"
+                  :title="$t('activity.moveDeviceDown', { host: h })"
+                  :data-testid="'host-priority-down-' + h"
+                  @click.stop="moveHost(h, 1)"
+                ) ↓
+                router-link.small(:to="routeForHost(hostParamFor([h]))")
+                  | {{ $t('activity.onlyThisDevice') }}
             // Devices named in the URL that have no activity data (e.g. removed
             // buckets): shown, but not as selected, since they aren't queried.
             div.host-selector-row.text-muted(
@@ -470,6 +495,7 @@ import {
   formatHostParam,
   isMultiHostSelection,
   parseHostParam,
+  orderMultideviceHosts,
   resolveHostSelection,
   toggleHostInSelection,
 } from '~/util/multidevice';
@@ -513,6 +539,8 @@ export default {
       categoryStore: useCategoryStore(),
       viewsStore: useViewsStore(),
       settingsStore: useSettingsStore(),
+      prioritySaving: false,
+      priorityError: false,
       bucketsStore: useBucketsStore(),
 
       today: null,
@@ -753,7 +781,13 @@ export default {
           if (!hosts.includes(h)) hosts.push(h);
         });
       }
-      return hosts;
+      return orderMultideviceHosts(
+        hosts,
+        this.settingsStore.multideviceHostOrder,
+        this.bucketsStore.bucketsWindow,
+        this.bucketsStore.bucketsAFK,
+        this.bucketsStore.bucketsAndroid
+      );
     },
     // Hosts named in a multi-device URL that have no activity data
     // (and are therefore left out of the query)
@@ -866,6 +900,14 @@ export default {
     },
   },
   watch: {
+    'settingsStore.multideviceHostOrder': {
+      deep: true,
+      handler() {
+        // moveHost refreshes after save: an early refresh aborts the shared
+        // client's in-flight settings request, losing persistence on reload.
+        if (this.isMultidevice && !this.prioritySaving) this.refresh();
+      },
+    },
     async needsCategoryHistory(needed) {
       // Switched to a view with the timeline barchart after a load that skipped it
       if (needed && !this.refreshing) {
@@ -1224,6 +1266,35 @@ export default {
         query: this.$route.query,
       };
     },
+    async moveHost(host: string, direction: number) {
+      if (this.prioritySaving) return;
+      const index = this.selectableHosts.indexOf(host);
+      const target = index + direction;
+      if (index < 0 || target < 0 || target >= this.selectableHosts.length) return;
+      this.prioritySaving = true;
+      this.priorityError = false;
+      const previous = [...this.settingsStore.multideviceHostOrder];
+      try {
+        await this.settingsStore.ensureLoaded();
+        const ordered = [...this.selectableHosts];
+        const current = ordered.indexOf(host);
+        const next = current + direction;
+        if (current < 0 || next < 0 || next >= ordered.length) return;
+        [ordered[current], ordered[next]] = [ordered[next], ordered[current]];
+        // Keep priorities for temporarily offline devices so their settings survive.
+        const offline = this.settingsStore.multideviceHostOrder.filter(h => !ordered.includes(h));
+        await this.settingsStore.update({ multideviceHostOrder: [...ordered, ...offline] });
+      } catch (error) {
+        this.settingsStore.$patch({ multideviceHostOrder: previous });
+        this.priorityError = true;
+        console.error('Failed to save device overlap priority', error);
+        return;
+      } finally {
+        this.prioritySaving = false;
+      }
+      if (this.isMultidevice) await this.refresh();
+    },
+
     toggleHost(host: string) {
       const next = toggleHostInSelection(this.hostSelection, host, this.selectableHosts);
       const param = formatHostParam(next);

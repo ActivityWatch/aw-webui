@@ -380,6 +380,11 @@ export default {
     multideviceNote: 'ब्राउज़र और स्टॉपवॉच डेटा केवल एक डिवाइस देखने पर उपलब्ध होता है।',
     deviceBreakdownTooltip:
       'प्रति डिवाइस सक्रिय समय। जब डिवाइस ओवरलैप होते हैं, तो समय केवल एक बार, पहले सूचीबद्ध डिवाइस के लिए गिना जाता है।',
+    overlapPriority: 'ओवरलैप प्राथमिकता',
+    overlapPriorityHint:
+      'ऊपर सूचीबद्ध डिवाइस ओवरलैप में प्राथमिकता पाते हैं। प्राथमिकता बदलने के लिए तीरों का उपयोग करें।',
+    moveDeviceUp: '{host} को ऊपर ले जाएँ',
+    moveDeviceDown: '{host} को नीचे ले जाएँ',
     overlap: 'ओवरलैप',
     timeActive: 'सक्रिय समय:',
     timeActiveTooltip:

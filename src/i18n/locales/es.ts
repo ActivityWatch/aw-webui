@@ -386,6 +386,11 @@ export default {
       'Los datos del navegador y del cronómetro solo están disponibles al ver un único dispositivo.',
     deviceBreakdownTooltip:
       'Tiempo activo por dispositivo. Cuando los dispositivos se superponen, el tiempo se cuenta una vez, para el dispositivo que aparece primero.',
+    overlapPriority: 'Prioridad de superposición',
+    overlapPriorityHint:
+      'Los dispositivos superiores ganan las superposiciones. Usa las flechas para cambiar la prioridad.',
+    moveDeviceUp: 'Subir {host}',
+    moveDeviceDown: 'Bajar {host}',
     overlap: 'superposición',
     timeActive: 'Tiempo activo:',
     timeActiveTooltip:
