@@ -67,7 +67,7 @@ div
           role="button"
           :aria-expanded="showDeviceBreakdown ? 'true' : 'false'"
           :title="$t('activity.deviceBreakdownTooltip')"
-          @click.prevent
+          @click.prevent="() => {}"
           data-testid="device-breakdown-toggle"
         )
           span.device-breakdown-bar
