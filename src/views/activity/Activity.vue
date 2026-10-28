@@ -1224,6 +1224,12 @@ export default {
           return;
         }
       }
+      // A reorder may have started while the All time lookup was awaiting.
+      if (this.prioritySaving) {
+        this.priorityRefreshPending = true;
+        this.priorityRefreshForce = this.priorityRefreshForce || !!force;
+        return;
+      }
       if (!this.timeperiod) {
         // All time before the earliest date is known; the timeperiod watcher refreshes later
         return;
@@ -1298,7 +1304,15 @@ export default {
         await this.settingsStore.update({ multideviceHostOrder: savedOrder });
         if (this.isMultidevice) this.priorityRefreshPending = true;
       } catch (error) {
-        if (previous) this.settingsStore.$patch({ multideviceHostOrder: previous });
+        if (previous) {
+          try {
+            // A POST may have succeeded before the final settings reload failed.
+            await this.settingsStore.load({ save: false });
+            if (this.isMultidevice) this.priorityRefreshPending = true;
+          } catch {
+            this.settingsStore.$patch({ multideviceHostOrder: previous });
+          }
+        }
         this.priorityError = true;
         console.error('Failed to save device overlap priority', error);
       } finally {

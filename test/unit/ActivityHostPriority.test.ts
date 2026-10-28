@@ -1,5 +1,7 @@
 import ActivityComponent from '~/views/activity/Activity.vue';
 
+jest.mock('~/util/awclient', () => ({ getClient: () => ({ abort: jest.fn() }) }));
+
 const Activity: any = ActivityComponent;
 
 function vmFor() {
@@ -9,6 +11,7 @@ function vmFor() {
       multideviceHostOrder: ['desktop', 'laptop', 'phone', 'offline'],
       ensureLoaded: jest.fn().mockResolvedValue(undefined),
       update: jest.fn().mockResolvedValue(undefined),
+      load: jest.fn().mockRejectedValue(new Error('offline')),
       $patch: jest.fn(),
     },
     prioritySaving: false,
@@ -73,6 +76,29 @@ describe('Activity overlap priority controls', () => {
       expect(vm.settingsStore.$patch).not.toHaveBeenCalled();
       expect((vm as any).priorityError).toBe(true);
       expect(vm.prioritySaving).toBe(false);
+    } finally {
+      log.mockRestore();
+    }
+  });
+
+  test('a save failure after an accepted POST reconciles the backend order before rollback', async () => {
+    const vm = vmFor();
+    vm.settingsStore.update.mockRejectedValue(new Error('reload failed'));
+    vm.settingsStore.load.mockImplementation(async () => {
+      vm.settingsStore.multideviceHostOrder = ['desktop', 'phone', 'laptop', 'offline'];
+    });
+    const log = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    try {
+      await Activity.methods.moveHost.call(vm, 'phone', -1);
+      expect(vm.settingsStore.load).toHaveBeenCalledWith({ save: false });
+      expect(vm.settingsStore.$patch).not.toHaveBeenCalled();
+      expect(vm.settingsStore.multideviceHostOrder).toEqual([
+        'desktop',
+        'phone',
+        'laptop',
+        'offline',
+      ]);
+      expect(vm.refresh).toHaveBeenCalledTimes(1);
     } finally {
       log.mockRestore();
     }
@@ -148,6 +174,30 @@ describe('Activity overlap priority controls', () => {
       }
     }
   );
+
+  test('an All time refresh started before saving defers its activity load until saving settles', async () => {
+    const vm: any = vmFor();
+    let finishLookup!: (changed: boolean) => void;
+    vm.periodLength = 'all';
+    vm.timeperiod = { start: 'old', end: 'old-end' };
+    vm.refreshGeneration = 0;
+    vm.activityStore = { ensure_loaded: jest.fn().mockResolvedValue(undefined) };
+    vm.loadEarliestDate = jest
+      .fn()
+      .mockImplementation(() => new Promise<boolean>(resolve => (finishLookup = resolve)));
+    vm.refresh = Activity.methods.refresh.bind(vm);
+    const refreshing = vm.refresh(true);
+    vm.prioritySaving = true;
+    finishLookup(false);
+    await refreshing;
+    expect(vm.activityStore.ensure_loaded).not.toHaveBeenCalled();
+    expect(vm.priorityRefreshPending).toBe(true);
+    expect(vm.priorityRefreshForce).toBe(true);
+    vm.prioritySaving = false;
+    vm.loadEarliestDate.mockResolvedValue(false);
+    await vm.refresh(vm.priorityRefreshForce);
+    expect(vm.activityStore.ensure_loaded).toHaveBeenCalledTimes(1);
+  });
 
   test('priority changes reload multi-device results, not a single-device view', () => {
     const refresh = jest.fn();
