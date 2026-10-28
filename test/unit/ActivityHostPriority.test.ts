@@ -154,6 +154,44 @@ describe('Activity overlap priority controls', () => {
     }
   );
 
+  test.each([false, true])(
+    'a destroyed view rolls back an uncertain save and invalidates settings (accepted=%s)',
+    async accepted => {
+      const vm: any = vmFor();
+      const previous = [...vm.settingsStore.multideviceHostOrder];
+      let rejectSave!: (error: Error) => void;
+      let persisted = [...previous];
+      vm.settingsStore._loaded = true;
+      vm.settingsStore.$patch.mockImplementation(patch => Object.assign(vm.settingsStore, patch));
+      vm.activityStore = { reset: jest.fn().mockResolvedValue(undefined) };
+      vm.settingsStore.update.mockImplementation(patch => {
+        Object.assign(vm.settingsStore, patch);
+        if (accepted) persisted = [...patch.multideviceHostOrder];
+        return new Promise<void>((_resolve, reject) => (rejectSave = reject));
+      });
+      const saving = Activity.methods.moveHost.call(vm, 'phone', -1);
+      await Promise.resolve();
+      expect(vm.settingsStore.multideviceHostOrder).not.toEqual(previous);
+      await Activity.beforeDestroy.call(vm);
+      rejectSave(new Error('request aborted'));
+      await saving;
+      expect(vm.settingsStore.multideviceHostOrder).toEqual(previous);
+      expect(vm.settingsStore._loaded).toBe(false);
+      expect(vm.settingsStore.load).not.toHaveBeenCalled();
+      expect(vm.refresh).not.toHaveBeenCalled();
+      // The next consumer reloads rather than treating rollback as server truth:
+      // the POST might have landed before the final settings GET was aborted.
+      vm.settingsStore.ensureLoaded.mockImplementation(async () => {
+        if (!vm.settingsStore._loaded) {
+          vm.settingsStore.multideviceHostOrder = [...persisted];
+          vm.settingsStore._loaded = true;
+        }
+      });
+      await vm.settingsStore.ensureLoaded();
+      expect(vm.settingsStore.multideviceHostOrder).toEqual(persisted);
+    }
+  );
+
   test('cannot move beyond either end or save concurrently', async () => {
     const vm = vmFor();
     await Activity.methods.moveHost.call(vm, 'desktop', -1);

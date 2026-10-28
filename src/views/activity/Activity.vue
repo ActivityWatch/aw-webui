@@ -1309,7 +1309,14 @@ export default {
         await this.settingsStore.update({ multideviceHostOrder: savedOrder });
         if (this.isMultidevice) this.priorityRefreshPending = true;
       } catch (error) {
-        if (this.priorityDisposed) return;
+        if (this.priorityDisposed) {
+          if (previous) {
+            // Do not retain the optimistic order or start requests from a dead view.
+            // The POST may have landed: let the next consumer reload server truth.
+            this.settingsStore.$patch({ multideviceHostOrder: previous, _loaded: false });
+          }
+          return;
+        }
         if (previous) {
           try {
             // Missing stored keys keep their current value during load(). Reset
