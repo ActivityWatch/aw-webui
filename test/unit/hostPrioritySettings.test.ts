@@ -56,7 +56,9 @@ describe('overlap priority settings persistence', () => {
         return Promise.resolve({ ...server });
       });
       const post = jest.spyOn(client.req, 'post').mockImplementation(async (url, value) => {
-        if (String(url).endsWith('/multideviceHostOrder')) server.multideviceHostOrder = value;
+        if (String(url).endsWith('/multideviceHostOrder')) {
+          server.multideviceHostOrder = value as string[];
+        }
         return {} as any;
       });
       const vm: any = {
