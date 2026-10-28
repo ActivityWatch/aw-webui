@@ -30,6 +30,54 @@ describe('Activity overlap priority controls', () => {
     expect(vm.refresh).toHaveBeenCalledTimes(1);
   });
 
+  test('reordering visible devices preserves interleaved offline priority slots', async () => {
+    const vm = vmFor();
+    vm.settingsStore.multideviceHostOrder = [
+      'offline-first',
+      'desktop',
+      'offline-middle',
+      'laptop',
+    ];
+    await Activity.methods.moveHost.call(vm, 'phone', -1);
+    expect(vm.settingsStore.update).toHaveBeenCalledWith({
+      multideviceHostOrder: ['offline-first', 'desktop', 'offline-middle', 'phone', 'laptop'],
+    });
+  });
+
+  test('a failed save restores the order loaded from the backend, not the initial default', async () => {
+    const vm = vmFor();
+    vm.settingsStore.multideviceHostOrder = [];
+    vm.settingsStore.ensureLoaded.mockImplementation(async () => {
+      vm.settingsStore.multideviceHostOrder = ['phone', 'desktop', 'laptop', 'offline'];
+    });
+    vm.settingsStore.update.mockRejectedValue(new Error('offline'));
+    const log = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    try {
+      await Activity.methods.moveHost.call(vm, 'phone', -1);
+      expect(vm.settingsStore.$patch).toHaveBeenCalledWith({
+        multideviceHostOrder: ['phone', 'desktop', 'laptop', 'offline'],
+      });
+      expect(vm.prioritySaving).toBe(false);
+    } finally {
+      log.mockRestore();
+    }
+  });
+
+  test('a settings load failure does not patch unloaded defaults over store state', async () => {
+    const vm = vmFor();
+    vm.settingsStore.ensureLoaded.mockRejectedValue(new Error('offline'));
+    const log = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    try {
+      await Activity.methods.moveHost.call(vm, 'phone', -1);
+      expect(vm.settingsStore.update).not.toHaveBeenCalled();
+      expect(vm.settingsStore.$patch).not.toHaveBeenCalled();
+      expect((vm as any).priorityError).toBe(true);
+      expect(vm.prioritySaving).toBe(false);
+    } finally {
+      log.mockRestore();
+    }
+  });
+
   test('cannot move beyond either end or save concurrently', async () => {
     const vm = vmFor();
     await Activity.methods.moveHost.call(vm, 'desktop', -1);

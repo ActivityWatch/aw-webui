@@ -1282,20 +1282,23 @@ export default {
       if (index < 0 || target < 0 || target >= this.selectableHosts.length) return;
       this.prioritySaving = true;
       this.priorityError = false;
-      const previous = [...this.settingsStore.multideviceHostOrder];
+      let previous: string[] | undefined;
       try {
         await this.settingsStore.ensureLoaded();
+        previous = [...this.settingsStore.multideviceHostOrder];
         const ordered = [...this.selectableHosts];
         const current = ordered.indexOf(host);
         const next = current + direction;
         if (current < 0 || next < 0 || next >= ordered.length) return;
         [ordered[current], ordered[next]] = [ordered[next], ordered[current]];
-        // Keep priorities for temporarily offline devices so their settings survive.
-        const offline = this.settingsStore.multideviceHostOrder.filter(h => !ordered.includes(h));
-        await this.settingsStore.update({ multideviceHostOrder: [...ordered, ...offline] });
+        // Refill visible slots in the saved order, keeping offline devices in place.
+        let visibleIndex = 0;
+        const savedOrder = previous.map(h => (ordered.includes(h) ? ordered[visibleIndex++] : h));
+        savedOrder.push(...ordered.slice(visibleIndex));
+        await this.settingsStore.update({ multideviceHostOrder: savedOrder });
         if (this.isMultidevice) this.priorityRefreshPending = true;
       } catch (error) {
-        this.settingsStore.$patch({ multideviceHostOrder: previous });
+        if (previous) this.settingsStore.$patch({ multideviceHostOrder: previous });
         this.priorityError = true;
         console.error('Failed to save device overlap priority', error);
       } finally {
