@@ -91,7 +91,9 @@ describe('Activity overlap priority controls', () => {
     try {
       await Activity.methods.moveHost.call(vm, 'phone', -1);
       expect(vm.settingsStore.load).toHaveBeenCalledWith({ save: false });
-      expect(vm.settingsStore.$patch).not.toHaveBeenCalled();
+      expect(vm.settingsStore.$patch).toHaveBeenCalledWith({
+        multideviceHostOrder: ['desktop', 'laptop', 'phone', 'offline'],
+      });
       expect(vm.settingsStore.multideviceHostOrder).toEqual([
         'desktop',
         'phone',
@@ -103,6 +105,54 @@ describe('Activity overlap priority controls', () => {
       log.mockRestore();
     }
   });
+
+  test('a failed first save reconciles a missing setting to the previous default', async () => {
+    const vm = vmFor();
+    vm.settingsStore.multideviceHostOrder = [];
+    vm.settingsStore.$patch.mockImplementation(patch => Object.assign(vm.settingsStore, patch));
+    vm.settingsStore.update.mockImplementation(async patch => {
+      Object.assign(vm.settingsStore, patch);
+      throw new Error('POST failed');
+    });
+    // load() leaves keys missing from both backend and localStorage untouched.
+    vm.settingsStore.load.mockResolvedValue(undefined);
+    const log = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    try {
+      await Activity.methods.moveHost.call(vm, 'phone', -1);
+      expect(vm.settingsStore.multideviceHostOrder).toEqual([]);
+    } finally {
+      log.mockRestore();
+    }
+  });
+
+  test.each([false, true])(
+    'a destroyed view never resumes a pending priority refresh (failure=%s)',
+    async fails => {
+      const vm: any = vmFor();
+      let settle!: () => void;
+      vm.activityStore = { reset: jest.fn().mockResolvedValue(undefined) };
+      vm.settingsStore.update.mockImplementation(
+        () =>
+          new Promise<void>((resolve, reject) => {
+            settle = () => (fails ? reject(new Error('canceled')) : resolve());
+          })
+      );
+      vm.settingsStore.load.mockResolvedValue(undefined);
+      const log = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+      try {
+        const saving = Activity.methods.moveHost.call(vm, 'phone', -1);
+        await Promise.resolve();
+        vm.priorityRefreshPending = true;
+        await Activity.beforeDestroy.call(vm);
+        settle();
+        await saving;
+        expect(vm.refresh).not.toHaveBeenCalled();
+        expect(vm.settingsStore.load).not.toHaveBeenCalled();
+      } finally {
+        log.mockRestore();
+      }
+    }
+  );
 
   test('cannot move beyond either end or save concurrently', async () => {
     const vm = vmFor();

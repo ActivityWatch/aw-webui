@@ -539,6 +539,7 @@ export default {
       categoryStore: useCategoryStore(),
       viewsStore: useViewsStore(),
       settingsStore: useSettingsStore(),
+      priorityDisposed: false,
       prioritySaving: false,
       priorityRefreshPending: false,
       priorityRefreshForce: false,
@@ -954,6 +955,7 @@ export default {
   },
 
   beforeDestroy: async function () {
+    this.priorityDisposed = true;
     // Cancels pending requests and resets store
     await this.activityStore.reset();
   },
@@ -1206,6 +1208,7 @@ export default {
     },
 
     refresh: async function (force) {
+      if (this.priorityDisposed) return;
       // Activity loads abort the shared client, including an in-flight settings
       // read. Coalesce navigation and manual refreshes until the save settles.
       if (this.prioritySaving) {
@@ -1225,6 +1228,7 @@ export default {
         }
       }
       // A reorder may have started while the All time lookup was awaiting.
+      if (this.priorityDisposed) return;
       if (this.prioritySaving) {
         this.priorityRefreshPending = true;
         this.priorityRefreshForce = this.priorityRefreshForce || !!force;
@@ -1291,6 +1295,7 @@ export default {
       let previous: string[] | undefined;
       try {
         await this.settingsStore.ensureLoaded();
+        if (this.priorityDisposed) return;
         previous = [...this.settingsStore.multideviceHostOrder];
         const ordered = [...this.selectableHosts];
         const current = ordered.indexOf(host);
@@ -1304,8 +1309,12 @@ export default {
         await this.settingsStore.update({ multideviceHostOrder: savedOrder });
         if (this.isMultidevice) this.priorityRefreshPending = true;
       } catch (error) {
+        if (this.priorityDisposed) return;
         if (previous) {
           try {
+            // Missing stored keys keep their current value during load(). Reset
+            // the optimistic patch first, then reconcile any accepted POST.
+            this.settingsStore.$patch({ multideviceHostOrder: previous });
             // A POST may have succeeded before the final settings reload failed.
             await this.settingsStore.load({ save: false });
             if (this.isMultidevice) this.priorityRefreshPending = true;
@@ -1322,7 +1331,7 @@ export default {
         this.priorityRefreshPending = false;
         this.priorityRefreshForce = false;
         // Use the current route, even on failure or a switch to one device.
-        if (refreshPending) await this.refresh(force);
+        if (refreshPending && !this.priorityDisposed) await this.refresh(force);
       }
     },
 
