@@ -31,6 +31,7 @@ import {
   HostDuration,
   isMultiHostSelection,
   parseHostParam,
+  orderMultideviceHosts,
   resolveHostSelection,
 } from '~/util/multidevice';
 import {
@@ -586,7 +587,14 @@ export const useActivityStore = defineStore('activity', {
         // fakedata hosts only take part when explicitly selected
         { includeFakedata: selection.hosts.some(h => h.startsWith('fakedata')) }
       );
-      return resolveHostSelection(selection, eligible);
+      const ordered = orderMultideviceHosts(
+        eligible,
+        useSettingsStore().multideviceHostOrder,
+        bucketsStore.bucketsWindow,
+        bucketsStore.bucketsAFK,
+        bucketsStore.bucketsAndroid
+      );
+      return resolveHostSelection(selection, ordered);
     },
 
     async ensure_loaded_multidevice(query_options: QueryOptions, hosts: string[]) {
