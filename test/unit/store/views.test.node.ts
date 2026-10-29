@@ -178,6 +178,43 @@ describe('views store on an Android build', () => {
     expect(expected[0].elements).not.toContainEqual({ type: 'top_titles' });
   });
 
+  test('save waits for persistence before reloading views', async () => {
+    const { viewsStore, save } = await loadOnAndroid(storedDesktopDefault());
+    viewsStore.addVisualization({ view_id: 'summary', type: 'top_titles' });
+    const edited = JSON.parse(JSON.stringify(viewsStore.views));
+    let finish: () => void;
+    save.mockImplementationOnce(() => new Promise<void>(resolve => (finish = resolve)));
+    const load = jest.spyOn(viewsStore, 'load');
+    let settled = false;
+    const saving = viewsStore.save().then(() => (settled = true));
+    // Let the update enter its deferred persistence without settling it.
+    await new Promise(resolve => setImmediate(resolve));
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(settled).toBe(false);
+    expect(load).not.toHaveBeenCalled();
+    expect(viewsStore.views).toEqual(edited);
+    finish();
+    await saving;
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(viewsStore.views).toEqual(edited);
+  });
+
+  test('save propagates persistence failures without reloading away the edit', async () => {
+    const { viewsStore, update } = await loadOnAndroid(storedDesktopDefault());
+    viewsStore.addVisualization({ view_id: 'summary', type: 'top_titles' });
+    const edited = JSON.parse(JSON.stringify(viewsStore.views));
+    const failure = new Error('offline');
+    // Observe the rejected update too, so the broken fire-and-forget caller
+    // cannot leave an unhandled rejection in this test.
+    const failedUpdate = Promise.reject(failure);
+    void failedUpdate.catch(() => undefined);
+    update.mockReturnValueOnce(failedUpdate);
+    const load = jest.spyOn(viewsStore, 'load');
+    await expect(viewsStore.save()).rejects.toBe(failure);
+    expect(load).not.toHaveBeenCalled();
+    expect(viewsStore.views).toEqual(edited);
+  });
+
   test('load() keeps stored views the user edited', async () => {
     const edited = storedDesktopDefault().slice(0, 2);
     const { views } = await loadOnAndroid(edited);
