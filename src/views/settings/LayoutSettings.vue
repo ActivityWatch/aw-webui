@@ -86,6 +86,9 @@ export default {
     },
     async reset() {
       if (this.saving) return;
+      this.draftTextSize = DEFAULT_TEXT_SIZE;
+      this.automaticWidth = DEFAULT_CONTENT_WIDTH === 0;
+      this.draftContentWidth = DEFAULT_CONTENT_WIDTH || 1200;
       await this.persist({ textSize: DEFAULT_TEXT_SIZE, contentWidth: DEFAULT_CONTENT_WIDTH });
     },
     async persist(values: { textSize: number; contentWidth: number }) {
