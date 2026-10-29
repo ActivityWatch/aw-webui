@@ -27,6 +27,8 @@ let settingsLoadPromise: Promise<void> | null = null;
 // POST and reload. Independent preferences need not wait for one another.
 // Keep request bookkeeping out of persisted/reactive settings.
 const appearanceUpdates = new WeakMap<object, Record<string, Promise<void>>>();
+// A completed newer reload supersedes older responses, not independent writes.
+const settingsLoads = new WeakMap<object, { issued: number; applied: number }>();
 
 // Backoffs for NewReleaseNotification
 export const SHORT_BACKOFF_PERIOD = 24 * 60 * 60;
@@ -204,8 +206,13 @@ export const useSettingsStore = defineStore('settings', {
       }
       const client = getClient();
 
+      const loads = settingsLoads.get(this) || { issued: 0, applied: 0 };
+      settingsLoads.set(this, loads);
+      const request = ++loads.issued;
       // Fetch from server, fall back to localStorage
       const server_settings = await client.get_settings();
+      if (request < loads.applied) return;
+      loads.applied = request;
 
       // Build a unified map: server value wins, localStorage is fallback.
       // Skip keys that are missing from BOTH sources — otherwise `null` from
@@ -324,12 +331,6 @@ export const useSettingsStore = defineStore('settings', {
       // NOTE: localStorage deprecated, will be removed in future
       const client = getClient();
 
-      // Preserve this request's explicit appearance values across concurrent
-      // saves/reloads while the server comparison is in flight.
-      const appearanceValues: Record<string, number> = {};
-      for (const key of ['textSize', 'contentWidth']) {
-        if (explicitKeys.includes(key)) appearanceValues[key] = this[key];
-      }
       // Fetch current settings from server
       const server_settings = await client.get_settings();
 

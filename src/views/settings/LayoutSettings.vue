@@ -113,6 +113,7 @@ export default {
       this.saved = false;
       this.error = '';
       try {
+        // Settings updates persist only the explicitly submitted keys.
         await useSettingsStore().update(values);
         this.retryKeys = [];
         const store = useSettingsStore();
