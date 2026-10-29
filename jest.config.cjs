@@ -13,6 +13,10 @@ module.exports = {
       displayName: 'jsdom',
       testEnvironment: 'jsdom',
       setupFilesAfterEnv: ['<rootDir>/test/jest-setup.js'],
+      globals: {
+        // Match pug-plain-loader: valueless Vue slot bindings must stay valueless.
+        'vue-jest': { pug: { doctype: 'html' } },
+      },
       transform: {
         '^.+\\.js$': 'babel-jest',
         '^.+\\.ts$': 'ts-jest',

@@ -278,6 +278,23 @@ async function importBuckets(aw, importFile) {
   return aw.req.post('/0/import', formData, { headers });
 }
 
+// Like importBuckets, keep rejection observable by the caller's local catch.
+async function reconcileHostDeletion(vm, selection) {
+  if (!selection.reconcileIds.length) return;
+  // ID-only DELETE acknowledgements cannot identify the incarnation removed.
+  await vm.bucketsStore.loadBuckets();
+  selection.bucketIds = selection.bucketIds.filter(id => {
+    if (!selection.reconcileIds.includes(id)) return true;
+    const bucket = vm.bucketsStore.getBucket(id);
+    return bucket && bucket.created?.valueOf() === selection.bucketCreated[id];
+  });
+  selection.bucketCount = selection.bucketIds.length;
+  vm.delete_host_reconcile_ids = vm.delete_host_reconcile_ids.filter(
+    id => !selection.reconcileIds.includes(id)
+  );
+  selection.reconcileIds = [];
+}
+
 export default {
   name: 'Buckets',
   components: {
@@ -297,6 +314,7 @@ export default {
       delete_host_selected: null,
       deleting_host: false,
       delete_host_error: null,
+      delete_host_reconcile_ids: [] as string[],
       export_inflight: 0,
       export_error: null as string | null,
     };
@@ -387,25 +405,85 @@ export default {
       this.$root.$emit('bv::hide::modal', 'delete-modal');
     },
     openDeleteHostModal: function (device) {
+      this.delete_host_error = null;
       this.delete_host_selected = {
         hostname: device.hostname,
         bucketCount: device.buckets.length,
         bucketIds: device.buckets.map(b => b.id),
+        bucketCreated: Object.fromEntries(device.buckets.map(b => [b.id, b.created?.valueOf()])),
+        reconcileIds: device.buckets
+          .map(b => b.id)
+          .filter(id => this.delete_host_reconcile_ids.includes(id)),
       };
       this.$root.$emit('bv::show::modal', 'delete-host-modal');
     },
+
     deleteBucketsForSelectedHost: async function () {
-      if (!this.delete_host_selected) return;
+      if (!this.delete_host_selected || this.deleting_host) return;
+      const selection = this.delete_host_selected;
+      const deletedIds = new Set<string>();
       this.deleting_host = true;
       this.delete_host_error = null;
       try {
+        // A failed reconciliation is retried before any further DELETE is sent.
+        if (selection.reconcileIds.length) await reconcileHostDeletion(this, selection);
         await this.bucketsStore.deleteBucketsByHost({
-          bucketIds: this.delete_host_selected.bucketIds,
+          bucketIds: [...selection.bucketIds],
+          onDeleted: bucketId => {
+            deletedIds.add(bucketId);
+            // Dismissal can outlive this operation, including its final reload.
+            // Retain the acknowledgement before consulting the current modal.
+            if (!this.delete_host_reconcile_ids.includes(bucketId)) {
+              this.delete_host_reconcile_ids.push(bucketId);
+            }
+            if (this.delete_host_selected !== selection) return;
+            selection.bucketIds = selection.bucketIds.filter(id => id !== bucketId);
+            selection.bucketCount = selection.bucketIds.length;
+          },
         });
-        this.$root.$emit('bv::hide::modal', 'delete-host-modal');
+        if (this.delete_host_selected === selection) {
+          this.$root.$emit('bv::hide::modal', 'delete-host-modal');
+        }
       } catch (err) {
-        this.delete_host_error = err?.message || this.$t('buckets.deleteFailed');
+        if (this.delete_host_selected === selection) {
+          this.delete_host_error = err?.message || this.$t('buckets.deleteFailed');
+        }
       } finally {
+        // Remove acknowledged stale entries. Reconfirmed replacements need a fresh
+        // read: the old request may have deleted them, or they may still exist.
+        // Old errors and close events still belong exclusively to their selection.
+        let current = this.delete_host_selected;
+        while (current && current !== selection) {
+          current.reconcileIds = [
+            ...new Set([
+              ...current.reconcileIds.filter(
+                id =>
+                  !deletedIds.has(id) || current.bucketCreated[id] !== selection.bucketCreated[id]
+              ),
+              ...current.bucketIds.filter(
+                id =>
+                  deletedIds.has(id) && current.bucketCreated[id] !== selection.bucketCreated[id]
+              ),
+            ]),
+          ];
+          this.delete_host_reconcile_ids = [
+            ...new Set([...this.delete_host_reconcile_ids, ...current.reconcileIds]),
+          ];
+          current.bucketIds = current.bucketIds.filter(
+            id => !deletedIds.has(id) || current.reconcileIds.includes(id)
+          );
+          current.bucketCount = current.bucketIds.length;
+          try {
+            await reconcileHostDeletion(this, current);
+          } catch (err) {
+            if (this.delete_host_selected === current) {
+              this.delete_host_error = err?.message || this.$t('buckets.deleteFailed');
+            }
+          }
+          if (this.delete_host_selected === current) break;
+          current = this.delete_host_selected;
+        }
+        // Single-flight spans dismiss/reopen; an old operation cannot overlap a new one.
         this.deleting_host = false;
       }
     },
