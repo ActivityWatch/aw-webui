@@ -1,6 +1,7 @@
 <template lang="pug">
 div
   h3 {{ $t('buckets.title') }}
+  p {{ $t('buckets.intro') }}
 
   b-card.bucket-card.mb-3(
     v-for="device in bucketsStore.bucketsByDevice",

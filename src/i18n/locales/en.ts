@@ -7,7 +7,7 @@ export default {
     activity: 'Activity',
     loading: 'Loading...',
     noActivityReports:
-      'No activity reports available. Make sure you have both an AFK and window watcher running.',
+      'No activity reports available. Make sure the idle-detection and active-window tracking components (aw-watcher-afk and aw-watcher-window) are running.',
     timeline: 'Timeline',
     stopwatch: 'Stopwatch',
     tools: 'Tools',
@@ -69,7 +69,9 @@ export default {
     requestFailed: 'The request failed.',
     all: 'All',
     uncategorized: 'Uncategorized',
-    requiresAfk: 'requires aw-watcher-afk',
+    requiresAfk: 'requires idle-detection data (aw-watcher-afk)',
+    active: 'Active',
+    inactive: 'Inactive',
     unknown: 'unknown',
   },
   notFound: {
@@ -141,7 +143,8 @@ export default {
     },
     activePattern: {
       title: 'Always count as active pattern',
-      help1: 'Apps or titles matching this regular expression will never be counted as AFK.',
+      help1:
+        'Apps or window titles matching this regular expression will not be counted as inactive in activity reports.',
       help2:
         'Can be used to count time as active, despite no input (like meetings, or games with controllers). An empty string disables it.',
       example: 'Example expression:',
@@ -270,6 +273,8 @@ export default {
     androidNote:
       'ActivityWatch on Android is in a very early stage of development. There will be bugs, but we hope you bear with us as we refine things and get it on par with the desktop version of ActivityWatch (which you should try!).',
     greeting: 'Welcome to ActivityWatch',
+    trackingIntro:
+      'Tracking components, called watchers, record activity such as the active window or browser tab. The idle-detection component marks time as inactive after a period without keyboard or mouse input; active means input was detected, not necessarily productive work. Raw Data lets you inspect the recorded events.',
     intro1:
       "We've come a long way{android} but we still need users (like you!) to provide feedback and help us turn ActivityWatch into a successful project. We'd love to hear any ideas you have for improvements.",
     introAndroid: ' (especially on Android!)',
@@ -318,7 +323,9 @@ export default {
     },
   },
   buckets: {
-    title: 'Buckets',
+    title: 'Event collections (buckets)',
+    intro:
+      'Each tracking component (watcher) records events in a collection called a bucket. Events describe what was recorded and when. Technical IDs below stay unchanged for exports and integrations.',
     moreWatchers: 'Are you looking to collect more data? Check out',
     docsLink: 'the docs',
     thisDevice: 'this device',
@@ -386,7 +393,7 @@ export default {
     filters: 'Filters',
     filtersTitle: 'Filters',
     refresh: 'Refresh',
-    excludeAfk: 'Exclude AFK time',
+    excludeAfk: 'Exclude inactive time',
     audibleActive: 'Count audible browser tab as active',
     includeStopwatch: 'Include manually logged events (stopwatch)',
     newView: 'New view',
@@ -426,7 +433,8 @@ export default {
     previousPeriod: 'Previous {period}',
     nextPeriod: 'Next {period}',
     allTimeSlowHint: 'All time can take a while on large databases.',
-    filterAfkTooltip: 'Filter away time where the AFK watcher did not detect any input.',
+    filterAfkTooltip:
+      'Exclude time marked inactive by the idle-detection component (aw-watcher-afk), usually after no keyboard or mouse input. Missing idle-detection data does not mean you were inactive. Apps matching the always-active pattern are still included.',
     filterAudibleTooltip:
       'If the active window is an audible browser tab, count as active. Requires a browser watcher.',
     showCategory: 'Show category',
@@ -476,7 +484,7 @@ export default {
   visualizations: {
     noData: '(no data)',
     unsupportedPeriod: "This feature doesn't support the current time period.",
-    missingWatcher: 'This feature is missing data from a required watcher.',
+    missingWatcher: 'This feature is missing data from a required tracking component (watcher).',
     docLink: 'documentation',
     allCategories: 'All',
     topApps: 'Top Applications',
@@ -500,9 +508,11 @@ export default {
   },
   timeline: {
     title: 'Timeline',
+    intro:
+      'Explore recorded events from each tracking component (watcher). Active and Inactive describe detected input, not productivity. Missing idle-detection data is not evidence of inactivity.',
     eventsShown: 'Events shown:',
     swimlanes: 'Swimlanes:',
-    filterAfk: 'Filter AFK',
+    filterAfk: 'Exclude inactive time',
     mergeByApp: 'Merge by app',
     noEvents: 'No events match selected criteria. Timeline is not updated.',
     scrollHint: 'Scroll to zoom, swipe/horizontal-scroll to pan, arrow keys to navigate',
@@ -590,8 +600,8 @@ export default {
     },
     bucketDetail: {
       type: 'Type:',
-      client: 'Client:',
-      hostname: 'Hostname:',
+      client: 'Tracking component (client):',
+      hostname: 'Device (hostname):',
       created: 'Created:',
       firstLastEvent: 'First/last event:',
       eventCount: 'Event count:',
@@ -942,17 +952,18 @@ export default {
       hours: '{count}+ hrs',
       merge: 'Merge:',
       categories: 'Categories:',
-      afkFiltered: 'AFK filtered',
+      afkFiltered: 'inactive time excluded',
       mergedByApp: 'merged by app',
       categoriesCount: '{count} categories',
       none: 'none',
       groupByCategory: 'Group by category',
-      groupByBucketType: 'Group by bucket type',
+      groupByBucketType: 'Group by collection type',
       groupedEvents: '{count} events · {duration}',
       collapseGroups: 'Collapse groups',
       groupBreakdown: 'Activity breakdown',
       totalTime: 'Total time',
-      bucketsNoEvents: 'Buckets with no events in the queried range will be hidden.',
+      bucketsNoEvents:
+        'Event collections with no recordings in the selected time range are hidden.',
       editSaved: 'Your edit is saved. Refresh the timeline to see it reflected.',
       editSavedTitle: 'Heads up',
     },

@@ -1,6 +1,7 @@
 <template lang="pug">
 div
   h3 {{ $t('timeline.title') }}
+  p {{ $t('timeline.intro') }}
 
   input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration").mb-3
 
