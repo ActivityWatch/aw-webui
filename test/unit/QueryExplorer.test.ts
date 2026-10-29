@@ -1,4 +1,15 @@
 import QueryExplorerComponent from '~/views/QueryExplorer.vue';
+import { buildSavedQuery } from '~/util/savedQueries';
+
+const saveQueryDraft = () =>
+  buildSavedQuery({
+    id: '',
+    name: '',
+    query_code: 'RETURN = [];',
+    startdate: '2026-05-20',
+    enddate: '2026-05-21',
+    event_type: 'currentwindow',
+  });
 
 // Tests call Options API members directly, which the Vue constructor type doesn't expose.
 const QueryExplorer: any = QueryExplorerComponent;
@@ -69,6 +80,7 @@ describe('QueryExplorer saveCurrentQuery', () => {
       persistSavedQueries: jest.fn().mockReturnValue(persistence),
       query_code: 'RETURN = [];',
       saveQueryName: 'Daily Coding Time',
+      saveQueryDraft: saveQueryDraft(),
       savedQueries: [],
       selected_saved_query_id: '',
       showSaveQueryModal: true,
@@ -95,6 +107,7 @@ describe('QueryExplorer saveCurrentQuery', () => {
       persistSavedQueries: jest.fn().mockResolvedValue(true),
       query_code: 'RETURN = [];',
       saveQueryName: 'Daily Coding Time',
+      saveQueryDraft: saveQueryDraft(),
       savedQueries: [],
       selected_saved_query_id: '',
       showSaveQueryModal: true,
@@ -132,6 +145,7 @@ describe('QueryExplorer saveCurrentQuery', () => {
     const vm = {
       persistSavedQueries: jest.fn().mockReturnValue(persistence),
       renameQueryName: 'Coding Time',
+      renameQueryTarget: { ...selectedSavedQuery },
       savedQueries: [selectedSavedQuery],
       selectedSavedQuery,
       showRenameQueryModal: true,
@@ -154,6 +168,7 @@ describe('QueryExplorer saveCurrentQuery', () => {
     const vm = {
       persistSavedQueries: jest.fn().mockResolvedValue(true),
       renameQueryName: 'Coding Time',
+      renameQueryTarget: { ...selectedSavedQuery },
       savedQueries: [selectedSavedQuery],
       selectedSavedQuery,
       showRenameQueryModal: true,

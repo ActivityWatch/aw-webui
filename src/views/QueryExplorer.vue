@@ -23,9 +23,9 @@ div
             | {{savedQuery.name}}
       div.form-group.col-lg-6
         div.saved-query-actions
-          button.btn.btn-success.mr-2(type="button", @click="saveCurrentQuery()") {{ $t('ui.query.saveCurrent') }}
-          button.btn.btn-secondary.mr-2(type="button", @click="renameSelectedQuery()", :disabled="!selected_saved_query_id") {{ $t('ui.query.rename') }}
-          button.btn.btn-danger(type="button", @click="deleteSelectedQuery()", :disabled="!selected_saved_query_id")
+          button.btn.btn-success.mr-2(type="button", @click="saveCurrentQuery()", :disabled="saved_query_pending") {{ $t('ui.query.saveCurrent') }}
+          button.btn.btn-secondary.mr-2(type="button", @click="renameSelectedQuery()", :disabled="!selected_saved_query_id || saved_query_pending") {{ $t('ui.query.rename') }}
+          button.btn.btn-danger(type="button", @click="deleteSelectedQuery()", :disabled="!selected_saved_query_id || saved_query_pending")
             icon(name="trash")
             |  {{ $t('common.delete') }}
 
@@ -52,6 +52,10 @@ div
   b-modal(
     v-model="showSaveQueryModal"
     :title="$t('ui.query.saveTitle')"
+    :busy="saved_query_pending"
+    :no-close-on-backdrop="saved_query_pending"
+    :no-close-on-esc="saved_query_pending"
+    :hide-header-close="saved_query_pending"
     :ok-title="$t('common.save')"
     @ok="onSaveQueryConfirm"
     @shown="$refs.saveQueryNameInput && $refs.saveQueryNameInput.focus()"
@@ -66,6 +70,10 @@ div
   b-modal(
     v-model="showRenameQueryModal"
     :title="$t('ui.query.renameTitle')"
+    :busy="saved_query_pending"
+    :no-close-on-backdrop="saved_query_pending"
+    :no-close-on-esc="saved_query_pending"
+    :hide-header-close="saved_query_pending"
     :ok-title="$t('ui.query.rename')"
     @ok="onRenameQueryConfirm"
     @shown="$refs.renameQueryNameInput && $refs.renameQueryNameInput.focus()"
@@ -138,8 +146,11 @@ RETURN = sort_by_duration(merged_events);
       enddate: tomorrow.format('YYYY-MM-DD'),
       showSaveQueryModal: false,
       saveQueryName: '',
+      saveQueryDraft: null as SavedQuery | null,
       showRenameQueryModal: false,
       renameQueryName: '',
+      renameQueryTarget: null as SavedQuery | null,
+      saved_query_pending: false,
     };
   },
   computed: {
@@ -183,124 +194,128 @@ RETURN = sort_by_duration(merged_events);
       this.saved_query_error = '';
     },
     saveCurrentQuery: async function () {
+      if (this.saved_query_pending) return;
       const current = this.selectedSavedQuery;
-
-      if (current) {
-        const confirmed = await this.$bvModal.msgBoxConfirm(
-          `Update saved query "${current.name}"?`,
-          { title: 'Update Query', okTitle: 'Update', cancelTitle: 'Cancel', centered: true }
-        );
-        if (!confirmed) {
-          return;
-        }
-
-        const updatedQuery = buildSavedQuery({
-          id: current.id,
-          name: current.name,
-          query_code: this.query_code,
-          startdate: this.startdate,
-          enddate: this.enddate,
-          event_type: this.event_type,
-        });
-
-        const didPersist = await this.persistSavedQueries(
-          this.savedQueries.map(savedQuery =>
-            savedQuery.id === current.id ? updatedQuery : savedQuery
-          )
-        );
-        if (didPersist) {
-          this.selected_saved_query_id = current.id;
-        }
-        return;
-      }
-
-      // No existing query — open modal to get a name
-      this.saveQueryName = getDefaultSavedQueryName(this.query_code);
-      this.showSaveQueryModal = true;
-    },
-    onSaveQueryConfirm: async function (event) {
-      event.preventDefault();
-
-      const trimmedName = this.saveQueryName.trim();
-      if (_.isEmpty(trimmedName)) {
-        this.saved_query_error = 'Saved query name cannot be empty.';
-        return;
-      }
-
-      const newId = buildSavedQueryId(
-        trimmedName,
-        this.savedQueries.map(savedQuery => savedQuery.id)
-      );
-      const newQuery = buildSavedQuery({
-        id: newId,
-        name: trimmedName,
+      // Bind the target and matching draft before confirmation can yield control.
+      const draft = buildSavedQuery({
+        id: current?.id || '',
+        name: current?.name || '',
         query_code: this.query_code,
         startdate: this.startdate,
         enddate: this.enddate,
         event_type: this.event_type,
       });
 
-      const didPersist = await this.persistSavedQueries([...this.savedQueries, newQuery]);
-      if (didPersist) {
-        this.selected_saved_query_id = newId;
-        this.showSaveQueryModal = false;
-      }
-    },
-    renameSelectedQuery: async function () {
-      if (!this.selectedSavedQuery) {
+      if (current) {
+        this.saved_query_pending = true;
+        try {
+          const confirmed = await this.$bvModal.msgBoxConfirm(
+            `Update saved query "${draft.name}"?`,
+            { title: 'Update Query', okTitle: 'Update', cancelTitle: 'Cancel', centered: true }
+          );
+          if (!confirmed) return;
+          await this.persistSavedQueries(
+            this.savedQueries.map(savedQuery => (savedQuery.id === draft.id ? draft : savedQuery))
+          );
+        } finally {
+          this.saved_query_pending = false;
+        }
         return;
       }
 
-      this.renameQueryName = this.selectedSavedQuery.name;
+      // No existing query — open modal to name this snapshot, not a later editor draft.
+      this.saveQueryDraft = draft;
+      this.saveQueryName = getDefaultSavedQueryName(draft.query_code);
+      this.showSaveQueryModal = true;
+    },
+    onSaveQueryConfirm: async function (event) {
+      event.preventDefault();
+
+      if (this.saved_query_pending) return;
+      const draft = this.saveQueryDraft;
+      const trimmedName = this.saveQueryName.trim();
+      if (_.isEmpty(trimmedName)) {
+        this.saved_query_error = 'Saved query name cannot be empty.';
+        return;
+      }
+
+      if (!draft) return;
+      const newId = buildSavedQueryId(
+        trimmedName,
+        this.savedQueries.map(savedQuery => savedQuery.id)
+      );
+      const newQuery = { ...draft, id: newId, name: trimmedName };
+      this.saved_query_pending = true;
+      try {
+        const didPersist = await this.persistSavedQueries([...this.savedQueries, newQuery]);
+        if (didPersist && this.saveQueryDraft === draft) {
+          if (!this.selected_saved_query_id) this.selected_saved_query_id = newId;
+          this.showSaveQueryModal = false;
+        }
+      } finally {
+        this.saved_query_pending = false;
+      }
+    },
+    renameSelectedQuery: async function () {
+      if (this.saved_query_pending || !this.selectedSavedQuery) {
+        return;
+      }
+
+      this.renameQueryTarget = { ...this.selectedSavedQuery };
+      this.renameQueryName = this.renameQueryTarget.name;
       this.showRenameQueryModal = true;
     },
     onRenameQueryConfirm: async function (event) {
       event.preventDefault();
 
-      if (!this.selectedSavedQuery) {
-        return;
-      }
-
+      if (this.saved_query_pending) return;
+      const target = this.renameQueryTarget;
       const trimmedName = this.renameQueryName.trim();
       if (_.isEmpty(trimmedName)) {
         this.saved_query_error = 'Saved query name cannot be empty.';
         return;
       }
 
-      const selectedQueryId = this.selectedSavedQuery.id;
-      const didPersist = await this.persistSavedQueries(
-        this.savedQueries.map(savedQuery =>
-          savedQuery.id === selectedQueryId ? { ...savedQuery, name: trimmedName } : savedQuery
-        )
-      );
-      if (didPersist) {
-        this.showRenameQueryModal = false;
+      if (!target) return;
+      this.saved_query_pending = true;
+      try {
+        const didPersist = await this.persistSavedQueries(
+          this.savedQueries.map(savedQuery =>
+            savedQuery.id === target.id ? { ...savedQuery, name: trimmedName } : savedQuery
+          )
+        );
+        if (didPersist && this.renameQueryTarget === target) {
+          this.showRenameQueryModal = false;
+        }
+      } finally {
+        this.saved_query_pending = false;
       }
     },
     deleteSelectedQuery: async function () {
-      if (!this.selectedSavedQuery) {
-        return;
-      }
-
-      const confirmed = await this.$bvModal.msgBoxConfirm(
-        `Delete saved query "${this.selectedSavedQuery.name}"? This cannot be undone.`,
-        {
-          title: 'Delete Query',
-          okTitle: 'Delete',
-          okVariant: 'danger',
-          cancelTitle: 'Cancel',
-          centered: true,
+      if (this.saved_query_pending || !this.selectedSavedQuery) return;
+      const targetId = this.selectedSavedQuery.id;
+      const targetName = this.selectedSavedQuery.name;
+      this.saved_query_pending = true;
+      try {
+        const confirmed = await this.$bvModal.msgBoxConfirm(
+          `Delete saved query "${targetName}"? This cannot be undone.`,
+          {
+            title: 'Delete Query',
+            okTitle: 'Delete',
+            okVariant: 'danger',
+            cancelTitle: 'Cancel',
+            centered: true,
+          }
+        );
+        if (!confirmed) return;
+        const didPersist = await this.persistSavedQueries(
+          this.savedQueries.filter(savedQuery => savedQuery.id !== targetId)
+        );
+        if (didPersist && this.selected_saved_query_id === targetId) {
+          this.selected_saved_query_id = '';
         }
-      );
-      if (!confirmed) {
-        return;
-      }
-
-      const didPersist = await this.persistSavedQueries(
-        this.savedQueries.filter(savedQuery => savedQuery.id !== this.selected_saved_query_id)
-      );
-      if (didPersist) {
-        this.selected_saved_query_id = '';
+      } finally {
+        this.saved_query_pending = false;
       }
     },
     query: async function () {
