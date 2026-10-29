@@ -113,7 +113,8 @@ export default {
       this.saved = false;
       this.error = '';
       try {
-        await useSettingsStore().update(values);
+        // Saving layout must not replay unrelated settings from this tab.
+        await useSettingsStore().update(values, true);
         this.retryKeys = [];
         const store = useSettingsStore();
         this.draftTextSize = store.textSize;

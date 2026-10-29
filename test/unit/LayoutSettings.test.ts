@@ -198,6 +198,34 @@ describe('persisted layout preferences', () => {
     expect([store.textSize, store.contentWidth]).toEqual([130, 1800]);
   });
 
+  test.each(['textSize', 'contentWidth'])(
+    'a delayed %s reload cannot revert a newer independent save',
+    async firstKey => {
+      const store = await persistentStore();
+      const originalGet = mockGetSettings.getMockImplementation();
+      const firstValues = firstKey === 'textSize' ? { textSize: 130 } : { contentWidth: 1800 };
+      const secondValues = firstKey === 'textSize' ? { contentWidth: 1800 } : { textSize: 130 };
+      let finishReload: () => void;
+      // Comparison is immediate; capture and delay only the first final reload.
+      mockGetSettings.mockImplementationOnce(originalGet).mockImplementationOnce(async () => {
+        const snapshot = await originalGet();
+        await new Promise<void>(resolve => {
+          finishReload = resolve;
+        });
+        return snapshot;
+      });
+      const first = store.update(firstValues);
+      await flush();
+      await store.update(secondValues);
+      expect([store.textSize, store.contentWidth]).toEqual([130, 1800]);
+      finishReload();
+      await first;
+      expect([store.textSize, store.contentWidth]).toEqual([130, 1800]);
+      await store.load();
+      expect([store.textSize, store.contentWidth]).toEqual([130, 1800]);
+    }
+  );
+
   test('a delayed older comparison cannot overwrite a newer same-key save', async () => {
     const store = await persistentStore();
     const originalGet = mockGetSettings.getMockImplementation();
@@ -316,6 +344,32 @@ describe('layout draft controls', () => {
         remoteKey === 'textSize' ? [140, 2100] : [125, 1800]
       );
       expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+      expect(wrapper.find('[role="status"]').text()).toContain('saved');
+      wrapper.destroy();
+    }
+  );
+
+  test.each([true, false])(
+    'layout submission preserves unrelated remote settings (edited: %s)',
+    async edited => {
+      const store = await persistentStore();
+      store.$patch({ theme: 'light' });
+      const wrapper = mount(LayoutSettings as any);
+      const server = { ...store.$state, theme: 'dark', landingpage: 'timeline' };
+      mockGetSettings.mockImplementation(async () => ({ ...server }));
+      mockPost.mockImplementation(async (url, value) => {
+        server[url.split('/').pop()] = value;
+      });
+      if (edited) await wrapper.find('#layout-text-size').setValue('125');
+      await wrapper.find('form').trigger('submit');
+      await flush();
+      expect(server.theme).toBe('dark');
+      expect(server.landingpage).toBe('timeline');
+      expect(store.theme).toBe('dark');
+      expect(store.textSize).toBe(edited ? 125 : 100);
+      expect(mockPost.mock.calls.map(([url]) => url)).toEqual(
+        edited ? ['/0/settings/textSize'] : []
+      );
       expect(wrapper.find('[role="status"]').text()).toContain('saved');
       wrapper.destroy();
     }

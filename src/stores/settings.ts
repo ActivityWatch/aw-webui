@@ -27,6 +27,8 @@ let settingsLoadPromise: Promise<void> | null = null;
 // POST and reload. Independent preferences need not wait for one another.
 // Keep request bookkeeping out of persisted/reactive settings.
 const appearanceUpdates = new WeakMap<object, Record<string, Promise<void>>>();
+// A completed newer reload supersedes older responses, not independent writes.
+const settingsLoads = new WeakMap<object, { issued: number; applied: number }>();
 
 // Backoffs for NewReleaseNotification
 export const SHORT_BACKOFF_PERIOD = 24 * 60 * 60;
@@ -204,8 +206,13 @@ export const useSettingsStore = defineStore('settings', {
       }
       const client = getClient();
 
+      const loads = settingsLoads.get(this) || { issued: 0, applied: 0 };
+      settingsLoads.set(this, loads);
+      const request = ++loads.issued;
       // Fetch from server, fall back to localStorage
       const server_settings = await client.get_settings();
+      if (request < loads.applied) return;
+      loads.applied = request;
 
       // Build a unified map: server value wins, localStorage is fallback.
       // Skip keys that are missing from BOTH sources — otherwise `null` from
@@ -304,7 +311,7 @@ export const useSettingsStore = defineStore('settings', {
         await this.save();
       }
     },
-    async save(explicitKeys: string[] = []) {
+    async save(explicitKeys: string[] = [], onlyExplicit = false) {
       // Important check, to avoid saving settings before they are loaded (potentially overwriting them with defaults)
       if (!this.loaded) {
         console.error('Settings not loaded, not saving');
@@ -330,7 +337,7 @@ export const useSettingsStore = defineStore('settings', {
       // Save settings
       for (const key of Object.keys(this.$state)) {
         // Skip keys starting with underscore, as they are local to the vuex store.
-        if (key.startsWith('_')) {
+        if (key.startsWith('_') || (onlyExplicit && !explicitKeys.includes(key))) {
           continue;
         }
 
@@ -383,7 +390,7 @@ export const useSettingsStore = defineStore('settings', {
       // After save, reload
       await this.load({ save: false });
     },
-    async update(new_state: Record<string, any>) {
+    async update(new_state: Record<string, any>, onlyExplicit = false) {
       console.log('Updating state', new_state);
       await this.ensureLoaded();
       const keys = ['textSize', 'contentWidth'].filter(key => key in new_state);
@@ -409,7 +416,7 @@ export const useSettingsStore = defineStore('settings', {
       try {
         // Explicitly updated keys are saved even if never stored before. A
         // successful save reloads _storedKeys from the server.
-        await this.save(Object.keys(new_state));
+        await this.save(Object.keys(new_state), onlyExplicit);
       } catch (error) {
         // Appearance edits are drafts until Save. Roll back their applied values
         // on rejection so a failed request cannot masquerade as a saved layout.
