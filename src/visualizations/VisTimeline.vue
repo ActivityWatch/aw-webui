@@ -92,7 +92,8 @@ import { markRaw } from 'vue';
 import Color from 'color';
 import { buildTooltip } from '../util/tooltip';
 import { seconds_to_duration } from '../util/time';
-import { getCategoryColorFromEvent, getColorFromCategory, getTitleAttr } from '../util/color';
+import { getCategoryColorFromEvent, getColorFromCategory } from '../util/color';
+import { getEventDisplayTitle } from '../util/eventDisplay';
 import { useCategoryStore } from '~/stores/categories';
 import { getSwimlane } from '../util/swimlane';
 import {
@@ -200,6 +201,10 @@ export default {
     },
   },
   watch: {
+    '$i18n.locale'() {
+      this.preparedItems?.clear();
+      this.update(false);
+    },
     groupGranularity() {
       this.expandedGroups = [];
       this.update(false);
@@ -302,7 +307,7 @@ export default {
         const totals = new Map<string, number>();
         for (const member of item.members) {
           const label = String(
-            getTitleAttr(item.bucket, member.event) || JSON.stringify(member.event.data)
+            getEventDisplayTitle(item.bucket, member.event) || JSON.stringify(member.event.data)
           );
           totals.set(label, (totals.get(label) || 0) + member.event.duration);
         }
@@ -560,7 +565,7 @@ export default {
               })
             : categorized
             ? categoryPathLabel(name)
-            : getTitleAttr(item.bucket, item.event),
+            : getEventDisplayTitle(item.bucket, item.event),
           start: item.start,
           end: item.end,
           style: `background-color: ${color}; border-color: ${colors.get(color)}`,

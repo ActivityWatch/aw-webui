@@ -9,6 +9,7 @@ div
     b-button.ml-1(size="sm" variant="link" @click="snoozeSupporterNudge") {{ $t('home.supporterNudge.notNow') }}
 
   h3 {{ $t('home.greeting') }}
+  p {{ $t('home.trackingIntro') }}
   p
     | {{ homeIntro1 }}
   p
