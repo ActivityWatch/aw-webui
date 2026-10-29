@@ -64,7 +64,6 @@ export default {
       // Incremented per request, so only the latest response is applied.
       eventsRequestId: 0,
       countRequestId: 0,
-      confirmedDeletionIds: new Set(),
     };
   },
   computed: {
@@ -93,7 +92,6 @@ export default {
     // The router reuses this component when navigating between buckets, so
     // reload everything for the new bucket instead of showing the old one's events.
     id: async function (bucket_id) {
-      this.confirmedDeletionIds = new Set();
       this.events = [];
       this.eventcount = '?';
       this.showingMostRecent = false;
@@ -172,14 +170,9 @@ export default {
     removeEvent: async function (event, bucketId) {
       if (bucketId !== this.id) return;
       this.events = this.events.filter(e => e.id !== event.id);
-      // The range can change while deletion is pending. Count each confirmation
-      // once for this bucket, even if the deleted row is no longer displayed.
-      if (!this.confirmedDeletionIds.has(event.id)) {
-        this.confirmedDeletionIds.add(event.id);
-        if (typeof this.eventcount === 'number') {
-          this.eventcount = Math.max(0, this.eventcount - 1);
-        }
-      }
+      // A previous count response may already include this deletion, even when
+      // its confirmation arrives later. Only a fresh server count is reliable.
+      this.eventcount = '?';
       // Supersede any pre-delete responses. Reload the current range (including
       // its recent-events fallback) and the authoritative total, rather than
       // letting an older snapshot restore the row or count. Keep the local

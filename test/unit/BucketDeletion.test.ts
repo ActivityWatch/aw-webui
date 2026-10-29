@@ -236,7 +236,7 @@ describe('confirmed Bucket deletion', () => {
     await Promise.all([loading, counting]);
     await flush();
     expectEvents(wrapper, [12]);
-    expect(wrapper.vm.eventcount).toBe(1);
+    expect(wrapper.vm.eventcount).toBe('?');
     expect(console.warn).toHaveBeenCalledWith(
       '[bucket] Failed to refresh after deletion:',
       expect.any(Error)
@@ -332,7 +332,7 @@ describe('confirmed Bucket deletion', () => {
     }
   );
 
-  test('deletion after a range change adjusts the total once even if count refreshes fail', async () => {
+  test('deletion after a range change invalidates the total if count refreshes fail', async () => {
     const { wrapper, server, $aw } = setup();
     await flush();
     const editor: any = await editFirst(wrapper);
@@ -356,18 +356,18 @@ describe('confirmed Bucket deletion', () => {
     await flush();
     expect(server.A.map(e => e.id)).toEqual([12]);
     expectEvents(wrapper, [12]);
-    expect(wrapper.vm.eventcount).toBe(1);
+    expect(wrapper.vm.eventcount).toBe('?');
 
     await wrapper.vm.removeEvent(deleted, 'A');
     await flush();
-    expect(wrapper.vm.eventcount).toBe(1);
+    expect(wrapper.vm.eventcount).toBe('?');
     expect(console.warn).toHaveBeenCalledWith(
       '[bucket] Failed to refresh after deletion:',
       expect.any(Error)
     );
   });
 
-  test('deletion accounting resets when navigating to another bucket with the same event id', async () => {
+  test('deletion invalidates the new bucket count after navigating to the same event id', async () => {
     const { wrapper } = setup();
     await flush();
     const first: any = await editFirst(wrapper);
@@ -383,7 +383,43 @@ describe('confirmed Bucket deletion', () => {
     await second.vm.delete_();
     await flush();
     expectEvents(wrapper, []);
+    expect(wrapper.vm.eventcount).toBe('?');
+    await wrapper.vm.getEventCount('B');
     expect(wrapper.vm.eventcount).toBe(0);
+  });
+
+  test('a count snapshot that includes a delayed deletion is not decremented again', async () => {
+    const { wrapper, server, $aw } = setup();
+    await flush();
+    server.A.push(event(13));
+    await wrapper.vm.getEvents('A');
+    await wrapper.vm.getEventCount('A');
+    await flush();
+    const first: any = await editFirst(wrapper);
+    const firstRequest = deferred();
+    $aw.deleteEvent.mockImplementationOnce(async () => {
+      await firstRequest.promise;
+      server.A = server.A.filter(e => e.id !== 11);
+    });
+    const deletingFirst = first.vm.delete_();
+    // The server commits another deletion before its confirmation is delivered.
+    // The first confirmation's refresh already includes both deletions.
+    server.A = server.A.filter(e => e.id !== 12);
+    firstRequest.resolve();
+    await deletingFirst;
+    await flush();
+    expectEvents(wrapper, [13]);
+    expect(wrapper.vm.eventcount).toBe(1);
+
+    mockCountEvents.mockRejectedValueOnce(new Error('count offline'));
+    jest.spyOn(console, 'warn').mockImplementation(jest.fn());
+    await wrapper.vm.removeEvent(event(12), 'A');
+    await flush();
+    expect(server.A.map(e => e.id)).toEqual([13]);
+    expectEvents(wrapper, [13]);
+    expect(wrapper.vm.eventcount).toBe('?');
+    await wrapper.vm.getEventCount('A');
+    expect(wrapper.vm.eventcount).toBe(1);
   });
 
   test('a duplicate confirmed notification cannot decrement the total twice', async () => {
