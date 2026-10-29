@@ -7,7 +7,13 @@ import EventEditor from '~/components/EventEditor.vue';
 
 const mockCountEvents = jest.fn();
 const mockGetBucketWithEvents = jest.fn();
-const buckets = ['A', 'B'].map(id => ({ id, type: 'test', client: 'test', hostname: 'test' }));
+const buckets = ['A', 'B'].map(id => ({
+  id,
+  type: 'test',
+  client: 'test',
+  hostname: 'test',
+  metadata: { end: '2026-10-01T12:00:00Z' },
+}));
 
 jest.mock('~/util/awclient', () => ({
   getClient: () => ({ countEvents: mockCountEvents }),
@@ -235,6 +241,48 @@ describe('confirmed Bucket deletion', () => {
       expect.any(Error)
     );
   });
+
+  test.each(['failure', 'success', 'empty'])(
+    'recent-event refresh %s preserves survivors until the complete refresh succeeds',
+    async outcome => {
+      const { wrapper, server } = setup();
+      await flush();
+      mockGetBucketWithEvents.mockImplementation(async ({ id, limit }) => ({
+        events: limit ? server[id].map(e => ({ ...e })) : [],
+      }));
+      await wrapper.vm.getEvents('A');
+      await flush();
+      expectEvents(wrapper, [11, 12]);
+      expect(wrapper.vm.showingMostRecent).toBe(true);
+      const lastEventTime = wrapper.vm.lastEventTime;
+      const editor: any = await editFirst(wrapper);
+      const recent = deferred();
+      mockGetBucketWithEvents
+        .mockResolvedValueOnce({ events: [] })
+        .mockReturnValueOnce(recent.promise);
+      jest.spyOn(console, 'warn').mockImplementation(jest.fn());
+      await editor.vm.delete_();
+      await flush();
+      expect(mockGetBucketWithEvents).toHaveBeenLastCalledWith({ id: 'A', limit: 100 });
+      expectEvents(wrapper, [12]);
+      expect(wrapper.vm.eventcount).toBe(1);
+      expect(wrapper.vm.showingMostRecent).toBe(true);
+      expect(wrapper.vm.lastEventTime).toBe(lastEventTime);
+
+      if (outcome === 'failure') recent.reject(new Error('recent offline'));
+      else recent.resolve({ events: outcome === 'success' ? [event(12), event(13)] : [] });
+      await flush();
+      expectEvents(wrapper, outcome === 'success' ? [12, 13] : outcome === 'empty' ? [] : [12]);
+      expect(wrapper.vm.showingMostRecent).toBe(outcome !== 'empty');
+      if (outcome === 'failure') {
+        expect(wrapper.vm.lastEventTime).toBe(lastEventTime);
+        expect(console.warn).toHaveBeenCalledWith(
+          '[bucket] Failed to load most recent events:',
+          expect.any(Error)
+        );
+      }
+    }
+  );
 
   test('a duplicate confirmed notification cannot decrement the total twice', async () => {
     const { wrapper } = setup();
