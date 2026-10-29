@@ -49,13 +49,20 @@ export default {
     ...mapState(useSettingsStore, ['loaded', 'textSize', 'contentWidth']),
   },
   watch: {
-    textSize() {
-      if (!this.saving) this.draftTextSize = this.textSize;
+    textSize(value: number, previous: number) {
+      if (
+        !this.saving &&
+        Number(this.draftTextSize) === previous &&
+        !this.retryKeys.includes('textSize')
+      ) {
+        this.draftTextSize = value;
+      }
     },
-    contentWidth() {
-      if (!this.saving) {
-        this.automaticWidth = this.contentWidth === 0;
-        this.draftContentWidth = this.contentWidth || 1200;
+    contentWidth(value: number, previous: number) {
+      const draft = this.automaticWidth ? 0 : Number(this.draftContentWidth);
+      if (!this.saving && draft === previous && !this.retryKeys.includes('contentWidth')) {
+        this.automaticWidth = value === 0;
+        this.draftContentWidth = value || 1200;
       }
     },
     draftTextSize() {
