@@ -392,6 +392,7 @@ export default {
         hostname: device.hostname,
         bucketCount: device.buckets.length,
         bucketIds: device.buckets.map(b => b.id),
+        bucketCreated: Object.fromEntries(device.buckets.map(b => [b.id, b.created])),
       };
       this.$root.$emit('bv::show::modal', 'delete-host-modal');
     },
@@ -420,11 +421,14 @@ export default {
         }
       } finally {
         // A reopened confirmation may have copied a stale catalogue, even after an
-        // acknowledgement. Reconcile only known deletions before enabling retry;
-        // old errors and close events still belong exclusively to their selection.
+        // acknowledgement. Remove known deletions, but retain explicitly reconfirmed
+        // buckets recreated with the same ID and a different creation timestamp.
+        // Old errors and close events still belong exclusively to their selection.
         const current = this.delete_host_selected;
         if (current && current !== selection) {
-          current.bucketIds = current.bucketIds.filter(id => !deletedIds.has(id));
+          current.bucketIds = current.bucketIds.filter(
+            id => !deletedIds.has(id) || current.bucketCreated[id] !== selection.bucketCreated[id]
+          );
           current.bucketCount = current.bucketIds.length;
         }
         // Single-flight spans dismiss/reopen; an old operation cannot overlap a new one.

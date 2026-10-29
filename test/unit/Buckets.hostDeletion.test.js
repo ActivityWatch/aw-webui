@@ -13,7 +13,13 @@ jest.mock('~/util/awclient', () => ({
 const localVue = createLocalVue();
 localVue.use(PiniaVuePlugin);
 const flushPromises = () => new Promise(resolve => setTimeout(resolve, 0));
-const bucket = id => ({ id, hostname: 'host', type: 'currentwindow', data: {} });
+const bucket = id => ({
+  id,
+  hostname: 'host',
+  type: 'currentwindow',
+  created: '2026-10-28T10:00:00Z',
+  data: {},
+});
 const deferred = () => {
   let resolve, reject;
   const promise = new Promise((yes, no) => {
@@ -294,6 +300,42 @@ describe('Buckets host deletion with the real bucket store', () => {
       expect(calls()).toEqual(outcome === 'error' ? ['A', 'B', 'B', 'C'] : ['A', 'B', 'C']);
       expect(catalogue.size).toBe(0);
       expect(wrapper.vm.delete_host_error).toBeNull();
+      expect(hideModal).toHaveBeenCalledTimes(1);
+    }
+  );
+
+  test.each([true, false])(
+    'reconciles a refreshed confirmation by creation timestamp (recreated: %s)',
+    async recreated => {
+      const gate = deferred();
+      mockDeleteBucket.mockImplementationOnce(deleteOnServer).mockImplementationOnce(async () => {
+        await gate.promise;
+        throw new Error('B failed');
+      });
+      const operation = submit();
+      await flushPromises();
+      expect(calls()).toEqual(['A', 'B']);
+      expectPending(['B', 'C']);
+      modal().vm.$emit('hidden');
+      // A fresh object alone does not prove recreation: a stale catalogue response
+      // may still contain the acknowledged bucket with the same creation timestamp.
+      catalogue.set('A', {
+        ...bucket('A'),
+        created: recreated ? '2026-10-29T10:00:00Z' : bucket('A').created,
+      });
+      await store.loadBuckets();
+      await openConfirmation();
+      expectPending(['A', 'B', 'C']);
+      gate.resolve();
+      await operation;
+      await wrapper.vm.$nextTick();
+      expectPending(recreated ? ['A', 'B', 'C'] : ['B', 'C']);
+      expect(wrapper.vm.delete_host_error).toBeNull();
+      expect(hideModal).not.toHaveBeenCalled();
+      if (!recreated) catalogue.delete('A');
+      await submit();
+      expect(calls()).toEqual(recreated ? ['A', 'B', 'A', 'B', 'C'] : ['A', 'B', 'B', 'C']);
+      expect(catalogue.size).toBe(0);
       expect(hideModal).toHaveBeenCalledTimes(1);
     }
   );
