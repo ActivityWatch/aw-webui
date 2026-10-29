@@ -41,6 +41,12 @@ describe('timeline event editing (#984)', () => {
   const editorVm = overrides => ({
     ...EventEditor.data(),
     ...EventEditor.methods,
+    // These method-level fixtures represent an already-loaded draft. Keep the
+    // computed ownership live when the selection changes during a request.
+    draftReady: true,
+    get selectionIdentity() {
+      return EventEditor.computed.selectionIdentity.call(this);
+    },
     event: { id: 7 },
     $refs: {},
     ...overrides,
@@ -114,8 +120,7 @@ describe('timeline event editing (#984)', () => {
 
     expect(snapshot.timestamp.valueOf()).toBe(Date.parse('2026-10-16T10:00:00Z'));
     expect(snapshot.data.nested.value).toBe('original');
-    expect(emit).toHaveBeenNthCalledWith(1, 'save', snapshot);
-    expect(emit).toHaveBeenNthCalledWith(2, 'saved', snapshot, 'aw-stopwatch_test');
+    expect(emit.mock.calls).toEqual([['saved', snapshot, 'aw-stopwatch_test']]);
   });
 
   test('does not report a saved event when the server rejects the update', async () => {

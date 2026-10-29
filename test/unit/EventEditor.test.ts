@@ -44,9 +44,10 @@ function makeEvent(id = 1) {
 
 // Mounts the editor with a stubbed client. getEvent resolves immediately with a
 // copy, mirroring the real flow where the editor re-fetches the event.
-function mountEditor({ event = makeEvent(), replaceEvent, deleteEvent }: any = {}) {
+function mountEditor({ event = makeEvent(), getEvent, replaceEvent, deleteEvent }: any = {}) {
   const $aw = {
-    getEvent: jest.fn().mockImplementation(async () => JSON.parse(JSON.stringify(event))),
+    getEvent:
+      getEvent || jest.fn().mockImplementation(async () => JSON.parse(JSON.stringify(event))),
     replaceEvent: replaceEvent || jest.fn().mockResolvedValue(undefined),
     deleteEvent: deleteEvent || jest.fn().mockResolvedValue(undefined),
   };
@@ -455,5 +456,256 @@ describe('EventEditor inside a parent that reacts to success', () => {
     expect(saved).toHaveLength(0);
     expect(wrapper.findComponent(EventEditor).exists()).toBe(true);
     expect(visibleText()).toContain('nope');
+  });
+});
+
+describe('EventEditor draft ownership', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '';
+    jest.spyOn(console, 'error').mockImplementation(jest.fn());
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  test('a late load cannot replace the current selection draft', async () => {
+    const oldLoad = deferred();
+    const newLoad = deferred();
+    const getEvent = jest
+      .fn()
+      .mockReturnValueOnce(oldLoad.promise)
+      .mockReturnValueOnce(newLoad.promise);
+    const { wrapper, $aw } = mountEditor({ getEvent });
+
+    await wrapper.setProps({ bucket_id: 'other-bucket', event: makeEvent(2) });
+    newLoad.resolve(makeEvent(2));
+    await flush();
+    oldLoad.resolve(makeEvent(1));
+    await flush();
+
+    expect(wrapper.vm.editedEvent.id).toBe(2);
+    await wrapper.vm.save();
+    expect($aw.replaceEvent).toHaveBeenCalledWith('other-bucket', makeEvent(2));
+    wrapper.destroy();
+  });
+
+  test('selection changes hide the old draft and block saving until the new load succeeds', async () => {
+    const nextLoad = deferred();
+    const getEvent = jest
+      .fn()
+      .mockResolvedValueOnce(makeEvent())
+      .mockReturnValueOnce(nextLoad.promise);
+    const { wrapper, $aw } = mountEditor({ getEvent });
+    await flush();
+    await showModal(wrapper);
+    expect(
+      Array.from(document.body.querySelectorAll('input')).some(input => input.value === 'original')
+    ).toBe(true);
+
+    await wrapper.setProps({ bucket_id: 'other-bucket', event: makeEvent(2) });
+    await flush();
+    expect(wrapper.vm.editedEvent).toBeNull();
+    expect(
+      Array.from(document.body.querySelectorAll('input')).some(input => input.value === 'original')
+    ).toBe(false);
+    await wrapper.vm.save();
+    expect($aw.replaceEvent).not.toHaveBeenCalled();
+
+    nextLoad.resolve(makeEvent(2));
+    await flush();
+    await wrapper.vm.save();
+    expect($aw.replaceEvent).toHaveBeenCalledWith('other-bucket', makeEvent(2));
+    wrapper.destroy();
+  });
+
+  test('a bucket-only change reloads even when the event ID and prop object are unchanged', async () => {
+    const nextLoad = deferred();
+    const getEvent = jest
+      .fn()
+      .mockResolvedValueOnce(makeEvent())
+      .mockReturnValueOnce(nextLoad.promise);
+    const { wrapper, $aw } = mountEditor({ getEvent });
+    await flush();
+
+    await wrapper.setProps({ bucket_id: 'other-bucket' });
+    expect(getEvent).toHaveBeenLastCalledWith('other-bucket', 1);
+    await wrapper.vm.save();
+    expect($aw.replaceEvent).not.toHaveBeenCalled();
+
+    const nextEvent = { ...makeEvent(), data: { title: 'other bucket' } };
+    nextLoad.resolve(nextEvent);
+    await flush();
+    await wrapper.vm.save();
+    expect($aw.replaceEvent).toHaveBeenCalledWith('other-bucket', nextEvent);
+    wrapper.destroy();
+  });
+
+  test('an obsolete failure cannot replace the current draft or error', async () => {
+    const oldLoad = deferred();
+    const getEvent = jest
+      .fn()
+      .mockReturnValueOnce(oldLoad.promise)
+      .mockResolvedValueOnce(makeEvent(2));
+    const { wrapper } = mountEditor({ getEvent });
+    await wrapper.setProps({ event: makeEvent(2) });
+    await flush();
+    oldLoad.reject(new Error('obsolete failure'));
+    await flush();
+
+    expect(wrapper.vm.editedEvent.id).toBe(2);
+    expect(wrapper.vm.error).toBe('');
+    wrapper.destroy();
+  });
+
+  test('a current load error is visible and can be retried without enabling stale saves', async () => {
+    const getEvent = jest
+      .fn()
+      .mockRejectedValueOnce(new Error('load failed'))
+      .mockResolvedValueOnce(makeEvent());
+    const { wrapper, $aw } = mountEditor({ getEvent });
+    await flush();
+    await showModal(wrapper);
+
+    expect(visibleText()).toContain('load failed');
+    expect(wrapper.vm.editedEvent).toBeNull();
+    await wrapper.vm.save();
+    expect($aw.replaceEvent).not.toHaveBeenCalled();
+    const retry = Array.from(document.body.querySelectorAll('button')).find(button =>
+      button.textContent.includes('Refresh')
+    );
+    expect(retry).toBeDefined();
+    retry.click();
+    await flush();
+    expect(wrapper.vm.error).toBe('');
+    expect(wrapper.vm.editedEvent.id).toBe(1);
+    await wrapper.vm.save();
+    expect($aw.replaceEvent).toHaveBeenCalledTimes(1);
+    wrapper.destroy();
+  });
+
+  test('a newer reload of the same selection owns its draft', async () => {
+    const oldLoad = deferred();
+    const newLoad = deferred();
+    const getEvent = jest
+      .fn()
+      .mockReturnValueOnce(oldLoad.promise)
+      .mockReturnValueOnce(newLoad.promise);
+    const { wrapper } = mountEditor({ getEvent });
+    const reload = wrapper.vm.getEvent();
+    const newest = { ...makeEvent(), data: { title: 'newest' } };
+    newLoad.resolve(newest);
+    await reload;
+    oldLoad.resolve(makeEvent());
+    await flush();
+    expect(wrapper.vm.editedEvent).toEqual(newest);
+    wrapper.destroy();
+  });
+
+  test('returning to the original selection does not revive its obsolete load', async () => {
+    const oldLoad = deferred();
+    const returningLoad = deferred();
+    const getEvent = jest
+      .fn()
+      .mockReturnValueOnce(oldLoad.promise)
+      .mockResolvedValueOnce(makeEvent(2))
+      .mockReturnValueOnce(returningLoad.promise);
+    const { wrapper, $aw } = mountEditor({ getEvent });
+    await wrapper.setProps({ event: makeEvent(2) });
+    await flush();
+    await wrapper.setProps({ event: makeEvent(1) });
+    oldLoad.resolve(makeEvent());
+    await flush();
+    expect(wrapper.vm.editedEvent).toBeNull();
+    await wrapper.vm.save();
+    expect($aw.replaceEvent).not.toHaveBeenCalled();
+    returningLoad.resolve({ ...makeEvent(), data: { title: 'fresh' } });
+    await flush();
+    expect(wrapper.vm.editedEvent.data.title).toBe('fresh');
+    wrapper.destroy();
+  });
+
+  test('same-tick bucket changes cannot submit the old draft before its watcher runs', async () => {
+    const { wrapper, $aw } = mountEditor();
+    await flush();
+    // setProps itself queues the prop update. Assign the reactive prop here
+    // to exercise the narrower interval after props change but before watchers.
+    wrapper.vm.$props.bucket_id = 'other-bucket';
+    await wrapper.vm.save();
+    expect($aw.replaceEvent).not.toHaveBeenCalled();
+    await wrapper.vm.$nextTick();
+    wrapper.destroy();
+  });
+
+  test('clearing selection invalidates the draft and both mutation actions', async () => {
+    const { wrapper, $aw } = mountEditor();
+    await flush();
+    await wrapper.setProps({ event: null });
+    expect(wrapper.vm.editedEvent).toBeNull();
+    await wrapper.vm.save();
+    await wrapper.vm.delete_();
+    expect($aw.replaceEvent).not.toHaveBeenCalled();
+    expect($aw.deleteEvent).not.toHaveBeenCalled();
+    wrapper.destroy();
+  });
+
+  test('destruction invalidates a pending load', async () => {
+    const load = deferred();
+    const { wrapper } = mountEditor({ getEvent: jest.fn().mockReturnValue(load.promise) });
+    wrapper.destroy();
+    load.resolve(makeEvent());
+    await flush();
+    expect(wrapper.vm.editedEvent).toBeNull();
+  });
+
+  test('an old-bucket mutation success reports its bucket without closing a new selection with the same ID', async () => {
+    const save = deferred();
+    const { wrapper } = mountEditor({ replaceEvent: jest.fn().mockReturnValue(save.promise) });
+    await flush();
+    const hide = jest.spyOn(wrapper.vm.$refs.eventEditModal, 'hide');
+    const saving = wrapper.vm.save();
+    await wrapper.setProps({ bucket_id: 'other-bucket' });
+    await flush();
+    save.resolve();
+    await saving;
+    expect(hide).not.toHaveBeenCalled();
+    expect(wrapper.emitted('save')).toBeUndefined();
+    expect(wrapper.emitted('saved')[0][1]).toBe('test-bucket');
+    wrapper.destroy();
+  });
+
+  test('a completed delete after destruction reports only the original bucket completion', async () => {
+    const deletion = deferred();
+    const { wrapper, $aw } = mountEditor({
+      deleteEvent: jest.fn().mockReturnValue(deletion.promise),
+    });
+    await flush();
+    const deleting = wrapper.vm.delete_();
+    wrapper.destroy();
+    deletion.resolve();
+    await deleting;
+    expect($aw.deleteEvent).toHaveBeenCalledWith('test-bucket', 1);
+    expect(wrapper.emitted('delete')).toBeUndefined();
+    expect(wrapper.emitted('deleted')[0]).toEqual([makeEvent(), 'test-bucket']);
+  });
+
+  test('an old mutation failure cannot overwrite the new selection error', async () => {
+    const save = deferred();
+    const getEvent = jest
+      .fn()
+      .mockResolvedValueOnce(makeEvent())
+      .mockRejectedValueOnce(new Error('current load failed'));
+    const { wrapper } = mountEditor({
+      getEvent,
+      replaceEvent: jest.fn().mockReturnValue(save.promise),
+    });
+    await flush();
+    const saving = wrapper.vm.save();
+    await wrapper.setProps({ event: makeEvent(2) });
+    await flush();
+    save.reject(new Error('obsolete save failed'));
+    await saving;
+    expect(wrapper.vm.error).toBe('current load failed');
+    wrapper.destroy();
   });
 });
