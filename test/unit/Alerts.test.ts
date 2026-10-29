@@ -1,4 +1,4 @@
-import { createLocalVue, shallowMount } from '@vue/test-utils';
+import { createLocalVue, mount, shallowMount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import BootstrapVue from 'bootstrap-vue';
 import moment from 'moment';
@@ -8,6 +8,7 @@ import { useSettingsStore } from '~/stores/settings';
 import { useCategoryStore } from '~/stores/categories';
 import { useBucketsStore } from '~/stores/buckets';
 import { getDefaultAlertGoals } from '~/util/alerts';
+import { seconds_to_duration } from '~/util/time';
 
 const localVue = createLocalVue();
 localVue.use(BootstrapVue);
@@ -16,7 +17,7 @@ localVue.filter('friendlytime', v => String(v));
 
 // Mounts the view with a stubbed $aw client. Buckets are pre-seeded so
 // mounted() resolves a hostname without reaching for the global AWClient.
-function mountAlerts({ startOfDay = '04:00', storedAlerts = undefined }: any = {}) {
+function mountAlerts({ startOfDay = '04:00', storedAlerts = undefined, full = false }: any = {}) {
   const query = jest.fn().mockResolvedValue([[]]);
 
   const settingsStore = useSettingsStore();
@@ -37,8 +38,14 @@ function mountAlerts({ startOfDay = '04:00', storedAlerts = undefined }: any = {
     { id: 'aw-watcher-afk_testhost', type: 'afkstatus', hostname: 'testhost', data: {} },
   ]);
 
-  const wrapper: any = shallowMount(Alerts, {
-    localVue,
+  const viewVue = full ? createLocalVue() : localVue;
+  if (full) {
+    viewVue.use(BootstrapVue);
+    viewVue.filter('friendlyduration', seconds_to_duration);
+    viewVue.filter('friendlytime', v => String(v));
+  }
+  const wrapper: any = (full ? mount : shallowMount)(Alerts, {
+    localVue: viewVue,
     mocks: { $aw: { query } },
     stubs: { icon: true },
   });
@@ -153,9 +160,123 @@ describe('Alerts query range', () => {
     ]);
     await wrapper.vm.check();
 
-    expect(wrapper.vm.alert_times).toEqual({ Work: 60, 'Work,Code': 30 });
+    expect(wrapper.vm.alertTime(['Work'])).toBe(90);
+    expect(wrapper.vm.alertTime(['Work', 'Code'])).toBe(30);
     expect(wrapper.vm.last_updated).not.toBeNull();
     expect(wrapper.vm.error).toBe('');
+  });
+});
+
+describe('Alerts goal progress', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+  });
+
+  async function checkEvents(events, storedAlerts = []) {
+    const mounted = mountAlerts({ storedAlerts });
+    for (let i = 0; i < 10; i++) await Promise.resolve();
+    mounted.query.mockResolvedValueOnce([events]);
+    await mounted.wrapper.vm.check();
+    await mounted.wrapper.vm.$nextTick();
+    return mounted;
+  }
+
+  test('sums exact and descendant paths without prefix siblings or ancestors', async () => {
+    const { wrapper } = await checkEvents([
+      { duration: 60, data: { $category: ['Work'] } },
+      { duration: 120, data: { $category: ['Work', 'Code'] } },
+      { duration: 30, data: { $category: ['Work', 'Code', 'Review'] } },
+      { duration: 15, data: { $category: ['Work', 'Code'] } },
+      { duration: 600, data: { $category: ['Workout'] } },
+      { duration: 900, data: { $category: ['Work', 'Codec'] } },
+      { duration: 1000, data: {} },
+      { duration: 1000, data: { $category: [] } },
+    ]);
+
+    expect(wrapper.vm.alertTime(['Work'])).toBe(1125);
+    expect(wrapper.vm.alertTime(['Work', 'Code'])).toBe(165);
+    expect(wrapper.vm.alertTime(['Work', 'Code', 'Review'])).toBe(30);
+    expect(wrapper.vm.alertTime(['Workout'])).toBe(600);
+    expect(wrapper.vm.alertTime(['Missing'])).toBe(0);
+    expect(wrapper.vm.alertTime(['undefined'])).toBe(0);
+    wrapper.destroy();
+  });
+
+  test('keeps delimiter-bearing names distinct from multi-segment paths', async () => {
+    const { wrapper } = await checkEvents([
+      { duration: 10, data: { $category: ['Work,Code'] } },
+      { duration: 20, data: { $category: ['Work', 'Code'] } },
+      { duration: 30, data: { $category: ['Work,Code', 'Review'] } },
+      { duration: 40, data: { $category: ['Work', 'Code,Review'] } },
+      { duration: 50, data: { $category: ['Work', 'Code', 'Review'] } },
+      { duration: 60, data: { $category: ['Work,Codec'] } },
+      { duration: 70, data: { $category: ['Work', 'Code,Reviewer'] } },
+    ]);
+
+    expect(wrapper.vm.alertTime(['Work,Code'])).toBe(40);
+    expect(wrapper.vm.alertTime(['Work'])).toBe(180);
+    expect(wrapper.vm.alertTime(['Work', 'Code'])).toBe(70);
+    expect(wrapper.vm.alertTime(['Work', 'Code,Review'])).toBe(40);
+    expect(wrapper.vm.alertTime(['Work', 'Code', 'Review'])).toBe(50);
+    wrapper.destroy();
+  });
+
+  test('mounted cards show real duration formatting and switch completion at the minute boundary', async () => {
+    const { wrapper, query } = mountAlerts({
+      full: true,
+      storedAlerts: [{ name: 'Work goal', category: ['Work'], goal: 1 }],
+    });
+    for (let i = 0; i < 10; i++) await Promise.resolve();
+    query.mockResolvedValueOnce([
+      [
+        { duration: 29, data: { $category: ['Work'] } },
+        { duration: 30, data: { $category: ['Work', 'Code'] } },
+        { duration: 600, data: { $category: ['Workout'] } },
+      ],
+    ]);
+    await wrapper.vm.check();
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('.card').text()).toContain('59s / 1 minutes');
+    expect(wrapper.find('.card .text-success').exists()).toBe(false);
+    expect(wrapper.find('.card .text-muted[name="times"]').exists()).toBe(true);
+
+    query.mockResolvedValueOnce([
+      [
+        { duration: 30, data: { $category: ['Work'] } },
+        { duration: 30, data: { $category: ['Work', 'Code'] } },
+      ],
+    ]);
+    await wrapper.vm.check();
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('.card').text()).toContain('1m 0s / 1 minutes');
+    expect(wrapper.find('.card .text-success').exists()).toBe(true);
+    expect(wrapper.find('.card .text-muted[name="times"]').exists()).toBe(false);
+    wrapper.destroy();
+  });
+
+  test.each([
+    [1, 1, false],
+    [1, 59, false],
+    [1, 60, true],
+    [1, 61, true],
+    [0.5, 29, false],
+    [0.5, 30, true],
+    [0.5, 31, true],
+    [0, 0, true],
+  ])('a %s-minute goal at %s seconds has completion %s', async (goal, seconds, complete) => {
+    const stored = [{ name: 'Code', category: ['Work', 'Code'], goal }];
+    const { wrapper, settingsStore, update } = await checkEvents(
+      [{ duration: seconds, data: { $category: ['Work', 'Code'] } }],
+      stored
+    );
+
+    expect(wrapper.find('.text-success').exists()).toBe(complete);
+    expect(wrapper.find('.text-muted[name="times"]').exists()).toBe(!complete);
+    // The filter receives seconds; only the completion comparison converts minutes.
+    expect(wrapper.text()).toContain(`${seconds} / ${goal} minutes`);
+    expect(settingsStore.alerts).toEqual(stored);
+    expect(update).not.toHaveBeenCalled();
+    wrapper.destroy();
   });
 });
 

@@ -22,7 +22,7 @@ div
     div {{ $t('ui.alerts.goalName') }}: {{ alert.name }}
     div {{ $t('ui.alerts.category') }}: {{ alert.category.join(" > ") }}
     div {{ $t('ui.alerts.current') }}: {{ alertTime(alert.category) | friendlyduration }} / {{alert.goal}} {{ $t('ui.alerts.minutes') }}
-      span(v-if="alertTime(alert.category) >= alert.goal")
+      span(v-if="alertTime(alert.category) >= alert.goal * 60")
         icon.text-success(name="check")
       span(v-else)
         icon.text-muted(name="times")
@@ -88,7 +88,7 @@ export default {
       // Set while an add/delete is being persisted, to block duplicate writes.
       saving: false,
 
-      alert_times: {},
+      alert_times: [],
 
       error: '',
 
@@ -113,11 +113,11 @@ export default {
     alertTime: function () {
       return cat => {
         let time = 0;
-        _.map(Object.entries(this.alert_times), ([c, t]) => {
-          if (c.startsWith(cat.join(','))) {
-            if (typeof t === 'number') time += t;
+        for (const { category, duration } of this.alert_times) {
+          if (cat.every((segment, index) => category[index] === segment)) {
+            time += duration;
           }
-        });
+        }
         return time;
       };
     },
@@ -233,14 +233,13 @@ export default {
         this.status = null;
       }
 
-      const grouped = _.groupBy(this.events, e => e.data.$category);
-      const sumCats = Object.fromEntries(
-        _.map(Object.entries(grouped), entry => {
-          const [group, events] = entry;
-          return [group.split(','), _.sumBy(events, 'duration')];
-        })
-      );
-      this.alert_times = sumCats;
+      // JSON keys preserve segment boundaries, including commas inside names.
+      const categorized = this.events.filter(e => Array.isArray(e.data.$category));
+      const grouped = _.groupBy(categorized, e => JSON.stringify(e.data.$category));
+      this.alert_times = Object.values(grouped).map(events => ({
+        category: events[0].data.$category,
+        duration: _.sumBy(events, 'duration'),
+      }));
 
       this.last_updated = new Date();
     },
