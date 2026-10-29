@@ -42,6 +42,7 @@ export default {
       saving: false,
       saved: false,
       error: '',
+      retryKeys: [] as string[],
     };
   },
   computed: {
@@ -83,8 +84,14 @@ export default {
         return;
       }
       const values: { textSize?: number; contentWidth?: number } = {};
-      if (textSize !== this.textSize) values.textSize = textSize;
-      if (contentWidth !== this.contentWidth) values.contentWidth = contentWidth;
+      // Failed per-key writes may have reached the server despite local rollback.
+      // Retry those keys even when the user chooses the rolled-back value.
+      if (textSize !== this.textSize || this.retryKeys.includes('textSize')) {
+        values.textSize = textSize;
+      }
+      if (contentWidth !== this.contentWidth || this.retryKeys.includes('contentWidth')) {
+        values.contentWidth = contentWidth;
+      }
       await this.persist(values);
     },
     async reset() {
@@ -100,6 +107,7 @@ export default {
       this.error = '';
       try {
         await useSettingsStore().update(values);
+        this.retryKeys = [];
         const store = useSettingsStore();
         this.draftTextSize = store.textSize;
         this.automaticWidth = store.contentWidth === 0;
@@ -112,6 +120,7 @@ export default {
           this.saved = true;
         }
       } catch (error) {
+        this.retryKeys = Array.from(new Set([...this.retryKeys, ...Object.keys(values)]));
         this.error = this.$t('settings.layout.saveFailed');
       } finally {
         this.saving = false;
