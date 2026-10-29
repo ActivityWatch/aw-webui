@@ -11,7 +11,8 @@ jest.mock('~/util/awclient', () => ({ getClient: jest.fn() }));
 jest.mock('vue-chartjs/legacy', () => ({ Bar: { render: h => h('div') } }));
 jest.mock('chart.js/auto', () => ({}));
 
-const event = (timestamp = '2026-10-01T12:00:00Z', duration = 60, category = ['Work']) => ({
+// Query bounds and chart buckets use local time; keep event fixtures in that same zone.
+const event = (timestamp = '2026-10-01T12:00:00', duration = 60, category = ['Work']) => ({
   timestamp,
   duration,
   data: { $category: category, app: 'Editor', title: 'Report test' },
@@ -60,7 +61,7 @@ test.each([false, true])(
     const activity = useActivityStore();
     if (prior) {
       activity.category.by_period = {
-        '2026-09-01': { cat_events: [event('2026-09-01T12:00:00Z', 3600, ['Leisure'])] },
+        '2026-09-01': { cat_events: [event('2026-09-01T12:00:00', 3600, ['Leisure'])] },
       } as any;
     }
     const before = JSON.stringify(activity.$state);
@@ -150,8 +151,8 @@ test('rejected recalculation retains the previous successful chart and event lis
 test('repeated generations replace the whole result, including a successful empty report', async () => {
   const { wrapper, vm } = mountReport();
   await vm.generate();
-  const earlier = event('2026-10-03T23:30:00Z', 3600, ['Leisure']);
-  const later = event('2026-10-04T12:00:00Z', 1800, ['Leisure']);
+  const earlier = event('2026-10-03T23:30:00', 3600, ['Leisure']);
+  const later = event('2026-10-04T12:00:00', 1800, ['Leisure']);
   vm.queryOptions.start = '2026-10-03';
   vm.queryOptions.stop = '2026-10-05';
   vm.queryOptions.filter_afk = false;
@@ -185,7 +186,7 @@ test.each(['resolve', 'reject'])(
     const { wrapper, vm } = mountReport();
     const request = vm.generate();
     vm.filterCategories = [[['Leisure'], { type: 'none' }]];
-    query.mockResolvedValueOnce([[event('2026-10-01T13:00:00Z', 3600, ['Leisure'])]]);
+    query.mockResolvedValueOnce([[event('2026-10-01T13:00:00', 3600, ['Leisure'])]]);
     await vm.generate();
     const result = vm.result;
     if (settle === 'resolve') old.resolve([[event()]]);
@@ -209,7 +210,7 @@ test('an older completion does not stop the newer loading state, even when the l
   query.mockReturnValueOnce(old.promise).mockReturnValueOnce(latest.promise);
   const first = vm.generate();
   const second = vm.generate();
-  old.resolve([[event('2026-10-01T13:00:00Z', 3600)]]);
+  old.resolve([[event('2026-10-01T13:00:00', 3600)]]);
   await first;
   expect(vm.status).toBe('searching');
   expect(vm.result).toBe(result);
