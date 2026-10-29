@@ -387,6 +387,7 @@ export default {
       this.$root.$emit('bv::hide::modal', 'delete-modal');
     },
     openDeleteHostModal: function (device) {
+      this.delete_host_error = null;
       this.delete_host_selected = {
         hostname: device.hostname,
         bucketCount: device.buckets.length,
@@ -395,17 +396,28 @@ export default {
       this.$root.$emit('bv::show::modal', 'delete-host-modal');
     },
     deleteBucketsForSelectedHost: async function () {
-      if (!this.delete_host_selected) return;
+      if (!this.delete_host_selected || this.deleting_host) return;
+      const selection = this.delete_host_selected;
       this.deleting_host = true;
       this.delete_host_error = null;
       try {
         await this.bucketsStore.deleteBucketsByHost({
-          bucketIds: this.delete_host_selected.bucketIds,
+          bucketIds: [...selection.bucketIds],
+          onDeleted: bucketId => {
+            if (this.delete_host_selected !== selection) return;
+            selection.bucketIds = selection.bucketIds.filter(id => id !== bucketId);
+            selection.bucketCount = selection.bucketIds.length;
+          },
         });
-        this.$root.$emit('bv::hide::modal', 'delete-host-modal');
+        if (this.delete_host_selected === selection) {
+          this.$root.$emit('bv::hide::modal', 'delete-host-modal');
+        }
       } catch (err) {
-        this.delete_host_error = err?.message || this.$t('buckets.deleteFailed');
+        if (this.delete_host_selected === selection) {
+          this.delete_host_error = err?.message || this.$t('buckets.deleteFailed');
+        }
       } finally {
+        // Single-flight spans dismiss/reopen; an old operation cannot overlap a new one.
         this.deleting_host = false;
       }
     },
