@@ -35,6 +35,7 @@ import CategorizationSettings from '~/views/settings/CategorizationSettings.vue'
 import LandingPageSettings from '~/views/settings/LandingPageSettings.vue';
 import DeveloperSettings from '~/views/settings/DeveloperSettings.vue';
 import Theme from '~/views/settings/Theme.vue';
+import LayoutSettings from '~/views/settings/LayoutSettings.vue';
 import ColorSettings from '~/views/settings/ColorSettings.vue';
 import ActivePatternSettings from '~/views/settings/ActivePatternSettings.vue';
 import PrivacyFilterSettings from '~/views/settings/PrivacyFilterSettings.vue';
@@ -58,6 +59,7 @@ export default {
     CategorizationSettings,
     LandingPageSettings,
     Theme,
+    LayoutSettings,
     ColorSettings,
     DeveloperSettings,
     ActivePatternSettings,
@@ -111,7 +113,7 @@ export default {
         id: 'appearance',
         label: this.$t('settings.groups.appearance'),
         help: this.$t('settings.groups.appearanceHelp'),
-        components: [{ name: 'Theme' }, { name: 'ColorSettings' }],
+        components: [{ name: 'Theme' }, { name: 'LayoutSettings' }, { name: 'ColorSettings' }],
       };
       const categorization: Group = {
         id: 'categorization',

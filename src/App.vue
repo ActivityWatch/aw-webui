@@ -2,7 +2,7 @@
 div#wrapper(v-if="loaded")
   aw-header
 
-  div(:class="{'container': !fullContainer, 'container-fluid': fullContainer}").px-0.px-md-2
+  div.aw-content(:class="{'container': !fullContainer, 'container-fluid': fullContainer}" :style="contentStyle").px-0.px-md-2
     div.aw-container.my-sm-3.mb-3.p-3
       error-boundary
         user-satisfaction-poll
@@ -32,6 +32,12 @@ export default {
   computed: {
     fullContainer() {
       return this.$route.meta.fullContainer;
+    },
+    contentStyle() {
+      const width = useSettingsStore().contentWidth;
+      // A max-width plus 100% width cannot grow beyond the viewport. Keep
+      // Bootstrap's route-specific breakpoints untouched in automatic mode.
+      return width === 0 ? {} : { maxWidth: `${width}px`, width: '100%' };
     },
   },
 
@@ -63,6 +69,22 @@ export default {
       }
     }
     this.loaded = true;
+  },
+
+  created() {
+    const root = document.documentElement;
+    const previousSize = root.style.getPropertyValue('font-size');
+    const previousPriority = root.style.getPropertyPriority('font-size');
+    const stop = this.$watch(
+      () => useSettingsStore().textSize,
+      value => root.style.setProperty('font-size', `${value}%`),
+      { immediate: true }
+    );
+    this.$once('hook:beforeDestroy', () => {
+      stop();
+      if (previousSize) root.style.setProperty('font-size', previousSize, previousPriority);
+      else root.style.removeProperty('font-size');
+    });
   },
 
   mounted: async function () {
