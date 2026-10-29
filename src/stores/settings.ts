@@ -23,14 +23,10 @@ function jsonEq(a: any, b: any) {
 }
 
 let settingsLoadPromise: Promise<void> | null = null;
-// Per-store, per-key ownership keeps an older failed update from undoing a
-// newer edit. Keep request bookkeeping out of persisted/reactive settings.
-interface AppearanceUpdate {
-  previousValue: number;
-  previous?: AppearanceUpdate;
-  failed: boolean;
-}
-const appearanceUpdates = new WeakMap<object, Record<string, AppearanceUpdate>>();
+// Order overlapping edits of the same preference, including their comparison,
+// POST and reload. Independent preferences need not wait for one another.
+// Keep request bookkeeping out of persisted/reactive settings.
+const appearanceUpdates = new WeakMap<object, Record<string, Promise<void>>>();
 
 // Backoffs for NewReleaseNotification
 export const SHORT_BACKOFF_PERIOD = 24 * 60 * 60;
@@ -390,50 +386,40 @@ export const useSettingsStore = defineStore('settings', {
     async update(new_state: Record<string, any>) {
       console.log('Updating state', new_state);
       await this.ensureLoaded();
-      // Appearance edits are drafts until Save. Roll back their applied values
-      // on rejection so a failed request cannot masquerade as a saved layout.
-      const previousAppearance: Record<string, number> = {};
-      for (const key of ['textSize', 'contentWidth']) {
-        if (!(key in new_state)) continue;
+      const keys = ['textSize', 'contentWidth'].filter(key => key in new_state);
+      for (const key of keys) {
         const valid =
           key === 'textSize' ? isTextSize(new_state[key]) : isContentWidth(new_state[key]);
         if (!valid) throw new Error('Invalid appearance preference: ' + key);
-        previousAppearance[key] = this[key];
       }
       const updates = appearanceUpdates.get(this) || {};
       appearanceUpdates.set(this, updates);
-      const current: Record<string, AppearanceUpdate> = {};
-      for (const key of Object.keys(previousAppearance)) {
-        current[key] = {
-          previousValue: previousAppearance[key],
-          previous: updates[key],
-          failed: false,
-        };
-        updates[key] = current[key];
-      }
+      const predecessors = keys.map(key => updates[key]);
+      let release: () => void;
+      const settled = new Promise<void>(resolve => {
+        release = resolve;
+      });
+      for (const key of keys) updates[key] = settled;
+      await Promise.all(predecessors);
+      // Snapshot only after predecessors have settled: transient optimistic
+      // values are not a rollback baseline. A failed predecessor releases too.
+      const previousAppearance: Record<string, number> = {};
+      for (const key of keys) previousAppearance[key] = this[key];
       this.$patch(new_state);
       try {
         // Explicitly updated keys are saved even if never stored before. A
         // successful save reloads _storedKeys from the server.
         await this.save(Object.keys(new_state));
-        for (const key of Object.keys(current)) {
-          if (updates[key] === current[key]) delete updates[key];
-        }
       } catch (error) {
-        const rollback: Record<string, number> = {};
-        for (const key of Object.keys(current)) {
-          current[key].failed = true;
-          if (updates[key] !== current[key]) continue;
-          let prior = current[key];
-          // Skip failed optimistic predecessors rather than restoring an edit
-          // that never saved. A pending predecessor regains rollback ownership.
-          while (prior.previous?.failed) prior = prior.previous;
-          rollback[key] = prior.previousValue;
-          if (prior.previous) updates[key] = prior.previous;
-          else delete updates[key];
-        }
-        this.$patch(rollback);
+        // Appearance edits are drafts until Save. Roll back their applied values
+        // on rejection so a failed request cannot masquerade as a saved layout.
+        this.$patch(previousAppearance);
         throw error;
+      } finally {
+        for (const key of keys) {
+          if (updates[key] === settled) delete updates[key];
+        }
+        release();
       }
     },
   },

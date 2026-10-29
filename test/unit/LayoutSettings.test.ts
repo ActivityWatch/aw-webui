@@ -146,37 +146,37 @@ describe('persisted layout preferences', () => {
     const first = store.update({ textSize: 130 });
     const rejected = first.catch(error => error);
     await flush();
-    await store.update({ textSize: 140 });
-    expect(store.textSize).toBe(140);
+    const second = store.update({ textSize: 140 });
+    await flush();
+    expect(mockPost.mock.calls.filter(([url]) => url.endsWith('/textSize'))).toHaveLength(1);
     rejectFirst(new Error('offline'));
     expect(await rejected).toEqual(new Error('offline'));
+    await second;
     expect(store.textSize).toBe(140);
     await store.load();
     expect(store.textSize).toBe(140);
   });
 
-  test.each([false, true])(
-    'two rejected overlapping updates restore the original value (older fails first: %s)',
-    async olderFirst => {
-      const store = await persistentStore();
-      const rejectPosts: Array<(error: Error) => void> = [];
-      mockPost.mockImplementation(() => new Promise((_, reject) => rejectPosts.push(reject)));
-      const first = store.update({ textSize: 130 }).catch(error => error);
+  test('two rejected overlapping updates restore the original value in submission order', async () => {
+    const store = await persistentStore();
+    const rejectPosts: Array<(error: Error) => void> = [];
+    mockPost.mockImplementation(() => new Promise((_, reject) => rejectPosts.push(reject)));
+    const first = store.update({ textSize: 130 }).catch(error => error);
+    await flush();
+    const second = store.update({ textSize: 140 }).catch(error => error);
+    await flush();
+    // The successor cannot POST before the predecessor settles.
+    expect(rejectPosts).toHaveLength(1);
+    for (const index of [0, 1]) {
+      rejectPosts[index](new Error('offline'));
       await flush();
-      const second = store.update({ textSize: 140 }).catch(error => error);
-      await flush();
-      const order = olderFirst ? [0, 1] : [1, 0];
-      for (const index of order) {
-        rejectPosts[index](new Error('offline'));
-        await flush();
-      }
-      expect(await first).toEqual(new Error('offline'));
-      expect(await second).toEqual(new Error('offline'));
-      expect(store.textSize).toBe(100);
-      await store.load();
-      expect(store.textSize).toBe(100);
     }
-  );
+    expect(await first).toEqual(new Error('offline'));
+    expect(await second).toEqual(new Error('offline'));
+    expect(store.textSize).toBe(100);
+    await store.load();
+    expect(store.textSize).toBe(100);
+  });
 
   test('a delayed settings read preserves explicit values across an independent save', async () => {
     const store = await persistentStore();
@@ -193,6 +193,61 @@ describe('persisted layout preferences', () => {
     await store.update({ contentWidth: 1800 });
     finishRead();
     await text;
+    expect([store.textSize, store.contentWidth]).toEqual([130, 1800]);
+    await store.load();
+    expect([store.textSize, store.contentWidth]).toEqual([130, 1800]);
+  });
+
+  test('a delayed older comparison cannot overwrite a newer same-key save', async () => {
+    const store = await persistentStore();
+    const originalGet = mockGetSettings.getMockImplementation();
+    let finishRead: () => void;
+    mockGetSettings.mockImplementationOnce(async () => {
+      await new Promise<void>(resolve => {
+        finishRead = resolve;
+      });
+      return originalGet();
+    });
+    const first = store.update({ textSize: 130 });
+    await flush();
+    const second = store.update({ textSize: 140 });
+    await flush();
+    finishRead();
+    await Promise.all([first, second]);
+    expect(store.textSize).toBe(140);
+    await store.load();
+    expect(store.textSize).toBe(140);
+  });
+
+  test('a rejected successor retains the committed predecessor after an independent reload', async () => {
+    const store = await persistentStore();
+    const originalPost = mockPost.getMockImplementation();
+    let finishFirst: () => void;
+    let rejectSecond: (error: Error) => void;
+    mockPost.mockImplementation(async (url, value, ...args) => {
+      if (url.endsWith('/textSize') && value === 130) {
+        await new Promise<void>(resolve => {
+          finishFirst = resolve;
+        });
+      }
+      if (url.endsWith('/textSize') && value === 140) {
+        await new Promise<void>((_, reject) => {
+          rejectSecond = reject;
+        });
+      }
+      return originalPost(url, value, ...args);
+    });
+    const first = store.update({ textSize: 130 });
+    await flush();
+    await store.update({ contentWidth: 1800 });
+    expect(store.textSize).toBe(100);
+    const second = store.update({ textSize: 140 }).catch(error => error);
+    await flush();
+    finishFirst();
+    await first;
+    await flush();
+    rejectSecond(new Error('offline'));
+    expect(await second).toEqual(new Error('offline'));
     expect([store.textSize, store.contentWidth]).toEqual([130, 1800]);
     await store.load();
     expect([store.textSize, store.contentWidth]).toEqual([130, 1800]);
@@ -446,6 +501,40 @@ describe('layout draft controls', () => {
       expect(wrapper.find('[role="status"]').text()).toContain('saved');
       await store.load();
       expect([store.textSize, store.contentWidth]).toEqual([100, 0]);
+      wrapper.destroy();
+    }
+  );
+
+  test.each(['textSize', 'contentWidth'])(
+    'preserves a dirty %s draft during an unrelated settings reload',
+    async key => {
+      const store = await persistentStore();
+      const wrapper = mount(LayoutSettings as any);
+      if (key === 'textSize') {
+        await wrapper.find('#layout-text-size').setValue('125');
+      } else {
+        await wrapper.find('#layout-automatic-width').setChecked(false);
+        await wrapper.find('#layout-content-width').setValue('1800');
+      }
+      const originalPost = mockPost.getMockImplementation();
+      await originalPost('/0/settings/' + key, key === 'textSize' ? 140 : 2100);
+      await store.update({ theme: 'dark' });
+      await flush();
+      expect((wrapper.find('#layout-text-size').element as HTMLInputElement).value).toBe(
+        key === 'textSize' ? '125' : '100'
+      );
+      if (key === 'contentWidth') {
+        expect((wrapper.find('#layout-automatic-width').element as HTMLInputElement).checked).toBe(
+          false
+        );
+        expect((wrapper.find('#layout-content-width').element as HTMLInputElement).value).toBe(
+          '1800'
+        );
+      }
+      await wrapper.find('form').trigger('submit');
+      await flush();
+      expect(store[key]).toBe(key === 'textSize' ? 125 : 1800);
+      expect(wrapper.find('[role="status"]').exists()).toBe(true);
       wrapper.destroy();
     }
   );
