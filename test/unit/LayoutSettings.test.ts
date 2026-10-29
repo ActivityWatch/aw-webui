@@ -155,6 +155,29 @@ describe('persisted layout preferences', () => {
     expect(store.textSize).toBe(140);
   });
 
+  test.each([false, true])(
+    'two rejected overlapping updates restore the original value (older fails first: %s)',
+    async olderFirst => {
+      const store = await persistentStore();
+      const rejectPosts: Array<(error: Error) => void> = [];
+      mockPost.mockImplementation(() => new Promise((_, reject) => rejectPosts.push(reject)));
+      const first = store.update({ textSize: 130 }).catch(error => error);
+      await flush();
+      const second = store.update({ textSize: 140 }).catch(error => error);
+      await flush();
+      const order = olderFirst ? [0, 1] : [1, 0];
+      for (const index of order) {
+        rejectPosts[index](new Error('offline'));
+        await flush();
+      }
+      expect(await first).toEqual(new Error('offline'));
+      expect(await second).toEqual(new Error('offline'));
+      expect(store.textSize).toBe(100);
+      await store.load();
+      expect(store.textSize).toBe(100);
+    }
+  );
+
   test('failed update rejects and rolls back only the changed appearance values', async () => {
     const store = await persistentStore();
     await store.update({ contentWidth: 1200 });
@@ -314,6 +337,42 @@ describe('layout draft controls', () => {
     expect(wrapper.find('[role="status"]').exists()).toBe(false);
     wrapper.destroy();
   });
+
+  test.each(['textSize', 'contentWidth'])(
+    'retry explicitly restores %s to its rolled-back value after a partial save',
+    async revertedKey => {
+      const store = await persistentStore();
+      const wrapper = mount(LayoutSettings as any);
+      const originalPost = mockPost.getMockImplementation();
+      let calls = 0;
+      mockPost.mockImplementation((url, ...args) => {
+        if (++calls === 2) return Promise.reject(new Error('offline'));
+        return originalPost(url, ...args);
+      });
+      await wrapper.find('#layout-text-size').setValue('130');
+      await wrapper.find('#layout-automatic-width').setChecked(false);
+      await wrapper.find('#layout-content-width').setValue('1800');
+      await wrapper.find('form').trigger('submit');
+      await flush();
+      expect([store.textSize, store.contentWidth]).toEqual([100, 0]);
+      expect(wrapper.find('[role="alert"]').exists()).toBe(true);
+      if (revertedKey === 'textSize') {
+        await wrapper.find('#layout-text-size').setValue('100');
+      } else {
+        await wrapper.find('#layout-automatic-width').setChecked(true);
+      }
+      mockPost.mockImplementation(originalPost);
+      await wrapper.find('form').trigger('submit');
+      await flush();
+      const expected = revertedKey === 'textSize' ? [100, 1800] : [130, 0];
+      expect([store.textSize, store.contentWidth]).toEqual(expected);
+      expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+      expect(wrapper.find('[role="status"]').text()).toContain('saved');
+      await store.load();
+      expect([store.textSize, store.contentWidth]).toEqual(expected);
+      wrapper.destroy();
+    }
+  );
 
   test('partially rejected reset restores the applied layout without claiming success', async () => {
     const store = await persistentStore();

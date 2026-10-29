@@ -25,7 +25,12 @@ function jsonEq(a: any, b: any) {
 let settingsLoadPromise: Promise<void> | null = null;
 // Per-store, per-key ownership keeps an older failed update from undoing a
 // newer edit. Keep request bookkeeping out of persisted/reactive settings.
-const appearanceUpdates = new WeakMap<object, Record<string, symbol>>();
+interface AppearanceUpdate {
+  previousValue: number;
+  previous?: AppearanceUpdate;
+  failed: boolean;
+}
+const appearanceUpdates = new WeakMap<object, Record<string, AppearanceUpdate>>();
 
 // Backoffs for NewReleaseNotification
 export const SHORT_BACKOFF_PERIOD = 24 * 60 * 60;
@@ -391,17 +396,35 @@ export const useSettingsStore = defineStore('settings', {
       }
       const updates = appearanceUpdates.get(this) || {};
       appearanceUpdates.set(this, updates);
-      const updateToken = Symbol();
-      for (const key of Object.keys(previousAppearance)) updates[key] = updateToken;
+      const current: Record<string, AppearanceUpdate> = {};
+      for (const key of Object.keys(previousAppearance)) {
+        current[key] = {
+          previousValue: previousAppearance[key],
+          previous: updates[key],
+          failed: false,
+        };
+        updates[key] = current[key];
+      }
       this.$patch(new_state);
       try {
         // Explicitly updated keys are saved even if never stored before. A
         // successful save reloads _storedKeys from the server.
         await this.save(Object.keys(new_state));
+        for (const key of Object.keys(current)) {
+          if (updates[key] === current[key]) delete updates[key];
+        }
       } catch (error) {
         const rollback: Record<string, number> = {};
-        for (const key of Object.keys(previousAppearance)) {
-          if (updates[key] === updateToken) rollback[key] = previousAppearance[key];
+        for (const key of Object.keys(current)) {
+          current[key].failed = true;
+          if (updates[key] !== current[key]) continue;
+          let prior = current[key];
+          // Skip failed optimistic predecessors rather than restoring an edit
+          // that never saved. A pending predecessor regains rollback ownership.
+          while (prior.previous?.failed) prior = prior.previous;
+          rollback[key] = prior.previousValue;
+          if (prior.previous) updates[key] = prior.previous;
+          else delete updates[key];
         }
         this.$patch(rollback);
         throw error;
