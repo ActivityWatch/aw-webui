@@ -2,6 +2,7 @@ import { createLocalVue, shallowMount } from '@vue/test-utils';
 import { createPinia, PiniaVuePlugin, setActivePinia } from 'pinia';
 import Buckets from '~/views/Buckets.vue';
 import { useBucketsStore } from '~/stores/buckets';
+import asyncErrorCapturedMixin from '~/mixins/asyncErrorCaptured';
 
 const mockGetBuckets = jest.fn();
 const mockDeleteBucket = jest.fn();
@@ -12,6 +13,7 @@ jest.mock('~/util/awclient', () => ({
 
 const localVue = createLocalVue();
 localVue.use(PiniaVuePlugin);
+localVue.mixin(asyncErrorCapturedMixin);
 const flushPromises = () => new Promise(resolve => setTimeout(resolve, 0));
 const bucket = id => ({
   id,
@@ -405,6 +407,34 @@ describe('Buckets host deletion with the real bucket store', () => {
       expect(hideModal).toHaveBeenCalledTimes(1);
     }
   );
+
+  test('retains unresolved acknowledgements across dismiss/reopen after a failed read', async () => {
+    jest.spyOn(console, 'warn').mockReturnValue(undefined);
+    const gate = deferred();
+    mockDeleteBucket
+      .mockImplementationOnce(async id => {
+        await gate.promise;
+        await deleteOnServer(id);
+      })
+      .mockRejectedValueOnce(new Error('B failed'));
+    const operation = submit();
+    catalogue.set('A', { ...bucket('A'), created: new Date('2026-10-29T10:00:00Z') });
+    await store.loadBuckets();
+    modal().vm.$emit('hidden');
+    await openConfirmation();
+    mockGetBuckets.mockRejectedValue(new Error('Catalogue unavailable'));
+    gate.resolve();
+    await operation;
+    modal().vm.$emit('hidden');
+    await openConfirmation();
+    expectPending(['A', 'B', 'C']);
+    await submit();
+    expect(calls()).toEqual(['A', 'B']);
+    mockGetBuckets.mockImplementation(async () => [...catalogue.values()]);
+    await submit();
+    expect(calls()).toEqual(['A', 'B', 'B', 'C']);
+    expect(catalogue.size).toBe(0);
+  });
 
   test('reconciles the latest confirmation when it is reopened during revalidation', async () => {
     const deletion = deferred();
