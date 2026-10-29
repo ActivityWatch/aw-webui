@@ -281,6 +281,42 @@ describe('layout draft controls', () => {
     wrapper.destroy();
   });
 
+  test.each([false, true])(
+    'Save retries the defaults after a failed reset (partial writes: %s)',
+    async partialWrites => {
+      const store = await persistentStore();
+      await store.update({ textSize: 150, contentWidth: 2400 });
+      const wrapper = mount(LayoutSettings as any);
+      const originalPost = mockPost.getMockImplementation();
+      mockPost.mockImplementation((url, ...args) => {
+        if (!partialWrites || url.endsWith('/contentWidth')) {
+          return Promise.reject(new Error('offline'));
+        }
+        return originalPost(url, ...args);
+      });
+      await wrapper.find('[data-testid="layout-reset"]').trigger('click');
+      await flush();
+      expect([store.textSize, store.contentWidth]).toEqual([150, 2400]);
+      expect(wrapper.find('[role="alert"]').text()).toContain('Could not save');
+      expect(wrapper.find('[role="status"]').exists()).toBe(false);
+      expect((wrapper.find('#layout-text-size').element as HTMLInputElement).value).toBe('100');
+      expect((wrapper.find('#layout-automatic-width').element as HTMLInputElement).checked).toBe(
+        true
+      );
+      expect(wrapper.find('#layout-content-width').attributes('disabled')).toBeDefined();
+
+      mockPost.mockImplementation(originalPost);
+      await wrapper.find('form').trigger('submit');
+      await flush();
+      expect([store.textSize, store.contentWidth]).toEqual([100, 0]);
+      expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+      expect(wrapper.find('[role="status"]').text()).toContain('saved');
+      await store.load();
+      expect([store.textSize, store.contentWidth]).toEqual([100, 0]);
+      wrapper.destroy();
+    }
+  );
+
   test('new layout messages use English fallback in another locale', () => {
     expect(i18n.t('settings.layout.textSize', 'sv')).toBe('Text size (%)');
   });
