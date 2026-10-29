@@ -84,6 +84,7 @@ export default {
     return {
       editedEvent: null,
       draftIdentity: null,
+      draftSource: null,
       loadSequence: 0,
       disposed: false,
       // Name of the mutation in flight ('save' / 'delete'), else null.
@@ -97,8 +98,17 @@ export default {
         ? JSON.stringify([this.bucket_id, this.event.id])
         : null;
     },
+    // Object replacement is a new editing session even for the same bucket/ID
+    // (for example, reopening a timeline event after cancelling its draft).
+    selectionSource() {
+      return { identity: this.selectionIdentity, event: this.event };
+    },
     draftReady() {
-      return this.editedEvent !== null && this.draftIdentity === this.selectionIdentity;
+      return (
+        this.editedEvent !== null &&
+        this.draftIdentity === this.selectionIdentity &&
+        this.draftSource === this.event
+      );
     },
     busy() {
       return this.pending !== null;
@@ -124,7 +134,7 @@ export default {
     },
   },
   watch: {
-    selectionIdentity() {
+    selectionSource() {
       this.getEvent();
     },
   },
@@ -164,9 +174,13 @@ export default {
     async runMutation(name, payload, bucketId, request) {
       if (this.pending) return;
       const identity = this.selectionIdentity;
+      const source = this.selectionSource;
       const sequence = this.loadSequence;
       const stillSelected = () =>
-        !this.disposed && this.selectionIdentity === identity && this.loadSequence === sequence;
+        !this.disposed &&
+        this.selectionIdentity === identity &&
+        this.selectionSource === source &&
+        this.loadSequence === sequence;
       this.pending = name;
       this.error = '';
       try {
@@ -184,6 +198,11 @@ export default {
       if (stillSelected()) {
         this.hideModal();
         this.$emit(name, payload);
+      } else if (!this.disposed && this.selectionIdentity === identity) {
+        // A reopened or reloaded draft may have read the event before this
+        // write committed. Invalidate it synchronously and read after the write;
+        // do not close the new editing session or let it submit stale data.
+        this.getEvent();
       }
       // The server did change, so this is reported even after the editor moved
       // on. It carries the bucket, for parents that patch their view in place.
@@ -202,21 +221,24 @@ export default {
       if (modal) modal.hide();
     },
     async getEvent() {
-      const identity = this.selectionIdentity;
+      const source = this.selectionSource;
+      const identity = source.identity;
       const sequence = ++this.loadSequence;
       this.editedEvent = null;
       this.draftIdentity = null;
+      this.draftSource = null;
       this.error = '';
       if (!identity || this.disposed) return;
       const bucketId = this.bucket_id;
       const eventId = this.event.id;
       const stillSelected = () =>
-        !this.disposed && this.selectionIdentity === identity && this.loadSequence === sequence;
+        !this.disposed && this.selectionSource === source && this.loadSequence === sequence;
       try {
         const event = await this.$aw.getEvent(bucketId, eventId);
         if (stillSelected()) {
           this.editedEvent = event;
           this.draftIdentity = identity;
+          this.draftSource = source.event;
         }
       } catch (e) {
         if (stillSelected()) {

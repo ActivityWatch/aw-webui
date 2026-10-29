@@ -519,6 +519,177 @@ describe('EventEditor draft ownership', () => {
     wrapper.destroy();
   });
 
+  test('reopening the same event discards cancelled edits and reloads current server data', async () => {
+    const reload = deferred();
+    const getEvent = jest
+      .fn()
+      .mockResolvedValueOnce(makeEvent())
+      .mockReturnValueOnce(reload.promise);
+    const { wrapper, $aw } = mountEditor({ getEvent });
+    await flush();
+    await showModal(wrapper);
+    wrapper.vm.editedEvent.data.title = 'cancelled edit';
+    wrapper.vm.close();
+    await flush();
+
+    // VisTimeline fetches a fresh object, but keeps the same editor mounted.
+    const current = { ...makeEvent(), data: { title: 'newer server value' } };
+    await wrapper.setProps({ event: current });
+    await showModal(wrapper);
+    expect(wrapper.vm.editedEvent).toBeNull();
+    expect(visibleText()).not.toContain('cancelled edit');
+    await wrapper.vm.save();
+    expect($aw.replaceEvent).not.toHaveBeenCalled();
+    expect(getEvent).toHaveBeenCalledTimes(2);
+
+    reload.resolve(current);
+    await flush();
+    await wrapper.vm.save();
+    expect($aw.replaceEvent).toHaveBeenCalledWith('test-bucket', current);
+    wrapper.destroy();
+  });
+
+  test('same-tick replacement with the same ID blocks old-draft mutations before watchers', async () => {
+    const { wrapper, $aw } = mountEditor();
+    await flush();
+    wrapper.vm.$props.event = makeEvent();
+    await wrapper.vm.save();
+    await wrapper.vm.delete_();
+    expect($aw.replaceEvent).not.toHaveBeenCalled();
+    expect($aw.deleteEvent).not.toHaveBeenCalled();
+    wrapper.destroy();
+  });
+
+  test.each(['success', 'failure'])(
+    'a same-ID reopen ignores old mutation %s UI effects',
+    async outcome => {
+      const save = deferred();
+      const { wrapper } = mountEditor({ replaceEvent: jest.fn().mockReturnValue(save.promise) });
+      await flush();
+      const hide = jest.spyOn(wrapper.vm.$refs.eventEditModal, 'hide');
+      const saving = wrapper.vm.save();
+      // Settle before the replacement watcher runs: source identity must guard
+      // the completion independently of the load sequence.
+      wrapper.vm.$props.event = makeEvent();
+      if (outcome === 'success') save.resolve();
+      else save.reject(new Error('obsolete save failed'));
+      await saving;
+      await flush();
+      expect(hide).not.toHaveBeenCalled();
+      expect(wrapper.vm.error).toBe('');
+      expect(wrapper.emitted('save')).toBeUndefined();
+      if (outcome === 'success') {
+        expect(wrapper.emitted('saved')[0]).toEqual([makeEvent(), 'test-bucket']);
+      } else {
+        expect(wrapper.emitted('saved')).toBeUndefined();
+      }
+      wrapper.destroy();
+    }
+  );
+
+  test('a replacement object with the same ID invalidates the previous pending load', async () => {
+    const oldLoad = deferred();
+    const reload = deferred();
+    const getEvent = jest
+      .fn()
+      .mockReturnValueOnce(oldLoad.promise)
+      .mockReturnValueOnce(reload.promise);
+    const { wrapper } = mountEditor({ getEvent });
+    await wrapper.setProps({ event: makeEvent() });
+    oldLoad.resolve(makeEvent());
+    await flush();
+    expect(wrapper.vm.editedEvent).toBeNull();
+    const current = { ...makeEvent(), data: { title: 'reopened' } };
+    reload.resolve(current);
+    await flush();
+    expect(wrapper.vm.editedEvent).toEqual(current);
+    wrapper.destroy();
+  });
+
+  test.each(['save', 'delete_'])(
+    '%s completion invalidates a returning draft loaded before the mutation committed',
+    async action => {
+      const mutation = deferred();
+      const reconciliation = deferred();
+      const getEvent = jest
+        .fn()
+        .mockResolvedValueOnce(makeEvent())
+        .mockResolvedValueOnce(makeEvent(2))
+        .mockResolvedValueOnce(makeEvent())
+        .mockReturnValueOnce(reconciliation.promise);
+      const request = jest.fn().mockReturnValue(mutation.promise);
+      const { wrapper, $aw } = mountEditor({
+        getEvent,
+        replaceEvent: request,
+        deleteEvent: request,
+      });
+      await flush();
+      wrapper.vm.editedEvent.data.title = 'confirmed update';
+      const writing = wrapper.vm[action]();
+      await wrapper.setProps({ event: makeEvent(2) });
+      await flush();
+      await wrapper.setProps({ event: makeEvent() });
+      await flush();
+      expect(wrapper.vm.editedEvent.data.title).toBe('original');
+      const hide = jest.spyOn(wrapper.vm.$refs.eventEditModal, 'hide');
+
+      mutation.resolve();
+      await writing;
+      expect(wrapper.vm.draftReady).toBe(false);
+      expect(wrapper.vm.editedEvent).toBeNull();
+      expect(getEvent).toHaveBeenCalledTimes(4);
+      expect(hide).not.toHaveBeenCalled();
+      expect(wrapper.emitted(action === 'save' ? 'saved' : 'deleted')).toHaveLength(1);
+      await wrapper.vm.save();
+      await wrapper.vm.delete_();
+      expect(request).toHaveBeenCalledTimes(1);
+
+      if (action === 'save') {
+        const confirmed = { ...makeEvent(), data: { title: 'confirmed update' } };
+        reconciliation.resolve(confirmed);
+        await flush();
+        await wrapper.vm.save();
+        expect($aw.replaceEvent).toHaveBeenLastCalledWith('test-bucket', confirmed);
+      } else {
+        reconciliation.reject(new Error('event no longer exists'));
+        await flush();
+        expect(wrapper.vm.draftReady).toBe(false);
+        expect(wrapper.vm.error).toBe('event no longer exists');
+        await wrapper.vm.save();
+        expect(request).toHaveBeenCalledTimes(1);
+      }
+      wrapper.destroy();
+    }
+  );
+
+  test('a post-save reload supersedes a same-session read still in flight', async () => {
+    const mutation = deferred();
+    const staleLoad = deferred();
+    const confirmedLoad = deferred();
+    const getEvent = jest
+      .fn()
+      .mockResolvedValueOnce(makeEvent())
+      .mockReturnValueOnce(staleLoad.promise)
+      .mockReturnValueOnce(confirmedLoad.promise);
+    const { wrapper } = mountEditor({
+      getEvent,
+      replaceEvent: jest.fn().mockReturnValue(mutation.promise),
+    });
+    await flush();
+    const writing = wrapper.vm.save();
+    const reloading = wrapper.vm.getEvent();
+    mutation.resolve();
+    await writing;
+    staleLoad.resolve(makeEvent());
+    await reloading;
+    expect(wrapper.vm.draftReady).toBe(false);
+    const confirmed = { ...makeEvent(), data: { title: 'confirmed update' } };
+    confirmedLoad.resolve(confirmed);
+    await flush();
+    expect(wrapper.vm.editedEvent).toEqual(confirmed);
+    wrapper.destroy();
+  });
+
   test('a bucket-only change reloads even when the event ID and prop object are unchanged', async () => {
     const nextLoad = deferred();
     const getEvent = jest
