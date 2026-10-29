@@ -359,6 +359,9 @@ test('panning preserves item IDs and editing uses the original bucket and event'
   vm.update();
   const ids = vm.itemData.getIds();
   expect(ids).toHaveLength(1);
+  expect(vm.itemData.get(ids[0]).content).toBe('Active');
+  expect(vm.itemData.get(ids[0]).style).toContain('#7F6');
+  expect(event.data.status).toBe('not-afk');
   const update = jest.spyOn(vm.itemData, 'update');
   vm.update(false);
   expect(update).not.toHaveBeenCalled();
@@ -708,4 +711,46 @@ test('a saved edit replaces the rendered event and keeps the window in place', (
     animation: false,
   });
   expect(vm.pendingWindowRestore).toBeNull();
+});
+
+// Labels are presentation, never event or color identities.
+test('locale changes refresh real DataSet labels without resetting IDs, colors or viewport', () => {
+  const { i18n, setAppLocale } = require('~/i18n');
+  const original = i18n.getLocaleMessage('de');
+  setAppLocale('en');
+  const vm = { ...VisTimeline.data(), ...VisTimeline.methods };
+  VisTimeline.created.call(vm);
+  const event = {
+    id: 42,
+    timestamp: '2020-01-01T00:00:00Z',
+    duration: 20,
+    data: { status: 'not-afk' },
+  };
+  vm.bucketsFromEither = [{ id: 'afk-host', type: 'afkstatus', events: [event] }];
+  vm.eventIndex = VisTimeline.computed.eventIndex.call(vm);
+  const start = new Date(event.timestamp).getTime();
+  vm.timeline = {
+    getWindow: () => ({ start: new Date(start), end: new Date(start + 10000) }),
+    setOptions: jest.fn(),
+    setWindow: jest.fn(),
+  };
+  try {
+    vm.update();
+    const [id] = vm.itemData.getIds();
+    const before = vm.itemData.get(id);
+    expect(before.content).toBe('Active');
+    vm.timeline.getWindow = () => ({ start: new Date(start), end: new Date(start + 20000) });
+    vm.timeline.setWindow.mockClear();
+    i18n.mergeLocaleMessage('de', { common: { active: 'Aktiv' } });
+    setAppLocale('de');
+    VisTimeline.watch['$i18n.locale'].call(vm);
+    expect(vm.itemData.get(id).content).toBe('Aktiv');
+    expect(vm.itemData.get(id).style).toBe(before.style);
+    expect(vm.itemData.getIds()).toEqual([id]);
+    expect(vm.timeline.setWindow).not.toHaveBeenCalled();
+    expect(event.data.status).toBe('not-afk');
+  } finally {
+    i18n.setLocaleMessage('de', original);
+    setAppLocale('en');
+  }
 });
