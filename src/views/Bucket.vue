@@ -38,7 +38,7 @@ div
 
     vis-timeline(:buckets="[bucket_with_events]", :showRowLabels="false")
 
-    aw-eventlist(:bucket_id="id", @save="updateEvent", :events="events" editable=true)
+    aw-eventlist(:bucket_id="id", @save="updateEvent", @deleted="removeEvent", :events="events" editable=true)
 </template>
 
 <script lang="ts">
@@ -155,6 +155,24 @@ export default {
       // aw-client already unwraps the response body, except that 0.3.x returns the
       // raw response when the body is falsy (a count of 0).
       this.eventcount = typeof count === 'number' ? count : count.data;
+    },
+    removeEvent: async function (event, bucketId) {
+      if (bucketId !== this.id) return;
+      const remaining = this.events.filter(e => e.id !== event.id);
+      if (remaining.length !== this.events.length) {
+        this.events = remaining;
+        if (typeof this.eventcount === 'number') {
+          this.eventcount = Math.max(0, this.eventcount - 1);
+        }
+      }
+      // Supersede any pre-delete responses. Reload the current range (including
+      // its recent-events fallback) and the authoritative total, rather than
+      // letting an older snapshot restore the row or count. Keep the local
+      // removal if refreshing fails; the server has already confirmed it.
+      await Promise.all([
+        this.daterange ? this.getEvents(bucketId) : null,
+        this.getEventCount(bucketId),
+      ]).catch(e => console.warn('[bucket] Failed to refresh after deletion:', e));
     },
     updateEvent: function (event) {
       const i = this.events.findIndex(e => e.id == event.id);
