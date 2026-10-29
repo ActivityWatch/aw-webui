@@ -274,7 +274,7 @@ export default {
       'ActivityWatch on Android is in a very early stage of development. There will be bugs, but we hope you bear with us as we refine things and get it on par with the desktop version of ActivityWatch (which you should try!).',
     greeting: 'Welcome to ActivityWatch',
     trackingIntro:
-      'Tracking components, called watchers, record activity such as the active window or browser tab. The idle-detection component marks time as inactive after a period without keyboard or mouse input; active means input was detected, not necessarily productive work. Raw Data lets you inspect the recorded events.',
+      'Tracking components, called watchers, record activity such as the active window or browser tab. Idle detection usually marks time as inactive after a period without keyboard or mouse input. Activity reports can also count configured apps or audible browser tabs as active without input; active does not necessarily mean productive work. Raw Data lets you inspect the recorded events.',
     intro1:
       "We've come a long way{android} but we still need users (like you!) to provide feedback and help us turn ActivityWatch into a successful project. We'd love to hear any ideas you have for improvements.",
     introAndroid: ' (especially on Android!)',

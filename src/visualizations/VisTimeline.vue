@@ -202,6 +202,7 @@ export default {
   watch: {
     '$i18n.locale'() {
       this.preparedItems?.clear();
+      this.renderedViewport = null;
       this.update(false);
     },
     groupGranularity() {

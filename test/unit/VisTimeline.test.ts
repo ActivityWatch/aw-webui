@@ -714,9 +714,43 @@ test('a saved edit replaces the rendered event and keeps the window in place', (
 });
 
 // Labels are presentation, never event or color identities.
-test('locale changes invalidate prepared timeline labels without resetting the viewport', () => {
-  const vm = { preparedItems: new Map([['item', { content: 'Active' }]]), update: jest.fn() };
-  VisTimeline.watch['$i18n.locale'].call(vm);
-  expect(vm.preparedItems.size).toBe(0);
-  expect(vm.update).toHaveBeenCalledWith(false);
+test('locale changes refresh real DataSet labels without resetting IDs, colors or viewport', () => {
+  const { i18n, setAppLocale } = require('~/i18n');
+  const original = i18n.getLocaleMessage('de');
+  setAppLocale('en');
+  const vm = { ...VisTimeline.data(), ...VisTimeline.methods };
+  VisTimeline.created.call(vm);
+  const event = {
+    id: 42,
+    timestamp: '2020-01-01T00:00:00Z',
+    duration: 20,
+    data: { status: 'not-afk' },
+  };
+  vm.bucketsFromEither = [{ id: 'afk-host', type: 'afkstatus', events: [event] }];
+  vm.eventIndex = VisTimeline.computed.eventIndex.call(vm);
+  const start = new Date(event.timestamp).getTime();
+  vm.timeline = {
+    getWindow: () => ({ start: new Date(start), end: new Date(start + 10000) }),
+    setOptions: jest.fn(),
+    setWindow: jest.fn(),
+  };
+  try {
+    vm.update();
+    const [id] = vm.itemData.getIds();
+    const before = vm.itemData.get(id);
+    expect(before.content).toBe('Active');
+    vm.timeline.getWindow = () => ({ start: new Date(start), end: new Date(start + 20000) });
+    vm.timeline.setWindow.mockClear();
+    i18n.mergeLocaleMessage('de', { common: { active: 'Aktiv' } });
+    setAppLocale('de');
+    VisTimeline.watch['$i18n.locale'].call(vm);
+    expect(vm.itemData.get(id).content).toBe('Aktiv');
+    expect(vm.itemData.get(id).style).toBe(before.style);
+    expect(vm.itemData.getIds()).toEqual([id]);
+    expect(vm.timeline.setWindow).not.toHaveBeenCalled();
+    expect(event.data.status).toBe('not-afk');
+  } finally {
+    i18n.setLocaleMessage('de', original);
+    setAppLocale('en');
+  }
 });
