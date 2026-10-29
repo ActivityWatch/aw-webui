@@ -35,6 +35,11 @@ const ENGLISH_FALLBACK_KEYS = new Set([
   'settings.layout.changedElsewhere',
   'settings.layout.invalid',
   'settings.layout.saveFailed',
+  'common.active',
+  'common.inactive',
+  'home.trackingIntro',
+  'timeline.intro',
+  'buckets.intro',
 ]);
 const SRC_DIR = path.join(__dirname, '../src');
 const INDEX_PATH = path.join(SRC_DIR, 'i18n/index.ts');
