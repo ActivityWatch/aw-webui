@@ -78,6 +78,7 @@ function mountBucket() {
     mocks: { $aw },
     stubs: {
       'input-timeinterval': {
+        name: 'TimeIntervalFixture',
         template: '<div />',
         mounted() {
           this.$emit('input', range());
@@ -281,6 +282,53 @@ describe('confirmed Bucket deletion', () => {
           expect.any(Error)
         );
       }
+    }
+  );
+
+  test.each([false, true])(
+    'changing range clears old rows and fallback state (previous fallback: %s)',
+    async previousFallback => {
+      const { wrapper } = setup();
+      await flush();
+      if (previousFallback) {
+        mockGetBucketWithEvents
+          .mockResolvedValueOnce({ events: [] })
+          .mockResolvedValueOnce({ events: [event(), event(12)] });
+        await wrapper.vm.getEvents('A');
+        await flush();
+      }
+      expectEvents(wrapper, [11, 12]);
+      expect(wrapper.vm.showingMostRecent).toBe(previousFallback);
+      const recent = deferred();
+      mockGetBucketWithEvents
+        .mockResolvedValueOnce({ events: [] })
+        .mockReturnValueOnce(recent.promise);
+      jest.spyOn(console, 'warn').mockImplementation(jest.fn());
+
+      const nextRange = ['new start', 'new end'].map(value => ({ format: () => value }));
+      wrapper.findComponent({ name: 'TimeIntervalFixture' }).vm.$emit('input', nextRange);
+      await flush();
+      expect(mockGetBucketWithEvents).toHaveBeenCalledWith({
+        id: 'A',
+        start: 'new start',
+        end: 'new end',
+      });
+      expect(mockGetBucketWithEvents).toHaveBeenLastCalledWith({ id: 'A', limit: 100 });
+      expectEvents(wrapper, []);
+      expect(wrapper.vm.showingMostRecent).toBe(false);
+      expect(wrapper.vm.lastEventTime).toBeNull();
+
+      recent.reject(new Error('recent offline'));
+      await flush();
+      expectEvents(wrapper, []);
+      expect(wrapper.vm.showingMostRecent).toBe(false);
+      expect(wrapper.vm.lastEventTime).toBeNull();
+      expect(wrapper.vm.eventcount).toBe(2);
+
+      mockGetBucketWithEvents.mockResolvedValueOnce({ events: [event(13)] });
+      await wrapper.vm.getEvents('A');
+      await flush();
+      expectEvents(wrapper, [13]);
     }
   );
 

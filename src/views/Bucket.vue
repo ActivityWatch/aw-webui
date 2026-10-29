@@ -82,6 +82,11 @@ export default {
   },
   watch: {
     daterange: async function () {
+      // Rows from the previous range must not survive a failed load for new dates.
+      // Same-range deletion refreshes call getEvents directly and retain survivors.
+      this.events = [];
+      this.showingMostRecent = false;
+      this.lastEventTime = null;
       await this.getEvents(this.id);
     },
     // The router reuses this component when navigating between buckets, so
