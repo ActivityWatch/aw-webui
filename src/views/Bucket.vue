@@ -188,6 +188,9 @@ export default {
     updateEvent: function (event) {
       const i = this.events.findIndex(e => e.id == event.id);
       if (i != -1) {
+        // A refresh started before this save may contain the old event data.
+        // Supersede it so it cannot replace the confirmed edit in either view.
+        this.eventsRequestId++;
         // This is needed instead of this.events[i] because insides of arrays
         // are not reactive in Vue.
         this.$set(this.events, i, event);

@@ -365,6 +365,47 @@ describe('confirmed Bucket deletion', () => {
     expect(wrapper.vm.eventcount).toBe(1);
   });
 
+  test.each([false, true])(
+    'a late deletion refresh cannot overwrite a later successful save (fallback: %s)',
+    async fallback => {
+      const { wrapper, server, $aw } = setup();
+      await flush();
+      const editor: any = await editFirst(wrapper);
+      const staleRefresh = deferred();
+      if (fallback) mockGetBucketWithEvents.mockResolvedValueOnce({ events: [] });
+      mockGetBucketWithEvents.mockReturnValueOnce(staleRefresh.promise);
+      await editor.vm.delete_();
+      await flush();
+      expectEvents(wrapper, [12]);
+      const snapshot = { events: server.A.map(e => ({ ...e, data: { ...e.data } })) };
+      const survivor: any = await editFirst(wrapper);
+      survivor.vm.editedEvent.data.title = 'saved after deletion';
+      $aw.replaceEvent.mockImplementationOnce(async (id, saved) => {
+        server[id] = server[id].map(e => (e.id === saved.id ? saved : e));
+      });
+      await survivor.vm.save();
+      await flush();
+      expect(server.A[0].data.title).toBe('saved after deletion');
+      expect(wrapper.find('li').text()).toContain('saved after deletion');
+
+      staleRefresh.resolve(snapshot);
+      await flush();
+      expectEvents(wrapper, [12]);
+      expect(wrapper.find('li').text()).toContain('saved after deletion');
+      expect(
+        wrapper.findComponent({ name: 'TimelineFixture' }).props('buckets')[0].events[0].data.title
+      ).toBe('saved after deletion');
+      expect(wrapper.vm.eventcount).toBe(1);
+
+      // A later explicit load still publishes fresh server data normally.
+      server.A.push(event(13));
+      await wrapper.vm.getEvents('A');
+      await flush();
+      expectEvents(wrapper, [12, 13]);
+      expect(wrapper.find('li').text()).toContain('saved after deletion');
+    }
+  );
+
   test('deletion preserves the display limit and the authoritative full-bucket total', async () => {
     const { wrapper, server } = setup();
     server.A = Array.from({ length: 120 }, (_, i) => event(i + 1));
