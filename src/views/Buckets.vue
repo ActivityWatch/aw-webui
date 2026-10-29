@@ -392,7 +392,7 @@ export default {
         hostname: device.hostname,
         bucketCount: device.buckets.length,
         bucketIds: device.buckets.map(b => b.id),
-        bucketCreated: Object.fromEntries(device.buckets.map(b => [b.id, b.created])),
+        bucketCreated: Object.fromEntries(device.buckets.map(b => [b.id, b.created?.valueOf()])),
       };
       this.$root.$emit('bv::show::modal', 'delete-host-modal');
     },

@@ -17,7 +17,7 @@ const bucket = id => ({
   id,
   hostname: 'host',
   type: 'currentwindow',
-  created: '2026-10-28T10:00:00Z',
+  created: new Date('2026-10-28T10:00:00Z'),
   data: {},
 });
 const deferred = () => {
@@ -321,7 +321,7 @@ describe('Buckets host deletion with the real bucket store', () => {
       // may still contain the acknowledged bucket with the same creation timestamp.
       catalogue.set('A', {
         ...bucket('A'),
-        created: recreated ? '2026-10-29T10:00:00Z' : bucket('A').created,
+        created: recreated ? new Date('2026-10-29T10:00:00Z') : bucket('A').created,
       });
       await store.loadBuckets();
       await openConfirmation();
