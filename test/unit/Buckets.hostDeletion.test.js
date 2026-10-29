@@ -340,6 +340,108 @@ describe('Buckets host deletion with the real bucket store', () => {
     }
   );
 
+  test('does not retry a replacement deleted by an older in-flight ID-only request', async () => {
+    const gate = deferred();
+    mockDeleteBucket
+      .mockImplementationOnce(async id => {
+        await gate.promise;
+        await deleteOnServer(id);
+      })
+      .mockRejectedValueOnce(new Error('B failed'));
+    const operation = submit();
+    expect(calls()).toEqual(['A']);
+    catalogue.set('A', { ...bucket('A'), created: new Date('2026-10-29T10:00:00Z') });
+    await store.loadBuckets();
+    modal().vm.$emit('hidden');
+    await openConfirmation();
+    expectPending(['A', 'B', 'C']);
+    gate.resolve();
+    await operation;
+    await wrapper.vm.$nextTick();
+
+    expectPending(['B', 'C']);
+    expect(wrapper.vm.delete_host_error).toBeNull();
+    expect(hideModal).not.toHaveBeenCalled();
+    await submit();
+    expect(calls()).toEqual(['A', 'B', 'B', 'C']);
+    expect(catalogue.size).toBe(0);
+    expect(hideModal).toHaveBeenCalledTimes(1);
+  });
+
+  test.each([false, true])(
+    'retries failed replacement reconciliation before deleting (replacement remains: %s)',
+    async remains => {
+      jest.spyOn(console, 'warn').mockReturnValue(undefined);
+      const gate = deferred();
+      mockDeleteBucket
+        .mockImplementationOnce(async id => {
+          await gate.promise;
+          await deleteOnServer(id);
+        })
+        .mockRejectedValueOnce(new Error('B failed'));
+      const operation = submit();
+      catalogue.set('A', { ...bucket('A'), created: new Date('2026-10-29T10:00:00Z') });
+      await store.loadBuckets();
+      modal().vm.$emit('hidden');
+      await openConfirmation();
+      mockGetBuckets.mockRejectedValue(new Error('Catalogue unavailable'));
+      gate.resolve();
+      await operation;
+      await wrapper.vm.$nextTick();
+      expectPending(['A', 'B', 'C']);
+      expect(wrapper.vm.delete_host_error).toBe('Catalogue unavailable');
+      expect(wrapper.vm.deleting_host).toBe(false);
+      await submit();
+      expect(calls()).toEqual(['A', 'B']);
+      expect(hideModal).not.toHaveBeenCalled();
+
+      if (remains)
+        catalogue.set('A', { ...bucket('A'), created: new Date('2026-10-29T10:00:00Z') });
+      mockGetBuckets.mockImplementation(async () => [...catalogue.values()]);
+      await submit();
+      expect(calls()).toEqual(remains ? ['A', 'B', 'A', 'B', 'C'] : ['A', 'B', 'B', 'C']);
+      expect(catalogue.size).toBe(0);
+      expect(wrapper.vm.delete_host_error).toBeNull();
+      expect(hideModal).toHaveBeenCalledTimes(1);
+    }
+  );
+
+  test('reconciles the latest confirmation when it is reopened during revalidation', async () => {
+    const deletion = deferred();
+    const refresh = deferred();
+    mockDeleteBucket
+      .mockImplementationOnce(async id => {
+        await deletion.promise;
+        await deleteOnServer(id);
+      })
+      .mockRejectedValueOnce(new Error('B failed'));
+    const operation = submit();
+    catalogue.set('A', { ...bucket('A'), created: new Date('2026-10-29T10:00:00Z') });
+    await store.loadBuckets();
+    modal().vm.$emit('hidden');
+    await openConfirmation();
+    // Store's ordinary final refresh fails, then revalidation waits on a fresh read.
+    jest.spyOn(console, 'warn').mockReturnValue(undefined);
+    mockGetBuckets
+      .mockRejectedValueOnce(new Error('Ordinary reload failed'))
+      .mockImplementationOnce(() => refresh.promise);
+    deletion.resolve();
+    await flushPromises();
+    expect(wrapper.vm.deleting_host).toBe(true);
+    modal().vm.$emit('hidden');
+    await openConfirmation();
+    const latest = wrapper.vm.delete_host_selected;
+    refresh.resolve([...catalogue.values()]);
+    await operation;
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.delete_host_selected).toBe(latest);
+    expectPending(['B', 'C']);
+    expect(wrapper.vm.delete_host_error).toBeNull();
+    await submit();
+    expect(calls()).toEqual(['A', 'B', 'B', 'C']);
+    expect(catalogue.size).toBe(0);
+  });
+
   test('reconciles deletions acknowledged before reopen even if catalogue reload fails', async () => {
     jest.spyOn(console, 'warn').mockReturnValue(undefined);
     const gate = deferred();

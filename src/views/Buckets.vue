@@ -393,8 +393,22 @@ export default {
         bucketCount: device.buckets.length,
         bucketIds: device.buckets.map(b => b.id),
         bucketCreated: Object.fromEntries(device.buckets.map(b => [b.id, b.created?.valueOf()])),
+        reconcileIds: [] as string[],
       };
       this.$root.$emit('bv::show::modal', 'delete-host-modal');
+    },
+    reconcileHostDeletion: async function (selection) {
+      if (!selection.reconcileIds.length) return;
+      // An ID-only DELETE may have removed the reconfirmed incarnation instead
+      // of the original one. Only a fresh catalogue can disambiguate that case.
+      await this.bucketsStore.loadBuckets();
+      selection.bucketIds = selection.bucketIds.filter(id => {
+        if (!selection.reconcileIds.includes(id)) return true;
+        const bucket = this.bucketsStore.getBucket(id);
+        return bucket && bucket.created?.valueOf() === selection.bucketCreated[id];
+      });
+      selection.bucketCount = selection.bucketIds.length;
+      selection.reconcileIds = [];
     },
     deleteBucketsForSelectedHost: async function () {
       if (!this.delete_host_selected || this.deleting_host) return;
@@ -403,6 +417,8 @@ export default {
       this.deleting_host = true;
       this.delete_host_error = null;
       try {
+        // A failed reconciliation is retried before any further DELETE is sent.
+        if (selection.reconcileIds.length) await this.reconcileHostDeletion(selection);
         await this.bucketsStore.deleteBucketsByHost({
           bucketIds: [...selection.bucketIds],
           onDeleted: bucketId => {
@@ -420,16 +436,27 @@ export default {
           this.delete_host_error = err?.message || this.$t('buckets.deleteFailed');
         }
       } finally {
-        // A reopened confirmation may have copied a stale catalogue, even after an
-        // acknowledgement. Remove known deletions, but retain explicitly reconfirmed
-        // buckets recreated with the same ID and a different creation timestamp.
+        // Remove acknowledged stale entries. Reconfirmed replacements need a fresh
+        // read: the old request may have deleted them, or they may still exist.
         // Old errors and close events still belong exclusively to their selection.
-        const current = this.delete_host_selected;
-        if (current && current !== selection) {
+        let current = this.delete_host_selected;
+        while (current && current !== selection) {
+          current.reconcileIds = current.bucketIds.filter(
+            id => deletedIds.has(id) && current.bucketCreated[id] !== selection.bucketCreated[id]
+          );
           current.bucketIds = current.bucketIds.filter(
-            id => !deletedIds.has(id) || current.bucketCreated[id] !== selection.bucketCreated[id]
+            id => !deletedIds.has(id) || current.reconcileIds.includes(id)
           );
           current.bucketCount = current.bucketIds.length;
+          try {
+            await this.reconcileHostDeletion(current);
+          } catch (err) {
+            if (this.delete_host_selected === current) {
+              this.delete_host_error = err?.message || this.$t('buckets.deleteFailed');
+            }
+          }
+          if (this.delete_host_selected === current) break;
+          current = this.delete_host_selected;
         }
         // Single-flight spans dismiss/reopen; an old operation cannot overlap a new one.
         this.deleting_host = false;
