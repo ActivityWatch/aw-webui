@@ -1,3 +1,5 @@
+import { execFileSync } from 'child_process';
+import path from 'path';
 import moment from 'moment';
 import { createPinia, setActivePinia } from 'pinia';
 import { useSettingsStore } from '~/stores/settings';
@@ -8,6 +10,32 @@ import BillingViewComponent from '~/views/BillingView.vue';
 // Tests call Options API members directly, which the Vue constructor type doesn't expose.
 const WorkReport: any = WorkReportComponent;
 const BillingView: any = BillingViewComponent;
+
+// Keep the DST regressions active on UTC CI runners, as in timeperiodDst.test.node.ts.
+if (process.env.TZ !== 'Europe/Stockholm') {
+  test('replays logical-day boundaries under Europe/Stockholm', () => {
+    expect(() =>
+      execFileSync(
+        process.execPath,
+        [
+          require.resolve('jest/bin/jest'),
+          '--selectProjects',
+          'jsdom',
+          '--runInBand',
+          '--coverage=false',
+          '--runTestsByPath',
+          __filename,
+        ],
+        {
+          cwd: path.resolve(__dirname, '../..'),
+          env: { ...process.env, TZ: 'Europe/Stockholm' },
+          stdio: 'pipe',
+          timeout: 90000,
+        }
+      )
+    ).not.toThrow();
+  }, 95000);
+}
 
 function expectWindow(dateRange: string, firstDate: string, lastDate: string) {
   const settingsStore = useSettingsStore();
@@ -94,6 +122,21 @@ describe('report logical-day anchor', () => {
       }
     }
   );
+
+  test.each([
+    [new Date(2026, 2, 29, 3, 59, 59, 999), '2026-03-28'],
+    [new Date(2026, 2, 29, 4), '2026-03-29'],
+    [new Date(2026, 2, 29, 4, 30), '2026-03-29'],
+    [new Date(2026, 9, 25, 3, 30), '2026-10-24'],
+    [new Date(2026, 9, 25, 3, 59, 59, 999), '2026-10-24'],
+    [new Date(2026, 9, 25, 4), '2026-10-25'],
+  ])('uses the local day-start boundary on the DST transition morning at %s', (now, today) => {
+    jest.setSystemTime(now);
+    expect(get_today_with_offset('04:00')).toBe(today);
+    expect(get_today_with_offset()).toBe(today);
+    expectWindow('thisMonth', `${today.slice(0, 7)}-01`, today);
+    expectWindow('last7d', moment(today).subtract(6, 'days').format('YYYY-MM-DD'), today);
+  });
 
   test.each([
     [new Date(2026, 2, 30, 2), '2026-03-23', '2026-03-29'],
