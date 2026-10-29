@@ -408,6 +408,50 @@ describe('Buckets host deletion with the real bucket store', () => {
     }
   );
 
+  test.each([false, true])(
+    'retains acknowledgements while dismissed until completion (replacement remains: %s)',
+    async remains => {
+      jest.spyOn(console, 'warn').mockReturnValue(undefined);
+      const gate = deferred();
+      mockDeleteBucket
+        .mockImplementationOnce(async id => {
+          await gate.promise;
+          await deleteOnServer(id);
+        })
+        .mockRejectedValueOnce(new Error('B failed'));
+      const operation = submit();
+      modal().vm.$emit('hidden');
+      mockGetBuckets.mockRejectedValue(new Error('Catalogue unavailable'));
+      gate.resolve();
+      await operation;
+      expect(wrapper.vm.delete_host_selected).toBeNull();
+      expect(wrapper.vm.deleting_host).toBe(false);
+      expect(wrapper.vm.delete_host_error).toBeNull();
+
+      await openConfirmation();
+      expectPending(['A', 'B', 'C']);
+      await submit();
+      expect(calls()).toEqual(['A', 'B']);
+      expect(wrapper.vm.delete_host_error).toBe('Catalogue unavailable');
+      expect(hideModal).not.toHaveBeenCalled();
+
+      // A freshly confirmed replacement must survive reconciliation, whereas
+      // the stale entry for the acknowledged deletion must not be retried.
+      if (remains) {
+        catalogue.set('A', { ...bucket('A'), created: new Date('2026-10-29T10:00:00Z') });
+        store.update_buckets([...catalogue.values()]);
+        modal().vm.$emit('hidden');
+        await openConfirmation();
+      }
+      mockGetBuckets.mockImplementation(async () => [...catalogue.values()]);
+      await submit();
+      expect(calls()).toEqual(remains ? ['A', 'B', 'A', 'B', 'C'] : ['A', 'B', 'B', 'C']);
+      expect(catalogue.size).toBe(0);
+      expect(wrapper.vm.delete_host_error).toBeNull();
+      expect(hideModal).toHaveBeenCalledTimes(1);
+    }
+  );
+
   test('retains unresolved acknowledgements across dismiss/reopen after a failed read', async () => {
     jest.spyOn(console, 'warn').mockReturnValue(undefined);
     const gate = deferred();

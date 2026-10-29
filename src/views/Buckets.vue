@@ -431,6 +431,11 @@ export default {
           bucketIds: [...selection.bucketIds],
           onDeleted: bucketId => {
             deletedIds.add(bucketId);
+            // Dismissal can outlive this operation, including its final reload.
+            // Retain the acknowledgement before consulting the current modal.
+            if (!this.delete_host_reconcile_ids.includes(bucketId)) {
+              this.delete_host_reconcile_ids.push(bucketId);
+            }
             if (this.delete_host_selected !== selection) return;
             selection.bucketIds = selection.bucketIds.filter(id => id !== bucketId);
             selection.bucketCount = selection.bucketIds.length;
@@ -451,7 +456,10 @@ export default {
         while (current && current !== selection) {
           current.reconcileIds = [
             ...new Set([
-              ...current.reconcileIds,
+              ...current.reconcileIds.filter(
+                id =>
+                  !deletedIds.has(id) || current.bucketCreated[id] !== selection.bucketCreated[id]
+              ),
               ...current.bucketIds.filter(
                 id =>
                   deletedIds.has(id) && current.bucketCreated[id] !== selection.bucketCreated[id]
