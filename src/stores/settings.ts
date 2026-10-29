@@ -23,6 +23,12 @@ function jsonEq(a: any, b: any) {
 }
 
 let settingsLoadPromise: Promise<void> | null = null;
+// Order overlapping edits of the same preference, including their comparison,
+// POST and reload. Independent preferences need not wait for one another.
+// Keep request bookkeeping out of persisted/reactive settings.
+const appearanceUpdates = new WeakMap<object, Record<string, Promise<void>>>();
+// A completed newer reload supersedes older responses, not independent writes.
+const settingsLoads = new WeakMap<object, { issued: number; applied: number }>();
 
 // Backoffs for NewReleaseNotification
 export const SHORT_BACKOFF_PERIOD = 24 * 60 * 60;
@@ -30,6 +36,20 @@ export const LONG_BACKOFF_PERIOD = 5 * 24 * 60 * 60;
 
 // Initial wait period for UserSatisfactionPoll
 export const INITIAL_WAIT_PERIOD = 7 * 24 * 60 * 60;
+
+// Integer percentages and CSS pixels. Automatic width preserves route defaults.
+export const DEFAULT_TEXT_SIZE = 100;
+export const DEFAULT_CONTENT_WIDTH = 0;
+export function isTextSize(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 80 && value <= 150;
+}
+export function isContentWidth(value: unknown): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    (value === 0 || (value >= 600 && value <= 2400))
+  );
+}
 
 interface State {
   // Timestamp when user was first seen (first time webapp is run)
@@ -43,6 +63,8 @@ interface State {
   landingpage: string;
   theme: 'light' | 'dark' | 'auto';
   locale: string;
+  textSize: number;
+  contentWidth: number;
 
   newReleaseCheckData: Record<string, any>;
   userSatisfactionPollData: {
@@ -108,6 +130,8 @@ export const useSettingsStore = defineStore('settings', {
 
     theme: 'auto',
     locale: 'en',
+    textSize: DEFAULT_TEXT_SIZE,
+    contentWidth: DEFAULT_CONTENT_WIDTH,
 
     newReleaseCheckData: {
       isEnabled: true,
@@ -182,13 +206,21 @@ export const useSettingsStore = defineStore('settings', {
       }
       const client = getClient();
 
+      const loads = settingsLoads.get(this) || { issued: 0, applied: 0 };
+      settingsLoads.set(this, loads);
+      const request = ++loads.issued;
       // Fetch from server, fall back to localStorage
       const server_settings = await client.get_settings();
+      if (request < loads.applied) return;
+      loads.applied = request;
 
       // Build a unified map: server value wins, localStorage is fallback.
       // Skip keys that are missing from BOTH sources — otherwise `null` from
       // localStorage.getItem overrides the defaults defined in `state()`.
-      const storage: Record<string, unknown> = {};
+      const storage: Record<string, unknown> = {
+        textSize: DEFAULT_TEXT_SIZE,
+        contentWidth: DEFAULT_CONTENT_WIDTH,
+      };
       const used = new Set<string>();
 
       // 1. Server settings take priority
@@ -199,7 +231,17 @@ export const useSettingsStore = defineStore('settings', {
           continue;
         }
         storage[key] =
-          key === 'alerts' ? cleanAlertGoals(server_settings[key]) : server_settings[key];
+          key === 'textSize'
+            ? isTextSize(server_settings[key])
+              ? server_settings[key]
+              : DEFAULT_TEXT_SIZE
+            : key === 'contentWidth'
+            ? isContentWidth(server_settings[key])
+              ? server_settings[key]
+              : DEFAULT_CONTENT_WIDTH
+            : key === 'alerts'
+            ? cleanAlertGoals(server_settings[key])
+            : server_settings[key];
         used.add(key);
       }
 
@@ -228,6 +270,10 @@ export const useSettingsStore = defineStore('settings', {
               parsed = cleanAlertGoals(parsed);
             }
             storage[key] = parsed;
+          } else if (key === 'textSize' || key === 'contentWidth') {
+            const value = raw.trim() === '' ? NaN : Number(raw);
+            const valid = key === 'textSize' ? isTextSize(value) : isContentWidth(value);
+            if (valid) storage[key] = value;
           } else if (key === 'timelineGroupGranularity') {
             const seconds = Number(raw);
             if (Number.isFinite(seconds) && seconds >= 0) storage[key] = seconds;
@@ -265,7 +311,7 @@ export const useSettingsStore = defineStore('settings', {
         await this.save();
       }
     },
-    async save(explicitKeys: string[] = []) {
+    async save(explicitKeys: string[] = [], onlyExplicit = false) {
       // Important check, to avoid saving settings before they are loaded (potentially overwriting them with defaults)
       if (!this.loaded) {
         console.error('Settings not loaded, not saving');
@@ -279,13 +325,19 @@ export const useSettingsStore = defineStore('settings', {
       // NOTE: localStorage deprecated, will be removed in future
       const client = getClient();
 
+      // Preserve this request's explicit appearance values across concurrent
+      // saves/reloads while the server comparison is in flight.
+      const appearanceValues: Record<string, number> = {};
+      for (const key of ['textSize', 'contentWidth']) {
+        if (explicitKeys.includes(key)) appearanceValues[key] = this[key];
+      }
       // Fetch current settings from server
       const server_settings = await client.get_settings();
 
       // Save settings
       for (const key of Object.keys(this.$state)) {
         // Skip keys starting with underscore, as they are local to the vuex store.
-        if (key.startsWith('_')) {
+        if (key.startsWith('_') || (onlyExplicit && !explicitKeys.includes(key))) {
           continue;
         }
 
@@ -300,7 +352,13 @@ export const useSettingsStore = defineStore('settings', {
           continue;
         }
 
-        const value = this.$state[key];
+        // Appearance controls submit only edited preferences. An unrelated save
+        // must not overwrite the other preference from a stale browser snapshot.
+        if (['textSize', 'contentWidth'].includes(key) && !explicitKeys.includes(key)) {
+          continue;
+        }
+
+        const value = key in appearanceValues ? appearanceValues[key] : this.$state[key];
 
         // Save to localStorage
         // NOTE: we always save the theme and landingpage to localStorage, since they are used before the settings are loaded
@@ -332,13 +390,44 @@ export const useSettingsStore = defineStore('settings', {
       // After save, reload
       await this.load({ save: false });
     },
-    async update(new_state: Record<string, any>) {
+    async update(new_state: Record<string, any>, onlyExplicit = false) {
       console.log('Updating state', new_state);
       await this.ensureLoaded();
+      const keys = ['textSize', 'contentWidth'].filter(key => key in new_state);
+      for (const key of keys) {
+        const valid =
+          key === 'textSize' ? isTextSize(new_state[key]) : isContentWidth(new_state[key]);
+        if (!valid) throw new Error('Invalid appearance preference: ' + key);
+      }
+      const updates = appearanceUpdates.get(this) || {};
+      appearanceUpdates.set(this, updates);
+      const predecessors = keys.map(key => updates[key]);
+      let release: () => void;
+      const settled = new Promise<void>(resolve => {
+        release = resolve;
+      });
+      for (const key of keys) updates[key] = settled;
+      await Promise.all(predecessors);
+      // Snapshot only after predecessors have settled: transient optimistic
+      // values are not a rollback baseline. A failed predecessor releases too.
+      const previousAppearance: Record<string, number> = {};
+      for (const key of keys) previousAppearance[key] = this[key];
       this.$patch(new_state);
-      // Explicitly updated keys are saved even if never stored before. A
-      // successful save reloads _storedKeys from the server.
-      await this.save(Object.keys(new_state));
+      try {
+        // Explicitly updated keys are saved even if never stored before. A
+        // successful save reloads _storedKeys from the server.
+        await this.save(Object.keys(new_state), onlyExplicit);
+      } catch (error) {
+        // Appearance edits are drafts until Save. Roll back their applied values
+        // on rejection so a failed request cannot masquerade as a saved layout.
+        this.$patch(previousAppearance);
+        throw error;
+      } finally {
+        for (const key of keys) {
+          if (updates[key] === settled) delete updates[key];
+        }
+        release();
+      }
     },
   },
 });

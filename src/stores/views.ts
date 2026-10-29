@@ -183,7 +183,7 @@ export const useViewsStore = defineStore('views', {
     },
     async save() {
       const settingsStore = useSettingsStore();
-      settingsStore.update({ views: this.views });
+      await settingsStore.update({ views: this.views });
       await this.load();
     },
     loadViews(views: View[]) {
