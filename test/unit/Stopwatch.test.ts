@@ -238,6 +238,10 @@ describe('Stopwatch editor completion', () => {
   const editorVm = overrides => ({
     ...EventEditor.data(),
     ...EventEditor.methods,
+    draftReady: true,
+    get selectionIdentity() {
+      return EventEditor.computed.selectionIdentity.call(this);
+    },
     $refs: {},
     ...overrides,
   });
