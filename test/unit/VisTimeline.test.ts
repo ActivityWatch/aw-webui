@@ -365,6 +365,9 @@ test('panning preserves item IDs and editing uses the original bucket and event'
   vm.update();
   const ids = vm.itemData.getIds();
   expect(ids).toHaveLength(1);
+  expect(vm.itemData.get(ids[0]).content).toBe('Active');
+  expect(vm.itemData.get(ids[0]).style).toContain('#7F6');
+  expect(event.data.status).toBe('not-afk');
   const update = jest.spyOn(vm.itemData, 'update');
   vm.update(false);
   expect(update).not.toHaveBeenCalled();
@@ -782,4 +785,12 @@ describe('host row labels', () => {
     expect(labels['host-group:phone']).toBe('phone');
     expect(labels['aw-watcher-window_desk-synced-from-phone']).toBe('window');
   });
+});
+
+// Labels are presentation, never event or color identities.
+test('locale changes invalidate prepared timeline labels without resetting the viewport', () => {
+  const vm = { preparedItems: new Map([['item', { content: 'Active' }]]), update: jest.fn() };
+  VisTimeline.watch['$i18n.locale'].call(vm);
+  expect(vm.preparedItems.size).toBe(0);
+  expect(vm.update).toHaveBeenCalledWith(false);
 });
