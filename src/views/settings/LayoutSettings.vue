@@ -82,7 +82,10 @@ export default {
         this.error = this.$t('settings.layout.invalid');
         return;
       }
-      await this.persist({ textSize, contentWidth });
+      const values: { textSize?: number; contentWidth?: number } = {};
+      if (textSize !== this.textSize) values.textSize = textSize;
+      if (contentWidth !== this.contentWidth) values.contentWidth = contentWidth;
+      await this.persist(values);
     },
     async reset() {
       if (this.saving) return;
@@ -91,7 +94,7 @@ export default {
       this.draftContentWidth = DEFAULT_CONTENT_WIDTH || 1200;
       await this.persist({ textSize: DEFAULT_TEXT_SIZE, contentWidth: DEFAULT_CONTENT_WIDTH });
     },
-    async persist(values: { textSize: number; contentWidth: number }) {
+    async persist(values: { textSize?: number; contentWidth?: number }) {
       this.saving = true;
       this.saved = false;
       this.error = '';
@@ -103,7 +106,7 @@ export default {
         this.draftContentWidth = store.contentWidth || 1200;
         // Report the values actually reloaded, not stale drafts from a competing save.
         await this.$nextTick();
-        if (store.textSize !== values.textSize || store.contentWidth !== values.contentWidth) {
+        if (Object.keys(values).some(key => store[key] !== values[key])) {
           this.error = this.$t('settings.layout.changedElsewhere');
         } else {
           this.saved = true;

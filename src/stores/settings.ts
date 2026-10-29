@@ -23,6 +23,9 @@ function jsonEq(a: any, b: any) {
 }
 
 let settingsLoadPromise: Promise<void> | null = null;
+// Per-store, per-key ownership keeps an older failed update from undoing a
+// newer edit. Keep request bookkeeping out of persisted/reactive settings.
+const appearanceUpdates = new WeakMap<object, Record<string, symbol>>();
 
 // Backoffs for NewReleaseNotification
 export const SHORT_BACKOFF_PERIOD = 24 * 60 * 60;
@@ -335,6 +338,12 @@ export const useSettingsStore = defineStore('settings', {
           continue;
         }
 
+        // Appearance controls submit only edited preferences. An unrelated save
+        // must not overwrite the other preference from a stale browser snapshot.
+        if (['textSize', 'contentWidth'].includes(key) && !explicitKeys.includes(key)) {
+          continue;
+        }
+
         const value = this.$state[key];
 
         // Save to localStorage
@@ -380,13 +389,21 @@ export const useSettingsStore = defineStore('settings', {
         if (!valid) throw new Error('Invalid appearance preference: ' + key);
         previousAppearance[key] = this[key];
       }
+      const updates = appearanceUpdates.get(this) || {};
+      appearanceUpdates.set(this, updates);
+      const updateToken = Symbol();
+      for (const key of Object.keys(previousAppearance)) updates[key] = updateToken;
       this.$patch(new_state);
       try {
         // Explicitly updated keys are saved even if never stored before. A
         // successful save reloads _storedKeys from the server.
         await this.save(Object.keys(new_state));
       } catch (error) {
-        this.$patch(previousAppearance);
+        const rollback: Record<string, number> = {};
+        for (const key of Object.keys(previousAppearance)) {
+          if (updates[key] === updateToken) rollback[key] = previousAppearance[key];
+        }
+        this.$patch(rollback);
         throw error;
       }
     },

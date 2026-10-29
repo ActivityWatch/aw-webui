@@ -131,6 +131,30 @@ describe('persisted layout preferences', () => {
     expect(localStorage.getItem('contentWidth')).toBeNull();
   });
 
+  test('an older rejected update cannot roll back a newer successful update', async () => {
+    const store = await persistentStore();
+    const originalPost = mockPost.getMockImplementation();
+    let rejectFirst: (error: Error) => void;
+    mockPost.mockImplementation((url, value, ...args) => {
+      if (url.endsWith('/textSize') && value === 130) {
+        return new Promise((_, reject) => {
+          rejectFirst = reject;
+        });
+      }
+      return originalPost(url, value, ...args);
+    });
+    const first = store.update({ textSize: 130 });
+    const rejected = first.catch(error => error);
+    await flush();
+    await store.update({ textSize: 140 });
+    expect(store.textSize).toBe(140);
+    rejectFirst(new Error('offline'));
+    expect(await rejected).toEqual(new Error('offline'));
+    expect(store.textSize).toBe(140);
+    await store.load();
+    expect(store.textSize).toBe(140);
+  });
+
   test('failed update rejects and rolls back only the changed appearance values', async () => {
     const store = await persistentStore();
     await store.update({ contentWidth: 1200 });
@@ -168,6 +192,36 @@ describe('layout draft controls', () => {
     expect(wrapper.find('[role="status"]').text()).toContain('saved');
     wrapper.destroy();
   });
+
+  test.each(['textSize', 'contentWidth'])(
+    'saving one draft preserves %s saved by another tab',
+    async remoteKey => {
+      const store = await persistentStore();
+      const wrapper = mount(LayoutSettings as any);
+      const remoteValue = remoteKey === 'textSize' ? 140 : 1800;
+      const server = { ...store.$state, [remoteKey]: remoteValue };
+      mockGetSettings.mockImplementation(async () => ({ ...server }));
+      mockPost.mockImplementation(async (url, value) => {
+        server[url.split('/').pop()] = value;
+      });
+      if (remoteKey === 'textSize') {
+        await wrapper.find('#layout-automatic-width').setChecked(false);
+        await wrapper.find('#layout-content-width').setValue('2100');
+      } else {
+        await wrapper.find('#layout-text-size').setValue('125');
+      }
+      await wrapper.find('form').trigger('submit');
+      await flush();
+      expect(server[remoteKey]).toBe(remoteValue);
+      expect(store[remoteKey]).toBe(remoteValue);
+      expect([store.textSize, store.contentWidth]).toEqual(
+        remoteKey === 'textSize' ? [140, 2100] : [125, 1800]
+      );
+      expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+      expect(wrapper.find('[role="status"]').text()).toContain('saved');
+      wrapper.destroy();
+    }
+  );
 
   test('does not claim submitted values were saved when another writer wins the final reload', async () => {
     const store = await persistentStore();
