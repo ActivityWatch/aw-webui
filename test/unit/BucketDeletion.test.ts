@@ -332,6 +332,60 @@ describe('confirmed Bucket deletion', () => {
     }
   );
 
+  test('deletion after a range change adjusts the total once even if count refreshes fail', async () => {
+    const { wrapper, server, $aw } = setup();
+    await flush();
+    const editor: any = await editFirst(wrapper);
+    const deleted = editor.props('event');
+    const request = deferred();
+    $aw.deleteEvent.mockImplementationOnce(async () => {
+      await request.promise;
+      server.A = server.A.filter(e => e.id !== 11);
+    });
+    const deletion = editor.vm.delete_();
+    mockGetBucketWithEvents.mockResolvedValue({ events: [event(12)] });
+    wrapper.findComponent({ name: 'TimeIntervalFixture' }).vm.$emit('input', range());
+    await flush();
+    expectEvents(wrapper, [12]);
+    expect(wrapper.vm.eventcount).toBe(2);
+    mockCountEvents.mockRejectedValue(new Error('count offline'));
+    jest.spyOn(console, 'warn').mockImplementation(jest.fn());
+
+    request.resolve();
+    await deletion;
+    await flush();
+    expect(server.A.map(e => e.id)).toEqual([12]);
+    expectEvents(wrapper, [12]);
+    expect(wrapper.vm.eventcount).toBe(1);
+
+    await wrapper.vm.removeEvent(deleted, 'A');
+    await flush();
+    expect(wrapper.vm.eventcount).toBe(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      '[bucket] Failed to refresh after deletion:',
+      expect.any(Error)
+    );
+  });
+
+  test('deletion accounting resets when navigating to another bucket with the same event id', async () => {
+    const { wrapper } = setup();
+    await flush();
+    const first: any = await editFirst(wrapper);
+    await first.vm.delete_();
+    await flush();
+    expect(wrapper.vm.eventcount).toBe(1);
+    await wrapper.setProps({ id: 'B' });
+    await flush();
+    expectEvents(wrapper, [11]);
+    mockCountEvents.mockRejectedValueOnce(new Error('count offline'));
+    jest.spyOn(console, 'warn').mockImplementation(jest.fn());
+    const second: any = await editFirst(wrapper);
+    await second.vm.delete_();
+    await flush();
+    expectEvents(wrapper, []);
+    expect(wrapper.vm.eventcount).toBe(0);
+  });
+
   test('a duplicate confirmed notification cannot decrement the total twice', async () => {
     const { wrapper } = setup();
     await flush();
