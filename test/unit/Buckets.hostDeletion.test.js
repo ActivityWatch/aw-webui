@@ -246,7 +246,7 @@ describe('Buckets host deletion with the real bucket store', () => {
   });
 
   test.each(['success', 'error'])(
-    'dismiss/reopen isolates new confirmation from old progress and %s, retaining global single-flight',
+    'dismiss/reopen isolates errors and close events but reconciles acknowledged IDs after %s',
     async outcome => {
       const first = deferred();
       const second = deferred();
@@ -285,10 +285,45 @@ describe('Buckets host deletion with the real bucket store', () => {
       await wrapper.vm.$nextTick();
       expect(calls()).toEqual(outcome === 'error' ? ['A', 'B'] : ['A', 'B', 'C']);
       expect(wrapper.vm.delete_host_selected).toBe(confirmation);
-      expectPending(['A', 'B', 'C']);
+      expectPending(outcome === 'error' ? ['B', 'C'] : []);
       expect(wrapper.vm.delete_host_error).toBeNull();
       expect(wrapper.vm.deleting_host).toBe(false);
       expect(hideModal).not.toHaveBeenCalled();
+
+      await submit();
+      expect(calls()).toEqual(outcome === 'error' ? ['A', 'B', 'B', 'C'] : ['A', 'B', 'C']);
+      expect(catalogue.size).toBe(0);
+      expect(wrapper.vm.delete_host_error).toBeNull();
+      expect(hideModal).toHaveBeenCalledTimes(1);
     }
   );
+
+  test('reconciles deletions acknowledged before reopen even if catalogue reload fails', async () => {
+    jest.spyOn(console, 'warn').mockReturnValue(undefined);
+    const gate = deferred();
+    mockDeleteBucket.mockImplementationOnce(deleteOnServer).mockImplementationOnce(async () => {
+      await gate.promise;
+      throw new Error('B failed');
+    });
+    const operation = submit();
+    await flushPromises();
+    expect(calls()).toEqual(['A', 'B']);
+    expectPending(['B', 'C']);
+    modal().vm.$emit('hidden');
+    // New arrivals may be explicitly included in the reopened confirmation.
+    catalogue.set('D', bucket('D'));
+    store.update_buckets([...store.buckets, bucket('D')]);
+    await openConfirmation();
+    expectPending(['A', 'B', 'C', 'D']);
+    mockGetBuckets.mockRejectedValueOnce(new Error('Catalogue unavailable'));
+    gate.resolve();
+    await operation;
+    await wrapper.vm.$nextTick();
+    expectPending(['B', 'C', 'D']);
+    expect(wrapper.vm.delete_host_error).toBeNull();
+    await submit();
+    expect(calls()).toEqual(['A', 'B', 'B', 'C', 'D']);
+    expect(catalogue.size).toBe(0);
+    expect(hideModal).toHaveBeenCalledTimes(1);
+  });
 });

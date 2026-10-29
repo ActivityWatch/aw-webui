@@ -398,12 +398,14 @@ export default {
     deleteBucketsForSelectedHost: async function () {
       if (!this.delete_host_selected || this.deleting_host) return;
       const selection = this.delete_host_selected;
+      const deletedIds = new Set<string>();
       this.deleting_host = true;
       this.delete_host_error = null;
       try {
         await this.bucketsStore.deleteBucketsByHost({
           bucketIds: [...selection.bucketIds],
           onDeleted: bucketId => {
+            deletedIds.add(bucketId);
             if (this.delete_host_selected !== selection) return;
             selection.bucketIds = selection.bucketIds.filter(id => id !== bucketId);
             selection.bucketCount = selection.bucketIds.length;
@@ -417,6 +419,14 @@ export default {
           this.delete_host_error = err?.message || this.$t('buckets.deleteFailed');
         }
       } finally {
+        // A reopened confirmation may have copied a stale catalogue, even after an
+        // acknowledgement. Reconcile only known deletions before enabling retry;
+        // old errors and close events still belong exclusively to their selection.
+        const current = this.delete_host_selected;
+        if (current && current !== selection) {
+          current.bucketIds = current.bucketIds.filter(id => !deletedIds.has(id));
+          current.bucketCount = current.bucketIds.length;
+        }
         // Single-flight spans dismiss/reopen; an old operation cannot overlap a new one.
         this.deleting_host = false;
       }
