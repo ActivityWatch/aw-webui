@@ -178,6 +178,26 @@ describe('persisted layout preferences', () => {
     }
   );
 
+  test('a delayed settings read preserves explicit values across an independent save', async () => {
+    const store = await persistentStore();
+    const originalGet = mockGetSettings.getMockImplementation();
+    let finishRead: () => void;
+    mockGetSettings.mockImplementationOnce(async () => {
+      await new Promise<void>(resolve => {
+        finishRead = resolve;
+      });
+      return originalGet();
+    });
+    const text = store.update({ textSize: 130 });
+    await flush();
+    await store.update({ contentWidth: 1800 });
+    finishRead();
+    await text;
+    expect([store.textSize, store.contentWidth]).toEqual([130, 1800]);
+    await store.load();
+    expect([store.textSize, store.contentWidth]).toEqual([130, 1800]);
+  });
+
   test('failed update rejects and rolls back only the changed appearance values', async () => {
     const store = await persistentStore();
     await store.update({ contentWidth: 1200 });

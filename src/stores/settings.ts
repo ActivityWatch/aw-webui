@@ -322,6 +322,12 @@ export const useSettingsStore = defineStore('settings', {
       // NOTE: localStorage deprecated, will be removed in future
       const client = getClient();
 
+      // Preserve this request's explicit appearance values across concurrent
+      // saves/reloads while the server comparison is in flight.
+      const appearanceValues: Record<string, number> = {};
+      for (const key of ['textSize', 'contentWidth']) {
+        if (explicitKeys.includes(key)) appearanceValues[key] = this[key];
+      }
       // Fetch current settings from server
       const server_settings = await client.get_settings();
 
@@ -349,7 +355,7 @@ export const useSettingsStore = defineStore('settings', {
           continue;
         }
 
-        const value = this.$state[key];
+        const value = key in appearanceValues ? appearanceValues[key] : this.$state[key];
 
         // Save to localStorage
         // NOTE: we always save the theme and landingpage to localStorage, since they are used before the settings are loaded
