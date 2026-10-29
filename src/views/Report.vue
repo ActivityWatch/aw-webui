@@ -11,7 +11,7 @@ div
     | {{error}}
 
   aw-select-categories-or-pattern(v-model="filterCategories")
-    template(v-slot:input-group-append)
+    template(v-slot:input-group-append="")
       b-button(type="button", @click="generate()" variant="success" :disabled="!has_pattern")
         icon(name="search")
         | {{ $t('report.generate') }}
@@ -58,7 +58,7 @@ div
 
     hr
 
-    aw-timeline-barchart(:datasets="datasets" :height="100")
+    aw-timeline-barchart(v-if="datasets.length" :datasets="datasets" :timeperiod_start="result.period.start" :timeperiod_length="result.period.length" :height="100")
 
     hr
 
@@ -85,9 +85,9 @@ import 'vue-awesome/icons/angle-double-down';
 import 'vue-awesome/icons/angle-double-up';
 
 import { canonicalEvents, querystr_to_array } from '~/queries';
-import { buildBarchartDataset } from '~/util/datasets';
+import { reportChartDatasets } from '~/util/reportChart';
+import { TimePeriod } from '~/util/timeperiod';
 
-import { useActivityStore } from '~/stores/activity';
 import { useCategoryStore } from '~/stores/categories';
 import { useBucketsStore } from '~/stores/buckets';
 
@@ -98,11 +98,11 @@ export default {
   name: 'Report',
   data() {
     return {
-      activityStore: useActivityStore(),
       categoryStore: useCategoryStore(),
       bucketsStore: useBucketsStore(),
 
-      events: null,
+      result: null,
+      generation: 0,
 
       status: null,
       queryTime: null,
@@ -118,11 +118,11 @@ export default {
     has_pattern: function () {
       return this.filterCategories.length > 0;
     },
+    events: function () {
+      return this.result ? this.result.events : null;
+    },
     datasets: function () {
-      return buildBarchartDataset(
-        this.activityStore.category.by_period,
-        this.categoryStore.classes
-      );
+      return this.result ? this.result.datasets : [];
     },
   },
   mounted: async function () {
@@ -130,34 +130,46 @@ export default {
   },
   methods: {
     generate: async function () {
-      // TODO: use full query (one per day/timeperiod) instead of canonicalEvents
-      let query = canonicalEvents({
-        ...this.bucketsStore.desktopBucketIds(this.queryOptions.hostname),
-        filter_afk: this.queryOptions.filter_afk,
-        categories: this.filterCategories,
-        filter_categories: this.filterCategories.map(c => c[0]),
-      });
-      query += '; RETURN = events;';
-
-      const query_array = querystr_to_array(query);
-      const start = moment(this.queryOptions.start).format();
-      const end = moment(this.queryOptions.stop).format();
-      const timeperiods = [start + '/' + end];
+      const generation = ++this.generation;
+      this.status = 'searching';
+      const time = moment();
       try {
-        this.status = 'searching';
-        const time = moment();
-        const data = await getClient().query(timeperiods, query_array);
-        this.events = _.orderBy(data[0], ['timestamp'], ['desc']);
+        // Controls remain editable; all result data belongs to this resolved request.
+        const options = _.cloneDeep(this.queryOptions);
+        const categories = _.cloneDeep(this.filterCategories);
+        const classes = _.cloneDeep(this.categoryStore.classes);
+        const start = moment(options.start);
+        const end = moment(options.stop);
+        if (!start.isValid() || !end.isValid() || !end.isAfter(start)) {
+          throw new Error('Report end must be after its start.');
+        }
+        const period: TimePeriod = {
+          start: start.format(),
+          length: [end.diff(start), 'milliseconds'],
+        };
+        let query = canonicalEvents({
+          ...this.bucketsStore.desktopBucketIds(options.hostname),
+          filter_afk: options.filter_afk,
+          categories,
+          filter_categories: categories.map(c => c[0]),
+        });
+        query += '; RETURN = events;';
+        const data = await getClient().query(
+          [start.format() + '/' + end.format()],
+          querystr_to_array(query)
+        );
+        if (generation !== this.generation) return;
+        const events = _.orderBy(data[0], ['timestamp'], ['desc']);
+        const datasets = reportChartDatasets(events, period, classes);
+        this.result = { events, datasets, period };
         this.error = '';
         this.queryTime = moment().diff(time);
-        // The chart reads the store's category history, which Activity views
-        // without a timeline barchart no longer load.
-        await this.activityStore.ensure_category_history();
       } catch (e) {
+        if (generation !== this.generation) return;
         console.error(e);
         this.error = e?.response?.data?.message || e?.message || this.$t('common.requestFailed');
       } finally {
-        this.status = null;
+        if (generation === this.generation) this.status = null;
       }
     },
 
