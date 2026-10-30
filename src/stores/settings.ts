@@ -6,7 +6,7 @@ import { SavedQuery } from '~/util/savedQueries';
 import { AlertGoal, cleanAlertGoals } from '~/util/alerts';
 import { View, defaultViews } from '~/stores/views';
 import type { PrivacyFilterRule } from '~/util/privacyFilters';
-import { isEqual } from 'lodash';
+import { cloneDeep, isEqual } from 'lodash';
 import { AppLocale, i18n, isAppLocale, setAppLocale } from '~/i18n';
 
 function jsonEq(a: any, b: any) {
@@ -272,6 +272,11 @@ export const useSettingsStore = defineStore('settings', {
         console.error('Settings not loaded, not saving');
         return;
       }
+      // Capture intent before any transport wait: another save's reload can
+      // replace shared state while this save is still pending.
+      const settings = cloneDeep(this.$state);
+      const keys = explicitKeys?.slice();
+
       // We want to avoid saving to localStorage to not accidentally mess up pre-migration data
       // For example, if the user is using several browsers, and opened in their non-main browser on first run after upgrade.
       const saveToLocalStorage = false;
@@ -284,9 +289,9 @@ export const useSettingsStore = defineStore('settings', {
       const server_settings = await client.get_settings();
 
       // Save settings
-      for (const key of Object.keys(this.$state)) {
+      for (const key of Object.keys(settings)) {
         // A stale session must not overwrite unrelated preferences confirmed elsewhere.
-        if (explicitKeys && !explicitKeys.includes(key)) continue;
+        if (keys && !keys.includes(key)) continue;
 
         // Skip keys starting with underscore, as they are local to the vuex store.
         if (key.startsWith('_')) {
@@ -298,13 +303,13 @@ export const useSettingsStore = defineStore('settings', {
         // (see hasStoredAlerts) and hide the sample goals.
         if (
           key === 'alerts' &&
-          !this._storedKeys.includes('alerts') &&
-          !explicitKeys?.includes('alerts')
+          !settings._storedKeys.includes('alerts') &&
+          !keys?.includes('alerts')
         ) {
           continue;
         }
 
-        const value = this.$state[key];
+        const value = settings[key];
 
         // Save to localStorage
         // NOTE: we always save the theme and landingpage to localStorage, since they are used before the settings are loaded

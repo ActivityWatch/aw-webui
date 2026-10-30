@@ -85,6 +85,64 @@ describe('settings persistence scope', () => {
     expect(server).toMatchObject({ theme: 'dark', startOfWeek: 'Sunday', startOfDay: '05:00' });
   });
 
+  test('overlapping saves retain intended values after another save reloads the store', async () => {
+    const store = newSession();
+    await store.load();
+    let releaseFirst!: () => void;
+    let releaseSecond!: () => void;
+    const firstRead = new Promise<void>(resolve => {
+      releaseFirst = resolve;
+    });
+    const secondRead = new Promise<void>(resolve => {
+      releaseSecond = resolve;
+    });
+    mockGetSettings
+      .mockImplementationOnce(async () => {
+        await firstRead;
+        return jsonCopy(server);
+      })
+      .mockImplementationOnce(async () => {
+        await secondRead;
+        return jsonCopy(server);
+      });
+
+    const first = store.update({ theme: 'dark' });
+    const second = store.update({ startOfWeek: 'Sunday' });
+    releaseFirst();
+    await first;
+    expect(server).toMatchObject({ theme: 'dark', startOfWeek: 'Monday' });
+    expect(store.startOfWeek).toBe('Monday'); // First save's reload has completed.
+    releaseSecond();
+    await second;
+
+    expect(postedKeys()).toEqual(['theme', 'startOfWeek']);
+    expect(server).toMatchObject({ theme: 'dark', startOfWeek: 'Sunday' });
+    expect(store.startOfWeek).toBe('Sunday');
+  });
+
+  test('a save captures nested values before transport waits and later local edits', async () => {
+    const store = newSession();
+    await store.load();
+    store.$patch({ newReleaseCheckData: { timesChecked: 2 } });
+    let release!: () => void;
+    const read = new Promise<void>(resolve => {
+      release = resolve;
+    });
+    mockGetSettings.mockImplementationOnce(async () => {
+      await read;
+      return jsonCopy(server);
+    });
+
+    const saving = store.save(['newReleaseCheckData']);
+    store.newReleaseCheckData.timesChecked = 3;
+    release();
+    await saving;
+
+    expect(postedKeys()).toEqual(['newReleaseCheckData']);
+    expect(server.newReleaseCheckData.timesChecked).toBe(2);
+    expect(store.newReleaseCheckData.timesChecked).toBe(2);
+  });
+
   test('a rejected update propagates and its intended value can be retried without stale writes', async () => {
     const a = newSession();
     const b = newSession();
