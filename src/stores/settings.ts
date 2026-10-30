@@ -265,7 +265,8 @@ export const useSettingsStore = defineStore('settings', {
         await this.save();
       }
     },
-    async save(explicitKeys: string[] = []) {
+    // Omitted keys retain full-save/migration behavior; [] deliberately saves nothing.
+    async save(explicitKeys?: string[]) {
       // Important check, to avoid saving settings before they are loaded (potentially overwriting them with defaults)
       if (!this.loaded) {
         console.error('Settings not loaded, not saving');
@@ -284,6 +285,9 @@ export const useSettingsStore = defineStore('settings', {
 
       // Save settings
       for (const key of Object.keys(this.$state)) {
+        // A stale session must not overwrite unrelated preferences confirmed elsewhere.
+        if (explicitKeys && !explicitKeys.includes(key)) continue;
+
         // Skip keys starting with underscore, as they are local to the vuex store.
         if (key.startsWith('_')) {
           continue;
@@ -295,7 +299,7 @@ export const useSettingsStore = defineStore('settings', {
         if (
           key === 'alerts' &&
           !this._storedKeys.includes('alerts') &&
-          !explicitKeys.includes('alerts')
+          !explicitKeys?.includes('alerts')
         ) {
           continue;
         }
