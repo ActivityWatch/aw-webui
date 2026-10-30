@@ -47,12 +47,13 @@ describe('Graph category identity', () => {
 
   test('clips depth before grouping and retains input arrays', () => {
     const categories = [['Work', 'Code'], ['Work', 'Review'], ['Work>Code']];
+    const originalCategories = categories.map(category => [...category]);
     const { nodes, links, events, get_category_color } = graph(categories, 1);
     expect(nodes).toHaveLength(2);
     expect(nodes.map(n => n.value)).toEqual([180, 180]);
     expect(get_category_color.mock.calls).toEqual([[['Work']], [['Work>Code']]]);
     expect(links).toEqual([{ source: nodes[0].id, target: nodes[1].id, value: 1 }]);
-    expect(events.map(e => e.data.$category)).toEqual(categories);
+    expect(events.map(e => e.data.$category)).toEqual(originalCategories);
   });
 
   test('preserves ordinary categories, parent groups and uncategorized', () => {
