@@ -17,7 +17,7 @@
 import axios from 'axios';
 import moment from 'moment';
 import semver from 'semver';
-import { mapWritableState } from 'pinia';
+import { mapState } from 'pinia';
 
 import { useSettingsStore, LONG_BACKOFF_PERIOD, SHORT_BACKOFF_PERIOD } from '~/stores/settings';
 import { getClient } from '~/util/awclient';
@@ -31,6 +31,7 @@ export default {
     return {
       isVisible: false,
       isFollowUpVisible: false,
+      isSaving: false,
       currentVersion: null,
       latestVersion: null,
       latestVersionDate: null,
@@ -40,36 +41,66 @@ export default {
     };
   },
   computed: {
-    ...mapWritableState(useSettingsStore, { data: 'newReleaseCheckData' }),
+    ...mapState(useSettingsStore, { data: 'newReleaseCheckData' }),
   },
   async mounted() {
-    await useSettingsStore().ensureLoaded();
+    const settings = useSettingsStore();
+    try {
+      await settings.ensureLoaded();
+    } catch (err) {
+      console.error('Unable to load release notification settings:', err);
+      return;
+    }
+    // Persist the initial deadline once, rather than moving it on every page load.
+    if (!settings._storedKeys.includes('newReleaseCheckData')) {
+      if (!(await this.saveData({ ...this.data }))) return;
+    }
     if (this.data && (!this.data.isEnabled || moment() < moment(this.data.nextCheckTime))) return;
 
     await this.retrieveCurrentVersion();
     await this.retrieveLatestVersion();
-    this.isVisible = this.getHasNewRelease() && this.getReleaseIsReady();
+    const isVisible = this.getHasNewRelease() && this.getReleaseIsReady();
 
-    if (this.isVisible && this.data) {
+    let data;
+    if (isVisible && this.data) {
       const _timesChecked = Math.min(this.data.timesChecked + 1, BACKOFF_THRESHOLD);
       const _howOftenToCheck =
         _timesChecked > BACKOFF_THRESHOLD - 1 ? LONG_BACKOFF_PERIOD : SHORT_BACKOFF_PERIOD;
-      this.data = {
+      data = {
         isEnabled: true,
         nextCheckTime: moment().add(_howOftenToCheck, 'seconds'),
         howOftenToCheck: _howOftenToCheck,
         timesChecked: _timesChecked,
       };
     } else {
-      this.data = {
+      data = {
         isEnabled: true,
         nextCheckTime: moment().add(SHORT_BACKOFF_PERIOD, 'seconds'),
         howOftenToCheck: SHORT_BACKOFF_PERIOD,
-        timesChecked: this.isVisible ? 1 : 0,
+        timesChecked: isVisible ? 1 : 0,
       };
     }
+    if (await this.saveData(data)) this.isVisible = isVisible;
   },
   methods: {
+    async saveData(data) {
+      if (this.isSaving) return false;
+      const settings = useSettingsStore();
+      const previous = { ...settings.newReleaseCheckData };
+      this.isSaving = true;
+      try {
+        await settings.update({ newReleaseCheckData: data });
+        return true;
+      } catch (err) {
+        settings.$patch(state => {
+          state.newReleaseCheckData = previous;
+        });
+        console.error('Unable to save release notification settings:', err);
+        return false;
+      } finally {
+        this.isSaving = false;
+      }
+    },
     async retrieveCurrentVersion() {
       try {
         const response = await getClient().getInfo();
@@ -112,11 +143,10 @@ export default {
       if (this.latestVersionDate) return moment() >= this.latestVersionDate.add(7, 'days');
       return false;
     },
-    disableCheck() {
+    async disableCheck() {
+      if (!(await this.saveData({ ...this.data, isEnabled: false }))) return;
       this.isVisible = false;
       this.isFollowUpVisible = true;
-      this.data.isEnabled = false;
-      this.saveData();
     },
   },
 };
