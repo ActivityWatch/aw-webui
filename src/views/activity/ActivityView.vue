@@ -6,10 +6,11 @@ div(v-if="viewMissing")
     router-link(:to="{ name: 'activity-view', params: {...$route.params, view_id: 'default'} }")
       | {{ $t('ui.activity.goDefault') }}
     | .
-div(v-else-if="view")
+div(v-else-if="view || editing")
   b-alert.mt-3(:show="saveError !== ''" variant="danger")
     | {{ saveError }}
-  draggable.row(v-model="elements" handle=".handle" :disabled="saving")
+  //- Keep Save/Cancel available when removing the final view empties the draft.
+  draggable.row(v-if="view" v-model="elements" handle=".handle" :disabled="saving")
     // TODO: Handle large/variable sized visualizations better
     //- Keep each draft element's identity across reorder/removal. Replacing a
       layout or discarding it rebuilds charts from the restored selections.
@@ -33,7 +34,7 @@ div(v-else-if="view")
       b-button(variant="warning" size="sm" :disabled="saving" @click="restoreDefaults();")
         icon(name="undo")
         span {{ $t('activityView.restoreDefaults') }}
-      b-button.mr-2(variant="danger" size="sm" :disabled="saving" v-b-modal="'remove-view-modal-' + view.id")
+      b-button.mr-2(v-if="view" variant="danger" size="sm" :disabled="saving" v-b-modal="'remove-view-modal-' + view.id")
         icon(name="trash")
         span {{ $t('activityView.remove') }}
   div(v-else).d-flex.flex-row-reverse.mt-2
