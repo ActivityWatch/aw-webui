@@ -1,4 +1,6 @@
 import { createLocalVue, mount, shallowMount } from '@vue/test-utils';
+import BootstrapVue, { BModal } from 'bootstrap-vue';
+import { Rule, matchString } from '~/util/classes';
 import { createTestingPinia } from '@pinia/testing';
 import { PiniaVuePlugin, setActivePinia, createPinia } from 'pinia';
 import CategoryBuilderComponent from '~/views/settings/CategoryBuilder.vue';
@@ -459,5 +461,81 @@ describe('CategoryBuilder navigation guards', () => {
       expect(e.returnValue).toBe('settings.unsavedCategoriesLeave');
       expect(result).toBe('settings.unsavedCategoriesLeave');
     });
+  });
+});
+
+describe('CategoryBuilder mounted append rule', () => {
+  let wrapper;
+  const originalNodeEnv = process.env.NODE_ENV;
+
+  afterEach(() => {
+    wrapper?.destroy();
+    process.env.NODE_ENV = originalNodeEnv;
+    jest.restoreAllMocks();
+  });
+
+  test.each<Rule>([
+    { type: 'regex', regex: '', ignore_case: true, select_keys: ['title'] },
+    { type: 'none' },
+    { type: 'regex', regex: 'browser', ignore_case: true },
+  ])('appends an escaped word through the modal to %j', async rule => {
+    const modalVue = createLocalVue();
+    modalVue.use(BootstrapVue);
+    modalVue.use(PiniaVuePlugin);
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    const categories = useCategoryStore();
+    const settings = useSettingsStore();
+    settings.category_sets = [{ id: 'default', categories: [{ name: ['Work'], rule }] }];
+    settings.active_set_ids = ['default'];
+    jest.spyOn(settings, 'ensureLoaded').mockResolvedValue(undefined);
+    const update = jest.spyOn(settings, 'update').mockImplementation(async value => {
+      settings.$patch(JSON.parse(JSON.stringify(value)));
+    });
+    const buckets = useBucketsStore();
+    buckets.buckets = [{ ...androidBucket, device_id: 'phone' }];
+    jest.spyOn(buckets, 'ensureLoaded').mockResolvedValue(undefined);
+    getClient.mockReturnValue({ query: jest.fn().mockResolvedValue(events('editor.exe')) });
+    const save = jest.spyOn(categories, 'save');
+    wrapper = mount(CategoryBuilder, {
+      localVue: modalVue,
+      pinia,
+      mocks: { $t: key => key },
+      stubs: {
+        'aw-query-options': true,
+        'b-modal': { extends: BModal, props: { static: { default: true } } },
+      },
+    });
+    await flush();
+    const append = wrapper
+      .findAll('button')
+      .wrappers.find(b => b.text() === 'ui.categoryBuilder.appendRule');
+    await append.trigger('click');
+    await flush();
+    const modal = wrapper.findComponent(BModal);
+    const select = modal.find('select');
+    select.element.selectedIndex = 0;
+    await select.trigger('change');
+    expect(wrapper.vm.append.word).toBe('editor\\.exe');
+    expect(wrapper.vm.valid).toBe(true);
+    const ok = modal.findAll('button').wrappers.find(b => b.text() === 'OK');
+    expect(ok.attributes('disabled')).toBeUndefined();
+    // Exercise real serialization instead of save()'s NODE_ENV=test early return.
+    process.env.NODE_ENV = 'development';
+    await ok.trigger('click');
+    await flush();
+
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(update).toHaveBeenCalledTimes(1);
+    expect(categories.classes_unsaved_changes).toBe(false);
+    const saved = update.mock.calls[0][0].classes;
+    expect(matchString('editor.exe', saved)?.name).toEqual(['Work']);
+    expect(matchString('totally unrelated', saved)).toBeNull();
+    expect(matchString('editorXexe', saved)).toBeNull();
+    if (rule.ignore_case) expect(matchString('EDITOR.EXE', saved)?.name).toEqual(['Work']);
+    if (rule.regex === 'browser') expect(matchString('browser', saved)?.name).toEqual(['Work']);
+    expect(saved[0].rule.ignore_case).toBe(rule.ignore_case);
+    expect(saved[0].rule.select_keys).toEqual(rule.select_keys);
+    expect(categories.classes[0].rule).toEqual(saved[0].rule);
   });
 });
