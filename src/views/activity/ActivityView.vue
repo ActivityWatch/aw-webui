@@ -11,10 +11,9 @@ div(v-else-if="view")
     | {{ saveError }}
   draggable.row(v-model="elements" handle=".handle" :disabled="saving")
     // TODO: Handle large/variable sized visualizations better
-    //- Key on the view id, reset revision and position, so switching views or
-      discarding a draft rebuilds visualizations with the restored selections
-      instead of keeping the previous instance's local state.
-    div.col-md-6.col-lg-4.p-3(v-for="el, index in elements", :key="view.id + '-' + layoutRevision + '-' + index", :class="{'col-md-12': isVisLarge(el), 'col-lg-12': isVisLarge(el)}")
+    //- Keep each draft element's identity across reorder/removal. Replacing a
+      layout or discarding it rebuilds charts from the restored selections.
+    div.col-md-6.col-lg-4.p-3(v-for="el, index in elements", :key="view.id + '-' + layoutRevision + '-' + elementKey(el)", :class="{'col-md-12': isVisLarge(el), 'col-lg-12': isVisLarge(el)}")
       aw-selectable-vis(:id="index" :type="el.type" :props="el.props" :view-id="view.id" @onTypeChange="onTypeChange" @onRemove="onRemove" :editable="editing && !saving" :disabled="saving")
 
     div.col-md-6.col-lg-4.p-3(v-if="editing")
@@ -85,6 +84,9 @@ import draggable from 'vuedraggable';
 
 import { useViewsStore } from '~/stores/views';
 
+const elementKeys = new WeakMap<object, number>();
+let nextElementKey = 0;
+
 export default {
   name: 'ActivityView',
   components: {
@@ -96,7 +98,7 @@ export default {
   data() {
     return {
       editing: false,
-      saving: false,
+      pendingAction: false,
       saveError: '',
       layoutRevision: 0,
       showCustomVisModal: false,
@@ -106,6 +108,9 @@ export default {
     };
   },
   computed: {
+    saving(): boolean {
+      return this.pendingAction || useViewsStore().saving;
+    },
     views: function () {
       return useViewsStore().viewsForHost(this.$route.params.host || '');
     },
@@ -132,9 +137,13 @@ export default {
     },
   },
   methods: {
+    elementKey(element): number {
+      if (!elementKeys.has(element)) elementKeys.set(element, nextElementKey++);
+      return elementKeys.get(element);
+    },
     async save() {
       if (this.saving) return;
-      this.saving = true;
+      this.pendingAction = true;
       this.saveError = '';
       try {
         await useViewsStore().save();
@@ -142,12 +151,12 @@ export default {
       } catch (error) {
         this.saveError = error instanceof Error ? error.message : String(error);
       } finally {
-        this.saving = false;
+        this.pendingAction = false;
       }
     },
     async discard() {
       if (this.saving) return;
-      this.saving = true;
+      this.pendingAction = true;
       this.saveError = '';
       try {
         await useViewsStore().load();
@@ -156,7 +165,7 @@ export default {
       } catch (error) {
         this.saveError = error instanceof Error ? error.message : String(error);
       } finally {
-        this.saving = false;
+        this.pendingAction = false;
       }
     },
     remove() {

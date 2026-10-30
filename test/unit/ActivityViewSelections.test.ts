@@ -200,3 +200,36 @@ test.each([false, true])(
     wrapper.destroy();
   }
 );
+
+test('a remounted editor observes the shared save lock', async () => {
+  const { wrapper, views } = mountEditor();
+  await flush();
+  views.saving = true;
+  await flush();
+  expect(wrapper.find('button[variant="success"]').attributes('disabled')).toBeDefined();
+  expect(wrapper.findComponent(TopBucketData).find('input').attributes('disabled')).toBeDefined();
+  views.saving = false;
+  await flush();
+  expect(wrapper.find('button[variant="success"]').attributes('disabled')).toBeUndefined();
+  wrapper.destroy();
+});
+
+test('reordered charts keep their own selections through Save unlock', async () => {
+  const { wrapper, views } = mountEditor();
+  views.views[0].elements.push({
+    type: 'top_bucket_data',
+    props: { bucketId: 'second', field: '__custom', customField: 'app' },
+  });
+  await flush();
+  views.setElements({ view_id: 'summary', elements: [...views.views[0].elements].reverse() });
+  await flush();
+  const reordered = copy(views.views);
+  jest.spyOn(views, 'save').mockResolvedValue(undefined);
+  await wrapper.find('button[variant="success"]').trigger('click');
+  await flush();
+  expect(views.views).toEqual(reordered);
+  const charts = wrapper.findAllComponents(TopBucketData);
+  expect((charts.at(0).find('select').element as HTMLSelectElement).value).toBe('second');
+  expect((charts.at(1).find('select').element as HTMLSelectElement).value).toBe('first');
+  wrapper.destroy();
+});
