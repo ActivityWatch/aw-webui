@@ -10,7 +10,7 @@ div
         )
     b-col(cols="12", md="6").mb-2
       b-form-group
-        template(#label)
+        template(#label="")
           span {{ $t('ui.topBucket.field') }}
           span.info-icon(
             :title="$t('ui.topBucket.fieldHelp')"
@@ -86,6 +86,7 @@ export default {
       earliestByBucket: {} as Record<string, Date | null>,
       loading: false,
       error: '',
+      loadGeneration: 0,
     };
   },
   computed: {
@@ -170,7 +171,10 @@ export default {
     // The shared range, widened for All time to the selected bucket's own
     // earliest event: the All time start only considers the host's standard
     // buckets, so e.g. an older imported bucket would otherwise be cut off.
-    async queryRange(bucketId: string): Promise<{ start: string; end: string } | null> {
+    async queryRange(
+      bucketId: string,
+      generation: number
+    ): Promise<{ start: string; end: string } | null> {
       const range = this.timeRange;
       const opts = this.activityStore.query_options;
       if (!range || !opts || !opts.all_time) return range;
@@ -188,29 +192,35 @@ export default {
         const earliest = await earliestEventInBucket(bucket, (id, params) =>
           client.getEvents(id, params)
         );
+        if (generation !== this.loadGeneration) return null;
         this.earliestByBucket = { ...this.earliestByBucket, [bucketId]: earliest };
       }
       return rangeCoveringEarliest(range, this.earliestByBucket[bucketId]);
     },
     async loadEvents() {
-      // Capture the bucket at call time: the earliest-event lookup below can
-      // await, and the selectedBucketId watcher may fire a newer loadEvents in
-      // the meantime. Reusing the captured id keeps the widened range and the
-      // fetched events in agreement, and drops this run if it was superseded.
+      // A bucket can have overlapping date/refresh requests, or be selected
+      // again after A -> B -> A. Bucket equality alone cannot identify its owner.
+      const generation = ++this.loadGeneration;
       const bucketId = this.selectedBucketId;
-      if (!bucketId || !this.timeRange) return;
-      this.loading = true;
       this.error = '';
       this.aggregated = [];
+      this.events = [];
+      this.fieldOptions = [];
+      if (!bucketId || !this.timeRange) {
+        this.loading = false;
+        return;
+      }
+      this.loading = true;
       try {
-        const range = await this.queryRange(bucketId);
-        if (!range || bucketId !== this.selectedBucketId) return;
-        this.events = await getClient().getEvents(bucketId, {
+        const range = await this.queryRange(bucketId, generation);
+        if (!range || generation !== this.loadGeneration) return;
+        const events = await getClient().getEvents(bucketId, {
           start: range.start,
           end: range.end,
           limit: -1,
         });
-        if (bucketId !== this.selectedBucketId) return;
+        if (generation !== this.loadGeneration) return;
+        this.events = events;
         this.fieldOptions = this.extractFields(this.events);
         if (!this.selectedField && this.fieldOptions.length > 0) {
           this.selectedField = this.fieldOptions[0];
@@ -219,16 +229,15 @@ export default {
         }
         this.aggregate();
       } catch (err) {
-        console.error(err);
         // A superseded run must not clobber the results of a newer one.
-        if (bucketId !== this.selectedBucketId) return;
+        if (generation !== this.loadGeneration) return;
+        console.error(err);
         this.events = [];
         this.fieldOptions = [];
         this.error = err?.message || this.$t('ui.topBucket.loadError');
       } finally {
-        // Only clear the spinner for the run that is still the selected bucket;
-        // a superseded run must not hide a newer in-flight load.
-        if (bucketId === this.selectedBucketId) this.loading = false;
+        // A superseded run must not hide a newer in-flight load.
+        if (generation === this.loadGeneration) this.loading = false;
       }
     },
     extractFields(events: any[]): string[] {
