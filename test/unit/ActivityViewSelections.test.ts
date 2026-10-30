@@ -8,12 +8,9 @@ import { useActivityStore } from '~/stores/activity';
 import { useBucketsStore } from '~/stores/buckets';
 import { useViewsStore } from '~/stores/views';
 
+const mockGetEvents = jest.fn();
 jest.mock('~/util/awclient', () => ({
-  getClient: () => ({
-    getEvents: jest
-      .fn()
-      .mockResolvedValue([{ duration: 10, data: { title: 'Example', app: 'Editor' } }]),
-  }),
+  getClient: () => ({ getEvents: (...args) => mockGetEvents(...args) }),
 }));
 
 const flush = () => new Promise(resolve => setTimeout(resolve, 0));
@@ -70,7 +67,12 @@ function mountEditor() {
   return { wrapper, views };
 }
 
-beforeEach(() => setActivePinia(createPinia()));
+beforeEach(() => {
+  setActivePinia(createPinia());
+  mockGetEvents
+    .mockReset()
+    .mockResolvedValue([{ duration: 10, data: { title: 'Example', app: 'Editor' } }]);
+});
 afterEach(() => jest.restoreAllMocks());
 
 test('Cancel restores the rendered bucket, field and custom field, not only the store', async () => {
@@ -161,6 +163,40 @@ test.each([false, true])(
       .wrappers.forEach(control => expect(control.attributes('disabled')).toBeUndefined());
     await chart.find('input').setValue('app');
     expect(views.views[0].elements[0].props.customField).toBe('app');
+    wrapper.destroy();
+  }
+);
+
+test.each([false, true])(
+  'delayed field discovery is forwarded after Save unlocks, rejection=%s',
+  async reject => {
+    let resolveEvents!: (events: any[]) => void;
+    mockGetEvents.mockReturnValue(
+      new Promise<any[]>(resolve => {
+        resolveEvents = resolve;
+      })
+    );
+    const { wrapper, views } = mountEditor();
+    await flush();
+    const chart: any = wrapper.findComponent(TopBucketData);
+    chart.vm.selectedField = '';
+    await flush();
+    expect(views.views[0].elements[0].props.field).toBe('');
+    let finish!: () => void;
+    jest.spyOn(views, 'save').mockImplementation(
+      () =>
+        new Promise<void>((resolve, rejectSave) => {
+          finish = reject ? () => rejectSave(new Error('offline')) : resolve;
+        })
+    );
+    await wrapper.find('button[variant="success"]').trigger('click');
+    resolveEvents([{ duration: 10, data: { app: 'Editor' } }]);
+    await flush();
+    expect(chart.vm.selectedField).toBe('app');
+    expect(views.views[0].elements[0].props.field).toBe('');
+    finish();
+    await flush();
+    expect(views.views[0].elements[0].props.field).toBe('app');
     wrapper.destroy();
   }
 );

@@ -260,6 +260,33 @@ describe('editable view ownership and persistence', () => {
     expect(views.views).toEqual(saved);
   });
 
+  test('a second editor cannot save until the shared pending save settles', async () => {
+    const { settings, views } = await setup();
+    let rejectSave!: (error: Error) => void;
+    const write = jest
+      .spyOn(settings, 'save')
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((_resolve, reject) => {
+            rejectSave = reject;
+          })
+      )
+      .mockResolvedValue(undefined);
+    views.addVisualization({ view_id: 'custom', type: 'top_urls' });
+    const first = views.save().catch(error => error);
+    // Navigation remounts ActivityView, not its shared Pinia store.
+    views.addVisualization({ view_id: 'custom', type: 'top_domains' });
+    await expect(views.save()).rejects.toThrow('already in progress');
+    expect(write).toHaveBeenCalledTimes(1);
+    rejectSave(new Error('offline'));
+    expect(await first).toEqual(new Error('offline'));
+    expect(settings.views).toEqual(confirmed());
+    await views.save();
+    expect(write).toHaveBeenCalledTimes(2);
+    expect(settings.views[0].elements).toHaveLength(4);
+    expect(views.views).toEqual(settings.views);
+  });
+
   test('rejected saves keep retryable edits but Cancel retains the confirmed baseline', async () => {
     const { settings, views } = await setup();
     jest.spyOn(settings, 'save').mockRejectedValue(new Error('offline'));

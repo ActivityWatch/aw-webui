@@ -125,6 +125,11 @@ export default {
     },
   },
   watch: {
+    disabled(value) {
+      // Field discovery can finish during a save. Forward the resulting
+      // selection once the parent accepts draft updates again.
+      if (!value) this.emitSelection();
+    },
     selectedBucketId: function () {
       this.emitSelection();
       // Drop the cached earliest for the newly selected bucket: it may have

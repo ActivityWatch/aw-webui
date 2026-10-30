@@ -165,11 +165,13 @@ export function migrateStoredViews(stored: View[], isAndroid: boolean = onAndroi
 
 interface State {
   views: View[];
+  saving: boolean;
 }
 
 export const useViewsStore = defineStore('views', {
   state: (): State => ({
     views: [],
+    saving: false,
   }),
   getters: {
     getViewById: state => (id: string) => state.views.find(view => view.id === id),
@@ -182,18 +184,26 @@ export const useViewsStore = defineStore('views', {
       this.loadViews(views);
     },
     async save() {
-      const settingsStore = useSettingsStore();
-      // Settings.update patches its state before persistence. Keep its confirmed
-      // baseline separate from the draft, including when persistence rejects.
-      const confirmed = JSON.parse(JSON.stringify(settingsStore.views));
-      const draft = JSON.parse(JSON.stringify(this.views));
+      // ActivityView can remount during a pending save. Own the lock here so
+      // a later invocation cannot race the pending write or its rollback.
+      if (this.saving) throw new Error('A view save is already in progress');
+      this.saving = true;
       try {
-        await settingsStore.update({ views: draft });
-      } catch (error) {
-        settingsStore.$patch({ views: confirmed });
-        throw error;
+        const settingsStore = useSettingsStore();
+        // Settings.update patches its state before persistence. Keep its confirmed
+        // baseline separate from the draft, including when persistence rejects.
+        const confirmed = JSON.parse(JSON.stringify(settingsStore.views));
+        const draft = JSON.parse(JSON.stringify(this.views));
+        try {
+          await settingsStore.update({ views: draft });
+        } catch (error) {
+          settingsStore.$patch({ views: confirmed });
+          throw error;
+        }
+        await this.load();
+      } finally {
+        this.saving = false;
       }
-      await this.load();
     },
     loadViews(views: View[]) {
       this.$patch({ views: JSON.parse(JSON.stringify(views)) });
