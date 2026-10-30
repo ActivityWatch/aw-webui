@@ -233,14 +233,14 @@ export function createMissingParents(classes: Category[]): Category[] {
   // Creates parents for categories that are missing theirs (implicit parents)
   classes = _.cloneDeep(classes);
   classes = classes.slice().map(c => annotate(c));
-  const all_full_names = new Set(classes.map(c => c.name.join(level_sep)));
+  const all_full_names = new Set(classes.map(c => JSON.stringify(c.name)));
 
   function _createMissing(children: Category[]) {
     children
       .map(c => c.parent)
       .filter(p => !!p)
       .map(p => {
-        const name = p.join(level_sep);
+        const name = JSON.stringify(p);
         if (p && !all_full_names.has(name)) {
           const new_parent = annotate({ name: p, rule: { type: null } });
           //console.log('Creating missing parent:', new_parent);
