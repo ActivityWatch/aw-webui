@@ -481,7 +481,7 @@ export const useCategoryStore = defineStore('categories', {
         cat.rule.type = 'regex';
         cat.rule.regex = pattern;
       } else if (cat.rule.type === 'regex') {
-        cat.rule.regex += '|' + pattern;
+        cat.rule.regex = cat.rule.regex === '' ? pattern : cat.rule.regex + '|' + pattern;
       }
       this.classes_unsaved_changes = true;
     },
