@@ -199,7 +199,8 @@ export const useCategoryStore = defineStore('categories', {
             return l;
           })
         ),
-        (v: string[]) => v.join('>>>>') // Can be any separator that doesn't appear in the category names themselves
+        // Encode segment boundaries too: category names may contain any delimiter.
+        (v: string[]) => JSON.stringify(v)
       );
     },
     allCategoriesSelect(): { value: string[]; text: string }[] {
