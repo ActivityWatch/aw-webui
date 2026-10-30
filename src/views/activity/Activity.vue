@@ -292,18 +292,19 @@ div
         h6 {{view.name}}
 
     li.nav-item(style="margin-left: auto")
-      a.nav-link(@click="$refs.new_view.show()")
+      a.nav-link(:class="{ disabled: viewSavePending }" :aria-disabled="viewSavePending" @click="!viewSavePending && $refs.new_view.show()")
         h6
           icon(name="plus")
           span.d-none.d-md-inline
             | {{ $t('activity.newView') }}
 
-  b-modal(id="new_view" ref="new_view" :title="$t('activity.newViewTitle')" @show="resetModal" @hidden="resetModal" @ok="handleOk")
+  b-modal(id="new_view" ref="new_view" :title="$t('activity.newViewTitle')" :ok-disabled="viewSavePending" :cancel-disabled="newViewSaving" :hide-header-close="newViewSaving" :no-close-on-backdrop="newViewSaving" :no-close-on-esc="newViewSaving" @show="resetModal" @hidden="resetModal" @ok="handleOk")
     div.my-1
+      b-alert(:show="newViewError !== ''" variant="danger") {{ newViewError }}
       b-input-group.my-1(:prepend="$t('activity.viewId')")
-        b-form-input(v-model="new_view.id")
+        b-form-input(v-model="new_view.id" :disabled="viewSavePending")
       b-input-group.my-1(:prepend="$t('activity.viewName')")
-        b-form-input(v-model="new_view.name")
+        b-form-input(v-model="new_view.name" :disabled="viewSavePending")
 
   div
     router-view
@@ -546,9 +547,14 @@ export default {
       refreshGeneration: 0,
       filter_afk: true,
       new_view: {},
+      newViewSaving: false,
+      newViewError: '',
     };
   },
   computed: {
+    viewSavePending() {
+      return this.newViewSaving || this.viewsStore.saving;
+    },
     categoryOptions() {
       return this.categoryStore.category_select(true, key => this.$t(key) as string);
     },
@@ -1269,24 +1275,31 @@ export default {
       this.handleSubmit();
     },
 
-    handleSubmit() {
-      // Exit when the form isn't valid
-      const valid = this.checkFormValidity();
-      if (!valid) {
-        return;
-      }
+    async handleSubmit() {
+      // Check before adding: a pending save will reload its earlier snapshot.
+      if (this.viewSavePending || !this.checkFormValidity()) return;
 
       const viewsStore = useViewsStore();
-      viewsStore.addView({ id: this.new_view.id, name: this.new_view.name, elements: [] });
-      viewsStore.save();
-
-      // Hide the modal manually
-      this.$nextTick(() => {
-        this.$refs.new_view.hide();
-      });
+      const id = this.new_view.id;
+      this.newViewSaving = true;
+      this.newViewError = '';
+      viewsStore.addView({ id, name: this.new_view.name, elements: [] });
+      try {
+        await viewsStore.save();
+      } catch (error) {
+        // Retain any pre-existing layout draft, but let this form retry the id.
+        if (viewsStore.getViewById(id)) viewsStore.removeView({ view_id: id });
+        this.newViewError = error instanceof Error ? error.message : String(error);
+        return;
+      } finally {
+        this.newViewSaving = false;
+      }
+      // Navigation can unmount the form while persistence is pending.
+      this.$refs.new_view?.hide();
     },
 
     resetModal() {
+      this.newViewError = '';
       this.new_view = {
         id: '',
         name: '',

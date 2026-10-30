@@ -6,11 +6,11 @@ div
         b-form-select(
           v-model="selectedBucketId",
           :options="bucketOptions",
-          :disabled="bucketOptions.length === 0 || loading"
+          :disabled="disabled || bucketOptions.length === 0 || loading"
         )
     b-col(cols="12", md="6").mb-2
       b-form-group
-        template(#label)
+        template(#label="")
           span {{ $t('ui.topBucket.field') }}
           span.info-icon(
             :title="$t('ui.topBucket.fieldHelp')"
@@ -18,13 +18,13 @@ div
         b-form-select(
           v-model="selectedField",
           :options="fieldSelectOptions",
-          :disabled="!selectedBucketId || loading"
+          :disabled="disabled || !selectedBucketId || loading"
         )
         b-form-input.mt-2(
           v-if="selectedField === '__custom' || fieldOptions.length === 0",
           v-model="customField",
           :placeholder="$t('ui.topBucket.fieldPlaceholder')",
-          :disabled="loading"
+          :disabled="disabled || loading"
         )
   b-alert.mt-2(v-if="error", show, variant="danger") {{ error }}
   b-alert.mt-2(v-else-if="!selectedBucketId" show variant="info")
@@ -71,6 +71,7 @@ export default {
     initialBucketId: { type: String, default: '' },
     initialField: { type: String, default: '' },
     initialCustomField: { type: String, default: '' },
+    disabled: { type: Boolean, default: false },
   },
   data() {
     return {
@@ -124,6 +125,11 @@ export default {
     },
   },
   watch: {
+    disabled(value) {
+      // Field discovery can finish during a save. Forward the resulting
+      // selection once the parent accepts draft updates again.
+      if (!value) this.emitSelection();
+    },
     selectedBucketId: function () {
       this.emitSelection();
       // Drop the cached earliest for the newly selected bucket: it may have
