@@ -184,3 +184,150 @@ describe('views store on an Android build', () => {
     expect(views).toEqual(edited);
   });
 });
+
+describe('editable view ownership and persistence', () => {
+  const confirmed = () => [
+    {
+      id: 'custom',
+      name: 'Custom',
+      elements: [
+        { type: 'top_apps', size: 3, props: { nested: { limit: 5 } } },
+        { type: 'top_titles', size: 6 },
+      ],
+    },
+  ];
+
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    jest.restoreAllMocks();
+  });
+
+  async function setup() {
+    const { useSettingsStore } = await import('~/stores/settings');
+    const settings = useSettingsStore();
+    settings.$patch({ views: confirmed(), _loaded: true });
+    const views = useViewsStore();
+    await views.load();
+    return { settings, views };
+  }
+
+  test('add, remove, reorder, type and nested props edits never alter confirmed settings', async () => {
+    const { settings, views } = await setup();
+    views.views[0].elements[0].props.nested['limit'] = 20;
+    views.editView({ view_id: 'custom', el_id: '1', type: 'top_domains', props: { limit: 10 } });
+    views.setElements({ view_id: 'custom', elements: [...views.views[0].elements].reverse() });
+    views.addVisualization({ view_id: 'custom', type: 'top_urls' });
+    views.removeVisualization({ view_id: 'custom', el_id: 1 });
+    expect(settings.views).toEqual(confirmed());
+    await views.load();
+    expect(views.views).toEqual(confirmed());
+  });
+
+  test('each restore creates pristine independent defaults and Cancel recovers custom views', async () => {
+    const { views } = await setup();
+    const pristine = JSON.parse(JSON.stringify(defaultViews));
+    views.restoreDefaults();
+    views.removeVisualization({ view_id: 'summary', el_id: 0 });
+    views.restoreDefaults();
+    expect(views.views).toEqual(pristine);
+    expect(defaultViews).toEqual(pristine);
+    await views.load();
+    expect(views.views).toEqual(confirmed());
+  });
+
+  test('save waits for persistence and owns the confirmed snapshot after success', async () => {
+    const { settings, views } = await setup();
+    let resolveSave!: () => void;
+    jest.spyOn(settings, 'save').mockImplementation(
+      () =>
+        new Promise<void>(resolve => {
+          resolveSave = resolve;
+        })
+    );
+    views.addVisualization({ view_id: 'custom', type: 'top_urls' });
+    let finished = false;
+    const saving = views.save().then(() => {
+      finished = true;
+    });
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(finished).toBe(false);
+    resolveSave();
+    await saving;
+    const saved = JSON.parse(JSON.stringify(settings.views));
+    views.removeVisualization({ view_id: 'custom', el_id: 0 });
+    expect(settings.views).toEqual(saved);
+    await views.load();
+    expect(views.views).toEqual(saved);
+  });
+
+  test('rejected saves keep retryable edits but Cancel retains the confirmed baseline', async () => {
+    const { settings, views } = await setup();
+    jest.spyOn(settings, 'save').mockRejectedValue(new Error('offline'));
+    views.addVisualization({ view_id: 'custom', type: 'top_urls' });
+    const draft = JSON.parse(JSON.stringify(views.views));
+    await expect(views.save()).rejects.toThrow('offline');
+    expect(views.views).toEqual(draft);
+    expect(settings.views).toEqual(confirmed());
+    await views.load();
+    expect(views.views).toEqual(confirmed());
+    views.loadViews(draft);
+    jest.spyOn(settings, 'save').mockResolvedValue(undefined);
+    await views.save();
+    expect(settings.views).toEqual(draft);
+    views.removeVisualization({ view_id: 'custom', el_id: 0 });
+    await views.load();
+    expect(views.views).toEqual(draft);
+  });
+});
+
+describe('view edits through the real settings HTTP lifecycle', () => {
+  test('failed persistence keeps Cancel safe and retry establishes a new baseline', async () => {
+    const { useSettingsStore } = await import('~/stores/settings');
+    const { createClient, getClient } = await import('~/util/awclient');
+    setActivePinia(createPinia());
+    createClient();
+    const client = getClient();
+    const previousRequest = client.req;
+    const previousStorage = (global as any).localStorage;
+    (global as any).localStorage = { setItem: jest.fn(), getItem: () => null };
+    const settings = useSettingsStore();
+    const initialViews = [{ id: 'custom', name: 'Custom', elements: [{ type: 'top_apps' }] }];
+    settings.$patch({ views: initialViews, _loaded: true });
+    const copy = value => JSON.parse(JSON.stringify(value));
+    const backend = copy(settings.$state);
+    const read = jest.spyOn(client, 'get_settings').mockImplementation(async () => copy(backend));
+    let failViews = true;
+    const post = jest.fn(async (url, value) => {
+      const key = url.split('/').pop();
+      if (key === 'views' && failViews) throw new Error('offline');
+      backend[key] = copy(value);
+      return {};
+    });
+    (client as any).req = { post, defaults: {} };
+    try {
+      const views = useViewsStore();
+      await views.load();
+      views.addVisualization({ view_id: 'custom', type: 'top_urls' });
+      await expect(views.save()).rejects.toThrow('offline');
+      expect(backend.views).toEqual(initialViews);
+      expect(settings.views).toEqual(initialViews);
+      expect(views.views[0].elements).toHaveLength(2);
+      await views.load();
+      expect(views.views).toEqual(initialViews);
+      views.addVisualization({ view_id: 'custom', type: 'top_urls' });
+      failViews = false;
+      await views.save();
+      expect(backend.views[0].elements).toHaveLength(2);
+      expect(settings.views).toEqual(backend.views);
+      views.removeVisualization({ view_id: 'custom', el_id: 0 });
+      await views.load();
+      expect(views.views).toEqual(backend.views);
+      expect(views.views[0].elements).toHaveLength(2);
+    } finally {
+      read.mockRestore();
+      client.req = previousRequest;
+      if (previousStorage === undefined) delete (global as any).localStorage;
+      else (global as any).localStorage = previousStorage;
+    }
+  });
+});

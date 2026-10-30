@@ -7,32 +7,34 @@ div(v-if="viewMissing")
       | {{ $t('ui.activity.goDefault') }}
     | .
 div(v-else-if="view")
-  draggable.row(v-model="elements" handle=".handle")
+  b-alert.mt-3(:show="saveError !== ''" variant="danger")
+    | {{ saveError }}
+  draggable.row(v-model="elements" handle=".handle" :disabled="saving")
     // TODO: Handle large/variable sized visualizations better
     //- Key on the view id as well as the position, so that switching views
       rebuilds the visualizations instead of reusing the instance that sat at
       the same index in the previous view (which kept its stale local state).
     div.col-md-6.col-lg-4.p-3(v-for="el, index in elements", :key="view.id + '-' + index", :class="{'col-md-12': isVisLarge(el), 'col-lg-12': isVisLarge(el)}")
-      aw-selectable-vis(:id="index" :type="el.type" :props="el.props" :view-id="view.id" @onTypeChange="onTypeChange" @onRemove="onRemove" :editable="editing")
+      aw-selectable-vis(:id="index" :type="el.type" :props="el.props" :view-id="view.id" @onTypeChange="onTypeChange" @onRemove="onRemove" :editable="editing && !saving")
 
     div.col-md-6.col-lg-4.p-3(v-if="editing")
-      b-button(@click="addVisualization" variant="outline-dark" block size="lg")
+      b-button(@click="addVisualization" :disabled="saving" variant="outline-dark" block size="lg")
         icon(name="plus")
         span {{ $t('activityView.addVisualization') }}
 
   div(v-if="editing").mt-2
     div.d-flex.flex-row-reverse
-      b-button(variant="outline-dark" @click="discard(); editing = !editing;")
+      b-button(variant="outline-dark" :disabled="saving" @click="discard")
         icon(name="times")
         span {{ $t('activityView.cancel') }}
-      b-button.mr-2(variant="success" @click="save(); editing = !editing;")
+      b-button.mr-2(variant="success" :disabled="saving" @click="save")
         icon(name="save")
         span {{ $t('activityView.save') }}
     div.mt-2.d-flex.flex-row-reverse
-      b-button(variant="warning" size="sm" @click="restoreDefaults();")
+      b-button(variant="warning" size="sm" :disabled="saving" @click="restoreDefaults();")
         icon(name="undo")
         span {{ $t('activityView.restoreDefaults') }}
-      b-button.mr-2(variant="danger" size="sm" v-b-modal="'remove-view-modal-' + view.id")
+      b-button.mr-2(variant="danger" size="sm" :disabled="saving" v-b-modal="'remove-view-modal-' + view.id")
         icon(name="trash")
         span {{ $t('activityView.remove') }}
   div(v-else).d-flex.flex-row-reverse.mt-2
@@ -94,6 +96,8 @@ export default {
   data() {
     return {
       editing: false,
+      saving: false,
+      saveError: '',
       showCustomVisModal: false,
       customVisWatcherName: 'aw-watcher-',
       customVisTitle: '',
@@ -127,11 +131,31 @@ export default {
     },
   },
   methods: {
-    save() {
-      useViewsStore().save();
+    async save() {
+      if (this.saving) return;
+      this.saving = true;
+      this.saveError = '';
+      try {
+        await useViewsStore().save();
+        this.editing = false;
+      } catch (error) {
+        this.saveError = error instanceof Error ? error.message : String(error);
+      } finally {
+        this.saving = false;
+      }
     },
-    discard() {
-      useViewsStore().load();
+    async discard() {
+      if (this.saving) return;
+      this.saving = true;
+      this.saveError = '';
+      try {
+        await useViewsStore().load();
+        this.editing = false;
+      } catch (error) {
+        this.saveError = error instanceof Error ? error.message : String(error);
+      } finally {
+        this.saving = false;
+      }
     },
     remove() {
       useViewsStore().removeView({ view_id: this.view.id });

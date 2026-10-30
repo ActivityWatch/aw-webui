@@ -183,11 +183,20 @@ export const useViewsStore = defineStore('views', {
     },
     async save() {
       const settingsStore = useSettingsStore();
-      settingsStore.update({ views: this.views });
+      // Settings.update patches its state before persistence. Keep its confirmed
+      // baseline separate from the draft, including when persistence rejects.
+      const confirmed = JSON.parse(JSON.stringify(settingsStore.views));
+      const draft = JSON.parse(JSON.stringify(this.views));
+      try {
+        await settingsStore.update({ views: draft });
+      } catch (error) {
+        settingsStore.$patch({ views: confirmed });
+        throw error;
+      }
       await this.load();
     },
     loadViews(views: View[]) {
-      this.$patch({ views });
+      this.$patch({ views: JSON.parse(JSON.stringify(views)) });
       console.log('Loaded views:', this.views);
     },
     clearViews(this: State) {
@@ -197,7 +206,7 @@ export const useViewsStore = defineStore('views', {
       this.views.find(v => v.id == view_id).elements = elements;
     },
     restoreDefaults(this: State) {
-      this.views = defaultViews;
+      this.views = JSON.parse(JSON.stringify(defaultViews));
     },
     viewsForHost(_host: string): View[] {
       return this.views;
