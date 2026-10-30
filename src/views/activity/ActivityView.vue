@@ -11,11 +11,11 @@ div(v-else-if="view")
     | {{ saveError }}
   draggable.row(v-model="elements" handle=".handle" :disabled="saving")
     // TODO: Handle large/variable sized visualizations better
-    //- Key on the view id as well as the position, so that switching views
-      rebuilds the visualizations instead of reusing the instance that sat at
-      the same index in the previous view (which kept its stale local state).
-    div.col-md-6.col-lg-4.p-3(v-for="el, index in elements", :key="view.id + '-' + index", :class="{'col-md-12': isVisLarge(el), 'col-lg-12': isVisLarge(el)}")
-      aw-selectable-vis(:id="index" :type="el.type" :props="el.props" :view-id="view.id" @onTypeChange="onTypeChange" @onRemove="onRemove" :editable="editing && !saving")
+    //- Key on the view id, reset revision and position, so switching views or
+      discarding a draft rebuilds visualizations with the restored selections
+      instead of keeping the previous instance's local state.
+    div.col-md-6.col-lg-4.p-3(v-for="el, index in elements", :key="view.id + '-' + layoutRevision + '-' + index", :class="{'col-md-12': isVisLarge(el), 'col-lg-12': isVisLarge(el)}")
+      aw-selectable-vis(:id="index" :type="el.type" :props="el.props" :view-id="view.id" @onTypeChange="onTypeChange" @onRemove="onRemove" :editable="editing && !saving" :disabled="saving")
 
     div.col-md-6.col-lg-4.p-3(v-if="editing")
       b-button(@click="addVisualization" :disabled="saving" variant="outline-dark" block size="lg")
@@ -98,6 +98,7 @@ export default {
       editing: false,
       saving: false,
       saveError: '',
+      layoutRevision: 0,
       showCustomVisModal: false,
       customVisWatcherName: 'aw-watcher-',
       customVisTitle: '',
@@ -150,6 +151,7 @@ export default {
       this.saveError = '';
       try {
         await useViewsStore().load();
+        this.layoutRevision++;
         this.editing = false;
       } catch (error) {
         this.saveError = error instanceof Error ? error.message : String(error);
@@ -166,6 +168,7 @@ export default {
     },
     restoreDefaults() {
       useViewsStore().restoreDefaults();
+      this.layoutRevision++;
       alert(this.$t('activityView.restoreAlert'));
       // If we're on an URL that might become invalid, navigate to the main/default view
       if (!this.$route.path.includes('default')) {
