@@ -57,4 +57,65 @@ describe('parseCategoryImport', () => {
   test('rejects invalid JSON', () => {
     expect(() => parseCategoryImport('{')).toThrow();
   });
+
+  test.each([
+    null,
+    7,
+    [],
+    {},
+    { name: 7, rule: { type: 'none' } },
+    { name: [], rule: { type: 'none' } },
+    { name: [''], rule: { type: 'none' } },
+    { name: ['Work', null], rule: { type: 'none' } },
+    { name: ['Work'] },
+    { name: ['Work'], rule: null },
+    { name: ['Work'], rule: [] },
+    { name: ['Work'], rule: {} },
+    { name: ['Work'], rule: { type: 'glob' } },
+    { name: ['Work'], rule: { type: 'regex' } },
+    { name: ['Work'], rule: { type: 'regex', regex: 7 } },
+    { name: ['Work'], rule: { type: 'regex', regex: 'x', ignore_case: 'false' } },
+    { name: ['Work'], rule: { type: 'regex', regex: 'x', priority: '1' } },
+    { name: ['Work'], rule: { type: 'regex', regex: 'x', weight: {} } },
+    { name: ['Work'], rule: { type: 'regex', regex: 'x', select_keys: 'app' } },
+    { name: ['Work'], rule: { type: 'regex', regex: 'x', select_keys: ['app', 7] } },
+    { name: ['Work'], rule: { type: 'none' }, data: [] },
+    { name: ['Work'], rule: { type: 'none' }, data: { color: 7 } },
+    { name: ['Work'], rule: { type: 'none' }, data: { score: '10' } },
+  ])('rejects the entire mixed array with malformed member %j', invalid => {
+    const categories = [{ name: ['Valid'], rule: { type: 'none' } }, invalid];
+    expect(() => parseCategoryImport(JSON.stringify({ id: 'mine', categories }))).toThrow();
+    expect(() => parseCategoryImport(JSON.stringify({ categories }))).toThrow();
+  });
+
+  test.each([
+    { name: ['Literal > segment', 'constructor'], rule: { type: 'none' } },
+    { name: ['Old parent'], rule: { type: null } },
+    { name: ['Editable pattern'], rule: { type: 'regex', regex: '[' } },
+    { name: ['Blank pattern'], rule: { type: 'regex', regex: '' } },
+    {
+      name: ['Metadata'],
+      rule: {
+        type: 'regex',
+        regex: 'vim',
+        ignore_case: false,
+        priority: 0,
+        weight: 1,
+        select_keys: ['app', '$custom', 'app'],
+      },
+      data: { color: '#123456', score: 0, custom: { retained: true } },
+    },
+    { name: ['Inheritance'], rule: { type: 'none' }, data: { color: null, score: null } },
+  ])('preserves compatible category values %j', category => {
+    const payload = { id: 'mine', categories: [category] };
+    expect(parseCategoryImport(JSON.stringify(payload))).toEqual(payload);
+  });
+
+  test('accepts empty named and legacy arrays', () => {
+    expect(parseCategoryImport('{"id":"empty","categories":[]}')).toEqual({
+      id: 'empty',
+      categories: [],
+    });
+    expect(parseCategoryImport('{"categories":[]}').categories).toEqual([]);
+  });
 });
