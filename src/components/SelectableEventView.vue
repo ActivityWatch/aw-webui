@@ -13,7 +13,7 @@ div
     aw-eventlist(:events="events")
   div(v-if="vis_method == 'summary'")
     input.form-control(type="text" v-model.lazy.trim="summaryKey" :placeholder="$t('ui.eventView.dataKey')" style="margin-bottom: 1em;")
-    aw-summary(:fields="events", :colorfunc="colorfunc", :namefunc="namefunc")
+    aw-summary(:fields="events", :colorfunc="colorfunc", :namefunc="namefunc", :data-key="summaryKey")
   div(v-if="vis_method == 'raw'")
     pre {{ events }}
 </template>
