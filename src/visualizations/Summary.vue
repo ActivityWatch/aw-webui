@@ -47,6 +47,12 @@ export default {
       type: Boolean,
       default: false,
     },
+    // Optional: when a parent keeps stable name/color callbacks, changing this
+    // still triggers the existing update path (SelectableEventView data key).
+    dataKey: {
+      type: String,
+      default: null,
+    },
   },
   data: function () {
     return { limit_: this.limit };
@@ -61,6 +67,21 @@ export default {
       this.update();
     },
     limit_: function () {
+      this.update();
+    },
+    dataKey: function () {
+      this.update();
+    },
+    namefunc: function () {
+      this.update();
+    },
+    colorfunc: function () {
+      this.update();
+    },
+    hoverfunc: function () {
+      this.update();
+    },
+    linkfunc: function () {
       this.update();
     },
   },
