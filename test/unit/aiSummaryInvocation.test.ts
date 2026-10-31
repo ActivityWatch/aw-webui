@@ -56,11 +56,12 @@ const useTestBuckets = defineStore('ai-summary-test-buckets', {
       return undefined;
     },
     bucketsByType(host: string, type: string, fallback = false): string[] {
-      return this.buckets
-        .filter(
-          b => b.type === type && (b.hostname === host || (fallback && b.hostname === 'unknown'))
-        )
-        .map(b => b.id);
+      const exact = this.buckets.filter(b => b.type === type && b.hostname === host);
+      const selected =
+        fallback && exact.length === 0
+          ? this.buckets.filter(b => b.type === type && b.hostname === 'unknown')
+          : exact;
+      return selected.map(b => b.id);
     },
     bucketsWindow(host: string): string[] {
       return this.bucketsByType(host, 'currentwindow').filter(
@@ -392,14 +393,10 @@ describe('AI Summary mounted invocation ownership', () => {
     expect(ranges).toHaveLength(1);
     expect(ranges[0].end.getTime() - ranges[0].start.getTime()).toBe(7 * 86400000);
     const queryText = statements.join('\n');
-    for (const id of [
-      'window-alpha',
-      'afk-alpha',
-      'aw-watcher-web-chrome-alpha',
-      'aw-watcher-web-firefox-legacy',
-    ]) {
+    for (const id of ['window-alpha', 'afk-alpha', 'aw-watcher-web-chrome-alpha']) {
       expect(queryText).toContain(id);
     }
+    expect(queryText).not.toContain('aw-watcher-web-firefox-legacy');
     expect(queryText).not.toContain('aw-watcher-web-chrome-beta');
     expect(queryText).not.toContain('window-beta');
     expect(queryText).toContain('filter_period_intersect');
@@ -414,7 +411,7 @@ describe('AI Summary mounted invocation ownership', () => {
     expect(sentPrompt).toContain('active after AFK filtering: 8m (40%)');
     expect(sentPrompt).toContain('Summarized below: 6m');
     expect(sentPrompt).toContain('withheld 2m');
-    expect(sentPrompt).toContain('hostname could not be resolved');
+    expect(sentPrompt).not.toContain('hostname could not be resolved');
     expect(sentPrompt).toContain('editor: 5m');
     for (const secret of [
       'RAW-TITLE',
@@ -428,6 +425,22 @@ describe('AI Summary mounted invocation ownership', () => {
     expect(vm().llmResponse).toBe('Fresh summary');
     expect(vm().loading).toBe(false);
     expect(vm().error).toBe('');
+  });
+
+  test('legacy browser fallback is selected and disclosed only without an exact-host browser bucket', async () => {
+    buckets.buckets = buckets.buckets.filter(b => b.id !== 'aw-watcher-web-chrome-alpha');
+    await mountView();
+    await startQuery();
+    const queryText = query.mock.calls[0][1].join('\n');
+    expect(queryText).toContain('aw-watcher-web-firefox-legacy');
+    expect(queryText).not.toContain('aw-watcher-web-chrome-alpha');
+    expect(queryText).not.toContain('aw-watcher-web-chrome-beta');
+    pendingQuery.resolve(queryResult());
+    await flush();
+    expect(llm).toHaveBeenCalledTimes(1);
+    expect(llm.mock.calls[0][1]).toContain('hostname could not be resolved');
+    expect(vm().llmResponse).toBe('Fresh summary');
+    expect(vm().loading).toBe(false);
   });
 
   test.each([
@@ -444,7 +457,11 @@ describe('AI Summary mounted invocation ownership', () => {
       pendingQuery.resolve(queryResult());
       await flush();
       const sentPrompt = llm.mock.calls[0][1];
-      expect(sentPrompt.includes('example.org')).toBe(domains);
+      expect(sentPrompt.split('\n')).toEqual(
+        domains
+          ? expect.arrayContaining(['  example.org: 2m (100%)'])
+          : expect.not.arrayContaining(['  example.org: 2m (100%)'])
+      );
       expect(sentPrompt.includes('uncategorized-app')).toBe(uncategorizedApp);
       expect(sentPrompt.includes('secret-app')).toBe(!privateOn);
     }
