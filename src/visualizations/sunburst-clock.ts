@@ -278,6 +278,8 @@ function update(
   const root_node: d3.HierarchyRectangularNode<IEvent> = partition_layout(root);
 
   const mode_clock = true;
+  // 0.001 radians is about 14 seconds on the fixed 24-hour dial.
+  const threshold = 0.001;
   let nodes;
   if (mode_clock) {
     // TODO: Make this a checkbox in the UI
@@ -324,7 +326,8 @@ function update(
       const timestamp = moment(d.data.timestamp).valueOf();
       const start = Math.max(periodStart, timestamp);
       const end = Math.min(periodEnd, timestamp + d.data.duration * 1000);
-      if (!(end > start)) return [];
+      // Apply visibility to the whole clipped event, not each DST fragment.
+      if (!((2 * Math.PI * (end - start)) / 86400000 > threshold)) return [];
       const bounds = [start, ...transitions.filter(t => t > start && t < end), end];
       return bounds.slice(0, -1).map((from, i) => {
         const x0 = wallClockAngle(from);
@@ -339,18 +342,9 @@ function update(
     root = root
       .sum(d => d.duration)
       .sort((a, b) => JSON.stringify(a.data.data).localeCompare(JSON.stringify(b.data.data)));
-    nodes = root_node.descendants();
+    // For efficiency, filter nodes to keep only those large enough to see.
+    nodes = root_node.descendants().filter(d => d.x1 - d.x0 > threshold);
   }
-
-  // For efficiency, filter nodes to keep only those large enough to see.
-  nodes = nodes.filter(function (d: d3.HierarchyRectangularNode<IEvent>) {
-    // 0.005 radians = 0.29 degrees
-    // If show_whole_day:
-    //   0.0044 rad = 1min
-    //   0.0011 rad = 15s
-    const threshold = 0.001;
-    return d.x1 - d.x0 > threshold;
-  });
 
   vis
     .data([root_event])

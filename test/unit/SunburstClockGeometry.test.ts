@@ -139,6 +139,27 @@ const stockholm = Intl.DateTimeFormat().resolvedOptions().timeZone === 'Europe/S
     expect(nodes.reduce((sum, n) => sum + n.x1 - n.x0, 0)).toBeCloseTo(hour, 9);
   });
 
+  test.each([
+    ['2026-03-29', '2026-03-29T01:59:50+01:00', 2, 3],
+    ['2026-10-25', '2026-10-25T02:59:50+02:00', 3, 2],
+  ])(
+    'retains both fragments of a visible short event across DST on %s',
+    (day, timestamp, before, after) => {
+      const { nodes, paths } = render(moment(`${day}T00:00:00`), timestamp, 20);
+      expect(nodes).toHaveLength(2);
+      expectSpan(nodes[0], before - 10 / 3600, before);
+      expectSpan(nodes[1], after, after + 10 / 3600);
+      expect(paths.every(path => !!path.getAttribute('d'))).toBe(true);
+      expect(nodes[0].data).toBe(nodes[1].data);
+      expect(nodes[0].data.duration).toBe(20);
+      // Whole events below the cutoff still stay hidden, split or not.
+      expect(render(moment(`${day}T00:00:00`), timestamp, 12).nodes).toHaveLength(0);
+      expect(render(moment(`${day}T00:00:00`), `${day}T06:00:00`, 12).nodes).toHaveLength(0);
+      // Visibility is based on the clipped interval, not the source duration.
+      expect(render(moment(`${day}T00:00:00`), `${day}T23:59:50`, 60).nodes).toHaveLength(0);
+    }
+  );
+
   test('fall-back draws both elapsed occurrences on the same wall-clock sector', () => {
     const { nodes } = render(moment('2026-10-25T00:00:00'), '2026-10-25T02:00:00+02:00', 7200);
     expect(nodes).toHaveLength(2);
