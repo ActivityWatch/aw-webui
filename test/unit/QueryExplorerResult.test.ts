@@ -65,6 +65,8 @@ describe('Query Explorer result-shape admission', () => {
     [{ total: 42 }, '"total": 42'],
     [null, 'null'],
     [[1, 2], '1'],
+    [[{ duration: 5, label: 'total' }], '"label": "total"'],
+    [[{ ...event, data: null }], '"data": null'],
   ])('Run of non-event result %p uses JSON fallback', async (value, snippet) => {
     const wrapper = mountExplorer(jest.fn().mockResolvedValue([value]));
     await wrapper.vm.query();

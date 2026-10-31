@@ -1,9 +1,22 @@
+import moment from 'moment';
+
 export function isEventLike(value: unknown): boolean {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
     return false;
   }
   const event = value as Record<string, unknown>;
-  return 'timestamp' in event || 'duration' in event || 'data' in event;
+  const validTimestamp =
+    (typeof event.timestamp === 'string' &&
+      moment(event.timestamp, moment.ISO_8601, true).isValid()) ||
+    (event.timestamp instanceof Date && Number.isFinite(event.timestamp.getTime()));
+  return (
+    validTimestamp &&
+    typeof event.duration === 'number' &&
+    Number.isFinite(event.duration) &&
+    event.data !== null &&
+    typeof event.data === 'object' &&
+    !Array.isArray(event.data)
+  );
 }
 
 export function isEventArray(value: unknown): boolean {

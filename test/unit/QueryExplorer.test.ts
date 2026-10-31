@@ -176,7 +176,7 @@ describe('QueryExplorer eventcount_str', () => {
     expect(QueryExplorer.computed.eventcount_str.call({ events: [] })).toBe('Number of events: 0');
   });
 
-  test.each([42, { total: 42 }, null, [1, 2]])(
+  test.each([[42], [{ total: 42 }], [null], [[1, 2]], [[{ duration: 5, label: 'total' }]]])(
     'does not label non-event result %p as events',
     value => {
       expect(QueryExplorer.computed.eventcount_str.call({ events: value })).toBe('');
