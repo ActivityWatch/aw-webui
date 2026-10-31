@@ -11,7 +11,7 @@ div
     span(slot="header")
       h4.card-title {{ $t('ui.eventList.title') }}
       span.pagination-header
-        | {{ $t('ui.eventList.showing', { shown: displayed_events.length, total: events.length }) }}
+        | {{ $t('ui.eventList.showing', { shown: displayed_events.length, total: safe_events.length }) }}
       b-button(@click="expandList", size="sm", style="float: right;")
         span(v-if="!isListExpanded")
           | {{ $t('ui.eventList.expand') }}
@@ -163,8 +163,11 @@ export default {
     };
   },
   computed: {
+    safe_events: function () {
+      return Array.isArray(this.events) ? this.events : [];
+    },
     displayed_events: function () {
-      return this.events.slice(0, this.limit);
+      return this.safe_events.slice(0, this.limit);
     },
   },
   methods: {
