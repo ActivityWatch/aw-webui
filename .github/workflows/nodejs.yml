@@ -158,6 +158,12 @@ jobs:
         AW_QUERY_TEST_SERVER_URL: http://localhost:5666
       run: |
         npm test
+    # jsdom inherits the process timezone. Run the real renderer on both a
+    # short and long reporting day instead of skipping DST cases on UTC runners.
+    - name: Test clock DST geometry
+      env:
+        TZ: Europe/Stockholm
+      run: npm test -- --selectProjects jsdom --runInBand --coverage=false --runTestsByPath test/unit/SunburstClockGeometry.test.ts test/unit/SunburstClockMounted.test.ts test/unit/SunburstClock.test.ts
     - uses: codecov/codecov-action@v7
       timeout-minutes: 2
       continue-on-error: true

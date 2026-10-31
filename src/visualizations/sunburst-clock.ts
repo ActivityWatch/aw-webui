@@ -157,7 +157,8 @@ function mouseover(_: Event, d: d3.HierarchyRectangularNode<IEvent>) {
   rootEl
     .selectAll('path')
     .filter(function (node: any) {
-      return sequenceArray.indexOf(node) >= 0;
+      // Split DST arcs share event data; highlight every fragment and its parents.
+      return sequenceArray.some(ancestor => ancestor.data === node.data);
     })
     .style('opacity', 1);
 }
@@ -231,6 +232,32 @@ function create(el: HTMLElement) {
     });
 }
 
+// Find timezone transitions once per displayed day, not once per event. Split
+// there so spring gaps stay empty and repeated fall hours share a clock sector.
+function offsetTransitions(start: number, end: number): number[] {
+  const transitions: number[] = [];
+  for (let from = start; from < end; from += 3600000) {
+    let low = from;
+    let high = Math.min(from + 3600000, end);
+    const offset = moment(low).utcOffset();
+    if (moment(high).utcOffset() === offset) continue;
+    while (high - low > 1) {
+      const middle = Math.floor((low + high) / 2);
+      if (moment(middle).utcOffset() === offset) low = middle;
+      else high = middle;
+    }
+    if (high < end) transitions.push(high);
+  }
+  return transitions;
+}
+
+function wallClockAngle(timestamp: number): number {
+  const local = moment(timestamp);
+  const seconds =
+    local.hours() * 3600 + local.minutes() * 60 + local.seconds() + local.milliseconds() / 1000;
+  return (2 * Math.PI * seconds) / 86400;
+}
+
 // Main function to draw and set up the visualization, once we have the data.
 function update(
   el: HTMLElement,
@@ -251,6 +278,8 @@ function update(
   const root_node: d3.HierarchyRectangularNode<IEvent> = partition_layout(root);
 
   const mode_clock = true;
+  // 0.001 radians is about 14 seconds on the fixed 24-hour dial.
+  const threshold = 0.001;
   let nodes;
   if (mode_clock) {
     // TODO: Make this a checkbox in the UI
@@ -290,42 +319,32 @@ function update(
       }
     }
 
-    nodes = root_node
-      .each(function (d: d3.HierarchyRectangularNode<IEvent>) {
-        const loc_start_sec = moment(d.data.timestamp).diff(root_start, 'seconds', true);
-        const loc_end_sec = moment(d.data.timestamp)
-          .add(d.data.duration, 'seconds')
-          .diff(root_start, 'seconds', true);
-
-        const loc_start = Math.max(
-          0,
-          loc_start_sec / ((root_end.valueOf() - root_start.valueOf()) / 1000)
-        );
-        const loc_end = Math.min(
-          1,
-          loc_end_sec / ((root_end.valueOf() - root_start.valueOf()) / 1000)
-        );
-
-        d.x0 = 2 * Math.PI * loc_start;
-        d.x1 = 2 * Math.PI * loc_end;
-      })
-      .descendants();
+    const periodStart = root_start.valueOf();
+    const periodEnd = root_end.valueOf();
+    const transitions = offsetTransitions(periodStart, periodEnd);
+    nodes = root_node.descendants().flatMap(d => {
+      const timestamp = moment(d.data.timestamp).valueOf();
+      const start = Math.max(periodStart, timestamp);
+      const end = Math.min(periodEnd, timestamp + d.data.duration * 1000);
+      // Apply visibility to the whole clipped event, not each DST fragment.
+      if (!((2 * Math.PI * (end - start)) / 86400000 > threshold)) return [];
+      const bounds = [start, ...transitions.filter(t => t > start && t < end), end];
+      return bounds.slice(0, -1).map((from, i) => {
+        const x0 = wallClockAngle(from);
+        // Each segment has a constant UTC offset. Elapsed duration therefore
+        // equals wall-clock duration here. Keep angles unwrapped over midnight;
+        // D3 draws the small crossing arc rather than a backwards/full-day arc.
+        const x1 = x0 + (2 * Math.PI * (bounds[i + 1] - from)) / 86400000;
+        return Object.assign(Object.create(Object.getPrototypeOf(d)), d, { x0, x1 });
+      });
+    });
   } else {
     root = root
       .sum(d => d.duration)
       .sort((a, b) => JSON.stringify(a.data.data).localeCompare(JSON.stringify(b.data.data)));
-    nodes = root_node.descendants();
+    // For efficiency, filter nodes to keep only those large enough to see.
+    nodes = root_node.descendants().filter(d => d.x1 - d.x0 > threshold);
   }
-
-  // For efficiency, filter nodes to keep only those large enough to see.
-  nodes = nodes.filter(function (d: d3.HierarchyRectangularNode<IEvent>) {
-    // 0.005 radians = 0.29 degrees
-    // If show_whole_day:
-    //   0.0044 rad = 1min
-    //   0.0011 rad = 15s
-    const threshold = 0.001;
-    return d.x1 - d.x0 > threshold;
-  });
 
   vis
     .data([root_event])

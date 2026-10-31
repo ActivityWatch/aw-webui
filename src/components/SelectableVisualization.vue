@@ -86,7 +86,7 @@ div(v-if="editable || !activityStore.buckets.loaded || has_prerequisites || !set
     div(v-if="type == 'timeline_barchart'")
       aw-timeline-barchart(:datasets="datasets", :timeperiod_start="activityStore.query_options.timeperiod.start", :timeperiod_length="activityStore.query_options.timeperiod.length", :clamp_hourly="true", style="height: 100")
     div(v-if="type == 'sunburst_clock' && isSingleDay")
-      aw-sunburst-clock(:date="date", :afkBucketId="activityStore.buckets.afk[0]", :windowBucketId="activityStore.buckets.window[0]")
+      aw-sunburst-clock(:date="activityStore.query_options.timeperiod.start", :afkBucketId="activityStore.buckets.afk[0]", :windowBucketId="activityStore.buckets.window[0]")
     div(v-if="type == 'custom_vis'")
       aw-custom-vis(:visname="props.visname" :title="props.title")
     div(v-if="type == 'vis_timeline' && isSingleDay")
