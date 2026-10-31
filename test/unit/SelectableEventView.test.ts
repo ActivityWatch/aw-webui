@@ -68,6 +68,41 @@ describe('SelectableEventView result admission', () => {
     }
   });
 
+  describe.each(['eventlist', 'timeline', 'summary'])('%s shape admission', visMethod => {
+    test.each([
+      [[{ duration: 5, label: 'total' }]],
+      [[{ timestamp: event.timestamp }]],
+      [[{ data: { title: 'Code' } }]],
+      [[{ ...event, data: null }]],
+      [[{ ...event, duration: '12' }]],
+      [[event, { duration: 5 }]],
+    ])('preserves partial or malformed objects as JSON: %p', async value => {
+      const wrapper = mountView(value, visMethod);
+      try {
+        await wrapper.vm.$nextTick();
+        expect(wrapper.find('pre.result-fallback').text()).toBe(JSON.stringify(value, null, 2));
+        expect(wrapper.find('.eventlist-stub, vis-timeline-stub, aw-summary-stub').exists()).toBe(
+          false
+        );
+      } finally {
+        wrapper.destroy();
+      }
+    });
+
+    test('keeps valid event arrays in the selected event view', async () => {
+      const wrapper = mountView([event], visMethod);
+      try {
+        await wrapper.vm.$nextTick();
+        expect(wrapper.find('pre.result-fallback').exists()).toBe(false);
+        expect(wrapper.find('.eventlist-stub, vis-timeline-stub, aw-summary-stub').exists()).toBe(
+          true
+        );
+      } finally {
+        wrapper.destroy();
+      }
+    });
+  });
+
   test('Raw JSON still renders event arrays', async () => {
     const wrapper = mountView([event], 'raw');
     try {

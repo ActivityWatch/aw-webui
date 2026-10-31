@@ -5,9 +5,22 @@ const event = { timestamp: '2026-10-31T12:00:00Z', duration: 10, data: { title: 
 describe('isEventLike', () => {
   test.each([
     [event, true],
-    [{ duration: 5 }, true],
-    [{ data: { app: 'Vim' } }, true],
-    [{ timestamp: '2026-10-31T12:00:00Z' }, true],
+    [{ ...event, timestamp: new Date(event.timestamp), duration: 0, data: {} }, true],
+    [{ duration: 5 }, false],
+    [{ data: { app: 'Vim' } }, false],
+    [{ timestamp: event.timestamp }, false],
+    [{ timestamp: event.timestamp, duration: 5 }, false],
+    [{ ...event, timestamp: null }, false],
+    [{ ...event, timestamp: 42 }, false],
+    [{ ...event, timestamp: 'not a date' }, false],
+    [{ ...event, timestamp: new Date(NaN) }, false],
+    [{ ...event, duration: '5' }, false],
+    [{ ...event, duration: null }, false],
+    [{ ...event, duration: NaN }, false],
+    [{ ...event, duration: Infinity }, false],
+    [{ ...event, data: null }, false],
+    [{ ...event, data: [] }, false],
+    [{ ...event, data: 'Code' }, false],
     [42, false],
     ['event', false],
     [null, false],
@@ -37,6 +50,8 @@ describe('isEventArray', () => {
     [[1, 2], false],
     [[event, 1], false],
     [[{ title: 'mixed' }], false],
+    [[{ duration: 5, label: 'total' }], false],
+    [[event, { data: null }], false],
   ])('rejects %p', (value, expected) => {
     expect(isEventArray(value)).toBe(expected);
   });
