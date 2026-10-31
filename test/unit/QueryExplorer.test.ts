@@ -165,3 +165,21 @@ describe('QueryExplorer saveCurrentQuery', () => {
     expect(vm.showRenameQueryModal).toBe(false);
   });
 });
+
+describe('QueryExplorer eventcount_str', () => {
+  const event = { timestamp: '2026-10-31T12:00:00Z', duration: 10, data: { title: 'Code' } };
+
+  test('counts ordinary and empty event arrays', () => {
+    expect(QueryExplorer.computed.eventcount_str.call({ events: [event] })).toBe(
+      'Number of events: 1'
+    );
+    expect(QueryExplorer.computed.eventcount_str.call({ events: [] })).toBe('Number of events: 0');
+  });
+
+  test.each([[42], [{ total: 42 }], [null], [[1, 2]], [[{ duration: 5, label: 'total' }]]])(
+    'does not label non-event result %p as events',
+    value => {
+      expect(QueryExplorer.computed.eventcount_str.call({ events: value })).toBe('');
+    }
+  );
+});
