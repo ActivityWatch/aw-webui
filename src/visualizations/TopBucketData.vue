@@ -10,7 +10,7 @@ div
         )
     b-col(cols="12", md="6").mb-2
       b-form-group
-        template(#label)
+        template(#label="")
           span {{ $t('ui.topBucket.field') }}
           span.info-icon(
             :title="$t('ui.topBucket.fieldHelp')"
@@ -64,6 +64,21 @@ function formatValue(value: unknown): string {
   if (value === null || value === undefined) return 'Unknown';
   if (typeof value === 'object') return JSON.stringify(value);
   return String(value);
+}
+// Watcher values are JSON-like. Keep type and structure separate from presentation;
+// object property insertion order is not part of value identity, array order is.
+function valueIdentity(value: unknown): unknown {
+  if (value === null || value === undefined) return ['unknown'];
+  if (Array.isArray(value)) return ['array', value.map(valueIdentity)];
+  if (typeof value === 'object') {
+    return [
+      'object',
+      Object.keys(value)
+        .sort()
+        .map(key => [key, valueIdentity(value[key])]),
+    ];
+  }
+  return [typeof value, value];
 }
 export default {
   name: 'aw-top-bucket-data',
@@ -252,7 +267,7 @@ export default {
       this.events.forEach(e => {
         const value = _.get(e, path);
         const display = formatValue(value);
-        const key = Array.isArray(value) ? JSON.stringify(value) : String(display);
+        const key = JSON.stringify(valueIdentity(value));
         if (!grouped.has(key)) {
           grouped.set(key, {
             duration: 0,
@@ -262,7 +277,27 @@ export default {
         const entry = grouped.get(key);
         entry.duration += e.duration || 0;
       });
-      this.aggregated = Array.from(grouped.values()).sort((a, b) => b.duration - a.duration);
+      const rows = Array.from(grouped.values());
+      const labelCounts = new Map<string, number>();
+      rows.forEach(e =>
+        labelCounts.set(e.data.display, (labelCounts.get(e.data.display) || 0) + 1)
+      );
+      // Reserve original labels so generated annotations cannot hide a literal
+      // string with that same spelling. Ordinary string names stay unchanged.
+      const usedLabels = new Set(rows.map(e => e.data.display));
+      rows.forEach(e => {
+        if (labelCounts.get(e.data.display) < 2 || typeof e.data.raw === 'string') return;
+        const raw = e.data.raw;
+        const type = raw == null ? 'unknown' : Array.isArray(raw) ? 'array' : typeof raw;
+        const text = Array.isArray(raw) ? JSON.stringify(raw) : e.data.display;
+        const base = `${text} (${type})`;
+        let label = base;
+        let suffix = 2;
+        while (usedLabels.has(label)) label = `${base} #${suffix++}`;
+        usedLabels.add(label);
+        e.data.display = label;
+      });
+      this.aggregated = rows.sort((a, b) => b.duration - a.duration);
     },
     emitSelection() {
       this.$emit('update-props', {
