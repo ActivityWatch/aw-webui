@@ -238,6 +238,52 @@ describe('Graph Generate invocation ownership', () => {
     expect(wrapper.vm.status).toBeNull();
   });
 
+  test('keeps the submitted depth while controls change during a pending Generate', async () => {
+    const response = deferred<unknown[][]>();
+    const wrapper = mountGraph(jest.fn().mockReturnValue(response.promise));
+    await flush();
+    await wrapper.setData({ maxDepth: 1 });
+    const generation = wrapper.vm.generate();
+    await wrapper.setData({ maxDepth: 2 });
+    const submittedEvent = event('Work');
+    submittedEvent.data.$category = ['Work', 'Code'];
+    response.resolve([[submittedEvent]]);
+    await generation;
+    await flush();
+    expect(wrapper.vm.maxDepth).toBe(2);
+    expect(nodeIds(wrapper)).toEqual(['Work']);
+    expect(wrapper.find('.graph-data').text()).not.toContain('Work>Code');
+    expect(wrapper.vm.events).toEqual([submittedEvent]);
+    expect(wrapper.vm.status).toBeNull();
+  });
+
+  test('a failure after success clears retained events and graph data', async () => {
+    const response = deferred<unknown[][]>();
+    const query = jest
+      .fn()
+      .mockResolvedValueOnce([[event('SUCCESS')]])
+      .mockReturnValueOnce(response.promise);
+    const wrapper = mountGraph(query);
+    await flush();
+    await wrapper.vm.generate();
+    await flush();
+    expect(wrapper.vm.events).toEqual([event('SUCCESS')]);
+    expect(nodeIds(wrapper)).toEqual(['SUCCESS']);
+    expect(wrapper.find('.graph-data').text()).toContain('SUCCESS');
+    const generation = wrapper.vm.generate();
+    await flush();
+    expect(wrapper.vm.status).toBe('searching');
+    response.reject(new Error('Refresh failed'));
+    await expect(generation).resolves.toBeUndefined();
+    await flush();
+    expect(wrapper.vm.events).toBeNull();
+    expect(wrapper.vm.graphdata).toEqual({});
+    expect(wrapper.find('.graph-data').exists()).toBe(false);
+    expect(wrapper.text()).not.toContain('Found 1 events');
+    expect(wrapper.find('b-alert-stub[variant="danger"]').text()).toBe('Refresh failed');
+    expect(wrapper.vm.status).toBeNull();
+  });
+
   test('retry after first failure publishes the new graph', async () => {
     const retry = deferred<unknown[][]>();
     const query = jest
@@ -325,6 +371,9 @@ describe('Graph Generate invocation ownership', () => {
     expect(wrapper.text()).toContain('Hostname: NEW');
     expect(nodeIds(wrapper)).toEqual(['NEW']);
     expect(wrapper.text()).toContain('Found 1 events');
-    expect(wrapper.find('.alert-danger').exists()).toBe(false);
+    expect(wrapper.find('b-alert-stub[variant="danger"]').exists()).toBe(false);
+    // Verify this selector can detect an error under shallowMount.
+    await wrapper.setData({ error: 'Synthetic visible error' });
+    expect(wrapper.find('b-alert-stub[variant="danger"]').text()).toBe('Synthetic visible error');
   });
 });
