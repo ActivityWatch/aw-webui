@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import Vue from 'vue';
 import SelectableEventView from '~/components/SelectableEventView.vue';
 import Summary from '~/visualizations/Summary.vue';
+import summary from '~/visualizations/summary';
 
 Vue.component('aw-summary', Summary);
 
@@ -74,6 +75,35 @@ describe('SelectableEventView summary key', () => {
         events: [{ duration: 60, data: { title: 'TITLE_ONE', app: 'APP_ONE' } }],
       });
       await flush(wrapper);
+      expect(svgName(wrapper)).toBe('APP_ONE');
+    } finally {
+      wrapper.destroy();
+    }
+  });
+
+  test('coalesces simultaneous fields and callback changes onto one redraw', async () => {
+    const nameA = e => e.data.title;
+    const nameB = e => e.data.app;
+    const colorA = e => e.data.title;
+    const colorB = e => e.data.app;
+    const wrapper = mount(Summary, {
+      propsData: {
+        fields: [event],
+        namefunc: nameA,
+        colorfunc: colorA,
+      },
+      attachTo: document.body,
+    });
+    try {
+      await flush(wrapper);
+      const spy = jest.spyOn(summary, 'updateSummedEvents');
+      wrapper.setProps({
+        fields: [{ duration: 60, data: { title: 'TITLE_ONE', app: 'APP_ONE' } }],
+        namefunc: nameB,
+        colorfunc: colorB,
+      });
+      await wrapper.vm.$nextTick();
+      expect(spy).toHaveBeenCalledTimes(1);
       expect(svgName(wrapper)).toBe('APP_ONE');
     } finally {
       wrapper.destroy();

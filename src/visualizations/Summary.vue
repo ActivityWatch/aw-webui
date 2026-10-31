@@ -55,7 +55,7 @@ export default {
     },
   },
   data: function () {
-    return { limit_: this.limit };
+    return { limit_: this.limit, updateQueued: false };
   },
   computed: {
     visible_more() {
@@ -64,25 +64,25 @@ export default {
   },
   watch: {
     fields: function () {
-      this.update();
+      this.scheduleUpdate();
     },
     limit_: function () {
-      this.update();
+      this.scheduleUpdate();
     },
     dataKey: function () {
-      this.update();
+      this.scheduleUpdate();
     },
     namefunc: function () {
-      this.update();
+      this.scheduleUpdate();
     },
     colorfunc: function () {
-      this.update();
+      this.scheduleUpdate();
     },
     hoverfunc: function () {
-      this.update();
+      this.scheduleUpdate();
     },
     linkfunc: function () {
-      this.update();
+      this.scheduleUpdate();
     },
   },
   mounted: function () {
@@ -91,6 +91,14 @@ export default {
     this.update();
   },
   methods: {
+    scheduleUpdate: function () {
+      if (this.updateQueued) return;
+      this.updateQueued = true;
+      this.$nextTick(() => {
+        this.updateQueued = false;
+        this.update();
+      });
+    },
     update: function () {
       const el = this.$el.children[0];
       if (this.fields) {
