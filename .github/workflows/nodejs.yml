@@ -104,6 +104,9 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Test screenshot comment publication
+      run: python3 .github/tests/test_screenshot_comment.py -v
+
     # TODO: Refactor out getting ActivityWatch builds (both release and nightly) into an action
     - name: Install and run ActivityWatch
       if: ${{ matrix.aw-version != 'master' }}
