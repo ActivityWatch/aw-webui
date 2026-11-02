@@ -16,12 +16,12 @@ describe('activity store', () => {
     await activityStore.load_demo();
   });
 
-  test('loads demo data', () => {
+  test('loads demo data', async () => {
     // Load
     expect(categoryStore.classes).toHaveLength(0);
     categoryStore.restoreDefaultClasses();
     expect(categoryStore.classes_unsaved_changes).toBeTruthy();
-    categoryStore.save();
+    await categoryStore.save();
     expect(categoryStore.classes_unsaved_changes).toBeFalsy();
     expect(categoryStore.classes).not.toHaveLength(0);
 

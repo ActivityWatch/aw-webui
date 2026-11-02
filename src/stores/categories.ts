@@ -159,6 +159,18 @@ function syncToPrimarySet(state: State) {
   state.classes = computeEffectiveClasses(state.category_sets, state.active_set_ids);
 }
 
+// Per-store queues stay outside serializable Pinia state. A rejected write must
+// reject its caller without preventing a later explicit save from retrying.
+const pendingSaves = new WeakMap<State, Promise<void>>();
+
+function saveSnapshot(state: State) {
+  return _.cloneDeep({
+    classes: state.classes.map(cleanCategory),
+    category_sets: state.category_sets,
+    active_set_ids: state.active_set_ids,
+  });
+}
+
 export const useCategoryStore = defineStore('categories', {
   state: (): State => ({
     classes: [],
@@ -295,17 +307,31 @@ export const useCategoryStore = defineStore('categories', {
     },
 
     async save(this: State) {
-      // Sync current classes back to the primary active set before persisting
+      // Capture intent now, not when an earlier write eventually completes.
       syncToPrimarySet(this);
-      // saveCategories already writes the legacy `classes` field. Do not also
-      // call saveClasses() — the two settingsStore.update() calls raced and
-      // could persist an empty/default snapshot (ActivityWatch/aw-android#247).
-      if (process.env.NODE_ENV === 'test') {
-        this.classes_unsaved_changes = false;
-        return;
+      const snapshot = saveSnapshot(this);
+      const previous = pendingSaves.get(this);
+      this.classes_unsaved_changes = true;
+      const write = (async () => {
+        if (previous) await previous.catch(() => undefined);
+        // saveCategories already writes legacy `classes`. A second saveClasses
+        // call would race this update (ActivityWatch/aw-android#247).
+        await saveCategories(snapshot.category_sets, snapshot.active_set_ids);
+      })();
+      pendingSaves.set(this, write);
+      try {
+        await write;
+        // Another queued snapshot may differ even if current data matches this
+        // one again. Only the last write can acknowledge the current contents.
+        if (pendingSaves.get(this) === write) {
+          this.classes_unsaved_changes = !_.isEqual(snapshot, saveSnapshot(this));
+        }
+      } catch (error) {
+        this.classes_unsaved_changes = true;
+        throw error;
+      } finally {
+        if (pendingSaves.get(this) === write) pendingSaves.delete(this);
       }
-      await saveCategories(this.category_sets, this.active_set_ids);
-      this.classes_unsaved_changes = false;
     },
 
     // ── Category set management ──────────────────────────────────────────────

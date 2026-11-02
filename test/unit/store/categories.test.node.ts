@@ -12,13 +12,13 @@ describe('categories store', () => {
     categoryStore.clearAll();
   });
 
-  test('loads default categories', () => {
+  test('loads default categories', async () => {
     // Load categories
     expect(categoryStore.classes).toHaveLength(0);
     categoryStore.restoreDefaultClasses();
 
     expect(categoryStore.classes_unsaved_changes).toBeTruthy();
-    categoryStore.save();
+    await categoryStore.save();
 
     expect(categoryStore.classes_unsaved_changes).toBeFalsy();
     expect(categoryStore.classes).not.toHaveLength(0);
@@ -229,7 +229,7 @@ describe('categories store', () => {
     expect(id).toBe(maxBefore + 1);
   });
 
-  test('import syncs classes into a primary set so save does not persist defaults', () => {
+  test('import syncs classes into a primary set so save does not persist defaults', async () => {
     categoryStore.category_sets = [];
     categoryStore.active_set_ids = ['default'];
     categoryStore.import([{ name: ['Work', 'Coding'], rule: { type: 'regex', regex: 'code' } }]);
@@ -239,7 +239,7 @@ describe('categories store', () => {
     const names = categoryStore.category_sets[0].categories.map(c => c.name);
     expect(names).toContainEqual(['Work']);
     expect(names).toContainEqual(['Work', 'Coding']);
-    categoryStore.save();
+    await categoryStore.save();
     expect(categoryStore.classes_unsaved_changes).toBeFalsy();
   });
 
