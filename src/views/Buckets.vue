@@ -4,7 +4,10 @@ div
     | {{ $t('buckets.title') }}
     button#buckets-help.btn.btn-link.p-0.ml-2.text-muted(type="button" :aria-label="$t('common.moreInformation')")
       icon(name="question-circle")
-  b-popover(target="buckets-help" triggers="hover focus click blur" placement="bottom" :content="$t('buckets.intro')")
+  b-popover(target="buckets-help" triggers="hover focus click blur" placement="bottom")
+    | {{ $t('buckets.intro') }}
+    p.mb-0.mt-2
+      a(href="https://docs.activitywatch.net/en/latest/buckets-and-events.html" target="_blank" rel="noopener") {{ $t('home.documentation') }}
 
   b-card.bucket-card.mb-3(
     v-for="device in bucketsStore.bucketsByDevice",

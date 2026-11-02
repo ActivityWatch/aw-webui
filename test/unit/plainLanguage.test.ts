@@ -23,8 +23,11 @@ test.each([['Home', Home, en.home.trackingIntro]])(
     const help = wrapper.find('b-popover-stub');
     expect(help.attributes('target')).toBe(button.attributes('id'));
     expect(help.attributes('triggers')).toBe('hover focus click blur');
-    expect(help.attributes('content')).toBe(explanation);
-    expect(wrapper.text()).not.toContain(explanation);
+    expect(help.text()).toContain(explanation);
+    const docs = help.find('a');
+    expect(docs.attributes('href')).toBe('https://docs.activitywatch.net/en/latest/watchers.html');
+    expect(docs.attributes('target')).toBe('_blank');
+    expect(docs.attributes('rel')).toBe('noopener');
     wrapper.destroy();
   }
 );
@@ -38,7 +41,9 @@ test.each([
   expect(source).toContain(`button#${target}.btn.btn-link`);
   expect(source).toContain(':aria-label="$t(\'common.moreInformation\')"');
   expect(source).toContain(`b-popover(target="${target}" triggers="hover focus click blur"`);
-  expect(source).toContain(`:content="$t('${key}')"`);
+  expect(source).toContain(`| {{ $t('${key}') }}`);
+  const docsPage = view === 'Buckets' ? 'buckets-and-events' : 'watchers';
+  expect(source).toContain(`href="https://docs.activitywatch.net/en/latest/${docsPage}.html"`);
 });
 
 test('Raw Data explains collections, events and stable technical IDs', () => {

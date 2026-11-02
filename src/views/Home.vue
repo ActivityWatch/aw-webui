@@ -12,7 +12,10 @@ div
     | {{ $t('home.greeting') }}
     button#home-tracking-help.btn.btn-link.p-0.ml-2.text-muted(type="button" :aria-label="$t('common.moreInformation')")
       icon(name="question-circle")
-  b-popover(target="home-tracking-help" triggers="hover focus click blur" placement="bottom" :content="$t('home.trackingIntro')")
+  b-popover(target="home-tracking-help" triggers="hover focus click blur" placement="bottom")
+    | {{ $t('home.trackingIntro') }}
+    p.mb-0.mt-2
+      a(href="https://docs.activitywatch.net/en/latest/watchers.html" target="_blank" rel="noopener") {{ $t('home.documentation') }}
   p
     | {{ homeIntro1 }}
   p
