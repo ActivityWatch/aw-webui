@@ -108,6 +108,15 @@ import {
 import 'vue-awesome/icons/sync';
 import 'vue-awesome/icons/download';
 
+interface CalculationParameters {
+  categories: string[];
+  breakTime: number;
+  dateRange: string;
+  hosts: string[];
+  timeperiods: string[];
+  expandedCategories: string[][];
+}
+
 interface DailyData {
   date: string;
   duration: number;
@@ -132,6 +141,7 @@ export default {
       loading: false,
       dailyData: [] as DailyData[],
       rawData: {} as Record<string, any>,
+      calculationParameters: null as CalculationParameters | null,
     };
   },
   computed: {
@@ -195,6 +205,7 @@ export default {
   },
   methods: {
     async loadData() {
+      if (this.loading) return;
       this.loading = true;
       try {
         const client = getClient();
@@ -279,10 +290,18 @@ export default {
         const categoriesStr = JSON.stringify(categories).replace(/\\\\/g, '\\');
 
         const query = buildWorkReportQuery(hostsToQuery, categoriesStr, categoriesFilter);
+        const parameters: CalculationParameters = {
+          categories: [...this.selectedCategories],
+          breakTime: this.breakTime,
+          dateRange: this.dateRange,
+          hosts: hostsToQuery.map(host => host.host),
+          timeperiods: [...timeperiods],
+          expandedCategories: categoriesFilter.map(category => [...category]),
+        };
 
         const results = await client.query(timeperiods, [query]);
 
-        this.dailyData = timeperiods.map((tp, i) => {
+        const dailyData = timeperiods.map((tp, i) => {
           const result = results[i];
           const events = result.events || [];
           const baseDuration = result.duration || 0;
@@ -303,7 +322,11 @@ export default {
           };
         });
 
+        // Publish only after every day was computed successfully. Failed retries
+        // retain the previous result and the inputs that actually produced it.
+        this.dailyData = dailyData;
         this.rawData = results;
+        this.calculationParameters = parameters;
       } catch (error) {
         console.error('Error loading work time data:', error);
         alert(this.$t('ui.workReport.loadError'));
@@ -388,11 +411,7 @@ export default {
 
     exportJSON() {
       const data = {
-        parameters: {
-          categories: this.selectedCategories,
-          breakTime: this.breakTime,
-          dateRange: this.dateRange,
-        },
+        parameters: this.calculationParameters,
         summary: {
           totalDuration: this.totalDuration,
           totalSessions: this.totalSessions,
