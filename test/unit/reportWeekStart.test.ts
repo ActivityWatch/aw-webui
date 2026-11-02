@@ -87,12 +87,12 @@ describe('report calendar week start', () => {
     expectWindow(reportPeriods(), firstDate, lastDate, '04:00');
   });
 
-  test('keeps the existing calendar-date policy before the configured day start', () => {
+  test('uses the previous logical week before the configured day start', () => {
     jest.setSystemTime(new Date(2026, 9, 18, 2, 0, 47, 321));
     useSettingsStore().startOfWeek = 'Sunday';
     const periods = reportPeriods();
-    expect(periods.work).toHaveLength(1);
-    expectWindow(periods, '2026-10-18', '2026-10-18', '04:00');
+    expect(periods.work).toHaveLength(7);
+    expectWindow(periods, '2026-10-11', '2026-10-17', '04:00');
   });
 
   test.each([
