@@ -103,6 +103,7 @@ div(v-if="editable || !activityStore.buckets.loaded || has_prerequisites || !set
         :initialBucketId="props ? props.bucketId : ''",
         :initialField="props ? props.field : ''",
         :initialCustomField="props ? props.customField : ''",
+        :disabled="disabled",
         @update-props="onWatcherPropsChange"
       )
 </template>
@@ -154,6 +155,7 @@ export default {
     props: Object,
     viewId: { type: String, default: '' },
     editable: { type: Boolean, default: true },
+    disabled: { type: Boolean, default: false },
   },
   data: function () {
     return {
@@ -365,7 +367,7 @@ export default {
   },
   methods: {
     onWatcherPropsChange(newProps) {
-      if (!this.viewId) return;
+      if (!this.viewId || this.disabled) return;
       const mergedProps = { ...(this.props || {}), ...newProps };
       useViewsStore().editView({
         view_id: this.viewId,
