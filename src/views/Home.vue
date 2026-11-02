@@ -8,8 +8,11 @@ div
     b-button.ml-2(size="sm" variant="primary" :href="supporterNudgeHref" target="_blank" @click="onSupporterNudgeSupport") {{ $t('home.supporterNudge.support') }}
     b-button.ml-1(size="sm" variant="link" @click="snoozeSupporterNudge") {{ $t('home.supporterNudge.notNow') }}
 
-  h3 {{ $t('home.greeting') }}
-  p {{ $t('home.trackingIntro') }}
+  h3
+    | {{ $t('home.greeting') }}
+    button#home-tracking-help.btn.btn-link.p-0.ml-2.text-muted(type="button" :aria-label="$t('common.moreInformation')")
+      icon(name="question-circle")
+  b-popover(target="home-tracking-help" triggers="hover focus click blur" placement="bottom" :content="$t('home.trackingIntro')")
   p
     | {{ homeIntro1 }}
   p
@@ -94,6 +97,7 @@ div
 </template>
 
 <script lang="ts">
+import 'vue-awesome/icons/question-circle';
 import moment from 'moment';
 import { mapState } from 'pinia';
 import { useServerStore } from '~/stores/server';

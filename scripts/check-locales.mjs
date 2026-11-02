@@ -35,6 +35,7 @@ const ENGLISH_FALLBACK_KEYS = new Set([
   'settings.layout.changedElsewhere',
   'settings.layout.invalid',
   'settings.layout.saveFailed',
+  'common.moreInformation',
   'common.active',
   'common.inactive',
   'home.trackingIntro',
