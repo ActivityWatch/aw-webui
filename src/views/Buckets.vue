@@ -127,7 +127,8 @@ div
         | {{ $t('buckets.importSuccess') }}
       b-alert(v-if="import_error" show variant="danger" dismissible @dismissed="import_error = null")
         | {{ import_error }}
-      b-form-file(v-model="import_file"
+      b-form-file(:value="import_file"
+                  @input="onImportFile"
                   :placeholder="$t('buckets.importPlaceholder')"
                   :drop-placeholder="$t('buckets.importDrop')")
       div.mt-2(v-if="import_file")
@@ -269,7 +270,7 @@ import { compact_relative_time } from '~/util/time';
 // `asyncErrorCapturedMixin` wraps every async method so that its rejection is
 // reported to the global `ErrorBoundary` and the *returned* promise resolves.
 // A wrapped `importBuckets` would therefore never reject inside the
-// `import_file` watcher below, and a failed import would still set
+// `onImportFile` handler below, and a failed import would still set
 // `import_success = true` (showing a success alert next to the error).
 async function importBuckets(aw, importFile) {
   const formData = new FormData();
@@ -291,6 +292,7 @@ export default {
       serverStore: useServerStore(),
 
       import_file: null,
+      import_request_id: 0,
       import_error: null,
       import_success: false,
       delete_bucket_selected: null,
@@ -314,31 +316,41 @@ export default {
       return this.$t('buckets.deleteHostTitle');
     },
   },
-  watch: {
-    import_file: async function (_new_value, _old_value) {
-      if (this.import_file != null) {
-        // Clear the previous outcome up-front so a stale success/error alert
-        // isn't shown beside the spinner while the new import is in flight.
-        this.import_success = false;
-        this.import_error = null;
-        try {
-          await importBuckets(this.$aw, this.import_file);
-          this.import_error = null;
-          this.import_success = true;
-        } catch (err) {
-          const serverMessage = err?.response?.data?.message;
-          this.import_error = serverMessage || this.$t('buckets.importFailedGeneric');
-          this.import_success = false;
-        }
-        await this.bucketsStore.loadBuckets();
-        this.import_file = null;
-      }
-    },
-  },
   mounted: async function () {
     await this.bucketsStore.loadBuckets();
   },
   methods: {
+    async onImportFile(importFile) {
+      // BFormFile emits null again when our completed selection resets it.
+      // Preserve that outcome, but handle user selection/clear events immediately.
+      if (importFile === this.import_file) return;
+      const requestId = ++this.import_request_id;
+      this.import_file = importFile;
+      this.import_success = false;
+      this.import_error = null;
+      if (importFile == null) return;
+
+      try {
+        await importBuckets(this.$aw, importFile);
+        if (requestId === this.import_request_id) {
+          this.import_success = true;
+        }
+      } catch (err) {
+        if (requestId === this.import_request_id) {
+          const serverMessage = err?.response?.data?.message;
+          this.import_error = serverMessage || this.$t('buckets.importFailedGeneric');
+        }
+      }
+      // Submitted imports still finish and reconcile the catalogue even when
+      // another selection owns the UI. Refresh errors keep reaching ErrorBoundary.
+      try {
+        await this.bucketsStore.loadBuckets();
+      } finally {
+        if (requestId === this.import_request_id) {
+          this.import_file = null;
+        }
+      }
+    },
     sortedBuckets: function (device) {
       return [...device.buckets].sort((a, b) => a.id.localeCompare(b.id));
     },
