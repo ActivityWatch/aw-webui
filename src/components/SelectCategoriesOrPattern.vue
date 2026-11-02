@@ -16,16 +16,14 @@ div
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import Vue, { PropType } from 'vue';
 import { useCategoryStore } from '~/stores/categories';
-
-const SEP = ' > ';
 
 export default Vue.extend({
   name: 'SelectCategoriesOrPattern',
   props: {
     filterCategories: {
-      type: Array,
+      type: Array as PropType<string[][]>,
       default: () => [],
     },
   },
@@ -33,7 +31,7 @@ export default Vue.extend({
     return {
       mode: 'categories',
       pattern: '',
-      filterCategoriesData: [],
+      filterCategoriesData: this.filterCategories.map(path => [...path]),
     };
   },
   computed: {
@@ -45,15 +43,14 @@ export default Vue.extend({
       if (this.mode === 'categories') {
         // Get the category and all subcategories
         return this.categories
-          .filter(cat => {
-            const name = cat.name.join(SEP);
-            for (const filterCat of this.filterCategoriesData) {
-              if (name.includes(filterCat.join(SEP))) {
-                return true;
-              }
-            }
-            return false;
-          })
+          .filter(cat =>
+            this.filterCategoriesData.some(
+              path =>
+                path.length > 0 &&
+                path.length <= cat.name.length &&
+                path.every((segment, index) => segment === cat.name[index])
+            )
+          )
           .filter(cat => cat.rule.type === 'regex')
           .map(cat => [cat.name, cat.rule]);
       } else if (this.mode === 'custom') {
@@ -65,16 +62,14 @@ export default Vue.extend({
     },
   },
   watch: {
-    filterCategories() {
-      this.filterCategoriesData = [...this.filterCategoriesData, ...this.filterCategories];
+    filterCategories(paths: string[][]) {
+      this.filterCategoriesData = paths.map(path => [...path]);
     },
-    filterCategoriesData() {
-      this.$emit('input', this.categoriesWithRules);
-      console.log(this.categoriesWithRules);
-    },
-    pattern() {
-      this.$emit('input', this.categoriesWithRules);
-      console.log(this.categoriesWithRules);
+    categoriesWithRules: {
+      immediate: true,
+      handler(rules) {
+        this.$emit('input', rules);
+      },
     },
   },
   async mounted() {
