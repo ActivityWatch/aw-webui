@@ -273,6 +273,45 @@ describe('Stopwatch tags editor', () => {
     wrapper.destroy();
   });
 
+  test('a late event load cannot overwrite the selected event tags', async () => {
+    const { wrapper, aw } = editor(timer(['first']));
+    await flush();
+    let resolveOld;
+    const oldLoad = new Promise(resolve => {
+      resolveOld = resolve;
+    });
+    aw.getEvent.mockReturnValueOnce(oldLoad);
+    const reloading = wrapper.vm.getEvent();
+    expect(wrapper.vm.tags).toEqual([]);
+    await wrapper.vm.save();
+    expect(aw.replaceEvent).not.toHaveBeenCalled();
+
+    const nextEvent = { ...timer(['second']), id: 2 };
+    aw.getEvent.mockResolvedValueOnce(nextEvent);
+    await wrapper.setProps({ event: nextEvent });
+    await flush();
+    resolveOld(timer(['obsolete']));
+    await reloading;
+    expect(wrapper.vm.tags).toEqual(['second']);
+    await wrapper.vm.save();
+    expect(aw.replaceEvent).toHaveBeenCalledWith('aw-stopwatch', nextEvent);
+    wrapper.destroy();
+  });
+
+  test('changing only the bucket replaces the tag draft for the same event ID', async () => {
+    const { wrapper, aw } = editor(timer(['first']));
+    await flush();
+    await wrapper.setData({ tags: ['unsaved'] });
+    const nextEvent = timer(['other bucket']);
+    aw.getEvent.mockResolvedValueOnce(nextEvent);
+    await wrapper.setProps({ bucket_id: 'other-stopwatch' });
+    await flush();
+    expect(wrapper.vm.tags).toEqual(['other bucket']);
+    await wrapper.vm.save();
+    expect(aw.replaceEvent).toHaveBeenCalledWith('other-stopwatch', nextEvent);
+    wrapper.destroy();
+  });
+
   test('generic event editing does not add stopwatch tags', async () => {
     const { wrapper, aw } = editor(timer(), false);
     await openEditor(wrapper);
