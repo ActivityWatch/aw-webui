@@ -144,6 +144,20 @@ Tests can be run with:
 npm test
 ```
 
+The Sunburst Clock uses local wall-clock coordinates, even when the reporting
+day starts after midnight. On DST changes, missing local hours remain empty
+and repeated local hours overlap on the same dial sector. Arcs split at offset
+transitions; event data and elapsed hover durations are unchanged. The query
+window still runs from the selected start to the same time on the next calendar
+day (not a fixed 24 elapsed hours).
+
+Run its deterministic DST regressions in a separate timezone-configured process
+(the CI test matrix also runs this command):
+
+```bash
+TZ=Europe/Stockholm npm test -- --selectProjects jsdom --runInBand --coverage=false --runTestsByPath test/unit/SunburstClockGeometry.test.ts test/unit/SunburstClockMounted.test.ts test/unit/SunburstClock.test.ts
+```
+
 There are also E2E tests. You need to have an aw-server and the web UI running in development mode (with `npm run serve`, as instructed above). After you have that setup, you can run the tests with:
 
 ```bash
