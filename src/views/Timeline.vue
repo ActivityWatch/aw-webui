@@ -1,7 +1,10 @@
 <template lang="pug">
 div
-  h3 {{ $t('timeline.title') }}
-  p {{ $t('timeline.intro') }}
+  h3
+    | {{ $t('timeline.title') }}
+    button#timeline-help.btn.btn-link.p-0.ml-2.text-muted(type="button" :aria-label="$t('common.moreInformation')")
+      icon(name="question-circle")
+  b-popover(target="timeline-help" triggers="hover focus click blur" placement="bottom" :content="$t('timeline.intro')")
 
   input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration").mb-3
 
@@ -128,6 +131,7 @@ div
 </template>
 
 <script lang="ts">
+import 'vue-awesome/icons/question-circle';
 import 'vue-awesome/icons/filter';
 import 'vue-awesome/icons/ellipsis-v';
 import _ from 'lodash';
