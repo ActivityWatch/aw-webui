@@ -1,9 +1,14 @@
 <template lang="pug">
 b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEditModal", :title="$t('ui.eventEditor.editTitle')", centered, hide-footer, :no-close-on-backdrop="busy", :no-close-on-esc="busy", :hide-header-close="busy")
-  div(v-if="!editedEvent")
+  b-alert(v-if="error" show variant="danger")
+    | {{ error }}
+    b-button.ml-2(v-if="!draftReady", @click="getEvent", :disabled="busy", size="sm")
+      | {{ $t('activity.refresh') }}
+
+  div(v-if="!draftReady && !error")
     | {{ $t('ui.eventEditor.loading') }}
 
-  div(v-else)
+  div(v-if="draftReady")
     table(style="width: 100%")
       tr
         th {{ $t('ui.eventEditor.bucket') }}
@@ -37,8 +42,6 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
 
     hr
 
-    b-alert(v-if="error" show variant="danger")
-      | {{ error }}
 
     div.float-left
       b-button.mx-1(@click="delete_", variant="danger", :disabled="busy")
@@ -80,12 +83,33 @@ export default {
   data() {
     return {
       editedEvent: null,
+      draftIdentity: null,
+      draftSource: null,
+      loadSequence: 0,
+      disposed: false,
       // Name of the mutation in flight ('save' / 'delete'), else null.
       pending: null,
       error: '',
     };
   },
   computed: {
+    selectionIdentity() {
+      return this.bucket_id && this.event && this.event.id
+        ? JSON.stringify([this.bucket_id, this.event.id])
+        : null;
+    },
+    // Object replacement is a new editing session even for the same bucket/ID
+    // (for example, reopening a timeline event after cancelling its draft).
+    selectionSource() {
+      return { identity: this.selectionIdentity, event: this.event };
+    },
+    draftReady() {
+      return (
+        this.editedEvent !== null &&
+        this.draftIdentity === this.selectionIdentity &&
+        this.draftSource === this.event
+      );
+    },
     busy() {
       return this.pending !== null;
     },
@@ -110,17 +134,20 @@ export default {
     },
   },
   watch: {
-    async event() {
-      this.error = '';
-      await this.getEvent();
+    selectionSource() {
+      this.getEvent();
     },
   },
   mounted: async function () {
     await this.getEvent();
   },
+  beforeDestroy() {
+    this.disposed = true;
+    this.loadSequence++;
+  },
   methods: {
     async save() {
-      if (!this.editedEvent) return;
+      if (!this.draftReady || this.disposed) return;
       // Capture before any async suspension: another selection can change
       // this.editedEvent or this.bucket_id while replaceEvent is in-flight.
       const savedEvent = _.cloneDeep(this.editedEvent);
@@ -130,6 +157,7 @@ export default {
       );
     },
     async delete_() {
+      if (!this.draftReady || this.disposed) return;
       const event = this.event;
       const bucketId = this.bucket_id;
       await this.runMutation('delete', event, bucketId, () =>
@@ -145,14 +173,21 @@ export default {
     // a v-if on the event being edited), and the ref would be gone by then.
     async runMutation(name, payload, bucketId, request) {
       if (this.pending) return;
-      const editingId = this.event && this.event.id;
+      const identity = this.selectionIdentity;
+      const source = this.selectionSource;
+      const sequence = this.loadSequence;
+      const stillSelected = () =>
+        !this.disposed &&
+        this.selectionIdentity === identity &&
+        this.selectionSource === source &&
+        this.loadSequence === sequence;
       this.pending = name;
       this.error = '';
       try {
         await request();
       } catch (e) {
         console.error(e);
-        this.error = this.requestErrorMessage(e, name);
+        if (stillSelected()) this.error = this.requestErrorMessage(e, name);
         return;
       } finally {
         this.pending = null;
@@ -160,9 +195,14 @@ export default {
 
       // The editor may have been pointed at a different event while the
       // request was in flight; a late response must not act on the new one.
-      if (this.event && this.event.id === editingId) {
+      if (stillSelected()) {
         this.hideModal();
         this.$emit(name, payload);
+      } else if (!this.disposed && this.selectionIdentity === identity) {
+        // A reopened or reloaded draft may have read the event before this
+        // write committed. Invalidate it synchronously and read after the write;
+        // do not close the new editing session or let it submit stale data.
+        this.getEvent();
       }
       // The server did change, so this is reported even after the editor moved
       // on. It carries the bucket, for parents that patch their view in place.
@@ -181,10 +221,33 @@ export default {
       if (modal) modal.hide();
     },
     async getEvent() {
-      if (this.bucket_id && this.event && this.event.id) {
-        this.editedEvent = await this.$aw.getEvent(this.bucket_id, this.event.id);
-      } else {
-        this.editedEvent = null;
+      const source = this.selectionSource;
+      const identity = source.identity;
+      const sequence = ++this.loadSequence;
+      this.editedEvent = null;
+      this.draftIdentity = null;
+      this.draftSource = null;
+      this.error = '';
+      if (!identity || this.disposed) return;
+      const bucketId = this.bucket_id;
+      const eventId = this.event.id;
+      const stillSelected = () =>
+        !this.disposed && this.selectionSource === source && this.loadSequence === sequence;
+      try {
+        const event = await this.$aw.getEvent(bucketId, eventId);
+        if (stillSelected()) {
+          this.editedEvent = event;
+          this.draftIdentity = identity;
+          this.draftSource = source.event;
+        }
+      } catch (e) {
+        if (stillSelected()) {
+          const response = e && e.response;
+          this.error =
+            (response && response.data && response.data.message) ||
+            (e && e.message) ||
+            'Failed to load event.';
+        }
       }
     },
     close() {
