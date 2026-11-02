@@ -88,6 +88,23 @@ export function periodStartDate(date: string, periodLength: string): string {
   return m.startOf(periodLengthConvertMoment(periodLength)).format('YYYY-MM-DD');
 }
 
+// Inclusive [start, end] dates for a named preset, relative to today.
+export function presetRange(preset: string, today = moment()): [string, string] | null {
+  const day = moment(today).startOf('day');
+  const weekStart = moment(periodStartDate(day.format('YYYY-MM-DD'), 'week'));
+  const ranges = {
+    thisWeek: [weekStart, day],
+    lastWeek: [weekStart.clone().subtract(7, 'days'), weekStart.clone().subtract(1, 'day')],
+    thisMonth: [day.clone().startOf('month'), day],
+    lastMonth: [
+      day.clone().subtract(1, 'month').startOf('month'),
+      day.clone().subtract(1, 'month').endOf('month'),
+    ],
+  };
+  const range = ranges[preset];
+  return range ? [range[0].format('YYYY-MM-DD'), range[1].format('YYYY-MM-DD')] : null;
+}
+
 export function timeperiodsAroundTimeperiod(timeperiod: TimePeriod): TimePeriod[] {
   const periods = [];
   for (let i = -15; i <= 15; i++) {

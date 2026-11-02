@@ -79,6 +79,15 @@ div
             aria-label="Shift forward one week"
           )
 
+      label.col-form-label.col-form-label-sm.mb-0 Presets
+      div.btn-group(role="group" aria-label="Date range presets")
+        input.btn.btn-light.btn-sm(
+          v-for="p in presets" :key="p.value"
+          type="button" :value="p.text"
+          :class="{ active: mode === 'range' && preset === p.value }"
+          @click="applyPreset(p.value); $event.target.blur()"
+        )
+
     div.text-right.d-none.d-md-block(v-if="showUpdate")
       b-button.px-2(@click="refresh()", variant="outline-dark", size="sm")
         icon.mr-1(name="sync")
@@ -126,6 +135,8 @@ div
 <script lang="ts">
 import moment from 'moment';
 import 'vue-awesome/icons/sync';
+import { presetRange } from '~/util/timeperiod';
+
 export default {
   name: 'input-timeinterval',
   props: {
@@ -141,6 +152,11 @@ export default {
       type: Boolean,
       default: true,
     },
+    // localStorage key used to remember the chosen interval across reloads; unset means no persistence.
+    persistKey: {
+      type: String,
+      default: null,
+    },
   },
   data() {
     return {
@@ -148,6 +164,13 @@ export default {
       mode: 'last_duration',
       start: null,
       end: null,
+      preset: null,
+      presets: [
+        { value: 'thisWeek', text: 'This week' },
+        { value: 'lastWeek', text: 'Last week' },
+        { value: 'thisMonth', text: 'This month' },
+        { value: 'lastMonth', text: 'Last month' },
+      ],
       lastUpdate: null,
       durations: [
         { seconds: 0.25 * 60 * 60, label: '&frac14;h' },
@@ -198,6 +221,7 @@ export default {
   },
   mounted() {
     this.duration = this.defaultDuration;
+    this.restoreState();
     this.valueChanged();
 
     // We want our lastUpdated text to update every ~500ms
@@ -219,7 +243,47 @@ export default {
       ) {
         this.lastUpdate = moment();
         this.$emit('input', this.value);
+        this.saveState();
       }
+    },
+    saveState() {
+      if (!this.persistKey) return;
+      const { mode, duration, start, end, preset } = this;
+      try {
+        localStorage.setItem(this.persistKey, JSON.stringify({ mode, duration, start, end, preset }));
+      } catch (e) {
+        console.warn('Could not save time interval', e);
+      }
+    },
+    restoreState() {
+      if (!this.persistKey) return;
+      let saved;
+      try {
+        saved = JSON.parse(localStorage.getItem(this.persistKey));
+      } catch (e) {
+        return;
+      }
+      if (!saved) return;
+      if (saved.mode === 'range') {
+        // Presets are recomputed so a saved "This week" rolls forward instead of replaying stale dates
+        const range = saved.preset ? presetRange(saved.preset) : [saved.start, saved.end];
+        if (!range || !range[0]) return;
+        [this.start, this.end] = range;
+        this.preset = saved.preset || null;
+        this.mode = 'range';
+        this.duration = 0;
+      } else if (saved.mode === 'last_duration' && saved.duration > 0) {
+        this.duration = saved.duration;
+      }
+    },
+    applyPreset(preset: string) {
+      const range = presetRange(preset);
+      if (!range) return;
+      [this.start, this.end] = range;
+      this.preset = preset;
+      this.mode = 'range';
+      this.duration = 0;
+      this.valueChanged();
     },
     refresh() {
       const tmpMode = this.mode;
@@ -228,15 +292,18 @@ export default {
       this.valueChanged();
     },
     applyRange() {
+      this.preset = null;
       this.mode = 'range';
       this.duration = 0;
       this.valueChanged();
     },
     applyLastDuration() {
+      this.preset = null;
       this.mode = 'last_duration';
       this.valueChanged();
     },
     setToday() {
+      this.preset = null;
       const today = moment().format('YYYY-MM-DD');
       this.start = today;
       this.end = today;
@@ -246,6 +313,7 @@ export default {
     },
     shiftDays(days: number) {
       if (!this.start) return;
+      this.preset = null;
       const newStart = moment(this.start).add(days, 'days').format('YYYY-MM-DD');
       const newEnd = this.end ? moment(this.end).add(days, 'days').format('YYYY-MM-DD') : null;
       this.start = newStart;
