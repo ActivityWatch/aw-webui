@@ -5,7 +5,7 @@ div
   event-editor(
     v-if="editable"
     :event="editableEvent", :bucket_id="bucket_id",
-    @save="(e) => $emit('save', e)", @delete="removeEvent"
+    @save="(e) => $emit('save', e)", @deleted="removeEvent"
   )
   b-card.event-container(no-block=true)
     span(slot="header")
@@ -178,9 +178,13 @@ export default {
       this.isListExpanded = !this.isListExpanded;
       console.log('List should be expanding: ', this.isListExpanded);
     },
-    removeEvent: function (_event) {
-      // FIXME: Illegal mutation of prop, need to propagate upwards or move into vuex.
-      //this.events = this.events.filter(e => e.id != event.id);
+    removeEvent: function (event, bucketId) {
+      // Only the owner may change the list; forward the confirmed mutation's
+      // bucket, not the current prop (navigation may have happened meanwhile).
+      this.$emit('deleted', event, bucketId);
+      if (bucketId === this.bucket_id && this.editableEvent && this.editableEvent.id === event.id) {
+        this.editableEvent = null;
+      }
     },
   },
 };

@@ -38,7 +38,7 @@ div
 
     vis-timeline(:buckets="[bucket_with_events]", :showRowLabels="false")
 
-    aw-eventlist(:bucket_id="id", @save="updateEvent", :events="events" editable=true)
+    aw-eventlist(:bucket_id="id", @save="updateEvent", @deleted="removeEvent", :events="events" editable=true)
 </template>
 
 <script lang="ts">
@@ -82,6 +82,11 @@ export default {
   },
   watch: {
     daterange: async function () {
+      // Rows from the previous range must not survive a failed load for new dates.
+      // Same-range deletion refreshes call getEvents directly and retain survivors.
+      this.events = [];
+      this.showingMostRecent = false;
+      this.lastEventTime = null;
       await this.getEvents(this.id);
     },
     // The router reuses this component when navigating between buckets, so
@@ -124,29 +129,35 @@ export default {
         end: daterange[1].format(),
       });
       if (requestId !== this.eventsRequestId) return;
-      this.events = bucket.events;
-      this.showingMostRecent = false;
+      let events = bucket.events;
+      let showingMostRecent = false;
+      let lastEventTime = null;
 
       // Stale or imported buckets have nothing in the selected range (#136):
       // fall back to the latest events so the view stays useful for debugging.
+      // Publish only the complete refresh, retaining local rows if fallback fails.
       const hasData = this.bucket.metadata && this.bucket.metadata.end;
-      if (this.events.length == 0 && hasData) {
+      if (events.length == 0 && hasData) {
         try {
           const recent = await this.bucketsStore.getBucketWithEvents({
             id: bucket_id,
             limit: 100,
           });
           if (requestId !== this.eventsRequestId) return;
-          if (recent.events.length > 0) {
-            this.events = recent.events;
+          events = recent.events;
+          if (events.length > 0) {
             // The API returns newest first.
-            this.lastEventTime = recent.events[0].timestamp;
-            this.showingMostRecent = true;
+            lastEventTime = events[0].timestamp;
+            showingMostRecent = true;
           }
         } catch (e) {
           console.warn('[bucket] Failed to load most recent events:', e);
+          return;
         }
       }
+      this.events = events;
+      this.showingMostRecent = showingMostRecent;
+      this.lastEventTime = lastEventTime;
     },
     getEventCount: async function (bucket_id) {
       const requestId = ++this.countRequestId;
@@ -156,9 +167,27 @@ export default {
       // raw response when the body is falsy (a count of 0).
       this.eventcount = typeof count === 'number' ? count : count.data;
     },
+    removeEvent: async function (event, bucketId) {
+      if (bucketId !== this.id) return;
+      this.events = this.events.filter(e => e.id !== event.id);
+      // A previous count response may already include this deletion, even when
+      // its confirmation arrives later. Only a fresh server count is reliable.
+      this.eventcount = '?';
+      // Supersede any pre-delete responses. Reload the current range (including
+      // its recent-events fallback) and the authoritative total, rather than
+      // letting an older snapshot restore the row or count. Keep the local
+      // removal if refreshing fails; the server has already confirmed it.
+      await Promise.all([
+        this.daterange ? this.getEvents(bucketId) : null,
+        this.getEventCount(bucketId),
+      ]).catch(e => console.warn('[bucket] Failed to refresh after deletion:', e));
+    },
     updateEvent: function (event) {
       const i = this.events.findIndex(e => e.id == event.id);
       if (i != -1) {
+        // A refresh started before this save may contain the old event data.
+        // Supersede it so it cannot replace the confirmed edit in either view.
+        this.eventsRequestId++;
         // This is needed instead of this.events[i] because insides of arrays
         // are not reactive in Vue.
         this.$set(this.events, i, event);
