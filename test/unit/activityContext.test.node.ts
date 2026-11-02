@@ -445,3 +445,98 @@ describe('formatActivityContext', () => {
     expect(formatActivityContext(ctx)).toContain('(+5 more');
   });
 });
+
+describe('buildActivityContext — literal application and domain keys', () => {
+  const names = ['constructor', 'toString', '__proto__', 'hasOwnProperty', 'Editor'];
+
+  test.each(names)('%s aggregates repeated durations and distinct local titles', name => {
+    const ctx = build([
+      event(name, 60, { title: 'LOCAL-TITLE-A' }),
+      event(name, 120, { title: 'LOCAL-TITLE-A' }),
+      event(name, 30, { title: 'LOCAL-TITLE-B' }),
+      event(name, 10),
+      event(name, 20, { title: '' }),
+      event('Other', 60),
+    ]);
+    expect(ctx.apps).toEqual([
+      { app: name, duration: 240, share: 0.8, titleCount: 2 },
+      { app: 'Other', duration: 60, share: 0.2, titleCount: 0 },
+    ]);
+    const text = formatActivityContext(ctx);
+    expect(text).toContain(`${name}: 4m`);
+    expect(text).not.toMatch(/LOCAL-TITLE|NaN|Infinity|native code/);
+  });
+
+  test.each(names)('%s is a domain value, not an inherited accumulator', name => {
+    const ctx = build([event('Browser', 300)], {
+      domainEvents: [
+        { duration: 60, data: { $domain: name } },
+        { duration: 120, data: { $domain: name } },
+        { duration: 60, data: { $domain: 'ordinary.invalid' } },
+      ],
+    });
+    expect(ctx.domains).toEqual([
+      { domain: name, duration: 180, share: 0.75 },
+      { domain: 'ordinary.invalid', duration: 60, share: 0.25 },
+    ]);
+    expect(formatActivityContext(ctx)).toContain(`${name}: 3m`);
+    expect(formatActivityContext(ctx)).not.toMatch(/NaN|Infinity|native code/);
+  });
+
+  test('mixed keys preserve limits, truncation accounting and finite shares', () => {
+    const ctx = build(
+      names.flatMap((name, i) => [event(name, (i + 1) * 60), event(name, 60)]),
+      {
+        domainEvents: names.map((name, i) => ({
+          duration: (i + 1) * 60,
+          data: { $domain: name },
+        })),
+        limits: { apps: 2, domains: 2 },
+      }
+    );
+    expect(ctx.apps.map(a => a.app)).toEqual(['Editor', 'hasOwnProperty']);
+    expect(ctx.apps.map(a => a.duration)).toEqual([360, 300]);
+    expect(ctx.domains.map(d => d.domain)).toEqual(['Editor', 'hasOwnProperty']);
+    expect(ctx.truncation.apps).toEqual({ shown: 2, total: 5, otherSeconds: 540 });
+    expect(ctx.truncation.domains).toEqual({ shown: 2, total: 5, otherSeconds: 360 });
+    for (const row of [...ctx.apps, ...ctx.domains]) {
+      expect(Number.isFinite(row.duration)).toBe(true);
+      expect(Number.isFinite(row.share)).toBe(true);
+    }
+  });
+
+  test.each(['private', 'uncategorized'])(
+    '%s filtering withholds reserved keys and all domains',
+    mode => {
+      const ctx = build(
+        [
+          event('__proto__', 60, { title: 'LOCAL-SECRET', category: ['Private', 'Child'] }),
+          event('constructor', 120),
+          event('Editor', 180, { category: ['Work'] }),
+        ],
+        {
+          privacy: {
+            excludeUncategorized: mode === 'uncategorized',
+            privateCategories: mode === 'private' ? [['Private']] : [],
+          },
+          domainEvents: names.map(name => ({ duration: 60, data: { $domain: name } })),
+        }
+      );
+      expect(ctx.domains).toEqual([]);
+      expect(ctx.coverage.activeSeconds).toBe(360);
+      expect(ctx.coverage.exportedSeconds).toBe(mode === 'private' ? 300 : 240);
+      expect(ctx.apps.map(a => a.app)).not.toContain(
+        mode === 'private' ? '__proto__' : 'constructor'
+      );
+      expect(formatActivityContext(ctx)).not.toMatch(/LOCAL-SECRET|NaN|Infinity|native code/);
+    }
+  );
+
+  test('empty inputs remain empty and do not inherit values', () => {
+    const ctx = build([], { domainEvents: [] });
+    expect(ctx.apps).toEqual([]);
+    expect(ctx.domains).toEqual([]);
+    expect(ctx.coverage.exportedSeconds).toBe(0);
+    expect(formatActivityContext(ctx)).not.toMatch(/NaN|Infinity|native code/);
+  });
+});

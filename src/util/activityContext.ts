@@ -379,8 +379,8 @@ export function buildActivityContext(input: BuildContextInput): ActivityContext 
   const exportedSeconds = kept.reduce((sum, e) => sum + (e.duration || 0), 0);
 
   // Apps, with distinct-title counts (the titles themselves stay local).
-  const appDurations: Record<string, number> = {};
-  const appTitles: Record<string, Set<string>> = {};
+  const appDurations: Record<string, number> = Object.create(null);
+  const appTitles: Record<string, Set<string>> = Object.create(null);
   for (const event of kept) {
     const app = event.data?.app || 'unknown';
     appDurations[app] = (appDurations[app] || 0) + (event.duration || 0);
@@ -415,7 +415,7 @@ export function buildActivityContext(input: BuildContextInput): ActivityContext 
   // is on rather than leaking activity the user asked to withhold.
   const privacyFilterActive =
     input.privacy.excludeUncategorized || input.privacy.privateCategories.length > 0;
-  const domainDurations: Record<string, number> = {};
+  const domainDurations: Record<string, number> = Object.create(null);
   if (!privacyFilterActive) {
     for (const event of input.domainEvents || []) {
       const domain = event.data?.$domain;
