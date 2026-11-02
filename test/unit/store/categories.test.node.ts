@@ -2,7 +2,13 @@ import { isEqual } from 'lodash';
 import { setActivePinia, createPinia } from 'pinia';
 
 import { useCategoryStore } from '~/stores/categories';
-import { createMissingParents, defaultCategories, Category } from '~/util/classes';
+import {
+  createMissingParents,
+  defaultCategories,
+  Category,
+  Rule,
+  matchString,
+} from '~/util/classes';
 
 describe('categories store', () => {
   setActivePinia(createPinia());
@@ -524,5 +530,51 @@ describe('import add-on-top via setActiveSets', () => {
     expect(store.active_set_ids).toEqual(['mine', 'shared']);
     store.discardChanges();
     expect(store.get_category(['Dev'])?.rule.regex).toBe('editor');
+  });
+});
+
+describe('categories store: append rule', () => {
+  test.each<Rule>([
+    { type: 'none' },
+    { type: null },
+    { type: 'regex', regex: '' },
+    { type: 'regex', regex: 'browser' },
+  ])('appends a first or additional pattern to %j without matching unrelated titles', rule => {
+    const store = useCategoryStore(createPinia());
+    store.load([{ name: ['Work'], rule }]);
+
+    store.appendClassRule(store.classes[0].id, 'editor\\.exe');
+
+    expect(matchString('editor.exe', store.classes)?.name).toEqual(['Work']);
+    expect(matchString('totally unrelated', store.classes)).toBeNull();
+    expect(matchString('editorXexe', store.classes)).toBeNull();
+    if (rule.regex === 'browser') {
+      expect(matchString('browser', store.classes)?.name).toEqual(['Work']);
+    }
+    expect(store.classes_unsaved_changes).toBe(true);
+    expect(store.classes_for_query[0][1]).toEqual(store.classes[0].rule);
+  });
+
+  test.each([false, true])('retains rule options including ignore_case=%s', ignore_case => {
+    const store = useCategoryStore(createPinia());
+    const options = { ignore_case, select_keys: ['title'], priority: 7, weight: 3 };
+    store.load([{ name: ['Work'], rule: { type: 'regex', regex: '', ...options } }]);
+
+    store.appendClassRule(store.classes[0].id, 'editor');
+
+    expect(store.classes[0].rule).toEqual({ type: 'regex', regex: 'editor', ...options });
+    expect(Boolean(matchString('EDITOR', store.classes))).toBe(ignore_case);
+    expect(matchString('totally unrelated', store.classes)).toBeNull();
+  });
+
+  test.each([' ', 'browser|', '|browser', '.*'])('preserves authored nonempty regex %j', regex => {
+    const store = useCategoryStore(createPinia());
+    store.load([{ name: ['Work'], rule: { type: 'regex', regex } }]);
+
+    store.appendClassRule(store.classes[0].id, 'editor');
+
+    expect(store.classes[0].rule.regex).toBe(regex + '|editor');
+    expect(matchString('editor', store.classes)?.name).toEqual(['Work']);
+    expect(matchString('totally unrelated', store.classes)?.name).toEqual(['Work']);
   });
 });
