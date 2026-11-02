@@ -4,7 +4,10 @@ div
     | {{ $t('timeline.title') }}
     button#timeline-help.btn.btn-link.p-0.ml-2.text-muted(type="button" :aria-label="$t('common.moreInformation')")
       icon(name="question-circle")
-  b-popover(target="timeline-help" triggers="hover focus click blur" placement="bottom" :content="$t('timeline.intro')")
+  b-popover(target="timeline-help" triggers="hover focus click blur" placement="bottom")
+    | {{ $t('timeline.intro') }}
+    p.mb-0.mt-2
+      a(href="https://docs.activitywatch.net/en/latest/watchers.html" target="_blank" rel="noopener") {{ $t('home.documentation') }}
 
   input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration").mb-3
 
