@@ -89,6 +89,7 @@ export default {
       status: null,
       queryTime: null,
       error: '',
+      generateRequest: null,
 
       // Parameters
       maxDepth: 3,
@@ -104,42 +105,64 @@ export default {
   },
   methods: {
     generate: async function () {
-      this.events = await this.fetchEvents();
-      this.graphdata = this.generateGraphData(this.events);
+      // Snapshot query/render options so a later Generate cannot steal this
+      // request's hostname/filters/depth, and so only this invocation may
+      // publish results, errors, or clear the spinner.
+      const request = {
+        hostname: this.queryOptions.hostname,
+        filter_afk: this.queryOptions.filter_afk,
+        start: this.queryOptions.start,
+        stop: this.queryOptions.stop,
+        excludeUncategorized: this.excludeUncategorized,
+        maxDepth: this.maxDepth,
+      };
+      this.generateRequest = request;
+      this.status = 'searching';
+      this.error = '';
+      try {
+        const events = await this.fetchEvents(request);
+        if (this.generateRequest !== request) return;
+        this.events = events;
+        this.graphdata = this.generateGraphData(events, request.maxDepth);
+      } catch (e) {
+        if (this.generateRequest !== request) return;
+        console.error(e);
+        this.error =
+          e?.response?.data?.message ||
+          e?.message ||
+          (typeof e === 'string' ? e : '') ||
+          this.$t('common.requestFailed');
+        this.events = null;
+        this.graphdata = {};
+      } finally {
+        if (this.generateRequest === request) this.status = null;
+      }
     },
-    fetchEvents: async function () {
+    fetchEvents: async function (request) {
       // TODO: use full query (one per day/timeperiod) instead of canonicalEvents
       let query = canonicalEvents({
-        ...useBucketsStore().desktopBucketIds(this.queryOptions.hostname),
-        filter_afk: this.queryOptions.filter_afk,
+        ...useBucketsStore().desktopBucketIds(request.hostname),
+        filter_afk: request.filter_afk,
         categories: this.categoryStore.classes_for_query,
-        filter_categories: this.excludeUncategorized
+        filter_categories: request.excludeUncategorized
           ? this.categoryStore.classes_for_query.map(t => t[0])
           : null,
       });
       query += '; RETURN = events;';
 
       const query_array = querystr_to_array(query);
-      const start = moment(this.queryOptions.start).format();
-      const end = moment(this.queryOptions.stop).format();
+      const start = moment(request.start).format();
+      const end = moment(request.stop).format();
       const timeperiods = [start + '/' + end];
-      try {
-        this.status = 'searching';
-        const time = moment();
-        const data = await getClient().query(timeperiods, query_array);
-        this.error = '';
+      const time = moment();
+      const data = await getClient().query(timeperiods, query_array);
+      if (this.generateRequest === request) {
         this.queryTime = moment().diff(time);
         console.log('done fetching events!');
-        this.events = _.orderBy(data[0], ['timestamp'], ['desc']);
-      } catch (e) {
-        console.error(e);
-        this.error = e?.response?.data?.message || e?.message || this.$t('common.requestFailed');
-      } finally {
-        this.status = null;
       }
-      return this.events;
+      return _.orderBy(data[0], ['timestamp'], ['desc']);
     },
-    generateGraphData: function (events) {
+    generateGraphData: function (events, maxDepth = this.maxDepth) {
       // generate graph data from events
       // iterate through events, and count the number of category transitions
       // for each category, add a node to the graphdata with the group of its parent category
@@ -148,7 +171,7 @@ export default {
 
       // copy all events, slice off category depth deeper than maxDepth
       events = events.map(e => {
-        const $category = e.data.$category.slice(0, this.maxDepth);
+        const $category = e.data.$category.slice(0, maxDepth);
         return { ...e, data: { ...e.data, $category } };
       });
 
