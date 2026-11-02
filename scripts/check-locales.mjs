@@ -21,6 +21,7 @@ const LOCALES = fs
 const ENGLISH_FALLBACK_KEYS = new Set([
   'settings.language.machineTranslatedNote',
   'settings.language.contributeTranslation',
+  'common.moreInformation',
   'common.active',
   'common.inactive',
   'home.trackingIntro',
