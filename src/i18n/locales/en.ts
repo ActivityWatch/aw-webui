@@ -51,6 +51,7 @@ export default {
     export: 'Export',
     open: 'Open',
     more: 'More',
+    moreInformation: 'More information',
     delete: 'Delete',
     enabled: 'Enabled',
     disabled: 'Disabled',
