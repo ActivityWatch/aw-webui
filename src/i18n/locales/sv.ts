@@ -353,6 +353,8 @@ export default {
     firstSeen: 'Först sedd:',
     exportBucketJson: 'Exportera bucket som JSON',
     exportEventsCsv: 'Exportera händelser som CSV',
+    exportRangeHelp:
+      'Tiderna använder din lokala tidszon. Lämna ett fält tomt för ingen gräns; lämna båda tomma för att exportera allt.',
     deleteBucket: 'Ta bort bucket',
     deleteModalTitle: 'Fara!',
     deleteConfirm: 'Är du säker på att du vill ta bort bucket "{id}"?',

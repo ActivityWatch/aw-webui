@@ -334,6 +334,8 @@ export default {
     firstSeen: '首次出现：',
     exportBucketJson: '导出存储桶为 JSON',
     exportEventsCsv: '导出事件为 CSV',
+    exportRangeHelp:
+      '时间使用您的本地时区。将任一字段留空表示不限制对应边界；将两者都留空可导出全部事件。',
     deleteBucket: '删除存储桶',
     deleteModalTitle: '危险操作！',
     deleteConfirm: '确定要删除存储桶 "{id}" 吗？',
