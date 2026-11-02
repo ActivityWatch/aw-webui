@@ -81,6 +81,7 @@ export default {
 
       status: null,
       error: '',
+      searchSequence: 0,
 
       // Options
       show_options: false,
@@ -90,25 +91,30 @@ export default {
       },
     };
   },
+  beforeDestroy() {
+    this.searchSequence++;
+  },
   methods: {
     search: async function () {
-      const timeperiods = [
-        moment(this.queryOptions.start).format() + '/' + moment(this.queryOptions.stop).format(),
-      ];
-
-      // Window search query
-      let windowQuery = canonicalEvents({
-        ...useBucketsStore().desktopBucketIds(this.queryOptions.hostname),
-        filter_afk: this.queryOptions.filter_afk,
-        categories: [[['searched'], { type: 'regex', regex: this.pattern, ignore_case: true }]],
-        filter_categories: [['searched']],
-      });
-      windowQuery += '; RETURN = events;';
-      const windowQueryArray = querystr_to_array(windowQuery);
+      const sequence = ++this.searchSequence;
+      // A submission owns its inputs even if the form changes during bucket loading.
+      const pattern = this.pattern;
+      const { hostname, start, stop, filter_afk } = this.queryOptions;
+      this.status = 'searching';
+      this.error = '';
 
       try {
-        this.status = 'searching';
-        this.error = '';
+        const timeperiods = [moment(start).format() + '/' + moment(stop).format()];
+
+        // Window search query
+        let windowQuery = canonicalEvents({
+          ...useBucketsStore().desktopBucketIds(hostname),
+          filter_afk,
+          categories: [[['searched'], { type: 'regex', regex: pattern, ignore_case: true }]],
+          filter_categories: [['searched']],
+        });
+        windowQuery += '; RETURN = events;';
+        const windowQueryArray = querystr_to_array(windowQuery);
 
         // Look up browser buckets for this host. A failure here (e.g. the bucket
         // list cannot be loaded) must not block the window-only search.
@@ -116,11 +122,13 @@ export default {
         try {
           const bucketsStore = useBucketsStore();
           await bucketsStore.ensureLoaded();
-          const browserBuckets = bucketsStore.bucketsBrowser(this.queryOptions.hostname);
-          browserQueryArray = browserSearchQuery(browserBuckets, this.pattern);
+          const browserBuckets = bucketsStore.bucketsBrowser(hostname);
+          browserQueryArray = browserSearchQuery(browserBuckets, pattern);
         } catch (e) {
           console.error('Failed to load browser buckets for search', e);
         }
+
+        if (sequence !== this.searchSequence) return;
 
         // Each source can fail independently (e.g. a browser-only host has no
         // window/AFK buckets). Keep successful matches and report partial failures.
@@ -139,6 +147,7 @@ export default {
               })
             : Promise.resolve(null),
         ]);
+        if (sequence !== this.searchSequence) return;
         this.error = errors.join('; ');
 
         // Every window hit carries the synthetic `searched` category the query
@@ -157,9 +166,11 @@ export default {
         );
       } catch (e) {
         console.error(e);
-        this.error = e.response?.data?.message ?? String(e);
+        if (sequence === this.searchSequence) {
+          this.error = e.response?.data?.message ?? String(e);
+        }
       } finally {
-        this.status = null;
+        if (sequence === this.searchSequence) this.status = null;
       }
     },
     extendByWeek() {
