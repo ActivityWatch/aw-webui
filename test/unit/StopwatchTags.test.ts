@@ -246,10 +246,49 @@ describe('Stopwatch tags editor', () => {
     }
   );
 
+  test('shows and clears legacy string tags without changing the historical event', async () => {
+    const past = { ...timer(), data: { ...timer().data, tags: 'work, meeting' } };
+    const { wrapper, aw } = editor(past);
+    await openEditor(wrapper);
+    const buttons = Array.from(document.querySelectorAll('.b-form-tag-remove'));
+    expect(buttons).toHaveLength(2);
+    for (const button of buttons) {
+      (button as HTMLButtonElement).click();
+    }
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.save();
+    expect(aw.replaceEvent.mock.calls[0][1].data.tags).toEqual([]);
+    expect(past.data.tags).toBe('work, meeting');
+    wrapper.destroy();
+  });
+
+  test('adding then removing a tag can explicitly clear a legacy string', async () => {
+    const past = { ...timer(), data: { ...timer().data, tags: 'work' } };
+    const { wrapper, aw } = editor(past);
+    await openEditor(wrapper);
+    const input = document.querySelector('[data-testid="event-tags"]') as HTMLInputElement;
+    input.value = 'temporary';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await wrapper.vm.$nextTick();
+    for (const button of Array.from(document.querySelectorAll('.b-form-tag-remove'))) {
+      (button as HTMLButtonElement).click();
+    }
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.save();
+    expect(aw.replaceEvent.mock.calls[0][1].data.tags).toEqual([]);
+    expect(past.data.tags).toBe('work');
+    wrapper.destroy();
+  });
+
   test('an explicit tag edit replaces a legacy value with an array', async () => {
     const past = { ...timer(), data: { ...timer().data, tags: 'legacy' } };
     const { wrapper, aw } = editor(past);
     await openEditor(wrapper);
+    for (const button of Array.from(document.querySelectorAll('.b-form-tag-remove'))) {
+      (button as HTMLButtonElement).click();
+    }
+    await wrapper.vm.$nextTick();
     const input = document.querySelector('[data-testid="event-tags"]') as HTMLInputElement;
     input.value = 'work';
     input.dispatchEvent(new Event('input', { bubbles: true }));

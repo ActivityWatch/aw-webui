@@ -82,6 +82,7 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
 
 import moment from 'moment';
 import _ from 'lodash';
+import { parseTags } from '~/util/tags';
 
 import 'vue-awesome/icons/times';
 import 'vue-awesome/icons/save';
@@ -172,9 +173,12 @@ export default {
       const savedEvent = _.cloneDeep(this.editedEvent);
       // Edit the array directly: joining and reparsing would split existing
       // tag names containing commas when an unrelated tag is added or removed.
-      // A non-array legacy value (or absent key) has no chips. Keep it until
-      // the user supplies tags, rather than erasing it on an unrelated edit.
-      if (this.editableTags && (Array.isArray(savedEvent.data.tags) || this.tags.length > 0)) {
+      // Show legacy strings as chips, but retain their exact stored value on
+      // unrelated edits. A changed chip array (including clearing it) opts in
+      // to array storage. Unsupported legacy shapes still start with no chips.
+      const originalTags = savedEvent.data.tags;
+      const legacyTags = typeof originalTags === 'string' ? parseTags(originalTags) : [];
+      if (this.editableTags && (Array.isArray(originalTags) || !_.isEqual(this.tags, legacyTags))) {
         savedEvent.data.tags = [...this.tags];
       }
       const bucketId = this.bucket_id;
@@ -264,8 +268,11 @@ export default {
         const event = await this.$aw.getEvent(bucketId, eventId);
         if (stillSelected()) {
           this.editedEvent = event;
-          this.tags = Array.isArray(this.editedEvent.data.tags)
-            ? [...this.editedEvent.data.tags]
+          const tags = this.editedEvent.data.tags;
+          this.tags = Array.isArray(tags)
+            ? [...tags]
+            : typeof tags === 'string'
+            ? parseTags(tags)
             : [];
           this.draftIdentity = identity;
           this.draftSource = source.event;
