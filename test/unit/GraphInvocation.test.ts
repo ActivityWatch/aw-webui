@@ -126,8 +126,11 @@ describe('Graph Generate invocation ownership', () => {
     return { wrapper, old, recent, first, second };
   }
 
-  function nodeIds(wrapper: any): string[] {
-    return (wrapper.vm.graphdata.nodes || []).map((node: { id: string }) => node.id);
+  // Node ids are structural identities, not display strings: the producer keys a
+  // category path by JSON.stringify(path) so `['Work>Code']` and `['Work','Code']`
+  // cannot collide (ActivityWatch/aw-webui#1219). `label`/`title` carry display.
+  function nodeIds(wrapper: any): string[][] {
+    return (wrapper.vm.graphdata.nodes || []).map((node: { id: string }) => JSON.parse(node.id));
   }
 
   test.each(['new-first', 'old-first'])(
@@ -140,7 +143,7 @@ describe('Graph Generate invocation ownership', () => {
         await flush();
         expect(wrapper.vm.queryOptions.hostname).toBe('NEW');
         expect(wrapper.vm.status).toBe('searching');
-        expect(nodeIds(wrapper)).not.toEqual(['OLD']);
+        expect(nodeIds(wrapper)).not.toEqual([['OLD']]);
       }
       recent.resolve([[event('NEW')]]);
       await second;
@@ -151,8 +154,8 @@ describe('Graph Generate invocation ownership', () => {
         await flush();
       }
       expect(wrapper.vm.queryOptions.hostname).toBe('NEW');
-      expect(nodeIds(wrapper)).toEqual(['NEW']);
-      expect(wrapper.find('.graph-data').text()).toContain('"id":"NEW"');
+      expect(nodeIds(wrapper)).toEqual([['NEW']]);
+      expect(wrapper.find('.graph-data').text()).toContain('"id":"[\\"NEW\\"]"');
       expect(wrapper.vm.error).toBe('');
       expect(wrapper.vm.status).toBeNull();
       expect(wrapper.vm.events).toEqual([event('NEW')]);
@@ -169,13 +172,13 @@ describe('Graph Generate invocation ownership', () => {
       await flush();
       expect(wrapper.vm.status).toBe('searching');
       expect(wrapper.text()).toContain('Searching...');
-      expect(nodeIds(wrapper)).not.toEqual(['OLD']);
+      expect(nodeIds(wrapper)).not.toEqual([['OLD']]);
       expect(wrapper.vm.error).toBe('');
       recent.resolve([[event('NEW')]]);
       await second;
       await flush();
       expect(wrapper.vm.status).toBeNull();
-      expect(nodeIds(wrapper)).toEqual(['NEW']);
+      expect(nodeIds(wrapper)).toEqual([['NEW']]);
     }
   );
 
@@ -251,7 +254,7 @@ describe('Graph Generate invocation ownership', () => {
     await generation;
     await flush();
     expect(wrapper.vm.maxDepth).toBe(2);
-    expect(nodeIds(wrapper)).toEqual(['Work']);
+    expect(nodeIds(wrapper)).toEqual([['Work']]);
     expect(wrapper.find('.graph-data').text()).not.toContain('Work>Code');
     expect(wrapper.vm.events).toEqual([submittedEvent]);
     expect(wrapper.vm.status).toBeNull();
@@ -268,7 +271,7 @@ describe('Graph Generate invocation ownership', () => {
     await wrapper.vm.generate();
     await flush();
     expect(wrapper.vm.events).toEqual([event('SUCCESS')]);
-    expect(nodeIds(wrapper)).toEqual(['SUCCESS']);
+    expect(nodeIds(wrapper)).toEqual([['SUCCESS']]);
     expect(wrapper.find('.graph-data').text()).toContain('SUCCESS');
     const generation = wrapper.vm.generate();
     await flush();
@@ -303,12 +306,12 @@ describe('Graph Generate invocation ownership', () => {
     await second;
     await flush();
     expect(wrapper.vm.error).toBe('');
-    expect(nodeIds(wrapper)).toEqual(['RETRY']);
+    expect(nodeIds(wrapper)).toEqual([['RETRY']]);
     expect(wrapper.vm.events).toEqual([event('RETRY')]);
     expect(wrapper.vm.status).toBeNull();
   });
 
-  test('leaves separator-joined category identities unchanged', () => {
+  test('keeps separator-joined category paths as distinct structural identities', () => {
     const wrapper = mountGraph();
     const data = wrapper.vm.generateGraphData([
       {
@@ -322,13 +325,14 @@ describe('Graph Generate invocation ownership', () => {
         data: { $category: ['Work', 'Code'] },
       },
     ]);
-    // Master still joins with '>' so these two arrays collide as one node
-    // and a false self-loop. ActivityWatch/aw-webui#1219 owns that identity
-    // repair; this PR must not absorb it.
-    expect(data.nodes).toHaveLength(1);
-    expect(data.nodes[0].id).toBe('Work>Code');
-    expect(data.nodes[0].value).toBe(180);
-    expect(data.links).toEqual([{ source: 'Work>Code', target: 'Work>Code', value: 1 }]);
+    // #1219 replaced the separator join with a structural identity, so a path
+    // containing the separator is no longer the same node as its split form.
+    expect(data.nodes).toHaveLength(2);
+    expect(data.nodes.map((n: any) => JSON.parse(n.id))).toEqual([['Work>Code'], ['Work', 'Code']]);
+    expect(data.nodes.map((n: any) => n.value)).toEqual([60, 120]);
+    expect(data.nodes[0].label).toBe('Work>Code');
+    expect(data.nodes[1].title).toBe('Work > Code');
+    expect(data.links).toEqual([{ source: data.nodes[0].id, target: data.nodes[1].id, value: 1 }]);
   });
 
   test('empty success completes without nodes or error', async () => {
@@ -369,7 +373,7 @@ describe('Graph Generate invocation ownership', () => {
     await flush();
     expect(wrapper.vm.queryOptions.hostname).toBe('NEW');
     expect(wrapper.text()).toContain('Hostname: NEW');
-    expect(nodeIds(wrapper)).toEqual(['NEW']);
+    expect(nodeIds(wrapper)).toEqual([['NEW']]);
     expect(wrapper.text()).toContain('Found 1 events');
     expect(wrapper.find('b-alert-stub[variant="danger"]').exists()).toBe(false);
     // Verify this selector can detect an error under shallowMount.
