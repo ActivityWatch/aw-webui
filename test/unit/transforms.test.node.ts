@@ -71,6 +71,35 @@ describe('overlappingEvents', () => {
     expect(overlappingEvents(two_empty, two_empty)).toHaveLength(0);
   });
 
+  test.each([false, true])(
+    'empty intervals do not cause quadratic scans (reversed: %s)',
+    reversed => {
+      const count = 64;
+      const spans = Array.from({ length: count }, (_, i) =>
+        ev('2026-10-19T00:00:00Z', 3600, `s${i}`)
+      );
+      const empty = Array.from({ length: count }, (_, i) => ev('2026-10-19T00:30:00Z', 0, `e${i}`));
+      const iterator = Array.prototype[Symbol.iterator];
+      let visits = 0;
+      // Count actual sweep work rather than depending on the machine's speed.
+      const spy = jest.spyOn(Array.prototype, Symbol.iterator).mockImplementation(function* () {
+        const items = iterator.call(this);
+        for (let item = items.next(); !item.done; item = items.next()) {
+          visits++;
+          yield item.value;
+        }
+      });
+      let pairs;
+      try {
+        pairs = reversed ? overlappingEvents(empty, spans) : overlappingEvents(spans, empty);
+      } finally {
+        spy.mockRestore();
+      }
+      expect(pairs).toEqual([]);
+      expect(visits).toBeLessThan(20 * count);
+    }
+  );
+
   test('an empty list yields no pairs, even when the other list is internally overlapping', () => {
     const events = [
       ev('2026-10-19T00:00:00Z', 100, 'A'),

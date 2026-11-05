@@ -92,7 +92,12 @@ export function overlappingEvents(events1, events2): Overlap[] {
   // Compared before sorting, since sorting a copy keeps the caller's lists untouched.
   const same_list = events1 === events2;
 
-  const sorted1 = events1.map(eventBounds).sort((a, b) => a.start_ms - b.start_ms);
+  // Empty/reversed intervals cannot produce pairs. Drop them before the sweep
+  // so they never trigger scans of a large active list without yielding output.
+  const sorted1 = events1
+    .map(eventBounds)
+    .filter(bounds => bounds.start_ms < bounds.end_ms)
+    .sort((a, b) => a.start_ms - b.start_ms);
 
   // Every pair is compared exactly once, so internally overlapping input lists
   // are enumerated exactly instead of only as far as a one-pointer-per-step
@@ -113,7 +118,10 @@ export function overlappingEvents(events1, events2): Overlap[] {
       active1.push(current);
     }
   } else {
-    const sorted2 = events2.map(eventBounds).sort((a, b) => a.start_ms - b.start_ms);
+    const sorted2 = events2
+      .map(eventBounds)
+      .filter(bounds => bounds.start_ms < bounds.end_ms)
+      .sort((a, b) => a.start_ms - b.start_ms);
     const active2: EventBounds[] = [];
     let i = 0;
     let j = 0;
