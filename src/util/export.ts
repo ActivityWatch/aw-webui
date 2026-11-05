@@ -27,6 +27,27 @@ export function neutralizeCsvFormula(value: string): string {
   return CSV_FORMULA_PATTERN.test(value) ? `'${value}` : value;
 }
 
+/** Local midnight of `day` (YYYY-MM-DD) plus `days`: `new Date('YYYY-MM-DD')` would
+ * be midnight UTC, a day shifted by the timezone offset. */
+const localMidnight = (day: string, days: number) => {
+  const [year, month, date] = day.split('-').map(Number);
+  return new Date(year, month - 1, date + days);
+};
+
+/** Query string limiting a bucket export to whole local days, from the start of
+ * `from` to the end of `to` (YYYY-MM-DD); an empty side stays open. */
+export function exportRangeQuery(from: string, to: string): string {
+  const params = new URLSearchParams();
+  if (from) params.set('start', localMidnight(from, 0).toISOString());
+  if (to) params.set('end', localMidnight(to, 1).toISOString());
+  const query = params.toString();
+  return query ? `?${query}` : '';
+}
+
+/** The days of a ranged export, for its file name: `_2026-10-26_2026-10-30`. */
+export const exportRangeSuffix = (from: string, to: string) =>
+  from || to ? `_${from || 'start'}_${to || 'now'}` : '';
+
 /**
  * CSV for the Report view's events: a header row, then one row per event.
  * PapaParse ignores the `columns` option for array rows, so the header has to
