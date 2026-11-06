@@ -126,7 +126,9 @@ describe('release notice in the host', () => {
     createClient();
     const NewReleaseNotification = (await import('~/components/NewReleaseNotification.vue'))
       .default;
-    const wrapper = mount(NewReleaseNotification, {
+    // This test drives visibility directly; release discovery is covered below.
+    // Do not let the mounted network/settings workflow race those transitions.
+    const wrapper = mount({ ...NewReleaseNotification, mounted: jest.fn() }, {
       localVue,
       ...i18n,
       stubs: { icon: true, 'router-link': true },
