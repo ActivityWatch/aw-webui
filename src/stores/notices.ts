@@ -26,7 +26,7 @@ export const useNoticesStore = defineStore('notices', {
     publish(id: string) {
       if (this.ids.includes(id)) return;
       this.ids.push(id);
-      this.unseen.push(id);
+      if (!this.isOpen) this.unseen.push(id);
     },
     withdraw(id: string) {
       this.ids = this.ids.filter(i => i !== id);

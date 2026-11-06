@@ -10,7 +10,7 @@
 
     b-alert(v-if="isFollowUpVisible", variant="success", show)
       | {{ $t('ui.release.disabled') }}
-      | #[router-link(to="/settings" class="alert-link" @click.native="isFollowUpVisible=false") {{ $t('ui.release.settingsPage') }}].
+      | #[router-link(to="/settings" class="alert-link" @click.native="openSettings") {{ $t('ui.release.settingsPage') }}].
       button(type="button", class="close", @click="isFollowUpVisible=false") &times;
 </template>
 
@@ -158,6 +158,10 @@ export default {
       // Want to make sure that the latest release is out for a week to make sure it's well tested
       if (this.latestVersionDate) return moment() >= this.latestVersionDate.add(7, 'days');
       return false;
+    },
+    openSettings() {
+      this.isFollowUpVisible = false;
+      useNoticesStore().close();
     },
     async disableCheck() {
       if (!(await this.saveData({ ...this.data, isEnabled: false }))) return;

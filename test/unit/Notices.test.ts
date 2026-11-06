@@ -27,6 +27,18 @@ describe('notices store', () => {
     expect(notices.hasUnseen).toBe(true);
   });
 
+  test('a notice arriving while the host is open is already seen', () => {
+    const notices = useNoticesStore();
+    notices.open();
+    notices.publish('release');
+    notices.close();
+    expect(notices.ids).toEqual(['release']);
+    expect(notices.hasUnseen).toBe(false);
+
+    notices.publish('poll');
+    expect(notices.hasUnseen).toBe(true);
+  });
+
   test('withdrawing removes the notice and its unseen mark', () => {
     const notices = useNoticesStore();
     notices.publish('release');
@@ -130,7 +142,10 @@ describe('release notice in the host', () => {
     await wrapper.vm.$nextTick();
     expect(notices.ids).toEqual(['release']);
 
-    vm.isFollowUpVisible = false;
+    notices.open();
+    await wrapper.find('router-link-stub').trigger('click');
+    expect(vm.isFollowUpVisible).toBe(false);
+    expect(notices.isOpen).toBe(false);
     await wrapper.vm.$nextTick();
     expect(notices.ids).toEqual([]);
     wrapper.destroy();
