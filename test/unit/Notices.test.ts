@@ -4,7 +4,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import NoticeBell from '~/components/NoticeBell.vue';
 import NoticeHost from '~/components/NoticeHost.vue';
 import { useNoticesStore } from '~/stores/notices';
-import { createClient } from '~/util/awclient';
+import { createClient, getClient } from '~/util/awclient';
 
 const localVue = createLocalVue();
 localVue.use(BootstrapVue);
@@ -148,6 +148,79 @@ describe('release notice in the host', () => {
     expect(notices.isOpen).toBe(false);
     await wrapper.vm.$nextTick();
     expect(notices.ids).toEqual([]);
+    wrapper.destroy();
+  });
+});
+
+describe('release notice persistence', () => {
+  beforeEach(() => setActivePinia(createPinia()));
+
+  async function mountRelease(currentVersion: string, data: Record<string, any>) {
+    let client;
+    try {
+      client = getClient();
+    } catch {
+      client = createClient();
+    }
+    jest.spyOn(client, 'getInfo').mockResolvedValue({ version: currentVersion } as any);
+    const { useSettingsStore } = await import('~/stores/settings');
+    const settings = useSettingsStore();
+    jest.spyOn(settings, 'ensureLoaded').mockResolvedValue(undefined as any);
+    const update = jest.spyOn(settings, 'update').mockImplementation(async (s: any) => {
+      settings.$patch(s);
+    });
+    settings.$patch({ newReleaseCheckData: data, _storedKeys: ['newReleaseCheckData'] } as any);
+    const NewReleaseNotification = (await import('~/components/NewReleaseNotification.vue'))
+      .default;
+    const wrapper = mount(NewReleaseNotification, {
+      localVue,
+      ...i18n,
+      stubs: { icon: true, 'router-link': true },
+    } as any);
+    await new Promise(resolve => setTimeout(resolve, 20));
+    return { wrapper, update, settings };
+  }
+
+  const future = '2999-01-01T00:00:00Z';
+
+  test('an update not yet opened from the bell is restored after a reload, inside the backoff', async () => {
+    const { wrapper, update } = await mountRelease('v0.1.0', {
+      isEnabled: true,
+      nextCheckTime: future,
+      howOftenToCheck: 86400,
+      timesChecked: 1,
+      pendingVersion: '9.9.9',
+    });
+    expect(useNoticesStore().ids).toEqual(['release']);
+    expect(update).not.toHaveBeenCalled();
+    wrapper.destroy();
+  });
+
+  test('opening the host consumes the pending marker, so the next reload stays quiet', async () => {
+    const { wrapper, settings } = await mountRelease('v0.1.0', {
+      isEnabled: true,
+      nextCheckTime: future,
+      howOftenToCheck: 86400,
+      timesChecked: 1,
+      pendingVersion: '9.9.9',
+    });
+    useNoticesStore().open();
+    await new Promise(resolve => setTimeout(resolve, 20));
+    expect(settings.newReleaseCheckData.pendingVersion).toBeNull();
+    expect(useNoticesStore().ids).toEqual(['release']); // still readable in this session
+    wrapper.destroy();
+  });
+
+  test('a pending update the user has since installed is dropped, not shown', async () => {
+    const { wrapper, settings } = await mountRelease('v9.9.9', {
+      isEnabled: true,
+      nextCheckTime: future,
+      howOftenToCheck: 86400,
+      timesChecked: 1,
+      pendingVersion: '9.9.9',
+    });
+    expect(useNoticesStore().ids).toEqual([]);
+    expect(settings.newReleaseCheckData.pendingVersion).toBeNull();
     wrapper.destroy();
   });
 });

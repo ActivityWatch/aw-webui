@@ -45,6 +45,7 @@ export default {
   },
   computed: {
     ...mapState(useSettingsStore, { data: 'newReleaseCheckData' }),
+    ...mapState(useNoticesStore, { hostOpen: 'isOpen' }),
     hasNotice() {
       return this.isVisible || this.isFollowUpVisible;
     },
@@ -57,6 +58,11 @@ export default {
       const notices = useNoticesStore();
       if (has) notices.publish(NOTICE_ID);
       else notices.withdraw(NOTICE_ID);
+    },
+    // The backoff starts when the user has seen the notice, not when we found it:
+    // until then the update stays pending across reloads instead of vanishing for days.
+    hostOpen(isOpen) {
+      if (isOpen && this.isVisible && this.data?.pendingVersion) this.clearPending();
     },
   },
   async mounted() {
@@ -71,7 +77,9 @@ export default {
     if (!settings._storedKeys.includes('newReleaseCheckData')) {
       if (!(await this.saveData({ ...this.data }))) return;
     }
-    if (this.data && (!this.data.isEnabled || moment() < moment(this.data.nextCheckTime))) return;
+    if (this.data && !this.data.isEnabled) return;
+    if (this.data?.pendingVersion && (await this.restorePending())) return;
+    if (this.data && moment() < moment(this.data.nextCheckTime)) return;
 
     await this.retrieveCurrentVersion();
     await this.retrieveLatestVersion();
@@ -96,9 +104,26 @@ export default {
         timesChecked: isVisible ? 1 : 0,
       };
     }
+    data.pendingVersion = isVisible ? this.latestVersion : null;
     if (await this.saveData(data)) this.isVisible = isVisible;
   },
   methods: {
+    // An update found earlier but never opened from the bell: show it again without
+    // another GitHub request. Drop the marker if the user has upgraded since.
+    async restorePending() {
+      await this.retrieveCurrentVersion();
+      this.latestVersion = this.cleanVersionTag(this.data.pendingVersion);
+      if (this.getHasNewRelease()) {
+        this.isVisible = true;
+        return true;
+      }
+      await this.clearPending();
+      return false;
+    },
+    async clearPending() {
+      // null, not omission: settings.update() deep-merges, so a missing key would survive.
+      await this.saveData({ ...this.data, pendingVersion: null });
+    },
     async saveData(data) {
       if (this.isSaving) return false;
       const settings = useSettingsStore();
@@ -164,7 +189,7 @@ export default {
       useNoticesStore().close();
     },
     async disableCheck() {
-      if (!(await this.saveData({ ...this.data, isEnabled: false }))) return;
+      if (!(await this.saveData({ ...this.data, isEnabled: false, pendingVersion: null }))) return;
       this.isVisible = false;
       this.isFollowUpVisible = true;
     },
