@@ -910,6 +910,13 @@ export default {
       bucketTools: 'Цей розділ ще в розробці',
       timelineExperiment: 'Не готово до production, ще експериментуємо',
     },
+    notices: {
+      title: 'Сповіщення',
+      bell: 'Сповіщення',
+      bellUnseen: 'Сповіщення, нове',
+      close: 'Закрити',
+      empty: 'Наразі нічого нового.',
+    },
     release: {
       newAvailable: 'Доступна нова версія, v{version}, для',
       download: 'завантаження',

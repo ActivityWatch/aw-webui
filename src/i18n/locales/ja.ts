@@ -919,6 +919,13 @@ export default {
       bucketTools: 'このセクションはまだ開発中です',
       timelineExperiment: '本番利用の準備はできておらず、実験中です',
     },
+    notices: {
+      title: 'お知らせ',
+      bell: 'お知らせ',
+      bellUnseen: 'お知らせ、新着あり',
+      close: '閉じる',
+      empty: '今のところ新しいお知らせはありません。',
+    },
     release: {
       newAvailable: '新しいリリース v{version} を',
       download: 'ダウンロード',

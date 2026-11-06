@@ -932,6 +932,13 @@ export default {
       bucketTools: 'Den här sektionen är fortfarande under utveckling',
       timelineExperiment: 'Inte redo för produktion, fortfarande experimentellt',
     },
+    notices: {
+      title: 'Meddelanden',
+      bell: 'Meddelanden',
+      bellUnseen: 'Meddelanden, nytt',
+      close: 'Stäng',
+      empty: 'Inget nytt just nu.',
+    },
     release: {
       newAvailable: 'En ny version, v{version}, finns tillgänglig för',
       download: 'nedladdning',
