@@ -4,7 +4,7 @@
     b-alert(v-if="isVisible", variant="info", show, data-testid="release-notice")
       | {{ $t('ui.release.newAvailable', { version: latestVersion }) }}
       | #[a(href="https://activitywatch.net/downloads/" target="_blank" class="alert-link") {{ $t('ui.release.download') }}],
-      | {{ $t('ui.release.disablePrefix') }} #[a(href="javascript:void(0);" class="alert-link" @click="disableCheck") {{ $t('ui.release.disable') }}]
+      | {{ $t('ui.release.disablePrefix') }} #[button(type="button" class="btn btn-link p-0 align-baseline alert-link" :disabled="isSaving" @click="disableCheck" data-testid="disable-release-check") {{ $t('ui.release.disable') }}]
       | {{ $t('ui.release.disableSuffix') }}
       button(type="button", class="close", @click="isVisible=false") &times;
 
@@ -49,6 +49,9 @@ export default {
     hasNotice() {
       return this.isVisible || this.isFollowUpVisible;
     },
+    releaseIsShown() {
+      return this.hostOpen && this.isVisible;
+    },
   },
   watch: {
     // The bell shows a dot while an update notice is waiting; the notice itself
@@ -61,8 +64,8 @@ export default {
     },
     // The backoff starts when the user has seen the notice, not when we found it:
     // until then the update stays pending across reloads instead of vanishing for days.
-    hostOpen(isOpen) {
-      if (isOpen && this.isVisible && this.data?.pendingVersion) this.clearPending();
+    releaseIsShown(isShown) {
+      if (isShown && this.data?.pendingVersion) this.clearPending(true);
     },
   },
   async mounted() {
@@ -113,6 +116,9 @@ export default {
     async restorePending() {
       await this.retrieveCurrentVersion();
       this.latestVersion = this.cleanVersionTag(this.data.pendingVersion);
+      // A failed lookup is not evidence of an upgrade. Keep the marker and retry
+      // on the next mount, without replacing it through a fresh release check.
+      if (!this.currentVersion) return true;
       if (this.getHasNewRelease()) {
         this.isVisible = true;
         return true;
@@ -120,9 +126,12 @@ export default {
       await this.clearPending();
       return false;
     },
-    async clearPending() {
+    async clearPending(viewed = false) {
       // null, not omission: settings.update() deep-merges, so a missing key would survive.
-      await this.saveData({ ...this.data, pendingVersion: null });
+      const data = { ...this.data, pendingVersion: null };
+      // Upgrade cleanup must not postpone the next check; viewing a notice must.
+      if (viewed) data.nextCheckTime = moment().add(data.howOftenToCheck, 'seconds');
+      await this.saveData(data);
     },
     async saveData(data) {
       if (this.isSaving) return false;

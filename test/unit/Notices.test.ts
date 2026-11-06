@@ -155,14 +155,16 @@ describe('release notice in the host', () => {
 describe('release notice persistence', () => {
   beforeEach(() => setActivePinia(createPinia()));
 
-  async function mountRelease(currentVersion: string, data: Record<string, any>) {
+  async function mountRelease(currentVersion: string | null, data: Record<string, any>) {
     let client;
     try {
       client = getClient();
     } catch {
       client = createClient();
     }
-    jest.spyOn(client, 'getInfo').mockResolvedValue({ version: currentVersion } as any);
+    const info = jest.spyOn(client, 'getInfo');
+    if (currentVersion === null) info.mockRejectedValue(new Error('server unavailable'));
+    else info.mockResolvedValue({ version: currentVersion } as any);
     const { useSettingsStore } = await import('~/stores/settings');
     const settings = useSettingsStore();
     jest.spyOn(settings, 'ensureLoaded').mockResolvedValue(undefined as any);
@@ -208,6 +210,87 @@ describe('release notice persistence', () => {
     await new Promise(resolve => setTimeout(resolve, 20));
     expect(settings.newReleaseCheckData.pendingVersion).toBeNull();
     expect(useNoticesStore().ids).toEqual(['release']); // still readable in this session
+    wrapper.destroy();
+  });
+
+  test('an unknown current version preserves the unread marker until a later reload', async () => {
+    const error = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const { wrapper, settings, update } = await mountRelease(null, {
+      isEnabled: true,
+      nextCheckTime: future,
+      howOftenToCheck: 86400,
+      timesChecked: 1,
+      pendingVersion: '9.9.9',
+    });
+    expect(settings.newReleaseCheckData.pendingVersion).toBe('9.9.9');
+    expect(update).not.toHaveBeenCalled();
+    expect(useNoticesStore().ids).toEqual([]);
+    wrapper.destroy();
+    error.mockRestore();
+  });
+
+  test('a release restored into an already-open host is consumed too', async () => {
+    useNoticesStore().open();
+    const { wrapper, settings } = await mountRelease('v0.1.0', {
+      isEnabled: true,
+      nextCheckTime: future,
+      howOftenToCheck: 86400,
+      timesChecked: 1,
+      pendingVersion: '9.9.9',
+    });
+    expect(settings.newReleaseCheckData.pendingVersion).toBeNull();
+    expect(useNoticesStore().hasUnseen).toBe(false);
+    expect(useNoticesStore().ids).toEqual(['release']);
+    wrapper.destroy();
+  });
+
+  test('reading an overdue notice starts a full backoff from viewing, not discovery', async () => {
+    const { wrapper, settings } = await mountRelease('v0.1.0', {
+      isEnabled: true,
+      nextCheckTime: '2000-01-01T00:00:00Z',
+      howOftenToCheck: 86400,
+      timesChecked: 1,
+      pendingVersion: '9.9.9',
+    });
+    const openedAt = Date.now();
+    useNoticesStore().open();
+    await new Promise(resolve => setTimeout(resolve, 20));
+    const deadline = new Date(settings.newReleaseCheckData.nextCheckTime).getTime();
+    expect(deadline).toBeGreaterThanOrEqual(openedAt + 86400 * 1000);
+    expect(deadline).toBeLessThanOrEqual(Date.now() + 86400 * 1000);
+    expect(settings.newReleaseCheckData.pendingVersion).toBeNull();
+    wrapper.destroy();
+  });
+
+  test('disable is visibly unavailable during the background save, then works', async () => {
+    const { wrapper, settings, update } = await mountRelease('v0.1.0', {
+      isEnabled: true,
+      nextCheckTime: future,
+      howOftenToCheck: 86400,
+      timesChecked: 1,
+      pendingVersion: '9.9.9',
+    });
+    let finishSave!: () => void;
+    update.mockImplementationOnce(async (s: any) => {
+      await new Promise<void>(resolve => {
+        finishSave = resolve;
+      });
+      settings.$patch(s);
+    });
+    useNoticesStore().open();
+    await wrapper.vm.$nextTick();
+    const disable = wrapper.find('[data-testid="disable-release-check"]');
+    expect(disable.exists()).toBe(true);
+    expect(disable.attributes('disabled')).toBeDefined();
+    await disable.trigger('click');
+    expect(update).toHaveBeenCalledTimes(1);
+    finishSave();
+    await new Promise(resolve => setTimeout(resolve, 20));
+    expect(disable.attributes('disabled')).toBeUndefined();
+    await disable.trigger('click');
+    await new Promise(resolve => setTimeout(resolve, 20));
+    expect(settings.newReleaseCheckData.isEnabled).toBe(false);
+    expect(wrapper.text()).toContain('ui.release.disabled');
     wrapper.destroy();
   });
 
