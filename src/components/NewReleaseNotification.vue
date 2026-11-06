@@ -1,6 +1,7 @@
 <template lang="pug">
   div
-    b-alert(v-if="isVisible", variant="info", show)
+    //- Rendered inside the notice host's modal, so it never shifts the page layout.
+    b-alert(v-if="isVisible", variant="info", show, data-testid="release-notice")
       | {{ $t('ui.release.newAvailable', { version: latestVersion }) }}
       | #[a(href="https://activitywatch.net/downloads/" target="_blank" class="alert-link") {{ $t('ui.release.download') }}],
       | {{ $t('ui.release.disablePrefix') }} #[a(href="javascript:void(0);" class="alert-link" @click="disableCheck") {{ $t('ui.release.disable') }}]
@@ -20,10 +21,12 @@ import semver from 'semver';
 import { mapState } from 'pinia';
 
 import { useSettingsStore, LONG_BACKOFF_PERIOD, SHORT_BACKOFF_PERIOD } from '~/stores/settings';
+import { useNoticesStore } from '~/stores/notices';
 import { getClient } from '~/util/awclient';
 
 // After reminding the user every SHORT_BACKOFF_PERIOD days for BACKOFF_THRESHOLD times, switch to LONG_BACKOFF_PERIOD
 const BACKOFF_THRESHOLD = 5;
+const NOTICE_ID = 'release';
 
 export default {
   name: 'new-release-notification',
@@ -42,6 +45,19 @@ export default {
   },
   computed: {
     ...mapState(useSettingsStore, { data: 'newReleaseCheckData' }),
+    hasNotice() {
+      return this.isVisible || this.isFollowUpVisible;
+    },
+  },
+  watch: {
+    // The bell shows a dot while an update notice is waiting; the notice itself
+    // only appears when the user opens the host from the bell. The follow-up
+    // confirmation counts too, so the host never says "nothing new" next to it.
+    hasNotice(has) {
+      const notices = useNoticesStore();
+      if (has) notices.publish(NOTICE_ID);
+      else notices.withdraw(NOTICE_ID);
+    },
   },
   async mounted() {
     const settings = useSettingsStore();
