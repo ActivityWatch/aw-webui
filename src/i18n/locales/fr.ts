@@ -99,6 +99,11 @@ export default {
       groupGranularity: 'Regrouper les événements courts (secondes)',
       groupGranularityHelp:
         'Regroupe les événements courts consécutifs en groupes de cette durée. La valeur 0 désactive le regroupement. Le filtre de durée de la chronologie reste indépendant et retire les événements avant le regroupement.',
+      timeFormat: 'Format de l’heure',
+      timeFormat24h: '24 heures (13:00)',
+      timeFormat12h: '12 heures (1:00 PM)',
+      timeFormatHelp:
+        'Comment les heures sont affichées sur l’axe de la chronologie et dans les infobulles des événements.',
     },
     landingPage: {
       title: 'Page d’accueil',

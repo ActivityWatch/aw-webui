@@ -6,6 +6,7 @@ import { SavedQuery } from '~/util/savedQueries';
 import { AlertGoal, cleanAlertGoals } from '~/util/alerts';
 import { View, defaultViews } from '~/stores/views';
 import type { PrivacyFilterRule } from '~/util/privacyFilters';
+import type { TimelineTimeFormat } from '~/util/timelineTimeFormat';
 import { cloneDeep, isEqual } from 'lodash';
 import { AppLocale, i18n, isAppLocale, setAppLocale } from '~/i18n';
 
@@ -39,6 +40,7 @@ interface State {
   startOfWeek: string;
   durationDefault: number;
   timelineGroupGranularity: number;
+  timelineTimeFormat: TimelineTimeFormat;
   useColorFallback: boolean;
   landingpage: string;
   theme: 'light' | 'dark' | 'auto';
@@ -103,6 +105,7 @@ export const useSettingsStore = defineStore('settings', {
     startOfWeek: 'Monday',
     durationDefault: 4 * 60 * 60,
     timelineGroupGranularity: 0,
+    timelineTimeFormat: '24h',
     useColorFallback: false,
     landingpage: '/home',
 
