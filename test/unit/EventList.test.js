@@ -61,6 +61,22 @@ describe('EventList', () => {
     expect(wrapper.vm.displayed_events).toHaveLength(200);
   });
 
+  test('saving a later event with Vue.set preserves paging', async () => {
+    const state = localVue.observable({ events: makeEvents(250) });
+    const wrapper = mountList(250);
+    await wrapper.setProps({ events: state.events });
+    await wrapper.find('button.show-more').trigger('click');
+    const updatedEvent = { ...state.events[150], data: { title: 'edited event' } };
+
+    // Bucket.updateEvent replaces an entry in its reactive array with $set.
+    localVue.set(state.events, 150, updatedEvent);
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.vm.displayed_events).toHaveLength(200);
+    expect(wrapper.vm.displayed_events[150]).toBe(updatedEvent);
+    wrapper.destroy();
+  });
+
   test('paging resets when events prop changes', async () => {
     const wrapper = mountList(250);
     wrapper.vm.showMore();
