@@ -62,12 +62,11 @@ export default {
         //theme === 'dark' ? document.querySelector('head').appendChild(style) : '';
       }
     }
-    this.loaded = true;
-  },
-
-  mounted: async function () {
+    // Server info also runs the query-capability probe, and the views query
+    // the server as soon as they mount — so fetch it before rendering them.
     const serverStore = useServerStore();
     await serverStore.getInfo();
+    this.loaded = true;
   },
 };
 </script>

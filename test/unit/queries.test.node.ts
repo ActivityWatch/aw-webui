@@ -82,6 +82,10 @@ import {
 } from '~/queries';
 import type { DesktopQueryParams, MultiQueryParams } from '~/queries';
 import type { Rule } from '~/util/classes';
+import {
+  MERGE_SUBWATCHER_FIELDS_PROBE_QUERY,
+  setSupportsMergeSubwatcherFields,
+} from '~/util/serverCapabilities';
 
 // Convert ActivityWatch (?i) patterns to JS RegExp with i flag for testing.
 // AW server uses Python-style (?i) inline flag; JS uses RegExp 'i' flag instead.
@@ -769,5 +773,91 @@ describe('browserOnlyQuery', () => {
     const stripped = joined.replace(/"[^"]*"/g, '""');
     expect(stripped).not.toMatch(/\/\//);
     expect(stripped).not.toMatch(/\/\*/);
+  });
+});
+
+describe('canonicalEvents URL enrichment via merge_subwatcher_fields', () => {
+  const baseParams = {
+    bid_window: 'aw-watcher-window_testhost',
+    bid_afk: 'aw-watcher-afk_testhost',
+    filter_afk: true,
+    include_audible: false,
+    categories: [],
+    filter_categories: [],
+  };
+
+  beforeEach(() => setSupportsMergeSubwatcherFields(true));
+  afterEach(() => setSupportsMergeSubwatcherFields(false));
+
+  test('emits merge_subwatcher_fields when browser buckets are present', () => {
+    const query = canonicalEvents({
+      ...baseParams,
+      bid_browsers: ['aw-watcher-web-chrome_testhost'],
+    });
+    expect(query).toContain(
+      'events = merge_subwatcher_fields(events, exclude_keyvals(browser_events, "incognito", [true]), ["url"], "base_wins");'
+    );
+  });
+
+  test('merge call runs BEFORE the stopwatch union and before categorize', () => {
+    const query = canonicalEvents({
+      ...baseParams,
+      bid_browsers: ['aw-watcher-web-chrome_testhost'],
+      bid_stopwatch: 'aw-stopwatch_testhost',
+      categories: [[['Work'], { type: 'regex', regex: 'github' }]],
+    });
+    const stopwatchIdx = query.indexOf('events = union_no_overlap(stopwatch_events, events);');
+    const mergeIdx = query.indexOf('events = merge_subwatcher_fields(');
+    const categorizeIdx = query.indexOf('events = categorize(');
+    const splitIdx = query.indexOf('events = split_url_events(events);');
+    expect(splitIdx).toBeGreaterThan(mergeIdx);
+    expect(splitIdx).toBeLessThan(stopwatchIdx);
+    expect(stopwatchIdx).toBeGreaterThan(0);
+    // merge must happen BEFORE the stopwatch union to avoid splitting user-tracked stopwatch time
+    expect(mergeIdx).toBeGreaterThan(0);
+    expect(mergeIdx).toBeLessThan(stopwatchIdx);
+    expect(categorizeIdx).toBeGreaterThan(mergeIdx);
+  });
+
+  test('omits browser enrichment when categorization is disabled', () => {
+    const query = canonicalEvents({
+      ...baseParams,
+      bid_browsers: ['aw-watcher-web-chrome_testhost'],
+      categories: null,
+    });
+    expect(query).not.toContain('merge_subwatcher_fields');
+    expect(query).not.toContain('events = categorize(');
+  });
+
+  test('omits merge_subwatcher_fields when the server lacks the function', () => {
+    setSupportsMergeSubwatcherFields(false);
+    const query = canonicalEvents({
+      ...baseParams,
+      bid_browsers: ['aw-watcher-web-chrome_testhost'],
+    });
+    expect(query).not.toContain('merge_subwatcher_fields');
+  });
+
+  test('omits merge_subwatcher_fields when no browser buckets configured', () => {
+    const query = canonicalEvents(baseParams);
+    expect(query).not.toContain('merge_subwatcher_fields');
+  });
+
+  test('omits merge_subwatcher_fields for Android queries', () => {
+    const query = canonicalEvents({
+      bid_android: 'aw-watcher-android_device',
+      categories: [],
+      filter_categories: [],
+    });
+    expect(query).not.toContain('merge_subwatcher_fields');
+  });
+
+  // aw-server answers any program without a `RETURN` statement with
+  // `EmptyQuery` (HTTP 400), whether or not the called function exists. A probe
+  // missing the RETURN therefore reports "unsupported" on every server and
+  // silently disables the enrichment this PR adds.
+  test('capability probe query returns a value', () => {
+    expect(MERGE_SUBWATCHER_FIELDS_PROBE_QUERY).toMatch(/RETURN\s*=/);
+    expect(MERGE_SUBWATCHER_FIELDS_PROBE_QUERY).toContain('merge_subwatcher_fields');
   });
 });
