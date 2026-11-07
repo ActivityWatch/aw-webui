@@ -61,12 +61,9 @@ div
         b-dropdown.kebab-dropdown(variant="outline-secondary", toggle-class="border-0", size="sm", right, no-caret, boundary="window", :title="$t('common.more')")
           template(v-slot:button-content)
             icon(name="ellipsis-v")
-          b-dropdown-item(@click="export_bucket_json(bucket.id)", :title="$t('buckets.exportBucketJson')")
+          b-dropdown-item(@click="open_export(bucket.id)", :title="$t('buckets.exportBucket')")
             icon.mr-1(name="download")
-            | {{ $t('buckets.exportBucketJson') }}
-          b-dropdown-item(@click="export_csv(bucket.id)", :title="$t('buckets.exportEventsCsv')")
-            icon.mr-1(name="download")
-            | {{ $t('buckets.exportEventsCsv') }}
+            | {{ $t('buckets.exportBucket') }}
           b-dropdown-divider
           b-dropdown-item-button(@click="openDeleteBucketModal(bucket.id)", :title="$t('buckets.deleteBucket')", button-class="text-danger")
             icon.mr-1(name="trash")
@@ -138,15 +135,19 @@ div
         | {{ $t('buckets.importHelpNew') }}
     b-card(:header="$t('buckets.exportBuckets')")
       p.small.text-muted {{ $t('buckets.exportHelp') }}
-      b-button(@click="export_all_buckets_json()",
-               :title="$t('buckets.exportAllJson')",
+      b-button(@click="open_export(null)",
+               :title="$t('buckets.exportAll')",
                :disabled="exporting",
                variant="outline-secondary")
         b-spinner.mr-1(v-if="exporting", small)
         icon.mr-1(v-else, name="download")
-        | {{ exporting ? $t('buckets.exporting') : $t('buckets.exportAllJson') }}
+        | {{ exporting ? $t('buckets.exporting') : $t('buckets.exportAll') }}
       b-alert.mt-2(v-if="export_error", variant="danger", show, dismissible, @dismissed="export_error = null")
         | {{ export_error }}
+
+  aw-export-dialog(:visible="export_dialog_open", :bucket-id="export_bucket",
+                   :initial-from="export_from", :initial-to="export_to",
+                   @export="run_export", @close="export_dialog_open = false")
 
   hr
 
@@ -263,7 +264,13 @@ import moment from 'moment';
 import { useServerStore } from '~/stores/server';
 import { useBucketsStore } from '~/stores/buckets';
 import { getStoredApiToken } from '~/util/awclient';
-import { androidExportFromUrl, downloadBlob } from '~/util/export';
+import {
+  androidExportFromUrl,
+  downloadBlob,
+  exportRangeQuery,
+  exportRangeSuffix,
+} from '~/util/export';
+import ExportDialog from '~/components/ExportDialog.vue';
 import { compact_relative_time } from '~/util/time';
 
 // NOTE: keep this out of the component's `methods`. The global
@@ -301,6 +308,7 @@ export default {
   components: {
     'aw-bucket-merge': () => import('~/components/BucketMerge.vue'),
     'aw-bucket-validate': () => import('~/components/BucketValidate.vue'),
+    'aw-export-dialog': ExportDialog,
   },
   data() {
     return {
@@ -319,11 +327,24 @@ export default {
       delete_host_reconcile_ids: [] as string[],
       export_inflight: 0,
       export_error: null as string | null,
+      // The export dialog: which bucket (null: all buckets), and the last range
+      // used, offered again while the page stays open (YYYY-MM-DD, local days).
+      export_dialog_open: false,
+      export_bucket: null as string | null,
+      export_from: '',
+      export_to: '',
     };
   },
   computed: {
     exporting() {
       return this.export_inflight > 0;
+    },
+    // Every export of the page, JSON and CSV, takes the chosen days.
+    export_query(): string {
+      return exportRangeQuery(this.export_from, this.export_to);
+    },
+    export_suffix(): string {
+      return exportRangeSuffix(this.export_from, this.export_to);
     },
     deleteHostModalTitle() {
       if (this.delete_host_selected) {
@@ -501,11 +522,31 @@ export default {
     },
 
     async export_bucket_json(bucketId: string) {
-      await this.export_json(`/0/buckets/${bucketId}/export`, `aw-bucket-export-${bucketId}.json`);
+      await this.export_json(
+        `/0/buckets/${bucketId}/export${this.export_query}`,
+        `aw-bucket-export-${bucketId}${this.export_suffix}.json`
+      );
     },
 
     async export_all_buckets_json() {
-      await this.export_json('/0/export', 'aw-buckets-export.json');
+      await this.export_json(
+        `/0/export${this.export_query}`,
+        `aw-buckets-export${this.export_suffix}.json`
+      );
+    },
+
+    open_export(bucketId: string | null) {
+      this.export_bucket = bucketId;
+      this.export_dialog_open = true;
+    },
+
+    async run_export({ format, from, to }: { format: string; from: string; to: string }) {
+      this.export_from = from;
+      this.export_to = to;
+      this.export_dialog_open = false;
+      if (this.export_bucket === null) await this.export_all_buckets_json();
+      else if (format === 'csv') await this.export_csv(this.export_bucket);
+      else await this.export_bucket_json(this.export_bucket);
     },
 
     async export_json(path: string, filename: string) {
@@ -534,8 +575,8 @@ export default {
     },
 
     async export_csv(bucketId: string) {
-      const filename = `aw-events-export-${bucketId}.csv`;
-      const path = `/0/buckets/${encodeURIComponent(bucketId)}/export/csv`;
+      const filename = `aw-events-export-${bucketId}${this.export_suffix}.csv`;
+      const path = `/0/buckets/${encodeURIComponent(bucketId)}/export/csv${this.export_query}`;
       const url = `${this.$aw.req.defaults.baseURL || ''}${path}`;
       // Android WebView: native URL download so the CSV never enters JS memory.
       if (androidExportFromUrl(url, filename)) {
