@@ -97,13 +97,17 @@ import moment from 'moment';
 import { mapState } from 'pinia';
 import { useServerStore } from '~/stores/server';
 import { useBucketsStore } from '~/stores/buckets';
+import { useSettingsStore } from '~/stores/settings';
 import { IBucket } from '~/util/interfaces';
 
 // "Support ActivityWatch" nudge — engagement-gated, dismissable, never modal.
 // Shown only to clearly-engaged users so casual/new users are never nagged.
 // All computation stays local; the app phones home nothing.
 const SUPPORTER_NUDGE_DISMISS_KEY = 'aw-supporter-nudge-dismissed-until';
-const SUPPORTER_FLAG_KEY = 'aw-supporter'; // honor-system "I already support" flag
+// Legacy honor-system "I already support" flag. The real flag now lives in the
+// server settings store (`supporter`), so every browser and the desktop clients
+// agree; this key is still honoured for users who set it before that existed.
+const SUPPORTER_FLAG_KEY = 'aw-supporter';
 const SNOOZE_DAYS = 90;
 
 // Signal 1 — install tenure.
@@ -185,6 +189,13 @@ export default {
   methods: {
     async evaluateSupporterNudge(): Promise<void> {
       try {
+        // The supporter flag is a server setting, so load settings before
+        // deciding. Best-effort: a failed load just falls back to the legacy
+        // localStorage flag in isSupporter().
+        await useSettingsStore()
+          .ensureLoaded()
+          .catch(() => undefined);
+
         if (this.isSupporterNudgeSnoozed() || this.isSupporter()) return;
 
         const bucketsStore = useBucketsStore();
@@ -228,6 +239,11 @@ export default {
     },
 
     isSupporter(): boolean {
+      try {
+        if (useSettingsStore().supporter) return true;
+      } catch {
+        // No active store (e.g. an isolated unit test) — use the legacy flag.
+      }
       try {
         return localStorage.getItem(SUPPORTER_FLAG_KEY) === 'true';
       } catch {
