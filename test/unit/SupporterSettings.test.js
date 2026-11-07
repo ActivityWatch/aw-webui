@@ -212,6 +212,8 @@ describe('SupporterSettings', () => {
     await wrapper.vm.$nextTick();
 
     expect(server.supporter).toBeUndefined();
+    expect(store.supporter).toBe(false);
+    expect(wrapper.vm.supporter).toBe(false);
     expect(wrapper.find('[role="alert"]').text()).toContain('Failed to save settings');
     expect(wrapper.find('[role="alert"]').text()).toContain('connection lost');
     wrapper.destroy();
