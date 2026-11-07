@@ -31,45 +31,25 @@ jobs:
         chmod +x "$RUNNER_TEMP/cml"
         echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
 
-    # Doesn't work for fetching artifacts from separate workflows
-    #- name: Download screenshots
-    #  uses: actions/download-artifact@v2
-    #  with:
-    #    name: screenshots
-    #    path: screenshots
-
-    - name: 'Download artifact'
+    # Link GitHub's existing archives instead of publishing each image to
+    # CML's deprecated upload service. No untrusted archive extraction needed.
+    - name: List screenshot artifacts
       uses: actions/github-script@v9
+      env:
+        SCREENSHOT_RUN_ID: ${{ github.event.workflow_run.id }}
       with:
         script: |
-          var fs = require('fs');
-          var child_process = require('child_process');
-          var artifacts = await github.rest.actions.listWorkflowRunArtifacts({
-             owner: context.repo.owner,
-             repo: context.repo.repo,
-             run_id: ${{ github.event.workflow_run.id }},
+          const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            run_id: Number(process.env.SCREENSHOT_RUN_ID),
+            per_page: 100,
           });
-          var matchingArtifacts = artifacts.data.artifacts.filter((artifact) => {
-            return artifact.name.startsWith("screenshots-");
-          });
-
-          for (const artifact of matchingArtifacts) {
-            var download = await github.rest.actions.downloadArtifact({
-               owner: context.repo.owner,
-               repo: context.repo.repo,
-               artifact_id: artifact.id,
-               archive_format: 'zip',
-            });
-            fs.writeFileSync(`${{github.workspace}}/${artifact.name}.zip`, Buffer.from(download.data));
-            // Unzip the artifact
-            child_process.execSync(`unzip -d screenshots ${artifact.name}.zip`, {cwd: process.env.GITHUB_WORKSPACE});
-            // Remove the zip file
-            fs.unlinkSync(`${{github.workspace}}/${artifact.name}.zip`);
-          }
+          require('fs').writeFileSync('screenshot-artifacts.json', JSON.stringify(artifacts));
 
     - name: Compose comment
       env:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        SCREENSHOT_RUN_ID: ${{ github.event.workflow_run.id }}
       run: |
         python3 .github/compose_screenshot_comment.py > comment.md
     - name: Post screenshots in commit comment
