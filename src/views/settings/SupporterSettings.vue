@@ -27,18 +27,26 @@ function isLegacySupporter(): boolean {
 
 export default {
   name: 'SupporterSettings',
+  data() {
+    return { saveQueue: Promise.resolve(), legacySupporter: isLegacySupporter() };
+  },
   computed: {
     supporter: {
       get(): boolean {
-        return !!useSettingsStore().supporter || isLegacySupporter();
+        return !!useSettingsStore().supporter || this.legacySupporter;
       },
       set(v: boolean) {
+        this.legacySupporter = false;
         try {
           localStorage.removeItem(LEGACY_SUPPORTER_KEY);
         } catch {
           // localStorage unavailable — nothing to clear.
         }
-        useSettingsStore().update({ supporter: v });
+        // Each update reloads the store after saving. Keep toggle writes in
+        // selection order so an earlier reload cannot overwrite the last choice.
+        this.saveQueue = this.saveQueue
+          .then(() => useSettingsStore().update({ supporter: v }))
+          .catch(error => console.error('Could not save supporter preference', error));
       },
     },
   },
