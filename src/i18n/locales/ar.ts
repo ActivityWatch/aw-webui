@@ -905,6 +905,13 @@ export default {
       bucketTools: 'هذا القسم لا يزال قيد التطوير',
       timelineExperiment: 'غير جاهز للإنتاج، لا يزال قيد التجربة',
     },
+    notices: {
+      title: 'الإشعارات',
+      bell: 'الإشعارات',
+      bellUnseen: 'الإشعارات، جديد',
+      close: 'إغلاق',
+      empty: 'لا جديد الآن.',
+    },
     release: {
       newAvailable: 'يتوفر إصدار جديد، v{version}، لـ',
       download: 'التنزيل',

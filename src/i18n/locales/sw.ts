@@ -926,6 +926,13 @@ export default {
       bucketTools: 'Sehemu hii bado ipo chini ya maendeleo',
       timelineExperiment: 'Haiko tayari kwa uzalishaji, bado inafanywa majaribio',
     },
+    notices: {
+      title: 'Arifa',
+      bell: 'Arifa',
+      bellUnseen: 'Arifa, mpya',
+      close: 'Funga',
+      empty: 'Hakuna jipya kwa sasa.',
+    },
     release: {
       newAvailable: 'Toleo jipya, v{version}, linapatikana kwa',
       download: 'kupakua',

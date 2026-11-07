@@ -914,6 +914,13 @@ export default {
       bucketTools: 'Dieser Bereich befindet sich noch in Entwicklung',
       timelineExperiment: 'Noch nicht produktionsreif, wird noch erprobt',
     },
+    notices: {
+      title: 'Hinweise',
+      bell: 'Hinweise',
+      bellUnseen: 'Hinweise, neu',
+      close: 'Schließen',
+      empty: 'Gerade nichts Neues.',
+    },
     release: {
       newAvailable: 'Eine neue Version, v{version}, ist verfügbar zum',
       download: 'Download',

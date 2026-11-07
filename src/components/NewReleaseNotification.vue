@@ -1,15 +1,16 @@
 <template lang="pug">
   div
-    b-alert(v-if="isVisible", variant="info", show)
+    //- Rendered inside the notice host's modal, so it never shifts the page layout.
+    b-alert(v-if="isVisible", variant="info", show, data-testid="release-notice")
       | {{ $t('ui.release.newAvailable', { version: latestVersion }) }}
       | #[a(href="https://activitywatch.net/downloads/" target="_blank" class="alert-link") {{ $t('ui.release.download') }}],
-      | {{ $t('ui.release.disablePrefix') }} #[a(href="javascript:void(0);" class="alert-link" @click="disableCheck") {{ $t('ui.release.disable') }}]
+      | {{ $t('ui.release.disablePrefix') }} #[button(type="button" class="btn btn-link p-0 align-baseline alert-link" :disabled="isSaving" @click="disableCheck" data-testid="disable-release-check") {{ $t('ui.release.disable') }}]
       | {{ $t('ui.release.disableSuffix') }}
       button(type="button", class="close", @click="isVisible=false") &times;
 
     b-alert(v-if="isFollowUpVisible", variant="success", show)
       | {{ $t('ui.release.disabled') }}
-      | #[router-link(to="/settings" class="alert-link" @click.native="isFollowUpVisible=false") {{ $t('ui.release.settingsPage') }}].
+      | #[router-link(to="/settings" class="alert-link" @click.native="openSettings") {{ $t('ui.release.settingsPage') }}].
       button(type="button", class="close", @click="isFollowUpVisible=false") &times;
 </template>
 
@@ -20,10 +21,12 @@ import semver from 'semver';
 import { mapState } from 'pinia';
 
 import { useSettingsStore, LONG_BACKOFF_PERIOD, SHORT_BACKOFF_PERIOD } from '~/stores/settings';
+import { useNoticesStore } from '~/stores/notices';
 import { getClient } from '~/util/awclient';
 
 // After reminding the user every SHORT_BACKOFF_PERIOD days for BACKOFF_THRESHOLD times, switch to LONG_BACKOFF_PERIOD
 const BACKOFF_THRESHOLD = 5;
+const NOTICE_ID = 'release';
 
 export default {
   name: 'new-release-notification',
@@ -42,6 +45,28 @@ export default {
   },
   computed: {
     ...mapState(useSettingsStore, { data: 'newReleaseCheckData' }),
+    ...mapState(useNoticesStore, { hostOpen: 'isOpen' }),
+    hasNotice() {
+      return this.isVisible || this.isFollowUpVisible;
+    },
+    releaseIsShown() {
+      return this.hostOpen && this.isVisible;
+    },
+  },
+  watch: {
+    // The bell shows a dot while an update notice is waiting; the notice itself
+    // only appears when the user opens the host from the bell. The follow-up
+    // confirmation counts too, so the host never says "nothing new" next to it.
+    hasNotice(has) {
+      const notices = useNoticesStore();
+      if (has) notices.publish(NOTICE_ID);
+      else notices.withdraw(NOTICE_ID);
+    },
+    // The backoff starts when the user has seen the notice, not when we found it:
+    // until then the update stays pending across reloads instead of vanishing for days.
+    releaseIsShown(isShown) {
+      if (isShown && this.data?.pendingVersion) this.clearPending(true);
+    },
   },
   async mounted() {
     const settings = useSettingsStore();
@@ -55,7 +80,9 @@ export default {
     if (!settings._storedKeys.includes('newReleaseCheckData')) {
       if (!(await this.saveData({ ...this.data }))) return;
     }
-    if (this.data && (!this.data.isEnabled || moment() < moment(this.data.nextCheckTime))) return;
+    if (this.data && !this.data.isEnabled) return;
+    if (this.data?.pendingVersion && (await this.restorePending())) return;
+    if (this.data && moment() < moment(this.data.nextCheckTime)) return;
 
     await this.retrieveCurrentVersion();
     await this.retrieveLatestVersion();
@@ -80,9 +107,32 @@ export default {
         timesChecked: isVisible ? 1 : 0,
       };
     }
+    data.pendingVersion = isVisible ? this.latestVersion : null;
     if (await this.saveData(data)) this.isVisible = isVisible;
   },
   methods: {
+    // An update found earlier but never opened from the bell: show it again without
+    // another GitHub request. Drop the marker if the user has upgraded since.
+    async restorePending() {
+      await this.retrieveCurrentVersion();
+      this.latestVersion = this.cleanVersionTag(this.data.pendingVersion);
+      // A failed lookup is not evidence of an upgrade. Keep the marker and retry
+      // on the next mount, without replacing it through a fresh release check.
+      if (!this.currentVersion) return true;
+      if (this.getHasNewRelease()) {
+        this.isVisible = true;
+        return true;
+      }
+      await this.clearPending();
+      return false;
+    },
+    async clearPending(viewed = false) {
+      // null, not omission: settings.update() deep-merges, so a missing key would survive.
+      const data = { ...this.data, pendingVersion: null };
+      // Upgrade cleanup must not postpone the next check; viewing a notice must.
+      if (viewed) data.nextCheckTime = moment().add(data.howOftenToCheck, 'seconds');
+      await this.saveData(data);
+    },
     async saveData(data) {
       if (this.isSaving) return false;
       const settings = useSettingsStore();
@@ -143,8 +193,12 @@ export default {
       if (this.latestVersionDate) return moment() >= this.latestVersionDate.add(7, 'days');
       return false;
     },
+    openSettings() {
+      this.isFollowUpVisible = false;
+      useNoticesStore().close();
+    },
     async disableCheck() {
-      if (!(await this.saveData({ ...this.data, isEnabled: false }))) return;
+      if (!(await this.saveData({ ...this.data, isEnabled: false, pendingVersion: null }))) return;
       this.isVisible = false;
       this.isFollowUpVisible = true;
     },

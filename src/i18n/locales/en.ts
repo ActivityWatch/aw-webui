@@ -910,6 +910,13 @@ export default {
       bucketTools: 'This section is still under development',
       timelineExperiment: 'Not ready for production, still experimenting',
     },
+    notices: {
+      title: 'Notices',
+      bell: 'Notices',
+      bellUnseen: 'Notices, new',
+      close: 'Close',
+      empty: 'Nothing new right now.',
+    },
     release: {
       newAvailable: 'A new release, v{version}, is available for',
       download: 'download',

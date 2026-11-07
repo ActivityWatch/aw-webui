@@ -918,6 +918,13 @@ export default {
       bucketTools: 'یہ حصہ ابھی زیر تکمیل ہے',
       timelineExperiment: 'پروڈکشن کے لیے تیار نہیں، ابھی تجربہ جاری ہے',
     },
+    notices: {
+      title: 'اطلاعات',
+      bell: 'اطلاعات',
+      bellUnseen: 'اطلاعات، نئی',
+      close: 'بند کریں',
+      empty: 'ابھی کچھ نیا نہیں۔',
+    },
     release: {
       newAvailable: 'نیا ریلیز v{version} دستیاب ہے:',
       download: 'ڈاؤن لوڈ کریں',

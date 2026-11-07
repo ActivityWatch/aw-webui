@@ -913,6 +913,13 @@ export default {
       bucketTools: 'এই অংশটি এখনও উন্নয়নাধীন',
       timelineExperiment: 'প্রোডাকশনের জন্য প্রস্তুত নয়, এখনও পরীক্ষা চলছে',
     },
+    notices: {
+      title: 'বিজ্ঞপ্তি',
+      bell: 'বিজ্ঞপ্তি',
+      bellUnseen: 'বিজ্ঞপ্তি, নতুন',
+      close: 'বন্ধ করুন',
+      empty: 'এখন নতুন কিছু নেই।',
+    },
     release: {
       newAvailable: 'নতুন রিলিজ v{version} পাওয়া যাচ্ছে:',
       download: 'ডাউনলোড করুন',
