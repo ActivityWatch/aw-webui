@@ -374,6 +374,11 @@ export default {
     multideviceNote: 'بيانات المتصفح وساعة الإيقاف متاحة فقط عند عرض جهاز واحد.',
     deviceBreakdownTooltip:
       'الوقت النشط لكل جهاز. عند تداخل الأجهزة، يُحتسب الوقت مرة واحدة للجهاز المدرج أولاً.',
+    overlapPriority: 'أولوية التداخل',
+    overlapPriorityHint:
+      'الأجهزة الأعلى في القائمة تفوز بحالات التداخل. استخدم الأسهم لتغيير الأولوية.',
+    moveDeviceUp: 'نقل {host} لأعلى',
+    moveDeviceDown: 'نقل {host} لأسفل',
     overlap: 'تداخل',
     timeActive: 'مدة النشاط:',
     timeActiveTooltip:

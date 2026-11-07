@@ -382,6 +382,11 @@ export default {
       'ブラウザとストップウォッチのデータは、単一のデバイスを表示している場合のみ利用できます。',
     deviceBreakdownTooltip:
       'デバイスごとのアクティブ時間。デバイスの時間が重なる場合は、先に表示されているデバイスに一度だけ計上されます。',
+    overlapPriority: '重複時の優先度',
+    overlapPriorityHint:
+      '上に表示されたデバイスが重複時に優先されます。矢印で優先度を変更できます。',
+    moveDeviceUp: '{host} を上に移動',
+    moveDeviceDown: '{host} を下に移動',
     overlap: '重複',
     timeActive: 'アクティブ時間：',
     timeActiveTooltip:

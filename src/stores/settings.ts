@@ -80,6 +80,7 @@ interface State {
 
   // Whether to hide visualizations that lack required data (default: off)
   hideUnsupportedVisualizations: boolean;
+  multideviceHostOrder: string[];
 
   // Set to true if settings loaded
   _loaded: boolean;
@@ -141,6 +142,7 @@ export const useSettingsStore = defineStore('settings', {
     devmode: typeof PRODUCTION === 'undefined' ? true : !PRODUCTION,
     requestTimeout: 30,
     hideUnsupportedVisualizations: false,
+    multideviceHostOrder: [],
 
     _loaded: false,
     _storedKeys: [],
@@ -218,6 +220,7 @@ export const useSettingsStore = defineStore('settings', {
           key == 'active_set_ids' ||
           key == 'saved_queries' ||
           key == 'category_builder_ignored_words' ||
+          key == 'multideviceHostOrder' ||
           key == 'alerts';
         try {
           if (isJsonKey) {

@@ -390,6 +390,11 @@ export default {
       'Les données du navigateur et du chronomètre ne sont disponibles que pour un seul appareil à la fois.',
     deviceBreakdownTooltip:
       "Temps actif par appareil. Lorsque des appareils se chevauchent, le temps est compté une seule fois, pour l'appareil listé en premier.",
+    overlapPriority: 'Priorité de chevauchement',
+    overlapPriorityHint:
+      "Les appareils placés plus haut l'emportent en cas de chevauchement. Utilisez les flèches pour changer la priorité.",
+    moveDeviceUp: 'Monter {host}',
+    moveDeviceDown: 'Descendre {host}',
     overlap: 'chevauchement',
     timeActive: 'Temps actif :',
     timeActiveTooltip:

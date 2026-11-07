@@ -385,6 +385,11 @@ export default {
       'Data ya kivinjari na saa ya kuhesabu zinapatikana tu unapoangalia kifaa kimoja.',
     deviceBreakdownTooltip:
       'Muda amilifu kwa kila kifaa. Vifaa vinapopishana, muda huhesabiwa mara moja, kwa kifaa kilichoorodheshwa kwanza.',
+    overlapPriority: 'Kipaumbele cha mwingiliano',
+    overlapPriorityHint:
+      'Vifaa vilivyo juu hushinda mwingiliano. Tumia mishale kubadilisha kipaumbele.',
+    moveDeviceUp: 'Sogeza {host} juu',
+    moveDeviceDown: 'Sogeza {host} chini',
     overlap: 'mwingiliano',
     timeActive: 'Muda wa kufanya kazi:',
     timeActiveTooltip:

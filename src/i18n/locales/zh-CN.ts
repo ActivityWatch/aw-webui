@@ -363,6 +363,10 @@ export default {
     multideviceNote: '仅在查看单个设备时显示浏览器和秒表数据。',
     deviceBreakdownTooltip:
       '每台设备的活跃时间。设备时间重叠时，该时间只计算一次，计入列表中排在前面的设备。',
+    overlapPriority: '重叠优先级',
+    overlapPriorityHint: '排在前面的设备优先计入重叠时间。使用箭头调整优先级。',
+    moveDeviceUp: '将 {host} 上移',
+    moveDeviceDown: '将 {host} 下移',
     overlap: '重叠',
     timeActive: '活跃时间：',
     timeActiveTooltip:

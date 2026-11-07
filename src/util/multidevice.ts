@@ -232,6 +232,23 @@ export function eligibleMultideviceHosts(
   );
 }
 
+/** Saved priority first; new devices default to desktops, phones, then imports. */
+export function orderMultideviceHosts(
+  hosts: string[],
+  savedOrder: string[],
+  bucketsWindow: (host: string) => string[],
+  bucketsAFK: (host: string) => string[],
+  bucketsAndroid: (host: string) => string[]
+): string[] {
+  const rank = (host: string) => {
+    if (bucketsWindow(host).length && bucketsAFK(host).length) return 0;
+    if (bucketsAndroid(host).some(id => id.startsWith('aw-watcher-android'))) return 1;
+    return 2;
+  };
+  const defaults = [...hosts].sort((a, b) => rank(a) - rank(b) || (a < b ? -1 : a > b ? 1 : 0));
+  return _uniq([...savedOrder.filter(h => hosts.includes(h)), ...defaults]);
+}
+
 export interface HostDuration {
   host: string;
   // Time credited to this host after overlap resolution. The credited

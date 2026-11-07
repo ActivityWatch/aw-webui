@@ -377,6 +377,11 @@ export default {
       'Browser- und Stoppuhrdaten sind nur bei Auswahl eines einzelnen Geräts verfügbar.',
     deviceBreakdownTooltip:
       'Aktive Zeit pro Gerät. Überschneiden sich Geräte, wird die Zeit nur einmal gezählt, für das zuerst aufgeführte Gerät.',
+    overlapPriority: 'Überschneidungspriorität',
+    overlapPriorityHint:
+      'Weiter oben stehende Geräte gewinnen Überschneidungen. Mit den Pfeilen die Priorität ändern.',
+    moveDeviceUp: '{host} nach oben verschieben',
+    moveDeviceDown: '{host} nach unten verschieben',
     overlap: 'Überschneidung',
     timeActive: 'Aktive Zeit:',
     timeActiveTooltip:
