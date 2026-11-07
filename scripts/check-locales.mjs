@@ -17,10 +17,24 @@ const LOCALES = fs
   .filter(name => name.endsWith('.ts'))
   .map(name => name.slice(0, -'.ts'.length))
   .sort((a, b) => a.localeCompare(b, 'en'));
-// These contributor-facing messages intentionally use English fallback until translated.
+// These new messages intentionally use English fallback until translated.
 const ENGLISH_FALLBACK_KEYS = new Set([
   'settings.language.machineTranslatedNote',
   'settings.language.contributeTranslation',
+  'settings.layout.title',
+  'settings.layout.help',
+  'settings.layout.textSize',
+  'settings.layout.textHelp',
+  'settings.layout.automaticWidth',
+  'settings.layout.contentWidth',
+  'settings.layout.widthHelp',
+  'settings.layout.save',
+  'settings.layout.saving',
+  'settings.layout.reset',
+  'settings.layout.saved',
+  'settings.layout.changedElsewhere',
+  'settings.layout.invalid',
+  'settings.layout.saveFailed',
 ]);
 const SRC_DIR = path.join(__dirname, '../src');
 const INDEX_PATH = path.join(SRC_DIR, 'i18n/index.ts');
