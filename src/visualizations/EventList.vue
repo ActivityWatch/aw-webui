@@ -172,8 +172,10 @@ export default {
     },
   },
   watch: {
-    events() {
-      this.limit = this.pageSize;
+    events(events, previousEvents) {
+      if (events !== previousEvents) {
+        this.limit = this.pageSize;
+      }
     },
   },
   methods: {
