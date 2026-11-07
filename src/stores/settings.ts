@@ -23,6 +23,9 @@ function jsonEq(a: any, b: any) {
 }
 
 let settingsLoadPromise: Promise<void> | null = null;
+// Navigation and post-save refreshes may overlap. Only the newest read for
+// each store may apply its snapshot; keep transport bookkeeping out of state.
+const latestSettingsRead = new WeakMap<object, object>();
 
 // Backoffs for NewReleaseNotification
 export const SHORT_BACKOFF_PERIOD = 24 * 60 * 60;
@@ -191,7 +194,10 @@ export const useSettingsStore = defineStore('settings', {
       const client = getClient();
 
       // Fetch from server, fall back to localStorage
+      const read = {};
+      latestSettingsRead.set(this, read);
       const server_settings = await client.get_settings();
+      if (latestSettingsRead.get(this) !== read) return;
 
       // Build a unified map: server value wins, localStorage is fallback.
       // Skip keys that are missing from BOTH sources — otherwise `null` from
