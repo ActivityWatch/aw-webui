@@ -72,6 +72,41 @@ describe('SupporterSettings', () => {
     ).toEqual([true, false]);
   });
 
+  it('preserves selection order after leaving and reopening Settings', async () => {
+    server.supporter = false;
+    let release;
+    const gate = new Promise(resolve => {
+      release = resolve;
+    });
+    post.mockImplementationOnce(async (path, value) => {
+      await gate;
+      server[path.split('/').pop()] = value;
+    });
+
+    wrapper.vm.supporter = true;
+    await flush();
+    expect(post).toHaveBeenCalledWith('/0/settings/supporter', true, expect.anything());
+    const firstSave = wrapper.vm.saveQueue;
+    wrapper.destroy();
+    wrapper = shallowMount(SupporterSettings, {
+      localVue,
+      pinia,
+      i18n,
+      stubs: ['b-form-checkbox'],
+    });
+    wrapper.vm.supporter = false;
+    await flush();
+    release();
+    await Promise.all([firstSave, wrapper.vm.saveQueue]);
+
+    expect(server.supporter).toBe(false);
+    expect(store.supporter).toBe(false);
+    expect(wrapper.vm.supporter).toBe(false);
+    expect(
+      post.mock.calls.filter(([path]) => path === '/0/settings/supporter').map(([, value]) => value)
+    ).toEqual([true, false]);
+  });
+
   it('still saves a later choice after a rejected write', async () => {
     const error = new Error('connection lost');
     post.mockRejectedValueOnce(error);

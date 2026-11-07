@@ -17,6 +17,10 @@ import { useSettingsStore } from '~/stores/settings';
 // (otherwise the switch could never turn the prompts back on for them).
 const LEGACY_SUPPORTER_KEY = 'aw-supporter';
 
+// Navigation destroys the component, not pending writes. Share the queue so a
+// newly mounted switch cannot save ahead of an older instance's pending choice.
+let saveQueue = Promise.resolve();
+
 function isLegacySupporter(): boolean {
   try {
     return localStorage.getItem(LEGACY_SUPPORTER_KEY) === 'true';
@@ -44,8 +48,9 @@ export default {
         }
         // Each update reloads the store after saving. Keep toggle writes in
         // selection order so an earlier reload cannot overwrite the last choice.
-        this.saveQueue = this.saveQueue
-          .then(() => useSettingsStore().update({ supporter: v }))
+        const store = useSettingsStore();
+        this.saveQueue = saveQueue = saveQueue
+          .then(() => store.update({ supporter: v }))
           .catch(error => console.error('Could not save supporter preference', error));
       },
     },
