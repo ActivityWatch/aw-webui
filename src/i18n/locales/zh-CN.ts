@@ -638,6 +638,7 @@ export default {
       expand: '展开列表',
       condense: '收起列表',
       edit: '编辑',
+      showMore: '再显示 {count} 个',
     },
     calendar: {
       bucket: '存储桶：',

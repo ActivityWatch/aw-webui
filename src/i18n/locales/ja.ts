@@ -666,6 +666,7 @@ export default {
       expand: '一覧を展開',
       condense: '一覧を折りたたむ',
       edit: '編集',
+      showMore: 'さらに {count} 件表示',
     },
     calendar: {
       bucket: 'バケット：',

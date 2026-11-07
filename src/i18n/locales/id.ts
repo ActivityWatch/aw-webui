@@ -667,6 +667,7 @@ export default {
       expand: 'Perluas daftar',
       condense: 'Ringkas daftar',
       edit: 'Ubah',
+      showMore: 'Tampilkan {count} lagi',
     },
     calendar: {
       bucket: 'Bucket:',

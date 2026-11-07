@@ -658,6 +658,7 @@ export default {
       expand: 'Liste ausklappen',
       condense: 'Liste einklappen',
       edit: 'Bearbeiten',
+      showMore: '{count} weitere anzeigen',
     },
     calendar: {
       bucket: 'Bucket:',

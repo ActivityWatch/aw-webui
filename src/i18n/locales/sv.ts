@@ -674,6 +674,7 @@ export default {
       expand: 'Expandera listan',
       condense: 'Komprimera listan',
       edit: 'Redigera',
+      showMore: 'Visa {count} till',
     },
     calendar: {
       bucket: 'Bucket:',

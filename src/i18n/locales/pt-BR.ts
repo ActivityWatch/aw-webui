@@ -674,6 +674,7 @@ export default {
       expand: 'Expandir lista',
       condense: 'Recolher lista',
       edit: 'Editar',
+      showMore: 'Mostrar mais {count}',
     },
     calendar: {
       bucket: 'Bucket:',
