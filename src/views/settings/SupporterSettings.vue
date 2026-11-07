@@ -59,8 +59,17 @@ export default {
         pendingChoice.value = v;
         const save = saveQueue
           .then(async () => {
-            await store.update({ supporter: v });
-            pendingChoice.error = '';
+            // Capture after older queued saves, not when the user clicks.
+            const previousSupporter = store.supporter;
+            try {
+              await store.update({ supporter: v });
+              pendingChoice.error = '';
+            } catch (error) {
+              // Reconcile with the server: the POST may have succeeded while
+              // its follow-up reload failed. If offline, undo only this flag.
+              await store.load().catch(() => store.$patch({ supporter: previousSupporter }));
+              throw error;
+            }
           })
           .catch(error => {
             pendingChoice.error = error instanceof Error ? error.message : String(error);

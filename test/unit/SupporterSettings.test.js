@@ -112,6 +112,84 @@ describe('SupporterSettings', () => {
     ).toEqual([true, false]);
   });
 
+  it.each([false, true])(
+    'restores supporter %s when the opposite choice fails to save',
+    async confirmed => {
+      server.supporter = confirmed;
+      store.$patch({ supporter: confirmed });
+      post.mockRejectedValueOnce(new Error('connection lost'));
+      jest.spyOn(console, 'error').mockImplementation(() => undefined);
+
+      wrapper.vm.supporter = !confirmed;
+      await wrapper.vm.saveQueue;
+      await wrapper.vm.$nextTick();
+
+      expect(server.supporter).toBe(confirmed);
+      expect(store.supporter).toBe(confirmed);
+      expect(wrapper.vm.supporter).toBe(confirmed);
+      expect(wrapper.find('[role="alert"]').text()).toContain('connection lost');
+    }
+  );
+
+  it('restores the preceding queued save when a later selection fails', async () => {
+    let release;
+    const gate = new Promise(resolve => {
+      release = resolve;
+    });
+    post.mockImplementationOnce(async (path, value) => {
+      await gate;
+      server[path.split('/').pop()] = value;
+    });
+    post.mockRejectedValueOnce(new Error('connection lost'));
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    wrapper.vm.supporter = true;
+    await flush();
+    wrapper.vm.supporter = false;
+    release();
+    await wrapper.vm.saveQueue;
+
+    expect(server.supporter).toBe(true);
+    expect(store.supporter).toBe(true);
+    expect(wrapper.vm.supporter).toBe(true);
+    expect(wrapper.find('[role="alert"]').text()).toContain('connection lost');
+  });
+
+  it('undoes the optimistic flag when both the write and reconciliation are offline', async () => {
+    post.mockRejectedValueOnce(new Error('connection lost'));
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const client = getClient();
+    // save() reads successfully, but its failed POST and the recovery read fail.
+    client.get_settings = jest
+      .fn()
+      .mockResolvedValueOnce(JSON.parse(JSON.stringify(server)))
+      .mockRejectedValueOnce(new Error('still offline'));
+
+    wrapper.vm.supporter = true;
+    await wrapper.vm.saveQueue;
+
+    expect(store.supporter).toBe(false);
+    expect(wrapper.vm.supporter).toBe(false);
+    expect(wrapper.find('[role="alert"]').text()).toContain('connection lost');
+  });
+
+  it('retains a committed choice when only its follow-up reload failed', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    getClient().get_settings = jest
+      .fn()
+      .mockImplementationOnce(async () => JSON.parse(JSON.stringify(server)))
+      .mockRejectedValueOnce(new Error('reload failed'))
+      .mockImplementation(async () => JSON.parse(JSON.stringify(server)));
+
+    wrapper.vm.supporter = true;
+    await wrapper.vm.saveQueue;
+
+    expect(server.supporter).toBe(true);
+    expect(store.supporter).toBe(true);
+    expect(wrapper.vm.supporter).toBe(true);
+    expect(wrapper.find('[role="alert"]').text()).toContain('reload failed');
+  });
+
   it('still saves a later choice after a rejected write', async () => {
     const error = new Error('connection lost');
     post.mockRejectedValueOnce(error);
