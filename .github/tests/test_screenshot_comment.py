@@ -1,9 +1,8 @@
-"""Offline replay of the actual screenshot composition and posting workflow steps."""
+"""Offline replay of screenshot artifact comment composition (no upload service)."""
 
 import json
 import os
 from pathlib import Path
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -11,209 +10,127 @@ import textwrap
 import unittest
 
 
-REPO = Path(os.environ.get("AW_SCREENSHOT_REPO", Path(__file__).resolve().parents[2]))
-WORKFLOW = REPO / ".github/workflows/comment.yml"
-
-
-def step(name):
-    """Read a named block from this workflow's fixed six-space step structure."""
-    lines = WORKFLOW.read_text().splitlines()
-    start = lines.index(f"    - name: {name}") + 1
-    end = next(
-        (i for i in range(start, len(lines)) if lines[i].startswith("    - ")),
-        len(lines),
-    )
-    block = lines[start:end]
-    run_start = block.index("      run: |") + 1
-    commands = []
-    for line in block[run_start:]:
-        if line and not line.startswith("        "):
-            break
-        commands.append(line)
-    return block[:run_start], textwrap.dedent("\n".join(commands))
-
-
-FAKE_CML = r"""
-import json
-import os
-from pathlib import Path
-import sys
-
-args = sys.argv[1:]
-log = Path("calls.jsonl")
-previous = [json.loads(line) for line in log.read_text().splitlines()] if log.exists() else []
-with log.open("a") as stream:
-    stream.write(json.dumps(args) + "\n")
-if args[:1] == ["publish"]:
-    number = 1 + sum(row[:1] == ["publish"] for row in previous)
-    if len(args) != 2 or not Path(args[1]).is_file():
-        sys.exit(44)
-    if number == int(os.environ.get("FAIL_AT", "0")):
-        mode = os.environ["FAIL_MODE"]
-        if mode == "nonzero":
-            print("publisher failure", file=sys.stderr)
-            sys.exit(23)
-        if mode == "empty":
-            sys.exit(0)
-        print(os.environ.get("INVALID_URL", "not-a-url"))
-    else:
-        print(f"https://example.invalid/image-{number}.png")
-elif args[:2] == ["comment", "create"]:
-    Path("posted.md").write_text(Path(args[-1]).read_text())
-else:
-    sys.exit(45)
-"""
+REPO = Path(__file__).resolve().parents[2]
+SCRIPT = REPO / ".github/compose_screenshot_comment.py"
 
 
 class ScreenshotCommentTests(unittest.TestCase):
-    def replay(self, images, mode="nonzero", fail_at=0, invalid_url="not-a-url"):
-        compose_meta, compose = step("Compose comment")
-        post_meta, post = step("Post screenshots in commit comment")
-        # Default Actions success gating is part of the caller contract.
-        self.assertFalse(any("continue-on-error:" in line for line in compose_meta))
-        self.assertFalse(any(line.strip().startswith("if:") for line in post_meta))
-        with tempfile.TemporaryDirectory(prefix="screenshot-comment-") as directory:
+    def compose(self, artifacts):
+        with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            shutil.copytree(REPO / ".github", root / ".github")
-            for image in images:
-                path = root / "screenshots" / image
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_bytes(b"offline fixture")
-            bindir = root / "bin"
-            bindir.mkdir()
-            fake = bindir / "cml"
-            fake.write_text(f"#!{sys.executable}\n" + FAKE_CML)
-            fake.chmod(0o755)
-            env = {
-                **os.environ,
-                "PATH": f"{bindir}{os.pathsep}{os.environ['PATH']}",
-                "FAIL_MODE": mode,
-                "FAIL_AT": str(fail_at),
-                "INVALID_URL": invalid_url,
-                "head_sha": "fixture-sha",
-                "repo_token": "offline-fixture",
-            }
-            result = subprocess.run(
-                ["bash", "-e", "-o", "pipefail", "-c", compose],
+            (root / "screenshot-artifacts.json").write_text(json.dumps(artifacts))
+            return subprocess.run(
+                [sys.executable, str(SCRIPT)],
                 cwd=root,
-                env=env,
-                text=True,
+                env={
+                    **os.environ,
+                    "GITHUB_REPOSITORY": "ActivityWatch/aw-webui",
+                    "SCREENSHOT_RUN_ID": "12345",
+                },
                 capture_output=True,
-                timeout=20,
+                text=True,
+                timeout=10,
             )
-            if result.returncode == 0:
-                post = post.replace("${{ github.repository }}", "fixture/repository")
-                posted = subprocess.run(
-                    ["bash", "-e", "-o", "pipefail", "-c", post],
-                    cwd=root,
-                    env=env,
-                    text=True,
-                    capture_output=True,
-                    timeout=20,
-                )
-                self.assertEqual(posted.returncode, 0, posted.stderr)
-            elif (root / "comment.md").exists():
-                self.assertEqual(
-                    (root / "comment.md").read_text(), "", "Partial comment emitted"
-                )
-            log = root / "calls.jsonl"
-            calls = (
-                [json.loads(line) for line in log.read_text().splitlines()]
-                if log.exists()
-                else []
+
+    def test_workflow_lists_triggering_run_artifacts_without_extracting_them(self):
+        workflow = (REPO / ".github/workflows/comment.yml").read_text()
+        script = workflow.split("        script: |\n", 1)[1].split("\n    - name:", 1)[
+            0
+        ]
+        script = textwrap.dedent(script)
+        harness = """
+const assert = require('node:assert/strict');
+const context = {repo: {owner: 'ActivityWatch', repo: 'aw-webui'}};
+const list = () => {};
+const github = {
+  rest: {actions: {listWorkflowRunArtifacts: list}},
+  paginate: async (method, options) => {
+    assert.equal(method, list);
+    assert.deepEqual(options, {
+      owner: 'ActivityWatch', repo: 'aw-webui', run_id: 12345, per_page: 100,
+    });
+    return [{id: 42, name: 'screenshots-aw-server-v1', expired: false}];
+  },
+};
+"""
+        with tempfile.TemporaryDirectory() as directory:
+            result = subprocess.run(
+                ["node", "-e", harness + "\n(async () => {\n" + script + "\n})();"],
+                cwd=directory,
+                env={**os.environ, "SCREENSHOT_RUN_ID": "12345"},
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
-            body = (
-                (root / "posted.md").read_text()
-                if (root / "posted.md").exists()
-                else None
+            self.assertEqual(result.returncode, 0, result.stderr)
+            artifacts = json.loads(
+                (Path(directory) / "screenshot-artifacts.json").read_text()
             )
-            return result, calls, body
+            self.assertEqual(artifacts[0]["id"], 42)
+        self.assertNotIn("execSync", workflow)
+        self.assertNotIn("downloadArtifact", workflow)
+        self.assertNotIn("pull_request.head.sha", workflow)
 
-    def assert_refused(self, result, calls, body):
-        self.assertNotEqual(
-            result.returncode, 0, "Compose accepted invalid publication"
-        )
-        self.assertIsNone(body, "Post ran after invalid publication")
-        self.assertFalse(any(call[:2] == ["comment", "create"] for call in calls))
-
-    def test_success_posts_complete_comment(self):
-        images = ["aw-server/v1/first.png", "aw-server-rust/v2/second.png"]
-        result, calls, body = self.replay(images)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(
-            [call[1] for call in calls if call[0] == "publish"],
-            [f"screenshots/{image}" for image in images],
-        )
-        self.assertEqual(sum(call[:2] == ["comment", "create"] for call in calls), 1)
-        for number in (1, 2):
-            self.assertIn(f"https://example.invalid/image-{number}.png", body)
-        self.assertEqual(body.count("<details>"), 2)
-        self.assertEqual(body.count("</details>"), 2)
-
-    def test_nonzero_publisher_stops_post(self):
-        self.assert_refused(*self.replay(["aw-server/v1/first.png"], fail_at=1))
-
-    def test_empty_publisher_output_stops_post(self):
-        self.assert_refused(
-            *self.replay(["aw-server/v1/first.png"], mode="empty", fail_at=1)
-        )
-
-    def test_invalid_url_stops_post(self):
-        for url in (
-            "not-a-url",
-            '{"message":"Internal server error"}',
-            "javascript:alert(1)",
-            "https:///missing-host.png",
-            "https://example.invalid:bad/image.png",
-            " https://example.invalid/image.png",
-            "https://example.invalid/image.png ",
-            "https://example.invalid/first.png\nhttps://example.invalid/second.png",
-            "https://example.invalid/image\x01.png",
-            'https://example.invalid/" onerror="bad',
-        ):
-            with self.subTest(url=url):
-                self.assert_refused(
-                    *self.replay(
-                        ["aw-server/v1/first.png"],
-                        mode="invalid",
-                        fail_at=1,
-                        invalid_url=url,
-                    )
-                )
-
-    def test_later_image_failure_never_posts_partial_comment(self):
-        result, calls, body = self.replay(
-            ["aw-server/v1/first.png", "aw-server/v1/second.png"], fail_at=2
-        )
-        self.assert_refused(result, calls, body)
-        self.assertEqual(sum(call[0] == "publish" for call in calls), 2)
-
-    def test_spaces_in_group_and_image_paths(self):
-        image = "aw-server test/version one/screen shot.png"
-        result, calls, body = self.replay([image])
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(
-            [call for call in calls if call[0] == "publish"],
-            [["publish", f"screenshots/{image}"]],
-        )
-        self.assertIn("https://example.invalid/image-1.png", body)
-
-    def test_empty_inventory_stops_post(self):
-        self.assert_refused(*self.replay([]))
-
-    def test_labels_and_url_query_are_html_escaped(self):
-        result, calls, body = self.replay(
-            ["aw-server <test>/version & one/screen.png"],
-            mode="invalid",
-            fail_at=1,
-            invalid_url="https://example.invalid/image.png?first=1&second=2",
+    def test_links_native_artifacts_without_calling_cml_publish(self):
+        result = self.compose(
+            [
+                {"id": 42, "name": "screenshots-aw-server-v1", "expired": False},
+                {"id": 43, "name": "screenshots-aw-server-rust-v2", "expired": False},
+            ]
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("aw-server &lt;test&gt; version &amp; one", body)
-        self.assertIn(
-            'src="https://example.invalid/image.png?first=1&amp;second=2"', body
+        for artifact_id in (42, 43):
+            self.assertIn(
+                f"https://github.com/ActivityWatch/aw-webui/actions/runs/12345/artifacts/{artifact_id}",
+                result.stdout,
+            )
+        self.assertIn("GitHub sign-in", result.stdout)
+        self.assertNotIn("<img", result.stdout)
+
+    def test_unrelated_and_expired_artifacts_are_excluded(self):
+        result = self.compose(
+            [
+                {"id": 42, "name": "screenshots-aw-server-v1", "expired": False},
+                {"id": 43, "name": "screenshots-old", "expired": True},
+                {"id": 44, "name": "dist", "expired": False},
+            ]
         )
-        self.assertEqual(sum(call[:2] == ["comment", "create"] for call in calls), 1)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("/artifacts/42", result.stdout)
+        self.assertNotIn("/artifacts/43", result.stdout)
+        self.assertNotIn("/artifacts/44", result.stdout)
+
+    def test_missing_artifacts_emit_no_partial_comment(self):
+        result = self.compose([])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, "")
+
+    def test_labels_cannot_inject_comment_html(self):
+        result = self.compose(
+            [
+                {
+                    "id": 42,
+                    "name": 'screenshots-<img src=x onerror="bad">',
+                    "expired": False,
+                },
+            ]
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("<img", result.stdout)
+        self.assertIn("&lt;img", result.stdout)
+
+    def test_invalid_artifact_id_emits_no_partial_comment(self):
+        result = self.compose(
+            [
+                {
+                    "id": '42"><img src=x>',
+                    "name": "screenshots-aw-server",
+                    "expired": False,
+                },
+            ]
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, "")
 
 
 if __name__ == "__main__":
