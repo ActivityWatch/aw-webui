@@ -197,6 +197,10 @@ export default {
       switchUnsavedConfirm:
         'Du har osparade ändringar. Vill du byta uppsättning ändå? (Ändringarna går förlorade)',
     },
+    supporter: {
+      title: 'Jag stödjer redan ActivityWatch',
+      help: 'Döljer uppmaningarna i appen om att stödja ActivityWatch. Hederssystem: sparas bara på din lokala server, verifieras aldrig, inget skickas.',
+    },
     developer: {
       title: 'Utvecklarinställningar',
       note: 'Obs!',

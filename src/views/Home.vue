@@ -189,14 +189,20 @@ export default {
   methods: {
     async evaluateSupporterNudge(): Promise<void> {
       try {
-        // The supporter flag is a server setting, so load settings before
-        // deciding. Best-effort: a failed load just falls back to the legacy
-        // localStorage flag in isSupporter().
+        // The supporter flag is a server setting, so refresh it before deciding:
+        // `ensureLoaded()` keeps a stale `false` in a tab that was opened before
+        // another tab (or the Settings switch) set it, and the storage-event
+        // listener below only covers the legacy localStorage flag.
+        // Best-effort: a failed load falls back to the legacy flag in isSupporter().
         await useSettingsStore()
-          .ensureLoaded()
+          .load()
           .catch(() => undefined);
 
-        if (this.isSupporterNudgeSnoozed() || this.isSupporter()) return;
+        // Someone may have enabled the flag while this prompt was on screen.
+        if (this.isSupporterNudgeSnoozed() || this.isSupporter()) {
+          this.supporterNudgeVisible = false;
+          return;
+        }
 
         const bucketsStore = useBucketsStore();
         await bucketsStore.ensureLoaded();

@@ -248,6 +248,10 @@ export default {
       importReplace: 'Statt meines Satzes verwenden',
       importAddOnTop: 'Zusätzlich zu meinem Satz hinzufügen',
     },
+    supporter: {
+      title: 'Ich unterstütze ActivityWatch bereits',
+      help: 'Blendet die Hinweise in der App aus, die um Unterstützung bitten. Auf Vertrauensbasis: nur im lokalen Server gespeichert, nie geprüft, es wird nichts gesendet.',
+    },
     developer: {
       title: 'Entwicklereinstellungen',
       note: 'Hinweis:',

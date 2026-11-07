@@ -201,6 +201,10 @@ export default {
       switchUnsavedConfirm:
         'Você tem alterações não salvas. Deseja trocar de conjunto mesmo assim? (As alterações serão descartadas)',
     },
+    supporter: {
+      title: 'Já apoio o ActivityWatch',
+      help: 'Oculta os avisos no aplicativo pedindo apoio ao ActivityWatch. Por confiança: fica salvo apenas no seu servidor local, nunca é verificado e nada é enviado.',
+    },
     developer: {
       title: 'Configurações de desenvolvedor',
       note: 'Observação:',
