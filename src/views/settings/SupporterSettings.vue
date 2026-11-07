@@ -10,6 +10,7 @@ div
 </template>
 
 <script lang="ts">
+import Vue from 'vue';
 import { useSettingsStore } from '~/stores/settings';
 
 // Pre-server-storage honor-system flag. Honoured so users who set it before the
@@ -20,6 +21,7 @@ const LEGACY_SUPPORTER_KEY = 'aw-supporter';
 // Navigation destroys the component, not pending writes. Share the queue so a
 // newly mounted switch cannot save ahead of an older instance's pending choice.
 let saveQueue = Promise.resolve();
+const pendingChoice = Vue.observable({ value: null as boolean | null });
 
 function isLegacySupporter(): boolean {
   try {
@@ -37,7 +39,7 @@ export default {
   computed: {
     supporter: {
       get(): boolean {
-        return !!useSettingsStore().supporter || this.legacySupporter;
+        return pendingChoice.value ?? (!!useSettingsStore().supporter || this.legacySupporter);
       },
       set(v: boolean) {
         this.legacySupporter = false;
@@ -49,9 +51,15 @@ export default {
         // Each update reloads the store after saving. Keep toggle writes in
         // selection order so an earlier reload cannot overwrite the last choice.
         const store = useSettingsStore();
-        this.saveQueue = saveQueue = saveQueue
+        pendingChoice.value = v;
+        const save = saveQueue
           .then(() => store.update({ supporter: v }))
-          .catch(error => console.error('Could not save supporter preference', error));
+          .catch(error => console.error('Could not save supporter preference', error))
+          .then(() => {
+            // Older completions must not clear a newer queued selection.
+            if (saveQueue === save) pendingChoice.value = null;
+          });
+        this.saveQueue = saveQueue = save;
       },
     },
   },

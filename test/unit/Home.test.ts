@@ -1,5 +1,6 @@
 import { shallowMount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
+import { useSettingsStore } from '~/stores/settings';
 import HomeComponent from '~/views/Home.vue';
 
 // Tests call Options API members directly, which the Vue constructor type doesn't expose.
@@ -73,6 +74,18 @@ describe('Home subscribe CTA src', () => {
     expect(link).toBeTruthy();
     return link.attributes('href');
   }
+
+  test('hides an already visible nudge when a pending supporter save completes', async () => {
+    const mounted = mountHome(false);
+    const store = useSettingsStore();
+    await mounted.setData({ supporterNudgeVisible: true });
+    expect(mounted.find('.supporter-nudge').exists()).toBe(true);
+
+    store.$patch({ supporter: true });
+    await mounted.vm.$nextTick();
+
+    expect(mounted.find('.supporter-nudge').exists()).toBe(false);
+  });
 
   test('desktop href uses inapp-home', () => {
     const mounted = mountHome(false);

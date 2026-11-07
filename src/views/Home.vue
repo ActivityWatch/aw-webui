@@ -157,6 +157,9 @@ export default {
   },
   computed: {
     ...mapState(useServerStore, ['info']),
+    settingsStore() {
+      return useSettingsStore();
+    },
     homeIntro1() {
       const android = this.$isAndroid ? this.$t('home.introAndroid') : '';
       return this.$t('home.intro1', { android });
@@ -173,6 +176,12 @@ export default {
     subscribeUrl(): string {
       const src = this.$isAndroid ? 'inapp-home-android' : 'inapp-home';
       return `https://activitywatch.net/go/?src=${src}`;
+    },
+  },
+  watch: {
+    // A Settings save may complete after navigation has already shown the nudge.
+    'settingsStore.supporter'(supporter: boolean) {
+      if (supporter) this.supporterNudgeVisible = false;
     },
   },
   mounted() {

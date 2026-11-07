@@ -88,13 +88,18 @@ describe('SupporterSettings', () => {
     expect(post).toHaveBeenCalledWith('/0/settings/supporter', true, expect.anything());
     const firstSave = wrapper.vm.saveQueue;
     wrapper.destroy();
+    // Settings.init() reloads the persisted value on each route entry.
+    await store.load();
+    expect(store.supporter).toBe(false);
     wrapper = shallowMount(SupporterSettings, {
       localVue,
       pinia,
       i18n,
       stubs: ['b-form-checkbox'],
     });
+    expect(wrapper.vm.supporter).toBe(true);
     wrapper.vm.supporter = false;
+    expect(wrapper.vm.supporter).toBe(false);
     await flush();
     release();
     await Promise.all([firstSave, wrapper.vm.saveQueue]);
