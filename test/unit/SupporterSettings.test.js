@@ -123,6 +123,33 @@ describe('SupporterSettings', () => {
 
     expect(console.error).toHaveBeenCalledWith('Could not save supporter preference', error);
     expect(server.supporter).toBe(true);
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+  });
+
+  it('shows a failed save across remounts and clears the error after a successful save', async () => {
+    post.mockRejectedValueOnce(new Error('connection lost'));
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    wrapper.vm.supporter = true;
+    await wrapper.vm.saveQueue;
+    await wrapper.vm.$nextTick();
+
+    expect(server.supporter).toBeUndefined();
+    expect(wrapper.find('[role="alert"]').text()).toContain('Failed to save settings');
+    expect(wrapper.find('[role="alert"]').text()).toContain('connection lost');
+    wrapper.destroy();
+    wrapper = shallowMount(SupporterSettings, {
+      localVue,
+      pinia,
+      i18n,
+      stubs: ['b-form-checkbox'],
+    });
+    expect(wrapper.find('[role="alert"]').text()).toContain('connection lost');
+
+    wrapper.vm.supporter = false;
+    await wrapper.vm.saveQueue;
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+    expect(wrapper.vm.supporter).toBe(false);
   });
 
   it('honours the legacy flag until an explicit choice clears it', async () => {

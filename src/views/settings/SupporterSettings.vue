@@ -7,6 +7,8 @@ div
       b-form-checkbox(v-model="supporter" switch aria-labelledby="supporter-label")
   small.text-muted
     | {{ $t('settings.supporter.help') }}
+  div.alert.alert-danger.mt-2(v-if="saveError" role="alert")
+    | {{ $t('settings.notifications.saveFailed', { error: saveError }) }}
 </template>
 
 <script lang="ts">
@@ -21,7 +23,7 @@ const LEGACY_SUPPORTER_KEY = 'aw-supporter';
 // Navigation destroys the component, not pending writes. Share the queue so a
 // newly mounted switch cannot save ahead of an older instance's pending choice.
 let saveQueue = Promise.resolve();
-const pendingChoice = Vue.observable({ value: null as boolean | null });
+const pendingChoice = Vue.observable({ value: null as boolean | null, error: '' });
 
 function isLegacySupporter(): boolean {
   try {
@@ -37,6 +39,9 @@ export default {
     return { saveQueue: Promise.resolve(), legacySupporter: isLegacySupporter() };
   },
   computed: {
+    saveError(): string {
+      return pendingChoice.error;
+    },
     supporter: {
       get(): boolean {
         return pendingChoice.value ?? (!!useSettingsStore().supporter || this.legacySupporter);
@@ -53,8 +58,14 @@ export default {
         const store = useSettingsStore();
         pendingChoice.value = v;
         const save = saveQueue
-          .then(() => store.update({ supporter: v }))
-          .catch(error => console.error('Could not save supporter preference', error))
+          .then(async () => {
+            await store.update({ supporter: v });
+            pendingChoice.error = '';
+          })
+          .catch(error => {
+            pendingChoice.error = error instanceof Error ? error.message : String(error);
+            console.error('Could not save supporter preference', error);
+          })
           .then(() => {
             // Older completions must not clear a newer queued selection.
             if (saveQueue === save) pendingChoice.value = null;
