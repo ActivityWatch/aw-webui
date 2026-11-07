@@ -8,6 +8,7 @@ import summary from '~/visualizations/summary';
 Vue.component('aw-summary', Summary);
 
 const event = {
+  timestamp: '2026-10-31T12:00:00Z',
   duration: 60,
   data: { title: 'TITLE_ONE', app: 'APP_ONE' },
 };
@@ -72,7 +73,7 @@ describe('SelectableEventView summary key', () => {
       input.trigger('change');
       await flush(wrapper);
       wrapper.setProps({
-        events: [{ duration: 60, data: { title: 'TITLE_ONE', app: 'APP_ONE' } }],
+        events: [{ ...event, data: { ...event.data } }],
       });
       await flush(wrapper);
       expect(svgName(wrapper)).toBe('APP_ONE');
