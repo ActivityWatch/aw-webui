@@ -23,6 +23,9 @@ function jsonEq(a: any, b: any) {
 }
 
 let settingsLoadPromise: Promise<void> | null = null;
+// Navigation and post-save refreshes may overlap. Only the newest read for
+// each store may apply its snapshot; keep transport bookkeeping out of state.
+const latestSettingsRead = new WeakMap<object, { promise: Promise<void> }>();
 
 // Backoffs for NewReleaseNotification
 export const SHORT_BACKOFF_PERIOD = 24 * 60 * 60;
@@ -80,6 +83,12 @@ interface State {
 
   // Whether to hide visualizations that lack required data (default: off)
   hideUnsupportedVisualizations: boolean;
+
+  // Honor-system "I already support ActivityWatch" flag. Stored in the server's
+  // settings store (not localStorage) so every browser and the desktop clients
+  // (aw-qt, aw-tauri) see the same answer. It only suppresses in-app support
+  // prompts; it is never verified, and nothing is sent anywhere when it is set.
+  supporter: boolean;
 
   // Set to true if settings loaded
   _loaded: boolean;
@@ -142,6 +151,8 @@ export const useSettingsStore = defineStore('settings', {
     requestTimeout: 30,
     hideUnsupportedVisualizations: false,
 
+    supporter: false,
+
     _loaded: false,
     _storedKeys: [],
   }),
@@ -183,87 +194,106 @@ export const useSettingsStore = defineStore('settings', {
       const client = getClient();
 
       // Fetch from server, fall back to localStorage
-      const server_settings = await client.get_settings();
-
-      // Build a unified map: server value wins, localStorage is fallback.
-      // Skip keys that are missing from BOTH sources — otherwise `null` from
-      // localStorage.getItem overrides the defaults defined in `state()`.
-      const storage: Record<string, unknown> = {};
-      const used = new Set<string>();
-
-      // 1. Server settings take priority
-      for (const key of Object.keys(server_settings)) {
-        if (key.startsWith('_') || REMOVED_KEYS.has(key)) continue;
-        if (key === 'locale' && !isAppLocale(server_settings[key])) {
-          console.warn('Ignoring invalid locale from server:', server_settings[key]);
-          continue;
+      const read = { promise: Promise.resolve() };
+      latestSettingsRead.set(this, read);
+      read.promise = (async () => {
+        const server_settings = await client.get_settings();
+        const latest = latestSettingsRead.get(this);
+        if (latest && latest !== read) {
+          // A discarded response is not a completed load. Callers such as update()
+          // must wait for the replacement snapshot (or receive its failure).
+          await latest.promise;
+          return;
         }
-        storage[key] =
-          key === 'alerts' ? cleanAlertGoals(server_settings[key]) : server_settings[key];
-        used.add(key);
-      }
 
-      // 2. localStorage fills in gaps, but skip missing keys (null)
-      for (const key of Object.keys(localStorage)) {
-        if (key.startsWith('_') || REMOVED_KEYS.has(key) || used.has(key)) continue;
-        const raw = localStorage.getItem(key);
-        if (raw === null || raw === 'null') continue; // key absent or stored as null → keep state() default
+        // Build a unified map: server value wins, localStorage is fallback.
+        // Skip keys that are missing from BOTH sources — otherwise `null` from
+        // localStorage.getItem overrides the defaults defined in `state()`.
+        const storage: Record<string, unknown> = {};
+        const used = new Set<string>();
 
-        // Keys ending with 'Data' are JSON-serialized objects in localStorage
-        const isJsonKey =
-          key.endsWith('Data') ||
-          key == 'views' ||
-          key == 'classes' ||
-          key == 'category_sets' ||
-          key == 'active_set_ids' ||
-          key == 'saved_queries' ||
-          key == 'category_builder_ignored_words' ||
-          key == 'alerts';
-        try {
-          if (isJsonKey) {
-            let parsed = JSON.parse(raw);
-            if (key == 'classes') {
-              parsed = parsed.map(cleanCategory);
-            } else if (key == 'alerts') {
-              parsed = cleanAlertGoals(parsed);
-            }
-            storage[key] = parsed;
-          } else if (key === 'timelineGroupGranularity') {
-            const seconds = Number(raw);
-            if (Number.isFinite(seconds) && seconds >= 0) storage[key] = seconds;
-          } else if (raw === 'true' || raw === 'false') {
-            storage[key] = raw === 'true';
-          } else if (key === 'locale') {
-            if (isAppLocale(raw)) {
-              storage[key] = raw;
-            } else {
-              console.warn('Ignoring invalid locale from storage:', raw);
-            }
-          } else {
-            storage[key] = raw;
+        // 1. Server settings take priority
+        for (const key of Object.keys(server_settings)) {
+          if (key.startsWith('_') || REMOVED_KEYS.has(key)) continue;
+          if (key === 'locale' && !isAppLocale(server_settings[key])) {
+            console.warn('Ignoring invalid locale from server:', server_settings[key]);
+            continue;
           }
-        } catch (e) {
-          console.error('failed to parse', key, raw, e);
+          storage[key] =
+            key === 'alerts' ? cleanAlertGoals(server_settings[key]) : server_settings[key];
+          used.add(key);
         }
-      }
-      this.$patch({ ...storage, _loaded: true, _storedKeys: Object.keys(storage) });
 
-      const localeFromServer = 'locale' in server_settings;
-      const localeFromLocalStorage = localStorage.getItem('locale') != null;
+        // 2. localStorage fills in gaps, but skip missing keys (null)
+        for (const key of Object.keys(localStorage)) {
+          if (key.startsWith('_') || REMOVED_KEYS.has(key) || used.has(key)) continue;
+          const raw = localStorage.getItem(key);
+          if (raw === null || raw === 'null') continue; // key absent or stored as null → keep state() default
 
-      if ((localeFromServer || localeFromLocalStorage) && isAppLocale(this.locale)) {
-        setAppLocale(this.locale);
-      } else if (isAppLocale(i18n.locale)) {
-        this.$patch({ locale: i18n.locale as AppLocale });
-      }
+          // Keys ending with 'Data' are JSON-serialized objects in localStorage
+          const isJsonKey =
+            key.endsWith('Data') ||
+            key == 'views' ||
+            key == 'classes' ||
+            key == 'category_sets' ||
+            key == 'active_set_ids' ||
+            key == 'saved_queries' ||
+            key == 'category_builder_ignored_words' ||
+            key == 'alerts';
+          try {
+            if (isJsonKey) {
+              let parsed = JSON.parse(raw);
+              if (key == 'classes') {
+                parsed = parsed.map(cleanCategory);
+              } else if (key == 'alerts') {
+                parsed = cleanAlertGoals(parsed);
+              }
+              storage[key] = parsed;
+            } else if (key === 'timelineGroupGranularity') {
+              const seconds = Number(raw);
+              if (Number.isFinite(seconds) && seconds >= 0) storage[key] = seconds;
+            } else if (raw === 'true' || raw === 'false') {
+              storage[key] = raw === 'true';
+            } else if (key === 'locale') {
+              if (isAppLocale(raw)) {
+                storage[key] = raw;
+              } else {
+                console.warn('Ignoring invalid locale from storage:', raw);
+              }
+            } else {
+              storage[key] = raw;
+            }
+          } catch (e) {
+            console.error('failed to parse', key, raw, e);
+          }
+        }
+        // Missing supporter storage means the default, including when reconciling
+        // an optimistic first-ever choice after a rejected POST.
+        this.$patch({
+          supporter: false,
+          ...storage,
+          _loaded: true,
+          _storedKeys: Object.keys(storage),
+        });
 
-      // Since `requestTimeout` is used to initialize the client, we need to set it again
-      // https://github.com/ActivityWatch/activitywatch/issues/979
-      client.req.defaults.timeout = this.requestTimeout * 1000;
+        const localeFromServer = 'locale' in server_settings;
+        const localeFromLocalStorage = localStorage.getItem('locale') != null;
 
-      if (save) {
-        await this.save();
-      }
+        if ((localeFromServer || localeFromLocalStorage) && isAppLocale(this.locale)) {
+          setAppLocale(this.locale);
+        } else if (isAppLocale(i18n.locale)) {
+          this.$patch({ locale: i18n.locale as AppLocale });
+        }
+
+        // Since `requestTimeout` is used to initialize the client, we need to set it again
+        // https://github.com/ActivityWatch/activitywatch/issues/979
+        client.req.defaults.timeout = this.requestTimeout * 1000;
+
+        if (save) {
+          await this.save();
+        }
+      })();
+      await read.promise;
     },
     // Omitted keys retain full-save/migration behavior; [] deliberately saves nothing.
     async save(explicitKeys?: string[]) {

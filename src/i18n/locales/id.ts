@@ -198,6 +198,10 @@ export default {
       switchUnsavedConfirm:
         'Anda memiliki perubahan yang belum disimpan. Tetap ganti set? (Perubahan akan dibuang)',
     },
+    supporter: {
+      title: 'Saya sudah mendukung ActivityWatch',
+      help: 'Menyembunyikan ajakan dalam aplikasi untuk mendukung ActivityWatch. Berbasis kepercayaan: hanya disimpan di server lokal Anda, tidak pernah diverifikasi, tidak ada yang dikirim.',
+    },
     developer: {
       title: 'Pengaturan pengembang',
       note: 'Catatan:',

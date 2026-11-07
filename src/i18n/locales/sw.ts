@@ -199,6 +199,10 @@ export default {
       switchUnsavedConfirm:
         'Una mabadiliko ambayo hayajahifadhiwa. Ubadilishe seti hata hivyo? (Mabadiliko yatatupwa)',
     },
+    supporter: {
+      title: 'Ninaunga ActivityWatch tayari',
+      help: 'Huficha arifa ndani ya programu zinazoomba uunge mkono ActivityWatch. Kwa msingi wa uaminifu: huhifadhiwa kwenye seva yako ya ndani pekee, haithibitishwi, na hakuna kinachotumwa.',
+    },
     developer: {
       title: 'Mipangilio ya msanidi',
       note: 'Kumbuka:',

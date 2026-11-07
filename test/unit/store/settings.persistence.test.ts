@@ -34,6 +34,143 @@ describe('settings persistence scope', () => {
     });
   });
 
+  test('an initial update waits for its replacement load before saving', async () => {
+    const store = newSession();
+    let releaseFirst!: () => void;
+    let releaseReplacement!: () => void;
+    const first = new Promise<void>(resolve => {
+      releaseFirst = resolve;
+    });
+    const replacement = new Promise<void>(resolve => {
+      releaseReplacement = resolve;
+    });
+    mockGetSettings
+      .mockImplementationOnce(async () => {
+        await first;
+        return jsonCopy(server);
+      })
+      .mockImplementationOnce(async () => {
+        await replacement;
+        return jsonCopy(server);
+      });
+
+    const updating = store.update({ supporter: true });
+    const refreshing = store.load();
+    releaseFirst();
+    // Drain the initial read and update continuations without releasing the refresh.
+    await new Promise(resolve => setTimeout(resolve, 0));
+    const changedBeforeLoaded = store.supporter;
+    releaseReplacement();
+    await Promise.all([updating, refreshing]);
+
+    expect(changedBeforeLoaded).toBe(false);
+    expect(postedKeys()).toEqual(['supporter']);
+    expect(server.supporter).toBe(true);
+    expect(store.supporter).toBe(true);
+  });
+
+  test('a superseded initial update propagates replacement failure without patching or saving', async () => {
+    const store = newSession();
+    let releaseFirst!: () => void;
+    let failReplacement!: (error: Error) => void;
+    const first = new Promise<void>(resolve => {
+      releaseFirst = resolve;
+    });
+    const replacement = new Promise<void>((_, reject) => {
+      failReplacement = reject;
+    });
+    mockGetSettings
+      .mockImplementationOnce(async () => {
+        await first;
+        return jsonCopy(server);
+      })
+      .mockImplementationOnce(() => replacement);
+
+    const updating = store.update({ supporter: true });
+    const refreshing = store.load();
+    const updateResult = updating.catch(error => error);
+    const refreshResult = refreshing.catch(error => error);
+    releaseFirst();
+    await new Promise(resolve => setTimeout(resolve, 0));
+    failReplacement(new Error('refresh failed'));
+    const errors = await Promise.all([updateResult, refreshResult]);
+
+    expect(errors.map(error => error.message)).toEqual(['refresh failed', 'refresh failed']);
+    expect(store.loaded).toBe(false);
+    expect(store.supporter).toBe(false);
+    expect(mockPost).not.toHaveBeenCalled();
+  });
+
+  test('a delayed read cannot undo a newer supporter save', async () => {
+    server.supporter = false;
+    const store = newSession();
+    await store.load();
+    let release!: () => void;
+    const gate = new Promise<void>(resolve => {
+      release = resolve;
+    });
+    const oldSettings = jsonCopy(server);
+    mockGetSettings.mockImplementationOnce(async () => {
+      await gate;
+      return oldSettings;
+    });
+
+    const homeReload = store.load();
+    await store.update({ supporter: true });
+    expect(store.supporter).toBe(true);
+    release();
+    await homeReload;
+
+    expect(server.supporter).toBe(true);
+    expect(store.supporter).toBe(true);
+  });
+
+  test('newer reads supersede older responses within a store, not across sessions', async () => {
+    const a = newSession();
+    const b = newSession();
+    let release!: () => void;
+    const gate = new Promise<void>(resolve => {
+      release = resolve;
+    });
+    const oldSettings = jsonCopy(server);
+    mockGetSettings.mockImplementationOnce(async () => {
+      await gate;
+      return oldSettings;
+    });
+    const older = a.load();
+    server.theme = 'dark';
+    await a.load();
+    // Loading another session must not invalidate a's latest response.
+    await b.load();
+    release();
+    await older;
+
+    expect(a.theme).toBe('dark');
+    expect(b.theme).toBe('dark');
+  });
+
+  test("a read in another session does not discard this session's pending refresh", async () => {
+    const a = newSession();
+    const b = newSession();
+    server.theme = 'dark';
+    let release!: () => void;
+    const gate = new Promise<void>(resolve => {
+      release = resolve;
+    });
+    mockGetSettings.mockImplementationOnce(async () => {
+      await gate;
+      return jsonCopy(server);
+    });
+    const pendingRead = a.load();
+    await b.load();
+    release();
+    await pendingRead;
+
+    expect(a.loaded).toBe(true);
+    expect(a.theme).toBe('dark');
+    expect(b.theme).toBe('dark');
+  });
+
   test('a stale session writes only its intended key and reloads confirmed unrelated settings', async () => {
     const a = newSession();
     const b = newSession();
