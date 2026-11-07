@@ -95,6 +95,11 @@ export default {
       groupGranularity: 'Kurze Ereignisse gruppieren (Sekunden)',
       groupGranularityHelp:
         'Fasst aufeinanderfolgende kurze Ereignisse in Gruppen dieser Dauer zusammen. 0 deaktiviert die Gruppierung. Der Dauerfilter der Zeitleiste bleibt unabhängig und entfernt Ereignisse vor der Gruppierung.',
+      timeFormat: 'Zeitformat',
+      timeFormat24h: '24-Stunden (13:00)',
+      timeFormat12h: '12-Stunden (1:00 PM)',
+      timeFormatHelp:
+        'Wie Uhrzeiten auf der Zeitachse und in den Ereignis-Tooltips angezeigt werden.',
     },
     landingPage: {
       title: 'Einstiegsseite',

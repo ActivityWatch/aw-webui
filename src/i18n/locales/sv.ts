@@ -99,6 +99,10 @@ export default {
       groupGranularity: 'Gruppera korta händelser (sekunder)',
       groupGranularityHelp:
         'Samlar korta händelser i följd i grupper med denna längd. Ange 0 för att stänga av grupperingen. Tidslinjens längdfilter är oberoende och tar bort händelser före grupperingen.',
+      timeFormat: 'Tidsformat',
+      timeFormat24h: '24-timmars (13:00)',
+      timeFormat12h: '12-timmars (1:00 PM)',
+      timeFormatHelp: 'Hur klockslag visas på tidslinjens axel och i händelsernas inforutor.',
     },
     landingPage: {
       title: 'Startsida',
