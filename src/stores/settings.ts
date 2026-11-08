@@ -211,7 +211,12 @@ export const useSettingsStore = defineStore('settings', {
       const request = ++loads.issued;
       // Fetch from server, fall back to localStorage
       const server_settings = await client.get_settings();
-      if (request < loads.applied) return;
+      if (request < loads.applied) {
+        // A newer response already applied. The state is up-to-date, but if
+        // this call requested persistence we must still honour that intent.
+        if (save) await this.save();
+        return;
+      }
       loads.applied = request;
 
       // Build a unified map: server value wins, localStorage is fallback.
