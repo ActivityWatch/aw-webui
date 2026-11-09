@@ -2,6 +2,7 @@ import { getTitleAttr } from '~/util/color';
 import { IEvent } from '~/util/interfaces';
 
 export const TIMELINE_LIST_PAGE_SIZE = 100;
+const DETAIL_MAX_LENGTH = 120;
 
 export interface TimelineListBucket {
   id: string;
@@ -27,7 +28,14 @@ function eventDetail(e: IEvent, label: string): string {
   if (typeof title === 'string' && title && title !== label) return title;
   const url = e.data?.url;
   if (typeof url === 'string' && url && url !== label) return url;
-  return '';
+  if (label) return '';
+  // No title for this bucket type: show the data fields instead of a blank cell.
+  const summary = Object.entries(e.data || {})
+    .map(([key, value]) => `${key}: ${typeof value === 'string' ? value : JSON.stringify(value)}`)
+    .join(', ');
+  return summary.length > DETAIL_MAX_LENGTH
+    ? summary.slice(0, DETAIL_MAX_LENGTH - 1) + '…'
+    : summary;
 }
 
 /**

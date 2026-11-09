@@ -90,6 +90,21 @@ describe('timelineListRows', () => {
     expect(rows[249].label).toBe('app249');
   });
 
+  test('summarizes data for bucket types without a title attribute', () => {
+    const rows = timelineListRows([
+      bucket('aw-watcher-agent_h', 'h', 'agent.session', [
+        {
+          timestamp: '2026-01-01T10:00:00Z',
+          duration: 5,
+          data: { harness: 'cli', model: 'x', note: 'n'.repeat(200) },
+        },
+      ]),
+    ]);
+    expect(rows[0].label).toBe('');
+    expect(rows[0].detail.startsWith('harness: cli, model: x, note: nnn')).toBe(true);
+    expect(rows[0].detail.length).toBeLessThanOrEqual(120);
+  });
+
   test('tolerates missing buckets and events', () => {
     expect(timelineListRows(null)).toEqual([]);
     expect(timelineListRows([{ id: 'x', hostname: 'h', type: 'currentwindow' }])).toEqual([]);
