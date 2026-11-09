@@ -963,6 +963,9 @@ export default {
       bucketsNoEvents: 'جن بکٹس میں کوئی ایونٹ نہ ہو وہ کوئری شدہ حد میں چھپا دیے جائیں گے۔',
       editSaved: 'آپ کی ترمیم محفوظ ہو گئی ہے۔ اسے دیکھنے کے لیے ٹائم لائن ریفریش کریں۔',
       editSavedTitle: 'اطلاع',
+      list: 'فہرست',
+      listShowing: '{total} میں سے {shown} واقعات دکھائے جا رہے ہیں',
+      showMore: 'مزید دکھائیں',
     },
     buckets: { id: 'ID' },
     userPoll: {

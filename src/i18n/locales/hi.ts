@@ -963,6 +963,9 @@ export default {
       bucketsNoEvents: 'चुनी गई सीमा में जिन bucket में कोई इवेंट नहीं है, वे छिपा दिए जाएँगे।',
       editSaved: 'आपका संपादन सहेज लिया गया है। इसे देखने के लिए टाइमलाइन रीफ़्रेश करें।',
       editSavedTitle: 'ध्यान दें',
+      list: 'सूची',
+      listShowing: '{total} में से {shown} इवेंट दिखाए जा रहे हैं',
+      showMore: 'और दिखाएँ',
     },
     buckets: { id: 'ID' },
     userPoll: {

@@ -958,6 +958,9 @@ export default {
       bucketsNoEvents: 'কোয়েরি করা সময়সীমায় ইভেন্ট নেই এমন বাকেট লুকানো থাকবে।',
       editSaved: 'আপনার সম্পাদনা সংরক্ষিত হয়েছে। প্রতিফলন দেখতে টাইমলাইন রিফ্রেশ করুন।',
       editSavedTitle: 'জেনে রাখুন',
+      list: 'তালিকা',
+      listShowing: '{total}টির মধ্যে {shown}টি ইভেন্ট দেখানো হচ্ছে',
+      showMore: 'আরও দেখান',
     },
     buckets: { id: 'ID' },
     userPoll: {

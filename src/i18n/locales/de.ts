@@ -961,6 +961,9 @@ export default {
       editSaved:
         'Ihre Änderung wurde gespeichert. Aktualisieren Sie die Zeitleiste, um sie zu sehen.',
       editSavedTitle: 'Hinweis',
+      list: 'Liste',
+      listShowing: '{shown} von {total} Ereignissen angezeigt',
+      showMore: 'Mehr anzeigen',
     },
     buckets: { id: 'ID' },
     userPoll: {

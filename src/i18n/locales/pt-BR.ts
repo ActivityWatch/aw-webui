@@ -975,6 +975,9 @@ export default {
       bucketsNoEvents: 'Buckets sem eventos no intervalo consultado serão ocultados.',
       editSaved: 'Sua edição foi salva. Atualize a linha do tempo para vê-la refletida.',
       editSavedTitle: 'Atenção',
+      list: 'Lista',
+      listShowing: 'Mostrando {shown} de {total} eventos',
+      showMore: 'Mostrar mais',
     },
     buckets: { id: 'ID' },
     userPoll: {

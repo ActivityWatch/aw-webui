@@ -977,6 +977,9 @@ export default {
       bucketsNoEvents: 'Buckets utan händelser i det efterfrågade intervallet döljs.',
       editSaved: 'Din ändring har sparats. Uppdatera tidslinjen för att se den.',
       editSavedTitle: 'Observera',
+      list: 'Lista',
+      listShowing: 'Visar {shown} av {total} händelser',
+      showMore: 'Visa mer',
     },
     buckets: {
       id: 'ID',

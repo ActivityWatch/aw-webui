@@ -964,6 +964,9 @@ export default {
       bucketsNoEvents: '照会した期間にイベントがないバケットは非表示になります。',
       editSaved: '編集を保存しました。反映を確認するには、タイムラインを更新してください。',
       editSavedTitle: 'お知らせ',
+      list: 'リスト',
+      listShowing: '{total} 件中 {shown} 件のイベントを表示',
+      showMore: 'もっと見る',
     },
     buckets: { id: 'ID' },
     userPoll: {
