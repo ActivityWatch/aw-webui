@@ -10,9 +10,11 @@ div.timeline-event-list
         th {{ $t('extraViews.search.title') }}
     tbody
       tr(v-for="row in visibleRows", :key="row.key")
-        td.text-nowrap {{ formatTime(row.start) }}
-        td.text-nowrap {{ formatTime(row.end) }}
-        td.text-nowrap.text-right {{ formatDuration(row.duration) }}
+        // ≤/≥: clipped to the selected range, the event extends beyond it
+        td.text-nowrap {{ row.clippedStart ? '≤ ' : '' }}{{ formatTime(row.start) }}
+        td.text-nowrap {{ row.clippedEnd ? '≥ ' : '' }}{{ formatTime(row.end) }}
+        td.text-nowrap.text-right
+          | {{ row.clippedStart || row.clippedEnd ? '≥ ' : '' }}{{ formatDuration(row.duration) }}
         td.text-nowrap
           | {{ row.bucketId }}
           small.text-muted.ml-1(v-if="row.hostname") ({{ row.hostname }})
@@ -36,13 +38,15 @@ export default {
   name: 'aw-timeline-event-list',
   props: {
     buckets: { type: Array, default: null },
+    // The queried [start, end]; rows touching it are marked as clipped.
+    range: { type: Array, default: null },
   },
   data() {
     return { limit: TIMELINE_LIST_PAGE_SIZE };
   },
   computed: {
     rows() {
-      return timelineListRows(this.buckets);
+      return timelineListRows(this.buckets, this.range);
     },
     visibleRows() {
       return this.rows.slice(0, this.limit);

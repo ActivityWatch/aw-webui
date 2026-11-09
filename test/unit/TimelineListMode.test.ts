@@ -70,6 +70,7 @@ test('List mode renders the same filtered buckets the timeline would', async () 
   const list = wrapper.findComponent(TimelineEventList);
   expect(list.exists()).toBe(true);
   expect(list.props('buckets')).toBe((wrapper.vm as any).buckets);
+  expect(list.props('range')).toBe((wrapper.vm as any).daterange);
   expect(list.findAll('tbody tr')).toHaveLength(1);
   expect(list.text()).toContain('long');
   expect(list.text()).not.toContain('short');

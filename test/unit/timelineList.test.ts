@@ -66,16 +66,32 @@ describe('timelineListRows', () => {
     expect(new Set(keys).size).toBe(keys.length);
   });
 
-  test('keeps the true start/end of events that cross the queried interval edges', () => {
-    // An event returned for a 10:00 query that started at 09:59 is not clipped:
-    // the list reports exactly when it happened.
-    const rows = timelineListRows([
-      bucket('w', 'h', 'currentwindow', [
-        { timestamp: '2026-01-01T09:59:00Z', duration: 120, data: { app: 'edge' } },
-      ]),
+  test('flags times clipped to the queried range instead of presenting them as exact', () => {
+    // The server truncates events to the query range: an event that really started at
+    // 09:59 arrives as starting at 10:00 for a 10:00-11:00 query. Rows touching the
+    // range edges are flagged so the list does not claim those are the true times.
+    const range: [string, string] = ['2026-01-01T10:00:00Z', '2026-01-01T11:00:00Z'];
+    const rows = timelineListRows(
+      [
+        bucket('w', 'h', 'currentwindow', [
+          { timestamp: '2026-01-01T10:00:00Z', duration: 60, data: { app: 'clipped-start' } },
+          { timestamp: '2026-01-01T10:30:00Z', duration: 60, data: { app: 'inside' } },
+          { timestamp: '2026-01-01T10:59:00Z', duration: 60, data: { app: 'clipped-end' } },
+        ]),
+      ],
+      range
+    );
+    expect(rows.map(r => [r.label, r.clippedStart, r.clippedEnd])).toEqual([
+      ['clipped-start', true, false],
+      ['inside', false, false],
+      ['clipped-end', false, true],
     ]);
-    expect(rows[0].start).toBe(Date.parse('2026-01-01T09:59:00Z'));
-    expect(rows[0].end).toBe(Date.parse('2026-01-01T10:01:00Z'));
+    // Without a range nothing is flagged
+    expect(
+      timelineListRows([
+        bucket('w', 'h', 'currentwindow', [{ timestamp: range[0], duration: 1, data: {} }]),
+      ])[0].clippedStart
+    ).toBe(false);
   });
 
   test('returns every event; paging past the first page is the caller’s choice', () => {

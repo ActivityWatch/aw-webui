@@ -116,7 +116,7 @@ div
 
   div(v-if="buckets !== null && view_mode === 'list'")
     // Same filtered buckets as the timeline, one chronological row per event.
-    aw-timeline-event-list(:buckets="buckets")
+    aw-timeline-event-list(:buckets="buckets", :range="daterange")
   div(v-else-if="buckets !== null")
     vis-timeline(:buckets="buckets", :categorizedEvents="categorizedEvents", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane", :groupGranularity="timelineGroupGranularity", :updateTimelineWindow='updateTimelineWindow', @event-saved="onEventSaved")
 

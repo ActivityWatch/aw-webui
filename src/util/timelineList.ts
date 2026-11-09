@@ -4,6 +4,9 @@ import { IEvent } from '~/util/interfaces';
 export const TIMELINE_LIST_PAGE_SIZE = 100;
 const DETAIL_MAX_LENGTH = 120;
 
+// Anything `new Date()` accepts, including the moment objects the Timeline passes.
+type RangeBound = Date | string | number | { valueOf(): number };
+
 export interface TimelineListBucket {
   id: string;
   hostname?: string;
@@ -20,6 +23,10 @@ export interface TimelineListRow {
   duration: number;
   label: string;
   detail: string;
+  // The server truncates events to the queried range, so a row touching a range edge
+  // may have started earlier / ended later than shown.
+  clippedStart: boolean;
+  clippedEnd: boolean;
 }
 
 // The event title shown next to the colour/grouping label, when it adds information.
@@ -42,14 +49,17 @@ function eventDetail(e: IEvent, label: string): string {
  * Flattens the Timeline's filtered buckets into one chronological, read-only list.
  *
  * Every event stays its own row with its source bucket and host: concurrent events
- * from different buckets are kept rather than merged into one canonical stream, and
- * events crossing the queried interval keep their true start and end. Equal start
- * times are ordered by bucket id, then by position in the bucket, so the order does
- * not depend on bucket order.
+ * from different buckets are kept rather than merged into one canonical stream.
+ * Events arrive clipped to the queried `range`, so rows touching its edges are flagged
+ * rather than presented as exact. Equal start times are ordered by bucket id, then by
+ * position in the bucket, so the order does not depend on bucket order.
  */
 export function timelineListRows(
-  buckets: TimelineListBucket[] | null | undefined
+  buckets: TimelineListBucket[] | null | undefined,
+  range?: [RangeBound, RangeBound] | null
 ): TimelineListRow[] {
+  const rangeStart = range ? new Date(range[0] as Date).getTime() : NaN;
+  const rangeEnd = range ? new Date(range[1] as Date).getTime() : NaN;
   const rows: (TimelineListRow & { index: number })[] = [];
   for (const bucket of buckets || []) {
     (bucket.events || []).forEach((e, index) => {
@@ -60,15 +70,18 @@ export function timelineListRows(
       } catch {
         // Malformed data for the bucket type; fall back to the raw title below.
       }
+      const end = start + e.duration * 1000;
       rows.push({
         key: `${bucket.id}:${index}`,
         bucketId: bucket.id,
         hostname: bucket.hostname || '',
         start,
-        end: start + e.duration * 1000,
+        end,
         duration: e.duration,
         label,
         detail: eventDetail(e, label),
+        clippedStart: start <= rangeStart,
+        clippedEnd: end >= rangeEnd,
         index,
       });
     });

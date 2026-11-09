@@ -41,6 +41,19 @@ describe('TimelineEventList', () => {
     expect(cells.at(4).text()).toBe('app0 — title0');
   });
 
+  test('marks start/end/duration clipped at the queried range edges', () => {
+    const wrapper = mount(TimelineEventList, {
+      propsData: {
+        buckets: [windowBucket('w', 1)],
+        range: ['2026-01-01T00:00:00Z', '2026-01-01T00:01:00Z'],
+      },
+    });
+    const cells = wrapper.findAll('tbody tr').at(0).findAll('td');
+    expect(cells.at(0).text().startsWith('≤ ')).toBe(true);
+    expect(cells.at(1).text().startsWith('≥ ')).toBe(true);
+    expect(cells.at(2).text()).toBe('≥ 1m 30s');
+  });
+
   test('pages past 100 rows instead of silently stopping', async () => {
     const wrapper = mountList([windowBucket('w', 250)]);
     expect(wrapper.findAll('tbody tr')).toHaveLength(100);
