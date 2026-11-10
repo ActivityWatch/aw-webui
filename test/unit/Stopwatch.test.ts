@@ -300,3 +300,30 @@ describe('Stopwatch editor completion', () => {
     jest.restoreAllMocks();
   });
 });
+
+describe('Stopwatch clock', () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  test('stops its clock interval when the view is destroyed', async () => {
+    const handle = 4242 as any;
+    jest.spyOn(global, 'setInterval').mockImplementation(() => handle);
+    const clear = jest.spyOn(global, 'clearInterval').mockImplementation(() => undefined);
+    const { wrapper } = mountStopwatch();
+    await flush();
+    expect(setInterval).toHaveBeenCalledTimes(1);
+    wrapper.destroy();
+    expect(clear).toHaveBeenCalledWith(handle);
+  });
+
+  test('does not leave a clock running when destroyed before loading finishes', async () => {
+    const handle = 4343 as any;
+    jest.spyOn(global, 'setInterval').mockImplementation(() => handle);
+    const clear = jest.spyOn(global, 'clearInterval').mockImplementation(() => undefined);
+    const { wrapper } = mountStopwatch();
+    wrapper.destroy();
+    await flush();
+    const started = (setInterval as unknown as jest.Mock).mock.calls.length;
+    const cleared = clear.mock.calls.filter(([h]) => h === handle).length;
+    expect(cleared).toBe(started);
+  });
+});
