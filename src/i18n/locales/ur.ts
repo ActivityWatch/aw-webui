@@ -667,6 +667,7 @@ export default {
       expand: 'فہرست پھیلائیں',
       condense: 'فہرست سمیٹیں',
       edit: 'ترمیم',
+      showMore: 'مزید {count} دکھائیں',
     },
     calendar: {
       bucket: 'بکٹ:',

@@ -658,6 +658,7 @@ export default {
       expand: 'Розгорнути список',
       condense: 'Згорнути список',
       edit: 'Редагувати',
+      showMore: 'Показати ще {count}',
     },
     calendar: {
       bucket: 'Bucket:',

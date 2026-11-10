@@ -662,6 +662,7 @@ export default {
       expand: 'তালিকা প্রসারিত করুন',
       condense: 'তালিকা সংকুচিত করুন',
       edit: 'সম্পাদনা',
+      showMore: 'আরও {count}টি দেখান',
     },
     calendar: {
       bucket: 'বাকেট:',

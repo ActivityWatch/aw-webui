@@ -671,6 +671,7 @@ export default {
       expand: 'Panua orodha',
       condense: 'Funga orodha',
       edit: 'Hariri',
+      showMore: 'Onyesha {count} zaidi',
     },
     calendar: {
       bucket: 'Bucket:',

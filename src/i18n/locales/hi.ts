@@ -665,6 +665,7 @@ export default {
       expand: 'सूची का विस्तार करें',
       condense: 'सूची संक्षिप्त करें',
       edit: 'संपादित करें',
+      showMore: '{count} और दिखाएँ',
     },
     calendar: {
       bucket: 'Bucket:',

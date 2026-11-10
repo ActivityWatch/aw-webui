@@ -656,6 +656,7 @@ export default {
       expand: 'توسيع القائمة',
       condense: 'طيّ القائمة',
       edit: 'تعديل',
+      showMore: 'عرض {count} إضافية',
     },
     calendar: {
       bucket: 'Bucket:',

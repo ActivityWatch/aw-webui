@@ -659,6 +659,7 @@ export default {
       expand: 'Развернуть список',
       condense: 'Свернуть список',
       edit: 'Редактировать',
+      showMore: 'Показать ещё {count}',
     },
     calendar: {
       bucket: 'Bucket:',
