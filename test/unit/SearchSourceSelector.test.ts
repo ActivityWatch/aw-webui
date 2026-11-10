@@ -121,4 +121,27 @@ describe('SearchSourceSelector', () => {
       event: { id: 7, data: { app: 'Firefox', title: 'example' } },
     });
   });
+
+  test.each(['bucketId', 'start', 'end'])(
+    'changing %s drops the listed and pending candidates',
+    async field => {
+      expect(Object.keys(Selector.watch)).toContain(field);
+      let resolve;
+      const vm = selectorVm(
+        jest
+          .fn()
+          .mockResolvedValueOnce([stored(1, 'example')])
+          .mockReturnValueOnce(new Promise(r => (resolve = r)))
+      );
+      vm.open();
+      await vm.load();
+      expect(vm.candidates).toHaveLength(1);
+      const loading = vm.load();
+      Selector.watch[field].call(vm);
+      expect(vm.candidates).toBeNull();
+      resolve([stored(2, 'example')]);
+      await loading;
+      expect(vm.candidates).toBeNull();
+    }
+  );
 });
