@@ -987,6 +987,17 @@ export default {
       duration: '时长',
       title: '标题',
       noResults: '没有找到结果。',
+      editStored: '编辑已存储的事件',
+      editStoredTitle: '编辑已存储的事件',
+      editStoredHelp:
+        '搜索结果是派生数据（已合并、拆分和裁剪），无法直接编辑。请从记录该事件的存储桶中选择要修改的已存储事件。保存会修改该已存储事件，它可能超出搜索时间段。',
+      onlyMatching: '仅显示数据与搜索模式匹配的事件',
+      outOfRange: '时间区间不能为空，且必须位于原始搜索时间段内。',
+      truncated: '此列表已达到结果上限，可能不完整。请缩小时间区间以查看其余内容。',
+      noCandidates: '此存储桶和时间区间内没有已存储的事件。',
+      load: '加载',
+      data: '数据',
+      staleResults: '事件已被修改，但无法刷新结果，因此结果可能已过时。请重新搜索。',
     },
     trends: { toUse: '即可查看趋势。' },
     workReport: {

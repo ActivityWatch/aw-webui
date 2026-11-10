@@ -1025,6 +1025,19 @@ export default {
       duration: 'Durasi',
       title: 'Judul',
       noResults: 'Tidak ada hasil.',
+      editStored: 'Edit peristiwa tersimpan',
+      editStoredTitle: 'Edit peristiwa tersimpan',
+      editStoredHelp:
+        'Hasil pencarian bersifat turunan (digabung, dipecah, dan dipotong) dan tidak dapat diedit langsung. Pilih peristiwa tersimpan yang ingin diubah dari bucket tempat peristiwa itu direkam. Menyimpan akan mengubah peristiwa tersimpan tersebut, yang mungkin melampaui periode pencarian.',
+      onlyMatching: 'Hanya tampilkan peristiwa yang datanya cocok dengan pola pencarian',
+      outOfRange: 'Interval tidak boleh kosong dan harus berada dalam periode pencarian awal.',
+      truncated:
+        'Daftar ini mencapai batas hasil dan mungkin tidak lengkap. Persempit interval untuk melihat sisanya.',
+      noCandidates: 'Tidak ada peristiwa tersimpan di bucket dan interval ini.',
+      load: 'Muat',
+      data: 'Data',
+      staleResults:
+        'Sebuah peristiwa telah diubah, tetapi hasil tidak dapat diperbarui sehingga mungkin sudah usang. Cari lagi.',
     },
     trends: { toUse: 'untuk menggunakan tampilan ini.' },
     workReport: {

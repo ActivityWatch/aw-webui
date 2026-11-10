@@ -1031,6 +1031,20 @@ export default {
       duration: 'Muda',
       title: 'Kichwa',
       noResults: 'Hakuna matokeo yaliyopatikana.',
+      editStored: 'Hariri tukio lililohifadhiwa',
+      editStoredTitle: 'Hariri tukio lililohifadhiwa',
+      editStoredHelp:
+        'Matokeo ya utafutaji yametokana na data nyingine (yameunganishwa, kugawanywa na kukatwa) na hayawezi kuhaririwa moja kwa moja. Chagua tukio lililohifadhiwa unalotaka kubadilisha kutoka kwenye bucket lilimorekodiwa. Kuhifadhi hubadilisha tukio hilo lililohifadhiwa, ambalo linaweza kuenea nje ya kipindi cha utafutaji.',
+      onlyMatching: 'Onyesha tu matukio ambayo data yake inalingana na muundo wa utafutaji',
+      outOfRange:
+        'Kipindi hakiwezi kuwa tupu na lazima kiwe ndani ya kipindi cha awali cha utafutaji.',
+      truncated:
+        'Orodha hii imefikia kikomo cha matokeo na huenda haijakamilika. Punguza kipindi ili kuona yaliyobaki.',
+      noCandidates: 'Hakuna matukio yaliyohifadhiwa katika bucket hii na kipindi hiki.',
+      load: 'Pakia',
+      data: 'Data',
+      staleResults:
+        'Tukio limebadilishwa, lakini matokeo hayakuweza kusasishwa, kwa hivyo huenda yamepitwa na wakati. Tafuta tena.',
     },
     trends: { toUse: 'kutumia mwonekano huu.' },
     workReport: {

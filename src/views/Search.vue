@@ -30,6 +30,14 @@ div
   div(v-if="events != null || browserEvents != null")
     hr
 
+    b-alert(v-if="stale" show variant="warning")
+      | {{ $t('extraViews.search.staleResults') }}
+
+    div.mb-2(v-if="submitted && submitted.sources.length > 0")
+      b-button(size="sm" variant="outline-dark" :disabled="stale || status == 'searching'" @click="$refs.sourceSelector.open()")
+        icon.mr-1(name="edit")
+        | {{ $t('extraViews.search.editStored') }}
+
     div(v-if="events && events.length > 0")
       h5 {{ $t('extraViews.search.windowEvents') }} ({{ events.length }})
       aw-selectable-eventview(:events="events")
@@ -58,6 +66,11 @@ div
       | {{ $t('search.notFound') }}
       br
       | {{ $t('search.addWeek') }} #[b-button(size="sm" variant="outline-dark" @click="extendByWeek()") {{ $t('search.addWeekBtn') }}]
+
+  aw-search-source-selector(v-if="submitted" ref="sourceSelector" :search="submitted" @select="editSource")
+  //- One Search-owned editor, outside the selector and result views, so a
+  //- confirmed mutation reaches Search even after the selection moves on.
+  event-editor(v-if="editing" :key="editing.bucketId + '/' + editing.event.id" :event="editing.event" :bucket_id="editing.bucketId" @saved="sourceMutated" @deleted="sourceMutated")
 </template>
 
 <script lang="ts">
@@ -70,9 +83,13 @@ import 'vue-awesome/icons/search';
 import 'vue-awesome/icons/spinner';
 import 'vue-awesome/icons/angle-double-down';
 import 'vue-awesome/icons/angle-double-up';
+import 'vue-awesome/icons/edit';
+import SearchSourceSelector from '~/components/SearchSourceSelector.vue';
+import EventEditor from '~/components/EventEditor.vue';
 
 export default {
   name: 'Search',
+  components: { 'aw-search-source-selector': SearchSourceSelector, 'event-editor': EventEditor },
   data() {
     return {
       pattern: '',
@@ -82,6 +99,13 @@ export default {
       status: null,
       error: '',
       searchSequence: 0,
+
+      // The last submission whose results are displayed, with the stored buckets it read.
+      submitted: null,
+      // Set when a refresh after an edit failed: results may predate that edit.
+      stale: false,
+      // The stored event explicitly selected for editing: { bucketId, event }.
+      editing: null,
 
       // Options
       show_options: false,
@@ -95,11 +119,13 @@ export default {
     this.searchSequence++;
   },
   methods: {
-    search: async function () {
-      const sequence = ++this.searchSequence;
+    search: function () {
       // A submission owns its inputs even if the form changes during bucket loading.
-      const pattern = this.pattern;
-      const { hostname, start, stop, filter_afk } = this.queryOptions;
+      return this.runSearch({ pattern: this.pattern, ...this.queryOptions });
+    },
+    runSearch: async function (options, refresh = false) {
+      const sequence = ++this.searchSequence;
+      const { pattern, hostname, start, stop, filter_afk } = options;
       this.status = 'searching';
       this.error = '';
 
@@ -107,8 +133,9 @@ export default {
         const timeperiods = [moment(start).format() + '/' + moment(stop).format()];
 
         // Window search query
+        const desktopBuckets = useBucketsStore().desktopBucketIds(hostname);
         let windowQuery = canonicalEvents({
-          ...useBucketsStore().desktopBucketIds(hostname),
+          ...desktopBuckets,
           filter_afk,
           categories: [[['searched'], { type: 'regex', regex: pattern, ignore_case: true }]],
           filter_categories: [['searched']],
@@ -119,10 +146,11 @@ export default {
         // Look up browser buckets for this host. A failure here (e.g. the bucket
         // list cannot be loaded) must not block the window-only search.
         let browserQueryArray: string[] = [];
+        let browserBuckets: string[] = [];
         try {
           const bucketsStore = useBucketsStore();
           await bucketsStore.ensureLoaded();
-          const browserBuckets = bucketsStore.bucketsBrowser(hostname);
+          browserBuckets = bucketsStore.bucketsBrowser(hostname);
           browserQueryArray = browserSearchQuery(browserBuckets, pattern);
         } catch (e) {
           console.error('Failed to load browser buckets for search', e);
@@ -149,6 +177,13 @@ export default {
         ]);
         if (sequence !== this.searchSequence) return;
         this.error = errors.join('; ');
+        // A refresh after an edit that could not re-read every source leaves
+        // results that may predate the edit.
+        this.stale = refresh && errors.length > 0;
+        this.submitted = {
+          ...options,
+          sources: [desktopBuckets?.bid_window, ...browserBuckets].filter(Boolean),
+        };
 
         // Every window hit carries the synthetic `searched` category the query
         // uses for filtering; it is not a real category, so drop it from results.
@@ -168,10 +203,24 @@ export default {
         console.error(e);
         if (sequence === this.searchSequence) {
           this.error = e.response?.data?.message ?? String(e);
+          if (refresh) this.stale = true;
         }
       } finally {
         if (sequence === this.searchSequence) this.status = null;
       }
+    },
+    editSource(selection) {
+      this.editing = selection;
+      this.$nextTick(() => this.$bvModal.show('edit-modal-' + selection.event.id));
+    },
+    // A stored event changed on the server. Re-run the newest submitted search
+    // if it read that bucket (never the unsent form), so no result predating the
+    // write is shown as fresh; the rerun also supersedes any in-flight search.
+    sourceMutated(_event, bucketId) {
+      this.editing = null;
+      const current = this.submitted;
+      if (!current || !current.sources.includes(bucketId)) return;
+      return this.runSearch(_.omit(current, 'sources'), true);
     },
     extendByWeek() {
       this.queryOptions.start = moment(this.queryOptions.start)

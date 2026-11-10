@@ -1023,6 +1023,20 @@ export default {
       duration: 'Dauer',
       title: 'Titel',
       noResults: 'Keine Ergebnisse gefunden.',
+      editStored: 'Gespeichertes Ereignis bearbeiten',
+      editStoredTitle: 'Gespeichertes Ereignis bearbeiten',
+      editStoredHelp:
+        'Suchergebnisse sind abgeleitet (zusammengeführt, geteilt und zugeschnitten) und können nicht direkt bearbeitet werden. Wähle das gespeicherte Ereignis, das du ändern möchtest, aus dem Bucket, in dem es aufgezeichnet wurde. Beim Speichern wird dieses gespeicherte Ereignis geändert, das über den Suchzeitraum hinausreichen kann.',
+      onlyMatching: 'Nur Ereignisse anzeigen, deren Daten zum Suchmuster passen',
+      outOfRange:
+        'Das Intervall darf nicht leer sein und muss innerhalb des ursprünglichen Suchzeitraums liegen.',
+      truncated:
+        'Diese Liste hat das Ergebnislimit erreicht und ist möglicherweise unvollständig. Grenze das Intervall ein, um den Rest zu sehen.',
+      noCandidates: 'Keine gespeicherten Ereignisse in diesem Bucket und Intervall.',
+      load: 'Laden',
+      data: 'Daten',
+      staleResults:
+        'Ein Ereignis wurde geändert, aber die Ergebnisse konnten nicht aktualisiert werden und sind möglicherweise veraltet. Suche erneut.',
     },
     trends: { toUse: 'werden benötigt, um diese Ansicht zu nutzen.' },
     workReport: {
