@@ -35,9 +35,9 @@ div
               b-btn.field(@click="() => {editEvent(event)}" variant="outline-dark" size="sm" style="padding: 0 0.2em 0 0.2em")
                 icon(name="edit")
                 | {{ $t('ui.eventList.edit') }}
-    div.text-center.p-2(v-if="events.length > displayed_events.length")
+    div.text-center.p-2(v-if="safe_events.length > displayed_events.length")
       b-button.show-more(@click="showMore", size="sm", variant="outline-dark")
-        | {{ $t('ui.eventList.showMore', { count: Math.min(pageSize, events.length - displayed_events.length) }) }}
+        | {{ $t('ui.eventList.showMore', { count: Math.min(pageSize, safe_events.length - displayed_events.length) }) }}
 </template>
 
 <style scoped lang="scss">
