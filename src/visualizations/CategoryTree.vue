@@ -12,7 +12,7 @@ div(style="font-size: 0.9em")
       span(v-else, style="opacity: 0.6")
         icon(name="circle", scale="0.4", style="margin-left: 1em; margin-right: 1.22em;")
 
-      span.category-title {{cat.subname}}
+      span.category-title {{categorySegmentLabel(cat.subname)}}
 
     // time
     span.category-value
@@ -63,6 +63,7 @@ import 'vue-awesome/icons/regular/minus-square';
 import _ from 'lodash';
 import { build_category_hierarchy, flatten_category_hierarchy } from '../util/classes.ts';
 import { IEvent } from '../util/interfaces.ts';
+import { categorySegmentLabel } from '~/util/categoryLabels';
 
 function _get_child_cats(cat, all_cats) {
   return _.filter(all_cats, c => _.isEqual(c.parent, cat.name));
@@ -135,6 +136,7 @@ export default {
     },
   },
   methods: {
+    categorySegmentLabel,
     get_category: function (cat_arr) {
       return _.find(this.category_hierarchy, c => _.isEqual(c.name, cat_arr));
     },

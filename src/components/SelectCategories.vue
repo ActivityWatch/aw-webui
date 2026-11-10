@@ -29,6 +29,7 @@ b-form-tags#tags-component-select(
 <script lang="ts">
 import Vue, { PropType } from 'vue';
 import { useCategoryStore } from '~/stores/categories';
+import { categoryPathLabel } from '~/util/categoryLabels';
 
 const SEP = ' > ';
 
@@ -55,13 +56,13 @@ export default Vue.extend({
     options() {
       return useCategoryStore().classes.map(category => ({
         value: JSON.stringify(category.name),
-        text: category.name.join(SEP),
+        text: categoryPathLabel(category.name, SEP),
       }));
     },
   },
   methods: {
     tagLabel(tag: string): string {
-      return JSON.parse(tag).join(SEP);
+      return categoryPathLabel(JSON.parse(tag), SEP);
     },
   },
 });

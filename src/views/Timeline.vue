@@ -65,7 +65,7 @@ div
                 option(v-for="cat in category_options", :key="cat.text", :value="cat.text") {{ cat.text }}
               div.mt-1(v-if="filter_categories.length > 0")
                 span.badge.badge-info.mr-1(v-for="(cat, idx) in filter_categories", :key="idx")
-                  | {{ cat.join(' > ') }}
+                  | {{ categoryPathLabel(cat) }}
                   button.ml-1.close.small(@click="removeCategory(idx)", type="button", :aria-label="$t('ui.workReport.removeCategory')", style="font-size: 0.85rem; line-height: 1") &times;
 
     b-button-group.mr-2(size="sm")
@@ -139,6 +139,7 @@ import { useCategoryStore } from '~/stores/categories';
 import { matchString } from '~/util/classes';
 import { getCategorizationStringFromEvent } from '~/util/color';
 import { seconds_to_duration } from '~/util/time';
+import { categoryPathLabel } from '~/util/categoryLabels';
 import { categoryTimelineQuery, mergeCategoryIntervals } from '~/util/timelineCategories';
 import TimelineEventList from '~/visualizations/TimelineEventList.vue';
 
@@ -256,6 +257,7 @@ export default {
     useCategoryStore().load();
   },
   methods: {
+    categoryPathLabel,
     onCategorySelect(event) {
       const text = event.target.value;
       if (!text) return;
