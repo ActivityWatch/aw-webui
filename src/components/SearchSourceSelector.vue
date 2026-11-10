@@ -100,6 +100,17 @@ export default {
       // A new or refreshed search invalidates any listed candidates.
       this.invalidate();
     },
+    // A list (or pending load) belongs to the inputs it was requested with;
+    // changing them must not leave another bucket's events editable below.
+    bucketId() {
+      this.invalidate();
+    },
+    start() {
+      this.invalidate();
+    },
+    end() {
+      this.invalidate();
+    },
   },
   beforeDestroy() {
     this.loadSequence++;
