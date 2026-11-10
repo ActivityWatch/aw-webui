@@ -215,6 +215,10 @@ export default {
       switchUnsavedConfirm:
         'You have unsaved changes. Switch sets anyway? (Changes will be discarded)',
     },
+    supporter: {
+      title: 'I already support ActivityWatch',
+      help: 'Hides the in-app prompts asking you to support ActivityWatch. Honor system: stored in your local server, never verified, nothing is sent.',
+    },
     developer: {
       title: 'Developer settings',
       note: 'Note:',

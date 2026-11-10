@@ -201,6 +201,10 @@ export default {
       switchUnsavedConfirm:
         'Vous avez des modifications non enregistrées. Changer de jeu quand même ? (Les modifications seront perdues)',
     },
+    supporter: {
+      title: 'Je soutiens déjà ActivityWatch',
+      help: "Masque les messages dans l'application qui demandent de soutenir ActivityWatch. Sur la base de la confiance : stocké uniquement sur votre serveur local, jamais vérifié, rien n'est envoyé.",
+    },
     developer: {
       title: 'Paramètres développeur',
       note: 'Remarque :',

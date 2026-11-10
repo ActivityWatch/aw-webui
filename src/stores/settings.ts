@@ -103,6 +103,12 @@ interface State {
   // Whether to hide visualizations that lack required data (default: off)
   hideUnsupportedVisualizations: boolean;
 
+  // Honor-system "I already support ActivityWatch" flag. Stored in the server's
+  // settings store (not localStorage) so every browser and the desktop clients
+  // (aw-qt, aw-tauri) see the same answer. It only suppresses in-app support
+  // prompts; it is never verified, and nothing is sent anywhere when it is set.
+  supporter: boolean;
+
   // Set to true if settings loaded
   _loaded: boolean;
   // Keys that were actually present in storage (server or localStorage) on load.
@@ -165,6 +171,8 @@ export const useSettingsStore = defineStore('settings', {
     devmode: typeof PRODUCTION === 'undefined' ? true : !PRODUCTION,
     requestTimeout: 30,
     hideUnsupportedVisualizations: false,
+
+    supporter: false,
 
     _loaded: false,
     _storedKeys: [],
@@ -297,7 +305,14 @@ export const useSettingsStore = defineStore('settings', {
           console.error('failed to parse', key, raw, e);
         }
       }
-      this.$patch({ ...storage, _loaded: true, _storedKeys: Object.keys(storage) });
+      // Missing supporter storage means the default, including when reconciling
+      // an optimistic first-ever choice after a rejected POST.
+      this.$patch({
+        supporter: false,
+        ...storage,
+        _loaded: true,
+        _storedKeys: Object.keys(storage),
+      });
 
       const localeFromServer = 'locale' in server_settings;
       const localeFromLocalStorage = localStorage.getItem('locale') != null;

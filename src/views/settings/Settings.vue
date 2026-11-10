@@ -40,6 +40,7 @@ import ColorSettings from '~/views/settings/ColorSettings.vue';
 import ActivePatternSettings from '~/views/settings/ActivePatternSettings.vue';
 import PrivacyFilterSettings from '~/views/settings/PrivacyFilterSettings.vue';
 import AwNotifySettings from '~/views/settings/AwNotifySettings.vue';
+import SupporterSettings from '~/views/settings/SupporterSettings.vue';
 
 interface Group {
   id: string;
@@ -65,6 +66,7 @@ export default {
     ActivePatternSettings,
     PrivacyFilterSettings,
     AwNotifySettings,
+    SupporterSettings,
   },
   async beforeRouteLeave(to, from, next) {
     const categoryStore = useCategoryStore();
@@ -106,6 +108,7 @@ export default {
           { name: 'TimelineDurationSettings' },
           { name: 'LandingPageSettings' },
           { name: 'UncategorizedHintSettings' },
+          { name: 'SupporterSettings' },
           ...(this.$isAndroid ? [] : [{ name: 'ReleaseNotificationSettings' }]),
         ],
       };

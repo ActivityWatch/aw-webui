@@ -179,6 +179,10 @@ export default {
       deleteSetConfirm: '确定要删除分类集“{id}”吗？此操作不可撤销。',
       switchUnsavedConfirm: '有未保存的更改。仍要切换分类集吗？（更改将被丢弃）',
     },
+    supporter: {
+      title: '我已在支持 ActivityWatch',
+      help: '隐藏应用中请求支持 ActivityWatch 的提示。基于信任：仅保存在本地服务器上，不会验证，也不会发送任何内容。',
+    },
     developer: {
       title: '开发者设置',
       note: '注意：',
