@@ -455,6 +455,21 @@ describe('Search stored-source editing', () => {
     expect(query).not.toHaveBeenCalled();
   });
 
+  test('browser discovery failure after an edit is visible and marks results stale', async () => {
+    const query = jest.fn().mockResolvedValue([[hit('a')]]);
+    const vm = searchVm(query);
+    await Search.methods.search.call(vm);
+    mockBuckets.ensureLoaded.mockRejectedValueOnce(new Error('Bucket list unavailable'));
+    query.mockClear();
+
+    await Search.methods.sourceMutated.call(vm, {}, 'aw-watcher-web-firefox_host');
+
+    expect(query).toHaveBeenCalledTimes(1);
+    expect(vm.events).toHaveLength(1);
+    expect(vm.error).toContain('Bucket list unavailable');
+    expect(vm.stale).toBe(true);
+  });
+
   test('a failed refresh after an edit marks the results stale', async () => {
     const query = jest
       .fn()
