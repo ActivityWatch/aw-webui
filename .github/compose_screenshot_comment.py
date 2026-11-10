@@ -1,74 +1,47 @@
-"""Publish screenshots and emit a comment only after every publication succeeds."""
+"""Link GitHub screenshot artifacts without a third-party image upload service."""
 
 import html
+import json
+import os
 from pathlib import Path
-import subprocess
 import sys
-from urllib.parse import urlsplit
-
-
-def publish(image: Path) -> str:
-    result = subprocess.run(
-        ["cml", "publish", str(image)], capture_output=True, text=True, check=False
-    )
-    if result.returncode:
-        raise RuntimeError(
-            f"Publication failed for {image} (exit {result.returncode}): "
-            f"{result.stderr.strip()}"
-        )
-    url = result.stdout.rstrip("\r\n")
-    try:
-        parsed = urlsplit(url)
-        valid = (
-            bool(url)
-            and parsed.scheme in ("http", "https")
-            and bool(parsed.hostname)
-            and not any(c.isspace() or ord(c) < 32 or ord(c) == 127 for c in url)
-            and not any(c in url for c in '"<>')
-        )
-        # Accessing port validates malformed/non-numeric or out-of-range ports.
-        parsed.port
-    except ValueError:
-        valid = False
-    if not valid:
-        raise RuntimeError(
-            f"Publisher returned an invalid image URL for {image}: {url!r}"
-        )
-    return url
 
 
 def compose() -> str:
-    images = sorted(
-        path for path in Path("screenshots").glob("aw-*/*/*.png") if path.is_file()
+    artifacts = json.loads(Path("screenshot-artifacts.json").read_text())
+    screenshots = sorted(
+        (
+            artifact
+            for artifact in artifacts
+            if artifact["name"].startswith("screenshots-") and not artifact["expired"]
+        ),
+        key=lambda artifact: artifact["name"],
     )
-    if not images:
-        raise RuntimeError("No PNG screenshots found under screenshots/aw-*/*/")
+    if not screenshots:
+        raise RuntimeError("No unexpired screenshot artifacts found for this build")
 
-    lines = ["Here are screenshots of this commit:", ""]
-    current_group = None
-    for image in images:
-        group = image.parent
-        if group != current_group:
-            if current_group is not None:
-                lines.extend(["</p>", "</details>"])
-            label = html.escape(f"{group.parent.name} {group.name}")
-            lines.extend(
-                [
-                    f"<details><summary>Screenshots using {label} (click to expand)</summary>",
-                    '<p float="left">',
-                ]
-            )
-            current_group = group
-        url = html.escape(publish(image), quote=True)
-        lines.append(f'<img width="45%" src="{url}"/>')
-    lines.extend(["</p>", "</details>"])
+    repository = os.environ["GITHUB_REPOSITORY"]
+    run_id = int(os.environ["SCREENSHOT_RUN_ID"])
+    lines = [
+        "Here are the screenshot archives for this commit:",
+        "",
+        "GitHub sign-in is required to download artifacts; links expire with the build artifacts.",
+        "",
+    ]
+    for artifact in screenshots:
+        artifact_id = artifact["id"]
+        if type(artifact_id) is not int or artifact_id <= 0:
+            raise ValueError("Invalid screenshot artifact ID")
+        url = f"https://github.com/{repository}/actions/runs/{run_id}/artifacts/{artifact_id}"
+        label = html.escape(artifact["name"])
+        lines.append(f'<a href="{url}">{label}</a><br/>')
     return "\n".join(lines)
 
 
 if __name__ == "__main__":
     try:
         comment = compose()
-    except (OSError, RuntimeError) as error:
+    except (OSError, RuntimeError, ValueError, KeyError) as error:
         print(f"Screenshot comment failed: {error}", file=sys.stderr)
         sys.exit(1)
     print(comment)
