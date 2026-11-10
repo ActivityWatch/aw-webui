@@ -102,6 +102,8 @@ export default {
 
       // The last submission whose results are displayed, with the stored buckets it read.
       submitted: null,
+      // Latest in-flight submission; its sources may not be discovered yet.
+      pendingSearch: null,
       // Set when a refresh after an edit failed: results may predate that edit.
       stale: false,
       // The stored event explicitly selected for editing: { bucketId, event }.
@@ -126,6 +128,7 @@ export default {
     runSearch: async function (options, refresh = false) {
       const sequence = ++this.searchSequence;
       const { pattern, hostname, start, stop, filter_afk } = options;
+      this.pendingSearch = { ...options };
       this.status = 'searching';
       this.error = '';
 
@@ -207,7 +210,10 @@ export default {
           if (refresh) this.stale = true;
         }
       } finally {
-        if (sequence === this.searchSequence) this.status = null;
+        if (sequence === this.searchSequence) {
+          this.status = null;
+          this.pendingSearch = null;
+        }
       }
     },
     editSource(selection) {
@@ -219,6 +225,9 @@ export default {
     // write is shown as fresh; the rerun also supersedes any in-flight search.
     sourceMutated(_event, bucketId) {
       this.editing = null;
+      // A pending submission can read the edited bucket even when the displayed
+      // one does not. Restart it conservatively (including during discovery).
+      if (this.pendingSearch) return this.runSearch(this.pendingSearch, true);
       const current = this.submitted;
       if (!current || !current.sources.includes(bucketId)) return;
       return this.runSearch(_.omit(current, 'sources'), true);

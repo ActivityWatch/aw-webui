@@ -444,6 +444,32 @@ describe('Search stored-source editing', () => {
     expect(vm.events[0].data.title).toBe('after edit');
   });
 
+  test('an edit invalidates a pending search even when completed results read another host', async () => {
+    const query = jest.fn().mockResolvedValue([[hit('initial')]]);
+    const vm = searchVm(query);
+    await Search.methods.search.call(vm);
+    // The editor from A can still be saving while a search on B completes.
+    mockBuckets.desktopBucketIds.mockReturnValue({ bid_window: 'window_B' });
+    mockBuckets.bucketsBrowser.mockReturnValue([]);
+    vm.queryOptions.hostname = 'B';
+    await Search.methods.search.call(vm);
+    expect(vm.submitted.sources).toEqual(['window_B']);
+
+    mockBuckets.desktopBucketIds.mockReturnValue({ bid_window: 'aw-watcher-window_host' });
+    vm.queryOptions.hostname = 'A';
+    const beforeWrite = deferred();
+    query.mockReturnValueOnce(beforeWrite.promise).mockResolvedValue([[hit('after write')]]);
+    const pendingRequest = Search.methods.search.call(vm);
+    await flush();
+    await Search.methods.sourceMutated.call(vm, {}, 'aw-watcher-window_host');
+    beforeWrite.resolve([[hit('before write')]]);
+    await pendingRequest;
+
+    expect(vm.events[0].data.title).toBe('after write');
+    expect(vm.submitted.hostname).toBe('A');
+    expect(vm.stale).toBe(false);
+  });
+
   test('an edit to a bucket the results did not read leaves them alone', async () => {
     const query = jest.fn().mockResolvedValue([[hit('a')]]);
     const vm = searchVm(query);
