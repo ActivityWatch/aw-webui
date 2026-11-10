@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import moment from 'moment';
+import _ from 'lodash';
 import { createLocalVue, shallowMount } from '@vue/test-utils';
 import { BButton, BFormInput } from 'bootstrap-vue';
 import SearchComponent from '~/views/Search.vue';
@@ -29,7 +30,7 @@ const windowEvent = {
 };
 
 function searchVm(query) {
-  return {
+  const vm: any = {
     ...Search.data(),
     pattern: 'example',
     queryOptions: {
@@ -40,6 +41,8 @@ function searchVm(query) {
     },
     $aw: { query },
   };
+  vm.runSearch = (...args) => Search.methods.runSearch.apply(vm, args);
+  return vm;
 }
 
 const deferred = () => {
@@ -269,7 +272,8 @@ describe('Search query failure isolation and request ownership', () => {
         },
         icon: true,
       },
-      data: () => searchVm(query),
+      // runSearch is a method on the mounted component, not data.
+      data: () => _.omit(searchVm(query), 'runSearch'),
     });
     try {
       await wrapper.find('input').setValue('old');
@@ -367,5 +371,104 @@ describe('Search query failure isolation and request ownership', () => {
     expect(vm.events).toHaveLength(1);
     expect(vm.browserEvents).toEqual([]);
     expect(vm.status).toBeNull();
+  });
+});
+
+describe('Search stored-source editing', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockBuckets.ensureLoaded.mockResolvedValue(undefined);
+    mockBuckets.desktopBucketIds.mockReturnValue({
+      bid_window: 'aw-watcher-window_host',
+      bid_afk: 'aw-watcher-afk_host',
+    });
+    mockBuckets.bucketsBrowser.mockReturnValue(['aw-watcher-web-firefox_host']);
+    jest.spyOn(console, 'error').mockReturnValue(undefined);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  test('a completed search records the submission and the buckets it read', async () => {
+    const vm = searchVm(jest.fn().mockResolvedValue([[hit('a')]]));
+    await Search.methods.search.call(vm);
+    expect(vm.submitted).toEqual({
+      pattern: 'example',
+      hostname: 'browser-only',
+      start: '2026-10-16',
+      stop: '2026-10-17',
+      filter_afk: true,
+      sources: ['aw-watcher-window_host', 'aw-watcher-web-firefox_host'],
+    });
+  });
+
+  test('an edit re-runs the submitted search, not unsent form changes', async () => {
+    const query = jest.fn().mockResolvedValue([[hit('a')]]);
+    const vm = searchVm(query);
+    await Search.methods.search.call(vm);
+    vm.pattern = 'unsent draft';
+    vm.queryOptions = { ...vm.queryOptions, hostname: 'other' };
+    vm.editing = { bucketId: 'aw-watcher-window_host', event: { id: 1 } };
+    query.mockClear();
+
+    await Search.methods.sourceMutated.call(vm, {}, 'aw-watcher-window_host');
+
+    expect(vm.editing).toBeNull();
+    expect(mockBuckets.desktopBucketIds).toHaveBeenLastCalledWith('browser-only');
+    expect(query).toHaveBeenCalledTimes(2);
+    expect(JSON.stringify(query.mock.calls[0][1])).toContain('example');
+    expect(JSON.stringify(query.mock.calls[0][1])).not.toContain('unsent draft');
+    expect(vm.submitted.pattern).toBe('example');
+    expect(vm.stale).toBe(false);
+  });
+
+  test('a search in flight when an edit lands cannot publish pre-edit results', async () => {
+    const before = deferred();
+    const query = jest
+      .fn()
+      .mockResolvedValueOnce([[hit('a')]])
+      .mockResolvedValueOnce([[browserEvent]])
+      .mockReturnValueOnce(before.promise)
+      .mockReturnValueOnce(before.promise)
+      .mockResolvedValue([[hit('after edit')]]);
+    const vm = searchVm(query);
+    await Search.methods.search.call(vm);
+    const inFlight = Search.methods.search.call(vm);
+    await flush();
+
+    await Search.methods.sourceMutated.call(vm, {}, 'aw-watcher-web-firefox_host');
+    before.resolve([[hit('before edit')]]);
+    await inFlight;
+
+    expect(vm.events[0].data.title).toBe('after edit');
+  });
+
+  test('an edit to a bucket the results did not read leaves them alone', async () => {
+    const query = jest.fn().mockResolvedValue([[hit('a')]]);
+    const vm = searchVm(query);
+    await Search.methods.search.call(vm);
+    query.mockClear();
+
+    await Search.methods.sourceMutated.call(vm, {}, 'aw-stopwatch');
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  test('a failed refresh after an edit marks the results stale', async () => {
+    const query = jest
+      .fn()
+      .mockResolvedValueOnce([[hit('a')]])
+      .mockResolvedValueOnce([[browserEvent]])
+      .mockRejectedValueOnce(new Error('server down'))
+      .mockResolvedValueOnce([[browserEvent]]);
+    const vm = searchVm(query);
+    await Search.methods.search.call(vm);
+    expect(vm.stale).toBe(false);
+
+    await Search.methods.sourceMutated.call(vm, {}, 'aw-watcher-window_host');
+
+    expect(vm.stale).toBe(true);
+    expect(vm.error).toContain('server down');
   });
 });
