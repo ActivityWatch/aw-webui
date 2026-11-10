@@ -8,10 +8,12 @@ b-modal(:id="modalId", ref="modal", :title="$t('extraViews.search.editStoredTitl
       b-form-select(v-model="bucketId", :options="sources", size="sm")
     div.col-md-3
       label.small {{ $t('ui.eventEditor.start') }}
-      b-input(v-model="start", type="datetime-local", size="sm")
+      b-input(v-model="start", type="datetime-local", size="sm", step="1", @input="startInstant = null")
+      b-form-select.mt-1(v-if="startOptions.length > 1", v-model="startInstant", :options="occurrenceOptions(startOptions)", size="sm")
     div.col-md-3
       label.small {{ $t('ui.eventEditor.end') }}
-      b-input(v-model="end", type="datetime-local", size="sm")
+      b-input(v-model="end", type="datetime-local", size="sm", step="1", @input="endInstant = null")
+      b-form-select.mt-1(v-if="endOptions.length > 1", v-model="endInstant", :options="occurrenceOptions(endOptions)", size="sm")
     div.col-md-2.d-flex.align-items-end
       b-button(size="sm", variant="primary", :disabled="!bucketId || loading", @click="load()") {{ $t('extraViews.search.load') }}
 
@@ -45,10 +47,11 @@ b-modal(:id="modalId", ref="modal", :title="$t('extraViews.search.editStoredTitl
 
 <script lang="ts">
 import moment from 'moment';
+import { wallTimeInstants } from '~/util/timeperiod';
 import 'vue-awesome/icons/spinner';
 
 // Format accepted by <input type="datetime-local">.
-const LOCAL = 'YYYY-MM-DDTHH:mm';
+const LOCAL = 'YYYY-MM-DDTHH:mm:ss';
 
 export default {
   name: 'aw-search-source-selector',
@@ -63,6 +66,8 @@ export default {
       bucketId: null,
       start: '',
       end: '',
+      startInstant: null,
+      endInstant: null,
       onlyMatching: true,
       candidates: null,
       loading: false,
@@ -72,6 +77,12 @@ export default {
     };
   },
   computed: {
+    startOptions() {
+      return wallTimeInstants(this.start);
+    },
+    endOptions() {
+      return wallTimeInstants(this.end);
+    },
     sources() {
       return this.search.sources;
     },
@@ -111,6 +122,12 @@ export default {
     end() {
       this.invalidate();
     },
+    startInstant() {
+      this.invalidate();
+    },
+    endInstant() {
+      this.invalidate();
+    },
   },
   beforeDestroy() {
     this.loadSequence++;
@@ -120,6 +137,10 @@ export default {
       this.bucketId = bucketId || this.sources[0] || null;
       this.start = moment(this.search.start).format(LOCAL);
       this.end = moment(this.search.stop).format(LOCAL);
+      // Preserve which occurrence the submitted search used. User edits clear
+      // the choice and must explicitly disambiguate a repeated local time.
+      this.startInstant = moment(this.search.start).utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
+      this.endInstant = moment(this.search.stop).utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
       this.invalidate();
       this.$bvModal.show(this.modalId);
     },
@@ -133,13 +154,31 @@ export default {
       this.error = '';
       this.outOfRange = false;
     },
+    occurrenceOptions(instants) {
+      return [
+        { value: null, text: this.$t('activity.intervalAmbiguousTime'), disabled: true },
+        ...instants.map(value => ({ value, text: moment(value).format('HH:mm:ss Z') })),
+      ];
+    },
     async load() {
       const sequence = ++this.loadSequence;
       const bucketId = this.bucketId;
-      const start = moment(this.start);
-      const end = moment(this.end);
       this.candidates = null;
       this.error = '';
+      this.outOfRange = false;
+      const bounds = [
+        { options: this.startOptions, pick: this.startInstant },
+        { options: this.endOptions, pick: this.endInstant },
+      ];
+      if (bounds.some(b => b.options.length === 0)) {
+        this.error = this.$t('activity.intervalNonexistentTime');
+        return;
+      }
+      if (bounds.some(b => b.options.length > 1 && !b.options.includes(b.pick))) {
+        this.error = this.$t('activity.intervalAmbiguousTime');
+        return;
+      }
+      const [start, end] = bounds.map(b => moment(b.options.length > 1 ? b.pick : b.options[0]));
       this.outOfRange =
         !start.isValid() ||
         !end.isValid() ||
