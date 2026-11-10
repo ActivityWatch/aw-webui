@@ -104,7 +104,7 @@ export default {
       submitted: null,
       // Latest in-flight submission; its sources may not be discovered yet.
       pendingSearch: null,
-      // Set when a refresh after an edit failed: results may predate that edit.
+      // Displayed results may predate a confirmed edit until refreshed.
       stale: false,
       // The stored event explicitly selected for editing: { bucketId, event }.
       editing: null,
@@ -225,6 +225,9 @@ export default {
     // write is shown as fresh; the rerun also supersedes any in-flight search.
     sourceMutated(_event, bucketId) {
       this.editing = null;
+      // Invalidate the displayed snapshot immediately: a newer submission may
+      // supersede the refresh and fail without publishing replacement results.
+      if (this.submitted?.sources.includes(bucketId)) this.stale = true;
       // A pending submission can read the edited bucket even when the displayed
       // one does not. Restart it conservatively (including during discovery).
       if (this.pendingSearch) return this.runSearch(this.pendingSearch, true);

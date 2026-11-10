@@ -496,6 +496,36 @@ describe('Search stored-source editing', () => {
     expect(vm.stale).toBe(true);
   });
 
+  test('a superseding synchronous failure cannot make pre-edit results fresh', async () => {
+    mockBuckets.bucketsBrowser.mockReturnValue([]);
+    const refresh = deferred();
+    const query = jest
+      .fn()
+      .mockResolvedValueOnce([[hit('before edit')]])
+      .mockReturnValueOnce(refresh.promise)
+      .mockImplementationOnce(() => {
+        throw new Error('transport unavailable');
+      })
+      .mockResolvedValue([[hit('after edit')]]);
+    const vm = searchVm(query);
+    await Search.methods.search.call(vm);
+
+    const refreshing = Search.methods.sourceMutated.call(vm, {}, 'aw-watcher-window_host');
+    await flush();
+    await Search.methods.search.call(vm);
+    refresh.resolve([[hit('obsolete refresh')]]);
+    await refreshing;
+
+    expect(vm.events[0].data.title).toBe('before edit');
+    expect(vm.error).toContain('transport unavailable');
+    expect(vm.status).toBeNull();
+    expect(vm.stale).toBe(true);
+
+    await Search.methods.search.call(vm);
+    expect(vm.events[0].data.title).toBe('after edit');
+    expect(vm.stale).toBe(false);
+  });
+
   test('a failed refresh after an edit marks the results stale', async () => {
     const query = jest
       .fn()
