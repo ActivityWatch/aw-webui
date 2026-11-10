@@ -965,6 +965,9 @@ export default {
       bucketsNoEvents: 'Bucket tanpa event dalam rentang yang diminta akan disembunyikan.',
       editSaved: 'Perubahan Anda tersimpan. Segarkan garis waktu untuk melihatnya.',
       editSavedTitle: 'Perhatian',
+      list: 'Daftar',
+      listShowing: 'Menampilkan {shown} dari {total} peristiwa',
+      showMore: 'Tampilkan lebih banyak',
     },
     buckets: { id: 'ID' },
     userPoll: {

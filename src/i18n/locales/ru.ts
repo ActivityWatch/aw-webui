@@ -958,6 +958,9 @@ export default {
       bucketsNoEvents: 'Bucket-и без событий в запрошенном диапазоне будут скрыты.',
       editSaved: 'Изменение сохранено. Обновите хронологию, чтобы увидеть его.',
       editSavedTitle: 'Обратите внимание',
+      list: 'Список',
+      listShowing: 'Показано {shown} из {total} событий',
+      showMore: 'Показать больше',
     },
     buckets: { id: 'ID' },
     userPoll: {

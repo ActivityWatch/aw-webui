@@ -950,6 +950,9 @@ export default {
       bucketsNoEvents: 'ستُخفى الـ buckets التي لا تحتوي على أحداث في النطاق المستعلم عنه.',
       editSaved: 'تم حفظ تعديلك. حدّث المخطط الزمني لرؤية التغيير.',
       editSavedTitle: 'تنبيه',
+      list: 'قائمة',
+      listShowing: 'عرض {shown} من {total} حدث',
+      showMore: 'عرض المزيد',
     },
     buckets: { id: 'المعرّف' },
     userPoll: {

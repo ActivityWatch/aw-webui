@@ -971,6 +971,9 @@ export default {
       bucketsNoEvents: 'Buckets zisizo na matukio katika kipindi kilichoulizwa zitafichwa.',
       editSaved: 'Uhariri wako umehifadhiwa. Onyesha upya mstari wa wakati kuuona ukirekodiwa.',
       editSavedTitle: 'Kumbuka',
+      list: 'Orodha',
+      listShowing: 'Inaonyesha matukio {shown} kati ya {total}',
+      showMore: 'Onyesha zaidi',
     },
     buckets: { id: 'Kitambulisho' },
     userPoll: {

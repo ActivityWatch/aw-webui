@@ -982,6 +982,9 @@ export default {
       editSaved:
         'Votre modification est enregistrée. Actualisez la chronologie pour la voir appliquée.',
       editSavedTitle: 'Information',
+      list: 'Liste',
+      listShowing: '{shown} événements affichés sur {total}',
+      showMore: 'Afficher plus',
     },
     buckets: { id: 'ID' },
     userPoll: {

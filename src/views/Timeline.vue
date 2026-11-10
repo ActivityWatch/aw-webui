@@ -68,9 +68,22 @@ div
                   | {{ cat.join(' > ') }}
                   button.ml-1.close.small(@click="removeCategory(idx)", type="button", :aria-label="$t('ui.workReport.removeCategory')", style="font-size: 0.85rem; line-height: 1") &times;
 
+    b-button-group.mr-2(size="sm")
+      b-button(
+        variant="outline-secondary"
+        :pressed="view_mode === 'timeline'"
+        @click="view_mode = 'timeline'"
+      ) {{ $t('timeline.title') }}
+      b-button(
+        variant="outline-secondary"
+        :pressed="view_mode === 'list'"
+        @click="view_mode = 'list'"
+      ) {{ $t('ui.timeline.list') }}
+
     // Display options (swimlanes, future visual toggles) tucked behind a
     // ghost kebab so they don't compete visually with Filters.
     b-dropdown.kebab-dropdown.mr-2(
+      v-if="view_mode === 'timeline'"
       size="sm"
       variant="outline-secondary"
       toggle-class="border-0"
@@ -92,7 +105,7 @@ div
     div.timeline-chip.mr-2.text-muted
       | {{ num_events }} {{ $t('timeline.eventsShown') }}
 
-    small.text-muted.ml-auto
+    small.text-muted.ml-auto(v-if="view_mode === 'timeline'")
       | {{ $t('timeline.scrollHint') }}
 
   b-alert.mb-2(v-if="buckets !== null && num_events === 0", variant="warning", show)
@@ -101,7 +114,10 @@ div
   b-alert.mb-2(v-if="categoryError", variant="warning", show)
     | Categorized timeline unavailable. Raw bucket events are still shown.
 
-  div(v-if="buckets !== null")
+  div(v-if="buckets !== null && view_mode === 'list'")
+    // Same filtered buckets as the timeline, one chronological row per event.
+    aw-timeline-event-list(:buckets="buckets", :range="daterange")
+  div(v-else-if="buckets !== null")
     vis-timeline(:buckets="buckets", :categorizedEvents="categorizedEvents", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane", :groupGranularity="timelineGroupGranularity", :updateTimelineWindow='updateTimelineWindow', @event-saved="onEventSaved")
 
     aw-devonly(:reason="$t('ui.devOnly.timelineExperiment')")
@@ -124,9 +140,11 @@ import { matchString } from '~/util/classes';
 import { getCategorizationStringFromEvent } from '~/util/color';
 import { seconds_to_duration } from '~/util/time';
 import { categoryTimelineQuery, mergeCategoryIntervals } from '~/util/timelineCategories';
+import TimelineEventList from '~/visualizations/TimelineEventList.vue';
 
 export default {
   name: 'Timeline',
+  components: { 'aw-timeline-event-list': TimelineEventList },
   data() {
     return {
       all_buckets: null,
@@ -145,6 +163,7 @@ export default {
       filter_merge_similar: false,
       filter_categories: [],
       swimlane: null,
+      view_mode: 'timeline',
       updateTimelineWindow: true,
     };
   },

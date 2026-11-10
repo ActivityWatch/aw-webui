@@ -955,6 +955,9 @@ export default {
       bucketsNoEvents: 'Buckets with no events in the queried range will be hidden.',
       editSaved: 'Your edit is saved. Refresh the timeline to see it reflected.',
       editSavedTitle: 'Heads up',
+      list: 'List',
+      listShowing: 'Showing {shown} of {total} events',
+      showMore: 'Show more',
     },
     buckets: { id: 'ID' },
     userPoll: {

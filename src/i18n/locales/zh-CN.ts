@@ -928,6 +928,9 @@ export default {
       bucketsNoEvents: '查询范围内没有事件的存储桶将被隐藏。',
       editSaved: '编辑已保存。刷新时间线后即可看到更新。',
       editSavedTitle: '提示',
+      list: '列表',
+      listShowing: '显示 {shown} / {total} 个事件',
+      showMore: '显示更多',
     },
     buckets: { id: 'ID' },
     userPoll: {

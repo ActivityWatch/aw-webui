@@ -955,6 +955,9 @@ export default {
       bucketsNoEvents: 'Bucket-и без подій у запитаному діапазоні буде приховано.',
       editSaved: 'Вашу зміну збережено. Оновіть хронологію, щоб побачити її.',
       editSavedTitle: 'Зверніть увагу',
+      list: 'Список',
+      listShowing: 'Показано {shown} з {total} подій',
+      showMore: 'Показати більше',
     },
     buckets: { id: 'ID' },
     userPoll: {
