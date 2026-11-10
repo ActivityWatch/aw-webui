@@ -666,6 +666,10 @@ export default {
       quickDurations: 'Snabbval för varaktighet',
       startDate: 'Startdatum',
       endDate: 'Slutdatum (valfritt)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(valfritt)',
       apply: 'Tillämpa',
       refresh: 'Uppdatera',

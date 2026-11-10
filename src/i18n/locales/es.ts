@@ -667,6 +667,10 @@ export default {
       quickDurations: 'Duraciones rápidas',
       startDate: 'Fecha de inicio',
       endDate: 'Fecha de fin (opcional)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(opcional)',
       apply: 'Aplicar',
       refresh: 'Actualizar',

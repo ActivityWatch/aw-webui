@@ -650,6 +650,10 @@ export default {
       quickDurations: 'مدد سريعة',
       startDate: 'تاريخ البدء',
       endDate: 'تاريخ الانتهاء (اختياري)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(اختياري)',
       apply: 'تطبيق',
       refresh: 'تحديث',
