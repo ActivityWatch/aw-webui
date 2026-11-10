@@ -22,9 +22,10 @@ function deferred() {
   return { promise, resolve, reject };
 }
 
-const oldEvents = [{ duration: 10, data: { title: 'Old' } }];
-const newEvents = [{ duration: 20, data: { title: 'New' } }];
-const initialEvents = [{ duration: 30, data: { title: 'Initial' } }];
+const timestamp = '2026-10-31T12:00:00Z';
+const oldEvents = [{ timestamp, duration: 10, data: { title: 'Old' } }];
+const newEvents = [{ timestamp, duration: 20, data: { title: 'New' } }];
+const initialEvents = [{ timestamp, duration: 30, data: { title: 'Initial' } }];
 
 describe('Query Explorer submission ownership', () => {
   const wrappers = [];
