@@ -36,14 +36,7 @@ div
             ).d-none
             label(:for="'dur' + idx" v-html="dur.label").btn.btn-light.btn-sm
       div.d-flex.flex-wrap.align-items-center(v-else)
-        input.form-control.form-control-sm.mr-1(
-          type="date", v-model="start", :max="end || undefined", style="width: auto"
-          :aria-label="$t('ui.timeInterval.startDate')"
-        )
-        input.form-control.form-control-sm.mr-1(
-          type="date", v-model="end", :min="start || undefined", :placeholder="$t('ui.timeInterval.optional')", style="width: auto"
-          :aria-label="$t('ui.timeInterval.endDate')"
-        )
+        input-date-range(:start.sync="start", :end.sync="end")
         b-button(
           size="sm" variant="outline-dark"
           :disabled="invalidDaterange || emptyDaterange || daterangeTooLong"
@@ -126,8 +119,10 @@ div
 <script lang="ts">
 import moment from 'moment';
 import 'vue-awesome/icons/sync';
+import InputDateRange from '~/components/InputDateRange.vue';
 export default {
   name: 'input-timeinterval',
+  components: { InputDateRange },
   props: {
     defaultDuration: {
       type: Number,
