@@ -196,4 +196,56 @@ describe('settings store', () => {
       expect(settingsStore.hasStoredAlerts).toBe(true);
     });
   });
+
+  describe('supporter flag', () => {
+    beforeAll(() => {
+      try {
+        createClient();
+      } catch {
+        // Another suite in this file already instantiated the global client.
+      }
+      (global as any).localStorage = { setItem: jest.fn() };
+    });
+    afterAll(() => {
+      delete (global as any).localStorage;
+    });
+
+    function fakeServer(initial: Record<string, unknown> = { theme: 'light' }) {
+      const post = jest.fn().mockResolvedValue({});
+      jest.spyOn(getClient(), 'get_settings').mockResolvedValue(initial);
+      (getClient() as any).req = { post, defaults: {} };
+      jest.spyOn(settingsStore, 'load').mockImplementation(async () => {
+        const posted = post.mock.calls.map(([url]) => url.split('/').pop());
+        settingsStore.$patch({
+          _storedKeys: [...new Set([...settingsStore._storedKeys, ...posted])],
+        });
+      });
+      settingsStore.$patch({ _loaded: true, _storedKeys: Object.keys(initial) });
+      return post;
+    }
+
+    const postedUrls = (post: jest.Mock) => post.mock.calls.map(([url]) => url);
+
+    test('defaults to false and stays unsaved until set', async () => {
+      expect(settingsStore.supporter).toBe(false);
+      const post = fakeServer();
+      settingsStore.$patch({ theme: 'dark' });
+      await settingsStore.save();
+      expect(postedUrls(post)).not.toContain('/0/settings/supporter');
+    });
+
+    test('setting it stores it in the server settings store', async () => {
+      const post = fakeServer();
+      await settingsStore.update({ supporter: true });
+      expect(post).toHaveBeenCalledWith('/0/settings/supporter', true, expect.anything());
+      expect(settingsStore.supporter).toBe(true);
+    });
+
+    test('clearing it saves false when the server already had true', async () => {
+      const post = fakeServer({ theme: 'light', supporter: true });
+      settingsStore.$patch({ supporter: false });
+      await settingsStore.update({ supporter: false });
+      expect(post).toHaveBeenCalledWith('/0/settings/supporter', false, expect.anything());
+    });
+  });
 });

@@ -197,6 +197,10 @@ export default {
       switchUnsavedConfirm:
         '未保存の変更があります。それでもセットを切り替えますか？(変更は破棄されます)',
     },
+    supporter: {
+      title: 'すでに ActivityWatch を支援しています',
+      help: 'ActivityWatch の支援を求めるアプリ内の案内を非表示にします。信頼ベース：ローカルサーバーにのみ保存され、検証も送信も行われません。',
+    },
     developer: {
       title: '開発者向け設定',
       note: '注意:',
