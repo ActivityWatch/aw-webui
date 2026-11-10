@@ -12,6 +12,54 @@ describe('settings store', () => {
     jest.restoreAllMocks();
   });
 
+  test('load({save:true}) persists even when superseded by a concurrent load', async () => {
+    // Repro: start load({save:true}), complete a second load() before the
+    // first response arrives. The stale-response guard must still honour the
+    // save intent instead of silently discarding it.
+    (global as any).localStorage = {
+      getItem: () => null,
+      setItem: jest.fn(),
+      length: 0,
+      key: () => null,
+    };
+    Object.defineProperty(global.localStorage, Symbol.iterator, {
+      value: [][Symbol.iterator].bind([]),
+      configurable: true,
+    });
+
+    let resolveFirst!: (v: Record<string, unknown>) => void;
+    const fakeClient = {
+      get_settings: jest
+        .fn()
+        // First call blocks
+        .mockImplementationOnce(
+          () =>
+            new Promise(resolve => {
+              resolveFirst = resolve;
+            })
+        )
+        // Second call resolves immediately
+        .mockResolvedValueOnce({}),
+      req: { defaults: {} },
+    };
+    jest.spyOn(require('~/util/awclient'), 'getClient').mockReturnValue(fakeClient);
+
+    const save = jest.spyOn(settingsStore, 'save').mockResolvedValue();
+
+    const firstLoad = settingsStore.load({ save: true });
+    // Allow the second load to complete ahead of the first
+    await settingsStore.load();
+
+    expect(save).not.toHaveBeenCalled(); // second load had no save intent
+
+    resolveFirst({});
+    await firstLoad;
+
+    expect(save).toHaveBeenCalledTimes(1);
+
+    delete (global as any).localStorage;
+  });
+
   test('ensureLoaded coalesces concurrent loads', async () => {
     let resolveLoad!: () => void;
     const loadMock = jest.spyOn(settingsStore, 'load').mockImplementation(
