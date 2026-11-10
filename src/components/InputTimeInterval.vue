@@ -200,11 +200,11 @@ export default {
     },
     rangeEnd() {
       if (!this.start) return null;
-      // A single date with no end date is one day long, whatever the start time.
-      if (!this.end) return moment(this.start).add(1, 'day');
-      // No end time keeps the end date inclusive, like the date-only inputs.
-      if (!this.hasTime) return moment(this.end).add(1, 'day');
-      return this.wallInstant(this.end, this.endTime);
+      const endDate = this.end || this.start;
+      // No end time keeps the end date inclusive, even with a start time.
+      if (!this.allowTime || !this.endTime) return moment(endDate).add(1, 'day');
+      // An end time without an end date refers to the start date.
+      return this.wallInstant(endDate, this.endTime);
     },
     // A wall time that does not exist (spring-forward gap) or happens twice
     // (fall-back) cannot name an exact interval, and we never silently pick one.
@@ -237,8 +237,7 @@ export default {
       return !this.start;
     },
     invalidDaterange() {
-      if (!this.end) return false;
-      if (!this.hasTime) return moment(this.start) > moment(this.end);
+      if (!this.hasTime) return !!this.end && moment(this.start) > moment(this.end);
       const start = this.rangeStart;
       const end = this.rangeEnd;
       // Reported separately by unresolvableTime.
