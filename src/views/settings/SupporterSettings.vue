@@ -24,6 +24,9 @@ const LEGACY_SUPPORTER_KEY = 'aw-supporter';
 // newly mounted switch cannot save ahead of an older instance's pending choice.
 let saveQueue = Promise.resolve();
 const pendingChoice = Vue.observable({ value: null as boolean | null, error: '' });
+// Shared for the same reason: a save that completes after navigation must clear
+// the legacy flag for the instance now on screen, not only the one that started it.
+const legacyFlag = Vue.observable({ value: false });
 
 function isLegacySupporter(): boolean {
   try {
@@ -36,7 +39,7 @@ function isLegacySupporter(): boolean {
 export default {
   name: 'SupporterSettings',
   data() {
-    return { saveQueue: Promise.resolve(), legacySupporter: isLegacySupporter() };
+    return { saveQueue: Promise.resolve() };
   },
   computed: {
     saveError(): string {
@@ -44,7 +47,7 @@ export default {
     },
     supporter: {
       get(): boolean {
-        return pendingChoice.value ?? (!!useSettingsStore().supporter || this.legacySupporter);
+        return pendingChoice.value ?? (!!useSettingsStore().supporter || legacyFlag.value);
       },
       set(v: boolean) {
         // Each update reloads the store after saving. Keep toggle writes in
@@ -60,7 +63,7 @@ export default {
               // The explicit server choice now wins. Retire the legacy flag only
               // after it is persisted: clearing it before a failed save would
               // silently turn a pre-existing supporter's prompts back on.
-              this.legacySupporter = false;
+              legacyFlag.value = false;
               try {
                 localStorage.removeItem(LEGACY_SUPPORTER_KEY);
               } catch {
@@ -85,6 +88,9 @@ export default {
         this.saveQueue = saveQueue = save;
       },
     },
+  },
+  created() {
+    legacyFlag.value = isLegacySupporter();
   },
 };
 </script>

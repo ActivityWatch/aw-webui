@@ -271,4 +271,35 @@ describe('SupporterSettings', () => {
     expect(localStorage.getItem('aw-supporter')).toBe('true');
     expect(wrapper.vm.supporter).toBe(true);
   });
+
+  it('clears the legacy flag for a remounted switch when a pending save completes', async () => {
+    localStorage.setItem('aw-supporter', 'true');
+    const mount = () =>
+      shallowMount(SupporterSettings, { localVue, pinia, i18n, stubs: ['b-form-checkbox'] });
+    wrapper.destroy();
+    wrapper = mount();
+    let release;
+    const gate = new Promise(resolve => {
+      release = resolve;
+    });
+    const read = getClient().get_settings;
+    getClient().get_settings = jest
+      .fn()
+      .mockImplementationOnce(async () => {
+        await gate;
+        return read();
+      })
+      .mockImplementation(read);
+
+    wrapper.vm.supporter = false;
+    const inFlight = wrapper.vm.saveQueue;
+    // Leave and reopen Settings while the save is still in flight.
+    wrapper.destroy();
+    wrapper = mount();
+    release();
+    await inFlight;
+
+    expect(localStorage.getItem('aw-supporter')).toBeNull();
+    expect(wrapper.vm.supporter).toBe(false);
+  });
 });
