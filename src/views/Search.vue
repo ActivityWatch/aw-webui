@@ -145,6 +145,7 @@ export default {
 
         // Look up browser buckets for this host. A failure here (e.g. the bucket
         // list cannot be loaded) must not block the window-only search.
+        const errors: string[] = [];
         let browserQueryArray: string[] = [];
         let browserBuckets: string[] = [];
         try {
@@ -154,13 +155,13 @@ export default {
           browserQueryArray = browserSearchQuery(browserBuckets, pattern);
         } catch (e) {
           console.error('Failed to load browser buckets for search', e);
+          errors.push(`Browser search: ${e.response?.data?.message ?? String(e)}`);
         }
 
         if (sequence !== this.searchSequence) return;
 
         // Each source can fail independently (e.g. a browser-only host has no
         // window/AFK buckets). Keep successful matches and report partial failures.
-        const errors: string[] = [];
         const results = await Promise.all([
           this.$aw.query(timeperiods, windowQueryArray).catch(e => {
             console.error('Window search failed', e);
