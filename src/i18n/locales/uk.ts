@@ -652,6 +652,10 @@ export default {
       quickDurations: 'Швидкий вибір тривалості',
       startDate: 'Дата початку',
       endDate: 'Дата завершення (необов’язково)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(необов’язково)',
       apply: 'Застосувати',
       refresh: 'Оновити',

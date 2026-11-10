@@ -665,6 +665,10 @@ export default {
       quickDurations: 'Muda wa haraka',
       startDate: 'Tarehe ya kuanza',
       endDate: 'Tarehe ya kumaliza (hiari)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(hiari)',
       apply: 'Tumia',
       refresh: 'Onyesha upya',

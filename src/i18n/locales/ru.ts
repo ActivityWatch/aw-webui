@@ -653,6 +653,10 @@ export default {
       quickDurations: 'Быстрый выбор длительности',
       startDate: 'Дата начала',
       endDate: 'Дата окончания (необязательно)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(необязательно)',
       apply: 'Применить',
       refresh: 'Обновить',

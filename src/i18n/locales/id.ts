@@ -661,6 +661,10 @@ export default {
       quickDurations: 'Durasi cepat',
       startDate: 'Tanggal mulai',
       endDate: 'Tanggal akhir (opsional)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(opsional)',
       apply: 'Terapkan',
       refresh: 'Segarkan',

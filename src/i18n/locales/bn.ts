@@ -656,6 +656,10 @@ export default {
       quickDurations: 'দ্রুত সময়কাল',
       startDate: 'শুরুর তারিখ',
       endDate: 'শেষের তারিখ (ঐচ্ছিক)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(ঐচ্ছিক)',
       apply: 'প্রয়োগ করুন',
       refresh: 'রিফ্রেশ',

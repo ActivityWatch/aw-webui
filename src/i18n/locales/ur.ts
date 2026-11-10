@@ -661,6 +661,10 @@ export default {
       quickDurations: 'فوری دورانیے',
       startDate: 'آغاز کی تاریخ',
       endDate: 'اختتام کی تاریخ (اختیاری)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(اختیاری)',
       apply: 'لاگو کریں',
       refresh: 'ریفریش',

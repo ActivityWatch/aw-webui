@@ -660,6 +660,10 @@ export default {
       quickDurations: 'クイック期間',
       startDate: '開始日',
       endDate: '終了日（任意）',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '（任意）',
       apply: '適用',
       refresh: '更新',
