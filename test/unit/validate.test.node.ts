@@ -20,6 +20,14 @@ describe('validateRegex', () => {
     expect(validateRegex('')).toBe(false);
   });
 
+  test('rejects non-string input without throwing', () => {
+    // Callers may pass undefined/null at runtime despite the string type annotation.
+    // Regression for ActivityWatch/activitywatch#1557: validateRegex(undefined) threw
+    // TypeError: e.replace is not a function in production builds.
+    expect(validateRegex(undefined as unknown as string)).toBe(false);
+    expect(validateRegex(null as unknown as string)).toBe(false);
+  });
+
   test('rejects JavaScript-invalid patterns', () => {
     // ++ is invalid: nothing to repeat for the second +
     expect(validateRegex('Notepad++')).toBe(false);
