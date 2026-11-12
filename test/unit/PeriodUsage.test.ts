@@ -194,6 +194,31 @@ describe('renderer geometry', () => {
     expect(el.querySelector('title').textContent).toContain('1m 30s');
   });
 
+  // The Today label used to be appended before its bar and centred on it, so a
+  // tall bar painted over it. It must sit beside the bar, after every bar in
+  // paint order, and on the side with room so it never runs off the strip.
+  test.each([
+    ['left half', 0, 'start'],
+    ['right half', 2, 'end'],
+  ])('Today label in the %s is beside its bar and drawn last', (_name, todayIndex, anchor) => {
+    // now is 2026-09-10T02:00, which belongs to the activity day starting 09-09.
+    const starts = ['2026-09-09', '2026-09-07', '2026-09-08'];
+    starts[todayIndex] = '2026-09-09';
+    starts[todayIndex === 0 ? 2 : 0] = '2026-09-06';
+    const el = render(starts.map(d => active(period(`${d}T04:00:00`), 100)));
+    const label = Array.from(el.querySelectorAll('text')).find(t => t.textContent === 'Today');
+    expect(label).toBeDefined();
+    expect(label.getAttribute('text-anchor')).toBe(anchor);
+    expect(el.lastElementChild).toBe(label);
+
+    const bar = el.querySelectorAll('rect')[todayIndex];
+    const left = parseFloat(bar.getAttribute('x'));
+    const right = left + parseFloat(bar.getAttribute('width'));
+    const x = parseFloat(label.getAttribute('x'));
+    if (anchor === 'start') expect(x).toBeGreaterThan(right);
+    else expect(x).toBeLessThan(left);
+  });
+
   test('re-rendering replaces stale bars and stale Today markers', () => {
     const el = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     document.body.appendChild(el);
