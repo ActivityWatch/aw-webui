@@ -141,6 +141,8 @@ function update(
       .append('text')
       .attr('x', todayLabel.x + '%')
       .attr('text-anchor', todayLabel.anchor)
+      // It may overlap a neighbouring bar; let clicks and hovers reach the bar.
+      .attr('pointer-events', 'none')
       .attr('y', '30')
       .text(labels.today);
   }

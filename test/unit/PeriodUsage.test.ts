@@ -210,6 +210,7 @@ describe('renderer geometry', () => {
     expect(label).toBeDefined();
     expect(label.getAttribute('text-anchor')).toBe(anchor);
     expect(el.lastElementChild).toBe(label);
+    expect(label.getAttribute('pointer-events')).toBe('none');
 
     const bar = el.querySelectorAll('rect')[todayIndex];
     const left = parseFloat(bar.getAttribute('x'));
