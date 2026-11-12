@@ -2,7 +2,14 @@
 div
   h3 {{ $t('timeline.title') }}
 
-  input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration", :allowTime="true").mb-3
+  input-timeinterval(
+    v-model="daterange",
+    :defaultDuration="timeintervalDefaultDuration",
+    :maxDuration="maxDuration",
+    :allowTime="true",
+    :initialStart="urlRange.start",
+    :initialEnd="urlRange.end"
+  ).mb-3
 
   // Toolbar: filters (primary), display kebab (swimlanes etc.), event count,
   // and keyboard hint. Flex-wrap so it doesn't overlap at narrow widths.
@@ -170,6 +177,12 @@ export default {
   },
   computed: {
     ...mapState(useSettingsStore, ['always_active_pattern']),
+    // Range to open on, from the `start` and `end` URL query parameters.
+    urlRange() {
+      const query = this.$route ? this.$route.query : {};
+      const param = value => (typeof value === 'string' ? value : null);
+      return { start: param(query.start), end: param(query.end) };
+    },
     swimlaneOptions() {
       return [
         { value: null, text: this.$t('ui.timeline.none') },
