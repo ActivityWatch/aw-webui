@@ -194,13 +194,13 @@ describe('renderer geometry', () => {
     expect(el.querySelector('title').textContent).toContain('1m 30s');
   });
 
-  // The Today label used to be appended before its bar and centred on it, so a
-  // tall bar painted over it. It must sit beside the bar, after every bar in
-  // paint order, and on the side with room so it never runs off the strip.
+  // Restore the original right-side placement: switching to the left can put
+  // the label over previous bars. Keep it above the bars and non-interactive.
   test.each([
-    ['left half', 0, 'start'],
-    ['right half', 2, 'end'],
-  ])('Today label in the %s is beside its bar and drawn last', (_name, todayIndex, anchor) => {
+    ['left half', 0],
+    ['centre', 1],
+    ['rightmost', 2],
+  ])('Today label in the %s stays to the right of its bar', (_name, todayIndex) => {
     // now is 2026-09-10T02:00, which belongs to the activity day starting 09-09.
     const starts = ['2026-09-09', '2026-09-07', '2026-09-08'];
     starts[todayIndex] = '2026-09-09';
@@ -208,7 +208,7 @@ describe('renderer geometry', () => {
     const el = render(starts.map(d => active(period(`${d}T04:00:00`), 100)));
     const label = Array.from(el.querySelectorAll('text')).find(t => t.textContent === 'Today');
     expect(label).toBeDefined();
-    expect(label.getAttribute('text-anchor')).toBe(anchor);
+    expect(label.getAttribute('text-anchor')).toBe('start');
     expect(el.lastElementChild).toBe(label);
     expect(label.getAttribute('pointer-events')).toBe('none');
 
@@ -216,8 +216,8 @@ describe('renderer geometry', () => {
     const left = parseFloat(bar.getAttribute('x'));
     const right = left + parseFloat(bar.getAttribute('width'));
     const x = parseFloat(label.getAttribute('x'));
-    if (anchor === 'start') expect(x).toBeGreaterThan(right);
-    else expect(x).toBeLessThan(left);
+    expect(x).toBeCloseTo(left + 1.5 * parseFloat(bar.getAttribute('width')));
+    expect(x).toBeGreaterThan(right);
   });
 
   test('re-rendering replaces stale bars and stale Today markers', () => {

@@ -66,7 +66,7 @@ function update(
   const center_elem = Math.floor(usage_arr.length / 2);
 
   const now = moment();
-  let todayLabel: { x: number; anchor: string } | null = null;
+  let todayLabelX: number | null = null;
   _.each(usage_arr, ({ period, events }, i: number) => {
     const usage_time = get_usage_time(events);
     const height = 85 * (usage_time / longest_usage);
@@ -93,13 +93,8 @@ function update(
         .attr('style', 'stroke: #888; stroke-width: 2px;')
         .attr('stroke-dasharray', '4, 2');
 
-      // Place the label beside the bar, on the side with room, so it can
-      // neither sit behind the bar nor run off the edge of the strip.
-      const leftHalf = x + width / 2 < 50;
-      todayLabel = {
-        x: leftHalf ? x + 1.5 * width : x - 0.5 * width,
-        anchor: leftHalf ? 'start' : 'end',
-      };
+      // Preserve the original placement to the right of today's bar.
+      todayLabelX = x + 1.5 * width;
     }
 
     const rect = svg
@@ -136,11 +131,11 @@ function update(
   });
 
   // Drawn after every bar so no bar is painted over it.
-  if (todayLabel) {
+  if (todayLabelX !== null) {
     svg
       .append('text')
-      .attr('x', todayLabel.x + '%')
-      .attr('text-anchor', todayLabel.anchor)
+      .attr('x', todayLabelX + '%')
+      .attr('text-anchor', 'start')
       // It may overlap a neighbouring bar; let clicks and hovers reach the bar.
       .attr('pointer-events', 'none')
       .attr('y', '30')
