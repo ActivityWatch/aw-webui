@@ -133,6 +133,9 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
         span.ml-2.align-middle(style="font-size: 1em; color: #000;") {{ $t('app.name') }}
         b-badge.ml-2.align-middle(v-if="researchEdition" variant="info" data-testid="research-edition-badge") {{ $t('app.researchEdition') }}
 
+    // Phone/tablet: the bell sits beside the drawer toggle, not inside the drawer
+    notice-bell.ml-auto.d-lg-none
+
     // Opens the drawer (b-sidebar listens to the same toggle event as b-collapse)
     b-navbar-toggle(target="nav-drawer" data-testid="nav-drawer-toggle")
 
@@ -150,6 +153,7 @@ div(:class="{'fixed-top-padding': fixedTopMenu}")
 
       b-navbar-nav.ml-auto
         +navTools(true)
+        notice-bell
 
     // Phone/tablet: modal side drawer. Closes on route change, Escape and
     // backdrop tap; traps focus while open and returns it to the toggle.

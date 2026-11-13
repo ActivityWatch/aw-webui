@@ -38,6 +38,7 @@ describe('Header research edition badge', () => {
         $t: key => key,
       },
       stubs: {
+        'notice-bell': true,
         'b-navbar': passthroughStub,
         'b-navbar-nav': passthroughStub,
         'b-navbar-brand': passthroughStub,
@@ -112,7 +113,7 @@ describe('Header phone navigation drawer', () => {
         $isAndroid: false,
         $t: key => key,
       },
-      stubs: { icon: true },
+      stubs: { icon: true, 'notice-bell': true },
     });
   }
 
@@ -140,6 +141,7 @@ describe('Header phone navigation drawer', () => {
     const wrapper = shallowMount(Header, {
       mocks: { $isAndroid: false, $t: key => key },
       stubs: {
+        'notice-bell': true,
         'b-navbar': passthroughStub,
         'b-navbar-nav': passthroughStub,
         'b-collapse': passthroughStub,
@@ -275,7 +277,7 @@ describe('Header native Android actions', () => {
       localVue,
       attachTo: document.body,
       mocks: { $isAndroid: false, $t: key => key },
-      stubs: { icon: true },
+      stubs: { icon: true, 'notice-bell': true },
     });
   }
 
@@ -326,6 +328,7 @@ describe('Header native Android actions', () => {
     const wrapper = shallowMount(Header, {
       mocks: { $isAndroid: false, $t: key => key },
       stubs: {
+        'notice-bell': true,
         'b-navbar': passthroughStub,
         'b-navbar-nav': passthroughStub,
         'b-collapse': passthroughStub,

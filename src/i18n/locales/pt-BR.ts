@@ -953,6 +953,13 @@ export default {
       bucketTools: 'Esta seção ainda está em desenvolvimento',
       timelineExperiment: 'Não está pronto para produção, ainda em experimentação',
     },
+    notices: {
+      title: 'Avisos',
+      bell: 'Avisos',
+      bellUnseen: 'Avisos, novo',
+      close: 'Fechar',
+      empty: 'Nada de novo por enquanto.',
+    },
     release: {
       newAvailable: 'Uma nova versão, v{version}, está disponível para',
       download: 'download',
