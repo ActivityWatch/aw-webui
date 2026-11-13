@@ -65,7 +65,7 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
 //  - Stopwatch
 //  - Bucket viewer
 //  - Timeline (on event-click)
-//  - Search (soon)
+//  - Search (via the stored-source selector)
 
 import moment from 'moment';
 import _ from 'lodash';

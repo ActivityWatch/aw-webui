@@ -1039,6 +1039,20 @@ export default {
       duration: 'Duração',
       title: 'Título',
       noResults: 'Nenhum resultado encontrado.',
+      editStored: 'Editar um evento armazenado',
+      editStoredTitle: 'Editar um evento armazenado',
+      editStoredHelp:
+        'Os resultados da busca são derivados (mesclados, divididos e recortados) e não podem ser editados diretamente. Escolha o evento armazenado que deseja alterar no bucket em que ele foi registrado. Salvar altera esse evento armazenado, que pode se estender além do período da busca.',
+      onlyMatching: 'Mostrar apenas eventos cujos dados correspondem ao padrão de busca',
+      outOfRange:
+        'O intervalo não pode ser vazio e deve estar dentro do período original da busca.',
+      truncated:
+        'Esta lista atingiu o limite de resultados e pode estar incompleta. Reduza o intervalo para ver o restante.',
+      noCandidates: 'Nenhum evento armazenado neste bucket e intervalo.',
+      load: 'Carregar',
+      data: 'Dados',
+      staleResults:
+        'Um evento foi alterado, mas os resultados não puderam ser atualizados e podem estar desatualizados. Busque novamente.',
     },
     trends: { toUse: 'para usar esta visualização.' },
     workReport: {
