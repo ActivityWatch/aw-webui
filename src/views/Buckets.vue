@@ -1,6 +1,13 @@
 <template lang="pug">
 div
-  h3 {{ $t('buckets.title') }}
+  h3
+    | {{ $t('buckets.title') }}
+    button#buckets-help.btn.btn-link.p-0.ml-2.text-muted(type="button" :aria-label="$t('common.moreInformation')")
+      icon(name="question-circle")
+  b-popover(target="buckets-help" triggers="hover focus click blur" placement="bottom")
+    | {{ $t('buckets.intro') }}
+    p.mb-0.mt-2
+      a(href="https://docs.activitywatch.net/en/latest/buckets-and-events.html" target="_blank" rel="noopener") {{ $t('home.documentation') }}
 
   b-card.bucket-card.mb-3(
     v-for="device in bucketsStore.bucketsByDevice",
@@ -254,6 +261,7 @@ import 'vue-awesome/icons/folder-open';
 import 'vue-awesome/icons/desktop';
 import 'vue-awesome/icons/mobile';
 import 'vue-awesome/icons/question';
+import 'vue-awesome/icons/question-circle';
 import 'vue-awesome/icons/exclamation-triangle';
 import 'vue-awesome/icons/ellipsis-v';
 
