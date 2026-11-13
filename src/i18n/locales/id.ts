@@ -113,6 +113,10 @@ export default {
       groupGranularity: 'Kelompokkan event singkat (detik)',
       groupGranularityHelp:
         'Menggabungkan event singkat berturut-turut menjadi kelompok dengan durasi ini. Atur ke 0 untuk menonaktifkan pengelompokan. Filter durasi linimasa tetap terpisah dan menghapus event sebelum pengelompokan.',
+      timeFormat: 'Format waktu',
+      timeFormat24h: '24 jam (13:00)',
+      timeFormat12h: '12 jam (1:00 PM)',
+      timeFormatHelp: 'Cara waktu ditampilkan pada sumbu linimasa dan tooltip event.',
     },
     landingPage: {
       title: 'Halaman awal',

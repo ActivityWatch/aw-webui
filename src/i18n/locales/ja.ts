@@ -113,6 +113,10 @@ export default {
       groupGranularity: '短いイベントをまとめる（秒）',
       groupGranularityHelp:
         '連続する短いイベントをこの長さのグループにまとめます。0にすると無効になります。タイムラインの時間フィルターは独立して動作し、グループ化する前にイベントを除外します。',
+      timeFormat: '時刻の形式',
+      timeFormat24h: '24時間制 (13:00)',
+      timeFormat12h: '12時間制 (1:00 PM)',
+      timeFormatHelp: 'タイムラインの時間軸とイベントのツールチップでの時刻の表示方法です。',
     },
     landingPage: {
       title: '起動時のページ',

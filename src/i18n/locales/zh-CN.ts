@@ -129,6 +129,10 @@ export default {
       groupGranularity: '合并短事件（秒）',
       groupGranularityHelp:
         '将连续的短事件合并为此时长的组。设为 0 可关闭分组。时间线的时长过滤器独立生效，并在分组前移除事件。',
+      timeFormat: '时间格式',
+      timeFormat24h: '24 小时制 (13:00)',
+      timeFormat12h: '12 小时制 (1:00 PM)',
+      timeFormatHelp: '时间线坐标轴和事件提示中时间的显示方式。',
     },
     releaseNotification: {
       title: '新版本通知',

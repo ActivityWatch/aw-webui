@@ -42,4 +42,30 @@ describe('buildTooltip', () => {
     );
     expect(html).toContain('payload');
   });
+
+  describe('time format', () => {
+    const event = { timestamp: '2024-06-15T13:05:09', duration: 60, data: {} };
+
+    test('shows 24-hour times by default', () => {
+      const html = buildTooltip({ type: 'test' }, event);
+      expect(html).toContain('<td>13:05:09</td>');
+      expect(html).toContain('<td>13:06:09</td>');
+    });
+
+    test('shows 12-hour times when asked', () => {
+      const html = buildTooltip({ type: 'test' }, event, '12h');
+      expect(html).toContain('<td>1:05:09 PM</td>');
+      expect(html).toContain('<td>1:06:09 PM</td>');
+    });
+
+    test('keeps the date on events spanning midnight', () => {
+      const html = buildTooltip(
+        { type: 'test' },
+        { timestamp: '2024-06-15T23:30:00', duration: 3600, data: {} },
+        '12h'
+      );
+      expect(html).toContain('<td>2024-06-15 11:30:00 PM</td>');
+      expect(html).toContain('<td>2024-06-16 12:30:00 AM</td>');
+    });
+  });
 });

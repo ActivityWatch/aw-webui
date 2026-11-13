@@ -112,6 +112,10 @@ export default {
       groupGranularity: 'Group short events (seconds)',
       groupGranularityHelp:
         'Combines consecutive short events into groups of this duration. Set to 0 to turn grouping off. The timeline duration filter remains independent and removes events before grouping.',
+      timeFormat: 'Time format',
+      timeFormat24h: '24-hour (13:00)',
+      timeFormat12h: '12-hour (1:00 PM)',
+      timeFormatHelp: 'How clock times are shown on the timeline axis and in event tooltips.',
     },
     landingPage: {
       title: 'Landing page',
