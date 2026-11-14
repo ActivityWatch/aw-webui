@@ -14,9 +14,17 @@ b-modal(id="edit" ref="edit" :title="$t('ui.categoryEditor.editTitle')" @show="r
     b-input-group.my-1(:prepend="$t('ui.categoryEditor.type')")
       b-select(v-model="editing.rule.type", :options="allRuleTypes")
     div(v-if="editing.rule.type === 'regex'")
-      b-input-group.my-1(:prepend="$t('ui.categoryEditor.pattern')")
-        b-form-input(v-model="editing.rule.regex")
-      div.d-flex
+      div.my-1(v-for="(pattern, index) in editing.rulePatterns" :key="index")
+        b-input-group
+          b-input-group-prepend
+            span.input-group-text {{ $t('ui.categoryEditor.pattern') }} {{ index + 1 }}
+          b-form-input(v-model="editing.rulePatterns[index]")
+          b-input-group-append
+            b-btn(variant="outline-danger" @click="removePattern(index)" :disabled="editing.rulePatterns.length <= 1")
+              icon(name="trash")
+      b-btn.mt-1(size="sm" variant="outline-primary" @click="addPattern()")
+        icon(name="plus")
+      div.d-flex.mt-2
         div.flex-grow-1
           b-form-checkbox(v-model="editing.rule.ignore_case" switch)
             | {{ $t('ui.categoryEditor.caseInsensitive') }}
@@ -84,10 +92,15 @@ import _ from 'lodash';
 import ColorPicker from '~/components/ColorPicker.vue';
 import { parseCategoryScore } from '~/util/categoryScore';
 import { useCategoryStore } from '~/stores/categories';
-import { validateRegex, isRegexBroad } from '~/util/validate';
+import { validateRegex, isRegexBroad, splitRegexPipe, joinRegexPipe } from '~/util/validate';
 import { CANONICAL_SELECT_KEYS, normalizeSelectKeys } from '~/util/classes';
 
 import 'vue-awesome/icons/trash';
+import 'vue-awesome/icons/plus';
+
+function samePatterns(a: string[], b: string[]): boolean {
+  return a.length === b.length && a.every((p, i) => p === b[i]);
+}
 
 export default {
   name: 'CategoryEditModal',
@@ -105,6 +118,8 @@ export default {
         id: 0, // Placeholder; replaced with the stored category id by resetModal()
         name: null,
         rule: {},
+        rulePatterns: [] as string[],
+        originalRegex: '',
         parent: [],
         inherit_color: true,
         color: null,
@@ -142,10 +157,12 @@ export default {
       return true;
     },
     validPattern: function () {
-      return this.editing.rule.type === 'regex' && validateRegex(this.editing.rule.regex || '');
+      if (this.editing.rule.type !== 'regex') return false;
+      return validateRegex(this.storedRegex());
     },
     broad_pattern: function () {
-      return this.editing.rule.type === 'regex' && isRegexBroad(this.editing.rule.regex || '');
+      if (this.editing.rule.type !== 'regex') return false;
+      return isRegexBroad(this.storedRegex());
     },
     validScore: function () {
       return this.editing.inherit_score || parseCategoryScore(this.editing.score) !== undefined;
@@ -186,6 +203,17 @@ export default {
     }
   },
   methods: {
+    storedRegex() {
+      const patterns = this.editing.rulePatterns;
+      if (Array.isArray(patterns) && patterns.length) {
+        const original = this.editing.originalRegex || this.editing.rule.regex || '';
+        if (samePatterns(patterns, splitRegexPipe(original))) {
+          return original;
+        }
+        return joinRegexPipe(patterns);
+      }
+      return this.editing.rule.regex || '';
+    },
     showModal() {
       this.$refs.edit?.show();
     },
@@ -260,6 +288,7 @@ export default {
       const rule =
         this.editing.rule.type !== 'none' ? _.cloneDeep(this.editing.rule) : { type: 'none' };
       if (rule.type === 'regex') {
+        rule.regex = this.storedRegex();
         const selected = normalizeSelectKeys(this.editing.match_fields);
         if (!selected) {
           delete rule.select_keys;
@@ -299,6 +328,13 @@ export default {
       });
       return true;
     },
+    addPattern() {
+      this.editing.rulePatterns.push('');
+    },
+    removePattern(index: number) {
+      if (this.editing.rulePatterns.length <= 1) return;
+      this.editing.rulePatterns.splice(index, 1);
+    },
     resetModal() {
       const cat = this.categoryStore.get_category_by_id(this.categoryId);
       const color = cat.data ? cat.data.color : undefined;
@@ -309,10 +345,13 @@ export default {
       const inherit_score = storedScore === null || storedScore === undefined;
       const rule = _.cloneDeep(cat.rule) || {};
       const storedKeys = normalizeSelectKeys(rule.select_keys);
+      const originalRegex = rule.type === 'regex' ? rule.regex || '' : '';
       this.editing = {
         id: cat.id,
         name: cat.subname,
         rule,
+        rulePatterns: originalRegex ? splitRegexPipe(originalRegex) : [''],
+        originalRegex,
         parent: cat.parent ? cat.parent : [],
         color,
         inherit_color,
