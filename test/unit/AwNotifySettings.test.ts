@@ -242,6 +242,40 @@ describe('AwNotifySettings', () => {
       wrapper.destroy();
     });
 
+    test.each(['success', 'failure'])(
+      'ignores an older polling %s after a save refresh',
+      async outcome => {
+        mockGet.mockResolvedValue({ data: { enabled: true, alerts: [] } });
+        mockGetBuckets.mockResolvedValue({ 'aw-notify_host': {} });
+        const wrapper: any = shallowMount(AwNotifySettings, {
+          mocks: { $t: key => key },
+        });
+        await flushPromises();
+
+        let resolveOld!: (value: any) => void;
+        let rejectOld!: (reason: Error) => void;
+        mockGetEvents.mockReturnValueOnce(
+          new Promise((resolve, reject) => {
+            resolveOld = resolve;
+            rejectOld = reject;
+          })
+        );
+        jest.advanceTimersByTime(15_000);
+        await flushPromises();
+
+        mockGetEvents.mockResolvedValue([{ timestamp: new Date().toISOString(), duration: 5 }]);
+        await wrapper.vm.save();
+        await flushPromises();
+        expect(wrapper.vm.liveness).toBe('running');
+
+        if (outcome === 'success') resolveOld([]);
+        else rejectOld(new Error('Older request failed'));
+        await flushPromises();
+        expect(wrapper.vm.liveness).toBe('running');
+        wrapper.destroy();
+      }
+    );
+
     test('does not start polling if destroyed before the settings load', async () => {
       let resolveGet!: (v: any) => void;
       mockGet.mockReturnValue(new Promise(r => (resolveGet = r)));

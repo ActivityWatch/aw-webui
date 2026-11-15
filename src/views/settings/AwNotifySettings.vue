@@ -127,6 +127,7 @@ export default {
       error: '',
       success: false,
       liveness: null as AwNotifyLiveness | null,
+      livenessRequest: 0,
       livenessTimer: null as ReturnType<typeof setInterval> | null,
       destroyed: false,
       goalOptions: [
@@ -165,6 +166,8 @@ export default {
       }
     },
     async refreshLiveness() {
+      // Saving and polling can overlap; only the newest request may update status.
+      const request = ++this.livenessRequest;
       // Best effort: liveness is informational and must never block the form.
       try {
         const client = getClient();
@@ -174,10 +177,14 @@ export default {
         const latest = await Promise.all(
           ids.map(async id => (await client.getEvents(id, { limit: 1 }))[0] ?? null)
         );
-        this.liveness = awNotifyLiveness(latest);
+        if (!this.destroyed && request === this.livenessRequest) {
+          this.liveness = awNotifyLiveness(latest);
+        }
       } catch (e) {
-        console.warn('Could not determine aw-notify liveness:', e);
-        this.liveness = null;
+        if (!this.destroyed && request === this.livenessRequest) {
+          console.warn('Could not determine aw-notify liveness:', e);
+          this.liveness = null;
+        }
       }
     },
     async load() {
