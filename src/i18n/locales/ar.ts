@@ -265,6 +265,11 @@ export default {
       loadFailed: 'تعذّر تحميل الإعدادات: {error}',
       saveFailed: 'تعذّر حفظ الإعدادات: {error}',
       thresholdsInvalid: 'يجب أن تكون الحدود دقائق صحيحة موجبة مفصولة بفواصل.',
+      livenessRunning: 'aw-notify قيد التشغيل.',
+      livenessStopped:
+        'لم يُرسل aw-notify أي إشارة خلال آخر 30 ثانية. يبدأ مع ActivityWatch ما دامت الإشعارات مفعّلة؛ إذا بقي متوقفًا، فأعد تشغيل ActivityWatch.',
+      livenessNever:
+        'لم يُرسل aw-notify أي إشارة إلى هذا الخادم بعد. بعد تفعيل الإشعارات والحفظ، يشغّله ActivityWatch.',
     },
     privacyFilters: {
       title: 'عوامل تصفية الخصوصية',

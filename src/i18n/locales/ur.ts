@@ -269,6 +269,11 @@ export default {
       loadFailed: 'ترتیبات لوڈ کرنے میں ناکامی: {error}',
       saveFailed: 'ترتیبات محفوظ کرنے میں ناکامی: {error}',
       thresholdsInvalid: 'حدیں کاما سے الگ کیے گئے مثبت پورے منٹ ہونی چاہئیں۔',
+      livenessRunning: 'aw-notify چل رہا ہے۔',
+      livenessStopped:
+        'aw-notify نے پچھلے 30 سیکنڈ میں کوئی سگنل نہیں بھیجا۔ اطلاعات فعال ہونے تک یہ ActivityWatch کے ساتھ شروع ہوتا ہے؛ اگر یہ رکا رہے تو ActivityWatch دوبارہ شروع کریں۔',
+      livenessNever:
+        'aw-notify نے ابھی تک اس سرور کو کوئی سگنل نہیں بھیجا۔ اطلاعات فعال کر کے محفوظ کرنے کے بعد ActivityWatch اسے شروع کرتا ہے۔',
     },
     privacyFilters: {
       title: 'رازداری کے فلٹرز',

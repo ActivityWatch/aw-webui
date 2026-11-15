@@ -268,6 +268,11 @@ export default {
       loadFailed: 'सेटिंग्स लोड करने में विफल: {error}',
       saveFailed: 'सेटिंग्स सहेजने में विफल: {error}',
       thresholdsInvalid: 'सीमाएँ कॉमा से अलग किए गए धनात्मक पूर्ण मिनट होनी चाहिए।',
+      livenessRunning: 'aw-notify चल रहा है।',
+      livenessStopped:
+        'aw-notify ने पिछले 30 सेकंड में कोई संकेत नहीं भेजा। सूचनाएँ सक्षम रहने पर यह ActivityWatch के साथ शुरू होता है; अगर यह रुका रहे, तो ActivityWatch को फिर से शुरू करें।',
+      livenessNever:
+        'aw-notify ने अभी तक इस सर्वर को कोई संकेत नहीं भेजा है। सूचनाएँ सक्षम करके सहेजने के बाद ActivityWatch इसे शुरू करता है।',
     },
     privacyFilters: {
       title: 'गोपनीयता फ़िल्टर',

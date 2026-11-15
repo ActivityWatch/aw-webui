@@ -269,6 +269,11 @@ export default {
       loadFailed: 'Gagal memuat pengaturan: {error}',
       saveFailed: 'Gagal menyimpan pengaturan: {error}',
       thresholdsInvalid: 'Ambang batas harus berupa menit bulat positif dipisahkan koma.',
+      livenessRunning: 'aw-notify sedang berjalan.',
+      livenessStopped:
+        'aw-notify tidak memberi sinyal dalam 30 detik terakhir. aw-notify dimulai bersama ActivityWatch selama notifikasi diaktifkan; jika tetap berhenti, mulai ulang ActivityWatch.',
+      livenessNever:
+        'aw-notify belum memberi sinyal ke server ini. Setelah Anda mengaktifkan notifikasi dan menyimpan, ActivityWatch akan menjalankannya.',
     },
     privacyFilters: {
       title: 'Filter privasi',

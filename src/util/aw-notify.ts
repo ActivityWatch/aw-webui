@@ -120,7 +120,7 @@ export type AwNotifyLiveness = 'running' | 'stopped' | 'never';
 
 interface HeartbeatEvent {
   timestamp: string | Date;
-  duration: number;
+  duration?: number;
 }
 
 /**
@@ -135,7 +135,7 @@ export function awNotifyLiveness(
   const events = latestEvents.filter((e): e is HeartbeatEvent => e !== null);
   if (events.length === 0) return 'never';
   const fresh = events.some(e => {
-    const end = new Date(e.timestamp).getTime() + e.duration * 1000;
+    const end = new Date(e.timestamp).getTime() + (e.duration || 0) * 1000;
     return now.getTime() - end <= AW_NOTIFY_STALE_AFTER_MS;
   });
   return fresh ? 'running' : 'stopped';

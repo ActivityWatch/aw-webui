@@ -265,6 +265,11 @@ export default {
       loadFailed: 'সেটিংস লোড করতে ব্যর্থ: {error}',
       saveFailed: 'সেটিংস সংরক্ষণ করতে ব্যর্থ: {error}',
       thresholdsInvalid: 'সীমা অবশ্যই কমা দিয়ে আলাদা করা ধনাত্মক পূর্ণ মিনিট হতে হবে।',
+      livenessRunning: 'aw-notify চলছে।',
+      livenessStopped:
+        'গত ৩০ সেকেন্ডে aw-notify কোনো সংকেত পাঠায়নি। বিজ্ঞপ্তি চালু থাকলে এটি ActivityWatch-এর সঙ্গে শুরু হয়; বন্ধ থাকলে ActivityWatch পুনরায় চালু করুন।',
+      livenessNever:
+        'aw-notify এখনও এই সার্ভারে কোনো সংকেত পাঠায়নি। বিজ্ঞপ্তি চালু করে সংরক্ষণ করার পর ActivityWatch এটি চালু করে।',
     },
     privacyFilters: {
       title: 'গোপনীয়তা ফিল্টার',

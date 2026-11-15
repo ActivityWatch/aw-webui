@@ -165,6 +165,11 @@ export default {
       loadFailed: 'Не удалось загрузить настройки: {error}',
       saveFailed: 'Не удалось сохранить настройки: {error}',
       thresholdsInvalid: 'Пороги должны быть положительными целыми числами минут через запятую.',
+      livenessRunning: 'aw-notify работает.',
+      livenessStopped:
+        'aw-notify не подавал сигналов последние 30 секунд. Он запускается вместе с ActivityWatch, пока уведомления включены; если он остаётся остановленным, перезапустите ActivityWatch.',
+      livenessNever:
+        'aw-notify ещё не подавал сигналов этому серверу. После того как вы включите уведомления и сохраните, ActivityWatch запустит его.',
     },
     privacyFilters: {
       title: 'Фильтры конфиденциальности',
