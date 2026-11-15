@@ -271,6 +271,11 @@ export default {
       loadFailed: 'Imeshindwa kupakia mipangilio: {error}',
       saveFailed: 'Imeshindwa kuhifadhi mipangilio: {error}',
       thresholdsInvalid: 'Vizingiti lazima viwe dakika nzima chanya zilizotenganishwa na koma.',
+      livenessRunning: 'aw-notify inaendeshwa.',
+      livenessStopped:
+        'aw-notify haijatuma ishara katika sekunde 30 zilizopita. Huanza pamoja na ActivityWatch wakati arifa zimewashwa; ikiendelea kusimama, anzisha upya ActivityWatch.',
+      livenessNever:
+        'aw-notify bado haijatuma ishara kwa seva hii. Baada ya kuwasha arifa na kuhifadhi, ActivityWatch huianzisha.',
     },
     privacyFilters: {
       title: 'Vichujio vya faragha',

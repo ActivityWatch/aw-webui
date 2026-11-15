@@ -274,6 +274,11 @@ export default {
       loadFailed: 'Falha ao carregar as configurações: {error}',
       saveFailed: 'Falha ao salvar as configurações: {error}',
       thresholdsInvalid: 'Os limites devem ser minutos inteiros positivos separados por vírgula.',
+      livenessRunning: 'O aw-notify está em execução.',
+      livenessStopped:
+        'O aw-notify não deu sinal nos últimos 30 segundos. Ele inicia com o ActivityWatch enquanto as notificações estiverem ativadas; se continuar parado, reinicie o ActivityWatch.',
+      livenessNever:
+        'O aw-notify ainda não deu sinal a este servidor. Depois que você ativar as notificações e salvar, o ActivityWatch o iniciará.',
     },
     privacyFilters: {
       title: 'Filtros de privacidade',

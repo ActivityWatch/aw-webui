@@ -270,6 +270,11 @@ export default {
       loadFailed: 'Det gick inte att läsa in inställningarna: {error}',
       saveFailed: 'Det gick inte att spara inställningarna: {error}',
       thresholdsInvalid: 'Tröskelvärden måste vara kommaseparerade positiva heltal i minuter.',
+      livenessRunning: 'aw-notify körs.',
+      livenessStopped:
+        'aw-notify har inte hörts av de senaste 30 sekunderna. Det startar med ActivityWatch så länge aviseringar är aktiverade; om det förblir stoppat, starta om ActivityWatch.',
+      livenessNever:
+        'aw-notify har inte hörts av till den här servern ännu. När du har aktiverat aviseringar och sparat startar ActivityWatch det.',
     },
     privacyFilters: {
       title: 'Integritetsfilter',
