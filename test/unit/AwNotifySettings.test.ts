@@ -11,8 +11,13 @@ jest.mock('~/util/awclient', () => ({
   }),
 }));
 
-import { shallowMount } from '@vue/test-utils';
+import { createLocalVue, enableAutoDestroy, mount, shallowMount } from '@vue/test-utils';
+import BootstrapVue from 'bootstrap-vue';
 import AwNotifySettings from '~/views/settings/AwNotifySettings.vue';
+
+// Enabled settings mounts start a polling interval; release every wrapper,
+// including when an assertion fails before a test's explicit destroy().
+enableAutoDestroy(afterEach);
 
 const flushPromises = () => new Promise(resolve => setTimeout(resolve, 0));
 
