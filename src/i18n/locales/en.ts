@@ -286,6 +286,11 @@ export default {
       loadFailed: 'Failed to load settings: {error}',
       saveFailed: 'Failed to save settings: {error}',
       thresholdsInvalid: 'Thresholds must be comma-separated positive whole minutes.',
+      livenessRunning: 'aw-notify is running.',
+      livenessStopped:
+        'aw-notify has not reported in the last 30 seconds. It starts with ActivityWatch while notifications are enabled; if it stays stopped, restart ActivityWatch.',
+      livenessNever:
+        'aw-notify has not reported to this server yet. After you enable notifications and save, ActivityWatch starts it.',
     },
     privacyFilters: {
       title: 'Privacy filters',

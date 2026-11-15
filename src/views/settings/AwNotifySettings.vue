@@ -18,6 +18,8 @@ div
       b-form-checkbox(v-model="enabled" switch)
         | {{ $t('extraViews.notifications.enabled') }}
         small.text-muted.ml-2 {{ $t('extraViews.notifications.enabledHelp') }}
+      p.small.mb-0.mt-1(v-if="config.enabled && liveness" :class="livenessClass" data-test="aw-notify-liveness")
+        | {{ $t(`settings.notifications.liveness${liveness[0].toUpperCase()}${liveness.slice(1)}`) }}
 
     template(v-if="enabled")
       p.text-muted.small.mb-3
@@ -69,8 +71,11 @@ import 'vue-awesome/icons/trash';
 
 import { getClient } from '~/util/awclient';
 import {
+  AW_NOTIFY_BUCKET_PREFIX,
   AwNotifyAlert,
   AwNotifyConfig,
+  AwNotifyLiveness,
+  awNotifyLiveness,
   parseAwNotifyConfig,
   parseThresholds,
 } from '~/util/aw-notify';
@@ -117,16 +122,39 @@ export default {
       saving: false,
       error: '',
       success: false,
+      liveness: null as AwNotifyLiveness | null,
       goalOptions: [
         { text: this.$t('settings.notifications.goalWarning'), value: false },
         { text: this.$t('settings.notifications.goalReached'), value: true },
       ],
     };
   },
+  computed: {
+    livenessClass(): string {
+      return this.liveness === 'running' ? 'text-success' : 'text-muted';
+    },
+  },
   async mounted() {
     await this.load();
+    await this.refreshLiveness();
   },
   methods: {
+    async refreshLiveness() {
+      // Best effort: liveness is informational and must never block the form.
+      try {
+        const client = getClient();
+        const ids = Object.keys(await client.getBuckets()).filter(id =>
+          id.startsWith(AW_NOTIFY_BUCKET_PREFIX)
+        );
+        const latest = await Promise.all(
+          ids.map(async id => (await client.getEvents(id, { limit: 1 }))[0] ?? null)
+        );
+        this.liveness = awNotifyLiveness(latest);
+      } catch (e) {
+        console.warn('Could not determine aw-notify liveness:', e);
+        this.liveness = null;
+      }
+    },
     async load() {
       this.loading = true;
       this.error = '';

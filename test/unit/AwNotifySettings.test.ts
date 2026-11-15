@@ -1,9 +1,13 @@
 const mockGet = jest.fn();
 const mockPost = jest.fn();
+const mockGetBuckets = jest.fn();
+const mockGetEvents = jest.fn();
 
 jest.mock('~/util/awclient', () => ({
   getClient: () => ({
     req: { get: mockGet, post: mockPost },
+    getBuckets: mockGetBuckets,
+    getEvents: mockGetEvents,
   }),
 }));
 
@@ -17,6 +21,10 @@ describe('AwNotifySettings', () => {
     mockGet.mockReset();
     mockPost.mockReset();
     mockPost.mockResolvedValue({});
+    mockGetBuckets.mockReset();
+    mockGetBuckets.mockResolvedValue({});
+    mockGetEvents.mockReset();
+    mockGetEvents.mockResolvedValue([]);
   });
 
   // aw-server-rust returns 200 with a null body for a setting that was never saved.
@@ -160,5 +168,33 @@ describe('AwNotifySettings', () => {
       expect.objectContaining({ http_port: 5600 }),
       expect.anything()
     );
+  });
+
+  test('shows aw-notify liveness from a fresh heartbeat bucket when enabled', async () => {
+    mockGet.mockResolvedValue({ data: { enabled: true, alerts: [] } });
+    mockGetBuckets.mockResolvedValue({ 'aw-notify_host': {}, 'aw-watcher-afk_host': {} });
+    mockGetEvents.mockResolvedValue([{ timestamp: new Date().toISOString(), duration: 5 }]);
+    const wrapper: any = shallowMount(AwNotifySettings, {
+      mocks: { $t: key => key },
+    });
+    await flushPromises();
+
+    expect(mockGetEvents).toHaveBeenCalledTimes(1);
+    expect(mockGetEvents).toHaveBeenCalledWith('aw-notify_host', { limit: 1 });
+    expect(wrapper.vm.liveness).toBe('running');
+    expect(wrapper.find('[data-test="aw-notify-liveness"]').text()).toBe(
+      'settings.notifications.livenessRunning'
+    );
+  });
+
+  test('hides liveness while notifications are disabled', async () => {
+    mockGet.mockResolvedValue({ data: { enabled: false, alerts: [] } });
+    const wrapper: any = shallowMount(AwNotifySettings, {
+      mocks: { $t: key => key },
+    });
+    await flushPromises();
+
+    expect(wrapper.vm.liveness).toBe('never');
+    expect(wrapper.find('[data-test="aw-notify-liveness"]').exists()).toBe(false);
   });
 });
