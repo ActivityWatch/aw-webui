@@ -111,6 +111,10 @@ function rowToDto(row: AlertRow): AwNotifyAlert {
   };
 }
 
+// aw-notify-rs heartbeats every few seconds; poll often enough that starting or
+// stopping it (e.g. from the tray) shows up without a page reload.
+const LIVENESS_POLL_MS = 15_000;
+
 export default {
   name: 'AwNotifySettings',
   data() {
@@ -123,6 +127,8 @@ export default {
       error: '',
       success: false,
       liveness: null as AwNotifyLiveness | null,
+      livenessTimer: null as ReturnType<typeof setInterval> | null,
+      destroyed: false,
       goalOptions: [
         { text: this.$t('settings.notifications.goalWarning'), value: false },
         { text: this.$t('settings.notifications.goalReached'), value: true },
@@ -137,8 +143,27 @@ export default {
   async mounted() {
     await this.load();
     await this.refreshLiveness();
+    this.syncLivenessPolling();
+  },
+  beforeDestroy() {
+    this.destroyed = true;
+    this.stopLivenessPolling();
   },
   methods: {
+    // Poll only while the saved config is enabled (the status line is hidden
+    // otherwise). mounted() is async, so guard against starting a timer after
+    // the component was destroyed mid-load.
+    syncLivenessPolling() {
+      this.stopLivenessPolling();
+      if (this.destroyed || !this.config.enabled) return;
+      this.livenessTimer = setInterval(() => this.refreshLiveness(), LIVENESS_POLL_MS);
+    },
+    stopLivenessPolling() {
+      if (this.livenessTimer !== null) {
+        clearInterval(this.livenessTimer);
+        this.livenessTimer = null;
+      }
+    },
     async refreshLiveness() {
       // Best effort: liveness is informational and must never block the form.
       try {
@@ -221,6 +246,8 @@ export default {
         // latest saved alerts, not the stale snapshot from page load.
         this.config = payload;
         this.success = true;
+        this.syncLivenessPolling();
+        void this.refreshLiveness();
       } catch (e: any) {
         this.error = `Failed to save settings: ${e?.message ?? e}`;
       } finally {
