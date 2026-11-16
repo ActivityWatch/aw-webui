@@ -17,7 +17,7 @@ div
           b-form-input#annotation-tags(v-model="tagsInput" :placeholder="$t('annotations.tagsPlaceholder')")
     b-form-group(:label="$t('annotations.note')" label-for="annotation-note")
       b-form-textarea#annotation-note(v-model="noteInput" rows="2" max-rows="6")
-    b-alert(v-if="formError" show variant="warning") {{ $t('annotations.errors.' + formError) }}
+    b-alert(v-if="formError" show variant="warning") {{ formErrorMessage }}
     b-button.mr-2(type="submit" variant="primary" :disabled="saving") {{ editingId === null ? $t('annotations.add') : $t('common.save') }}
     b-button(v-if="editingId !== null" variant="outline-secondary" :disabled="saving" @click="resetForm") {{ $t('common.cancel') }}
 
@@ -100,6 +100,19 @@ export default {
         .sort()
         .reverse()
         .map(date => ({ date, events: byDay[date] }));
+    },
+    // Literal keys, so the locale check can see every message this view uses.
+    formErrorMessage() {
+      switch (this.formError) {
+        case 'invalidRange':
+          return this.$t('annotations.errors.invalidRange');
+        case 'empty':
+          return this.$t('annotations.errors.empty');
+        case 'save':
+          return this.$t('annotations.errors.save');
+        default:
+          return '';
+      }
     },
   },
   mounted: async function () {
