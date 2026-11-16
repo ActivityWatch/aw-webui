@@ -425,16 +425,16 @@ export default {
     rangeStart: 'آغاز کی تاریخ',
     rangeEnd: 'اختتام کی تاریخ',
     invalidRange: 'URL میں تاریخ کی حد غلط ہے، اس کی بجائے آج دکھایا جا رہا ہے۔',
-    // English fallback until these interval strings are translated.
-    periodExactInterval: 'exact times',
-    intervalStart: 'Start time',
-    intervalEnd: 'End time (exclusive)',
-    invalidInterval: 'Invalid time interval in URL, showing today instead.',
-    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    periodExactInterval: 'درست اوقات',
+    intervalStart: 'آغاز کا وقت',
+    intervalEnd: 'اختتام کا وقت (شامل نہیں)',
+    invalidInterval: 'URL میں وقت کا وقفہ غلط ہے، اس کی بجائے آج دکھایا جا رہا ہے۔',
+    intervalNonexistentTime: 'یہ وقت آپ کے ٹائم زون میں موجود نہیں ہے (گھڑی آگے کی جاتی ہے)۔',
     intervalAmbiguousTime:
-      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
-    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
-    intervalEndAfterStart: 'The end time must be after the start time.',
+      'یہ وقت آپ کے ٹائم زون میں دو بار آتا ہے (گھڑی پیچھے کی جاتی ہے)۔ منتخب کریں کہ کون سا استعمال کرنا ہے:',
+    intervalTooLong:
+      'درست وقفہ زیادہ سے زیادہ 92 دن کا ہو سکتا ہے؛ لمبی مدت کے لیے تاریخ کی حد استعمال کریں۔',
+    intervalEndAfterStart: 'اختتام کا وقت آغاز کے وقت کے بعد ہونا چاہیے۔',
     diagnosticMissingWindow:
       '{host} کے لیے کوئی ونڈو بکٹ نہیں ہے۔ aw-watcher-window شروع کریں، پھر اس صفحے کو ریفریش کریں۔',
     diagnosticMissingAfk:
@@ -494,7 +494,7 @@ export default {
     periodLast7d: 'پچھلے 7 دنوں',
     periodLast30d: 'پچھلے 30 دنوں',
     periodCustomRange: 'منتخب کردہ حد میں',
-    periodExactInterval: 'in the selected time interval', // English fallback
+    periodExactInterval: 'منتخب وقت کے وقفے میں',
     periodAllTime: 'مجموعی طور پر',
   },
   visualizations: {
@@ -661,10 +661,10 @@ export default {
       quickDurations: 'فوری دورانیے',
       startDate: 'آغاز کی تاریخ',
       endDate: 'اختتام کی تاریخ (اختیاری)',
-      startTime: 'Start time',
-      endTime: 'End time',
+      startTime: 'آغاز کا وقت',
+      endTime: 'اختتام کا وقت',
       unresolvableTime:
-        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
+        'ڈے لائٹ سیونگ کی تبدیلی کی وجہ سے منتخب اوقات میں سے ایک موجود نہیں یا دو بار آتا ہے۔ اسے درست کریں۔',
       optional: '(اختیاری)',
       apply: 'لاگو کریں',
       refresh: 'ریفریش',

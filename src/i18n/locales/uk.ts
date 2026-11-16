@@ -419,16 +419,17 @@ export default {
     rangeStart: 'Дата початку',
     rangeEnd: 'Дата завершення',
     invalidRange: 'Недійсний діапазон дат в URL, показано сьогодні.',
-    // English fallback until these interval strings are translated.
-    periodExactInterval: 'exact times',
-    intervalStart: 'Start time',
-    intervalEnd: 'End time (exclusive)',
-    invalidInterval: 'Invalid time interval in URL, showing today instead.',
-    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    periodExactInterval: 'точний час',
+    intervalStart: 'Час початку',
+    intervalEnd: 'Час завершення (не включно)',
+    invalidInterval: 'Недійсний інтервал часу в URL, натомість показано сьогодні.',
+    intervalNonexistentTime:
+      'Такого часу немає у вашому часовому поясі (годинник переводять вперед).',
     intervalAmbiguousTime:
-      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
-    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
-    intervalEndAfterStart: 'The end time must be after the start time.',
+      'Цей час настає двічі у вашому часовому поясі (годинник переводять назад). Виберіть, який використати:',
+    intervalTooLong:
+      'Точний інтервал може тривати щонайбільше 92 дні; для довших періодів використовуйте діапазон дат.',
+    intervalEndAfterStart: 'Час завершення має бути пізніше за час початку.',
     diagnosticMissingWindow:
       'Немає bucket-а вікон для {host}. Запустіть aw-watcher-window і оновіть сторінку.',
     diagnosticMissingAfk:
@@ -488,7 +489,7 @@ export default {
     periodLast7d: 'останні 7 днів',
     periodLast30d: 'останні 30 днів',
     periodCustomRange: 'за вибраний період',
-    periodExactInterval: 'in the selected time interval', // English fallback
+    periodExactInterval: 'у вибраному інтервалі часу',
     periodAllTime: 'за весь час',
   },
   visualizations: {
@@ -652,10 +653,10 @@ export default {
       quickDurations: 'Швидкий вибір тривалості',
       startDate: 'Дата початку',
       endDate: 'Дата завершення (необов’язково)',
-      startTime: 'Start time',
-      endTime: 'End time',
+      startTime: 'Час початку',
+      endTime: 'Час завершення',
       unresolvableTime:
-        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
+        'Один із вибраних моментів часу не існує або повторюється двічі через переведення годинника. Змініть його.',
       optional: '(необов’язково)',
       apply: 'Застосувати',
       refresh: 'Оновити',

@@ -420,16 +420,17 @@ export default {
     rangeStart: 'Startdatum',
     rangeEnd: 'Enddatum',
     invalidRange: 'Ungültiger Zeitraum in der URL, stattdessen wird heute angezeigt.',
-    // English fallback until these interval strings are translated.
-    periodExactInterval: 'exact times',
-    intervalStart: 'Start time',
-    intervalEnd: 'End time (exclusive)',
-    invalidInterval: 'Invalid time interval in URL, showing today instead.',
-    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    periodExactInterval: 'genaue Uhrzeiten',
+    intervalStart: 'Startzeit',
+    intervalEnd: 'Endzeit (exklusiv)',
+    invalidInterval: 'Ungültiges Zeitintervall in der URL, stattdessen wird heute angezeigt.',
+    intervalNonexistentTime:
+      'Diese Uhrzeit gibt es in Ihrer Zeitzone nicht (die Uhr wird vorgestellt).',
     intervalAmbiguousTime:
-      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
-    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
-    intervalEndAfterStart: 'The end time must be after the start time.',
+      'Diese Uhrzeit kommt in Ihrer Zeitzone zweimal vor (die Uhr wird zurückgestellt). Wählen Sie, welche verwendet werden soll:',
+    intervalTooLong:
+      'Ein genaues Intervall darf höchstens 92 Tage umfassen; verwenden Sie für längere Zeiträume einen Datumsbereich.',
+    intervalEndAfterStart: 'Die Endzeit muss nach der Startzeit liegen.',
     diagnosticMissingWindow:
       'Kein Fenster-Bucket für {host}. Starten Sie aw-watcher-window und laden Sie die Seite neu.',
     diagnosticMissingAfk:
@@ -489,7 +490,7 @@ export default {
     periodLast7d: 'die letzten 7 Tage',
     periodLast30d: 'die letzten 30 Tage',
     periodCustomRange: 'im gewählten Zeitraum',
-    periodExactInterval: 'in the selected time interval', // English fallback
+    periodExactInterval: 'im gewählten Zeitintervall',
     periodAllTime: 'insgesamt',
   },
   visualizations: {
@@ -652,10 +653,10 @@ export default {
       quickDurations: 'Schnellauswahl',
       startDate: 'Startdatum',
       endDate: 'Enddatum (optional)',
-      startTime: 'Start time',
-      endTime: 'End time',
+      startTime: 'Startzeit',
+      endTime: 'Endzeit',
       unresolvableTime:
-        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
+        'Eine der gewählten Uhrzeiten existiert wegen der Zeitumstellung nicht oder kommt doppelt vor. Bitte passen Sie sie an.',
       optional: '(optional)',
       apply: 'Anwenden',
       refresh: 'Aktualisieren',

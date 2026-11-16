@@ -419,16 +419,16 @@ export default {
     rangeStart: 'Дата начала',
     rangeEnd: 'Дата окончания',
     invalidRange: 'Неверный диапазон дат в URL, показан сегодняшний день.',
-    // English fallback until these interval strings are translated.
-    periodExactInterval: 'exact times',
-    intervalStart: 'Start time',
-    intervalEnd: 'End time (exclusive)',
-    invalidInterval: 'Invalid time interval in URL, showing today instead.',
-    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    periodExactInterval: 'точное время',
+    intervalStart: 'Время начала',
+    intervalEnd: 'Время окончания (не включая)',
+    invalidInterval: 'Недопустимый интервал времени в URL, вместо этого показан сегодняшний день.',
+    intervalNonexistentTime: 'Этого времени нет в вашем часовом поясе (часы переводятся вперёд).',
     intervalAmbiguousTime:
-      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
-    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
-    intervalEndAfterStart: 'The end time must be after the start time.',
+      'Это время наступает дважды в вашем часовом поясе (часы переводятся назад). Выберите, какое использовать:',
+    intervalTooLong:
+      'Точный интервал может составлять не более 92 дней; для более длинных периодов используйте диапазон дат.',
+    intervalEndAfterStart: 'Время окончания должно быть позже времени начала.',
     diagnosticMissingWindow:
       'Нет bucket-а окон для {host}. Запустите aw-watcher-window и обновите страницу.',
     diagnosticMissingAfk:
@@ -488,7 +488,7 @@ export default {
     periodLast7d: 'последние 7 дней',
     periodLast30d: 'последние 30 дней',
     periodCustomRange: 'за выбранный период',
-    periodExactInterval: 'in the selected time interval', // English fallback
+    periodExactInterval: 'в выбранном интервале времени',
     periodAllTime: 'за всё время',
   },
   visualizations: {
@@ -653,10 +653,10 @@ export default {
       quickDurations: 'Быстрый выбор длительности',
       startDate: 'Дата начала',
       endDate: 'Дата окончания (необязательно)',
-      startTime: 'Start time',
-      endTime: 'End time',
+      startTime: 'Время начала',
+      endTime: 'Время окончания',
       unresolvableTime:
-        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
+        'Одно из выбранных значений времени не существует или повторяется дважды из-за перевода часов. Измените его.',
       optional: '(необязательно)',
       apply: 'Применить',
       refresh: 'Обновить',
