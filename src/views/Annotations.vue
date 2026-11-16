@@ -8,17 +8,19 @@ div
     b-form-row
       b-col(md="3" sm="6")
         b-form-group(:label="$t('annotations.start')" label-for="annotation-start")
-          b-form-input#annotation-start(type="datetime-local" v-model="startInput" required)
+          b-form-input#annotation-start(type="datetime-local" step="1" v-model="startInput" :disabled="saving || loading || !bucket_id" required)
+          b-form-select.mt-1(v-if="startCandidates.length > 1" v-model="startPick" :options="timeOptions(startCandidates)" :disabled="saving" :aria-label="$t('activity.intervalAmbiguousTime')")
       b-col(md="3" sm="6")
         b-form-group(:label="$t('annotations.end')" label-for="annotation-end")
-          b-form-input#annotation-end(type="datetime-local" v-model="endInput" required)
+          b-form-input#annotation-end(type="datetime-local" step="1" v-model="endInput" :disabled="saving || loading || !bucket_id" required)
+          b-form-select.mt-1(v-if="endCandidates.length > 1" v-model="endPick" :options="timeOptions(endCandidates)" :disabled="saving" :aria-label="$t('activity.intervalAmbiguousTime')")
       b-col(md="6")
         b-form-group(:label="$t('annotations.tags')" label-for="annotation-tags")
-          b-form-input#annotation-tags(v-model="tagsInput" :placeholder="$t('annotations.tagsPlaceholder')")
+          b-form-input#annotation-tags(v-model="tagsInput" :disabled="saving || loading || !bucket_id" :placeholder="$t('annotations.tagsPlaceholder')")
     b-form-group(:label="$t('annotations.note')" label-for="annotation-note")
-      b-form-textarea#annotation-note(v-model="noteInput" rows="2" max-rows="6")
+      b-form-textarea#annotation-note(v-model="noteInput" :disabled="saving || loading || !bucket_id" rows="2" max-rows="6")
     b-alert(v-if="formError" show variant="warning") {{ formErrorMessage }}
-    b-button.mr-2(type="submit" variant="primary" :disabled="saving") {{ editingId === null ? $t('annotations.add') : $t('common.save') }}
+    b-button.mr-2(type="submit" variant="primary" :disabled="saving || loading || !bucket_id") {{ editingId === null ? $t('annotations.add') : $t('common.save') }}
     b-button(v-if="editingId !== null" variant="outline-secondary" :disabled="saving" @click="resetForm") {{ $t('common.cancel') }}
 
   hr
@@ -38,10 +40,13 @@ div
       div.annotation-entry.d-flex.align-items-start.px-3.py-2(v-for="e in day.events" :key="e.id")
         div.flex-fill.mr-2
           div
-            span.text-muted {{ e.timestamp | shorttime }} &ndash; {{ endOf(e) | shorttime }}
+            span.text-muted
+              | {{ e.timestamp | shorttime }} &ndash;
+              template(v-if="endDate(e)") {{ endDate(e) }}
+              |  {{ endOf(e) | shorttime }}
             b-badge.ml-2(v-for="t in tagList(e)" :key="t" variant="secondary") {{ t }}
           div(v-if="e.data.note").annotation-note {{ e.data.note }}
-        b-button.mx-1(size="sm" variant="outline-dark" @click="edit(e)") {{ $t('annotations.edit') }}
+        b-button.mx-1(size="sm" variant="outline-dark" :disabled="saving" @click="edit(e)") {{ $t('annotations.edit') }}
         b-button.mx-1(size="sm" variant="outline-danger" :disabled="saving" @click="remove(e)") {{ $t('common.delete') }}
     b-button.mt-3(v-if="hasMore" variant="outline-secondary" @click="showMore") {{ $t('annotations.showMore') }}
 </template>
@@ -61,6 +66,7 @@ div
 <script lang="ts">
 import _ from 'lodash';
 import moment from 'moment';
+import { wallTimeInstants } from '~/util/timeperiod';
 
 import {
   ANNOTATION_BUCKET_TYPE,
@@ -71,7 +77,7 @@ import {
   validateDraft,
 } from '~/util/annotations';
 
-const LOCAL_FORMAT = 'YYYY-MM-DDTHH:mm';
+const LOCAL_FORMAT = 'YYYY-MM-DDTHH:mm:ss';
 const PAGE_SIZE = 100;
 
 export default {
@@ -87,6 +93,9 @@ export default {
       hasMore: false,
       events: [],
       editingId: null,
+      originalRange: null,
+      startPick: null,
+      endPick: null,
       startInput: moment().subtract(1, 'hour').format(LOCAL_FORMAT),
       endInput: moment().format(LOCAL_FORMAT),
       tagsInput: '',
@@ -94,6 +103,12 @@ export default {
     };
   },
   computed: {
+    startCandidates() {
+      return this.timeCandidates('start', this.startInput);
+    },
+    endCandidates() {
+      return this.timeCandidates('end', this.endInput);
+    },
     days() {
       const byDay = _.groupBy(this.events, e => moment(e.timestamp).format('YYYY-MM-DD'));
       return Object.keys(byDay)
@@ -110,24 +125,48 @@ export default {
           return this.$t('annotations.errors.empty');
         case 'save':
           return this.$t('annotations.errors.save');
+        case 'unresolvableTime':
+          return this.$t('ui.timeInterval.unresolvableTime');
         default:
           return '';
       }
     },
   },
+  watch: {
+    startInput() {
+      this.startPick = null;
+    },
+    endInput() {
+      this.endPick = null;
+    },
+  },
   mounted: async function () {
-    try {
-      const info = await this.$aw.getInfo();
-      this.bucket_id = annotationBucketId(info.hostname);
-      await this.$aw.ensureBucket(this.bucket_id, ANNOTATION_BUCKET_TYPE, info.hostname);
-    } catch (e) {
-      this.error = this.$t('annotations.errors.load');
-      this.loading = false;
-      return;
-    }
     await this.load();
   },
   methods: {
+    timeCandidates(field, wall) {
+      // A note/tag edit must retain the saved instant, including milliseconds
+      // and the second occurrence of a repeated local hour.
+      const original = this.originalRange && this.originalRange[field];
+      if (original && moment(original).format(LOCAL_FORMAT) === wall) {
+        return [original.toISOString()];
+      }
+      return wallTimeInstants(wall);
+    },
+    timeOptions(candidates) {
+      return [
+        { value: null, text: this.$t('activity.intervalAmbiguousTime'), disabled: true },
+        ...candidates.map(value => ({ value, text: moment(value).format('HH:mm:ss Z') })),
+      ];
+    },
+    selectedTime(candidates, pick) {
+      const value = candidates.length === 1 ? candidates[0] : candidates.find(c => c === pick);
+      return value ? new Date(value) : null;
+    },
+    endDate(e) {
+      const end = moment(this.endOf(e));
+      return end.isSame(moment(e.timestamp), 'day') ? '' : end.format('YYYY-MM-DD');
+    },
     endOf(e) {
       return new Date(new Date(e.timestamp).getTime() + e.duration * 1000);
     },
@@ -136,6 +175,9 @@ export default {
     },
     resetForm() {
       this.editingId = null;
+      this.originalRange = null;
+      this.startPick = null;
+      this.endPick = null;
       this.formError = null;
       this.tagsInput = '';
       this.noteInput = '';
@@ -143,6 +185,10 @@ export default {
       this.endInput = moment().format(LOCAL_FORMAT);
     },
     edit(e) {
+      if (this.saving) return;
+      this.originalRange = { start: new Date(e.timestamp), end: this.endOf(e) };
+      this.startPick = null;
+      this.endPick = null;
       this.editingId = e.id;
       this.formError = null;
       this.startInput = moment(e.timestamp).format(LOCAL_FORMAT);
@@ -152,8 +198,15 @@ export default {
       window.scrollTo && window.scrollTo(0, 0);
     },
     load: async function () {
+      this.loading = true;
       this.error = null;
       try {
+        if (!this.bucket_id) {
+          const info = await this.$aw.getInfo();
+          const bucket = annotationBucketId(info.hostname);
+          await this.$aw.ensureBucket(bucket, ANNOTATION_BUCKET_TYPE, info.hostname);
+          this.bucket_id = bucket;
+        }
         // Ask for one extra event to know whether more history exists.
         const events = await this.$aw.getEvents(this.bucket_id, { limit: this.limit + 1 });
         this.hasMore = events.length > this.limit;
@@ -171,9 +224,16 @@ export default {
       await this.load();
     },
     save: async function () {
+      if (this.saving || this.loading || !this.bucket_id) return;
+      const start = this.selectedTime(this.startCandidates, this.startPick);
+      const end = this.selectedTime(this.endCandidates, this.endPick);
+      if (!start || !end) {
+        this.formError = 'unresolvableTime';
+        return;
+      }
       const draft = {
-        start: moment(this.startInput, LOCAL_FORMAT, true).toDate(),
-        end: moment(this.endInput, LOCAL_FORMAT, true).toDate(),
+        start,
+        end,
         tags: this.tagsInput,
         note: this.noteInput,
       };
@@ -196,6 +256,7 @@ export default {
       }
     },
     remove: async function (e) {
+      if (this.saving || this.loading || !this.bucket_id) return;
       this.saving = true;
       try {
         await this.$aw.deleteEvent(this.bucket_id, e.id);
