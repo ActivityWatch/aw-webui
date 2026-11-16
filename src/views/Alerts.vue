@@ -140,6 +140,11 @@ export default {
     );
     this.hostname = this.hostnames[0];
   },
+  beforeDestroy: function () {
+    // Stop auto-refresh when leaving the view, or check() keeps querying every 10s.
+    clearInterval(this.running_interval);
+    this.running_interval = null;
+  },
   methods: {
     addAlert: async function () {
       const goal = cleanAlertGoal(this.editing_alert);
