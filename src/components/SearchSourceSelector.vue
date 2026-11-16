@@ -99,7 +99,7 @@ export default {
       try {
         re = new RegExp(this.pattern, 'i');
       } catch (e) {
-        return this.candidates;
+        return [];
       }
       return this.candidates.filter(e =>
         Object.values(e.data || {}).some(v => typeof v === 'string' && re.test(v))
