@@ -186,6 +186,19 @@ describe('SearchSourceSelector', () => {
     expect(vm.$emit).not.toHaveBeenCalled();
   });
 
+  test('an invalid pattern shows no matches unless filtering is explicitly disabled', async () => {
+    const vm = selectorVm(jest.fn().mockResolvedValue([stored(1, 'example')]));
+    vm.search = { ...search, pattern: '(' };
+    vm.open();
+    await vm.load();
+    expect(vm.candidates).toHaveLength(1);
+    expect(vm.shown).toEqual([]);
+    expect(vm.$emit).not.toHaveBeenCalled();
+    vm.onlyMatching = false;
+    expect(vm.shown.map(e => e.id)).toEqual([1]);
+    expect(vm.$emit).not.toHaveBeenCalled();
+  });
+
   test('a list that reaches the limit is flagged as possibly incomplete', async () => {
     const vm = selectorVm(jest.fn().mockResolvedValue([stored(1, 'a'), stored(2, 'b')]), 2);
     vm.open();
