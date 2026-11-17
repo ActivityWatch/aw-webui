@@ -663,6 +663,9 @@ export default {
       showMore: '再显示 {count} 个',
     },
     calendar: {
+      source: '来源：',
+      categories: '分类',
+      rawBucket: '原始存储桶',
       bucket: '存储桶：',
       show: '显示：',
       day: '日',

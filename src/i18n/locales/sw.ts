@@ -696,6 +696,9 @@ export default {
       showMore: 'Onyesha {count} zaidi',
     },
     calendar: {
+      source: 'Chanzo:',
+      categories: 'Kategoria',
+      rawBucket: 'Bucket ghafi',
       bucket: 'Bucket:',
       show: 'Onyesha:',
       day: 'Siku',

@@ -703,6 +703,9 @@ export default {
       showMore: 'Afficher {count} de plus',
     },
     calendar: {
+      source: 'Source :',
+      categories: 'Catégories',
+      rawBucket: 'Bucket brut',
       bucket: 'Bucket :',
       show: 'Afficher :',
       day: 'Jour',

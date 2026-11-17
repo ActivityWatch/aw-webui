@@ -692,6 +692,9 @@ export default {
       showMore: 'Tampilkan {count} lagi',
     },
     calendar: {
+      source: 'Sumber:',
+      categories: 'Kategori',
+      rawBucket: 'Bucket mentah',
       bucket: 'Bucket:',
       show: 'Tampilkan:',
       day: 'Hari',

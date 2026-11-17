@@ -691,6 +691,9 @@ export default {
       showMore: 'さらに {count} 件表示',
     },
     calendar: {
+      source: 'ソース：',
+      categories: 'カテゴリ',
+      rawBucket: '生のバケット',
       bucket: 'バケット：',
       show: '表示：',
       day: '日',
