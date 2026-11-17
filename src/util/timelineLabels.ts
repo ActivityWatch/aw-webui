@@ -90,3 +90,10 @@ export function formatTimelineBucketLabelHtml(
   // Fallback: keep the full id with wrap opportunities.
   return `<span class="timeline-label" title="${escaped}">${addWrapOpportunities(escaped)}</span>`;
 }
+
+// Label for a host row that nests that host's buckets in the timeline.
+export function formatTimelineHostLabelHtml(hostname: string): string {
+  return `<span class="timeline-label" title="${escapeHtml(hostname)}">${addWrapOpportunities(
+    escapeHtml(hostname)
+  )}</span>`;
+}

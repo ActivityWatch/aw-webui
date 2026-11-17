@@ -103,7 +103,12 @@ import {
 import { DataSet } from 'vis-data';
 import { IEvent } from '../util/interfaces';
 import { categoryPathLabel } from '~/util/categoryLabels';
-import { formatTimelineBucketLabelHtml, shortenBucketLabel } from '../util/timelineLabels';
+import {
+  formatTimelineBucketLabelHtml,
+  formatTimelineHostLabelHtml,
+  shortenBucketLabel,
+} from '../util/timelineLabels';
+import { nestGroupsByHost } from '../util/timelineHostGroups';
 
 import { Timeline } from 'vis-timeline/esnext';
 import 'vis-timeline/styles/vis-timeline-graph2d.css';
@@ -135,6 +140,7 @@ export default {
       filterShortEvents: true,
       items: [],
       groups: [],
+      hostNested: false,
       options: {
         zoomMin: 1000 * 60, // 10min in milliseconds
         zoomMax: 1000 * 60 * 60 * 24 * 31 * 3, // about three months in milliseconds
@@ -577,6 +583,31 @@ export default {
       // Keep group rows stable while panning through gaps in a bucket's data.
       this.preparedItems = new Map(items.map(item => [item.id, item]));
       groups = groups.filter(group => index.groups.has(group.id));
+      let isNested = false;
+      if (this.showRowLabels) {
+        const hostById = new Map(buckets.map(b => [b.id, realHost(b)]));
+        const nested = nestGroupsByHost(
+          groups,
+          id => hostById.get(id),
+          formatTimelineHostLabelHtml
+        );
+        // The host parent row carries the hostname, so drop the "@ host" suffix.
+        isNested = nested !== groups;
+        groups =
+          nested === groups
+            ? groups
+            : nested.map(g =>
+                g.nestedGroups
+                  ? g
+                  : hostById.get(g.id)
+                  ? { ...g, content: formatTimelineBucketLabelHtml(g.id) }
+                  : g
+              );
+      }
+      // vis-timeline hid the children of a collapsed host by writing visible:false
+      // into the group data. Once the host rows are gone, show the buckets again.
+      if (this.hostNested && !isNested) groups = groups.map(g => ({ ...g, visible: true }));
+      this.hostNested = isNested;
       if (this.queriedInterval && this.showQueriedInterval) {
         groups.push({ id: 'queried-interval', content: 'queried interval' });
         items.push({
