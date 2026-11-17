@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { set, del } from 'vue';
 import { useSettingsStore } from './settings';
 
 /** Items per row on large screens: 1 = full width, 2 = half, 3 = a third. */
@@ -255,10 +256,12 @@ export const useViewsStore = defineStore('views', {
       { view_id, el_id, width }: { view_id: string; el_id: number; width: ElementWidth | null }
     ) {
       const element = this.views.find(v => v.id == view_id).elements[el_id];
+      // Most elements have no `width` key yet; Vue 2 only tracks added or
+      // removed keys through set/del.
       if (width === null) {
-        delete element.width;
+        del(element, 'width');
       } else {
-        element.width = width;
+        set(element, 'width', width);
       }
     },
     addVisualization(this: State, { view_id, type }) {

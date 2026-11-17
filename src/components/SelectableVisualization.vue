@@ -9,7 +9,8 @@ div(v-if="editable || !activityStore.buckets.loaded || has_prerequisites || !set
         icon(name="cog")
       b-dropdown-item(v-for="t in types" :key="t" variant="outline-secondary" @click="$emit('onTypeChange', id, t)")
         | {{ visualizations[t].title }} #[span.small.text-warning(v-if="!visualizations[t].available") {{ $t('visualizations.noData') }}]
-    b-dropdown.mr-1(size="sm" variant="outline-secondary" right :title="$t('visualizations.width')")
+    //- The clock draws at a fixed size, so it is always full width.
+    b-dropdown.mr-1(v-if="type != 'sunburst_clock'" size="sm" variant="outline-secondary" right :title="$t('visualizations.width')")
       template(v-slot:button-content="")
         icon(name="arrows-alt-h")
       b-dropdown-header {{ $t('visualizations.width') }}
