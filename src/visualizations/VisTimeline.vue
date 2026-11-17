@@ -585,7 +585,7 @@ export default {
       groups = groups.filter(group => index.groups.has(group.id));
       let isNested = false;
       if (this.showRowLabels) {
-        const hostById = new Map(buckets.map(b => [b.id, realHost(b)]));
+        const hostById = new Map<string, string | undefined>(buckets.map(b => [b.id, realHost(b)]));
         const nested = nestGroupsByHost(
           groups,
           id => hostById.get(id),
