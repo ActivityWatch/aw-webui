@@ -96,6 +96,13 @@ describe('migrateStoredViews', () => {
     expect(migrateStoredViews(stored, true)).toBe(stored);
   });
 
+  test('treats a null card width as Automatic when migrating', () => {
+    const stored: View[] = storedDesktopDefault();
+    // Not a valid ElementWidth, but settings JSON can carry it.
+    (stored[0].elements[0] as { width?: unknown }).width = null;
+    expect(migrateStoredViews(stored, true)).toEqual(androidViews);
+  });
+
   test('replaces a stored desktop default on Android', () => {
     const migrated = migrateStoredViews(storedDesktopDefault(), true);
     expect(migrated).toEqual(androidViews);

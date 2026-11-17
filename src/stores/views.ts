@@ -148,7 +148,8 @@ function sameLayout(a: View[], b: View[]): boolean {
           (el, j) =>
             el.type === other.elements[j].type &&
             el.size === other.elements[j].size &&
-            el.width === undefined &&
+            // A null width renders as Automatic, so it is not a user edit.
+            el.width == null &&
             el.props === undefined
         )
       );
