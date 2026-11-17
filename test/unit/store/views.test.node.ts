@@ -1,6 +1,7 @@
 import { setActivePinia, createPinia } from 'pinia';
 import { useViewsStore, androidViews, defaultViews, migrateStoredViews } from '~/stores/views';
 import type { View } from '~/stores/views';
+import { nextTick, watch } from 'vue';
 
 describe('views store', () => {
   setActivePinia(createPinia());
@@ -28,6 +29,21 @@ describe('views store', () => {
     expect(viewsStore.views[0].elements[0]).toEqual({ type: 'top_apps', size: 3, width: 2 });
     viewsStore.setVisualizationWidth({ view_id: 'v', el_id: 0, width: null });
     expect(viewsStore.views[0].elements[0]).toEqual({ type: 'top_apps', size: 3 });
+  });
+
+  test('a newly set width is reactive', async () => {
+    viewsStore.loadViews([{ id: 'v', name: 'V', elements: [{ type: 'top_apps' }] }]);
+    const seen = [];
+    const stop = watch(
+      () => viewsStore.views[0].elements[0].width,
+      width => seen.push(width)
+    );
+    viewsStore.setVisualizationWidth({ view_id: 'v', el_id: 0, width: 2 });
+    await nextTick();
+    viewsStore.setVisualizationWidth({ view_id: 'v', el_id: 0, width: null });
+    await nextTick();
+    stop();
+    expect(seen).toEqual([2, undefined]);
   });
 });
 

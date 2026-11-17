@@ -262,8 +262,9 @@ export default {
     },
     // Below md every card is full width. `width` is the number of cards per
     // row on large screens; without it, the clock and timeline stay full width.
+    // The clock draws at a fixed 750px, so it is always full width.
     visClass(el): string[] {
-      const width = el.width || (this.isVisLarge(el) ? 1 : 3);
+      const width = el.type == 'sunburst_clock' ? 1 : el.width || (this.isVisLarge(el) ? 1 : 3);
       if (width === 1) return ['col-md-12', 'col-lg-12'];
       if (width === 2) return ['col-md-6', 'col-lg-6'];
       return ['col-md-6', 'col-lg-4'];

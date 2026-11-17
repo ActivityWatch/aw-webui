@@ -145,6 +145,10 @@ describe('ActivityView visClass', () => {
     expect(visClass({ type: 'top_apps', width: 2 })).toEqual(['col-md-6', 'col-lg-6']);
     expect(visClass({ type: 'vis_timeline', width: 3 })).toEqual(['col-md-6', 'col-lg-4']);
   });
+
+  test('the fixed-size clock stays full width whatever is stored', () => {
+    expect(visClass({ type: 'sunburst_clock', width: 3 })).toEqual(['col-md-12', 'col-lg-12']);
+  });
 });
 
 describe('ActivityView custom visualization modal', () => {
