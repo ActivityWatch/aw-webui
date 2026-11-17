@@ -130,6 +130,23 @@ describe('ActivityView mobile presentation', () => {
   );
 });
 
+describe('ActivityView visClass', () => {
+  const visClass = el => ActivityView.methods.visClass.call(ActivityView.methods, el);
+
+  test('without a chosen width, keeps the per-type layout', () => {
+    expect(visClass({ type: 'top_apps', size: 3 })).toEqual(['col-md-6', 'col-lg-4']);
+    expect(visClass({ type: 'vis_timeline' })).toEqual(['col-md-12', 'col-lg-12']);
+    // Changing a default card's type keeps its stored size: 3; the timeline stays full width.
+    expect(visClass({ type: 'sunburst_clock', size: 3 })).toEqual(['col-md-12', 'col-lg-12']);
+  });
+
+  test('a chosen width sets the cards per row on large screens', () => {
+    expect(visClass({ type: 'top_apps', width: 1 })).toEqual(['col-md-12', 'col-lg-12']);
+    expect(visClass({ type: 'top_apps', width: 2 })).toEqual(['col-md-6', 'col-lg-6']);
+    expect(visClass({ type: 'vis_timeline', width: 3 })).toEqual(['col-md-6', 'col-lg-4']);
+  });
+});
+
 describe('ActivityView custom visualization modal', () => {
   test('stays open when a required field is blank', async () => {
     const event = { preventDefault: jest.fn() };
