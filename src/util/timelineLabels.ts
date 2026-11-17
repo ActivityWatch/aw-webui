@@ -42,6 +42,9 @@ export interface BucketLabelOptions {
   // applied), the short label "window" collides between hosts. Pass the
   // bucket's hostname to disambiguate as e.g. "window @ host".
   hostname?: string;
+  // Rows nested under a host parent row already name the host, so drop the
+  // "@ host" suffix from synced buckets too. The tooltip keeps the full id.
+  omitHost?: boolean;
 }
 
 export function formatTimelineBucketLabelHtml(
@@ -71,7 +74,7 @@ export function formatTimelineBucketLabelHtml(
     const shortWatcher =
       shortenBucketLabel(basePart) ??
       (underscoreIdx !== -1 ? basePart.slice(0, underscoreIdx) : basePart);
-    const display = `${shortWatcher} @ ${remotePart}`;
+    const display = options.omitHost ? shortWatcher : `${shortWatcher} @ ${remotePart}`;
     return `<span class="timeline-label" title="${escaped}">${addWrapOpportunities(
       escapeHtml(display)
     )}</span>`;

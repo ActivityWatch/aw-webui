@@ -600,7 +600,7 @@ export default {
                 g.nestedGroups
                   ? g
                   : hostById.get(g.id)
-                  ? { ...g, content: formatTimelineBucketLabelHtml(g.id) }
+                  ? { ...g, content: formatTimelineBucketLabelHtml(g.id, { omitHost: true }) }
                   : g
               );
       }
