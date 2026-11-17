@@ -475,3 +475,36 @@ describe('Alerts goal persistence', () => {
     }
   });
 });
+
+describe('Alerts auto-refresh', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  const flush = async () => {
+    for (let i = 0; i < 10; i++) await Promise.resolve();
+  };
+
+  test('stops querying once the view is destroyed', async () => {
+    const { wrapper, query } = mountAlerts();
+    await flush();
+    wrapper.setData({ autorefresh: true });
+    wrapper.vm.toggleAutoRefresh();
+
+    jest.advanceTimersByTime(10000);
+    await flush();
+    const callsWhileMounted = query.mock.calls.length;
+    expect(callsWhileMounted).toBeGreaterThan(0);
+
+    wrapper.destroy();
+    jest.advanceTimersByTime(30000);
+    await flush();
+    expect(query).toHaveBeenCalledTimes(callsWhileMounted);
+    expect(wrapper.vm.running_interval).toBeNull();
+  });
+});
