@@ -46,9 +46,9 @@ const useTestBuckets = defineStore('ai-summary-test-buckets', {
       bucket('window-alpha', 'currentwindow', 'alpha'),
       bucket('window-beta', 'currentwindow', 'beta'),
       bucket('afk-alpha', 'afkstatus', 'alpha'),
-      bucket('aw-watcher-web-chrome-alpha', 'web.tab.current', 'alpha'),
+      bucket('aw-watcher-web-chrome_alpha', 'web.tab.current', 'alpha'),
       bucket('aw-watcher-web-chrome-beta', 'web.tab.current', 'beta'),
-      bucket('aw-watcher-web-firefox-legacy', 'web.tab.current', 'unknown'),
+      bucket('aw-watcher-web-firefox_legacy', 'web.tab.current', 'unknown'),
     ],
   }),
   actions: {
@@ -393,10 +393,10 @@ describe('AI Summary mounted invocation ownership', () => {
     expect(ranges).toHaveLength(1);
     expect(ranges[0].end.getTime() - ranges[0].start.getTime()).toBe(7 * 86400000);
     const queryText = statements.join('\n');
-    for (const id of ['window-alpha', 'afk-alpha', 'aw-watcher-web-chrome-alpha']) {
+    for (const id of ['window-alpha', 'afk-alpha', 'aw-watcher-web-chrome_alpha']) {
       expect(queryText).toContain(id);
     }
-    expect(queryText).not.toContain('aw-watcher-web-firefox-legacy');
+    expect(queryText).not.toContain('aw-watcher-web-firefox_legacy');
     expect(queryText).not.toContain('aw-watcher-web-chrome-beta');
     expect(queryText).not.toContain('window-beta');
     expect(queryText).toContain('filter_period_intersect');
@@ -428,12 +428,12 @@ describe('AI Summary mounted invocation ownership', () => {
   });
 
   test('legacy browser fallback is selected and disclosed only without an exact-host browser bucket', async () => {
-    buckets.buckets = buckets.buckets.filter(b => b.id !== 'aw-watcher-web-chrome-alpha');
+    buckets.buckets = buckets.buckets.filter(b => b.id !== 'aw-watcher-web-chrome_alpha');
     await mountView();
     await startQuery();
     const queryText = query.mock.calls[0][1].join('\n');
-    expect(queryText).toContain('aw-watcher-web-firefox-legacy');
-    expect(queryText).not.toContain('aw-watcher-web-chrome-alpha');
+    expect(queryText).toContain('aw-watcher-web-firefox_legacy');
+    expect(queryText).not.toContain('aw-watcher-web-chrome_alpha');
     expect(queryText).not.toContain('aw-watcher-web-chrome-beta');
     pendingQuery.resolve(queryResult());
     await flush();
