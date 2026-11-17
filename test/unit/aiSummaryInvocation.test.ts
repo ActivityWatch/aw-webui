@@ -47,7 +47,7 @@ const useTestBuckets = defineStore('ai-summary-test-buckets', {
       bucket('window-beta', 'currentwindow', 'beta'),
       bucket('afk-alpha', 'afkstatus', 'alpha'),
       bucket('aw-watcher-web-chrome_alpha', 'web.tab.current', 'alpha'),
-      bucket('aw-watcher-web-chrome-beta', 'web.tab.current', 'beta'),
+      bucket('aw-watcher-web-chrome_beta', 'web.tab.current', 'beta'),
       bucket('aw-watcher-web-firefox_legacy', 'web.tab.current', 'unknown'),
     ],
   }),
@@ -397,7 +397,7 @@ describe('AI Summary mounted invocation ownership', () => {
       expect(queryText).toContain(id);
     }
     expect(queryText).not.toContain('aw-watcher-web-firefox_legacy');
-    expect(queryText).not.toContain('aw-watcher-web-chrome-beta');
+    expect(queryText).not.toContain('aw-watcher-web-chrome_beta');
     expect(queryText).not.toContain('window-beta');
     expect(queryText).toContain('filter_period_intersect');
     expect(queryText).toContain('categorize');
@@ -434,7 +434,7 @@ describe('AI Summary mounted invocation ownership', () => {
     const queryText = query.mock.calls[0][1].join('\n');
     expect(queryText).toContain('aw-watcher-web-firefox_legacy');
     expect(queryText).not.toContain('aw-watcher-web-chrome_alpha');
-    expect(queryText).not.toContain('aw-watcher-web-chrome-beta');
+    expect(queryText).not.toContain('aw-watcher-web-chrome_beta');
     pendingQuery.resolve(queryResult());
     await flush();
     expect(llm).toHaveBeenCalledTimes(1);
