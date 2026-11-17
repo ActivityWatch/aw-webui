@@ -436,7 +436,7 @@ export default {
     intervalAmbiguousTime:
       'Muda huo hutokea mara mbili katika eneo lako la saa (saa hurudishwa nyuma). Chagua utakaotumia:',
     intervalTooLong:
-      'Kipindi kamili kinaweza kuwa na siku 92 zaidi; tumia kipindi cha tarehe kwa vipindi virefu zaidi.',
+      'Kipindi kamili kinaweza kuwa kisichozidi siku 92; tumia kipindi cha tarehe kwa vipindi virefu zaidi.',
     intervalEndAfterStart: 'Muda wa kumaliza lazima uwe baada ya muda wa kuanza.',
     diagnosticMissingWindow:
       'Hakuna bucket ya dirisha kwa {host}. Anzisha aw-watcher-window, kisha onyesha upya ukurasa huu.',
