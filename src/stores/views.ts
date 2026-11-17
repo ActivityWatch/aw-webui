@@ -1,9 +1,15 @@
 import { defineStore } from 'pinia';
 import { useSettingsStore } from './settings';
 
+/** Items per row on large screens: 1 = full width, 2 = half, 3 = a third. */
+export type ElementWidth = 1 | 2 | 3;
+
 interface IElement {
   type: string;
+  // Stored by every default view, but never read for layout (see `width`).
   size?: number;
+  // Chosen by the user in edit mode. Unset keeps the per-type default.
+  width?: ElementWidth;
   props?: Record<string, unknown>;
 }
 
@@ -141,6 +147,7 @@ function sameLayout(a: View[], b: View[]): boolean {
           (el, j) =>
             el.type === other.elements[j].type &&
             el.size === other.elements[j].size &&
+            el.width === undefined &&
             el.props === undefined
         )
       );
@@ -242,6 +249,17 @@ export const useViewsStore = defineStore('views', {
       const element = this.views.find(v => v.id == view_id).elements[el_id];
       element.type = type;
       element.props = props;
+    },
+    setVisualizationWidth(
+      this: State,
+      { view_id, el_id, width }: { view_id: string; el_id: number; width: ElementWidth | null }
+    ) {
+      const element = this.views.find(v => v.id == view_id).elements[el_id];
+      if (width === null) {
+        delete element.width;
+      } else {
+        element.width = width;
+      }
     },
     addVisualization(this: State, { view_id, type }) {
       this.views.find(v => v.id == view_id).elements.push({ type: type });

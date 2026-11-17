@@ -11,11 +11,10 @@ div(v-else-if="view || editing")
     | {{ saveError }}
   //- Keep Save/Cancel available when removing the final view empties the draft.
   draggable.row(v-if="view" v-model="elements" handle=".handle" :disabled="saving")
-    // TODO: Handle large/variable sized visualizations better
     //- Keep each draft element's identity across reorder/removal. Replacing a
       layout or discarding it rebuilds charts from the restored selections.
-    div.col-md-6.col-lg-4.p-3(v-for="el, index in elements", :key="view.id + '-' + layoutRevision + '-' + elementKey(el)", :class="{'col-md-12': isVisLarge(el), 'col-lg-12': isVisLarge(el)}")
-      aw-selectable-vis(:id="index" :type="el.type" :props="el.props" :view-id="view.id" @onTypeChange="onTypeChange" @onRemove="onRemove" :editable="editing && !saving" :disabled="saving")
+    div.p-3(v-for="el, index in elements", :key="view.id + '-' + layoutRevision + '-' + elementKey(el)", :class="visClass(el)")
+      aw-selectable-vis(:id="index" :type="el.type" :props="el.props" :width="el.width || null" :view-id="view.id" @onTypeChange="onTypeChange" @onWidthChange="onWidthChange" @onRemove="onRemove" :editable="editing && !saving" :disabled="saving")
 
     div.col-md-6.col-lg-4.p-3(v-if="editing")
       b-button(@click="addVisualization" :disabled="saving" variant="outline-dark" block size="lg")
@@ -219,8 +218,19 @@ export default {
     async onRemove(id) {
       await useViewsStore().removeVisualization({ view_id: this.view.id, el_id: id });
     },
+    onWidthChange(id, width) {
+      useViewsStore().setVisualizationWidth({ view_id: this.view.id, el_id: id, width });
+    },
     isVisLarge(el) {
       return el.type == 'sunburst_clock' || el.type == 'vis_timeline';
+    },
+    // Below md every card is full width. `width` is the number of cards per
+    // row on large screens; without it, the clock and timeline stay full width.
+    visClass(el): string[] {
+      const width = el.width || (this.isVisLarge(el) ? 1 : 3);
+      if (width === 1) return ['col-md-12', 'col-lg-12'];
+      if (width === 2) return ['col-md-6', 'col-lg-6'];
+      return ['col-md-6', 'col-lg-4'];
     },
   },
 };
