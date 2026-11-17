@@ -1,25 +1,24 @@
 <template lang="pug">
 div
-  div.d-sm-flex.justify-content-between
-    div
-      h5.mb-2.mb-sm-0 {{ $t('settings.activePattern.title') }}
+  div
+    h5.mb-2 {{ $t('settings.activePattern.title') }}
 
-      small.text-muted
-        | {{ $t('settings.activePattern.help1') }}
-        |
-        | {{ $t('settings.activePattern.help2') }}
-        |
-        span.text-nowrap
-          | {{ $t('settings.activePattern.example') }}&nbsp;
-          code(style="background-color: rgba(200, 200, 200, 0.3); padding: 2px 4px; border-radius: 2px;")
-            | Zoom Meeting|Google Meet|Microsoft Teams
-    div
-      b-form-input(size="sm" v-model="always_active_pattern_editing" :state="(enabled || null) && valid")
-      small.text-right
-        div.text-success(v-if="enabled && valid") {{ $t('common.enabled') }}
-        div.text-danger(v-else-if="enabled") {{ $t('settings.activePattern.invalid') }}
-        div.text-muted(v-else) {{ $t('common.disabled') }}
-        div.text-danger(v-if="enabled && valid && broad_pattern") {{ $t('settings.activePattern.tooBroad') }}
+    small.text-muted
+      | {{ $t('settings.activePattern.help1') }}
+      |
+      | {{ $t('settings.activePattern.help2') }}
+      |
+      span
+        | {{ $t('settings.activePattern.example') }}&nbsp;
+        code(style="background-color: rgba(200, 200, 200, 0.3); padding: 2px 4px; border-radius: 2px;")
+          | Zoom Meeting|Google Meet|Microsoft Teams
+  div.mt-2
+    b-form-input(size="sm" v-model="always_active_pattern_editing" :state="(enabled || null) && valid")
+    small.text-right
+      div.text-success(v-if="enabled && valid") {{ $t('common.enabled') }}
+      div.text-danger(v-else-if="enabled") {{ $t('settings.activePattern.invalid') }}
+      div.text-muted(v-else) {{ $t('common.disabled') }}
+      div.text-danger(v-if="enabled && valid && broad_pattern") {{ $t('settings.activePattern.tooBroad') }}
 
 </template>
 
