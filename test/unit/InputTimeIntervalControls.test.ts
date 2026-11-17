@@ -8,6 +8,18 @@ import InputTimeIntervalComponent from '~/components/InputTimeInterval.vue';
 // Tests call Options API members directly, which the Vue constructor type doesn't expose.
 const InputTimeInterval: any = InputTimeIntervalComponent;
 
+// Stand-in for InputDate (a b-form-datepicker) so tests can type into a plain date input.
+const InputDateStub = {
+  props: ['value', 'min', 'max', 'placeholder', 'ariaLabel'],
+  render(h) {
+    return h('input', {
+      attrs: { type: 'date', 'aria-label': this.ariaLabel },
+      domProps: { value: this.value },
+      on: { input: e => this.$emit('input', e.target.value) },
+    });
+  },
+};
+
 describe('date range shifts', () => {
   function makeVm(start = null, end = null) {
     return { start, end, mode: 'range', duration: 0, valueChanged: jest.fn() };
@@ -91,6 +103,7 @@ describe('time interval controls', () => {
         'b-button': BButton,
         'b-form-radio-group': BFormRadioGroup,
         icon: true,
+        'input-date': InputDateStub,
       },
       filters: { friendlytime: () => 'now' },
     });
