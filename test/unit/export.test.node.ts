@@ -2,7 +2,14 @@
  * @jest-environment node
  */
 
-import { androidExportFromUrl } from '../../src/util/export';
+import Papa from 'papaparse';
+
+import {
+  androidExportFromUrl,
+  CSV_FORMULA_PATTERN,
+  neutralizeCsvFormula,
+  reportEventsCsv,
+} from '../../src/util/export';
 
 describe('androidExportFromUrl', () => {
   afterEach(() => {
@@ -21,5 +28,88 @@ describe('androidExportFromUrl', () => {
     global.window = { Android: { exportFromUrl } };
     expect(androidExportFromUrl('/api/0/export', 'aw-bucket-export.json')).toBe(true);
     expect(exportFromUrl).toHaveBeenCalledWith('/api/0/export', 'aw-bucket-export.json');
+  });
+});
+
+describe('CSV formula neutralization', () => {
+  test.each([
+    '=HYPERLINK("http://example.invalid","x")',
+    '+1+1',
+    '-1+1',
+    '@SUM(A1)',
+    ' =1+1',
+    '\t=1+1',
+    '\r\n@SUM(A1)',
+  ])('prefixes formula-like cell %j', value => {
+    expect(neutralizeCsvFormula(value)).toBe(`'${value}`);
+  });
+
+  test.each(['GitHub - Mozilla Firefox', 'a=b', '', '1+1', 'email@example.com'])(
+    'leaves plain cell %j unchanged',
+    value => {
+      expect(neutralizeCsvFormula(value)).toBe(value);
+    }
+  );
+
+  test('Papa.unparse with the pattern escapes string cells only', () => {
+    const csv = Papa.unparse([['2026-10-26T08:00:00Z', -5, 'Firefox', ' =1+1']], {
+      columns: ['timestamp', 'duration', 'app', 'title'],
+      escapeFormulae: CSV_FORMULA_PATTERN,
+    });
+    expect(csv).toBe('2026-10-26T08:00:00Z,-5,Firefox,"\' =1+1"');
+  });
+});
+
+describe('reportEventsCsv', () => {
+  test.each(['=1+1', '+1+1', '-1+1', '@SUM(A1)', ' =1+1', '\t=1+1', '\r\n@SUM(A1)'])(
+    'neutralizes array-valued category paths starting with %j',
+    category => {
+      const csv = reportEventsCsv([
+        {
+          timestamp: '2026-10-26T08:00:00Z',
+          duration: -5,
+          data: { $category: [category, 'Child'], app: 'Firefox', title: 'Example' },
+        },
+      ]);
+      const rows = Papa.parse<string[]>(csv).data;
+      expect(rows[1]).toEqual([
+        '2026-10-26T08:00:00Z',
+        '-5',
+        `'${category},Child`,
+        'Firefox',
+        'Example',
+      ]);
+    }
+  );
+
+  test.each([
+    { category: ['Work', 'Programming'], expected: 'Work,Programming' },
+    { category: [], expected: '' },
+    { category: undefined, expected: '' },
+    { category: null, expected: '' },
+    { category: '=1+1', expected: "'=1+1" },
+  ])('preserves CSV representation of $category', ({ category, expected }) => {
+    const csv = reportEventsCsv([
+      {
+        timestamp: '2026-10-26T08:00:00Z',
+        duration: 60,
+        data: { $category: category, app: 'Firefox', title: 'Example' },
+      },
+    ]);
+    expect(Papa.parse<string[]>(csv).data[1][2]).toBe(expected);
+  });
+
+  test('writes a header row and neutralizes formula-like titles', () => {
+    const csv = reportEventsCsv([
+      {
+        timestamp: '2026-10-26T08:00:00Z',
+        duration: 60,
+        data: { $category: ['Work'], app: 'Firefox', title: '=1+1' },
+      },
+    ]);
+    expect(csv.split(/\r?\n/)).toEqual([
+      'timestamp,duration,category,app,title',
+      '2026-10-26T08:00:00Z,60,Work,Firefox,"\'=1+1"',
+    ]);
   });
 });

@@ -72,6 +72,20 @@ export default {
     requiresAfk: 'kräver aw-watcher-afk',
     unknown: 'okänd',
   },
+  categoryNames: {
+    work: 'Arbete',
+    programming: 'Programmering',
+    image: 'Bild',
+    video: 'Video',
+    audio: 'Ljud',
+    media: 'Media',
+    games: 'Spel',
+    socialMedia: 'Sociala medier',
+    music: 'Musik',
+    comms: 'Kommunikation',
+    im: 'Chatt',
+    email: 'E-post',
+  },
   notFound: {
     title: 'Hoppsan, sidan kunde inte hittas!',
     hint: 'Försök gå tillbaka till sidan du kom från.',
@@ -96,6 +110,9 @@ export default {
     timelineDuration: {
       title: 'Standardvärde för varaktighet',
       help: "Standardvaraktigheten som används för 'visa senaste' i tidslinjevyn.",
+      groupGranularity: 'Gruppera korta händelser (sekunder)',
+      groupGranularityHelp:
+        'Samlar korta händelser i följd i grupper med denna längd. Ange 0 för att stänga av grupperingen. Tidslinjens längdfilter är oberoende och tar bort händelser före grupperingen.',
     },
     landingPage: {
       title: 'Startsida',
@@ -193,6 +210,10 @@ export default {
       deleteSetConfirm: 'Ta bort kategoriuppsättningen "{id}"? Detta kan inte ångras.',
       switchUnsavedConfirm:
         'Du har osparade ändringar. Vill du byta uppsättning ändå? (Ändringarna går förlorade)',
+    },
+    supporter: {
+      title: 'Jag stödjer redan ActivityWatch',
+      help: 'Döljer uppmaningarna i appen om att stödja ActivityWatch. Hederssystem: sparas bara på din lokala server, verifieras aldrig, inget skickas.',
     },
     developer: {
       title: 'Utvecklarinställningar',
@@ -378,6 +399,9 @@ export default {
     allDevicesCount: 'Alla enheter ({count})',
     onlyThisDevice: 'endast',
     multideviceNote: 'Webbläsar- och stoppursdata visas bara när en enskild enhet är vald.',
+    deviceBreakdownTooltip:
+      'Aktiv tid per enhet. När enheter överlappar räknas tiden en gång, för den enhet som listas först.',
+    overlap: 'överlapp',
     timeActive: 'Aktiv tid:',
     timeActiveTooltip:
       'Aktiv fönstertid i det efterfrågade intervallet, efter filtren nedan. Staplarna i periodens diagram visar enhetens råa aktiva tid och kan därför vara något högre.',
@@ -402,6 +426,16 @@ export default {
     rangeStart: 'Startdatum',
     rangeEnd: 'Slutdatum',
     invalidRange: 'Ogiltigt datumintervall i URL:en, visar idag istället.',
+    // English fallback until these interval strings are translated.
+    periodExactInterval: 'exact times',
+    intervalStart: 'Start time',
+    intervalEnd: 'End time (exclusive)',
+    invalidInterval: 'Invalid time interval in URL, showing today instead.',
+    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    intervalAmbiguousTime:
+      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
+    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
+    intervalEndAfterStart: 'The end time must be after the start time.',
     diagnosticMissingWindow:
       'Ingen fönsterbucket för {host}. Starta aw-watcher-window och uppdatera sedan sidan.',
     diagnosticMissingAfk:
@@ -461,6 +495,7 @@ export default {
     periodLast7d: 'de senaste 7 dagarna',
     periodLast30d: 'de senaste 30 dagarna',
     periodCustomRange: 'i det valda intervallet',
+    periodExactInterval: 'in the selected time interval', // English fallback
     periodAllTime: 'totalt',
   },
   visualizations: {
@@ -631,6 +666,10 @@ export default {
       quickDurations: 'Snabbval för varaktighet',
       startDate: 'Startdatum',
       endDate: 'Slutdatum (valfritt)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(valfritt)',
       apply: 'Tillämpa',
       refresh: 'Uppdatera',
@@ -657,6 +696,7 @@ export default {
       expand: 'Expandera listan',
       condense: 'Komprimera listan',
       edit: 'Redigera',
+      showMore: 'Visa {count} till',
     },
     calendar: {
       bucket: 'Bucket:',
@@ -810,6 +850,9 @@ export default {
       mostActiveDay: 'Mest aktiva dag',
       onThisDay: 'den här dagen',
       timePerDay: 'Tid per dag',
+      timePerWeek: 'Tid per vecka',
+      groupByDay: 'Dag',
+      groupByWeek: 'Vecka',
       topChanges: 'Största förändringar per kategori',
       noData: 'Inga kategoriserade data att jämföra.',
       uncategorized: 'Okategoriserat',
@@ -950,10 +993,16 @@ export default {
       none: 'ingen',
       groupByCategory: 'Gruppera efter kategori',
       groupByBucketType: 'Gruppera efter buckettyp',
+      groupedEvents: '{count} händelser · {duration}',
+      collapseGroups: 'Fäll ihop grupper',
+      groupBreakdown: 'Aktivitetsfördelning',
       totalTime: 'Total tid',
       bucketsNoEvents: 'Buckets utan händelser i det efterfrågade intervallet döljs.',
       editSaved: 'Din ändring har sparats. Uppdatera tidslinjen för att se den.',
       editSavedTitle: 'Observera',
+      list: 'Lista',
+      listShowing: 'Visar {shown} av {total} händelser',
+      showMore: 'Visa mer',
     },
     buckets: {
       id: 'ID',
@@ -981,45 +1030,47 @@ export default {
   },
   extraViews: {
     bucket: {
-      notFound: 'No bucket named "{id}" was found.',
-      seeAll: 'See all buckets',
-      noEventsPrefix: 'There are no events in the selected range. The last event was recorded',
-      noEventsSuffix: '. Showing the {count} most recent events instead.',
+      notFound: 'Ingen bucket med namnet "{id}" hittades.',
+      seeAll: 'Visa alla buckets',
+      noEventsPrefix:
+        'Det finns inga händelser i det valda intervallet. Den senaste händelsen registrerades',
+      noEventsSuffix: '. Visar de {count} senaste händelserna i stället.',
     },
     search: {
-      windowEvents: 'Window events',
-      browserEvents: 'Browser events',
-      timestamp: 'Timestamp',
-      duration: 'Duration',
-      title: 'Title',
-      noResults: 'No results found.',
+      windowEvents: 'Fönsterhändelser',
+      browserEvents: 'Webbläsarhändelser',
+      timestamp: 'Tidsstämpel',
+      duration: 'Varaktighet',
+      title: 'Titel',
+      noResults: 'Inga resultat hittades.',
     },
-    trends: { toUse: 'to use this view.' },
+    trends: { toUse: 'behöver vara igång för att använda den här vyn.' },
     workReport: {
-      selectCategoryError: 'Select at least one category.',
+      selectCategoryError: 'Välj minst en kategori.',
     },
     categoryBuilder: {
-      range: 'Date range',
-      showOptions: 'Show options',
-      hideOptions: 'Hide options',
-      retry: 'Retry',
+      range: 'Datumintervall',
+      showOptions: 'Visa alternativ',
+      hideOptions: 'Dölj alternativ',
+      retry: 'Försök igen',
       noActivityBuckets:
-        'This device has no activity data. Choose another device in the options above.',
-      noHostPrefix: 'No device with activity buckets is available. Install',
-      noHostSuffix: 'to start collecting activity data.',
-      watcher: 'a watcher',
-      showMore: 'Show more',
-      ignoredWords: '{count} ignored keywords',
-      show: 'Show',
-      hide: 'Hide',
-      reset: 'Reset',
-      unignore: 'Stop ignoring',
-      invalid: 'Invalid pattern',
-      tooBroad: 'Pattern is too broad',
+        'Den här enheten har inga aktivitetsdata. Välj en annan enhet i alternativen ovan.',
+      noHostPrefix: 'Ingen enhet med aktivitetsbuckets är tillgänglig. Installera',
+      noHostSuffix: 'för att börja samla in aktivitetsdata.',
+      watcher: 'en bevakare',
+      showMore: 'Visa mer',
+      ignoredWords: '{count} ignorerade nyckelord',
+      show: 'Visa',
+      hide: 'Dölj',
+      reset: 'Återställ',
+      unignore: 'Sluta ignorera',
+      invalid: 'Ogiltigt mönster',
+      tooBroad: 'Mönstret är för brett',
     },
     notifications: {
-      enabled: 'Enable notifications',
-      enabledHelp: 'aw-notify runs only while enabled. The tray menu toggle follows this setting.',
+      enabled: 'Aktivera notiser',
+      enabledHelp:
+        'aw-notify körs bara när den är aktiverad. Reglaget i systemfältets meny följer den här inställningen.',
     },
   },
 };

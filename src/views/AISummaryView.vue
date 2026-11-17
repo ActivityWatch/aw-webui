@@ -84,7 +84,7 @@ div
 import { useBucketsStore } from '~/stores/buckets';
 import { useCategoryStore } from '~/stores/categories';
 import { getClient } from '~/util/awclient';
-import { analysisContextQuery } from '~/queries';
+import { analysisContextQuery, type DesktopQueryParams } from '~/queries';
 import { loadLLMConfig, saveLLMConfig, callLLM, type LLMProvider } from '~/util/aiSummary';
 import {
   buildActivityContext,
@@ -97,6 +97,23 @@ import 'vue-awesome/icons/copy';
 const DEFAULT_PROMPT =
   'Based on the following activity data, provide a concise summary of how I spent my time. ' +
   'Highlight the main activities, identify focus areas, and suggest any observations about productivity patterns.';
+
+interface SummaryInvocation {
+  host: string;
+  days: number;
+  provider: LLMProvider;
+  apiKey: string;
+  model: string;
+  prompt: string;
+  excludeUncategorized: boolean;
+  privateCategories: CategoryName[];
+  excludePrivateCategories: boolean;
+  categories: DesktopQueryParams['categories'];
+  windowBucketId: string;
+  afkBucketId: string;
+  browserBuckets: string[];
+  browserFallbackUsed: boolean;
+}
 
 export default {
   name: 'AISummaryView',
@@ -116,6 +133,7 @@ export default {
       excludePrivateCategories: true,
 
       loading: false,
+      invocationVersion: 0,
       error: '',
       aggregatedText: '',
       llmResponse: '',
@@ -161,6 +179,44 @@ export default {
       if (this.provider === 'anthropic') return 'claude-haiku-4-5-20251001';
       return 'gpt-4o-mini';
     },
+    invocationInputs(): SummaryInvocation {
+      const host = this.selectedHost;
+      const afkBucket = (this.bucketsStore.buckets || []).find(
+        b => b.type === 'afkstatus' && b.hostname === host
+      );
+      const browserBuckets = this.bucketsStore.bucketsBrowser(host);
+      return {
+        host,
+        days: this.periodDays,
+        provider: this.provider,
+        apiKey: this.apiKey,
+        model: this.model,
+        prompt: this.userPrompt,
+        excludeUncategorized: this.excludeUncategorized,
+        privateCategories: this.privateCategories,
+        excludePrivateCategories: this.excludePrivateCategories,
+        categories: this.categoryStore.classes_for_query,
+        windowBucketId: this.bucketsStore.bucketsWindow(host)[0] || '',
+        afkBucketId: afkBucket ? afkBucket.id : '',
+        browserBuckets,
+        browserFallbackUsed:
+          browserBuckets.length > this.bucketsStore.bucketsByType(host, 'web.tab.current').length,
+      };
+    },
+  },
+  watch: {
+    // A privacy tightening must cancel, not be bypassed by an earlier snapshot.
+    // Deep observation also catches in-place category/rule edits. The version
+    // makes invalidation sticky if a user edits and then restores a control.
+    invocationInputs: {
+      deep: true,
+      handler() {
+        this.invalidateInvocation();
+      },
+    },
+  },
+  beforeDestroy() {
+    this.invalidateInvocation();
   },
   async mounted() {
     await this.bucketsStore.ensureLoaded();
@@ -190,7 +246,16 @@ export default {
         model: this.model,
       });
     },
+    invalidateInvocation() {
+      this.invocationVersion++;
+      this.error = '';
+      this.llmResponse = '';
+      this.aggregatedText = '';
+      this.dataVisible = false;
+      this.copied = false;
+    },
     async generate() {
+      if (this.loading) return;
       this.error = '';
       this.llmResponse = '';
       this.aggregatedText = '';
@@ -204,41 +269,48 @@ export default {
         return;
       }
 
+      // Detach nested category names/rules and private lists from mutable stores.
+      const serializedInputs = JSON.stringify(this.invocationInputs);
+      const invocation: SummaryInvocation = JSON.parse(serializedInputs);
+      const version = this.invocationVersion;
+      // The comparison also catches edits before Vue's batched watcher runs.
+      const isCurrent = () =>
+        version === this.invocationVersion &&
+        serializedInputs === JSON.stringify(this.invocationInputs);
       this.loading = true;
       try {
-        const summaryText = await this.buildContextText();
+        const summaryText = await this.buildContextText(invocation);
+        if (!isCurrent()) return;
         this.aggregatedText = summaryText;
 
-        const fullPrompt = `${this.userPrompt}\n\n${summaryText}`;
-        const effectiveModel = this.model.trim() || this.defaultModel;
+        const fullPrompt = `${invocation.prompt}\n\n${summaryText}`;
+        const effectiveModel =
+          invocation.model.trim() ||
+          (invocation.provider === 'anthropic' ? 'claude-haiku-4-5-20251001' : 'gpt-4o-mini');
 
         const response = await callLLM(
           {
-            provider: this.provider,
-            apiKey: this.apiKey.trim(),
+            provider: invocation.provider,
+            apiKey: invocation.apiKey.trim(),
             model: effectiveModel,
           },
           fullPrompt
         );
-        this.llmResponse = response;
+        if (isCurrent()) this.llmResponse = response;
       } catch (err: any) {
-        this.error = err?.message || String(err);
+        if (isCurrent()) this.error = err?.message || String(err);
       } finally {
         this.loading = false;
       }
     },
-    async buildContextText(): Promise<string> {
-      const buckets = this.bucketsStore.buckets || [];
+    async buildContextText(invocation: SummaryInvocation = this.invocationInputs): Promise<string> {
       // Use the store's bucketsWindow() filter: it excludes aw-watcher-android
       // buckets which share the 'currentwindow' type but sort before the desktop
       // watcher, so a naive find() could silently select an Android bucket.
-      const windowBucketId = this.bucketsStore.bucketsWindow(this.selectedHost)[0];
+      const windowBucketId = invocation.windowBucketId;
       if (!windowBucketId) {
-        throw new Error(`No window-watcher bucket found for host: ${this.selectedHost}`);
+        throw new Error(`No window-watcher bucket found for host: ${invocation.host}`);
       }
-      const afkBucket = buckets.find(
-        b => b.type === 'afkstatus' && b.hostname === this.selectedHost
-      );
       // Only include browser buckets for the selected host; mixing buckets from
       // other hosts would send another device's domains to the LLM under the
       // selected host's summary. Use bucketsBrowser() rather than an inline
@@ -250,24 +322,21 @@ export default {
       // (dropping it would lose all browser data on older single-device setups)
       // but disclose it explicitly in the context text below, so the user sees
       // exactly what is being sent in the preview before it reaches the LLM.
-      const browserBuckets = this.bucketsStore.bucketsBrowser(this.selectedHost);
-      // Fallback buckets are those the strict per-host getter added on top of the
-      // exact-host ones (i.e. 'unknown'-hostname buckets).
-      const browserFallbackUsed =
-        browserBuckets.length >
-        this.bucketsStore.bucketsByType(this.selectedHost, 'web.tab.current').length;
+      const browserBuckets = invocation.browserBuckets;
+      // Fallback attribution is captured with the bucket IDs, before the query.
+      const browserFallbackUsed = invocation.browserFallbackUsed;
 
       const end = new Date();
-      const start = new Date(end.getTime() - this.periodDays * 24 * 60 * 60 * 1000);
+      const start = new Date(end.getTime() - invocation.days * 24 * 60 * 60 * 1000);
 
       // Query-side AFK filtering and categorization: only derived statistics
       // (never raw titles or URLs) are exported from the result below.
       const query = analysisContextQuery({
         bid_window: windowBucketId,
-        bid_afk: afkBucket ? afkBucket.id : '',
+        bid_afk: invocation.afkBucketId,
         bid_browsers: browserBuckets,
-        filter_afk: Boolean(afkBucket),
-        categories: this.categoryStore.classes_for_query,
+        filter_afk: Boolean(invocation.afkBucketId),
+        categories: invocation.categories,
         filter_categories: [],
       });
       const [result] = await getClient().query([{ start, end }], query);
@@ -278,11 +347,13 @@ export default {
         trackedSeconds: result.tracked_duration || 0,
         start,
         end,
-        hosts: [this.selectedHost],
+        hosts: [invocation.host],
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         privacy: {
-          excludeUncategorized: this.excludeUncategorized,
-          privateCategories: this.excludePrivateCategories ? this.privateCategories : [],
+          excludeUncategorized: invocation.excludeUncategorized,
+          privateCategories: invocation.excludePrivateCategories
+            ? invocation.privateCategories
+            : [],
         },
       });
       const text = formatActivityContext(context);

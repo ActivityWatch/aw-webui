@@ -413,7 +413,7 @@ function hasPythonInvalidLookbehind(re: string): boolean {
 export function validateRegex(re: string) {
   // validates if pattern is a valid regex in both JavaScript and Python
   // returns true if regex is valid
-  if (re === '') return false;
+  if (typeof re !== 'string' || re === '') return false;
   try {
     new RegExp(re);
   } catch (e) {

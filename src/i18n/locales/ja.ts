@@ -72,6 +72,20 @@ export default {
     requiresAfk: 'aw-watcher-afk が必要です',
     unknown: '不明',
   },
+  categoryNames: {
+    work: '仕事',
+    programming: 'プログラミング',
+    image: '画像',
+    video: '動画',
+    audio: '音声',
+    media: 'メディア',
+    games: 'ゲーム',
+    socialMedia: 'ソーシャルメディア',
+    music: '音楽',
+    comms: 'コミュニケーション',
+    im: 'チャット',
+    email: 'メール',
+  },
   notFound: {
     title: 'ページが見つかりませんでした。',
     hint: '元のページに戻ってお試しください。',
@@ -96,6 +110,9 @@ export default {
     timelineDuration: {
       title: '期間のデフォルト値',
       help: 'タイムラインビューの「直近を表示」で使用するデフォルトの期間です。',
+      groupGranularity: '短いイベントをまとめる（秒）',
+      groupGranularityHelp:
+        '連続する短いイベントをこの長さのグループにまとめます。0にすると無効になります。タイムラインの時間フィルターは独立して動作し、グループ化する前にイベントを除外します。',
     },
     landingPage: {
       title: '起動時のページ',
@@ -193,6 +210,10 @@ export default {
       deleteSetConfirm: 'カテゴリセット「{id}」を削除しますか？この操作は元に戻せません。',
       switchUnsavedConfirm:
         '未保存の変更があります。それでもセットを切り替えますか？(変更は破棄されます)',
+    },
+    supporter: {
+      title: 'すでに ActivityWatch を支援しています',
+      help: 'ActivityWatch の支援を求めるアプリ内の案内を非表示にします。信頼ベース：ローカルサーバーにのみ保存され、検証も送信も行われません。',
     },
     developer: {
       title: '開発者向け設定',
@@ -377,6 +398,9 @@ export default {
     onlyThisDevice: 'のみ',
     multideviceNote:
       'ブラウザとストップウォッチのデータは、単一のデバイスを表示している場合のみ利用できます。',
+    deviceBreakdownTooltip:
+      'デバイスごとのアクティブ時間。デバイスの時間が重なる場合は、先に表示されているデバイスに一度だけ計上されます。',
+    overlap: '重複',
     timeActive: 'アクティブ時間：',
     timeActiveTooltip:
       '以下のフィルターを適用した、クエリ範囲内のアクティブウィンドウの時間です。期間チャートの棒グラフはデバイスの生のアクティブ時間を表すため、わずかに大きくなる場合があります。',
@@ -401,6 +425,16 @@ export default {
     rangeStart: '開始日',
     rangeEnd: '終了日',
     invalidRange: 'URL の日付範囲が無効なため、代わりに今日を表示しています。',
+    // English fallback until these interval strings are translated.
+    periodExactInterval: 'exact times',
+    intervalStart: 'Start time',
+    intervalEnd: 'End time (exclusive)',
+    invalidInterval: 'Invalid time interval in URL, showing today instead.',
+    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    intervalAmbiguousTime:
+      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
+    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
+    intervalEndAfterStart: 'The end time must be after the start time.',
     diagnosticMissingWindow:
       '{host} のウィンドウバケットがありません。aw-watcher-window を起動してから、このページを更新してください。',
     diagnosticMissingAfk:
@@ -460,6 +494,7 @@ export default {
     periodLast7d: '過去7日間',
     periodLast30d: '過去30日間',
     periodCustomRange: '選択した期間',
+    periodExactInterval: 'in the selected time interval', // English fallback
     periodAllTime: '全期間',
   },
   visualizations: {
@@ -625,6 +660,10 @@ export default {
       quickDurations: 'クイック期間',
       startDate: '開始日',
       endDate: '終了日（任意）',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '（任意）',
       apply: '適用',
       refresh: '更新',
@@ -649,6 +688,7 @@ export default {
       expand: '一覧を展開',
       condense: '一覧を折りたたむ',
       edit: '編集',
+      showMore: 'さらに {count} 件表示',
     },
     calendar: {
       bucket: 'バケット：',
@@ -802,6 +842,9 @@ export default {
       mostActiveDay: '最もアクティブな日',
       onThisDay: 'この日',
       timePerDay: '日別の時間',
+      timePerWeek: '週別の時間',
+      groupByDay: '日',
+      groupByWeek: '週',
       topChanges: 'カテゴリ別の変化が大きい項目',
       noData: '比較できる分類済みデータがありません。',
       uncategorized: '未分類',
@@ -937,10 +980,16 @@ export default {
       none: 'なし',
       groupByCategory: 'カテゴリでグループ化',
       groupByBucketType: 'バケットの種類でグループ化',
+      groupedEvents: '{count}件のイベント · {duration}',
+      collapseGroups: 'グループを折りたたむ',
+      groupBreakdown: 'アクティビティの内訳',
       totalTime: '合計時間',
       bucketsNoEvents: '照会した期間にイベントがないバケットは非表示になります。',
       editSaved: '編集を保存しました。反映を確認するには、タイムラインを更新してください。',
       editSavedTitle: 'お知らせ',
+      list: 'リスト',
+      listShowing: '{total} 件中 {shown} 件のイベントを表示',
+      showMore: 'もっと見る',
     },
     buckets: { id: 'ID' },
     userPoll: {

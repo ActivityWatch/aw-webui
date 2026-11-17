@@ -17,6 +17,25 @@ const LOCALES = fs
   .filter(name => name.endsWith('.ts'))
   .map(name => name.slice(0, -'.ts'.length))
   .sort((a, b) => a.localeCompare(b, 'en'));
+// These new messages intentionally use English fallback until translated.
+const ENGLISH_FALLBACK_KEYS = new Set([
+  'settings.language.machineTranslatedNote',
+  'settings.language.contributeTranslation',
+  'settings.layout.title',
+  'settings.layout.help',
+  'settings.layout.textSize',
+  'settings.layout.textHelp',
+  'settings.layout.automaticWidth',
+  'settings.layout.contentWidth',
+  'settings.layout.widthHelp',
+  'settings.layout.save',
+  'settings.layout.saving',
+  'settings.layout.reset',
+  'settings.layout.saved',
+  'settings.layout.changedElsewhere',
+  'settings.layout.invalid',
+  'settings.layout.saveFailed',
+]);
 const SRC_DIR = path.join(__dirname, '../src');
 const INDEX_PATH = path.join(SRC_DIR, 'i18n/index.ts');
 const verbose = process.argv.includes('--verbose');
@@ -84,7 +103,10 @@ const IDENTICAL_OK = {
     'Version:',
     'Forum',
     'Score',
+    'Video',
+    'Audio',
   ],
+  es: ['h', 's', 'General', 'Buckets', 'Hosts', 'Total', 'Prompt', 'Color', 'Audio'],
   fr: [
     'h',
     's',
@@ -102,6 +124,8 @@ const IDENTICAL_OK = {
     'Total',
     'minutes',
     'Parent',
+    'Image',
+    'Audio',
   ],
   hi: ['Buckets', 'All'],
   id: [
@@ -115,11 +139,26 @@ const IDENTICAL_OK = {
     'Model',
     'Prompt',
     'Valid',
+    'Video',
+    'Audio',
+    'Media',
   ],
   ja: ['Raw JSON'],
   'pt-BR': ['App', 'h', 's', 'Buckets', 'Hosts', 'Total', 'Prompt', 'download'],
-  sv: ['App', 'Version:', 'Forum', 'Buckets', 'Data:', 'Period', 'Prompt'],
-  sw: ['h', 'm', 's', 'Buckets'],
+  sv: [
+    'App',
+    'Version:',
+    'h',
+    's',
+    'Forum',
+    'Buckets',
+    'Data:',
+    'Period',
+    'Prompt',
+    'Video',
+    'Media',
+  ],
+  sw: ['h', 'm', 's', 'Buckets', 'Video'],
 };
 
 function loadLocale(code) {
@@ -255,11 +294,12 @@ for (const code of LOCALES) {
   const missing = [...enKeys].filter(k => !keys.has(k));
   const extra = [...keys].filter(k => !enKeys.has(k));
 
-  if (missing.length) {
+  const requiredMissing = missing.filter(k => !ENGLISH_FALLBACK_KEYS.has(k));
+  if (requiredMissing.length) {
     failed = true;
-    console.error(`\n[${code}] Missing keys (${missing.length}):`);
-    missing.slice(0, 20).forEach(k => console.error(`  - ${k}`));
-    if (missing.length > 20) console.error(`  ... and ${missing.length - 20} more`);
+    console.error(`\n[${code}] Missing keys (${requiredMissing.length}):`);
+    requiredMissing.slice(0, 20).forEach(k => console.error(`  - ${k}`));
+    if (requiredMissing.length > 20) console.error(`  ... and ${requiredMissing.length - 20} more`);
   }
   if (extra.length) {
     failed = true;

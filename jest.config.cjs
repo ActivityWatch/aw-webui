@@ -11,8 +11,14 @@ module.exports = {
   projects: [
     {
       displayName: 'jsdom',
+      // Match pug-plain-loader: bare named slots must compile as empty attributes.
+      globals: { 'vue-jest': { pug: { doctype: 'html' } } },
       testEnvironment: 'jsdom',
       setupFilesAfterEnv: ['<rootDir>/test/jest-setup.js'],
+      globals: {
+        // Match pug-plain-loader: valueless Vue slot bindings must stay valueless.
+        'vue-jest': { pug: { doctype: 'html' } },
+      },
       transform: {
         '^.+\\.js$': 'babel-jest',
         '^.+\\.ts$': 'ts-jest',

@@ -5,6 +5,8 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  # Dispatched by dependabot-automerge.yml after it merges (see there).
+  workflow_dispatch:
 
 # One run per workflow and ref. On PRs a new push cancels the superseded run.
 # On master the running build finishes, and queued intermediates collapse to
@@ -72,7 +74,8 @@ jobs:
 
   test:
     name: Test (node-${{ matrix.node-version }}, py-${{ matrix.python-version }}, ${{ matrix.aw-server }} ${{ matrix.aw-version }})
-    runs-on: ubuntu-latest
+    # Python 3.9 is unavailable on Ubuntu 26.04 (ubuntu-latest).
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
@@ -101,6 +104,9 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Test screenshot comment publication
+      run: python3 .github/tests/test_screenshot_comment.py -v
+
     # TODO: Refactor out getting ActivityWatch builds (both release and nightly) into an action
     - name: Install and run ActivityWatch
       if: ${{ matrix.aw-version != 'master' }}
@@ -112,7 +118,7 @@ jobs:
 
     - name: Download aw-server-rust nightly
       if: ${{ matrix.aw-server == 'aw-server-rust' && matrix.aw-version == 'master' }}
-      uses: dawidd6/action-download-artifact@v27
+      uses: dawidd6/action-download-artifact@v28
       with:
         repo: ActivityWatch/aw-server-rust
         # Required, workflow file name or ID
@@ -155,6 +161,12 @@ jobs:
         AW_QUERY_TEST_SERVER_URL: http://localhost:5666
       run: |
         npm test
+    # jsdom inherits the process timezone. Run the real renderer on both a
+    # short and long reporting day instead of skipping DST cases on UTC runners.
+    - name: Test clock DST geometry
+      env:
+        TZ: Europe/Stockholm
+      run: npm test -- --selectProjects jsdom --runInBand --coverage=false --runTestsByPath test/unit/SunburstClockGeometry.test.ts test/unit/SunburstClockMounted.test.ts test/unit/SunburstClock.test.ts
     - uses: codecov/codecov-action@v7
       timeout-minutes: 2
       continue-on-error: true

@@ -72,6 +72,20 @@ export default {
     requiresAfk: 'inahitaji aw-watcher-afk',
     unknown: 'haijulikani',
   },
+  categoryNames: {
+    work: 'Kazi',
+    programming: 'Uprogramu',
+    image: 'Picha',
+    video: 'Video',
+    audio: 'Sauti',
+    media: 'Vyombo vya habari',
+    games: 'Michezo',
+    socialMedia: 'Mitandao ya kijamii',
+    music: 'Muziki',
+    comms: 'Mawasiliano',
+    im: 'Ujumbe wa papo hapo',
+    email: 'Barua pepe',
+  },
   notFound: {
     title: 'Samahani, ukurasa huu haukupatikana!',
     hint: 'Jaribu kurudi mahali ulipokuwa.',
@@ -96,6 +110,9 @@ export default {
     timelineDuration: {
       title: 'Thamani ya chaguo-msingi ya muda',
       help: "Muda wa chaguo-msingi unaotumika kwa 'onyesha mwisho' katika mwonekano wa mstari wa wakati.",
+      groupGranularity: 'Panga matukio mafupi (sekunde)',
+      groupGranularityHelp:
+        'Huunganisha matukio mafupi yanayofuatana katika makundi ya muda huu. Weka 0 kuzima upangaji. Kichujio cha muda cha ratiba hubaki huru na huondoa matukio kabla ya kuyapanga.',
     },
     landingPage: {
       title: 'Ukurasa wa kuingia',
@@ -195,6 +212,10 @@ export default {
       deleteSetConfirm: 'Futa seti ya kategoria "{id}"? Hii haiwezi kutenduliwa.',
       switchUnsavedConfirm:
         'Una mabadiliko ambayo hayajahifadhiwa. Ubadilishe seti hata hivyo? (Mabadiliko yatatupwa)',
+    },
+    supporter: {
+      title: 'Ninaunga ActivityWatch tayari',
+      help: 'Huficha arifa ndani ya programu zinazoomba uunge mkono ActivityWatch. Kwa msingi wa uaminifu: huhifadhiwa kwenye seva yako ya ndani pekee, haithibitishwi, na hakuna kinachotumwa.',
     },
     developer: {
       title: 'Mipangilio ya msanidi',
@@ -380,6 +401,9 @@ export default {
     onlyThisDevice: 'tu',
     multideviceNote:
       'Data ya kivinjari na saa ya kuhesabu zinapatikana tu unapoangalia kifaa kimoja.',
+    deviceBreakdownTooltip:
+      'Muda amilifu kwa kila kifaa. Vifaa vinapopishana, muda huhesabiwa mara moja, kwa kifaa kilichoorodheshwa kwanza.',
+    overlap: 'mwingiliano',
     timeActive: 'Muda wa kufanya kazi:',
     timeActiveTooltip:
       'Muda wa dirisha linalofanya kazi katika kipindi kilichoulizwa, baada ya vichujio hapa chini. Mistari katika chati ya kipindi inaonyesha muda ghafi wa kufanya kazi wa kifaa, kwa hivyo inaweza kuwa kidogo juu zaidi.',
@@ -404,6 +428,16 @@ export default {
     rangeStart: 'Tarehe ya kuanza',
     rangeEnd: 'Tarehe ya kumaliza',
     invalidRange: 'Kipindi cha tarehe batili kwenye URL, inaonyesha leo badala yake.',
+    // English fallback until these interval strings are translated.
+    periodExactInterval: 'exact times',
+    intervalStart: 'Start time',
+    intervalEnd: 'End time (exclusive)',
+    invalidInterval: 'Invalid time interval in URL, showing today instead.',
+    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    intervalAmbiguousTime:
+      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
+    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
+    intervalEndAfterStart: 'The end time must be after the start time.',
     diagnosticMissingWindow:
       'Hakuna bucket ya dirisha kwa {host}. Anzisha aw-watcher-window, kisha onyesha upya ukurasa huu.',
     diagnosticMissingAfk:
@@ -463,6 +497,7 @@ export default {
     periodLast7d: 'siku 7 zilizopita',
     periodLast30d: 'siku 30 zilizopita',
     periodCustomRange: 'katika kipindi kilichochaguliwa',
+    periodExactInterval: 'in the selected time interval', // English fallback
     periodAllTime: 'kwa ujumla',
   },
   visualizations: {
@@ -630,6 +665,10 @@ export default {
       quickDurations: 'Muda wa haraka',
       startDate: 'Tarehe ya kuanza',
       endDate: 'Tarehe ya kumaliza (hiari)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(hiari)',
       apply: 'Tumia',
       refresh: 'Onyesha upya',
@@ -654,6 +693,7 @@ export default {
       expand: 'Panua orodha',
       condense: 'Funga orodha',
       edit: 'Hariri',
+      showMore: 'Onyesha {count} zaidi',
     },
     calendar: {
       bucket: 'Bucket:',
@@ -808,6 +848,9 @@ export default {
       mostActiveDay: 'Siku yenye shughuli zaidi',
       onThisDay: 'siku hiyo',
       timePerDay: 'Muda kwa siku',
+      timePerWeek: 'Muda kwa wiki',
+      groupByDay: 'Siku',
+      groupByWeek: 'Wiki',
       topChanges: 'Mabadiliko makuu kwa kategoria',
       noData: 'Hakuna data iliyopangwa ya kulinganisha.',
       uncategorized: 'Isiyopangwa',
@@ -944,10 +987,16 @@ export default {
       none: 'hakuna',
       groupByCategory: 'Panga kwa kategoria',
       groupByBucketType: 'Panga kwa aina ya bucket',
+      groupedEvents: 'Matukio {count} · {duration}',
+      collapseGroups: 'Kunja makundi',
+      groupBreakdown: 'Mchanganuo wa shughuli',
       totalTime: 'Wakati wote',
       bucketsNoEvents: 'Buckets zisizo na matukio katika kipindi kilichoulizwa zitafichwa.',
       editSaved: 'Uhariri wako umehifadhiwa. Onyesha upya mstari wa wakati kuuona ukirekodiwa.',
       editSavedTitle: 'Kumbuka',
+      list: 'Orodha',
+      listShowing: 'Inaonyesha matukio {shown} kati ya {total}',
+      showMore: 'Onyesha zaidi',
     },
     buckets: { id: 'Kitambulisho' },
     userPoll: {

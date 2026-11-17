@@ -4,6 +4,7 @@ import moment from 'moment';
 import { execFileSync } from 'child_process';
 import path from 'path';
 import TimelineBarChart from '~/visualizations/TimelineBarChart.vue';
+import { i18n } from '~/i18n';
 import { hourlyLabels, timeperiodsHoursOfPeriod } from '~/util/timeperiod';
 
 // Inspect computed Chart.js configuration without mounting a canvas in Node.
@@ -97,6 +98,37 @@ describe('TimelineBarChart hourly labels', () => {
   });
 });
 
+describe('TimelineBarChart weekly labels', () => {
+  let originalLocale: string;
+  beforeEach(() => {
+    originalLocale = i18n.locale;
+    i18n.locale = 'en-US';
+  });
+  afterEach(() => {
+    i18n.locale = originalLocale;
+  });
+
+  test('labels a single weekly bar with its start date, not seven weekdays', () => {
+    expect(chartLabels('2026-01-05T00:00:00', 1, 'weeks')).toEqual(['Jan 5']);
+  });
+
+  test('labels each weekly bar across the year boundary', () => {
+    expect(chartLabels('2026-12-21T00:00:00', 4, 'weeks')).toEqual([
+      'Dec 21',
+      'Dec 28',
+      'Jan 4',
+      'Jan 11',
+    ]);
+  });
+
+  test('keeps singular week as seven consecutive weekday labels', () => {
+    const weekday = new Intl.DateTimeFormat(undefined, { weekday: 'short' });
+    expect(chartLabels('2026-01-05T00:00:00', 1, 'week')).toEqual(
+      [5, 6, 7, 8, 9, 10, 11].map(day => weekday.format(new Date(2026, 0, day, 12)))
+    );
+  });
+});
+
 if (process.env.TZ !== 'Europe/Stockholm') {
   test('replays chart DST labels under Europe/Stockholm on UTC CI', () => {
     expect(() =>
@@ -136,6 +168,27 @@ describeStockholm('TimelineBarChart DST labels', () => {
     expect(labels).toEqual(hourlyLabels({ start, length: [1, 'day'] }));
     expect(new Set(labels).size).toBe(count);
   });
+
+  test.each([
+    ['2026-03-23T00:00:00', ['Mar 23', 'Mar 30', 'Apr 6'], -60, -120],
+    ['2026-10-19T00:00:00', ['Oct 19', 'Oct 26', 'Nov 2'], -120, -60],
+  ])(
+    'keeps weekly labels on their calendar dates across DST from %s',
+    (start, expected, before, after) => {
+      // Prove this fixture crosses a real offset change, including on UTC CI's child run.
+      expect(new Date(start).getTimezoneOffset()).toBe(before);
+      const nextWeek = new Date(start);
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      expect(nextWeek.getTimezoneOffset()).toBe(after);
+      const originalLocale = i18n.locale;
+      try {
+        i18n.locale = 'en-US';
+        expect(chartLabels(start, 3, 'weeks')).toEqual(expected);
+      } finally {
+        i18n.locale = originalLocale;
+      }
+    }
+  );
 
   test('distinguishes the two autumn 02:00 intervals', () => {
     expect(

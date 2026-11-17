@@ -89,6 +89,7 @@ export default {
       status: null,
       queryTime: null,
       error: '',
+      generateRequest: null,
 
       // Parameters
       maxDepth: 3,
@@ -104,80 +105,105 @@ export default {
   },
   methods: {
     generate: async function () {
-      this.events = await this.fetchEvents();
-      this.graphdata = this.generateGraphData(this.events);
+      // Snapshot query/render options so a later Generate cannot steal this
+      // request's hostname/filters/depth, and so only this invocation may
+      // publish results, errors, or clear the spinner.
+      const request = {
+        hostname: this.queryOptions.hostname,
+        filter_afk: this.queryOptions.filter_afk,
+        start: this.queryOptions.start,
+        stop: this.queryOptions.stop,
+        excludeUncategorized: this.excludeUncategorized,
+        maxDepth: this.maxDepth,
+      };
+      this.generateRequest = request;
+      this.status = 'searching';
+      this.error = '';
+      try {
+        const events = await this.fetchEvents(request);
+        if (this.generateRequest !== request) return;
+        this.events = events;
+        this.graphdata = this.generateGraphData(events, request.maxDepth);
+      } catch (e) {
+        if (this.generateRequest !== request) return;
+        console.error(e);
+        this.error =
+          e?.response?.data?.message ||
+          e?.message ||
+          (typeof e === 'string' ? e : '') ||
+          this.$t('common.requestFailed');
+        this.events = null;
+        this.graphdata = {};
+      } finally {
+        if (this.generateRequest === request) this.status = null;
+      }
     },
-    fetchEvents: async function () {
+    fetchEvents: async function (request) {
       // TODO: use full query (one per day/timeperiod) instead of canonicalEvents
       let query = canonicalEvents({
-        ...useBucketsStore().desktopBucketIds(this.queryOptions.hostname),
-        filter_afk: this.queryOptions.filter_afk,
+        ...useBucketsStore().desktopBucketIds(request.hostname),
+        filter_afk: request.filter_afk,
         categories: this.categoryStore.classes_for_query,
-        filter_categories: this.excludeUncategorized
+        filter_categories: request.excludeUncategorized
           ? this.categoryStore.classes_for_query.map(t => t[0])
           : null,
       });
       query += '; RETURN = events;';
 
       const query_array = querystr_to_array(query);
-      const start = moment(this.queryOptions.start).format();
-      const end = moment(this.queryOptions.stop).format();
+      const start = moment(request.start).format();
+      const end = moment(request.stop).format();
       const timeperiods = [start + '/' + end];
-      try {
-        this.status = 'searching';
-        const time = moment();
-        const data = await getClient().query(timeperiods, query_array);
-        this.error = '';
+      const time = moment();
+      const data = await getClient().query(timeperiods, query_array);
+      if (this.generateRequest === request) {
         this.queryTime = moment().diff(time);
         console.log('done fetching events!');
-        this.events = _.orderBy(data[0], ['timestamp'], ['desc']);
-      } catch (e) {
-        console.error(e);
-        this.error = e?.response?.data?.message || e?.message || this.$t('common.requestFailed');
-      } finally {
-        this.status = null;
       }
-      return this.events;
+      return _.orderBy(data[0], ['timestamp'], ['desc']);
     },
-    generateGraphData: function (events) {
+    generateGraphData: function (events, maxDepth = this.maxDepth) {
       // generate graph data from events
       // iterate through events, and count the number of category transitions
       // for each category, add a node to the graphdata with the group of its parent category
       // for each transition-pair, add a link to the graphdata with the number of transitions as weight
-      const SEP = '>';
+      // Category paths may contain literal separators; display strings are not identities.
+      const categoryKey = (category: string[]) => JSON.stringify(category);
 
       // copy all events, slice off category depth deeper than maxDepth
       events = events.map(e => {
-        const $category = e.data.$category.slice(0, this.maxDepth);
+        const $category = e.data.$category.slice(0, maxDepth);
         return { ...e, data: { ...e.data, $category } };
       });
 
-      const allCategories: Set<string> = new Set(
-        events.map(e => e.data.$category).map(c => c.join(SEP))
+      const allCategories = new Map<string, string[]>(
+        events.map(e => [categoryKey(e.data.$category), e.data.$category])
       );
-      const groups = { Uncategorized: 0 };
+      const groups = new Map<string, number>([['Uncategorized', 0]]);
 
       // Generate groups
-      for (const category of allCategories) {
-        const rootcat = category.split(SEP)[0];
-        if (!Object.prototype.hasOwnProperty.call(groups, rootcat)) {
-          groups[rootcat] = Object.keys(groups).length;
+      for (const category of allCategories.values()) {
+        const rootcat = category[0];
+        if (!groups.has(rootcat)) {
+          groups.set(rootcat, groups.size);
         }
       }
 
       // Generate nodes
       const nodes = [];
-      for (const category of allCategories) {
-        const rootcat = category.split(SEP)[0];
+      for (const [id, category] of allCategories) {
+        const rootcat = category[0];
         // Size nodes depending on time spent
         const catTime = events
-          .filter(e => e.data.$category.join(SEP) == category)
+          .filter(e => categoryKey(e.data.$category) == id)
           .map(e => moment(e.timestamp).add(e.duration).diff(e.timestamp))
           .reduce((a, b) => a + b, 0);
         nodes.push({
-          id: category,
-          group: groups[rootcat],
-          color: this.categoryStore.get_category_color(category.split(SEP)),
+          id,
+          label: category[category.length - 1] || '',
+          title: category.join(' > '),
+          group: groups.get(rootcat),
+          color: this.categoryStore.get_category_color(category),
           value: catTime,
         });
       }
@@ -191,13 +217,15 @@ export default {
         const e2cat = e2.data.$category;
         if (_.isEqual(e1cat, e2cat)) continue;
 
-        const link = links.find(l => l.source == e1cat.join(SEP) && l.target == e2cat.join(SEP));
+        const source = categoryKey(e1cat);
+        const target = categoryKey(e2cat);
+        const link = links.find(l => l.source == source && l.target == target);
         if (link) {
           link.value++;
         } else {
           links.push({
-            source: e1cat.join(SEP),
-            target: e2cat.join(SEP),
+            source,
+            target,
             value: 1,
           });
         }

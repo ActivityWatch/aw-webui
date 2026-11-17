@@ -29,6 +29,28 @@ describe('periodsForFullDesktopQuery', () => {
     expect(periods[0]).toContain('2026-08-01');
   });
 
+  test('keeps an exact interval up to a day as one request with exact bounds', () => {
+    const periods = periodsForFullDesktopQuery(
+      { start: '2026-08-01T13:00:00Z', length: [90 * 60 * 1000, 'milliseconds'] },
+      now
+    );
+    expect(periods.map(p => p.split('/').map(x => moment(x).toISOString()))).toEqual([
+      ['2026-08-01T13:00:00.000Z', '2026-08-01T14:30:00.000Z'],
+    ]);
+  });
+
+  test('splits a longer exact interval into days with a clipped final chunk', () => {
+    const periods = periodsForFullDesktopQuery(
+      { start: '2026-08-01T13:00:00Z', length: [2.25 * 24 * 3600 * 1000, 'milliseconds'] },
+      now
+    );
+    const bounds = periods.map(p => p.split('/').map(x => moment(x).valueOf()));
+    expect(bounds).toHaveLength(3);
+    expect(bounds[0][0]).toBe(moment('2026-08-01T13:00:00Z').valueOf());
+    expect(bounds[2][1]).toBe(moment('2026-08-03T19:00:00Z').valueOf());
+    bounds.forEach(([, end], i) => i < 2 && expect(bounds[i + 1][0]).toBe(end));
+  });
+
   test('splits a week into 7 days', () => {
     const periods = periodsForFullDesktopQuery(
       { start: '2026-08-03T04:00:00Z', length: [1, 'week'] },

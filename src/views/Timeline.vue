@@ -2,7 +2,7 @@
 div
   h3 {{ $t('timeline.title') }}
 
-  input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration").mb-3
+  input-timeinterval(v-model="daterange", :defaultDuration="timeintervalDefaultDuration", :maxDuration="maxDuration", :allowTime="true").mb-3
 
   // Toolbar: filters (primary), display kebab (swimlanes etc.), event count,
   // and keyboard hint. Flex-wrap so it doesn't overlap at narrow widths.
@@ -65,12 +65,25 @@ div
                 option(v-for="cat in category_options", :key="cat.text", :value="cat.text") {{ cat.text }}
               div.mt-1(v-if="filter_categories.length > 0")
                 span.badge.badge-info.mr-1(v-for="(cat, idx) in filter_categories", :key="idx")
-                  | {{ cat.join(' > ') }}
+                  | {{ categoryPathLabel(cat) }}
                   button.ml-1.close.small(@click="removeCategory(idx)", type="button", :aria-label="$t('ui.workReport.removeCategory')", style="font-size: 0.85rem; line-height: 1") &times;
+
+    b-button-group.mr-2(size="sm")
+      b-button(
+        variant="outline-secondary"
+        :pressed="view_mode === 'timeline'"
+        @click="view_mode = 'timeline'"
+      ) {{ $t('timeline.title') }}
+      b-button(
+        variant="outline-secondary"
+        :pressed="view_mode === 'list'"
+        @click="view_mode = 'list'"
+      ) {{ $t('ui.timeline.list') }}
 
     // Display options (swimlanes, future visual toggles) tucked behind a
     // ghost kebab so they don't compete visually with Filters.
     b-dropdown.kebab-dropdown.mr-2(
+      v-if="view_mode === 'timeline'"
       size="sm"
       variant="outline-secondary"
       toggle-class="border-0"
@@ -92,7 +105,7 @@ div
     div.timeline-chip.mr-2.text-muted
       | {{ num_events }} {{ $t('timeline.eventsShown') }}
 
-    small.text-muted.ml-auto
+    small.text-muted.ml-auto(v-if="view_mode === 'timeline'")
       | {{ $t('timeline.scrollHint') }}
 
   b-alert.mb-2(v-if="buckets !== null && num_events === 0", variant="warning", show)
@@ -101,8 +114,11 @@ div
   b-alert.mb-2(v-if="categoryError", variant="warning", show)
     | Categorized timeline unavailable. Raw bucket events are still shown.
 
-  div(v-if="buckets !== null")
-    vis-timeline(:buckets="buckets", :categorizedEvents="categorizedEvents", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane", :updateTimelineWindow='updateTimelineWindow', @event-saved="onEventSaved")
+  div(v-if="buckets !== null && view_mode === 'list'")
+    // Same filtered buckets as the timeline, one chronological row per event.
+    aw-timeline-event-list(:buckets="buckets", :range="daterange")
+  div(v-else-if="buckets !== null")
+    vis-timeline(:buckets="buckets", :categorizedEvents="categorizedEvents", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane", :groupGranularity="timelineGroupGranularity", :updateTimelineWindow='updateTimelineWindow', @event-saved="onEventSaved")
 
     aw-devonly(:reason="$t('ui.devOnly.timelineExperiment')")
       aw-calendar(:buckets="buckets")
@@ -123,10 +139,13 @@ import { useCategoryStore } from '~/stores/categories';
 import { matchString } from '~/util/classes';
 import { getCategorizationStringFromEvent } from '~/util/color';
 import { seconds_to_duration } from '~/util/time';
+import { categoryPathLabel } from '~/util/categoryLabels';
 import { categoryTimelineQuery, mergeCategoryIntervals } from '~/util/timelineCategories';
+import TimelineEventList from '~/visualizations/TimelineEventList.vue';
 
 export default {
   name: 'Timeline',
+  components: { 'aw-timeline-event-list': TimelineEventList },
   data() {
     return {
       all_buckets: null,
@@ -145,6 +164,7 @@ export default {
       filter_merge_similar: false,
       filter_categories: [],
       swimlane: null,
+      view_mode: 'timeline',
       updateTimelineWindow: true,
     };
   },
@@ -156,6 +176,9 @@ export default {
         { value: 'category', text: this.$t('ui.timeline.groupByCategory') },
         { value: 'bucketType', text: this.$t('ui.timeline.groupByBucketType') },
       ];
+    },
+    timelineGroupGranularity() {
+      return Number(useSettingsStore().timelineGroupGranularity);
     },
     timeintervalDefaultDuration() {
       const settingsStore = useSettingsStore();
@@ -234,6 +257,7 @@ export default {
     useCategoryStore().load();
   },
   methods: {
+    categoryPathLabel,
     onCategorySelect(event) {
       const text = event.target.value;
       if (!text) return;

@@ -72,6 +72,20 @@ export default {
     durationMinutes: 'min',
     durationSeconds: 's',
   },
+  categoryNames: {
+    work: 'Trabajo',
+    programming: 'Programación',
+    image: 'Imagen',
+    video: 'Vídeo',
+    audio: 'Audio',
+    media: 'Multimedia',
+    games: 'Juegos',
+    socialMedia: 'Redes sociales',
+    music: 'Música',
+    comms: 'Comunicación',
+    im: 'Mensajería',
+    email: 'Correo',
+  },
   notFound: {
     title: '¡Vaya, no se ha encontrado esta página!',
     hint: 'Intente volver a la página de la que vino.',
@@ -95,6 +109,9 @@ export default {
     timelineDuration: {
       title: 'Duración predeterminada',
       help: "La duración predeterminada usada para 'mostrar últimos' en la vista de línea de tiempo.",
+      groupGranularity: 'Agrupar eventos cortos (segundos)',
+      groupGranularityHelp:
+        'Combina eventos cortos consecutivos en grupos de esta duración. Usa 0 para desactivar la agrupación. El filtro de duración de la línea de tiempo es independiente y elimina eventos antes de agruparlos.',
     },
     landingPage: {
       title: 'Página de inicio',
@@ -197,6 +214,10 @@ export default {
         '¿Eliminar el conjunto de categorías «{id}»? Esta acción no se puede deshacer.',
       switchUnsavedConfirm:
         'Hay cambios sin guardar. ¿Cambiar de conjunto de todos modos? (Los cambios se descartarán)',
+    },
+    supporter: {
+      title: 'Ya apoyo a ActivityWatch',
+      help: 'Oculta los avisos de la aplicación que piden apoyar a ActivityWatch. Por confianza: se guarda solo en tu servidor local, nunca se verifica y no se envía nada.',
     },
     developer: {
       title: 'Configuración de desarrollador',
@@ -381,6 +402,9 @@ export default {
     onlyThisDevice: 'solo',
     multideviceNote:
       'Los datos del navegador y del cronómetro solo están disponibles al ver un único dispositivo.',
+    deviceBreakdownTooltip:
+      'Tiempo activo por dispositivo. Cuando los dispositivos se superponen, el tiempo se cuenta una vez, para el dispositivo que aparece primero.',
+    overlap: 'superposición',
     timeActive: 'Tiempo activo:',
     timeActiveTooltip:
       'Tiempo de ventana activa en el rango consultado, tras aplicar los filtros siguientes. Las barras del gráfico del período muestran el tiempo activo bruto del dispositivo, por lo que pueden ser algo mayores.',
@@ -422,16 +446,27 @@ export default {
     errIdNotUnique: 'El ID no es único',
     errMissingId: 'Falta el ID',
     errMissingName: 'Falta el nombre',
+    // English fallback until these interval strings are translated.
+    periodExactInterval: 'exact times',
+    intervalStart: 'Start time',
+    intervalEnd: 'End time (exclusive)',
+    invalidInterval: 'Invalid time interval in URL, showing today instead.',
+    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    intervalAmbiguousTime:
+      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
+    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
+    intervalEndAfterStart: 'The end time must be after the start time.',
     diagnosticMissingWindow:
-      'No window bucket for {host}. Start aw-watcher-window, then refresh this page.',
-    diagnosticMissingAfk: 'No AFK bucket for {host}. Start aw-watcher-afk, then refresh this page.',
+      'No hay ningún bucket de ventanas para {host}. Inicie aw-watcher-window y después actualice esta página.',
+    diagnosticMissingAfk:
+      'No hay ningún bucket de inactividad para {host}. Inicie aw-watcher-afk y después actualice esta página.',
     diagnosticAmbiguousWindow:
-      'Multiple window buckets may describe {host}: {buckets}. Choose the correct device above or inspect Raw Data.',
+      'Varios buckets de ventanas pueden describir {host}: {buckets}. Elija el dispositivo correcto arriba o consulte Datos sin procesar.',
     diagnosticMismatchedHostnames:
-      'aw-watcher-window reports {host} as {windowHosts}, but aw-watcher-afk reports it as {afkHosts}. Activity needs both under the same hostname: restart both watchers, then refresh this page.',
+      'aw-watcher-window informa de {host} como {windowHosts}, pero aw-watcher-afk lo informa como {afkHosts}. La actividad necesita ambos con el mismo nombre de host: reinicie los dos watchers y después actualice esta página.',
     diagnosticNoWindowEvents:
-      'No window activity was found for this period. Check that aw-watcher-window is running. On Wayland, try awatcher.',
-    diagnosticOpenRawData: 'Open Raw Data.',
+      'No se encontró actividad de ventanas en este periodo. Compruebe que aw-watcher-window esté en ejecución. En Wayland, pruebe awatcher.',
+    diagnosticOpenRawData: 'Abrir datos sin procesar.',
   },
   activityView: {
     addVisualization: 'Añadir visualización',
@@ -463,6 +498,7 @@ export default {
     periodLast7d: 'de los últimos 7 días',
     periodLast30d: 'de los últimos 30 días',
     periodCustomRange: 'en el rango seleccionado',
+    periodExactInterval: 'in the selected time interval', // English fallback
     periodAllTime: 'en total',
   },
   visualizations: {
@@ -631,6 +667,10 @@ export default {
       quickDurations: 'Duraciones rápidas',
       startDate: 'Fecha de inicio',
       endDate: 'Fecha de fin (opcional)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(opcional)',
       apply: 'Aplicar',
       refresh: 'Actualizar',
@@ -648,13 +688,14 @@ export default {
       key: 'Clave',
       value: 'Valor',
     },
-    visualizations: { bundleIds: 'Bundle IDs' },
+    visualizations: { bundleIds: 'IDs de bundle' },
     eventList: {
       title: 'Eventos',
       showing: 'Mostrando {shown} eventos (de {total})',
       expand: 'Expandir lista',
       condense: 'Contraer lista',
       edit: 'Editar',
+      showMore: 'Mostrar {count} más',
     },
     calendar: {
       bucket: 'Bucket:',
@@ -809,6 +850,9 @@ export default {
       mostActiveDay: 'Día más activo',
       onThisDay: 'en este día',
       timePerDay: 'Tiempo por día',
+      timePerWeek: 'Tiempo por semana',
+      groupByDay: 'Día',
+      groupByWeek: 'Semana',
       topChanges: 'Principales cambios por categoría',
       noData: 'No hay datos categorizados para comparar.',
       uncategorized: 'Sin categoría',
@@ -948,10 +992,16 @@ export default {
       none: 'ninguna',
       groupByCategory: 'Agrupar por categoría',
       groupByBucketType: 'Agrupar por tipo de bucket',
+      groupedEvents: '{count} eventos · {duration}',
+      collapseGroups: 'Contraer grupos',
+      groupBreakdown: 'Desglose de actividades',
       totalTime: 'Tiempo total',
       bucketsNoEvents: 'Se ocultarán los buckets sin eventos en el rango consultado.',
       editSaved: 'Su edición se ha guardado. Actualice la línea de tiempo para verla reflejada.',
       editSavedTitle: 'Aviso',
+      list: 'Lista',
+      listShowing: 'Mostrando {shown} de {total} eventos',
+      showMore: 'Mostrar más',
     },
     buckets: { id: 'ID' },
     userPoll: {
@@ -978,45 +1028,46 @@ export default {
   },
   extraViews: {
     bucket: {
-      notFound: 'No bucket named "{id}" was found.',
-      seeAll: 'See all buckets',
-      noEventsPrefix: 'There are no events in the selected range. The last event was recorded',
-      noEventsSuffix: '. Showing the {count} most recent events instead.',
+      notFound: 'No se encontró ningún bucket con el nombre {id}.',
+      seeAll: 'Ver todos los buckets',
+      noEventsPrefix: 'No hay eventos en el rango seleccionado. El último evento se registró',
+      noEventsSuffix: '. Se muestran en su lugar los {count} eventos más recientes.',
     },
     search: {
-      windowEvents: 'Window events',
-      browserEvents: 'Browser events',
-      timestamp: 'Timestamp',
-      duration: 'Duration',
-      title: 'Title',
-      noResults: 'No results found.',
+      windowEvents: 'Eventos de ventana',
+      browserEvents: 'Eventos del navegador',
+      timestamp: 'Marca de tiempo',
+      duration: 'Duración',
+      title: 'Título',
+      noResults: 'No se encontraron resultados.',
     },
-    trends: { toUse: 'to use this view.' },
+    trends: { toUse: 'para usar esta vista.' },
     workReport: {
-      selectCategoryError: 'Select at least one category.',
+      selectCategoryError: 'Seleccione al menos una categoría.',
     },
     categoryBuilder: {
-      range: 'Date range',
-      showOptions: 'Show options',
-      hideOptions: 'Hide options',
-      retry: 'Retry',
+      range: 'Intervalo de fechas',
+      showOptions: 'Mostrar opciones',
+      hideOptions: 'Ocultar opciones',
+      retry: 'Reintentar',
       noActivityBuckets:
-        'This device has no activity data. Choose another device in the options above.',
-      noHostPrefix: 'No device with activity buckets is available. Install',
-      noHostSuffix: 'to start collecting activity data.',
-      watcher: 'a watcher',
-      showMore: 'Show more',
-      ignoredWords: '{count} ignored keywords',
-      show: 'Show',
-      hide: 'Hide',
-      reset: 'Reset',
-      unignore: 'Stop ignoring',
-      invalid: 'Invalid pattern',
-      tooBroad: 'Pattern is too broad',
+        'Este dispositivo no tiene datos de actividad. Elija otro dispositivo en las opciones de arriba.',
+      noHostPrefix: 'No hay ningún dispositivo con buckets de actividad disponible. Instale',
+      noHostSuffix: 'para empezar a recopilar datos de actividad.',
+      watcher: 'un watcher',
+      showMore: 'Mostrar más',
+      ignoredWords: '{count} palabras clave ignoradas',
+      show: 'Mostrar',
+      hide: 'Ocultar',
+      reset: 'Restablecer',
+      unignore: 'Dejar de ignorar',
+      invalid: 'Patrón no válido',
+      tooBroad: 'El patrón es demasiado amplio',
     },
     notifications: {
-      enabled: 'Enable notifications',
-      enabledHelp: 'aw-notify runs only while enabled. The tray menu toggle follows this setting.',
+      enabled: 'Activar las notificaciones',
+      enabledHelp:
+        'aw-notify solo se ejecuta mientras está activado. El interruptor del menú del área de notificación sigue este ajuste.',
     },
   },
 };

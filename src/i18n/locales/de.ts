@@ -69,6 +69,20 @@ export default {
     requiresAfk: 'erfordert aw-watcher-afk',
     unknown: 'unbekannt',
   },
+  categoryNames: {
+    work: 'Arbeit',
+    programming: 'Programmierung',
+    image: 'Bild',
+    video: 'Video',
+    audio: 'Audio',
+    media: 'Medien',
+    games: 'Spiele',
+    socialMedia: 'Soziale Medien',
+    music: 'Musik',
+    comms: 'Kommunikation',
+    im: 'Chat',
+    email: 'E-Mail',
+  },
   notFound: {
     title: 'Hoppla, diese Seite wurde nicht gefunden!',
     hint: 'Versuchen Sie, dorthin zurückzukehren, woher Sie kamen.',
@@ -92,6 +106,9 @@ export default {
     timelineDuration: {
       title: 'Standarddauer',
       help: 'Standarddauer für „Zuletzt anzeigen“ in der Zeitleiste.',
+      groupGranularity: 'Kurze Ereignisse gruppieren (Sekunden)',
+      groupGranularityHelp:
+        'Fasst aufeinanderfolgende kurze Ereignisse in Gruppen dieser Dauer zusammen. 0 deaktiviert die Gruppierung. Der Dauerfilter der Zeitleiste bleibt unabhängig und entfernt Ereignisse vor der Gruppierung.',
     },
     landingPage: {
       title: 'Einstiegsseite',
@@ -245,6 +262,10 @@ export default {
       importReplace: 'Statt meines Satzes verwenden',
       importAddOnTop: 'Zusätzlich zu meinem Satz hinzufügen',
     },
+    supporter: {
+      title: 'Ich unterstütze ActivityWatch bereits',
+      help: 'Blendet die Hinweise in der App aus, die um Unterstützung bitten. Auf Vertrauensbasis: nur im lokalen Server gespeichert, nie geprüft, es wird nichts gesendet.',
+    },
     developer: {
       title: 'Entwicklereinstellungen',
       note: 'Hinweis:',
@@ -372,6 +393,9 @@ export default {
     onlyThisDevice: 'nur',
     multideviceNote:
       'Browser- und Stoppuhrdaten sind nur bei Auswahl eines einzelnen Geräts verfügbar.',
+    deviceBreakdownTooltip:
+      'Aktive Zeit pro Gerät. Überschneiden sich Geräte, wird die Zeit nur einmal gezählt, für das zuerst aufgeführte Gerät.',
+    overlap: 'Überschneidung',
     timeActive: 'Aktive Zeit:',
     timeActiveTooltip:
       'Aktive Fensterzeit im abgefragten Zeitraum nach Anwendung der Filter unten. Die Balken im Zeitraumdiagramm zeigen die rohe aktive Gerätezeit und können daher etwas höher liegen.',
@@ -396,6 +420,16 @@ export default {
     rangeStart: 'Startdatum',
     rangeEnd: 'Enddatum',
     invalidRange: 'Ungültiger Zeitraum in der URL, stattdessen wird heute angezeigt.',
+    // English fallback until these interval strings are translated.
+    periodExactInterval: 'exact times',
+    intervalStart: 'Start time',
+    intervalEnd: 'End time (exclusive)',
+    invalidInterval: 'Invalid time interval in URL, showing today instead.',
+    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    intervalAmbiguousTime:
+      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
+    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
+    intervalEndAfterStart: 'The end time must be after the start time.',
     diagnosticMissingWindow:
       'Kein Fenster-Bucket für {host}. Starten Sie aw-watcher-window und laden Sie die Seite neu.',
     diagnosticMissingAfk:
@@ -455,6 +489,7 @@ export default {
     periodLast7d: 'die letzten 7 Tage',
     periodLast30d: 'die letzten 30 Tage',
     periodCustomRange: 'im gewählten Zeitraum',
+    periodExactInterval: 'in the selected time interval', // English fallback
     periodAllTime: 'insgesamt',
   },
   visualizations: {
@@ -617,6 +652,10 @@ export default {
       quickDurations: 'Schnellauswahl',
       startDate: 'Startdatum',
       endDate: 'Enddatum (optional)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(optional)',
       apply: 'Anwenden',
       refresh: 'Aktualisieren',
@@ -641,6 +680,7 @@ export default {
       expand: 'Liste ausklappen',
       condense: 'Liste einklappen',
       edit: 'Bearbeiten',
+      showMore: '{count} weitere anzeigen',
     },
     calendar: {
       bucket: 'Bucket:',
@@ -794,6 +834,9 @@ export default {
       mostActiveDay: 'Aktivster Tag',
       onThisDay: 'an diesem Tag',
       timePerDay: 'Zeit pro Tag',
+      timePerWeek: 'Zeit pro Woche',
+      groupByDay: 'Tag',
+      groupByWeek: 'Woche',
       topChanges: 'Größte Änderungen nach Kategorie',
       noData: 'Keine kategorisierten Daten zum Vergleichen.',
       uncategorized: 'Nicht kategorisiert',
@@ -933,11 +976,17 @@ export default {
       none: 'keine',
       groupByCategory: 'Nach Kategorie gruppieren',
       groupByBucketType: 'Nach Bucket-Typ gruppieren',
+      groupedEvents: '{count} Ereignisse · {duration}',
+      collapseGroups: 'Gruppen einklappen',
+      groupBreakdown: 'Aktivitätsübersicht',
       totalTime: 'Gesamtzeit',
       bucketsNoEvents: 'Buckets ohne Ereignisse im abgefragten Zeitraum werden ausgeblendet.',
       editSaved:
         'Ihre Änderung wurde gespeichert. Aktualisieren Sie die Zeitleiste, um sie zu sehen.',
       editSavedTitle: 'Hinweis',
+      list: 'Liste',
+      listShowing: '{shown} von {total} Ereignissen angezeigt',
+      showMore: 'Mehr anzeigen',
     },
     buckets: { id: 'ID' },
     userPoll: {
@@ -965,45 +1014,47 @@ export default {
   },
   extraViews: {
     bucket: {
-      notFound: 'No bucket named "{id}" was found.',
-      seeAll: 'See all buckets',
-      noEventsPrefix: 'There are no events in the selected range. The last event was recorded',
-      noEventsSuffix: '. Showing the {count} most recent events instead.',
+      notFound: 'Kein Bucket mit dem Namen „{id}“ gefunden.',
+      seeAll: 'Alle Buckets anzeigen',
+      noEventsPrefix:
+        'Im gewählten Zeitraum gibt es keine Ereignisse. Das letzte Ereignis wurde aufgezeichnet',
+      noEventsSuffix: '. Es werden stattdessen die {count} neuesten Ereignisse angezeigt.',
     },
     search: {
-      windowEvents: 'Window events',
-      browserEvents: 'Browser events',
-      timestamp: 'Timestamp',
-      duration: 'Duration',
-      title: 'Title',
-      noResults: 'No results found.',
+      windowEvents: 'Fenster-Ereignisse',
+      browserEvents: 'Browser-Ereignisse',
+      timestamp: 'Zeitstempel',
+      duration: 'Dauer',
+      title: 'Titel',
+      noResults: 'Keine Ergebnisse gefunden.',
     },
-    trends: { toUse: 'to use this view.' },
+    trends: { toUse: 'werden benötigt, um diese Ansicht zu nutzen.' },
     workReport: {
-      selectCategoryError: 'Select at least one category.',
+      selectCategoryError: 'Wählen Sie mindestens eine Kategorie aus.',
     },
     categoryBuilder: {
-      range: 'Date range',
-      showOptions: 'Show options',
-      hideOptions: 'Hide options',
-      retry: 'Retry',
+      range: 'Zeitraum',
+      showOptions: 'Optionen anzeigen',
+      hideOptions: 'Optionen ausblenden',
+      retry: 'Erneut versuchen',
       noActivityBuckets:
-        'This device has no activity data. Choose another device in the options above.',
-      noHostPrefix: 'No device with activity buckets is available. Install',
-      noHostSuffix: 'to start collecting activity data.',
-      watcher: 'a watcher',
-      showMore: 'Show more',
-      ignoredWords: '{count} ignored keywords',
-      show: 'Show',
-      hide: 'Hide',
-      reset: 'Reset',
-      unignore: 'Stop ignoring',
-      invalid: 'Invalid pattern',
-      tooBroad: 'Pattern is too broad',
+        'Dieses Gerät hat keine Aktivitätsdaten. Wählen Sie oben ein anderes Gerät aus.',
+      noHostPrefix: 'Kein Gerät mit Aktivitäts-Buckets verfügbar. Installieren Sie',
+      noHostSuffix: 'zur Erfassung von Aktivitätsdaten.',
+      watcher: 'einen Watcher',
+      showMore: 'Mehr anzeigen',
+      ignoredWords: '{count} ignorierte Wörter',
+      show: 'Anzeigen',
+      hide: 'Ausblenden',
+      reset: 'Zurücksetzen',
+      unignore: 'Nicht mehr ignorieren',
+      invalid: 'Ungültiges Muster',
+      tooBroad: 'Muster zu allgemein',
     },
     notifications: {
-      enabled: 'Enable notifications',
-      enabledHelp: 'aw-notify runs only while enabled. The tray menu toggle follows this setting.',
+      enabled: 'Benachrichtigungen aktivieren',
+      enabledHelp:
+        'aw-notify läuft nur, solange diese Option aktiviert ist. Das Umschalten im Tray-Menü folgt dieser Einstellung.',
     },
   },
 };

@@ -71,6 +71,20 @@ export default {
     requiresAfk: 'требуется aw-watcher-afk',
     unknown: 'неизвестно',
   },
+  categoryNames: {
+    work: 'Работа',
+    programming: 'Программирование',
+    image: 'Изображения',
+    video: 'Видео',
+    audio: 'Аудио',
+    media: 'Медиа',
+    games: 'Игры',
+    socialMedia: 'Соцсети',
+    music: 'Музыка',
+    comms: 'Общение',
+    im: 'Мессенджеры',
+    email: 'Почта',
+  },
   notFound: {
     title: 'Ой, эта страница не найдена!',
     hint: 'Попробуйте вернуться туда, откуда пришли.',
@@ -94,6 +108,9 @@ export default {
     timelineDuration: {
       title: 'Длительность по умолчанию',
       help: 'Длительность по умолчанию для «показать последние» в хронологии.',
+      groupGranularity: 'Группировать короткие события (секунды)',
+      groupGranularityHelp:
+        'Объединяет последовательные короткие события в группы указанной длительности. Значение 0 отключает группировку. Фильтр длительности на временной шкале работает независимо и удаляет события до группировки.',
     },
     landingPage: {
       title: 'Стартовая страница',
@@ -247,6 +264,10 @@ export default {
       switchUnsavedConfirm:
         'Есть несохранённые изменения. Всё равно переключить набор? (Изменения будут потеряны)',
     },
+    supporter: {
+      title: 'Я уже поддерживаю ActivityWatch',
+      help: 'Скрывает в приложении предложения поддержать ActivityWatch. На доверии: хранится только на вашем локальном сервере, не проверяется и никуда не отправляется.',
+    },
     developer: {
       title: 'Настройки разработчика',
       note: 'Внимание:',
@@ -371,6 +392,9 @@ export default {
     onlyThisDevice: 'только',
     multideviceNote:
       'Данные браузера и секундомера доступны только при просмотре одного устройства.',
+    deviceBreakdownTooltip:
+      'Активное время по устройствам. Если устройства пересекаются по времени, время учитывается один раз — для устройства, указанного первым.',
+    overlap: 'пересечение',
     timeActive: 'Активное время:',
     timeActiveTooltip:
       'Время активного окна в запрошенном диапазоне с учётом фильтров ниже. Столбцы на графике периода показывают необработанное активное время устройства, поэтому они могут быть немного выше.',
@@ -395,6 +419,16 @@ export default {
     rangeStart: 'Дата начала',
     rangeEnd: 'Дата окончания',
     invalidRange: 'Неверный диапазон дат в URL, показан сегодняшний день.',
+    // English fallback until these interval strings are translated.
+    periodExactInterval: 'exact times',
+    intervalStart: 'Start time',
+    intervalEnd: 'End time (exclusive)',
+    invalidInterval: 'Invalid time interval in URL, showing today instead.',
+    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    intervalAmbiguousTime:
+      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
+    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
+    intervalEndAfterStart: 'The end time must be after the start time.',
     diagnosticMissingWindow:
       'Нет bucket-а окон для {host}. Запустите aw-watcher-window и обновите страницу.',
     diagnosticMissingAfk:
@@ -454,6 +488,7 @@ export default {
     periodLast7d: 'последние 7 дней',
     periodLast30d: 'последние 30 дней',
     periodCustomRange: 'за выбранный период',
+    periodExactInterval: 'in the selected time interval', // English fallback
     periodAllTime: 'за всё время',
   },
   visualizations: {
@@ -618,6 +653,10 @@ export default {
       quickDurations: 'Быстрый выбор длительности',
       startDate: 'Дата начала',
       endDate: 'Дата окончания (необязательно)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(необязательно)',
       apply: 'Применить',
       refresh: 'Обновить',
@@ -642,6 +681,7 @@ export default {
       expand: 'Развернуть список',
       condense: 'Свернуть список',
       edit: 'Редактировать',
+      showMore: 'Показать ещё {count}',
     },
     calendar: {
       bucket: 'Bucket:',
@@ -794,6 +834,9 @@ export default {
       mostActiveDay: 'Самый активный день',
       onThisDay: 'в этот день',
       timePerDay: 'Время по дням',
+      timePerWeek: 'Время по неделям',
+      groupByDay: 'День',
+      groupByWeek: 'Неделя',
       topChanges: 'Главные изменения по категориям',
       noData: 'Нет категоризованных данных для сравнения.',
       uncategorized: 'Без категории',
@@ -931,10 +974,16 @@ export default {
       none: 'нет',
       groupByCategory: 'Группировать по категории',
       groupByBucketType: 'Группировать по типу bucket-а',
+      groupedEvents: '{count} событий · {duration}',
+      collapseGroups: 'Свернуть группы',
+      groupBreakdown: 'Распределение активности',
       totalTime: 'Общее время',
       bucketsNoEvents: 'Bucket-и без событий в запрошенном диапазоне будут скрыты.',
       editSaved: 'Изменение сохранено. Обновите хронологию, чтобы увидеть его.',
       editSavedTitle: 'Обратите внимание',
+      list: 'Список',
+      listShowing: 'Показано {shown} из {total} событий',
+      showMore: 'Показать больше',
     },
     buckets: { id: 'ID' },
     userPoll: {
@@ -960,45 +1009,46 @@ export default {
   },
   extraViews: {
     bucket: {
-      notFound: 'No bucket named "{id}" was found.',
-      seeAll: 'See all buckets',
-      noEventsPrefix: 'There are no events in the selected range. The last event was recorded',
-      noEventsSuffix: '. Showing the {count} most recent events instead.',
+      notFound: 'Bucket с именем «{id}» не найден.',
+      seeAll: 'Показать все bucket-ы',
+      noEventsPrefix: 'В выбранном диапазоне нет событий. Последнее событие записано',
+      noEventsSuffix: '. Вместо этого показаны последние события ({count}).',
     },
     search: {
-      windowEvents: 'Window events',
-      browserEvents: 'Browser events',
-      timestamp: 'Timestamp',
-      duration: 'Duration',
-      title: 'Title',
-      noResults: 'No results found.',
+      windowEvents: 'События окон',
+      browserEvents: 'События браузера',
+      timestamp: 'Метка времени',
+      duration: 'Длительность',
+      title: 'Заголовок',
+      noResults: 'Ничего не найдено.',
     },
-    trends: { toUse: 'to use this view.' },
+    trends: { toUse: 'нужны, чтобы использовать этот вид.' },
     workReport: {
-      selectCategoryError: 'Select at least one category.',
+      selectCategoryError: 'Выберите хотя бы одну категорию.',
     },
     categoryBuilder: {
-      range: 'Date range',
-      showOptions: 'Show options',
-      hideOptions: 'Hide options',
-      retry: 'Retry',
+      range: 'Диапазон дат',
+      showOptions: 'Показать параметры',
+      hideOptions: 'Скрыть параметры',
+      retry: 'Повторить',
       noActivityBuckets:
-        'This device has no activity data. Choose another device in the options above.',
-      noHostPrefix: 'No device with activity buckets is available. Install',
-      noHostSuffix: 'to start collecting activity data.',
-      watcher: 'a watcher',
-      showMore: 'Show more',
-      ignoredWords: '{count} ignored keywords',
-      show: 'Show',
-      hide: 'Hide',
-      reset: 'Reset',
-      unignore: 'Stop ignoring',
-      invalid: 'Invalid pattern',
-      tooBroad: 'Pattern is too broad',
+        'На этом устройстве нет данных об активности. Выберите другое устройство в параметрах выше.',
+      noHostPrefix: 'Нет доступных устройств с bucket-ами активности. Установите',
+      noHostSuffix: 'для начала сбора данных об активности.',
+      watcher: 'watcher',
+      showMore: 'Показать больше',
+      ignoredWords: 'Игнорируемые слова: {count}',
+      show: 'Показать',
+      hide: 'Скрыть',
+      reset: 'Сбросить',
+      unignore: 'Перестать игнорировать',
+      invalid: 'Некорректный шаблон',
+      tooBroad: 'Слишком широкий шаблон',
     },
     notifications: {
-      enabled: 'Enable notifications',
-      enabledHelp: 'aw-notify runs only while enabled. The tray menu toggle follows this setting.',
+      enabled: 'Включить уведомления',
+      enabledHelp:
+        'aw-notify работает только при включённой опции. Переключатель в меню трея следует этой настройке.',
     },
   },
 };

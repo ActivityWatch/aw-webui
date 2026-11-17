@@ -311,18 +311,20 @@ function accumulateByDay(
 /**
  * Focus statistics over the AFK-filtered timeline.
  *
- * Events are assumed to be sorted by timestamp. Consecutive events in the same app
- * are merged into one block, so `appSwitches` counts real context switches rather
- * than watcher heartbeats.
+ * Events are assumed to be sorted by timestamp. Contiguous events in the same app
+ * are merged into one block. App switches count changes between adjacent retained
+ * events; a gap in the same app starts a new block without adding a switch.
  */
 export function computeFocusStats(events: ContextEvent[]): FocusStats {
   const blocks: number[] = [];
+  let appSwitches = 0;
   let currentApp: string | null = null;
   let currentDuration = 0;
   let prevEnd: number | null = null; // seconds since epoch
 
   for (const event of events) {
     const app = event.data?.app || 'unknown';
+    if (currentApp !== null && currentApp !== app) appSwitches++;
     const start = new Date(event.timestamp).getTime() / 1000;
     const duration = event.duration || 0;
     // After AFK or privacy filtering, two events for the same app can be
@@ -349,7 +351,7 @@ export function computeFocusStats(events: ContextEvent[]): FocusStats {
     : 0;
 
   return {
-    appSwitches: Math.max(0, blocks.length - 1),
+    appSwitches,
     blockCount: blocks.length,
     longestBlockSeconds: blocks.length ? Math.max(...blocks) : 0,
     medianBlockSeconds: median,
@@ -377,8 +379,8 @@ export function buildActivityContext(input: BuildContextInput): ActivityContext 
   const exportedSeconds = kept.reduce((sum, e) => sum + (e.duration || 0), 0);
 
   // Apps, with distinct-title counts (the titles themselves stay local).
-  const appDurations: Record<string, number> = {};
-  const appTitles: Record<string, Set<string>> = {};
+  const appDurations: Record<string, number> = Object.create(null);
+  const appTitles: Record<string, Set<string>> = Object.create(null);
   for (const event of kept) {
     const app = event.data?.app || 'unknown';
     appDurations[app] = (appDurations[app] || 0) + (event.duration || 0);
@@ -413,7 +415,7 @@ export function buildActivityContext(input: BuildContextInput): ActivityContext 
   // is on rather than leaking activity the user asked to withhold.
   const privacyFilterActive =
     input.privacy.excludeUncategorized || input.privacy.privateCategories.length > 0;
-  const domainDurations: Record<string, number> = {};
+  const domainDurations: Record<string, number> = Object.create(null);
   if (!privacyFilterActive) {
     for (const event of input.domainEvents || []) {
       const domain = event.data?.$domain;

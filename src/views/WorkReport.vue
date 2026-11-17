@@ -90,7 +90,11 @@ import { getClient } from '~/util/awclient';
 import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
 import { useBucketsStore } from '~/stores/buckets';
-import { get_day_start_with_offset, get_day_end_with_offset } from '~/util/time';
+import {
+  get_day_start_with_offset,
+  get_day_end_with_offset,
+  get_today_with_offset,
+} from '~/util/time';
 import { periodStartDate } from '~/util/timeperiod';
 import {
   getSupportedWorkReportHosts,
@@ -103,6 +107,15 @@ import {
 
 import 'vue-awesome/icons/sync';
 import 'vue-awesome/icons/download';
+
+interface CalculationParameters {
+  categories: string[];
+  breakTime: number;
+  dateRange: string;
+  hosts: string[];
+  timeperiods: string[];
+  expandedCategories: string[][];
+}
 
 interface DailyData {
   date: string;
@@ -128,6 +141,7 @@ export default {
       loading: false,
       dailyData: [] as DailyData[],
       rawData: {} as Record<string, any>,
+      calculationParameters: null as CalculationParameters | null,
     };
   },
   computed: {
@@ -191,6 +205,7 @@ export default {
   },
   methods: {
     async loadData() {
+      if (this.loading) return;
       this.loading = true;
       try {
         const client = getClient();
@@ -275,10 +290,18 @@ export default {
         const categoriesStr = JSON.stringify(categories).replace(/\\\\/g, '\\');
 
         const query = buildWorkReportQuery(hostsToQuery, categoriesStr, categoriesFilter);
+        const parameters: CalculationParameters = {
+          categories: [...this.selectedCategories],
+          breakTime: this.breakTime,
+          dateRange: this.dateRange,
+          hosts: hostsToQuery.map(host => host.host),
+          timeperiods: [...timeperiods],
+          expandedCategories: categoriesFilter.map(category => [...category]),
+        };
 
         const results = await client.query(timeperiods, [query]);
 
-        this.dailyData = timeperiods.map((tp, i) => {
+        const dailyData = timeperiods.map((tp, i) => {
           const result = results[i];
           const events = result.events || [];
           const baseDuration = result.duration || 0;
@@ -299,7 +322,11 @@ export default {
           };
         });
 
+        // Publish only after every day was computed successfully. Failed retries
+        // retain the previous result and the inputs that actually produced it.
+        this.dailyData = dailyData;
         this.rawData = results;
+        this.calculationParameters = parameters;
       } catch (error) {
         console.error('Error loading work time data:', error);
         alert(this.$t('ui.workReport.loadError'));
@@ -327,7 +354,7 @@ export default {
       // "thisMonth" the start anchors to the calendar boundary (not "N days
       // ago"), so on a Wednesday "thisMonth" gives Mar 1..Mar 5, not Mar 1..N.
       let startDate: moment.Moment;
-      const today = moment().startOf('day');
+      const today = moment(get_today_with_offset(offset));
 
       if (this.dateRange === 'last7d') {
         startDate = today.clone().subtract(6, 'days');
@@ -336,14 +363,14 @@ export default {
       } else if (this.dateRange === 'thisWeek') {
         startDate = moment(periodStartDate(today.format('YYYY-MM-DD'), 'week'));
       } else if (this.dateRange === 'thisMonth') {
-        startDate = moment().startOf('month');
+        startDate = today.clone().startOf('month');
       } else {
         startDate = today.clone().subtract(6, 'days');
       }
 
       const days = today.diff(startDate, 'days') + 1;
       for (let i = days - 1; i >= 0; i--) {
-        const date = moment().subtract(i, 'days');
+        const date = today.clone().subtract(i, 'days');
         const start = get_day_start_with_offset(date, offset);
         const end = get_day_end_with_offset(date, offset);
         timeperiods.push(start + '/' + end);
@@ -384,11 +411,7 @@ export default {
 
     exportJSON() {
       const data = {
-        parameters: {
-          categories: this.selectedCategories,
-          breakTime: this.breakTime,
-          dateRange: this.dateRange,
-        },
+        parameters: this.calculationParameters,
         summary: {
           totalDuration: this.totalDuration,
           totalSessions: this.totalSessions,

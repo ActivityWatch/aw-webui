@@ -72,6 +72,20 @@ export default {
     requiresAfk: 'nécessite aw-watcher-afk',
     unknown: 'inconnu',
   },
+  categoryNames: {
+    work: 'Travail',
+    programming: 'Programmation',
+    image: 'Image',
+    video: 'Vidéo',
+    audio: 'Audio',
+    media: 'Médias',
+    games: 'Jeux',
+    socialMedia: 'Réseaux sociaux',
+    music: 'Musique',
+    comms: 'Communication',
+    im: 'Messagerie',
+    email: 'E-mail',
+  },
   notFound: {
     title: 'Oups, cette page est introuvable !',
     hint: 'Essayez de revenir à la page précédente.',
@@ -96,6 +110,9 @@ export default {
     timelineDuration: {
       title: 'Durée par défaut',
       help: 'La durée par défaut utilisée pour « afficher les derniers » dans la vue Chronologie.',
+      groupGranularity: 'Regrouper les événements courts (secondes)',
+      groupGranularityHelp:
+        'Regroupe les événements courts consécutifs en groupes de cette durée. La valeur 0 désactive le regroupement. Le filtre de durée de la chronologie reste indépendant et retire les événements avant le regroupement.',
     },
     landingPage: {
       title: 'Page d’accueil',
@@ -197,6 +214,10 @@ export default {
       deleteSetConfirm: 'Supprimer le jeu de catégories « {id} » ? Cette action est irréversible.',
       switchUnsavedConfirm:
         'Vous avez des modifications non enregistrées. Changer de jeu quand même ? (Les modifications seront perdues)',
+    },
+    supporter: {
+      title: 'Je soutiens déjà ActivityWatch',
+      help: "Masque les messages dans l'application qui demandent de soutenir ActivityWatch. Sur la base de la confiance : stocké uniquement sur votre serveur local, jamais vérifié, rien n'est envoyé.",
     },
     developer: {
       title: 'Paramètres développeur',
@@ -385,6 +406,9 @@ export default {
     onlyThisDevice: 'uniquement',
     multideviceNote:
       'Les données du navigateur et du chronomètre ne sont disponibles que pour un seul appareil à la fois.',
+    deviceBreakdownTooltip:
+      "Temps actif par appareil. Lorsque des appareils se chevauchent, le temps est compté une seule fois, pour l'appareil listé en premier.",
+    overlap: 'chevauchement',
     timeActive: 'Temps actif :',
     timeActiveTooltip:
       'Durée de fenêtre active dans la plage interrogée, après application des filtres ci-dessous. Les barres du graphique de la période indiquent le temps actif brut de l’appareil ; elles peuvent donc être légèrement plus élevées.',
@@ -409,6 +433,16 @@ export default {
     rangeStart: 'Date de début',
     rangeEnd: 'Date de fin',
     invalidRange: 'Plage de dates invalide dans l’URL, affichage d’aujourd’hui à la place.',
+    // English fallback until these interval strings are translated.
+    periodExactInterval: 'exact times',
+    intervalStart: 'Start time',
+    intervalEnd: 'End time (exclusive)',
+    invalidInterval: 'Invalid time interval in URL, showing today instead.',
+    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    intervalAmbiguousTime:
+      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
+    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
+    intervalEndAfterStart: 'The end time must be after the start time.',
     diagnosticMissingWindow:
       'Aucun bucket de fenêtres pour {host}. Démarrez aw-watcher-window, puis actualisez cette page.',
     diagnosticMissingAfk:
@@ -469,6 +503,7 @@ export default {
     periodLast7d: 'sur les 7 derniers jours',
     periodLast30d: 'sur les 30 derniers jours',
     periodCustomRange: 'sur la plage sélectionnée',
+    periodExactInterval: 'in the selected time interval', // English fallback
     periodAllTime: 'toutes périodes confondues',
   },
   visualizations: {
@@ -637,6 +672,10 @@ export default {
       quickDurations: 'Durées rapides',
       startDate: 'Date de début',
       endDate: 'Date de fin (facultatif)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(facultatif)',
       apply: 'Appliquer',
       refresh: 'Actualiser',
@@ -661,6 +700,7 @@ export default {
       expand: 'Développer la liste',
       condense: 'Réduire la liste',
       edit: 'Modifier',
+      showMore: 'Afficher {count} de plus',
     },
     calendar: {
       bucket: 'Bucket :',
@@ -816,6 +856,9 @@ export default {
       mostActiveDay: 'Jour le plus actif',
       onThisDay: 'ce jour-là',
       timePerDay: 'Temps par jour',
+      timePerWeek: 'Temps par semaine',
+      groupByDay: 'Jour',
+      groupByWeek: 'Semaine',
       topChanges: 'Principaux changements par catégorie',
       noData: 'Aucune donnée catégorisée à comparer.',
       uncategorized: 'Non catégorisé',
@@ -954,11 +997,17 @@ export default {
       none: 'aucune',
       groupByCategory: 'Grouper par catégorie',
       groupByBucketType: 'Grouper par type de bucket',
+      groupedEvents: '{count} événements · {duration}',
+      collapseGroups: 'Réduire les groupes',
+      groupBreakdown: 'Répartition des activités',
       totalTime: 'Temps total',
       bucketsNoEvents: 'Les buckets sans événement dans la plage interrogée seront masqués.',
       editSaved:
         'Votre modification est enregistrée. Actualisez la chronologie pour la voir appliquée.',
       editSavedTitle: 'Information',
+      list: 'Liste',
+      listShowing: '{shown} événements affichés sur {total}',
+      showMore: 'Afficher plus',
     },
     buckets: { id: 'ID' },
     userPoll: {

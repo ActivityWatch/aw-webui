@@ -66,6 +66,7 @@ function update(
   const center_elem = Math.floor(usage_arr.length / 2);
 
   const now = moment();
+  let todayLabelX: number | null = null;
   _.each(usage_arr, ({ period, events }, i: number) => {
     const usage_time = get_usage_time(events);
     const height = 85 * (usage_time / longest_usage);
@@ -92,12 +93,8 @@ function update(
         .attr('style', 'stroke: #888; stroke-width: 2px;')
         .attr('stroke-dasharray', '4, 2');
 
-      svg
-        .append('text')
-        .attr('x', x + width / 2 + '%')
-        .attr('text-anchor', 'middle')
-        .attr('y', '30')
-        .text(labels.today);
+      // Preserve the original placement to the right of today's bar.
+      todayLabelX = x + 1.5 * width;
     }
 
     const rect = svg
@@ -132,6 +129,18 @@ function update(
       .append('title')
       .text(label + '\n' + seconds_to_duration(usage_time) + '\n(device active time)');
   });
+
+  // Drawn after every bar so no bar is painted over it.
+  if (todayLabelX !== null) {
+    svg
+      .append('text')
+      .attr('x', todayLabelX + '%')
+      .attr('text-anchor', 'start')
+      // It may overlap a neighbouring bar; let clicks and hovers reach the bar.
+      .attr('pointer-events', 'none')
+      .attr('y', '30')
+      .text(labels.today);
+  }
 }
 
 export default {

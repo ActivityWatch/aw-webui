@@ -10,6 +10,10 @@ div
         .aw-loading {{ $t('common.loading') }}
   small
     | {{ $t('settings.language.help') }}
+  p.small.mt-2.mb-0(v-if="locale !== 'en'" data-testid="translation-quality-note")
+    | {{ $t('settings.language.machineTranslatedNote') }}
+    = ' '
+    a(href="https://github.com/ActivityWatch/aw-webui/issues" target="_blank" rel="noopener noreferrer") {{ $t('settings.language.contributeTranslation') }}
 </template>
 
 <script lang="ts">

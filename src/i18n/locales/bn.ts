@@ -72,6 +72,20 @@ export default {
     requiresAfk: 'aw-watcher-afk প্রয়োজন',
     unknown: 'অজানা',
   },
+  categoryNames: {
+    work: 'কাজ',
+    programming: 'প্রোগ্রামিং',
+    image: 'ছবি',
+    video: 'ভিডিও',
+    audio: 'অডিও',
+    media: 'মিডিয়া',
+    games: 'গেম',
+    socialMedia: 'সোশ্যাল মিডিয়া',
+    music: 'সংগীত',
+    comms: 'যোগাযোগ',
+    im: 'মেসেজিং',
+    email: 'ইমেইল',
+  },
   notFound: {
     title: 'ওহ, এই পাতাটি পাওয়া যায়নি!',
     hint: 'যেখান থেকে এসেছিলেন সেখানে ফিরে যাওয়ার চেষ্টা করুন।',
@@ -96,6 +110,9 @@ export default {
     timelineDuration: {
       title: 'ডিফল্ট সময়কাল',
       help: "টাইমলাইন ভিউতে 'সর্বশেষ দেখান' এর জন্য ব্যবহৃত ডিফল্ট সময়কাল।",
+      groupGranularity: 'ছোট ইভেন্ট গোষ্ঠীবদ্ধ করুন (সেকেন্ড)',
+      groupGranularityHelp:
+        'পরপর ছোট ইভেন্টগুলোকে এই সময়কালের গোষ্ঠীতে একত্র করে। গোষ্ঠীবদ্ধকরণ বন্ধ করতে 0 দিন। টাইমলাইনের সময়কাল ফিল্টার স্বাধীনভাবে কাজ করে এবং গোষ্ঠীবদ্ধ করার আগে ইভেন্ট সরিয়ে দেয়।',
     },
     landingPage: {
       title: 'ল্যান্ডিং পেজ',
@@ -190,6 +207,10 @@ export default {
       deleteSetConfirm: 'বিভাগ সেট "{id}" মুছবেন? এটি পূর্বাবস্থায় ফেরানো যাবে না।',
       switchUnsavedConfirm:
         'আপনার অসংরক্ষিত পরিবর্তন আছে। তবুও সেট পরিবর্তন করবেন? (পরিবর্তনগুলি বাতিল হবে)',
+    },
+    supporter: {
+      title: 'আমি ইতিমধ্যে ActivityWatch সমর্থন করি',
+      help: 'ActivityWatch সমর্থন করার অনুরোধ জানানো অ্যাপের বার্তাগুলো লুকায়। বিশ্বাসভিত্তিক: কেবল আপনার স্থানীয় সার্ভারে সংরক্ষিত, কখনো যাচাই করা হয় না, কিছুই পাঠানো হয় না।',
     },
     developer: {
       title: 'ডেভেলপার সেটিংস',
@@ -373,6 +394,9 @@ export default {
     allDevicesCount: 'সব ডিভাইস ({count})',
     onlyThisDevice: 'শুধু এটি',
     multideviceNote: 'ব্রাউজার ও স্টপওয়াচ ডেটা শুধুমাত্র একটি ডিভাইস দেখার সময় পাওয়া যায়।',
+    deviceBreakdownTooltip:
+      'প্রতিটি ডিভাইসের সক্রিয় সময়। ডিভাইসগুলোর সময় ওভারল্যাপ করলে, তালিকার প্রথম ডিভাইসের জন্য সময় একবারই গণনা করা হয়।',
+    overlap: 'ওভারল্যাপ',
     timeActive: 'সক্রিয় সময়:',
     timeActiveTooltip:
       'নিচের ফিল্টার প্রয়োগের পর কোয়েরি করা সময়সীমায় সক্রিয় উইন্ডোর সময়। সময়কাল চার্টের বারগুলি ডিভাইসের কাঁচা সক্রিয় সময় দেখায়, তাই সেগুলি কিছুটা বেশি হতে পারে।',
@@ -397,6 +421,16 @@ export default {
     rangeStart: 'শুরুর তারিখ',
     rangeEnd: 'শেষের তারিখ',
     invalidRange: 'URL এ তারিখের সময়সীমা অবৈধ, তাই আজকের তারিখ দেখানো হচ্ছে।',
+    // English fallback until these interval strings are translated.
+    periodExactInterval: 'exact times',
+    intervalStart: 'Start time',
+    intervalEnd: 'End time (exclusive)',
+    invalidInterval: 'Invalid time interval in URL, showing today instead.',
+    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    intervalAmbiguousTime:
+      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
+    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
+    intervalEndAfterStart: 'The end time must be after the start time.',
     diagnosticMissingWindow:
       '{host} এর জন্য কোনো উইন্ডো বাকেট নেই। aw-watcher-window চালু করুন, তারপর এই পাতা রিফ্রেশ করুন।',
     diagnosticMissingAfk:
@@ -456,6 +490,7 @@ export default {
     periodLast7d: 'গত 7 দিনের',
     periodLast30d: 'গত 30 দিনের',
     periodCustomRange: 'নির্বাচিত সময়সীমার',
+    periodExactInterval: 'in the selected time interval', // English fallback
     periodAllTime: 'সর্বকালের',
   },
   visualizations: {
@@ -621,6 +656,10 @@ export default {
       quickDurations: 'দ্রুত সময়কাল',
       startDate: 'শুরুর তারিখ',
       endDate: 'শেষের তারিখ (ঐচ্ছিক)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(ঐচ্ছিক)',
       apply: 'প্রয়োগ করুন',
       refresh: 'রিফ্রেশ',
@@ -645,6 +684,7 @@ export default {
       expand: 'তালিকা প্রসারিত করুন',
       condense: 'তালিকা সংকুচিত করুন',
       edit: 'সম্পাদনা',
+      showMore: 'আরও {count}টি দেখান',
     },
     calendar: {
       bucket: 'বাকেট:',
@@ -796,6 +836,9 @@ export default {
       mostActiveDay: 'সবচেয়ে সক্রিয় দিন',
       onThisDay: 'এই দিনে',
       timePerDay: 'প্রতিদিনের সময়',
+      timePerWeek: 'প্রতি সপ্তাহের সময়',
+      groupByDay: 'দিন',
+      groupByWeek: 'সপ্তাহ',
       topChanges: 'বিভাগ অনুযায়ী শীর্ষ পরিবর্তন',
       noData: 'তুলনা করার মতো বিভাগীকৃত ডেটা নেই।',
       uncategorized: 'বিভাগহীন',
@@ -931,10 +974,16 @@ export default {
       none: 'কিছুই নয়',
       groupByCategory: 'বিভাগ অনুযায়ী গ্রুপ করুন',
       groupByBucketType: 'বাকেটের ধরন অনুযায়ী গ্রুপ করুন',
+      groupedEvents: '{count}টি ইভেন্ট · {duration}',
+      collapseGroups: 'গোষ্ঠী সংকুচিত করুন',
+      groupBreakdown: 'কার্যকলাপের বিবরণ',
       totalTime: 'মোট সময়',
       bucketsNoEvents: 'কোয়েরি করা সময়সীমায় ইভেন্ট নেই এমন বাকেট লুকানো থাকবে।',
       editSaved: 'আপনার সম্পাদনা সংরক্ষিত হয়েছে। প্রতিফলন দেখতে টাইমলাইন রিফ্রেশ করুন।',
       editSavedTitle: 'জেনে রাখুন',
+      list: 'তালিকা',
+      listShowing: '{total}টির মধ্যে {shown}টি ইভেন্ট দেখানো হচ্ছে',
+      showMore: 'আরও দেখান',
     },
     buckets: { id: 'ID' },
     userPoll: {

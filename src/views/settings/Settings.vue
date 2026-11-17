@@ -35,10 +35,12 @@ import CategorizationSettings from '~/views/settings/CategorizationSettings.vue'
 import LandingPageSettings from '~/views/settings/LandingPageSettings.vue';
 import DeveloperSettings from '~/views/settings/DeveloperSettings.vue';
 import Theme from '~/views/settings/Theme.vue';
+import LayoutSettings from '~/views/settings/LayoutSettings.vue';
 import ColorSettings from '~/views/settings/ColorSettings.vue';
 import ActivePatternSettings from '~/views/settings/ActivePatternSettings.vue';
 import PrivacyFilterSettings from '~/views/settings/PrivacyFilterSettings.vue';
 import AwNotifySettings from '~/views/settings/AwNotifySettings.vue';
+import SupporterSettings from '~/views/settings/SupporterSettings.vue';
 
 interface Group {
   id: string;
@@ -58,11 +60,13 @@ export default {
     CategorizationSettings,
     LandingPageSettings,
     Theme,
+    LayoutSettings,
     ColorSettings,
     DeveloperSettings,
     ActivePatternSettings,
     PrivacyFilterSettings,
     AwNotifySettings,
+    SupporterSettings,
   },
   async beforeRouteLeave(to, from, next) {
     const categoryStore = useCategoryStore();
@@ -104,6 +108,7 @@ export default {
           { name: 'TimelineDurationSettings' },
           { name: 'LandingPageSettings' },
           { name: 'UncategorizedHintSettings' },
+          { name: 'SupporterSettings' },
           ...(this.$isAndroid ? [] : [{ name: 'ReleaseNotificationSettings' }]),
         ],
       };
@@ -111,7 +116,7 @@ export default {
         id: 'appearance',
         label: this.$t('settings.groups.appearance'),
         help: this.$t('settings.groups.appearanceHelp'),
-        components: [{ name: 'Theme' }, { name: 'ColorSettings' }],
+        components: [{ name: 'Theme' }, { name: 'LayoutSettings' }, { name: 'ColorSettings' }],
       };
       const categorization: Group = {
         id: 'categorization',

@@ -84,8 +84,13 @@ import { getClient } from '~/util/awclient';
 import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
 import { useBucketsStore } from '~/stores/buckets';
-import { get_day_start_with_offset, get_day_end_with_offset } from '~/util/time';
+import {
+  get_day_start_with_offset,
+  get_day_end_with_offset,
+  get_today_with_offset,
+} from '~/util/time';
 import { periodStartDate } from '~/util/timeperiod';
+import { neutralizeCsvFormula } from '~/util/export';
 import {
   getWorkReportHostBuckets,
   getWorkReportHostOptions,
@@ -183,10 +188,10 @@ export default {
     getTimeperiod(): string {
       const offset = this.settingsStore.startOfDay;
       let startDate: moment.Moment;
-      const today = moment();
+      const today = moment(get_today_with_offset(offset));
 
       if (this.dateRange === 'thisMonth') {
-        startDate = moment().startOf('month');
+        startDate = today.clone().startOf('month');
       } else if (this.dateRange === 'last30d') {
         startDate = today.clone().subtract(29, 'days');
       } else if (this.dateRange === 'thisWeek') {
@@ -312,7 +317,7 @@ export default {
         const rate = this.getEffectiveRate(row);
         const amount = this.getAmount(row);
         return [
-          '"' + row.category.replace(/"/g, '""') + '"',
+          '"' + neutralizeCsvFormula(row.category).replace(/"/g, '""') + '"',
           (row.duration / 3600).toFixed(2),
           rate > 0 ? rate.toFixed(2) : '',
           amount > 0 ? amount.toFixed(2) : '',

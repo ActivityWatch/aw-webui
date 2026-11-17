@@ -5,6 +5,8 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  # Dispatched by dependabot-automerge.yml after it merges (see there).
+  workflow_dispatch:
 
 # One run per workflow and ref. On PRs a new push cancels the superseded run.
 # On master the running build finishes, and queued intermediates collapse to

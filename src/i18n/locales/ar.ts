@@ -72,6 +72,20 @@ export default {
     requiresAfk: 'يتطلب aw-watcher-afk',
     unknown: 'غير معروف',
   },
+  categoryNames: {
+    work: 'العمل',
+    programming: 'البرمجة',
+    image: 'الصور',
+    video: 'الفيديو',
+    audio: 'الصوت',
+    media: 'الوسائط',
+    games: 'الألعاب',
+    socialMedia: 'وسائل التواصل الاجتماعي',
+    music: 'الموسيقى',
+    comms: 'التواصل',
+    im: 'المراسلة الفورية',
+    email: 'البريد الإلكتروني',
+  },
   notFound: {
     title: 'عذرًا، لم يتم العثور على هذه الصفحة!',
     hint: 'حاول الرجوع إلى الصفحة التي جئت منها.',
@@ -95,6 +109,9 @@ export default {
     timelineDuration: {
       title: 'القيمة الافتراضية للمدة',
       help: 'المدة الافتراضية المستخدمة لخيار "عرض آخر" في عرض الجدول الزمني.',
+      groupGranularity: 'تجميع الأحداث القصيرة (بالثواني)',
+      groupGranularityHelp:
+        'يجمع الأحداث القصيرة المتتالية في مجموعات بهذه المدة. اضبط القيمة على 0 لإيقاف التجميع. يظل مرشّح المدة في الخط الزمني مستقلاً ويزيل الأحداث قبل التجميع.',
     },
     landingPage: {
       title: 'صفحة البداية',
@@ -192,6 +209,10 @@ export default {
       deleteSetConfirm: 'هل تريد حذف مجموعة الفئات "{id}"؟ لا يمكن التراجع عن هذا الإجراء.',
       switchUnsavedConfirm:
         'لديك تغييرات غير محفوظة. هل تريد تبديل المجموعات على أي حال؟ (ستُتجاهل التغييرات)',
+    },
+    supporter: {
+      title: 'أنا أدعم ActivityWatch بالفعل',
+      help: 'يخفي التنبيهات داخل التطبيق التي تطلب دعم ActivityWatch. على أساس الثقة: يُحفظ على خادمك المحلي فقط، ولا يُتحقق منه ولا يُرسل أي شيء.',
     },
     developer: {
       title: 'إعدادات المطوّر',
@@ -369,6 +390,9 @@ export default {
     allDevicesCount: 'جميع الأجهزة ({count})',
     onlyThisDevice: 'فقط',
     multideviceNote: 'بيانات المتصفح وساعة الإيقاف متاحة فقط عند عرض جهاز واحد.',
+    deviceBreakdownTooltip:
+      'الوقت النشط لكل جهاز. عند تداخل الأجهزة، يُحتسب الوقت مرة واحدة للجهاز المدرج أولاً.',
+    overlap: 'تداخل',
     timeActive: 'مدة النشاط:',
     timeActiveTooltip:
       'مدة نشاط النوافذ في النطاق المُستعلَم عنه، بعد تطبيق عوامل التصفية أدناه. تعرض أعمدة مخطط الفترة وقت نشاط الجهاز الخام، لذا قد تكون أعلى قليلًا.',
@@ -393,6 +417,16 @@ export default {
     rangeStart: 'تاريخ البدء',
     rangeEnd: 'تاريخ الانتهاء',
     invalidRange: 'نطاق التاريخ في الرابط غير صالح، يتم عرض اليوم بدلًا منه.',
+    // English fallback until these interval strings are translated.
+    periodExactInterval: 'exact times',
+    intervalStart: 'Start time',
+    intervalEnd: 'End time (exclusive)',
+    invalidInterval: 'Invalid time interval in URL, showing today instead.',
+    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    intervalAmbiguousTime:
+      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
+    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
+    intervalEndAfterStart: 'The end time must be after the start time.',
     diagnosticMissingWindow:
       'لا يوجد bucket للنوافذ لـ {host}. شغّل aw-watcher-window ثم حدّث هذه الصفحة.',
     diagnosticMissingAfk:
@@ -452,6 +486,7 @@ export default {
     periodLast7d: 'آخر 7 أيام',
     periodLast30d: 'آخر 30 يومًا',
     periodCustomRange: 'في النطاق المحدد',
+    periodExactInterval: 'in the selected time interval', // English fallback
     periodAllTime: 'إجمالًا',
   },
   visualizations: {
@@ -615,6 +650,10 @@ export default {
       quickDurations: 'مدد سريعة',
       startDate: 'تاريخ البدء',
       endDate: 'تاريخ الانتهاء (اختياري)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(اختياري)',
       apply: 'تطبيق',
       refresh: 'تحديث',
@@ -639,6 +678,7 @@ export default {
       expand: 'توسيع القائمة',
       condense: 'طيّ القائمة',
       edit: 'تعديل',
+      showMore: 'عرض {count} إضافية',
     },
     calendar: {
       bucket: 'Bucket:',
@@ -789,6 +829,9 @@ export default {
       mostActiveDay: 'اليوم الأكثر نشاطًا',
       onThisDay: 'في هذا اليوم',
       timePerDay: 'الوقت في اليوم',
+      timePerWeek: 'الوقت في الأسبوع',
+      groupByDay: 'يوم',
+      groupByWeek: 'أسبوع',
       topChanges: 'أبرز التغييرات حسب الفئة',
       noData: 'لا توجد بيانات مصنفة للمقارنة.',
       uncategorized: 'غير مصنف',
@@ -923,10 +966,16 @@ export default {
       none: 'بلا',
       groupByCategory: 'التجميع حسب الفئة',
       groupByBucketType: 'التجميع حسب نوع الـ bucket',
+      groupedEvents: '{count} أحداث · {duration}',
+      collapseGroups: 'طي المجموعات',
+      groupBreakdown: 'تفصيل الأنشطة',
       totalTime: 'الوقت الإجمالي',
       bucketsNoEvents: 'ستُخفى الـ buckets التي لا تحتوي على أحداث في النطاق المستعلم عنه.',
       editSaved: 'تم حفظ تعديلك. حدّث المخطط الزمني لرؤية التغيير.',
       editSavedTitle: 'تنبيه',
+      list: 'قائمة',
+      listShowing: 'عرض {shown} من {total} حدث',
+      showMore: 'عرض المزيد',
     },
     buckets: { id: 'المعرّف' },
     userPoll: {

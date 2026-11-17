@@ -72,6 +72,20 @@ export default {
     requiresAfk: 'aw-watcher-afk درکار ہے',
     unknown: 'نامعلوم',
   },
+  categoryNames: {
+    work: 'کام',
+    programming: 'پروگرامنگ',
+    image: 'تصاویر',
+    video: 'ویڈیو',
+    audio: 'آڈیو',
+    media: 'میڈیا',
+    games: 'گیمز',
+    socialMedia: 'سوشل میڈیا',
+    music: 'موسیقی',
+    comms: 'رابطہ',
+    im: 'پیغام رسانی',
+    email: 'ای میل',
+  },
   notFound: {
     title: 'افسوس، یہ صفحہ نہیں ملا!',
     hint: 'جہاں سے آئے تھے وہاں واپس جانے کی کوشش کریں۔',
@@ -96,6 +110,9 @@ export default {
     timelineDuration: {
       title: 'دورانیے کی ڈیفالٹ قدر',
       help: "ٹائم لائن ویو میں 'آخری دکھائیں' کے لیے استعمال ہونے والا ڈیفالٹ دورانیہ۔",
+      groupGranularity: 'مختصر ایونٹس کو گروپ کریں (سیکنڈ)',
+      groupGranularityHelp:
+        'مسلسل مختصر ایونٹس کو اس دورانیے کے گروپس میں یکجا کرتا ہے۔ گروپ بندی بند کرنے کے لیے 0 مقرر کریں۔ ٹائم لائن کا دورانیہ فلٹر آزاد رہتا ہے اور گروپ بندی سے پہلے ایونٹس ہٹا دیتا ہے۔',
     },
     landingPage: {
       title: 'ابتدائی صفحہ',
@@ -194,6 +211,10 @@ export default {
       deleteSetConfirm: 'زمروں کا سیٹ "{id}" حذف کریں؟ یہ عمل واپس نہیں ہو سکتا۔',
       switchUnsavedConfirm:
         'آپ کی تبدیلیاں محفوظ نہیں ہیں۔ پھر بھی سیٹ تبدیل کریں؟ (تبدیلیاں رد ہو جائیں گی)',
+    },
+    supporter: {
+      title: 'میں پہلے ہی ActivityWatch کی حمایت کرتا ہوں',
+      help: 'ایپ میں ActivityWatch کی حمایت کی درخواست والے پیغامات چھپاتا ہے۔ اعتماد کی بنیاد پر: صرف آپ کے مقامی سرور پر محفوظ ہوتا ہے، کبھی تصدیق نہیں ہوتی، کچھ نہیں بھیجا جاتا۔',
     },
     developer: {
       title: 'ڈویلپر کی ترتیبات',
@@ -377,6 +398,9 @@ export default {
     allDevicesCount: 'تمام ڈیوائسز ({count})',
     onlyThisDevice: 'صرف',
     multideviceNote: 'براؤزر اور اسٹاپ واچ کا ڈیٹا صرف ایک ڈیوائس دیکھتے وقت دستیاب ہوتا ہے۔',
+    deviceBreakdownTooltip:
+      'ہر ڈیوائس کا فعال وقت۔ جب ڈیوائسز کا وقت اوورلیپ ہو تو وقت صرف ایک بار، پہلے درج ڈیوائس کے لیے گنا جاتا ہے۔',
+    overlap: 'اوورلیپ',
     timeActive: 'فعال وقت:',
     timeActiveTooltip:
       'نیچے دیے گئے فلٹرز کے بعد، کوئری شدہ حد میں فعال ونڈو کا وقت۔ مدت کے چارٹ میں بارز ڈیوائس کا خام فعال وقت دکھاتے ہیں، اس لیے وہ قدرے زیادہ ہو سکتے ہیں۔',
@@ -401,6 +425,16 @@ export default {
     rangeStart: 'آغاز کی تاریخ',
     rangeEnd: 'اختتام کی تاریخ',
     invalidRange: 'URL میں تاریخ کی حد غلط ہے، اس کی بجائے آج دکھایا جا رہا ہے۔',
+    // English fallback until these interval strings are translated.
+    periodExactInterval: 'exact times',
+    intervalStart: 'Start time',
+    intervalEnd: 'End time (exclusive)',
+    invalidInterval: 'Invalid time interval in URL, showing today instead.',
+    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    intervalAmbiguousTime:
+      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
+    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
+    intervalEndAfterStart: 'The end time must be after the start time.',
     diagnosticMissingWindow:
       '{host} کے لیے کوئی ونڈو بکٹ نہیں ہے۔ aw-watcher-window شروع کریں، پھر اس صفحے کو ریفریش کریں۔',
     diagnosticMissingAfk:
@@ -460,6 +494,7 @@ export default {
     periodLast7d: 'پچھلے 7 دنوں',
     periodLast30d: 'پچھلے 30 دنوں',
     periodCustomRange: 'منتخب کردہ حد میں',
+    periodExactInterval: 'in the selected time interval', // English fallback
     periodAllTime: 'مجموعی طور پر',
   },
   visualizations: {
@@ -626,6 +661,10 @@ export default {
       quickDurations: 'فوری دورانیے',
       startDate: 'آغاز کی تاریخ',
       endDate: 'اختتام کی تاریخ (اختیاری)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(اختیاری)',
       apply: 'لاگو کریں',
       refresh: 'ریفریش',
@@ -650,6 +689,7 @@ export default {
       expand: 'فہرست پھیلائیں',
       condense: 'فہرست سمیٹیں',
       edit: 'ترمیم',
+      showMore: 'مزید {count} دکھائیں',
     },
     calendar: {
       bucket: 'بکٹ:',
@@ -801,6 +841,9 @@ export default {
       mostActiveDay: 'سب سے زیادہ فعال دن',
       onThisDay: 'اس دن',
       timePerDay: 'فی دن وقت',
+      timePerWeek: 'فی ہفتہ وقت',
+      groupByDay: 'دن',
+      groupByWeek: 'ہفتہ',
       topChanges: 'زمروں کے لحاظ سے سب سے بڑی تبدیلیاں',
       noData: 'موازنے کے لیے زمروں میں تقسیم شدہ کوئی ڈیٹا نہیں۔',
       uncategorized: 'بلا زمرہ',
@@ -936,10 +979,16 @@ export default {
       none: 'کوئی نہیں',
       groupByCategory: 'زمرے کے مطابق گروپ کریں',
       groupByBucketType: 'بکٹ کی قسم کے مطابق گروپ کریں',
+      groupedEvents: '{count} ایونٹس · {duration}',
+      collapseGroups: 'گروپس سمیٹیں',
+      groupBreakdown: 'سرگرمی کی تفصیل',
       totalTime: 'کل وقت',
       bucketsNoEvents: 'جن بکٹس میں کوئی ایونٹ نہ ہو وہ کوئری شدہ حد میں چھپا دیے جائیں گے۔',
       editSaved: 'آپ کی ترمیم محفوظ ہو گئی ہے۔ اسے دیکھنے کے لیے ٹائم لائن ریفریش کریں۔',
       editSavedTitle: 'اطلاع',
+      list: 'فہرست',
+      listShowing: '{total} میں سے {shown} واقعات دکھائے جا رہے ہیں',
+      showMore: 'مزید دکھائیں',
     },
     buckets: { id: 'ID' },
     userPoll: {

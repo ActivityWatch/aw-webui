@@ -173,6 +173,20 @@ describe('multidevice path for custom ranges and All time', () => {
     expect(s.query_category_time_by_period).toHaveBeenCalled();
   });
 
+  test('an exact interval keeps the category chart and its exact timeperiod', async () => {
+    const s = spies();
+    const timeperiod = { start: '2026-10-20T13:00:00Z', length: [3600000, 'milliseconds'] };
+    await activityStore.ensure_loaded_multidevice(
+      { host: '@all', skip_active_history: true, timeperiod } as any,
+      ['self', 'phone']
+    );
+    expect(s.query_active_history_multidevice).not.toHaveBeenCalled();
+    expect(s.query_category_time_by_period).toHaveBeenCalledWith(
+      expect.objectContaining({ timeperiod })
+    );
+    expect(s.query_multidevice_full).toHaveBeenCalled();
+  });
+
   test('long ranges take the barchart from the query chunks instead', async () => {
     const s = spies();
     await activityStore.ensure_loaded_multidevice(
@@ -184,5 +198,41 @@ describe('multidevice path for custom ranges and All time', () => {
     );
     expect(s.query_active_history_multidevice).toHaveBeenCalled();
     expect(s.query_category_time_by_period).not.toHaveBeenCalled();
+  });
+});
+
+describe('per-device duration loading lifecycle', () => {
+  beforeEach(() => setActivePinia(createPinia()));
+
+  test('clears the previous breakdown immediately when a new selection starts loading', () => {
+    const store = useActivityStore();
+    store.query_window_completed({
+      app_events: [],
+      title_events: [],
+      duration: 15,
+      host_durations: [
+        { host: 'desktop', duration: 10, overlap: 0 },
+        { host: 'phone', duration: 5, overlap: 3 },
+      ],
+    });
+    expect(store.window.host_durations).toHaveLength(2);
+
+    store.start_loading({ host: 'desktop,tablet' } as any);
+
+    expect(store.active.duration).toBeNull();
+    expect(store.window.host_durations).toEqual([]);
+
+    // Only a completed query may populate the replacement devices/durations.
+    store.query_window_completed({
+      app_events: [],
+      title_events: [],
+      duration: 7,
+      host_durations: [
+        { host: 'desktop', duration: 4, overlap: 0 },
+        { host: 'tablet', duration: 3, overlap: 0 },
+      ],
+    });
+    expect(store.window.host_durations.map(row => row.host)).toEqual(['desktop', 'tablet']);
+    expect(store.active.duration).toBe(7);
   });
 });

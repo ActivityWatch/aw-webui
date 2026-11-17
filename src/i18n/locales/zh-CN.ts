@@ -72,6 +72,20 @@ export default {
     requiresAfk: '需要 aw-watcher-afk',
     unknown: '未知',
   },
+  categoryNames: {
+    work: '工作',
+    programming: '编程',
+    image: '图像',
+    video: '视频',
+    audio: '音频',
+    media: '媒体',
+    games: '游戏',
+    socialMedia: '社交媒体',
+    music: '音乐',
+    comms: '通讯',
+    im: '即时通讯',
+    email: '电子邮件',
+  },
   notFound: {
     title: '页面未找到！',
     hint: '请尝试返回之前所在的页面。',
@@ -112,6 +126,9 @@ export default {
     timelineDuration: {
       title: '默认时长',
       help: '时间线视图中“显示最近”默认使用的时长。',
+      groupGranularity: '合并短事件（秒）',
+      groupGranularityHelp:
+        '将连续的短事件合并为此时长的组。设为 0 可关闭分组。时间线的时长过滤器独立生效，并在分组前移除事件。',
     },
     releaseNotification: {
       title: '新版本通知',
@@ -175,6 +192,10 @@ export default {
       duplicateSet: '名为“{name}”的分类集已存在。',
       deleteSetConfirm: '确定要删除分类集“{id}”吗？此操作不可撤销。',
       switchUnsavedConfirm: '有未保存的更改。仍要切换分类集吗？（更改将被丢弃）',
+    },
+    supporter: {
+      title: '我已在支持 ActivityWatch',
+      help: '隐藏应用中请求支持 ActivityWatch 的提示。基于信任：仅保存在本地服务器上，不会验证，也不会发送任何内容。',
     },
     developer: {
       title: '开发者设置',
@@ -358,6 +379,9 @@ export default {
     allDevicesCount: '所有设备（{count}）',
     onlyThisDevice: '仅此',
     multideviceNote: '仅在查看单个设备时显示浏览器和秒表数据。',
+    deviceBreakdownTooltip:
+      '每台设备的活跃时间。设备时间重叠时，该时间只计算一次，计入列表中排在前面的设备。',
+    overlap: '重叠',
     timeActive: '活跃时间：',
     timeActiveTooltip:
       '所选时间范围内应用窗口的活跃时长（已应用下方筛选条件）。时间段图表显示的是设备原始活跃时长，因此数值可能略高。',
@@ -382,6 +406,16 @@ export default {
     rangeStart: '开始日期',
     rangeEnd: '结束日期',
     invalidRange: 'URL 中的日期范围无效，改为显示今天。',
+    // English fallback until these interval strings are translated.
+    periodExactInterval: 'exact times',
+    intervalStart: 'Start time',
+    intervalEnd: 'End time (exclusive)',
+    invalidInterval: 'Invalid time interval in URL, showing today instead.',
+    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    intervalAmbiguousTime:
+      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
+    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
+    intervalEndAfterStart: 'The end time must be after the start time.',
     diagnosticMissingWindow: '{host} 没有窗口存储桶。请启动 aw-watcher-window，然后刷新此页面。',
     diagnosticMissingAfk: '{host} 没有 AFK 存储桶。请启动 aw-watcher-afk，然后刷新此页面。',
     diagnosticAmbiguousWindow:
@@ -436,6 +470,7 @@ export default {
     periodLast7d: '最近 7 天',
     periodLast30d: '最近 30 天',
     periodCustomRange: '在所选范围内',
+    periodExactInterval: 'in the selected time interval', // English fallback
     periodAllTime: '总计',
   },
   visualizations: {
@@ -597,6 +632,10 @@ export default {
       quickDurations: '快速时长',
       startDate: '开始日期',
       endDate: '结束日期（可选）',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '（可选）',
       apply: '应用',
       refresh: '刷新',
@@ -621,6 +660,7 @@ export default {
       expand: '展开列表',
       condense: '收起列表',
       edit: '编辑',
+      showMore: '再显示 {count} 个',
     },
     calendar: {
       bucket: '存储桶：',
@@ -769,6 +809,9 @@ export default {
       mostActiveDay: '最活跃的一天',
       onThisDay: '的活跃时长',
       timePerDay: '每日活跃时长',
+      timePerWeek: '每周活跃时长',
+      groupByDay: '按日',
+      groupByWeek: '按周',
       topChanges: '分类变化排行',
       noData: '没有可供比较的分类数据。',
       uncategorized: '未分类',
@@ -901,10 +944,16 @@ export default {
       none: '无',
       groupByCategory: '按分类分组',
       groupByBucketType: '按存储桶类型分组',
+      groupedEvents: '{count} 个事件 · {duration}',
+      collapseGroups: '折叠分组',
+      groupBreakdown: '活动明细',
       totalTime: '总时长',
       bucketsNoEvents: '查询范围内没有事件的存储桶将被隐藏。',
       editSaved: '编辑已保存。刷新时间线后即可看到更新。',
       editSavedTitle: '提示',
+      list: '列表',
+      listShowing: '显示 {shown} / {total} 个事件',
+      showMore: '显示更多',
     },
     buckets: { id: 'ID' },
     userPoll: {

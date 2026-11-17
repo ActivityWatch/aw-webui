@@ -6,11 +6,11 @@ div
         b-form-select(
           v-model="selectedBucketId",
           :options="bucketOptions",
-          :disabled="bucketOptions.length === 0 || loading"
+          :disabled="disabled || bucketOptions.length === 0 || loading"
         )
     b-col(cols="12", md="6").mb-2
       b-form-group
-        template(#label)
+        template(#label="")
           span {{ $t('ui.topBucket.field') }}
           span.info-icon(
             :title="$t('ui.topBucket.fieldHelp')"
@@ -18,13 +18,13 @@ div
         b-form-select(
           v-model="selectedField",
           :options="fieldSelectOptions",
-          :disabled="!selectedBucketId || loading"
+          :disabled="disabled || !selectedBucketId || loading"
         )
         b-form-input.mt-2(
           v-if="selectedField === '__custom' || fieldOptions.length === 0",
           v-model="customField",
           :placeholder="$t('ui.topBucket.fieldPlaceholder')",
-          :disabled="loading"
+          :disabled="disabled || loading"
         )
   b-alert.mt-2(v-if="error", show, variant="danger") {{ error }}
   b-alert.mt-2(v-else-if="!selectedBucketId" show variant="info")
@@ -65,12 +65,28 @@ function formatValue(value: unknown): string {
   if (typeof value === 'object') return JSON.stringify(value);
   return String(value);
 }
+// Watcher values are JSON-like. Keep type and structure separate from presentation;
+// object property insertion order is not part of value identity, array order is.
+function valueIdentity(value: unknown): unknown {
+  if (value === null || value === undefined) return ['unknown'];
+  if (Array.isArray(value)) return ['array', value.map(valueIdentity)];
+  if (typeof value === 'object') {
+    return [
+      'object',
+      Object.keys(value)
+        .sort()
+        .map(key => [key, valueIdentity(value[key])]),
+    ];
+  }
+  return [typeof value, value];
+}
 export default {
   name: 'aw-top-bucket-data',
   props: {
     initialBucketId: { type: String, default: '' },
     initialField: { type: String, default: '' },
     initialCustomField: { type: String, default: '' },
+    disabled: { type: Boolean, default: false },
   },
   data() {
     return {
@@ -86,6 +102,7 @@ export default {
       earliestByBucket: {} as Record<string, Date | null>,
       loading: false,
       error: '',
+      loadGeneration: 0,
     };
   },
   computed: {
@@ -124,6 +141,11 @@ export default {
     },
   },
   watch: {
+    disabled(value) {
+      // Field discovery can finish during a save. Forward the resulting
+      // selection once the parent accepts draft updates again.
+      if (!value) this.emitSelection();
+    },
     selectedBucketId: function () {
       this.emitSelection();
       // Drop the cached earliest for the newly selected bucket: it may have
@@ -170,7 +192,10 @@ export default {
     // The shared range, widened for All time to the selected bucket's own
     // earliest event: the All time start only considers the host's standard
     // buckets, so e.g. an older imported bucket would otherwise be cut off.
-    async queryRange(bucketId: string): Promise<{ start: string; end: string } | null> {
+    async queryRange(
+      bucketId: string,
+      generation: number
+    ): Promise<{ start: string; end: string } | null> {
       const range = this.timeRange;
       const opts = this.activityStore.query_options;
       if (!range || !opts || !opts.all_time) return range;
@@ -188,29 +213,35 @@ export default {
         const earliest = await earliestEventInBucket(bucket, (id, params) =>
           client.getEvents(id, params)
         );
+        if (generation !== this.loadGeneration) return null;
         this.earliestByBucket = { ...this.earliestByBucket, [bucketId]: earliest };
       }
       return rangeCoveringEarliest(range, this.earliestByBucket[bucketId]);
     },
     async loadEvents() {
-      // Capture the bucket at call time: the earliest-event lookup below can
-      // await, and the selectedBucketId watcher may fire a newer loadEvents in
-      // the meantime. Reusing the captured id keeps the widened range and the
-      // fetched events in agreement, and drops this run if it was superseded.
+      // A bucket can have overlapping date/refresh requests, or be selected
+      // again after A -> B -> A. Bucket equality alone cannot identify its owner.
+      const generation = ++this.loadGeneration;
       const bucketId = this.selectedBucketId;
-      if (!bucketId || !this.timeRange) return;
-      this.loading = true;
       this.error = '';
       this.aggregated = [];
+      this.events = [];
+      this.fieldOptions = [];
+      if (!bucketId || !this.timeRange) {
+        this.loading = false;
+        return;
+      }
+      this.loading = true;
       try {
-        const range = await this.queryRange(bucketId);
-        if (!range || bucketId !== this.selectedBucketId) return;
-        this.events = await getClient().getEvents(bucketId, {
+        const range = await this.queryRange(bucketId, generation);
+        if (!range || generation !== this.loadGeneration) return;
+        const events = await getClient().getEvents(bucketId, {
           start: range.start,
           end: range.end,
           limit: -1,
         });
-        if (bucketId !== this.selectedBucketId) return;
+        if (generation !== this.loadGeneration) return;
+        this.events = events;
         this.fieldOptions = this.extractFields(this.events);
         if (!this.selectedField && this.fieldOptions.length > 0) {
           this.selectedField = this.fieldOptions[0];
@@ -219,16 +250,15 @@ export default {
         }
         this.aggregate();
       } catch (err) {
-        console.error(err);
         // A superseded run must not clobber the results of a newer one.
-        if (bucketId !== this.selectedBucketId) return;
+        if (generation !== this.loadGeneration) return;
+        console.error(err);
         this.events = [];
         this.fieldOptions = [];
         this.error = err?.message || this.$t('ui.topBucket.loadError');
       } finally {
-        // Only clear the spinner for the run that is still the selected bucket;
-        // a superseded run must not hide a newer in-flight load.
-        if (bucketId === this.selectedBucketId) this.loading = false;
+        // A superseded run must not hide a newer in-flight load.
+        if (generation === this.loadGeneration) this.loading = false;
       }
     },
     extractFields(events: any[]): string[] {
@@ -252,7 +282,7 @@ export default {
       this.events.forEach(e => {
         const value = _.get(e, path);
         const display = formatValue(value);
-        const key = Array.isArray(value) ? JSON.stringify(value) : String(display);
+        const key = JSON.stringify(valueIdentity(value));
         if (!grouped.has(key)) {
           grouped.set(key, {
             duration: 0,
@@ -262,7 +292,27 @@ export default {
         const entry = grouped.get(key);
         entry.duration += e.duration || 0;
       });
-      this.aggregated = Array.from(grouped.values()).sort((a, b) => b.duration - a.duration);
+      const rows = Array.from(grouped.values());
+      const labelCounts = new Map<string, number>();
+      rows.forEach(e =>
+        labelCounts.set(e.data.display, (labelCounts.get(e.data.display) || 0) + 1)
+      );
+      // Reserve original labels so generated annotations cannot hide a literal
+      // string with that same spelling. Ordinary string names stay unchanged.
+      const usedLabels = new Set(rows.map(e => e.data.display));
+      rows.forEach(e => {
+        if (labelCounts.get(e.data.display) < 2 || typeof e.data.raw === 'string') return;
+        const raw = e.data.raw;
+        const type = raw == null ? 'unknown' : Array.isArray(raw) ? 'array' : typeof raw;
+        const text = Array.isArray(raw) ? JSON.stringify(raw) : e.data.display;
+        const base = `${text} (${type})`;
+        let label = base;
+        let suffix = 2;
+        while (usedLabels.has(label)) label = `${base} #${suffix++}`;
+        usedLabels.add(label);
+        e.data.display = label;
+      });
+      this.aggregated = rows.sort((a, b) => b.duration - a.duration);
     },
     emitSelection() {
       this.$emit('update-props', {

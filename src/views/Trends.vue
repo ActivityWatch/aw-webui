@@ -21,6 +21,13 @@ div
       style="width: auto"
     )
 
+    b-form-group.mr-2.mb-1(:label="$t('activity.showCategory')" label-for="trends-category")
+      b-form-select#trends-category(
+        v-model="selectedCategory"
+        :options="categoryStore.category_select(true, $t.bind(this))"
+        size="sm"
+      )
+
     small.text-muted.ml-auto.mb-1
       | {{ $t('ui.trends.comparing') }} #[b {{ currentRangeLabel }}] {{ $t('ui.trends.vs') }} #[b {{ previousRangeLabel }}]
 
@@ -55,8 +62,17 @@ div
           h4.mb-0.text-muted(v-else) —
           div.small.text-muted.mt-1(v-if="busiestDay") {{ busiestDay.duration | friendlyduration }} {{ $t('ui.trends.onThisDay') }}
 
-    h5.mt-3 {{ $t('ui.trends.timePerDay') }}
-    aw-timeline-barchart(:datasets="datasets" :height="100" :timeperiod_start="currentStart.toISOString()" :timeperiod_length="[periodDays, 'days']")
+    div.d-flex.align-items-center.mt-3
+      h5.mb-0.mr-3 {{ groupBy === 'week' ? $t('ui.trends.timePerWeek') : $t('ui.trends.timePerDay') }}
+      b-button-group(size="sm")
+        b-button.px-3(
+          v-for="opt in groupByOptions"
+          :key="opt.value"
+          :pressed="groupBy === opt.value"
+          @click="groupBy = opt.value"
+          variant="outline-dark"
+        ) {{ opt.text }}
+    aw-timeline-barchart(:datasets="datasets" :height="100" :timeperiod_start="barchartStart" :timeperiod_length="barchartLength")
 
     h5.mt-4 {{ $t('ui.trends.topChanges') }}
     p.small.text-muted(v-if="categoryTrends.length === 0")
@@ -72,7 +88,7 @@ div
       :sort-desc="true"
     )
       template(#cell(category)="row")
-        | {{ row.item.category.join(' > ') || $t('common.uncategorized') }}
+        | {{ categoryPathLabel(row.item.category) || $t('common.uncategorized') }}
       template(#cell(current)="row")
         | {{ row.item.current | friendlyduration }}
       template(#cell(previous)="row")
@@ -96,12 +112,13 @@ import {
   format_date_short,
   format_date_with_weekday,
 } from '~/util/time';
-import { buildBarchartDataset } from '~/util/datasets';
+import { buildBarchartDataset, groupDaysIntoWeeks } from '~/util/datasets';
 import { canonicalEvents, querystr_to_array } from '~/queries';
 import { getClient } from '~/util/awclient';
 import { useBucketsStore } from '~/stores/buckets';
 import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
+import { categoryPathLabel } from '~/util/categoryLabels';
 
 interface CategoryTotals {
   [key: string]: number;
@@ -124,6 +141,10 @@ export default {
       settingsStore: useSettingsStore(),
 
       periodDays: 7,
+      // Bar granularity: one bar per day, or per week starting on the
+      // configured start of week. Grouping is client-side; no re-query.
+      groupBy: 'day' as 'day' | 'week',
+      selectedCategory: null as string[] | null,
 
       loading: false,
 
@@ -147,6 +168,41 @@ export default {
         { value: 30, text: this.$t('ui.trends.period30d') },
         { value: 90, text: this.$t('ui.trends.period90d') },
       ];
+    },
+
+    groupByOptions(): { value: string; text: string }[] {
+      return [
+        { value: 'day', text: this.$t('ui.trends.groupByDay') },
+        { value: 'week', text: this.$t('ui.trends.groupByWeek') },
+      ];
+    },
+
+    weekly(): { firstWeekStart: string | null; byWeek: Record<string, any> } | null {
+      if (!this.byPeriod) return null;
+      return groupDaysIntoWeeks(this.byPeriod, this.settingsStore.startOfWeek);
+    },
+
+    barchartStart(): string {
+      if (this.groupBy === 'week' && this.weekly && this.weekly.firstWeekStart) {
+        return moment(this.weekly.firstWeekStart).toISOString();
+      }
+      return this.currentStart.toISOString();
+    },
+
+    barchartLength(): [number, string] {
+      if (this.groupBy === 'week' && this.weekly) {
+        return [Object.keys(this.weekly.byWeek).length, 'weeks'];
+      }
+      return [this.periodDays, 'days'];
+    },
+
+    filterCategories(): string[][] | null {
+      if (!this.selectedCategory) return null;
+      const selected = this.selectedCategory;
+      const descendants = this.categoryStore.all_categories.filter(
+        path => path.length > selected.length && selected.every((part, i) => path[i] === part)
+      );
+      return [selected, ...descendants];
     },
 
     categoryFields(): object[] {
@@ -256,7 +312,8 @@ export default {
     datasets(): any {
       if (this.loading) return [];
       if (!this.byPeriod) return null;
-      const built = buildBarchartDataset(this.byPeriod, this.categoryStore.classes);
+      const source = this.groupBy === 'week' && this.weekly ? this.weekly.byWeek : this.byPeriod;
+      const built = buildBarchartDataset(source, this.categoryStore.classes);
       return built.length > 0 ? built : null;
     },
 
@@ -285,6 +342,9 @@ export default {
   },
 
   watch: {
+    selectedCategory() {
+      this.refresh();
+    },
     host() {
       this.refresh();
     },
@@ -297,6 +357,7 @@ export default {
   },
 
   methods: {
+    categoryPathLabel,
     setPeriod(days: number) {
       this.periodDays = days;
       this.refresh();
@@ -444,7 +505,7 @@ export default {
           ...this.bucketsStore.desktopBucketIds(host),
           filter_afk: true,
           categories: cats,
-          filter_categories: null,
+          filter_categories: this.filterCategories,
           always_active_pattern: this.settingsStore.always_active_pattern || undefined,
         }) +
         `
