@@ -50,7 +50,8 @@ export default {
       return this.categoryEvents.length > 0;
     },
     activeSource: function () {
-      if (this.source === 'bucket') return 'bucket';
+      // An explicit choice sticks either way; only the default follows the stream.
+      if (this.source) return this.source;
       return this.hasCategories ? 'category' : 'bucket';
     },
     calendarOptions: function () {

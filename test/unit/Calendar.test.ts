@@ -149,6 +149,13 @@ describe('categorized calendar (#200)', () => {
       sourceSelect.element.value = 'bucket';
       await sourceSelect.trigger('change');
       expect(wrapper.vm.events.map(e => e.title)).toEqual(['Raw']);
+      // An explicit category choice sticks too: an emptied stream renders an
+      // empty calendar instead of flipping to the last-selected raw bucket.
+      sourceSelect.element.value = 'category';
+      await sourceSelect.trigger('change');
+      await wrapper.setProps({ categorizedEvents: [] });
+      expect(wrapper.vm.activeSource).toBe('category');
+      expect(wrapper.vm.events).toEqual([]);
     } finally {
       wrapper.destroy();
     }
