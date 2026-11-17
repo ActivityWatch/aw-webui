@@ -5,6 +5,7 @@ import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import Calendar from '~/visualizations/Calendar.vue';
 import { useCategoryStore } from '~/stores/categories';
+import { i18n } from '~/i18n';
 
 beforeEach(() => setActivePinia(createPinia()));
 
@@ -148,6 +149,39 @@ describe('categorized calendar (#200)', () => {
       sourceSelect.element.value = 'bucket';
       await sourceSelect.trigger('change');
       expect(wrapper.vm.events.map(e => e.title)).toEqual(['Raw']);
+    } finally {
+      wrapper.destroy();
+    }
+  });
+
+  test('titles use translated labels for default category names', () => {
+    i18n.locale = 'sv';
+    const wrapper: any = mount(Calendar, {
+      propsData: { buckets: [windowBucket], categorizedEvents: categorized },
+      stubs,
+    });
+    try {
+      expect(wrapper.vm.events[0].title).toBe('Arbete > Programmering');
+    } finally {
+      wrapper.destroy();
+      i18n.locale = 'en';
+    }
+  });
+
+  test('falls back to raw buckets when no categorized interval is renderable', () => {
+    const wrapper: any = mount(Calendar, {
+      propsData: {
+        buckets: [windowBucket],
+        categorizedEvents: [
+          { timestamp: '2026-09-10T09:30:00', duration: 0, data: { $category: ['Work'] } },
+          { timestamp: '2026-09-10T09:30:00', duration: 60, data: {} },
+        ],
+      },
+      stubs,
+    });
+    try {
+      expect(wrapper.vm.hasCategories).toBe(false);
+      expect(wrapper.vm.activeSource).toBe('bucket');
     } finally {
       wrapper.destroy();
     }

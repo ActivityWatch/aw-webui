@@ -26,6 +26,7 @@ import FullCalendar from '@fullcalendar/vue';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { calendarTimeBounds } from '~/util/calendar';
 import { useCategoryStore } from '~/stores/categories';
+import { categoryPathLabel } from '~/util/categoryLabels';
 
 // Category mode renders the Timeline's canonical categorized stream
 // (categoryTimelineQuery + mergeCategoryIntervals), so there is no second query.
@@ -44,7 +45,9 @@ export default {
   },
   computed: {
     hasCategories: function () {
-      return Array.isArray(this.categorizedEvents) && this.categorizedEvents.length > 0;
+      // Key off renderable blocks, so a stream of only zero-duration or
+      // uncategorized intervals still falls back to the raw bucket.
+      return this.categoryEvents.length > 0;
     },
     activeSource: function () {
       if (this.source === 'bucket') return 'bucket';
@@ -92,12 +95,13 @@ export default {
     },
     categoryEvents: function () {
       const categoryStore = useCategoryStore();
-      return this.categorizedEvents
+      const intervals = Array.isArray(this.categorizedEvents) ? this.categorizedEvents : [];
+      return intervals
         .filter(e => e && e.timestamp && Number(e.duration) > 0 && e.data?.$category)
         .map(e => {
           const name = e.data.$category;
           return {
-            title: name.join(' > '),
+            title: categoryPathLabel(name),
             start: moment(e.timestamp).format(),
             end: moment(e.timestamp).add(e.duration, 'seconds').format(),
             backgroundColor: categoryStore.get_category_color(name),
