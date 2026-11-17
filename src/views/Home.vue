@@ -97,13 +97,17 @@ import moment from 'moment';
 import { mapState } from 'pinia';
 import { useServerStore } from '~/stores/server';
 import { useBucketsStore } from '~/stores/buckets';
+import { useSettingsStore } from '~/stores/settings';
 import { IBucket } from '~/util/interfaces';
 
 // "Support ActivityWatch" nudge — engagement-gated, dismissable, never modal.
 // Shown only to clearly-engaged users so casual/new users are never nagged.
 // All computation stays local; the app phones home nothing.
 const SUPPORTER_NUDGE_DISMISS_KEY = 'aw-supporter-nudge-dismissed-until';
-const SUPPORTER_FLAG_KEY = 'aw-supporter'; // honor-system "I already support" flag
+// Legacy honor-system "I already support" flag. The real flag now lives in the
+// server settings store (`supporter`), so every browser and the desktop clients
+// agree; this key is still honoured for users who set it before that existed.
+const SUPPORTER_FLAG_KEY = 'aw-supporter';
 const SNOOZE_DAYS = 90;
 
 // Signal 1 — install tenure.
@@ -153,6 +157,9 @@ export default {
   },
   computed: {
     ...mapState(useServerStore, ['info']),
+    settingsStore() {
+      return useSettingsStore();
+    },
     homeIntro1() {
       const android = this.$isAndroid ? this.$t('home.introAndroid') : '';
       return this.$t('home.intro1', { android });
@@ -171,6 +178,12 @@ export default {
       return `https://activitywatch.net/go/?src=${src}`;
     },
   },
+  watch: {
+    // A Settings save may complete after navigation has already shown the nudge.
+    'settingsStore.supporter'(supporter: boolean) {
+      if (supporter) this.supporterNudgeVisible = false;
+    },
+  },
   mounted() {
     // Best-effort: must never block or break the Home render.
     this.evaluateSupporterNudge();
@@ -185,7 +198,20 @@ export default {
   methods: {
     async evaluateSupporterNudge(): Promise<void> {
       try {
-        if (this.isSupporterNudgeSnoozed() || this.isSupporter()) return;
+        // The supporter flag is a server setting, so refresh it before deciding:
+        // `ensureLoaded()` keeps a stale `false` in a tab that was opened before
+        // another tab (or the Settings switch) set it, and the storage-event
+        // listener below only covers the legacy localStorage flag.
+        // Best-effort: a failed load falls back to the legacy flag in isSupporter().
+        await useSettingsStore()
+          .load()
+          .catch(() => undefined);
+
+        // Someone may have enabled the flag while this prompt was on screen.
+        if (this.isSupporterNudgeSnoozed() || this.isSupporter()) {
+          this.supporterNudgeVisible = false;
+          return;
+        }
 
         const bucketsStore = useBucketsStore();
         await bucketsStore.ensureLoaded();
@@ -228,6 +254,11 @@ export default {
     },
 
     isSupporter(): boolean {
+      try {
+        if (useSettingsStore().supporter) return true;
+      } catch {
+        // No active store (e.g. an isolated unit test) — use the legacy flag.
+      }
       try {
         return localStorage.getItem(SUPPORTER_FLAG_KEY) === 'true';
       } catch {

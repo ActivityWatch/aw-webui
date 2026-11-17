@@ -12,6 +12,54 @@ describe('settings store', () => {
     jest.restoreAllMocks();
   });
 
+  test('load({save:true}) persists even when superseded by a concurrent load', async () => {
+    // Repro: start load({save:true}), complete a second load() before the
+    // first response arrives. The stale-response guard must still honour the
+    // save intent instead of silently discarding it.
+    (global as any).localStorage = {
+      getItem: () => null,
+      setItem: jest.fn(),
+      length: 0,
+      key: () => null,
+    };
+    Object.defineProperty(global.localStorage, Symbol.iterator, {
+      value: [][Symbol.iterator].bind([]),
+      configurable: true,
+    });
+
+    let resolveFirst!: (v: Record<string, unknown>) => void;
+    const fakeClient = {
+      get_settings: jest
+        .fn()
+        // First call blocks
+        .mockImplementationOnce(
+          () =>
+            new Promise(resolve => {
+              resolveFirst = resolve;
+            })
+        )
+        // Second call resolves immediately
+        .mockResolvedValueOnce({}),
+      req: { defaults: {} },
+    };
+    jest.spyOn(require('~/util/awclient'), 'getClient').mockReturnValue(fakeClient);
+
+    const save = jest.spyOn(settingsStore, 'save').mockResolvedValue();
+
+    const firstLoad = settingsStore.load({ save: true });
+    // Allow the second load to complete ahead of the first
+    await settingsStore.load();
+
+    expect(save).not.toHaveBeenCalled(); // second load had no save intent
+
+    resolveFirst({});
+    await firstLoad;
+
+    expect(save).toHaveBeenCalledTimes(1);
+
+    delete (global as any).localStorage;
+  });
+
   test('ensureLoaded coalesces concurrent loads', async () => {
     let resolveLoad!: () => void;
     const loadMock = jest.spyOn(settingsStore, 'load').mockImplementation(
@@ -146,6 +194,58 @@ describe('settings store', () => {
       failOld(new Error('offline'));
       await expect(older).rejects.toThrow('offline');
       expect(settingsStore.hasStoredAlerts).toBe(true);
+    });
+  });
+
+  describe('supporter flag', () => {
+    beforeAll(() => {
+      try {
+        createClient();
+      } catch {
+        // Another suite in this file already instantiated the global client.
+      }
+      (global as any).localStorage = { setItem: jest.fn() };
+    });
+    afterAll(() => {
+      delete (global as any).localStorage;
+    });
+
+    function fakeServer(initial: Record<string, unknown> = { theme: 'light' }) {
+      const post = jest.fn().mockResolvedValue({});
+      jest.spyOn(getClient(), 'get_settings').mockResolvedValue(initial);
+      (getClient() as any).req = { post, defaults: {} };
+      jest.spyOn(settingsStore, 'load').mockImplementation(async () => {
+        const posted = post.mock.calls.map(([url]) => url.split('/').pop());
+        settingsStore.$patch({
+          _storedKeys: [...new Set([...settingsStore._storedKeys, ...posted])],
+        });
+      });
+      settingsStore.$patch({ _loaded: true, _storedKeys: Object.keys(initial) });
+      return post;
+    }
+
+    const postedUrls = (post: jest.Mock) => post.mock.calls.map(([url]) => url);
+
+    test('defaults to false and stays unsaved until set', async () => {
+      expect(settingsStore.supporter).toBe(false);
+      const post = fakeServer();
+      settingsStore.$patch({ theme: 'dark' });
+      await settingsStore.save();
+      expect(postedUrls(post)).not.toContain('/0/settings/supporter');
+    });
+
+    test('setting it stores it in the server settings store', async () => {
+      const post = fakeServer();
+      await settingsStore.update({ supporter: true });
+      expect(post).toHaveBeenCalledWith('/0/settings/supporter', true, expect.anything());
+      expect(settingsStore.supporter).toBe(true);
+    });
+
+    test('clearing it saves false when the server already had true', async () => {
+      const post = fakeServer({ theme: 'light', supporter: true });
+      settingsStore.$patch({ supporter: false });
+      await settingsStore.update({ supporter: false });
+      expect(post).toHaveBeenCalledWith('/0/settings/supporter', false, expect.anything());
     });
   });
 });

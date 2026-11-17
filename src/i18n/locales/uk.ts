@@ -72,6 +72,20 @@ export default {
     requiresAfk: 'потрібен aw-watcher-afk',
     unknown: 'невідомо',
   },
+  categoryNames: {
+    work: 'Робота',
+    programming: 'Програмування',
+    image: 'Зображення',
+    video: 'Відео',
+    audio: 'Аудіо',
+    media: 'Медіа',
+    games: 'Ігри',
+    socialMedia: 'Соцмережі',
+    music: 'Музика',
+    comms: 'Спілкування',
+    im: 'Месенджери',
+    email: 'Пошта',
+  },
   notFound: {
     title: 'Ой, цю сторінку не знайдено!',
     hint: 'Спробуйте повернутися туди, звідки прийшли.',
@@ -248,6 +262,10 @@ export default {
       duplicateSet: 'Набір із назвою «{name}» уже існує.',
       deleteSetConfirm: 'Видалити набір категорій «{id}»? Цю дію не можна скасувати.',
       switchUnsavedConfirm: 'Є незбережені зміни. Все одно перемкнути набір? (Зміни буде втрачено)',
+    },
+    supporter: {
+      title: 'Я вже підтримую ActivityWatch',
+      help: 'Приховує в застосунку пропозиції підтримати ActivityWatch. На довірі: зберігається лише на вашому локальному сервері, не перевіряється й нікуди не надсилається.',
     },
     developer: {
       title: 'Налаштування розробника',
@@ -639,6 +657,10 @@ export default {
       quickDurations: 'Швидкий вибір тривалості',
       startDate: 'Дата початку',
       endDate: 'Дата завершення (необов’язково)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(необов’язково)',
       apply: 'Застосувати',
       refresh: 'Оновити',
@@ -663,6 +685,7 @@ export default {
       expand: 'Розгорнути список',
       condense: 'Згорнути список',
       edit: 'Редагувати',
+      showMore: 'Показати ще {count}',
     },
     calendar: {
       bucket: 'Bucket:',
@@ -960,6 +983,9 @@ export default {
       bucketsNoEvents: 'Bucket-и без подій у запитаному діапазоні буде приховано.',
       editSaved: 'Вашу зміну збережено. Оновіть хронологію, щоб побачити її.',
       editSavedTitle: 'Зверніть увагу',
+      list: 'Список',
+      listShowing: 'Показано {shown} з {total} подій',
+      showMore: 'Показати більше',
     },
     buckets: { id: 'ID' },
     userPoll: {

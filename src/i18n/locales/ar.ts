@@ -72,6 +72,20 @@ export default {
     requiresAfk: 'يتطلب aw-watcher-afk',
     unknown: 'غير معروف',
   },
+  categoryNames: {
+    work: 'العمل',
+    programming: 'البرمجة',
+    image: 'الصور',
+    video: 'الفيديو',
+    audio: 'الصوت',
+    media: 'الوسائط',
+    games: 'الألعاب',
+    socialMedia: 'وسائل التواصل الاجتماعي',
+    music: 'الموسيقى',
+    comms: 'التواصل',
+    im: 'المراسلة الفورية',
+    email: 'البريد الإلكتروني',
+  },
   notFound: {
     title: 'عذرًا، لم يتم العثور على هذه الصفحة!',
     hint: 'حاول الرجوع إلى الصفحة التي جئت منها.',
@@ -195,6 +209,10 @@ export default {
       deleteSetConfirm: 'هل تريد حذف مجموعة الفئات "{id}"؟ لا يمكن التراجع عن هذا الإجراء.',
       switchUnsavedConfirm:
         'لديك تغييرات غير محفوظة. هل تريد تبديل المجموعات على أي حال؟ (ستُتجاهل التغييرات)',
+    },
+    supporter: {
+      title: 'أنا أدعم ActivityWatch بالفعل',
+      help: 'يخفي التنبيهات داخل التطبيق التي تطلب دعم ActivityWatch. على أساس الثقة: يُحفظ على خادمك المحلي فقط، ولا يُتحقق منه ولا يُرسل أي شيء.',
     },
     developer: {
       title: 'إعدادات المطوّر',
@@ -637,6 +655,10 @@ export default {
       quickDurations: 'مدد سريعة',
       startDate: 'تاريخ البدء',
       endDate: 'تاريخ الانتهاء (اختياري)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(اختياري)',
       apply: 'تطبيق',
       refresh: 'تحديث',
@@ -661,6 +683,7 @@ export default {
       expand: 'توسيع القائمة',
       condense: 'طيّ القائمة',
       edit: 'تعديل',
+      showMore: 'عرض {count} إضافية',
     },
     calendar: {
       bucket: 'Bucket:',
@@ -955,6 +978,9 @@ export default {
       bucketsNoEvents: 'ستُخفى الـ buckets التي لا تحتوي على أحداث في النطاق المستعلم عنه.',
       editSaved: 'تم حفظ تعديلك. حدّث المخطط الزمني لرؤية التغيير.',
       editSavedTitle: 'تنبيه',
+      list: 'قائمة',
+      listShowing: 'عرض {shown} من {total} حدث',
+      showMore: 'عرض المزيد',
     },
     buckets: { id: 'المعرّف' },
     userPoll: {

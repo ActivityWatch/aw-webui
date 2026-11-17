@@ -75,7 +75,7 @@ div(v-if="editable || !activityStore.buckets.loaded || has_prerequisites || !set
                  with_limit)
     div(v-if="type == 'top_categories'")
       aw-summary(:fields="activityStore.category.top",
-                 :namefunc="e => e.data['$category'].join(' > ')",
+                 :namefunc="e => categoryPathLabel(e.data['$category'])",
                  :colorfunc="e => e.data['$category']",
                  :linkfunc="e => '#' + $route.path + '?category=' + encodeURIComponent(e.data['$category'].join('>'))",
                  with_limit)
@@ -86,7 +86,7 @@ div(v-if="editable || !activityStore.buckets.loaded || has_prerequisites || !set
     div(v-if="type == 'timeline_barchart'")
       aw-timeline-barchart(:datasets="datasets", :timeperiod_start="activityStore.query_options.timeperiod.start", :timeperiod_length="activityStore.query_options.timeperiod.length", :clamp_hourly="true", style="height: 100")
     div(v-if="type == 'sunburst_clock' && isSingleDay")
-      aw-sunburst-clock(:date="date", :afkBucketId="activityStore.buckets.afk[0]", :windowBucketId="activityStore.buckets.window[0]")
+      aw-sunburst-clock(:date="activityStore.query_options.timeperiod.start", :afkBucketId="activityStore.buckets.afk[0]", :windowBucketId="activityStore.buckets.window[0]")
     div(v-if="type == 'custom_vis'")
       aw-custom-vis(:visname="props.visname" :title="props.title")
     div(v-if="type == 'vis_timeline' && isSingleDay")
@@ -103,6 +103,7 @@ div(v-if="editable || !activityStore.buckets.loaded || has_prerequisites || !set
         :initialBucketId="props ? props.bucketId : ''",
         :initialField="props ? props.field : ''",
         :initialCustomField="props ? props.customField : ''",
+        :disabled="disabled",
         @update-props="onWatcherPropsChange"
       )
 </template>
@@ -137,6 +138,7 @@ import { useViewsStore } from '~/stores/views';
 import { useSettingsStore } from '~/stores/settings';
 import { isBrowserAllowlistMiss } from '~/util/browserAllowlist';
 import { isExactTimeperiod } from '~/util/timeperiod';
+import { categoryPathLabel } from '~/util/categoryLabels';
 
 import moment from 'moment';
 
@@ -154,6 +156,7 @@ export default {
     props: Object,
     viewId: { type: String, default: '' },
     editable: { type: Boolean, default: true },
+    disabled: { type: Boolean, default: false },
   },
   data: function () {
     return {
@@ -364,8 +367,9 @@ export default {
     }
   },
   methods: {
+    categoryPathLabel,
     onWatcherPropsChange(newProps) {
-      if (!this.viewId) return;
+      if (!this.viewId || this.disabled) return;
       const mergedProps = { ...(this.props || {}), ...newProps };
       useViewsStore().editView({
         view_id: this.viewId,

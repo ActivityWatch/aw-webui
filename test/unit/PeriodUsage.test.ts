@@ -194,6 +194,32 @@ describe('renderer geometry', () => {
     expect(el.querySelector('title').textContent).toContain('1m 30s');
   });
 
+  // Restore the original right-side placement: switching to the left can put
+  // the label over previous bars. Keep it above the bars and non-interactive.
+  test.each([
+    ['left half', 0],
+    ['centre', 1],
+    ['rightmost', 2],
+  ])('Today label in the %s stays to the right of its bar', (_name, todayIndex) => {
+    // now is 2026-09-10T02:00, which belongs to the activity day starting 09-09.
+    const starts = ['2026-09-09', '2026-09-07', '2026-09-08'];
+    starts[todayIndex] = '2026-09-09';
+    starts[todayIndex === 0 ? 2 : 0] = '2026-09-06';
+    const el = render(starts.map(d => active(period(`${d}T04:00:00`), 100)));
+    const label = Array.from(el.querySelectorAll('text')).find(t => t.textContent === 'Today');
+    expect(label).toBeDefined();
+    expect(label.getAttribute('text-anchor')).toBe('start');
+    expect(el.lastElementChild).toBe(label);
+    expect(label.getAttribute('pointer-events')).toBe('none');
+
+    const bar = el.querySelectorAll('rect')[todayIndex];
+    const left = parseFloat(bar.getAttribute('x'));
+    const right = left + parseFloat(bar.getAttribute('width'));
+    const x = parseFloat(label.getAttribute('x'));
+    expect(x).toBeCloseTo(left + 1.5 * parseFloat(bar.getAttribute('width')));
+    expect(x).toBeGreaterThan(right);
+  });
+
   test('re-rendering replaces stale bars and stale Today markers', () => {
     const el = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     document.body.appendChild(el);

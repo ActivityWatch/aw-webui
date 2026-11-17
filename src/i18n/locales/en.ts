@@ -72,6 +72,20 @@ export default {
     requiresAfk: 'requires aw-watcher-afk',
     unknown: 'unknown',
   },
+  categoryNames: {
+    work: 'Work',
+    programming: 'Programming',
+    image: 'Image',
+    video: 'Video',
+    audio: 'Audio',
+    media: 'Media',
+    games: 'Games',
+    socialMedia: 'Social Media',
+    music: 'Music',
+    comms: 'Comms',
+    im: 'IM',
+    email: 'Email',
+  },
   notFound: {
     title: 'Oops, this page was not found!',
     hint: 'Try navigating back where you came from.',
@@ -113,11 +127,31 @@ export default {
       dark: 'Dark',
       help: 'Change the color theme. Category colors are picked separately — you may want to adjust them when switching to dark mode.',
     },
+    layout: {
+      title: 'Text and content layout',
+      help: 'Adjust text size and content width independently of window zoom. Some chart and SVG labels use fixed sizes and may not scale with text.',
+      textSize: 'Text size (%)',
+      textHelp: '80–150%, in whole percentages. Default: 100%.',
+      automaticWidth: 'Automatic content width (use each page’s default)',
+      contentWidth: 'Maximum content width (pixels)',
+      widthHelp:
+        '600–2400 pixels. Always fits within the window. Automatic preserves each page’s normal width.',
+      save: 'Save layout',
+      saving: 'Saving…',
+      reset: 'Reset text and width',
+      saved: 'Layout saved.',
+      changedElsewhere:
+        'Layout changed elsewhere while saving. The current saved values are shown; review them before retrying.',
+      invalid:
+        'Enter a whole-number text size from 80 to 150 and a width from 600 to 2400, or choose Automatic.',
+      saveFailed:
+        'Could not save layout. The previous layout has been restored. Some settings may have reached the server; retry saving to confirm both values.',
+    },
     groups: {
       general: 'General',
       generalHelp: 'Defaults that shape how time periods, the timeline, and landing page behave.',
       appearance: 'Appearance',
-      appearanceHelp: 'Theme and visualization colors.',
+      appearanceHelp: 'Theme, text size, content width and visualization colors.',
       categorization: 'Categorization',
       categorizationHelp:
         'Rules that classify events into categories, plus AFK/active-pattern overrides.',
@@ -194,6 +228,10 @@ export default {
       deleteSetConfirm: 'Delete category set "{id}"? This cannot be undone.',
       switchUnsavedConfirm:
         'You have unsaved changes. Switch sets anyway? (Changes will be discarded)',
+    },
+    supporter: {
+      title: 'I already support ActivityWatch',
+      help: 'Hides the in-app prompts asking you to support ActivityWatch. Honor system: stored in your local server, never verified, nothing is sent.',
     },
     developer: {
       title: 'Developer settings',
@@ -638,6 +676,10 @@ export default {
       quickDurations: 'Quick durations',
       startDate: 'Start date',
       endDate: 'End date (optional)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(optional)',
       apply: 'Apply',
       refresh: 'Refresh',
@@ -662,6 +704,7 @@ export default {
       expand: 'Expand list',
       condense: 'Condense list',
       edit: 'Edit',
+      showMore: 'Show {count} more',
     },
     calendar: {
       bucket: 'Bucket:',
@@ -959,6 +1002,9 @@ export default {
       bucketsNoEvents: 'Buckets with no events in the queried range will be hidden.',
       editSaved: 'Your edit is saved. Refresh the timeline to see it reflected.',
       editSavedTitle: 'Heads up',
+      list: 'List',
+      listShowing: 'Showing {shown} of {total} events',
+      showMore: 'Show more',
     },
     buckets: { id: 'ID' },
     userPoll: {

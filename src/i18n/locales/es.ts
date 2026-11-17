@@ -72,6 +72,20 @@ export default {
     durationMinutes: 'min',
     durationSeconds: 's',
   },
+  categoryNames: {
+    work: 'Trabajo',
+    programming: 'Programación',
+    image: 'Imagen',
+    video: 'Vídeo',
+    audio: 'Audio',
+    media: 'Multimedia',
+    games: 'Juegos',
+    socialMedia: 'Redes sociales',
+    music: 'Música',
+    comms: 'Comunicación',
+    im: 'Mensajería',
+    email: 'Correo',
+  },
   notFound: {
     title: '¡Vaya, no se ha encontrado esta página!',
     hint: 'Intente volver a la página de la que vino.',
@@ -200,6 +214,10 @@ export default {
         '¿Eliminar el conjunto de categorías «{id}»? Esta acción no se puede deshacer.',
       switchUnsavedConfirm:
         'Hay cambios sin guardar. ¿Cambiar de conjunto de todos modos? (Los cambios se descartarán)',
+    },
+    supporter: {
+      title: 'Ya apoyo a ActivityWatch',
+      help: 'Oculta los avisos de la aplicación que piden apoyar a ActivityWatch. Por confianza: se guarda solo en tu servidor local, nunca se verifica y no se envía nada.',
     },
     developer: {
       title: 'Configuración de desarrollador',
@@ -654,6 +672,10 @@ export default {
       quickDurations: 'Duraciones rápidas',
       startDate: 'Fecha de inicio',
       endDate: 'Fecha de fin (opcional)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(opcional)',
       apply: 'Aplicar',
       refresh: 'Actualizar',
@@ -678,6 +700,7 @@ export default {
       expand: 'Expandir lista',
       condense: 'Contraer lista',
       edit: 'Editar',
+      showMore: 'Mostrar {count} más',
     },
     calendar: {
       bucket: 'Bucket:',
@@ -981,6 +1004,9 @@ export default {
       bucketsNoEvents: 'Se ocultarán los buckets sin eventos en el rango consultado.',
       editSaved: 'Su edición se ha guardado. Actualice la línea de tiempo para verla reflejada.',
       editSavedTitle: 'Aviso',
+      list: 'Lista',
+      listShowing: 'Mostrando {shown} de {total} eventos',
+      showMore: 'Mostrar más',
     },
     buckets: { id: 'ID' },
     userPoll: {

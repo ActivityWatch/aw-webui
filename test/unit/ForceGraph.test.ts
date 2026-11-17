@@ -37,6 +37,40 @@ describe('ForceGraph', () => {
     delete global.ResizeObserver;
   });
 
+  test('renders explicit category labels and titles independently of opaque IDs', () => {
+    const graphData = {
+      nodes: [
+        {
+          id: '["Work>Code"]',
+          label: 'Work>Code',
+          title: 'Work>Code',
+          color: '#336699',
+          value: 60,
+        },
+        {
+          id: '["Work","Code"]',
+          label: 'Code',
+          title: 'Work > Code',
+          color: '#336699',
+          value: 120,
+        },
+      ],
+      links: [{ source: '["Work>Code"]', target: '["Work","Code"]', value: 1 }],
+    };
+    const wrapper = mount(ForceGraph, { propsData: { data: graphData }, attachTo: document.body });
+    expect([...wrapper.element.querySelectorAll('text')].map(t => t.textContent)).toEqual([
+      'Work>Code',
+      'Code',
+    ]);
+    expect([...wrapper.element.querySelectorAll('title')].map(t => t.textContent)).toEqual([
+      'Work>Code',
+      'Work > Code',
+    ]);
+    expect(wrapper.element.querySelectorAll('circle')).toHaveLength(2);
+    expect(wrapper.element.querySelectorAll('line')).toHaveLength(1);
+    wrapper.destroy();
+  });
+
   test('draws at the container width and redraws when it changes', () => {
     const wrapper = mount(ForceGraph, { propsData: { data }, attachTo: document.body });
     expect(wrapper.element.querySelector('svg').getAttribute('width')).toBe('341');

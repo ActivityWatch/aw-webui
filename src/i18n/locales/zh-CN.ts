@@ -72,6 +72,20 @@ export default {
     requiresAfk: '需要 aw-watcher-afk',
     unknown: '未知',
   },
+  categoryNames: {
+    work: '工作',
+    programming: '编程',
+    image: '图像',
+    video: '视频',
+    audio: '音频',
+    media: '媒体',
+    games: '游戏',
+    socialMedia: '社交媒体',
+    music: '音乐',
+    comms: '通讯',
+    im: '即时通讯',
+    email: '电子邮件',
+  },
   notFound: {
     title: '页面未找到！',
     hint: '请尝试返回之前所在的页面。',
@@ -178,6 +192,10 @@ export default {
       duplicateSet: '名为“{name}”的分类集已存在。',
       deleteSetConfirm: '确定要删除分类集“{id}”吗？此操作不可撤销。',
       switchUnsavedConfirm: '有未保存的更改。仍要切换分类集吗？（更改将被丢弃）',
+    },
+    supporter: {
+      title: '我已在支持 ActivityWatch',
+      help: '隐藏应用中请求支持 ActivityWatch 的提示。基于信任：仅保存在本地服务器上，不会验证，也不会发送任何内容。',
     },
     developer: {
       title: '开发者设置',
@@ -618,6 +636,10 @@ export default {
       quickDurations: '快速时长',
       startDate: '开始日期',
       endDate: '结束日期（可选）',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '（可选）',
       apply: '应用',
       refresh: '刷新',
@@ -642,6 +664,7 @@ export default {
       expand: '展开列表',
       condense: '收起列表',
       edit: '编辑',
+      showMore: '再显示 {count} 个',
     },
     calendar: {
       bucket: '存储桶：',
@@ -932,6 +955,9 @@ export default {
       bucketsNoEvents: '查询范围内没有事件的存储桶将被隐藏。',
       editSaved: '编辑已保存。刷新时间线后即可看到更新。',
       editSavedTitle: '提示',
+      list: '列表',
+      listShowing: '显示 {shown} / {total} 个事件',
+      showMore: '显示更多',
     },
     buckets: { id: 'ID' },
     userPoll: {

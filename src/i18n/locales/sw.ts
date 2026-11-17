@@ -72,6 +72,20 @@ export default {
     requiresAfk: 'inahitaji aw-watcher-afk',
     unknown: 'haijulikani',
   },
+  categoryNames: {
+    work: 'Kazi',
+    programming: 'Uprogramu',
+    image: 'Picha',
+    video: 'Video',
+    audio: 'Sauti',
+    media: 'Vyombo vya habari',
+    games: 'Michezo',
+    socialMedia: 'Mitandao ya kijamii',
+    music: 'Muziki',
+    comms: 'Mawasiliano',
+    im: 'Ujumbe wa papo hapo',
+    email: 'Barua pepe',
+  },
   notFound: {
     title: 'Samahani, ukurasa huu haukupatikana!',
     hint: 'Jaribu kurudi mahali ulipokuwa.',
@@ -198,6 +212,10 @@ export default {
       deleteSetConfirm: 'Futa seti ya kategoria "{id}"? Hii haiwezi kutenduliwa.',
       switchUnsavedConfirm:
         'Una mabadiliko ambayo hayajahifadhiwa. Ubadilishe seti hata hivyo? (Mabadiliko yatatupwa)',
+    },
+    supporter: {
+      title: 'Ninaunga ActivityWatch tayari',
+      help: 'Huficha arifa ndani ya programu zinazoomba uunge mkono ActivityWatch. Kwa msingi wa uaminifu: huhifadhiwa kwenye seva yako ya ndani pekee, haithibitishwi, na hakuna kinachotumwa.',
     },
     developer: {
       title: 'Mipangilio ya msanidi',
@@ -652,6 +670,10 @@ export default {
       quickDurations: 'Muda wa haraka',
       startDate: 'Tarehe ya kuanza',
       endDate: 'Tarehe ya kumaliza (hiari)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(hiari)',
       apply: 'Tumia',
       refresh: 'Onyesha upya',
@@ -676,6 +698,7 @@ export default {
       expand: 'Panua orodha',
       condense: 'Funga orodha',
       edit: 'Hariri',
+      showMore: 'Onyesha {count} zaidi',
     },
     calendar: {
       bucket: 'Bucket:',
@@ -976,6 +999,9 @@ export default {
       bucketsNoEvents: 'Buckets zisizo na matukio katika kipindi kilichoulizwa zitafichwa.',
       editSaved: 'Uhariri wako umehifadhiwa. Onyesha upya mstari wa wakati kuuona ukirekodiwa.',
       editSavedTitle: 'Kumbuka',
+      list: 'Orodha',
+      listShowing: 'Inaonyesha matukio {shown} kati ya {total}',
+      showMore: 'Onyesha zaidi',
     },
     buckets: { id: 'Kitambulisho' },
     userPoll: {

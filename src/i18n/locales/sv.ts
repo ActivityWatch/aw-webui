@@ -72,6 +72,20 @@ export default {
     requiresAfk: 'kräver aw-watcher-afk',
     unknown: 'okänd',
   },
+  categoryNames: {
+    work: 'Arbete',
+    programming: 'Programmering',
+    image: 'Bild',
+    video: 'Video',
+    audio: 'Ljud',
+    media: 'Media',
+    games: 'Spel',
+    socialMedia: 'Sociala medier',
+    music: 'Musik',
+    comms: 'Kommunikation',
+    im: 'Chatt',
+    email: 'E-post',
+  },
   notFound: {
     title: 'Hoppsan, sidan kunde inte hittas!',
     hint: 'Försök gå tillbaka till sidan du kom från.',
@@ -196,6 +210,10 @@ export default {
       deleteSetConfirm: 'Ta bort kategoriuppsättningen "{id}"? Detta kan inte ångras.',
       switchUnsavedConfirm:
         'Du har osparade ändringar. Vill du byta uppsättning ändå? (Ändringarna går förlorade)',
+    },
+    supporter: {
+      title: 'Jag stödjer redan ActivityWatch',
+      help: 'Döljer uppmaningarna i appen om att stödja ActivityWatch. Hederssystem: sparas bara på din lokala server, verifieras aldrig, inget skickas.',
     },
     developer: {
       title: 'Utvecklarinställningar',
@@ -653,6 +671,10 @@ export default {
       quickDurations: 'Snabbval för varaktighet',
       startDate: 'Startdatum',
       endDate: 'Slutdatum (valfritt)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(valfritt)',
       apply: 'Tillämpa',
       refresh: 'Uppdatera',
@@ -679,6 +701,7 @@ export default {
       expand: 'Expandera listan',
       condense: 'Komprimera listan',
       edit: 'Redigera',
+      showMore: 'Visa {count} till',
     },
     calendar: {
       bucket: 'Bucket:',
@@ -982,6 +1005,9 @@ export default {
       bucketsNoEvents: 'Buckets utan händelser i det efterfrågade intervallet döljs.',
       editSaved: 'Din ändring har sparats. Uppdatera tidslinjen för att se den.',
       editSavedTitle: 'Observera',
+      list: 'Lista',
+      listShowing: 'Visar {shown} av {total} händelser',
+      showMore: 'Visa mer',
     },
     buckets: {
       id: 'ID',

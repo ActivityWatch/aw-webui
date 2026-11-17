@@ -136,9 +136,11 @@ export function get_today_with_offset(offset?: string): string {
   if (!offset) {
     offset = getStartOfDayOffset();
   }
-  // Gets "today" in an offset-aware way
-  const offset_dur = get_offset_duration(offset);
-  return moment().subtract(offset_dur).startOf('day').format('YYYY-MM-DD');
+  // Compare against the local wall-clock boundary: subtracting elapsed hours
+  // can cross the wrong midnight on mornings when the UTC offset changes.
+  const now = moment();
+  const dayStart = moment(get_day_start_with_offset(now, offset));
+  return (now.isBefore(dayStart) ? now.subtract(1, 'day') : now).format('YYYY-MM-DD');
 }
 
 export function format_weekday_short(dateParam: Date, locale?: string | string[]) {

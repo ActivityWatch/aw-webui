@@ -9,9 +9,14 @@ const mockViews = [
   { id: 'second', name: 'Second', elements: [{ type: 'top_bucket_data', props: {} }] },
 ];
 
+const mockSave = jest.fn();
+const mockLoad = jest.fn();
+
 jest.mock('~/stores/views', () => ({
   useViewsStore: () => ({
     viewsForHost: () => mockViews,
+    save: (...args) => mockSave(...args),
+    load: (...args) => mockLoad(...args),
   }),
 }));
 
@@ -93,6 +98,91 @@ describe('ActivityView view switching', () => {
     await wrapper.setProps({ view_id: 'default' });
 
     expect(created).toEqual(['default:0:top_apps']);
+    wrapper.destroy();
+  });
+});
+
+describe('ActivityView Save and Cancel completion', () => {
+  const button = {
+    template: '<button v-bind="$attrs" @click="$emit(\'click\')"><slot /></button>',
+  };
+  const flush = () => new Promise(resolve => setTimeout(resolve, 0));
+  function mountEditor(): ReturnType<typeof shallowMount> & { vm: any } {
+    return shallowMount(ActivityView, {
+      propsData: { view_id: 'default' },
+      mocks: { $route: { params: {}, path: '/activity/view/default' }, $t: key => key },
+      data: () => ({ editing: true }),
+      stubs: {
+        draggable: { template: '<div><slot /></div>' },
+        'b-button': button,
+        'b-alert': { props: ['show'], template: '<div v-if="show" role="alert"><slot /></div>' },
+        'b-modal': true,
+        icon: true,
+      },
+    });
+  }
+
+  beforeEach(() => {
+    mockSave.mockReset();
+    mockLoad.mockReset();
+  });
+
+  test('Save stays editing until persistence succeeds and prevents duplicate submissions', async () => {
+    let resolve!: () => void;
+    mockSave.mockReturnValue(
+      new Promise<void>(done => {
+        resolve = done;
+      })
+    );
+    const wrapper = mountEditor();
+    await wrapper.find('button[variant="success"]').trigger('click');
+    expect(wrapper.vm.editing).toBe(true);
+    expect(wrapper.find('button[variant="success"]').attributes('disabled')).toBeDefined();
+    expect(
+      wrapper
+        .findAll('button')
+        .wrappers.find(b => b.text().includes('activityView.cancel'))
+        .attributes('disabled')
+    ).toBeDefined();
+    await wrapper.vm.save();
+    expect(mockSave).toHaveBeenCalledTimes(1);
+    resolve();
+    await flush();
+    expect(wrapper.vm.editing).toBe(false);
+    wrapper.destroy();
+  });
+
+  test('a rejected Save stays retryable, reports the error, and a retry can succeed', async () => {
+    mockSave.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce(undefined);
+    const wrapper = mountEditor();
+    await wrapper.find('button[variant="success"]').trigger('click');
+    await flush();
+    expect(wrapper.vm.editing).toBe(true);
+    expect(wrapper.find('[role="alert"]').text()).toContain('offline');
+    await wrapper.find('button[variant="success"]').trigger('click');
+    await flush();
+    expect(wrapper.vm.editing).toBe(false);
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+    wrapper.destroy();
+  });
+
+  test('Cancel only exits editing once the confirmed layout has reloaded', async () => {
+    let resolve!: () => void;
+    mockLoad.mockReturnValue(
+      new Promise<void>(done => {
+        resolve = done;
+      })
+    );
+    const wrapper = mountEditor();
+    await wrapper
+      .findAll('button')
+      .wrappers.find(b => b.text().includes('activityView.cancel'))
+      .trigger('click');
+    expect(wrapper.vm.editing).toBe(true);
+    resolve();
+    await flush();
+    expect(mockLoad).toHaveBeenCalledTimes(1);
+    expect(wrapper.vm.editing).toBe(false);
     wrapper.destroy();
   });
 });

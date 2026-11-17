@@ -2,7 +2,13 @@ import { isEqual } from 'lodash';
 import { setActivePinia, createPinia } from 'pinia';
 
 import { useCategoryStore } from '~/stores/categories';
-import { createMissingParents, defaultCategories, Category } from '~/util/classes';
+import {
+  createMissingParents,
+  defaultCategories,
+  Category,
+  Rule,
+  matchString,
+} from '~/util/classes';
 
 describe('categories store', () => {
   setActivePinia(createPinia());
@@ -12,13 +18,13 @@ describe('categories store', () => {
     categoryStore.clearAll();
   });
 
-  test('loads default categories', () => {
+  test('loads default categories', async () => {
     // Load categories
     expect(categoryStore.classes).toHaveLength(0);
     categoryStore.restoreDefaultClasses();
 
     expect(categoryStore.classes_unsaved_changes).toBeTruthy();
-    categoryStore.save();
+    await categoryStore.save();
 
     expect(categoryStore.classes_unsaved_changes).toBeFalsy();
     expect(categoryStore.classes).not.toHaveLength(0);
@@ -229,7 +235,7 @@ describe('categories store', () => {
     expect(id).toBe(maxBefore + 1);
   });
 
-  test('import syncs classes into a primary set so save does not persist defaults', () => {
+  test('import syncs classes into a primary set so save does not persist defaults', async () => {
     categoryStore.category_sets = [];
     categoryStore.active_set_ids = ['default'];
     categoryStore.import([{ name: ['Work', 'Coding'], rule: { type: 'regex', regex: 'code' } }]);
@@ -239,7 +245,7 @@ describe('categories store', () => {
     const names = categoryStore.category_sets[0].categories.map(c => c.name);
     expect(names).toContainEqual(['Work']);
     expect(names).toContainEqual(['Work', 'Coding']);
-    categoryStore.save();
+    await categoryStore.save();
     expect(categoryStore.classes_unsaved_changes).toBeFalsy();
   });
 
@@ -524,5 +530,51 @@ describe('import add-on-top via setActiveSets', () => {
     expect(store.active_set_ids).toEqual(['mine', 'shared']);
     store.discardChanges();
     expect(store.get_category(['Dev'])?.rule.regex).toBe('editor');
+  });
+});
+
+describe('categories store: append rule', () => {
+  test.each<Rule>([
+    { type: 'none' },
+    { type: null },
+    { type: 'regex', regex: '' },
+    { type: 'regex', regex: 'browser' },
+  ])('appends a first or additional pattern to %j without matching unrelated titles', rule => {
+    const store = useCategoryStore(createPinia());
+    store.load([{ name: ['Work'], rule }]);
+
+    store.appendClassRule(store.classes[0].id, 'editor\\.exe');
+
+    expect(matchString('editor.exe', store.classes)?.name).toEqual(['Work']);
+    expect(matchString('totally unrelated', store.classes)).toBeNull();
+    expect(matchString('editorXexe', store.classes)).toBeNull();
+    if (rule.regex === 'browser') {
+      expect(matchString('browser', store.classes)?.name).toEqual(['Work']);
+    }
+    expect(store.classes_unsaved_changes).toBe(true);
+    expect(store.classes_for_query[0][1]).toEqual(store.classes[0].rule);
+  });
+
+  test.each([false, true])('retains rule options including ignore_case=%s', ignore_case => {
+    const store = useCategoryStore(createPinia());
+    const options = { ignore_case, select_keys: ['title'], priority: 7, weight: 3 };
+    store.load([{ name: ['Work'], rule: { type: 'regex', regex: '', ...options } }]);
+
+    store.appendClassRule(store.classes[0].id, 'editor');
+
+    expect(store.classes[0].rule).toEqual({ type: 'regex', regex: 'editor', ...options });
+    expect(Boolean(matchString('EDITOR', store.classes))).toBe(ignore_case);
+    expect(matchString('totally unrelated', store.classes)).toBeNull();
+  });
+
+  test.each([' ', 'browser|', '|browser', '.*'])('preserves authored nonempty regex %j', regex => {
+    const store = useCategoryStore(createPinia());
+    store.load([{ name: ['Work'], rule: { type: 'regex', regex } }]);
+
+    store.appendClassRule(store.classes[0].id, 'editor');
+
+    expect(store.classes[0].rule.regex).toBe(regex + '|editor');
+    expect(matchString('editor', store.classes)?.name).toEqual(['Work']);
+    expect(matchString('totally unrelated', store.classes)?.name).toEqual(['Work']);
   });
 });

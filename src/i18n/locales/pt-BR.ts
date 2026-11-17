@@ -72,6 +72,20 @@ export default {
     requiresAfk: 'requer aw-watcher-afk',
     unknown: 'desconhecido',
   },
+  categoryNames: {
+    work: 'Trabalho',
+    programming: 'Programação',
+    image: 'Imagem',
+    video: 'Vídeo',
+    audio: 'Áudio',
+    media: 'Mídia',
+    games: 'Jogos',
+    socialMedia: 'Redes sociais',
+    music: 'Música',
+    comms: 'Comunicação',
+    im: 'Mensagens',
+    email: 'E-mail',
+  },
   notFound: {
     title: 'Ops, esta página não foi encontrada!',
     hint: 'Tente voltar para o lugar de onde você veio.',
@@ -200,6 +214,10 @@ export default {
       deleteSetConfirm: 'Excluir o conjunto de categorias “{id}”? Esta ação não pode ser desfeita.',
       switchUnsavedConfirm:
         'Você tem alterações não salvas. Deseja trocar de conjunto mesmo assim? (As alterações serão descartadas)',
+    },
+    supporter: {
+      title: 'Já apoio o ActivityWatch',
+      help: 'Oculta os avisos no aplicativo pedindo apoio ao ActivityWatch. Por confiança: fica salvo apenas no seu servidor local, nunca é verificado e nada é enviado.',
     },
     developer: {
       title: 'Configurações de desenvolvedor',
@@ -655,6 +673,10 @@ export default {
       quickDurations: 'Durações rápidas',
       startDate: 'Data de início',
       endDate: 'Data de término (opcional)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(opcional)',
       apply: 'Aplicar',
       refresh: 'Atualizar',
@@ -679,6 +701,7 @@ export default {
       expand: 'Expandir lista',
       condense: 'Recolher lista',
       edit: 'Editar',
+      showMore: 'Mostrar mais {count}',
     },
     calendar: {
       bucket: 'Bucket:',
@@ -980,6 +1003,9 @@ export default {
       bucketsNoEvents: 'Buckets sem eventos no intervalo consultado serão ocultados.',
       editSaved: 'Sua edição foi salva. Atualize a linha do tempo para vê-la refletida.',
       editSavedTitle: 'Atenção',
+      list: 'Lista',
+      listShowing: 'Mostrando {shown} de {total} eventos',
+      showMore: 'Mostrar mais',
     },
     buckets: { id: 'ID' },
     userPoll: {

@@ -120,6 +120,10 @@ export default {
     },
   },
   mounted: async function () {
+    // Start the clock before any await so beforeDestroy can always clear it,
+    // even if the view is left while the initial load is still pending.
+    this.clockInterval = setInterval(() => (this.now = moment()), 1000);
+
     // TODO: List all possible timer buckets
     //this.getBuckets();
 
@@ -127,8 +131,9 @@ export default {
     await this.$aw.ensureBucket(this.bucket_id, 'general.stopwatch', 'unknown');
 
     await this.getEvents();
-
-    setInterval(() => (this.now = moment()), 1000);
+  },
+  beforeDestroy: function () {
+    clearInterval(this.clockInterval);
   },
   methods: {
     startTimer: async function (label) {

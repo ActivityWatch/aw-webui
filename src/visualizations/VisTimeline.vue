@@ -102,6 +102,7 @@ import {
 } from '../util/timelineIndex';
 import { DataSet } from 'vis-data';
 import { IEvent } from '../util/interfaces';
+import { categoryPathLabel } from '~/util/categoryLabels';
 import { formatTimelineBucketLabelHtml, shortenBucketLabel } from '../util/timelineLabels';
 
 import { Timeline } from 'vis-timeline/esnext';
@@ -558,7 +559,7 @@ export default {
                 duration: this.formatGroupDuration(item.event.duration),
               })
             : categorized
-            ? name.join(' > ')
+            ? categoryPathLabel(name)
             : getTitleAttr(item.bucket, item.event),
           start: item.start,
           end: item.end,

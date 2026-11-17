@@ -72,6 +72,20 @@ export default {
     requiresAfk: 'aw-watcher-afk が必要です',
     unknown: '不明',
   },
+  categoryNames: {
+    work: '仕事',
+    programming: 'プログラミング',
+    image: '画像',
+    video: '動画',
+    audio: '音声',
+    media: 'メディア',
+    games: 'ゲーム',
+    socialMedia: 'ソーシャルメディア',
+    music: '音楽',
+    comms: 'コミュニケーション',
+    im: 'チャット',
+    email: 'メール',
+  },
   notFound: {
     title: 'ページが見つかりませんでした。',
     hint: '元のページに戻ってお試しください。',
@@ -196,6 +210,10 @@ export default {
       deleteSetConfirm: 'カテゴリセット「{id}」を削除しますか？この操作は元に戻せません。',
       switchUnsavedConfirm:
         '未保存の変更があります。それでもセットを切り替えますか？(変更は破棄されます)',
+    },
+    supporter: {
+      title: 'すでに ActivityWatch を支援しています',
+      help: 'ActivityWatch の支援を求めるアプリ内の案内を非表示にします。信頼ベース：ローカルサーバーにのみ保存され、検証も送信も行われません。',
     },
     developer: {
       title: '開発者向け設定',
@@ -647,6 +665,10 @@ export default {
       quickDurations: 'クイック期間',
       startDate: '開始日',
       endDate: '終了日（任意）',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '（任意）',
       apply: '適用',
       refresh: '更新',
@@ -671,6 +693,7 @@ export default {
       expand: '一覧を展開',
       condense: '一覧を折りたたむ',
       edit: '編集',
+      showMore: 'さらに {count} 件表示',
     },
     calendar: {
       bucket: 'バケット：',
@@ -969,6 +992,9 @@ export default {
       bucketsNoEvents: '照会した期間にイベントがないバケットは非表示になります。',
       editSaved: '編集を保存しました。反映を確認するには、タイムラインを更新してください。',
       editSavedTitle: 'お知らせ',
+      list: 'リスト',
+      listShowing: '{total} 件中 {shown} 件のイベントを表示',
+      showMore: 'もっと見る',
     },
     buckets: { id: 'ID' },
     userPoll: {

@@ -72,6 +72,20 @@ export default {
     requiresAfk: 'aw-watcher-afk প্রয়োজন',
     unknown: 'অজানা',
   },
+  categoryNames: {
+    work: 'কাজ',
+    programming: 'প্রোগ্রামিং',
+    image: 'ছবি',
+    video: 'ভিডিও',
+    audio: 'অডিও',
+    media: 'মিডিয়া',
+    games: 'গেম',
+    socialMedia: 'সোশ্যাল মিডিয়া',
+    music: 'সংগীত',
+    comms: 'যোগাযোগ',
+    im: 'মেসেজিং',
+    email: 'ইমেইল',
+  },
   notFound: {
     title: 'ওহ, এই পাতাটি পাওয়া যায়নি!',
     hint: 'যেখান থেকে এসেছিলেন সেখানে ফিরে যাওয়ার চেষ্টা করুন।',
@@ -193,6 +207,10 @@ export default {
       deleteSetConfirm: 'বিভাগ সেট "{id}" মুছবেন? এটি পূর্বাবস্থায় ফেরানো যাবে না।',
       switchUnsavedConfirm:
         'আপনার অসংরক্ষিত পরিবর্তন আছে। তবুও সেট পরিবর্তন করবেন? (পরিবর্তনগুলি বাতিল হবে)',
+    },
+    supporter: {
+      title: 'আমি ইতিমধ্যে ActivityWatch সমর্থন করি',
+      help: 'ActivityWatch সমর্থন করার অনুরোধ জানানো অ্যাপের বার্তাগুলো লুকায়। বিশ্বাসভিত্তিক: কেবল আপনার স্থানীয় সার্ভারে সংরক্ষিত, কখনো যাচাই করা হয় না, কিছুই পাঠানো হয় না।',
     },
     developer: {
       title: 'ডেভেলপার সেটিংস',
@@ -643,6 +661,10 @@ export default {
       quickDurations: 'দ্রুত সময়কাল',
       startDate: 'শুরুর তারিখ',
       endDate: 'শেষের তারিখ (ঐচ্ছিক)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(ঐচ্ছিক)',
       apply: 'প্রয়োগ করুন',
       refresh: 'রিফ্রেশ',
@@ -667,6 +689,7 @@ export default {
       expand: 'তালিকা প্রসারিত করুন',
       condense: 'তালিকা সংকুচিত করুন',
       edit: 'সম্পাদনা',
+      showMore: 'আরও {count}টি দেখান',
     },
     calendar: {
       bucket: 'বাকেট:',
@@ -963,6 +986,9 @@ export default {
       bucketsNoEvents: 'কোয়েরি করা সময়সীমায় ইভেন্ট নেই এমন বাকেট লুকানো থাকবে।',
       editSaved: 'আপনার সম্পাদনা সংরক্ষিত হয়েছে। প্রতিফলন দেখতে টাইমলাইন রিফ্রেশ করুন।',
       editSavedTitle: 'জেনে রাখুন',
+      list: 'তালিকা',
+      listShowing: '{total}টির মধ্যে {shown}টি ইভেন্ট দেখানো হচ্ছে',
+      showMore: 'আরও দেখান',
     },
     buckets: { id: 'ID' },
     userPoll: {

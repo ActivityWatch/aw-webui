@@ -178,9 +178,220 @@ describe('views store on an Android build', () => {
     expect(expected[0].elements).not.toContainEqual({ type: 'top_titles' });
   });
 
+  test('save waits for persistence before reloading views', async () => {
+    const { viewsStore, save } = await loadOnAndroid(storedDesktopDefault());
+    viewsStore.addVisualization({ view_id: 'summary', type: 'top_titles' });
+    const edited = JSON.parse(JSON.stringify(viewsStore.views));
+    let finish: () => void;
+    save.mockImplementationOnce(() => new Promise<void>(resolve => (finish = resolve)));
+    const load = jest.spyOn(viewsStore, 'load');
+    let settled = false;
+    const saving = viewsStore.save().then(() => (settled = true));
+    // Let the update enter its deferred persistence without settling it.
+    await new Promise(resolve => setImmediate(resolve));
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(settled).toBe(false);
+    expect(load).not.toHaveBeenCalled();
+    expect(viewsStore.views).toEqual(edited);
+    finish();
+    await saving;
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(viewsStore.views).toEqual(edited);
+  });
+
+  test('save propagates persistence failures without reloading away the edit', async () => {
+    const { viewsStore, update } = await loadOnAndroid(storedDesktopDefault());
+    viewsStore.addVisualization({ view_id: 'summary', type: 'top_titles' });
+    const edited = JSON.parse(JSON.stringify(viewsStore.views));
+    const failure = new Error('offline');
+    // Observe the rejected update too, so the broken fire-and-forget caller
+    // cannot leave an unhandled rejection in this test.
+    const failedUpdate = Promise.reject(failure);
+    void failedUpdate.catch(() => undefined);
+    update.mockReturnValueOnce(failedUpdate);
+    const load = jest.spyOn(viewsStore, 'load');
+    await expect(viewsStore.save()).rejects.toBe(failure);
+    expect(load).not.toHaveBeenCalled();
+    expect(viewsStore.views).toEqual(edited);
+  });
+
   test('load() keeps stored views the user edited', async () => {
     const edited = storedDesktopDefault().slice(0, 2);
     const { views } = await loadOnAndroid(edited);
     expect(views).toEqual(edited);
+  });
+});
+
+describe('editable view ownership and persistence', () => {
+  const confirmed = () => [
+    {
+      id: 'custom',
+      name: 'Custom',
+      elements: [
+        { type: 'top_apps', size: 3, props: { nested: { limit: 5 } } },
+        { type: 'top_titles', size: 6 },
+      ],
+    },
+  ];
+
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    jest.restoreAllMocks();
+  });
+
+  async function setup() {
+    const { useSettingsStore } = await import('~/stores/settings');
+    const settings = useSettingsStore();
+    settings.$patch({ views: confirmed(), _loaded: true });
+    const views = useViewsStore();
+    await views.load();
+    return { settings, views };
+  }
+
+  test('add, remove, reorder, type and nested props edits never alter confirmed settings', async () => {
+    const { settings, views } = await setup();
+    views.views[0].elements[0].props.nested['limit'] = 20;
+    views.editView({ view_id: 'custom', el_id: '1', type: 'top_domains', props: { limit: 10 } });
+    views.setElements({ view_id: 'custom', elements: [...views.views[0].elements].reverse() });
+    views.addVisualization({ view_id: 'custom', type: 'top_urls' });
+    views.removeVisualization({ view_id: 'custom', el_id: 1 });
+    expect(settings.views).toEqual(confirmed());
+    await views.load();
+    expect(views.views).toEqual(confirmed());
+  });
+
+  test('each restore creates pristine independent defaults and Cancel recovers custom views', async () => {
+    const { views } = await setup();
+    const pristine = JSON.parse(JSON.stringify(defaultViews));
+    views.restoreDefaults();
+    views.removeVisualization({ view_id: 'summary', el_id: 0 });
+    views.restoreDefaults();
+    expect(views.views).toEqual(pristine);
+    expect(defaultViews).toEqual(pristine);
+    await views.load();
+    expect(views.views).toEqual(confirmed());
+  });
+
+  test('save waits for persistence and owns the confirmed snapshot after success', async () => {
+    const { settings, views } = await setup();
+    let resolveSave!: () => void;
+    jest.spyOn(settings, 'save').mockImplementation(
+      () =>
+        new Promise<void>(resolve => {
+          resolveSave = resolve;
+        })
+    );
+    views.addVisualization({ view_id: 'custom', type: 'top_urls' });
+    let finished = false;
+    const saving = views.save().then(() => {
+      finished = true;
+    });
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(finished).toBe(false);
+    resolveSave();
+    await saving;
+    const saved = JSON.parse(JSON.stringify(settings.views));
+    views.removeVisualization({ view_id: 'custom', el_id: 0 });
+    expect(settings.views).toEqual(saved);
+    await views.load();
+    expect(views.views).toEqual(saved);
+  });
+
+  test('a second editor cannot save until the shared pending save settles', async () => {
+    const { settings, views } = await setup();
+    let rejectSave!: (error: Error) => void;
+    const write = jest
+      .spyOn(settings, 'save')
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((_resolve, reject) => {
+            rejectSave = reject;
+          })
+      )
+      .mockResolvedValue(undefined);
+    views.addVisualization({ view_id: 'custom', type: 'top_urls' });
+    const first = views.save().catch(error => error);
+    // Navigation remounts ActivityView, not its shared Pinia store.
+    views.addVisualization({ view_id: 'custom', type: 'top_domains' });
+    await expect(views.save()).rejects.toThrow('already in progress');
+    expect(write).toHaveBeenCalledTimes(1);
+    rejectSave(new Error('offline'));
+    expect(await first).toEqual(new Error('offline'));
+    expect(settings.views).toEqual(confirmed());
+    await views.save();
+    expect(write).toHaveBeenCalledTimes(2);
+    expect(settings.views[0].elements).toHaveLength(4);
+    expect(views.views).toEqual(settings.views);
+  });
+
+  test('rejected saves keep retryable edits but Cancel retains the confirmed baseline', async () => {
+    const { settings, views } = await setup();
+    jest.spyOn(settings, 'save').mockRejectedValue(new Error('offline'));
+    views.addVisualization({ view_id: 'custom', type: 'top_urls' });
+    const draft = JSON.parse(JSON.stringify(views.views));
+    await expect(views.save()).rejects.toThrow('offline');
+    expect(views.views).toEqual(draft);
+    expect(settings.views).toEqual(confirmed());
+    await views.load();
+    expect(views.views).toEqual(confirmed());
+    views.loadViews(draft);
+    jest.spyOn(settings, 'save').mockResolvedValue(undefined);
+    await views.save();
+    expect(settings.views).toEqual(draft);
+    views.removeVisualization({ view_id: 'custom', el_id: 0 });
+    await views.load();
+    expect(views.views).toEqual(draft);
+  });
+});
+
+describe('view edits through the real settings HTTP lifecycle', () => {
+  test('failed persistence keeps Cancel safe and retry establishes a new baseline', async () => {
+    const { useSettingsStore } = await import('~/stores/settings');
+    const { createClient, getClient } = await import('~/util/awclient');
+    setActivePinia(createPinia());
+    createClient();
+    const client = getClient();
+    const previousRequest = client.req;
+    const previousStorage = (global as any).localStorage;
+    (global as any).localStorage = { setItem: jest.fn(), getItem: () => null };
+    const settings = useSettingsStore();
+    const initialViews = [{ id: 'custom', name: 'Custom', elements: [{ type: 'top_apps' }] }];
+    settings.$patch({ views: initialViews, _loaded: true });
+    const copy = value => JSON.parse(JSON.stringify(value));
+    const backend = copy(settings.$state);
+    const read = jest.spyOn(client, 'get_settings').mockImplementation(async () => copy(backend));
+    let failViews = true;
+    const post = jest.fn(async (url, value) => {
+      const key = url.split('/').pop();
+      if (key === 'views' && failViews) throw new Error('offline');
+      backend[key] = copy(value);
+      return {};
+    });
+    (client as any).req = { post, defaults: {} };
+    try {
+      const views = useViewsStore();
+      await views.load();
+      views.addVisualization({ view_id: 'custom', type: 'top_urls' });
+      await expect(views.save()).rejects.toThrow('offline');
+      expect(backend.views).toEqual(initialViews);
+      expect(settings.views).toEqual(initialViews);
+      expect(views.views[0].elements).toHaveLength(2);
+      await views.load();
+      expect(views.views).toEqual(initialViews);
+      views.addVisualization({ view_id: 'custom', type: 'top_urls' });
+      failViews = false;
+      await views.save();
+      expect(backend.views[0].elements).toHaveLength(2);
+      expect(settings.views).toEqual(backend.views);
+      views.removeVisualization({ view_id: 'custom', el_id: 0 });
+      await views.load();
+      expect(views.views).toEqual(backend.views);
+      expect(views.views[0].elements).toHaveLength(2);
+    } finally {
+      read.mockRestore();
+      client.req = previousRequest;
+      if (previousStorage === undefined) delete (global as any).localStorage;
+      else (global as any).localStorage = previousStorage;
+    }
   });
 });

@@ -72,6 +72,20 @@ export default {
     requiresAfk: 'aw-watcher-afk आवश्यक है',
     unknown: 'अज्ञात',
   },
+  categoryNames: {
+    work: 'काम',
+    programming: 'प्रोग्रामिंग',
+    image: 'चित्र',
+    video: 'वीडियो',
+    audio: 'ऑडियो',
+    media: 'मीडिया',
+    games: 'गेम',
+    socialMedia: 'सोशल मीडिया',
+    music: 'संगीत',
+    comms: 'संचार',
+    im: 'मैसेजिंग',
+    email: 'ईमेल',
+  },
   notFound: {
     title: 'उफ़, यह पेज नहीं मिला!',
     hint: 'जहाँ से आए थे, वहाँ वापस जाने का प्रयास करें।',
@@ -196,6 +210,10 @@ export default {
       deleteSetConfirm: 'श्रेणी सेट "{id}" हटाएँ? इसे पूर्ववत नहीं किया जा सकता।',
       switchUnsavedConfirm:
         'आपके पास बिना सहेजे बदलाव हैं। फिर भी सेट बदलें? (बदलाव छोड़ दिए जाएँगे)',
+    },
+    supporter: {
+      title: 'मैं पहले से ActivityWatch का समर्थन करता हूँ',
+      help: 'ActivityWatch का समर्थन करने के अनुरोध वाले इन-ऐप संदेश छिपाता है। विश्वास-आधारित: केवल आपके स्थानीय सर्वर पर सहेजा जाता है, कभी सत्यापित नहीं होता, कुछ भी नहीं भेजा जाता।',
     },
     developer: {
       title: 'डेवलपर सेटिंग्स',
@@ -646,6 +664,10 @@ export default {
       quickDurations: 'त्वरित अवधियाँ',
       startDate: 'आरंभ तिथि',
       endDate: 'समाप्ति तिथि (वैकल्पिक)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(वैकल्पिक)',
       apply: 'लागू करें',
       refresh: 'रीफ़्रेश करें',
@@ -670,6 +692,7 @@ export default {
       expand: 'सूची का विस्तार करें',
       condense: 'सूची संक्षिप्त करें',
       edit: 'संपादित करें',
+      showMore: '{count} और दिखाएँ',
     },
     calendar: {
       bucket: 'Bucket:',
@@ -968,6 +991,9 @@ export default {
       bucketsNoEvents: 'चुनी गई सीमा में जिन bucket में कोई इवेंट नहीं है, वे छिपा दिए जाएँगे।',
       editSaved: 'आपका संपादन सहेज लिया गया है। इसे देखने के लिए टाइमलाइन रीफ़्रेश करें।',
       editSavedTitle: 'ध्यान दें',
+      list: 'सूची',
+      listShowing: '{total} में से {shown} इवेंट दिखाए जा रहे हैं',
+      showMore: 'और दिखाएँ',
     },
     buckets: { id: 'ID' },
     userPoll: {

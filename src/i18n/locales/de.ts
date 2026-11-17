@@ -69,6 +69,20 @@ export default {
     requiresAfk: 'erfordert aw-watcher-afk',
     unknown: 'unbekannt',
   },
+  categoryNames: {
+    work: 'Arbeit',
+    programming: 'Programmierung',
+    image: 'Bild',
+    video: 'Video',
+    audio: 'Audio',
+    media: 'Medien',
+    games: 'Spiele',
+    socialMedia: 'Soziale Medien',
+    music: 'Musik',
+    comms: 'Kommunikation',
+    im: 'Chat',
+    email: 'E-Mail',
+  },
   notFound: {
     title: 'Hoppla, diese Seite wurde nicht gefunden!',
     hint: 'Versuchen Sie, dorthin zurückzukehren, woher Sie kamen.',
@@ -247,6 +261,10 @@ export default {
       importSetPrompt: 'Wie möchten Sie den importierten Satz „{id}“ anwenden?',
       importReplace: 'Statt meines Satzes verwenden',
       importAddOnTop: 'Zusätzlich zu meinem Satz hinzufügen',
+    },
+    supporter: {
+      title: 'Ich unterstütze ActivityWatch bereits',
+      help: 'Blendet die Hinweise in der App aus, die um Unterstützung bitten. Auf Vertrauensbasis: nur im lokalen Server gespeichert, nie geprüft, es wird nichts gesendet.',
     },
     developer: {
       title: 'Entwicklereinstellungen',
@@ -639,6 +657,10 @@ export default {
       quickDurations: 'Schnellauswahl',
       startDate: 'Startdatum',
       endDate: 'Enddatum (optional)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(optional)',
       apply: 'Anwenden',
       refresh: 'Aktualisieren',
@@ -663,6 +685,7 @@ export default {
       expand: 'Liste ausklappen',
       condense: 'Liste einklappen',
       edit: 'Bearbeiten',
+      showMore: '{count} weitere anzeigen',
     },
     calendar: {
       bucket: 'Bucket:',
@@ -966,6 +989,9 @@ export default {
       editSaved:
         'Ihre Änderung wurde gespeichert. Aktualisieren Sie die Zeitleiste, um sie zu sehen.',
       editSavedTitle: 'Hinweis',
+      list: 'Liste',
+      listShowing: '{shown} von {total} Ereignissen angezeigt',
+      showMore: 'Mehr anzeigen',
     },
     buckets: { id: 'ID' },
     userPoll: {

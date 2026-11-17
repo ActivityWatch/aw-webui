@@ -71,6 +71,20 @@ export default {
     requiresAfk: 'требуется aw-watcher-afk',
     unknown: 'неизвестно',
   },
+  categoryNames: {
+    work: 'Работа',
+    programming: 'Программирование',
+    image: 'Изображения',
+    video: 'Видео',
+    audio: 'Аудио',
+    media: 'Медиа',
+    games: 'Игры',
+    socialMedia: 'Соцсети',
+    music: 'Музыка',
+    comms: 'Общение',
+    im: 'Мессенджеры',
+    email: 'Почта',
+  },
   notFound: {
     title: 'Ой, эта страница не найдена!',
     hint: 'Попробуйте вернуться туда, откуда пришли.',
@@ -249,6 +263,10 @@ export default {
       deleteSetConfirm: 'Удалить набор категорий «{id}»? Это действие нельзя отменить.',
       switchUnsavedConfirm:
         'Есть несохранённые изменения. Всё равно переключить набор? (Изменения будут потеряны)',
+    },
+    supporter: {
+      title: 'Я уже поддерживаю ActivityWatch',
+      help: 'Скрывает в приложении предложения поддержать ActivityWatch. На доверии: хранится только на вашем локальном сервере, не проверяется и никуда не отправляется.',
     },
     developer: {
       title: 'Настройки разработчика',
@@ -640,6 +658,10 @@ export default {
       quickDurations: 'Быстрый выбор длительности',
       startDate: 'Дата начала',
       endDate: 'Дата окончания (необязательно)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(необязательно)',
       apply: 'Применить',
       refresh: 'Обновить',
@@ -664,6 +686,7 @@ export default {
       expand: 'Развернуть список',
       condense: 'Свернуть список',
       edit: 'Редактировать',
+      showMore: 'Показать ещё {count}',
     },
     calendar: {
       bucket: 'Bucket:',
@@ -963,6 +986,9 @@ export default {
       bucketsNoEvents: 'Bucket-и без событий в запрошенном диапазоне будут скрыты.',
       editSaved: 'Изменение сохранено. Обновите хронологию, чтобы увидеть его.',
       editSavedTitle: 'Обратите внимание',
+      list: 'Список',
+      listShowing: 'Показано {shown} из {total} событий',
+      showMore: 'Показать больше',
     },
     buckets: { id: 'ID' },
     userPoll: {

@@ -72,6 +72,20 @@ export default {
     requiresAfk: 'membutuhkan aw-watcher-afk',
     unknown: 'tidak diketahui',
   },
+  categoryNames: {
+    work: 'Kerja',
+    programming: 'Pemrograman',
+    image: 'Gambar',
+    video: 'Video',
+    audio: 'Audio',
+    media: 'Media',
+    games: 'Gim',
+    socialMedia: 'Media Sosial',
+    music: 'Musik',
+    comms: 'Komunikasi',
+    im: 'Pesan Instan',
+    email: 'Surel',
+  },
   notFound: {
     title: 'Ups, halaman ini tidak ditemukan!',
     hint: 'Coba kembali ke halaman sebelumnya.',
@@ -197,6 +211,10 @@ export default {
       deleteSetConfirm: 'Hapus set kategori "{id}"? Tindakan ini tidak dapat dibatalkan.',
       switchUnsavedConfirm:
         'Anda memiliki perubahan yang belum disimpan. Tetap ganti set? (Perubahan akan dibuang)',
+    },
+    supporter: {
+      title: 'Saya sudah mendukung ActivityWatch',
+      help: 'Menyembunyikan ajakan dalam aplikasi untuk mendukung ActivityWatch. Berbasis kepercayaan: hanya disimpan di server lokal Anda, tidak pernah diverifikasi, tidak ada yang dikirim.',
     },
     developer: {
       title: 'Pengaturan pengembang',
@@ -648,6 +666,10 @@ export default {
       quickDurations: 'Durasi cepat',
       startDate: 'Tanggal mulai',
       endDate: 'Tanggal akhir (opsional)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(opsional)',
       apply: 'Terapkan',
       refresh: 'Segarkan',
@@ -672,6 +694,7 @@ export default {
       expand: 'Perluas daftar',
       condense: 'Ringkas daftar',
       edit: 'Ubah',
+      showMore: 'Tampilkan {count} lagi',
     },
     calendar: {
       bucket: 'Bucket:',
@@ -970,6 +993,9 @@ export default {
       bucketsNoEvents: 'Bucket tanpa event dalam rentang yang diminta akan disembunyikan.',
       editSaved: 'Perubahan Anda tersimpan. Segarkan garis waktu untuk melihatnya.',
       editSavedTitle: 'Perhatian',
+      list: 'Daftar',
+      listShowing: 'Menampilkan {shown} dari {total} peristiwa',
+      showMore: 'Tampilkan lebih banyak',
     },
     buckets: { id: 'ID' },
     userPoll: {

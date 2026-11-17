@@ -1,67 +1,135 @@
-import moment from 'moment';
-import InputTimeIntervalComponent from '~/components/InputTimeInterval.vue';
+import { mount } from '@vue/test-utils';
+import InputTimeInterval from '~/components/InputTimeInterval.vue';
 
-// Tests call Options API members directly, which the Vue constructor type doesn't expose.
-const InputTimeInterval: any = InputTimeIntervalComponent;
+// Date-only behaviour must stay identical for Bucket.vue, which does not opt in
+// to the optional time inputs.
 
-describe('date range shifts', () => {
-  function makeVm(start = null, end = null) {
-    return { start, end, mode: 'range', duration: 0, valueChanged: jest.fn() };
+const stubs = ['b-alert', 'b-form-radio-group', 'b-button', 'icon'];
+const mocks = { $t: (key: string) => key };
+
+function make(propsData: Record<string, unknown> = {}) {
+  return mount(InputTimeInterval as any, { propsData, stubs, mocks });
+}
+
+function range(wrapper: any) {
+  const [start, end] = wrapper.vm.value;
+  return [start.format('YYYY-MM-DD HH:mm'), end.format('YYYY-MM-DD HH:mm')];
+}
+
+test('date-only inputs keep the inclusive-day range', async () => {
+  const wrapper = make();
+  try {
+    await wrapper.setData({ mode: 'range', start: '2026-06-10', end: '2026-06-11' });
+    expect(range(wrapper)).toEqual(['2026-06-10 00:00', '2026-06-12 00:00']);
+    expect(wrapper.vm.hasTime).toBe(false);
+    expect(wrapper.vm.unresolvableTime).toBe(false);
+  } finally {
+    wrapper.destroy();
   }
+});
 
-  test.each([-7, -1, 1, 7])('does not populate an empty range when shifting %i days', days => {
-    const vm = makeVm();
+test('time inputs do not apply unless the consumer opts in', async () => {
+  const wrapper = make();
+  try {
+    await wrapper.setData({
+      mode: 'range',
+      start: '2026-06-10',
+      startTime: '09:30',
+      end: '2026-06-10',
+      endTime: '11:00',
+    });
+    // allowTime defaults to false, so the times are ignored.
+    expect(wrapper.vm.hasTime).toBe(false);
+    expect(range(wrapper)).toEqual(['2026-06-10 00:00', '2026-06-11 00:00']);
+  } finally {
+    wrapper.destroy();
+  }
+});
 
-    InputTimeInterval.methods.shiftDays.call(vm, days);
+test('opted-in times give an exact sub-day interval', async () => {
+  const wrapper = make({ allowTime: true });
+  try {
+    await wrapper.setData({
+      mode: 'range',
+      start: '2026-06-10',
+      startTime: '09:30',
+      end: '2026-06-10',
+      endTime: '11:00',
+    });
+    expect(range(wrapper)).toEqual(['2026-06-10 09:30', '2026-06-10 11:00']);
+    expect(wrapper.vm.invalidDaterange).toBe(false);
+    expect(wrapper.vm.unresolvableTime).toBe(false);
+  } finally {
+    wrapper.destroy();
+  }
+});
 
-    expect(vm.start).toBeNull();
-    expect(vm.end).toBeNull();
-    expect(vm.valueChanged).not.toHaveBeenCalled();
-  });
+test('a start time without an end date still covers one day', async () => {
+  const wrapper = make({ allowTime: true });
+  try {
+    await wrapper.setData({ mode: 'range', start: '2026-06-10', startTime: '09:30' });
+    expect(range(wrapper)).toEqual(['2026-06-10 09:30', '2026-06-11 00:00']);
+  } finally {
+    wrapper.destroy();
+  }
+});
 
-  test('leaves an end-only range unchanged', () => {
-    const vm = makeVm(null, '2026-10-17');
+test('an end before the start is rejected and never emitted', async () => {
+  const wrapper = make({ allowTime: true });
+  try {
+    await wrapper.setData({
+      mode: 'range',
+      start: '2026-06-10',
+      startTime: '11:00',
+      end: '2026-06-10',
+      endTime: '09:30',
+    });
+    expect(wrapper.vm.invalidDaterange).toBe(true);
+    const emittedBefore = wrapper.emitted('input')?.length ?? 0;
+    wrapper.vm.valueChanged();
+    expect(wrapper.emitted('input')?.length ?? 0).toBe(emittedBefore);
+  } finally {
+    wrapper.destroy();
+  }
+});
 
-    InputTimeInterval.methods.shiftDays.call(vm, 1);
+test('a wall time that names no instant is reported, not silently resolved', async () => {
+  const wrapper = make({ allowTime: true });
+  try {
+    // 25:00 is not a valid wall time, so wallTimeInstants returns no instant.
+    await wrapper.setData({
+      mode: 'range',
+      start: '2026-06-10',
+      startTime: '25:00',
+      end: '2026-06-10',
+      endTime: '11:00',
+    });
+    expect(wrapper.vm.unresolvableTime).toBe(true);
+    expect(wrapper.vm.invalidDaterange).toBe(false);
+    // The date-only range is still emitted so consumers never see null.
+    expect(range(wrapper)).toEqual(['2026-06-10 00:00', '2026-06-11 00:00']);
+    const emittedBefore = wrapper.emitted('input')?.length ?? 0;
+    wrapper.vm.valueChanged();
+    expect(wrapper.emitted('input')?.length ?? 0).toBe(emittedBefore);
+  } finally {
+    wrapper.destroy();
+  }
+});
 
-    expect(vm.start).toBeNull();
-    expect(vm.end).toBe('2026-10-17');
-    expect(vm.valueChanged).not.toHaveBeenCalled();
-  });
-
-  test('shifts a single-day range without filling in its optional end', () => {
-    const vm = makeVm('2026-10-17');
-
-    InputTimeInterval.methods.shiftDays.call(vm, -7);
-
-    expect(vm.start).toBe('2026-10-10');
-    expect(vm.end).toBeNull();
-    expect(vm.valueChanged).toHaveBeenCalledTimes(1);
-  });
-
-  test('shifts both dates across a month boundary', () => {
-    const vm = makeVm('2026-10-30', '2026-10-31');
-
-    InputTimeInterval.methods.shiftDays.call(vm, 7);
-
-    expect(vm.start).toBe('2026-11-06');
-    expect(vm.end).toBe('2026-11-07');
-    expect(vm.valueChanged).toHaveBeenCalledTimes(1);
-  });
-
-  test('Today explicitly initializes an empty range', () => {
-    jest.useFakeTimers().setSystemTime(new Date(2026, 9, 17, 12));
-    try {
-      const vm = makeVm();
-      const today = moment().format('YYYY-MM-DD');
-
-      InputTimeInterval.methods.setToday.call(vm);
-
-      expect(vm.start).toBe(today);
-      expect(vm.end).toBe(today);
-      expect(vm.valueChanged).toHaveBeenCalledTimes(1);
-    } finally {
-      jest.useRealTimers();
-    }
-  });
+test('maxDuration applies to the exact interval when times are set', async () => {
+  const wrapper = make({ allowTime: true, maxDuration: 60 * 60 });
+  try {
+    await wrapper.setData({
+      mode: 'range',
+      start: '2026-06-10',
+      startTime: '09:00',
+      end: '2026-06-10',
+      endTime: '11:00',
+    });
+    expect(wrapper.vm.daterangeTooLong).toBe(true);
+    await wrapper.setData({ endTime: '09:30' });
+    expect(wrapper.vm.daterangeTooLong).toBe(false);
+  } finally {
+    wrapper.destroy();
+  }
 });

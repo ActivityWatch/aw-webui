@@ -72,6 +72,20 @@ export default {
     requiresAfk: 'aw-watcher-afk درکار ہے',
     unknown: 'نامعلوم',
   },
+  categoryNames: {
+    work: 'کام',
+    programming: 'پروگرامنگ',
+    image: 'تصاویر',
+    video: 'ویڈیو',
+    audio: 'آڈیو',
+    media: 'میڈیا',
+    games: 'گیمز',
+    socialMedia: 'سوشل میڈیا',
+    music: 'موسیقی',
+    comms: 'رابطہ',
+    im: 'پیغام رسانی',
+    email: 'ای میل',
+  },
   notFound: {
     title: 'افسوس، یہ صفحہ نہیں ملا!',
     hint: 'جہاں سے آئے تھے وہاں واپس جانے کی کوشش کریں۔',
@@ -197,6 +211,10 @@ export default {
       deleteSetConfirm: 'زمروں کا سیٹ "{id}" حذف کریں؟ یہ عمل واپس نہیں ہو سکتا۔',
       switchUnsavedConfirm:
         'آپ کی تبدیلیاں محفوظ نہیں ہیں۔ پھر بھی سیٹ تبدیل کریں؟ (تبدیلیاں رد ہو جائیں گی)',
+    },
+    supporter: {
+      title: 'میں پہلے ہی ActivityWatch کی حمایت کرتا ہوں',
+      help: 'ایپ میں ActivityWatch کی حمایت کی درخواست والے پیغامات چھپاتا ہے۔ اعتماد کی بنیاد پر: صرف آپ کے مقامی سرور پر محفوظ ہوتا ہے، کبھی تصدیق نہیں ہوتی، کچھ نہیں بھیجا جاتا۔',
     },
     developer: {
       title: 'ڈویلپر کی ترتیبات',
@@ -648,6 +666,10 @@ export default {
       quickDurations: 'فوری دورانیے',
       startDate: 'آغاز کی تاریخ',
       endDate: 'اختتام کی تاریخ (اختیاری)',
+      startTime: 'Start time',
+      endTime: 'End time',
+      unresolvableTime:
+        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
       optional: '(اختیاری)',
       apply: 'لاگو کریں',
       refresh: 'ریفریش',
@@ -672,6 +694,7 @@ export default {
       expand: 'فہرست پھیلائیں',
       condense: 'فہرست سمیٹیں',
       edit: 'ترمیم',
+      showMore: 'مزید {count} دکھائیں',
     },
     calendar: {
       bucket: 'بکٹ:',
@@ -968,6 +991,9 @@ export default {
       bucketsNoEvents: 'جن بکٹس میں کوئی ایونٹ نہ ہو وہ کوئری شدہ حد میں چھپا دیے جائیں گے۔',
       editSaved: 'آپ کی ترمیم محفوظ ہو گئی ہے۔ اسے دیکھنے کے لیے ٹائم لائن ریفریش کریں۔',
       editSavedTitle: 'اطلاع',
+      list: 'فہرست',
+      listShowing: '{total} میں سے {shown} واقعات دکھائے جا رہے ہیں',
+      showMore: 'مزید دکھائیں',
     },
     buckets: { id: 'ID' },
     userPoll: {

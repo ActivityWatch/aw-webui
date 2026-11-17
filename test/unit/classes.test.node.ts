@@ -21,6 +21,60 @@ test('correctly flatten hierarchy', () => {
   expect(result).toHaveLength(3);
 });
 
+describe('structural category hierarchy', () => {
+  const category = (name: string[]): Category => ({ name, rule: { type: 'none' } });
+
+  test.each([
+    [['Work>Code'], ['Work', 'Code', 'Review']],
+    [
+      ['Work', 'Code'],
+      ['Work>Code', 'Review'],
+    ],
+    [
+      ['A>B', 'C'],
+      ['A', 'B>C', 'Child'],
+    ],
+    [
+      ['A', 'B>C'],
+      ['A>B', 'C', 'Child'],
+    ],
+  ])('creates missing parents despite colliding display names: %j / %j', (flat, nested) => {
+    const input = [category(flat), category(nested)];
+    const before = JSON.parse(JSON.stringify(input));
+    const result = classes.createMissingParents(input);
+    for (let depth = 1; depth < nested.length; depth++) {
+      expect(
+        result.filter(c => JSON.stringify(c.name) === JSON.stringify(nested.slice(0, depth)))
+      ).toHaveLength(1);
+    }
+    const flattened = classes.flatten_category_hierarchy(classes.build_category_hierarchy(input));
+    expect(flattened.map(c => c.name)).toEqual(expect.arrayContaining([flat, nested]));
+    expect(input).toEqual(before);
+  });
+
+  test('keeps explicit parents and adds each shared implicit parent only once', () => {
+    const parent: Category = {
+      ...category(['Work', 'Code']),
+      id: 10,
+      data: { color: '#336699' },
+    };
+    const input = [
+      category(['Work>Code']),
+      parent,
+      category(['Work', 'Code', 'Review']),
+      category(['Work', 'Code', 'Test']),
+    ];
+    const before = JSON.parse(JSON.stringify(input));
+    const result = classes.build_category_hierarchy(input);
+    const work = result.find(c => c.subname === 'Work');
+    expect(work.children).toHaveLength(1);
+    expect(work.children[0]).toMatchObject(parent);
+    expect(work.children[0].children.map(c => c.subname)).toEqual(['Review', 'Test']);
+    expect(classes.flatten_category_hierarchy(result)).toHaveLength(5);
+    expect(input).toEqual(before);
+  });
+});
+
 test('matches string to category', () => {
   const cat = classes.matchString('subsubtest', testClasses);
   expect(cat).toEqual(testClasses[1]);
