@@ -1,5 +1,7 @@
 import { setActivePinia, createPinia } from 'pinia';
 import { useViewsStore, androidViews, defaultViews, migrateStoredViews } from '~/stores/views';
+import type { View } from '~/stores/views';
+import { nextTick, watch } from 'vue';
 
 describe('views store', () => {
   setActivePinia(createPinia());
@@ -19,6 +21,29 @@ describe('views store', () => {
     expect(viewsStore.views).toHaveLength(0);
     viewsStore.loadViews([{ id: 'something', name: 'Something', elements: [] }]);
     expect(viewsStore.views).not.toHaveLength(0);
+  });
+
+  test('sets and clears a visualization width', () => {
+    viewsStore.loadViews([{ id: 'v', name: 'V', elements: [{ type: 'top_apps', size: 3 }] }]);
+    viewsStore.setVisualizationWidth({ view_id: 'v', el_id: 0, width: 2 });
+    expect(viewsStore.views[0].elements[0]).toEqual({ type: 'top_apps', size: 3, width: 2 });
+    viewsStore.setVisualizationWidth({ view_id: 'v', el_id: 0, width: null });
+    expect(viewsStore.views[0].elements[0]).toEqual({ type: 'top_apps', size: 3 });
+  });
+
+  test('a newly set width is reactive', async () => {
+    viewsStore.loadViews([{ id: 'v', name: 'V', elements: [{ type: 'top_apps' }] }]);
+    const seen = [];
+    const stop = watch(
+      () => viewsStore.views[0].elements[0].width,
+      width => seen.push(width)
+    );
+    viewsStore.setVisualizationWidth({ view_id: 'v', el_id: 0, width: 2 });
+    await nextTick();
+    viewsStore.setVisualizationWidth({ view_id: 'v', el_id: 0, width: null });
+    await nextTick();
+    stop();
+    expect(seen).toEqual([2, undefined]);
   });
 });
 
@@ -65,6 +90,19 @@ const storedDesktopDefault = () => [
 ];
 
 describe('migrateStoredViews', () => {
+  test('keeps a stored desktop default whose card widths were edited', () => {
+    const stored: View[] = storedDesktopDefault();
+    stored[0].elements[0].width = 1;
+    expect(migrateStoredViews(stored, true)).toBe(stored);
+  });
+
+  test('treats a null card width as Automatic when migrating', () => {
+    const stored: View[] = storedDesktopDefault();
+    // Not a valid ElementWidth, but settings JSON can carry it.
+    (stored[0].elements[0] as { width?: unknown }).width = null;
+    expect(migrateStoredViews(stored, true)).toEqual(androidViews);
+  });
+
   test('replaces a stored desktop default on Android', () => {
     const migrated = migrateStoredViews(storedDesktopDefault(), true);
     expect(migrated).toEqual(androidViews);
