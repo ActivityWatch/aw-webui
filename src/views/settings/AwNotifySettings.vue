@@ -18,6 +18,8 @@ div
       b-form-checkbox(v-model="enabled" switch)
         | {{ $t('extraViews.notifications.enabled') }}
         small.text-muted.ml-2 {{ $t('extraViews.notifications.enabledHelp') }}
+      p.small.mb-0.mt-1(v-if="config.enabled && liveness" :class="livenessClass" data-test="aw-notify-liveness")
+        | {{ $t(`settings.notifications.liveness${liveness[0].toUpperCase()}${liveness.slice(1)}`) }}
 
     template(v-if="enabled")
       p.text-muted.small.mb-3
@@ -69,8 +71,11 @@ import 'vue-awesome/icons/trash';
 
 import { getClient } from '~/util/awclient';
 import {
+  AW_NOTIFY_BUCKET_PREFIX,
   AwNotifyAlert,
   AwNotifyConfig,
+  AwNotifyLiveness,
+  awNotifyLiveness,
   parseAwNotifyConfig,
   parseThresholds,
 } from '~/util/aw-notify';
@@ -106,6 +111,10 @@ function rowToDto(row: AlertRow): AwNotifyAlert {
   };
 }
 
+// aw-notify-rs heartbeats every few seconds; poll often enough that starting or
+// stopping it (e.g. from the tray) shows up without a page reload.
+const LIVENESS_POLL_MS = 15_000;
+
 export default {
   name: 'AwNotifySettings',
   data() {
@@ -117,16 +126,67 @@ export default {
       saving: false,
       error: '',
       success: false,
+      liveness: null as AwNotifyLiveness | null,
+      livenessRequest: 0,
+      livenessTimer: null as ReturnType<typeof setInterval> | null,
+      destroyed: false,
       goalOptions: [
         { text: this.$t('settings.notifications.goalWarning'), value: false },
         { text: this.$t('settings.notifications.goalReached'), value: true },
       ],
     };
   },
+  computed: {
+    livenessClass(): string {
+      return this.liveness === 'running' ? 'text-success' : 'text-muted';
+    },
+  },
   async mounted() {
     await this.load();
+    await this.refreshLiveness();
+    this.syncLivenessPolling();
+  },
+  beforeDestroy() {
+    this.destroyed = true;
+    this.stopLivenessPolling();
   },
   methods: {
+    // Poll only while the saved config is enabled (the status line is hidden
+    // otherwise). mounted() is async, so guard against starting a timer after
+    // the component was destroyed mid-load.
+    syncLivenessPolling() {
+      this.stopLivenessPolling();
+      if (this.destroyed || !this.config.enabled) return;
+      this.livenessTimer = setInterval(() => this.refreshLiveness(), LIVENESS_POLL_MS);
+    },
+    stopLivenessPolling() {
+      if (this.livenessTimer !== null) {
+        clearInterval(this.livenessTimer);
+        this.livenessTimer = null;
+      }
+    },
+    async refreshLiveness() {
+      // Saving and polling can overlap; only the newest request may update status.
+      const request = ++this.livenessRequest;
+      // Best effort: liveness is informational and must never block the form.
+      try {
+        const client = getClient();
+        const ids = Object.keys(await client.getBuckets()).filter(id =>
+          id.startsWith(AW_NOTIFY_BUCKET_PREFIX)
+        );
+        const latest = await Promise.all(
+          ids.map(async id => (await client.getEvents(id, { limit: 1 }))[0] ?? null)
+        );
+        if (!this.destroyed && request === this.livenessRequest) {
+          this.liveness = awNotifyLiveness(latest);
+        }
+      } catch (e) {
+        if (!this.destroyed && request === this.livenessRequest) {
+          console.warn('Could not determine aw-notify liveness:', e);
+          this.liveness = null;
+        }
+      }
+    },
     async load() {
       this.loading = true;
       this.error = '';
@@ -193,6 +253,8 @@ export default {
         // latest saved alerts, not the stale snapshot from page load.
         this.config = payload;
         this.success = true;
+        this.syncLivenessPolling();
+        void this.refreshLiveness();
       } catch (e: any) {
         this.error = `Failed to save settings: ${e?.message ?? e}`;
       } finally {

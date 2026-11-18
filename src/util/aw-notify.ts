@@ -105,3 +105,38 @@ export function parseAwNotifyConfig(value: unknown): AwNotifyConfig | null {
 
   return null;
 }
+
+/** aw-notify-rs writes heartbeats to `aw-notify_<hostname>`. */
+export const AW_NOTIFY_BUCKET_PREFIX = 'aw-notify_';
+
+/**
+ * aw-notify-rs heartbeats every 5 s with a 10 s pulsetime, so a running
+ * daemon's last event always ends within seconds of now. Allow several missed
+ * beats before reporting it as stopped.
+ */
+export const AW_NOTIFY_STALE_AFTER_MS = 30_000;
+
+export type AwNotifyLiveness = 'running' | 'stopped' | 'never';
+
+interface HeartbeatEvent {
+  timestamp: string | Date;
+  duration?: number;
+}
+
+/**
+ * Liveness from the latest event of each `aw-notify_*` bucket (null for an
+ * empty bucket). Running if any heartbeat ended within the stale window;
+ * `never` if no heartbeat bucket or event exists at all.
+ */
+export function awNotifyLiveness(
+  latestEvents: (HeartbeatEvent | null)[],
+  now: Date = new Date()
+): AwNotifyLiveness {
+  const events = latestEvents.filter((e): e is HeartbeatEvent => e !== null);
+  if (events.length === 0) return 'never';
+  const fresh = events.some(e => {
+    const end = new Date(e.timestamp).getTime() + (e.duration || 0) * 1000;
+    return now.getTime() - end <= AW_NOTIFY_STALE_AFTER_MS;
+  });
+  return fresh ? 'running' : 'stopped';
+}

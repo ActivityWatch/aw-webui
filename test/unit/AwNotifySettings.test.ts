@@ -1,14 +1,22 @@
 const mockGet = jest.fn();
 const mockPost = jest.fn();
+const mockGetBuckets = jest.fn();
+const mockGetEvents = jest.fn();
 
 jest.mock('~/util/awclient', () => ({
   getClient: () => ({
     req: { get: mockGet, post: mockPost },
+    getBuckets: mockGetBuckets,
+    getEvents: mockGetEvents,
   }),
 }));
 
-import { shallowMount } from '@vue/test-utils';
+import { enableAutoDestroy, shallowMount } from '@vue/test-utils';
 import AwNotifySettings from '~/views/settings/AwNotifySettings.vue';
+
+// Enabled settings mounts start a polling interval; release every wrapper,
+// including when an assertion fails before a test's explicit destroy().
+enableAutoDestroy(afterEach);
 
 const flushPromises = () => new Promise(resolve => setTimeout(resolve, 0));
 
@@ -17,6 +25,10 @@ describe('AwNotifySettings', () => {
     mockGet.mockReset();
     mockPost.mockReset();
     mockPost.mockResolvedValue({});
+    mockGetBuckets.mockReset();
+    mockGetBuckets.mockResolvedValue({});
+    mockGetEvents.mockReset();
+    mockGetEvents.mockResolvedValue([]);
   });
 
   // aw-server-rust returns 200 with a null body for a setting that was never saved.
@@ -160,5 +172,135 @@ describe('AwNotifySettings', () => {
       expect.objectContaining({ http_port: 5600 }),
       expect.anything()
     );
+  });
+
+  test('shows aw-notify liveness from a fresh heartbeat bucket when enabled', async () => {
+    mockGet.mockResolvedValue({ data: { enabled: true, alerts: [] } });
+    mockGetBuckets.mockResolvedValue({ 'aw-notify_host': {}, 'aw-watcher-afk_host': {} });
+    mockGetEvents.mockResolvedValue([{ timestamp: new Date().toISOString(), duration: 5 }]);
+    const wrapper: any = shallowMount(AwNotifySettings, {
+      mocks: { $t: key => key },
+    });
+    await flushPromises();
+
+    expect(mockGetEvents).toHaveBeenCalledTimes(1);
+    expect(mockGetEvents).toHaveBeenCalledWith('aw-notify_host', { limit: 1 });
+    expect(wrapper.vm.liveness).toBe('running');
+    expect(wrapper.find('[data-test="aw-notify-liveness"]').text()).toBe(
+      'settings.notifications.livenessRunning'
+    );
+  });
+
+  describe('liveness polling', () => {
+    beforeEach(() => {
+      // Keep setTimeout real so flushPromises still works.
+      jest.useFakeTimers({ doNotFake: ['setTimeout', 'nextTick', 'setImmediate'] });
+    });
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    test('re-checks liveness periodically while enabled and stops on destroy', async () => {
+      mockGet.mockResolvedValue({ data: { enabled: true, alerts: [] } });
+      mockGetBuckets.mockResolvedValue({ 'aw-notify_host': {} });
+      mockGetEvents.mockResolvedValue([]);
+      const wrapper: any = shallowMount(AwNotifySettings, {
+        mocks: { $t: key => key },
+      });
+      await flushPromises();
+      expect(wrapper.vm.liveness).toBe('never');
+
+      mockGetEvents.mockResolvedValue([{ timestamp: new Date().toISOString(), duration: 5 }]);
+      jest.advanceTimersByTime(15_000);
+      await flushPromises();
+      expect(wrapper.vm.liveness).toBe('running');
+
+      wrapper.destroy();
+      const calls = mockGetBuckets.mock.calls.length;
+      jest.advanceTimersByTime(60_000);
+      await flushPromises();
+      expect(mockGetBuckets.mock.calls.length).toBe(calls);
+    });
+
+    test('does not poll while disabled, and starts polling after enabling and saving', async () => {
+      mockGet.mockResolvedValue({ data: { enabled: false, alerts: [] } });
+      const wrapper: any = shallowMount(AwNotifySettings, {
+        mocks: { $t: key => key },
+      });
+      await flushPromises();
+      expect(wrapper.vm.livenessTimer).toBeNull();
+      const calls = mockGetBuckets.mock.calls.length;
+      jest.advanceTimersByTime(60_000);
+      await flushPromises();
+      expect(mockGetBuckets.mock.calls.length).toBe(calls);
+
+      wrapper.vm.enabled = true;
+      await wrapper.vm.save();
+      await flushPromises();
+      // Saving refreshes immediately, then keeps polling.
+      expect(mockGetBuckets.mock.calls.length).toBe(calls + 1);
+      expect(wrapper.vm.livenessTimer).not.toBeNull();
+      jest.advanceTimersByTime(15_000);
+      await flushPromises();
+      expect(mockGetBuckets.mock.calls.length).toBe(calls + 2);
+      wrapper.destroy();
+    });
+
+    test.each(['success', 'failure'])(
+      'ignores an older polling %s after a save refresh',
+      async outcome => {
+        mockGet.mockResolvedValue({ data: { enabled: true, alerts: [] } });
+        mockGetBuckets.mockResolvedValue({ 'aw-notify_host': {} });
+        const wrapper: any = shallowMount(AwNotifySettings, {
+          mocks: { $t: key => key },
+        });
+        await flushPromises();
+
+        let resolveOld!: (value: any) => void;
+        let rejectOld!: (reason: Error) => void;
+        mockGetEvents.mockReturnValueOnce(
+          new Promise((resolve, reject) => {
+            resolveOld = resolve;
+            rejectOld = reject;
+          })
+        );
+        jest.advanceTimersByTime(15_000);
+        await flushPromises();
+
+        mockGetEvents.mockResolvedValue([{ timestamp: new Date().toISOString(), duration: 5 }]);
+        await wrapper.vm.save();
+        await flushPromises();
+        expect(wrapper.vm.liveness).toBe('running');
+
+        if (outcome === 'success') resolveOld([]);
+        else rejectOld(new Error('Older request failed'));
+        await flushPromises();
+        expect(wrapper.vm.liveness).toBe('running');
+        wrapper.destroy();
+      }
+    );
+
+    test('does not start polling if destroyed before the settings load', async () => {
+      let resolveGet!: (v: any) => void;
+      mockGet.mockReturnValue(new Promise(r => (resolveGet = r)));
+      const wrapper: any = shallowMount(AwNotifySettings, {
+        mocks: { $t: key => key },
+      });
+      wrapper.destroy();
+      resolveGet({ data: { enabled: true, alerts: [] } });
+      await flushPromises();
+      expect(wrapper.vm.livenessTimer).toBeNull();
+    });
+  });
+
+  test('hides liveness while notifications are disabled', async () => {
+    mockGet.mockResolvedValue({ data: { enabled: false, alerts: [] } });
+    const wrapper: any = shallowMount(AwNotifySettings, {
+      mocks: { $t: key => key },
+    });
+    await flushPromises();
+
+    expect(wrapper.vm.liveness).toBe('never');
+    expect(wrapper.find('[data-test="aw-notify-liveness"]').exists()).toBe(false);
   });
 });

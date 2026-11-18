@@ -1,4 +1,9 @@
-import { parseAwNotifyConfig, parseThresholds } from '~/util/aw-notify';
+import {
+  AW_NOTIFY_STALE_AFTER_MS,
+  awNotifyLiveness,
+  parseAwNotifyConfig,
+  parseThresholds,
+} from '~/util/aw-notify';
 
 describe('parseThresholds', () => {
   test('parses comma-separated positive whole minutes', () => {
@@ -81,5 +86,41 @@ describe('parseAwNotifyConfig', () => {
     { alerts: [canonicalAlert], enabled: 'yes' },
   ])('rejects unsupported config %p', config => {
     expect(parseAwNotifyConfig(config)).toBeNull();
+  });
+});
+
+describe('awNotifyLiveness', () => {
+  const now = new Date('2026-11-15T12:00:00Z');
+  const endingAgo = (ms: number, duration = 5) => ({
+    timestamp: new Date(now.getTime() - ms - duration * 1000).toISOString(),
+    duration,
+  });
+
+  test('never when there is no heartbeat bucket or event', () => {
+    expect(awNotifyLiveness([], now)).toBe('never');
+    expect(awNotifyLiveness([null], now)).toBe('never');
+  });
+
+  test('running when the latest heartbeat ended within the stale window', () => {
+    expect(awNotifyLiveness([endingAgo(2_000)], now)).toBe('running');
+    expect(awNotifyLiveness([endingAgo(AW_NOTIFY_STALE_AFTER_MS)], now)).toBe('running');
+  });
+
+  test('counts the merged event duration, not just its start', () => {
+    // A long merged run started an hour ago but its last pulse was 3 s ago.
+    expect(awNotifyLiveness([endingAgo(3_000, 3600)], now)).toBe('running');
+  });
+
+  test('stopped when every heartbeat is older than the stale window', () => {
+    expect(awNotifyLiveness([endingAgo(AW_NOTIFY_STALE_AFTER_MS + 1)], now)).toBe('stopped');
+    expect(awNotifyLiveness([endingAgo(3_600_000), null], now)).toBe('stopped');
+  });
+
+  test('running if any host bucket is fresh', () => {
+    expect(awNotifyLiveness([endingAgo(3_600_000), endingAgo(1_000)], now)).toBe('running');
+  });
+
+  test('a heartbeat ending slightly in the future (clock skew) counts as running', () => {
+    expect(awNotifyLiveness([endingAgo(-5_000)], now)).toBe('running');
   });
 });

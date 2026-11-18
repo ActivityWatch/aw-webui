@@ -256,6 +256,10 @@ export default {
       loadFailed: '加载设置失败：{error}',
       saveFailed: '保存设置失败：{error}',
       thresholdsInvalid: '阈值必须是用逗号分隔的正整数分钟数。',
+      livenessRunning: 'aw-notify 正在运行。',
+      livenessStopped:
+        'aw-notify 在过去 30 秒内没有发出心跳。启用通知后，它会随 ActivityWatch 一起启动；如果一直处于停止状态，请重启 ActivityWatch。',
+      livenessNever: 'aw-notify 尚未向此服务器发出心跳。启用通知并保存后，ActivityWatch 会启动它。',
     },
     privacyFilters: {
       title: '隐私过滤器',
