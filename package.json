@@ -65,7 +65,7 @@
     "vis-data": "^7.1.2",
     "vis-timeline": "^7.5.0",
     "vis-util": "^5.0.2",
-    "vite": "^6.4.5",
+    "vite": "^7.3.8",
     "vue-awesome": "^3.5.1",
     "vue-chartjs": "^4.1.0",
     "vue-color": "^2.8.1",
@@ -153,7 +153,6 @@
     "postcss": "^8.5.10",
     "serialize-javascript": "^7.0.5",
     "webpack-dev-server": "^5.2.4",
-    "esbuild": "0.28.1",
     "cross-spawn": "^7.0.6"
   }
 }
