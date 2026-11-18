@@ -102,6 +102,7 @@ interface State {
 
   // Whether to hide visualizations that lack required data (default: off)
   hideUnsupportedVisualizations: boolean;
+  multideviceHostOrder: string[];
 
   // Honor-system "I already support ActivityWatch" flag. Stored in the server's
   // settings store (not localStorage) so every browser and the desktop clients
@@ -171,6 +172,7 @@ export const useSettingsStore = defineStore('settings', {
     devmode: typeof PRODUCTION === 'undefined' ? true : !PRODUCTION,
     requestTimeout: 30,
     hideUnsupportedVisualizations: false,
+    multideviceHostOrder: [],
 
     supporter: false,
 
@@ -273,6 +275,7 @@ export const useSettingsStore = defineStore('settings', {
           key == 'active_set_ids' ||
           key == 'saved_queries' ||
           key == 'category_builder_ignored_words' ||
+          key == 'multideviceHostOrder' ||
           key == 'alerts';
         try {
           if (isJsonKey) {
