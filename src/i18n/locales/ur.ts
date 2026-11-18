@@ -692,6 +692,9 @@ export default {
       showMore: 'مزید {count} دکھائیں',
     },
     calendar: {
+      source: 'ماخذ:',
+      categories: 'زمرے',
+      rawBucket: 'خام بکٹ',
       bucket: 'بکٹ:',
       show: 'دکھائیں:',
       day: 'دن',

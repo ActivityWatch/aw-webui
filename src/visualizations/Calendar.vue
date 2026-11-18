@@ -1,7 +1,11 @@
 <template lang="pug">
 div.mx-3
   b-form
-    b-form-group(:label="$t('ui.calendar.bucket')")
+    b-form-group(:label="$t('ui.calendar.source')")
+      select(:value="activeSource", @change="source = $event.target.value")
+        option(value="category", :disabled="!hasCategories") {{ $t('ui.calendar.categories') }}
+        option(value="bucket") {{ $t('ui.calendar.rawBucket') }}
+    b-form-group(v-if="activeSource === 'bucket'", :label="$t('ui.calendar.bucket')")
       select(v-model="selectedBucket")
         option(v-for="bucket in buckets", :value="bucket.id") {{ bucket.id }}
     b-form-group(:label="$t('ui.calendar.show')")
@@ -21,9 +25,11 @@ import _ from 'lodash';
 import FullCalendar from '@fullcalendar/vue';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { calendarTimeBounds } from '~/util/calendar';
+import { useCategoryStore } from '~/stores/categories';
+import { categoryPathLabel } from '~/util/categoryLabels';
 
-// TODO: Use canonical timeline query, with flooding and categorization
-// TODO: Checkbox for toggling category-view, where adjacent events with same category are merged and the events are labeled by category
+// Category mode renders the Timeline's canonical categorized stream
+// (categoryTimelineQuery + mergeCategoryIntervals), so there is no second query.
 // TODO: Use the recommended way of dynamically getting events: https://fullcalendar.io/docs/events-function
 export default {
   components: {
@@ -31,11 +37,23 @@ export default {
   },
   props: {
     buckets: { type: Array },
+    // Merged category intervals from Timeline; they carry no source event IDs.
+    categorizedEvents: { type: Array, default: () => [] },
   },
   data() {
-    return { fitToActive: false, selectedBucket: null, view: 'timeGridDay' };
+    return { fitToActive: false, selectedBucket: null, source: null, view: 'timeGridDay' };
   },
   computed: {
+    hasCategories: function () {
+      // Key off renderable blocks, so a stream of only zero-duration or
+      // uncategorized intervals still falls back to the raw bucket.
+      return this.categoryEvents.length > 0;
+    },
+    activeSource: function () {
+      // An explicit choice sticks either way; only the default follows the stream.
+      if (this.source) return this.source;
+      return this.hasCategories ? 'category' : 'bucket';
+    },
     calendarOptions: function () {
       const events: any[] = Array.isArray(this.events) ? this.events.filter(Boolean) : [];
       return {
@@ -57,6 +75,7 @@ export default {
     },
     events: function () {
       // NOTE: This returns FullCalendar events, not ActivityWatch events.
+      if (this.activeSource === 'category') return this.categoryEvents;
       if (this.buckets == null) return [];
 
       const bucket = _.find(this.buckets, b => b.id == this.selectedBucket);
@@ -74,6 +93,21 @@ export default {
         };
       });
       return events;
+    },
+    categoryEvents: function () {
+      const categoryStore = useCategoryStore();
+      const intervals = Array.isArray(this.categorizedEvents) ? this.categorizedEvents : [];
+      return intervals
+        .filter(e => e && e.timestamp && Number(e.duration) > 0 && e.data?.$category)
+        .map(e => {
+          const name = e.data.$category;
+          return {
+            title: categoryPathLabel(name),
+            start: moment(e.timestamp).format(),
+            end: moment(e.timestamp).add(e.duration, 'seconds').format(),
+            backgroundColor: categoryStore.get_category_color(name),
+          };
+        });
     },
   },
   watch: {

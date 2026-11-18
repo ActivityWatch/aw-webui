@@ -683,6 +683,9 @@ export default {
       showMore: '{count} weitere anzeigen',
     },
     calendar: {
+      source: 'Quelle:',
+      categories: 'Kategorien',
+      rawBucket: 'Roher Bucket',
       bucket: 'Bucket:',
       show: 'Anzeigen:',
       day: 'Tag',
