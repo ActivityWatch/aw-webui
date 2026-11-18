@@ -101,7 +101,7 @@ describe('Stopwatch retrieval', () => {
       'aw-stopwatch',
       1,
       expect.objectContaining({
-        data: { running: true, label: 'New timer' },
+        data: { running: true, label: 'New timer', tags: [] },
       })
     );
     expect(wrapper.vm.runningTimers.map(e => e.id)).toEqual([103, 1]);
