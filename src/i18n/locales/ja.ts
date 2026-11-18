@@ -425,16 +425,17 @@ export default {
     rangeStart: '開始日',
     rangeEnd: '終了日',
     invalidRange: 'URL の日付範囲が無効なため、代わりに今日を表示しています。',
-    // English fallback until these interval strings are translated.
-    periodExactInterval: 'exact times',
-    intervalStart: 'Start time',
-    intervalEnd: 'End time (exclusive)',
-    invalidInterval: 'Invalid time interval in URL, showing today instead.',
-    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    periodExactInterval: '正確な時刻',
+    intervalStart: '開始時刻',
+    intervalEnd: '終了時刻（含まない）',
+    invalidInterval: 'URL の時間間隔が無効なため、代わりに今日を表示しています。',
+    intervalNonexistentTime:
+      'その時刻はお使いのタイムゾーンには存在しません（時計が進められます）。',
     intervalAmbiguousTime:
-      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
-    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
-    intervalEndAfterStart: 'The end time must be after the start time.',
+      'その時刻はお使いのタイムゾーンで 2 回発生します（時計が戻されます）。使用する方を選択してください:',
+    intervalTooLong:
+      '正確な時間間隔は最大 92 日までです。これより長い期間には日付範囲を使用してください。',
+    intervalEndAfterStart: '終了時刻は開始時刻より後である必要があります。',
     diagnosticMissingWindow:
       '{host} のウィンドウバケットがありません。aw-watcher-window を起動してから、このページを更新してください。',
     diagnosticMissingAfk:
@@ -494,7 +495,7 @@ export default {
     periodLast7d: '過去7日間',
     periodLast30d: '過去30日間',
     periodCustomRange: '選択した期間',
-    periodExactInterval: 'in the selected time interval', // English fallback
+    periodExactInterval: '選択した時間間隔',
     periodAllTime: '全期間',
   },
   visualizations: {
@@ -660,10 +661,10 @@ export default {
       quickDurations: 'クイック期間',
       startDate: '開始日',
       endDate: '終了日（任意）',
-      startTime: 'Start time',
-      endTime: 'End time',
+      startTime: '開始時刻',
+      endTime: '終了時刻',
       unresolvableTime:
-        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
+        '選択した時刻のいずれかが、夏時間の切り替えにより存在しないか 2 回発生します。調整してください。',
       optional: '（任意）',
       apply: '適用',
       refresh: '更新',

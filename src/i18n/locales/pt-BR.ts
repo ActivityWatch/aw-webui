@@ -431,16 +431,16 @@ export default {
     rangeStart: 'Data de início',
     rangeEnd: 'Data de término',
     invalidRange: 'Intervalo de datas inválido na URL; exibindo hoje no lugar.',
-    // English fallback until these interval strings are translated.
-    periodExactInterval: 'exact times',
-    intervalStart: 'Start time',
-    intervalEnd: 'End time (exclusive)',
-    invalidInterval: 'Invalid time interval in URL, showing today instead.',
-    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    periodExactInterval: 'horários exatos',
+    intervalStart: 'Horário de início',
+    intervalEnd: 'Horário de término (exclusivo)',
+    invalidInterval: 'Intervalo de tempo inválido na URL, mostrando hoje em vez disso.',
+    intervalNonexistentTime: 'Esse horário não existe no seu fuso horário (o relógio é adiantado).',
     intervalAmbiguousTime:
-      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
-    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
-    intervalEndAfterStart: 'The end time must be after the start time.',
+      'Esse horário ocorre duas vezes no seu fuso horário (o relógio é atrasado). Escolha qual usar:',
+    intervalTooLong:
+      'Um intervalo exato pode ter no máximo 92 dias; use um intervalo de datas para períodos mais longos.',
+    intervalEndAfterStart: 'O horário de término deve ser posterior ao horário de início.',
     diagnosticMissingWindow:
       'Nenhum bucket de janela para {host}. Inicie o aw-watcher-window e atualize esta página.',
     diagnosticMissingAfk:
@@ -500,7 +500,7 @@ export default {
     periodLast7d: 'nos últimos 7 dias',
     periodLast30d: 'nos últimos 30 dias',
     periodCustomRange: 'no intervalo selecionado',
-    periodExactInterval: 'in the selected time interval', // English fallback
+    periodExactInterval: 'no intervalo de tempo selecionado',
     periodAllTime: 'no total',
   },
   visualizations: {
@@ -668,10 +668,10 @@ export default {
       quickDurations: 'Durações rápidas',
       startDate: 'Data de início',
       endDate: 'Data de término (opcional)',
-      startTime: 'Start time',
-      endTime: 'End time',
+      startTime: 'Horário de início',
+      endTime: 'Horário de término',
       unresolvableTime:
-        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
+        'Um dos horários selecionados não existe, ou ocorre duas vezes, devido a uma mudança de horário de verão. Ajuste-o.',
       optional: '(opcional)',
       apply: 'Aplicar',
       refresh: 'Atualizar',

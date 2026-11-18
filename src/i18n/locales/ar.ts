@@ -417,16 +417,16 @@ export default {
     rangeStart: 'تاريخ البدء',
     rangeEnd: 'تاريخ الانتهاء',
     invalidRange: 'نطاق التاريخ في الرابط غير صالح، يتم عرض اليوم بدلًا منه.',
-    // English fallback until these interval strings are translated.
-    periodExactInterval: 'exact times',
-    intervalStart: 'Start time',
-    intervalEnd: 'End time (exclusive)',
-    invalidInterval: 'Invalid time interval in URL, showing today instead.',
-    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    periodExactInterval: 'أوقات دقيقة',
+    intervalStart: 'وقت البدء',
+    intervalEnd: 'وقت الانتهاء (غير مشمول)',
+    invalidInterval: 'الفترة الزمنية في الرابط غير صالحة، يتم عرض اليوم بدلًا منها.',
+    intervalNonexistentTime: 'هذا الوقت غير موجود في منطقتك الزمنية (تُقدَّم الساعة).',
     intervalAmbiguousTime:
-      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
-    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
-    intervalEndAfterStart: 'The end time must be after the start time.',
+      'هذا الوقت يتكرر مرتين في منطقتك الزمنية (تُؤخَّر الساعة). اختر أيهما تريد استخدامه:',
+    intervalTooLong:
+      'يمكن أن تمتد الفترة الدقيقة 92 يومًا كحد أقصى؛ استخدم نطاق تاريخ للفترات الأطول.',
+    intervalEndAfterStart: 'يجب أن يكون وقت الانتهاء بعد وقت البدء.',
     diagnosticMissingWindow:
       'لا يوجد bucket للنوافذ لـ {host}. شغّل aw-watcher-window ثم حدّث هذه الصفحة.',
     diagnosticMissingAfk:
@@ -486,7 +486,7 @@ export default {
     periodLast7d: 'آخر 7 أيام',
     periodLast30d: 'آخر 30 يومًا',
     periodCustomRange: 'في النطاق المحدد',
-    periodExactInterval: 'in the selected time interval', // English fallback
+    periodExactInterval: 'في الفترة الزمنية المحددة',
     periodAllTime: 'إجمالًا',
   },
   visualizations: {
@@ -650,10 +650,10 @@ export default {
       quickDurations: 'مدد سريعة',
       startDate: 'تاريخ البدء',
       endDate: 'تاريخ الانتهاء (اختياري)',
-      startTime: 'Start time',
-      endTime: 'End time',
+      startTime: 'وقت البدء',
+      endTime: 'وقت الانتهاء',
       unresolvableTime:
-        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
+        'أحد الأوقات المحددة غير موجود أو يتكرر مرتين بسبب تغيير التوقيت الصيفي. يرجى تعديله.',
       optional: '(اختياري)',
       apply: 'تطبيق',
       refresh: 'تحديث',
