@@ -230,6 +230,100 @@ describe('time interval controls', () => {
     expect(lastRange()[1].format('YYYY-MM-DD HH:mm')).toBe('2026-10-30 00:00');
   });
 
+  // A range from the URL fills the inputs, which then work as if typed in.
+  describe('initial range', () => {
+    const initial = {
+      allowTime: true,
+      initialStart: '2026-10-27T10:59:00Z',
+      initialEnd: '2026-10-27T15:02:43.547Z',
+    };
+    // The time inputs hold whole seconds, so the end rounds up to stay in the range.
+    const shown = [moment('2026-10-27T10:59:00Z'), moment('2026-10-27T15:02:44Z')];
+    const shownRange = shown.map(time => time.valueOf());
+
+    function emittedRange() {
+      return lastRange().map(time => time.valueOf());
+    }
+
+    function inputs() {
+      return ['Start date', 'Start time', 'End date (optional)', 'End time'].map(
+        label => wrapper.find(`input[aria-label="${label}"]`).element.value
+      );
+    }
+
+    test('opens on the range and shows it in the inputs', async () => {
+      create(initial);
+      await wrapper.vm.$nextTick();
+      expect(wrapper.emitted('input')).toHaveLength(1);
+      expect(emittedRange()).toEqual(shownRange);
+      expect(wrapper.find('input[type="radio"][value="range"]').element.checked).toBe(true);
+      expect(inputs()).toEqual([
+        shown[0].format('YYYY-MM-DD'),
+        shown[0].format('HH:mm'),
+        shown[1].format('YYYY-MM-DD'),
+        shown[1].format('HH:mm:ss'),
+      ]);
+    });
+
+    test('opens on the whole days of the range without the time inputs', () => {
+      create({ ...initial, allowTime: false });
+      expect(emittedRange()).toEqual([
+        shown[0].clone().startOf('day').valueOf(),
+        shown[1].clone().startOf('day').add(1, 'day').valueOf(),
+      ]);
+    });
+
+    test.each([
+      ['2026-10-27T10:59:00Z', null],
+      [null, '2026-10-27T15:02:43Z'],
+      ['not a date', '2026-10-27T15:02:43Z'],
+    ])('ignores an unreadable range from %s to %s', (initialStart, initialEnd) => {
+      create({ allowTime: true, initialStart, initialEnd });
+      expect(wrapper.vm.mode).toBe('last_duration');
+      expectSeconds(3600);
+    });
+
+    test.each([
+      ['reversed', '2026-10-27T15:02:43Z', '2026-10-27T10:59:00Z'],
+      ['empty', '2026-10-27T10:59:00Z', '2026-10-27T10:59:00Z'],
+      ['too long', '2026-09-01T00:00:00Z', '2026-10-27T00:00:00Z'],
+    ])('shows a %s range with a warning instead of opening on it', async (_case, start, end) => {
+      create({ allowTime: true, initialStart: start, initialEnd: end });
+      await wrapper.vm.$nextTick();
+      expect(wrapper.emitted('input')).toBeUndefined();
+      expect(wrapper.find('.alert').exists()).toBe(true);
+      expect(button('Apply').element.disabled).toBe(true);
+    });
+
+    test('Refresh keeps the range', async () => {
+      create(initial);
+      await button('Refresh').trigger('click');
+      expect(wrapper.emitted('input')).toHaveLength(2);
+      expect(emittedRange()).toEqual(shownRange);
+    });
+
+    test('opens on a new range when the props change', async () => {
+      create({ allowTime: true });
+      expectSeconds(3600);
+      await wrapper.setProps(initial);
+      expect(emittedRange()).toEqual(shownRange);
+    });
+
+    // e.g. the Timeline link removes the query without remounting the page
+    test.each([
+      ['removed', { initialStart: undefined, initialEnd: undefined }],
+      ['unreadable', { initialStart: 'not a date' }],
+    ])('returns to the default duration when the range is %s', async (_case, props) => {
+      create({ ...initial, defaultDuration: 7200 });
+      await wrapper.setProps(props);
+      expect(wrapper.vm.mode).toBe('last_duration');
+      expectSeconds(7200);
+      expect(lastRange()[1].valueOf()).toBe(Date.now());
+      const { start, startTime, end, endTime } = wrapper.vm;
+      expect([start, startTime, end, endTime]).toEqual([null, null, null, null]);
+    });
+  });
+
   // Node reads TZ at startup; replay in a child so default UTC CI exercises DST too.
   if (process.env.TZ !== 'Europe/Stockholm') {
     test('replays DST cases in Europe/Stockholm', () => {

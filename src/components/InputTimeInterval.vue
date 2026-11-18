@@ -158,6 +158,16 @@ export default {
       type: Boolean,
       default: false,
     },
+    // Range to open on (ISO 8601 instants, e.g. from the URL), filled into the
+    // inputs. Its times need allowTime, and it is ignored when unreadable.
+    initialStart: {
+      type: String,
+      default: null,
+    },
+    initialEnd: {
+      type: String,
+      default: null,
+    },
   },
   data() {
     return {
@@ -244,6 +254,9 @@ export default {
       if (start === null || end === null) return false;
       return !start.isBefore(end);
     },
+    initialRange() {
+      return [this.initialStart, this.initialEnd];
+    },
     daterangeTooLong() {
       if (!this.start || this.maxDuration === null) return false;
       const [start, end] = this.dateRange;
@@ -251,8 +264,20 @@ export default {
       return end.diff(start, 'seconds', true) > this.maxDuration;
     },
   },
+  watch: {
+    initialRange() {
+      if (!this.applyInitialRange()) {
+        // Removed or unreadable (e.g. by navigating without it): open like a fresh page.
+        this.mode = 'last_duration';
+        this.duration = this.defaultDuration;
+        this.start = this.end = this.startTime = this.endTime = null;
+      }
+      this.valueChanged();
+    },
+  },
   mounted() {
     this.duration = this.defaultDuration;
+    this.applyInitialRange();
     this.valueChanged();
 
     // We want our lastUpdated text to update every ~500ms
@@ -293,6 +318,24 @@ export default {
     applyRange() {
       this.mode = 'range';
       this.valueChanged();
+    },
+    applyInitialRange() {
+      if (!this.initialStart || !this.initialEnd) return false;
+      const start = moment(this.initialStart, moment.ISO_8601, true);
+      const end = moment(this.initialEnd, moment.ISO_8601, true);
+      if (!start.isValid() || !end.isValid()) return false;
+      // The time inputs hold whole seconds: round outwards to keep the whole range.
+      start.startOf('second');
+      if (end.milliseconds()) end.startOf('second').add(1, 'second');
+      // A range the inputs can't show (reversed, too long, or in a repeated DST
+      // hour) gets their usual warning.
+      const wallTime = (time: moment.Moment) => time.format(time.seconds() ? 'HH:mm:ss' : 'HH:mm');
+      this.mode = 'range';
+      this.start = start.format('YYYY-MM-DD');
+      this.startTime = wallTime(start);
+      this.end = end.format('YYYY-MM-DD');
+      this.endTime = wallTime(end);
+      return true;
     },
     applyLastDuration() {
       this.mode = 'last_duration';
