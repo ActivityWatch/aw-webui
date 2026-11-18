@@ -180,22 +180,20 @@ div
                  :aria-label="$t('activity.previousPeriod', { period: periodLength })")
           icon(name="arrow-left")
       template(v-if="dateRange")
-        input.form-control.form-control-sm.activity-dateinput(
-          type="date"
+        input-date.activity-dateinput(
           :value="dateRange.start"
           :max="dateRange.end"
           :aria-label="$t('activity.rangeStart')"
           :title="$t('activity.rangeStart')"
-          @change="setRange($event.target.value, dateRange.end)"
+          @input="setRange($event, dateRange.end)"
         )
-        input.form-control.form-control-sm.activity-dateinput(
-          type="date"
+        input-date.activity-dateinput(
           :value="dateRange.end"
           :min="dateRange.start"
           :max="todayDate"
           :aria-label="$t('activity.rangeEnd')"
           :title="$t('activity.rangeEnd')"
-          @change="setRange(dateRange.start, $event.target.value)"
+          @input="setRange(dateRange.start, $event)"
         )
       template(v-else-if="exactInterval")
         input.form-control.form-control-sm.activity-datetimeinput(
@@ -216,13 +214,12 @@ div
           data-testid="interval-end"
           @change="editInterval('end', $event.target.value)"
         )
-      input.form-control.form-control-sm.activity-dateinput(
+      input-date.activity-dateinput(
         v-else
-        type="date"
         :value="_date"
         :max="today"
         :title="periodIsBrowseable ? periodReadableRange : ''"
-        @change="setDate($event.target.value, periodLength)"
+        @input="setDate($event, periodLength)"
       )
       b-input-group-append
         b-button.px-2(:to="{ path: link_prefix + '/' + nextPeriod() + '/' + subview + '/' + currentViewId, query: $route.query }",
@@ -385,8 +382,8 @@ div
   // regardless of mode (day / week / month / year / N days). The full
   // human-readable range remains available via the input's tooltip and the
   // page heading.
-  width: 9.5rem;
-  min-width: 9.5rem;
+  width: 10.5rem;
+  min-width: 10.5rem;
 }
 
 .nav {
@@ -467,6 +464,7 @@ import 'vue-awesome/icons/desktop';
 import 'vue-awesome/icons/caret-down';
 import 'vue-awesome/icons/caret-right';
 
+import InputDate from '~/components/InputDate.vue';
 import { useSettingsStore } from '~/stores/settings';
 import { useCategoryStore } from '~/stores/categories';
 import { useActivityStore, QueryOptions } from '~/stores/activity';
@@ -498,6 +496,7 @@ import {
 export default {
   name: 'Activity',
   components: {
+    'input-date': InputDate,
     'aw-uncategorized-notification': () => import('~/components/UncategorizedNotification.vue'),
     'aw-watcher-liveness-banner': () => import('~/components/WatcherLivenessBanner.vue'),
   },

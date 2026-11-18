@@ -4,7 +4,7 @@ import InputTimeInterval from '~/components/InputTimeInterval.vue';
 // Date-only behaviour must stay identical for Bucket.vue, which does not opt in
 // to the optional time inputs.
 
-const stubs = ['b-alert', 'b-form-radio-group', 'b-button', 'icon'];
+const stubs = ['b-alert', 'b-form-radio-group', 'b-button', 'icon', 'input-date'];
 const mocks = { $t: (key: string) => key };
 
 function make(propsData: Record<string, unknown> = {}) {
