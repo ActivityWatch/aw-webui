@@ -943,6 +943,13 @@ export default {
       bucketTools: 'Bagian ini masih dalam pengembangan',
       timelineExperiment: 'Belum siap untuk produksi, masih bereksperimen',
     },
+    notices: {
+      title: 'Pemberitahuan',
+      bell: 'Pemberitahuan',
+      bellUnseen: 'Pemberitahuan, baru',
+      close: 'Tutup',
+      empty: 'Belum ada yang baru.',
+    },
     release: {
       newAvailable: 'Rilis baru, v{version}, tersedia untuk',
       download: 'diunduh',

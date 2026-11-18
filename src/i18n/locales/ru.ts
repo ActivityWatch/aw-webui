@@ -936,6 +936,13 @@ export default {
       bucketTools: 'Этот раздел ещё в разработке',
       timelineExperiment: 'Не готово к релизу, пока экспериментируем',
     },
+    notices: {
+      title: 'Уведомления',
+      bell: 'Уведомления',
+      bellUnseen: 'Уведомления, новое',
+      close: 'Закрыть',
+      empty: 'Сейчас ничего нового.',
+    },
     release: {
       newAvailable: 'Доступен новый релиз v{version} для',
       download: 'скачивания',

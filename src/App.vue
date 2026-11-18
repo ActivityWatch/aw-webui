@@ -6,8 +6,10 @@ div#wrapper(v-if="loaded")
     div.aw-container.my-sm-3.mb-3.p-3
       error-boundary
         user-satisfaction-poll
-        new-release-notification(v-if="isNewReleaseCheckEnabled")
         router-view
+
+  notice-host
+    new-release-notification(v-if="isNewReleaseCheckEnabled")
 
   aw-footer
 </template>

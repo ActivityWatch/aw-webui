@@ -941,6 +941,13 @@ export default {
       bucketTools: 'यह अनुभाग अभी विकास में है',
       timelineExperiment: 'प्रोडक्शन के लिए तैयार नहीं, अभी प्रयोग जारी है',
     },
+    notices: {
+      title: 'सूचनाएँ',
+      bell: 'सूचनाएँ',
+      bellUnseen: 'सूचनाएँ, नई',
+      close: 'बंद करें',
+      empty: 'अभी कुछ नया नहीं है।',
+    },
     release: {
       newAvailable: 'नया रिलीज़, v{version}, इसके लिए उपलब्ध है:',
       download: 'डाउनलोड',

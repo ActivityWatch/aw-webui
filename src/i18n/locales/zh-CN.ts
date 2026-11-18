@@ -906,6 +906,13 @@ export default {
       bucketTools: '此部分仍在开发中',
       timelineExperiment: '尚未准备好用于生产环境，仍在试验中',
     },
+    notices: {
+      title: '通知',
+      bell: '通知',
+      bellUnseen: '通知，有新消息',
+      close: '关闭',
+      empty: '暂时没有新内容。',
+    },
     release: {
       newAvailable: '新版本 v{version} 可供',
       download: '下载',
