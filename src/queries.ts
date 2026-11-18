@@ -1,5 +1,7 @@
 import _ from 'lodash';
 
+import { supportsMergeSubwatcherFields } from '~/util/serverCapabilities';
+
 // TODO: Sanitize string input of buckets
 
 export function querystr_to_array(querystr: string): string[] {
@@ -246,6 +248,28 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
     // Filter out window events when the user was afk
     isDesktopParams(params) && params.filter_afk
       ? 'events = filter_period_intersect(events, not_afk);'
+      : '',
+    // Enrich window events with browser url/$domain so URL-based category rules
+    // fire on the main events stream. `merge_subwatcher_fields` was added in
+    // aw-server-rust#824, which is newer than the server floor this webui
+    // supports, so only emit it when the startup capability probe found it
+    // (see util/serverCapabilities). Otherwise the query fails server-side with
+    // VariableNotDefined and the whole Activity view breaks.
+    // Must run BEFORE the stopwatch union: stopwatch events explicitly recorded
+    // by the user should not be split and given browser url/$domain.
+    // Incognito events are excluded — those URLs already appear in the Browser
+    // section and should not reach the category engine via this path.
+    // base_wins preserves the url already present in window events on macOS
+    // (aw-watcher-window writes url natively for supported browsers). Copy only
+    // url, then derive its fields so a preserved native URL cannot acquire a
+    // different browser page's $domain.
+    isDesktopParams(params) &&
+    params.categories &&
+    params.bid_browsers &&
+    params.bid_browsers.length > 0 &&
+    supportsMergeSubwatcherFields()
+      ? `events = merge_subwatcher_fields(events, exclude_keyvals(browser_events, "incognito", [true]), ["url"], "base_wins");
+         events = split_url_events(events);`
       : '',
     params.bid_stopwatch
       ? `stopwatch_events = query_bucket("${params.bid_stopwatch}");
