@@ -3,6 +3,7 @@ import { seconds_to_duration } from './time';
 import DOMPurify from 'dompurify';
 import _ from 'lodash';
 import { IEvent } from './interfaces';
+import { TimelineTimeFormat, timelineClockFormat } from './timelineTimeFormat';
 
 const escapeText = (value: unknown): string => _.escape(value == null ? '' : String(value));
 
@@ -19,7 +20,11 @@ function urlLink(value: unknown): string {
   return text;
 }
 
-export function buildTooltip(bucket: { type?: string } | null | undefined, e: IEvent): string {
+export function buildTooltip(
+  bucket: { type?: string } | null | undefined,
+  e: IEvent,
+  timeFormat: TimelineTimeFormat = '24h'
+): string {
   let inner = 'Unknown bucket type';
   // A bucket with no type, or an event with no data, must still render a
   // tooltip rather than throwing and taking the whole timeline down.
@@ -29,12 +34,13 @@ export function buildTooltip(bucket: { type?: string } | null | undefined, e: IE
   // if same day, don't show date
   let start: any = moment(e.timestamp);
   let stop: any = moment(e.timestamp).add(e.duration, 'seconds');
+  const clock = timelineClockFormat(timeFormat);
   if (start.isSame(stop, 'day')) {
-    start = start.format('HH:mm:ss');
-    stop = stop.format('HH:mm:ss');
+    start = start.format(clock);
+    stop = stop.format(clock);
   } else {
-    start = start.format('YYYY-MM-DD HH:mm:ss');
-    stop = stop.format('YYYY-MM-DD HH:mm:ss');
+    start = start.format(`YYYY-MM-DD ${clock}`);
+    stop = stop.format(`YYYY-MM-DD ${clock}`);
   }
 
   if (type == 'currentwindow') {

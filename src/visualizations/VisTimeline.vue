@@ -91,9 +91,11 @@ import _ from 'lodash';
 import { markRaw } from 'vue';
 import Color from 'color';
 import { buildTooltip } from '../util/tooltip';
+import { timelineAxisOptions } from '../util/timelineTimeFormat';
 import { seconds_to_duration } from '../util/time';
 import { getCategoryColorFromEvent, getColorFromCategory, getTitleAttr } from '../util/color';
 import { useCategoryStore } from '~/stores/categories';
+import { useSettingsStore } from '~/stores/settings';
 import { getSwimlane } from '../util/swimlane';
 import {
   indexTimelineEvents,
@@ -162,6 +164,9 @@ export default {
     };
   },
   computed: {
+    timeFormat() {
+      return useSettingsStore().timelineTimeFormat;
+    },
     bucketsFromEither() {
       if (this.buckets) {
         return this.buckets;
@@ -200,6 +205,11 @@ export default {
     },
   },
   watch: {
+    // Tooltips are built on hover, so only the axis needs to be told.
+    timeFormat(timeFormat) {
+      Object.assign(this.options, timelineAxisOptions(timeFormat));
+      if (this.timeline) this.timeline.setOptions(this.options);
+    },
     groupGranularity() {
       this.expandedGroups = [];
       this.update(false);
@@ -246,6 +256,7 @@ export default {
         passive: false,
       });
       this.options.tooltip.template = item => item.title || this.tooltipForItem(item.id);
+      Object.assign(this.options, timelineAxisOptions(this.timeFormat));
       this.timeline = markRaw(new Timeline(el, this.itemData, this.groupData, this.options));
       this.timeline.on('rangechange', this.scheduleViewportUpdate);
       this.timeline.on('select', properties => {
@@ -294,7 +305,8 @@ export default {
             timestamp: this.queriedInterval[0],
             duration: this.queriedInterval[1].diff(this.queriedInterval[0], 'seconds'),
             data: { title: 'query' },
-          }
+          },
+          this.timeFormat
         );
       }
       const item = this.itemEvents.get(id);
@@ -319,7 +331,13 @@ export default {
           this.$t('ui.timeline.groupBreakdown')
         )}</caption>${rows}</table>`;
       }
-      return item ? buildTooltip({ ...item.bucket, type: item.bucket.type || '' }, item.event) : '';
+      return item
+        ? buildTooltip(
+            { ...item.bucket, type: item.bucket.type || '' },
+            item.event,
+            this.timeFormat
+          )
+        : '';
     },
     onHorizontalWheel: function (event: WheelEvent) {
       if (!this.timeline || Math.abs(event.deltaX) <= Math.abs(event.deltaY)) {

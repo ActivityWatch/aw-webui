@@ -112,6 +112,11 @@ export default {
       groupGranularity: 'Agrupar eventos cortos (segundos)',
       groupGranularityHelp:
         'Combina eventos cortos consecutivos en grupos de esta duración. Usa 0 para desactivar la agrupación. El filtro de duración de la línea de tiempo es independiente y elimina eventos antes de agruparlos.',
+      timeFormat: 'Formato de hora',
+      timeFormat24h: '24 horas (13:00)',
+      timeFormat12h: '12 horas (1:00 PM)',
+      timeFormatHelp:
+        'Cómo se muestran las horas en el eje de la línea de tiempo y en la información emergente de los eventos.',
     },
     landingPage: {
       title: 'Página de inicio',

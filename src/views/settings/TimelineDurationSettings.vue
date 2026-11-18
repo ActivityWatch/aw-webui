@@ -20,6 +20,13 @@ div
     b-form-input#timeline-group-granularity(size="sm" type="number" min="0" step="1" :value="timelineGroupGranularity" @change="timelineGroupGranularity = $event" aria-describedby="timeline-group-granularity-help" style="max-width: 8rem")
   small#timeline-group-granularity-help.text-muted
     | {{ $t('settings.timelineDuration.groupGranularityHelp') }}
+  div.d-sm-flex.justify-content-between.align-items-center.mt-3
+    label.mb-2.mb-sm-0(for="timeline-time-format") {{ $t('settings.timelineDuration.timeFormat') }}
+    b-select#timeline-time-format(size="sm" :value="timelineTimeFormat" @change="timelineTimeFormat = $event" aria-describedby="timeline-time-format-help" style="max-width: 12rem")
+      option(value="24h") {{ $t('settings.timelineDuration.timeFormat24h') }}
+      option(value="12h") {{ $t('settings.timelineDuration.timeFormat12h') }}
+  small#timeline-time-format-help.text-muted
+    | {{ $t('settings.timelineDuration.timeFormatHelp') }}
 </template>
 <script lang="ts">
 import { useSettingsStore } from '~/stores/settings';
@@ -41,6 +48,14 @@ export default {
         if (Number.isFinite(seconds) && seconds >= 0) {
           this.settingsStore.update({ timelineGroupGranularity: seconds });
         }
+      },
+    },
+    timelineTimeFormat: {
+      get() {
+        return this.settingsStore.timelineTimeFormat;
+      },
+      set(value) {
+        this.settingsStore.update({ timelineTimeFormat: value });
       },
     },
     durationDefault: {

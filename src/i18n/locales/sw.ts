@@ -113,6 +113,11 @@ export default {
       groupGranularity: 'Panga matukio mafupi (sekunde)',
       groupGranularityHelp:
         'Huunganisha matukio mafupi yanayofuatana katika makundi ya muda huu. Weka 0 kuzima upangaji. Kichujio cha muda cha ratiba hubaki huru na huondoa matukio kabla ya kuyapanga.',
+      timeFormat: 'Muundo wa saa',
+      timeFormat24h: 'Saa 24 (13:00)',
+      timeFormat12h: 'Saa 12 (1:00 PM)',
+      timeFormatHelp:
+        'Jinsi nyakati zinavyoonyeshwa kwenye mhimili wa rekodi ya matukio na katika vidokezo vya matukio.',
     },
     landingPage: {
       title: 'Ukurasa wa kuingia',
