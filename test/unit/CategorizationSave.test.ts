@@ -187,6 +187,37 @@ describe('CategorizationSettings save completion', () => {
     expectSavedUi();
   });
 
+  test.each([
+    [
+      {
+        message:
+          'Unable to save settings to C:\\Users\\test\\settings.json: Settings file is read-only',
+      },
+      'Unable to save settings to C:\\Users\\test\\settings.json: Settings file is read-only',
+    ],
+    [undefined, 'Request failed with status code 500'],
+    ['<html>Internal Server Error</html>', 'Request failed with status code 500'],
+    [{}, 'Request failed with status code 500'],
+    [{ message: '' }, 'Request failed with status code 500'],
+    [{ message: '   ' }, 'Request failed with status code 500'],
+    [{ message: { reason: 'denied' } }, 'Request failed with status code 500'],
+  ])('save failure displays a server message or falls back safely (%j)', async (data, detail) => {
+    const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => undefined);
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    await addCategory();
+    const request = await clickSave();
+    request.reject(
+      Object.assign(new Error('Request failed with status code 500'), {
+        response: { status: 500, data },
+      })
+    );
+    await flushUi();
+
+    expect(alertSpy).toHaveBeenCalledTimes(1);
+    expect(alertSpy).toHaveBeenCalledWith(`Failed to save categories (HTTP 500): ${detail}`);
+    expectDirtyUi();
+  });
+
   test('failed persistence leaves Save and warning available and a button retry can succeed', async () => {
     const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => undefined);
     jest.spyOn(console, 'error').mockImplementation(() => undefined);
