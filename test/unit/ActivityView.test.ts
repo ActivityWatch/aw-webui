@@ -15,6 +15,8 @@ const mockLoad = jest.fn();
 jest.mock('~/stores/views', () => ({
   useViewsStore: () => ({
     viewsForHost: () => mockViews,
+    saving: false,
+    isDefaultSummary: view => view?.id === 'summary',
     save: (...args) => mockSave(...args),
     load: (...args) => mockLoad(...args),
   }),
@@ -27,6 +29,105 @@ describe('ActivityView isVisLarge', () => {
     expect(ActivityView.methods.isVisLarge({ type: 'timeline_barchart' })).toBe(false);
     expect(ActivityView.methods.isVisLarge({ type: 'top_apps' })).toBe(false);
   });
+});
+
+describe('ActivityView mobile presentation', () => {
+  test('chart-first presentation is off during editing and for custom layouts', () => {
+    const eligible = ActivityView.computed.mobileDefaultSummary;
+    expect(eligible.call({ phoneViewport: true, editing: false, view: { id: 'summary' } })).toBe(
+      true
+    );
+    expect(eligible.call({ phoneViewport: false, editing: false, view: { id: 'summary' } })).toBe(
+      false
+    );
+    expect(eligible.call({ phoneViewport: true, editing: true, view: { id: 'summary' } })).toBe(
+      false
+    );
+    expect(eligible.call({ phoneViewport: true, editing: false, view: { id: 'custom' } })).toBe(
+      false
+    );
+    expect(eligible.call({ phoneViewport: true, editing: false, view: undefined })).toBe(false);
+  });
+
+  test('phone reading order puts the chart first without changing saved or editor order', () => {
+    const elements = [
+      { type: 'top_apps' },
+      { type: 'top_categories' },
+      { type: 'timeline_barchart' },
+    ];
+    const get = ActivityView.computed.elements.get;
+    const phone = get.call({ mobileDefaultSummary: true, view: { elements } });
+    expect(phone.map(el => el.type)).toEqual(['timeline_barchart', 'top_apps', 'top_categories']);
+    expect(elements.map(el => el.type)).toEqual([
+      'top_apps',
+      'top_categories',
+      'timeline_barchart',
+    ]);
+    expect(get.call({ mobileDefaultSummary: false, view: { elements } })).toBe(elements);
+  });
+
+  test.each([false, true])(
+    'DOM follows viewport and editing; cleans up listener (legacy: %s)',
+    async legacy => {
+      const original = window.matchMedia;
+      const add = jest.fn();
+      const remove = jest.fn();
+      const query = {
+        matches: true,
+        ...(legacy
+          ? { addListener: add, removeListener: remove }
+          : { addEventListener: add, removeEventListener: remove }),
+      };
+      window.matchMedia = jest.fn().mockReturnValue(query);
+      const elements = [
+        { type: 'top_apps' },
+        { type: 'top_categories' },
+        { type: 'timeline_barchart' },
+      ];
+      const wrapper = shallowMount(ActivityView, {
+        computed: { view: () => ({ id: 'summary', elements }) },
+        mocks: { $route: { params: {}, path: '/activity/view/summary' }, $t: key => key },
+        stubs: {
+          draggable: { props: ['disabled'], template: '<div><slot /></div>' },
+          'aw-selectable-vis': {
+            props: ['type', 'id'],
+            template: '<div :data-type="type" :data-id="id" />',
+          },
+          'b-button': true,
+          'b-modal': true,
+          icon: true,
+        },
+      });
+      try {
+        await wrapper.vm.$nextTick();
+        const order = () =>
+          wrapper.findAll('[data-type]').wrappers.map(el => el.attributes('data-type'));
+        expect(order()).toEqual(['timeline_barchart', 'top_apps', 'top_categories']);
+        expect(wrapper.findAll('[data-id]').wrappers.map(el => el.attributes('data-id'))).toEqual([
+          '2',
+          '0',
+          '1',
+        ]);
+        expect(wrapper.findComponent({ name: 'draggable' }).props('disabled')).toBe(true);
+        const onChange = add.mock.calls[0][legacy ? 0 : 1];
+        onChange({ matches: false });
+        await wrapper.vm.$nextTick();
+        expect(order()).toEqual(['top_apps', 'top_categories', 'timeline_barchart']);
+        onChange({ matches: true });
+        await wrapper.vm.$nextTick();
+        expect(order()[0]).toBe('timeline_barchart');
+        await wrapper.setData({ editing: true });
+        expect(wrapper.findComponent({ name: 'draggable' }).props('disabled')).toBe(false);
+        expect(order()).toEqual(['top_apps', 'top_categories', 'timeline_barchart']);
+        expect(elements[0].type).toBe('top_apps');
+        wrapper.destroy();
+        expect(remove).toHaveBeenCalledWith(...add.mock.calls[0]);
+      } finally {
+        wrapper.destroy();
+        window.matchMedia = original;
+      }
+    }
+  );
 });
 
 describe('ActivityView custom visualization modal', () => {

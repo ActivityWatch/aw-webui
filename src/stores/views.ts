@@ -175,6 +175,11 @@ export const useViewsStore = defineStore('views', {
   }),
   getters: {
     getViewById: state => (id: string) => state.views.find(view => view.id === id),
+    // Presentation only: recognize both platform defaults without rewriting saved views.
+    isDefaultSummary:
+      () =>
+      (view?: View): boolean =>
+        !!view && [desktopViews[0], androidViews[0]].some(summary => sameLayout([view], [summary])),
   },
   actions: {
     async load() {

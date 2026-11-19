@@ -1,11 +1,11 @@
 <template lang="pug">
 div
-  h3.mb-0 {{ $t('activity.title') }} #[span.d-sm-inline.d-none {{ $t('activity.for') }} ]
-    span.text-muted.d-sm-inline-block.d-block
+  h3.mb-0.activity-heading {{ $t('activity.title') }} #[span.d-sm-inline.d-none {{ $t('activity.for') }} ]
+    span.text-muted.activity-period(:title="periodReadableRange")
       span(v-if="periodIsBrowseable") {{ timeperiod | friendlyperiod }}
       span(v-else) {{ periodLengthTitle }}
 
-  div.mb-3.text-muted(style="font-size: 0.9em;")
+  div.mb-3.text-muted.activity-metadata(style="font-size: 0.9em;")
     ul.list-group.list-group-horizontal-md
       li.list-group-item.pl-0.pr-3.py-0.border-0
         b.mr-1 {{ isMultidevice ? $t('activity.devices') : $t('activity.host') }}
@@ -286,17 +286,23 @@ div
   aw-watcher-liveness-banner(v-if="host" :host="host")
   aw-uncategorized-notification(:periodLength="periodLength")
 
-  ul.row.nav.nav-tabs.mt-4
-    li.nav-item(v-for="view in views")
-      router-link.nav-link(:to="{ name: 'activity-view', params: {...$route.params, view_id: view.id}, query: $route.query}" :class="{'router-link-exact-active': currentView.id == view.id}")
-        h6 {{view.name}}
+  div.row.mt-4.activity-view-navigation
+    ul.nav.nav-tabs.activity-view-tabs
+      li.nav-item(v-for="view in views" :key="view.id")
+        router-link.nav-link(:to="{ name: 'activity-view', params: {...$route.params, view_id: view.id}, query: $route.query}" :class="{'router-link-exact-active': currentView.id == view.id}")
+          h6 {{view.name}}
 
-    li.nav-item(style="margin-left: auto")
-      a.nav-link(:class="{ disabled: viewSavePending }" :aria-disabled="viewSavePending" @click="!viewSavePending && $refs.new_view.show()")
-        h6
-          icon(name="plus")
-          span.d-none.d-md-inline
-            | {{ $t('activity.newView') }}
+    b-button.nav-link.activity-add-view(
+      variant="link"
+      :disabled="viewSavePending"
+      :aria-label="$t('activity.newView')"
+      :title="$t('activity.newView')"
+      @click="$refs.new_view.show()"
+    )
+      h6
+        icon(name="plus")
+        span.d-none.d-md-inline
+          | {{ $t('activity.newView') }}
 
   b-modal(id="new_view" ref="new_view" :title="$t('activity.newViewTitle')" :ok-disabled="viewSavePending" :cancel-disabled="newViewSaving" :hide-header-close="newViewSaving" :no-close-on-backdrop="newViewSaving" :no-close-on-esc="newViewSaving" @show="resetModal" @hidden="resetModal" @ok="handleOk")
     div.my-1
@@ -316,6 +322,61 @@ div
 
 <style lang="scss" scoped>
 @import '../../style/globals';
+
+.activity-period {
+  display: inline-block;
+}
+
+.activity-view-navigation {
+  display: flex;
+  flex-wrap: nowrap;
+  border-bottom: 1px solid $lightBorderColor;
+}
+
+.nav.activity-view-tabs {
+  flex: 1;
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  border-bottom: 0;
+
+  .nav-link {
+    white-space: nowrap;
+  }
+}
+
+.activity-add-view {
+  flex: none;
+  align-self: stretch;
+  padding: 0.25rem 1rem;
+  color: inherit;
+  border: 0;
+
+  h6 {
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .activity-heading {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 1.25rem;
+    white-space: nowrap;
+  }
+
+  .activity-period {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .activity-metadata > .list-group:first-child {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
 
 .activity-options-row {
   background-color: #eee;
