@@ -121,7 +121,10 @@ async function geometry(page) {
           : 'ul.nav-tabs > li:last-child'
       ),
       chart: bounds('canvas'),
-      firstCard: cards[0].getBoundingClientRect().top,
+      firstCard: cards
+        .find(card => !card.classList.contains('summary-timeline'))
+        .getBoundingClientRect().top,
+      chartFirstInDOM: cards[0].classList.contains('summary-timeline'),
       overflow: document.documentElement.scrollWidth > innerWidth,
     };
   });
@@ -148,9 +151,22 @@ async function geometry(page) {
           assert.ok(rect.add.right <= width, 'add button remains inside viewport');
           assert.ok(rect.chart.bottom < 852, 'entire populated chart within first viewport');
           assert.ok(rect.chart.top < rect.firstCard, 'default chart visually before tables');
+          assert.equal(rect.chartFirstInDOM, true, 'reading order matches phone visual order');
+          assert.equal(await page.locator('.handle').count(), 0, 'no drag handles in view mode');
+          await page.setViewportSize({ width: 1280, height: 852 });
+          await page.waitForTimeout(300);
+          assert.equal(
+            (await geometry(page)).chartFirstInDOM,
+            false,
+            'resize restores desktop order'
+          );
+          await page.setViewportSize({ width, height: 852 });
+          await page.waitForTimeout(300);
+          assert.equal((await geometry(page)).chartFirstInDOM, true, 'resize restores phone order');
           await page.getByRole('button', { name: 'Edit view', exact: true }).click();
           const editing = await geometry(page);
           assert.ok(editing.chart.top > editing.firstCard, 'editing restores actual element order');
+          assert.equal(editing.chartFirstInDOM, false, 'editor retains saved DOM order');
         } else {
           assert.ok(rect.chart.left > rect.heading.left + 500, 'desktop chart remains third');
         }
@@ -179,6 +195,11 @@ async function geometry(page) {
         'focus scrolls long tab into view'
       );
       const add = custom.locator('.activity-add-view');
+      assert.equal(
+        await add.getAttribute('aria-label'),
+        'Neue Ansicht',
+        'server locale is applied'
+      );
       await add.focus();
       await custom.keyboard.press('Enter');
       await custom.locator('#new_view').waitFor({ state: 'visible' });

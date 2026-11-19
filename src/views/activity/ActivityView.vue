@@ -10,12 +10,12 @@ div(v-else-if="view || editing")
   b-alert.mt-3(:show="saveError !== ''" variant="danger")
     | {{ saveError }}
   //- Keep Save/Cancel available when removing the final view empties the draft.
-  draggable.row(v-if="view" v-model="elements" handle=".handle" :disabled="saving" :class="{ 'mobile-default-summary': mobileDefaultSummary }")
+  draggable.row(v-if="view" v-model="elements" handle=".handle" :disabled="!editing || saving")
     // TODO: Handle large/variable sized visualizations better
     //- Keep each draft element's identity across reorder/removal. Replacing a
       layout or discarding it rebuilds charts from the restored selections.
-    div.col-md-6.col-lg-4.p-3(v-for="el, index in elements", :key="view.id + '-' + layoutRevision + '-' + elementKey(el)", :class="{'col-md-12': isVisLarge(el), 'col-lg-12': isVisLarge(el), 'summary-timeline': el.type === 'timeline_barchart'}")
-      aw-selectable-vis(:id="index" :type="el.type" :props="el.props" :view-id="view.id" @onTypeChange="onTypeChange" @onRemove="onRemove" :editable="editing && !saving" :disabled="saving")
+    div.col-md-6.col-lg-4.p-3(v-for="el in elements", :key="view.id + '-' + layoutRevision + '-' + elementKey(el)", :class="{'col-md-12': isVisLarge(el), 'col-lg-12': isVisLarge(el), 'summary-timeline': el.type === 'timeline_barchart'}")
+      aw-selectable-vis(:id="view.elements.indexOf(el)" :type="el.type" :props="el.props" :view-id="view.id" @onTypeChange="onTypeChange" @onRemove="onRemove" :editable="editing && !saving" :disabled="saving")
 
     div.col-md-6.col-lg-4.p-3(v-if="editing")
       b-button(@click="addVisualization" :disabled="saving" variant="outline-dark" block size="lg")
@@ -75,14 +75,6 @@ div(v-else-if="view || editing")
       )
 </template>
 
-<style scoped lang="scss">
-@media (max-width: 575.98px) {
-  .mobile-default-summary > .summary-timeline {
-    order: -1;
-  }
-}
-</style>
-
 <script lang="ts">
 import 'vue-awesome/icons/save';
 import 'vue-awesome/icons/times';
@@ -107,6 +99,8 @@ export default {
   data() {
     return {
       editing: false,
+      phoneViewport: false,
+      phoneQuery: null as MediaQueryList | null,
       pendingAction: false,
       saveError: '',
       layoutRevision: 0,
@@ -119,7 +113,7 @@ export default {
   computed: {
     mobileDefaultSummary(): boolean {
       // Editing always uses the actual persisted/draft order, at every width.
-      return !this.editing && useViewsStore().isDefaultSummary(this.view);
+      return this.phoneViewport && !this.editing && useViewsStore().isDefaultSummary(this.view);
     },
     saving(): boolean {
       return this.pendingAction || useViewsStore().saving;
@@ -142,14 +136,44 @@ export default {
     },
     elements: {
       get() {
-        return this.view.elements;
+        const elements = this.view.elements;
+        // Reorder a copy, not saved settings. DOM and visual/keyboard order agree.
+        if (this.mobileDefaultSummary) {
+          return [
+            ...elements.filter(el => el.type === 'timeline_barchart'),
+            ...elements.filter(el => el.type !== 'timeline_barchart'),
+          ];
+        }
+        return elements;
       },
       set(elements) {
         useViewsStore().setElements({ view_id: this.view.id, elements });
       },
     },
   },
+  mounted() {
+    if (!window.matchMedia) return;
+    this.phoneQuery = window.matchMedia('(max-width: 575.98px)');
+    this.phoneViewport = this.phoneQuery.matches;
+    // Old Android WebViews and Safari use the legacy listener API.
+    if (this.phoneQuery.addEventListener) {
+      this.phoneQuery.addEventListener('change', this.onPhoneQueryChange);
+    } else {
+      this.phoneQuery.addListener(this.onPhoneQueryChange);
+    }
+  },
+  beforeDestroy() {
+    if (!this.phoneQuery) return;
+    if (this.phoneQuery.removeEventListener) {
+      this.phoneQuery.removeEventListener('change', this.onPhoneQueryChange);
+    } else {
+      this.phoneQuery.removeListener(this.onPhoneQueryChange);
+    }
+  },
   methods: {
+    onPhoneQueryChange(event: MediaQueryListEvent) {
+      this.phoneViewport = event.matches;
+    },
     elementKey(element): number {
       if (!elementKeys.has(element)) elementKeys.set(element, nextElementKey++);
       return elementKeys.get(element);
