@@ -1,5 +1,6 @@
 // Optional visual smoke test; no real server or personal activity data is used.
-// With Playwright installed: node test/e2e/mobile-activity.cjs [base URL] [output dir]
+// Kept outside test/e2e/: TestCafe imports every script in that directory.
+// With Playwright installed: node test/visual/mobile-activity.cjs [base URL] [output dir]
 // PLAYWRIGHT_MODULE and CHROMIUM_PATH can select an existing local installation.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
