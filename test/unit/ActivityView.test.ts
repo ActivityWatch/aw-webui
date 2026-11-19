@@ -15,6 +15,7 @@ const mockLoad = jest.fn();
 jest.mock('~/stores/views', () => ({
   useViewsStore: () => ({
     viewsForHost: () => mockViews,
+    isDefaultSummary: view => view?.id === 'summary',
     save: (...args) => mockSave(...args),
     load: (...args) => mockLoad(...args),
   }),
@@ -26,6 +27,16 @@ describe('ActivityView isVisLarge', () => {
     expect(ActivityView.methods.isVisLarge({ type: 'vis_timeline' })).toBe(true);
     expect(ActivityView.methods.isVisLarge({ type: 'timeline_barchart' })).toBe(false);
     expect(ActivityView.methods.isVisLarge({ type: 'top_apps' })).toBe(false);
+  });
+});
+
+describe('ActivityView mobile presentation', () => {
+  test('chart-first presentation is off during editing and for custom layouts', () => {
+    const eligible = ActivityView.computed.mobileDefaultSummary;
+    expect(eligible.call({ editing: false, view: { id: 'summary' } })).toBe(true);
+    expect(eligible.call({ editing: true, view: { id: 'summary' } })).toBe(false);
+    expect(eligible.call({ editing: false, view: { id: 'custom' } })).toBe(false);
+    expect(eligible.call({ editing: false, view: undefined })).toBe(false);
   });
 });
 

@@ -10,11 +10,11 @@ div(v-else-if="view || editing")
   b-alert.mt-3(:show="saveError !== ''" variant="danger")
     | {{ saveError }}
   //- Keep Save/Cancel available when removing the final view empties the draft.
-  draggable.row(v-if="view" v-model="elements" handle=".handle" :disabled="saving")
+  draggable.row(v-if="view" v-model="elements" handle=".handle" :disabled="saving" :class="{ 'mobile-default-summary': mobileDefaultSummary }")
     // TODO: Handle large/variable sized visualizations better
     //- Keep each draft element's identity across reorder/removal. Replacing a
       layout or discarding it rebuilds charts from the restored selections.
-    div.col-md-6.col-lg-4.p-3(v-for="el, index in elements", :key="view.id + '-' + layoutRevision + '-' + elementKey(el)", :class="{'col-md-12': isVisLarge(el), 'col-lg-12': isVisLarge(el)}")
+    div.col-md-6.col-lg-4.p-3(v-for="el, index in elements", :key="view.id + '-' + layoutRevision + '-' + elementKey(el)", :class="{'col-md-12': isVisLarge(el), 'col-lg-12': isVisLarge(el), 'summary-timeline': el.type === 'timeline_barchart'}")
       aw-selectable-vis(:id="index" :type="el.type" :props="el.props" :view-id="view.id" @onTypeChange="onTypeChange" @onRemove="onRemove" :editable="editing && !saving" :disabled="saving")
 
     div.col-md-6.col-lg-4.p-3(v-if="editing")
@@ -75,6 +75,14 @@ div(v-else-if="view || editing")
       )
 </template>
 
+<style scoped lang="scss">
+@media (max-width: 575.98px) {
+  .mobile-default-summary > .summary-timeline {
+    order: -1;
+  }
+}
+</style>
+
 <script lang="ts">
 import 'vue-awesome/icons/save';
 import 'vue-awesome/icons/times';
@@ -109,6 +117,10 @@ export default {
     };
   },
   computed: {
+    mobileDefaultSummary(): boolean {
+      // Editing always uses the actual persisted/draft order, at every width.
+      return !this.editing && useViewsStore().isDefaultSummary(this.view);
+    },
     saving(): boolean {
       return this.pendingAction || useViewsStore().saving;
     },
