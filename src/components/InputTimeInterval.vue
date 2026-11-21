@@ -31,6 +31,7 @@ div
           template(v-for="(dur, idx) in durations")
             input(
               type="radio"
+              :name="'duration-' + _uid"
               :id="'dur' + idx"
               :value="dur.seconds"
               v-model="duration"

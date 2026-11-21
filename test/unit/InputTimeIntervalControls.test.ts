@@ -97,6 +97,7 @@ describe('time interval controls', () => {
 
   function create(propsData = {}) {
     wrapper = mount(InputTimeIntervalComponent, {
+      attachTo: document.body,
       propsData: { defaultDuration: 3600, maxDuration: 31 * 86400, ...propsData },
       stubs: {
         'b-alert': BAlert,
@@ -132,6 +133,59 @@ describe('time interval controls', () => {
   function button(text) {
     return wrapper.findAll('button').wrappers.find(b => b.text() === text);
   }
+
+  test('a stale checked duration becomes selectable again after choosing another', async () => {
+    create({ defaultDuration: 900 });
+    await wrapper.vm.$nextTick();
+    const half = wrapper.find('input#dur1').element as HTMLInputElement;
+    const hour = wrapper.find('input#dur2').element as HTMLInputElement;
+
+    // Model a browser checked state that no longer matches Vue's duration.
+    // Native clicks do not synthesize change for an already-checked radio.
+    half.checked = true;
+    hour.click();
+    await wrapper.vm.$nextTick();
+    expectSeconds(3600);
+    expect(half.checked).toBe(false);
+
+    half.click();
+    await wrapper.vm.$nextTick();
+    expectSeconds(1800);
+    expect(hour.checked).toBe(false);
+  });
+
+  test('quick durations can be selected repeatedly', async () => {
+    create({ defaultDuration: 900 });
+    await wrapper.vm.$nextTick();
+    for (const [index, seconds] of [
+      [1, 1800],
+      [3, 7200],
+      [1, 1800],
+      [0, 900],
+    ]) {
+      (wrapper.find(`input#dur${index}`).element as HTMLInputElement).click();
+      await wrapper.vm.$nextTick();
+      expectSeconds(seconds);
+      expect(wrapper.findAll('input[name^="duration-"]:checked').length).toBe(1);
+    }
+  });
+
+  test('quick duration radio groups are independent across component instances', async () => {
+    const first = create({ defaultDuration: 900 });
+    try {
+      create({ defaultDuration: 1800 });
+      await wrapper.vm.$nextTick();
+      (wrapper.find('input#dur2').element as HTMLInputElement).click();
+      await wrapper.vm.$nextTick();
+      expectSeconds(3600);
+      expect(first.find('input#dur0').element.checked).toBe(true);
+      expect(first.find('input#dur0').attributes('name')).not.toBe(
+        wrapper.find('input#dur0').attributes('name')
+      );
+    } finally {
+      first.destroy();
+    }
+  });
 
   test.each(['Apply', 'Today', 'Shift'])(
     '%s preserves the selected relative duration across mode changes and refresh',
