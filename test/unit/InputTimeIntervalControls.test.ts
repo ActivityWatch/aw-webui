@@ -137,8 +137,8 @@ describe('time interval controls', () => {
   test('a stale checked duration becomes selectable again after choosing another', async () => {
     create({ defaultDuration: 900 });
     await wrapper.vm.$nextTick();
-    const half = wrapper.find('input#dur1').element as HTMLInputElement;
-    const hour = wrapper.find('input#dur2').element as HTMLInputElement;
+    const half = wrapper.find('input[value="1800"]').element as HTMLInputElement;
+    const hour = wrapper.find('input[value="3600"]').element as HTMLInputElement;
 
     // Model a browser checked state that no longer matches Vue's duration.
     // Native clicks do not synthesize change for an already-checked radio.
@@ -157,13 +157,8 @@ describe('time interval controls', () => {
   test('quick durations can be selected repeatedly', async () => {
     create({ defaultDuration: 900 });
     await wrapper.vm.$nextTick();
-    for (const [index, seconds] of [
-      [1, 1800],
-      [3, 7200],
-      [1, 1800],
-      [0, 900],
-    ]) {
-      (wrapper.find(`input#dur${index}`).element as HTMLInputElement).click();
+    for (const seconds of [1800, 7200, 1800, 900]) {
+      (wrapper.find(`input[value="${seconds}"]`).element as HTMLInputElement).click();
       await wrapper.vm.$nextTick();
       expectSeconds(seconds);
       expect(wrapper.findAll('input[name^="duration-"]:checked').length).toBe(1);
@@ -175,13 +170,26 @@ describe('time interval controls', () => {
     try {
       create({ defaultDuration: 1800 });
       await wrapper.vm.$nextTick();
-      (wrapper.find('input#dur2').element as HTMLInputElement).click();
+      const firstEvents = first.emitted('input').length;
+      const hourId = wrapper.find('input[value="3600"]').attributes('id');
+      (wrapper.find(`label[for="${hourId}"]`).element as HTMLLabelElement).click();
       await wrapper.vm.$nextTick();
       expectSeconds(3600);
-      expect(first.find('input#dur0').element.checked).toBe(true);
-      expect(first.find('input#dur0').attributes('name')).not.toBe(
-        wrapper.find('input#dur0').attributes('name')
+      expect(first.emitted('input').length).toBe(firstEvents);
+      expect(first.find('input[value="900"]').element.checked).toBe(true);
+      expect(wrapper.find('input[value="3600"]').element.checked).toBe(true);
+      expect(first.find('input[value="900"]').attributes('name')).not.toBe(
+        wrapper.find('input[value="900"]').attributes('name')
       );
+
+      const secondEvents = wrapper.emitted('input').length;
+      const twoHoursId = first.find('input[value="7200"]').attributes('id');
+      (first.find(`label[for="${twoHoursId}"]`).element as HTMLLabelElement).click();
+      await first.vm.$nextTick();
+      const [start, end] = first.emitted('input').slice(-1)[0][0];
+      expect(end.diff(start, 'seconds', true)).toBe(7200);
+      expect(wrapper.emitted('input').length).toBe(secondEvents);
+      expect(wrapper.find('input[value="3600"]').element.checked).toBe(true);
     } finally {
       first.destroy();
     }
@@ -193,7 +201,7 @@ describe('time interval controls', () => {
       create({ defaultDuration: 7200 });
       expectSeconds(7200);
       // A subsequent user choice, not just the default, must survive.
-      await wrapper.find('input#dur4').setChecked();
+      await wrapper.find('input[value="10800"]').setChecked();
       expectSeconds(10800);
       await dates('2026-10-27', '2026-10-28');
       if (action === 'Apply') await button('Apply').trigger('click');
@@ -205,7 +213,7 @@ describe('time interval controls', () => {
       await button('Refresh').trigger('click');
       await mode('last_duration');
       expectSeconds(10800);
-      expect(wrapper.find('input#dur4').element.checked).toBe(true);
+      expect(wrapper.find('input[value="10800"]').element.checked).toBe(true);
       jest.advanceTimersByTime(10000);
       await button('Refresh').trigger('click');
       expectSeconds(10800);
@@ -214,7 +222,7 @@ describe('time interval controls', () => {
       await mode('range');
       await wrapper.find('input[aria-label="End date (optional)"]').setValue('2020-01-01');
       await mode('last_duration');
-      await wrapper.find('input#dur0').setChecked();
+      await wrapper.find('input[value="900"]').setChecked();
       expectSeconds(900);
     }
   );
