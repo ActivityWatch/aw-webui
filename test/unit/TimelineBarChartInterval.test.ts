@@ -52,3 +52,30 @@ describe('exact interval stack bounds', () => {
     wrapper.destroy();
   });
 });
+
+describe('tooltip label', () => {
+  const label = (dataset: { label?: string }, y: number) => {
+    const wrapper = shallowMount(TimelineBarChart, {
+      propsData: {
+        datasets: [{ label: 'a', data: [1] }],
+        timeperiod_start: '2026-10-20T00:00:00Z',
+        timeperiod_length: [1, 'day'],
+      },
+    });
+    const callback = (wrapper.vm as any).chartOptions.plugins.tooltip.callbacks.label;
+    wrapper.destroy();
+    return callback({ dataset, parsed: { y } });
+  };
+
+  test('names the hovered category alongside its duration', () => {
+    expect(label({ label: 'Work > Programming' }, 1.5)).toBe('Work > Programming: 1:30');
+  });
+
+  test('rounds 59.5+ minutes up to the next hour', () => {
+    expect(label({ label: 'Media' }, 0.9999)).toBe('Media: 1:00');
+  });
+
+  test('falls back to the duration alone for an unlabeled dataset', () => {
+    expect(label({}, 0.25)).toBe('0:15');
+  });
+});

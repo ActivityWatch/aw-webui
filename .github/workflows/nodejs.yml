@@ -182,13 +182,15 @@ jobs:
     # intermittently wedges TestCafe native automation: the run goes silent
     # between two tests until the step timeout. The same build from Chrome for
     # Testing hangs too, while the later 155.0.8059.84 point release runs clean,
-    # so this is a defect in that one Chrome build. Tracking the CfT stable
-    # channel keeps CI off whatever stale build the image happens to carry.
+    # so this is a defect in that one Chrome build. Pin the last passing CfT
+    # release: stable moved to Chrome 158 on 2026-11-17 and all three e2e legs
+    # hung in the first Home fixture. Chrome 157.0.8103.78 passed all 25 tests
+    # on master in run 44088679583. Revalidate e2e before updating this pin.
     - name: Set up Chrome for e2e
       id: setup-chrome
       uses: browser-actions/setup-chrome@v2
       with:
-        chrome-version: stable
+        chrome-version: '157.0.8103.78'
     - name: Run e2e tests with testcafe
       id: e2e
       timeout-minutes: 10

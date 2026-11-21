@@ -181,7 +181,10 @@ export default {
                   hours += 1;
                 }
                 const minutes_str = minutes.toString().padStart(2, '0');
-                return `${hours}:${minutes_str}`;
+                const duration = `${hours}:${minutes_str}`;
+                // Keep the category name: without it, every bar segment reads the same.
+                const name = context.dataset.label;
+                return name ? `${name}: ${duration}` : duration;
               },
             },
           },
