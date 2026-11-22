@@ -31,12 +31,13 @@ div
           template(v-for="(dur, idx) in durations")
             input(
               type="radio"
-              :id="'dur' + idx"
+              :name="'duration-' + _uid"
+              :id="'duration-' + _uid + '-dur' + idx"
               :value="dur.seconds"
               v-model="duration"
               @change="applyLastDuration"
             ).d-none
-            label(:for="'dur' + idx" v-html="dur.label").btn.btn-light.btn-sm
+            label(:for="'duration-' + _uid + '-dur' + idx" v-html="dur.label").btn.btn-light.btn-sm
       div.d-flex.flex-wrap.align-items-center(v-else)
         input-date.mr-1(
           v-model="start", :max="end || undefined"
