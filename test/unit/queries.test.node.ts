@@ -208,6 +208,23 @@ describe('browser_appname_regex', () => {
     }
   });
 
+  test('firefox pattern matches Zen when it reports to a Firefox web watcher bucket', () => {
+    const re = toRegex(browser_appname_regex.firefox);
+    expect(re.test('Zen')).toBe(true);
+    expect(re.test('Zen Browser')).toBe(true);
+    expect(re.test('app.zen_browser.zen')).toBe(true);
+    expect(re.test('appXzen_browserYzen')).toBe(false);
+    expect(re.test('app.zen_browser.zen.helper')).toBe(false);
+  });
+
+  test.each(['zenity', 'Zenmap', 'Citizen', 'Zen Browser Helper'])(
+    'Firefox and Zen patterns do not match unrelated app %s',
+    name => {
+      expect(toRegex(browser_appname_regex.firefox).test(name)).toBe(false);
+      expect(toRegex(browser_appname_regex.zen).test(name)).toBe(false);
+    }
+  );
+
   test('opera pattern matches all known Opera app names', () => {
     const re = toRegex(browser_appname_regex.opera);
     const knownNames = ['opera.exe', 'Opera.exe', 'Opera'];
@@ -307,6 +324,89 @@ describe('browser_appname_regex', () => {
     const knownNames = ['Floorp', 'floorp.exe', 'Floorp.exe', 'floorp'];
     for (const name of knownNames) {
       expect(re.test(name)).toBe(true);
+    }
+  });
+});
+
+describe('Zen matching in generated query', () => {
+  const params = {
+    bid_window: 'aw-watcher-window_testhost',
+    bid_afk: 'aw-watcher-afk_testhost',
+    filter_afk: true,
+    include_audible: false,
+    categories: [],
+    filter_categories: [],
+  };
+  const zenNames = ['Zen', 'Zen Browser', 'zen-browser', 'Zen.exe'];
+
+  test.each(['zenhost', 'firefox-zen-profile', 'arc-zen-desktop'])(
+    'does not discover dedicated browser buckets from hostname %s',
+    hostname => {
+      const query = fullDesktopQuery({
+        ...params,
+        bid_browsers: [`aw-watcher-web-chrome_${hostname}`, `aw-watcher-web-firefox_${hostname}`],
+      }).join('\n');
+      expect(query).toContain(
+        `events_firefox = flood(query_bucket("aw-watcher-web-firefox_${hostname}"));`
+      );
+      expect(query).not.toContain('events_zen =');
+      expect(query).not.toContain('events_arc =');
+      const firefoxMatch = query.match(
+        /window_firefox_re = filter_keyvals_regex\(events, "app", "(.*)"\);/
+      );
+      expect(firefoxMatch).not.toBeNull();
+      expect(toRegex(firefoxMatch?.[1] ?? '').test('app.zen_browser.zen')).toBe(true);
+    }
+  );
+
+  test.each([false, true])('Firefox fallback with dedicated Zen bucket=%s', dedicatedZen => {
+    const query = fullDesktopQuery({
+      ...params,
+      bid_browsers: [
+        'aw-watcher-web-firefox_testhost',
+        ...(dedicatedZen ? ['aw-watcher-web-zen_testhost'] : []),
+      ],
+    }).join('\n');
+    const firefoxMatch = query.match(
+      /window_firefox_re = filter_keyvals_regex\(events, "app", "(.*)"\);/
+    );
+    expect(firefoxMatch).not.toBeNull();
+    const firefoxRegex = toRegex(firefoxMatch?.[1] ?? '');
+    for (const name of zenNames) {
+      expect(firefoxRegex.test(name)).toBe(true);
+    }
+    for (const name of ['Firefox.exe', 'LibreWolf', 'Waterfox', 'Nightly']) {
+      expect(firefoxRegex.test(name)).toBe(true);
+    }
+    expect(firefoxRegex.test('zenity')).toBe(false);
+    expect(firefoxRegex.test('app.zen_browser.zen')).toBe(true);
+    expect(firefoxRegex.test('appXzen_browserYzen')).toBe(false);
+    expect(firefoxRegex.test('app.zen_browser.zen.helper')).toBe(false);
+    expect(query).toContain(
+      `window_firefox = filter_keyvals(events, "app", ${JSON.stringify(browser_appnames.firefox)});`
+    );
+    if (dedicatedZen) {
+      const zenMatch = query.match(
+        /window_zen_re = filter_keyvals_regex\(events, "app", "(.*)"\);/
+      );
+      expect(zenMatch).not.toBeNull();
+      for (const name of zenNames) {
+        expect(toRegex(zenMatch?.[1] ?? '').test(name)).toBe(true);
+      }
+      expect(query).toContain('"app.zen_browser.zen"');
+      expect(query).toContain('events_firefox_zen = union_no_overlap(events_zen, events_firefox);');
+      expect(query).toContain('browser_events = concat(browser_events, events_firefox_zen);');
+      expect(query).not.toContain('browser_events = concat(browser_events, events_zen);');
+      expect(query).not.toContain('browser_events = concat(browser_events, events_firefox);');
+      expect(query.indexOf('events_firefox_zen = union_no_overlap')).toBeGreaterThan(
+        query.indexOf('events_zen = filter_period_intersect')
+      );
+      expect(query.indexOf('events_firefox_zen = union_no_overlap')).toBeGreaterThan(
+        query.indexOf('events_firefox = filter_period_intersect')
+      );
+    } else {
+      expect(query).toContain('browser_events = concat(browser_events, events_firefox);');
+      expect(query).not.toContain('events_firefox_zen');
     }
   });
 });
