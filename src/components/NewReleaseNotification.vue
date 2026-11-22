@@ -3,7 +3,7 @@
     b-alert(v-if="isVisible", variant="info", show)
       | {{ $t('ui.release.newAvailable', { version: latestVersion }) }}
       | #[a(href="https://activitywatch.net/downloads/" target="_blank" class="alert-link") {{ $t('ui.release.download') }}],
-      | {{ $t('ui.release.disablePrefix') }} #[a(href="javascript:void(0);" class="alert-link" @click="disableCheck") {{ $t('ui.release.disable') }}]
+      | {{ $t('ui.release.disablePrefix') }} #[a(href="#" class="alert-link" @click.prevent="disableCheck") {{ $t('ui.release.disable') }}]
       | {{ $t('ui.release.disableSuffix') }}
       button(type="button", class="close", @click="isVisible=false") &times;
 

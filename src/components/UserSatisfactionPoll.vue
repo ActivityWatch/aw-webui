@@ -12,7 +12,7 @@
             label(:for="'option' + i", style="display: block")
               | {{ i }}
       div(style="display: flex; justify-content: space-between")
-        a(@click="dontShowAgain" href="#")
+        a(href="#" @click.prevent="dontShowAgain")
           | {{ $t('ui.userPoll.dontShowAgain') }}
         input(type="submit" :value="$t('ui.userPoll.submit')" @click="submit")
 
