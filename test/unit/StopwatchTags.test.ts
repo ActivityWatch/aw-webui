@@ -130,6 +130,29 @@ describe('Stopwatch event tags', () => {
     wrapper.destroy();
   });
 
+  test('keeps tags typed while a start is in flight', async () => {
+    const { wrapper, aw } = stopwatch([timer(['work'])]);
+    await flush();
+    let resolveStart;
+    aw.heartbeat.mockReturnValueOnce(
+      new Promise(resolve => {
+        resolveStart = resolve;
+      })
+    );
+    const input = wrapper.find('[data-testid="stopwatch-tags"]');
+    input.vm.$emit('input', 'work');
+    await wrapper.vm.$nextTick();
+    const starting = wrapper.vm.startTimer('Study');
+    // The user keeps typing before the heartbeat resolves.
+    input.vm.$emit('input', 'urgent');
+    await wrapper.vm.$nextTick();
+    resolveStart(undefined);
+    await starting;
+    await flush();
+    expect(wrapper.vm.tags).toBe('urgent');
+    wrapper.destroy();
+  });
+
   test('starting a timer clears chip selections and the tag draft', async () => {
     const { wrapper, aw } = stopwatch([timer(['work'])]);
     await flush();

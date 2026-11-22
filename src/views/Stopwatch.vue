@@ -231,6 +231,10 @@ export default {
       // restart and must leave a prepared draft alone.
       const fromInputRow = tags === undefined;
       if (fromInputRow) tags = this.selectedTags;
+      // Snapshot what the form submitted: a start can be in flight while the
+      // user keeps typing, and completion must not erase those later edits.
+      const submittedDraft = this.tags;
+      const submittedChips = [...this.selectedTagList];
       // Old events may carry comma-separated text or an unsupported shape.
       // Normalize only the new timer; never rewrite the historical event.
       tags = Array.isArray(tags) ? tags : typeof tags === 'string' ? parseTags(tags) : [];
@@ -246,7 +250,11 @@ export default {
       // A started timer must not preload the next one. Chip selections are
       // otherwise invisible state that keeps applying to later timers, so
       // clear both sources once the heartbeat is accepted.
-      if (fromInputRow) {
+      if (
+        fromInputRow &&
+        this.tags === submittedDraft &&
+        _.isEqual(this.selectedTagList, submittedChips)
+      ) {
         this.tags = '';
         this.selectedTagList = [];
       }
