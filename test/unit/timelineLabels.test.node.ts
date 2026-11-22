@@ -67,6 +67,14 @@ describe('formatTimelineBucketLabelHtml', () => {
     );
   });
 
+  it('omits the "@ host" suffix on synced buckets nested under a host row', () => {
+    expect(
+      formatTimelineBucketLabelHtml('aw-watcher-android-synced-from-phone', { omitHost: true })
+    ).toBe(
+      '<span class="timeline-label" title="aw-watcher-android-synced-from-phone">android</span>'
+    );
+  });
+
   it('escapes HTML in bucket IDs', () => {
     expect(formatTimelineBucketLabelHtml('bucket<script>')).toBe(
       '<span class="timeline-label" title="bucket&lt;script&gt;">bucket&lt;script&gt;</span>'

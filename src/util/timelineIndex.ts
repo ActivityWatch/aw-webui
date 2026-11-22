@@ -130,6 +130,13 @@ export function visibleTimelineEvents(
   return result;
 }
 
+function sameValue(a: any, b: any): boolean {
+  if (Array.isArray(a) && Array.isArray(b)) {
+    return a.length === b.length && a.every((value, i) => value === b[i]);
+  }
+  return a === b;
+}
+
 // DataSet updates notify vis-timeline. Avoid notifications for unchanged items.
 export function syncTimelineData(dataset, next: Record<string, any>[]): void {
   const ids = new Set(next.map(item => item.id));
@@ -137,7 +144,7 @@ export function syncTimelineData(dataset, next: Record<string, any>[]): void {
   if (removed.length) dataset.remove(removed);
   const changed = next.filter(item => {
     const previous = dataset.get(item.id);
-    return !previous || Object.keys(item).some(key => item[key] !== previous[key]);
+    return !previous || Object.keys(item).some(key => !sameValue(item[key], previous[key]));
   });
   if (changed.length) dataset.update(changed);
 }
