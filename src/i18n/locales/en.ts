@@ -21,7 +21,7 @@ export default {
     categoryBuilder: 'Category Builder',
     query: 'Query',
     graph: 'Graph',
-    rawData: 'Raw Data',
+    rawData: 'Data',
     settings: 'Settings',
     syncSettings: 'Sync settings',
     apiAuthentication: 'API authentication',
@@ -314,7 +314,7 @@ export default {
       'ActivityWatch on Android is in a very early stage of development. There will be bugs, but we hope you bear with us as we refine things and get it on par with the desktop version of ActivityWatch (which you should try!).',
     greeting: 'Welcome to ActivityWatch',
     trackingIntro:
-      'Tracking components, called watchers, record activity such as the active window or browser tab. Idle detection usually marks time as inactive after a period without keyboard or mouse input. Activity reports can also count configured apps or audible browser tabs as active without input; active does not necessarily mean productive work. Raw Data lets you inspect the recorded events.',
+      'Watchers record activity such as windows and browser tabs. Idle detection marks time without input as inactive; reports may also count configured apps or audible tabs as active. Inspect recordings in Data.',
     intro1:
       "We've come a long way{android} but we still need users (like you!) to provide feedback and help us turn ActivityWatch into a successful project. We'd love to hear any ideas you have for improvements.",
     introAndroid: ' (especially on Android!)',
@@ -363,9 +363,9 @@ export default {
     },
   },
   buckets: {
-    title: 'Event collections (buckets)',
+    title: 'Data',
     intro:
-      'Each tracking component (watcher) records events in a collection called a bucket. Events describe what was recorded and when. Technical IDs below stay unchanged for exports and integrations.',
+      'Browse recordings by device, or import and export them. Each watcher stores its events in a bucket.',
     moreWatchers: 'Are you looking to collect more data? Check out',
     docsLink: 'the docs',
     thisDevice: 'this device',
@@ -467,12 +467,12 @@ export default {
       'No window bucket for {host}. Start aw-watcher-window, then refresh this page.',
     diagnosticMissingAfk: 'No AFK bucket for {host}. Start aw-watcher-afk, then refresh this page.',
     diagnosticAmbiguousWindow:
-      'Multiple window buckets may describe {host}: {buckets}. Choose the correct device above or inspect Raw Data.',
+      'Multiple window buckets may describe {host}: {buckets}. Choose the correct device above or inspect Data.',
     diagnosticMismatchedHostnames:
       'aw-watcher-window reports {host} as {windowHosts}, but aw-watcher-afk reports it as {afkHosts}. Activity needs both under the same hostname: restart both watchers, then refresh this page.',
     diagnosticNoWindowEvents:
       'No window activity was found for this period. Check that aw-watcher-window is running. On Wayland, try awatcher.',
-    diagnosticOpenRawData: 'Open Raw Data.',
+    diagnosticOpenRawData: 'Open Data.',
     periodAllTime: 'all time',
     previousPeriod: 'Previous {period}',
     nextPeriod: 'Next {period}',
@@ -645,8 +645,9 @@ export default {
     },
     bucketDetail: {
       type: 'Type:',
-      client: 'Tracking component (client):',
-      hostname: 'Device (hostname):',
+      client: 'Client:',
+      hostname: 'Device:',
+      help: 'Type identifies the event format; client is the recorder; device is its hostname. Event count covers the whole bucket, not just the selected dates.',
       created: 'Created:',
       firstLastEvent: 'First/last event:',
       eventCount: 'Event count:',
@@ -1017,13 +1018,12 @@ export default {
       categoriesCount: '{count} categories',
       none: 'none',
       groupByCategory: 'Group by category',
-      groupByBucketType: 'Group by collection type',
+      groupByBucketType: 'Group by bucket type',
       groupedEvents: '{count} events · {duration}',
       collapseGroups: 'Collapse groups',
       groupBreakdown: 'Activity breakdown',
       totalTime: 'Total time',
-      bucketsNoEvents:
-        'Event collections with no recordings in the selected time range are hidden.',
+      bucketsNoEvents: 'Buckets without events in the selected time range are hidden.',
       editSaved: 'Your edit is saved. Refresh the timeline to see it reflected.',
       editSavedTitle: 'Heads up',
       list: 'List',

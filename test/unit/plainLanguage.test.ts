@@ -46,12 +46,15 @@ test.each([
   expect(source).toContain(`href="https://docs.activitywatch.net/en/latest/${docsPage}.html"`);
 });
 
-test('Raw Data explains collections, events and stable technical IDs', () => {
+test('Data has a short title and keeps bucket terminology in contextual help', () => {
   const source = fs.readFileSync(path.join(__dirname, '../../src/views/Buckets.vue'), 'utf8');
   expect(source).toContain("$t('buckets.intro')");
-  expect(en.buckets.title).toContain('Event collections');
+  expect(en.buckets.title).toBe('Data');
+  expect(en.nav.rawData).toBe('Data');
+  expect(en.ui.bucketDetail.client).toBe('Client:');
+  expect(en.ui.bucketDetail.hostname).toBe('Device:');
   expect(en.buckets.intro).toContain('bucket');
-  expect(en.buckets.intro).toContain('IDs');
+  expect(en.buckets.intro).toContain('events');
 });
 
 test('English controls explain inactivity and missing data without asserting the user is inactive', () => {

@@ -1,12 +1,19 @@
 <template lang="pug">
 div
-  h3 {{ id }}
+  h3.text-break
+    | {{ id }}
+    button#bucket-details-help.btn.btn-link.p-0.ml-2.text-muted(v-if="bucket" type="button" :aria-label="$t('common.moreInformation')")
+      icon(name="question-circle")
+  b-popover(v-if="bucket" target="bucket-details-help" triggers="hover focus click blur" placement="bottom")
+    | {{ $t('ui.bucketDetail.help') }}
+    p.mb-0.mt-2
+      a(href="https://docs.activitywatch.net/en/latest/buckets-and-events.html" target="_blank" rel="noopener") {{ $t('home.documentation') }}
   b-alert(v-if="notFound", show, variant="warning")
     | {{ $t('extraViews.bucket.notFound', { id }) }}
     |
     router-link(to="/buckets") {{ $t('extraViews.bucket.seeAll') }}
   div(v-else-if="bucket")
-    table
+    table.bucket-details.mb-3
       tr
         th {{ $t('ui.bucketDetail.type') }}
         td {{ bucket.type }}
@@ -27,7 +34,7 @@ div
       tr
         th {{ $t('ui.bucketDetail.eventCount') }}
         td {{ eventcount }}
-      tr
+      tr(v-if="bucket.data && Object.keys(bucket.data).length > 0")
         th {{ $t('ui.bucketDetail.data') }}
         td {{ bucket.data }}
 
@@ -41,7 +48,20 @@ div
     aw-eventlist(:bucket_id="id", @save="updateEvent", @deleted="removeEvent", :events="events" editable=true)
 </template>
 
+<style scoped>
+.bucket-details th {
+  padding-right: 1rem;
+  white-space: nowrap;
+  vertical-align: top;
+}
+
+.bucket-details td {
+  overflow-wrap: anywhere;
+}
+</style>
+
 <script lang="ts">
+import 'vue-awesome/icons/question-circle';
 import { useBucketsStore } from '~/stores/buckets';
 import { getClient } from '~/util/awclient';
 

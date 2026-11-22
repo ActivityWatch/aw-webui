@@ -42,6 +42,7 @@ const ENGLISH_FALLBACK_KEYS = new Set([
   'home.trackingIntro',
   'timeline.intro',
   'buckets.intro',
+  'ui.bucketDetail.help',
 ]);
 const SRC_DIR = path.join(__dirname, '../src');
 const INDEX_PATH = path.join(SRC_DIR, 'i18n/index.ts');
