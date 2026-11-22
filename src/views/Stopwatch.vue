@@ -238,6 +238,11 @@ export default {
         },
       };
       await this.$aw.heartbeat(this.bucket_id, 1, event);
+      // A started timer must not preload the next one. Chip selections are
+      // otherwise invisible state that keeps applying to later timers, so
+      // clear both sources once the heartbeat is accepted.
+      this.tags = '';
+      this.selectedTagList = [];
       await this.getEvents();
     },
 

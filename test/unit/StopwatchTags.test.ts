@@ -115,18 +115,36 @@ describe('Stopwatch event tags', () => {
     await wrapper.vm.$nextTick();
     expect(wrapper.vm.selectedTags).toEqual(['research, development', 'urgent', 'work']);
     expect(wrapper.find('.stopwatch-recent-tag').attributes('aria-pressed')).toBe('true');
+    // Clearing the draft cannot delete a selected chip, but clicking it can.
+    input.vm.$emit('input', '');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.selectedTags).toEqual(['research, development']);
+    input.vm.$emit('input', 'urgent, work');
+    await wrapper.vm.$nextTick();
     await wrapper.vm.startTimer('Study');
     expect(aw.heartbeat.mock.calls[0][2].data.tags).toEqual([
       'research, development',
       'urgent',
       'work',
     ]);
-    // Clearing the draft cannot delete a selected chip, but clicking it can.
-    input.vm.$emit('input', '');
+    wrapper.destroy();
+  });
+
+  test('starting a timer clears chip selections and the tag draft', async () => {
+    const { wrapper, aw } = stopwatch([timer(['work'])]);
+    await flush();
     await wrapper.vm.$nextTick();
-    expect(wrapper.vm.selectedTags).toEqual(['research, development']);
-    wrapper.vm.toggleTag('research, development');
+    wrapper.vm.toggleTag('work');
+    const input = wrapper.find('[data-testid="stopwatch-tags"]');
+    input.vm.$emit('input', 'urgent');
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.startTimer('Study');
+    expect(aw.heartbeat.mock.calls[0][2].data.tags).toEqual(['work', 'urgent']);
+    // A started timer must not preload the next one with invisible state.
     expect(wrapper.vm.selectedTags).toEqual([]);
+    expect(wrapper.vm.tags).toBe('');
+    await wrapper.vm.startTimer('Study again');
+    expect(aw.heartbeat.mock.calls[1][2].data.tags).toEqual([]);
     wrapper.destroy();
   });
 
