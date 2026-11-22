@@ -438,16 +438,17 @@ export default {
     rangeStart: 'Date de début',
     rangeEnd: 'Date de fin',
     invalidRange: 'Plage de dates invalide dans l’URL, affichage d’aujourd’hui à la place.',
-    // English fallback until these interval strings are translated.
-    periodExactInterval: 'exact times',
-    intervalStart: 'Start time',
-    intervalEnd: 'End time (exclusive)',
-    invalidInterval: 'Invalid time interval in URL, showing today instead.',
-    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    periodExactInterval: 'heures exactes',
+    intervalStart: 'Heure de début',
+    intervalEnd: 'Heure de fin (exclue)',
+    invalidInterval: "Intervalle de temps invalide dans l'URL, affichage d'aujourd'hui à la place.",
+    intervalNonexistentTime:
+      "Cette heure n'existe pas dans votre fuseau horaire (l'horloge avance).",
     intervalAmbiguousTime:
-      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
-    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
-    intervalEndAfterStart: 'The end time must be after the start time.',
+      "Cette heure se produit deux fois dans votre fuseau horaire (l'horloge recule). Choisissez celle à utiliser :",
+    intervalTooLong:
+      'Un intervalle exact peut couvrir au plus 92 jours ; utilisez une plage de dates pour des périodes plus longues.',
+    intervalEndAfterStart: "L'heure de fin doit être postérieure à l'heure de début.",
     diagnosticMissingWindow:
       'Aucun bucket de fenêtres pour {host}. Démarrez aw-watcher-window, puis actualisez cette page.',
     diagnosticMissingAfk:
@@ -508,7 +509,7 @@ export default {
     periodLast7d: 'sur les 7 derniers jours',
     periodLast30d: 'sur les 30 derniers jours',
     periodCustomRange: 'sur la plage sélectionnée',
-    periodExactInterval: 'in the selected time interval', // English fallback
+    periodExactInterval: "dans l'intervalle de temps sélectionné",
     periodAllTime: 'toutes périodes confondues',
   },
   visualizations: {
@@ -677,10 +678,10 @@ export default {
       quickDurations: 'Durées rapides',
       startDate: 'Date de début',
       endDate: 'Date de fin (facultatif)',
-      startTime: 'Start time',
-      endTime: 'End time',
+      startTime: 'Heure de début',
+      endTime: 'Heure de fin',
       unresolvableTime:
-        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
+        "L'une des heures sélectionnées n'existe pas, ou se produit deux fois, en raison d'un changement d'heure. Ajustez-la.",
       optional: '(facultatif)',
       apply: 'Appliquer',
       refresh: 'Actualiser',

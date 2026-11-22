@@ -426,16 +426,16 @@ export default {
     rangeStart: 'শুরুর তারিখ',
     rangeEnd: 'শেষের তারিখ',
     invalidRange: 'URL এ তারিখের সময়সীমা অবৈধ, তাই আজকের তারিখ দেখানো হচ্ছে।',
-    // English fallback until these interval strings are translated.
-    periodExactInterval: 'exact times',
-    intervalStart: 'Start time',
-    intervalEnd: 'End time (exclusive)',
-    invalidInterval: 'Invalid time interval in URL, showing today instead.',
-    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    periodExactInterval: 'সঠিক সময়',
+    intervalStart: 'শুরুর সময়',
+    intervalEnd: 'শেষের সময় (অন্তর্ভুক্ত নয়)',
+    invalidInterval: 'URL-এ সময়ের ব্যবধান অবৈধ, পরিবর্তে আজ দেখানো হচ্ছে।',
+    intervalNonexistentTime: 'এই সময়টি আপনার সময় অঞ্চলে নেই (ঘড়ি এগিয়ে দেওয়া হয়)।',
     intervalAmbiguousTime:
-      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
-    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
-    intervalEndAfterStart: 'The end time must be after the start time.',
+      'এই সময়টি আপনার সময় অঞ্চলে দুবার আসে (ঘড়ি পিছিয়ে দেওয়া হয়)। কোনটি ব্যবহার করবেন তা বেছে নিন:',
+    intervalTooLong:
+      'একটি সঠিক ব্যবধান সর্বোচ্চ 92 দিনের হতে পারে; দীর্ঘ সময়ের জন্য তারিখের পরিসর ব্যবহার করুন।',
+    intervalEndAfterStart: 'শেষের সময় অবশ্যই শুরুর সময়ের পরে হতে হবে।',
     diagnosticMissingWindow:
       '{host} এর জন্য কোনো উইন্ডো বাকেট নেই। aw-watcher-window চালু করুন, তারপর এই পাতা রিফ্রেশ করুন।',
     diagnosticMissingAfk:
@@ -495,7 +495,7 @@ export default {
     periodLast7d: 'গত 7 দিনের',
     periodLast30d: 'গত 30 দিনের',
     periodCustomRange: 'নির্বাচিত সময়সীমার',
-    periodExactInterval: 'in the selected time interval', // English fallback
+    periodExactInterval: 'নির্বাচিত সময়ের ব্যবধানে',
     periodAllTime: 'সর্বকালের',
   },
   visualizations: {
@@ -661,10 +661,10 @@ export default {
       quickDurations: 'দ্রুত সময়কাল',
       startDate: 'শুরুর তারিখ',
       endDate: 'শেষের তারিখ (ঐচ্ছিক)',
-      startTime: 'Start time',
-      endTime: 'End time',
+      startTime: 'শুরুর সময়',
+      endTime: 'শেষের সময়',
       unresolvableTime:
-        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
+        'ডেলাইট সেভিং পরিবর্তনের কারণে নির্বাচিত সময়গুলোর একটি নেই অথবা দুবার আসে। এটি সামঞ্জস্য করুন।',
       optional: '(ঐচ্ছিক)',
       apply: 'প্রয়োগ করুন',
       refresh: 'রিফ্রেশ',

@@ -431,16 +431,16 @@ export default {
     rangeStart: 'Startdatum',
     rangeEnd: 'Slutdatum',
     invalidRange: 'Ogiltigt datumintervall i URL:en, visar idag istället.',
-    // English fallback until these interval strings are translated.
-    periodExactInterval: 'exact times',
-    intervalStart: 'Start time',
-    intervalEnd: 'End time (exclusive)',
-    invalidInterval: 'Invalid time interval in URL, showing today instead.',
-    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    periodExactInterval: 'exakta tider',
+    intervalStart: 'Starttid',
+    intervalEnd: 'Sluttid (exklusiv)',
+    invalidInterval: 'Ogiltigt tidsintervall i URL:en, visar idag istället.',
+    intervalNonexistentTime: 'Den tiden finns inte i din tidszon (klockan ställs fram).',
     intervalAmbiguousTime:
-      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
-    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
-    intervalEndAfterStart: 'The end time must be after the start time.',
+      'Den tiden inträffar två gånger i din tidszon (klockan ställs tillbaka). Välj vilken som ska användas:',
+    intervalTooLong:
+      'Ett exakt intervall får vara högst 92 dagar; använd ett datumintervall för längre perioder.',
+    intervalEndAfterStart: 'Sluttiden måste vara efter starttiden.',
     diagnosticMissingWindow:
       'Ingen fönsterbucket för {host}. Starta aw-watcher-window och uppdatera sedan sidan.',
     diagnosticMissingAfk:
@@ -500,7 +500,7 @@ export default {
     periodLast7d: 'de senaste 7 dagarna',
     periodLast30d: 'de senaste 30 dagarna',
     periodCustomRange: 'i det valda intervallet',
-    periodExactInterval: 'in the selected time interval', // English fallback
+    periodExactInterval: 'i det valda tidsintervallet',
     periodAllTime: 'totalt',
   },
   visualizations: {
@@ -671,10 +671,10 @@ export default {
       quickDurations: 'Snabbval för varaktighet',
       startDate: 'Startdatum',
       endDate: 'Slutdatum (valfritt)',
-      startTime: 'Start time',
-      endTime: 'End time',
+      startTime: 'Starttid',
+      endTime: 'Sluttid',
       unresolvableTime:
-        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
+        'En av de valda tiderna finns inte, eller inträffar två gånger, på grund av sommartid. Justera den.',
       optional: '(valfritt)',
       apply: 'Tillämpa',
       refresh: 'Uppdatera',
