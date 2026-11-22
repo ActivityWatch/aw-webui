@@ -938,6 +938,26 @@ describe('multideviceQuery browser support', () => {
     expect(joined).not.toContain('aw-watcher-android-web-synced-from-phone');
   });
 
+  test('does not limit per-chunk browser aggregates before merging across days', () => {
+    const joined = multideviceQuery(multiWithBrowsers).join('\n');
+    expect(joined).not.toContain('limit_events(browser_urls');
+    expect(joined).not.toContain('limit_events(browser_domains');
+    expect(joined).not.toContain('limit_events(browser_titles');
+  });
+
+  test('canonicalEvents with return_variable_suffix and no bid_browsers avoids undefined browser_events', () => {
+    const q = canonicalEvents({
+      bid_window: 'aw-watcher-window_laptop',
+      bid_afk: 'aw-watcher-afk_laptop',
+      filter_afk: true,
+      categories: [],
+      filter_categories: [],
+      return_variable_suffix: 'timeline_0',
+    });
+    expect(q).toContain('browser_events_timeline_0 = [];');
+    expect(q).not.toContain('browser_events_timeline_0 = browser_events;');
+  });
+
   test('emits no inline or block comments when browsers are included', () => {
     const joined = multideviceQuery(multiWithBrowsers).join('\n');
     const stripped = joined.replace(/"[^"]*"/g, '""');

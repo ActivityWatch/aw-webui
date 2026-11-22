@@ -649,7 +649,7 @@ export const useActivityStore = defineStore('activity', {
     },
 
     multidevice_params(
-      { filter_categories, filter_afk, include_audible, always_active_pattern }: QueryOptions,
+      { filter_categories, filter_afk, always_active_pattern }: QueryOptions,
       hosts: string[]
     ): MultiQueryParams {
       const bucketsStore = useBucketsStore();
@@ -670,7 +670,6 @@ export const useActivityStore = defineStore('activity', {
       return {
         hosts: hosts_with_buckets,
         filter_afk,
-        ...(include_audible !== undefined ? { include_audible } : {}),
         categories: useCategoryStore().classes_for_query,
         filter_categories,
         host_params,

@@ -205,6 +205,10 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
 
   // For simplicity, we assume that bid_window and bid_android are exchangeable (note however it needs special treatment)
   const bid_window = isDesktopParams(params) ? params.bid_window : params.bid_android;
+  const hasBrowserEvents = Boolean(
+    (isDesktopParams(params) && params.bid_browsers) ||
+      (isAndroidParams(params) && params.bid_browsers && params.bid_browsers.length > 0)
+  );
 
   return [
     // Fetch window/app events
@@ -280,9 +284,9 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
       ? [
           `events_${params.return_variable_suffix} = events;`,
           `not_afk_${params.return_variable_suffix} = not_afk;`,
-          isAndroidParams(params) && !(params.bid_browsers && params.bid_browsers.length > 0)
-            ? `browser_events_${params.return_variable_suffix} = [];`
-            : `browser_events_${params.return_variable_suffix} = browser_events;`,
+          hasBrowserEvents
+            ? `browser_events_${params.return_variable_suffix} = browser_events;`
+            : `browser_events_${params.return_variable_suffix} = [];`,
         ].join('\n')
       : '',
   ].join('\n');
@@ -708,13 +712,10 @@ export function multideviceQuery(params: MultiQueryParams): string[] {
     browser_events = split_url_events(browser_events);
     browser_urls = merge_events_by_keys(browser_events, ["url"]);
     browser_urls = sort_by_duration(browser_urls);
-    browser_urls = limit_events(browser_urls, ${default_limit});
     browser_domains = merge_events_by_keys(browser_events, ["$domain"]);
     browser_domains = sort_by_duration(browser_domains);
-    browser_domains = limit_events(browser_domains, ${default_limit});
     browser_titles = merge_events_by_keys(browser_events, ["title"]);
     browser_titles = sort_by_duration(browser_titles);
-    browser_titles = limit_events(browser_titles, ${default_limit});
     browser_duration = sum_durations(browser_events);
 
     RETURN = {

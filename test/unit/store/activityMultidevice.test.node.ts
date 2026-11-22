@@ -56,9 +56,16 @@ describe('activity store host selection', () => {
 
   test('multidevice params use the actual (synced) bucket ids', () => {
     const params = activityStore.multidevice_params(
-      { host: '@all', filter_afk: true, filter_categories: [], always_active_pattern: '' },
+      {
+        host: '@all',
+        filter_afk: true,
+        include_audible: true,
+        filter_categories: [],
+        always_active_pattern: '',
+      },
       ['laptop', 'phone']
     );
+    expect(params.include_audible).toBeUndefined();
     expect(params.hosts).toEqual(['laptop', 'phone']);
     expect(params.host_params.laptop).toEqual({
       bid_window: 'aw-watcher-window_laptop-synced-from-laptop',
