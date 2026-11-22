@@ -49,6 +49,11 @@ hr {
 .dropdown-menu {
   background-color: #1a1d24 !important;
   border-color: #282c32 !important;
+  color: #e9ebf0 !important;
+}
+
+.dropdown-menu .dropdown-divider {
+  border-top-color: #282c32 !important;
 }
 
 /* Phone navigation drawer: b-sidebar renders .bg-white/.text-dark, which
