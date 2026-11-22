@@ -80,9 +80,9 @@ describe('ActivityView mobile presentation', () => {
       };
       window.matchMedia = jest.fn().mockReturnValue(query);
       const elements = [
-        { type: 'top_apps' },
+        { type: 'top_apps', width: 2 },
         { type: 'top_categories' },
-        { type: 'timeline_barchart' },
+        { type: 'timeline_barchart', width: 1 },
       ];
       const wrapper = shallowMount(ActivityView, {
         computed: { view: () => ({ id: 'summary', elements }) },
@@ -103,6 +103,13 @@ describe('ActivityView mobile presentation', () => {
         const order = () =>
           wrapper.findAll('[data-type]').wrappers.map(el => el.attributes('data-type'));
         expect(order()).toEqual(['timeline_barchart', 'top_apps', 'top_categories']);
+        const chartClasses = wrapper.find('[data-type="timeline_barchart"]').element.parentElement
+          .classList;
+        expect(Array.from(chartClasses)).toEqual(
+          expect.arrayContaining(['summary-timeline', 'col-lg-12'])
+        );
+        const appClasses = wrapper.find('[data-type="top_apps"]').element.parentElement.classList;
+        expect(Array.from(appClasses)).toContain('col-lg-6');
         expect(wrapper.findAll('[data-id]').wrappers.map(el => el.attributes('data-id'))).toEqual([
           '2',
           '0',
