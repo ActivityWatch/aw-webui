@@ -213,7 +213,11 @@ export default {
       } catch (e) {
         console.error('Failed to save categories', e);
         const httpStatus = e && e.response && e.response.status;
-        const detail = (e && e.message) || String(e);
+        const serverMessage = e?.response?.data?.message;
+        const detail =
+          typeof serverMessage === 'string' && serverMessage.trim()
+            ? serverMessage
+            : (e && e.message) || String(e);
         const prefix = httpStatus
           ? `Failed to save categories (HTTP ${httpStatus})`
           : 'Failed to save categories';
