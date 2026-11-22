@@ -30,6 +30,7 @@ div
       placeholder="work, meeting"
       :aria-label="$t('stopwatch.tagsLabel')"
       :title="$t('stopwatch.tagsLabel')"
+      @input="onTagsInput"
       @keyup.enter="startTimer(label)"
     )
     b-input-group-append
@@ -38,13 +39,15 @@ div
         | {{ $t('stopwatch.start') }}
 
   div.stopwatch-recent-tags.mt-1(v-if="recentTags.length > 0" data-testid="stopwatch-recent-tags")
-    b-badge.stopwatch-recent-tag(
+    b-button.stopwatch-recent-tag(
       v-for="t in recentTags"
       :key="t"
-      href="#"
+      size="sm"
       pill
       :variant="selectedTags.includes(t) ? 'primary' : 'light'"
-      @click.prevent="toggleTag(t)"
+      :aria-pressed="selectedTags.includes(t) ? 'true' : 'false'"
+      :title="t"
+      @click="toggleTag(t)"
     ) {{ t }}
 
   hr
@@ -137,6 +140,9 @@ export default {
       events: [],
       label: '',
       tags: '',
+      // Authoritative selection; `tags` is only the comma-delimited display.
+      // A tag may itself contain a comma, so the text round-trip is lossy.
+      selectedTagList: [] as string[],
       now: moment(),
     };
   },
@@ -147,8 +153,8 @@ export default {
     stoppedTimers() {
       return _.filter(this.events, e => !e.data.running);
     },
-    selectedTags() {
-      return parseTags(this.tags);
+    selectedTags(): string[] {
+      return this.selectedTagList;
     },
     // Most recently used first; at most RECENT_TAG_LIMIT distinct tags.
     recentTags() {
@@ -157,8 +163,14 @@ export default {
         (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       );
       for (const e of sorted) {
-        if (!Array.isArray(e.data.tags)) continue;
-        for (const t of e.data.tags) {
+        // Events created before tags became arrays stored a comma-separated
+        // string; read it for suggestions but never rewrite the event.
+        const tags = Array.isArray(e.data.tags)
+          ? e.data.tags
+          : typeof e.data.tags === 'string'
+          ? parseTags(e.data.tags)
+          : [];
+        for (const t of tags) {
           if (typeof t === 'string' && t.trim()) seen.add(t.trim());
         }
       }
@@ -185,14 +197,23 @@ export default {
     clearInterval(this.clockInterval);
   },
   methods: {
-    toggleTag: function (tag) {
-      const current = parseTags(this.tags);
-      this.tags = (current.includes(tag) ? current.filter(t => t !== tag) : [...current, tag]).join(
-        ', '
-      );
+    // Typing is the only lossy path (commas delimit tags there); keep the
+    // array in sync so a typed tag still becomes a single array entry.
+    onTagsInput: function (text: string) {
+      this.selectedTagList = parseTags(text);
     },
 
-    startTimer: async function (label, tags = parseTags(this.tags)) {
+    toggleTag: function (tag) {
+      const current = this.selectedTagList;
+      this.selectedTagList = current.includes(tag)
+        ? current.filter(t => t !== tag)
+        : [...current, tag];
+      // Keep the visible field in sync without re-parsing it (which would
+      // split a tag that contains a comma).
+      this.tags = this.selectedTagList.join(', ');
+    },
+
+    startTimer: async function (label, tags = this.selectedTags) {
       // Old events may carry comma-separated text or an unsupported shape.
       // Normalize only the new timer; never rewrite the historical event.
       tags = Array.isArray(tags) ? tags : typeof tags === 'string' ? parseTags(tags) : [];

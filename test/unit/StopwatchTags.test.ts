@@ -43,7 +43,9 @@ describe('Stopwatch event tags', () => {
     await flush();
     const tags = wrapper.find('[data-testid="stopwatch-tags"]');
     expect(tags.exists()).toBe(true);
-    await wrapper.setData({ tags: ' study,  deep work, ,reading , ' });
+    // Emit from the input component so the v-model/@input wiring is exercised.
+    tags.vm.$emit('input', ' study,  deep work, ,reading , ');
+    await wrapper.vm.$nextTick();
     await wrapper.vm.$nextTick();
     await wrapper.vm.startTimer('Study');
     expect(aw.heartbeat.mock.calls[0][2].data).toEqual({
@@ -79,6 +81,52 @@ describe('Stopwatch event tags', () => {
     wrapper.destroy();
   });
 
+  test('a clicked recent tag containing a comma stays one array entry', async () => {
+    const past = timer(['research, development', 'work']);
+    const { wrapper, aw } = stopwatch([past]);
+    await flush();
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.recentTags).toContain('research, development');
+
+    wrapper.vm.toggleTag('research, development');
+    await wrapper.vm.$nextTick();
+    // Selected state survives the text round-trip, so a second click removes it.
+    expect(wrapper.vm.selectedTags).toEqual(['research, development']);
+    wrapper.vm.toggleTag('research, development');
+    expect(wrapper.vm.selectedTags).toEqual([]);
+
+    wrapper.vm.toggleTag('research, development');
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.startTimer('Study');
+    expect(aw.heartbeat.mock.calls[0][2].data.tags).toEqual(['research, development']);
+    wrapper.destroy();
+  });
+
+  test('suggests chips for legacy comma-separated string tags', async () => {
+    const legacy = {
+      ...timer(),
+      data: { ...timer().data, tags: 'work, meeting' },
+    };
+    const { wrapper } = stopwatch([legacy]);
+    await flush();
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.recentTags).toEqual(['work', 'meeting']);
+    expect(wrapper.find('[data-testid="stopwatch-recent-tags"]').exists()).toBe(true);
+    wrapper.destroy();
+  });
+
+  test('recent-tag chips expose their pressed state to assistive tech', async () => {
+    const { wrapper } = stopwatch([timer(['work'])]);
+    await flush();
+    await wrapper.vm.$nextTick();
+    const chip = wrapper.find('.stopwatch-recent-tag');
+    expect(chip.attributes('aria-pressed')).toBe('false');
+    wrapper.vm.toggleTag('work');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('.stopwatch-recent-tag').attributes('aria-pressed')).toBe('true');
+    wrapper.destroy();
+  });
+
   test('hides the recent-tag row when no event has tags', async () => {
     const { wrapper } = stopwatch([timer()]);
     await flush();
@@ -96,7 +144,7 @@ describe('Stopwatch event tags', () => {
       const { wrapper, aw } = stopwatch([past]);
       await flush();
       // A separate draft must not leak into a restarted historical timer.
-      await wrapper.setData({ tags: 'unrelated draft' });
+      wrapper.vm.onTagsInput('unrelated draft');
       wrapper.findComponent(StopwatchEntry).vm.$emit('new');
       await flush();
       expect(aw.heartbeat.mock.calls[0][2].data).toEqual({
@@ -119,7 +167,7 @@ describe('Stopwatch event tags', () => {
     const original = JSON.stringify(past);
     const { wrapper, aw } = stopwatch([past]);
     await flush();
-    await wrapper.setData({ tags: 'unrelated draft' });
+    wrapper.vm.onTagsInput('unrelated draft');
     wrapper.findComponent(StopwatchEntry).vm.$emit('new');
     await flush();
     expect(aw.heartbeat).toHaveBeenCalledTimes(1);
