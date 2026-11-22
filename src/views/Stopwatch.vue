@@ -23,13 +23,29 @@ div
       :aria-label="$t('stopwatch.placeholder')"
       @keyup.enter="startTimer(label)"
     )
+    b-input.stopwatch-tags-input(
+      id="stopwatch-tags"
+      data-testid="stopwatch-tags"
+      v-model="tags"
+      placeholder="work, meeting"
+      :aria-label="$t('stopwatch.tagsLabel')"
+      :title="$t('stopwatch.tagsLabel')"
+      @keyup.enter="startTimer(label)"
+    )
     b-input-group-append
       b-button(@click="startTimer(label)", variant="success")
         icon(name="play")
         | {{ $t('stopwatch.start') }}
 
-  b-form-group.mt-2(:label="$t('stopwatch.tagsLabel')" label-for="stopwatch-tags")
-    b-input(id="stopwatch-tags" data-testid="stopwatch-tags" v-model="tags" placeholder="work, meeting")
+  div.stopwatch-recent-tags.mt-1(v-if="recentTags.length > 0" data-testid="stopwatch-recent-tags")
+    b-badge.stopwatch-recent-tag(
+      v-for="t in recentTags"
+      :key="t"
+      href="#"
+      pill
+      :variant="selectedTags.includes(t) ? 'primary' : 'light'"
+      @click.prevent="toggleTag(t)"
+    ) {{ t }}
 
   hr
 
@@ -69,6 +85,15 @@ div
 </template>
 
 <style scoped lang="scss">
+.stopwatch-tags-input {
+  max-width: 14em;
+}
+
+.stopwatch-recent-tag {
+  margin-right: 0.25em;
+  font-weight: normal;
+}
+
 .btn {
   margin-right: 0.5em;
 
@@ -83,6 +108,8 @@ div
 import _ from 'lodash';
 import moment from 'moment';
 import { parseTags } from '../util/tags';
+
+const RECENT_TAG_LIMIT = 8;
 
 import StopwatchEntry from '../components/StopwatchEntry.vue';
 import 'vue-awesome/icons/play';
@@ -120,6 +147,23 @@ export default {
     stoppedTimers() {
       return _.filter(this.events, e => !e.data.running);
     },
+    selectedTags() {
+      return parseTags(this.tags);
+    },
+    // Most recently used first; at most RECENT_TAG_LIMIT distinct tags.
+    recentTags() {
+      const seen = new Set<string>();
+      const sorted = [...this.events].sort(
+        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+      for (const e of sorted) {
+        if (!Array.isArray(e.data.tags)) continue;
+        for (const t of e.data.tags) {
+          if (typeof t === 'string' && t.trim()) seen.add(t.trim());
+        }
+      }
+      return [...seen].slice(0, RECENT_TAG_LIMIT);
+    },
     timersByDate() {
       return _.groupBy(this.stoppedTimers, e => moment(e.timestamp).format('YYYY-MM-DD'));
     },
@@ -141,6 +185,13 @@ export default {
     clearInterval(this.clockInterval);
   },
   methods: {
+    toggleTag: function (tag) {
+      const current = parseTags(this.tags);
+      this.tags = (current.includes(tag) ? current.filter(t => t !== tag) : [...current, tag]).join(
+        ', '
+      );
+    },
+
     startTimer: async function (label, tags = parseTags(this.tags)) {
       // Old events may carry comma-separated text or an unsupported shape.
       // Normalize only the new timer; never rewrite the historical event.

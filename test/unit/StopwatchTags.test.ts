@@ -54,6 +54,40 @@ describe('Stopwatch event tags', () => {
     wrapper.destroy();
   });
 
+  test('offers recent tags (newest first, deduplicated) and toggles them into the input', async () => {
+    const older = {
+      ...timer(['work', 'deep work']),
+      id: 1,
+      timestamp: new Date('2026-10-19T12:00:00Z'),
+    };
+    const newer = {
+      ...timer(['meeting', 'work']),
+      id: 2,
+      timestamp: new Date('2026-10-20T12:00:00Z'),
+    };
+    const { wrapper } = stopwatch([older, newer]);
+    await flush();
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.recentTags).toEqual(['meeting', 'work', 'deep work']);
+    expect(wrapper.find('[data-testid="stopwatch-recent-tags"]').exists()).toBe(true);
+
+    wrapper.vm.toggleTag('work');
+    wrapper.vm.toggleTag('meeting');
+    expect(wrapper.vm.tags).toBe('work, meeting');
+    wrapper.vm.toggleTag('work');
+    expect(wrapper.vm.tags).toBe('meeting');
+    wrapper.destroy();
+  });
+
+  test('hides the recent-tag row when no event has tags', async () => {
+    const { wrapper } = stopwatch([timer()]);
+    await flush();
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.recentTags).toEqual([]);
+    expect(wrapper.find('[data-testid="stopwatch-recent-tags"]').exists()).toBe(false);
+    wrapper.destroy();
+  });
+
   test.each<[string[] | undefined]>([[undefined], [['work', 'meeting']]])(
     'Start New inherits tags without mutating history: %p',
     async tags => {
