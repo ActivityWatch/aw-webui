@@ -699,6 +699,9 @@ export default {
       showMore: 'Visa {count} till',
     },
     calendar: {
+      source: 'Källa:',
+      categories: 'Kategorier',
+      rawBucket: 'Rå bucket',
       bucket: 'Bucket:',
       show: 'Visa:',
       day: 'Dag',

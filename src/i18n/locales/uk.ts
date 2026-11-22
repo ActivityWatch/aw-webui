@@ -683,6 +683,9 @@ export default {
       showMore: 'Показати ще {count}',
     },
     calendar: {
+      source: 'Джерело:',
+      categories: 'Категорії',
+      rawBucket: 'Сирий bucket',
       bucket: 'Bucket:',
       show: 'Показати:',
       day: 'День',

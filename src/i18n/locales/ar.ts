@@ -681,6 +681,9 @@ export default {
       showMore: 'عرض {count} إضافية',
     },
     calendar: {
+      source: 'المصدر:',
+      categories: 'الفئات',
+      rawBucket: 'Bucket خام',
       bucket: 'Bucket:',
       show: 'عرض:',
       day: 'يوم',

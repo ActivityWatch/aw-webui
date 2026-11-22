@@ -121,7 +121,7 @@ div
     vis-timeline(:buckets="buckets", :categorizedEvents="categorizedEvents", :showRowLabels='true', :queriedInterval="daterange", :swimlane="swimlane", :groupGranularity="timelineGroupGranularity", :updateTimelineWindow='updateTimelineWindow', @event-saved="onEventSaved")
 
     aw-devonly(:reason="$t('ui.devOnly.timelineExperiment')")
-      aw-calendar(:buckets="buckets")
+      aw-calendar(:buckets="buckets", :categorizedEvents="categorizedEvents")
   div(v-else)
     h1.aw-loading {{ $t('common.loading') }}
 </template>

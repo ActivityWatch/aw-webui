@@ -699,6 +699,9 @@ export default {
       showMore: 'Mostrar mais {count}',
     },
     calendar: {
+      source: 'Fonte:',
+      categories: 'Categorias',
+      rawBucket: 'Bucket bruto',
       bucket: 'Bucket:',
       show: 'Mostrar:',
       day: 'Dia',

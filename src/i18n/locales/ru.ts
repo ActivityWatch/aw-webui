@@ -684,6 +684,9 @@ export default {
       showMore: 'Показать ещё {count}',
     },
     calendar: {
+      source: 'Источник:',
+      categories: 'Категории',
+      rawBucket: 'Исходный bucket',
       bucket: 'Bucket:',
       show: 'Показать:',
       day: 'День',

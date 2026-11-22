@@ -687,6 +687,9 @@ export default {
       showMore: 'আরও {count}টি দেখান',
     },
     calendar: {
+      source: 'উৎস:',
+      categories: 'বিভাগসমূহ',
+      rawBucket: 'কাঁচা বাকেট',
       bucket: 'বাকেট:',
       show: 'দেখান:',
       day: 'দিন',

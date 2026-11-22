@@ -690,6 +690,9 @@ export default {
       showMore: '{count} और दिखाएँ',
     },
     calendar: {
+      source: 'स्रोत:',
+      categories: 'श्रेणियाँ',
+      rawBucket: 'कच्चा Bucket',
       bucket: 'Bucket:',
       show: 'दिखाएँ:',
       day: 'दिन',
