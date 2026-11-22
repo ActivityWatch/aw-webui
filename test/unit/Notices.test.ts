@@ -309,3 +309,116 @@ describe('release notice persistence', () => {
     wrapper.destroy();
   });
 });
+
+describe('poll in the host', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    jest.useFakeTimers();
+  });
+  afterEach(() => jest.useRealTimers());
+
+  async function mountPoll() {
+    const UserSatisfactionPoll = (await import('~/components/UserSatisfactionPoll.vue')).default;
+    // Drive visibility directly; the settings/backoff workflow is covered in notificationPersistence.
+    const wrapper = mount({ ...UserSatisfactionPoll, mounted: jest.fn() }, {
+      localVue,
+      ...i18n,
+      stubs: { icon: true },
+    } as any);
+    const vm: any = wrapper.vm;
+    vm.saveData = jest.fn().mockResolvedValue(true);
+    return { wrapper, vm, notices: useNoticesStore() };
+  }
+
+  test('waits behind the bell, then opens on its own once after the dwell time', async () => {
+    const { wrapper, vm, notices } = await mountPoll();
+    vm.isPollVisible = true;
+    await wrapper.vm.$nextTick();
+    expect(notices.ids).toEqual(['poll']);
+    expect(notices.hasUnseen).toBe(true);
+    expect(notices.isOpen).toBe(false);
+
+    jest.advanceTimersByTime(7999);
+    expect(notices.isOpen).toBe(false);
+    jest.advanceTimersByTime(1);
+    expect(notices.isOpen).toBe(true);
+
+    // The user closes it; it does not reopen by itself.
+    notices.close();
+    jest.advanceTimersByTime(60000);
+    expect(notices.isOpen).toBe(false);
+    wrapper.destroy();
+  });
+
+  test('does not auto-open if the user already opened the host from the bell', async () => {
+    const { wrapper, vm, notices } = await mountPoll();
+    vm.isPollVisible = true;
+    await wrapper.vm.$nextTick();
+    notices.open();
+    await wrapper.vm.$nextTick();
+    notices.close();
+    jest.advanceTimersByTime(60000);
+    expect(notices.isOpen).toBe(false);
+    wrapper.destroy();
+  });
+
+  test('the answer only routes: positive goes to the attributed support page', async () => {
+    const { wrapper, vm, notices } = await mountPoll();
+    vm.isPollVisible = true;
+    await wrapper.vm.$nextTick();
+    await wrapper.find('[data-testid="poll-positive"]').trigger('click');
+    await wrapper.vm.$nextTick();
+    expect(vm.saveData).toHaveBeenCalledWith(expect.objectContaining({ isEnabled: false }));
+    expect(wrapper.find('[data-testid="poll-ask"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="poll-support"]').attributes('href')).toBe(
+      'https://activitywatch.net/go/?src=inapp-poll'
+    );
+    expect(notices.ids).toEqual(['poll']);
+
+    // Seen once the host closes: the follow-up is not listed again.
+    notices.open();
+    await wrapper.vm.$nextTick();
+    notices.close();
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.$nextTick();
+    expect(notices.ids).toEqual([]);
+    wrapper.destroy();
+  });
+
+  test('negative goes to the attributed feedback form', async () => {
+    const { wrapper, vm } = await mountPoll();
+    vm.isPollVisible = true;
+    await wrapper.vm.$nextTick();
+    await wrapper.find('[data-testid="poll-negative"]').trigger('click');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('[data-testid="poll-feedback"]').attributes('href')).toBe(
+      'https://activitywatch.net/go/?src=inapp-survey&to=survey'
+    );
+    wrapper.destroy();
+  });
+
+  test('"Not now" closes without answering or disabling the poll', async () => {
+    const { wrapper, vm, notices } = await mountPoll();
+    vm.isPollVisible = true;
+    await wrapper.vm.$nextTick();
+    notices.open();
+    await wrapper.find('[data-testid="poll-not-now"]').trigger('click');
+    await wrapper.vm.$nextTick();
+    expect(vm.saveData).not.toHaveBeenCalled();
+    expect(notices.isOpen).toBe(false);
+    expect(vm.isPollVisible).toBe(false);
+    expect(notices.ids).toEqual([]);
+    wrapper.destroy();
+  });
+
+  test('"Don\'t ask again" disables the poll', async () => {
+    const { wrapper, vm } = await mountPoll();
+    vm.isPollVisible = true;
+    await wrapper.vm.$nextTick();
+    await wrapper.find('[data-testid="poll-dont-ask"]').trigger('click');
+    await wrapper.vm.$nextTick();
+    expect(vm.saveData).toHaveBeenCalledWith(expect.objectContaining({ isEnabled: false }));
+    expect(vm.isPollVisible).toBe(false);
+    wrapper.destroy();
+  });
+});

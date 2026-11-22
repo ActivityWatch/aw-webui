@@ -1039,12 +1039,8 @@ export default {
       id: 'ID',
     },
     userPoll: {
-      question:
-        'Hej! Du har använt ActivityWatch ett tag nu. Hur sannolikt är det att du skulle rekommendera det till en vän eller kollega på en skala från 1 till 10? (där 10 är mest sannolikt)',
       dontShowAgain: 'Visa inte igen',
-      submit: 'Skicka',
       positiveIntro: 'Vad kul att höra att du gillar ActivityWatch, men vi kan bli bättre!',
-      positiveHelp: 'För att hjälpa oss att hjälpa dig finns det några saker du kan göra:',
       support: 'Stöd oss på',
       tellFriends: 'Berätta för dina vänner och kollegor!',
       social: 'Skriv om det i sociala medier, vi finns på',
@@ -1055,7 +1051,6 @@ export default {
         'Vi är ledsna att höra att du inte gillade ActivityWatch, men vi vill bli bättre! Vi vore mycket tacksamma om du hjälpte oss genom att:',
       feedback: 'Fyll i vårt',
       vote: 'Rösta på nya funktioner i vårt',
-      feedbackPrefix: 'Fyll i vårt',
       feedbackForm: 'feedbackformulär',
     },
   },

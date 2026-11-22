@@ -237,7 +237,7 @@ describe('notification settings persistence', () => {
   test.each([
     [NewReleaseNotification, 'newReleaseCheckData', 'disableCheck', 'isVisible'],
     [UserSatisfactionPoll, 'userSatisfactionPollData', 'dontShowAgain', 'isPollVisible'],
-    [UserSatisfactionPoll, 'userSatisfactionPollData', 'submit', 'isPollVisible'],
+    [UserSatisfactionPoll, 'userSatisfactionPollData', 'choose', 'isPollVisible'],
   ])(
     'failed disable retains visible state and can retry (%s, %s, %s)',
     async (component, key, action, visible) => {
@@ -245,7 +245,6 @@ describe('notification settings persistence', () => {
       await useSettingsStore().load();
       const wrapper = mountNotification(component);
       await flush();
-      wrapper.vm.rating = '8';
       expect(wrapper.vm[visible]).toBe(true);
       mockPost.mockRejectedValueOnce(new Error('offline'));
       // Components may report the failure locally or propagate it to their caller.

@@ -1030,13 +1030,9 @@ export default {
     },
     buckets: { id: 'Kitambulisho' },
     userPoll: {
-      question:
-        'Habari! Umekuwa ukitumia ActivityWatch kwa muda. Je, una uwezekano gani wa kuipendekeza kwa rafiki/mwenzako kwa kiwango cha 1-10? (10 ikiwa na uwezekano mkubwa zaidi)',
       dontShowAgain: 'Usionyeshe tena',
-      submit: 'Wasilisha',
       positiveIntro:
         'Tunafurahi kusikia unafurahia kutumia ActivityWatch, lakini tunaweza kufanya vizuri zaidi!',
-      positiveHelp: 'Kutusaidia kukusaidia, hapa kuna mambo machache unayoweza kufanya:',
       support: 'Tututie mkono kwenye',
       tellFriends: 'Mwambie marafiki na wenzako!',
       social: 'Chapisha kuhusu hilo kwenye mitandao ya kijamii; tuko kwenye',
@@ -1047,7 +1043,6 @@ export default {
         'Tunasikitika kusikia hukupenda ActivityWatch, lakini tunataka kuboresha! Tungeshukuru sana ikiwa utatusaidia kwa:',
       feedback: 'Jaza',
       vote: 'Piga kura kwa vipengele vipya kwenye',
-      feedbackPrefix: 'Jaza',
       feedbackForm: 'fomu ya maoni',
     },
   },
