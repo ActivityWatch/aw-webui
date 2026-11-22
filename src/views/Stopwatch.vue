@@ -140,8 +140,8 @@ export default {
       events: [],
       label: '',
       tags: '',
-      // Authoritative selection; `tags` is only the comma-delimited display.
-      // A tag may itself contain a comma, so the text round-trip is lossy.
+      // Chip selections stay separate from the typed draft: a selected tag
+      // may itself contain a comma and must never be parsed as draft text.
       selectedTagList: [] as string[],
       now: moment(),
     };
@@ -154,7 +154,7 @@ export default {
       return _.filter(this.events, e => !e.data.running);
     },
     selectedTags(): string[] {
-      return this.selectedTagList;
+      return [...new Set([...this.selectedTagList, ...parseTags(this.tags)])];
     },
     // Most recently used first; at most RECENT_TAG_LIMIT distinct tags.
     recentTags() {
@@ -197,20 +197,21 @@ export default {
     clearInterval(this.clockInterval);
   },
   methods: {
-    // Typing is the only lossy path (commas delimit tags there); keep the
-    // array in sync so a typed tag still becomes a single array entry.
     onTagsInput: function (text: string) {
-      this.selectedTagList = parseTags(text);
+      this.tags = text;
     },
 
     toggleTag: function (tag) {
-      const current = this.selectedTagList;
-      this.selectedTagList = current.includes(tag)
-        ? current.filter(t => t !== tag)
-        : [...current, tag];
-      // Keep the visible field in sync without re-parsing it (which would
-      // split a tag that contains a comma).
-      this.tags = this.selectedTagList.join(', ');
+      if (this.selectedTags.includes(tag)) {
+        this.selectedTagList = this.selectedTagList.filter(t => t !== tag);
+        // A tag can also be selected via the draft. Remove it there too,
+        // without round-tripping any chip selections through text.
+        this.tags = parseTags(this.tags)
+          .filter(t => t !== tag)
+          .join(', ');
+      } else {
+        this.selectedTagList = [...this.selectedTagList, tag];
+      }
     },
 
     startTimer: async function (label, tags = this.selectedTags) {

@@ -75,9 +75,10 @@ describe('Stopwatch event tags', () => {
 
     wrapper.vm.toggleTag('work');
     wrapper.vm.toggleTag('meeting');
-    expect(wrapper.vm.tags).toBe('work, meeting');
+    expect(wrapper.vm.selectedTags).toEqual(['work', 'meeting']);
+    expect(wrapper.vm.tags).toBe('');
     wrapper.vm.toggleTag('work');
-    expect(wrapper.vm.tags).toBe('meeting');
+    expect(wrapper.vm.selectedTags).toEqual(['meeting']);
     wrapper.destroy();
   });
 
@@ -99,6 +100,49 @@ describe('Stopwatch event tags', () => {
     await wrapper.vm.$nextTick();
     await wrapper.vm.startTimer('Study');
     expect(aw.heartbeat.mock.calls[0][2].data.tags).toEqual(['research, development']);
+    wrapper.destroy();
+  });
+
+  test('typing after selecting a comma-containing tag preserves its boundary', async () => {
+    const { wrapper, aw } = stopwatch([timer(['research, development', 'work'])]);
+    await flush();
+    wrapper.vm.toggleTag('research, development');
+    await wrapper.vm.$nextTick();
+    // The text field is a separate draft, not a lossy serialization of chips.
+    expect(wrapper.vm.tags).toBe('');
+    const input = wrapper.find('[data-testid="stopwatch-tags"]');
+    input.vm.$emit('input', 'urgent, work');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.selectedTags).toEqual(['research, development', 'urgent', 'work']);
+    expect(wrapper.find('.stopwatch-recent-tag').attributes('aria-pressed')).toBe('true');
+    await wrapper.vm.startTimer('Study');
+    expect(aw.heartbeat.mock.calls[0][2].data.tags).toEqual([
+      'research, development',
+      'urgent',
+      'work',
+    ]);
+    // Clearing the draft cannot delete a selected chip, but clicking it can.
+    input.vm.$emit('input', '');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.selectedTags).toEqual(['research, development']);
+    wrapper.vm.toggleTag('research, development');
+    expect(wrapper.vm.selectedTags).toEqual([]);
+    wrapper.destroy();
+  });
+
+  test('toggling a typed recent tag removes it and selecting it again does not duplicate it', async () => {
+    const { wrapper } = stopwatch([timer(['work'])]);
+    await flush();
+    const input = wrapper.find('[data-testid="stopwatch-tags"]');
+    input.vm.$emit('input', 'work, urgent');
+    await wrapper.vm.$nextTick();
+    wrapper.vm.toggleTag('work');
+    expect(wrapper.vm.selectedTags).toEqual(['urgent']);
+    expect(wrapper.vm.tags).toBe('urgent');
+    wrapper.vm.toggleTag('work');
+    input.vm.$emit('input', 'urgent, work');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.selectedTags).toEqual(['work', 'urgent']);
     wrapper.destroy();
   });
 
