@@ -122,7 +122,7 @@ div
               td.text-right.text-nowrap {{ d.duration | friendlyduration }}
               td.text-muted.text-nowrap
                 span(v-if="d.overlap >= 60") ({{ secondsToDuration(d.overlap) }} {{ $t('activity.overlap') }})
-    b-alert.py-1.px-2.mb-1.small(
+    b-alert.alert-compact.mb-1.small(
       v-if="isMultidevice && !multideviceNoteDismissed"
       show
       variant="info"
