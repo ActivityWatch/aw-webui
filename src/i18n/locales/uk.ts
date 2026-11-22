@@ -393,6 +393,11 @@ export default {
     multideviceNote: 'Дані секундоміра доступні лише під час перегляду одного пристрою.',
     deviceBreakdownTooltip:
       'Активний час за пристроями. Якщо пристрої перетинаються в часі, час враховується один раз — для пристрою, вказаного першим.',
+    overlapPriority: 'Пріоритет при перетині',
+    overlapPriorityHint:
+      'При перетині перевагу мають пристрої, що вище в списку. Стрілками можна змінити пріоритет.',
+    moveDeviceUp: 'Перемістити {host} вгору',
+    moveDeviceDown: 'Перемістити {host} вниз',
     overlap: 'перетин',
     timeActive: 'Активний час:',
     timeActiveTooltip:
@@ -934,6 +939,13 @@ export default {
       hide: 'Сховати',
       bucketTools: 'Цей розділ ще в розробці',
       timelineExperiment: 'Не готово до production, ще експериментуємо',
+    },
+    notices: {
+      title: 'Сповіщення',
+      bell: 'Сповіщення',
+      bellUnseen: 'Сповіщення, нове',
+      close: 'Закрити',
+      empty: 'Наразі нічого нового.',
     },
     release: {
       newAvailable: 'Доступна нова версія, v{version}, для',

@@ -398,6 +398,11 @@ export default {
     multideviceNote: 'स्टॉपवॉच डेटा केवल एक डिवाइस देखने पर उपलब्ध होता है।',
     deviceBreakdownTooltip:
       'प्रति डिवाइस सक्रिय समय। जब डिवाइस ओवरलैप होते हैं, तो समय केवल एक बार, पहले सूचीबद्ध डिवाइस के लिए गिना जाता है।',
+    overlapPriority: 'ओवरलैप प्राथमिकता',
+    overlapPriorityHint:
+      'ऊपर सूचीबद्ध डिवाइस ओवरलैप में प्राथमिकता पाते हैं। प्राथमिकता बदलने के लिए तीरों का उपयोग करें।',
+    moveDeviceUp: '{host} को ऊपर ले जाएँ',
+    moveDeviceDown: '{host} को नीचे ले जाएँ',
     overlap: 'ओवरलैप',
     timeActive: 'सक्रिय समय:',
     timeActiveTooltip:
@@ -943,6 +948,13 @@ export default {
       hide: 'छिपाएँ',
       bucketTools: 'यह अनुभाग अभी विकास में है',
       timelineExperiment: 'प्रोडक्शन के लिए तैयार नहीं, अभी प्रयोग जारी है',
+    },
+    notices: {
+      title: 'सूचनाएँ',
+      bell: 'सूचनाएँ',
+      bellUnseen: 'सूचनाएँ, नई',
+      close: 'बंद करें',
+      empty: 'अभी कुछ नया नहीं है।',
     },
     release: {
       newAvailable: 'नया रिलीज़, v{version}, इसके लिए उपलब्ध है:',

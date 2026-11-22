@@ -400,6 +400,11 @@ export default {
     multideviceNote: 'اسٹاپ واچ کا ڈیٹا صرف ایک ڈیوائس دیکھتے وقت دستیاب ہوتا ہے۔',
     deviceBreakdownTooltip:
       'ہر ڈیوائس کا فعال وقت۔ جب ڈیوائسز کا وقت اوورلیپ ہو تو وقت صرف ایک بار، پہلے درج ڈیوائس کے لیے گنا جاتا ہے۔',
+    overlapPriority: 'اوورلیپ کی ترجیح',
+    overlapPriorityHint:
+      'اوپر درج ڈیوائسز اوورلیپ میں ترجیح پاتی ہیں۔ ترجیح بدلنے کے لیے تیروں کا استعمال کریں۔',
+    moveDeviceUp: '{host} کو اوپر لے جائیں',
+    moveDeviceDown: '{host} کو نیچے لے جائیں',
     overlap: 'اوورلیپ',
     timeActive: 'فعال وقت:',
     timeActiveTooltip:
@@ -943,6 +948,13 @@ export default {
       hide: 'چھپائیں',
       bucketTools: 'یہ حصہ ابھی زیر تکمیل ہے',
       timelineExperiment: 'پروڈکشن کے لیے تیار نہیں، ابھی تجربہ جاری ہے',
+    },
+    notices: {
+      title: 'اطلاعات',
+      bell: 'اطلاعات',
+      bellUnseen: 'اطلاعات، نئی',
+      close: 'بند کریں',
+      empty: 'ابھی کچھ نیا نہیں۔',
     },
     release: {
       newAvailable: 'نیا ریلیز v{version} دستیاب ہے:',

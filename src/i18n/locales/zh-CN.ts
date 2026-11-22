@@ -381,6 +381,10 @@ export default {
     multideviceNote: '仅在查看单个设备时显示秒表数据。',
     deviceBreakdownTooltip:
       '每台设备的活跃时间。设备时间重叠时，该时间只计算一次，计入列表中排在前面的设备。',
+    overlapPriority: '重叠优先级',
+    overlapPriorityHint: '排在前面的设备优先计入重叠时间。使用箭头调整优先级。',
+    moveDeviceUp: '将 {host} 上移',
+    moveDeviceDown: '将 {host} 下移',
     overlap: '重叠',
     timeActive: '活跃时间：',
     timeActiveTooltip:
@@ -908,6 +912,13 @@ export default {
       hide: '隐藏',
       bucketTools: '此部分仍在开发中',
       timelineExperiment: '尚未准备好用于生产环境，仍在试验中',
+    },
+    notices: {
+      title: '通知',
+      bell: '通知',
+      bellUnseen: '通知，有新消息',
+      close: '关闭',
+      empty: '暂时没有新内容。',
     },
     release: {
       newAvailable: '新版本 v{version} 可供',

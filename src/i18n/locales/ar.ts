@@ -392,6 +392,11 @@ export default {
     multideviceNote: 'بيانات ساعة الإيقاف متاحة فقط عند عرض جهاز واحد.',
     deviceBreakdownTooltip:
       'الوقت النشط لكل جهاز. عند تداخل الأجهزة، يُحتسب الوقت مرة واحدة للجهاز المدرج أولاً.',
+    overlapPriority: 'أولوية التداخل',
+    overlapPriorityHint:
+      'الأجهزة الأعلى في القائمة تفوز بحالات التداخل. استخدم الأسهم لتغيير الأولوية.',
+    moveDeviceUp: 'نقل {host} لأعلى',
+    moveDeviceDown: 'نقل {host} لأسفل',
     overlap: 'تداخل',
     timeActive: 'مدة النشاط:',
     timeActiveTooltip:
@@ -930,6 +935,13 @@ export default {
       hide: 'إخفاء',
       bucketTools: 'هذا القسم لا يزال قيد التطوير',
       timelineExperiment: 'غير جاهز للإنتاج، لا يزال قيد التجربة',
+    },
+    notices: {
+      title: 'الإشعارات',
+      bell: 'الإشعارات',
+      bellUnseen: 'الإشعارات، جديد',
+      close: 'إغلاق',
+      empty: 'لا جديد الآن.',
     },
     release: {
       newAvailable: 'يتوفر إصدار جديد، v{version}، لـ',

@@ -408,6 +408,11 @@ export default {
       'Les données du chronomètre ne sont disponibles que pour un seul appareil à la fois.',
     deviceBreakdownTooltip:
       "Temps actif par appareil. Lorsque des appareils se chevauchent, le temps est compté une seule fois, pour l'appareil listé en premier.",
+    overlapPriority: 'Priorité de chevauchement',
+    overlapPriorityHint:
+      "Les appareils placés plus haut l'emportent en cas de chevauchement. Utilisez les flèches pour changer la priorité.",
+    moveDeviceUp: 'Monter {host}',
+    moveDeviceDown: 'Descendre {host}',
     overlap: 'chevauchement',
     timeActive: 'Temps actif :',
     timeActiveTooltip:
@@ -960,6 +965,13 @@ export default {
       hide: 'Masquer',
       bucketTools: 'Cette section est encore en cours de développement',
       timelineExperiment: 'Pas prêt pour la production, encore en phase d’expérimentation',
+    },
+    notices: {
+      title: 'Notifications',
+      bell: 'Notifications',
+      bellUnseen: 'Notifications, nouveau',
+      close: 'Fermer',
+      empty: 'Rien de nouveau pour le moment.',
     },
     release: {
       newAvailable: 'Une nouvelle version, v{version}, est disponible en',

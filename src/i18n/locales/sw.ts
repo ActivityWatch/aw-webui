@@ -402,6 +402,11 @@ export default {
     multideviceNote: 'Data ya saa ya kuhesabu inapatikana tu unapoangalia kifaa kimoja.',
     deviceBreakdownTooltip:
       'Muda amilifu kwa kila kifaa. Vifaa vinapopishana, muda huhesabiwa mara moja, kwa kifaa kilichoorodheshwa kwanza.',
+    overlapPriority: 'Kipaumbele cha mwingiliano',
+    overlapPriorityHint:
+      'Vifaa vilivyo juu hushinda mwingiliano. Tumia mishale kubadilisha kipaumbele.',
+    moveDeviceUp: 'Sogeza {host} juu',
+    moveDeviceDown: 'Sogeza {host} chini',
     overlap: 'mwingiliano',
     timeActive: 'Muda wa kufanya kazi:',
     timeActiveTooltip:
@@ -950,6 +955,13 @@ export default {
       hide: 'Ficha',
       bucketTools: 'Sehemu hii bado ipo chini ya maendeleo',
       timelineExperiment: 'Haiko tayari kwa uzalishaji, bado inafanywa majaribio',
+    },
+    notices: {
+      title: 'Arifa',
+      bell: 'Arifa',
+      bellUnseen: 'Arifa, mpya',
+      close: 'Funga',
+      empty: 'Hakuna jipya kwa sasa.',
     },
     release: {
       newAvailable: 'Toleo jipya, v{version}, linapatikana kwa',

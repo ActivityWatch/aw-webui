@@ -417,6 +417,10 @@ export default {
     timeActive: 'Time active:',
     deviceBreakdownTooltip:
       'Active time per device. When devices overlap, the time is counted once, for the device listed first.',
+    overlapPriority: 'Overlap priority',
+    overlapPriorityHint: 'Higher devices win overlaps. Use the arrows to change priority.',
+    moveDeviceUp: 'Move {host} up',
+    moveDeviceDown: 'Move {host} down',
     overlap: 'overlap',
     timeActiveTooltip:
       'Active window time in the queried range, after the filters below. The bars in the period chart show raw device active time, so they can be slightly higher.',
@@ -955,6 +959,13 @@ export default {
       hide: 'Hide',
       bucketTools: 'This section is still under development',
       timelineExperiment: 'Not ready for production, still experimenting',
+    },
+    notices: {
+      title: 'Notices',
+      bell: 'Notices',
+      bellUnseen: 'Notices, new',
+      close: 'Close',
+      empty: 'Nothing new right now.',
     },
     release: {
       newAvailable: 'A new release, v{version}, is available for',

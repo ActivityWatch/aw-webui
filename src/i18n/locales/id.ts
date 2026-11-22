@@ -400,6 +400,11 @@ export default {
     multideviceNote: 'Data stopwatch hanya tersedia saat melihat satu perangkat.',
     deviceBreakdownTooltip:
       'Waktu aktif per perangkat. Saat perangkat tumpang tindih, waktu dihitung sekali, untuk perangkat yang tercantum pertama.',
+    overlapPriority: 'Prioritas tumpang tindih',
+    overlapPriorityHint:
+      'Perangkat yang lebih atas diutamakan saat tumpang tindih. Gunakan panah untuk mengubah prioritas.',
+    moveDeviceUp: 'Pindahkan {host} ke atas',
+    moveDeviceDown: 'Pindahkan {host} ke bawah',
     overlap: 'tumpang tindih',
     timeActive: 'Waktu aktif:',
     timeActiveTooltip:
@@ -945,6 +950,13 @@ export default {
       hide: 'Sembunyikan',
       bucketTools: 'Bagian ini masih dalam pengembangan',
       timelineExperiment: 'Belum siap untuk produksi, masih bereksperimen',
+    },
+    notices: {
+      title: 'Pemberitahuan',
+      bell: 'Pemberitahuan',
+      bellUnseen: 'Pemberitahuan, baru',
+      close: 'Tutup',
+      empty: 'Belum ada yang baru.',
     },
     release: {
       newAvailable: 'Rilis baru, v{version}, tersedia untuk',

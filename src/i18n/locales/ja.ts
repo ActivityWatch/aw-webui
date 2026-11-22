@@ -400,6 +400,11 @@ export default {
       'ストップウォッチのデータは、単一のデバイスを表示している場合のみ利用できます。',
     deviceBreakdownTooltip:
       'デバイスごとのアクティブ時間。デバイスの時間が重なる場合は、先に表示されているデバイスに一度だけ計上されます。',
+    overlapPriority: '重複時の優先度',
+    overlapPriorityHint:
+      '上に表示されたデバイスが重複時に優先されます。矢印で優先度を変更できます。',
+    moveDeviceUp: '{host} を上に移動',
+    moveDeviceDown: '{host} を下に移動',
     overlap: '重複',
     timeActive: 'アクティブ時間：',
     timeActiveTooltip:
@@ -944,6 +949,13 @@ export default {
       hide: '非表示',
       bucketTools: 'このセクションはまだ開発中です',
       timelineExperiment: '本番利用の準備はできておらず、実験中です',
+    },
+    notices: {
+      title: 'お知らせ',
+      bell: 'お知らせ',
+      bellUnseen: 'お知らせ、新着あり',
+      close: '閉じる',
+      empty: '今のところ新しいお知らせはありません。',
     },
     release: {
       newAvailable: '新しいリリース v{version} を',

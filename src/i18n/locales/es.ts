@@ -403,6 +403,11 @@ export default {
     multideviceNote: 'Los datos del cronómetro solo están disponibles al ver un único dispositivo.',
     deviceBreakdownTooltip:
       'Tiempo activo por dispositivo. Cuando los dispositivos se superponen, el tiempo se cuenta una vez, para el dispositivo que aparece primero.',
+    overlapPriority: 'Prioridad de superposición',
+    overlapPriorityHint:
+      'Los dispositivos superiores ganan las superposiciones. Usa las flechas para cambiar la prioridad.',
+    moveDeviceUp: 'Subir {host}',
+    moveDeviceDown: 'Bajar {host}',
     overlap: 'superposición',
     timeActive: 'Tiempo activo:',
     timeActiveTooltip:
@@ -955,6 +960,13 @@ export default {
       hide: 'Ocultar',
       bucketTools: 'Esta sección aún está en desarrollo',
       timelineExperiment: 'No está listo para producción, todavía en fase experimental',
+    },
+    notices: {
+      title: 'Avisos',
+      bell: 'Avisos',
+      bellUnseen: 'Avisos, nuevo',
+      close: 'Cerrar',
+      empty: 'Nada nuevo por ahora.',
     },
     release: {
       newAvailable: 'Hay una nueva versión, v{version}, disponible para',

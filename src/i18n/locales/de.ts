@@ -394,6 +394,11 @@ export default {
     multideviceNote: 'Stoppuhrdaten sind nur bei Auswahl eines einzelnen Geräts verfügbar.',
     deviceBreakdownTooltip:
       'Aktive Zeit pro Gerät. Überschneiden sich Geräte, wird die Zeit nur einmal gezählt, für das zuerst aufgeführte Gerät.',
+    overlapPriority: 'Überschneidungspriorität',
+    overlapPriorityHint:
+      'Weiter oben stehende Geräte gewinnen Überschneidungen. Mit den Pfeilen die Priorität ändern.',
+    moveDeviceUp: '{host} nach oben verschieben',
+    moveDeviceDown: '{host} nach unten verschieben',
     overlap: 'Überschneidung',
     timeActive: 'Aktive Zeit:',
     timeActiveTooltip:
@@ -938,6 +943,13 @@ export default {
       hide: 'Ausblenden',
       bucketTools: 'Dieser Bereich befindet sich noch in Entwicklung',
       timelineExperiment: 'Noch nicht produktionsreif, wird noch erprobt',
+    },
+    notices: {
+      title: 'Hinweise',
+      bell: 'Hinweise',
+      bellUnseen: 'Hinweise, neu',
+      close: 'Schließen',
+      empty: 'Gerade nichts Neues.',
     },
     release: {
       newAvailable: 'Eine neue Version, v{version}, ist verfügbar zum',

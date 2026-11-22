@@ -401,6 +401,11 @@ export default {
     multideviceNote: 'Stoppursdata visas bara när en enskild enhet är vald.',
     deviceBreakdownTooltip:
       'Aktiv tid per enhet. När enheter överlappar räknas tiden en gång, för den enhet som listas först.',
+    overlapPriority: 'Prioritet vid överlapp',
+    overlapPriorityHint:
+      'Enheter högre upp vinner över överlappningar. Använd pilarna för att ändra prioritet.',
+    moveDeviceUp: 'Flytta {host} uppåt',
+    moveDeviceDown: 'Flytta {host} nedåt',
     overlap: 'överlapp',
     timeActive: 'Aktiv tid:',
     timeActiveTooltip:
@@ -957,6 +962,13 @@ export default {
       hide: 'Dölj',
       bucketTools: 'Den här sektionen är fortfarande under utveckling',
       timelineExperiment: 'Inte redo för produktion, fortfarande experimentellt',
+    },
+    notices: {
+      title: 'Meddelanden',
+      bell: 'Meddelanden',
+      bellUnseen: 'Meddelanden, nytt',
+      close: 'Stäng',
+      empty: 'Inget nytt just nu.',
     },
     release: {
       newAvailable: 'En ny version, v{version}, finns tillgänglig för',

@@ -396,6 +396,11 @@ export default {
     multideviceNote: 'স্টপওয়াচ ডেটা শুধুমাত্র একটি ডিভাইস দেখার সময় পাওয়া যায়।',
     deviceBreakdownTooltip:
       'প্রতিটি ডিভাইসের সক্রিয় সময়। ডিভাইসগুলোর সময় ওভারল্যাপ করলে, তালিকার প্রথম ডিভাইসের জন্য সময় একবারই গণনা করা হয়।',
+    overlapPriority: 'ওভারল্যাপের অগ্রাধিকার',
+    overlapPriorityHint:
+      'তালিকায় উপরের ডিভাইস ওভারল্যাপে অগ্রাধিকার পায়। অগ্রাধিকার বদলাতে তীর ব্যবহার করুন।',
+    moveDeviceUp: '{host} উপরে সরান',
+    moveDeviceDown: '{host} নিচে সরান',
     overlap: 'ওভারল্যাপ',
     timeActive: 'সক্রিয় সময়:',
     timeActiveTooltip:
@@ -938,6 +943,13 @@ export default {
       hide: 'লুকান',
       bucketTools: 'এই অংশটি এখনও উন্নয়নাধীন',
       timelineExperiment: 'প্রোডাকশনের জন্য প্রস্তুত নয়, এখনও পরীক্ষা চলছে',
+    },
+    notices: {
+      title: 'বিজ্ঞপ্তি',
+      bell: 'বিজ্ঞপ্তি',
+      bellUnseen: 'বিজ্ঞপ্তি, নতুন',
+      close: 'বন্ধ করুন',
+      empty: 'এখন নতুন কিছু নেই।',
     },
     release: {
       newAvailable: 'নতুন রিলিজ v{version} পাওয়া যাচ্ছে:',
