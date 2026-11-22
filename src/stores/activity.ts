@@ -594,10 +594,9 @@ export const useActivityStore = defineStore('activity', {
       this.query_hosts = hosts;
       this.get_buckets_multidevice(hosts);
 
-      // The multidevice query supports window/app, category and active-time
-      // data. Browser (and audible-as-active) and stopwatch data are
-      // single-device only for now: browser buckets often have no usable
-      // hostname, so they can't be attributed to a device.
+      // The multidevice query supports window/app, host-attributed browser,
+      // category and active-time data. Stopwatch data (and legacy 'unknown'-host
+      // browser buckets) remain single-device only.
       // With only mobile hosts selected, behave like the single-device
       // Android view: their events have no window titles.
       const bucketsStore = useBucketsStore();
@@ -605,7 +604,7 @@ export const useActivityStore = defineStore('activity', {
         h => bucketsStore.bucketsWindow(h).length > 0 && bucketsStore.bucketsAFK(h).length > 0
       );
       this.window.available = hasDesktop;
-      this.browser.available = false;
+      this.browser.available = this.buckets.browser.length > 0;
       this.active.available = true;
       this.editor.available = this.buckets.editor.length > 0;
       this.android.available = !hasDesktop;
@@ -638,14 +637,19 @@ export const useActivityStore = defineStore('activity', {
       this.buckets.afk = collect(bucketsStore.bucketsAFK);
       this.buckets.window = collect(bucketsStore.bucketsWindow);
       this.buckets.android = collect(bucketsStore.bucketsAndroid);
-      this.buckets.browser = [];
+      // Match only browser buckets explicitly attributed to each selected host
+      // (no 'unknown' host fallback) so legacy 'unknown' buckets are never
+      // misattributed to another device or queried multiple times.
+      this.buckets.browser = collect(host =>
+        bucketsStore.bucketsByType(host, 'web.tab.current', false)
+      );
       this.buckets.editor = collect(bucketsStore.bucketsEditor);
       this.buckets.stopwatch = [];
       this.buckets.loaded = true;
     },
 
     multidevice_params(
-      { filter_categories, filter_afk, always_active_pattern }: QueryOptions,
+      { filter_categories, filter_afk, include_audible, always_active_pattern }: QueryOptions,
       hosts: string[]
     ): MultiQueryParams {
       const bucketsStore = useBucketsStore();
@@ -660,11 +664,13 @@ export const useActivityStore = defineStore('activity', {
         hosts,
         host => bucketsStore.bucketsWindow(host),
         host => bucketsStore.bucketsAFK(host),
-        host => bucketsStore.bucketsAndroid(host)
+        host => bucketsStore.bucketsAndroid(host),
+        host => bucketsStore.bucketsByType(host, 'web.tab.current', false)
       );
       return {
         hosts: hosts_with_buckets,
         filter_afk,
+        ...(include_audible !== undefined ? { include_audible } : {}),
         categories: useCategoryStore().classes_for_query,
         filter_categories,
         host_params,
@@ -863,6 +869,7 @@ export const useActivityStore = defineStore('activity', {
         applyScreentimeNames(windowResult.title_events || [], bundleIdToName);
       }
       this.query_window_completed(windowResult);
+      this.query_browser_completed(merged.browser || {});
     },
 
     async query_desktop_full({
@@ -1165,7 +1172,11 @@ export const useActivityStore = defineStore('activity', {
     ) {
       const settingsStore = useSettingsStore();
       const { host_params, hosts: resolvedHosts } = this.multidevice_params(query_options, hosts);
-      const sources: ActivityQuerySource[] = resolvedHosts.map(host => host_params[host]);
+      const sources: ActivityQuerySource[] = resolvedHosts.map(host => {
+        const source = { ...host_params[host] };
+        delete source.bid_browsers;
+        return source;
+      });
       const generation = this.invalidate_active_history({
         cache_key: activeHistoryCacheKey(
           {

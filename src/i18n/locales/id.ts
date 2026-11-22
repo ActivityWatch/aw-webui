@@ -397,7 +397,7 @@ export default {
     allDevices: 'Semua perangkat',
     allDevicesCount: 'Semua perangkat ({count})',
     onlyThisDevice: 'saja',
-    multideviceNote: 'Data browser dan stopwatch hanya tersedia saat melihat satu perangkat.',
+    multideviceNote: 'Data stopwatch hanya tersedia saat melihat satu perangkat.',
     deviceBreakdownTooltip:
       'Waktu aktif per perangkat. Saat perangkat tumpang tindih, waktu dihitung sekali, untuk perangkat yang tercantum pertama.',
     overlap: 'tumpang tindih',

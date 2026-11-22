@@ -871,3 +871,77 @@ describe('browserOnlyQuery', () => {
     expect(stripped).not.toMatch(/\/\*/);
   });
 });
+
+describe('multideviceQuery browser support', () => {
+  const multiWithBrowsers: MultiQueryParams = {
+    hosts: ['laptop', 'phone'],
+    host_params: {
+      laptop: {
+        bid_window: 'aw-watcher-window_laptop',
+        bid_afk: 'aw-watcher-afk_laptop',
+        bid_browsers: ['aw-watcher-web-firefox_laptop'],
+      },
+      phone: {
+        bid_android: 'aw-watcher-android-synced-from-phone',
+        isIos: false,
+        bid_browsers: ['aw-watcher-android-web-synced-from-phone'],
+      },
+    },
+    filter_afk: true,
+    always_active_pattern: '',
+    categories: [],
+    filter_categories: [],
+  };
+
+  test('combines desktop and android browser buckets via union_no_overlap and returns browser', () => {
+    const joined = multideviceQuery(multiWithBrowsers).join('\n');
+    expect(joined).toContain('query_bucket("aw-watcher-web-firefox_laptop")');
+    expect(joined).toContain('query_bucket("aw-watcher-android-web-synced-from-phone")');
+    expect(joined).toContain('browser_events_laptop_0 = browser_events;');
+    expect(joined).toContain('browser_events_phone_1 = browser_events;');
+    expect(joined).toContain(
+      'browser_events = union_no_overlap(browser_events, browser_events_laptop_0);'
+    );
+    expect(joined).toContain(
+      'browser_events = union_no_overlap(browser_events, browser_events_phone_1);'
+    );
+    expect(joined).toContain('"browser": {');
+    expect(joined).toContain('"domains": browser_domains');
+    expect(joined).toContain('"urls": browser_urls');
+    expect(joined).toContain('"titles": browser_titles');
+    expect(joined).toContain('"duration": browser_duration');
+  });
+
+  test('handles iOS ScreenTime hosts with browser buckets without package intersection', () => {
+    const joined = multideviceQuery({
+      ...multiWithBrowsers,
+      hosts: ['laptop', 'iphone'],
+      host_params: {
+        laptop: multiWithBrowsers.host_params.laptop,
+        iphone: {
+          bid_android: 'aw-import-screentime_iphone',
+          isIos: true,
+          bid_browsers: ['aw-watcher-web-safari_iphone'],
+        },
+      },
+    }).join('\n');
+    expect(joined).toContain('query_bucket("aw-watcher-web-safari_iphone")');
+    expect(joined).not.toContain('filter_keyvals(events, "package"');
+    expect(joined).toContain(
+      'browser_events = union_no_overlap(browser_events, browser_events_iphone_1);'
+    );
+  });
+
+  test('categoryQuery skips browser buckets when include_audible is not enabled', () => {
+    const joined = categoryQuery(multiWithBrowsers).join('\n');
+    expect(joined).not.toContain('aw-watcher-web-firefox_laptop');
+    expect(joined).not.toContain('aw-watcher-android-web-synced-from-phone');
+  });
+
+  test('emits no inline or block comments when browsers are included', () => {
+    const joined = multideviceQuery(multiWithBrowsers).join('\n');
+    const stripped = joined.replace(/"[^"]*"/g, '""');
+    expect(stripped).not.toMatch(/\/\//);
+    expect(stripped).not.toMatch(/\/\*/);
+  });
+});

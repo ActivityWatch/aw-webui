@@ -395,7 +395,7 @@ export default {
     allDevices: 'सभी डिवाइस',
     allDevicesCount: 'सभी डिवाइस ({count})',
     onlyThisDevice: 'केवल',
-    multideviceNote: 'ब्राउज़र और स्टॉपवॉच डेटा केवल एक डिवाइस देखने पर उपलब्ध होता है।',
+    multideviceNote: 'स्टॉपवॉच डेटा केवल एक डिवाइस देखने पर उपलब्ध होता है।',
     deviceBreakdownTooltip:
       'प्रति डिवाइस सक्रिय समय। जब डिवाइस ओवरलैप होते हैं, तो समय केवल एक बार, पहले सूचीबद्ध डिवाइस के लिए गिना जाता है।',
     overlap: 'ओवरलैप',

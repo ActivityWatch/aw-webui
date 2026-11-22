@@ -3,8 +3,8 @@
 // in isolation.
 
 type HostParamOverride =
-  | { bid_window: string; bid_afk: string }
-  | { bid_android: string; isIos?: boolean };
+  | { bid_window: string; bid_afk: string; bid_browsers?: string[] }
+  | { bid_android: string; isIos?: boolean; bid_browsers?: string[] };
 
 export interface MultideviceHostSelection {
   /** Per-host bucket-ID overrides, keyed by hostname. */
@@ -32,15 +32,18 @@ export function buildMultideviceHostParams(
   hosts: string[],
   bucketsWindow: (host: string) => string[],
   bucketsAFK: (host: string) => string[],
-  bucketsAndroid?: (host: string) => string[]
+  bucketsAndroid?: (host: string) => string[],
+  bucketsBrowser?: (host: string) => string[]
 ): MultideviceHostSelection {
   const host_params: MultideviceHostSelection['host_params'] = {};
   const hosts_with_buckets: string[] = [];
   hosts.forEach(host => {
+    const bid_browsers = bucketsBrowser ? bucketsBrowser(host) : [];
+    const browserOverride = bid_browsers.length > 0 ? { bid_browsers } : {};
     const bid_window = bucketsWindow(host)[0];
     const bid_afk = bucketsAFK(host)[0];
     if (bid_window && bid_afk) {
-      host_params[host] = { bid_window, bid_afk };
+      host_params[host] = { bid_window, bid_afk, ...browserOverride };
       hosts_with_buckets.push(host);
       return;
     }
@@ -53,7 +56,11 @@ export function buildMultideviceHostParams(
     const bid_android =
       androidBucketIds.find(id => id.startsWith('aw-import-screentime')) || androidBucketIds[0];
     if (bid_android) {
-      host_params[host] = { bid_android, isIos: bid_android.startsWith('aw-import-screentime') };
+      host_params[host] = {
+        bid_android,
+        isIos: bid_android.startsWith('aw-import-screentime'),
+        ...browserOverride,
+      };
       hosts_with_buckets.push(host);
       return;
     }

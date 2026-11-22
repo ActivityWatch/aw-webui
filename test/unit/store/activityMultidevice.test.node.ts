@@ -3,7 +3,7 @@ import { setActivePinia, createPinia } from 'pinia';
 import { useActivityStore } from '~/stores/activity';
 import { selectPeriodsToQuery } from '~/util/activeHistory';
 import { useBucketsStore } from '~/stores/buckets';
-import { createClient } from '~/util/awclient';
+import { createClient, getClient } from '~/util/awclient';
 
 const bucket = (id: string, type: string, hostname: string) => ({
   id,
@@ -234,5 +234,153 @@ describe('per-device duration loading lifecycle', () => {
     });
     expect(store.window.host_durations.map(row => row.host)).toEqual(['desktop', 'tablet']);
     expect(store.active.duration).toBe(7);
+  });
+});
+
+describe('multidevice browser buckets and completion', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+  });
+
+  afterEach(() => jest.restoreAllMocks());
+
+  test('attributes host-scoped browser buckets per device and ignores unknown-host buckets', () => {
+    const activityStore = useActivityStore();
+    const bucketsStore = useBucketsStore();
+    bucketsStore.buckets = [
+      bucket('aw-watcher-window_laptop', 'currentwindow', 'laptop'),
+      bucket('aw-watcher-afk_laptop', 'afkstatus', 'laptop'),
+      bucket('aw-watcher-web-firefox_laptop', 'web.tab.current', 'laptop'),
+      bucket('aw-watcher-android-synced-from-phone', 'currentwindow', 'phone'),
+      bucket('aw-watcher-android-web-synced-from-phone', 'web.tab.current', 'phone'),
+      bucket('aw-watcher-web-chrome', 'web.tab.current', 'unknown'),
+    ] as any;
+
+    activityStore.get_buckets_multidevice(['laptop', 'phone']);
+    expect(activityStore.buckets.browser).toEqual([
+      'aw-watcher-web-firefox_laptop',
+      'aw-watcher-android-web-synced-from-phone',
+    ]);
+
+    const params = activityStore.multidevice_params(
+      { host: '@all', filter_afk: true, filter_categories: [], always_active_pattern: '' },
+      ['laptop', 'phone']
+    );
+    expect(params.host_params.laptop).toEqual({
+      bid_window: 'aw-watcher-window_laptop',
+      bid_afk: 'aw-watcher-afk_laptop',
+      bid_browsers: ['aw-watcher-web-firefox_laptop'],
+    });
+    expect(params.host_params.phone).toEqual({
+      bid_android: 'aw-watcher-android-synced-from-phone',
+      isIos: false,
+      bid_browsers: ['aw-watcher-android-web-synced-from-phone'],
+    });
+  });
+
+  test('sets browser.available only when selected hosts have host-attributed browser buckets', async () => {
+    const activityStore = useActivityStore();
+    const bucketsStore = useBucketsStore();
+    for (const method of [
+      'query_multidevice_full',
+      'query_active_history_multidevice',
+      'query_editor',
+      'query_editor_completed',
+      'query_category_time_by_period',
+    ]) {
+      jest.spyOn(activityStore, method as any).mockResolvedValue(undefined);
+    }
+
+    bucketsStore.buckets = [
+      bucket('aw-watcher-window_laptop', 'currentwindow', 'laptop'),
+      bucket('aw-watcher-afk_laptop', 'afkstatus', 'laptop'),
+      bucket('aw-watcher-android-synced-from-phone', 'currentwindow', 'phone'),
+      bucket('aw-watcher-web-chrome', 'web.tab.current', 'unknown'),
+    ] as any;
+
+    await activityStore.ensure_loaded_multidevice(
+      {
+        host: '@all',
+        timeperiod: { start: '2026-09-25T04:00:00+02:00', length: [1, 'day'] },
+      } as any,
+      ['laptop', 'phone']
+    );
+    expect(activityStore.browser.available).toBe(false);
+
+    bucketsStore.buckets.push(
+      bucket('aw-watcher-android-web-synced-from-phone', 'web.tab.current', 'phone') as any
+    );
+    await activityStore.ensure_loaded_multidevice(
+      {
+        host: '@all',
+        timeperiod: { start: '2026-09-25T04:00:00+02:00', length: [1, 'day'] },
+      } as any,
+      ['laptop', 'phone']
+    );
+    expect(activityStore.browser.available).toBe(true);
+  });
+
+  test('query_multidevice_full completes browser state from merged browser results', async () => {
+    const activityStore = useActivityStore();
+    const bucketsStore = useBucketsStore();
+    bucketsStore.buckets = [
+      bucket('aw-watcher-window_laptop', 'currentwindow', 'laptop'),
+      bucket('aw-watcher-afk_laptop', 'afkstatus', 'laptop'),
+      bucket('aw-watcher-web-firefox_laptop', 'web.tab.current', 'laptop'),
+      bucket('aw-watcher-android-synced-from-phone', 'currentwindow', 'phone'),
+      bucket('aw-watcher-android-web-synced-from-phone', 'web.tab.current', 'phone'),
+    ] as any;
+
+    const client = getClient();
+    jest.spyOn(client, 'query').mockResolvedValue([
+      {
+        window: {
+          app_events: [],
+          app_cat_events: [],
+          title_events: [],
+          cat_events: [],
+          active_events: [],
+          duration: 1800,
+          host_cumulative_durations: [1200, 1800],
+          host_raw_durations: [1200, 600],
+        },
+        browser: {
+          domains: [
+            { timestamp: '2026-09-25T09:00:00Z', duration: 900, data: { $domain: 'github.com' } },
+          ],
+          urls: [
+            {
+              timestamp: '2026-09-25T09:00:00Z',
+              duration: 900,
+              data: { url: 'https://github.com/ActivityWatch/aw-webui' },
+            },
+          ],
+          titles: [
+            {
+              timestamp: '2026-09-25T09:00:00Z',
+              duration: 900,
+              data: { title: 'ActivityWatch/aw-webui' },
+            },
+          ],
+          duration: 900,
+        },
+      },
+    ]);
+
+    await activityStore.query_multidevice_full(
+      {
+        host: '@all',
+        filter_afk: true,
+        filter_categories: [],
+        timeperiod: { start: '2026-09-25T04:00:00+02:00', length: [1, 'day'] },
+      } as any,
+      ['laptop', 'phone']
+    );
+
+    expect(activityStore.browser.duration).toBe(900);
+    expect(activityStore.browser.top_domains).toHaveLength(1);
+    expect(activityStore.browser.top_domains[0].data.$domain).toBe('github.com');
+    expect(activityStore.browser.top_urls).toHaveLength(1);
+    expect(activityStore.browser.top_titles).toHaveLength(1);
   });
 });

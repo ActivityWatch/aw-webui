@@ -389,7 +389,7 @@ export default {
     allDevices: 'جميع الأجهزة',
     allDevicesCount: 'جميع الأجهزة ({count})',
     onlyThisDevice: 'فقط',
-    multideviceNote: 'بيانات المتصفح وساعة الإيقاف متاحة فقط عند عرض جهاز واحد.',
+    multideviceNote: 'بيانات ساعة الإيقاف متاحة فقط عند عرض جهاز واحد.',
     deviceBreakdownTooltip:
       'الوقت النشط لكل جهاز. عند تداخل الأجهزة، يُحتسب الوقت مرة واحدة للجهاز المدرج أولاً.',
     overlap: 'تداخل',

@@ -400,8 +400,7 @@ export default {
     allDevices: 'Todos los dispositivos',
     allDevicesCount: 'Todos los dispositivos ({count})',
     onlyThisDevice: 'solo',
-    multideviceNote:
-      'Los datos del navegador y del cronómetro solo están disponibles al ver un único dispositivo.',
+    multideviceNote: 'Los datos del cronómetro solo están disponibles al ver un único dispositivo.',
     deviceBreakdownTooltip:
       'Tiempo activo por dispositivo. Cuando los dispositivos se superponen, el tiempo se cuenta una vez, para el dispositivo que aparece primero.',
     overlap: 'superposición',

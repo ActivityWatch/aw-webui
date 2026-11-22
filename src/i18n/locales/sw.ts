@@ -399,8 +399,7 @@ export default {
     allDevices: 'Vifaa vyote',
     allDevicesCount: 'Vifaa vyote ({count})',
     onlyThisDevice: 'tu',
-    multideviceNote:
-      'Data ya kivinjari na saa ya kuhesabu zinapatikana tu unapoangalia kifaa kimoja.',
+    multideviceNote: 'Data ya saa ya kuhesabu inapatikana tu unapoangalia kifaa kimoja.',
     deviceBreakdownTooltip:
       'Muda amilifu kwa kila kifaa. Vifaa vinapopishana, muda huhesabiwa mara moja, kwa kifaa kilichoorodheshwa kwanza.',
     overlap: 'mwingiliano',
