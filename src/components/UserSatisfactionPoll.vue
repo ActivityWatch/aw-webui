@@ -92,9 +92,8 @@ export default {
     },
     // Once the user has closed the host the follow-up has been seen: stop listing it.
     hostOpen(isOpen) {
-      if (isOpen) {
-        this.cancelDwell();
-      } else {
+      this.cancelDwell();
+      if (!isOpen) {
         this.isPosFollowUpVisible = false;
         this.isNegFollowUpVisible = false;
       }
@@ -161,6 +160,8 @@ export default {
     },
     scheduleSpontaneousOpen() {
       this.cancelDwell();
+      // Already opened (and possibly closed again) by the user: do not reopen it later.
+      if (useNoticesStore().isOpen) return;
       this.dwellTimer = setTimeout(() => {
         this.dwellTimer = null;
         if (this.isPollVisible) useNoticesStore().open();
@@ -177,6 +178,8 @@ export default {
     async choose(positive) {
       if (!(await this.saveData({ ...this.data, isEnabled: false }))) return;
       this.isPollVisible = false;
+      // The host may have been closed while saving; that dismisses the follow-up too.
+      if (!useNoticesStore().isOpen) return;
       if (positive) this.isPosFollowUpVisible = true;
       else this.isNegFollowUpVisible = true;
     },

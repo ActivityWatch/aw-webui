@@ -362,10 +362,43 @@ describe('poll in the host', () => {
     wrapper.destroy();
   });
 
+  test('opening and closing the host before the poll is eligible does not schedule a reopen', async () => {
+    const { wrapper, vm, notices } = await mountPoll();
+    notices.open();
+    await wrapper.vm.$nextTick();
+    vm.isPollVisible = true; // eligibility lands while the host is already open
+    await wrapper.vm.$nextTick();
+    notices.close();
+    await wrapper.vm.$nextTick();
+    jest.advanceTimersByTime(60000);
+    expect(notices.isOpen).toBe(false);
+    wrapper.destroy();
+  });
+
+  test('closing the host while an answer is saving discards the follow-up', async () => {
+    const { wrapper, vm, notices } = await mountPoll();
+    let finishSave;
+    vm.saveData = jest.fn(() => new Promise(resolve => (finishSave = () => resolve(true))));
+    vm.isPollVisible = true;
+    await wrapper.vm.$nextTick();
+    notices.open();
+    await wrapper.vm.$nextTick();
+    const answered = vm.choose(true);
+    notices.close();
+    await wrapper.vm.$nextTick();
+    finishSave();
+    await answered;
+    await wrapper.vm.$nextTick();
+    expect(vm.isPosFollowUpVisible).toBe(false);
+    expect(notices.ids).toEqual([]);
+    wrapper.destroy();
+  });
+
   test('the answer only routes: positive goes to the attributed support page', async () => {
     const { wrapper, vm, notices } = await mountPoll();
     vm.isPollVisible = true;
     await wrapper.vm.$nextTick();
+    notices.open();
     await wrapper.find('[data-testid="poll-positive"]').trigger('click');
     await wrapper.vm.$nextTick();
     expect(vm.saveData).toHaveBeenCalledWith(expect.objectContaining({ isEnabled: false }));
@@ -386,9 +419,10 @@ describe('poll in the host', () => {
   });
 
   test('negative goes to the attributed feedback form', async () => {
-    const { wrapper, vm } = await mountPoll();
+    const { wrapper, vm, notices } = await mountPoll();
     vm.isPollVisible = true;
     await wrapper.vm.$nextTick();
+    notices.open();
     await wrapper.find('[data-testid="poll-negative"]').trigger('click');
     await wrapper.vm.$nextTick();
     expect(wrapper.find('[data-testid="poll-feedback"]').attributes('href')).toBe(
