@@ -13,8 +13,8 @@ sunburst.sunburst-categories(:data="data", :colorScale="colorfunc", :getCategory
     //nodeInfoDisplayer(:current="nodes.mouseOver" :root="nodes.root" description="time spent" :show-all-number="false")
     div.info
       div(v-if="nodes.mouseOver !== null && nodes.mouseOver")
-        div.parent {{ nodes.mouseOver.data.parent ? nodes.mouseOver.data.parent.join(" > ") : " " }}
-        div.name {{ nodes.mouseOver.data.name }}
+        div.parent {{ nodes.mouseOver.data.parent ? categoryPathLabel(nodes.mouseOver.data.parent) : " " }}
+        div.name {{ categorySegmentLabel(nodes.mouseOver.data.name) }}
         div {{ nodes.mouseOver.value | friendlyduration }}
         div ({{ Math.round(100 * nodes.mouseOver.value / nodes.root.value) }}%)
 
@@ -31,6 +31,7 @@ import {
   zoomOnClick,
 } from 'vue-d3-sunburst';
 import 'vue-d3-sunburst/dist/vue-d3-sunburst.css';
+import { categoryPathLabel, categorySegmentLabel } from '~/util/categoryLabels';
 import { getColorFromCategory } from '~/util/color';
 import { fitLabel, measureText, sunburstLabelFontPx } from '~/util/sunburstLabels';
 
@@ -79,12 +80,18 @@ export default {
     },
   },
   methods: {
+    // Display-only: arc text and hover info show translated default-category
+    // names, while categoryForColor/colorfunc keep the stored names, which are
+    // the category store's lookup keys.
+    categoryPathLabel,
+    categorySegmentLabel,
     // Called by vue-d3-sunburst for each arc with the node and its zoom context.
     // Truncates the name to the radial space where it stays visible: the ring
     // itself when child arcs are drawn over the next ring, otherwise the ring
     // plus the library's maxLabelText overflow (minus its 5px text offset).
+    // Translates before fitting so truncation measures the text actually shown.
     labelFor: function (node) {
-      const name = node.data.name;
+      const name = categorySegmentLabel(node.data.name);
       const chart = this.$refs.sunburst;
       if (!chart || !chart.scaleY) return name;
       const { scaleY, maxLabelText } = chart;
