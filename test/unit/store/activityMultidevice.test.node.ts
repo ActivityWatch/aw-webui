@@ -3,6 +3,7 @@ import { setActivePinia, createPinia } from 'pinia';
 import { useActivityStore } from '~/stores/activity';
 import { selectPeriodsToQuery } from '~/util/activeHistory';
 import { useBucketsStore } from '~/stores/buckets';
+import { useSettingsStore } from '~/stores/settings';
 import { createClient } from '~/util/awclient';
 
 const bucket = (id: string, type: string, hostname: string) => ({
@@ -52,6 +53,15 @@ describe('activity store host selection', () => {
       'fakedata',
       'self',
     ]);
+  });
+
+  test('saved overlap priority controls all devices and explicit subsets', () => {
+    const settings = useSettingsStore();
+    settings.$patch({ multideviceHostOrder: ['phone', 'self', 'laptop'] });
+    expect(activityStore.resolve_multidevice_hosts('@all')).toEqual(['phone', 'self', 'laptop']);
+    expect(activityStore.resolve_multidevice_hosts('laptop,self')).toEqual(['self', 'laptop']);
+    expect(activityStore.resolve_multidevice_hosts('self')).toEqual([]);
+    settings.$reset();
   });
 
   test('multidevice params use the actual (synced) bucket ids', () => {
