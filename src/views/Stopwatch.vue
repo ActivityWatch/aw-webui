@@ -38,9 +38,9 @@ div
         icon(name="play")
         | {{ $t('stopwatch.start') }}
 
-  div.stopwatch-recent-tags.mt-1(v-if="recentTags.length > 0" data-testid="stopwatch-recent-tags")
+  div.stopwatch-recent-tags.mt-1(v-if="tagChips.length > 0" data-testid="stopwatch-recent-tags")
     b-button.stopwatch-recent-tag(
-      v-for="t in recentTags"
+      v-for="t in tagChips"
       :key="t"
       size="sm"
       pill
@@ -176,6 +176,14 @@ export default {
       }
       return [...seen].slice(0, RECENT_TAG_LIMIT);
     },
+    // Chips for recent tags plus every chip-selected tag that is no longer
+    // recent (its supplying events were deleted, or it aged out of the limit).
+    // A selection must stay visible and clickable: otherwise Start silently
+    // saves a tag the user can no longer see or remove.
+    tagChips(): string[] {
+      const missing = this.selectedTagList.filter(t => !this.recentTags.includes(t));
+      return [...this.recentTags, ...missing];
+    },
     timersByDate() {
       return _.groupBy(this.stoppedTimers, e => moment(e.timestamp).format('YYYY-MM-DD'));
     },
@@ -204,11 +212,14 @@ export default {
     toggleTag: function (tag) {
       if (this.selectedTags.includes(tag)) {
         this.selectedTagList = this.selectedTagList.filter(t => t !== tag);
-        // A tag can also be selected via the draft. Remove it there too,
-        // without round-tripping any chip selections through text.
-        this.tags = parseTags(this.tags)
-          .filter(t => t !== tag)
-          .join(', ');
+        // A tag can also be selected via the draft. Removing it there is what
+        // makes one click actually deselect it (a draft-only tag would keep
+        // the chip pressed), but only touch the draft when it holds the tag so
+        // an unrelated draft is never re-serialized.
+        const draft = parseTags(this.tags);
+        if (draft.includes(tag)) {
+          this.tags = draft.filter(t => t !== tag).join(', ');
+        }
       } else {
         this.selectedTagList = [...this.selectedTagList, tag];
       }

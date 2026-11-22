@@ -171,6 +171,35 @@ describe('Stopwatch event tags', () => {
     wrapper.destroy();
   });
 
+  test('keeps a chip-selected tag visible and removable after its events disappear', async () => {
+    const { wrapper, aw } = stopwatch([timer(['work'])]);
+    await flush();
+    await wrapper.vm.$nextTick();
+    wrapper.vm.toggleTag('work');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.selectedTags).toEqual(['work']);
+
+    // The only event supplying the tag is deleted, so it leaves recentTags.
+    aw.req.post.mockResolvedValue({ data: [{ running: [], history: [] }] });
+    await wrapper.vm.getEvents();
+    await flush();
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.recentTags).toEqual([]);
+
+    // The selection must not become a hidden tag that Start would still save.
+    const chips = wrapper.findAll('.stopwatch-recent-tag');
+    expect(chips).toHaveLength(1);
+    expect(chips.at(0).text()).toBe('work');
+    expect(chips.at(0).attributes('aria-pressed')).toBe('true');
+    expect(wrapper.vm.selectedTags).toEqual(['work']);
+
+    wrapper.vm.toggleTag('work');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.selectedTags).toEqual([]);
+    expect(wrapper.find('[data-testid="stopwatch-recent-tags"]').exists()).toBe(false);
+    wrapper.destroy();
+  });
+
   test('hides the recent-tag row when no event has tags', async () => {
     const { wrapper } = stopwatch([timer()]);
     await flush();
