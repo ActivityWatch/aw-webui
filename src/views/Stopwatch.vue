@@ -225,7 +225,12 @@ export default {
       }
     },
 
-    startTimer: async function (label, tags = this.selectedTags) {
+    startTimer: async function (label, tags) {
+      // No explicit tags means the tag input row was used. "Start new" on a
+      // historical timer passes that timer's tags, which is an explicit
+      // restart and must leave a prepared draft alone.
+      const fromInputRow = tags === undefined;
+      if (fromInputRow) tags = this.selectedTags;
       // Old events may carry comma-separated text or an unsupported shape.
       // Normalize only the new timer; never rewrite the historical event.
       tags = Array.isArray(tags) ? tags : typeof tags === 'string' ? parseTags(tags) : [];
@@ -241,8 +246,10 @@ export default {
       // A started timer must not preload the next one. Chip selections are
       // otherwise invisible state that keeps applying to later timers, so
       // clear both sources once the heartbeat is accepted.
-      this.tags = '';
-      this.selectedTagList = [];
+      if (fromInputRow) {
+        this.tags = '';
+        this.selectedTagList = [];
+      }
       await this.getEvents();
     },
 

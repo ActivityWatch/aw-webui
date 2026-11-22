@@ -243,6 +243,9 @@ describe('Stopwatch event tags', () => {
         running: true,
         tags: tags || [],
       });
+      // An explicit restart carries its own tags, so it must not discard a
+      // draft the user prepared for the next timer.
+      expect(wrapper.vm.tags).toBe('unrelated draft');
       expect(JSON.stringify(past)).toBe(original);
       if (tags) expect(aw.heartbeat.mock.calls[0][2].data.tags).not.toBe(tags);
       wrapper.destroy();
