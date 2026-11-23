@@ -52,7 +52,7 @@
     "jsdom": "^21.1.1",
     "keycharm": "^0.3.1",
     "less": "^4.9.1",
-    "less-loader": "^10.2",
+    "less-loader": "^13.1",
     "luxon": "^1.24.1",
     "papaparse": "^5.3.2",
     "pinia": "^2.0.13",
