@@ -46,9 +46,7 @@ const ENGLISH_FALLBACK_KEYS = new Set([
   'ui.userPoll.askQuestion',
   'ui.userPoll.workingWell',
   'ui.userPoll.couldBeBetter',
-  'ui.userPoll.notNow',
   'ui.userPoll.supportLink',
-  'ui.userPoll.moreWays',
   'ui.userPoll.forum',
 ]);
 const SRC_DIR = path.join(__dirname, '../src');

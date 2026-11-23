@@ -1049,7 +1049,7 @@ export default {
     },
     buckets: { id: 'ID' },
     userPoll: {
-      dontShowAgain: "Don't show again",
+      dontShowAgain: "Don't ask again",
       positiveIntro: 'We are happy to hear you enjoy using ActivityWatch, but we can do better!',
       support: 'Support us on',
       tellFriends: 'Tell your friends and colleagues!',
@@ -1065,9 +1065,7 @@ export default {
       askQuestion: 'How is ActivityWatch working for you?',
       workingWell: 'Working well',
       couldBeBetter: 'Could be better',
-      notNow: 'Not now',
       supportLink: 'our support page',
-      moreWays: 'More ways to help',
       forum: 'forum',
     },
   },

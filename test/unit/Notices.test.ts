@@ -431,17 +431,37 @@ describe('poll in the host', () => {
     wrapper.destroy();
   });
 
-  test('"Not now" closes without answering or disabling the poll', async () => {
+  test('uses the host Close for deferral, with only a secondary permanent opt-out', async () => {
+    const { wrapper, vm, notices } = await mountPoll();
+    vm.isPollVisible = true;
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('[data-testid="poll-not-now"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="poll-dont-ask"]').classes()).toContain('btn-link');
+    notices.open();
+    await wrapper.vm.$nextTick();
+    notices.close();
+    await wrapper.vm.$nextTick();
+    expect(vm.saveData).not.toHaveBeenCalled();
+    // Closing is temporary: the prompt remains accessible from the bell this load.
+    expect(notices.ids).toEqual(['poll']);
+    wrapper.destroy();
+  });
+
+  test('shows all ways to help without disclosure, with funding and word of mouth before reviews', async () => {
     const { wrapper, vm, notices } = await mountPoll();
     vm.isPollVisible = true;
     await wrapper.vm.$nextTick();
     notices.open();
-    await wrapper.find('[data-testid="poll-not-now"]').trigger('click');
+    await wrapper.find('[data-testid="poll-positive"]').trigger('click');
     await wrapper.vm.$nextTick();
-    expect(vm.saveData).not.toHaveBeenCalled();
-    expect(notices.isOpen).toBe(false);
-    expect(vm.isPollVisible).toBe(false);
-    expect(notices.ids).toEqual([]);
+    const step = wrapper.find('[data-testid="poll-positive-step"]');
+    expect(step.find('details').exists()).toBe(false);
+    const items = step.findAll('li');
+    expect(items.at(0).find('[data-testid="poll-support"]').exists()).toBe(true);
+    expect(items.at(1).text()).toContain('ui.userPoll.tellFriends');
+    expect(items.at(items.length - 1).text()).toContain('AlternativeTo');
+    expect(step.text()).toContain('Discord');
+    expect(step.text()).toContain('newsletter');
     wrapper.destroy();
   });
 

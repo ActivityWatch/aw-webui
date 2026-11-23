@@ -9,11 +9,8 @@
           | {{ $t('ui.userPoll.workingWell') }}
         b-button.mb-2(variant="outline-secondary", data-testid="poll-negative", :disabled="isSaving", @click="choose(false)")
           | {{ $t('ui.userPoll.couldBeBetter') }}
-      div.d-flex.justify-content-between.small
-        b-button.p-0(variant="link", size="sm", data-testid="poll-not-now", @click="notNow")
-          | {{ $t('ui.userPoll.notNow') }}
-        b-button.p-0(variant="link", size="sm", data-testid="poll-dont-ask", :disabled="isSaving", @click="dontShowAgain")
-          | {{ $t('ui.userPoll.dontShowAgain') }}
+      b-button.p-0.text-muted(variant="link", size="sm", data-testid="poll-dont-ask", :disabled="isSaving", @click="dontShowAgain")
+        | {{ $t('ui.userPoll.dontShowAgain') }}
 
     div(v-if="isPosFollowUpVisible", data-testid="poll-positive-step")
       p
@@ -22,18 +19,15 @@
         li
           | {{ $t('ui.userPoll.support') }} #[a(:href="goUrl('inapp-poll')" target="_blank" data-testid="poll-support") {{ $t('ui.userPoll.supportLink') }}]
         li
-          | {{ $t('ui.userPoll.rate') }} #[a(href="https://alternativeto.net/software/activitywatch/about/" target="_blank") AlternativeTo] / #[a(href="https://play.google.com/store/apps/details?id=net.activitywatch.android" target="_blank") Google Play Store]
-      details.small
-        summary {{ $t('ui.userPoll.moreWays') }}
-        ul.mt-1
-          li
-            | {{ $t('ui.userPoll.tellFriends') }}
-          li
-            | {{ $t('ui.userPoll.social') }} #[a(href="https://twitter.com/ActivityWatchIt" target="_blank") Twitter] / #[a(href="https://www.facebook.com/ActivityWatch" target="_blank") Facebook]
-          li
-            | {{ $t('ui.userPoll.join') }} #[a(href="https://discord.gg/vDskV9q" target="_blank") Discord]
-          li
-            | {{ $t('ui.userPoll.newsletter') }} #[a(href="http://eepurl.com/cTU6QX" target="_blank") newsletter]
+          | {{ $t('ui.userPoll.tellFriends') }}
+        li
+          | {{ $t('ui.userPoll.social') }} #[a(href="https://twitter.com/ActivityWatchIt" target="_blank") Twitter] / #[a(href="https://www.facebook.com/ActivityWatch" target="_blank") Facebook]
+        li
+          | {{ $t('ui.userPoll.join') }} #[a(href="https://discord.gg/vDskV9q" target="_blank") Discord]
+        li
+          | {{ $t('ui.userPoll.newsletter') }} #[a(href="http://eepurl.com/cTU6QX" target="_blank") newsletter]
+        li
+          | {{ $t('ui.userPoll.rate') }} #[a(href="https://play.google.com/store/apps/details?id=net.activitywatch.android" target="_blank") Google Play Store] / #[a(href="https://alternativeto.net/software/activitywatch/about/" target="_blank") AlternativeTo]
 
     div(v-if="isNegFollowUpVisible", data-testid="poll-negative-step")
       p
@@ -182,11 +176,6 @@ export default {
       if (!useNoticesStore().isOpen) return;
       if (positive) this.isPosFollowUpVisible = true;
       else this.isNegFollowUpVisible = true;
-    },
-    // Closes without answering; the 7-day backoff set when it was shown still applies.
-    notNow() {
-      this.isPollVisible = false;
-      useNoticesStore().close();
     },
     async dontShowAgain() {
       if (!(await this.saveData({ ...this.data, isEnabled: false }))) return;
