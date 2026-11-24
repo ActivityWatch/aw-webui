@@ -714,3 +714,51 @@ test('a saved edit replaces the rendered event and keeps the window in place', (
   });
   expect(vm.pendingWindowRestore).toBeNull();
 });
+
+describe('host row labels', () => {
+  beforeEach(() => setActivePinia(createPinia()));
+
+  function groupsFor(buckets) {
+    const vm = {
+      ...VisTimeline.data(),
+      ...VisTimeline.methods,
+      showRowLabels: true,
+      bucketsFromEither: buckets,
+      $aw: { getEvent: jest.fn() },
+    };
+    VisTimeline.created.call(vm);
+    vm.eventIndex = VisTimeline.computed.eventIndex.call(vm);
+    vm.timeline = {
+      setOptions: jest.fn(),
+      setWindow: jest.fn(),
+      getWindow: () => ({
+        start: new Date('2026-10-18T09:00:00Z'),
+        end: new Date('2026-10-18T11:00:00Z'),
+      }),
+    };
+    vm.update();
+    // The visible text only: the title attribute always carries the full id.
+    return Object.fromEntries(vm.groups.map(g => [g.id, g.content.replace(/<[^>]*>/g, '')]));
+  }
+
+  const bucket = (id, hostname) => ({
+    id,
+    type: 'currentwindow',
+    hostname,
+    events: [{ id: 1, timestamp: '2026-10-18T10:00:00Z', duration: 60, data: { app: 'x' } }],
+  });
+
+  test('a single synced host keeps its host name, as there is no host row', () => {
+    const labels = groupsFor([bucket('aw-watcher-window_desk-synced-from-phone', 'phone')]);
+    expect(labels['aw-watcher-window_desk-synced-from-phone']).toBe('window @ phone');
+  });
+
+  test('rows nested under a host row drop the host name', () => {
+    const labels = groupsFor([
+      bucket('aw-watcher-window_desk-synced-from-phone', 'phone'),
+      bucket('aw-watcher-window_desk', 'desk'),
+    ]);
+    expect(labels['host-group:phone']).toBe('phone');
+    expect(labels['aw-watcher-window_desk-synced-from-phone']).toBe('window');
+  });
+});
