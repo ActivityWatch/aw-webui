@@ -1042,3 +1042,83 @@ describe('desktop browser AFK filtering', () => {
     expect(query).not.toContain('browser_events');
   });
 });
+
+describe('always_active_pattern escaping', () => {
+  // validateRegex accepts a double quote, so the setting can contain one.
+  const pattern = 'Meeting "Daily"';
+  const escaped = 'filter_keyvals_regex(events, "app", "Meeting \\"Daily\\"")';
+  const desktop: DesktopQueryParams = {
+    bid_window: 'aw-watcher-window_testhost',
+    bid_afk: 'aw-watcher-afk_testhost',
+    filter_afk: true,
+    always_active_pattern: pattern,
+    categories: [],
+    filter_categories: [],
+  };
+
+  test.each([
+    ['fullDesktopQuery', () => fullDesktopQuery(desktop).join('\n')],
+    ['categoryQuery', () => categoryQuery(desktop).join('\n')],
+    ['analysisContextQuery', () => analysisContextQuery(desktop).join('\n')],
+    ['canonicalEvents', () => canonicalEvents(desktop)],
+    [
+      'multideviceQuery',
+      () =>
+        multideviceQuery({
+          hosts: ['testhost'],
+          host_params: {
+            testhost: { bid_window: desktop.bid_window, bid_afk: desktop.bid_afk },
+          },
+          filter_afk: true,
+          always_active_pattern: pattern,
+          categories: [],
+          filter_categories: [],
+        }).join('\n'),
+    ],
+  ])('%s escapes quotes in the pattern', (_name, build) => {
+    const query = build();
+    expect(query).toContain(escaped);
+    expect(query).not.toContain('"Meeting "Daily""');
+  });
+});
+
+describe('multidevice bucket id escaping', () => {
+  // Bucket hostnames can be any text, e.g. a ScreenTime import's device name.
+  const base = {
+    filter_afk: true,
+    always_active_pattern: '',
+    categories: [],
+    filter_categories: [],
+  };
+
+  test('android host bucket ids', () => {
+    const query = multideviceQuery({
+      ...base,
+      hosts: ['phone'],
+      host_params: { phone: { bid_android: 'aw-import-screentime_Bob "Work" iPhone', isIos: true } },
+    }).join('\n');
+    expect(query).toContain('query_bucket("aw-import-screentime_Bob \\"Work\\" iPhone")');
+  });
+
+  test('desktop host bucket ids derived from the hostname', () => {
+    const query = categoryQuery({ ...base, hosts: ['my "box"'], host_params: {} }).join('\n');
+    expect(query).toContain('query_bucket("aw-watcher-window_my \\"box\\"")');
+    expect(query).toContain('query_bucket("aw-watcher-afk_my \\"box\\"")');
+  });
+});
+
+test('filter_categories names are written the same way as in categorize', () => {
+  // categorize un-doubles JSON's backslashes; the filter must match it, or a
+  // selected category whose name has a backslash filters out every event.
+  const q = categoryQuery({
+    bid_window: 'w_h',
+    bid_afk: 'a_h',
+    filter_afk: true,
+    categories: [[['Dev\\Ops'], { type: 'regex', regex: 'x' }]],
+    filter_categories: [['Dev\\Ops']],
+  }).join('\n');
+  const cat = q.match(/categorize\(events, \[\[\["([^"]*)"/)[1];
+  const filt = q.match(/"\$category", \[\["([^"]*)"/)[1];
+  expect(cat).toBe('Dev\\Ops');
+  expect(filt).toBe(cat);
+});

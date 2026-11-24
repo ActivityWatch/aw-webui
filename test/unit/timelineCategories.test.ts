@@ -230,6 +230,15 @@ test('mobile canonical queries retain timestamps, use actual synced IDs, and omi
   expect(code).not.toContain('merge_events_by_keys');
 });
 
+test('category timeline filter writes backslashes the same way as categorize', () => {
+  const code = categoryTimelineQuery(buckets(), buckets(), {
+    categories: [[['Dev\\Ops'], { type: 'regex', regex: 'Code' }]],
+    filter_categories: [['Dev\\Ops']],
+  }).join('\n');
+  expect(code).toContain('[["Dev\\Ops"],');
+  expect(code).toContain('filter_keyvals(events, "$category", [["Dev\\Ops"]])');
+});
+
 test('parent category filters include descendants after resolving source overlap', () => {
   const code = categoryTimelineQuery(buckets(), buckets(), {
     categories: [[['Work', 'Programming'], { type: 'regex', regex: 'Code' }]],

@@ -198,6 +198,10 @@ function get_params(
       }
     });
   }
+  // Bucket hostnames can be any text (e.g. ScreenTime device names).
+  new_params.bid_window = escape_doublequote(new_params.bid_window);
+  new_params.bid_afk = escape_doublequote(new_params.bid_afk);
+  new_params.bid_browsers = (new_params.bid_browsers || []).map(escape_doublequote);
   return new_params;
 }
 
@@ -235,10 +239,15 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
   const categories_str = params.categories
     ? JSON.stringify(params.categories).replace(/\\\\/g, '\\')
     : '';
-  const always_active_pattern_str = isDesktopParams(params)
-    ? params.always_active_pattern
-    : undefined;
-  const cat_filter_str = JSON.stringify(params.filter_categories);
+  // Escaped here, so every caller gets a valid string literal.
+  const always_active_pattern_str =
+    isDesktopParams(params) && params.always_active_pattern
+      ? escape_doublequote(params.always_active_pattern)
+      : undefined;
+  // Un-double backslashes like categories_str, so names compare equal server-side.
+  const cat_filter_str = params.filter_categories
+    ? JSON.stringify(params.filter_categories).replace(/\\\\/g, '\\')
+    : '';
 
   // For simplicity, we assume that bid_window and bid_android are exchangeable (note however it needs special treatment)
   const bid_window = isDesktopParams(params) ? params.bid_window : params.bid_android;
@@ -866,9 +875,7 @@ export function activeDurationQuery(
         bid_window: escape_doublequote(source.bid_window),
         bid_afk: escape_doublequote(source.bid_afk),
         bid_browsers: (source.bid_browsers || []).map(escape_doublequote),
-        always_active_pattern: options.always_active_pattern
-          ? escape_doublequote(options.always_active_pattern)
-          : undefined,
+        always_active_pattern: options.always_active_pattern || undefined,
         categories: null,
         filter_categories: null,
       });

@@ -61,7 +61,9 @@ export function categoryTimelineQuery(
       ],
       _.isEqual
     );
-    queries.push(`events = filter_keyvals(events, "$category", ${JSON.stringify(selected)});`);
+    // Un-double backslashes as canonicalEvents does for categorize, so names match.
+    const selected_str = JSON.stringify(selected).replace(/\\\\/g, '\\');
+    queries.push(`events = filter_keyvals(events, "$category", ${selected_str});`);
   }
   queries.push('RETURN = sort_by_timestamp(events);');
   return querystr_to_array(queries.join('\n'));
