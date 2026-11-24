@@ -10,7 +10,11 @@ jest.mock('chart.js/auto', () => ({}));
 // view was visited renders `undefined.paths` errors when opened directly (#/report).
 test('Report registers every icon its template uses', () => {
   const template = fs.readFileSync(path.join(__dirname, '../../src/views/Report.vue'), 'utf8');
-  const used = [...template.matchAll(/icon\(name="([a-z0-9-]+)"/g)].map(m => m[1]);
+  // Matches `icon(name=…)`, Pug class forms like `icon.mr-1(name=…)` and `name`
+  // after other attributes; not `b-icon` (bootstrap-vue, registered elsewhere).
+  const used = [
+    ...template.matchAll(/(?<![\w-])icon(?:\.[\w-]+)*\([^)]*?\bname="([a-z0-9-]+)"/g),
+  ].map(m => m[1]);
   expect(used).toContain('save');
   const registered = Object.keys((Icon as any).icons);
   expect(used.filter(name => !registered.includes(name))).toEqual([]);
