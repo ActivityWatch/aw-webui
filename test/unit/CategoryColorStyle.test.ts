@@ -11,7 +11,7 @@ const injected = 'red; position: fixed; inset: 0; z-index: 99999';
 const localVue = createLocalVue();
 localVue.use(PiniaVuePlugin);
 
-test('CategoryEditTree does not apply declarations smuggled in a color', () => {
+function colorDot(color: string): HTMLElement {
   const wrapper = shallowMount(CategoryEditTree, {
     localVue,
     pinia: createTestingPinia({ createSpy: jest.fn }),
@@ -20,16 +20,31 @@ test('CategoryEditTree does not apply declarations smuggled in a color', () => {
         id: 0,
         name: ['Work'],
         rule: { type: 'none' },
-        data: { color: injected },
+        data: { color },
         children: [],
       },
     },
     mocks: { $t: (key: string) => key },
     stubs: { icon: true },
   });
-  const styled = wrapper.findAll('icon-stub').wrappers.map(w => w.element as HTMLElement);
-  expect(styled.length).toBeGreaterThan(0);
-  for (const el of styled) expect(el.style.position).toBe('');
+  // The color dot is the only `.ml-1` circle; the row's other circle is the
+  // tree bullet, which would satisfy a check over all icons on its own.
+  const dots = wrapper.findAll('icon-stub.ml-1[name="circle"]');
+  expect(dots.length).toBe(1);
+  return dots.at(0).element as HTMLElement;
+}
+
+test('CategoryEditTree does not apply declarations smuggled in a color', () => {
+  const dot = colorDot(injected);
+  expect(dot.style.position).toBe('');
+  expect(dot.style.inset).toBe('');
+  expect(dot.style.zIndex).toBe('');
+});
+
+test('CategoryEditTree color dot still shows a valid color', () => {
+  const dot = colorDot('#123abc');
+  expect(dot.style.color).toBe('rgb(18, 58, 188)');
+  expect(dot.style.position).toBe('');
 });
 
 test('ColorPicker does not apply declarations smuggled in a color', () => {
