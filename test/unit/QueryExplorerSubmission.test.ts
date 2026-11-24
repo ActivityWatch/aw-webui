@@ -195,6 +195,38 @@ describe('Query Explorer submission ownership', () => {
     expect(wrapper.vm.error).toBe('');
   });
 
+  // String.replace treats `$$`, `$&`, `` $` `` and `$'` in a replacement string as
+  // patterns, so category names/regexes containing them were corrupted.
+  test('inserts category rules containing $ sequences verbatim, at every placeholder', async () => {
+    const rules = [
+      [['Finance', '$$$'], { type: 'regex', regex: '^\\$$' }],
+      [['Odd', "a$`b$'c$&d"], { type: 'none' }],
+    ];
+    mockCategories.classes_for_query = rules;
+    const query = jest.fn().mockResolvedValue([[]]);
+    const wrapper = mountExplorer(query);
+    await wrapper.setData({ query_code: 'a = __CATEGORIES__; RETURN = __CATEGORIES__;' });
+    await wrapper.vm.query();
+    const json = JSON.stringify(rules);
+    expect(query.mock.calls[0][1]).toEqual([`a = ${json};`, `RETURN = ${json};`]);
+  });
+
+  test('leaves a quoted __CATEGORIES__ search text alone and fills the real placeholder', async () => {
+    const rules = [[['Work'], { type: 'regex', regex: '^work' }]];
+    mockCategories.classes_for_query = rules;
+    const query = jest.fn().mockResolvedValue([[]]);
+    const wrapper = mountExplorer(query);
+    await wrapper.setData({
+      query_code: 'events = filter_keyvals([], "app", ["__CATEGORIES__"]); c = __CATEGORIES__;',
+    });
+    await wrapper.vm.query();
+    const json = JSON.stringify(rules);
+    expect(query.mock.calls[0][1]).toEqual([
+      `events = filter_keyvals([], "app", ["__CATEGORIES__"]);`,
+      `c = ${json};`,
+    ]);
+  });
+
   test('Run and Ctrl-Enter share latest-submission ownership in the mounted view', async () => {
     const old = deferred();
     const recent = deferred();
