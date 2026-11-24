@@ -738,7 +738,12 @@ describe('host row labels', () => {
     };
     vm.update();
     // The visible text only: the title attribute always carries the full id.
-    return Object.fromEntries(vm.groups.map(g => [g.id, g.content.replace(/<[^>]*>/g, '')]));
+    const visibleText = (html: string) => {
+      const el = document.createElement('div');
+      el.innerHTML = html;
+      return el.textContent;
+    };
+    return Object.fromEntries(vm.groups.map(g => [g.id, visibleText(g.content)]));
   }
 
   const bucket = (id, hostname) => ({
