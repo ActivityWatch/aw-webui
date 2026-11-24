@@ -348,12 +348,6 @@ export default {
         buckets = await this._applyAfkFilter(buckets);
       }
 
-      if (this.filter_duration > 0) {
-        for (const bucket of buckets) {
-          bucket.events = _.filter(bucket.events, e => e.duration >= this.filter_duration);
-        }
-      }
-
       if (this.filter_categories.length > 0) {
         const categoryStore = useCategoryStore();
         const allCats = categoryStore.classes;
@@ -375,12 +369,21 @@ export default {
       }
 
       // Merge adjacent events by app name for window buckets.
-      // Runs after the AFK, duration and category filters so merges operate on
+      // Runs after the AFK and category filters so merges operate on
       // already-filtered events.
       // Reduces visual clutter from apps that produce many small events (e.g.
       // Adobe Illustrator's TAB key toggling UI panels). See: activitywatch#1165
       if (this.filter_merge_similar) {
         buckets = this._applyMergeSimilar(buckets);
+      }
+
+      // Duration filter last, on the events actually drawn, as the categorized
+      // row does (merge, then filter). Filtering before Merge similar dropped
+      // short events that merge into a long block (#1343 item 3).
+      if (this.filter_duration > 0) {
+        for (const bucket of buckets) {
+          bucket.events = _.filter(bucket.events, e => e.duration >= this.filter_duration);
+        }
       }
 
       if (seq !== this.fetchSeq) return;
