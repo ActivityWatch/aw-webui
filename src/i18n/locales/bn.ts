@@ -590,6 +590,18 @@ export default {
     bucketLabel: 'বাকেট:',
     eventsLabel: 'ইভেন্ট:',
   },
+  datepicker: {
+    noDateSelected: 'কোনো তারিখ নির্বাচিত হয়নি',
+    resetButton: 'রিসেট',
+    calendar: 'ক্যালেন্ডার',
+    nav: 'ক্যালেন্ডার নেভিগেশন',
+    prevYear: 'আগের বছর',
+    prevMonth: 'আগের মাস',
+    currentMonth: 'বর্তমান মাস',
+    nextMonth: 'পরের মাস',
+    nextYear: 'পরের বছর',
+    today: 'আজ',
+  },
   ui: {
     activity: {
       missingView: 'এই ড্যাশবোর্ডে এই ভিউ ("{view}") নেই।',

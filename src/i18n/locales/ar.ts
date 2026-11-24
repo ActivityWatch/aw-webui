@@ -585,6 +585,18 @@ export default {
     bucketLabel: 'Bucket:',
     eventsLabel: 'الأحداث:',
   },
+  datepicker: {
+    noDateSelected: 'لم يتم تحديد تاريخ',
+    resetButton: 'إعادة تعيين',
+    calendar: 'التقويم',
+    nav: 'التنقل في التقويم',
+    prevYear: 'السنة السابقة',
+    prevMonth: 'الشهر السابق',
+    currentMonth: 'الشهر الحالي',
+    nextMonth: 'الشهر التالي',
+    nextYear: 'السنة التالية',
+    today: 'اليوم',
+  },
   ui: {
     activity: {
       missingView: 'هذا العرض ("{view}") غير موجود في لوحة المعلومات هذه.',

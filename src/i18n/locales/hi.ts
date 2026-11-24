@@ -593,6 +593,18 @@ export default {
     bucketLabel: 'Bucket:',
     eventsLabel: 'इवेंट:',
   },
+  datepicker: {
+    noDateSelected: 'कोई तारीख़ चयनित नहीं',
+    resetButton: 'रीसेट करें',
+    calendar: 'कैलेंडर',
+    nav: 'कैलेंडर नेविगेशन',
+    prevYear: 'पिछला वर्ष',
+    prevMonth: 'पिछला महीना',
+    currentMonth: 'वर्तमान महीना',
+    nextMonth: 'अगला महीना',
+    nextYear: 'अगला वर्ष',
+    today: 'आज',
+  },
   ui: {
     activity: {
       missingView: 'यह व्यू ("{view}") इस डैशबोर्ड पर मौजूद नहीं है।',
