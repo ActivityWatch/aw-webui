@@ -492,6 +492,9 @@ export const useActivityStore = defineStore('activity', {
       }
 
       await bucketsStore.ensureLoaded();
+      // A newer load may have started while the buckets loaded: change no
+      // shared state (hosts, availability, cached bars) for this one.
+      if (!isCurrent()) return;
 
       // The `host` option is the Activity route's `:host` param: a single
       // hostname, a comma-separated list, or "@all" (see util/multidevice.ts).
@@ -508,6 +511,7 @@ export const useActivityStore = defineStore('activity', {
       this.query_hosts = [query_options.host];
 
       await this.get_buckets(query_options);
+      if (!isCurrent()) return;
 
       // TODO: These queries can actually run in parallel, but since server won't process them in parallel anyway we won't.
       this.set_available();

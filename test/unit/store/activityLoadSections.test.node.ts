@@ -28,6 +28,21 @@ function stubDesktopLoad(store: ReturnType<typeof useActivityStore>, afkBucket: 
   jest.spyOn(store, 'queries_category_history').mockReturnValue(true);
 }
 
+function deferred() {
+  let resolve!: () => void;
+  const promise = new Promise<void>(r => (resolve = r));
+  return { promise, resolve };
+}
+
+// A newer single-device load's completed bars.
+function showBarsOf(store: ReturnType<typeof useActivityStore>, host: string) {
+  store.start_loading({ host, timeperiod: day } as any);
+  store.invalidate_active_history({ cache_key: `history-of-${host}` });
+  store.query_active_history_completed({
+    active_history: { p: [{ timestamp: '2024-01-01T00:00:00Z', duration: 111, data: {} }] },
+  });
+}
+
 describe('activity load sections', () => {
   beforeEach(() => setActivePinia(createPinia()));
   afterEach(() => jest.restoreAllMocks());
@@ -128,6 +143,22 @@ describe('activity load sections', () => {
     expect(editor).not.toHaveBeenCalled();
   });
 
+  test('a load superseded while its buckets load leaves the newer bars alone', async () => {
+    const store = useActivityStore();
+    stubDesktopLoad(store, 'aw-watcher-afk_a');
+    const buckets = deferred();
+    jest.spyOn(store, 'get_buckets').mockImplementation(() => buckets.promise);
+    const desktop = jest.spyOn(store, 'query_desktop_full').mockResolvedValue();
+
+    const stale = store.load({ host: 'a', timeperiod: day } as any);
+    showBarsOf(store, 'b');
+    buckets.resolve();
+    await stale;
+
+    expect(desktop).not.toHaveBeenCalled();
+    expect(Object.keys(store.active.history)).toEqual(['p']);
+  });
+
   describe('All Devices', () => {
     function stubMultideviceLoad(store: ReturnType<typeof useActivityStore>) {
       const buckets = useBucketsStore();
@@ -141,6 +172,22 @@ describe('activity load sections', () => {
       });
       jest.spyOn(store, 'queries_category_history').mockReturnValue(true);
     }
+
+    test('a load superseded while buckets load leaves the newer bars alone', async () => {
+      const store = useActivityStore();
+      stubMultideviceLoad(store);
+      const buckets = deferred();
+      jest.spyOn(useBucketsStore(), 'ensureLoaded').mockImplementation(() => buckets.promise);
+      const combined = jest.spyOn(store, 'query_multidevice_full').mockResolvedValue();
+
+      const stale = store.load({ host: '@all', timeperiod: day } as any);
+      showBarsOf(store, 'a');
+      buckets.resolve();
+      await stale;
+
+      expect(combined).not.toHaveBeenCalled();
+      expect(Object.keys(store.active.history)).toEqual(['p']);
+    });
 
     test('a failed combined history query does not strand editor and category history', async () => {
       const store = useActivityStore();
