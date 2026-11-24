@@ -164,6 +164,16 @@ describeZone('Europe/Stockholm')('start of day inside the Stockholm spring-forwa
     );
   });
 
+  test('hourly chart labels match the 23 buckets of the gap day', () => {
+    const tp = dateToTimeperiod('2026-03-29', '02:00');
+    const labels = hourlyLabels(tp);
+    expect(labels).toHaveLength(23);
+    expect(labels[0]).toBe('3');
+    expect(labels[labels.length - 1]).toBe('1');
+    // Without the requested start of day, the chart would draw a 24th bucket
+    expect(hourlyLabels({ start: tp.start, length: tp.length })).toHaveLength(24);
+  });
+
   test('neighbouring history periods start at each real day start', () => {
     const tp = dateToTimeperiod('2026-03-29', '02:00');
     const around = timeperiodsAroundTimeperiod(tp);

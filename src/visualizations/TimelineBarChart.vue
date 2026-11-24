@@ -66,6 +66,12 @@ export default {
       type: Array,
       default: () => [1, 'day'],
     },
+    // The start of day the period was requested with; without it a DST-gap day
+    // would get a bucket per wall-clock hour instead of per elapsed hour.
+    timeperiod_offset: {
+      type: String,
+      default: undefined,
+    },
     // Only hourly activity views (single-day or exact interval) should trim overlapping stacks.
     // Other callers (Trends, Report, multi-day Activity) reuse the default
     // `[1, 'day']` timeperiod but pass per-day values, which must not be clamped.
@@ -87,7 +93,13 @@ export default {
         return start ? exactBucketLabels({ start, length: [count, resolution] }) : [];
       }
       if (resolution.startsWith('day') && count == 1) {
-        if (start) return hourlyLabels({ start, length: [count, resolution] });
+        if (start) {
+          return hourlyLabels({
+            start,
+            length: [count, resolution],
+            offset: this.timeperiod_offset,
+          });
+        }
         // Reports aggregate by wall-clock hour without a selected calendar day.
         const hourOffset = get_hour_offset();
         return _.range(0, 24).map(h => `${(h + hourOffset) % 24}`);
