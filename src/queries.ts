@@ -276,7 +276,10 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
       ? browserEvents(params) +
         // Include focused and audible browser events as indications of not-afk
         (params.include_audible
-          ? `audible_events = filter_keyvals(browser_events, "audible", [true]);
+          ? // Self-intersect to copy: older aw-server (Python) period_union clears
+            // .data in place, which would wipe url/title from browser_events.
+            `audible_events = filter_keyvals(browser_events, "audible", [true]);
+             audible_events = filter_period_intersect(audible_events, audible_events);
              not_afk = period_union(not_afk, audible_events);`
           : '')
       : '',

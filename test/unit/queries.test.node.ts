@@ -946,6 +946,5 @@ describe('desktop browser AFK filtering', () => {
   test('does not reference browser events when browser buckets are omitted', () => {
     const query = canonicalEvents({ ...params, bid_browsers: undefined });
     expect(query).not.toContain('browser_events');
-
   });
 });
