@@ -549,6 +549,8 @@ export default {
     noEvents: 'No events match selected criteria. Timeline is not updated.',
     scrollHint: 'Scroll to zoom, swipe/horizontal-scroll to pan, arrow keys to navigate',
     loading: 'Loading...',
+    loadError: 'Could not load events for this range.',
+    retry: 'Retry',
   },
   stopwatch: {
     title: 'Stopwatch',
