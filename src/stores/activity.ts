@@ -822,7 +822,10 @@ export const useActivityStore = defineStore('activity', {
       const periods = periodsForFullDesktopQuery(query_options.timeperiod);
       this.progress_add(periods.length);
       const params = this.multidevice_params(query_options, hosts);
-      const q = queries.multideviceQuery(params);
+      const q = queries.multideviceQuery(
+        params,
+        periods.length > 1 ? CHUNKED_QUERY_LIMIT : undefined
+      );
       const { merged, chunks } = await queryDesktopPeriods(periods, q, 'multidevice', () =>
         this.progress_tick()
       );
@@ -885,20 +888,23 @@ export const useActivityStore = defineStore('activity', {
       this.progress_add(periods.length);
       const categories = useCategoryStore().classes_for_query;
 
-      const q = queries.fullDesktopQuery({
-        bid_window: this.buckets.window[0],
-        bid_afk: this.buckets.afk[0],
-        bid_browsers: this.buckets.browser,
-        bid_stopwatch:
-          include_stopwatch && this.buckets.stopwatch.length > 0
-            ? this.buckets.stopwatch[0]
-            : undefined,
-        filter_afk,
-        categories,
-        filter_categories,
-        include_audible,
-        always_active_pattern,
-      });
+      const q = queries.fullDesktopQuery(
+        {
+          bid_window: this.buckets.window[0],
+          bid_afk: this.buckets.afk[0],
+          bid_browsers: this.buckets.browser,
+          bid_stopwatch:
+            include_stopwatch && this.buckets.stopwatch.length > 0
+              ? this.buckets.stopwatch[0]
+              : undefined,
+          filter_afk,
+          categories,
+          filter_categories,
+          include_audible,
+          always_active_pattern,
+        },
+        periods.length > 1 ? CHUNKED_QUERY_LIMIT : undefined
+      );
       const { merged, chunks } = await queryDesktopPeriods(periods, q, 'fullDesktopQuery', () =>
         this.progress_tick()
       );
