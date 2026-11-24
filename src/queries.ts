@@ -85,6 +85,14 @@ function escape_doublequote(s: string) {
   return s.replace(/\\?"/g, match => (match.length === 2 ? '\\\\\\"' : '\\"'));
 }
 
+// JSON for a value interpolated into a query. `JSON.stringify` doubles every
+// backslash, and aw-query takes the literal's content as written, so a regex
+// like `arc(\.exe)?$` or `\w` would reach the server as `arc(\\.exe)?$`.
+// Undo the doubling here so every caller escapes backslashes the same way.
+export function jsonForQuery(value: unknown): string {
+  return JSON.stringify(value).replace(/\\\\/g, '\\');
+}
+
 // Hostname safe for using as a variable name
 export function safeHostname(hostname: string): string {
   return hostname.replace(/[^a-zA-Z0-9_]/g, '');
@@ -243,19 +251,15 @@ function queryBucket(bid: string): string {
 //  - Filters by category (if filter_categories set)
 // Puts it's results in `events` and `not_afk` (if not_afk available for platform).
 export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams): string {
-  // Needs escaping for regex patterns like '\w' to work (JSON.stringify adds extra unnecessary escaping)
-  const categories_str = params.categories
-    ? JSON.stringify(params.categories).replace(/\\\\/g, '\\')
-    : '';
+  // Single backslashes, so regex patterns like '\w' survive the JSON round-trip.
+  const categories_str = params.categories ? jsonForQuery(params.categories) : '';
   // Escaped here, so every caller gets a valid string literal.
   const always_active_pattern_str =
     isDesktopParams(params) && params.always_active_pattern
       ? escape_doublequote(params.always_active_pattern)
       : undefined;
-  // Un-double backslashes like categories_str, so names compare equal server-side.
-  const cat_filter_str = params.filter_categories
-    ? JSON.stringify(params.filter_categories).replace(/\\\\/g, '\\')
-    : '';
+  // Same un-doubling as categories_str, so names compare equal server-side.
+  const cat_filter_str = params.filter_categories ? jsonForQuery(params.filter_categories) : '';
 
   // For simplicity, we assume that bid_window and bid_android are exchangeable (note however it needs special treatment)
   const bid_window = isDesktopParams(params) ? params.bid_window : params.bid_android;
@@ -617,7 +621,7 @@ function browserEvents(params: DesktopQueryParams): string {
     if (pattern) {
       // JSON.stringify adds extra unnecessary escaping for backslashes (e.g. '\.' becomes '\\.')
       // which breaks regex patterns like arc(\.exe)?$ on Windows. Undo the double-escaping.
-      const pattern_str = JSON.stringify(pattern).replace(/\\\\/g, '\\');
+      const pattern_str = jsonForQuery(pattern);
       code += `
        window_${browserName}_re = filter_keyvals_regex(events, "app", ${pattern_str});
        window_${browserName} = sort_by_timestamp(concat(window_${browserName}, window_${browserName}_re));`;
@@ -655,7 +659,7 @@ export function browserSearchQuery(browserBuckets: string[], pattern: string): s
   // needs a single backslash, so patterns like '\d' must be un-escaped to match
   // (same treatment as `categories_str` in canonicalEvents).
   // Match window search's ignore_case rule for both URL and title matches.
-  const escapedPattern = JSON.stringify('(?i)' + pattern).replace(/\\\\/g, '\\');
+  const escapedPattern = jsonForQuery('(?i)' + pattern);
   let code = 'browser_results = [];';
   // Use numeric indices as variable-name suffixes so every bucket is queried
   // regardless of whether its name matches a known browser — this also handles

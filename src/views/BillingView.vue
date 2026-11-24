@@ -91,6 +91,7 @@ import {
 } from '~/util/time';
 import { periodStartDate } from '~/util/timeperiod';
 import { neutralizeCsvFormula } from '~/util/export';
+import { jsonForQuery } from '~/queries';
 import {
   getWorkReportHostBuckets,
   getWorkReportHostOptions,
@@ -232,7 +233,7 @@ export default {
         }
 
         const categories = this.categoryStore.classes_for_query;
-        const categoriesStr = JSON.stringify(categories).replace(/\\\\/g, '\\');
+        const categoriesStr = jsonForQuery(categories);
         const query = buildBillingQuery(hostsToQuery, categoriesStr);
         const tp = this.getTimeperiod();
 

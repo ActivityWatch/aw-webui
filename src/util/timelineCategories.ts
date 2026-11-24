@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { canonicalEvents, querystr_to_array, BaseQueryParams } from '~/queries';
+import { canonicalEvents, jsonForQuery, querystr_to_array, BaseQueryParams } from '~/queries';
 import { IEvent } from './interfaces';
 
 interface TimelineBucket {
@@ -62,7 +62,7 @@ export function categoryTimelineQuery(
       _.isEqual
     );
     // Un-double backslashes as canonicalEvents does for categorize, so names match.
-    const selected_str = JSON.stringify(selected).replace(/\\\\/g, '\\');
+    const selected_str = jsonForQuery(selected);
     queries.push(`events = filter_keyvals(events, "$category", ${selected_str});`);
   }
   queries.push('RETURN = sort_by_timestamp(events);');
