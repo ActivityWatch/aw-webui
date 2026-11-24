@@ -147,10 +147,15 @@ describe('activity load sections', () => {
     const store = useActivityStore();
     stubDesktopLoad(store, 'aw-watcher-afk_a');
     const buckets = deferred();
-    jest.spyOn(store, 'get_buckets').mockImplementation(() => buckets.promise);
+    const bucketsStarted = deferred();
+    jest.spyOn(store, 'get_buckets').mockImplementation(() => {
+      bucketsStarted.resolve();
+      return buckets.promise;
+    });
     const desktop = jest.spyOn(store, 'query_desktop_full').mockResolvedValue();
 
     const stale = store.load({ host: 'a', timeperiod: day } as any);
+    await bucketsStarted.promise; // past the check after ensureLoaded()
     showBarsOf(store, 'b');
     buckets.resolve();
     await stale;
