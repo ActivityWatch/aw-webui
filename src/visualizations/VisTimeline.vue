@@ -548,7 +548,7 @@ export default {
       if (this.categorizedEvents?.length) {
         groups.unshift({
           id: CATEGORIZED_ROW,
-          content: this.showRowLabels ? i18n.t('timeline.categorizedRow') : '',
+          content: this.showRowLabels ? String(i18n.t('timeline.categorizedRow')) : '',
         });
       }
 
