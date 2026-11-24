@@ -522,10 +522,16 @@ export const useCategoryStore = defineStore('categories', {
      * scheme. For a user-owned set it means the built-in categories: the
      * subsequent save syncs these classes into the active set, so restoring
      * anything else here would overwrite that set with another set's contents.
+     *
+     * Only the active (primary) set is reset. Other active sets keep contributing
+     * their categories, so the next sync does not mistake them for deletions and
+     * tombstone them; the primary set's earlier masks are lifted as part of the reset.
      */
     restoreDefaultClasses(this: State) {
       const activeId = this.active_set_ids.length > 0 ? this.active_set_ids[0] : undefined;
-      this.classes = assignIds(createMissingParents(getDefaultClasses(activeId)));
+      const primary: CategorySet = { id: activeId ?? '', categories: getDefaultClasses(activeId) };
+      const secondary = orderedActiveSets(this.category_sets, this.active_set_ids.slice(1));
+      this.classes = assignIds(createMissingParents(mergeCategorySets([primary, ...secondary])));
       this.classes_unsaved_changes = true;
     },
     clearAll(this: State) {
