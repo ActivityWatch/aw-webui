@@ -17,7 +17,8 @@ export default defineConfig(({ mode }) => {
         if (!html.includes(pattern)) {
           throw new Error(`Could not find pattern ${pattern} in the html file`);
         }
-        return html.replace(pattern, CSP);
+        // index.html uses the placeholder in both default-src and connect-src.
+        return html.replaceAll(pattern, CSP);
       },
     };
   };
