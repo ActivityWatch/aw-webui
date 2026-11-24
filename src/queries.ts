@@ -43,19 +43,15 @@ export function querystr_to_array(querystr: string): string[] {
   // Split on ';' but only when not inside a double-quoted string literal.
   // A naive .split(';') breaks category rules whose regex contains semicolons,
   // e.g. `"regex": "foo;bar"` would be shredded before reaching the server.
+  // Literals end where aw-query (Rust and Python) ends them: at the first quote
+  // not preceded by a backslash. Backslashes are not read in pairs.
   const statements: string[] = [];
   let current = '';
   let inString = false;
-  let inEscape = false;
+  let prev = '';
 
   for (const char of querystr) {
-    if (inEscape) {
-      current += char;
-      inEscape = false;
-    } else if (char === '\\' && inString) {
-      current += char;
-      inEscape = true;
-    } else if (char === '"') {
+    if (char === '"' && !(inString && prev === '\\')) {
       inString = !inString;
       current += char;
     } else if (char === ';' && !inString) {
@@ -65,6 +61,7 @@ export function querystr_to_array(querystr: string): string[] {
     } else {
       current += char;
     }
+    prev = char;
   }
 
   const trimmed = current.trim();
@@ -73,23 +70,21 @@ export function querystr_to_array(querystr: string): string[] {
   return statements;
 }
 
-// Escape a value for a double-quoted query literal.
+// Encode a value as the content of a double-quoted query literal.
 //
-// `querystr_to_array` reads backslashes in pairs, so a quote stays inside the
-// literal only after an odd run of backslashes; after an even run it ends the
-// literal and the next `;` splits the query. aw-query turns `\"` into `"` and
-// keeps every other backslash as written. So a quote after an even run gets one
-// more backslash, and the value arrives unchanged. A quote after an odd run is
-// already escaped and is left alone: aw-query drops that backslash, which a
-// regex reads the same as the bare quote. A trailing odd run is padded to even,
-// or it would escape the closing quote the caller adds. Backslashes elsewhere
-// are untouched: regex patterns like `\w` have to reach aw-query unchanged.
-function escape_doublequote(s: string) {
-  return s.replace(/(\\*)("|$)/g, (_match, run: string, end: string) => {
-    const escaped = run.length % 2 === 1;
-    if (end === '"') return escaped ? `${run}"` : `${run}\\"`;
-    return escaped ? `${run}\\` : run;
-  });
+// aw-query turns each `\"` into `"` and keeps every other backslash as
+// written, so one backslash before each quote sends any value unchanged,
+// including bucket IDs and patterns that already hold backslashes. A value
+// ending in a backslash cannot be written: that backslash would escape the
+// closing quote. It is rejected rather than changed, so a bucket ID is never
+// swapped for a different one.
+export function escape_doublequote(s: string): string {
+  if (s.endsWith('\\')) {
+    throw new Error(
+      `aw-query cannot represent a string ending in a backslash: ${JSON.stringify(s)}`
+    );
+  }
+  return s.replace(/"/g, '\\"');
 }
 
 // JSON for a value interpolated into a query. `JSON.stringify` doubles every

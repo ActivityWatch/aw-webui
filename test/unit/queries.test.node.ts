@@ -76,6 +76,7 @@ import {
   categoryQuery,
   chromeAppnameRegex,
   editorActivityQuery,
+  escape_doublequote,
   fullDesktopQuery,
   multideviceQuery,
   querystr_to_array,
@@ -584,10 +585,8 @@ describe('querystr_to_array', () => {
   });
 
   test('a saved pattern with an escaped quote does not split the query', () => {
-    // The pattern is a regex: `a\"b;c` matches a quote between a and b.
-    // Escaping only the quote gives `a\\"b;c`, whose `\\` is a literal
-    // backslash, so the quote closes the literal and `;` splits the query.
-    // The quote is already escaped, so it goes through as written.
+    // The pattern is a regex: `a\\"b;c` matches a quote between a and b. Its
+    // quote gets one more backslash, and aw-query drops exactly that one.
     const query = canonicalEvents({
       bid_window: 'aw-watcher-window_testhost',
       bid_afk: 'aw-watcher-afk_testhost',
@@ -598,17 +597,26 @@ describe('querystr_to_array', () => {
       always_active_pattern: 'a\\"b;c',
     });
     const result = querystr_to_array(query);
-    expect(result).toContain('not_treat_as_afk = filter_keyvals_regex(events, "app", "a\\"b;c");');
+    expect(result).toContain(
+      'not_treat_as_afk = filter_keyvals_regex(events, "app", "a\\\\"b;c");'
+    );
     // Nothing was cut at the semicolon inside the pattern.
-    expect(result.some(statement => statement.includes('filter_keyvals_regex'))).toBe(true);
     expect(result.filter(s => s.includes('filter_keyvals_regex'))).toHaveLength(2);
   });
 
-  // aw-query (Rust and Python) reads a literal by turning `\"` into `"` and
-  // keeping every other backslash as written.
+  test('a quote after an even backslash run stays inside the literal, as on the server', () => {
+    // aw-query ends a literal only at a quote with no backslash before it.
+    const result = querystr_to_array('x = "a\\\\";b"; RETURN = x;');
+    expect(result).toEqual(['x = "a\\\\";b";', 'RETURN = x;']);
+  });
+
+  // aw-query (Rust and Python) ends a literal at the first quote with no
+  // backslash before it, turns each `\\"` into `"` and keeps every other
+  // backslash as written.
   function awQueryLiteral(statement: string): string {
-    const match = statement.match(/"app", "((?:[^"\\]|\\.)*)"\);$/);
+    const match = statement.match(/"app", "(.*)"\);$/);
     if (!match) throw new Error(`no app literal in: ${statement}`);
+    expect(match[1]).not.toMatch(/(^|[^\\])"/);
     return match[1].replace(/\\"/g, '"');
   }
 
@@ -625,36 +633,58 @@ describe('querystr_to_array', () => {
     return querystr_to_array(query).filter(s => s.includes('filter_keyvals_regex'));
   }
 
-  // An even run escapes nothing, so the quote needs its own backslash and the
-  // pattern arrives unchanged. An odd run already escapes the quote; the server
-  // drops that backslash, which a regex treats the same as the bare quote.
-  test.each([
-    [0, 'a";b'],
-    [1, 'a";b'],
-    [2, 'a\\\\";b'],
-    [3, 'a\\\\";b'],
-    [4, 'a\\\\\\\\";b'],
-  ])('%i backslashes before a quote keep the pattern in one literal', (n, expected) => {
-    const statements = alwaysActiveStatements(`a${'\\'.repeat(n)}";b`);
+  // Every run length arrives unchanged, in one literal.
+  test.each([0, 1, 2, 3, 4])('%i backslashes before a quote reach aw-query unchanged', n => {
+    const pattern = `a${'\\'.repeat(n)}";b`;
+    const statements = alwaysActiveStatements(pattern);
     // Two statements (app and title), neither cut at the `;` in the pattern.
     expect(statements).toHaveLength(2);
     for (const statement of statements) {
       expect(statement).toMatch(/^not_treat_as_afk = filter_keyvals_regex\(events, "(app|title)"/);
       expect(statement).toMatch(/"\);$/);
     }
-    expect(awQueryLiteral(statements[0])).toBe(expected);
+    expect(awQueryLiteral(statements[0])).toBe(pattern);
   });
 
-  // The caller closes the literal right after a trailing run, so an odd run
-  // would escape that closing quote and swallow the rest of the query.
-  test.each([
-    [1, 'a;b\\\\'],
-    [2, 'a;b\\\\'],
-    [3, 'a;b\\\\\\\\'],
-  ])('%i trailing backslashes do not escape the closing quote', (n, expected) => {
-    const statements = alwaysActiveStatements(`a;b${'\\'.repeat(n)}`);
-    expect(statements).toHaveLength(2);
-    expect(awQueryLiteral(statements[0])).toBe(expected);
+  // A trailing backslash would escape the closing quote; aw-query has no way
+  // to write one, so the value is rejected rather than changed.
+  test.each([1, 2, 3])('%i trailing backslashes are rejected', n => {
+    expect(() => alwaysActiveStatements(`a;b${'\\'.repeat(n)}`)).toThrow(/ending in a backslash/);
+  });
+});
+
+describe('escape_doublequote', () => {
+  // Bucket IDs are matched exactly, so two IDs must never encode the same way.
+  test('IDs that differ only in backslashes before a quote stay distinct', () => {
+    const ids = ['a"b', 'a\\"b', 'a\\\\"b', 'a\\\\\\"b'];
+    const encoded = ids.map(escape_doublequote);
+    expect(new Set(encoded).size).toBe(ids.length);
+    // aw-query decodes each one back to the original ID.
+    expect(encoded.map(e => e.replace(/\\"/g, '"'))).toEqual(ids);
+  });
+
+  test('an ID ending in a backslash is rejected, not changed', () => {
+    expect(() => escape_doublequote('host\\')).toThrow(/ending in a backslash/);
+    expect(() => escape_doublequote('host\\\\')).toThrow(/ending in a backslash/);
+  });
+
+  test('multidevice bucket IDs that differ by a backslash query different buckets', () => {
+    const literals = ['a"b', 'a\\"b'].map(id => {
+      const query = multideviceQuery({
+        filter_afk: true,
+        always_active_pattern: '',
+        categories: [],
+        filter_categories: [],
+        hosts: ['phone'],
+        host_params: { phone: { bid_android: id, isIos: true } },
+      });
+      const statement = query.find(s => s.includes('query_bucket('));
+      if (!statement) throw new Error('no query_bucket statement');
+      const match = statement.match(/query_bucket\("(.*?[^\\])"\)/);
+      if (!match) throw new Error(`no bucket literal in: ${statement}`);
+      return match[1].replace(/\\"/g, '"');
+    });
+    expect(literals).toEqual(['a"b', 'a\\"b']);
   });
 });
 
