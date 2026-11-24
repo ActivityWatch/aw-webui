@@ -1,9 +1,12 @@
 import {
   format_day_of_month,
   format_weekday_short,
+  friendlydate,
   get_short_month_labels,
   seconds_to_duration,
 } from '~/util/time';
+import moment from 'moment';
+import 'moment/locale/de';
 
 describe('seconds_to_duration', () => {
   test('should format 8145 seconds as "2h 15m 45s"', () => {
@@ -81,5 +84,21 @@ describe('locale-aware time labels', () => {
     if (HAS_SV_SE) {
       expect(svSEMonths).not.toEqual(enUSMonths);
     }
+  });
+});
+
+describe('friendlydate', () => {
+  afterEach(() => {
+    moment.locale('en');
+  });
+
+  test('uses the app locale for the last minute (#1324)', () => {
+    moment.locale('de');
+    const label = friendlydate(moment().subtract(30, 'seconds'));
+    expect(label).toBe('vor 30 Sekunden');
+  });
+
+  test('keeps a seconds count in English', () => {
+    expect(friendlydate(moment().subtract(30, 'seconds'))).toBe('30 seconds ago');
   });
 });

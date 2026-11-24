@@ -37,7 +37,8 @@ export function friendlydate(timestamp: string | Moment) {
   const m = moment.parseZone(timestamp);
   const sinceNow = moment.duration(m.diff(now));
   if (-sinceNow.asSeconds() <= 60) {
-    return `${Math.round(-sinceNow.asSeconds())}s ago`;
+    // Count seconds (ss: 0) up to a minute, in the active moment locale (#1324).
+    return sinceNow.humanize(true, { ss: 0, s: 60 });
   } else if (-sinceNow.asSeconds() <= 60 * 60 * 24) {
     return sinceNow.humanize(true);
   }
