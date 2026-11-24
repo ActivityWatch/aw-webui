@@ -371,7 +371,10 @@ export async function saveCategories(sets: CategorySet[], activeIds: string[]) {
     try {
       const server = await getClient().get_settings();
       for (const key of keys) {
-        if (server[key] !== undefined) settingsStore[key] = server[key];
+        if (server[key] === undefined) continue;
+        settingsStore[key] = server[key];
+        // As load() would: a stored value is not the shipped preset any more.
+        if (!settingsStore._storedKeys.includes(key)) settingsStore._storedKeys.push(key);
       }
     } catch (reloadError) {
       console.warn('Could not reload settings after a rejected category save', reloadError);

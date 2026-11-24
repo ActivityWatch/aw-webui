@@ -173,4 +173,25 @@ describe('categories save rollback', () => {
 
     expect(settings.startOfWeek).toBe('Sunday');
   });
+
+  test('a first save that wrote only classes is what Discard shows, as after a reload', async () => {
+    server = {};
+    const settings = useSettingsStore();
+    await settings.load();
+    const store = useCategoryStore();
+    store.load();
+    store.addClass({ name: ['Custom'], rule: { type: null } });
+    mockPost.mockImplementation(async (url, value) => {
+      const key = url.replace('/0/settings/', '');
+      if (key !== 'classes') throw new Error('rejected');
+      server[key] = jsonCopy(value);
+      return {};
+    });
+
+    await expect(store.save()).rejects.toThrow('rejected');
+
+    expect(settings._storedKeys).toContain('classes');
+    store.load();
+    expect({ names: names(store), active: store.active_set_ids }).toEqual(await persistedView());
+  });
 });
