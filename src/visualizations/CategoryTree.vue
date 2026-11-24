@@ -17,7 +17,7 @@ div(style="font-size: 0.9em")
     // time
     span.category-value
       span(v-if="show_perc")
-        | {{Math.round(100 * cat.duration / total_duration, 1)}}%
+        | {{Math.round(1000 * cat.duration / total_duration) / 10}}%
       span(v-else)
         | {{cat.duration | friendlyduration}}
   hr

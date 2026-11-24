@@ -81,7 +81,8 @@ export function mergeCategoryIntervals(events: IEvent[]): IEvent[] {
     const end = start + event.duration * 1000;
     const previousStart = previous && +new Date(previous.timestamp);
     const previousEnd = previous && previousStart + previous.duration * 1000;
-    if (previous && start <= previousEnd && _.isEqual(previous.data.$category, category)) {
+    // < 1 ms gap counts as touching: Date truncates microsecond timestamps (as indexTimelineEvents).
+    if (previous && start - previousEnd < 1 && _.isEqual(previous.data.$category, category)) {
       previous.duration = (Math.max(previousEnd, end) - previousStart) / 1000;
     } else {
       merged.push({
