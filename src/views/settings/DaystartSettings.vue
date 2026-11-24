@@ -4,7 +4,7 @@ div
     div
       h5.mt-1.mb-2.mb-sm-0 {{ $t('settings.daystart.startOfDay') }}
     div
-      b-input(type="time" size="sm" :value="startOfDay" @change="startOfDay = $event")
+      b-input(type="time" size="sm" :key="startOfDayInputKey" :value="startOfDay" @change="startOfDay = $event")
   small.text-muted
     | {{ $t('settings.daystart.startOfDayHelp') }}
 
@@ -24,6 +24,8 @@ export default {
   data() {
     return {
       settingsStore: useSettingsStore(),
+      // Bumped to reset the input to the stored value after an invalid entry.
+      startOfDayInputKey: 0,
     };
   },
   computed: {
@@ -32,6 +34,12 @@ export default {
         return this.settingsStore.startOfDay;
       },
       set: function (value) {
+        // Clearing the time input yields '', which would save a start of day
+        // that get_hour_offset() parses as NaN ("NaN" hour labels).
+        if (!/^\d{2}:\d{2}(:\d{2})?$/.test(value)) {
+          this.startOfDayInputKey++;
+          return;
+        }
         console.log('Set start of day to ' + value);
         this.settingsStore.update({ startOfDay: value });
       },
