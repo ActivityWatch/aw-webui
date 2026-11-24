@@ -995,7 +995,13 @@ export default {
       // All time has no timeperiod until the new host's earliest date is known,
       // so refresh() below returns early and never aborts the old host's
       // chunked load; it would keep running and writing into the store.
-      if (this.periodLength === 'all' && !this.prioritySaving) getClient().abort();
+      // Aborting the shared client also cancels an in-flight layout save (a
+      // settings read that has not written yet), so any pending save defers it.
+      // Deferring is safe: the new load aborts the old host's query before it
+      // starts (ensure_loaded aborts when the store is already loaded).
+      if (this.periodLength === 'all' && !this.prioritySaving && !this.viewSavePending) {
+        getClient().abort();
+      }
       this.earliestDate = null;
       this.loadEarliestDate();
       this.refresh();
