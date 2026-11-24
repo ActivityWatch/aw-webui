@@ -16,6 +16,7 @@ import StopwatchEntryComponent from '~/components/StopwatchEntry.vue';
 import moment from 'moment';
 import { createPinia, setActivePinia } from 'pinia';
 import { DataSet } from 'vis-data';
+import { FilterXSS } from 'xss';
 
 const DataSetUpdate = DataSet.prototype.update;
 
@@ -528,8 +529,11 @@ describe('derived category row (#700)', () => {
     ]);
     vm.update();
     const [item] = vm.itemData.get();
-    expect(item.content).not.toContain('<a');
-    expect(item.content).toContain('&lt;a href=');
+    // Render it as vis-timeline does: through its xss filter, then as HTML.
+    const rendered = document.createElement('div');
+    rendered.innerHTML = new FilterXSS().process(item.content);
+    expect(rendered.querySelector('a')).toBeNull();
+    expect(rendered.textContent).toBe(link);
   });
 
   test('uses the assigned category color and keeps subsecond intervals in a single row', () => {
