@@ -2,6 +2,43 @@ import _ from 'lodash';
 
 // TODO: Sanitize string input of buckets
 
+// Substitute `marker` everywhere except inside double-quoted string literals.
+//
+// The Query Explorer's `__CATEGORIES__` placeholder is usually code, but a query
+// may also search for that literal text ("RETURN = filter_keyvals(events,
+// "app", ["__CATEGORIES__"])"). Replacing every occurrence injects the category
+// JSON into the search string, which breaks it. Quoting rules match
+// querystr_to_array, and the result is rebuilt rather than passed to
+// String.replace as a pattern (category names contain `$` sequences).
+export function replaceOutsideStrings(
+  querystr: string,
+  marker: string,
+  replacement: string
+): string {
+  let out = '';
+  let inString = false;
+  let inEscape = false;
+  for (let i = 0; i < querystr.length; i++) {
+    const char = querystr[i];
+    if (inEscape) {
+      out += char;
+      inEscape = false;
+    } else if (char === '\\' && inString) {
+      out += char;
+      inEscape = true;
+    } else if (char === '"') {
+      inString = !inString;
+      out += char;
+    } else if (!inString && querystr.startsWith(marker, i)) {
+      out += replacement;
+      i += marker.length - 1;
+    } else {
+      out += char;
+    }
+  }
+  return out;
+}
+
 export function querystr_to_array(querystr: string): string[] {
   // Split on ';' but only when not inside a double-quoted string literal.
   // A naive .split(';') breaks category rules whose regex contains semicolons,

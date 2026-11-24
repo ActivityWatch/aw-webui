@@ -98,7 +98,7 @@ div
 import 'vue-awesome/icons/trash';
 import moment from 'moment';
 import _ from 'lodash';
-import { querystr_to_array } from '~/queries';
+import { querystr_to_array, replaceOutsideStrings } from '~/queries';
 import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
 import { isEventArray } from '~/util/queryResult';
@@ -326,19 +326,20 @@ RETURN = sort_by_duration(merged_events);
       this.query_request = request;
       let query = this.query_code;
 
-      // replace magic string `__CATEGORIES__` in query text with latest category rule
-      if (_.includes(query, '__CATEGORIES__')) {
-        const categoryRules = useCategoryStore().classes_for_query;
-
+      // Replace the magic string `__CATEGORIES__` in query text with the latest
+      // category rule. Only occurrences outside quoted literals are placeholders:
+      // a query may legitimately search for the marker's own text.
+      const withCategories = replaceOutsideStrings(
+        query,
+        '__CATEGORIES__',
+        JSON.stringify(useCategoryStore().classes_for_query)
+      );
+      if (withCategories !== query) {
         if (useCategoryStore().classes_for_query.length === 0) {
           this.error = '__CATEGORIES__ was used in query but no categories have been defined yet.';
           return;
         }
-
-        // split/join rather than replace(): a replacement string interprets `$$`,
-        // `$&`, `` $` `` and `$'`, which can occur in category names and regexes,
-        // and replace() would only substitute the first placeholder.
-        query = query.split('__CATEGORIES__').join(JSON.stringify(categoryRules));
+        query = withCategories;
       }
 
       // the aw-client expects an array of commands with whitespace cleaned up
