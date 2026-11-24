@@ -595,6 +595,18 @@ export default {
     bucketLabel: 'Bucket:',
     eventsLabel: 'Event:',
   },
+  datepicker: {
+    noDateSelected: 'Tidak ada tanggal dipilih',
+    resetButton: 'Atur ulang',
+    calendar: 'Kalender',
+    nav: 'Navigasi kalender',
+    prevYear: 'Tahun sebelumnya',
+    prevMonth: 'Bulan sebelumnya',
+    currentMonth: 'Bulan ini',
+    nextMonth: 'Bulan berikutnya',
+    nextYear: 'Tahun berikutnya',
+    today: 'Hari ini',
+  },
   ui: {
     activity: {
       missingView: 'Tampilan ini ("{view}") tidak ada di dasbor ini.',

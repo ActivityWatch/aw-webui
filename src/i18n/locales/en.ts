@@ -606,6 +606,18 @@ export default {
     bucketLabel: 'Bucket:',
     eventsLabel: 'Events:',
   },
+  datepicker: {
+    noDateSelected: 'No date selected',
+    resetButton: 'Reset',
+    calendar: 'Calendar',
+    nav: 'Calendar navigation',
+    prevYear: 'Previous year',
+    prevMonth: 'Previous month',
+    currentMonth: 'Current month',
+    nextMonth: 'Next month',
+    nextYear: 'Next year',
+    today: 'Today',
+  },
   ui: {
     activity: {
       missingView: 'This view ("{view}") does not exist on this dashboard.',

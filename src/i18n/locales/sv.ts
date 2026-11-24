@@ -595,6 +595,18 @@ export default {
     bucketLabel: 'Bucket:',
     eventsLabel: 'Händelser:',
   },
+  datepicker: {
+    noDateSelected: 'Inget datum valt',
+    resetButton: 'Återställ',
+    calendar: 'Kalender',
+    nav: 'Kalendernavigering',
+    prevYear: 'Föregående år',
+    prevMonth: 'Föregående månad',
+    currentMonth: 'Aktuell månad',
+    nextMonth: 'Nästa månad',
+    nextYear: 'Nästa år',
+    today: 'Idag',
+  },
   ui: {
     activity: {
       missingView: 'Vyn "{view}" finns inte på den här instrumentpanelen.',

@@ -589,6 +589,18 @@ export default {
     bucketLabel: 'Bucket:',
     eventsLabel: 'Подій:',
   },
+  datepicker: {
+    noDateSelected: 'Дату не вибрано',
+    resetButton: 'Скинути',
+    calendar: 'Календар',
+    nav: 'Навігація календарем',
+    prevYear: 'Попередній рік',
+    prevMonth: 'Попередній місяць',
+    currentMonth: 'Поточний місяць',
+    nextMonth: 'Наступний місяць',
+    nextYear: 'Наступний рік',
+    today: 'Сьогодні',
+  },
   ui: {
     activity: {
       missingView: 'Перегляду «{view}» немає на цій панелі.',

@@ -607,6 +607,18 @@ export default {
     bucketLabel: 'Bucket :',
     eventsLabel: 'Événements :',
   },
+  datepicker: {
+    noDateSelected: 'Aucune date sélectionnée',
+    resetButton: 'Réinitialiser',
+    calendar: 'Calendrier',
+    nav: 'Navigation du calendrier',
+    prevYear: 'Année précédente',
+    prevMonth: 'Mois précédent',
+    currentMonth: 'Mois en cours',
+    nextMonth: 'Mois suivant',
+    nextYear: 'Année suivante',
+    today: 'Aujourd’hui',
+  },
   ui: {
     activity: {
       missingView: 'Cette vue (« {view} ») n’existe pas sur ce tableau de bord.',

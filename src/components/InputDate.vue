@@ -16,6 +16,16 @@ b-form-datepicker.input-date(
   size="sm",
   hide-header,
   label-help="",
+  :label-no-date-selected="$t('datepicker.noDateSelected')",
+  :label-reset-button="$t('datepicker.resetButton')",
+  :label-calendar="$t('datepicker.calendar')",
+  :label-nav="$t('datepicker.nav')",
+  :label-prev-year="$t('datepicker.prevYear')",
+  :label-prev-month="$t('datepicker.prevMonth')",
+  :label-current-month="$t('datepicker.currentMonth')",
+  :label-next-month="$t('datepicker.nextMonth')",
+  :label-next-year="$t('datepicker.nextYear')",
+  :label-today="$t('datepicker.today')",
   @input="onInput"
 )
 </template>

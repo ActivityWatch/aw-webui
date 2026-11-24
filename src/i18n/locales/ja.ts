@@ -595,6 +595,18 @@ export default {
     bucketLabel: 'バケット：',
     eventsLabel: 'イベント：',
   },
+  datepicker: {
+    noDateSelected: '日付が選択されていません',
+    resetButton: 'リセット',
+    calendar: 'カレンダー',
+    nav: 'カレンダーのナビゲーション',
+    prevYear: '前年',
+    prevMonth: '前月',
+    currentMonth: '今月',
+    nextMonth: '翌月',
+    nextYear: '翌年',
+    today: '今日',
+  },
   ui: {
     activity: {
       missingView: 'このビュー（「{view}」）はこのダッシュボードに存在しません。',

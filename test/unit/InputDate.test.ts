@@ -5,7 +5,7 @@ import InputDate from '~/components/InputDate.vue';
 
 const DatepickerStub = {
   name: 'b-form-datepicker',
-  props: ['value', 'startWeekday'],
+  props: ['value', 'startWeekday', 'labelNoDateSelected', 'labelResetButton', 'labelNav'],
   render(h) {
     return h('div');
   },
@@ -55,6 +55,19 @@ test('re-emits picked dates as input and change', async () => {
     wrapper.findComponent(DatepickerStub).vm.$emit('input', '2026-06-12');
     expect(wrapper.emitted('input')).toEqual([['2026-06-12']]);
     expect(wrapper.emitted('change')).toEqual([['2026-06-12']]);
+  } finally {
+    wrapper.destroy();
+  }
+});
+
+test('passes translated labels instead of bootstrap-vue English defaults', () => {
+  const wrapper = make();
+  try {
+    const picker = wrapper.findComponent(DatepickerStub);
+    // jest-setup's $t resolves keys against en.ts; an unbound label is undefined.
+    expect(picker.props('labelNoDateSelected')).toBe('No date selected');
+    expect(picker.props('labelResetButton')).toBe('Reset');
+    expect(picker.props('labelNav')).toBe('Calendar navigation');
   } finally {
     wrapper.destroy();
   }

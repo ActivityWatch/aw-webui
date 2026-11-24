@@ -612,6 +612,18 @@ export default {
     bucketLabel: 'Bucket:',
     eventsLabel: 'Ereignisse:',
   },
+  datepicker: {
+    noDateSelected: 'Kein Datum ausgewählt',
+    resetButton: 'Zurücksetzen',
+    calendar: 'Kalender',
+    nav: 'Kalendernavigation',
+    prevYear: 'Vorheriges Jahr',
+    prevMonth: 'Vorheriger Monat',
+    currentMonth: 'Aktueller Monat',
+    nextMonth: 'Nächster Monat',
+    nextYear: 'Nächstes Jahr',
+    today: 'Heute',
+  },
   ui: {
     activity: {
       missingView: 'Diese Ansicht („{view}“) existiert in diesem Dashboard nicht.',
