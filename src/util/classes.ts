@@ -343,9 +343,9 @@ export async function saveCategories(sets: CategorySet[], activeIds: string[]) {
     .map(id => sets.find(s => s.id === id))
     .filter((s): s is CategorySet => !!s);
   const effectiveClasses = mergeCategorySets(orderedSets).map(cleanCategory);
-  // settingsStore.update patches its state before persisting. On rejection,
-  // restore the confirmed copy (as views.save does), or the category store's
-  // Reset would reload the unsaved draft as if it had been saved.
+  // settingsStore.update patches its state before persisting. On rejection the
+  // settings store must not keep the draft, or the category store's Reset would
+  // reload it as if it had been saved.
   const confirmed = JSON.parse(
     JSON.stringify({
       category_sets: settingsStore.category_sets,
@@ -360,9 +360,18 @@ export async function saveCategories(sets: CategorySet[], activeIds: string[]) {
       classes: effectiveClasses,
     });
   } catch (error) {
-    settingsStore.category_sets = confirmed.category_sets;
-    settingsStore.active_set_ids = confirmed.active_set_ids;
-    settingsStore.classes = confirmed.classes;
+    // save() writes each key separately, so the rejection may come after some
+    // of them were written. Show what the server now holds (which also keeps a
+    // concurrent settings write that succeeded meanwhile). Only if it can't be
+    // read either, fall back to the copy confirmed before this save.
+    try {
+      await settingsStore.load();
+    } catch (reloadError) {
+      console.warn('Could not reload settings after a rejected category save', reloadError);
+      settingsStore.category_sets = confirmed.category_sets;
+      settingsStore.active_set_ids = confirmed.active_set_ids;
+      settingsStore.classes = confirmed.classes;
+    }
     throw error;
   }
 }
