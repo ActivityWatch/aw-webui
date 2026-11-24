@@ -5,6 +5,12 @@ import { useSettingsStore } from '~/stores/settings';
 
 const mockGetSettings = jest.fn();
 const mockPost = jest.fn();
+let mockPresets: unknown[] = [];
+
+jest.mock('~/util/presetCategories', () => ({
+  ...jest.requireActual('~/util/presetCategories'),
+  getPresetCategorySets: () => JSON.parse(JSON.stringify(mockPresets)),
+}));
 
 jest.mock('~/util/awclient', () => ({
   getClient: () => ({
@@ -42,6 +48,7 @@ describe('categories save rollback', () => {
 
   afterEach(() => {
     process.env.NODE_ENV = env;
+    mockPresets = [];
   });
 
   test('a rejected save does not leave the draft in settings for Reset to reload', async () => {
@@ -175,6 +182,8 @@ describe('categories save rollback', () => {
   });
 
   test('a first save that wrote only classes is what Discard shows, as after a reload', async () => {
+    // With a preset, Discard falls back to it unless `classes` counts as stored.
+    mockPresets = [{ id: 'preset', categories: [{ name: ['Preset'], rule: { type: 'none' } }] }];
     server = {};
     const settings = useSettingsStore();
     await settings.load();
@@ -192,6 +201,7 @@ describe('categories save rollback', () => {
 
     expect(settings._storedKeys).toContain('classes');
     store.load();
+    expect(names(store)).toContainEqual(['Custom']);
     expect({ names: names(store), active: store.active_set_ids }).toEqual(await persistedView());
   });
 });
