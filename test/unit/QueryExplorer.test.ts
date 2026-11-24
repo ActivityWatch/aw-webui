@@ -198,3 +198,51 @@ describe('QueryExplorer eventcount_str', () => {
     }
   );
 });
+
+// ActivityWatch/aw-webui#1328 item 7: settingsStore.update() applies the new
+// list before the request, so a failed save must restore the previous one.
+describe('QueryExplorer saved-query persistence failure', () => {
+  const { createPinia, setActivePinia } = jest.requireActual('pinia');
+  const { useSettingsStore } = jest.requireActual('~/stores/settings');
+  let settingsStore, save;
+
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    settingsStore = useSettingsStore();
+    settingsStore.$patch({ saved_queries: [] });
+    jest.spyOn(settingsStore, 'ensureLoaded').mockResolvedValue(undefined);
+    save = jest.spyOn(settingsStore, 'save');
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+  });
+  afterEach(() => jest.restoreAllMocks());
+
+  function makeExplorer() {
+    const vm: any = {
+      settingsStore,
+      saved_query_error: '',
+      saved_query_pending: false,
+      selected_saved_query_id: '',
+      saveQueryDraft: saveQueryDraft(),
+      saveQueryName: 'foo',
+      showSaveQueryModal: true,
+    };
+    vm.persistSavedQueries = list => QueryExplorer.methods.persistSavedQueries.call(vm, list);
+    Object.defineProperty(vm, 'savedQueries', {
+      get: () => QueryExplorer.computed.savedQueries.call(vm),
+    });
+    return vm;
+  }
+
+  test('a failed save leaves no phantom preset, and a retry does not duplicate it', async () => {
+    const explorer = makeExplorer();
+    save.mockRejectedValueOnce(new Error('offline'));
+    await QueryExplorer.methods.onSaveQueryConfirm.call(explorer, { preventDefault: jest.fn() });
+    expect(settingsStore.saved_queries).toEqual([]);
+    expect(explorer.saved_query_error).not.toBe('');
+    expect(explorer.showSaveQueryModal).toBe(true);
+
+    save.mockResolvedValueOnce(undefined);
+    await QueryExplorer.methods.onSaveQueryConfirm.call(explorer, { preventDefault: jest.fn() });
+    expect(settingsStore.saved_queries.map(q => q.id)).toEqual(['foo']);
+  });
+});

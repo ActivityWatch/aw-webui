@@ -173,12 +173,17 @@ RETURN = sort_by_duration(merged_events);
   },
   methods: {
     persistSavedQueries: async function (savedQueries: SavedQuery[]) {
+      // settingsStore.update() applies the new list before the request is made.
+      const previous = this.settingsStore.saved_queries;
       try {
         this.saved_query_error = '';
         await this.settingsStore.update({ saved_queries: sortSavedQueries(savedQueries) });
         return true;
       } catch (e) {
         console.error('Failed to save query presets', e);
+        // Otherwise a failed save leaves a phantom preset (and a retry saves a
+        // duplicate), and a failed delete hides a preset that still exists.
+        this.settingsStore.$patch({ saved_queries: previous });
         this.saved_query_error = 'Failed to save query presets.';
         return false;
       }
