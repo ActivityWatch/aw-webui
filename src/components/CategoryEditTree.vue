@@ -8,7 +8,7 @@ div
         span(v-else style="opacity: 0.6")
           icon(name="circle" scale="0.4" style="margin-left: 1em; margin-right: 1.22em;")
         | {{ _class.name.slice(depth).join(" ➤ ")}}
-        icon.ml-1(v-if="_class.data && _class.data.color" name="circle" :style="'color: ' + _class.data.color")
+        icon.ml-1(v-if="_class.data && _class.data.color" name="circle" :style="{ color: _class.data.color }")
         span.ml-1(v-if="_class.children.length > 0" style="opacity: 0.5") ({{totalChildren}})
         span.d-none.d-md-inline
           span(v-if="_class.data && _class.data.score !== undefined" :style="'color: ' + (_class.data.score > 0 ? 'green' : 'red')")

@@ -68,10 +68,23 @@ export function getColorFromString(appname: string): string {
   return customColors[appname] || scale(Math.abs(hashcode(appname) % 20).toString());
 }
 
+// A stored color can be typed freely or imported from a file. Color() throws on
+// invalid values (e.g. '#ab', 'bluee'), which would stop rendering mid-chart.
+export function isValidColor(value: unknown): value is string {
+  if (typeof value !== 'string' || value === '') return false;
+  try {
+    Color(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // TODO: Move into vuex?
 export function getColorFromCategory(c: Category, allCats: Category[]): string {
-  // Returns the color for a certain category, falling back to parents if none set
-  if (c && c.data && c.data.color) {
+  // Returns the color for a certain category, falling back to parents if none
+  // set. An invalid color is treated as unset.
+  if (c && c.data && isValidColor(c.data.color)) {
     return c.data.color;
   } else if (c && c.name.slice(0, -1).length > 0) {
     // If no color is set on category, traverse parents until one is found
