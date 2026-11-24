@@ -335,7 +335,10 @@ RETURN = sort_by_duration(merged_events);
           return;
         }
 
-        query = query.replace('__CATEGORIES__', JSON.stringify(categoryRules));
+        // split/join rather than replace(): a replacement string interprets `$$`,
+        // `$&`, `` $` `` and `$'`, which can occur in category names and regexes,
+        // and replace() would only substitute the first placeholder.
+        query = query.split('__CATEGORIES__').join(JSON.stringify(categoryRules));
       }
 
       // the aw-client expects an array of commands with whitespace cleaned up
