@@ -430,6 +430,7 @@ export default {
     rangeStart: '開始日',
     rangeEnd: '終了日',
     invalidRange: 'URL の日付範囲が無効なため、代わりに今日を表示しています。',
+    invalidUrlPeriod: 'URL の日付または期間が無効なため、代わりに今日を表示しています。',
     periodExactInterval: '正確な時刻',
     intervalStart: '開始時刻',
     intervalEnd: '終了時刻（含まない）',

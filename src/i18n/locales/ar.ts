@@ -422,6 +422,7 @@ export default {
     rangeStart: 'تاريخ البدء',
     rangeEnd: 'تاريخ الانتهاء',
     invalidRange: 'نطاق التاريخ في الرابط غير صالح، يتم عرض اليوم بدلًا منه.',
+    invalidUrlPeriod: 'التاريخ أو الفترة في الرابط غير صالحة، يتم عرض اليوم بدلًا منها.',
     periodExactInterval: 'أوقات دقيقة',
     intervalStart: 'وقت البدء',
     intervalEnd: 'وقت الانتهاء (غير مشمول)',

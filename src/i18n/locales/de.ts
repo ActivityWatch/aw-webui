@@ -451,6 +451,8 @@ export default {
     rangeStart: 'Startdatum',
     rangeEnd: 'Enddatum',
     invalidRange: 'Ungültiger Zeitraum in der URL, stattdessen wird heute angezeigt.',
+    invalidUrlPeriod:
+      'Ungültiges Datum oder ungültige Periode in der URL, stattdessen wird heute angezeigt.',
     periodExactInterval: 'genaue Uhrzeiten',
     intervalStart: 'Startzeit',
     intervalEnd: 'Endzeit (exklusiv)',

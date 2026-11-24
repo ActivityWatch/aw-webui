@@ -426,6 +426,7 @@ export default {
     rangeStart: 'শুরুর তারিখ',
     rangeEnd: 'শেষের তারিখ',
     invalidRange: 'URL এ তারিখের সময়সীমা অবৈধ, তাই আজকের তারিখ দেখানো হচ্ছে।',
+    invalidUrlPeriod: 'URL এ তারিখ বা সময়কাল অবৈধ, তাই আজকের তারিখ দেখানো হচ্ছে।',
     periodExactInterval: 'সঠিক সময়',
     intervalStart: 'শুরুর সময়',
     intervalEnd: 'শেষের সময় (অন্তর্ভুক্ত নয়)',

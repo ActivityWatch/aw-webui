@@ -424,6 +424,7 @@ export default {
     rangeStart: 'Дата начала',
     rangeEnd: 'Дата окончания',
     invalidRange: 'Неверный диапазон дат в URL, показан сегодняшний день.',
+    invalidUrlPeriod: 'Неверная дата или период в URL, показан сегодняшний день.',
     periodExactInterval: 'точное время',
     intervalStart: 'Время начала',
     intervalEnd: 'Время окончания (не включая)',

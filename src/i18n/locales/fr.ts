@@ -438,6 +438,7 @@ export default {
     rangeStart: 'Date de début',
     rangeEnd: 'Date de fin',
     invalidRange: 'Plage de dates invalide dans l’URL, affichage d’aujourd’hui à la place.',
+    invalidUrlPeriod: 'Date ou période invalide dans l’URL, affichage d’aujourd’hui à la place.',
     periodExactInterval: 'heures exactes',
     intervalStart: 'Heure de début',
     intervalEnd: 'Heure de fin (exclue)',

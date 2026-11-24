@@ -431,6 +431,7 @@ export default {
     rangeStart: 'Startdatum',
     rangeEnd: 'Slutdatum',
     invalidRange: 'Ogiltigt datumintervall i URL:en, visar idag istället.',
+    invalidUrlPeriod: 'Ogiltigt datum eller period i URL:en, visar idag istället.',
     periodExactInterval: 'exakta tider',
     intervalStart: 'Starttid',
     intervalEnd: 'Sluttid (exklusiv)',
