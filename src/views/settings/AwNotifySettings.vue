@@ -21,7 +21,9 @@ div
   div(v-if="loading")
     b-spinner(small) {{ $t('common.loading') }}
 
-  div(v-else)
+  //- Hidden after a failed load: edits there could not be saved, and a
+  //- successful Retry would replace them.
+  div(v-else-if="!loadFailed")
     b-form-group.mb-3
       b-form-checkbox(v-model="enabled" switch)
         | {{ $t('extraViews.notifications.enabled') }}

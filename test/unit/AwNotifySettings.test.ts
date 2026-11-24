@@ -199,6 +199,8 @@ describe('AwNotifySettings', () => {
     expect(wrapper.vm.loadFailed).toBe(true);
     const saveButton = wrapper.find('button.btn-primary');
     expect(saveButton.attributes('disabled')).toBe('disabled');
+    // No editor to type into: edits could not be saved and Retry would drop them.
+    expect(wrapper.find('input[type="checkbox"]').exists()).toBe(false);
 
     const retry = wrapper.findAll('button').filter(b => b.text() === 'common.retry');
     expect(retry).toHaveLength(1);
@@ -210,6 +212,7 @@ describe('AwNotifySettings', () => {
     expect(wrapper.vm.error).toBe('');
     expect(wrapper.vm.enabled).toBe(true);
     expect(wrapper.find('button.btn-primary').attributes('disabled')).toBeUndefined();
+    expect(wrapper.find('input[type="checkbox"]').exists()).toBe(true);
     wrapper.destroy();
   });
 });
