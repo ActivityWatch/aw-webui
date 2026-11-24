@@ -149,9 +149,15 @@ test.each([
   const vm: any = {
     viewsStore: useViewsStore(),
     new_view: { id, name: 'Custom' },
-    $t: (key: string) => key,
+    // Resolve the wrapper string to its errors so the assertion below can tell
+    // *which* rule fired, not just that some rule did.
+    $t: (key: string, params?: { errors: string }) =>
+      key === 'activity.invalidForm' ? params?.errors : key,
   };
   const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => undefined);
   expect(Activity.methods.checkFormValidity.call(vm)).toBe(expected);
   expect(alertSpy).toHaveBeenCalledTimes(expected ? 0 : 1);
+  if (!expected) {
+    expect(alertSpy).toHaveBeenCalledWith('activity.errIdReserved');
+  }
 });
