@@ -7,7 +7,15 @@ div
     b-btn(@click="save" size="sm" variant="primary" :disabled="saving || loading || loadFailed")
       | {{ saving ? $t('settings.notifications.saving') : $t('common.save') }}
 
-  b-alert(v-if="error" show variant="danger") {{ error }}
+  b-alert(v-if="error" show variant="danger")
+    | {{ error }}
+    b-btn.ml-2(
+      v-if="loadFailed"
+      size="sm"
+      variant="outline-danger"
+      :disabled="loading"
+      @click="load"
+    ) {{ $t('common.retry') }}
   b-alert(v-if="success" show variant="success" dismissible @dismissed="success = false") {{ $t('settings.notifications.saved') }}
 
   div(v-if="loading")

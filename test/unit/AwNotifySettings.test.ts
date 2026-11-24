@@ -7,7 +7,8 @@ jest.mock('~/util/awclient', () => ({
   }),
 }));
 
-import { shallowMount } from '@vue/test-utils';
+import { createLocalVue, mount, shallowMount } from '@vue/test-utils';
+import BootstrapVue from 'bootstrap-vue';
 import AwNotifySettings from '~/views/settings/AwNotifySettings.vue';
 
 const flushPromises = () => new Promise(resolve => setTimeout(resolve, 0));
@@ -179,5 +180,36 @@ describe('AwNotifySettings', () => {
 
     expect(mockPost).not.toHaveBeenCalled();
     expect(wrapper.vm.error).not.toBe('');
+  });
+
+  // A failed load hides the form behind the error, so the Save button must be
+  // unclickable and the banner needs a way back that is not a page refresh.
+  test('disables Save and offers a Retry that reloads after a failed load', async () => {
+    const localVue = createLocalVue();
+    localVue.use(BootstrapVue);
+    mockGet.mockRejectedValueOnce(new Error('timeout')).mockResolvedValueOnce({
+      data: { enabled: true, alerts: [] },
+    });
+    const wrapper: any = mount(AwNotifySettings, {
+      localVue,
+      mocks: { $t: (key: string) => key },
+    });
+    await flushPromises();
+
+    expect(wrapper.vm.loadFailed).toBe(true);
+    const saveButton = wrapper.find('button.btn-primary');
+    expect(saveButton.attributes('disabled')).toBe('disabled');
+
+    const retry = wrapper.findAll('button').filter(b => b.text() === 'common.retry');
+    expect(retry).toHaveLength(1);
+    await retry.at(0).trigger('click');
+    await flushPromises();
+
+    expect(mockGet).toHaveBeenCalledTimes(2);
+    expect(wrapper.vm.loadFailed).toBe(false);
+    expect(wrapper.vm.error).toBe('');
+    expect(wrapper.vm.enabled).toBe(true);
+    expect(wrapper.find('button.btn-primary').attributes('disabled')).toBeUndefined();
+    wrapper.destroy();
   });
 });
