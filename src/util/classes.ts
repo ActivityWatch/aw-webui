@@ -331,7 +331,7 @@ export function loadClasses(): Category[] {
  * Persist category sets and active set IDs to the settings store.
  * Also updates the legacy `classes` field for backwards compatibility with external readers.
  */
-export function saveCategories(sets: CategorySet[], activeIds: string[]) {
+export async function saveCategories(sets: CategorySet[], activeIds: string[]) {
   if (areWeTesting()) {
     console.log('Not saving categories in test mode');
     return;
@@ -343,11 +343,28 @@ export function saveCategories(sets: CategorySet[], activeIds: string[]) {
     .map(id => sets.find(s => s.id === id))
     .filter((s): s is CategorySet => !!s);
   const effectiveClasses = mergeCategorySets(orderedSets).map(cleanCategory);
-  return settingsStore.update({
-    category_sets: cleanSets,
-    active_set_ids: activeIds,
-    classes: effectiveClasses,
-  });
+  // settingsStore.update patches its state before persisting. On rejection,
+  // restore the confirmed copy (as views.save does), or the category store's
+  // Reset would reload the unsaved draft as if it had been saved.
+  const confirmed = JSON.parse(
+    JSON.stringify({
+      category_sets: settingsStore.category_sets,
+      active_set_ids: settingsStore.active_set_ids,
+      classes: settingsStore.classes,
+    })
+  );
+  try {
+    await settingsStore.update({
+      category_sets: cleanSets,
+      active_set_ids: activeIds,
+      classes: effectiveClasses,
+    });
+  } catch (error) {
+    settingsStore.category_sets = confirmed.category_sets;
+    settingsStore.active_set_ids = confirmed.active_set_ids;
+    settingsStore.classes = confirmed.classes;
+    throw error;
+  }
 }
 
 /**
