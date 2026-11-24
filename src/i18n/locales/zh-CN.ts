@@ -509,6 +509,8 @@ export default {
     noEvents: '没有符合筛选条件的事件。未更新时间线。',
     scrollHint: '滚动缩放，滑动/水平滚动平移，方向键导航',
     loading: '加载中...',
+    loadError: '无法加载此范围内的事件。',
+    retry: '重试',
   },
   stopwatch: {
     title: '秒表',

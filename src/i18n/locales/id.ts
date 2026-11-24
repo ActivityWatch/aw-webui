@@ -537,6 +537,8 @@ export default {
     scrollHint:
       'Gulir untuk zoom, geser/gulir horizontal untuk menggeser, tombol panah untuk bernavigasi',
     loading: 'Memuat...',
+    loadError: 'Tidak dapat memuat peristiwa untuk rentang ini.',
+    retry: 'Coba lagi',
   },
   stopwatch: {
     title: 'Stopwatch',

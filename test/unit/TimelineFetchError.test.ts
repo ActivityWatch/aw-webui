@@ -63,9 +63,15 @@ describe('Timeline event fetch failure', () => {
     expect(wrapper.find('[role="alert"]').exists()).toBe(true);
     expect(wrapper.find('.aw-loading').exists()).toBe(false);
 
+    const retry = wrapper.find('[role="alert"] b-button');
+    expect(retry.exists()).toBe(true);
+    expect(mockGetBucketsWithEvents).toHaveBeenCalledTimes(1);
+
     mockGetBucketsWithEvents.mockResolvedValueOnce([bucket('Firefox')]);
-    await (wrapper.vm as any).getBuckets();
+    await retry.trigger('click');
     await flush();
+    // Retry starts a fresh fetch rather than reusing the failed one.
+    expect(mockGetBucketsWithEvents).toHaveBeenCalledTimes(2);
     expect(wrapper.find('[role="alert"]').exists()).toBe(false);
     expect((wrapper.vm as any).buckets).toHaveLength(1);
   });
@@ -77,9 +83,12 @@ describe('Timeline event fetch failure', () => {
     await flush();
     expect((wrapper.vm as any).buckets).toHaveLength(1);
 
+    // A warning left over from the previous range must not outlive the rows it described.
+    wrapper.setData({ categoryError: true });
     mockGetBucketsWithEvents.mockRejectedValueOnce(new Error('server down'));
     wrapper.setData({ daterange: day('2026-10-19') });
     await flush();
+    expect((wrapper.vm as any).categoryError).toBe(false);
     expect((wrapper.vm as any).buckets).toBeNull();
     expect(wrapper.find('vis-timeline-stub').exists()).toBe(false);
     expect(wrapper.find('[role="alert"]').exists()).toBe(true);

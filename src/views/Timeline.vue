@@ -308,6 +308,7 @@ export default {
         this.all_buckets = null;
         this.buckets = null;
         this.categorizedEvents = [];
+        this.categoryError = false;
         this.loadError = true;
         return;
       }

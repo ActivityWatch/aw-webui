@@ -538,6 +538,8 @@ export default {
     scrollHint:
       'Rulla för att zooma, svep/rulla horisontellt för att panorera, använd piltangenterna för att navigera',
     loading: 'Läser in...',
+    loadError: 'Det gick inte att läsa in händelser för det här intervallet.',
+    retry: 'Försök igen',
   },
   stopwatch: {
     title: 'Stoppur',
