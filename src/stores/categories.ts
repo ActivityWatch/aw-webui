@@ -259,11 +259,13 @@ export const useCategoryStore = defineStore('categories', {
       ): { text: string; value?: string[] }[] => {
         // Useful for <select> elements enumerating categories
         let cats = this.all_categories;
-        cats = cats
-          .map((c: string[]) => {
+        // A boolean comparator is never negative, so V8 leaves the input order.
+        cats = _.sortBy(
+          cats.map((c: string[]) => {
             return { text: c.join(' > '), value: c };
-          })
-          .sort((a, b) => a.text > b.text);
+          }),
+          'text'
+        );
         if (insertMeta) {
           cats = [
             { text: translate?.('common.all') || 'All', value: null },
