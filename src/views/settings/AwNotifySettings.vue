@@ -4,16 +4,26 @@ div
     div
       h5.mb-1 {{ $t('settings.notifications.activityTitle') }}
       small.text-muted {{ $t('settings.notifications.activityHelp') }}
-    b-btn(@click="save" size="sm" variant="primary" :disabled="saving || loading")
+    b-btn(@click="save" size="sm" variant="primary" :disabled="saving || loading || loadFailed")
       | {{ saving ? $t('settings.notifications.saving') : $t('common.save') }}
 
-  b-alert(v-if="error" show variant="danger") {{ error }}
+  b-alert(v-if="error" show variant="danger")
+    | {{ error }}
+    b-btn.ml-2(
+      v-if="loadFailed"
+      size="sm"
+      variant="outline-danger"
+      :disabled="loading"
+      @click="load"
+    ) {{ $t('common.retry') }}
   b-alert(v-if="success" show variant="success" dismissible @dismissed="success = false") {{ $t('settings.notifications.saved') }}
 
   div(v-if="loading")
     b-spinner(small) {{ $t('common.loading') }}
 
-  div(v-else)
+  //- Hidden after a failed load: edits there could not be saved, and a
+  //- successful Retry would replace them.
+  div(v-else-if="!loadFailed")
     b-form-group.mb-3
       b-form-checkbox(v-model="enabled" switch)
         | {{ $t('extraViews.notifications.enabled') }}
@@ -114,6 +124,9 @@ export default {
       alerts: [] as AlertRow[],
       config: {} as AwNotifyConfig,
       loading: false,
+      // Set when the saved config could not be read: the form then holds empty
+      // defaults, and saving it would overwrite the stored alerts.
+      loadFailed: false,
       saving: false,
       error: '',
       success: false,
@@ -129,6 +142,7 @@ export default {
   methods: {
     async load() {
       this.loading = true;
+      this.loadFailed = false;
       this.error = '';
       try {
         const client = getClient();
@@ -150,6 +164,7 @@ export default {
         if (e?.response?.status === 404) {
           this.useDefaults();
         } else {
+          this.loadFailed = true;
           this.error = this.$t('settings.notifications.loadFailed', { error: e?.message ?? e });
         }
       } finally {
@@ -162,6 +177,10 @@ export default {
       this.alerts = this.defaultAlerts();
     },
     async save() {
+      if (this.loadFailed) {
+        // Keep the load error visible; there is nothing safe to save.
+        return;
+      }
       this.error = '';
       this.success = false;
       // When disabling, skip form validation and use the last-saved alerts so a

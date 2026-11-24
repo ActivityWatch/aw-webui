@@ -19,6 +19,7 @@ const LOCALES = fs
   .sort((a, b) => a.localeCompare(b, 'en'));
 // These new messages intentionally use English fallback until translated.
 const ENGLISH_FALLBACK_KEYS = new Set([
+  'common.retry',
   'settings.language.machineTranslatedNote',
   'settings.language.contributeTranslation',
   'settings.layout.title',

@@ -42,6 +42,7 @@ export default {
     donate: 'Donate',
   },
   common: {
+    retry: 'Retry',
     loading: 'Loading...',
     save: 'Save',
     cancel: 'Cancel',
