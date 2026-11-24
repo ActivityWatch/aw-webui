@@ -47,6 +47,23 @@ import {
 // switching views back and forth doesn't repeat it.
 let historyRequest: { query_options: QueryOptions; promise: Promise<void> } | null = null;
 
+// Runs the independent sections of a load in order. A failing section (e.g. a
+// Year-view chunk timing out) does not skip the later ones, which would leave
+// their panels on "Loading…"; the first error is rethrown once all have run.
+// When a newer load has taken over, and aborted this one, it stops right away.
+async function runLoadSections(isCurrent: () => boolean, sections: (() => Promise<unknown>)[]) {
+  const errors: unknown[] = [];
+  for (const section of sections) {
+    try {
+      await section();
+    } catch (e) {
+      if (!isCurrent()) throw e;
+      errors.push(e);
+    }
+  }
+  if (errors.length > 0) throw errors[0];
+}
+
 function timeperiodStrsAroundTimeperiod(timeperiod: TimePeriod): string[] {
   return timeperiodsAroundTimeperiod(timeperiod).map(timeperiodToStr);
 }
@@ -457,6 +474,8 @@ export const useActivityStore = defineStore('activity', {
       const settingsStore = useSettingsStore();
       const bucketsStore = useBucketsStore();
       this.start_loading(query_options);
+      const current = this.query_options;
+      const isCurrent = () => this.query_options === current;
       if (!query_options.timeperiod) {
         query_options.timeperiod = dateToTimeperiod(query_options.date, settingsStore.startOfDay);
       }
@@ -482,53 +501,114 @@ export const useActivityStore = defineStore('activity', {
       // TODO: These queries can actually run in parallel, but since server won't process them in parallel anyway we won't.
       this.set_available();
 
-      if (this.window.available) {
-        await this.query_desktop_full(query_options);
-      } else if (this.android.available) {
-        // Browser enrichment (when aw-watcher-web is present) is handled
-        // inside query_android via androidBrowserQuery.
-        await this.query_android(query_options);
-      } else if (this.browser.available) {
-        // Browser-only mode: device with aw-watcher-web but no window/afk/android watcher.
-        await this.query_browser_only(query_options);
-        this.query_window_completed();
-        this.query_category_time_by_period_completed();
-      } else {
-        console.log(
-          'Cannot query windows as we are missing either an afk/window bucket pair or an android bucket'
-        );
-        this.query_window_completed();
-        this.query_category_time_by_period_completed();
+      // Drop the previous context's period-usage bars now rather than when
+      // the history query runs, after the (slow) main query: otherwise the
+      // newly selected host shows the previous host's bars meanwhile.
+      if (!query_options.skip_active_history) {
+        this.invalidate_active_history({
+          cache_key: this.active_history_cache_key(query_options),
+        });
       }
 
-      if (query_options.skip_active_history) {
-        // Period-usage bars not shown
-      } else if (this.active.available) {
-        await this.query_active_history(query_options);
-      } else if (this.android.available) {
-        await this.query_active_history_android(query_options);
-      } else {
-        console.log('Cannot call query_active_history as we do not have an afk bucket');
-        // No query will run to invalidate the previous host's cache. Also
-        // reject any response still arriving for that previous host.
-        this.invalidate_active_history({ cache_key: null, force: true });
-        await this.query_active_history_completed();
-      }
+      await runLoadSections(isCurrent, [
+        async () => {
+          if (this.window.available) {
+            await this.query_desktop_full(query_options);
+          } else if (this.android.available) {
+            // Browser enrichment (when aw-watcher-web is present) is handled
+            // inside query_android via androidBrowserQuery.
+            await this.query_android(query_options);
+          } else if (this.browser.available) {
+            // Browser-only mode: device with aw-watcher-web but no window/afk/android watcher.
+            await this.query_browser_only(query_options);
+            this.query_window_completed();
+            this.query_category_time_by_period_completed();
+          } else {
+            console.log(
+              'Cannot query windows as we are missing either an afk/window bucket pair or an android bucket'
+            );
+            this.query_window_completed();
+            this.query_category_time_by_period_completed();
+          }
+        },
+        async () => {
+          if (query_options.skip_active_history) {
+            // Period-usage bars not shown
+          } else if (this.active.available) {
+            await this.query_active_history(query_options);
+          } else if (this.android.available) {
+            await this.query_active_history_android(query_options);
+          } else {
+            console.log('Cannot call query_active_history as we do not have an afk bucket');
+            // No query will run to invalidate the previous host's cache. Also
+            // reject any response still arriving for that previous host.
+            this.invalidate_active_history({ cache_key: null, force: true });
+            await this.query_active_history_completed();
+          }
+        },
+        async () => {
+          if (this.editor.available) {
+            await this.query_editor(query_options);
+          } else {
+            console.log('Cannot call query_editor as we do not have any editor buckets');
+            await this.query_editor_completed();
+          }
+        },
+        // Perform this last, as it takes the longest.
+        async () => {
+          if (
+            query_options.include_category_history !== false &&
+            this.queries_category_history(query_options)
+          ) {
+            await this.query_category_time_by_period(query_options);
+          }
+        },
+      ]);
+    },
 
-      if (this.editor.available) {
-        await this.query_editor(query_options);
-      } else {
-        console.log('Cannot call query_editor as we do not have any editor buckets');
-        await this.query_editor_completed();
-      }
+    // The period-usage cache key the history query of this load uses, or
+    // null when no history query runs (no afk or Android bucket).
+    active_history_cache_key(query_options: QueryOptions): string | null {
+      if (this.active.available) return this.desktop_active_history_cache_key(query_options);
+      if (this.android.available) return this.android_active_history_cache_key(query_options);
+      return null;
+    },
 
-      // Perform this last, as it takes the longest.
-      if (
-        query_options.include_category_history !== false &&
-        this.queries_category_history(query_options)
-      ) {
-        await this.query_category_time_by_period(query_options);
-      }
+    desktop_active_history_cache_key(query_options: QueryOptions): string {
+      const settingsStore = useSettingsStore();
+      return activeHistoryCacheKey(
+        {
+          platform: 'desktop',
+          host: query_options.host,
+          useMultidevice: false,
+          startOfDay: settingsStore.startOfDay,
+          filter_afk: query_options.filter_afk,
+          include_audible: query_options.include_audible,
+          always_active_pattern: query_options.always_active_pattern,
+        },
+        activeHistorySources(this)
+      );
+    },
+
+    // Prefer ScreenTime bucket over Android watcher for consistency with query_android
+    android_history_bucket(): string {
+      return (
+        this.buckets.android.find((id: string) => id.startsWith('aw-import-screentime')) ||
+        this.buckets.android[0]
+      );
+    },
+
+    android_active_history_cache_key(query_options: QueryOptions): string {
+      const settingsStore = useSettingsStore();
+      return activeHistoryCacheKey(
+        {
+          platform: 'android',
+          host: query_options.host,
+          useMultidevice: false,
+          startOfDay: settingsStore.startOfDay,
+        },
+        [this.android_history_bucket()]
+      );
     },
 
     // Whether category.by_period is queried separately. Long ranges (and Year)
@@ -1004,24 +1084,12 @@ export const useActivityStore = defineStore('activity', {
     },
 
     async query_active_history({ timeperiod, ...query_options }: QueryOptions) {
-      const settingsStore = useSettingsStore();
       const sources = activeHistorySources(this);
 
       // Drop anything fetched for a different question before deciding what is
       // still missing, so incompatible periods can never be reused.
       const generation = this.invalidate_active_history({
-        cache_key: activeHistoryCacheKey(
-          {
-            platform: 'desktop',
-            host: query_options.host,
-            useMultidevice: false,
-            startOfDay: settingsStore.startOfDay,
-            filter_afk: query_options.filter_afk,
-            include_audible: query_options.include_audible,
-            always_active_pattern: query_options.always_active_pattern,
-          },
-          sources
-        ),
+        cache_key: this.desktop_active_history_cache_key(query_options as QueryOptions),
         force: query_options.force,
       });
 
@@ -1223,22 +1291,10 @@ export const useActivityStore = defineStore('activity', {
     },
 
     async query_active_history_android({ timeperiod, ...query_options }: QueryOptions) {
-      const settingsStore = useSettingsStore();
-      // Prefer ScreenTime bucket over Android watcher for consistency with query_android
-      const iosOrAndroidBucket =
-        this.buckets.android.find((id: string) => id.startsWith('aw-import-screentime')) ||
-        this.buckets.android[0];
+      const iosOrAndroidBucket = this.android_history_bucket();
 
       const generation = this.invalidate_active_history({
-        cache_key: activeHistoryCacheKey(
-          {
-            platform: 'android',
-            host: query_options.host,
-            useMultidevice: false,
-            startOfDay: settingsStore.startOfDay,
-          },
-          [iosOrAndroidBucket]
-        ),
+        cache_key: this.android_active_history_cache_key(query_options as QueryOptions),
         force: query_options.force,
       });
 
@@ -1402,6 +1458,10 @@ export const useActivityStore = defineStore('activity', {
 
       this.active.duration = null;
       this.progress = null;
+
+      // Only the desktop query writes this, and the stopwatch bucket (host
+      // 'unknown') is available for every host, so clear it per load.
+      this.stopwatch.top_stopwatches = [];
 
       // active.history is deliberately preserved here so navigating dates
       // reuses periods already fetched for the same context. Clearing it is
