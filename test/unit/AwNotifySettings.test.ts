@@ -161,4 +161,23 @@ describe('AwNotifySettings', () => {
       expect.anything()
     );
   });
+  // A failed or unparseable load leaves the form on empty defaults; saving it
+  // would overwrite the user's stored alerts (and unknown keys) with nothing.
+  test.each([
+    ['a server error', () => mockGet.mockRejectedValue(new Error('timeout'))],
+    ['an unsupported format', () => mockGet.mockResolvedValue({ data: { alerts: 'bad' } })],
+  ])('does not overwrite the saved setting after %s on load', async (_name, setup) => {
+    setup();
+    const wrapper: any = shallowMount(AwNotifySettings, {
+      mocks: { $t: key => key },
+    });
+    await flushPromises();
+
+    wrapper.vm.enabled = true;
+    wrapper.vm.addAlert();
+    await wrapper.vm.save();
+
+    expect(mockPost).not.toHaveBeenCalled();
+    expect(wrapper.vm.error).not.toBe('');
+  });
 });
