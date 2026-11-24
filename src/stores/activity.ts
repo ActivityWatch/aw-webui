@@ -1063,6 +1063,7 @@ export const useActivityStore = defineStore('activity', {
         timeperiod,
         filter_categories,
         filter_afk,
+        include_audible,
         include_stopwatch,
         dontQueryInactive,
         always_active_pattern,
@@ -1139,6 +1140,8 @@ export const useActivityStore = defineStore('activity', {
               categories,
               filter_categories,
               filter_afk,
+              // Same active-time definition as the category totals (fullDesktopQuery).
+              include_audible,
               always_active_pattern,
               ...(isAndroid
                 ? {
