@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import { IEvent } from './interfaces';
 import { useSettingsStore } from '~/stores/settings';
+import { getClient } from '~/util/awclient';
 import { getPresetCategorySets } from '~/util/presetCategories';
 
 const level_sep = '>';
@@ -331,7 +332,7 @@ export function loadClasses(): Category[] {
  * Persist category sets and active set IDs to the settings store.
  * Also updates the legacy `classes` field for backwards compatibility with external readers.
  */
-export function saveCategories(sets: CategorySet[], activeIds: string[]) {
+export async function saveCategories(sets: CategorySet[], activeIds: string[]) {
   if (areWeTesting()) {
     console.log('Not saving categories in test mode');
     return;
@@ -343,11 +344,43 @@ export function saveCategories(sets: CategorySet[], activeIds: string[]) {
     .map(id => sets.find(s => s.id === id))
     .filter((s): s is CategorySet => !!s);
   const effectiveClasses = mergeCategorySets(orderedSets).map(cleanCategory);
-  return settingsStore.update({
-    category_sets: cleanSets,
-    active_set_ids: activeIds,
-    classes: effectiveClasses,
-  });
+  // settingsStore.update patches its state before persisting. On rejection the
+  // settings store must not keep the draft, or the category store's Reset would
+  // reload it as if it had been saved.
+  const confirmed = JSON.parse(
+    JSON.stringify({
+      category_sets: settingsStore.category_sets,
+      active_set_ids: settingsStore.active_set_ids,
+      classes: settingsStore.classes,
+    })
+  );
+  try {
+    await settingsStore.update({
+      category_sets: cleanSets,
+      active_set_ids: activeIds,
+      classes: effectiveClasses,
+    });
+  } catch (error) {
+    // Put the confirmed copy back at once, so nothing reads the draft while the
+    // server is asked. save() writes each key separately, so the rejection may
+    // come after some of them were written: then show what the server holds for
+    // these three fields (also keeping a concurrent write that succeeded). Other
+    // settings are left alone, e.g. a rejected preference kept for a retry.
+    const keys = ['category_sets', 'active_set_ids', 'classes'] as const;
+    for (const key of keys) settingsStore[key] = confirmed[key];
+    try {
+      const server = await getClient().get_settings();
+      for (const key of keys) {
+        if (server[key] === undefined) continue;
+        settingsStore[key] = server[key];
+        // As load() would: a stored value is not the shipped preset any more.
+        if (!settingsStore._storedKeys.includes(key)) settingsStore._storedKeys.push(key);
+      }
+    } catch (reloadError) {
+      console.warn('Could not reload settings after a rejected category save', reloadError);
+    }
+    throw error;
+  }
 }
 
 /**
