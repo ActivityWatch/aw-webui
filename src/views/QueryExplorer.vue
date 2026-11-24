@@ -187,7 +187,9 @@ RETURN = sort_by_duration(merged_events);
         // the server what it holds; the old list is only the offline fallback.
         let confirmed = previous;
         try {
-          const server = await getClient().get_settings();
+          const server = (await getClient().get_settings()) as {
+            saved_queries?: SavedQuery[];
+          };
           if (Array.isArray(server?.saved_queries)) confirmed = server.saved_queries;
         } catch (err) {
           console.error('Failed to read back query presets', err);
