@@ -16,6 +16,36 @@ describe('activityDiagnostic', () => {
     ).toEqual({ kind: 'missing-window', host: 'laptop' });
   });
 
+  test('stays quiet for a browser-only host', () => {
+    // aw-webui#1323: a phone running aw-watcher-web has no window watcher to start.
+    expect(
+      activityDiagnostic({
+        host: 'phone',
+        buckets: [bucket('aw-watcher-web-firefox_phone', 'phone', 'web.tab.current')],
+        isMultidevice: false,
+        isMobile: false,
+        queryComplete: true,
+        rawWindowDuration: 0,
+      })
+    ).toBeNull();
+  });
+
+  test('still reports a missing window bucket when an AFK watcher runs', () => {
+    expect(
+      activityDiagnostic({
+        host: 'laptop',
+        buckets: [
+          bucket('aw-watcher-web-firefox_laptop', 'laptop', 'web.tab.current'),
+          bucket('aw-watcher-afk_laptop', 'laptop', 'afkstatus'),
+        ],
+        isMultidevice: false,
+        isMobile: false,
+        queryComplete: true,
+        rawWindowDuration: 0,
+      })
+    ).toEqual({ kind: 'missing-window', host: 'laptop' });
+  });
+
   test('reports a missing AFK bucket for a desktop host', () => {
     expect(
       activityDiagnostic({
