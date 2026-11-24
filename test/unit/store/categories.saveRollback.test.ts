@@ -142,4 +142,35 @@ describe('categories save rollback', () => {
     expect(jsonCopy(settings.category_sets)).toEqual(server.category_sets);
     expect(jsonCopy(settings.classes)).toEqual(server.classes);
   });
+  test('with only legacy classes stored, Reset after a rejected first save shows the saved state', async () => {
+    delete server.category_sets;
+    delete server.active_set_ids;
+    const settings = useSettingsStore();
+    await settings.load();
+    const store = useCategoryStore();
+    store.load();
+    store.addClass({ name: ['Unsaved'], rule: { type: null } });
+    mockPost.mockRejectedValue(new Error('offline'));
+
+    await expect(store.save()).rejects.toThrow('offline');
+
+    store.load();
+    expect(names(store)).toEqual([['Work']]);
+  });
+
+  test('a rejected category save keeps an unrelated preference awaiting retry', async () => {
+    server.startOfWeek = 'Monday';
+    const settings = useSettingsStore();
+    await settings.load();
+    mockPost.mockRejectedValue(new Error('offline'));
+    await expect(settings.update({ startOfWeek: 'Sunday' })).rejects.toThrow('offline');
+    expect(settings.startOfWeek).toBe('Sunday'); // kept so save() can retry it
+
+    const store = useCategoryStore();
+    store.load();
+    store.addClass({ name: ['Unsaved'], rule: { type: null } });
+    await expect(store.save()).rejects.toThrow('offline');
+
+    expect(settings.startOfWeek).toBe('Sunday');
+  });
 });

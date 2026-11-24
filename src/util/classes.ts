@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import { IEvent } from './interfaces';
 import { useSettingsStore } from '~/stores/settings';
+import { getClient } from '~/util/awclient';
 import { getPresetCategorySets } from '~/util/presetCategories';
 
 const level_sep = '>';
@@ -360,17 +361,20 @@ export async function saveCategories(sets: CategorySet[], activeIds: string[]) {
       classes: effectiveClasses,
     });
   } catch (error) {
-    // save() writes each key separately, so the rejection may come after some
-    // of them were written. Show what the server now holds (which also keeps a
-    // concurrent settings write that succeeded meanwhile). Only if it can't be
-    // read either, fall back to the copy confirmed before this save.
+    // Put the confirmed copy back at once, so nothing reads the draft while the
+    // server is asked. save() writes each key separately, so the rejection may
+    // come after some of them were written: then show what the server holds for
+    // these three fields (also keeping a concurrent write that succeeded). Other
+    // settings are left alone, e.g. a rejected preference kept for a retry.
+    const keys = ['category_sets', 'active_set_ids', 'classes'] as const;
+    for (const key of keys) settingsStore[key] = confirmed[key];
     try {
-      await settingsStore.load();
+      const server = await getClient().get_settings();
+      for (const key of keys) {
+        if (server[key] !== undefined) settingsStore[key] = server[key];
+      }
     } catch (reloadError) {
       console.warn('Could not reload settings after a rejected category save', reloadError);
-      settingsStore.category_sets = confirmed.category_sets;
-      settingsStore.active_set_ids = confirmed.active_set_ids;
-      settingsStore.classes = confirmed.classes;
     }
     throw error;
   }
