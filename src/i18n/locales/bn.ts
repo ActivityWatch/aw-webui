@@ -463,6 +463,7 @@ export default {
     invalidForm: 'ফর্মের ইনপুট অবৈধ: {errors}',
     errIdNotUnique: 'ID অনন্য নয়',
     errMissingId: 'ID নেই',
+    errIdReserved: '"default" সংরক্ষিত',
     errMissingName: 'নাম নেই',
   },
   activityView: {

@@ -465,6 +465,7 @@ export default {
     invalidForm: 'फ़ॉर्म इनपुट अमान्य है: {errors}',
     errIdNotUnique: 'ID अद्वितीय नहीं है',
     errMissingId: 'ID नहीं है',
+    errIdReserved: '"default" आरक्षित है',
     errMissingName: 'नाम नहीं है',
   },
   activityView: {

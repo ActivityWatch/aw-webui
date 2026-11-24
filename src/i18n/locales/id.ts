@@ -467,6 +467,7 @@ export default {
     invalidForm: 'Input formulir tidak valid: {errors}',
     errIdNotUnique: 'ID tidak unik',
     errMissingId: 'ID belum diisi',
+    errIdReserved: '"default" dicadangkan',
     errMissingName: 'Nama belum diisi',
   },
   activityView: {

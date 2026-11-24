@@ -470,6 +470,7 @@ export default {
     invalidForm: 'Ingizo batili la fomu: {errors}',
     errIdNotUnique: 'Kitambulisho si cha kipekee',
     errMissingId: 'Kitambulisho kinakosekana',
+    errIdReserved: '"default" imehifadhiwa',
     errMissingName: 'Jina linakosekana',
   },
   activityView: {

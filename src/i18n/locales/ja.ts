@@ -468,6 +468,7 @@ export default {
     invalidForm: 'フォームの入力が無効です：{errors}',
     errIdNotUnique: 'ID が重複しています',
     errMissingId: 'ID がありません',
+    errIdReserved: '"default" は予約されています',
     errMissingName: '名前がありません',
   },
   activityView: {

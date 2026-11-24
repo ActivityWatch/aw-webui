@@ -468,6 +468,7 @@ export default {
     invalidForm: 'Ogiltig formulärinmatning: {errors}',
     errIdNotUnique: 'ID:t är inte unikt',
     errMissingId: 'ID saknas',
+    errIdReserved: '"default" är reserverat',
     errMissingName: 'Namn saknas',
   },
   activityView: {

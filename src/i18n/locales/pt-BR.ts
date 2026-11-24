@@ -473,6 +473,7 @@ export default {
     invalidForm: 'Dados do formulário inválidos: {errors}',
     errIdNotUnique: 'O ID não é único',
     errMissingId: 'ID ausente',
+    errIdReserved: '"default" é reservado',
     errMissingName: 'Nome ausente',
   },
   activityView: {

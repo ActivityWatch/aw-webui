@@ -489,6 +489,7 @@ export default {
     invalidForm: 'Ungültige Eingabe: {errors}',
     errIdNotUnique: 'ID ist nicht eindeutig',
     errMissingId: 'ID fehlt',
+    errIdReserved: '"default" ist reserviert',
     errMissingName: 'Name fehlt',
   },
   activityView: {

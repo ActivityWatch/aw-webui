@@ -462,6 +462,7 @@ export default {
     invalidForm: 'Некоректні дані форми: {errors}',
     errIdNotUnique: 'ID не унікальний',
     errMissingId: 'Немає ID',
+    errIdReserved: 'ID "default" зарезервований',
     errMissingName: 'Немає назви',
   },
   activityView: {

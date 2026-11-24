@@ -467,6 +467,7 @@ export default {
     invalidForm: 'فارم کا ان پٹ غلط ہے: {errors}',
     errIdNotUnique: 'ID منفرد نہیں ہے',
     errMissingId: 'ID موجود نہیں',
+    errIdReserved: '"default" محفوظ ہے',
     errMissingName: 'نام موجود نہیں',
   },
   activityView: {

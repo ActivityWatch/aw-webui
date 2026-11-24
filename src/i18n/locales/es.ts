@@ -450,6 +450,7 @@ export default {
     invalidForm: 'Entrada de formulario no válida: {errors}',
     errIdNotUnique: 'El ID no es único',
     errMissingId: 'Falta el ID',
+    errIdReserved: '"default" está reservado',
     errMissingName: 'Falta el nombre',
     periodExactInterval: 'horas exactas',
     intervalStart: 'Hora de inicio',

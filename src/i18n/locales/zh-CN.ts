@@ -441,6 +441,7 @@ export default {
     invalidForm: '表单输入无效：{errors}',
     errIdNotUnique: 'ID 不唯一',
     errMissingId: '缺少 ID',
+    errIdReserved: '"default" 是保留的 ID',
     errMissingName: '缺少名称',
   },
   activityView: {

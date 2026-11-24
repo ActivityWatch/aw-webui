@@ -461,6 +461,7 @@ export default {
     invalidForm: 'Некорректные данные формы: {errors}',
     errIdNotUnique: 'ID не уникален',
     errMissingId: 'Нет ID',
+    errIdReserved: 'ID "default" зарезервирован',
     errMissingName: 'Нет названия',
   },
   activityView: {

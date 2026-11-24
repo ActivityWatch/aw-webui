@@ -477,6 +477,7 @@ export default {
     invalidForm: 'Saisie du formulaire invalide : {errors}',
     errIdNotUnique: 'L’ID n’est pas unique',
     errMissingId: 'ID manquant',
+    errIdReserved: '"default" est réservé',
     errMissingName: 'Nom manquant',
   },
   activityView: {

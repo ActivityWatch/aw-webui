@@ -459,6 +459,7 @@ export default {
     invalidForm: 'إدخال النموذج غير صالح: {errors}',
     errIdNotUnique: 'المعرّف غير فريد',
     errMissingId: 'المعرّف مفقود',
+    errIdReserved: '"default" محجوز',
     errMissingName: 'الاسم مفقود',
   },
   activityView: {
