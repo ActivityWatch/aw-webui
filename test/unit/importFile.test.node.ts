@@ -81,7 +81,9 @@ describe('parseCategoryImport', () => {
     { name: ['Work'], rule: { type: 'regex', regex: 'x', select_keys: ['app', 7] } },
     { name: ['Work'], rule: { type: 'none' }, data: [] },
     { name: ['Work'], rule: { type: 'none' }, data: { color: 7 } },
-    { name: ['Work'], rule: { type: 'none' }, data: { score: '10' } },
+    { name: ['Work'], rule: { type: 'none' }, data: { score: 'ten' } },
+    { name: ['Work'], rule: { type: 'none' }, data: { score: '' } },
+    { name: ['Work'], rule: { type: 'none' }, data: { score: 'Infinity' } },
   ])('rejects the entire mixed array with malformed member %j', invalid => {
     const categories = [{ name: ['Valid'], rule: { type: 'none' } }, invalid];
     expect(() => parseCategoryImport(JSON.stringify({ id: 'mine', categories }))).toThrow();
@@ -109,6 +111,21 @@ describe('parseCategoryImport', () => {
   ])('preserves compatible category values %j', category => {
     const payload = { id: 'mine', categories: [category] };
     expect(parseCategoryImport(JSON.stringify(payload))).toEqual(payload);
+  });
+
+  // The category editor used to save scores as strings (ActivityWatch/aw-webui#1317),
+  // so existing exports contain numeric strings. Import them as numbers.
+  test.each([
+    ['10', 10],
+    [' -2.5 ', -2.5],
+    ['0', 0],
+  ])('converts numeric string score %j to a number', (score, expected) => {
+    const data = { score, color: '#123456', custom: { retained: true } };
+    const payload = { id: 'mine', categories: [{ name: ['Work'], rule: { type: 'none' }, data }] };
+    expect(parseCategoryImport(JSON.stringify(payload))).toEqual({
+      id: 'mine',
+      categories: [{ name: ['Work'], rule: { type: 'none' }, data: { ...data, score: expected } }],
+    });
   });
 
   test('accepts empty named and legacy arrays', () => {

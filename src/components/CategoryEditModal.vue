@@ -61,7 +61,7 @@ b-modal(id="edit" ref="edit" :title="$t('ui.categoryEditor.editTitle')" @show="r
     b-form-checkbox(v-model="editing.inherit_score" switch)
       | {{ $t('ui.categoryEditor.inheritScore') }}
     b-input-group.my-1(:prepend="$t('ui.categoryEditor.score')" v-if="!editing.inherit_score")
-      b-form-input(v-model="editing.score")
+      b-form-input(v-model="editing.score" type="number" step="any")
 
   hr
   div.my-1
@@ -73,6 +73,7 @@ b-modal(id="edit" ref="edit" :title="$t('ui.categoryEditor.editTitle')" @show="r
 <script lang="ts">
 import _ from 'lodash';
 import ColorPicker from '~/components/ColorPicker.vue';
+import { parseCategoryScore } from '~/util/categoryScore';
 import { useCategoryStore } from '~/stores/categories';
 import { validateRegex, isRegexBroad } from '~/util/validate';
 import { CANONICAL_SELECT_KEYS, normalizeSelectKeys } from '~/util/classes';
@@ -261,7 +262,10 @@ export default {
         rule,
         data: {
           color: this.editing.inherit_color === true ? undefined : this.editing.color,
-          score: this.editing.inherit_score === true ? undefined : this.editing.score,
+          score:
+            this.editing.inherit_score === true
+              ? undefined
+              : parseCategoryScore(this.editing.score),
         },
       };
       this.categoryStore.updateClass(new_class);

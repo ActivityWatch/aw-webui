@@ -257,6 +257,41 @@ describe('CategoryEditModal score round trip', () => {
   });
 });
 
+describe('CategoryEditModal typed score', () => {
+  // ActivityWatch/aw-webui#1317: a typed score reached the store as a string.
+  test.each([
+    ['5', 5],
+    ['-1.5', -1.5],
+    ['0', 0],
+    [' 2 ', 2],
+    ['', undefined],
+    ['abc', undefined],
+  ])('saves typed score %j as %s', (typed, expected) => {
+    const updateClass = jest.fn();
+    const vm: any = {
+      editing: {
+        id: 2,
+        name: 'Child',
+        parent: ['Parent'],
+        rule: { type: 'none' },
+        color: '#123456',
+        inherit_color: false,
+        score: typed,
+        inherit_score: false,
+      },
+      categoryStore: { updateClass },
+      priorityFromRule: CategoryEditModal.methods.priorityFromRule,
+      checkFormValidity: () => true,
+      $nextTick: callback => callback(),
+      $refs: { edit: { hide: jest.fn() } },
+    };
+
+    CategoryEditModal.methods.handleSubmit.call(vm);
+
+    expect(updateClass.mock.calls[0][0].data.score).toBe(expected);
+  });
+});
+
 describe('CategoryEditModal mounted score round trip', () => {
   test('keeps numeric zero after showing, saving, and reopening the modal', async () => {
     const localVue = createLocalVue();
