@@ -1461,12 +1461,10 @@ export default {
       const id = this.new_view.id;
       this.newViewSaving = true;
       this.newViewError = '';
-      viewsStore.addView({ id, name: this.new_view.name, elements: [] });
       try {
-        await viewsStore.save();
+        // Persist on top of the stored layout so unsaved edits stay drafts.
+        await viewsStore.saveNewView({ id, name: this.new_view.name, elements: [] });
       } catch (error) {
-        // Retain any pre-existing layout draft, but let this form retry the id.
-        if (viewsStore.getViewById(id)) viewsStore.removeView({ view_id: id });
         this.newViewError = error instanceof Error ? error.message : String(error);
         return;
       } finally {

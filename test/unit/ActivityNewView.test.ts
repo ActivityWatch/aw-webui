@@ -103,3 +103,16 @@ test('navigation during creation does not undo a confirmed view when the modal u
   expect(useViewsStore().views.map(v => v.id)).toEqual(['summary', 'custom']);
   expect(vm.newViewError).toBe('');
 });
+
+test('New view persists the stored layout, not unsaved ActivityView edits, and keeps the draft', async () => {
+  const update = jest.spyOn(useSettingsStore(), 'update').mockImplementation(async ({ views }) => {
+    useSettingsStore().$patch({ views: copy(views) });
+  });
+  useViewsStore().views[0].name = 'Unsaved edit';
+  const vm = form();
+  await Activity.methods.handleSubmit.call(vm);
+  const persisted = update.mock.calls[0][0].views;
+  expect(persisted.map(v => v.name)).toEqual(['Summary', 'Custom']);
+  expect(useSettingsStore().views[0].name).toBe('Summary');
+  expect(useViewsStore().views.map(v => v.name)).toEqual(['Unsaved edit', 'Custom']);
+});
