@@ -539,3 +539,78 @@ describe('CategoryBuilder mounted append rule', () => {
     expect(categories.classes[0].rule).toEqual(saved[0].rule);
   });
 });
+
+// Embedded in Settings → Categorization, the builder shares the categories store
+// with the editor, so it must neither reload nor save it (aw-webui#1328 item 1).
+describe('CategoryBuilder embedded in the category editor', () => {
+  let wrapper, categories;
+
+  beforeEach(() => {
+    const pinia = createTestingPinia({ createSpy: jest.fn, stubActions: false });
+    const buckets: any = useBucketsStore();
+    buckets.buckets = [androidBucket];
+    jest.spyOn(buckets, 'ensureLoaded').mockResolvedValue(undefined);
+    jest.spyOn(useSettingsStore(), 'ensureLoaded').mockResolvedValue(undefined);
+    categories = useCategoryStore();
+    categories.save.mockResolvedValue(undefined);
+    categories.load([{ name: ['Work'], rule: { type: 'regex', regex: 'Editor' } }]);
+    getClient.mockReturnValue({ query: jest.fn().mockResolvedValue(events('Firefox')) });
+    wrapper = shallowMount(CategoryBuilder, {
+      localVue,
+      pinia,
+      propsData: { embedded: true },
+      stubs: { 'aw-query-options': true, 'b-button': true, 'b-modal': true },
+    });
+  });
+
+  afterEach(() => {
+    wrapper?.destroy();
+    jest.restoreAllMocks();
+  });
+
+  const names = () => categories.classes.map(c => c.name.join('>'));
+  const edit = () => categories.addClass({ name: ['Unsaved'], rule: { type: 'none' } });
+
+  test('loading words keeps the editor’s unsaved edits', async () => {
+    edit();
+    await wrapper.vm.fetchWords();
+    await flush();
+    expect(wrapper.text()).toContain('Firefox');
+    expect(names()).toContain('Unsaved');
+    expect(categories.classes_unsaved_changes).toBe(true);
+  });
+
+  test.each([
+    [true, 'with'],
+    [false, 'without'],
+  ])('New rule → Cancel drops only the placeholder (%s, %s other edits)', async dirty => {
+    if (dirty) edit();
+    const before = names();
+    wrapper.vm.createRule('Firefox');
+    expect(names()).toContain('Firefox');
+    await wrapper.vm.createRuleCancel();
+    expect(names()).toEqual(before);
+    expect(categories.classes_unsaved_changes).toBe(dirty);
+  });
+
+  test('New rule → OK keeps the rule unsaved instead of saving the editor', async () => {
+    edit();
+    wrapper.vm.createRule('Firefox');
+    await wrapper.vm.createRuleOk();
+    // The modal also emits `hidden` after OK.
+    await wrapper.vm.createRuleCancel();
+    expect(categories.save).not.toHaveBeenCalled();
+    expect(names()).toEqual(expect.arrayContaining(['Unsaved', 'Firefox']));
+    expect(categories.classes_unsaved_changes).toBe(true);
+  });
+
+  test('Append rule leaves the change unsaved', async () => {
+    edit();
+    wrapper.vm.append.word = 'Firefox';
+    wrapper.vm.append.category = ['Work'];
+    await wrapper.vm.appendRuleOk();
+    expect(categories.save).not.toHaveBeenCalled();
+    expect(categories.get_category(['Work']).rule.regex).toBe('Editor|Firefox');
+    expect(names()).toContain('Unsaved');
+  });
+});

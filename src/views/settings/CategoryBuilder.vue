@@ -206,6 +206,10 @@ export default {
       create: {
         word: '',
         categoryId: null,
+        // Embedded mode: whether OK kept the new rule, and whether the editor
+        // had unsaved changes before the placeholder was added.
+        accepted: false,
+        wasDirty: false,
       },
     };
   },
@@ -320,9 +324,13 @@ export default {
           return;
         }
 
-        // Make sure we don't query with stale unsaved category changes.
-        await this.categoryStore.load();
-        if (requestId !== this.requestId) return;
+        // Standalone: make sure we don't query with stale unsaved category changes.
+        // Embedded: the store is shared with the category editor, so reloading
+        // would discard the user's unsaved edits; query with them instead.
+        if (!this.embedded) {
+          await this.categoryStore.load();
+          if (requestId !== this.requestId) return;
+        }
         const query =
           canonicalEvents({
             ...bucketParams,
@@ -416,6 +424,8 @@ export default {
     },
     createRule(word: string) {
       console.log('Opening modal for creating rule with word: ' + word);
+      this.create.accepted = false;
+      this.create.wasDirty = this.categoryStore.classes_unsaved_changes;
       const lastId = this.categoryStore.addClass({
         name: [word],
         rule: { type: 'regex', regex: _.escapeRegExp(word) },
@@ -425,13 +435,27 @@ export default {
     },
     async createRuleOk() {
       console.log('Creating rule with word: ' + this.create.word);
-      await this.categoryStore.save();
+      if (this.embedded) {
+        // Saving here would also commit the editor's other unsaved edits.
+        // Leave the new rule unsaved; the editor's Save button persists it.
+        this.create.accepted = true;
+      } else {
+        await this.categoryStore.save();
+      }
       this.fetchWords();
     },
     async createRuleCancel() {
+      // Also runs after OK, since the modal emits `hidden` whenever it closes.
       console.log('Cancelling create rule');
+      const { categoryId, accepted, wasDirty } = this.create;
       this.create.categoryId = null;
-      this.categoryStore.load(); // Restore categories to last saved
+      if (!this.embedded) {
+        this.categoryStore.load(); // Restore categories to last saved
+      } else if (!accepted && categoryId !== null) {
+        // Drop only the placeholder rule, keeping the editor's other edits.
+        this.categoryStore.removeClass(categoryId);
+        this.categoryStore.classes_unsaved_changes = wasDirty;
+      }
     },
     appendRule(word) {
       console.log('Opening modal to append rule with word: ' + word);
@@ -442,7 +466,8 @@ export default {
       console.log('Appending rule with word: ' + this.append.word);
       const cat = this.categoryStore.get_category(this.append.category);
       this.categoryStore.appendClassRule(cat.id, this.append.word);
-      await this.categoryStore.save();
+      // Embedded: leave the change unsaved alongside the editor's other edits.
+      if (!this.embedded) await this.categoryStore.save();
       this.fetchWords();
     },
     handleOk(bvModalEvent) {
