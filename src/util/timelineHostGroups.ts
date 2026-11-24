@@ -19,6 +19,11 @@ export const HOST_GROUP_PREFIX = 'host-group:';
 // Children carry an explicit `treeLevel`. Without it vis-timeline labels them
 // `vis-group-level-unknown-but-gte1`, which its stylesheet draws with a red
 // border (and a light background that hides the label in dark mode).
+//
+// Top-level rows carry an explicit `treeLevel: 0` for the mirror-image reason:
+// `syncTimelineData` merges into the existing DataSet and keeps keys the
+// rebuilt row does not name, so a row that was a child under "All" keeps its
+// indented level after a filter drops host nesting.
 export function nestGroupsByHost(
   groups: TimelineGroup[],
   hostOf: (id: string) => string | undefined,
@@ -29,14 +34,14 @@ export function nestGroupsByHost(
     const host = hostOf(group.id);
     if (host) byHost.set(host, [...(byHost.get(host) || []), group]);
   }
-  if (byHost.size < 2) return groups;
+  if (byHost.size < 2) return groups.map(group => ({ ...group, treeLevel: 0 }));
 
   const result: TimelineGroup[] = [];
   const emitted = new Set<string>();
   for (const group of groups) {
     const host = hostOf(group.id);
     if (!host) {
-      result.push(group);
+      result.push({ ...group, treeLevel: 0 });
     } else if (!emitted.has(host)) {
       emitted.add(host);
       const children = (byHost.get(host) as TimelineGroup[]).map(c => ({ ...c, treeLevel: 1 }));

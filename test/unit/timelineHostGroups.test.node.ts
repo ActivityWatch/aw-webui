@@ -11,6 +11,21 @@ const g = (id: string) => ({ id, content: id });
 const hostOf = (id: string) => hosts[id];
 const label = (h: string) => `host ${h}`;
 
+const makeData = () => {
+  const store = new Map<string, any>();
+  return {
+    store,
+    updates: 0,
+    getIds: () => [...store.keys()],
+    get: (id: string) => store.get(id),
+    remove: (ids: string[]) => ids.forEach(id => store.delete(id)),
+    update(items: any[]) {
+      this.updates++;
+      items.forEach(i => store.set(i.id, { ...store.get(i.id), ...i }));
+    },
+  };
+};
+
 describe('nestGroupsByHost', () => {
   it('nests buckets under one parent per host when two hosts are present', () => {
     const out = nestGroupsByHost(
@@ -40,17 +55,43 @@ describe('nestGroupsByHost', () => {
     expect(level['aw-watcher-window_a']).toBe(1);
     expect(level['aw-watcher-window_b']).toBe(1);
     expect(level[HOST_GROUP_PREFIX + 'a']).toBeUndefined();
-    expect(level['aw-stopwatch']).toBeUndefined();
+    // Top-level rows name level 0, so a previously nested row cannot keep its
+    // old indentation when the host rows disappear.
+    expect(level['aw-stopwatch']).toBe(0);
   });
 
-  it('returns the same array for a single host', () => {
+  it('returns top-level rows unchanged for a single host', () => {
     const groups = [g('aw-watcher-window_a'), g('aw-watcher-afk_a')];
-    expect(nestGroupsByHost(groups, hostOf, label)).toBe(groups);
+    const out = nestGroupsByHost(groups, hostOf, label);
+    expect(out.map(x => x.id)).toEqual(groups.map(x => x.id));
+    expect(out.every(x => x.treeLevel === 0)).toBe(true);
+  });
+
+  it('clears a stale nested level when the host filter leaves one host', () => {
+    // All hosts first: the buckets are children at level 1.
+    const nested = nestGroupsByHost(
+      [g('aw-watcher-window_a'), g('aw-watcher-window_b')],
+      hostOf,
+      label
+    );
+    const data = makeData();
+    syncTimelineData(data, nested);
+    expect(data.store.get('aw-watcher-window_a').treeLevel).toBe(1);
+
+    // Switching the filter to one host drops the host rows. The rebuilt row has
+    // to name treeLevel explicitly: syncTimelineData merges, so an omitted key
+    // would leave the old level and the label would stay indented and tinted.
+    const filtered = nestGroupsByHost([g('aw-watcher-window_a')], hostOf, label);
+    syncTimelineData(data, filtered);
+    expect(data.store.get('aw-watcher-window_a').treeLevel).toBe(0);
+    expect(data.store.get(HOST_GROUP_PREFIX + 'b')).toBeUndefined();
   });
 
   it('keeps hostless buckets top-level and counts only real hosts', () => {
     const groups = [g('aw-stopwatch'), g('aw-watcher-window_a')];
-    expect(nestGroupsByHost(groups, hostOf, label)).toBe(groups);
+    const flat = nestGroupsByHost(groups, hostOf, label);
+    expect(flat.map(x => x.id)).toEqual(groups.map(x => x.id));
+    expect(Object.fromEntries(flat.map(x => [x.id, x.treeLevel]))['aw-stopwatch']).toBe(0);
     const out = nestGroupsByHost([...groups, g('aw-watcher-window_b')], hostOf, label);
     expect(out.map(x => x.id)).toEqual([
       'aw-stopwatch',
@@ -63,21 +104,6 @@ describe('nestGroupsByHost', () => {
 });
 
 describe('syncTimelineData with nestedGroups', () => {
-  const makeData = () => {
-    const store = new Map<string, any>();
-    return {
-      store,
-      updates: 0,
-      getIds: () => [...store.keys()],
-      get: (id: string) => store.get(id),
-      remove: (ids: string[]) => ids.forEach(id => store.delete(id)),
-      update(items: any[]) {
-        this.updates++;
-        items.forEach(i => store.set(i.id, { ...store.get(i.id), ...i }));
-      },
-    };
-  };
-
   it('does not re-update an unchanged parent and keeps vis-written showNested', () => {
     const data = makeData();
     const parent = () => ({ id: 'p', content: 'p', nestedGroups: ['c'] });
