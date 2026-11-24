@@ -646,10 +646,17 @@ describe('querystr_to_array', () => {
     expect(awQueryLiteral(statements[0])).toBe(pattern);
   });
 
-  // A trailing backslash would escape the closing quote; aw-query has no way
-  // to write one, so the value is rejected rather than changed.
-  test.each([1, 2, 3])('%i trailing backslashes are rejected', n => {
-    expect(() => alwaysActiveStatements(`a;b${'\\'.repeat(n)}`)).toThrow(/ending in a backslash/);
+  // A trailing backslash would escape the closing quote. A valid pattern ends
+  // in an escaped backslash, so an empty group keeps the regex the same.
+  test.each([2, 4])('%i trailing backslashes get an empty group, not an error', n => {
+    const pattern = `a;b${'\\'.repeat(n)}`;
+    const statements = alwaysActiveStatements(pattern);
+    expect(statements).toHaveLength(2);
+    const sent = awQueryLiteral(statements[0]);
+    expect(sent).toBe(`${pattern}(?:)`);
+    expect(new RegExp(sent).exec(`x${pattern}`)?.[0]).toBe(
+      new RegExp(pattern).exec(`x${pattern}`)?.[0]
+    );
   });
 });
 
@@ -666,6 +673,22 @@ describe('escape_doublequote', () => {
   test('an ID ending in a backslash is rejected, not changed', () => {
     expect(() => escape_doublequote('host\\')).toThrow(/ending in a backslash/);
     expect(() => escape_doublequote('host\\\\')).toThrow(/ending in a backslash/);
+  });
+
+  test('an unusable browser bucket is skipped, and the rest of the query still builds', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const query = fullDesktopQuery({
+      bid_window: 'aw-watcher-window_host',
+      bid_afk: 'aw-watcher-afk_host',
+      bid_browsers: ['aw-watcher-web-chrome_bad\\', 'aw-watcher-web-chrome_good'],
+      filter_afk: true,
+      categories: [],
+      filter_categories: [],
+    }).join('\n');
+    expect(query).toContain('query_bucket("aw-watcher-web-chrome_good")');
+    expect(query).not.toContain('chrome_bad');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('chrome_bad'));
+    warn.mockRestore();
   });
 
   test('multidevice bucket IDs that differ by a backslash query different buckets', () => {
