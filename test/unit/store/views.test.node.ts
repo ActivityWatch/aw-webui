@@ -90,6 +90,28 @@ describe('migrateStoredViews', () => {
     }
   });
 
+  test('Android defaults include a Browser view for aw-watcher-web data (#1321)', () => {
+    const browser = androidViews.find(view => view.id === 'browser');
+    expect(browser?.elements.map(el => el.type)).toEqual([
+      'top_domains',
+      'top_urls',
+      'top_browser_titles',
+    ]);
+  });
+
+  test('replaces the stored summary-only Android default with the current one', () => {
+    const stored = JSON.parse(JSON.stringify(androidViews.filter(view => view.id === 'summary')));
+    const migrated = migrateStoredViews(stored, true);
+    expect(migrated).toEqual(androidViews);
+    expect(migrated.map(view => view.id)).toContain('browser');
+  });
+
+  test('keeps an edited summary-only Android layout', () => {
+    const stored = JSON.parse(JSON.stringify(androidViews.filter(view => view.id === 'summary')));
+    stored[0].elements.pop();
+    expect(migrateStoredViews(stored, true)).toBe(stored);
+  });
+
   test('keeps the stored desktop default off Android', () => {
     const stored = storedDesktopDefault();
     expect(migrateStoredViews(stored, false)).toBe(stored);

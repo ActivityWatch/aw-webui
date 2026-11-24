@@ -66,6 +66,15 @@ export const androidViews: View[] = [
       { type: 'category_sunburst', size: 3 },
     ],
   },
+  {
+    id: 'browser',
+    name: 'Browser',
+    elements: [
+      { type: 'top_domains', size: 3 },
+      { type: 'top_urls', size: 3 },
+      { type: 'top_browser_titles', size: 3 },
+    ],
+  },
 ];
 
 const onAndroid = Boolean(process.env.VUE_APP_ON_ANDROID);
@@ -127,6 +136,24 @@ const LEGACY_DESKTOP_DEFAULTS: View[][] = [
   LEGACY_DESKTOP_WITH_BROWSER_TITLES,
 ];
 
+// The Android default before it had a Browser view (#1321). Browser data was
+// queried but no view showed it, so an unmodified copy gets the current default.
+const LEGACY_ANDROID_SUMMARY_ONLY: View[] = [
+  {
+    id: 'summary',
+    name: 'Summary',
+    elements: [
+      { type: 'top_apps', size: 3 },
+      { type: 'top_categories', size: 3 },
+      { type: 'timeline_barchart', size: 3 },
+      { type: 'category_tree', size: 3 },
+      { type: 'category_sunburst', size: 3 },
+    ],
+  },
+];
+
+const LEGACY_ANDROID_DEFAULTS: View[][] = [...LEGACY_DESKTOP_DEFAULTS, LEGACY_ANDROID_SUMMARY_ONLY];
+
 function sameLayout(a: View[], b: View[]): boolean {
   return (
     a.length === b.length &&
@@ -149,14 +176,15 @@ function sameLayout(a: View[], b: View[]): boolean {
 }
 
 /**
- * On Android, replace stored views that are an unmodified desktop default with
- * the Android defaults (aw-android#321). Views the user edited are kept.
+ * On Android, replace stored views that are an unmodified earlier default (the
+ * desktop layout, aw-android#321, or the summary-only Android layout, #1321)
+ * with the Android defaults. Views the user edited are kept.
  */
 export function migrateStoredViews(stored: View[], isAndroid: boolean = onAndroid): View[] {
   if (!isAndroid || !Array.isArray(stored)) {
     return stored;
   }
-  if (!LEGACY_DESKTOP_DEFAULTS.some(legacy => sameLayout(stored, legacy))) {
+  if (!LEGACY_ANDROID_DEFAULTS.some(legacy => sameLayout(stored, legacy))) {
     return stored;
   }
   // A copy, so later view edits don't mutate the shared default.
