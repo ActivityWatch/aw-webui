@@ -481,6 +481,7 @@ export default {
     invalidForm: 'Invalid form input: {errors}',
     errIdNotUnique: 'ID is not unique',
     errMissingId: 'Missing ID',
+    errIdReserved: '"default" is reserved',
     errMissingName: 'Missing name',
   },
   activityView: {

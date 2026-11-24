@@ -1436,6 +1436,8 @@ export default {
           this.viewsStore.isViewIdTaken(this.new_view.id),
         ],
         [this.$t('activity.errMissingId').toString(), this.new_view.id === ''],
+        // The route maps view id "default" to the first view (ActivityView.vue).
+        [this.$t('activity.errIdReserved').toString(), this.new_view.id === 'default'],
         [this.$t('activity.errMissingName').toString(), this.new_view.name === ''],
       ];
       const errors = checks.filter(([, v]) => v).map(([k]) => k);

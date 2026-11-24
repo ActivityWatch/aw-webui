@@ -138,3 +138,20 @@ test('an id kept only in saved settings (after Restore defaults) cannot be reuse
   expect(useSettingsStore().views).toEqual(saved);
   expect(views.views.some(v => v.id === 'custom')).toBe(false);
 });
+
+// ActivityWatch/aw-webui#1328 item 3: the route maps view id "default" to the
+// first view, so a view with that id could never be opened and its Remove
+// deleted Summary instead.
+test.each([
+  ['default', false],
+  ['custom', true],
+])('checkFormValidity with view id %p returns %p', (id, expected) => {
+  const vm: any = {
+    viewsStore: useViewsStore(),
+    new_view: { id, name: 'Custom' },
+    $t: (key: string) => key,
+  };
+  const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => undefined);
+  expect(Activity.methods.checkFormValidity.call(vm)).toBe(expected);
+  expect(alertSpy).toHaveBeenCalledTimes(expected ? 0 : 1);
+});
