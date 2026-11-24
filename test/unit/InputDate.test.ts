@@ -2,6 +2,7 @@ import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { useSettingsStore } from '~/stores/settings';
 import InputDate from '~/components/InputDate.vue';
+import fr from '~/i18n/locales/fr';
 
 const DatepickerStub = {
   name: 'b-form-datepicker',
@@ -11,10 +12,11 @@ const DatepickerStub = {
   },
 };
 
-function make() {
+function make(mocks?: Record<string, unknown>) {
   return mount(InputDate as any, {
     propsData: { value: '2026-06-10' },
     stubs: { 'b-form-datepicker': DatepickerStub },
+    mocks,
   });
 }
 
@@ -68,6 +70,23 @@ test('passes translated labels instead of bootstrap-vue English defaults', () =>
     expect(picker.props('labelNoDateSelected')).toBe('No date selected');
     expect(picker.props('labelResetButton')).toBe('Reset');
     expect(picker.props('labelNav')).toBe('Calendar navigation');
+  } finally {
+    wrapper.destroy();
+  }
+});
+
+test('takes the labels from the active locale, not English', () => {
+  // The global $t stub in jest-setup resolves against en.ts, so pass a French
+  // $t here: a component that hard-coded the English defaults would still pass
+  // the test above but fail this one.
+  const $t = (key: string) =>
+    (key.split('.').reduce<any>((o, k) => (o == null ? null : o[k]), fr) as string | null) ?? key;
+  const wrapper = make({ $t });
+  try {
+    const picker = wrapper.findComponent(DatepickerStub);
+    expect(picker.props('labelResetButton')).toBe('Réinitialiser');
+    expect(picker.props('labelNav')).toBe('Navigation du calendrier');
+    expect(picker.props('labelNoDateSelected')).toBe('Aucune date sélectionnée');
   } finally {
     wrapper.destroy();
   }
