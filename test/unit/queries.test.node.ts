@@ -1095,7 +1095,9 @@ describe('multidevice bucket id escaping', () => {
     const query = multideviceQuery({
       ...base,
       hosts: ['phone'],
-      host_params: { phone: { bid_android: 'aw-import-screentime_Bob "Work" iPhone', isIos: true } },
+      host_params: {
+        phone: { bid_android: 'aw-import-screentime_Bob "Work" iPhone', isIos: true },
+      },
     }).join('\n');
     expect(query).toContain('query_bucket("aw-import-screentime_Bob \\"Work\\" iPhone")');
   });
