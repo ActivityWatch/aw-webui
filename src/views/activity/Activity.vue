@@ -760,7 +760,9 @@ export default {
     // An unknown :periodLength, or a :date that isn't a real YYYY-MM-DD day
     // (range and interval are validated by invalidRange). Falls back to today.
     invalidUrlPeriod: function (): boolean {
-      if (!(this.periodLength in this.periodLengths)) return true;
+      // hasOwnProperty, not `in`: names inherited from Object.prototype
+      // ("constructor", "toString", …) are not periods.
+      if (!Object.prototype.hasOwnProperty.call(this.periodLengths, this.periodLength)) return true;
       if (['range', 'interval', 'all'].includes(this.periodLength) || !this.date) return false;
       return !moment(this.date, 'YYYY-MM-DD', true).isValid();
     },
@@ -807,8 +809,10 @@ export default {
           ? moment(this.exactInterval.start).format('YYYY-MM-DD')
           : get_today_with_offset(offset);
       }
-      const baseDate =
-        this.date && !this.invalidUrlPeriod ? this.date : get_today_with_offset(offset);
+      // A valid day in the URL still applies when the period segment is unknown,
+      // so the date picker changes what is shown while the warning is up.
+      const urlDateIsDay = !!this.date && moment(this.date, 'YYYY-MM-DD', true).isValid();
+      const baseDate = urlDateIsDay ? this.date : get_today_with_offset(offset);
       if (['week', 'month', 'year'].includes(this.periodLength)) {
         return periodStartDate(baseDate, this.periodLength);
       }
@@ -898,7 +902,10 @@ export default {
       return formatHostParam(this.hostSelection);
     },
     link_prefix: function () {
-      return `/activity/${this.hostParam}/${this.periodLength}`;
+      // An unsupported period cannot be browsed, so Previous/Next and the date
+      // picker build day links; otherwise the chosen date would not apply.
+      const period = this.invalidUrlPeriod ? 'day' : this.periodLength;
+      return `/activity/${this.hostParam}/${period}`;
     },
     periodusage: function () {
       // Neighbouring periods of an exact interval would be ±15 sub-day slices
@@ -936,7 +943,14 @@ export default {
         };
       } else {
         // An unknown period in the URL shows a single day (a warning is shown).
-        const len = { last7d: [7, 'days'], last30d: [30, 'days'] }[this.periodLength] || [1, 'day'];
+        // Own-property lookup: "constructor" must not resolve to Object's function.
+        const knownLengths: Record<string, [number, string]> = {
+          last7d: [7, 'days'],
+          last30d: [30, 'days'],
+        };
+        const len = Object.prototype.hasOwnProperty.call(knownLengths, this.periodLength)
+          ? knownLengths[this.periodLength]
+          : [1, 'day'];
         return {
           start: get_day_start_with_offset(
             moment(this._date).subtract(len[0] - 1, len[1]),

@@ -6,7 +6,9 @@ const Activity: any = ActivityComponent;
 
 beforeEach(() => {
   setActivePinia(createPinia());
-  jest.useFakeTimers().setSystemTime(new Date('2026-10-20T18:00:00Z'));
+  // Local time, not UTC: the view works in local dates, so a UTC instant would
+  // land on a different day east of UTC and make these tests timezone-dependent.
+  jest.useFakeTimers().setSystemTime(new Date(2026, 9, 20, 18, 0, 0));
 });
 afterEach(() => jest.useRealTimers());
 
@@ -15,6 +17,7 @@ function makeVm(periodLength: string, date: string | undefined) {
     periodLength,
     date,
     host: 'test',
+    hostParam: 'all',
     settingsStore: { startOfDay: '04:00' },
     $t: (k: string) => k,
     ...Activity.methods,
@@ -30,6 +33,7 @@ function makeVm(periodLength: string, date: string | undefined) {
     'periodIsBrowseable',
     'periodReadableRange',
     'allTimeRange',
+    'link_prefix',
   ]) {
     Object.defineProperty(vm, name, { get: () => Activity.computed[name].call(vm) });
   }
@@ -52,8 +56,23 @@ describe('Activity URL date and period validation', () => {
     const vm = makeVm('foo', '2026-10-15');
     expect(vm.invalidUrlPeriod).toBe(true);
     expect(vm.timeperiod.length).toEqual([1, 'day']);
-    expect(vm.periodReadableRange).toBe('2026-10-20—2026-10-21');
+    // The day in the URL still applies, so the date picker moves the view.
+    expect(vm.periodReadableRange).toBe('2026-10-15—2026-10-16');
+    // Previous/Next build day links, otherwise they would keep re-entering `foo`.
+    expect(vm.link_prefix).toBe('/activity/all/day');
   });
+
+  // Object.prototype names are inherited, so a plain `in` check accepted them and
+  // the duration lookup then returned Object's constructor instead of a duration.
+  test.each(['constructor', 'toString', 'hasOwnProperty'])(
+    'the inherited name %p is not treated as a period',
+    periodLength => {
+      const vm = makeVm(periodLength, '2026-10-15');
+      expect(vm.invalidUrlPeriod).toBe(true);
+      expect(vm.timeperiod.length).toEqual([1, 'day']);
+      expect(vm.link_prefix).toBe('/activity/all/day');
+    }
+  );
 
   test.each([
     ['day', '2026-10-15'],
