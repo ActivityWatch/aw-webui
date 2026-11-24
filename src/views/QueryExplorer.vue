@@ -101,6 +101,7 @@ import _ from 'lodash';
 import { querystr_to_array } from '~/queries';
 import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
+import { getClient } from '~/util/awclient';
 import { isEventArray } from '~/util/queryResult';
 import {
   buildSavedQuery,
@@ -175,15 +176,29 @@ RETURN = sort_by_duration(merged_events);
     persistSavedQueries: async function (savedQueries: SavedQuery[]) {
       // settingsStore.update() applies the new list before the request is made.
       const previous = this.settingsStore.saved_queries;
+      const attempted = sortSavedQueries(savedQueries);
       try {
         this.saved_query_error = '';
-        await this.settingsStore.update({ saved_queries: sortSavedQueries(savedQueries) });
+        await this.settingsStore.update({ saved_queries: attempted });
         return true;
       } catch (e) {
         console.error('Failed to save query presets', e);
+        // The write may have landed before the follow-up reload failed, so ask
+        // the server what it holds; the old list is only the offline fallback.
+        let confirmed = previous;
+        try {
+          const server = await getClient().get_settings();
+          if (Array.isArray(server?.saved_queries)) confirmed = server.saved_queries;
+        } catch (err) {
+          console.error('Failed to read back query presets', err);
+        }
+        // A newer save may have replaced the list meanwhile: leave that alone.
         // Otherwise a failed save leaves a phantom preset (and a retry saves a
         // duplicate), and a failed delete hides a preset that still exists.
-        this.settingsStore.$patch({ saved_queries: previous });
+        if (_.isEqual(this.settingsStore.saved_queries, attempted)) {
+          this.settingsStore.$patch({ saved_queries: confirmed });
+        }
+        if (_.isEqual(confirmed, attempted)) return true;
         this.saved_query_error = 'Failed to save query presets.';
         return false;
       }

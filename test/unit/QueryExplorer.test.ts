@@ -204,14 +204,19 @@ describe('QueryExplorer eventcount_str', () => {
 describe('QueryExplorer saved-query persistence failure', () => {
   const { createPinia, setActivePinia } = jest.requireActual('pinia');
   const { useSettingsStore } = jest.requireActual('~/stores/settings');
-  let settingsStore, save;
+  const { createClient, getClient } = jest.requireActual('~/util/awclient');
+  const existing = { ...saveQueryDraft(), id: 'existing', name: 'existing' };
+  let settingsStore, save, getSettings;
 
+  beforeAll(() => createClient());
   beforeEach(() => {
     setActivePinia(createPinia());
     settingsStore = useSettingsStore();
-    settingsStore.$patch({ saved_queries: [] });
+    settingsStore.$patch({ saved_queries: [existing] });
     jest.spyOn(settingsStore, 'ensureLoaded').mockResolvedValue(undefined);
     save = jest.spyOn(settingsStore, 'save');
+    // Default: the server cannot be reached to read back what it holds.
+    getSettings = jest.spyOn(getClient(), 'get_settings').mockRejectedValue(new Error('offline'));
     jest.spyOn(console, 'error').mockImplementation(() => undefined);
   });
   afterEach(() => jest.restoreAllMocks());
@@ -232,17 +237,49 @@ describe('QueryExplorer saved-query persistence failure', () => {
     });
     return vm;
   }
+  const ids = () => settingsStore.saved_queries.map(q => q.id);
 
-  test('a failed save leaves no phantom preset, and a retry does not duplicate it', async () => {
+  test('a failed save keeps existing presets, leaves no phantom, and a retry does not duplicate', async () => {
     const explorer = makeExplorer();
     save.mockRejectedValueOnce(new Error('offline'));
     await QueryExplorer.methods.onSaveQueryConfirm.call(explorer, { preventDefault: jest.fn() });
-    expect(settingsStore.saved_queries).toEqual([]);
+    expect(ids()).toEqual(['existing']);
     expect(explorer.saved_query_error).not.toBe('');
     expect(explorer.showSaveQueryModal).toBe(true);
 
     save.mockResolvedValueOnce(undefined);
     await QueryExplorer.methods.onSaveQueryConfirm.call(explorer, { preventDefault: jest.fn() });
-    expect(settingsStore.saved_queries.map(q => q.id)).toEqual(['foo']);
+    expect(ids()).toEqual(['existing', 'foo']);
+  });
+
+  test('a save the server stored is kept when only the follow-up reload fails', async () => {
+    const explorer = makeExplorer();
+    const stored = [existing, { ...existing, id: 'foo', name: 'foo' }];
+    save.mockRejectedValueOnce(new Error('reload failed'));
+    getSettings.mockResolvedValueOnce({ saved_queries: stored });
+    const ok = await explorer.persistSavedQueries(stored);
+    expect(ok).toBe(true);
+    expect(ids()).toEqual(['existing', 'foo']);
+    expect(explorer.saved_query_error).toBe('');
+  });
+
+  test('an older failed request does not undo a newer successful save', async () => {
+    const explorer = makeExplorer();
+    let failFirst!: (e: Error) => void;
+    save.mockImplementationOnce(
+      () =>
+        new Promise<void>((_resolve, reject) => {
+          failFirst = reject;
+        })
+    );
+    const first = explorer.persistSavedQueries([]); // delete 'existing'
+    await Promise.resolve();
+    await Promise.resolve();
+    save.mockResolvedValueOnce(undefined);
+    const newer = [existing, { ...existing, id: 'bar', name: 'bar' }];
+    expect(await explorer.persistSavedQueries(newer)).toBe(true);
+    failFirst(new Error('offline'));
+    expect(await first).toBe(false);
+    expect(ids()).toEqual(['bar', 'existing']);
   });
 });
