@@ -53,7 +53,8 @@ export default {
       return formatQueryResult(this.events);
     },
     summaryEvents: function () {
-      const groups = _.groupBy(this.events || [], this.summaryKeyFunc);
+      const positiveEvents = (this.events || []).filter(event => event.duration > 0);
+      const groups = _.groupBy(positiveEvents, event => JSON.stringify(this.summaryKeyFunc(event)));
       const summed = _.map(groups, events => ({
         ...events[0],
         duration: _.sumBy(events, 'duration'),

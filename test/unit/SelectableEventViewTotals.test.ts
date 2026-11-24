@@ -2,6 +2,7 @@ import { createLocalVue, mount } from '@vue/test-utils';
 import { createPinia, setActivePinia, PiniaVuePlugin } from 'pinia';
 import SelectableEventView from '~/components/SelectableEventView.vue';
 import Summary from '~/visualizations/Summary.vue';
+import { useCategoryStore } from '~/stores/categories';
 
 const events = [
   { timestamp: '2026-01-01T00:00:00Z', duration: 60, data: { title: 'A', app: 'editor' } },
@@ -9,7 +10,7 @@ const events = [
   { timestamp: '2026-01-01T00:11:00Z', duration: 60, data: { title: 'A', app: 'browser' } },
 ];
 
-function makeView() {
+function makeView(inputEvents = events) {
   const localVue = createLocalVue();
   localVue.use(PiniaVuePlugin);
   const pinia = createPinia();
@@ -18,7 +19,7 @@ function makeView() {
   return mount(SelectableEventView, {
     localVue,
     pinia,
-    propsData: { events },
+    propsData: { events: inputEvents },
     mocks: { $t: key => key },
     stubs: {
       'aw-eventlist': { name: 'EventListStub', props: ['events'], template: '<div />' },
@@ -68,6 +69,54 @@ describe('SelectableEventView summary', () => {
     expect(wrapper.props('events')).toBe(events);
     await wrapper.setData({ vis_method: 'timeline' });
     expect(wrapper.findComponent({ name: 'TimelineStub' }).props('buckets')[0].events).toBe(events);
+    wrapper.destroy();
+  });
+
+  test('keeps category arrays with comma-containing elements separate', async () => {
+    const input = [
+      { ...events[0], data: { title: 'A', app: 'editor', $category: ['Work,Email'] } },
+      { ...events[1], data: { title: 'B', app: 'browser', $category: ['Work', 'Email'] } },
+    ];
+    const wrapper = makeView(input);
+    useCategoryStore().classes.push(
+      ...[['Work'], ['Work', 'Email'], ['Work,Email']].map(name => ({
+        name,
+        rule: { type: 'none' as const },
+        data: { color: '#123456' },
+      }))
+    );
+    await wrapper.setData({ vis_method: 'summary', summaryKey: '$category' });
+    expect(
+      wrapper
+        .findComponent(Summary)
+        .props('fields')
+        .map(e => [e.data.$category, e.duration])
+    ).toEqual([
+      [['Work', 'Email'], 600],
+      [['Work,Email'], 60],
+    ]);
+    expect(wrapper.findAll('svg > g > rect').length).toBe(2);
+    wrapper.destroy();
+  });
+
+  test('skips non-positive durations before summing and omits non-positive-only groups', async () => {
+    const input = [
+      events[0],
+      { ...events[0], duration: -60 },
+      { ...events[1], duration: 0 },
+      { ...events[2], duration: -1, data: { title: 'C', app: 'editor' } },
+    ];
+    const wrapper = makeView(input);
+    await wrapper.setData({ vis_method: 'summary' });
+    expect(
+      wrapper
+        .findComponent(Summary)
+        .props('fields')
+        .map(e => [e.data.title, e.duration])
+    ).toEqual([['A', 60]]);
+    expect(
+      wrapper.findAll('svg > g > rect').wrappers.map(rect => rect.attributes('width'))
+    ).toEqual(['100%']);
     wrapper.destroy();
   });
 });
