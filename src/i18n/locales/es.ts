@@ -391,6 +391,12 @@ export default {
     exportFailed: 'La exportación falló: {error}',
   },
   activity: {
+    watcherLiveness: {
+      stopped: 'Watcher detenido:',
+      lastReported: '{name} informó por última vez {ago}.',
+      hint: 'Compruebe el icono de la bandeja o {link}.',
+      restart: 'reinicie el watcher',
+    },
     title: 'Actividad',
     browserAllowlistMiss:
       'No hay ninguna ventana de navegador coincidente en este período. Si navegaba en una variante de Chromium/Firefox, es posible que su nombre de aplicación aún no se reconozca.',
@@ -542,6 +548,7 @@ export default {
     scrollHint:
       'Desplácese para hacer zoom, deslice o desplácese horizontalmente para moverse, use las flechas para navegar',
     loading: 'Cargando...',
+    categorizedRow: 'Categorizado',
   },
   stopwatch: {
     title: 'Cronómetro',

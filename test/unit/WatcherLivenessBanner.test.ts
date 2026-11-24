@@ -1,8 +1,9 @@
 import Vue from 'vue';
-import { shallowMount } from '@vue/test-utils';
+import { mount as fullMount, shallowMount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 import WatcherLivenessBanner from '~/components/WatcherLivenessBanner.vue';
 import { useBucketsStore } from '~/stores/buckets';
+import { i18n, setAppLocale } from '~/i18n';
 
 const NOW = Date.parse('2026-10-08T12:00:00Z');
 const bucket = (id, type, age, hostname = 'desktop') => ({
@@ -145,5 +146,41 @@ describe('watcher liveness banner', () => {
     resolve();
     await flush();
     expect(wrapper.vm.staleWatchers).toHaveLength(1);
+  });
+
+  test('renders the banner in the app locale, with its plural rules (#1324)', async () => {
+    // The global $t stub is English-only; render through the real vue-i18n instance.
+    Vue.prototype.$t = function (key, values) {
+      return this.$i18n.t(key, values);
+    };
+    store.buckets = [bucket('window-synced', 'currentwindow', 0), bucket('afk', 'afkstatus', 6)];
+    const render = async () => {
+      wrapper = fullMount(WatcherLivenessBanner, {
+        propsData: { host: 'desktop' },
+        i18n,
+        stubs: { 'b-alert': { template: '<div><slot /></div>' } },
+      });
+      await flush();
+      const text = wrapper.text().replace(/\s+/g, ' ');
+      wrapper.destroy();
+      wrapper = undefined;
+      return text;
+    };
+    try {
+      setAppLocale('de');
+      const de = await render();
+      expect(de).toContain('Watcher gestoppt:');
+      expect(de).toContain('aw-watcher-afk hat sich zuletzt vor 6 Minuten gemeldet.');
+      expect(de).toContain('Prüfen Sie das Tray-Symbol oder starten Sie den Watcher neu.');
+      setAppLocale('ru');
+      expect(await render()).toContain('6 минут назад');
+    } finally {
+      setAppLocale('en');
+    }
+    const en = await render();
+    expect(en).toBe(
+      'Watcher stopped: aw-watcher-afk last reported 6 minutes ago. ' +
+        'Check the tray icon or restart the watcher.'
+    );
   });
 });

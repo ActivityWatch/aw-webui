@@ -381,6 +381,12 @@ export default {
     exportFailed: 'Не вдалося експортувати: {error}',
   },
   activity: {
+    watcherLiveness: {
+      stopped: 'Watcher зупинено:',
+      lastReported: 'Останній звіт від {name}: {ago}.',
+      hint: 'Перевірте значок у треї або {link}.',
+      restart: 'перезапустіть watcher',
+    },
     title: 'Активність',
     browserAllowlistMiss:
       'Для цього періоду не знайдено відповідного вікна браузера. Якщо ви користувалися форком Chromium/Firefox, назва його застосунку може ще не розпізнаватися.',
@@ -532,6 +538,7 @@ export default {
     scrollHint:
       'Коліщатко — масштаб, свайп/горизонтальна прокрутка — панорама, стрілки — навігація',
     loading: 'Завантаження…',
+    categorizedRow: 'За категоріями',
   },
   stopwatch: {
     title: 'Секундомір',

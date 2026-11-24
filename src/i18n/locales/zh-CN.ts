@@ -369,6 +369,12 @@ export default {
     exportFailed: '导出失败：{error}',
   },
   activity: {
+    watcherLiveness: {
+      stopped: 'Watcher 已停止：',
+      lastReported: '{name} 最后一次报告于{ago}。',
+      hint: '请检查托盘图标或{link}。',
+      restart: '重启 watcher',
+    },
     title: '活动',
     browserAllowlistMiss:
       '此时间段内未找到匹配的浏览器窗口。如果您使用的是 Chromium/Firefox 衍生浏览器，其应用名称可能尚未被识别。',
@@ -510,6 +516,7 @@ export default {
     noEvents: '没有符合筛选条件的事件。未更新时间线。',
     scrollHint: '滚动缩放，滑动/水平滚动平移，方向键导航',
     loading: '加载中...',
+    categorizedRow: '已分类',
   },
   stopwatch: {
     title: '秒表',

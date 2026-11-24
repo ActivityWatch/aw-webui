@@ -388,6 +388,12 @@ export default {
     exportFailed: 'Ekspor gagal: {error}',
   },
   activity: {
+    watcherLiveness: {
+      stopped: 'Watcher berhenti:',
+      lastReported: '{name} terakhir melapor {ago}.',
+      hint: 'Periksa ikon baki sistem atau {link}.',
+      restart: 'mulai ulang watcher',
+    },
     title: 'Aktivitas',
     browserAllowlistMiss:
       'Tidak ada jendela browser yang cocok untuk periode ini. Jika Anda menjelajah dengan fork Chromium/Firefox, nama aplikasinya mungkin belum dikenali.',
@@ -538,6 +544,7 @@ export default {
     scrollHint:
       'Gulir untuk zoom, geser/gulir horizontal untuk menggeser, tombol panah untuk bernavigasi',
     loading: 'Memuat...',
+    categorizedRow: 'Terkategori',
   },
   stopwatch: {
     title: 'Stopwatch',

@@ -386,6 +386,12 @@ export default {
     exportFailed: 'एक्सपोर्ट विफल रहा: {error}',
   },
   activity: {
+    watcherLiveness: {
+      stopped: 'watcher रुक गया:',
+      lastReported: '{name} ने आख़िरी बार {ago} रिपोर्ट किया।',
+      hint: 'ट्रे आइकन जाँचें या {link}।',
+      restart: 'watcher को फिर से शुरू करें',
+    },
     title: 'गतिविधि',
     browserAllowlistMiss:
       'इस अवधि के लिए कोई मेल खाती ब्राउज़र विंडो नहीं मिली। अगर आप Chromium/Firefox के किसी फ़ोर्क में ब्राउज़ कर रहे थे, तो हो सकता है उसका ऐप नाम अभी पहचाना न जाता हो।',
@@ -536,6 +542,7 @@ export default {
     scrollHint:
       'ज़ूम के लिए स्क्रॉल करें, पैन के लिए स्वाइप/क्षैतिज स्क्रॉल करें, नेविगेट करने के लिए तीर कुंजियाँ दबाएँ',
     loading: 'लोड हो रहा है...',
+    categorizedRow: 'वर्गीकृत',
   },
   stopwatch: {
     title: 'स्टॉपवॉच',

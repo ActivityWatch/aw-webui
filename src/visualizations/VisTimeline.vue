@@ -95,6 +95,7 @@ import { seconds_to_duration } from '../util/time';
 import { getCategoryColorFromEvent, getColorFromCategory } from '../util/color';
 import { getEventDisplayTitle } from '../util/eventDisplay';
 import { useCategoryStore } from '~/stores/categories';
+import { i18n } from '~/i18n';
 import { getSwimlane } from '../util/swimlane';
 import {
   indexTimelineEvents,
@@ -542,7 +543,10 @@ export default {
       });
 
       if (this.categorizedEvents?.length) {
-        groups.unshift({ id: CATEGORIZED_ROW, content: this.showRowLabels ? 'Categorized' : '' });
+        groups.unshift({
+          id: CATEGORIZED_ROW,
+          content: this.showRowLabels ? i18n.t('timeline.categorizedRow') : '',
+        });
       }
 
       const visible = visibleTimelineEvents(index, start - buffer, end + buffer);

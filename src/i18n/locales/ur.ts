@@ -388,6 +388,12 @@ export default {
     exportFailed: 'برآمد ناکام ہو گئی: {error}',
   },
   activity: {
+    watcherLiveness: {
+      stopped: 'واچر رک گیا:',
+      lastReported: '{name} نے آخری بار {ago} رپورٹ کیا۔',
+      hint: 'ٹرے آئیکن چیک کریں یا {link}۔',
+      restart: 'واچر دوبارہ شروع کریں',
+    },
     title: 'سرگرمی',
     browserAllowlistMiss:
       'اس مدت کے لیے کوئی مطابقت رکھنے والی براؤزر ونڈو نہیں ملی۔ اگر آپ Chromium/Firefox کے کسی فورک میں براؤز کر رہے تھے تو ممکن ہے اس کا ایپ نام ابھی پہچانا نہ گیا ہو۔',
@@ -538,6 +544,7 @@ export default {
     scrollHint:
       'زوم کے لیے اسکرول کریں، پین کے لیے سوائپ/افقی اسکرول کریں، نیویگیٹ کرنے کے لیے ایرو کیز استعمال کریں',
     loading: 'لوڈ ہو رہا ہے...',
+    categorizedRow: 'زمرہ بند',
   },
   stopwatch: {
     title: 'اسٹاپ واچ',
