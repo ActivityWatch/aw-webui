@@ -135,6 +135,7 @@ div
         b.mr-1 {{ $t('activity.queryRange') }}
         span {{ periodReadableRange }}
 
+  b-alert(v-if="invalidUrlPeriod" variant="warning" show) {{ $t('activity.invalidUrlPeriod') }}
   b-alert(v-if="invalidRange" variant="warning" show) {{ periodLength === 'interval' ? $t('activity.invalidInterval') : $t('activity.invalidRange') }}
   b-alert.py-1(v-if="intervalIssue" variant="warning" show data-testid="interval-issue")
     span {{ intervalIssue.message }}
@@ -756,6 +757,13 @@ export default {
         (this.periodLength === 'interval' && !this.exactInterval)
       );
     },
+    // An unknown :periodLength, or a :date that isn't a real YYYY-MM-DD day
+    // (range and interval are validated by invalidRange). Falls back to today.
+    invalidUrlPeriod: function (): boolean {
+      if (!(this.periodLength in this.periodLengths)) return true;
+      if (['range', 'interval', 'all'].includes(this.periodLength) || !this.date) return false;
+      return !moment(this.date, 'YYYY-MM-DD', true).isValid();
+    },
     activityDiagnostic: function (): ActivityDiagnostic | null {
       return diagnoseActivity({
         host: this.host,
@@ -799,7 +807,8 @@ export default {
           ? moment(this.exactInterval.start).format('YYYY-MM-DD')
           : get_today_with_offset(offset);
       }
-      const baseDate = this.date || get_today_with_offset(offset);
+      const baseDate =
+        this.date && !this.invalidUrlPeriod ? this.date : get_today_with_offset(offset);
       if (['week', 'month', 'year'].includes(this.periodLength)) {
         return periodStartDate(baseDate, this.periodLength);
       }
@@ -926,7 +935,8 @@ export default {
           length: [1, this.periodLength],
         };
       } else {
-        const len = { last7d: [7, 'days'], last30d: [30, 'days'] }[this.periodLength];
+        // An unknown period in the URL shows a single day (a warning is shown).
+        const len = { last7d: [7, 'days'], last30d: [30, 'days'] }[this.periodLength] || [1, 'day'];
         return {
           start: get_day_start_with_offset(
             moment(this._date).subtract(len[0] - 1, len[1]),
@@ -967,7 +977,8 @@ export default {
         } else if (this.periodLength === 'last30d') {
           periodLength = [30, 'day'];
         } else {
-          throw 'unknown periodLength';
+          // Unknown period in the URL: timeperiod falls back to a single day
+          periodLength = [1, 'day'];
         }
       }
 
