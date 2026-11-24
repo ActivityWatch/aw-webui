@@ -73,8 +73,16 @@ export function querystr_to_array(querystr: string): string[] {
   return statements;
 }
 
+// Escape a value for a double-quoted query literal.
+//
+// A backslash that is already escaping a quote has to survive the pass:
+// escaping only the quote turns `\"` into `\\"`, and both `querystr_to_array`
+// and aw-query read `\\` as a literal backslash, so the quote ends the literal
+// and the next `;` splits the query into two broken statements. Escaping the
+// pair keeps the literal open. Backslashes that do not precede a quote are
+// left alone: regex patterns like `\w` have to reach aw-query unchanged.
 function escape_doublequote(s: string) {
-  return s.replace(/"/g, '\\"');
+  return s.replace(/\\?"/g, match => (match.length === 2 ? '\\\\\\"' : '\\"'));
 }
 
 // Hostname safe for using as a variable name

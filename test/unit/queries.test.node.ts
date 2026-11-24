@@ -582,6 +582,28 @@ describe('querystr_to_array', () => {
     const result = querystr_to_array(query);
     expect(result).toHaveLength(2);
   });
+
+  test('a saved pattern with an escaped quote does not split the query', () => {
+    // The pattern is a regex: `a\"b;c` matches a quote between a and b.
+    // Escaping only the quote gives `a\\"b;c`, whose `\\` is a literal
+    // backslash, so the quote closes the literal and `;` splits the query.
+    const query = canonicalEvents({
+      bid_window: 'aw-watcher-window_testhost',
+      bid_afk: 'aw-watcher-afk_testhost',
+      bid_browsers: [],
+      filter_afk: true,
+      categories: [],
+      filter_categories: [],
+      always_active_pattern: 'a\\"b;c',
+    });
+    const result = querystr_to_array(query);
+    expect(result).toContain(
+      'not_treat_as_afk = filter_keyvals_regex(events, "app", "a\\\\\\"b;c");'
+    );
+    // Nothing was cut at the semicolon inside the pattern.
+    expect(result.some(statement => statement.includes('filter_keyvals_regex'))).toBe(true);
+    expect(result.filter(s => s.includes('filter_keyvals_regex'))).toHaveLength(2);
+  });
 });
 
 // AQL has no comment syntax, so any comment leaking into a generated query
