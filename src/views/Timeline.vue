@@ -341,6 +341,13 @@ export default {
         categoryPromise = Promise.resolve({ events: [], error: false });
       }
 
+      // AFK filtering: use query engine to filter window events by AFK status.
+      // It replaces window events with a fresh query result, so it must run
+      // before the duration/category filters or it would undo them.
+      if (this.filter_afk) {
+        buckets = await this._applyAfkFilter(buckets);
+      }
+
       if (this.filter_duration > 0) {
         for (const bucket of buckets) {
           bucket.events = _.filter(bucket.events, e => e.duration >= this.filter_duration);
@@ -367,13 +374,9 @@ export default {
         }
       }
 
-      // AFK filtering: use query engine to filter window events by AFK status
-      if (this.filter_afk) {
-        buckets = await this._applyAfkFilter(buckets);
-      }
-
       // Merge adjacent events by app name for window buckets.
-      // Runs after AFK filtering so merges operate on already-filtered events.
+      // Runs after the AFK, duration and category filters so merges operate on
+      // already-filtered events.
       // Reduces visual clutter from apps that produce many small events (e.g.
       // Adobe Illustrator's TAB key toggling UI panels). See: activitywatch#1165
       if (this.filter_merge_similar) {
