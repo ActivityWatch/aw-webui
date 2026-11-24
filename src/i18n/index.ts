@@ -247,6 +247,13 @@ function applyDocumentLocale(locale: AppLocale): void {
 moment.locale(MOMENT_LOCALE[initialLocale]);
 applyDocumentLocale(initialLocale);
 
+// Restores moment's global locale to the app locale after a library changed it.
+// vis-timeline calls moment.locale(navigator.languages) when its module is first
+// evaluated, which happens lazily on the first timeline render (#1324).
+export function restoreMomentLocale(): void {
+  moment.locale(MOMENT_LOCALE[isAppLocale(i18n.locale) ? i18n.locale : 'en']);
+}
+
 export function setAppLocale(locale: string): void {
   const next = isAppLocale(locale) ? locale : 'en';
   i18n.locale = next;

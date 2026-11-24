@@ -95,7 +95,7 @@ import { seconds_to_duration } from '../util/time';
 import { getCategoryColorFromEvent, getColorFromCategory } from '../util/color';
 import { getEventDisplayTitle } from '../util/eventDisplay';
 import { useCategoryStore } from '~/stores/categories';
-import { i18n } from '~/i18n';
+import { i18n, restoreMomentLocale } from '~/i18n';
 import { getSwimlane } from '../util/swimlane';
 import {
   indexTimelineEvents,
@@ -115,6 +115,9 @@ import { HOST_GROUP_PREFIX, nestGroupsByHost } from '../util/timelineHostGroups'
 import { Timeline } from 'vis-timeline/esnext';
 import 'vis-timeline/styles/vis-timeline-graph2d.css';
 import EventEditor from '~/components/EventEditor.vue';
+
+// Importing vis-timeline resets moment's global locale to the browser language.
+restoreMomentLocale();
 
 const PIXELS_PER_WHEEL_LINE = 40;
 // Group id of the derived category row; its events are not editable.
