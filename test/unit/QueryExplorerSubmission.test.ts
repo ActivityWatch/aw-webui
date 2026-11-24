@@ -217,13 +217,12 @@ describe('Query Explorer submission ownership', () => {
     const query = jest.fn().mockResolvedValue([[]]);
     const wrapper = mountExplorer(query);
     await wrapper.setData({
-      query_code:
-        'events = filter_keyvals_regex(events, "app", ["__CATEGORIES__"]); c = __CATEGORIES__;',
+      query_code: 'events = filter_keyvals([], "app", ["__CATEGORIES__"]); c = __CATEGORIES__;',
     });
     await wrapper.vm.query();
     const json = JSON.stringify(rules);
     expect(query.mock.calls[0][1]).toEqual([
-      `events = filter_keyvals_regex(events, "app", ["__CATEGORIES__"]);`,
+      `events = filter_keyvals([], "app", ["__CATEGORIES__"]);`,
       `c = ${json};`,
     ]);
   });
