@@ -30,7 +30,8 @@ jest.mock('~/stores/settings', () => ({
   }),
 }));
 
-const event = (offset: number, duration: number, app: string) => ({
+const event = (offset: number, duration: number, app: string, id?: number) => ({
+  id,
   timestamp: moment.utc('2026-10-18T09:00:00Z').add(offset, 'seconds').toISOString(),
   duration,
   data: { app, title: app },
@@ -62,8 +63,12 @@ describe('Timeline duration filter after Merge similar', () => {
   });
 
   test('merge-similar runs before the duration filter, so merged runs survive it', async () => {
-    // Ten contiguous 5s events of the same app = one 50s block once merged.
-    const raw = Array.from({ length: 10 }, (_v, i) => event(i * 5, 5, 'Illustrator'));
+    // Ten contiguous 5s events of the same app = one 50s block once merged,
+    // plus an isolated 5s event of another app well after it (gap > 30s).
+    const raw = [
+      ...Array.from({ length: 10 }, (_v, i) => event(i * 5, 5, 'Illustrator')),
+      event(600, 5, 'Terminal'),
+    ];
     mockGetBucketsWithEvents.mockResolvedValue([
       { id: 'window_laptop', type: 'currentwindow', hostname: 'laptop', client: 'w', events: raw },
     ]);
@@ -73,10 +78,42 @@ describe('Timeline duration filter after Merge similar', () => {
     await flush();
     wrapper.setData({ filter_merge_similar: true });
     await flush();
-    expect(windowEvents(wrapper.vm).map(e => e.duration)).toEqual([50]);
+    expect(windowEvents(wrapper.vm).map(e => [e.data.app, e.duration])).toEqual([
+      ['Illustrator', 50],
+      ['Terminal', 5],
+    ]);
     wrapper.setData({ filter_duration: 30 });
     await flush();
-    // The categorized row filters after merging; raw rows filter before and lose the block.
-    expect(windowEvents(wrapper.vm).map(e => e.duration)).toEqual([50]);
+    // The minimum still applies with Merge similar on: the short isolated
+    // event goes, the merged 50s block (made of 5s events) stays.
+    expect(windowEvents(wrapper.vm).map(e => [e.data.app, e.duration])).toEqual([
+      ['Illustrator', 50],
+    ]);
+  });
+
+  test('a merged bar carries no event id; an unmerged one keeps its own', async () => {
+    const raw = [
+      ...Array.from({ length: 3 }, (_v, i) => event(i * 5, 5, 'Illustrator', i + 1)),
+      event(600, 5, 'Terminal', 42),
+    ];
+    mockGetBucketsWithEvents.mockResolvedValue([
+      { id: 'window_laptop', type: 'currentwindow', hostname: 'laptop', client: 'w', events: raw },
+    ]);
+    mockQuery.mockResolvedValue([[]]);
+    const wrapper = mountTimeline();
+    wrapper.setData({ daterange: [moment.utc('2026-10-18'), moment.utc('2026-10-19')] });
+    await flush();
+    wrapper.setData({ filter_merge_similar: true });
+    await flush();
+    const events = windowEvents(wrapper.vm);
+    expect(events.map(e => [e.data.app, e.duration])).toEqual([
+      ['Illustrator', 15],
+      ['Terminal', 5],
+    ]);
+    // Clicking the merged bar must not open the editor for event 1 alone.
+    expect(events[0]).not.toHaveProperty('id');
+    expect(events[1].id).toBe(42);
+    // The bucket's own events are not mutated by the merge.
+    expect(raw.map(e => e.id)).toEqual([1, 2, 3, 42]);
   });
 });

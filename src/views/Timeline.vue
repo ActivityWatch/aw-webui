@@ -427,6 +427,10 @@ export default {
             const nextEnd = nextStart + next.duration * 1000;
             current.duration =
               (Math.max(currentEnd, nextEnd) - new Date(current.timestamp).getTime()) / 1000;
+            // A merged bar spans several stored events, so it must not carry
+            // the first one's id: clicking it would open the editor for that
+            // event alone. Without an id the timeline skips the editor.
+            delete current.id;
           } else {
             merged.push(current);
             current = { ...next };
