@@ -2,7 +2,7 @@ import { createPinia, setActivePinia } from 'pinia';
 
 import { useActivityStore } from '~/stores/activity';
 import { useBucketsStore } from '~/stores/buckets';
-import { createClient } from '~/util/awclient';
+import { createClient, getClient } from '~/util/awclient';
 
 createClient();
 
@@ -75,8 +75,9 @@ describe('activity load sections', () => {
     stubDesktopLoad(store, 'aw-watcher-afk_a');
     jest.spyOn(store, 'query_desktop_full').mockResolvedValue();
     jest.spyOn(store, 'query_active_history').mockImplementation(async options => {
-      // Simulate host A's completed bars, keyed like the real query would key them.
-      store.invalidate_active_history({ cache_key: store.active_history_cache_key(options) });
+      // Simulate host A's completed bars under some host-A cache key (any key
+      // that differs from host B's; the test must not depend on new actions).
+      store.invalidate_active_history({ cache_key: `history-of-${options.host}` });
       store.query_active_history_completed({
         active_history: { p: [{ timestamp: '2024-01-01T00:00:00Z', duration: 111, data: {} }] },
       });
@@ -94,5 +95,90 @@ describe('activity load sections', () => {
     });
     await store.load({ host: 'b', timeperiod: day } as any);
     expect(historyDuringDesktop).toEqual({});
+  });
+
+  test('leaving Activity (reset) stops the load before its remaining queries', async () => {
+    const store = useActivityStore();
+    stubDesktopLoad(store, 'aw-watcher-afk_a');
+    jest.spyOn(store, 'query_desktop_full').mockImplementation(async () => {
+      await store.reset(); // aborts the client without touching query_options
+      throw new Error('aborted');
+    });
+    const activeHistory = jest.spyOn(store, 'query_active_history').mockResolvedValue();
+    const editor = jest.spyOn(store, 'query_editor').mockResolvedValue();
+    const byPeriod = jest.spyOn(store, 'query_category_time_by_period').mockResolvedValue();
+
+    await expect(store.load({ host: 'a', timeperiod: day } as any)).rejects.toThrow('aborted');
+    expect(activeHistory).not.toHaveBeenCalled();
+    expect(editor).not.toHaveBeenCalled();
+    expect(byPeriod).not.toHaveBeenCalled();
+  });
+
+  test('a stale load whose section completed starts no further section', async () => {
+    const store = useActivityStore();
+    stubDesktopLoad(store, 'aw-watcher-afk_a');
+    jest.spyOn(store, 'query_desktop_full').mockImplementation(async () => {
+      getClient().abort(); // a newer load cancelled this one, yet the query resolved
+    });
+    const activeHistory = jest.spyOn(store, 'query_active_history').mockResolvedValue();
+    const editor = jest.spyOn(store, 'query_editor').mockResolvedValue();
+
+    await store.load({ host: 'a', timeperiod: day } as any);
+    expect(activeHistory).not.toHaveBeenCalled();
+    expect(editor).not.toHaveBeenCalled();
+  });
+
+  describe('All Devices', () => {
+    function stubMultideviceLoad(store: ReturnType<typeof useActivityStore>) {
+      const buckets = useBucketsStore();
+      jest.spyOn(buckets, 'ensureLoaded').mockResolvedValue(undefined as any);
+      jest.spyOn(buckets, 'bucketsWindow').mockImplementation((h: string) => [`window_${h}`]);
+      jest.spyOn(buckets, 'bucketsAFK').mockImplementation((h: string) => [`afk_${h}`]);
+      jest.spyOn(buckets, 'bucketsAndroid').mockReturnValue([]);
+      jest.spyOn(store, 'resolve_multidevice_hosts').mockReturnValue(['a', 'b']);
+      jest.spyOn(store, 'get_buckets_multidevice').mockImplementation(() => {
+        store.buckets.editor = ['aw-watcher-vim_test'];
+      });
+      jest.spyOn(store, 'queries_category_history').mockReturnValue(true);
+    }
+
+    test('a failed combined history query does not strand editor and category history', async () => {
+      const store = useActivityStore();
+      stubMultideviceLoad(store);
+      jest.spyOn(store, 'query_multidevice_full').mockResolvedValue();
+      const failure = new Error('multideviceActivityQuery timed out');
+      jest.spyOn(store, 'query_active_history_multidevice').mockRejectedValue(failure);
+      const editor = jest.spyOn(store, 'query_editor').mockResolvedValue();
+      const byPeriod = jest.spyOn(store, 'query_category_time_by_period').mockResolvedValue();
+
+      await expect(store.load({ host: '@all', timeperiod: day } as any)).rejects.toBe(failure);
+      expect(editor).toHaveBeenCalledTimes(1);
+      expect(byPeriod).toHaveBeenCalledTimes(1);
+    });
+
+    test('switching from one device drops its bars before the combined query', async () => {
+      const store = useActivityStore();
+      // Host A's completed single-device bars.
+      store.invalidate_active_history({ cache_key: 'history-of-a' });
+      store.query_active_history_completed({
+        active_history: { p: [{ timestamp: '2024-01-01T00:00:00Z', duration: 111, data: {} }] },
+      });
+
+      stubMultideviceLoad(store);
+      let historyDuringQuery: Record<string, unknown> | null = null;
+      jest.spyOn(store, 'query_multidevice_full').mockImplementation(async () => {
+        historyDuringQuery = { ...store.active.history };
+        throw new Error('combined query failed');
+      });
+      jest.spyOn(store, 'query_active_history_multidevice').mockResolvedValue();
+      jest.spyOn(store, 'query_editor').mockResolvedValue();
+      jest.spyOn(store, 'query_category_time_by_period').mockResolvedValue();
+
+      await expect(store.load({ host: '@all', timeperiod: day } as any)).rejects.toThrow(
+        'combined query failed'
+      );
+      expect(historyDuringQuery).toEqual({});
+      expect(store.active.history).toEqual({});
+    });
   });
 });
