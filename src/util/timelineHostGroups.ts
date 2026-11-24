@@ -2,6 +2,7 @@ export interface TimelineGroup {
   id: string;
   content: string;
   nestedGroups?: string[];
+  treeLevel?: number;
 }
 
 export const HOST_GROUP_PREFIX = 'host-group:';
@@ -14,6 +15,10 @@ export const HOST_GROUP_PREFIX = 'host-group:';
 // collapse state into the group DataSet when a label is clicked, and
 // `syncTimelineData` leaves keys the rebuilt group does not name untouched,
 // so the state survives every rebuild.
+//
+// Children carry an explicit `treeLevel`. Without it vis-timeline labels them
+// `vis-group-level-unknown-but-gte1`, which its stylesheet draws with a red
+// border (and a light background that hides the label in dark mode).
 export function nestGroupsByHost(
   groups: TimelineGroup[],
   hostOf: (id: string) => string | undefined,
@@ -34,7 +39,7 @@ export function nestGroupsByHost(
       result.push(group);
     } else if (!emitted.has(host)) {
       emitted.add(host);
-      const children = byHost.get(host) as TimelineGroup[];
+      const children = (byHost.get(host) as TimelineGroup[]).map(c => ({ ...c, treeLevel: 1 }));
       result.push({
         id: HOST_GROUP_PREFIX + host,
         content: hostLabel(host),

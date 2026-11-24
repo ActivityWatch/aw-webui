@@ -29,6 +29,20 @@ describe('nestGroupsByHost', () => {
     expect(out[0].content).toBe('host a');
   });
 
+  it('gives nested bucket rows an explicit tree level', () => {
+    const out = nestGroupsByHost(
+      [g('aw-watcher-window_a'), g('aw-stopwatch'), g('aw-watcher-window_b')],
+      hostOf,
+      label
+    );
+    const level = Object.fromEntries(out.map(x => [x.id, x.treeLevel]));
+    // A missing level on a nested row makes vis-timeline draw it with a red border.
+    expect(level['aw-watcher-window_a']).toBe(1);
+    expect(level['aw-watcher-window_b']).toBe(1);
+    expect(level[HOST_GROUP_PREFIX + 'a']).toBeUndefined();
+    expect(level['aw-stopwatch']).toBeUndefined();
+  });
+
   it('returns the same array for a single host', () => {
     const groups = [g('aw-watcher-window_a'), g('aw-watcher-afk_a')];
     expect(nestGroupsByHost(groups, hostOf, label)).toBe(groups);
