@@ -284,6 +284,10 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
     isDesktopParams(params) && params.filter_afk
       ? 'events = filter_period_intersect(events, not_afk);'
       : '',
+    // Audible tabs must extend not_afk before browser statistics are clipped.
+    isDesktopParams(params) && params.filter_afk && params.bid_browsers
+      ? 'browser_events = filter_period_intersect(browser_events, not_afk);'
+      : '',
     params.bid_stopwatch
       ? `stopwatch_events = query_bucket("${params.bid_stopwatch}");
          events = union_no_overlap(stopwatch_events, events);`
