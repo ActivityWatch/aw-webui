@@ -1,7 +1,15 @@
 import { execFileSync } from 'child_process';
 import path from 'path';
 import moment from 'moment';
-import { TimePeriod, hourlyLabels, timeperiodsHoursOfPeriod } from '~/util/timeperiod';
+import {
+  TimePeriod,
+  dateToTimeperiod,
+  hourlyLabels,
+  timeperiodToStr,
+  timeperiodsAroundTimeperiod,
+  timeperiodsDaysOfPeriod,
+  timeperiodsHoursOfPeriod,
+} from '~/util/timeperiod';
 
 // Node reads TZ once at startup, and CI runs `npm test` with no TZ (UTC), where
 // no DST transition exists. Replay this file under each relevant zone, in a
@@ -121,5 +129,90 @@ describeZone('Australia/Lord_Howe')('hourly periods with 30-minute DST (Lord How
     expect(labels[0]).toBe('0:30');
     expect(labels[1]).toBe('1:30');
     expect(labels[2]).toBe('2');
+  });
+});
+
+// A configured start of day inside the spring-forward gap resolves to the first
+// instant after it (02:00 -> 03:00 on the transition day). The next day still
+// starts at the configured time, so the transition day is a 23 h (23.5 h) day
+// and must end exactly where the next one starts, never an hour/30 min later.
+function endOf(tp: TimePeriod): string {
+  return timeperiodToStr(tp).split('/')[1];
+}
+
+function expectDayEndsAtNextDayStart(date: string, nextDate: string, offset: string) {
+  const day = dateToTimeperiod(date, offset);
+  const next = dateToTimeperiod(nextDate, offset);
+  expect(endOf(day)).toBe(moment(next.start).format());
+}
+
+describeZone('Europe/Stockholm')('start of day inside the Stockholm spring-forward gap', () => {
+  test.each(['02:00', '02:30'])('day ends where the next day starts (%s)', offset => {
+    expectDayEndsAtNextDayStart('2026-03-29', '2026-03-30', offset);
+    // The gap day itself starts at 03:00; its neighbours are unaffected.
+    expectDayEndsAtNextDayStart('2026-03-28', '2026-03-29', offset);
+    expectDayEndsAtNextDayStart('2026-03-30', '2026-03-31', offset);
+  });
+
+  test('gap day is 23 hourly buckets with exact coverage', () => {
+    const tp = dateToTimeperiod('2026-03-29', '02:00');
+    const periods = timeperiodsHoursOfPeriod(tp);
+    expect(periods).toHaveLength(23);
+    const last = periods[periods.length - 1];
+    expect(moment(last.start).add(1, 'hour').format()).toBe(
+      moment(dateToTimeperiod('2026-03-30', '02:00').start).format()
+    );
+  });
+
+  test('neighbouring history periods start at each real day start', () => {
+    const tp = dateToTimeperiod('2026-03-29', '02:00');
+    const around = timeperiodsAroundTimeperiod(tp);
+    around.forEach((p, i) => {
+      const date = moment('2026-03-29')
+        .add(i - 15, 'days')
+        .format('YYYY-MM-DD');
+      expect(moment(p.start).format()).toBe(moment(dateToTimeperiod(date, '02:00').start).format());
+    });
+    around.slice(0, -1).forEach((p, i) => {
+      expect(endOf(p)).toBe(moment(around[i + 1].start).format());
+    });
+  });
+
+  test('days of a week crossing the gap are contiguous and keep the offset', () => {
+    const tp = {
+      ...dateToTimeperiod('2026-03-26', '02:00'),
+      length: [7, 'days'] as [number, string],
+    };
+    const days = timeperiodsDaysOfPeriod(tp);
+    expect(days).toHaveLength(7);
+    days.slice(0, -1).forEach((p, i) => {
+      expect(endOf(p)).toBe(moment(days[i + 1].start).format());
+    });
+    expect(moment(days[4].start).format('HH:mm')).toBe('02:00'); // 2026-03-30
+  });
+
+  test('controls: a normal 04:00 day and the fall-back day are unchanged', () => {
+    expectDayEndsAtNextDayStart('2026-03-29', '2026-03-30', '04:00');
+    expectDayEndsAtNextDayStart('2026-10-25', '2026-10-26', '02:00');
+    const fall = timeperiodsHoursOfPeriod(dateToTimeperiod('2026-10-25', '04:00'));
+    expect(fall).toHaveLength(24);
+  });
+});
+
+describeZone('Australia/Lord_Howe')('start of day inside the Lord Howe 30-minute gap', () => {
+  test.each(['02:00', '02:15'])('day ends where the next day starts (%s)', offset => {
+    expectDayEndsAtNextDayStart('2026-10-04', '2026-10-05', offset);
+    expectDayEndsAtNextDayStart('2026-10-03', '2026-10-04', offset);
+  });
+
+  test('gap day covers 23.5 hours with a clipped final bucket', () => {
+    const tp = dateToTimeperiod('2026-10-04', '02:00');
+    const periods = timeperiodsHoursOfPeriod(tp);
+    const nextStart = moment(dateToTimeperiod('2026-10-05', '02:00').start);
+    const total = periods.reduce((sum, p) => sum + p.length[0], 0);
+    // 02:30 -> next 02:00 is 23.5 elapsed hours
+    expect(total).toBeCloseTo(23.5, 6);
+    const last = periods[periods.length - 1];
+    expect(moment(last.start).add(last.length[0], 'hour').format()).toBe(nextStart.format());
   });
 });

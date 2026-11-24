@@ -914,6 +914,7 @@ export default {
         return {
           start: get_day_start_with_offset(this._date, settingsStore.startOfDay),
           length: [1, 'day'],
+          offset: settingsStore.startOfDay,
         };
       } else if (this.periodIsBrowseable) {
         // The URL date isn't necessarily aligned to the period (e.g. /week with no
@@ -924,6 +925,7 @@ export default {
             settingsStore.startOfDay
           ),
           length: [1, this.periodLength],
+          offset: settingsStore.startOfDay,
         };
       } else {
         const len = { last7d: [7, 'days'], last30d: [30, 'days'] }[this.periodLength];
@@ -933,6 +935,7 @@ export default {
             settingsStore.startOfDay
           ),
           length: len,
+          offset: settingsStore.startOfDay,
         };
       }
     },

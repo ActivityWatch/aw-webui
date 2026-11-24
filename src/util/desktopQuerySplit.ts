@@ -1,10 +1,10 @@
-import moment from 'moment';
-
 import { default_limit as DESKTOP_QUERY_EVENT_LIMIT } from '~/queries';
 import { IEvent } from '~/util/interfaces';
 import {
   EXACT_HOURLY_MAX_MS,
   TimePeriod,
+  advanceTimeperiodStart,
+  timeperiodEnd,
   timeperiodToStr,
   timeperiodsCalendarMonthsOfPeriod,
   timeperiodsDaysOfPeriod,
@@ -101,11 +101,14 @@ export function periodsForFullDesktopQuery(
   ) {
     periods = timeperiodsDaysOfPeriod(timeperiod).map(timeperiodToStr);
   } else if (res.startsWith('year') && count === 1) {
-    const start = moment(timeperiod.start);
-    const end = start.clone().add(1, 'year');
+    const end = timeperiodEnd(timeperiod);
     periods = [];
-    for (let d = start.clone(); d.isBefore(end); d.add(1, 'day')) {
-      periods.push(timeperiodToStr({ start: d.format(), length: [1, 'day'] }));
+    for (let i = 0; ; i++) {
+      const d = advanceTimeperiodStart(timeperiod.start, i, 'day', timeperiod.offset);
+      if (!d.isBefore(end)) break;
+      periods.push(
+        timeperiodToStr({ start: d.format(), length: [1, 'day'], offset: timeperiod.offset })
+      );
     }
   } else {
     periods = [timeperiodToStr(timeperiod)];
