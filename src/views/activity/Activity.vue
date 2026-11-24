@@ -972,7 +972,12 @@ export default {
       }
 
       const startOfPeriod = periodStart.format(dateFormatString);
-      const endOfPeriod = periodStart.add(...periodLength).format(dateFormatString);
+      // The period end is exclusive: show the last day inside it, as the
+      // range/interval branch above does.
+      const endOfPeriod = periodStart
+        .add(...periodLength)
+        .subtract(1, 'day')
+        .format(dateFormatString);
       return `${startOfPeriod}—${endOfPeriod}`;
     },
   },
