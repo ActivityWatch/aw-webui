@@ -587,6 +587,7 @@ describe('querystr_to_array', () => {
     // The pattern is a regex: `a\"b;c` matches a quote between a and b.
     // Escaping only the quote gives `a\\"b;c`, whose `\\` is a literal
     // backslash, so the quote closes the literal and `;` splits the query.
+    // The quote is already escaped, so it goes through as written.
     const query = canonicalEvents({
       bid_window: 'aw-watcher-window_testhost',
       bid_afk: 'aw-watcher-afk_testhost',
@@ -597,12 +598,63 @@ describe('querystr_to_array', () => {
       always_active_pattern: 'a\\"b;c',
     });
     const result = querystr_to_array(query);
-    expect(result).toContain(
-      'not_treat_as_afk = filter_keyvals_regex(events, "app", "a\\\\\\"b;c");'
-    );
+    expect(result).toContain('not_treat_as_afk = filter_keyvals_regex(events, "app", "a\\"b;c");');
     // Nothing was cut at the semicolon inside the pattern.
     expect(result.some(statement => statement.includes('filter_keyvals_regex'))).toBe(true);
     expect(result.filter(s => s.includes('filter_keyvals_regex'))).toHaveLength(2);
+  });
+
+  // aw-query (Rust and Python) reads a literal by turning `\"` into `"` and
+  // keeping every other backslash as written.
+  function awQueryLiteral(statement: string): string {
+    const match = statement.match(/"app", "((?:[^"\\]|\\.)*)"\);$/);
+    if (!match) throw new Error(`no app literal in: ${statement}`);
+    return match[1].replace(/\\"/g, '"');
+  }
+
+  function alwaysActiveStatements(pattern: string): string[] {
+    const query = canonicalEvents({
+      bid_window: 'aw-watcher-window_testhost',
+      bid_afk: 'aw-watcher-afk_testhost',
+      bid_browsers: [],
+      filter_afk: true,
+      categories: [],
+      filter_categories: [],
+      always_active_pattern: pattern,
+    });
+    return querystr_to_array(query).filter(s => s.includes('filter_keyvals_regex'));
+  }
+
+  // An even run escapes nothing, so the quote needs its own backslash and the
+  // pattern arrives unchanged. An odd run already escapes the quote; the server
+  // drops that backslash, which a regex treats the same as the bare quote.
+  test.each([
+    [0, 'a";b'],
+    [1, 'a";b'],
+    [2, 'a\\\\";b'],
+    [3, 'a\\\\";b'],
+    [4, 'a\\\\\\\\";b'],
+  ])('%i backslashes before a quote keep the pattern in one literal', (n, expected) => {
+    const statements = alwaysActiveStatements(`a${'\\'.repeat(n)}";b`);
+    // Two statements (app and title), neither cut at the `;` in the pattern.
+    expect(statements).toHaveLength(2);
+    for (const statement of statements) {
+      expect(statement).toMatch(/^not_treat_as_afk = filter_keyvals_regex\(events, "(app|title)"/);
+      expect(statement).toMatch(/"\);$/);
+    }
+    expect(awQueryLiteral(statements[0])).toBe(expected);
+  });
+
+  // The caller closes the literal right after a trailing run, so an odd run
+  // would escape that closing quote and swallow the rest of the query.
+  test.each([
+    [1, 'a;b\\\\'],
+    [2, 'a;b\\\\'],
+    [3, 'a;b\\\\\\\\'],
+  ])('%i trailing backslashes do not escape the closing quote', (n, expected) => {
+    const statements = alwaysActiveStatements(`a;b${'\\'.repeat(n)}`);
+    expect(statements).toHaveLength(2);
+    expect(awQueryLiteral(statements[0])).toBe(expected);
   });
 });
 

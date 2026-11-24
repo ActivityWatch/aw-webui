@@ -75,14 +75,21 @@ export function querystr_to_array(querystr: string): string[] {
 
 // Escape a value for a double-quoted query literal.
 //
-// A backslash that is already escaping a quote has to survive the pass:
-// escaping only the quote turns `\"` into `\\"`, and both `querystr_to_array`
-// and aw-query read `\\` as a literal backslash, so the quote ends the literal
-// and the next `;` splits the query into two broken statements. Escaping the
-// pair keeps the literal open. Backslashes that do not precede a quote are
-// left alone: regex patterns like `\w` have to reach aw-query unchanged.
+// `querystr_to_array` reads backslashes in pairs, so a quote stays inside the
+// literal only after an odd run of backslashes; after an even run it ends the
+// literal and the next `;` splits the query. aw-query turns `\"` into `"` and
+// keeps every other backslash as written. So a quote after an even run gets one
+// more backslash, and the value arrives unchanged. A quote after an odd run is
+// already escaped and is left alone: aw-query drops that backslash, which a
+// regex reads the same as the bare quote. A trailing odd run is padded to even,
+// or it would escape the closing quote the caller adds. Backslashes elsewhere
+// are untouched: regex patterns like `\w` have to reach aw-query unchanged.
 function escape_doublequote(s: string) {
-  return s.replace(/\\?"/g, match => (match.length === 2 ? '\\\\\\"' : '\\"'));
+  return s.replace(/(\\*)("|$)/g, (_match, run: string, end: string) => {
+    const escaped = run.length % 2 === 1;
+    if (end === '"') return escaped ? `${run}"` : `${run}\\"`;
+    return escaped ? `${run}\\` : run;
+  });
 }
 
 // JSON for a value interpolated into a query. `JSON.stringify` doubles every
