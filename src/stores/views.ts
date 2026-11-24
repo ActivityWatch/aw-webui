@@ -222,7 +222,13 @@ export const useViewsStore = defineStore('views', {
       try {
         const settingsStore = useSettingsStore();
         const confirmed = JSON.parse(JSON.stringify(settingsStore.views));
-        const draft = [...migrateStoredViews(confirmed), { ...view, elements: [] }];
+        const stored = migrateStoredViews(confirmed);
+        // Restore defaults drops custom views from the draft but not from
+        // settings, so the draft alone cannot tell whether the id is free.
+        if (stored.some(v => v.id === view.id)) {
+          throw new Error(`A saved view already uses the id "${view.id}"`);
+        }
+        const draft = [...stored, { ...view, elements: [] }];
         try {
           await settingsStore.update({ views: draft });
         } catch (error) {
@@ -238,6 +244,11 @@ export const useViewsStore = defineStore('views', {
       } finally {
         this.saving = false;
       }
+    },
+    // An id is taken if the draft or the saved layout uses it.
+    isViewIdTaken(this: State, id: string): boolean {
+      const stored = migrateStoredViews(useSettingsStore().views);
+      return [...this.views, ...stored].some(v => v.id === id);
     },
     loadViews(views: View[]) {
       this.$patch({ views: JSON.parse(JSON.stringify(views)) });

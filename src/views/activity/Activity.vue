@@ -1433,7 +1433,7 @@ export default {
       const checks: [string, boolean][] = [
         [
           this.$t('activity.errIdNotUnique').toString(),
-          this.viewsStore.views.map(v => v.id).includes(this.new_view.id),
+          this.viewsStore.isViewIdTaken(this.new_view.id),
         ],
         [this.$t('activity.errMissingId').toString(), this.new_view.id === ''],
         [this.$t('activity.errMissingName').toString(), this.new_view.name === ''],

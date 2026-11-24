@@ -35,11 +35,11 @@ afterEach(() => jest.restoreAllMocks());
 test('New view does not mutate a draft while another layout save is pending', async () => {
   const views = useViewsStore();
   views.saving = true;
-  const save = jest.spyOn(views, 'save').mockResolvedValue(undefined);
+  const saveNewView = jest.spyOn(views, 'saveNewView');
   const vm = form();
   await Activity.methods.handleSubmit.call(vm);
   expect(views.views).toEqual(initial);
-  expect(save).not.toHaveBeenCalled();
+  expect(saveNewView).not.toHaveBeenCalled();
   expect(vm.$refs.new_view.hide).not.toHaveBeenCalled();
   expect(vm.new_view.name).toBe('Custom');
 });
@@ -115,4 +115,26 @@ test('New view persists the stored layout, not unsaved ActivityView edits, and k
   expect(persisted.map(v => v.name)).toEqual(['Summary', 'Custom']);
   expect(useSettingsStore().views[0].name).toBe('Summary');
   expect(useViewsStore().views.map(v => v.name)).toEqual(['Unsaved edit', 'Custom']);
+});
+
+test('an id kept only in saved settings (after Restore defaults) cannot be reused', async () => {
+  const saved = [...copy(initial), { id: 'custom', name: 'Older custom', elements: [] }];
+  useSettingsStore().$patch({ views: copy(saved) });
+  const update = jest.spyOn(useSettingsStore(), 'update');
+  const views = useViewsStore();
+  views.restoreDefaults(); // unsaved: the draft no longer lists 'custom'
+  expect(views.views.some(v => v.id === 'custom')).toBe(false);
+
+  expect(views.isViewIdTaken('custom')).toBe(true);
+  const vm: any = { viewsStore: views, new_view: { id: 'custom', name: 'Custom' }, $t: k => k };
+  const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => undefined);
+  expect(Activity.methods.checkFormValidity.call(vm)).toBe(false);
+  expect(alertSpy).toHaveBeenCalledTimes(1);
+
+  await expect(views.saveNewView({ id: 'custom', name: 'Custom', elements: [] })).rejects.toThrow(
+    'already uses'
+  );
+  expect(update).not.toHaveBeenCalled();
+  expect(useSettingsStore().views).toEqual(saved);
+  expect(views.views.some(v => v.id === 'custom')).toBe(false);
 });
