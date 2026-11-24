@@ -992,6 +992,10 @@ export default {
       }
     },
     host: function () {
+      // All time has no timeperiod until the new host's earliest date is known,
+      // so refresh() below returns early and never aborts the old host's
+      // chunked load; it would keep running and writing into the store.
+      if (this.periodLength === 'all' && !this.prioritySaving) getClient().abort();
       this.earliestDate = null;
       this.loadEarliestDate();
       this.refresh();
