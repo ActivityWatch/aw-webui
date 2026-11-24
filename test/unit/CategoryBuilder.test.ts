@@ -569,15 +569,23 @@ describe('CategoryBuilder embedded in the category editor', () => {
   });
 
   const names = () => categories.classes.map(c => c.name.join('>'));
-  const edit = () => categories.addClass({ name: ['Unsaved'], rule: { type: 'none' } });
+  const edit = () =>
+    categories.addClass({ name: ['Unsaved'], rule: { type: 'regex', regex: 'UnsavedPattern' } });
+  // Results accumulate across tests, so read the client this test mounted.
+  const queryCalls = () => getClient.mock.results.at(-1).value.query.mock.calls;
 
   test('loading words keeps the editor’s unsaved edits', async () => {
+    // Pin the host so fetchWords queries instead of waiting for the picker.
+    wrapper.vm.queryOptions = { ...wrapper.vm.queryOptions, hostname: 'unknown' };
     edit();
     await wrapper.vm.fetchWords();
     await flush();
     expect(wrapper.text()).toContain('Firefox');
     expect(names()).toContain('Unsaved');
     expect(categories.classes_unsaved_changes).toBe(true);
+    // The unsaved rule really reaches the query; the words above would still be
+    // returned by this fake client even if it did not.
+    expect(queryCalls().at(-1)[1].join('\n')).toContain('UnsavedPattern');
   });
 
   test.each([
@@ -591,6 +599,15 @@ describe('CategoryBuilder embedded in the category editor', () => {
     await wrapper.vm.createRuleCancel();
     expect(names()).toEqual(before);
     expect(categories.classes_unsaved_changes).toBe(dirty);
+  });
+
+  test('Cancel after a save landed mid-draft leaves no false unsaved warning', async () => {
+    wrapper.vm.createRule('Firefox');
+    // A save that started before the draft opened persists the state without it.
+    categories.load(categories.classes.filter(c => c.name[0] !== 'Firefox'));
+    await wrapper.vm.createRuleCancel();
+    expect(names()).not.toContain('Firefox');
+    expect(categories.classes_unsaved_changes).toBe(false);
   });
 
   test('New rule → OK keeps the rule unsaved instead of saving the editor', async () => {

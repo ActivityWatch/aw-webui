@@ -19,6 +19,10 @@ import { defineStore } from 'pinia';
 interface State {
   classes: Category[];
   classes_unsaved_changes: boolean;
+  // Snapshot of the last loaded/saved state, so "is anything still unsaved?" can
+  // be answered after the fact: a captured boolean goes stale when a save lands
+  // while a draft is open.
+  saved_snapshot: Record<string, unknown> | null;
   // Category sets — named collections of category rules
   category_sets: CategorySet[];
   // Ordered list of active set IDs; first entry has highest priority when merging
@@ -175,12 +179,17 @@ export const useCategoryStore = defineStore('categories', {
   state: (): State => ({
     classes: [],
     classes_unsaved_changes: false,
+    saved_snapshot: null,
     category_sets: [],
     active_set_ids: ['default'],
   }),
 
   // getters
   getters: {
+    /** True when the in-memory categories differ from the last loaded/saved state. */
+    hasUnsavedChanges(): boolean {
+      return this.saved_snapshot !== null && !_.isEqual(this.saved_snapshot, saveSnapshot(this));
+    },
     classes_clean(): Category[] {
       return this.classes.map(cleanCategory);
     },
@@ -295,6 +304,7 @@ export const useCategoryStore = defineStore('categories', {
         // Explicit categories provided (test / programmatic path)
         classes = createMissingParents(classes);
         this.classes = assignIds(classes);
+        this.saved_snapshot = saveSnapshot(this);
         this.classes_unsaved_changes = false;
         return;
       }
@@ -306,6 +316,7 @@ export const useCategoryStore = defineStore('categories', {
 
       // Compute effective classes from active sets (merged in priority order)
       this.classes = computeEffectiveClasses(this.category_sets, this.active_set_ids);
+      this.saved_snapshot = saveSnapshot(this);
       this.classes_unsaved_changes = false;
     },
 
@@ -327,6 +338,7 @@ export const useCategoryStore = defineStore('categories', {
         // Another queued snapshot may differ even if current data matches this
         // one again. Only the last write can acknowledge the current contents.
         if (pendingSaves.get(this) === write) {
+          this.saved_snapshot = snapshot;
           this.classes_unsaved_changes = !_.isEqual(snapshot, saveSnapshot(this));
         }
       } catch (error) {

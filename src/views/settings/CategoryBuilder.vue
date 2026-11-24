@@ -206,10 +206,8 @@ export default {
       create: {
         word: '',
         categoryId: null,
-        // Embedded mode: whether OK kept the new rule, and whether the editor
-        // had unsaved changes before the placeholder was added.
+        // Embedded mode: whether OK kept the new rule.
         accepted: false,
-        wasDirty: false,
       },
     };
   },
@@ -425,7 +423,6 @@ export default {
     createRule(word: string) {
       console.log('Opening modal for creating rule with word: ' + word);
       this.create.accepted = false;
-      this.create.wasDirty = this.categoryStore.classes_unsaved_changes;
       const lastId = this.categoryStore.addClass({
         name: [word],
         rule: { type: 'regex', regex: _.escapeRegExp(word) },
@@ -447,15 +444,26 @@ export default {
     async createRuleCancel() {
       // Also runs after OK, since the modal emits `hidden` whenever it closes.
       console.log('Cancelling create rule');
-      const { categoryId, accepted, wasDirty } = this.create;
+      const { categoryId, accepted } = this.create;
       this.create.categoryId = null;
       if (!this.embedded) {
         this.categoryStore.load(); // Restore categories to last saved
       } else if (!accepted && categoryId !== null) {
         // Drop only the placeholder rule, keeping the editor's other edits.
         this.categoryStore.removeClass(categoryId);
-        this.categoryStore.classes_unsaved_changes = wasDirty;
+        // Ask the store what is still unsaved rather than restoring a flag read
+        // before the placeholder: a save finishing while the draft was open
+        // already recorded the editor's real state, so that read is stale.
+        this.categoryStore.classes_unsaved_changes = this.categoryStore.hasUnsavedChanges;
       }
+    },
+    // The parent discards the store's unsaved edits (its Discard button, a set
+    // switch) without remounting this builder, so suggestions computed from the
+    // discarded rules have to be recomputed.
+    refreshSuggestions() {
+      // Only worth a query if the builder has already run one.
+      if (!this.bucketsReady) return;
+      return this.fetchWords();
     },
     appendRule(word) {
       console.log('Opening modal to append rule with word: ' + word);
