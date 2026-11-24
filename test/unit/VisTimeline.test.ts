@@ -520,6 +520,18 @@ describe('derived category row (#700)', () => {
     return vm;
   }
 
+  // ActivityWatch/aw-webui#1328 item 6
+  test('renders a category name as text, not HTML', () => {
+    const link = '<a href="https://evil.example/">Session expired</a>';
+    const vm = makeVm([
+      { timestamp: '2026-10-18T10:00:00Z', duration: 60, data: { $category: [link] } },
+    ]);
+    vm.update();
+    const [item] = vm.itemData.get();
+    expect(item.content).not.toContain('<a');
+    expect(item.content).toContain('&lt;a href=');
+  });
+
   test('uses the assigned category color and keeps subsecond intervals in a single row', () => {
     const vm = makeVm([
       { timestamp: '2026-10-18T10:00:00Z', duration: 0.5, data: { $category: ['Uncategorized'] } },
