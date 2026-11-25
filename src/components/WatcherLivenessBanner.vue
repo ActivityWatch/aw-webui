@@ -130,8 +130,11 @@ export default Vue.extend({
   },
   methods: {
     // moment carries the app locale (src/i18n), including its plural rules (#1324).
+    // Explicit thresholds keep the minute unit for longer outages: moment's
+    // defaults collapse 45+ minutes to "an hour ago", which hides how long a
+    // watcher has actually been down.
     reportedAgo(stale: StaleWatcher): string {
-      return moment.duration(-stale.minutesAgo, 'minutes').humanize(true);
+      return moment.duration(-stale.minutesAgo, 'minutes').humanize(true, { m: 60, h: 24 });
     },
     async refreshMetadata() {
       if (this.refreshing) return;

@@ -15,6 +15,7 @@ import EventEditorComponent from '~/components/EventEditor.vue';
 import StopwatchEntryComponent from '~/components/StopwatchEntry.vue';
 import moment from 'moment';
 import { createPinia, setActivePinia } from 'pinia';
+import { setAppLocale } from '~/i18n';
 import { DataSet } from 'vis-data';
 import { FilterXSS } from 'xss';
 
@@ -558,6 +559,14 @@ describe('derived category row (#700)', () => {
     ]);
     vm.update();
     expect(vm.groups[0]).toMatchObject({ id: '__categorized__', content: 'Categorized' });
+    // The label follows the app locale, so it must not fall back to the en key.
+    setAppLocale('de');
+    try {
+      vm.update();
+      expect(vm.groups[0]).toMatchObject({ id: '__categorized__', content: 'Kategorisiert' });
+    } finally {
+      setAppLocale('en');
+    }
     await vm.onSelect({ items: vm.itemData.getIds() });
     expect(vm.$aw.getEvent).not.toHaveBeenCalled();
   });

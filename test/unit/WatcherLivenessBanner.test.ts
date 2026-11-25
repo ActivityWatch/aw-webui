@@ -148,8 +148,21 @@ describe('watcher liveness banner', () => {
     expect(wrapper.vm.staleWatchers).toHaveLength(1);
   });
 
+  test('keeps the minute unit for outages past 45 minutes', async () => {
+    store.buckets = [bucket('window-synced', 'currentwindow', 0), bucket('afk', 'afkstatus', 46)];
+    wrapper = mount();
+    await flush();
+    expect(wrapper.vm.staleWatchers).toEqual([
+      { type: 'afk', name: 'aw-watcher-afk', minutesAgo: 46 },
+    ]);
+    // moment's default thresholds would say "an hour ago" from 45 minutes on.
+    expect(wrapper.vm.reportedAgo(wrapper.vm.staleWatchers[0])).toBe('46 minutes ago');
+  });
+
   test('renders the banner in the app locale, with its plural rules (#1324)', async () => {
-    // The global $t stub is English-only; render through the real vue-i18n instance.
+    // The global $t stub is English-only; render through the real vue-i18n
+    // instance, then restore the stub so later tests stay hermetic.
+    const originalT = Vue.prototype.$t;
     Vue.prototype.$t = function (key, values) {
       return this.$i18n.t(key, values);
     };
@@ -174,13 +187,15 @@ describe('watcher liveness banner', () => {
       expect(de).toContain('Prüfen Sie das Tray-Symbol oder starten Sie den Watcher neu.');
       setAppLocale('ru');
       expect(await render()).toContain('6 минут назад');
+      setAppLocale('en');
+      const en = await render();
+      expect(en).toBe(
+        'Watcher stopped: aw-watcher-afk last reported 6 minutes ago. ' +
+          'Check the tray icon or restart the watcher.'
+      );
     } finally {
       setAppLocale('en');
+      Vue.prototype.$t = originalT;
     }
-    const en = await render();
-    expect(en).toBe(
-      'Watcher stopped: aw-watcher-afk last reported 6 minutes ago. ' +
-        'Check the tray icon or restart the watcher.'
-    );
   });
 });
