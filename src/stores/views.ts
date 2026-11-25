@@ -11,6 +11,8 @@ export interface View {
   id: string;
   name: string;
   elements: IElement[];
+  // Stored with the layout in the same settings write, never a separate key.
+  customized?: boolean;
 }
 
 const desktopViews: View[] = [
@@ -181,7 +183,7 @@ function sameLayout(a: View[], b: View[]): boolean {
  * with the Android defaults. Views the user edited are kept.
  */
 export function migrateStoredViews(stored: View[], isAndroid: boolean = onAndroid): View[] {
-  if (!isAndroid || !Array.isArray(stored)) {
+  if (!isAndroid || !Array.isArray(stored) || stored.some(view => view.customized === true)) {
     return stored;
   }
   if (!LEGACY_ANDROID_DEFAULTS.some(legacy => sameLayout(stored, legacy))) {
@@ -213,11 +215,7 @@ export const useViewsStore = defineStore('views', {
     async load() {
       const settingsStore = useSettingsStore();
       await settingsStore.ensureLoaded();
-      // Explicitly saved layouts may have the exact shape of an old default
-      // (for example, after removing Browser). Only migrate untouched layouts.
-      const views = settingsStore.viewsCustomized
-        ? settingsStore.views
-        : migrateStoredViews(settingsStore.views);
+      const views = migrateStoredViews(settingsStore.views);
       this.loadViews(views);
     },
     async save() {
@@ -230,12 +228,16 @@ export const useViewsStore = defineStore('views', {
         // Settings.update patches its state before persistence. Keep its confirmed
         // baseline separate from the draft, including when persistence rejects.
         const confirmed = JSON.parse(JSON.stringify(settingsStore.views));
-        const wasCustomized = settingsStore.viewsCustomized;
-        const draft = JSON.parse(JSON.stringify(this.views));
+        const draft: View[] = JSON.parse(JSON.stringify(this.views));
+        // A user can recreate an old default by deleting Browser. Persist the
+        // distinction inside that layout, atomically with the views write.
+        if (onAndroid && LEGACY_ANDROID_DEFAULTS.some(legacy => sameLayout(draft, legacy))) {
+          draft[0].customized = true;
+        }
         try {
-          await settingsStore.update({ views: draft, viewsCustomized: true });
+          await settingsStore.update({ views: draft });
         } catch (error) {
-          settingsStore.$patch({ views: confirmed, viewsCustomized: wasCustomized });
+          settingsStore.$patch({ views: confirmed });
           throw error;
         }
         await this.load();
@@ -244,7 +246,9 @@ export const useViewsStore = defineStore('views', {
       }
     },
     loadViews(views: View[]) {
-      this.$patch({ views: JSON.parse(JSON.stringify(views)) });
+      // Persistence metadata is not part of the editable layout.
+      const editable = views.map(({ customized: _customized, ...view }) => view);
+      this.$patch({ views: JSON.parse(JSON.stringify(editable)) });
       console.log('Loaded views:', this.views);
     },
     clearViews(this: State) {

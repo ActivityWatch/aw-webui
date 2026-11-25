@@ -233,19 +233,26 @@ describe('views store on an Android build', () => {
     const previousStorage = (global as any).localStorage;
     (global as any).localStorage = { setItem: jest.fn(), getItem: () => null };
     const post = jest.fn(async (url, value) => {
-      backend[url.split('/').pop()] = copy(value);
+      // Only the views key is writable: a separate marker request must fail.
+      if (url !== '/0/settings/views') throw new Error('second settings write failed');
+      backend.views = copy(value);
       return {};
     });
     client.req = { post, defaults: {} };
     try {
       viewsStore.removeView({ view_id: 'browser' });
       await viewsStore.save();
-      expect(post).toHaveBeenCalledWith('/0/settings/viewsCustomized', true, expect.anything());
+      expect(post).toHaveBeenCalledTimes(1);
+      expect(post).toHaveBeenCalledWith(
+        '/0/settings/views',
+        [{ ...storedAndroidDefault()[0], customized: true }],
+        expect.anything()
+      );
       expect(viewsStore.views).toEqual(storedAndroidDefault());
       settingsStore.$reset();
       await settingsStore.load();
       await viewsStore.load();
-      expect(settingsStore.viewsCustomized).toBe(true);
+      expect(settingsStore.views[0].customized).toBe(true);
       expect(viewsStore.views).toEqual(storedAndroidDefault());
     } finally {
       read.mockRestore();
@@ -262,7 +269,7 @@ describe('views store on an Android build', () => {
     viewsStore.removeView({ view_id: 'browser' });
     save.mockRejectedValueOnce(new Error('offline'));
     await expect(viewsStore.save()).rejects.toThrow('offline');
-    expect(settingsStore.viewsCustomized).toBe(false);
+    expect(settingsStore.views[0].customized).toBeUndefined();
     await viewsStore.load();
     expect(viewsStore.views).toEqual(expected);
   });
@@ -275,7 +282,7 @@ describe('views store on an Android build', () => {
     await viewsStore.save();
     const edited = JSON.parse(JSON.stringify(expected));
     edited[0].elements.push({ type: 'top_titles' });
-    expect(update).toHaveBeenCalledWith({ views: edited, viewsCustomized: true });
+    expect(update).toHaveBeenCalledWith({ views: edited });
     expect(settingsStore.views).toEqual(edited);
     expect(save).toHaveBeenCalledTimes(1);
     expect(viewsStore.views).toEqual(edited);
