@@ -160,6 +160,7 @@ const IDENTICAL_OK = {
     'Media',
   ],
   sw: ['h', 'm', 's', 'Buckets', 'Video'],
+  'zh-TW': ['All'],
 };
 
 function loadLocale(code) {
