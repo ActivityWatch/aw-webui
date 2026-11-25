@@ -204,6 +204,7 @@ describeZone('Europe/Stockholm')('start of day inside the Stockholm spring-forwa
   });
 
   test('monthly totals use the requested day start and cover the exact range', () => {
+    jest.useFakeTimers().setSystemTime(new Date('2027-01-01'));
     const tp = dateToTimeperiod('2026-03-29', '02:00', [100, 'days']);
     const months = timeperiodsCalendarMonthsOfPeriod(tp);
     expect(endOf(months[0])).toBe(moment(dateToTimeperiod('2026-04-01', '02:00').start).format());
@@ -228,6 +229,7 @@ describeZone('Europe/Stockholm')('start of day inside the Stockholm spring-forwa
       m => m.cat_events[0].duration
     );
     expect(totals).toEqual([3, 30, 31, 30, 6]);
+    jest.useRealTimers();
   });
 
   test('year chunks cover the full year even when starting on the gap day', () => {
