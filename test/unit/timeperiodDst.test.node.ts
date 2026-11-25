@@ -230,6 +230,17 @@ describeZone('Europe/Stockholm')('start of day inside the Stockholm spring-forwa
     expect(totals).toEqual([3, 30, 31, 30, 6]);
   });
 
+  test('year chunks cover the full year even when starting on the gap day', () => {
+    const tp = dateToTimeperiod('2026-03-29', '02:00', [1, 'year']);
+    const chunks = periodsForFullDesktopQuery(tp, new Date('2028-01-01'));
+    expect(chunks).toHaveLength(365);
+    expect(chunks[0].split('/')[0]).toBe(tp.start);
+    chunks.slice(0, -1).forEach((p, i) => {
+      expect(p.split('/')[1]).toBe(chunks[i + 1].split('/')[0]);
+    });
+    expect(chunks[chunks.length - 1].split('/')[1]).toBe(endOf(tp));
+  });
+
   test('controls: a normal 04:00 day and the fall-back day are unchanged', () => {
     expectDayEndsAtNextDayStart('2026-03-29', '2026-03-30', '04:00');
     expectDayEndsAtNextDayStart('2026-10-25', '2026-10-26', '02:00');
@@ -250,6 +261,11 @@ describeZone('America/Nuuk')('start of day in a gap crossing midnight', () => {
       if (i > 0) expect(endOf(days[i - 1])).toBe(p.start);
     });
     expect(endOf(days[6])).toBe(endOf(week));
+    const range = dateToTimeperiod('2026-03-28', offset, [100, 'days']);
+    const months = timeperiodsCalendarMonthsOfPeriod(range);
+    expect(endOf(months[0])).toBe(dateToTimeperiod('2026-04-01', offset).start);
+    expect(months.every(p => p.length[0] > 0)).toBe(true);
+    expect(endOf(months[months.length - 1])).toBe(endOf(range));
   });
 });
 

@@ -68,6 +68,13 @@ describeZone('DST-gap Activity consumers', () => {
     expect(bounds.map(m => m.format())).toEqual([tp.start, nextStart]);
   });
 
+  test('raw timeline keeps its one-day scope for a multi-day selection', () => {
+    const bounds = Visualization.computed.timeline_daterange.call({
+      activityStore: { query_options: { timeperiod: { ...tp, length: [7, 'days'] }, date } },
+    });
+    expect(bounds.map(m => m.format())).toEqual([tp.start, nextStart]);
+  });
+
   test('chart labels and stack capacities match the query buckets', () => {
     const buckets = timeperiodsHoursOfPeriod(tp);
     const vm: any = {

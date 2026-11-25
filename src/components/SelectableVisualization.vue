@@ -343,7 +343,7 @@ export default {
       if (isExactTimeperiod(this.activityStore.query_options.timeperiod)) return null;
 
       const period = this.activityStore.query_options.timeperiod;
-      return [moment(period.start), timeperiodEnd(period)];
+      return [moment(period.start), timeperiodEnd({ ...period, length: [1, 'day'] })];
     },
     isSingleDay: function () {
       return _.isEqual(this.activityStore.query_options.timeperiod.length, [1, 'day']);
