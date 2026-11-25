@@ -27,10 +27,17 @@ export function advanceTimeperiodStart(
   unit: string,
   offset?: string
 ): moment.Moment {
-  const advanced = moment(start).add(count, unit as moment.unitOfTime.DurationConstructor);
-  return offset && CALENDAR_UNIT_RE.test(unit)
-    ? moment(get_day_start_with_offset(advanced, offset))
-    : advanced;
+  const local = moment(start);
+  if (!offset || !CALENDAR_UNIT_RE.test(unit)) {
+    return local.add(count, unit as moment.unitOfTime.DurationConstructor);
+  }
+  if (count === 0) return local;
+  // Advance a civil date, not the resolved wall time. A gap at 23:00 can
+  // resolve on the following date (Nuuk), so recover its nominal date first.
+  const date = moment.utc(local.format('YYYY-MM-DD'));
+  if (local.format('HH:mm') < offset) date.subtract(1, 'day');
+  date.add(count, unit as moment.unitOfTime.DurationConstructor);
+  return moment(get_day_start_with_offset(date.format('YYYY-MM-DD'), offset));
 }
 
 /** Exclusive end of a period. */
@@ -303,11 +310,13 @@ export function timeperiodsCalendarMonthsOfPeriod(timeperiod: TimePeriod): TimeP
   let cur = start.clone();
   while (cur.isBefore(end)) {
     let next = cur.clone().startOf('month').add(1, 'month');
-    // Keep the day-start offset (e.g. 04:00) on month boundaries
-    next = next.hours(start.hours()).minutes(start.minutes());
+    // Use the requested day start, not a wall time shifted out of a DST gap.
+    next = timeperiod.offset
+      ? moment(get_day_start_with_offset(next, timeperiod.offset))
+      : next.hours(start.hours()).minutes(start.minutes());
     if (next.isAfter(end)) next = end.clone();
-    const days = next.diff(cur, 'days', true);
-    periods.push({ start: cur.format(), length: [Math.round(days), 'days'] });
+    // Store exact bounds: rounded calendar days lose a clipped/DST-shifted end.
+    periods.push({ start: cur.format(), length: [next.diff(cur), 'milliseconds'] });
     cur = next;
   }
   return periods;

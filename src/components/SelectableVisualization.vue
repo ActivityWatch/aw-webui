@@ -137,7 +137,7 @@ import { useBucketsStore } from '~/stores/buckets';
 import { useViewsStore } from '~/stores/views';
 import { useSettingsStore } from '~/stores/settings';
 import { isBrowserAllowlistMiss } from '~/util/browserAllowlist';
-import { isExactTimeperiod } from '~/util/timeperiod';
+import { isExactTimeperiod, timeperiodEnd } from '~/util/timeperiod';
 import { categoryPathLabel } from '~/util/categoryLabels';
 
 import moment from 'moment';
@@ -342,12 +342,8 @@ export default {
       // The timeline only supports whole days; never fetch a full day for an exact interval
       if (isExactTimeperiod(this.activityStore.query_options.timeperiod)) return null;
 
-      let date = this.activityStore.query_options.date;
-      if (!date) {
-        date = this.activityStore.query_options.timeperiod.start;
-      }
-
-      return [moment(date), moment(date).add(1, 'day')];
+      const period = this.activityStore.query_options.timeperiod;
+      return [moment(period.start), timeperiodEnd(period)];
     },
     isSingleDay: function () {
       return _.isEqual(this.activityStore.query_options.timeperiod.length, [1, 'day']);

@@ -109,6 +109,7 @@ export default {
         return timeperiodsCalendarMonthsOfPeriod({
           start,
           length: [count, resolution],
+          offset: this.timeperiod_offset,
         }).map(p => fmt.format(new Date(p.start)));
       } else if (resolution.startsWith('day')) {
         return _.range(count).map(d => {
@@ -151,12 +152,14 @@ export default {
       let datasets = _.sortBy(this.datasets, d => d.label);
       const [count, resolution] = this.timeperiod_length;
       if (this.clamp_hourly) {
-        if (resolution.startsWith('day') && count === 1) {
-          datasets = clampStackedHours(datasets);
-        } else if (resolution === 'milliseconds' && count <= EXACT_HOURLY_MAX_MS) {
+        if (
+          (resolution.startsWith('day') && count === 1) ||
+          (resolution === 'milliseconds' && count <= EXACT_HOURLY_MAX_MS)
+        ) {
           const bucketHours = timeperiodsHoursOfPeriod({
             start: this.timeperiod_start,
             length: [count, resolution],
+            offset: this.timeperiod_offset,
           }).map(period => period.length[0]);
           datasets = clampStackedHours(datasets, bucketHours);
         }

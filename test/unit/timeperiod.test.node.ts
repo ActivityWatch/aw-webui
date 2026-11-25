@@ -132,7 +132,12 @@ describe('timeperiodsForBarchart', () => {
       '2026-04-01',
       '2026-05-01',
     ]);
-    expect(periods.map(p => p.length[0])).toEqual([17, 28, 31, 30, 14]);
+    expect(
+      periods.map(p => {
+        const [begin, end] = timeperiodToStr(p).split('/');
+        return moment(end).diff(moment(begin), 'days', true);
+      })
+    ).toEqual([17, 28, 31, 30, 14]);
   });
 
   it('keeps the day-start offset on month boundaries', () => {

@@ -9,13 +9,15 @@ import {
   timeperiodsAroundTimeperiod,
   timeperiodsDaysOfPeriod,
   timeperiodsHoursOfPeriod,
+  timeperiodsCalendarMonthsOfPeriod,
 } from '~/util/timeperiod';
+import { categoryByPeriodFromChunks, periodsForFullDesktopQuery } from '~/util/desktopQuerySplit';
 
 // Node reads TZ once at startup, and CI runs `npm test` with no TZ (UTC), where
 // no DST transition exists. Replay this file under each relevant zone, in a
 // child Jest, so the regressions stay active on a UTC runner.
 const REPO_ROOT = path.resolve(__dirname, '../..');
-const ZONES = ['Europe/Stockholm', 'Australia/Lord_Howe'];
+const ZONES = ['Europe/Stockholm', 'Australia/Lord_Howe', 'America/Nuuk'];
 
 if (!process.env.AW_DST_ZONE) {
   test.each(ZONES)(
@@ -201,11 +203,53 @@ describeZone('Europe/Stockholm')('start of day inside the Stockholm spring-forwa
     expect(moment(days[4].start).format('HH:mm')).toBe('02:00'); // 2026-03-30
   });
 
+  test('monthly totals use the requested day start and cover the exact range', () => {
+    const tp = dateToTimeperiod('2026-03-29', '02:00', [100, 'days']);
+    const months = timeperiodsCalendarMonthsOfPeriod(tp);
+    expect(endOf(months[0])).toBe(moment(dateToTimeperiod('2026-04-01', '02:00').start).format());
+    expect(endOf(months[months.length - 1])).toBe(endOf(tp));
+    months.slice(0, -1).forEach((p, i) => {
+      expect(endOf(p)).toBe(months[i + 1].start);
+    });
+    const chunks = periodsForFullDesktopQuery(tp, new Date('2027-01-01')).map(
+      period =>
+        [
+          period,
+          {
+            window: {
+              cat_events: [
+                { timestamp: period.split('/')[0], duration: 1, data: { $category: ['Work'] } },
+              ],
+            },
+          },
+        ] as [string, any]
+    );
+    const totals = Object.values(categoryByPeriodFromChunks(tp, chunks)).map(
+      m => m.cat_events[0].duration
+    );
+    expect(totals).toEqual([3, 30, 31, 30, 6]);
+  });
+
   test('controls: a normal 04:00 day and the fall-back day are unchanged', () => {
     expectDayEndsAtNextDayStart('2026-03-29', '2026-03-30', '04:00');
     expectDayEndsAtNextDayStart('2026-10-25', '2026-10-26', '02:00');
     const fall = timeperiodsHoursOfPeriod(dateToTimeperiod('2026-10-25', '04:00'));
     expect(fall).toHaveLength(24);
+  });
+});
+
+describeZone('America/Nuuk')('start of day in a gap crossing midnight', () => {
+  test.each(['23:00', '23:30'])('keeps nominal calendar dates for %s boundaries', offset => {
+    expectDayEndsAtNextDayStart('2026-03-27', '2026-03-28', offset);
+    expectDayEndsAtNextDayStart('2026-03-28', '2026-03-29', offset);
+    const week = dateToTimeperiod('2026-03-26', offset, [7, 'days']);
+    const days = timeperiodsDaysOfPeriod(week);
+    days.forEach((p, i) => {
+      const date = moment.utc('2026-03-26').add(i, 'days').format('YYYY-MM-DD');
+      expect(p.start).toBe(dateToTimeperiod(date, offset).start);
+      if (i > 0) expect(endOf(days[i - 1])).toBe(p.start);
+    });
+    expect(endOf(days[6])).toBe(endOf(week));
   });
 });
 

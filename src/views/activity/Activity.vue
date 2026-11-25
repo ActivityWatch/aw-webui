@@ -531,6 +531,7 @@ import {
   formatInstant,
   periodStartDate,
   shiftDateRange,
+  timeperiodEnd,
 } from '~/util/timeperiod';
 import _ from 'lodash';
 
@@ -1183,12 +1184,7 @@ export default {
         // (clipped to the interval budget), so the bounds are exact and editable.
         if (!this.timeperiod || this.periodLength === 'interval') return;
         const start = moment(this.timeperiod.start);
-        const end = start
-          .clone()
-          .add(
-            this.timeperiod.length[0],
-            this.timeperiod.length[1] as moment.unitOfTime.DurationConstructor
-          );
+        const end = timeperiodEnd(this.timeperiod);
         const capped = moment.min(end, start.clone().add(MAX_INTERVAL_MS, 'milliseconds'));
         this.pushPeriod(
           'interval',
