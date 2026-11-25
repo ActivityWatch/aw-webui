@@ -433,8 +433,7 @@ export default {
     rangeStart: 'Tarehe ya kuanza',
     rangeEnd: 'Tarehe ya kumaliza',
     invalidRange: 'Kipindi cha tarehe batili kwenye URL, inaonyesha leo badala yake.',
-    invalidUrlPeriod:
-      'Tarehe au kipindi batili kwenye URL, inaonyesha tarehe halali iliyo karibu zaidi badala yake.',
+    invalidUrlPeriod: 'Tarehe au kipindi batili kwenye URL.',
     periodExactInterval: 'nyakati kamili',
     intervalStart: 'Muda wa kuanza',
     intervalEnd: 'Muda wa kumaliza (bila kujumuisha)',
