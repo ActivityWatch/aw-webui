@@ -950,8 +950,10 @@ export default {
         return `${range.start}—${range.end}`;
       }
 
-      const periodStart = moment(this.timeperiod.start);
       const dateFormatString = 'YYYY-MM-DD';
+      // Labels are calendar dates, not instants: discard the day-start time
+      // and avoid local clock-change gaps while computing the last date.
+      const periodStart = moment.utc(moment(this.timeperiod.start).format(dateFormatString));
 
       // it's helpful to render a range for the week as opposed to just the start of the week
       // or the number of the week so users can easily determine (a) if we are using monday/sunday as the week
