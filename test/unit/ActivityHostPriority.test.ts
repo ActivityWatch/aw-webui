@@ -5,7 +5,7 @@ jest.mock('~/util/awclient', () => ({ getClient: () => ({ abort: jest.fn() }) })
 const Activity: any = ActivityComponent;
 
 function vmFor() {
-  return {
+  const vm: any = {
     selectableHosts: ['desktop', 'laptop', 'phone'],
     settingsStore: {
       multideviceHostOrder: ['desktop', 'laptop', 'phone', 'offline'],
@@ -17,9 +17,13 @@ function vmFor() {
     prioritySaving: false,
     priorityRefreshPending: false,
     priorityRefreshForce: false,
+    viewSavePending: false,
+    deferredHostAbort: false,
     isMultidevice: true,
     refresh: jest.fn(),
   };
+  vm.flushDeferredRefresh = Activity.methods.flushDeferredRefresh.bind(vm);
+  return vm;
 }
 
 describe('Activity overlap priority controls', () => {
