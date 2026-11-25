@@ -230,6 +230,19 @@ test('mobile canonical queries retain timestamps, use actual synced IDs, and omi
   expect(code).not.toContain('merge_events_by_keys');
 });
 
+test('timeline sources escape bucket ids that contain quotes', () => {
+  const sources = [
+    { id: 'aw-import-screentime_Bob "Work" iPhone', type: 'app', hostname: 'ios' },
+    { id: 'window_laptop', type: 'currentwindow', hostname: 'laptop' },
+  ];
+  const code = categoryTimelineQuery(sources, sources, {
+    categories: [],
+    filter_categories: [],
+  }).join('\n');
+  expect(code).toContain('query_bucket("aw-import-screentime_Bob \\"Work\\" iPhone")');
+  expect(code).toContain('query_bucket("window_laptop")');
+});
+
 test('category timeline filter writes backslashes the same way as categorize', () => {
   const code = categoryTimelineQuery(buckets(), buckets(), {
     categories: [[['Dev\\Ops'], { type: 'regex', regex: 'Code' }]],

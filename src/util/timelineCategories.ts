@@ -1,11 +1,30 @@
 import _ from 'lodash';
-import { canonicalEvents, jsonForQuery, querystr_to_array, BaseQueryParams } from '~/queries';
+import {
+  canonicalEvents,
+  escape_doublequote,
+  jsonForQuery,
+  querystr_to_array,
+  BaseQueryParams,
+} from '~/queries';
 import { IEvent } from './interfaces';
 
 interface TimelineBucket {
   id: string;
   type: string;
   hostname?: string;
+}
+
+// `canonicalEvents` writes bucket ids verbatim, so callers escape them first.
+// A value ending in a backslash cannot be written in aw-query at all; skip that
+// source with a warning rather than emit an unparsable query that fails the
+// whole categorized timeline.
+function escapeTimelineBucketId(id: string): string | null {
+  try {
+    return escape_doublequote(id);
+  } catch (e) {
+    console.warn(`Skipping timeline source: ${(e as Error).message}`);
+    return null;
+  }
 }
 
 /** Use the Activity view's canonical stream, not independently classified raw buckets.
@@ -19,11 +38,17 @@ export function categoryTimelineQuery(
   all: TimelineBucket[],
   params: BaseQueryParams & { always_active_pattern?: string }
 ): string[] | null {
-  const sources = visible.filter(
-    b => b.type === 'currentwindow' || (b.type === 'app' && b.id.startsWith('aw-import-screentime'))
-  );
+  const sources = visible
+    .filter(
+      b =>
+        b.type === 'currentwindow' || (b.type === 'app' && b.id.startsWith('aw-import-screentime'))
+    )
+    .flatMap(bucket => {
+      const id = escapeTimelineBucketId(bucket.id);
+      return id === null ? [] : [{ bucket, id }];
+    });
   if (!sources.length) return null;
-  const queries = sources.map((bucket, i) => {
+  const queries = sources.map(({ bucket, id }, i) => {
     const common = { ...params, filter_categories: [], return_variable_suffix: `timeline_${i}` };
     if (
       bucket.id.startsWith('aw-watcher-android') ||
@@ -31,17 +56,18 @@ export function categoryTimelineQuery(
     ) {
       return canonicalEvents({
         ...common,
-        bid_android: bucket.id,
+        bid_android: id,
         isIos: bucket.id.startsWith('aw-import-screentime'),
         keep_event_timestamps: true,
       });
     }
     const afk = all.find(b => b.type === 'afkstatus' && b.hostname === bucket.hostname);
+    const afk_id = afk ? escapeTimelineBucketId(afk.id) : null;
     return canonicalEvents({
       ...common,
-      bid_window: bucket.id,
-      bid_afk: afk?.id || '',
-      filter_afk: !!afk,
+      bid_window: id,
+      bid_afk: afk_id ?? '',
+      filter_afk: !!afk_id,
     });
   });
   queries.push('events = [];');
