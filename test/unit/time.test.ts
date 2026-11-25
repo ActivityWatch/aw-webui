@@ -106,7 +106,9 @@ describe('friendlydate', () => {
   test('uses the app locale even after Timeline changes the Moment locale (#1324)', () => {
     i18n.locale = 'de';
     moment.locale('en');
-    expect(friendlydate(moment().subtract(30, 'seconds'))).toBe('vor 30 Sekunden');
+    if (Intl.RelativeTimeFormat.supportedLocalesOf(['de']).length) {
+      expect(friendlydate(moment().subtract(30, 'seconds'))).toBe('vor 30 Sekunden');
+    }
     expect(friendlydate(moment().subtract(2, 'minutes'))).toBe('vor 2 Minuten');
     expect(moment.locale()).toBe('en');
   });
@@ -131,6 +133,9 @@ describe('friendlydate', () => {
   ])('handles one second in %s', (locale, expected) => {
     i18n.locale = locale;
     moment.locale('en');
-    expect(friendlydate(moment().subtract(1, 'second'))).toBe(expected);
+    // Like the date-label tests above, allow Node builds without full ICU data.
+    if (Intl.RelativeTimeFormat.supportedLocalesOf([locale]).length) {
+      expect(friendlydate(moment().subtract(1, 'second'))).toBe(expected);
+    }
   });
 });
