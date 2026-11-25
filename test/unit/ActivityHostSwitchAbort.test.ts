@@ -200,6 +200,70 @@ test('the deferred abort runs once the save settles and restarts a cancelled dat
   expect(v.priorityRefreshPending).toBe(false);
 });
 
+test('the deferred flush starts the All-time query with the date the lookup recovered', async () => {
+  // End-to-end for the case Greptile flagged on the isolated retry test: a Day
+  // load aborts the shared client while a layout save is still reading settings,
+  // so the host abort and the All-time refresh are both deferred. When the save
+  // settles the lookup runs again, and the page has to load All-time results
+  // starting at the recovered date instead of leaving Day data under All time.
+  let finishCanceled;
+  const getDate = jest
+    .fn()
+    .mockImplementationOnce(() => new Promise(resolve => (finishCanceled = resolve)))
+    .mockResolvedValue({ date: '2020-01-01', approximate: false });
+  const ensureLoaded = jest.fn().mockResolvedValue(undefined);
+  const v: any = {
+    ...flushVm({ earliestDate: null, viewSavePending: true }),
+    ...dateVm(getDate),
+    activityStore: { get_earliest_date: getDate, ensure_loaded: ensureLoaded },
+    refreshGeneration: 0,
+    refreshing: false,
+    needsCategoryHistory: false,
+    filter_afk: false,
+    include_audible: false,
+    include_stopwatch: false,
+    include_category_history: false,
+    filter_categories: [],
+    always_active_pattern: null,
+    navigationNow: 0,
+    // Mirrors Activity.vue: All time has no timeperiod until the date is known.
+    get timeperiod() {
+      return this.earliestDate ? { start: this.earliestDate, length: [1, 'year'] } : null;
+    },
+  };
+  v.loadEarliestDate = Activity.methods.loadEarliestDate.bind(v);
+  v.refresh = Activity.methods.refresh.bind(v);
+  // A Day load resuming after the settings reload cancels the in-flight lookup.
+  abort.mockImplementation(() => {
+    controller.abort();
+    controller = new AbortController();
+  });
+
+  const firstLookup = v.loadEarliestDate();
+  v.viewSavePending = false;
+  await Activity.methods.flushDeferredRefresh.call(v);
+
+  // The restarted lookup publishes the real date; the deferred refresh ran
+  // before that and had no timeperiod yet.
+  await new Promise(resolve => setTimeout(resolve, 0));
+  expect(v.earliestDate).toBe('2020-01-01');
+  expect(ensureLoaded).not.toHaveBeenCalled();
+
+  // The timeperiod watcher is what loads the newly known range.
+  Activity.watch.timeperiod.call(v);
+  await new Promise(resolve => setTimeout(resolve, 0));
+  expect(ensureLoaded).toHaveBeenCalledTimes(1);
+  expect(ensureLoaded.mock.calls[0][0]).toMatchObject({
+    all_time: true,
+    timeperiod: { start: '2020-01-01' },
+  });
+
+  // The canceled store fallback must still not overwrite the recovered range.
+  finishCanceled({ date: '2026-01-01', approximate: true });
+  await firstLookup;
+  expect(v.earliestDate).toBe('2020-01-01');
+});
+
 test('the deferred abort waits while another save is still pending', async () => {
   const v: any = flushVm({ viewSavePending: true, priorityRefreshPending: true });
   await Activity.methods.flushDeferredRefresh.call(v);
