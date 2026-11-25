@@ -71,6 +71,27 @@ describe('activity load sections', () => {
     expect(byPeriod).toHaveBeenCalledTimes(1);
   });
 
+  test('later section failures are logged while the first error is rethrown', async () => {
+    const store = useActivityStore();
+    stubDesktopLoad(store, 'aw-watcher-afk_a');
+    const failure = new Error('desktop query failed');
+    const historyFailure = new Error('active history timed out');
+    const editorFailure = new Error('editor query failed');
+    jest.spyOn(store, 'query_desktop_full').mockRejectedValue(failure);
+    jest.spyOn(store, 'query_active_history').mockRejectedValue(historyFailure);
+    jest.spyOn(store, 'query_editor').mockRejectedValue(editorFailure);
+    const byPeriod = jest.spyOn(store, 'query_category_time_by_period').mockResolvedValue();
+    const log = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    await expect(store.load({ host: 'a', timeperiod: day } as any)).rejects.toBe(failure);
+
+    expect(byPeriod).toHaveBeenCalledTimes(1);
+    expect(log.mock.calls).toEqual([
+      ['Activity load section failed', historyFailure],
+      ['Activity load section failed', editorFailure],
+    ]);
+  });
+
   test('a failure after a newer load took over stops the stale load', async () => {
     const store = useActivityStore();
     stubDesktopLoad(store, 'aw-watcher-afk_a');

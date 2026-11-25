@@ -59,7 +59,8 @@ function loadGuard(store: { query_options: QueryOptions | null }): () => boolean
 
 // Runs the independent sections of a load in order. A failing section (e.g. a
 // Year-view chunk timing out) does not skip the later ones, which would leave
-// their panels on "Loading…"; the first error is rethrown once all have run.
+// their panels on "Loading…"; the first error is rethrown once all have run,
+// and subsequent errors are logged so independent failures remain diagnosable.
 // Once the load is no longer current it starts no further section, whether
 // the previous one failed or completed.
 async function runLoadSections(isCurrent: () => boolean, sections: (() => Promise<unknown>)[]) {
@@ -70,6 +71,7 @@ async function runLoadSections(isCurrent: () => boolean, sections: (() => Promis
       await section();
     } catch (e) {
       if (!isCurrent()) throw e;
+      if (errors.length > 0) console.error('Activity load section failed', e);
       errors.push(e);
     }
   }
