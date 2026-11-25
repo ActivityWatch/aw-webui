@@ -197,6 +197,7 @@ describe('CategoryEditModal rule priority', () => {
   test('negative priorities disable submission and cannot be saved', () => {
     const { vm, updateClass } = ctx({ priority: '-1' });
     vm.validPattern = true;
+    vm.validScore = true;
     vm.validPriority = CategoryEditModal.computed.validPriority.call(vm);
     vm.canSubmit = CategoryEditModal.computed.canSubmit.call(vm);
     vm.checkFormValidity = () => CategoryEditModal.methods.checkFormValidity.call(vm);
@@ -264,8 +265,6 @@ describe('CategoryEditModal typed score', () => {
     ['-1.5', -1.5],
     ['0', 0],
     [' 2 ', 2],
-    ['', undefined],
-    ['abc', undefined],
   ])('saves typed score %j as %s', (typed, expected) => {
     const updateClass = jest.fn();
     const vm: any = {
@@ -292,13 +291,60 @@ describe('CategoryEditModal typed score', () => {
   });
 });
 
+describe('CategoryEditModal invalid legacy scores', () => {
+  test.each(['abc', '5%', 'Infinity', ''])('requires correction of stored score %j', stored => {
+    const updateClass = jest.fn();
+    const vm: any = {
+      categoryId: 2,
+      categoryStore: {
+        get_category_by_id: () => ({
+          id: 2,
+          subname: 'Child',
+          parent: ['Parent'],
+          rule: { type: 'none' },
+          data: { score: stored },
+        }),
+        updateClass,
+      },
+      priorityFromRule: CategoryEditModal.methods.priorityFromRule,
+      checkFormValidity: () => CategoryEditModal.methods.checkFormValidity.call(vm),
+      $nextTick: callback => callback(),
+      $refs: { edit: { hide: jest.fn() } },
+    };
+    Object.defineProperty(vm, 'validScore', {
+      get: () => CategoryEditModal.computed.validScore.call(vm),
+    });
+
+    CategoryEditModal.methods.resetModal.call(vm);
+    expect(vm.editing.inherit_score).toBe(false);
+    expect(vm.editing.score).toBe(stored);
+    expect(CategoryEditModal.computed.canSubmit.call(vm)).toBe(false);
+    CategoryEditModal.methods.handleSubmit.call(vm);
+    expect(updateClass).not.toHaveBeenCalled();
+
+    vm.editing.score = '2.5';
+    expect(CategoryEditModal.computed.canSubmit.call(vm)).toBe(true);
+    CategoryEditModal.methods.handleSubmit.call(vm);
+    expect(updateClass.mock.calls[0][0].data.score).toBe(2.5);
+
+    vm.editing.score = stored;
+    vm.editing.inherit_score = true;
+    expect(CategoryEditModal.computed.canSubmit.call(vm)).toBe(true);
+    CategoryEditModal.methods.handleSubmit.call(vm);
+    expect(updateClass.mock.calls[1][0].data.score).toBeUndefined();
+  });
+});
+
 describe('CategoryEditModal mounted score round trip', () => {
   test.each([
-    [0, 0],
-    [' 2 ', 2],
-    [' -1.5 ', -1.5],
-    [' 0 ', 0],
-  ])('displays and saves stored score %j as %s', async (stored, expected) => {
+    [0, 0, false],
+    [' 2 ', 2, false],
+    [' -1.5 ', -1.5, false],
+    [' 0 ', 0, false],
+    ['abc', 2.5, true],
+    ['5%', 2.5, true],
+    ['', 2.5, true],
+  ])('displays and saves stored score %j as %s', async (stored, expected, invalid) => {
     const localVue = createLocalVue();
     localVue.use(BootstrapVue);
     localVue.use(PiniaVuePlugin);
@@ -337,7 +383,18 @@ describe('CategoryEditModal mounted score round trip', () => {
         .findAllComponents({ name: 'BInputGroup' })
         .wrappers.find(group => group.text().includes('ui.categoryEditor.score'))
         .find('input');
-      expect((scoreInput.element as HTMLInputElement).value).toBe(String(expected));
+      expect((scoreInput.element as HTMLInputElement).value).toBe(
+        String(invalid ? stored : expected)
+      );
+      if (invalid) {
+        expect(wrapper.text()).toContain('ui.categoryEditor.invalidScore');
+        expect((wrapper.vm as any).canSubmit).toBe(false);
+        (wrapper.vm.$refs.edit as any).$emit('ok', { preventDefault: jest.fn() });
+        await localVue.nextTick();
+        expect(store.get_category(['Parent', 'Child']).data.score).toBe(stored);
+        await scoreInput.setValue(String(expected));
+        expect((wrapper.vm as any).canSubmit).toBe(true);
+      }
       (wrapper.vm.$refs.edit as any).$emit('ok', { preventDefault: jest.fn() });
       await localVue.nextTick();
       expect(store.get_category(['Parent', 'Child']).data.score).toBe(expected);

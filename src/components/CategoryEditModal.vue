@@ -61,7 +61,9 @@ b-modal(id="edit" ref="edit" :title="$t('ui.categoryEditor.editTitle')" @show="r
     b-form-checkbox(v-model="editing.inherit_score" switch)
       | {{ $t('ui.categoryEditor.inheritScore') }}
     b-input-group.my-1(:prepend="$t('ui.categoryEditor.score')" v-if="!editing.inherit_score")
-      b-form-input(v-model="editing.score" type="number" step="any")
+      b-form-input(v-model="editing.score" inputmode="decimal" :state="validScore ? null : false")
+    small.text-danger(v-if="!validScore")
+      | {{ $t('ui.categoryEditor.invalidScore') }}
 
   hr
   div.my-1
@@ -124,6 +126,9 @@ export default {
       return this.canSubmit;
     },
     canSubmit: function () {
+      if (!this.validScore) {
+        return false;
+      }
       if (this.editing.rule.type === 'regex') {
         return this.validPattern && this.validPriority;
       }
@@ -134,6 +139,9 @@ export default {
     },
     broad_pattern: function () {
       return this.editing.rule.type === 'regex' && isRegexBroad(this.editing.rule.regex || '');
+    },
+    validScore: function () {
+      return this.editing.inherit_score || parseCategoryScore(this.editing.score) !== undefined;
     },
     validPriority: function () {
       if (this.editing.rule.type !== 'regex') {
@@ -183,6 +191,9 @@ export default {
       this.categoryStore.removeClass(this.categoryId);
     },
     checkFormValidity() {
+      if (!this.validScore) {
+        return false;
+      }
       if (this.editing.rule.type === 'regex' && !this.validPriority) {
         return false;
       }
@@ -280,8 +291,10 @@ export default {
       const cat = this.categoryStore.get_category_by_id(this.categoryId);
       const color = cat.data ? cat.data.color : undefined;
       const inherit_color = !color;
-      const score = parseCategoryScore(cat.data?.score);
-      const inherit_score = score === null || score === undefined;
+      const storedScore = cat.data?.score;
+      // Show malformed legacy values for correction instead of silently inheriting.
+      const score = parseCategoryScore(storedScore) ?? storedScore;
+      const inherit_score = storedScore === null || storedScore === undefined;
       const rule = _.cloneDeep(cat.rule) || {};
       const storedKeys = normalizeSelectKeys(rule.select_keys);
       this.editing = {
