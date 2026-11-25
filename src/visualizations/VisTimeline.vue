@@ -212,9 +212,12 @@ export default {
   },
   watch: {
     '$i18n.locale'() {
+      // Labels are stored in vis DataSets, outside Vue's render cycle. Rebuild
+      // their cached strings without changing the user's viewport.
       this.preparedItems?.clear();
       this.renderedViewport = null;
       this.update(false);
+      this.timeline?.redraw();
     },
     groupGranularity() {
       this.expandedGroups = [];

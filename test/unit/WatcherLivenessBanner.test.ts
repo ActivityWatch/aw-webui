@@ -148,15 +148,18 @@ describe('watcher liveness banner', () => {
     expect(wrapper.vm.staleWatchers).toHaveLength(1);
   });
 
-  test('keeps the minute unit for outages past 45 minutes', async () => {
-    store.buckets = [bucket('window-synced', 'currentwindow', 0), bucket('afk', 'afkstatus', 46)];
+  test.each([45, 46, 90, 1500])('keeps the minute unit for a %i-minute outage', async minutes => {
+    store.buckets = [
+      bucket('window-synced', 'currentwindow', 0),
+      bucket('afk', 'afkstatus', minutes),
+    ];
     wrapper = mount();
     await flush();
     expect(wrapper.vm.staleWatchers).toEqual([
-      { type: 'afk', name: 'aw-watcher-afk', minutesAgo: 46 },
+      { type: 'afk', name: 'aw-watcher-afk', minutesAgo: minutes },
     ]);
     // moment's default thresholds would say "an hour ago" from 45 minutes on.
-    expect(wrapper.vm.reportedAgo(wrapper.vm.staleWatchers[0])).toBe('46 minutes ago');
+    expect(wrapper.vm.reportedAgo(wrapper.vm.staleWatchers[0])).toBe(`${minutes} minutes ago`);
   });
 
   test('renders the banner in the app locale, with its plural rules (#1324)', async () => {

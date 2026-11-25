@@ -134,7 +134,7 @@ export default Vue.extend({
     // defaults collapse 45+ minutes to "an hour ago", which hides how long a
     // watcher has actually been down.
     reportedAgo(stale: StaleWatcher): string {
-      return moment.duration(-stale.minutesAgo, 'minutes').humanize(true, { m: 60, h: 24 });
+      return moment.duration(-stale.minutesAgo, 'minutes').humanize(true, { m: Infinity });
     },
     async refreshMetadata() {
       if (this.refreshing) return;

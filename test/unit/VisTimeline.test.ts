@@ -798,7 +798,7 @@ describe('host row labels', () => {
 
 // Labels are presentation, never event or color identities.
 test('locale changes refresh real DataSet labels without resetting IDs, colors or viewport', () => {
-  const { i18n, setAppLocale } = require('~/i18n');
+  const { i18n } = require('~/i18n');
   const original = i18n.getLocaleMessage('de');
   setAppLocale('en');
   const vm = { ...VisTimeline.data(), ...VisTimeline.methods };
@@ -816,6 +816,7 @@ test('locale changes refresh real DataSet labels without resetting IDs, colors o
     getWindow: () => ({ start: new Date(start), end: new Date(start + 10000) }),
     setOptions: jest.fn(),
     setWindow: jest.fn(),
+    redraw: jest.fn(),
   };
   try {
     vm.update();
