@@ -267,6 +267,7 @@ RETURN = sort_by_duration(merged_events);
       }
 
       // No existing query — open modal to name this snapshot, not a later editor draft.
+      this.saved_query_error = '';
       this.saveQueryDraft = draft;
       this.saveQueryName = getDefaultSavedQueryName(draft.query_code);
       this.showSaveQueryModal = true;
@@ -304,6 +305,7 @@ RETURN = sort_by_duration(merged_events);
         return;
       }
 
+      this.saved_query_error = '';
       this.renameQueryTarget = { ...this.selectedSavedQuery };
       this.renameQueryName = this.renameQueryTarget.name;
       this.showRenameQueryModal = true;

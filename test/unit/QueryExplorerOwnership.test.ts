@@ -226,6 +226,35 @@ describe('mounted saved-query modal', () => {
     jest.restoreAllMocks();
   });
 
+  test.each(['save', 'rename'])('a fresh %s dialog clears a cancelled draft error', async kind => {
+    wrapper = mount(QueryExplorer, {
+      localVue,
+      attachTo: document.body,
+      mocks: { $route: { query: {} }, $t: key => key },
+      stubs: { icon: true, 'aw-selectable-eventview': true },
+    });
+    const isSave = kind === 'save';
+    await wrapper.setData({ selected_saved_query_id: isSave ? '' : 'a' });
+    const openDraft = () =>
+      isSave ? wrapper.vm.saveCurrentQuery() : wrapper.vm.renameSelectedQuery();
+    await openDraft();
+    const modal: any = wrapper.findAllComponents(BModal).at(isSave ? 0 : 1);
+    for (let i = 0; i < 20; i++) await new Promise(resolve => setTimeout(resolve, 20));
+    await wrapper.setData(isSave ? { saveQueryName: '' } : { renameQueryName: '' });
+    modal.vm.onOk(new MouseEvent('click'));
+    await wrapper.vm.$nextTick();
+    expect(modal.vm.isVisible).toBe(true);
+    expect(document.body.querySelector('.modal-dialog [role="alert"]')?.textContent).toMatch(
+      /cannot be empty/
+    );
+    modal.vm.onEsc(new KeyboardEvent('keydown', { keyCode: 27 }));
+    for (let i = 0; i < 20; i++) await new Promise(resolve => setTimeout(resolve, 20));
+    expect(modal.vm.isVisible).toBe(false);
+    await openDraft();
+    expect(isSave ? wrapper.vm.saveQueryName : wrapper.vm.renameQueryName).not.toBe('');
+    expect(wrapper.vm.saved_query_error).toBe('');
+  });
+
   test.each(['save', 'rename'])(
     'shows the busy retry reason inside the open %s dialog',
     async kind => {
