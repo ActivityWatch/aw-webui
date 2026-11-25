@@ -1065,6 +1065,8 @@ export default {
       truncated:
         'Esta lista atingiu o limite de resultados e pode estar incompleta. Reduza o intervalo para ver o restante.',
       noCandidates: 'Nenhum evento armazenado neste bucket e intervalo.',
+      noMatchingCandidates:
+        'O filtro do navegador não encontrou correspondências. Alguns padrões do servidor não são compatíveis aqui. Desative o filtro acima para ver todos os eventos armazenados carregados.',
       load: 'Carregar',
       data: 'Dados',
       staleResults:

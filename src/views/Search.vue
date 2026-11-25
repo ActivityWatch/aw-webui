@@ -151,6 +151,7 @@ export default {
         const errors: string[] = [];
         let browserQueryArray: string[] = [];
         let browserBuckets: string[] = [];
+        let browserDiscoveryFailed = false;
         try {
           const bucketsStore = useBucketsStore();
           await bucketsStore.ensureLoaded();
@@ -158,6 +159,7 @@ export default {
           browserQueryArray = browserSearchQuery(browserBuckets, pattern);
         } catch (e) {
           console.error('Failed to load browser buckets for search', e);
+          browserDiscoveryFailed = true;
           errors.push(`Browser search: ${e.response?.data?.message ?? String(e)}`);
         }
 
@@ -187,12 +189,27 @@ export default {
           ...(results[0] ? [desktopBuckets?.bid_window] : []),
           ...(results[1] ? browserBuckets : []),
         ];
+        const sources = [desktopBuckets?.bid_window, ...browserBuckets].filter(Boolean);
+        const editedSource = refreshBucket && useBucketsStore().getBucket(refreshBucket);
+        // If discovery failed, retain uncertainty for browser buckets this host
+        // could read (including the shared "unknown" fallback), not unrelated hosts.
+        const undiscoveredBrowserSource =
+          browserDiscoveryFailed &&
+          (!editedSource ||
+            (editedSource.type === 'web.tab.current' &&
+              (!hostname ||
+                !editedSource.hostname ||
+                editedSource.hostname === 'unknown' ||
+                editedSource.hostname === hostname)));
         this.stale = Boolean(
-          refreshBucket && errors.length > 0 && !refreshedSources.includes(refreshBucket)
+          refreshBucket &&
+            errors.length > 0 &&
+            !refreshedSources.includes(refreshBucket) &&
+            (sources.includes(refreshBucket) || undiscoveredBrowserSource)
         );
         this.submitted = {
           ...options,
-          sources: [desktopBuckets?.bid_window, ...browserBuckets].filter(Boolean),
+          sources,
         };
 
         // Every window hit carries the synthetic `searched` category the query

@@ -1054,6 +1054,8 @@ export default {
       truncated:
         'Daftar ini mencapai batas hasil dan mungkin tidak lengkap. Persempit interval untuk melihat sisanya.',
       noCandidates: 'Tidak ada peristiwa tersimpan di bucket dan interval ini.',
+      noMatchingCandidates:
+        'Filter browser tidak menemukan kecocokan. Beberapa pola pencarian server tidak didukung di sini. Nonaktifkan filter di atas untuk melihat semua peristiwa tersimpan yang telah dimuat.',
       load: 'Muat',
       data: 'Data',
       staleResults:

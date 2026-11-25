@@ -1080,6 +1080,8 @@ export default {
       truncated:
         'Diese Liste hat das Ergebnislimit erreicht und ist möglicherweise unvollständig. Grenze das Intervall ein, um den Rest zu sehen.',
       noCandidates: 'Keine gespeicherten Ereignisse in diesem Bucket und Intervall.',
+      noMatchingCandidates:
+        'Der Browserfilter hat keine Treffer gefunden. Manche Suchmuster des Servers werden hier nicht unterstützt. Deaktivieren Sie den Filter oben, um alle geladenen gespeicherten Ereignisse anzuzeigen.',
       load: 'Laden',
       data: 'Daten',
       staleResults:

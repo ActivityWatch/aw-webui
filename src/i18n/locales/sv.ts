@@ -1069,6 +1069,8 @@ export default {
       truncated:
         'Listan nådde resultatgränsen och kan vara ofullständig. Begränsa intervallet för att se resten.',
       noCandidates: 'Inga lagrade händelser i denna bucket och detta intervall.',
+      noMatchingCandidates:
+        'Webbläsarfiltret hittade inga träffar. Vissa sökmönster på servern stöds inte här. Stäng av matchningsfiltret ovan för att visa alla inlästa lagrade händelser.',
       load: 'Ladda',
       data: 'Data',
       staleResults:

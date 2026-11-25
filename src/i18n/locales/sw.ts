@@ -1061,6 +1061,8 @@ export default {
       truncated:
         'Orodha hii imefikia kikomo cha matokeo na huenda haijakamilika. Punguza kipindi ili kuona yaliyobaki.',
       noCandidates: 'Hakuna matukio yaliyohifadhiwa katika bucket hii na kipindi hiki.',
+      noMatchingCandidates:
+        'Kichujio cha kivinjari hakikupata yanayolingana. Baadhi ya mifumo ya utafutaji ya seva haitumiki hapa. Zima kichujio hapo juu ili kuona matukio yote yaliyohifadhiwa ambayo yamepakiwa.',
       load: 'Pakia',
       data: 'Data',
       staleResults:

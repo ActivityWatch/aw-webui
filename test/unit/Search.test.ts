@@ -12,6 +12,11 @@ const mockBuckets = {
   ensureLoaded: jest.fn(),
   desktopBucketIds: jest.fn(),
   bucketsBrowser: jest.fn(),
+  getBucket: jest.fn(id => ({
+    id,
+    type: id.includes('web-') ? 'web.tab.current' : 'currentwindow',
+    hostname: 'browser-only',
+  })),
 };
 
 jest.mock('~/stores/buckets', () => ({
@@ -540,6 +545,58 @@ describe('Search stored-source editing', () => {
     expect(vm.submitted.hostname).toBe('B');
     expect(vm.stale).toBe(false);
   });
+
+  test.each([
+    ['query', 'aw-watcher-window_host'],
+    ['discovery', 'aw-watcher-window_host'],
+    ['query', 'aw-watcher-web-firefox_host'],
+    ['discovery', 'aw-watcher-web-firefox_host'],
+  ])(
+    'browser %s failure on another host stays fresh after an unrelated edit to %s',
+    async (failure, editedBucket) => {
+      const query = jest.fn().mockResolvedValue([[hit('a')]]);
+      const vm = searchVm(query);
+      await Search.methods.search.call(vm);
+      mockBuckets.desktopBucketIds.mockReturnValue({ bid_window: 'window_B' });
+      mockBuckets.bucketsBrowser.mockReturnValue(['browser_B']);
+      vm.queryOptions.hostname = 'B';
+      const beforeWrite = deferred();
+      query.mockReturnValueOnce(beforeWrite.promise).mockReturnValueOnce(beforeWrite.promise);
+      const pendingRequest = Search.methods.search.call(vm);
+      await flush();
+      query.mockResolvedValueOnce([[hit('host B')]]);
+      if (failure === 'query') query.mockRejectedValueOnce(new Error('Browser unavailable'));
+      else mockBuckets.ensureLoaded.mockRejectedValueOnce(new Error('Browser unavailable'));
+
+      await Search.methods.sourceMutated.call(vm, {}, editedBucket);
+      beforeWrite.resolve([[hit('obsolete')]]);
+      await pendingRequest;
+
+      expect(vm.error).toContain('Browser unavailable');
+      expect(vm.submitted.hostname).toBe('B');
+      expect(vm.events[0].data.title).toBe('host B');
+      expect(vm.stale).toBe(false);
+    }
+  );
+
+  test.each(['browser-only', 'unknown', undefined])(
+    'browser discovery failure keeps a potentially read browser bucket on host %s stale',
+    async hostname => {
+      mockBuckets.getBucket.mockReturnValueOnce({
+        id: 'aw-watcher-web-firefox_host',
+        type: 'web.tab.current',
+        hostname,
+      });
+      const vm = searchVm(jest.fn().mockResolvedValue([[hit('a')]]));
+      await Search.methods.search.call(vm);
+      mockBuckets.ensureLoaded.mockRejectedValueOnce(new Error('Bucket list unavailable'));
+
+      await Search.methods.sourceMutated.call(vm, {}, 'aw-watcher-web-firefox_host');
+
+      expect(vm.error).toContain('Bucket list unavailable');
+      expect(vm.stale).toBe(true);
+    }
+  );
 
   test('browser discovery failure after an edit is visible and marks results stale', async () => {
     const query = jest.fn().mockResolvedValue([[hit('a')]]);

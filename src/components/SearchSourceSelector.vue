@@ -26,7 +26,7 @@ b-modal(:id="modalId", ref="modal", :title="$t('extraViews.search.editStoredTitl
 
   div.mt-2(v-if="loading") #[icon(name="spinner" pulse)]
   div.mt-2(v-else-if="candidates")
-    p.small.text-muted(v-if="shown.length === 0") {{ $t('extraViews.search.noCandidates') }}
+    p.small.text-muted(v-if="shown.length === 0") {{ $t(candidates.length ? 'extraViews.search.noMatchingCandidates' : 'extraViews.search.noCandidates') }}
     table.table.table-sm.table-hover(v-else)
       thead
         tr

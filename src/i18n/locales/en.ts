@@ -1062,6 +1062,8 @@ export default {
       truncated:
         'This list reached the result limit and may be incomplete. Narrow the interval to see the rest.',
       noCandidates: 'No stored events in this bucket and interval.',
+      noMatchingCandidates:
+        'The browser filter found no matches. Some server search patterns are not supported here. Turn off the matching filter above to see all loaded stored events.',
       load: 'Load',
       data: 'Data',
       staleResults:
