@@ -1279,28 +1279,37 @@ export default {
     // the lookup may have fallen back to (late) bucket creation dates, or
     // older data may have been imported since. Returns whether the date
     // changed.
-    loadEarliestDate: async function (reload = false) {
+    loadEarliestDate: async function (reload = false, attempt = 0) {
       if (this.periodLength !== 'all' || (this.earliestDate && !reload)) return false;
       const host = this.host;
       const generation = ++this.earliestDateGeneration;
       const signal = getClient().controller.signal;
       let result;
+      let canceled = false;
       try {
         result = await this.activityStore.get_earliest_date(host, { force: reload });
       } catch (e) {
-        if (e.message === 'canceled') return false;
-        throw e;
+        if (e.message !== 'canceled') throw e;
+        canceled = true;
       }
       // A canceled store lookup can resolve with a bucket-creation fallback.
-      // Never publish it: its timeperiod watcher would abort the replacement.
+      // Never publish it, and never retry on behalf of a lookup a newer one,
+      // a host switch, or a period change has already replaced.
       if (
-        signal.aborted ||
         generation !== this.earliestDateGeneration ||
         host !== this.host ||
         this.periodLength !== 'all' ||
         this.priorityDisposed
       )
         return false;
+      if (signal.aborted || canceled) {
+        // The shared client aborts unrelated work too: a Day load resuming
+        // after a settings reload can cancel this lookup while All time is
+        // still selected. abort() installs a fresh controller, so one retry
+        // recovers the range instead of leaving Day data under All time.
+        // The guard above already proved no newer lookup took over.
+        return attempt < 1 ? this.loadEarliestDate(reload, attempt + 1) : false;
+      }
       const { date: found, approximate } = result;
       // No data at all: fall back to today
       const date = nextEarliestDate(

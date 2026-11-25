@@ -79,22 +79,60 @@ test('the deferred abort ignores the canceled fallback and keeps the replacement
   expect(v.earliestDate).toBe('2020-01-01');
 });
 
-test('an aborted lookup cannot publish a fallback even without a replacement', async () => {
+test('an aborted lookup is retried and publishes the fresh date', async () => {
+  // A Day load resuming after a settings reload aborts the shared client while
+  // All time is still selected. The canceled fallback must not be published,
+  // but the range has to be recovered instead of leaving Day data under All time.
   let finish;
-  const v = dateVm(() => new Promise(resolve => (finish = resolve)));
-  const lookup = Activity.methods.loadEarliestDate.call(v);
+  const getDate = jest
+    .fn()
+    .mockImplementationOnce(() => new Promise(resolve => (finish = resolve)))
+    .mockResolvedValueOnce({ date: '2020-01-01', approximate: false });
+  const v: any = dateVm(getDate);
+  v.loadEarliestDate = Activity.methods.loadEarliestDate.bind(v);
+  const lookup = v.loadEarliestDate();
+  // abort() installs a fresh controller, so the retry is not canceled too.
   controller.abort();
+  controller = new AbortController();
   finish({ date: '2026-01-01', approximate: true });
-  expect(await lookup).toBe(false);
+  expect(await lookup).toBe(true);
+  expect(getDate).toHaveBeenCalledTimes(2);
+  expect(v.earliestDate).toBe('2020-01-01');
+});
+
+test('a store-canceled lookup is retried once and then gives up', async () => {
+  const getDate = jest
+    .fn()
+    .mockRejectedValueOnce(new Error('canceled'))
+    .mockRejectedValueOnce(new Error('canceled'));
+  const v: any = dateVm(getDate);
+  v.loadEarliestDate = Activity.methods.loadEarliestDate.bind(v);
+  await expect(v.loadEarliestDate()).resolves.toBe(false);
+  expect(getDate).toHaveBeenCalledTimes(2);
+  expect(v.earliestDate).toBeNull();
+});
+
+test('an aborted lookup is not retried once the period changed', async () => {
+  let finish;
+  const getDate = jest.fn(() => new Promise(resolve => (finish = resolve)));
+  const v: any = dateVm(getDate);
+  v.loadEarliestDate = Activity.methods.loadEarliestDate.bind(v);
+  const lookup = v.loadEarliestDate();
+  controller.abort();
+  v.periodLength = 'day';
+  finish({ date: '2026-01-01', approximate: true });
+  await expect(lookup).resolves.toBe(false);
+  expect(getDate).toHaveBeenCalledTimes(1);
   expect(v.earliestDate).toBeNull();
 });
 
 test('expected date lookup cancellation is handled, but other failures propagate', async () => {
-  const v = dateVm(jest.fn().mockRejectedValueOnce(new Error('canceled')));
-  await expect(Activity.methods.loadEarliestDate.call(v)).resolves.toBe(false);
+  const v: any = dateVm(jest.fn().mockRejectedValue(new Error('canceled')));
+  v.loadEarliestDate = Activity.methods.loadEarliestDate.bind(v);
+  await expect(v.loadEarliestDate()).resolves.toBe(false);
   expect(v.earliestDate).toBeNull();
   v.activityStore.get_earliest_date.mockRejectedValueOnce(new Error('offline'));
-  await expect(Activity.methods.loadEarliestDate.call(v)).rejects.toThrow('offline');
+  await expect(v.loadEarliestDate()).rejects.toThrow('offline');
 });
 
 test('a deferred refresh handles expected activity cancellation', async () => {
