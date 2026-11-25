@@ -62,7 +62,9 @@ export function categoryTimelineQuery(
       });
     }
     const afk = all.find(b => b.type === 'afkstatus' && b.hostname === bucket.hostname);
-    const afk_id = afk ? escapeTimelineBucketId(afk.id) : null;
+    // An existing AFK bucket is required: dropping its filter would count idle
+    // time as activity. Let the view report the error and retain its raw rows.
+    const afk_id = afk ? escape_doublequote(afk.id) : null;
     return canonicalEvents({
       ...common,
       bid_window: id,

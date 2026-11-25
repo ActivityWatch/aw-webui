@@ -124,6 +124,29 @@ test('query failure clears the old row and shows an explicit warning alongside r
   warn.mockRestore();
 });
 
+test('an unrepresentable AFK bucket reports a category error without losing raw rows', async () => {
+  const vm = context();
+  await vm.getBuckets();
+  expect(vm.categorizedEvents).not.toHaveLength(0);
+  const raw = buckets();
+  raw[1].id = 'afk_laptop\\';
+  raw[0].events = [event(0, 10)];
+  mockGetBucketsWithEvents.mockResolvedValueOnce(raw);
+  const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+  mockQuery.mockClear();
+  vm.daterange = [moment.utc('2026-10-19'), moment.utc('2026-10-20')];
+  try {
+    await vm.getBuckets();
+    expect(vm.categoryError).toBe(true);
+    expect(vm.categorizedEvents).toEqual([]);
+    expect(vm.buckets).toEqual(raw);
+    expect(mockQuery).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith('Categorized timeline query failed:', expect.any(Error));
+  } finally {
+    warn.mockRestore();
+  }
+});
+
 test('a slow old query cannot overwrite the newly selected day', async () => {
   const vm = context();
   let finishOld;
