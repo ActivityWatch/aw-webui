@@ -931,7 +931,7 @@ export default {
       productivityScore: 'উৎপাদনশীলতার স্কোর',
       inheritScore: 'অভিভাবকের স্কোর উত্তরাধিকার করুন',
       score: 'স্কোর',
-      invalidScore: 'Enter a finite number or choose Inherit parent score.',
+      invalidScore: 'একটি সসীম সংখ্যা লিখুন অথবা “অভিভাবকের স্কোর উত্তরাধিকার করুন” বেছে নিন।',
       remove: 'বিভাগ সরান',
       noRule: 'কোনো নিয়ম নেই',
       none: 'কিছুই নয়',

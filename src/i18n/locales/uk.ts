@@ -929,7 +929,7 @@ export default {
       productivityScore: 'Оцінка продуктивності',
       inheritScore: 'Успадкувати оцінку батьківської',
       score: 'Оцінка',
-      invalidScore: 'Enter a finite number or choose Inherit parent score.',
+      invalidScore: 'Введіть скінченне число або виберіть «Успадкувати оцінку батьківської».',
       remove: 'Видалити категорію',
       noRule: 'Без правила',
       none: 'Немає',

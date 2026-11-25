@@ -897,7 +897,7 @@ export default {
       productivityScore: '生产力得分',
       inheritScore: '继承父分类得分',
       score: '得分',
-      invalidScore: '请输入一个有限的数字，或选择“继承父级得分”。',
+      invalidScore: '请输入一个有限的数字，或选择“继承父分类得分”。',
       remove: '移除分类',
       noRule: '无规则',
       none: '无',

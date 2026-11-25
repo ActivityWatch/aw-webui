@@ -931,7 +931,7 @@ export default {
       productivityScore: 'Оценка продуктивности',
       inheritScore: 'Наследовать оценку родителя',
       score: 'Оценка',
-      invalidScore: 'Enter a finite number or choose Inherit parent score.',
+      invalidScore: 'Введите конечное число или выберите «Наследовать оценку родителя».',
       remove: 'Удалить категорию',
       noRule: 'Нет правила',
       none: 'Нет',

@@ -923,7 +923,7 @@ export default {
       productivityScore: 'درجة الإنتاجية',
       inheritScore: 'وراثة درجة الأصل',
       score: 'الدرجة',
-      invalidScore: 'Enter a finite number or choose Inherit parent score.',
+      invalidScore: 'أدخل عددًا محدودًا أو اختر «وراثة درجة الأصل».',
       remove: 'إزالة الفئة',
       noRule: 'بدون قاعدة',
       none: 'بلا',
