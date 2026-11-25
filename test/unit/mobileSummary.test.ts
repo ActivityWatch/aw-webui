@@ -33,6 +33,15 @@ test('explicitly reordered, renamed, resized, configured and custom views keep t
   }
 });
 
+test('a desktop-only width choice does not disable phone chart-first presentation', () => {
+  const store = useViewsStore();
+  // Width has no effect below md, so this stays presentation-equivalent to the
+  // default summary even though it counts as a user edit for migration.
+  const view = copy(defaultViews[0]);
+  view.elements[0].width = 2;
+  expect(store.isDefaultSummary(view)).toBe(true);
+});
+
 test('empty or missing summary is not a default layout', () => {
   const store = useViewsStore();
   expect(store.isDefaultSummary(undefined)).toBe(false);

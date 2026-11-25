@@ -163,7 +163,15 @@ const LEGACY_ANDROID_SUMMARY_ONLY: View[] = [
 
 const LEGACY_ANDROID_DEFAULTS: View[][] = [...LEGACY_DESKTOP_DEFAULTS, LEGACY_ANDROID_SUMMARY_ONLY];
 
-function sameLayout(a: View[], b: View[]): boolean {
+/**
+ * Compare two view layouts element by element.
+ *
+ * `ignoreWidth` is for presentation-only callers: a card width has no effect
+ * below `md` (every card is full width there), so a desktop-only width tweak
+ * must not change phone presentation. Migration callers keep the default,
+ * where a non-null width *is* a user edit worth preserving.
+ */
+function sameLayout(a: View[], b: View[], ignoreWidth = false): boolean {
   return (
     a.length === b.length &&
     a.every((view, i) => {
@@ -178,7 +186,7 @@ function sameLayout(a: View[], b: View[]): boolean {
             el.type === other.elements[j].type &&
             el.size === other.elements[j].size &&
             // A null width renders as Automatic, so it is not a user edit.
-            el.width == null &&
+            (ignoreWidth || el.width == null) &&
             el.props === undefined
         )
       );
@@ -218,7 +226,12 @@ export const useViewsStore = defineStore('views', {
     isDefaultSummary:
       () =>
       (view?: View): boolean =>
-        !!view && [desktopViews[0], androidViews[0]].some(summary => sameLayout([view], [summary])),
+        !!view &&
+        [desktopViews[0], androidViews[0]].some(summary =>
+          // Width is a desktop-only presentation detail, so ignore it here:
+          // setting it must not disable the phone chart-first reorder.
+          sameLayout([view], [summary], true)
+        ),
   },
   actions: {
     async load() {
