@@ -24,7 +24,7 @@ describe('DaystartSettings start of day', () => {
     return { wrapper, settings };
   }
 
-  // Driving the real input, so removing the change listener or the :key reset
+  // Driving the real input, so removing the change/blur listeners or the :key reset
   // makes this fail instead of passing on a direct state write.
   function timeInput(wrapper: any): HTMLInputElement {
     return wrapper.find('input[type="time"]').element as HTMLInputElement;
@@ -37,14 +37,37 @@ describe('DaystartSettings start of day', () => {
     await wrapper.vm.$nextTick();
   }
 
-  test('clearing the input is not saved and it shows the stored time again', async () => {
+  test('clearing a segment mid-edit is not saved and does not remount the input', async () => {
     const { wrapper, settings } = mountSettings();
-    expect(timeInput(wrapper).value).toBe('04:00');
+    const before = timeInput(wrapper);
+    expect(before.value).toBe('04:00');
 
+    // Browsers emit change with '' as soon as a segment is blanked; the user is
+    // still typing, so the same element must stay mounted with focus.
     await typeInto(wrapper, '');
 
     expect(settings.update).not.toHaveBeenCalled();
+    expect(timeInput(wrapper)).toBe(before);
+  });
+
+  test('leaving the input empty shows the stored time again on blur', async () => {
+    const { wrapper, settings } = mountSettings();
+    await typeInto(wrapper, '');
+
+    await wrapper.find('input[type="time"]').trigger('blur');
+    await wrapper.vm.$nextTick();
+
+    expect(settings.update).not.toHaveBeenCalled();
     expect(timeInput(wrapper).value).toBe('04:00');
+  });
+
+  test('blur after a valid edit keeps the input', async () => {
+    const { wrapper } = mountSettings();
+    await typeInto(wrapper, '05:30');
+    const before = timeInput(wrapper);
+    await wrapper.find('input[type="time"]').trigger('blur');
+    await wrapper.vm.$nextTick();
+    expect(timeInput(wrapper)).toBe(before);
   });
 
   test('a valid time is saved', async () => {

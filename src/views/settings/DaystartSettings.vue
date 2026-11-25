@@ -4,7 +4,7 @@ div
     div
       h5.mt-1.mb-2.mb-sm-0 {{ $t('settings.daystart.startOfDay') }}
     div
-      b-input(type="time" size="sm" :key="startOfDayInputKey" :value="startOfDay" @change="startOfDay = $event")
+      b-input(type="time" size="sm" :key="startOfDayInputKey" :value="startOfDay" @change="startOfDay = $event" @blur="resetInvalidStartOfDay")
   small.text-muted
     | {{ $t('settings.daystart.startOfDayHelp') }}
 
@@ -19,12 +19,16 @@ div
 <script lang="ts">
 import { useSettingsStore } from '~/stores/settings';
 
+const VALID_TIME = /^\d{2}:\d{2}(:\d{2})?$/;
+
 export default {
   name: 'DaystartSettings',
   data() {
     return {
       settingsStore: useSettingsStore(),
-      // Bumped to reset the input to the stored value after an invalid entry.
+      // Bumped on blur to reset the input to the stored value after an invalid
+      // entry. Not bumped on change: browsers emit change with '' as soon as a
+      // segment is blanked mid-edit, and remounting then would drop focus.
       startOfDayInputKey: 0,
     };
   },
@@ -36,10 +40,7 @@ export default {
       set: function (value) {
         // Clearing the time input yields '', which would save a start of day
         // that get_hour_offset() parses as NaN ("NaN" hour labels).
-        if (!/^\d{2}:\d{2}(:\d{2})?$/.test(value)) {
-          this.startOfDayInputKey++;
-          return;
-        }
+        if (!VALID_TIME.test(value)) return;
         console.log('Set start of day to ' + value);
         this.settingsStore.update({ startOfDay: value });
       },
@@ -63,6 +64,12 @@ export default {
     startOfWeekLabel() {
       const option = this.weekOptions.find(item => item.value === this.startOfWeek);
       return option?.text || this.startOfWeek;
+    },
+  },
+  methods: {
+    resetInvalidStartOfDay(event: FocusEvent) {
+      const value = (event.target as HTMLInputElement).value;
+      if (!VALID_TIME.test(value)) this.startOfDayInputKey++;
     },
   },
 };
