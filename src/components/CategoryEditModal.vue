@@ -119,7 +119,7 @@ export default {
         name: null,
         rule: {},
         rulePatterns: [] as string[],
-        newPatternRows: [] as boolean[],
+        savedEmptyRows: [] as boolean[],
         originalRegex: '',
         parent: [],
         inherit_color: true,
@@ -208,16 +208,15 @@ export default {
       const patterns = this.editing.rulePatterns;
       if (Array.isArray(patterns) && patterns.length) {
         const original = this.editing.originalRegex || this.editing.rule.regex || '';
-        if (samePatterns(patterns, splitRegexPipe(original))) {
+        // Only a row that was already an empty alternative in the saved rule
+        // may stay empty. Cleared non-empty rows and new placeholders are omitted.
+        const storedPatterns = patterns.filter(
+          (pattern, index) => pattern !== '' || this.editing.savedEmptyRows?.[index]
+        );
+        if (samePatterns(storedPatterns, splitRegexPipe(original))) {
           return original;
         }
-        // Keep saved empty alternatives, even when another row changes. Only
-        // blank rows created with the add button are disposable placeholders.
-        return joinRegexPipe(
-          patterns.filter(
-            (pattern, index) => pattern !== '' || !this.editing.newPatternRows?.[index]
-          )
-        );
+        return joinRegexPipe(storedPatterns);
       }
       return this.editing.rule.regex || '';
     },
@@ -337,12 +336,12 @@ export default {
     },
     addPattern() {
       this.editing.rulePatterns.push('');
-      this.editing.newPatternRows.push(true);
+      this.editing.savedEmptyRows.push(false);
     },
     removePattern(index: number) {
       if (this.editing.rulePatterns.length <= 1) return;
       this.editing.rulePatterns.splice(index, 1);
-      this.editing.newPatternRows.splice(index, 1);
+      this.editing.savedEmptyRows.splice(index, 1);
     },
     resetModal() {
       const cat = this.categoryStore.get_category_by_id(this.categoryId);
@@ -360,7 +359,9 @@ export default {
         name: cat.subname,
         rule,
         rulePatterns: originalRegex ? splitRegexPipe(originalRegex) : [''],
-        newPatternRows: (originalRegex ? splitRegexPipe(originalRegex) : ['']).map(() => false),
+        savedEmptyRows: (originalRegex ? splitRegexPipe(originalRegex) : ['']).map(
+          pattern => originalRegex !== '' && pattern === ''
+        ),
         originalRegex,
         parent: cat.parent ? cat.parent : [],
         color,

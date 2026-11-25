@@ -414,6 +414,7 @@ describe('CategoryEditModal regex round trip', () => {
         parent: ['Work'],
         rule: { type: 'regex', regex },
         rulePatterns: rulePatterns ?? splitRegexPipe(regex),
+        savedEmptyRows: splitRegexPipe(regex).map(pattern => pattern === ''),
         originalRegex: regex,
         match_fields: [],
         inherit_color: true,
@@ -588,6 +589,35 @@ describe('CategoryEditModal mounted regex rows', () => {
       await wrapper.find('button[aria-label="Remove pattern 1"]').trigger('click');
       expect(rows().length).toBe(3);
       expect(await save()).toBe('|Discord| - YouTube');
+    } finally {
+      wrapper.destroy();
+    }
+  });
+
+  test.each(['', 'Chrome|Firefox'])(
+    'clearing a non-empty row does not create an empty alternative: %s',
+    async regex => {
+      const { wrapper, rows, save } = await openModal(regex);
+      try {
+        if (!regex) {
+          await wrapper.find('button[aria-label="Add pattern"]').trigger('click');
+          await rows().at(1).setValue('Firefox');
+        } else {
+          await rows().at(0).setValue('');
+        }
+        expect(await save()).toBe('Firefox');
+      } finally {
+        wrapper.destroy();
+      }
+    }
+  );
+
+  test('removing a saved empty alternative then adding a placeholder does not resurrect it', async () => {
+    const { wrapper, save } = await openModal('Firefox|');
+    try {
+      await wrapper.find('button[aria-label="Remove pattern 2"]').trigger('click');
+      await wrapper.find('button[aria-label="Add pattern"]').trigger('click');
+      expect(await save()).toBe('Firefox');
     } finally {
       wrapper.destroy();
     }
