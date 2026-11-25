@@ -202,23 +202,6 @@ describe('views store on an Android build', () => {
     expect(update).not.toHaveBeenCalled();
   });
 
-  test('removing Browser stays removed after Save and a fresh settings load', async () => {
-    const { viewsStore, settingsStore, save } = await loadOnAndroid(storedAndroidDefault());
-    expect(viewsStore.views.map(view => view.id)).toContain('browser');
-    viewsStore.removeView({ view_id: 'browser' });
-    await viewsStore.save();
-    expect(viewsStore.views).toEqual(storedAndroidDefault());
-
-    // The marker must survive persistence, not just the current views store.
-    const persisted = JSON.parse(JSON.stringify(settingsStore.$state));
-    settingsStore.$reset();
-    settingsStore.$patch(persisted);
-    viewsStore.clearViews();
-    await viewsStore.load();
-    expect(viewsStore.views).toEqual(storedAndroidDefault());
-    expect(save).toHaveBeenCalledTimes(1);
-  });
-
   test('Browser removal and its marker survive the real settings HTTP lifecycle', async () => {
     const { viewsStore, settingsStore, save, awclient } = await loadOnAndroid(
       storedAndroidDefault()
@@ -240,6 +223,7 @@ describe('views store on an Android build', () => {
     });
     client.req = { post, defaults: {} };
     try {
+      expect(viewsStore.views.map(view => view.id)).toContain('browser');
       viewsStore.removeView({ view_id: 'browser' });
       await viewsStore.save();
       expect(post).toHaveBeenCalledTimes(1);
