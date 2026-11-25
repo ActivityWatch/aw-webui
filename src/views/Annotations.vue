@@ -94,6 +94,7 @@ export default {
       events: [],
       editingId: null,
       originalRange: null,
+      originalData: null,
       startPick: null,
       endPick: null,
       startInput: moment().subtract(1, 'hour').format(LOCAL_FORMAT),
@@ -176,6 +177,7 @@ export default {
     resetForm() {
       this.editingId = null;
       this.originalRange = null;
+      this.originalData = null;
       this.startPick = null;
       this.endPick = null;
       this.formError = null;
@@ -187,6 +189,7 @@ export default {
     edit(e) {
       if (this.saving) return;
       this.originalRange = { start: new Date(e.timestamp), end: this.endOf(e) };
+      this.originalData = { ...e.data };
       this.startPick = null;
       this.endPick = null;
       this.editingId = e.id;
@@ -240,6 +243,17 @@ export default {
       this.formError = validateDraft(draft);
       if (this.formError) return;
       const event = draftToEvent(draft);
+      if (this.originalData) {
+        // Only replace fields the user edited: the form cannot losslessly
+        // represent every tag value or metadata written by another client.
+        const data = { ...this.originalData };
+        if (this.tagsInput !== formatTags(this.originalData.tags)) data.tags = event.data.tags;
+        if (this.noteInput !== (this.originalData.note || '')) {
+          if (event.data.note) data.note = event.data.note;
+          else delete data.note;
+        }
+        event.data = data;
+      }
       this.saving = true;
       try {
         if (this.editingId === null) {

@@ -136,6 +136,56 @@ describe('Annotations view', () => {
     expect(event.data.tags).toEqual(['client-y']);
   });
 
+  test.each(['note', 'tags', 'range'])('editing %s preserves untouched event data', async field => {
+    const original = {
+      ...stored(1, ['a,b', 7], '  original note  '),
+      data: { tags: ['a,b', 7], note: '  original note  ', source: 'cli', extra: { v: 1 } },
+    };
+    const before = JSON.parse(JSON.stringify(original));
+    const { wrapper, aw } = mountView([original]);
+    await flush();
+    wrapper.vm.edit(wrapper.vm.events[0]);
+    if (field === 'note') wrapper.vm.noteInput = ' updated ';
+    if (field === 'tags') wrapper.vm.tagsInput = 'new, tags';
+    if (field === 'range') {
+      wrapper.vm.endInput = moment(wrapper.vm.endInput)
+        .add(1, 'minute')
+        .format('YYYY-MM-DDTHH:mm:ss');
+    }
+    await wrapper.vm.save();
+    expect(aw.replaceEvent).toHaveBeenCalledTimes(1);
+    expect(aw.replaceEvent.mock.calls[0][1].data).toEqual({
+      ...before.data,
+      ...(field === 'note' ? { note: 'updated' } : {}),
+      ...(field === 'tags' ? { tags: ['new', 'tags'] } : {}),
+    });
+    expect(original).toEqual(before);
+  });
+
+  test('explicitly clearing fields removes the note and tags but preserves metadata', async () => {
+    const original = {
+      ...stored(1, ['a'], 'note'),
+      data: { tags: ['a'], note: 'note', source: 'cli' },
+    };
+    const { wrapper, aw } = mountView([original]);
+    await flush();
+    wrapper.vm.edit(wrapper.vm.events[0]);
+    wrapper.vm.noteInput = '';
+    await wrapper.vm.save();
+    expect(aw.replaceEvent.mock.calls[0][1].data).toEqual({ tags: ['a'], source: 'cli' });
+    wrapper.vm.edit(wrapper.vm.events[0]);
+    wrapper.vm.tagsInput = '';
+    await wrapper.vm.save();
+    expect(aw.replaceEvent.mock.calls[1][1].data).toEqual({
+      tags: [],
+      note: 'note',
+      source: 'cli',
+    });
+    wrapper.vm.tagsInput = 'fresh';
+    await wrapper.vm.save();
+    expect(aw.insertEvent.mock.calls[0][1].data).toEqual({ tags: ['fresh'] });
+  });
+
   test('deletes by id and reloads', async () => {
     const { wrapper, aw } = mountView();
     await flush();
