@@ -293,7 +293,12 @@ describe('CategoryEditModal typed score', () => {
 });
 
 describe('CategoryEditModal mounted score round trip', () => {
-  test('keeps numeric zero after showing, saving, and reopening the modal', async () => {
+  test.each([
+    [0, 0],
+    [' 2 ', 2],
+    [' -1.5 ', -1.5],
+    [' 0 ', 0],
+  ])('displays and saves stored score %j as %s', async (stored, expected) => {
     const localVue = createLocalVue();
     localVue.use(BootstrapVue);
     localVue.use(PiniaVuePlugin);
@@ -302,7 +307,7 @@ describe('CategoryEditModal mounted score round trip', () => {
     const store = useCategoryStore();
     store.load([
       { name: ['Parent'], rule: { type: 'none' }, data: { score: 1 } },
-      { name: ['Parent', 'Child'], rule: { type: 'none' }, data: { score: 0 } },
+      { name: ['Parent', 'Child'], rule: { type: 'none' }, data: { score: stored as any } },
     ]);
     const categoryId = store.get_category(['Parent', 'Child']).id;
     const openModal = async () => {
@@ -332,16 +337,16 @@ describe('CategoryEditModal mounted score round trip', () => {
         .findAllComponents({ name: 'BInputGroup' })
         .wrappers.find(group => group.text().includes('ui.categoryEditor.score'))
         .find('input');
-      expect((scoreInput.element as HTMLInputElement).value).toBe('0');
+      expect((scoreInput.element as HTMLInputElement).value).toBe(String(expected));
       (wrapper.vm.$refs.edit as any).$emit('ok', { preventDefault: jest.fn() });
       await localVue.nextTick();
-      expect(store.get_category(['Parent', 'Child']).data.score).toBe(0);
-      expect(store.get_category_score(['Parent', 'Child'])).toBe(0);
+      expect(store.get_category(['Parent', 'Child']).data.score).toBe(expected);
+      expect(store.get_category_score(['Parent', 'Child'])).toBe(expected);
 
       wrapper.destroy();
       wrapper = await openModal();
       expect((wrapper.vm as any).editing.inherit_score).toBe(false);
-      expect((wrapper.vm as any).editing.score).toBe(0);
+      expect((wrapper.vm as any).editing.score).toBe(expected);
     } finally {
       wrapper.destroy();
     }

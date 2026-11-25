@@ -280,7 +280,7 @@ export default {
       const cat = this.categoryStore.get_category_by_id(this.categoryId);
       const color = cat.data ? cat.data.color : undefined;
       const inherit_color = !color;
-      const score = cat.data ? cat.data.score : undefined;
+      const score = parseCategoryScore(cat.data?.score);
       const inherit_score = score === null || score === undefined;
       const rule = _.cloneDeep(cat.rule) || {};
       const storedKeys = normalizeSelectKeys(rule.select_keys);
