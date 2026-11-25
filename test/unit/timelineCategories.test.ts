@@ -277,3 +277,12 @@ test('a saved edit refetches the raw buckets for the same range', async () => {
   expect(mockGetBucketsWithEvents).toHaveBeenCalledTimes(2);
   expect(vm.buckets[0].events[0].duration).toBe(99);
 });
+
+test.each([
+  ['no router', undefined, { start: null, end: null }],
+  ['no range', { query: {} }, { start: null, end: null }],
+  ['a range', { query: { start: 'a', end: 'b' } }, { start: 'a', end: 'b' }],
+  ['a repeated parameter', { query: { start: 'a', end: ['b', 'c'] } }, { start: 'a', end: null }],
+])('reads the URL range with %s', (_case, $route, expected) => {
+  expect(Timeline.computed.urlRange.call({ $route })).toEqual(expected);
+});
