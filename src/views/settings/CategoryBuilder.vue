@@ -217,12 +217,9 @@ export default {
       // in the store (the modal edits it by id), but the suggestions list must
       // not follow it while the user is still deciding.
       suggestionsPaused: false,
-      // Set when Cancel drops the placeholder: the rules are back to what they
-      // were, so the list on screen is correct and the watcher must not refresh.
-      discardDraftRule: false,
-      // A rule change arrived while the embedded builder was collapsed; the
-      // stale list is refreshed once when it is reopened.
-      suggestionsStale: false,
+      // categoryRulesKey as of the latest fetch: the list on screen is stale
+      // exactly when the current rules differ from it.
+      fetchedRulesKey: null,
     };
   },
   computed: {
@@ -268,29 +265,10 @@ export default {
   },
   watch: {
     categoryRulesKey() {
-      if (!this.embedded || !this.bucketsReady) return;
-      if (this.discardDraftRule) {
-        // Cancel put the rules back exactly as they were; the visible list was
-        // never changed, so keep the user's page instead of refreshing.
-        this.discardDraftRule = false;
-        this.suggestionsStale = false;
-        return;
-      }
-      if (this.suggestionsPaused || !this.visible) {
-        // The New-rule modal is open, or nobody can see the list: do not query
-        // activity for it. Reopening / OK refreshes once instead of on every
-        // intermediate rule change.
-        this.suggestionsStale = true;
-        return;
-      }
-      this.suggestionsStale = false;
-      this.fetchWords();
+      this.refreshIfStale();
     },
-    visible(isVisible: boolean) {
-      if (isVisible && this.suggestionsStale) {
-        this.suggestionsStale = false;
-        this.fetchWords();
-      }
+    visible() {
+      this.refreshIfStale();
     },
     queryOptions: {
       handler: function () {
@@ -318,8 +296,16 @@ export default {
         return msg;
       }
     },
+    // Embedded mode: follow the editor's rules, but only while someone can see
+    // the list and no New-rule placeholder is being edited.
+    refreshIfStale() {
+      if (!this.embedded || !this.bucketsReady) return;
+      if (!this.visible || this.suggestionsPaused) return;
+      if (this.categoryRulesKey !== this.fetchedRulesKey) this.fetchWords();
+    },
     async fetchWords() {
       const requestId = ++this.requestId;
+      this.fetchedRulesKey = this.categoryRulesKey;
       const options = { ...this.queryOptions };
       this.loading = true;
       this.loadError = '';
@@ -374,6 +360,8 @@ export default {
           await this.categoryStore.load();
           if (requestId !== this.requestId) return;
         }
+        // The rules may have changed while the stores were loading.
+        this.fetchedRulesKey = this.categoryRulesKey;
         const query =
           canonicalEvents({
             ...bucketParams,
@@ -469,8 +457,8 @@ export default {
       console.log('Opening modal for creating rule with word: ' + word);
       this.create.accepted = false;
       // The modal edits the rule by id, so the placeholder has to be in the
-      // store before it opens. Pause the suggestions watcher instead: refreshing
-      // here would reset visible_count and hide the row the user clicked.
+      // store before it opens. Pause refreshing instead: it would reset
+      // visible_count and hide the row the user clicked.
       const lastId = this.categoryStore.addClass({
         name: [word],
         rule: { type: 'regex', regex: _.escapeRegExp(word) },
@@ -485,12 +473,13 @@ export default {
         // Saving here would also commit the editor's other unsaved edits.
         // Leave the new rule unsaved; the editor's Save button persists it.
         this.create.accepted = true;
+        this.suggestionsPaused = false;
+        this.refreshIfStale();
       } else {
         await this.categoryStore.save();
+        this.suggestionsPaused = false;
+        this.fetchWords();
       }
-      this.suggestionsPaused = false;
-      // The rule may have been edited inside the modal, so refresh once.
-      this.fetchWords();
     },
     async createRuleCancel() {
       // Also runs after OK, since the modal emits `hidden` whenever it closes.
@@ -498,22 +487,18 @@ export default {
       const { categoryId, accepted } = this.create;
       this.create.categoryId = null;
       if (!this.embedded) {
-        this.suggestionsPaused = false;
         this.categoryStore.load(); // Restore categories to last saved
       } else if (!accepted && categoryId !== null) {
-        // Drop only the placeholder rule, keeping the editor's other edits. The
-        // visible list never included it, so tell the watcher to skip the
-        // refresh that removing it would otherwise trigger.
-        this.discardDraftRule = true;
+        // Drop only the placeholder rule, keeping the editor's other edits.
         this.categoryStore.removeClass(categoryId);
         // Ask the store what is still unsaved rather than restoring a flag read
         // before the placeholder: a save finishing while the draft was open
         // already recorded the editor's real state, so that read is stale.
         this.categoryStore.classes_unsaved_changes = this.categoryStore.hasUnsavedChanges;
-        this.suggestionsPaused = false;
-      } else {
-        this.suggestionsPaused = false;
       }
+      this.suggestionsPaused = false;
+      // A no-op if the rules are back to what the list was fetched with.
+      this.refreshIfStale();
     },
     appendRule(word) {
       console.log('Opening modal to append rule with word: ' + word);

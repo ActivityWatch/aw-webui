@@ -738,6 +738,54 @@ describe('CategoryBuilder embedded in the category editor', () => {
     expect(fetchSpy).toHaveBeenCalledTimes(1);
   });
 
+  // Pins the host, opens New rule and lets the paused watcher run, as a click would.
+  const openNewRule = async () => {
+    wrapper.vm.queryOptions = { ...wrapper.vm.queryOptions, hostname: 'unknown' };
+    await flush();
+    const query = getClient.mock.results.at(-1).value.query;
+    query.mockClear();
+    wrapper.vm.createRule('Firefox');
+    await flush();
+    return query;
+  };
+
+  test.each([false, true])(
+    'New rule → OK refreshes exactly once (rule edited in the modal: %s)',
+    async edited => {
+      const query = await openNewRule();
+      // The modal writes its edits to the store right before emitting `ok`.
+      if (edited) {
+        categories.updateClass({
+          id: wrapper.vm.create.categoryId,
+          name: ['Firefox'],
+          rule: { type: 'regex', regex: 'EditedPattern' },
+        });
+      }
+      await wrapper.vm.createRuleOk();
+      await wrapper.vm.createRuleCancel();
+      await flush();
+      expect(query).toHaveBeenCalledTimes(1);
+      // Reopening an up-to-date builder must not reset the user's page.
+      await wrapper.setProps({ visible: false });
+      await wrapper.setProps({ visible: true });
+      await flush();
+      expect(query).toHaveBeenCalledTimes(1);
+    }
+  );
+
+  test('removing the new rule in the modal does not swallow the next refresh', async () => {
+    const query = await openNewRule();
+    // The modal's Remove button drops the placeholder, then hides the modal.
+    categories.removeClass(wrapper.vm.create.categoryId);
+    await flush();
+    await wrapper.vm.createRuleCancel();
+    await flush();
+    expect(query).not.toHaveBeenCalled();
+    edit();
+    await flush();
+    expect(query).toHaveBeenCalledTimes(1);
+  });
+
   test('a collapsed builder does not query and refreshes once when reopened', async () => {
     wrapper.vm.queryOptions = { ...wrapper.vm.queryOptions, hostname: 'unknown' };
     await flush();
@@ -749,7 +797,6 @@ describe('CategoryBuilder embedded in the category editor', () => {
     edit();
     await flush();
     expect(query).not.toHaveBeenCalled();
-    expect(wrapper.vm.suggestionsStale).toBe(true);
 
     // A second change while still collapsed must not pile up work.
     categories.addClass({ name: ['Second'], rule: { type: 'regex', regex: 'SecondPattern' } });
@@ -760,6 +807,5 @@ describe('CategoryBuilder embedded in the category editor', () => {
     await flush();
     expect(query).toHaveBeenCalledTimes(1);
     expect(query.mock.calls[0][1].join('\n')).toContain('SecondPattern');
-    expect(wrapper.vm.suggestionsStale).toBe(false);
   });
 });
