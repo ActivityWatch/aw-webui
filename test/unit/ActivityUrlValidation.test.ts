@@ -26,6 +26,7 @@ function makeVm(periodLength: string, date: string | undefined) {
     'exactInterval',
     'dateRange',
     'invalidRange',
+    'unknownUrlPeriod',
     'invalidUrlPeriod',
     'periodLengths',
     'timeperiod',
@@ -51,6 +52,15 @@ describe('Activity URL date and period validation', () => {
       expect(vm.previousPeriod()).toBe('2026-10-19');
     }
   );
+
+  test.each([
+    ['week', 'garbage'],
+    ['last7d', '2026-02-30'],
+  ])('a known :periodLength %p with a bad date keeps its period in links', (period, date) => {
+    const vm = makeVm(period, date);
+    expect(vm.invalidUrlPeriod).toBe(true);
+    expect(vm.link_prefix).toBe(`/activity/all/${period}`);
+  });
 
   test('an unknown :periodLength warns and renders a single day instead of throwing', () => {
     const vm = makeVm('foo', '2026-10-15');

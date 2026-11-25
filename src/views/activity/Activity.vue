@@ -757,12 +757,15 @@ export default {
         (this.periodLength === 'interval' && !this.exactInterval)
       );
     },
+    // A :periodLength that is not a period at all. hasOwnProperty, not `in`:
+    // names inherited from Object.prototype ("constructor", …) are not periods.
+    unknownUrlPeriod: function (): boolean {
+      return !Object.prototype.hasOwnProperty.call(this.periodLengths, this.periodLength);
+    },
     // An unknown :periodLength, or a :date that isn't a real YYYY-MM-DD day
     // (range and interval are validated by invalidRange). Falls back to today.
     invalidUrlPeriod: function (): boolean {
-      // hasOwnProperty, not `in`: names inherited from Object.prototype
-      // ("constructor", "toString", …) are not periods.
-      if (!Object.prototype.hasOwnProperty.call(this.periodLengths, this.periodLength)) return true;
+      if (this.unknownUrlPeriod) return true;
       if (['range', 'interval', 'all'].includes(this.periodLength) || !this.date) return false;
       return !moment(this.date, 'YYYY-MM-DD', true).isValid();
     },
@@ -902,9 +905,10 @@ export default {
       return formatHostParam(this.hostSelection);
     },
     link_prefix: function () {
-      // An unsupported period cannot be browsed, so Previous/Next and the date
+      // An unknown period cannot be browsed, so Previous/Next and the date
       // picker build day links; otherwise the chosen date would not apply.
-      const period = this.invalidUrlPeriod ? 'day' : this.periodLength;
+      // A known period with only a bad date keeps its period (week stays week).
+      const period = this.unknownUrlPeriod ? 'day' : this.periodLength;
       return `/activity/${this.hostParam}/${period}`;
     },
     periodusage: function () {
@@ -944,11 +948,12 @@ export default {
       } else {
         // An unknown period in the URL shows a single day (a warning is shown).
         // Own-property lookup: "constructor" must not resolve to Object's function.
-        const knownLengths: Record<string, [number, string]> = {
+        type Length = [number, moment.unitOfTime.DurationConstructor];
+        const knownLengths: Record<string, Length> = {
           last7d: [7, 'days'],
           last30d: [30, 'days'],
         };
-        const len = Object.prototype.hasOwnProperty.call(knownLengths, this.periodLength)
+        const len: Length = Object.prototype.hasOwnProperty.call(knownLengths, this.periodLength)
           ? knownLengths[this.periodLength]
           : [1, 'day'];
         return {
