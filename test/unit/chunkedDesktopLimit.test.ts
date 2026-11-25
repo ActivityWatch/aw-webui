@@ -1,8 +1,10 @@
 import { createPinia, setActivePinia } from 'pinia';
 import moment from 'moment';
 import { useActivityStore } from '~/stores/activity';
+import type { QueryOptions } from '~/stores/activity';
 import { useBucketsStore } from '~/stores/buckets';
 import { createClient } from '~/util/awclient';
+import type { IBucket } from '~/util/interfaces';
 import { fullDesktopQuery, multideviceQuery, default_limit } from '~/queries';
 
 function limitFrom(query: string[], variable: string): number {
@@ -58,25 +60,24 @@ describe('chunked desktop queries keep long-tail entries', () => {
       const store = useActivityStore();
       store.buckets.window = ['aw-watcher-window_host'];
       store.buckets.afk = ['aw-watcher-afk_host'];
-      const options = {
+      const options: QueryOptions = {
         host: 'host',
         timeperiod: { start: moment('2020-01-06').format(), length: [1, 'week'] },
         filter_afk: true,
       };
       if (mode === 'multidevice') {
-        useBucketsStore().buckets = ['host', 'laptop'].flatMap(hostname =>
-          [
-            ['aw-watcher-window', 'currentwindow'],
-            ['aw-watcher-afk', 'afkstatus'],
-          ].map(([prefix, type]) => ({
-            id: `${prefix}_${hostname}`,
-            type,
-            hostname,
-            client: 'test',
-            created: '2020-01-06T00:00:00Z',
-            last_updated: '2020-01-06T00:00:00Z',
-            data: {},
-          }))
+        useBucketsStore().buckets = ['host', 'laptop'].flatMap(
+          hostname =>
+            [
+              ['aw-watcher-window', 'currentwindow'],
+              ['aw-watcher-afk', 'afkstatus'],
+            ].map(([prefix, type]) => ({
+              id: `${prefix}_${hostname}`,
+              type,
+              hostname,
+              device_id: hostname,
+              data: {},
+            })) as IBucket[]
         );
         await store.query_multidevice_full(options, ['host', 'laptop']);
       } else {
