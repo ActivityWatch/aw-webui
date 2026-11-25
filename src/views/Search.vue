@@ -125,7 +125,7 @@ export default {
       // A submission owns its inputs even if the form changes during bucket loading.
       return this.runSearch({ pattern: this.pattern, ...this.queryOptions });
     },
-    runSearch: async function (options, refresh = false) {
+    runSearch: async function (options, refreshBucket = null) {
       const sequence = ++this.searchSequence;
       const { pattern, hostname, start, stop, filter_afk } = options;
       this.pendingSearch = { ...options };
@@ -181,9 +181,15 @@ export default {
         ]);
         if (sequence !== this.searchSequence) return;
         this.error = errors.join('; ');
-        // A refresh after an edit that could not re-read every source leaves
-        // results that may predate the edit.
-        this.stale = refresh && errors.length > 0;
+        // Only failure to re-read the edited bucket makes this refresh stale.
+        // Unrelated source failures still appear in the partial-failure error.
+        const refreshedSources = [
+          ...(results[0] ? [desktopBuckets?.bid_window] : []),
+          ...(results[1] ? browserBuckets : []),
+        ];
+        this.stale = Boolean(
+          refreshBucket && errors.length > 0 && !refreshedSources.includes(refreshBucket)
+        );
         this.submitted = {
           ...options,
           sources: [desktopBuckets?.bid_window, ...browserBuckets].filter(Boolean),
@@ -207,7 +213,7 @@ export default {
         console.error(e);
         if (sequence === this.searchSequence) {
           this.error = e.response?.data?.message ?? String(e);
-          if (refresh) this.stale = true;
+          if (refreshBucket) this.stale = true;
         }
       } finally {
         if (sequence === this.searchSequence) {
@@ -230,10 +236,10 @@ export default {
       if (this.submitted?.sources.includes(bucketId)) this.stale = true;
       // A pending submission can read the edited bucket even when the displayed
       // one does not. Restart it conservatively (including during discovery).
-      if (this.pendingSearch) return this.runSearch(this.pendingSearch, true);
+      if (this.pendingSearch) return this.runSearch(this.pendingSearch, bucketId);
       const current = this.submitted;
       if (!current || !current.sources.includes(bucketId)) return;
-      return this.runSearch(_.omit(current, 'sources'), true);
+      return this.runSearch(_.omit(current, 'sources'), bucketId);
     },
     extendByWeek() {
       this.queryOptions.start = moment(this.queryOptions.start)

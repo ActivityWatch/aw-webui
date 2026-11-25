@@ -481,6 +481,66 @@ describe('Search stored-source editing', () => {
     expect(query).not.toHaveBeenCalled();
   });
 
+  test.each(['window', 'browser'])(
+    'a refreshed %s source stays fresh when only the other source fails',
+    async source => {
+      const query = jest.fn().mockResolvedValue([[hit('before edit')]]);
+      const vm = searchVm(query);
+      await Search.methods.search.call(vm);
+      const editedBucket =
+        source === 'window' ? 'aw-watcher-window_host' : 'aw-watcher-web-firefox_host';
+      const failure = new Error('Unrelated source unavailable');
+      if (source === 'window') {
+        query.mockResolvedValueOnce([[hit('after edit')]]).mockRejectedValueOnce(failure);
+      } else {
+        query.mockRejectedValueOnce(failure).mockResolvedValueOnce([[browserEvent]]);
+      }
+
+      await Search.methods.sourceMutated.call(vm, {}, editedBucket);
+
+      expect(source === 'window' ? vm.events[0].data.title : vm.browserEvents[0].data.title).toBe(
+        source === 'window' ? 'after edit' : 'Example'
+      );
+      expect(vm.error).toContain('Unrelated source unavailable');
+      expect(vm.stale).toBe(false);
+    }
+  );
+
+  test('a browser refresh failure remains stale even when the window query succeeds', async () => {
+    const query = jest.fn().mockResolvedValue([[hit('a')]]);
+    const vm = searchVm(query);
+    await Search.methods.search.call(vm);
+    query
+      .mockResolvedValueOnce([[windowEvent]])
+      .mockRejectedValueOnce(new Error('Browser unavailable'));
+
+    await Search.methods.sourceMutated.call(vm, {}, 'aw-watcher-web-firefox_host');
+
+    expect(vm.error).toContain('Browser unavailable');
+    expect(vm.stale).toBe(true);
+  });
+
+  test('a successful pending search on another host is fresh after an unrelated edit', async () => {
+    const query = jest.fn().mockResolvedValue([[hit('a')]]);
+    const vm = searchVm(query);
+    await Search.methods.search.call(vm);
+    mockBuckets.desktopBucketIds.mockReturnValue({ bid_window: 'window_B' });
+    mockBuckets.bucketsBrowser.mockReturnValue([]);
+    vm.queryOptions.hostname = 'B';
+    const beforeWrite = deferred();
+    query.mockReturnValueOnce(beforeWrite.promise).mockResolvedValue([[hit('host B')]]);
+    const pendingRequest = Search.methods.search.call(vm);
+    await flush();
+
+    await Search.methods.sourceMutated.call(vm, {}, 'aw-watcher-window_host');
+    beforeWrite.resolve([[hit('obsolete')]]);
+    await pendingRequest;
+
+    expect(vm.events[0].data.title).toBe('host B');
+    expect(vm.submitted.hostname).toBe('B');
+    expect(vm.stale).toBe(false);
+  });
+
   test('browser discovery failure after an edit is visible and marks results stale', async () => {
     const query = jest.fn().mockResolvedValue([[hit('a')]]);
     const vm = searchVm(query);
