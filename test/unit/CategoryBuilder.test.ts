@@ -28,9 +28,9 @@ const androidBucket = {
   data: {},
 };
 const events = app => [[{ data: { app }, duration: 120 }]];
-const deferred = () => {
+const deferred = <T = unknown>() => {
   let resolve, reject;
-  const promise = new Promise((res, rej) => {
+  const promise = new Promise<T>((res, rej) => {
     resolve = res;
     reject = rej;
   });
@@ -601,7 +601,7 @@ describe('CategoryBuilder embedded in the category editor', () => {
   });
 
   test('Cancel after a real save landed mid-draft leaves no false unsaved warning', async () => {
-    const response = deferred();
+    const response = deferred<void>();
     const settings = useSettingsStore();
     jest.spyOn(settings, 'update').mockReturnValue(response.promise);
     const env = process.env.NODE_ENV;
@@ -630,7 +630,7 @@ describe('CategoryBuilder embedded in the category editor', () => {
       { id: 'default', categories: categories.classes_clean },
       { id: 'extra', categories: [] },
     ];
-    const response = deferred();
+    const response = deferred<void>();
     const update = jest.spyOn(settings, 'update').mockResolvedValue(undefined);
     const save = () => {
       const env = process.env.NODE_ENV;
