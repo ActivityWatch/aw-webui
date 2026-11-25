@@ -54,7 +54,17 @@ export default {
     },
     summaryEvents: function () {
       const positiveEvents = (this.events || []).filter(event => event.duration > 0);
-      const groups = _.groupBy(positiveEvents, event => JSON.stringify(this.summaryKeyFunc(event)));
+      const groups = _.groupBy(positiveEvents, event =>
+        JSON.stringify(this.summaryKeyFunc(event), (_key, value) =>
+          _.isPlainObject(value)
+            ? Object.fromEntries(
+                Object.keys(value)
+                  .sort()
+                  .map(key => [key, value[key]])
+              )
+            : value
+        )
+      );
       const summed = _.map(groups, events => ({
         ...events[0],
         duration: _.sumBy(events, 'duration'),

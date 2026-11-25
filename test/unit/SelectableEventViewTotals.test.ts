@@ -99,6 +99,26 @@ describe('SelectableEventView summary', () => {
     wrapper.destroy();
   });
 
+  test('groups equivalent JSON objects recursively while preserving array order', async () => {
+    const first = { project: 'A', details: [{ team: 'B', tags: ['one', 'two'] }] };
+    const reordered = { details: [{ tags: ['one', 'two'], team: 'B' }], project: 'A' };
+    const different = { project: 'A', details: [{ team: 'B', tags: ['two', 'one'] }] };
+    const input = [first, reordered, different].map((metadata, index) => ({
+      ...events[index],
+      duration: 60,
+      data: { ...events[index].data, metadata },
+    }));
+    const original = JSON.stringify(input);
+    const wrapper = makeView(input);
+    await wrapper.setData({ summaryKey: 'metadata' });
+    expect((wrapper.vm as any).summaryEvents.map(e => [e.data.metadata, e.duration])).toEqual([
+      [first, 120],
+      [different, 60],
+    ]);
+    expect(JSON.stringify(input)).toBe(original);
+    wrapper.destroy();
+  });
+
   test('skips non-positive durations before summing and omits non-positive-only groups', async () => {
     const input = [
       events[0],
