@@ -16,6 +16,7 @@ import 'moment/locale/sw';
 import 'moment/locale/uk';
 import 'moment/locale/ur';
 import 'moment/locale/zh-cn';
+import 'moment/locale/zh-tw';
 
 import ar from './locales/ar';
 import bn from './locales/bn';
@@ -33,6 +34,7 @@ import sw from './locales/sw';
 import uk from './locales/uk';
 import ur from './locales/ur';
 import zhCN from './locales/zh-CN';
+import zhTW from './locales/zh-TW';
 
 Vue.use(VueI18n);
 
@@ -52,7 +54,8 @@ export type AppLocale =
   | 'sw'
   | 'uk'
   | 'ur'
-  | 'zh-CN';
+  | 'zh-CN'
+  | 'zh-TW';
 
 export const SUPPORTED: AppLocale[] = [
   'ar',
@@ -71,6 +74,7 @@ export const SUPPORTED: AppLocale[] = [
   'uk',
   'ur',
   'zh-CN',
+  'zh-TW',
 ];
 
 /**
@@ -95,6 +99,7 @@ export const LANGUAGE_NAMES: Record<AppLocale, string> = {
   uk: 'Українська',
   ur: 'اردو',
   'zh-CN': '简体中文',
+  'zh-TW': '繁體中文',
 };
 
 export function isAppLocale(value: string | null | undefined): value is AppLocale {
@@ -118,7 +123,22 @@ const HTML_LANG: Record<AppLocale, string> = {
   uk: 'uk',
   ur: 'ur',
   'zh-CN': 'zh-CN',
+  'zh-TW': 'zh-TW',
 };
+
+/**
+ * Chinese browser tags: an explicit script subtag wins over the region, so `zh-Hans-TW`
+ * stays Simplified and `zh-Hant-CN` gets Traditional. Without a script, the Traditional
+ * regions (TW, HK, MO) get zh-TW; bare `zh` and every other region keep zh-CN. zh-TW is
+ * Taiwan wording; HK/MO users get it as the nearest Traditional-script dictionary.
+ */
+function detectChineseLocale(lang: string): AppLocale {
+  const subtags = lang.split(/[-_]/).slice(1);
+  if (subtags.includes('hant')) return 'zh-TW';
+  if (subtags.includes('hans')) return 'zh-CN';
+  if (subtags.some(t => t === 'tw' || t === 'hk' || t === 'mo')) return 'zh-TW';
+  return 'zh-CN';
+}
 
 function detectBrowserLocale(): AppLocale | null {
   if (typeof navigator === 'undefined') {
@@ -142,7 +162,7 @@ function detectBrowserLocale(): AppLocale | null {
   if (lang.startsWith('sw')) return 'sw';
   if (lang.startsWith('uk')) return 'uk';
   if (lang.startsWith('ur')) return 'ur';
-  if (lang.startsWith('zh')) return 'zh-CN';
+  if (lang.startsWith('zh')) return detectChineseLocale(lang);
   return null;
 }
 
@@ -175,6 +195,7 @@ const MOMENT_LOCALE: Record<AppLocale, string> = {
   uk: 'uk',
   ur: 'ur',
   'zh-CN': 'zh-cn',
+  'zh-TW': 'zh-tw',
 };
 
 const initialLocale = getInitialLocale();
@@ -199,6 +220,7 @@ export const i18n = new VueI18n({
     uk,
     ur,
     'zh-CN': zhCN,
+    'zh-TW': zhTW,
   },
   silentTranslationWarn: process.env.NODE_ENV === 'production',
 });
