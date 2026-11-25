@@ -38,10 +38,10 @@ export function friendlydate(timestamp: string | Moment) {
   const sinceNow = moment.duration(m.diff(now)).locale(i18n.locale);
   if (-sinceNow.asSeconds() <= 60) {
     // Count seconds with locale-aware plurals, independent of Moment's global locale (#1324).
-    return new Intl.RelativeTimeFormat(i18n.locale, { numeric: 'always' }).format(
-      Math.round(sinceNow.asSeconds()) || -0,
-      'second'
-    );
+    return new Intl.RelativeTimeFormat(i18n.locale, {
+      numeric: 'always',
+      numberingSystem: 'latn',
+    }).format(Math.round(sinceNow.asSeconds()) || -0, 'second');
   } else if (-sinceNow.asSeconds() <= 60 * 60 * 24) {
     return sinceNow.humanize(true);
   }

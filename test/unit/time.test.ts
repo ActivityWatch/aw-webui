@@ -130,6 +130,7 @@ describe('friendlydate', () => {
     ['de', 'vor 1 Sekunde'],
     ['pt-BR', 'há 1 segundo'],
     ['zh-CN', '1秒钟前'],
+    ['bn', '1 সেকেন্ড আগে'],
   ])('handles one second in %s', (locale, expected) => {
     i18n.locale = locale;
     moment.locale('en');
