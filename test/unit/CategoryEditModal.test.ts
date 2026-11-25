@@ -227,7 +227,7 @@ describe('CategoryEditModal rule priority', () => {
 });
 
 describe('CategoryEditModal score round trip', () => {
-  test.each([0, 0.5, -0.5, null, undefined])('reopens and saves score %s', score => {
+  test.each([0, 0.5, -0.5, 1000, null, undefined])('reopens and saves score %s', score => {
     const updateClass = jest.fn();
     const category = {
       id: 2,
@@ -268,6 +268,9 @@ describe('CategoryEditModal typed score', () => {
     // Phone decimal keypads in comma locales type "1,5".
     ['1,5', 1.5],
     ['-1,5', -1.5],
+    ['-0,25', -0.25],
+    ['0,125', 0.125],
+    ['-0,125', -0.125],
   ])('saves typed score %j as %s', (typed, expected) => {
     const updateClass = jest.fn();
     const vm: any = {
@@ -295,7 +298,8 @@ describe('CategoryEditModal typed score', () => {
 });
 
 describe('CategoryEditModal invalid legacy scores', () => {
-  test.each(['abc', '5%', 'Infinity', ''])('requires correction of stored score %j', stored => {
+  const invalidScores = ['abc', '5%', 'Infinity', '', '1,000', '-12,345', ' 123,456 ', '1,000e2'];
+  test.each(invalidScores)('requires correction of stored score %j', stored => {
     const updateClass = jest.fn();
     const vm: any = {
       categoryId: 2,
@@ -346,6 +350,7 @@ describe('CategoryEditModal mounted score round trip', () => {
     [' 0 ', 0, false],
     ['abc', 2.5, true],
     ['5%', 2.5, true],
+    ['1,000', 1000, true],
     ['', 2.5, true],
   ])('displays and saves stored score %j as %s', async (stored, expected, invalid) => {
     const localVue = createLocalVue();

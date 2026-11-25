@@ -84,6 +84,10 @@ describe('parseCategoryImport', () => {
     { name: ['Work'], rule: { type: 'none' }, data: { score: 'ten' } },
     { name: ['Work'], rule: { type: 'none' }, data: { score: '' } },
     { name: ['Work'], rule: { type: 'none' }, data: { score: 'Infinity' } },
+    { name: ['Work'], rule: { type: 'none' }, data: { score: '1,000' } },
+    { name: ['Work'], rule: { type: 'none' }, data: { score: '-12,345' } },
+    { name: ['Work'], rule: { type: 'none' }, data: { score: '1,000e2' } },
+    { name: ['Work'], rule: { type: 'none' }, data: { score: ' 123,456 ' } },
   ])('rejects the entire mixed array with malformed member %j', invalid => {
     const categories = [{ name: ['Valid'], rule: { type: 'none' } }, invalid];
     expect(() => parseCategoryImport(JSON.stringify({ id: 'mine', categories }))).toThrow();
@@ -117,6 +121,11 @@ describe('parseCategoryImport', () => {
   // so existing exports contain numeric strings. Import them as numbers.
   test.each([
     ['10', 10],
+    ['1,5', 1.5],
+    ['-0,25', -0.25],
+    ['0,125', 0.125],
+    ['-0,125', -0.125],
+    ['1000', 1000],
     [' -2.5 ', -2.5],
     ['0', 0],
   ])('converts numeric string score %j to a number', (score, expected) => {

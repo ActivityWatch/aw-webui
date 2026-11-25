@@ -4,9 +4,11 @@
 export function parseCategoryScore(value: unknown): number | undefined {
   if (typeof value === 'number') return Number.isFinite(value) ? value : undefined;
   if (typeof value !== 'string' || value.trim() === '') return undefined;
-  // Phone decimal keypads in comma locales produce "1,5". A single comma and no
-  // period is a decimal separator, not a thousands separator (scores are small).
   const trimmed = value.trim();
+  // "1,000" could mean a decimal or grouped thousands. Preserve legacy text for
+  // explicit correction rather than silently choosing either interpretation.
+  if (/^[+-]?[1-9]\d{0,2},\d{3}(?:[eE][+-]?\d+)?$/.test(trimmed)) return undefined;
+  // Accept ordinary comma decimals from locale keyboards, such as "1,5".
   const normalized =
     !trimmed.includes('.') && trimmed.split(',').length === 2 ? trimmed.replace(',', '.') : trimmed;
   const number = Number(normalized);
