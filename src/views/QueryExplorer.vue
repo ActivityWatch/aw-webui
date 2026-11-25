@@ -60,6 +60,7 @@ div
     @ok="onSaveQueryConfirm"
     @shown="$refs.saveQueryNameInput && $refs.saveQueryNameInput.focus()"
   )
+    div.alert.alert-danger(v-if="saved_query_error" role="alert") {{ saved_query_error }}
     b-form-group(:label="$t('ui.query.savedNameLabel')")
       b-form-input(
         ref="saveQueryNameInput"
@@ -78,6 +79,7 @@ div
     @ok="onRenameQueryConfirm"
     @shown="$refs.renameQueryNameInput && $refs.renameQueryNameInput.focus()"
   )
+    div.alert.alert-danger(v-if="saved_query_error" role="alert") {{ saved_query_error }}
     b-form-group(:label="$t('ui.query.newNameLabel')")
       b-form-input(
         ref="renameQueryNameInput"
