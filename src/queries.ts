@@ -615,7 +615,10 @@ export function browserSearchQuery(browserBuckets: string[], pattern: string): s
   return querystr_to_array(code);
 }
 
-export function fullDesktopQuery(params: DesktopQueryParams): string[] {
+// `limit` caps each top list (apps, titles, urls, ...). A period queried as
+// several chunks must over-fetch per chunk: the client merges the chunks and
+// re-limits, and an entry outside one chunk's top `limit` loses that chunk's time.
+export function fullDesktopQuery(params: DesktopQueryParams, limit = default_limit): string[] {
   return querystr_to_array(
     `
     ${canonicalEvents({
@@ -630,8 +633,8 @@ export function fullDesktopQuery(params: DesktopQueryParams): string[] {
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
     app_cat_events = sort_by_duration(merge_events_by_keys(events, ["app", "$category"]));
 
-    app_events  = limit_events(app_events, ${default_limit});
-    title_events  = limit_events(title_events, ${default_limit});
+    app_events  = limit_events(app_events, ${limit});
+    title_events  = limit_events(title_events, ${limit});
     duration = sum_durations(events);
     raw_window_duration = sum_durations(raw_window_events);
     ` + // Browser events are retrieved in canonicalQuery
@@ -639,17 +642,17 @@ export function fullDesktopQuery(params: DesktopQueryParams): string[] {
     browser_events = split_url_events(browser_events);
     browser_urls = merge_events_by_keys(browser_events, ["url"]);
     browser_urls = sort_by_duration(browser_urls);
-    browser_urls = limit_events(browser_urls, ${default_limit});
+    browser_urls = limit_events(browser_urls, ${limit});
     browser_domains = merge_events_by_keys(browser_events, ["$domain"]);
     browser_domains = sort_by_duration(browser_domains);
-    browser_domains = limit_events(browser_domains, ${default_limit});
+    browser_domains = limit_events(browser_domains, ${limit});
     browser_titles = merge_events_by_keys(browser_events, ["title"]);
     browser_titles = sort_by_duration(browser_titles);
-    browser_titles = limit_events(browser_titles, ${default_limit});
+    browser_titles = limit_events(browser_titles, ${limit});
     browser_duration = sum_durations(browser_events);
     stopwatch_events = merge_events_by_keys(stopwatch_events, ["label"]);
     stopwatch_events = sort_by_duration(stopwatch_events);
-    stopwatch_events = limit_events(stopwatch_events, ${default_limit});
+    stopwatch_events = limit_events(stopwatch_events, ${limit});
 
     RETURN = {
         "window": {
@@ -687,7 +690,7 @@ export function fullDesktopQuery(params: DesktopQueryParams): string[] {
 //       Android hosts have no afk filter, matching the single-device Android view.
 // NOTE: Doesn't support browser buckets (and therefore not browser audible detection either)
 //       This is due to the 'unknown' hostname of browser buckets (will hopefully be fixed soon).
-export function multideviceQuery(params: MultiQueryParams): string[] {
+export function multideviceQuery(params: MultiQueryParams, limit = default_limit): string[] {
   // app_events is computed from events directly, not chained off
   // title_events: aw-watcher-android events have no "title" key, so
   // merge_events_by_keys(events, ["app", "title"]) drops them from
@@ -706,8 +709,8 @@ export function multideviceQuery(params: MultiQueryParams): string[] {
     cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
     app_cat_events = sort_by_duration(merge_events_by_keys(events, ["app", "$category"]));
 
-    app_events  = limit_events(app_events, ${default_limit});
-    title_events  = limit_events(title_events, ${default_limit});
+    app_events  = limit_events(app_events, ${limit});
+    title_events  = limit_events(title_events, ${limit});
     duration = sum_durations(events);
 
     RETURN = {
