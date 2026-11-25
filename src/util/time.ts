@@ -38,9 +38,9 @@ export function friendlydate(timestamp: string | Moment) {
   const sinceNow = moment.duration(m.diff(now)).locale(i18n.locale);
   if (-sinceNow.asSeconds() <= 60) {
     // Count seconds with locale-aware plurals, independent of Moment's global locale (#1324).
-    return new Intl.RelativeTimeFormat(i18n.locale, {
+    // Latin digits via the locale's -u-nu- extension: the `numberingSystem` option is not in TS's ES2020 lib.
+    return new Intl.RelativeTimeFormat(`${i18n.locale}-u-nu-latn`, {
       numeric: 'always',
-      numberingSystem: 'latn',
     }).format(Math.round(sinceNow.asSeconds()) || -0, 'second');
   } else if (-sinceNow.asSeconds() <= 60 * 60 * 24) {
     return sinceNow.humanize(true);
