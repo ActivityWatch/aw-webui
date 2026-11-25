@@ -265,6 +265,9 @@ describe('CategoryEditModal typed score', () => {
     ['-1.5', -1.5],
     ['0', 0],
     [' 2 ', 2],
+    // Phone decimal keypads in comma locales type "1,5".
+    ['1,5', 1.5],
+    ['-1,5', -1.5],
   ])('saves typed score %j as %s', (typed, expected) => {
     const updateClass = jest.fn();
     const vm: any = {

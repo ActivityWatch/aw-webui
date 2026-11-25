@@ -61,8 +61,15 @@ b-modal(id="edit" ref="edit" :title="$t('ui.categoryEditor.editTitle')" @show="r
     b-form-checkbox(v-model="editing.inherit_score" switch)
       | {{ $t('ui.categoryEditor.inheritScore') }}
     b-input-group.my-1(:prepend="$t('ui.categoryEditor.score')" v-if="!editing.inherit_score")
-      b-form-input(v-model="editing.score" inputmode="decimal" :state="validScore ? null : false")
-    small.text-danger(v-if="!validScore")
+      b-form-input(
+        v-model="editing.score"
+        :state="validScore ? null : false"
+        :aria-describedby="validScore ? null : 'category-score-error-' + categoryId"
+      )
+    small.text-danger(
+      v-if="!validScore"
+      :id="'category-score-error-' + categoryId"
+    )
       | {{ $t('ui.categoryEditor.invalidScore') }}
 
   hr

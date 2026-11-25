@@ -4,6 +4,11 @@
 export function parseCategoryScore(value: unknown): number | undefined {
   if (typeof value === 'number') return Number.isFinite(value) ? value : undefined;
   if (typeof value !== 'string' || value.trim() === '') return undefined;
-  const number = Number(value);
+  // Phone decimal keypads in comma locales produce "1,5". A single comma and no
+  // period is a decimal separator, not a thousands separator (scores are small).
+  const trimmed = value.trim();
+  const normalized =
+    !trimmed.includes('.') && trimmed.split(',').length === 2 ? trimmed.replace(',', '.') : trimmed;
+  const number = Number(normalized);
   return Number.isFinite(number) ? number : undefined;
 }
