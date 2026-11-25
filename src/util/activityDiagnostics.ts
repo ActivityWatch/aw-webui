@@ -70,7 +70,7 @@ export function activityDiagnostic({
   // shows the data.
   if (windows.length === 0) {
     const browserOnly =
-      buckets.some(bucket => bucket.type === 'web.tab.current' && sameDevice(bucket)) &&
+      buckets.some(bucket => bucket.type === 'web.tab.current' && bucket.hostname === host) &&
       !buckets.some(bucket => bucket.type === 'afkstatus' && sameDevice(bucket));
     return browserOnly ? null : { kind: 'missing-window', host };
   }

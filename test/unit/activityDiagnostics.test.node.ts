@@ -30,6 +30,22 @@ describe('activityDiagnostic', () => {
     ).toBeNull();
   });
 
+  test('does not hide the warning for a browser bucket under a hostname variant', () => {
+    expect(
+      activityDiagnostic({
+        host: 'laptop',
+        buckets: [
+          bucket('aw-watcher-vscode_laptop', 'laptop', 'app.editor.activity'),
+          bucket('aw-watcher-web-firefox_laptop.local', 'laptop.local', 'web.tab.current'),
+        ],
+        isMultidevice: false,
+        isMobile: false,
+        queryComplete: true,
+        rawWindowDuration: 0,
+      })
+    ).toEqual({ kind: 'missing-window', host: 'laptop' });
+  });
+
   test('still reports a missing window bucket when an AFK watcher runs', () => {
     expect(
       activityDiagnostic({
