@@ -1,3 +1,4 @@
+import en from '~/i18n/locales/en';
 import { createLocalVue, mount } from '@vue/test-utils';
 import BootstrapVue, { BModal } from 'bootstrap-vue';
 import { createPinia, PiniaVuePlugin, setActivePinia } from 'pinia';
@@ -351,6 +352,8 @@ describe('CategoryEditModal mounted score round trip', () => {
     ['abc', 2.5, true],
     ['5%', 2.5, true],
     ['1,000', 1000, true],
+    ['1,125', 1.125, true],
+    ['1,125', 1125, true],
     ['', 2.5, true],
   ])('displays and saves stored score %j as %s', async (stored, expected, invalid) => {
     const localVue = createLocalVue();
@@ -369,7 +372,10 @@ describe('CategoryEditModal mounted score round trip', () => {
         localVue,
         pinia,
         propsData: { categoryId },
-        mocks: { $t: key => key },
+        mocks: {
+          $t: key =>
+            key === 'ui.categoryEditor.invalidScore' ? en.ui.categoryEditor.invalidScore : key,
+        },
         stubs: {
           'color-picker': true,
           icon: true,
@@ -395,7 +401,10 @@ describe('CategoryEditModal mounted score round trip', () => {
         String(invalid ? stored : expected)
       );
       if (invalid) {
-        expect(wrapper.text()).toContain('ui.categoryEditor.invalidScore');
+        expect(wrapper.text()).toContain(en.ui.categoryEditor.invalidScore);
+        expect(wrapper.text()).toContain('1.125');
+        expect(wrapper.text()).toContain('1125');
+        expect(wrapper.text()).toContain('1,125');
         expect((wrapper.vm as any).canSubmit).toBe(false);
         (wrapper.vm.$refs.edit as any).$emit('ok', { preventDefault: jest.fn() });
         await localVue.nextTick();

@@ -948,7 +948,8 @@ export default {
       productivityScore: 'Produktivitetspoäng',
       inheritScore: 'Ärv överordnads poäng',
       score: 'Poäng',
-      invalidScore: 'Ange ett ändligt tal eller välj Ärv överordnads poäng.',
+      invalidScore:
+        'Ange ett ändligt tal eller välj Ärv överordnads poäng. Skriv 1.125 för ett decimaltal eller 1125 för ett heltal i stället för 1,125.',
       remove: 'Ta bort kategori',
       noRule: 'Ingen regel',
       none: 'Ingen',

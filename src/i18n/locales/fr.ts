@@ -954,7 +954,8 @@ export default {
       productivityScore: 'Score de productivité',
       inheritScore: 'Hériter du score du parent',
       score: 'Score',
-      invalidScore: 'Saisissez un nombre fini ou choisissez Hériter du score du parent.',
+      invalidScore:
+        'Saisissez un nombre fini ou choisissez Hériter du score du parent. Au lieu de 1,125, utilisez 1.125 pour un nombre décimal ou 1125 pour un entier.',
       remove: 'Supprimer la catégorie',
       noRule: 'Aucune règle',
       none: 'Aucun',

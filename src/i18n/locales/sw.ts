@@ -944,7 +944,8 @@ export default {
       productivityScore: 'Alama ya tija',
       inheritScore: 'Rithi alama ya mzazi',
       score: 'Alama',
-      invalidScore: 'Weka nambari yenye kikomo au uchague “Rithi alama ya mzazi”.',
+      invalidScore:
+        'Weka nambari yenye kikomo au uchague “Rithi alama ya mzazi”. Badala ya 1,125, tumia 1.125 kwa nambari ya desimali au 1125 kwa nambari kamili.',
       remove: 'Ondoa kategoria',
       noRule: 'Hakuna sheria',
       none: 'Hakuna',

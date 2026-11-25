@@ -960,7 +960,7 @@ export default {
       inheritScore: 'Score der übergeordneten Kategorie erben',
       score: 'Score',
       invalidScore:
-        'Gib eine endliche Zahl ein oder wähle „Score der übergeordneten Kategorie erben“.',
+        'Gib eine endliche Zahl ein oder wähle „Score der übergeordneten Kategorie erben“. Verwende statt 1,125 die Schreibweise 1.125 für eine Dezimalzahl oder 1125 für eine ganze Zahl.',
       remove: 'Kategorie entfernen',
       noRule: 'Keine Regel',
       none: 'Keine',

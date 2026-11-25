@@ -948,7 +948,8 @@ export default {
       productivityScore: 'Pontuação de produtividade',
       inheritScore: 'Herdar pontuação da categoria pai',
       score: 'Pontuação',
-      invalidScore: 'Insira um número finito ou escolha “Herdar pontuação da categoria pai”.',
+      invalidScore:
+        'Insira um número finito ou escolha “Herdar pontuação da categoria pai”. Em vez de 1,125, use 1.125 para um decimal ou 1125 para um número inteiro.',
       remove: 'Remover categoria',
       noRule: 'Sem regra',
       none: 'Nenhum',

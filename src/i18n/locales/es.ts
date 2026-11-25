@@ -950,7 +950,7 @@ export default {
       inheritScore: 'Heredar la puntuación de la categoría principal',
       score: 'Puntuación',
       invalidScore:
-        'Introduce un número finito o elige Heredar la puntuación de la categoría principal.',
+        'Introduce un número finito o elige Heredar la puntuación de la categoría principal. En lugar de 1,125, escribe 1.125 para un decimal o 1125 para un número entero.',
       remove: 'Eliminar categoría',
       noRule: 'Sin regla',
       none: 'Ninguna',

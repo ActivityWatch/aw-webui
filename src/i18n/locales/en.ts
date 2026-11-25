@@ -948,7 +948,8 @@ export default {
       productivityScore: 'Productivity score',
       inheritScore: 'Inherit parent score',
       score: 'Score',
-      invalidScore: 'Enter a finite number or choose Inherit parent score.',
+      invalidScore:
+        'Enter a finite number or choose Inherit parent score. Use 1.125 for a decimal or 1125 for a whole number instead of 1,125.',
       remove: 'Remove category',
       noRule: 'No rule',
       none: 'None',
