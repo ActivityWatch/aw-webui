@@ -82,6 +82,12 @@ describe('Timeline event fetch failure', () => {
     wrapper.setData({ daterange: day('2026-10-18') });
     await flush();
     expect((wrapper.vm as any).buckets).toHaveLength(1);
+    const hostOptions = () =>
+      wrapper.findAll('#timeline-filter-host option').wrappers.map(option => option.text());
+    const clientOptions = () =>
+      wrapper.findAll('#timeline-filter-client option').wrappers.map(option => option.text());
+    expect(hostOptions()).toContain('laptop');
+    expect(clientOptions()).toContain('window');
 
     // A warning left over from the previous range must not outlive the rows it described.
     wrapper.setData({ categoryError: true });
@@ -92,5 +98,20 @@ describe('Timeline event fetch failure', () => {
     expect((wrapper.vm as any).buckets).toBeNull();
     expect(wrapper.find('vis-timeline-stub').exists()).toBe(false);
     expect(wrapper.find('[role="alert"]').exists()).toBe(true);
+    // Only the All option remains; stale range-specific filters must not be selectable.
+    expect(hostOptions()).toHaveLength(1);
+    expect(clientOptions()).toHaveLength(1);
+
+    mockGetBucketsWithEvents.mockResolvedValueOnce([
+      { ...bucket('NewRange'), hostname: 'desktop', client: 'browser' },
+    ]);
+    await wrapper.find('[role="alert"] b-button').trigger('click');
+    await flush();
+    expect(mockGetBucketsWithEvents).toHaveBeenCalledTimes(3);
+    expect(hostOptions()).toContain('desktop');
+    expect(hostOptions()).not.toContain('laptop');
+    expect(clientOptions()).toContain('browser');
+    expect(clientOptions()).not.toContain('window');
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false);
   });
 });

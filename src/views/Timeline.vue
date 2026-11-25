@@ -306,6 +306,8 @@ export default {
         console.error('Could not load timeline events', error);
         // Don't keep showing the previous range's events under the new range.
         this.all_buckets = null;
+        this.hosts = null;
+        this.clients = null;
         this.buckets = null;
         this.categorizedEvents = [];
         this.categoryError = false;
