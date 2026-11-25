@@ -21,9 +21,9 @@ export const HOST_GROUP_PREFIX = 'host-group:';
 // border (and a light background that hides the label in dark mode).
 //
 // Top-level rows carry an explicit `treeLevel: 0` for the mirror-image reason:
-// `syncTimelineData` merges into the existing DataSet and keeps keys the
-// rebuilt row does not name, so a row that was a child under "All" keeps its
-// indented level after a filter drops host nesting.
+// `syncTimelineData` uses a level change to recreate the row, clearing both
+// vis-timeline's nestedInGroup metadata and its accumulated label classes when
+// a filter drops host nesting.
 export function nestGroupsByHost(
   groups: TimelineGroup[],
   hostOf: (id: string) => string | undefined,

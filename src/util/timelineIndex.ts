@@ -141,6 +141,14 @@ function sameValue(a: any, b: any): boolean {
 export function syncTimelineData(dataset, next: Record<string, any>[]): void {
   const ids = new Set(next.map(item => item.id));
   const removed = dataset.getIds().filter(id => !ids.has(id));
+  // vis-timeline writes nestedInGroup into child records and only adds level
+  // classes to existing labels. Recreate rows that change level to clear both
+  // the library-owned metadata and DOM classes; preserve unchanged parents so
+  // their showNested (collapse) state survives ordinary updates.
+  for (const item of next) {
+    const previous = dataset.get(item.id);
+    if (previous && previous.treeLevel !== item.treeLevel) removed.push(item.id);
+  }
   if (removed.length) dataset.remove(removed);
   const changed = next.filter(item => {
     const previous = dataset.get(item.id);

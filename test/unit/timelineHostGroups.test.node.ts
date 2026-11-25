@@ -77,13 +77,15 @@ describe('nestGroupsByHost', () => {
     const data = makeData();
     syncTimelineData(data, nested);
     expect(data.store.get('aw-watcher-window_a').treeLevel).toBe(1);
+    // ItemSet writes the parent id into the real DataSet when nesting rows.
+    data.store.get('aw-watcher-window_a').nestedInGroup = HOST_GROUP_PREFIX + 'a';
 
-    // Switching the filter to one host drops the host rows. The rebuilt row has
-    // to name treeLevel explicitly: syncTimelineData merges, so an omitted key
-    // would leave the old level and the label would stay indented and tinted.
+    // Switching the filter to one host drops the host rows. A level change
+    // must recreate the row, clearing vis-timeline's parent metadata as well.
     const filtered = nestGroupsByHost([g('aw-watcher-window_a')], hostOf, label);
     syncTimelineData(data, filtered);
     expect(data.store.get('aw-watcher-window_a').treeLevel).toBe(0);
+    expect(data.store.get('aw-watcher-window_a').nestedInGroup).toBeUndefined();
     expect(data.store.get(HOST_GROUP_PREFIX + 'b')).toBeUndefined();
   });
 
