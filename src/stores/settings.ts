@@ -89,6 +89,8 @@ interface State {
   // Ordered list of active set IDs. First entry has highest priority when merging.
   active_set_ids: string[];
   views: View[];
+  // Explicit view saves must not be mistaken for historical default layouts.
+  viewsCustomized: boolean;
   saved_queries: SavedQuery[];
   // Words the Category Builder's "Ignore" button hides from its suggestions.
   category_builder_ignored_words: string[];
@@ -163,6 +165,7 @@ export const useSettingsStore = defineStore('settings', {
     category_sets: [],
     active_set_ids: ['default'],
     views: defaultViews,
+    viewsCustomized: false,
     saved_queries: [],
     category_builder_ignored_words: [],
     alerts: [],

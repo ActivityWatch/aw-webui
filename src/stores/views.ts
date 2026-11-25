@@ -213,7 +213,11 @@ export const useViewsStore = defineStore('views', {
     async load() {
       const settingsStore = useSettingsStore();
       await settingsStore.ensureLoaded();
-      const views = migrateStoredViews(settingsStore.views);
+      // Explicitly saved layouts may have the exact shape of an old default
+      // (for example, after removing Browser). Only migrate untouched layouts.
+      const views = settingsStore.viewsCustomized
+        ? settingsStore.views
+        : migrateStoredViews(settingsStore.views);
       this.loadViews(views);
     },
     async save() {
@@ -226,11 +230,12 @@ export const useViewsStore = defineStore('views', {
         // Settings.update patches its state before persistence. Keep its confirmed
         // baseline separate from the draft, including when persistence rejects.
         const confirmed = JSON.parse(JSON.stringify(settingsStore.views));
+        const wasCustomized = settingsStore.viewsCustomized;
         const draft = JSON.parse(JSON.stringify(this.views));
         try {
-          await settingsStore.update({ views: draft });
+          await settingsStore.update({ views: draft, viewsCustomized: true });
         } catch (error) {
-          settingsStore.$patch({ views: confirmed });
+          settingsStore.$patch({ views: confirmed, viewsCustomized: wasCustomized });
           throw error;
         }
         await this.load();

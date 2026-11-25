@@ -64,6 +64,21 @@ const storedDesktopDefault = () => [
   },
 ];
 
+// The Android default saved before the Browser tab was introduced.
+const storedAndroidDefault = () => [
+  {
+    id: 'summary',
+    name: 'Summary',
+    elements: [
+      { type: 'top_apps', size: 3 },
+      { type: 'top_categories', size: 3 },
+      { type: 'timeline_barchart', size: 3 },
+      { type: 'category_tree', size: 3 },
+      { type: 'category_sunburst', size: 3 },
+    ],
+  },
+];
+
 describe('migrateStoredViews', () => {
   test('replaces a stored desktop default on Android', () => {
     const migrated = migrateStoredViews(storedDesktopDefault(), true);
@@ -100,14 +115,14 @@ describe('migrateStoredViews', () => {
   });
 
   test('replaces the stored summary-only Android default with the current one', () => {
-    const stored = JSON.parse(JSON.stringify(androidViews.filter(view => view.id === 'summary')));
+    const stored = storedAndroidDefault();
     const migrated = migrateStoredViews(stored, true);
     expect(migrated).toEqual(androidViews);
     expect(migrated.map(view => view.id)).toContain('browser');
   });
 
   test('keeps an edited summary-only Android layout', () => {
-    const stored = JSON.parse(JSON.stringify(androidViews.filter(view => view.id === 'summary')));
+    const stored = storedAndroidDefault();
     stored[0].elements.pop();
     expect(migrateStoredViews(stored, true)).toBe(stored);
   });
@@ -157,6 +172,7 @@ describe('views store on an Android build', () => {
         pinia: require('pinia'),
         views: require('~/stores/views'),
         settings: require('~/stores/settings'),
+        awclient: require('~/util/awclient'),
       };
     });
     mods.pinia.setActivePinia(mods.pinia.createPinia());
@@ -173,6 +189,7 @@ describe('views store on an Android build', () => {
       settingsStore,
       save,
       update,
+      awclient: mods.awclient,
     };
   }
 
@@ -185,6 +202,71 @@ describe('views store on an Android build', () => {
     expect(update).not.toHaveBeenCalled();
   });
 
+  test('removing Browser stays removed after Save and a fresh settings load', async () => {
+    const { viewsStore, settingsStore, save } = await loadOnAndroid(storedAndroidDefault());
+    expect(viewsStore.views.map(view => view.id)).toContain('browser');
+    viewsStore.removeView({ view_id: 'browser' });
+    await viewsStore.save();
+    expect(viewsStore.views).toEqual(storedAndroidDefault());
+
+    // The marker must survive persistence, not just the current views store.
+    const persisted = JSON.parse(JSON.stringify(settingsStore.$state));
+    settingsStore.$reset();
+    settingsStore.$patch(persisted);
+    viewsStore.clearViews();
+    await viewsStore.load();
+    expect(viewsStore.views).toEqual(storedAndroidDefault());
+    expect(save).toHaveBeenCalledTimes(1);
+  });
+
+  test('Browser removal and its marker survive the real settings HTTP lifecycle', async () => {
+    const { viewsStore, settingsStore, save, awclient } = await loadOnAndroid(
+      storedAndroidDefault()
+    );
+    save.mockRestore();
+    awclient.createClient();
+    const client = awclient.getClient();
+    const copy = value => JSON.parse(JSON.stringify(value));
+    const backend = { views: storedAndroidDefault() };
+    const read = jest.spyOn(client, 'get_settings').mockImplementation(async () => copy(backend));
+    const previousRequest = client.req;
+    const previousStorage = (global as any).localStorage;
+    (global as any).localStorage = { setItem: jest.fn(), getItem: () => null };
+    const post = jest.fn(async (url, value) => {
+      backend[url.split('/').pop()] = copy(value);
+      return {};
+    });
+    client.req = { post, defaults: {} };
+    try {
+      viewsStore.removeView({ view_id: 'browser' });
+      await viewsStore.save();
+      expect(post).toHaveBeenCalledWith('/0/settings/viewsCustomized', true, expect.anything());
+      expect(viewsStore.views).toEqual(storedAndroidDefault());
+      settingsStore.$reset();
+      await settingsStore.load();
+      await viewsStore.load();
+      expect(settingsStore.viewsCustomized).toBe(true);
+      expect(viewsStore.views).toEqual(storedAndroidDefault());
+    } finally {
+      read.mockRestore();
+      client.req = previousRequest;
+      if (previousStorage === undefined) delete (global as any).localStorage;
+      else (global as any).localStorage = previousStorage;
+    }
+  });
+
+  test('a failed save rolls back the customization marker so legacy defaults still migrate', async () => {
+    const { viewsStore, settingsStore, save, expected } = await loadOnAndroid(
+      storedAndroidDefault()
+    );
+    viewsStore.removeView({ view_id: 'browser' });
+    save.mockRejectedValueOnce(new Error('offline'));
+    await expect(viewsStore.save()).rejects.toThrow('offline');
+    expect(settingsStore.viewsCustomized).toBe(false);
+    await viewsStore.load();
+    expect(viewsStore.views).toEqual(expected);
+  });
+
   test('saving an edit persists the migrated Android layout', async () => {
     const { viewsStore, settingsStore, expected, save, update } = await loadOnAndroid(
       storedDesktopDefault()
@@ -193,7 +275,7 @@ describe('views store on an Android build', () => {
     await viewsStore.save();
     const edited = JSON.parse(JSON.stringify(expected));
     edited[0].elements.push({ type: 'top_titles' });
-    expect(update).toHaveBeenCalledWith({ views: edited });
+    expect(update).toHaveBeenCalledWith({ views: edited, viewsCustomized: true });
     expect(settingsStore.views).toEqual(edited);
     expect(save).toHaveBeenCalledTimes(1);
     expect(viewsStore.views).toEqual(edited);
