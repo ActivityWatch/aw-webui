@@ -1,19 +1,48 @@
 import { shallowMount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 import Home from '~/views/Home.vue';
+import Buckets from '~/views/Buckets.vue';
+import Timeline from '~/views/Timeline.vue';
 
-import fs from 'fs';
-import path from 'path';
 import en from '~/i18n/locales/en';
+import { useSettingsStore } from '~/stores/settings';
+import { useBucketsStore } from '~/stores/buckets';
 
-beforeEach(() => createTestingPinia());
+beforeEach(() => {
+  createTestingPinia();
+  (useSettingsStore().load as jest.Mock).mockResolvedValue(undefined);
+  (useBucketsStore().ensureLoaded as jest.Mock).mockResolvedValue(undefined);
+});
 
-test.each([['Home', Home, en.home.trackingIntro]])(
+test.each([
+  ['Home', Home, en.home.trackingIntro, 'watchers'],
+  ['Buckets', Buckets, en.buckets.intro, 'buckets-and-events'],
+  ['Timeline', Timeline, en.timeline.intro, 'watchers'],
+])(
   '%s keeps explanations behind a focusable help icon',
-  (_name, component, explanation) => {
+  (_name, component, explanation, docsPage) => {
     const wrapper = shallowMount(component, {
       mocks: { $isAndroid: false },
-      stubs: ['b-alert', 'b-button', 'b-popover', 'router-link', 'icon'],
+      stubs: [
+        'b-alert',
+        'b-button',
+        'b-popover',
+        'router-link',
+        'icon',
+        'b-card',
+        'b-card-group',
+        'b-modal',
+        'b-form-file',
+        'b-button-group',
+        'b-dropdown',
+        'b-dropdown-header',
+        'b-dropdown-item-button',
+        'b-form-checkbox',
+        'input-timeinterval',
+        'aw-devonly',
+        'aw-bucket-merge',
+        'aw-bucket-validate',
+      ],
     });
     const button = wrapper.find('h3 button');
     expect(button.exists()).toBe(true);
@@ -25,30 +54,37 @@ test.each([['Home', Home, en.home.trackingIntro]])(
     expect(help.attributes('triggers')).toBe('hover focus click blur');
     expect(help.text()).toContain(explanation);
     const docs = help.find('a');
-    expect(docs.attributes('href')).toBe('https://docs.activitywatch.net/en/latest/watchers.html');
+    expect(docs.attributes('href')).toBe(
+      `https://docs.activitywatch.net/en/latest/${docsPage}.html`
+    );
     expect(docs.attributes('target')).toBe('_blank');
     expect(docs.attributes('rel')).toBe('noopener');
+    expect(wrapper.findAll('p').wrappers.filter(p => p.text().includes(explanation))).toHaveLength(
+      0
+    );
     wrapper.destroy();
   }
 );
 
-test.each([
-  ['Buckets', 'buckets.intro', 'buckets-help'],
-  ['Timeline', 'timeline.intro', 'timeline-help'],
-])('%s uses the existing on-demand help pattern', (view, key, target) => {
-  const source = fs.readFileSync(path.join(__dirname, `../../src/views/${view}.vue`), 'utf8');
-  expect(source).not.toContain(`p {{ $t('${key}') }}`);
-  expect(source).toContain(`button#${target}.btn.btn-link`);
-  expect(source).toContain(':aria-label="$t(\'common.moreInformation\')"');
-  expect(source).toContain(`b-popover(target="${target}" triggers="hover focus click blur"`);
-  expect(source).toContain(`| {{ $t('${key}') }}`);
-  const docsPage = view === 'Buckets' ? 'buckets-and-events' : 'watchers';
-  expect(source).toContain(`href="https://docs.activitywatch.net/en/latest/${docsPage}.html"`);
-});
-
 test('Data has a short title and keeps bucket terminology in contextual help', () => {
-  const source = fs.readFileSync(path.join(__dirname, '../../src/views/Buckets.vue'), 'utf8');
-  expect(source).toContain("$t('buckets.intro')");
+  const wrapper = shallowMount(Buckets, {
+    stubs: [
+      'b-popover',
+      'b-alert',
+      'icon',
+      'b-card',
+      'b-card-group',
+      'b-modal',
+      'b-button',
+      'b-form-file',
+      'aw-devonly',
+      'aw-bucket-merge',
+      'aw-bucket-validate',
+    ],
+  });
+  expect(wrapper.find('h3').text()).toBe('Data');
+  expect(wrapper.find('b-popover-stub').text()).toContain(en.buckets.intro);
+  wrapper.destroy();
   expect(en.buckets.title).toBe('Data');
   expect(en.nav.rawData).toBe('Data');
   expect(en.ui.bucketDetail.client).toBe('Client:');
