@@ -115,6 +115,12 @@ import {
 const today = moment().startOf('day');
 const tomorrow = moment(today).add(24, 'hours');
 
+// Per settings store: the last saved-query list known to be on the server, and
+// how many writes are in flight. While a write is pending, the store holds an
+// optimistic list that may include another request's unconfirmed changes, so
+// it cannot serve as the offline rollback target.
+const savedQueryBaselines = new WeakMap<object, { confirmed: SavedQuery[]; pending: number }>();
+
 export default {
   name: 'QueryExplorer',
   data() {
@@ -175,22 +181,33 @@ RETURN = sort_by_duration(merged_events);
   methods: {
     persistSavedQueries: async function (savedQueries: SavedQuery[]) {
       // settingsStore.update() applies the new list before the request is made.
-      const previous = this.settingsStore.saved_queries;
+      let baseline = savedQueryBaselines.get(this.settingsStore);
+      if (!baseline) {
+        baseline = { confirmed: [], pending: 0 };
+        savedQueryBaselines.set(this.settingsStore, baseline);
+      }
+      // With no write in flight the store matches the server.
+      if (baseline.pending === 0) baseline.confirmed = this.settingsStore.saved_queries;
+      baseline.pending += 1;
       const attempted = sortSavedQueries(savedQueries);
       try {
         this.saved_query_error = '';
         await this.settingsStore.update({ saved_queries: attempted });
+        baseline.confirmed = attempted;
         return true;
       } catch (e) {
         console.error('Failed to save query presets', e);
         // The write may have landed before the follow-up reload failed, so ask
         // the server what it holds; the old list is only the offline fallback.
-        let confirmed = previous;
+        let confirmed = baseline.confirmed;
         try {
           const server = (await getClient().get_settings()) as {
             saved_queries?: SavedQuery[];
           };
-          if (Array.isArray(server?.saved_queries)) confirmed = server.saved_queries;
+          if (Array.isArray(server?.saved_queries)) {
+            confirmed = server.saved_queries;
+            baseline.confirmed = confirmed;
+          }
         } catch (err) {
           console.error('Failed to read back query presets', err);
         }
@@ -200,9 +217,13 @@ RETURN = sort_by_duration(merged_events);
         if (_.isEqual(this.settingsStore.saved_queries, attempted)) {
           this.settingsStore.$patch({ saved_queries: confirmed });
         }
-        if (_.isEqual(confirmed, attempted)) return true;
+        // Compare the request's JSON form: a cleared date's NaN offset is
+        // sent, and read back, as null.
+        if (_.isEqual(confirmed, JSON.parse(JSON.stringify(attempted)))) return true;
         this.saved_query_error = 'Failed to save query presets.';
         return false;
+      } finally {
+        baseline.pending -= 1;
       }
     },
     loadSelectedQuery: function () {

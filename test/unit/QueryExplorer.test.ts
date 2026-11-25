@@ -282,4 +282,33 @@ describe('QueryExplorer saved-query persistence failure', () => {
     expect(await first).toBe(false);
     expect(ids()).toEqual(['bar', 'existing']);
   });
+
+  test('two failed overlapping saves restore the confirmed list, not an unconfirmed one', async () => {
+    const explorer = makeExplorer();
+    const rejects: ((e: Error) => void)[] = [];
+    save.mockImplementation(() => new Promise<void>((_resolve, reject) => rejects.push(reject)));
+    const first = explorer.persistSavedQueries([]); // A: delete 'existing'
+    await Promise.resolve();
+    await Promise.resolve();
+    const foo = { ...existing, id: 'foo', name: 'foo' };
+    const second = explorer.persistSavedQueries([foo]); // B: built from A's optimistic []
+    await Promise.resolve();
+    await Promise.resolve();
+    rejects[0](new Error('offline'));
+    expect(await first).toBe(false);
+    rejects[1](new Error('offline'));
+    expect(await second).toBe(false);
+    // Neither write succeeded and the server could not be read: keep 'existing'.
+    expect(ids()).toEqual(['existing']);
+  });
+
+  test('a stored preset with a cleared date is recognised as saved after a reload failure', async () => {
+    const explorer = makeExplorer();
+    const cleared = { ...existing, id: 'nan', name: 'nan', start_day_offset: NaN };
+    const attempted = [existing, cleared];
+    save.mockRejectedValueOnce(new Error('reload failed'));
+    getSettings.mockResolvedValueOnce({ saved_queries: JSON.parse(JSON.stringify(attempted)) });
+    expect(await explorer.persistSavedQueries(attempted)).toBe(true);
+    expect(explorer.saved_query_error).toBe('');
+  });
 });
