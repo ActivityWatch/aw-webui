@@ -162,7 +162,7 @@ div
         b-button.px-3(
           v-for="opt in primaryPeriods"
           :key="opt.value"
-          :pressed="periodLength === opt.value"
+          :pressed="(unknownUrlPeriod ? 'day' : periodLength) === opt.value"
           @click="setDate(_date, opt.value)"
           variant="outline-dark"
           size="sm"
@@ -716,7 +716,7 @@ export default {
       return this.periodLengthsButtons.filter(p => !['day', 'last7d', 'last30d'].includes(p.value));
     },
     isPrimaryPeriod: function () {
-      return ['day', 'last7d', 'last30d'].includes(this.periodLength);
+      return this.unknownUrlPeriod || ['day', 'last7d', 'last30d'].includes(this.periodLength);
     },
     extendedPeriodLabel: function () {
       const opt = this.extendedPeriods.find(p => p.value === this.periodLength);
@@ -905,8 +905,7 @@ export default {
       return formatHostParam(this.hostSelection);
     },
     link_prefix: function () {
-      // An unknown period cannot be browsed, so Previous/Next and the date
-      // picker build day links; otherwise the chosen date would not apply.
+      // An unknown period cannot be browsed, so Previous/Next build day links.
       // A known period with only a bad date keeps its period (week stays week).
       const period = this.unknownUrlPeriod ? 'day' : this.periodLength;
       return `/activity/${this.hostParam}/${period}`;
@@ -1193,6 +1192,11 @@ export default {
       // periodLength is an optional argument, default to this.periodLength
       if (!periodLength) {
         periodLength = this.periodLength;
+      }
+      // Date-input and usage-bar navigation should leave an unsupported URL
+      // period behind, just like Previous/Next. Explicit period switches stay intact.
+      if (this.unknownUrlPeriod && periodLength === this.periodLength) {
+        periodLength = 'day';
       }
 
       const momentJsDate = moment(date);
