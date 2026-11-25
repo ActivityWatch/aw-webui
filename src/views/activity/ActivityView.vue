@@ -234,6 +234,12 @@ export default {
       }
 
       await useViewsStore().editView({ view_id: this.view.id, el_id: id, type, props: {} });
+      if (type == 'sunburst_clock') {
+        // The clock is always full width and hides the width menu, so a width
+        // chosen for the previous type would otherwise linger invisibly and
+        // resurface (or count as an edit) later.
+        useViewsStore().setVisualizationWidth({ view_id: this.view.id, el_id: id, width: null });
+      }
     },
     async onCustomVisConfirm(event) {
       if (!this.customVisWatcherName.trim() || !this.customVisTitle.trim()) {
@@ -264,7 +270,9 @@ export default {
     // row on large screens; without it, the clock and timeline stay full width.
     // The clock draws at a fixed 750px, so it is always full width.
     visClass(el): string[] {
-      const width = el.type == 'sunburst_clock' ? 1 : el.width || (this.isVisLarge(el) ? 1 : 3);
+      // Only 1|2|3 are selectable; anything else falls back to the type default.
+      const chosen = [1, 2, 3].includes(el.width) ? el.width : null;
+      const width = el.type == 'sunburst_clock' ? 1 : chosen || (this.isVisLarge(el) ? 1 : 3);
       if (width === 1) return ['col-md-12', 'col-lg-12'];
       if (width === 2) return ['col-md-6', 'col-lg-6'];
       return ['col-md-6', 'col-lg-4'];

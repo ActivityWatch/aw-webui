@@ -14,7 +14,7 @@ div(v-if="editable || !activityStore.buckets.loaded || has_prerequisites || !set
       template(v-slot:button-content="")
         icon(name="arrows-alt-h")
       b-dropdown-header {{ $t('visualizations.width') }}
-      b-dropdown-item(v-for="w in widths" :key="String(w.value)" :active="w.value === width" @click="$emit('onWidthChange', id, w.value)")
+      b-dropdown-item(v-for="w in widths" :key="String(w.value)" :active="w.value === activeWidth" @click="$emit('onWidthChange', id, w.value)")
         | {{ $t(w.label) }}
     b-button.p-0(size="sm", variant="outline-danger" @click="$emit('onRemove', id)")
       icon(name="times")
@@ -216,6 +216,11 @@ export default {
     };
   },
   computed: {
+    // Only 1|2|3 are selectable; any other stored value renders as the type
+    // default, so the menu must highlight Automatic for it too.
+    activeWidth() {
+      return [1, 2, 3].includes(this.width) ? this.width : null;
+    },
     widths() {
       return [
         { value: null, label: 'visualizations.widthAuto' },

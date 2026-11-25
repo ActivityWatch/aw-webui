@@ -11,6 +11,8 @@ const mockViews = [
 
 const mockSave = jest.fn();
 const mockLoad = jest.fn();
+const mockEditView = jest.fn();
+const mockSetVisualizationWidth = jest.fn();
 
 jest.mock('~/stores/views', () => ({
   useViewsStore: () => ({
@@ -19,6 +21,8 @@ jest.mock('~/stores/views', () => ({
     isDefaultSummary: view => view?.id === 'summary',
     save: (...args) => mockSave(...args),
     load: (...args) => mockLoad(...args),
+    editView: (...args) => mockEditView(...args),
+    setVisualizationWidth: (...args) => mockSetVisualizationWidth(...args),
   }),
 }));
 
@@ -137,6 +141,35 @@ describe('ActivityView mobile presentation', () => {
   );
 });
 
+describe('ActivityView onTypeChange', () => {
+  beforeEach(() => {
+    mockEditView.mockClear();
+    mockSetVisualizationWidth.mockClear();
+  });
+
+  test('clears a stored width when the card becomes the fixed-size clock', async () => {
+    const vm = { view: { id: 'default' } };
+    await ActivityView.methods.onTypeChange.call(vm, 1, 'sunburst_clock');
+    expect(mockEditView).toHaveBeenCalledWith({
+      view_id: 'default',
+      el_id: 1,
+      type: 'sunburst_clock',
+      props: {},
+    });
+    expect(mockSetVisualizationWidth).toHaveBeenCalledWith({
+      view_id: 'default',
+      el_id: 1,
+      width: null,
+    });
+  });
+
+  test('keeps a chosen width when switching between width-capable types', async () => {
+    const vm = { view: { id: 'default' } };
+    await ActivityView.methods.onTypeChange.call(vm, 1, 'top_titles');
+    expect(mockSetVisualizationWidth).not.toHaveBeenCalled();
+  });
+});
+
 describe('ActivityView visClass', () => {
   const visClass = el => ActivityView.methods.visClass.call(ActivityView.methods, el);
 
@@ -155,6 +188,15 @@ describe('ActivityView visClass', () => {
 
   test('the fixed-size clock stays full width whatever is stored', () => {
     expect(visClass({ type: 'sunburst_clock', width: 3 })).toEqual(['col-md-12', 'col-lg-12']);
+  });
+
+  test('an unselectable stored width falls back to the per-type default', () => {
+    // The menu can only highlight 1|2|3|null, so anything else must render the
+    // same as Automatic rather than a layout no option represents.
+    expect(visClass({ type: 'top_apps', width: 4 })).toEqual(visClass({ type: 'top_apps' }));
+    expect(visClass({ type: 'vis_timeline', width: 4 })).toEqual(
+      visClass({ type: 'vis_timeline' })
+    );
   });
 });
 
