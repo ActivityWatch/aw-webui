@@ -197,7 +197,7 @@ export default {
       this.startInput = moment(e.timestamp).format(LOCAL_FORMAT);
       this.endInput = moment(this.endOf(e)).format(LOCAL_FORMAT);
       this.tagsInput = formatTags(e.data.tags);
-      this.noteInput = e.data.note || '';
+      this.noteInput = typeof e.data.note === 'string' ? e.data.note : '';
       window.scrollTo && window.scrollTo(0, 0);
     },
     load: async function () {
@@ -246,7 +246,9 @@ export default {
         // represent every tag value or metadata written by another client.
         const data = { ...this.originalData };
         if (this.tagsInput !== formatTags(this.originalData.tags)) data.tags = event.data.tags;
-        if (this.noteInput !== (this.originalData.note || '')) {
+        const originalNote =
+          typeof this.originalData.note === 'string' ? this.originalData.note : '';
+        if (this.noteInput !== originalNote) {
           if (event.data.note) data.note = event.data.note;
           else delete data.note;
         }

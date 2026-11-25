@@ -162,6 +162,42 @@ describe('Annotations view', () => {
     expect(original).toEqual(before);
   });
 
+  test.each([42, { text: 'external note' }, false, null])(
+    'editing preserves a non-string note (%p) unless replaced explicitly',
+    async note => {
+      const original = {
+        ...stored(1, ['a']),
+        data: { tags: ['a'], note, source: 'cli' },
+      };
+      const before = JSON.parse(JSON.stringify(original));
+      const { wrapper, aw } = mountView([original]);
+      await flush();
+      wrapper.vm.edit(wrapper.vm.events[0]);
+      wrapper.vm.tagsInput = 'changed';
+      await expect(wrapper.vm.save()).resolves.toBeUndefined();
+      expect(aw.replaceEvent).toHaveBeenCalledTimes(1);
+      expect(aw.replaceEvent.mock.calls[0][1].data).toEqual({
+        ...before.data,
+        tags: ['changed'],
+      });
+
+      wrapper.vm.edit(wrapper.vm.events[0]);
+      wrapper.vm.endInput = moment(original.timestamp).add(1, 'hour').format('YYYY-MM-DDTHH:mm:ss');
+      await wrapper.vm.save();
+      expect(aw.replaceEvent.mock.calls[1][1].data).toEqual(before.data);
+      expect(aw.replaceEvent.mock.calls[1][1].duration).toBe(3600);
+
+      wrapper.vm.edit(wrapper.vm.events[0]);
+      wrapper.vm.noteInput = ' new note ';
+      await wrapper.vm.save();
+      expect(aw.replaceEvent.mock.calls[2][1].data).toEqual({
+        ...before.data,
+        note: 'new note',
+      });
+      expect(original).toEqual(before);
+    }
+  );
+
   test('explicitly clearing fields removes the note and tags but preserves metadata', async () => {
     const original = {
       ...stored(1, ['a'], 'note'),
