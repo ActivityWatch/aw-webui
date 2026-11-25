@@ -944,6 +944,7 @@ export default {
       productivityScore: 'Alama ya tija',
       inheritScore: 'Rithi alama ya mzazi',
       score: 'Alama',
+      invalidScore: 'Enter a finite number or choose Inherit parent score.',
       remove: 'Ondoa kategoria',
       noRule: 'Hakuna sheria',
       none: 'Hakuna',

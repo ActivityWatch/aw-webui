@@ -938,6 +938,7 @@ export default {
       productivityScore: 'Skor produktivitas',
       inheritScore: 'Gunakan skor induk',
       score: 'Skor',
+      invalidScore: 'Enter a finite number or choose Inherit parent score.',
       remove: 'Hapus kategori',
       noRule: 'Tanpa aturan',
       none: 'Tidak ada',

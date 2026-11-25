@@ -948,6 +948,7 @@ export default {
       productivityScore: 'Produktivitetspoäng',
       inheritScore: 'Ärv överordnads poäng',
       score: 'Poäng',
+      invalidScore: 'Ange ett ändligt tal eller välj Ärv överordnads poäng.',
       remove: 'Ta bort kategori',
       noRule: 'Ingen regel',
       none: 'Ingen',

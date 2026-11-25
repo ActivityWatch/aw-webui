@@ -948,6 +948,7 @@ export default {
       productivityScore: 'Pontuação de produtividade',
       inheritScore: 'Herdar pontuação da categoria pai',
       score: 'Pontuação',
+      invalidScore: 'Enter a finite number or choose Inherit parent score.',
       remove: 'Remover categoria',
       noRule: 'Sem regra',
       none: 'Nenhum',

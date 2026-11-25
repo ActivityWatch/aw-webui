@@ -938,6 +938,7 @@ export default {
       productivityScore: '生産性スコア',
       inheritScore: '親のスコアを継承',
       score: 'スコア',
+      invalidScore: 'Enter a finite number or choose Inherit parent score.',
       remove: 'カテゴリを削除',
       noRule: 'ルールなし',
       none: 'なし',

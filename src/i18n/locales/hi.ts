@@ -936,6 +936,7 @@ export default {
       productivityScore: 'उत्पादकता स्कोर',
       inheritScore: 'मूल श्रेणी का स्कोर अपनाएँ',
       score: 'स्कोर',
+      invalidScore: 'Enter a finite number or choose Inherit parent score.',
       remove: 'श्रेणी हटाएँ',
       noRule: 'कोई नियम नहीं',
       none: 'कोई नहीं',

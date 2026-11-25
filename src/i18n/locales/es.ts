@@ -949,6 +949,8 @@ export default {
       productivityScore: 'Puntuación de productividad',
       inheritScore: 'Heredar la puntuación de la categoría principal',
       score: 'Puntuación',
+      invalidScore:
+        'Introduce un número finito o elige Heredar la puntuación de la categoría principal.',
       remove: 'Eliminar categoría',
       noRule: 'Sin regla',
       none: 'Ninguna',

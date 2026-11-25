@@ -959,6 +959,8 @@ export default {
       productivityScore: 'Produktivitäts-Score',
       inheritScore: 'Score der übergeordneten Kategorie erben',
       score: 'Score',
+      invalidScore:
+        'Gib eine endliche Zahl ein oder wähle „Score der übergeordneten Kategorie erben“.',
       remove: 'Kategorie entfernen',
       noRule: 'Keine Regel',
       none: 'Keine',
