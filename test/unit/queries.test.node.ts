@@ -72,11 +72,14 @@ import {
   activityQuery,
   androidBrowserQuery,
   browserOnlyQuery,
+  browserSearchQuery,
   canonicalEvents,
+  categoriesForQuery,
   categoryQuery,
   chromeAppnameRegex,
   editorActivityQuery,
   escape_doublequote,
+  jsonForQuery,
   fullDesktopQuery,
   multideviceQuery,
   querystr_to_array,
@@ -1117,6 +1120,13 @@ describe('replaceOutsideStrings', () => {
     );
   });
 
+  test('keeps placeholders inside strings after an even backslash run', () => {
+    const query = `a = "two${'\\'.repeat(2)}"__CATEGORIES__"; b = __CATEGORIES__;`;
+    expect(replaceOutsideStrings(query, marker, categories)).toBe(
+      `a = "two${'\\'.repeat(2)}"__CATEGORIES__"; b = ${categories};`
+    );
+  });
+
   test('does not treat a marker after an escaped quote as quoted', () => {
     const query = 'a = "say \\"x\\""; b = __CATEGORIES__;';
     expect(replaceOutsideStrings(query, marker, categories)).toBe(
@@ -1250,4 +1260,51 @@ test('filter_categories names are written the same way as in categorize', () => 
   const filt = q.match(/"\$category", \[\["([^"]*)"/)[1];
   expect(cat).toBe('Dev\\Ops');
   expect(filt).toBe(cat);
+});
+
+describe('JSON query literals ending in backslashes', () => {
+  test.each([2, 4])('category regex with %i trailing backslashes keeps statements intact', n => {
+    const pattern = 'C:' + '\\'.repeat(n);
+    const statements = categoryQuery({
+      bid_window: 'w_h',
+      bid_afk: 'a_h',
+      filter_afk: true,
+      categories: [[['Paths'], { type: 'regex', regex: pattern }]],
+      filter_categories: [['Paths']],
+    });
+    const encoded = statements.find(s => s.startsWith('events = categorize'));
+    expect(encoded).toContain(`"regex":"${pattern}(?:)"`);
+    expect(encoded).not.toContain('filter_keyvals');
+    expect(statements[statements.length - 1]).toBe('RETURN = { "cat_events": cat_events };');
+    for (const sample of ['C:', 'C:\\', 'C:\\\\', 'xC:\\y']) {
+      expect(new RegExp(pattern + '(?:)').test(sample)).toBe(new RegExp(pattern).test(sample));
+    }
+  });
+
+  test('browser search applies the regex workaround to both fields', () => {
+    const pattern = 'C:' + '\\'.repeat(2);
+    const statements = browserSearchQuery(['aw-watcher-web-chrome_h'], pattern);
+    expect(statements.filter(s => s.includes('filter_keyvals_regex'))).toHaveLength(2);
+    expect(statements.join('\n')).toContain(`"(?i)${pattern}(?:)"`);
+    expect(statements[statements.length - 1]).toBe('RETURN = browser_results;');
+  });
+
+  test('literal category names are rejected rather than silently changed', () => {
+    expect(() => jsonForQuery([['Paths\\']])).toThrow(/ending in a backslash/);
+  });
+
+  test('shared category encoder preserves names, select_keys and saved regexes', () => {
+    const pattern = 'C:' + '\\'.repeat(2);
+    const categories: DesktopQueryParams['categories'] = [
+      [['Dev\\Ops'], { type: 'regex', regex: pattern, select_keys: ['title'], ignore_case: true }],
+    ];
+    const original = JSON.stringify(categories);
+    expect(categoriesForQuery(categories)).toBe(
+      `[[["Dev\\Ops"],{"type":"regex","regex":"${pattern}(?:)","select_keys":["title"],"ignore_case":true}]]`
+    );
+    expect(JSON.stringify(categories)).toBe(original);
+    expect(() => categoriesForQuery([[['Paths\\'], { type: 'none' }]])).toThrow(
+      /ending in a backslash/
+    );
+  });
 });

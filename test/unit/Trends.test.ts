@@ -470,7 +470,7 @@ describe('Trends refresh ownership', () => {
       bucketsStore: {
         desktopBucketIds: host => ({ bid_window: `window_${host}`, bid_afk: `afk_${host}` }),
       },
-      categoryStore: { classes_for_query: [[], []] },
+      categoryStore: { classes_for_query: [[['Work'], { type: 'regex', regex: 'Code' }]] },
       settingsStore: { always_active_pattern: '' },
     };
     const query = Trends.methods.buildCategoryQuery.call(vm, 'a').join(' ');
@@ -530,7 +530,7 @@ describe('Trends category selection', () => {
   test('both daily and comparison queries receive the selected category filter', () => {
     const vm = {
       bucketsStore: { desktopBucketIds: () => ({ bid_window: 'window_a', bid_afk: 'afk_a' }) },
-      categoryStore: { classes_for_query: [[], []] },
+      categoryStore: { classes_for_query: [[['Work'], { type: 'regex', regex: 'Code' }]] },
       settingsStore: { always_active_pattern: '' },
       filterCategories: [['Work'], ['Work', 'Coding']],
     };

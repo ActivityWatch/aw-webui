@@ -17,16 +17,9 @@ export function replaceOutsideStrings(
 ): string {
   let out = '';
   let inString = false;
-  let inEscape = false;
   for (let i = 0; i < querystr.length; i++) {
     const char = querystr[i];
-    if (inEscape) {
-      out += char;
-      inEscape = false;
-    } else if (char === '\\' && inString) {
-      out += char;
-      inEscape = true;
-    } else if (char === '"') {
+    if (char === '"' && !(inString && querystr[i - 1] === '\\')) {
       inString = !inString;
       out += char;
     } else if (!inString && querystr.startsWith(marker, i)) {
@@ -90,8 +83,12 @@ export function escape_doublequote(s: string): string {
 // Encode a regex pattern for a query literal. Like `escape_doublequote`, but a
 // pattern ending in an escaped backslash (`C:\\`) is valid, so it gets an
 // empty group appended instead of being rejected: `C:\\(?:)` matches the same text.
+function querySafePattern(pattern: string): string {
+  return /\\$/.test(pattern) ? `${pattern}(?:)` : pattern;
+}
+
 function escapePatternForQuery(pattern: string): string {
-  return escape_doublequote(/\\$/.test(pattern) ? `${pattern}(?:)` : pattern);
+  return escape_doublequote(querySafePattern(pattern));
 }
 
 // Encode a list of optional buckets, such as browser buckets. An ID that cannot
@@ -112,8 +109,24 @@ function escapeBucketIds(ids: string[]): string[] {
 // backslash, and aw-query takes the literal's content as written, so a regex
 // like `arc(\.exe)?$` or `\w` would reach the server as `arc(\\.exe)?$`.
 // Undo the doubling here so every caller escapes backslashes the same way.
+// Literal names cannot use the regex workaround: reject an unrepresentable
+// value instead of emitting an unclosed string or changing its identity.
 export function jsonForQuery(value: unknown): string {
-  return JSON.stringify(value).replace(/\\\\/g, '\\');
+  return JSON.stringify(value, (_key, item) => {
+    if (typeof item === 'string') escape_doublequote(item);
+    return item;
+  }).replace(/\\\\/g, '\\');
+}
+
+// Only rule.regex is a regex; category paths and select_keys are literal names.
+// Copy rather than modifying the user's saved rules.
+export function categoriesForQuery(categories: Category[]): string {
+  return jsonForQuery(
+    categories.map(([path, rule]) => [
+      path,
+      rule.regex === undefined ? rule : { ...rule, regex: querySafePattern(rule.regex) },
+    ])
+  );
 }
 
 // Hostname safe for using as a variable name
@@ -275,7 +288,7 @@ function queryBucket(bid: string): string {
 // Puts it's results in `events` and `not_afk` (if not_afk available for platform).
 export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams): string {
   // Single backslashes, so regex patterns like '\w' survive the JSON round-trip.
-  const categories_str = params.categories ? jsonForQuery(params.categories) : '';
+  const categories_str = params.categories ? categoriesForQuery(params.categories) : '';
   // Escaped here, so every caller gets a valid string literal.
   const always_active_pattern_str =
     isDesktopParams(params) && params.always_active_pattern
@@ -682,7 +695,7 @@ export function browserSearchQuery(browserBuckets: string[], pattern: string): s
   // needs a single backslash, so patterns like '\d' must be un-escaped to match
   // (same treatment as `categories_str` in canonicalEvents).
   // Match window search's ignore_case rule for both URL and title matches.
-  const escapedPattern = jsonForQuery('(?i)' + pattern);
+  const escapedPattern = `"${escapePatternForQuery('(?i)' + pattern)}"`;
   let code = 'browser_results = [];';
   // Use numeric indices as variable-name suffixes so every bucket is queried
   // regardless of whether its name matches a known browser — this also handles
