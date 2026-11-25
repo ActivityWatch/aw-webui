@@ -623,6 +623,7 @@ export default {
       showDeviceBreakdown: false,
       // First day with data for the host, used by All time
       earliestDate: null,
+      earliestDateGeneration: 0,
       // Problem with the last exact start/end edit (nonexistent or repeated DST time, bad order)
       intervalIssue: null,
       navigationNow: Date.now(),
@@ -1281,10 +1282,26 @@ export default {
     loadEarliestDate: async function (reload = false) {
       if (this.periodLength !== 'all' || (this.earliestDate && !reload)) return false;
       const host = this.host;
-      const { date: found, approximate } = await this.activityStore.get_earliest_date(host, {
-        force: reload,
-      });
-      if (host !== this.host) return false;
+      const generation = ++this.earliestDateGeneration;
+      const signal = getClient().controller.signal;
+      let result;
+      try {
+        result = await this.activityStore.get_earliest_date(host, { force: reload });
+      } catch (e) {
+        if (e.message === 'canceled') return false;
+        throw e;
+      }
+      // A canceled store lookup can resolve with a bucket-creation fallback.
+      // Never publish it: its timeperiod watcher would abort the replacement.
+      if (
+        signal.aborted ||
+        generation !== this.earliestDateGeneration ||
+        host !== this.host ||
+        this.periodLength !== 'all' ||
+        this.priorityDisposed
+      )
+        return false;
+      const { date: found, approximate } = result;
       // No data at all: fall back to today
       const date = nextEarliestDate(
         this.earliestDate,
@@ -1352,6 +1369,8 @@ export default {
         if (generation === this.refreshGeneration && this.needsCategoryHistory) {
           await this.activityStore.ensure_category_history();
         }
+      } catch (e) {
+        if (e.message !== 'canceled') throw e;
       } finally {
         if (generation === this.refreshGeneration) this.refreshing = false;
       }
