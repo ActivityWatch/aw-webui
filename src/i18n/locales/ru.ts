@@ -935,6 +935,8 @@ export default {
       rule: 'Правило',
       type: 'Тип',
       pattern: 'Шаблон',
+      addPattern: 'Добавить шаблон',
+      removePattern: 'Удалить шаблон {number}',
       caseInsensitive: 'Без учёта регистра',
       matchFields: 'Поля для сопоставления',
       matchFieldsHelp: 'Оставьте пустым, чтобы проверять все строковые поля (по умолчанию).',

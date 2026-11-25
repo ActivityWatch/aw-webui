@@ -933,6 +933,8 @@ export default {
       rule: 'Правило',
       type: 'Тип',
       pattern: 'Шаблон',
+      addPattern: 'Додати шаблон',
+      removePattern: 'Видалити шаблон {number}',
       caseInsensitive: 'Без урахування регістру',
       matchFields: 'Поля для зіставлення',
       matchFieldsHelp: 'Залиште порожнім, щоб зіставляти всі рядкові поля (типово).',

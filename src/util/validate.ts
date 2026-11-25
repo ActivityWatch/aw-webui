@@ -450,12 +450,10 @@ export function isRegexBroad(re: string | RegExp) {
  */
 export function splitRegexPipe(regex: string): string[] {
   if (!regex) return [];
-  if (regex.length > 1000) {
-    return [regex];
-  }
   const parts: string[] = [];
   let depth = 0;
   let inClass = false;
+  let classContentStart = -1;
   let escaping = false;
   let start = 0;
   for (let i = 0; i < regex.length; i++) {
@@ -470,10 +468,12 @@ export function splitRegexPipe(regex: string): string[] {
     }
     if (!inClass && ch === '[') {
       inClass = true;
+      // In Python, ] is literal at the start of a class (after an optional ^).
+      classContentStart = i + (regex[i + 1] === '^' ? 2 : 1);
       continue;
     }
     if (inClass) {
-      if (ch === ']') inClass = false;
+      if (ch === ']' && i !== classContentStart) inClass = false;
       continue;
     }
     if (ch === '(') {
@@ -495,8 +495,8 @@ export function splitRegexPipe(regex: string): string[] {
 
 /**
  * Join pattern lines with `|`. Do not trim: whitespace is part of the pattern.
- * Completely empty lines are dropped so a blank UI row is not stored as `|`.
+ * Empty alternatives are meaningful; the editor omits only unused new rows.
  */
 export function joinRegexPipe(patterns: string[]): string {
-  return patterns.filter(p => p != null && p !== '').join('|');
+  return patterns.join('|');
 }

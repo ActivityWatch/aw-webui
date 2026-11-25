@@ -171,9 +171,18 @@ describe('splitRegexPipe / joinRegexPipe', () => {
     expect(splitRegexPipe('a||b')).toEqual(['a', '', 'b']);
   });
 
-  test('join drops blank UI rows without trimming non-empty patterns', () => {
-    expect(joinRegexPipe(['a', '', 'b'])).toBe('a|b');
-    expect(joinRegexPipe(['Google Chrome', ' - YouTube', ''])).toBe('Google Chrome| - YouTube');
+  test('join preserves empty alternatives and whitespace', () => {
+    expect(joinRegexPipe(['a', '', 'b'])).toBe('a||b');
+    expect(joinRegexPipe(['Google Chrome', ' - YouTube', ''])).toBe('Google Chrome| - YouTube|');
+  });
+
+  test.each(['[]|a]|Firefox', '[^]|a]|Firefox'])('keeps a leading literal ] in %s', regex => {
+    expect(splitRegexPipe(regex)).toEqual([regex.slice(0, -8), 'Firefox']);
+  });
+
+  test('splits long rules with a linear scan', () => {
+    const pattern = 'a'.repeat(1001);
+    expect(splitRegexPipe(`${pattern}|Firefox`)).toEqual([pattern, 'Firefox']);
   });
 
   test('does not split on | inside groups', () => {

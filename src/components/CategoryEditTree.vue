@@ -17,8 +17,7 @@ div
     div.col-4.col-md-8
       span.d-none.d-md-inline
         span(v-if="_class.rule.type === 'regex'")
-          | {{ $t('ui.categoryEditor.rule') }} ({{_class.rule.type}}):
-          code.ml-1(v-for="(pat, indx) in splitRegex(_class.rule.regex)" :key="indx") {{ pat }}
+          | {{ $t('ui.categoryEditor.rule') }} ({{_class.rule.type}}): #[code {{_class.rule.regex}}]
           span.text-muted(v-if="_class.rule.select_keys && _class.rule.select_keys.length")
             |  [{{ _class.rule.select_keys.join(', ') }}]
         span.text-muted(v-else) {{ $t('ui.categoryEditor.noRule') }}
@@ -46,7 +45,6 @@ import 'vue-awesome/icons/edit';
 
 import CategoryEditModal from './CategoryEditModal.vue';
 import { useCategoryStore } from '~/stores/categories';
-import { splitRegexPipe } from '~/util/validate';
 
 import _ from 'lodash';
 
@@ -102,9 +100,6 @@ export default {
     },
     hideEditModal: function () {
       this.editingId = null;
-    },
-    splitRegex: function (regex: string): string[] {
-      return splitRegexPipe(regex);
     },
   },
 };

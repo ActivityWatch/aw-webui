@@ -18,11 +18,11 @@ b-modal(id="edit" ref="edit" :title="$t('ui.categoryEditor.editTitle')" @show="r
         b-input-group
           b-input-group-prepend
             span.input-group-text {{ $t('ui.categoryEditor.pattern') }} {{ index + 1 }}
-          b-form-input(v-model="editing.rulePatterns[index]")
+          b-form-input(v-model="editing.rulePatterns[index]" :aria-label="$t('ui.categoryEditor.pattern') + ' ' + (index + 1)")
           b-input-group-append
-            b-btn(variant="outline-danger" @click="removePattern(index)" :disabled="editing.rulePatterns.length <= 1")
+            b-btn(variant="outline-danger" @click="removePattern(index)" :disabled="editing.rulePatterns.length <= 1" :aria-label="$t('ui.categoryEditor.removePattern', { number: index + 1 })")
               icon(name="trash")
-      b-btn.mt-1(size="sm" variant="outline-primary" @click="addPattern()")
+      b-btn.mt-1(size="sm" variant="outline-primary" @click="addPattern()" :aria-label="$t('ui.categoryEditor.addPattern')")
         icon(name="plus")
       div.d-flex.mt-2
         div.flex-grow-1
@@ -119,6 +119,7 @@ export default {
         name: null,
         rule: {},
         rulePatterns: [] as string[],
+        newPatternRows: [] as boolean[],
         originalRegex: '',
         parent: [],
         inherit_color: true,
@@ -210,7 +211,13 @@ export default {
         if (samePatterns(patterns, splitRegexPipe(original))) {
           return original;
         }
-        return joinRegexPipe(patterns);
+        // Keep saved empty alternatives, even when another row changes. Only
+        // blank rows created with the add button are disposable placeholders.
+        return joinRegexPipe(
+          patterns.filter(
+            (pattern, index) => pattern !== '' || !this.editing.newPatternRows?.[index]
+          )
+        );
       }
       return this.editing.rule.regex || '';
     },
@@ -330,10 +337,12 @@ export default {
     },
     addPattern() {
       this.editing.rulePatterns.push('');
+      this.editing.newPatternRows.push(true);
     },
     removePattern(index: number) {
       if (this.editing.rulePatterns.length <= 1) return;
       this.editing.rulePatterns.splice(index, 1);
+      this.editing.newPatternRows.splice(index, 1);
     },
     resetModal() {
       const cat = this.categoryStore.get_category_by_id(this.categoryId);
@@ -351,6 +360,7 @@ export default {
         name: cat.subname,
         rule,
         rulePatterns: originalRegex ? splitRegexPipe(originalRegex) : [''],
+        newPatternRows: (originalRegex ? splitRegexPipe(originalRegex) : ['']).map(() => false),
         originalRegex,
         parent: cat.parent ? cat.parent : [],
         color,

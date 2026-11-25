@@ -959,6 +959,8 @@ export default {
       rule: 'Règle',
       type: 'Type',
       pattern: 'Motif',
+      addPattern: 'Ajouter un motif',
+      removePattern: 'Supprimer le motif {number}',
       caseInsensitive: 'Insensible à la casse',
       matchFields: 'Champs à comparer',
       matchFieldsHelp: 'Laissez vide pour comparer tous les champs de type chaîne (par défaut).',

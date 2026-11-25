@@ -963,6 +963,8 @@ export default {
       rule: 'Regel',
       type: 'Typ',
       pattern: 'Muster',
+      addPattern: 'Muster hinzufügen',
+      removePattern: 'Muster {number} entfernen',
       caseInsensitive: 'Groß-/Kleinschreibung ignorieren',
       matchFields: 'Zu prüfende Felder',
       matchFieldsHelp: 'Leer lassen, um alle Textfelder zu prüfen (Standard).',

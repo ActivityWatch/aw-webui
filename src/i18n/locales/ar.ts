@@ -928,6 +928,8 @@ export default {
       rule: 'القاعدة',
       type: 'النوع',
       pattern: 'النمط',
+      addPattern: 'إضافة نمط',
+      removePattern: 'إزالة النمط {number}',
       caseInsensitive: 'غير حساس لحالة الأحرف',
       matchFields: 'حقول المطابقة',
       matchFieldsHelp: 'اتركه فارغًا لمطابقة كل حقول النصوص (الافتراضي).',

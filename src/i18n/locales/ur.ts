@@ -941,6 +941,8 @@ export default {
       rule: 'اصول',
       type: 'قسم',
       pattern: 'پیٹرن',
+      addPattern: 'پیٹرن شامل کریں',
+      removePattern: 'پیٹرن {number} ہٹائیں',
       caseInsensitive: 'حروف کی بڑائی چھوٹائی نظر انداز کریں',
       matchFields: 'مطابقت کی فیلڈز',
       matchFieldsHelp: 'تمام اسٹرنگ فیلڈز سے مطابقت کے لیے خالی چھوڑیں (ڈیفالٹ)۔',

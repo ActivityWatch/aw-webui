@@ -953,6 +953,8 @@ export default {
       rule: 'Regel',
       type: 'Typ',
       pattern: 'Mönster',
+      addPattern: 'Lägg till mönster',
+      removePattern: 'Ta bort mönster {number}',
       caseInsensitive: 'Skiftlägesokänslig',
       matchFields: 'Matchningsfält',
       matchFieldsHelp: 'Lämna tomt för att matcha alla strängfält (standard).',

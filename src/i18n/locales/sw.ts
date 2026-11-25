@@ -948,6 +948,8 @@ export default {
       rule: 'Sheria',
       type: 'Aina',
       pattern: 'Mfumo',
+      addPattern: 'Ongeza mfumo',
+      removePattern: 'Ondoa mfumo {number}',
       caseInsensitive: 'Bila kuzingatia herufi kubwa/ndogo',
       matchFields: 'Sehemu za kulinganisha',
       matchFieldsHelp: 'Acha tupu kulinganisha kila sehemu ya mfuatano (chaguo-msingi).',

@@ -536,3 +536,72 @@ describe('CategoryEditModal mounted score round trip', () => {
     }
   });
 });
+
+describe('CategoryEditModal mounted regex rows', () => {
+  async function openModal(regex: string) {
+    const localVue = createLocalVue();
+    localVue.use(BootstrapVue);
+    localVue.use(PiniaVuePlugin);
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    const store = useCategoryStore();
+    store.load([{ name: ['Browser'], rule: { type: 'regex', regex } }]);
+    const wrapper = mount(CategoryEditModal, {
+      localVue,
+      pinia,
+      propsData: { categoryId: store.get_category(['Browser']).id },
+      stubs: {
+        'color-picker': true,
+        icon: true,
+        'b-modal': { extends: BModal, props: { static: { default: true } } },
+      },
+    });
+    await localVue.nextTick();
+    await new Promise(resolve => setTimeout(resolve, 0));
+    const rows = () => wrapper.findAll('input[aria-label^="Pattern "]');
+    const save = async () => {
+      wrapper.findComponent(BModal).vm.$emit('ok', { preventDefault: jest.fn() });
+      await localVue.nextTick();
+      return store.get_category(['Browser']).rule.regex;
+    };
+    return { wrapper, rows, save };
+  }
+
+  test('editing another row and adding an unused row keep existing empty alternatives', async () => {
+    const { wrapper, rows, save } = await openModal('Slack||Discord|');
+    try {
+      expect(rows().length).toBe(4);
+      await rows().at(2).setValue('Discord Canary');
+      await wrapper.find('button[aria-label="Add pattern"]').trigger('click');
+      expect(rows().length).toBe(5);
+      expect(await save()).toBe('Slack||Discord Canary|');
+    } finally {
+      wrapper.destroy();
+    }
+  });
+
+  test('add, type, remove an earlier row, and save use the rendered controls', async () => {
+    const { wrapper, rows, save } = await openModal('Slack||Discord');
+    try {
+      await wrapper.find('button[aria-label="Add pattern"]').trigger('click');
+      await rows().at(3).setValue(' - YouTube');
+      await wrapper.find('button[aria-label="Remove pattern 1"]').trigger('click');
+      expect(rows().length).toBe(3);
+      expect(await save()).toBe('|Discord| - YouTube');
+    } finally {
+      wrapper.destroy();
+    }
+  });
+
+  test('cannot remove the last row', async () => {
+    const { wrapper, rows } = await openModal('Firefox');
+    try {
+      const remove = wrapper.find('button[aria-label="Remove pattern 1"]');
+      expect(remove.attributes('disabled')).toBeDefined();
+      await remove.trigger('click');
+      expect(rows().length).toBe(1);
+    } finally {
+      wrapper.destroy();
+    }
+  });
+});

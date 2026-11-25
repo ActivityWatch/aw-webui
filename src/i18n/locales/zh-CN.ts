@@ -902,6 +902,8 @@ export default {
       rule: '规则',
       type: '类型',
       pattern: '模式',
+      addPattern: '添加模式',
+      removePattern: '删除模式 {number}',
       caseInsensitive: '忽略大小写',
       matchFields: '匹配字段',
       matchFieldsHelp: '留空则匹配所有字符串字段（默认）。',

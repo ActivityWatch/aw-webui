@@ -943,6 +943,8 @@ export default {
       rule: 'ルール',
       type: '種類',
       pattern: 'パターン',
+      addPattern: 'パターンを追加',
+      removePattern: 'パターン {number} を削除',
       caseInsensitive: '大文字と小文字を区別しない',
       matchFields: '一致対象のフィールド',
       matchFieldsHelp: '空欄にすると、すべての文字列フィールドに一致します (既定)。',

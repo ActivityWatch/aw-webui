@@ -967,6 +967,8 @@ export default {
       rule: 'Rule',
       type: 'Type',
       pattern: 'Pattern',
+      addPattern: 'Add pattern',
+      removePattern: 'Remove pattern {number}',
       caseInsensitive: 'Case insensitive',
       matchFields: 'Match fields',
       matchFieldsHelp: 'Leave blank to match every string field (default).',
