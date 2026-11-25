@@ -445,7 +445,8 @@ export default {
     rangeStart: 'Start date',
     rangeEnd: 'End date',
     invalidRange: 'Invalid date range in URL, showing today instead.',
-    invalidUrlPeriod: 'Invalid date or period in URL, showing today instead.',
+    // Not "today": an unknown period with a valid :date still shows that date.
+    invalidUrlPeriod: 'Invalid date or period in URL, showing the nearest valid date instead.',
     periodExactInterval: 'exact times',
     intervalStart: 'Start time',
     intervalEnd: 'End time (exclusive)',
