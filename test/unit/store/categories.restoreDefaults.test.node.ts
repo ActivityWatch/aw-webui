@@ -188,6 +188,54 @@ describe('restoreDefaultClasses with several active sets', () => {
     }
   );
 
+  test.each([false, true])(
+    'unnamed import replaces a restore without clearing inactive masks (multiple sets: %s)',
+    async multiple => {
+      setupRaw(
+        [{ name: ['Custom'], rule: { type: 'regex', regex: 'custom' } }],
+        [{ name: ['Hobby'], rule: { type: 'regex', regex: 'guitar' } }],
+        [JSON.stringify(['Hobby'])]
+      );
+      const work = _.cloneDeep(defaultCategories.find(c => _.isEqual(c.name, ['Work'])));
+      const imported: Category = { name: ['Imported'], rule: { type: 'regex', regex: 'imported' } };
+      store.createSet('other');
+      store.category_sets.find(s => s.id === 'other').categories = [work];
+      store.setActiveSets(multiple ? ['mine', 'other'] : ['mine']);
+
+      store.restoreDefaultClasses();
+      store.import(multiple ? [_.cloneDeep(work), imported] : [imported]);
+      await store.save();
+
+      expect(store.category_sets.find(s => s.id === 'mine').tombstones).toContain(
+        JSON.stringify(['Hobby'])
+      );
+      expect(primaryNames()).toContainEqual(['Imported']);
+      // The cancelled restore must not make a secondary copy of Work primary-owned.
+      expect(primaryNames()).not.toContainEqual(['Work']);
+      store.setActiveSets(['mine', 'shared']);
+      expect(names()).not.toContainEqual(['Hobby']);
+      expect(names()).not.toContainEqual(['Work']);
+      expect(names()).toContainEqual(['Imported']);
+    }
+  );
+
+  test('a named import preserves and commits the pending restore before adding its set', async () => {
+    setup([JSON.stringify(['Hobby'])]);
+    store.setActiveSets(['mine']);
+    store.restoreDefaultClasses();
+    const imported: Category = { name: ['Imported'], rule: { type: 'regex', regex: 'imported' } };
+
+    store.importSetOnTop('imported', [imported]);
+    await store.save();
+    store.setActiveSets(['mine', 'shared']);
+
+    expect(store.category_sets.find(s => s.id === 'mine').tombstones).toBeUndefined();
+    expect(primaryNames()).toContainEqual(['Work']);
+    expect(primaryNames()).not.toContainEqual(['Imported']);
+    expect(store.category_sets.find(s => s.id === 'imported').categories).toEqual([imported]);
+    expect(names()).toContainEqual(['Hobby']);
+  });
+
   test('a generated parent of a secondary category is not saved as a primary category', () => {
     setupRaw(
       [{ name: ['Custom'], rule: { type: 'regex', regex: 'custom' } }],

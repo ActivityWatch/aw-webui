@@ -484,6 +484,8 @@ export const useCategoryStore = defineStore('categories', {
 
     // mutations
     import(this: State, classes: Category[]) {
+      // Unlike a named import, this replaces the preview instead of committing it.
+      pendingRestoredPrimary.delete(this);
       this.classes = assignIds(createMissingParents(classes));
       if (this.category_sets.length === 0) {
         const setId = this.active_set_ids[0] || 'default';
