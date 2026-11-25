@@ -335,10 +335,12 @@ export const useCategoryStore = defineStore('categories', {
       pendingSaves.set(this, write);
       try {
         await write;
+        // Writes are serialized, so each success is now what the server holds,
+        // even if a later queued write then fails before writing.
+        this.saved_snapshot = snapshot;
         // Another queued snapshot may differ even if current data matches this
         // one again. Only the last write can acknowledge the current contents.
         if (pendingSaves.get(this) === write) {
-          this.saved_snapshot = snapshot;
           this.classes_unsaved_changes = !_.isEqual(snapshot, saveSnapshot(this));
         }
       } catch (error) {
