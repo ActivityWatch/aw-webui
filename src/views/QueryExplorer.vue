@@ -199,7 +199,7 @@ RETURN = sort_by_duration(merged_events);
         console.error('Failed to save query presets', e);
         // The write may have landed before the follow-up reload failed, so ask
         // the server what it holds; the old list is only the offline fallback.
-        let confirmed = baseline.confirmed;
+        let confirmed: SavedQuery[] | undefined;
         try {
           const server = (await getClient().get_settings()) as {
             saved_queries?: SavedQuery[];
@@ -211,6 +211,8 @@ RETURN = sort_by_duration(merged_events);
         } catch (err) {
           console.error('Failed to read back query presets', err);
         }
+        // Another request may have confirmed a save while the read-back waited.
+        confirmed = confirmed ?? baseline.confirmed;
         // A newer save may have replaced the list meanwhile: leave that alone.
         // Otherwise a failed save leaves a phantom preset (and a retry saves a
         // duplicate), and a failed delete hides a preset that still exists.

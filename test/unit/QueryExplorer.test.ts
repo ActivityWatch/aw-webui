@@ -302,6 +302,43 @@ describe('QueryExplorer saved-query persistence failure', () => {
     expect(ids()).toEqual(['existing']);
   });
 
+  test('a failed read-back restores a save confirmed while it was waiting', async () => {
+    const explorer = makeExplorer();
+    const foo = { ...existing, id: 'foo', name: 'foo' };
+    const bar = { ...existing, id: 'bar', name: 'bar' };
+    let confirmFirst!: (settings: object) => void;
+    let failSecond!: (error: Error) => void;
+    let firstReadStarted!: () => void;
+    let secondReadStarted!: () => void;
+    const firstReading = new Promise<void>(resolve => (firstReadStarted = resolve));
+    const secondReading = new Promise<void>(resolve => (secondReadStarted = resolve));
+    save.mockRejectedValue(new Error('reload failed'));
+    getSettings
+      .mockImplementationOnce(() => {
+        firstReadStarted();
+        return new Promise(resolve => (confirmFirst = resolve));
+      })
+      .mockImplementationOnce(() => {
+        secondReadStarted();
+        return new Promise((_resolve, reject) => (failSecond = reject));
+      });
+
+    const first = explorer.persistSavedQueries([existing, foo]);
+    await firstReading;
+    const second = makeExplorer().persistSavedQueries([existing, foo, bar]);
+    await secondReading;
+    confirmFirst({ saved_queries: [existing, foo] });
+    expect(await first).toBe(true);
+    failSecond(new Error('offline'));
+    expect(await second).toBe(false);
+    expect(ids()).toEqual(['existing', 'foo']);
+
+    // A subsequent edit must not send a list that deletes the confirmed preset.
+    save.mockResolvedValueOnce(undefined);
+    expect(await explorer.persistSavedQueries([...settingsStore.saved_queries, bar])).toBe(true);
+    expect(ids()).toEqual(['bar', 'existing', 'foo']);
+  });
+
   test('a stored preset with a cleared date is recognised as saved after a reload failure', async () => {
     const explorer = makeExplorer();
     const cleared = { ...existing, id: 'nan', name: 'nan', start_day_offset: NaN };
