@@ -213,6 +213,12 @@ export default {
   },
   computed: {
     ...mapState(useCategoryStore, ['allCategoriesSelect', 'classes_unsaved_changes']),
+    // Compare query contents, not array identity: saves may rebuild an equivalent
+    // class list. Every effective rule change (including imports/set switches)
+    // must invalidate suggestions, regardless of which editor action made it.
+    categoryRulesKey(): string {
+      return JSON.stringify(this.categoryStore.classes_for_query);
+    },
     // Persisted in server settings so "Ignore" survives reloads (aw-webui#486).
     ignored_words: function (): string[] {
       return this.settingsStore.category_builder_ignored_words || [];
@@ -247,6 +253,9 @@ export default {
     },
   },
   watch: {
+    categoryRulesKey() {
+      if (this.embedded && this.bucketsReady) this.fetchWords();
+    },
     queryOptions: {
       handler: function () {
         this.fetchWords();
@@ -456,14 +465,6 @@ export default {
         // already recorded the editor's real state, so that read is stale.
         this.categoryStore.classes_unsaved_changes = this.categoryStore.hasUnsavedChanges;
       }
-    },
-    // The parent discards the store's unsaved edits (its Discard button, a set
-    // switch) without remounting this builder, so suggestions computed from the
-    // discarded rules have to be recomputed.
-    refreshSuggestions() {
-      // Only worth a query if the builder has already run one.
-      if (!this.bucketsReady) return;
-      return this.fetchWords();
     },
     appendRule(word) {
       console.log('Opening modal to append rule with word: ' + word);

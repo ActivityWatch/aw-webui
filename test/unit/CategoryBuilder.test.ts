@@ -552,7 +552,6 @@ describe('CategoryBuilder embedded in the category editor', () => {
     jest.spyOn(buckets, 'ensureLoaded').mockResolvedValue(undefined);
     jest.spyOn(useSettingsStore(), 'ensureLoaded').mockResolvedValue(undefined);
     categories = useCategoryStore();
-    categories.save.mockResolvedValue(undefined);
     categories.load([{ name: ['Work'], rule: { type: 'regex', regex: 'Editor' } }]);
     getClient.mockReturnValue({ query: jest.fn().mockResolvedValue(events('Firefox')) });
     wrapper = shallowMount(CategoryBuilder, {
@@ -601,14 +600,86 @@ describe('CategoryBuilder embedded in the category editor', () => {
     expect(categories.classes_unsaved_changes).toBe(dirty);
   });
 
-  test('Cancel after a save landed mid-draft leaves no false unsaved warning', async () => {
+  test('Cancel after a real save landed mid-draft leaves no false unsaved warning', async () => {
+    const response = deferred();
+    const settings = useSettingsStore();
+    jest.spyOn(settings, 'update').mockReturnValue(response.promise);
+    const env = process.env.NODE_ENV;
+    let saving;
+    edit();
+    try {
+      process.env.NODE_ENV = 'development';
+      saving = categories.save();
+    } finally {
+      process.env.NODE_ENV = env;
+    }
+    expect(settings.update).toHaveBeenCalledTimes(1);
     wrapper.vm.createRule('Firefox');
-    // A save that started before the draft opened persists the state without it.
-    categories.load(categories.classes.filter(c => c.name[0] !== 'Firefox'));
+    response.resolve();
+    await saving;
+    expect(names()).toContain('Firefox');
+    expect(categories.classes_unsaved_changes).toBe(true);
     await wrapper.vm.createRuleCancel();
-    expect(names()).not.toContain('Firefox');
+    expect(names()).toEqual(['Work', 'Unsaved']);
     expect(categories.classes_unsaved_changes).toBe(false);
   });
+
+  test('Cancel keeps the warning while a newer category-set save is pending', async () => {
+    const settings = useSettingsStore();
+    categories.category_sets = [
+      { id: 'default', categories: categories.classes_clean },
+      { id: 'extra', categories: [] },
+    ];
+    const response = deferred();
+    const update = jest.spyOn(settings, 'update').mockResolvedValue(undefined);
+    const save = () => {
+      const env = process.env.NODE_ENV;
+      try {
+        process.env.NODE_ENV = 'development';
+        return categories.save();
+      } finally {
+        process.env.NODE_ENV = env;
+      }
+    };
+    edit();
+    await save();
+    categories.setActiveSets(['default', 'extra']);
+    update.mockReturnValueOnce(response.promise);
+    const saving = save();
+    categories.setActiveSets(['default']);
+    wrapper.vm.createRule('Firefox');
+    await wrapper.vm.createRuleCancel();
+    expect(categories.classes_unsaved_changes).toBe(true);
+    response.resolve();
+    await saving;
+    expect(categories.classes_unsaved_changes).toBe(true);
+  });
+
+  test.each(['switch', 'extra set', 'defaults', 'import', 'discard', 'delete'])(
+    'refreshes suggestions after %s changes the effective rules',
+    async action => {
+      await flush();
+      const query = getClient().query;
+      query.mockClear();
+      categories.category_sets = [
+        { id: 'default', categories: categories.classes_clean },
+        { id: 'extra', categories: [{ name: ['Other'], rule: { type: 'regex', regex: 'Other' } }] },
+      ];
+      if (action === 'switch') categories.switchToSet('extra');
+      if (action === 'extra set') categories.setActiveSets(['default', 'extra']);
+      if (action === 'defaults') categories.restoreDefaultClasses();
+      if (action === 'import') categories.import([{ name: ['Imported'], rule: { type: 'none' } }]);
+      if (action === 'discard') categories.load([]);
+      if (action === 'delete') categories.deleteSet('default');
+      await flush();
+      expect(query).toHaveBeenCalled();
+      const code = query.mock.calls.at(-1)[1].join('\n');
+      if (['switch', 'extra set', 'delete'].includes(action)) expect(code).toContain('Other');
+      if (['switch', 'discard', 'delete', 'import'].includes(action)) {
+        expect(code).not.toContain('Editor');
+      }
+    }
+  );
 
   test('New rule → OK keeps the rule unsaved instead of saving the editor', async () => {
     edit();

@@ -23,6 +23,7 @@ interface State {
   // be answered after the fact: a captured boolean goes stale when a save lands
   // while a draft is open.
   saved_snapshot: Record<string, unknown> | null;
+  saves_pending: number;
   // Category sets — named collections of category rules
   category_sets: CategorySet[];
   // Ordered list of active set IDs; first entry has highest priority when merging
@@ -180,15 +181,19 @@ export const useCategoryStore = defineStore('categories', {
     classes: [],
     classes_unsaved_changes: false,
     saved_snapshot: null,
+    saves_pending: 0,
     category_sets: [],
     active_set_ids: ['default'],
   }),
 
   // getters
   getters: {
-    /** True when the in-memory categories differ from the last loaded/saved state. */
+    /** Pending writes can change storage even when memory matches the last success. */
     hasUnsavedChanges(): boolean {
-      return this.saved_snapshot !== null && !_.isEqual(this.saved_snapshot, saveSnapshot(this));
+      return (
+        this.saves_pending > 0 ||
+        (this.saved_snapshot !== null && !_.isEqual(this.saved_snapshot, saveSnapshot(this)))
+      );
     },
     classes_clean(): Category[] {
       return this.classes.map(cleanCategory);
@@ -325,6 +330,7 @@ export const useCategoryStore = defineStore('categories', {
       syncToPrimarySet(this);
       const snapshot = saveSnapshot(this);
       const previous = pendingSaves.get(this);
+      this.saves_pending++;
       this.classes_unsaved_changes = true;
       const write = (async () => {
         if (previous) await previous.catch(() => undefined);
@@ -347,6 +353,7 @@ export const useCategoryStore = defineStore('categories', {
         this.classes_unsaved_changes = true;
         throw error;
       } finally {
+        this.saves_pending--;
         if (pendingSaves.get(this) === write) pendingSaves.delete(this);
       }
     },

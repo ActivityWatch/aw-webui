@@ -101,7 +101,7 @@ div
         | {{ builderOpen ? $t('settings.categorization.hideBuilder') : $t('settings.categorization.openBuilder') }}
     b-collapse#category-builder-collapse(v-model="builderOpen")
       div.mt-3(v-if="builderMounted")
-        CategoryBuilder(embedded ref="builder")
+        CategoryBuilder(embedded)
 
   b-modal(
     v-model="showCreateSetModal"
@@ -226,9 +226,6 @@ export default {
     },
     resetClasses: async function () {
       await this.categoryStore.load();
-      // The builder stays mounted, and its suggestions were computed with the
-      // rules just discarded, so refresh them instead of leaving them stale.
-      (this.$refs.builder as any)?.refreshSuggestions();
     },
     restoreDefaultClasses: async function () {
       await this.categoryStore.restoreDefaultClasses();
