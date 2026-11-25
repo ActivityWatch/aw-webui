@@ -17,7 +17,7 @@ div
     pre.result-fallback {{ fallbackText }}
   div(v-if="vis_method == 'summary' && canUseEventVisualizations")
     input.form-control(type="text" v-model.lazy.trim="summaryKey" :placeholder="$t('ui.eventView.dataKey')" style="margin-bottom: 1em;")
-    aw-summary(:fields="events", :colorfunc="colorfunc", :namefunc="namefunc", :data-key="summaryKey")
+    aw-summary(:fields="summaryEvents", :colorfunc="colorfunc", :namefunc="namefunc", :data-key="summaryKey")
   div(v-else-if="vis_method == 'summary'")
     pre.result-fallback {{ fallbackText }}
   div(v-if="vis_method == 'raw'")
@@ -25,6 +25,8 @@ div
 </template>
 
 <script lang="ts">
+import _ from 'lodash';
+
 import { formatQueryResult, isEventArray } from '~/util/queryResult';
 
 export default {
@@ -49,6 +51,25 @@ export default {
     },
     fallbackText: function () {
       return formatQueryResult(this.events);
+    },
+    summaryEvents: function () {
+      const positiveEvents = (this.events || []).filter(event => event.duration > 0);
+      const groups = _.groupBy(positiveEvents, event =>
+        JSON.stringify(this.summaryKeyFunc(event), (_key, value) =>
+          _.isPlainObject(value)
+            ? Object.fromEntries(
+                Object.keys(value)
+                  .sort()
+                  .map(key => [key, value[key]])
+              )
+            : value
+        )
+      );
+      const summed = _.map(groups, events => ({
+        ...events[0],
+        duration: _.sumBy(events, 'duration'),
+      }));
+      return _.orderBy(summed, 'duration', 'desc');
     },
   },
   mounted: async function () {
