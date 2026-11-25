@@ -55,7 +55,10 @@ describeNuuk('chart dates when the day-start gap crosses midnight', () => {
         timeperiod_length: periodLength,
         timeperiod_offset: withOffset ? offset : undefined,
       });
-    expect(labels([1, 'week'])).toEqual(['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri']);
+    const weekday = new Intl.DateTimeFormat(undefined, { weekday: 'short' });
+    expect(labels([1, 'week'])).toEqual(
+      Array.from({ length: 7 }, (_, day) => weekday.format(new Date(2026, 2, 28 + day, 12)))
+    );
     expect(labels([3, 'days'])).toEqual(['Mar 28', 'Mar 29', 'Mar 30']);
     // Trends' plural weeks use one bar per week rather than one per day.
     expect(labels([2, 'weeks'])).toEqual(['Mar 28', 'Apr 4']);
