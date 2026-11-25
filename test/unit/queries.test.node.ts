@@ -79,6 +79,7 @@ import {
   fullDesktopQuery,
   multideviceQuery,
   querystr_to_array,
+  replaceOutsideStrings,
 } from '~/queries';
 import type { DesktopQueryParams, MultiQueryParams } from '~/queries';
 import type { Rule } from '~/util/classes';
@@ -963,5 +964,36 @@ describe('multideviceQuery browser support', () => {
     const stripped = joined.replace(/"[^"]*"/g, '""');
     expect(stripped).not.toMatch(/\/\//);
     expect(stripped).not.toMatch(/\/\*/);
+  });
+});
+
+describe('replaceOutsideStrings', () => {
+  const marker = '__CATEGORIES__';
+  const categories = '[["Work",{"type":"regex","regex":"$& $1"}]]';
+
+  test('replaces an unquoted placeholder', () => {
+    const query = 'events = categorize(events, __CATEGORIES__); RETURN = events;';
+    expect(replaceOutsideStrings(query, marker, categories)).toBe(
+      `events = categorize(events, ${categories}); RETURN = events;`
+    );
+  });
+
+  test('leaves the marker alone inside a string literal', () => {
+    const query = 'RETURN = filter_keyvals(events, "app", ["__CATEGORIES__"]);';
+    expect(replaceOutsideStrings(query, marker, categories)).toBe(query);
+  });
+
+  test('replaces every unquoted placeholder and skips quoted ones', () => {
+    const query = 'a = __CATEGORIES__; b = "x__CATEGORIES__y"; c = __CATEGORIES__;';
+    expect(replaceOutsideStrings(query, marker, categories)).toBe(
+      `a = ${categories}; b = "x__CATEGORIES__y"; c = ${categories};`
+    );
+  });
+
+  test('does not treat a marker after an escaped quote as quoted', () => {
+    const query = 'a = "say \\"x\\""; b = __CATEGORIES__;';
+    expect(replaceOutsideStrings(query, marker, categories)).toBe(
+      `a = "say \\"x\\""; b = ${categories};`
+    );
   });
 });

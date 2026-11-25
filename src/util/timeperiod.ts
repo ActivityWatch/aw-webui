@@ -47,8 +47,16 @@ export function periodReadable(timeperiod: TimePeriod) {
     return (
       moment(timeperiod.start).format(dateformat(timeperiod.length[1])) +
       ' to ' +
-      moment(timeperiod.start)
-        .add(timeperiod.length[0], timeperiod.length[1] as moment.unitOfTime.DurationConstructor)
+      // Name the last unit inside the period: the end is exclusive, so a 7-day
+      // period starting on the 18th ends on the 24th, not the 25th.
+      // Do calendar-date arithmetic in UTC so a skipped local day-start time
+      // cannot normalize the last date into the following day.
+      moment
+        .utc(moment(timeperiod.start).format('YYYY-MM-DD'))
+        .add(
+          timeperiod.length[0] - 1,
+          timeperiod.length[1] as moment.unitOfTime.DurationConstructor
+        )
         .format(dateformat(timeperiod.length[1]))
     );
   }

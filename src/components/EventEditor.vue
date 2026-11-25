@@ -32,13 +32,26 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
       tr
         th {{ $t('ui.eventEditor.key') }}
         th {{ $t('ui.eventEditor.value') }}
-      tr(v-for="(v, k) in editedEvent.data" :key="k")
+      tr(v-for="(v, k) in editableData" :key="k")
         td
           b-input(disabled, :value="k", size="sm")
         td
           b-checkbox(v-if="typeof event.data[k] === typeof true", v-model="editedEvent.data[k]", :disabled="busy", style="margin: 0.25em")
           b-input(v-if="typeof event.data[k] === typeof 'string'", v-model="editedEvent.data[k]", :disabled="busy", size="sm")
           b-input(v-if="typeof event.data[k] === 'number'", v-model.number="editedEvent.data[k]", :disabled="busy", size="sm", type="number")
+
+    b-form-group.mt-2(v-if="editableTags" :label="$t('stopwatch.tagsLabel')" :label-for="'event-tags-' + event.id")
+      b-form-tags(
+        :input-id="'event-tags-' + event.id"
+        :input-attrs="{ 'data-testid': 'event-tags' }"
+        v-model="tags"
+        :disabled="busy"
+        separator=","
+        add-on-change
+        :placeholder="$t('stopwatch.tagsLabel')"
+        :add-button-text="$t('ui.activity.add')"
+        :tag-remove-label="$t('activityView.remove')"
+      )
 
     hr
 
@@ -69,6 +82,7 @@ b-modal(v-if="event && event.id", :id="'edit-modal-' + event.id", ref="eventEdit
 
 import moment from 'moment';
 import _ from 'lodash';
+import { parseTags } from '~/util/tags';
 
 import 'vue-awesome/icons/times';
 import 'vue-awesome/icons/save';
@@ -79,6 +93,7 @@ export default {
   props: {
     event: { type: Object },
     bucket_id: { type: String, required: true },
+    editableTags: { type: Boolean, default: false },
   },
   data() {
     return {
@@ -87,12 +102,17 @@ export default {
       draftSource: null,
       loadSequence: 0,
       disposed: false,
+      tags: [],
       // Name of the mutation in flight ('save' / 'delete'), else null.
       pending: null,
       error: '',
     };
   },
   computed: {
+    editableData() {
+      const data = this.editedEvent ? this.editedEvent.data : {};
+      return this.editableTags ? _.omit(data, 'tags') : data;
+    },
     selectionIdentity() {
       return this.bucket_id && this.event && this.event.id
         ? JSON.stringify([this.bucket_id, this.event.id])
@@ -151,6 +171,16 @@ export default {
       // Capture before any async suspension: another selection can change
       // this.editedEvent or this.bucket_id while replaceEvent is in-flight.
       const savedEvent = _.cloneDeep(this.editedEvent);
+      // Edit the array directly: joining and reparsing would split existing
+      // tag names containing commas when an unrelated tag is added or removed.
+      // Show legacy strings as chips, but retain their exact stored value on
+      // unrelated edits. A changed chip array (including clearing it) opts in
+      // to array storage. Unsupported legacy shapes still start with no chips.
+      const originalTags = savedEvent.data.tags;
+      const legacyTags = typeof originalTags === 'string' ? parseTags(originalTags) : [];
+      if (this.editableTags && (Array.isArray(originalTags) || !_.isEqual(this.tags, legacyTags))) {
+        savedEvent.data.tags = [...this.tags];
+      }
       const bucketId = this.bucket_id;
       await this.runMutation('save', savedEvent, bucketId, () =>
         this.$aw.replaceEvent(bucketId, savedEvent)
@@ -227,6 +257,7 @@ export default {
       this.editedEvent = null;
       this.draftIdentity = null;
       this.draftSource = null;
+      this.tags = [];
       this.error = '';
       if (!identity || this.disposed) return;
       const bucketId = this.bucket_id;
@@ -237,6 +268,12 @@ export default {
         const event = await this.$aw.getEvent(bucketId, eventId);
         if (stillSelected()) {
           this.editedEvent = event;
+          const tags = this.editedEvent.data.tags;
+          this.tags = Array.isArray(tags)
+            ? [...tags]
+            : typeof tags === 'string'
+            ? parseTags(tags)
+            : [];
           this.draftIdentity = identity;
           this.draftSource = source.event;
         }

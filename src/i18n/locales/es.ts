@@ -450,16 +450,16 @@ export default {
     errIdNotUnique: 'El ID no es único',
     errMissingId: 'Falta el ID',
     errMissingName: 'Falta el nombre',
-    // English fallback until these interval strings are translated.
-    periodExactInterval: 'exact times',
-    intervalStart: 'Start time',
-    intervalEnd: 'End time (exclusive)',
-    invalidInterval: 'Invalid time interval in URL, showing today instead.',
-    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    periodExactInterval: 'horas exactas',
+    intervalStart: 'Hora de inicio',
+    intervalEnd: 'Hora de fin (exclusiva)',
+    invalidInterval: 'Intervalo de tiempo no válido en la URL; se muestra hoy en su lugar.',
+    intervalNonexistentTime: 'Esa hora no existe en su zona horaria (el reloj se adelanta).',
     intervalAmbiguousTime:
-      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
-    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
-    intervalEndAfterStart: 'The end time must be after the start time.',
+      'Esa hora ocurre dos veces en su zona horaria (el reloj se atrasa). Elija cuál usar:',
+    intervalTooLong:
+      'Un intervalo exacto puede durar como máximo 92 días; use un rango de fechas para periodos más largos.',
+    intervalEndAfterStart: 'La hora de fin debe ser posterior a la hora de inicio.',
     diagnosticMissingWindow:
       'No hay ningún bucket de ventanas para {host}. Inicie aw-watcher-window y después actualice esta página.',
     diagnosticMissingAfk:
@@ -502,7 +502,7 @@ export default {
     periodLast7d: 'de los últimos 7 días',
     periodLast30d: 'de los últimos 30 días',
     periodCustomRange: 'en el rango seleccionado',
-    periodExactInterval: 'in the selected time interval', // English fallback
+    periodExactInterval: 'en el intervalo de tiempo seleccionado',
     periodAllTime: 'en total',
   },
   visualizations: {
@@ -549,6 +549,7 @@ export default {
     aboutBody:
       'Registre sesiones manualmente junto al seguimiento automático. Para ver los totales del cronómetro en un panel, abra una vista de Actividad, haga clic en Editar vista, luego en Añadir visualización y elija Eventos de cronómetro principales.',
     placeholder: '¿En qué está trabajando?',
+    tagsLabel: 'Etiquetas (separadas por comas)',
     noRunning:
       'No hay ningún cronómetro en marcha. Inicie uno arriba para registrar trabajo concentrado.',
     start: 'Iniciar',
@@ -671,10 +672,10 @@ export default {
       quickDurations: 'Duraciones rápidas',
       startDate: 'Fecha de inicio',
       endDate: 'Fecha de fin (opcional)',
-      startTime: 'Start time',
-      endTime: 'End time',
+      startTime: 'Hora de inicio',
+      endTime: 'Hora de fin',
       unresolvableTime:
-        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
+        'Una de las horas seleccionadas no existe, u ocurre dos veces, debido a un cambio de horario. Ajústela.',
       optional: '(opcional)',
       apply: 'Aplicar',
       refresh: 'Actualizar',

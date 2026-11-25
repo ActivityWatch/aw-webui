@@ -430,16 +430,16 @@ export default {
     rangeStart: 'Tanggal mulai',
     rangeEnd: 'Tanggal akhir',
     invalidRange: 'Rentang tanggal di URL tidak valid, menampilkan hari ini sebagai gantinya.',
-    // English fallback until these interval strings are translated.
-    periodExactInterval: 'exact times',
-    intervalStart: 'Start time',
-    intervalEnd: 'End time (exclusive)',
-    invalidInterval: 'Invalid time interval in URL, showing today instead.',
-    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    periodExactInterval: 'waktu tepat',
+    intervalStart: 'Waktu mulai',
+    intervalEnd: 'Waktu akhir (tidak termasuk)',
+    invalidInterval: 'Interval waktu di URL tidak valid, menampilkan hari ini sebagai gantinya.',
+    intervalNonexistentTime: 'Waktu tersebut tidak ada di zona waktu Anda (jam dimajukan).',
     intervalAmbiguousTime:
-      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
-    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
-    intervalEndAfterStart: 'The end time must be after the start time.',
+      'Waktu tersebut terjadi dua kali di zona waktu Anda (jam dimundurkan). Pilih yang akan digunakan:',
+    intervalTooLong:
+      'Interval tepat paling lama 92 hari; gunakan rentang tanggal untuk periode yang lebih panjang.',
+    intervalEndAfterStart: 'Waktu akhir harus setelah waktu mulai.',
     diagnosticMissingWindow:
       'Tidak ada bucket jendela untuk {host}. Jalankan aw-watcher-window, lalu segarkan halaman ini.',
     diagnosticMissingAfk:
@@ -499,7 +499,7 @@ export default {
     periodLast7d: '7 hari terakhir',
     periodLast30d: '30 hari terakhir',
     periodCustomRange: 'dalam rentang yang dipilih',
-    periodExactInterval: 'in the selected time interval', // English fallback
+    periodExactInterval: 'dalam interval waktu yang dipilih',
     periodAllTime: 'secara keseluruhan',
   },
   visualizations: {
@@ -545,6 +545,7 @@ export default {
     aboutBody:
       'Lacak sesi yang dicatat manual berdampingan dengan pelacakan otomatis. Untuk melihat total stopwatch Anda di dasbor, buka tampilan Aktivitas, klik Ubah tampilan, lalu Tambah visualisasi dan pilih Event Stopwatch Teratas.',
     placeholder: 'Sedang mengerjakan apa?',
+    tagsLabel: 'Tag (dipisahkan koma)',
     noRunning:
       'Tidak ada stopwatch yang berjalan. Mulai satu di atas untuk melacak pekerjaan terfokus.',
     start: 'Mulai',
@@ -666,10 +667,10 @@ export default {
       quickDurations: 'Durasi cepat',
       startDate: 'Tanggal mulai',
       endDate: 'Tanggal akhir (opsional)',
-      startTime: 'Start time',
-      endTime: 'End time',
+      startTime: 'Waktu mulai',
+      endTime: 'Waktu akhir',
       unresolvableTime:
-        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
+        'Salah satu waktu yang dipilih tidak ada, atau terjadi dua kali, karena perubahan waktu musim panas. Sesuaikan waktunya.',
       optional: '(opsional)',
       apply: 'Terapkan',
       refresh: 'Segarkan',

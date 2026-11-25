@@ -18,6 +18,30 @@ describe('categories store', () => {
     categoryStore.clearAll();
   });
 
+  test('category_select lists categories alphabetically', () => {
+    categoryStore.load(
+      ['Work', 'Admin', 'Media', 'Media > Games'].map(n => ({
+        name: n.split(' > '),
+        rule: { type: 'none' as const },
+      }))
+    );
+    expect(categoryStore.category_select(false).map(o => o.text)).toEqual([
+      'Admin',
+      'Media',
+      'Media > Games',
+      'Work',
+    ]);
+    // The meta entries stay first, ahead of the sorted categories.
+    expect(categoryStore.category_select(true).map(o => o.text)).toEqual([
+      'All',
+      'Uncategorized',
+      'Admin',
+      'Media',
+      'Media > Games',
+      'Work',
+    ]);
+  });
+
   test('loads default categories', async () => {
     // Load categories
     expect(categoryStore.classes).toHaveLength(0);

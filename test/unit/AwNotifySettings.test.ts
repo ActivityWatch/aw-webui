@@ -7,7 +7,8 @@ jest.mock('~/util/awclient', () => ({
   }),
 }));
 
-import { shallowMount } from '@vue/test-utils';
+import { createLocalVue, mount, shallowMount } from '@vue/test-utils';
+import BootstrapVue from 'bootstrap-vue';
 import AwNotifySettings from '~/views/settings/AwNotifySettings.vue';
 
 const flushPromises = () => new Promise(resolve => setTimeout(resolve, 0));
@@ -160,5 +161,58 @@ describe('AwNotifySettings', () => {
       expect.objectContaining({ http_port: 5600 }),
       expect.anything()
     );
+  });
+  // A failed or unparseable load leaves the form on empty defaults; saving it
+  // would overwrite the user's stored alerts (and unknown keys) with nothing.
+  test.each([
+    ['a server error', () => mockGet.mockRejectedValue(new Error('timeout'))],
+    ['an unsupported format', () => mockGet.mockResolvedValue({ data: { alerts: 'bad' } })],
+  ])('does not overwrite the saved setting after %s on load', async (_name, setup) => {
+    setup();
+    const wrapper: any = shallowMount(AwNotifySettings, {
+      mocks: { $t: key => key },
+    });
+    await flushPromises();
+
+    wrapper.vm.enabled = true;
+    wrapper.vm.addAlert();
+    await wrapper.vm.save();
+
+    expect(mockPost).not.toHaveBeenCalled();
+    expect(wrapper.vm.error).not.toBe('');
+  });
+
+  // A failed load hides the form behind the error, so the Save button must be
+  // unclickable and the banner needs a way back that is not a page refresh.
+  test('disables Save and offers a Retry that reloads after a failed load', async () => {
+    const localVue = createLocalVue();
+    localVue.use(BootstrapVue);
+    mockGet.mockRejectedValueOnce(new Error('timeout')).mockResolvedValueOnce({
+      data: { enabled: true, alerts: [] },
+    });
+    const wrapper: any = mount(AwNotifySettings, {
+      localVue,
+      mocks: { $t: (key: string) => key },
+    });
+    await flushPromises();
+
+    expect(wrapper.vm.loadFailed).toBe(true);
+    const saveButton = wrapper.find('button.btn-primary');
+    expect(saveButton.attributes('disabled')).toBe('disabled');
+    // No editor to type into: edits could not be saved and Retry would drop them.
+    expect(wrapper.find('input[type="checkbox"]').exists()).toBe(false);
+
+    const retry = wrapper.findAll('button').filter(b => b.text() === 'common.retry');
+    expect(retry).toHaveLength(1);
+    await retry.at(0).trigger('click');
+    await flushPromises();
+
+    expect(mockGet).toHaveBeenCalledTimes(2);
+    expect(wrapper.vm.loadFailed).toBe(false);
+    expect(wrapper.vm.error).toBe('');
+    expect(wrapper.vm.enabled).toBe(true);
+    expect(wrapper.find('button.btn-primary').attributes('disabled')).toBeUndefined();
+    expect(wrapper.find('input[type="checkbox"]').exists()).toBe(true);
+    wrapper.destroy();
   });
 });

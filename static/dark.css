@@ -360,6 +360,10 @@ div[style="color: rgb(85, 85, 85); font-size: 0.9em;"] {
   border-color: hsl(355, 60%, 25%);
 }
 
+.alert-dismissible .close {
+  text-shadow: none;
+}
+
 /* Links inside dark-mode colored alerts inherit Bootstrap's default
    darker variant which sits ~equal-luminance with the alert background.
    Push them brighter and underline so they read clearly. */

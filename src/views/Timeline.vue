@@ -341,10 +341,11 @@ export default {
         categoryPromise = Promise.resolve({ events: [], error: false });
       }
 
-      if (this.filter_duration > 0) {
-        for (const bucket of buckets) {
-          bucket.events = _.filter(bucket.events, e => e.duration >= this.filter_duration);
-        }
+      // AFK filtering: use query engine to filter window events by AFK status.
+      // It replaces window events with a fresh query result, so it must run
+      // before the duration/category filters or it would undo them.
+      if (this.filter_afk) {
+        buckets = await this._applyAfkFilter(buckets);
       }
 
       if (this.filter_categories.length > 0) {
@@ -367,17 +368,22 @@ export default {
         }
       }
 
-      // AFK filtering: use query engine to filter window events by AFK status
-      if (this.filter_afk) {
-        buckets = await this._applyAfkFilter(buckets);
-      }
-
       // Merge adjacent events by app name for window buckets.
-      // Runs after AFK filtering so merges operate on already-filtered events.
+      // Runs after the AFK and category filters so merges operate on
+      // already-filtered events.
       // Reduces visual clutter from apps that produce many small events (e.g.
       // Adobe Illustrator's TAB key toggling UI panels). See: activitywatch#1165
       if (this.filter_merge_similar) {
         buckets = this._applyMergeSimilar(buckets);
+      }
+
+      // Duration filter last, on the events actually drawn, as the categorized
+      // row does (merge, then filter). Filtering before Merge similar dropped
+      // short events that merge into a long block (#1343 item 3).
+      if (this.filter_duration > 0) {
+        for (const bucket of buckets) {
+          bucket.events = _.filter(bucket.events, e => e.duration >= this.filter_duration);
+        }
       }
 
       if (seq !== this.fetchSeq) return;
@@ -421,6 +427,10 @@ export default {
             const nextEnd = nextStart + next.duration * 1000;
             current.duration =
               (Math.max(currentEnd, nextEnd) - new Date(current.timestamp).getTime()) / 1000;
+            // A merged bar spans several stored events, so it must not carry
+            // the first one's id: clicking it would open the editor for that
+            // event alone. Without an id the timeline skips the editor.
+            delete current.id;
           } else {
             merged.push(current);
             current = { ...next };

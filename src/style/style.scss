@@ -48,6 +48,31 @@ iframe {
   border-radius: 5px;
 }
 
+// Compact alerts: Bootstrap's .py-1/.px-2 utilities use !important, which
+// overrides .alert-dismissible's end padding, while .alert-dismissible .close
+// keeps Bootstrap's default 0.75rem 1.25rem padding and 1.5rem font-size
+// (pushing the close button past the bottom edge of a single-line alert).
+.alert.alert-compact {
+  padding: 0.25rem 0.5rem;
+
+  &.alert-dismissible {
+    padding-inline: 0.5rem 2.25rem;
+
+    .close {
+      top: 0;
+      bottom: 0;
+      inset-inline-start: auto;
+      inset-inline-end: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 0.5rem;
+      font-size: 1.5em;
+      line-height: 1;
+    }
+  }
+}
+
 // Bootstrap 4 is LTR-only. Under dir="rtl": its reboot pins `body` to
 // text-align: left, and its auto-margin utilities are physical, so they push
 // items toward the wrong edge (the navbar's right-hand group collided with the

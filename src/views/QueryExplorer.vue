@@ -60,6 +60,7 @@ div
     @ok="onSaveQueryConfirm"
     @shown="$refs.saveQueryNameInput && $refs.saveQueryNameInput.focus()"
   )
+    div.alert.alert-danger(v-if="saved_query_error" role="alert") {{ saved_query_error }}
     b-form-group(:label="$t('ui.query.savedNameLabel')")
       b-form-input(
         ref="saveQueryNameInput"
@@ -78,6 +79,7 @@ div
     @ok="onRenameQueryConfirm"
     @shown="$refs.renameQueryNameInput && $refs.renameQueryNameInput.focus()"
   )
+    div.alert.alert-danger(v-if="saved_query_error" role="alert") {{ saved_query_error }}
     b-form-group(:label="$t('ui.query.newNameLabel')")
       b-form-input(
         ref="renameQueryNameInput"
@@ -98,9 +100,10 @@ div
 import 'vue-awesome/icons/trash';
 import moment from 'moment';
 import _ from 'lodash';
-import { querystr_to_array } from '~/queries';
+import { querystr_to_array, replaceOutsideStrings } from '~/queries';
 import { useCategoryStore } from '~/stores/categories';
 import { useSettingsStore } from '~/stores/settings';
+import { getClient } from '~/util/awclient';
 import { isEventArray } from '~/util/queryResult';
 import {
   buildSavedQuery,
@@ -113,6 +116,10 @@ import {
 
 const today = moment().startOf('day');
 const tomorrow = moment(today).add(24, 'hours');
+
+// Shared across remounted explorers: hold the save lock through any recovery
+// read-back. Reject overlap instead of queueing drafts built from optimistic state.
+const pendingSavedQueryStores = new WeakSet<object>();
 
 export default {
   name: 'QueryExplorer',
@@ -173,14 +180,48 @@ RETURN = sort_by_duration(merged_events);
   },
   methods: {
     persistSavedQueries: async function (savedQueries: SavedQuery[]) {
+      if (pendingSavedQueryStores.has(this.settingsStore)) {
+        this.saved_query_error =
+          'Another query preset save is in progress. Please retry after it finishes.';
+        return false;
+      }
+      pendingSavedQueryStores.add(this.settingsStore);
+      // No earlier preset write can still own this optimistic settings state.
+      const previous = _.cloneDeep(this.settingsStore.saved_queries || []);
+      const attempted = sortSavedQueries(savedQueries);
       try {
         this.saved_query_error = '';
-        await this.settingsStore.update({ saved_queries: sortSavedQueries(savedQueries) });
+        await this.settingsStore.update({ saved_queries: attempted });
         return true;
       } catch (e) {
         console.error('Failed to save query presets', e);
+        // The write may have landed before the follow-up reload failed, so ask
+        // the server what it holds; the old list is only the offline fallback.
+        let confirmed: SavedQuery[] | undefined;
+        try {
+          const server = (await getClient().get_settings()) as {
+            saved_queries?: SavedQuery[];
+          };
+          if (Array.isArray(server?.saved_queries)) {
+            confirmed = server.saved_queries;
+          }
+        } catch (err) {
+          console.error('Failed to read back query presets', err);
+        }
+        confirmed = confirmed ?? previous;
+        // Leave unrelated settings refreshes alone if they replaced the list.
+        // Otherwise a failed save leaves a phantom preset (and a retry saves a
+        // duplicate), and a failed delete hides a preset that still exists.
+        if (_.isEqual(this.settingsStore.saved_queries, attempted)) {
+          this.settingsStore.$patch({ saved_queries: confirmed });
+        }
+        // Compare the request's JSON form: a cleared date's NaN offset is
+        // sent, and read back, as null.
+        if (_.isEqual(confirmed, JSON.parse(JSON.stringify(attempted)))) return true;
         this.saved_query_error = 'Failed to save query presets.';
         return false;
+      } finally {
+        pendingSavedQueryStores.delete(this.settingsStore);
       }
     },
     loadSelectedQuery: function () {
@@ -226,6 +267,7 @@ RETURN = sort_by_duration(merged_events);
       }
 
       // No existing query — open modal to name this snapshot, not a later editor draft.
+      this.saved_query_error = '';
       this.saveQueryDraft = draft;
       this.saveQueryName = getDefaultSavedQueryName(draft.query_code);
       this.showSaveQueryModal = true;
@@ -263,6 +305,7 @@ RETURN = sort_by_duration(merged_events);
         return;
       }
 
+      this.saved_query_error = '';
       this.renameQueryTarget = { ...this.selectedSavedQuery };
       this.renameQueryName = this.renameQueryTarget.name;
       this.showRenameQueryModal = true;
@@ -326,16 +369,20 @@ RETURN = sort_by_duration(merged_events);
       this.query_request = request;
       let query = this.query_code;
 
-      // replace magic string `__CATEGORIES__` in query text with latest category rule
-      if (_.includes(query, '__CATEGORIES__')) {
-        const categoryRules = useCategoryStore().classes_for_query;
-
+      // Replace the magic string `__CATEGORIES__` in query text with the latest
+      // category rule. Only occurrences outside quoted literals are placeholders:
+      // a query may legitimately search for the marker's own text.
+      const withCategories = replaceOutsideStrings(
+        query,
+        '__CATEGORIES__',
+        JSON.stringify(useCategoryStore().classes_for_query)
+      );
+      if (withCategories !== query) {
         if (useCategoryStore().classes_for_query.length === 0) {
           this.error = '__CATEGORIES__ was used in query but no categories have been defined yet.';
           return;
         }
-
-        query = query.replace('__CATEGORIES__', JSON.stringify(categoryRules));
+        query = withCategories;
       }
 
       // the aw-client expects an array of commands with whitespace cleaned up

@@ -122,7 +122,7 @@ div
               td.text-right.text-nowrap {{ d.duration | friendlyduration }}
               td.text-muted.text-nowrap
                 span(v-if="d.overlap >= 60") ({{ secondsToDuration(d.overlap) }} {{ $t('activity.overlap') }})
-    b-alert.py-1.px-2.mb-1.small(
+    b-alert.alert-compact.mb-1.small(
       v-if="isMultidevice && !multideviceNoteDismissed"
       show
       variant="info"
@@ -950,8 +950,10 @@ export default {
         return `${range.start}—${range.end}`;
       }
 
-      const periodStart = moment(this.timeperiod.start);
       const dateFormatString = 'YYYY-MM-DD';
+      // Labels are calendar dates, not instants: discard the day-start time
+      // and avoid local clock-change gaps while computing the last date.
+      const periodStart = moment.utc(moment(this.timeperiod.start).format(dateFormatString));
 
       // it's helpful to render a range for the week as opposed to just the start of the week
       // or the number of the week so users can easily determine (a) if we are using monday/sunday as the week
@@ -972,7 +974,12 @@ export default {
       }
 
       const startOfPeriod = periodStart.format(dateFormatString);
-      const endOfPeriod = periodStart.add(...periodLength).format(dateFormatString);
+      // The period end is exclusive: show the last day inside it, as the
+      // range/interval branch above does.
+      const endOfPeriod = periodStart
+        .add(...periodLength)
+        .subtract(1, 'day')
+        .format(dateFormatString);
       return `${startOfPeriod}—${endOfPeriod}`;
     },
   },
@@ -1433,7 +1440,7 @@ export default {
       const checks: [string, boolean][] = [
         [
           this.$t('activity.errIdNotUnique').toString(),
-          this.viewsStore.views.map(v => v.id).includes(this.new_view.id),
+          this.viewsStore.isViewIdTaken(this.new_view.id),
         ],
         [this.$t('activity.errMissingId').toString(), this.new_view.id === ''],
         [this.$t('activity.errMissingName').toString(), this.new_view.name === ''],
@@ -1461,12 +1468,10 @@ export default {
       const id = this.new_view.id;
       this.newViewSaving = true;
       this.newViewError = '';
-      viewsStore.addView({ id, name: this.new_view.name, elements: [] });
       try {
-        await viewsStore.save();
+        // Persist on top of the stored layout so unsaved edits stay drafts.
+        await viewsStore.saveNewView({ id, name: this.new_view.name, elements: [] });
       } catch (error) {
-        // Retain any pre-existing layout draft, but let this form retry the id.
-        if (viewsStore.getViewById(id)) viewsStore.removeView({ view_id: id });
         this.newViewError = error instanceof Error ? error.message : String(error);
         return;
       } finally {

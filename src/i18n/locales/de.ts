@@ -124,6 +124,26 @@ export default {
       dark: 'Dunkel',
       help: 'Farbschema der Anwendung (Kategoriefarben für den Dunkelmodus ggf. manuell anpassen).',
     },
+    layout: {
+      title: 'Text- und Inhaltslayout',
+      help: 'Passt Textgröße und Inhaltsbreite unabhängig vom Fenster-Zoom an. Einige Diagramm- und SVG-Beschriftungen verwenden feste Größen und skalieren möglicherweise nicht mit dem Text.',
+      textSize: 'Textgröße (%)',
+      textHelp: '80–150 %, in ganzen Prozentpunkten. Standard: 100 %.',
+      automaticWidth: 'Automatische Inhaltsbreite (Standard der jeweiligen Seite verwenden)',
+      contentWidth: 'Maximale Inhaltsbreite (Pixel)',
+      widthHelp:
+        '600–2400 Pixel. Passt immer ins Fenster. „Automatisch“ behält die normale Breite der jeweiligen Seite bei.',
+      save: 'Layout speichern',
+      saving: 'Speichern…',
+      reset: 'Text und Breite zurücksetzen',
+      saved: 'Layout gespeichert.',
+      changedElsewhere:
+        'Das Layout wurde während des Speicherns an anderer Stelle geändert. Die aktuell gespeicherten Werte werden angezeigt; prüfen Sie diese, bevor Sie es erneut versuchen.',
+      invalid:
+        'Geben Sie eine ganzzahlige Textgröße von 80 bis 150 und eine Breite von 600 bis 2400 ein, oder wählen Sie „Automatisch“.',
+      saveFailed:
+        'Layout konnte nicht gespeichert werden. Das vorherige Layout wurde wiederhergestellt. Einige Einstellungen haben möglicherweise den Server erreicht; speichern Sie erneut, um beide Werte zu bestätigen.',
+    },
     uncategorizedHint: {
       title: 'Hinweis zu nicht kategorisierter Zeit',
       help: 'Zeigt in der Aktivitätsansicht ein Banner an, wenn zu viel Ihrer erfassten Zeit in den Bucket „Nicht kategorisiert“ fällt – praktisch, um zu erkennen, wann Sie Ihre Kategorisierungsregeln verfeinern sollten.',
@@ -186,7 +206,7 @@ export default {
       general: 'Allgemein',
       generalHelp: 'Standardwerte für Zeiträume, Timeline und Startseite.',
       appearance: 'Darstellung',
-      appearanceHelp: 'Design und Farben der Visualisierungen.',
+      appearanceHelp: 'Design, Textgröße, Inhaltsbreite und Farben der Visualisierungen.',
       categorization: 'Kategorisierung',
       categorizationHelp:
         'Regeln zur Einstufung von Ereignissen in Kategorien sowie AFK-/Aktivitäts-Overrides.',
@@ -195,7 +215,13 @@ export default {
         'Filter, die sensible Ereignisdaten vor dem Speichern verwerfen oder ausblenden.',
       developer: 'Entwickler',
     },
-    language: { title: 'Sprache', help: 'Sprache der Web-Oberfläche.' },
+    language: {
+      title: 'Sprache',
+      help: 'Sprache der Web-Oberfläche.',
+      machineTranslatedNote:
+        'Einige Übersetzungen wurden mithilfe von KI erstellt und können Fehler enthalten.',
+      contributeTranslation: 'Beiträge von Muttersprachlern sind willkommen.',
+    },
     releaseNotification: {
       title: 'Auf neue Versionen prüfen',
       help: 'Wenn aktiviert, prüft die Weboberfläche einmal täglich auf eine neue ActivityWatch-Version und zeigt einen Hinweis an.',
@@ -424,16 +450,17 @@ export default {
     rangeStart: 'Startdatum',
     rangeEnd: 'Enddatum',
     invalidRange: 'Ungültiger Zeitraum in der URL, stattdessen wird heute angezeigt.',
-    // English fallback until these interval strings are translated.
-    periodExactInterval: 'exact times',
-    intervalStart: 'Start time',
-    intervalEnd: 'End time (exclusive)',
-    invalidInterval: 'Invalid time interval in URL, showing today instead.',
-    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    periodExactInterval: 'genaue Uhrzeiten',
+    intervalStart: 'Startzeit',
+    intervalEnd: 'Endzeit (exklusiv)',
+    invalidInterval: 'Ungültiges Zeitintervall in der URL, stattdessen wird heute angezeigt.',
+    intervalNonexistentTime:
+      'Diese Uhrzeit gibt es in Ihrer Zeitzone nicht (die Uhr wird vorgestellt).',
     intervalAmbiguousTime:
-      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
-    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
-    intervalEndAfterStart: 'The end time must be after the start time.',
+      'Diese Uhrzeit kommt in Ihrer Zeitzone zweimal vor (die Uhr wird zurückgestellt). Wählen Sie, welche verwendet werden soll:',
+    intervalTooLong:
+      'Ein genaues Intervall darf höchstens 92 Tage umfassen; verwenden Sie für längere Zeiträume einen Datumsbereich.',
+    intervalEndAfterStart: 'Die Endzeit muss nach der Startzeit liegen.',
     diagnosticMissingWindow:
       'Kein Fenster-Bucket für {host}. Starten Sie aw-watcher-window und laden Sie die Seite neu.',
     diagnosticMissingAfk:
@@ -493,7 +520,7 @@ export default {
     periodLast7d: 'die letzten 7 Tage',
     periodLast30d: 'die letzten 30 Tage',
     periodCustomRange: 'im gewählten Zeitraum',
-    periodExactInterval: 'in the selected time interval', // English fallback
+    periodExactInterval: 'im gewählten Zeitintervall',
     periodAllTime: 'insgesamt',
   },
   visualizations: {
@@ -538,6 +565,7 @@ export default {
     aboutBody:
       'Manuell erfasste Sitzungen neben der automatischen Erfassung verfolgen. Um Stoppuhr-Summen im Dashboard zu sehen, öffnen Sie eine Aktivitätsansicht, klicken Sie auf Ansicht bearbeiten, dann Visualisierung hinzufügen und wählen Sie Top-Stoppuhr-Ereignisse.',
     placeholder: 'Woran arbeiten Sie?',
+    tagsLabel: 'Tags (durch Kommas getrennt)',
     noRunning: 'Keine Stoppuhr läuft. Starten Sie oben eine, um fokussierte Arbeit zu erfassen.',
     start: 'Starten',
     running: 'Läuft',
@@ -656,10 +684,10 @@ export default {
       quickDurations: 'Schnellauswahl',
       startDate: 'Startdatum',
       endDate: 'Enddatum (optional)',
-      startTime: 'Start time',
-      endTime: 'End time',
+      startTime: 'Startzeit',
+      endTime: 'Endzeit',
       unresolvableTime:
-        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
+        'Eine der gewählten Uhrzeiten existiert wegen der Zeitumstellung nicht oder kommt doppelt vor. Bitte passen Sie sie an.',
       optional: '(optional)',
       apply: 'Anwenden',
       refresh: 'Aktualisieren',

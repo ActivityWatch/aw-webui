@@ -556,17 +556,20 @@ export default {
             )
           : getCategoryColorFromEvent(item.bucket, item.event);
         if (!colors.has(color)) colors.set(color, Color(color).darken(0.3).toString());
+        // vis-timeline renders content as HTML (after its xss filter, which
+        // keeps links), so category names and titles are escaped like tooltips.
+        const content = item.members
+          ? this.$t('ui.timeline.groupedEvents', {
+              count: item.members.length,
+              duration: this.formatGroupDuration(item.event.duration),
+            })
+          : categorized
+          ? categoryPathLabel(name)
+          : getTitleAttr(item.bucket, item.event);
         return {
           id: item.id,
           group: item.bucket.id,
-          content: item.members
-            ? this.$t('ui.timeline.groupedEvents', {
-                count: item.members.length,
-                duration: this.formatGroupDuration(item.event.duration),
-              })
-            : categorized
-            ? categoryPathLabel(name)
-            : getTitleAttr(item.bucket, item.event),
+          content: _.escape(content),
           start: item.start,
           end: item.end,
           style: `background-color: ${color}; border-color: ${colors.get(color)}`,

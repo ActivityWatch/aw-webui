@@ -432,16 +432,16 @@ export default {
     rangeStart: 'Tarehe ya kuanza',
     rangeEnd: 'Tarehe ya kumaliza',
     invalidRange: 'Kipindi cha tarehe batili kwenye URL, inaonyesha leo badala yake.',
-    // English fallback until these interval strings are translated.
-    periodExactInterval: 'exact times',
-    intervalStart: 'Start time',
-    intervalEnd: 'End time (exclusive)',
-    invalidInterval: 'Invalid time interval in URL, showing today instead.',
-    intervalNonexistentTime: 'That time does not exist in your time zone (clocks skip forward).',
+    periodExactInterval: 'nyakati kamili',
+    intervalStart: 'Muda wa kuanza',
+    intervalEnd: 'Muda wa kumaliza (bila kujumuisha)',
+    invalidInterval: 'Kipindi cha muda batili kwenye URL, inaonyesha leo badala yake.',
+    intervalNonexistentTime: 'Muda huo haupo katika eneo lako la saa (saa husogezwa mbele).',
     intervalAmbiguousTime:
-      'That time happens twice in your time zone (clocks go back). Pick which one to use:',
-    intervalTooLong: 'An exact interval can be at most 92 days; use a date range for longer spans.',
-    intervalEndAfterStart: 'The end time must be after the start time.',
+      'Muda huo hutokea mara mbili katika eneo lako la saa (saa hurudishwa nyuma). Chagua utakaotumia:',
+    intervalTooLong:
+      'Kipindi kamili kinaweza kuwa kisichozidi siku 92; tumia kipindi cha tarehe kwa vipindi virefu zaidi.',
+    intervalEndAfterStart: 'Muda wa kumaliza lazima uwe baada ya muda wa kuanza.',
     diagnosticMissingWindow:
       'Hakuna bucket ya dirisha kwa {host}. Anzisha aw-watcher-window, kisha onyesha upya ukurasa huu.',
     diagnosticMissingAfk:
@@ -501,7 +501,7 @@ export default {
     periodLast7d: 'siku 7 zilizopita',
     periodLast30d: 'siku 30 zilizopita',
     periodCustomRange: 'katika kipindi kilichochaguliwa',
-    periodExactInterval: 'in the selected time interval', // English fallback
+    periodExactInterval: 'katika kipindi cha muda kilichochaguliwa',
     periodAllTime: 'kwa ujumla',
   },
   visualizations: {
@@ -547,6 +547,7 @@ export default {
     aboutBody:
       'Fuatilia vikao vilivyorekodiwa kwa mkono pamoja na ufuatiliaji wa kiotomatiki. Kuona jumla za saa yako ya kuhesabu kwenye dashibodi, fungua mwonekano wa Shughuli, bonyeza Hariri mwonekano, kisha Ongeza uonyeshaji na chagua Matukio ya Saa ya Kuhesabu ya Juu.',
     placeholder: 'Unafanya kazi kwenye nini?',
+    tagsLabel: 'Lebo (zimetenganishwa kwa koma)',
     noRunning:
       'Hakuna saa ya kuhesabu inayoendesha. Anzisha moja hapo juu kufuatilia kazi iliyozingatia.',
     start: 'Anzisha',
@@ -669,10 +670,10 @@ export default {
       quickDurations: 'Muda wa haraka',
       startDate: 'Tarehe ya kuanza',
       endDate: 'Tarehe ya kumaliza (hiari)',
-      startTime: 'Start time',
-      endTime: 'End time',
+      startTime: 'Muda wa kuanza',
+      endTime: 'Muda wa kumaliza',
       unresolvableTime:
-        'One of the selected times does not exist, or happens twice, because of a daylight-saving change. Adjust it.',
+        'Mojawapo ya nyakati zilizochaguliwa haipo, au hutokea mara mbili, kwa sababu ya mabadiliko ya saa za majira. Irekebishe.',
       optional: '(hiari)',
       apply: 'Tumia',
       refresh: 'Onyesha upya',

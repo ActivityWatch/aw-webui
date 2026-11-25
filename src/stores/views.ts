@@ -210,6 +210,46 @@ export const useViewsStore = defineStore('views', {
         this.saving = false;
       }
     },
+    // Persist a new empty view on top of the *persisted* layout. save() would
+    // serialise the in-memory list, which may hold unsaved ActivityView edits;
+    // those must stay drafts. The view shows in the list right away (so the
+    // form can't submit it twice) and is removed again if persistence fails.
+    async saveNewView(this: State, view: View) {
+      if (this.saving) throw new Error('A view save is already in progress');
+      this.saving = true;
+      const added = !this.views.some(v => v.id === view.id);
+      if (added) this.views.push({ ...view, elements: [] });
+      try {
+        const settingsStore = useSettingsStore();
+        const confirmed = JSON.parse(JSON.stringify(settingsStore.views));
+        const stored = migrateStoredViews(confirmed);
+        // Restore defaults drops custom views from the draft but not from
+        // settings, so the draft alone cannot tell whether the id is free.
+        if (stored.some(v => v.id === view.id)) {
+          throw new Error(`A saved view already uses the id "${view.id}"`);
+        }
+        const draft = [...stored, { ...view, elements: [] }];
+        try {
+          await settingsStore.update({ views: draft });
+        } catch (error) {
+          settingsStore.$patch({ views: confirmed });
+          throw error;
+        }
+      } catch (error) {
+        if (added) {
+          const idx = this.views.findIndex(v => v.id === view.id);
+          if (idx >= 0) this.views.splice(idx, 1);
+        }
+        throw error;
+      } finally {
+        this.saving = false;
+      }
+    },
+    // An id is taken if the draft or the saved layout uses it.
+    isViewIdTaken(this: State, id: string): boolean {
+      const stored = migrateStoredViews(useSettingsStore().views);
+      return [...this.views, ...stored].some(v => v.id === id);
+    },
     loadViews(views: View[]) {
       this.$patch({ views: JSON.parse(JSON.stringify(views)) });
       console.log('Loaded views:', this.views);
