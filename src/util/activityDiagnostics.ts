@@ -65,8 +65,14 @@ export function activityDiagnostic({
   const hasWindowActivity = (rawWindowDuration ?? 0) > 0;
 
   // No window bucket for this device at all: the watcher is not reporting.
+  // A host with only browser data (e.g. a phone running aw-watcher-web) never
+  // had a window watcher, so advising one is wrong; its Browser tab still
+  // shows the data.
   if (windows.length === 0) {
-    return { kind: 'missing-window', host };
+    const browserOnly =
+      buckets.some(bucket => bucket.type === 'web.tab.current' && bucket.hostname === host) &&
+      !buckets.some(bucket => bucket.type === 'afkstatus' && sameDevice(bucket));
+    return browserOnly ? null : { kind: 'missing-window', host };
   }
 
   const hasAfk = buckets.some(bucket => bucket.type === 'afkstatus' && exactHost(bucket));
