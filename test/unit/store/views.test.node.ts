@@ -262,6 +262,31 @@ describe('views store on an Android build', () => {
     }
   });
 
+  test('an unchanged desktop save preserves Android Browser removal across reloads', async () => {
+    const android = await loadOnAndroid(storedAndroidDefault());
+    android.viewsStore.removeView({ view_id: 'browser' });
+    await android.viewsStore.save();
+    const stored = JSON.parse(JSON.stringify(android.settingsStore.views));
+    expect(stored[0].customized).toBe(true);
+
+    // The module imported at file scope is the non-Android build. Both clients
+    // connect to the same settings backend, including its customization marker.
+    const { useSettingsStore } = await import('~/stores/settings');
+    setActivePinia(createPinia());
+    const settings = useSettingsStore();
+    settings.$patch({ views: stored, _loaded: true });
+    jest.spyOn(settings, 'save').mockResolvedValue(undefined);
+    const desktop = useViewsStore();
+    await desktop.load();
+    expect(desktop.views[0].customized).toBeUndefined();
+    await desktop.save();
+    const persisted = JSON.parse(JSON.stringify(settings.views));
+    expect(persisted[0].customized).toBe(true);
+
+    const reloaded = await loadOnAndroid(persisted);
+    expect(reloaded.views).toEqual(storedAndroidDefault());
+  });
+
   test('a failed save rolls back the customization marker so legacy defaults still migrate', async () => {
     const { viewsStore, settingsStore, save, expected } = await loadOnAndroid(
       storedAndroidDefault()

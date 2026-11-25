@@ -231,7 +231,14 @@ export const useViewsStore = defineStore('views', {
         const draft: View[] = JSON.parse(JSON.stringify(this.views));
         // A user can recreate an old default by deleting Browser. Persist the
         // distinction inside that layout, atomically with the views write.
-        if (onAndroid && LEGACY_ANDROID_DEFAULTS.some(legacy => sameLayout(draft, legacy))) {
+        const keepCustomized =
+          Array.isArray(confirmed) &&
+          confirmed.some((view: View) => view.customized === true) &&
+          sameLayout(draft, confirmed);
+        if (
+          (onAndroid || keepCustomized) &&
+          LEGACY_ANDROID_DEFAULTS.some(legacy => sameLayout(draft, legacy))
+        ) {
           draft[0].customized = true;
         }
         try {
