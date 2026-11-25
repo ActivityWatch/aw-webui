@@ -164,6 +164,10 @@ export default {
     // When embedded inside CategorizationSettings, drop the standalone
     // page chrome so the embed reads as a subsection of the parent.
     embedded: { type: Boolean, default: false },
+    // Embedded mode keeps this component mounted while the parent collapses it,
+    // so tell it whether anyone can see the suggestions: a hidden builder must
+    // not keep querying activity for edits only the editor knows about.
+    visible: { type: Boolean, default: true },
   },
   data() {
     return {
@@ -206,9 +210,15 @@ export default {
       create: {
         word: '',
         categoryId: null,
+        // The modal's placeholder rule. Kept out of the store until OK so that
+        // opening the modal and cancelling cannot refresh the word list.
+        draft: null,
         // Embedded mode: whether OK kept the new rule.
         accepted: false,
       },
+      // A rule change arrived while the embedded builder was collapsed; the
+      // stale list is refreshed once when it is reopened.
+      suggestionsStale: false,
     };
   },
   computed: {
@@ -254,7 +264,21 @@ export default {
   },
   watch: {
     categoryRulesKey() {
-      if (this.embedded && this.bucketsReady) this.fetchWords();
+      if (!this.embedded || !this.bucketsReady) return;
+      if (this.visible) {
+        this.suggestionsStale = false;
+        this.fetchWords();
+      } else {
+        // Nobody can see the list, so do not query activity for it; reopening
+        // refreshes once instead of on every keystroke-sized rule change.
+        this.suggestionsStale = true;
+      }
+    },
+    visible(isVisible: boolean) {
+      if (isVisible && this.suggestionsStale) {
+        this.suggestionsStale = false;
+        this.fetchWords();
+      }
     },
     queryOptions: {
       handler: function () {
@@ -432,15 +456,22 @@ export default {
     createRule(word: string) {
       console.log('Opening modal for creating rule with word: ' + word);
       this.create.accepted = false;
-      const lastId = this.categoryStore.addClass({
+      // Keep the placeholder out of the store until OK. Adding it changes the
+      // rules, and the resulting refresh throws away the "Show more" page the
+      // user clicked through; cancelling changed nothing, so it must not
+      // refresh either.
+      this.create.draft = {
         name: [word],
         rule: { type: 'regex', regex: _.escapeRegExp(word) },
-      });
+      };
       this.create.word = word;
-      this.create.categoryId = lastId;
+      this.create.categoryId = null;
     },
     async createRuleOk() {
       console.log('Creating rule with word: ' + this.create.word);
+      const draft = this.create.draft;
+      this.create.draft = null;
+      if (draft) this.create.categoryId = this.categoryStore.addClass(draft);
       if (this.embedded) {
         // Saving here would also commit the editor's other unsaved edits.
         // Leave the new rule unsaved; the editor's Save button persists it.
@@ -448,17 +479,19 @@ export default {
       } else {
         await this.categoryStore.save();
       }
-      this.fetchWords();
+      // Embedded mode's rule watcher starts the single refresh for this change.
+      if (!this.embedded) this.fetchWords();
     },
     async createRuleCancel() {
       // Also runs after OK, since the modal emits `hidden` whenever it closes.
       console.log('Cancelling create rule');
       const { categoryId, accepted } = this.create;
+      this.create.draft = null;
       this.create.categoryId = null;
       if (!this.embedded) {
         this.categoryStore.load(); // Restore categories to last saved
       } else if (!accepted && categoryId !== null) {
-        // Drop only the placeholder rule, keeping the editor's other edits.
+        // Drop only the accepted placeholder, keeping the editor's other edits.
         this.categoryStore.removeClass(categoryId);
         // Ask the store what is still unsaved rather than restoring a flag read
         // before the placeholder: a save finishing while the draft was open
@@ -476,8 +509,12 @@ export default {
       const cat = this.categoryStore.get_category(this.append.category);
       this.categoryStore.appendClassRule(cat.id, this.append.word);
       // Embedded: leave the change unsaved alongside the editor's other edits.
-      if (!this.embedded) await this.categoryStore.save();
-      this.fetchWords();
+      if (!this.embedded) {
+        await this.categoryStore.save();
+        // Embedded mode's rule watcher owns the refresh, so the append does not
+        // race a second, identical query.
+        this.fetchWords();
+      }
     },
     handleOk(bvModalEvent) {
       // Prevent modal from closing (to be closed later in handleSubmit, if validation passes)
