@@ -118,6 +118,8 @@ function syncToPrimarySet(state: State) {
   const primaryId = state.active_set_ids[0];
   const primarySet = state.category_sets.find(s => s.id === primaryId);
   if (!primarySet) return;
+  // Reset all earlier masks, including names from sets that are inactive now.
+  if (restoredBaseline) delete primarySet.tombstones;
   const current = state.classes.map(cleanCategory);
   if (state.active_set_ids.length === 1) {
     primarySet.categories = current;
@@ -349,7 +351,8 @@ export const useCategoryStore = defineStore('categories', {
         // Another queued snapshot may differ even if current data matches this
         // one again. Only the last write can acknowledge the current contents.
         if (pendingSaves.get(this) === write) {
-          this.classes_unsaved_changes = !_.isEqual(snapshot, saveSnapshot(this));
+          this.classes_unsaved_changes =
+            pendingRestoredPrimary.has(this) || !_.isEqual(snapshot, saveSnapshot(this));
         }
       } catch (error) {
         this.classes_unsaved_changes = true;
@@ -382,6 +385,9 @@ export const useCategoryStore = defineStore('categories', {
         console.warn('Cannot delete the last category set');
         return;
       }
+      // Rebuilding the view discards its preview; it must not govern the next
+      // primary set's ownership when the automatic save syncs this new view.
+      pendingRestoredPrimary.delete(this);
       this.category_sets = this.category_sets.filter(s => s.id !== id);
       this.active_set_ids = this.active_set_ids.filter(aid => aid !== id);
       if (this.active_set_ids.length === 0) {
