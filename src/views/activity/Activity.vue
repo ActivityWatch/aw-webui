@@ -1279,47 +1279,48 @@ export default {
     // the lookup may have fallen back to (late) bucket creation dates, or
     // older data may have been imported since. Returns whether the date
     // changed.
-    loadEarliestDate: async function (reload = false, attempt = 0) {
+    loadEarliestDate: async function (reload = false) {
       if (this.periodLength !== 'all' || (this.earliestDate && !reload)) return false;
       const host = this.host;
       const generation = ++this.earliestDateGeneration;
-      const signal = getClient().controller.signal;
-      let result;
-      let canceled = false;
-      try {
-        result = await this.activityStore.get_earliest_date(host, { force: reload });
-      } catch (e) {
-        if (e.message !== 'canceled') throw e;
-        canceled = true;
+      const isCurrent = () =>
+        generation === this.earliestDateGeneration &&
+        host === this.host &&
+        this.periodLength === 'all' &&
+        !this.priorityDisposed;
+      while (isCurrent()) {
+        const signal = getClient().controller.signal;
+        let result;
+        let canceled = false;
+        try {
+          result = await this.activityStore.get_earliest_date(host, { force: reload });
+        } catch (e) {
+          if (e.message !== 'canceled') throw e;
+          canceled = true;
+        }
+        // A canceled store lookup can resolve with a bucket-creation fallback.
+        // Never publish it, or retry work a newer lookup/navigation replaced.
+        if (!isCurrent()) return false;
+        if (signal.aborted || canceled) {
+          // Unrelated activity loads can abort the shared client more than
+          // once. Keep recovering the range while this lookup is current,
+          // yielding between attempts so repeated cancellation cannot spin.
+          // abort() installs a fresh controller for the next request.
+          await new Promise(resolve => setTimeout(resolve, 100));
+          continue;
+        }
+        const { date: found, approximate } = result;
+        // No data at all: fall back to today
+        const date = nextEarliestDate(
+          this.earliestDate,
+          found || get_today_with_offset(this.settingsStore.startOfDay),
+          { approximate }
+        );
+        const changed = date !== this.earliestDate;
+        this.earliestDate = date;
+        return changed;
       }
-      // A canceled store lookup can resolve with a bucket-creation fallback.
-      // Never publish it, and never retry on behalf of a lookup a newer one,
-      // a host switch, or a period change has already replaced.
-      if (
-        generation !== this.earliestDateGeneration ||
-        host !== this.host ||
-        this.periodLength !== 'all' ||
-        this.priorityDisposed
-      )
-        return false;
-      if (signal.aborted || canceled) {
-        // The shared client aborts unrelated work too: a Day load resuming
-        // after a settings reload can cancel this lookup while All time is
-        // still selected. abort() installs a fresh controller, so one retry
-        // recovers the range instead of leaving Day data under All time.
-        // The guard above already proved no newer lookup took over.
-        return attempt < 1 ? this.loadEarliestDate(reload, attempt + 1) : false;
-      }
-      const { date: found, approximate } = result;
-      // No data at all: fall back to today
-      const date = nextEarliestDate(
-        this.earliestDate,
-        found || get_today_with_offset(this.settingsStore.startOfDay),
-        { approximate }
-      );
-      const changed = date !== this.earliestDate;
-      this.earliestDate = date;
-      return changed;
+      return false;
     },
 
     refresh: async function (force) {

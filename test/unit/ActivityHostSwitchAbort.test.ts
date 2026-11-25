@@ -100,17 +100,43 @@ test('an aborted lookup is retried and publishes the fresh date', async () => {
   expect(v.earliestDate).toBe('2020-01-01');
 });
 
-test('a store-canceled lookup is retried once and then gives up', async () => {
+test('repeated cancellations recover the All-time range without a manual refresh', async () => {
   const getDate = jest
     .fn()
     .mockRejectedValueOnce(new Error('canceled'))
-    .mockRejectedValueOnce(new Error('canceled'));
+    .mockRejectedValueOnce(new Error('canceled'))
+    .mockResolvedValueOnce({ date: '2020-01-01', approximate: false });
   const v: any = dateVm(getDate);
   v.loadEarliestDate = Activity.methods.loadEarliestDate.bind(v);
-  await expect(v.loadEarliestDate()).resolves.toBe(false);
-  expect(getDate).toHaveBeenCalledTimes(2);
-  expect(v.earliestDate).toBeNull();
+  await expect(v.loadEarliestDate()).resolves.toBe(true);
+  expect(getDate).toHaveBeenCalledTimes(3);
+  expect(v.earliestDate).toBe('2020-01-01');
 });
+
+test.each(['host', 'period', 'generation', 'disposal'])(
+  'a queued cancellation retry stops after %s changes',
+  async change => {
+    jest.useFakeTimers();
+    try {
+      const getDate = jest.fn().mockRejectedValue(new Error('canceled'));
+      const v: any = dateVm(getDate);
+      v.loadEarliestDate = Activity.methods.loadEarliestDate.bind(v);
+      const lookup = v.loadEarliestDate();
+      await Promise.resolve();
+      expect(getDate).toHaveBeenCalledTimes(1);
+      if (change === 'host') v.host = 'other-host';
+      if (change === 'period') v.periodLength = 'day';
+      if (change === 'generation') v.earliestDateGeneration++;
+      if (change === 'disposal') v.priorityDisposed = true;
+      jest.runOnlyPendingTimers();
+      await expect(lookup).resolves.toBe(false);
+      expect(getDate).toHaveBeenCalledTimes(1);
+      expect(v.earliestDate).toBeNull();
+    } finally {
+      jest.useRealTimers();
+    }
+  }
+);
 
 test('an aborted lookup is not retried once the period changed', async () => {
   let finish;
@@ -127,12 +153,17 @@ test('an aborted lookup is not retried once the period changed', async () => {
 });
 
 test('expected date lookup cancellation is handled, but other failures propagate', async () => {
-  const v: any = dateVm(jest.fn().mockRejectedValue(new Error('canceled')));
+  const v: any = dateVm(
+    jest
+      .fn()
+      .mockRejectedValueOnce(new Error('canceled'))
+      .mockResolvedValueOnce({ date: '2020-01-01', approximate: false })
+  );
   v.loadEarliestDate = Activity.methods.loadEarliestDate.bind(v);
-  await expect(v.loadEarliestDate()).resolves.toBe(false);
-  expect(v.earliestDate).toBeNull();
+  await expect(v.loadEarliestDate()).resolves.toBe(true);
+  expect(v.earliestDate).toBe('2020-01-01');
   v.activityStore.get_earliest_date.mockRejectedValueOnce(new Error('offline'));
-  await expect(v.loadEarliestDate()).rejects.toThrow('offline');
+  await expect(v.loadEarliestDate(true)).rejects.toThrow('offline');
 });
 
 test('a deferred refresh handles expected activity cancellation', async () => {
