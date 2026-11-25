@@ -35,10 +35,13 @@ export function seconds_to_duration(seconds: number) {
 export function friendlydate(timestamp: string | Moment) {
   const now = moment();
   const m = moment.parseZone(timestamp);
-  const sinceNow = moment.duration(m.diff(now));
+  const sinceNow = moment.duration(m.diff(now)).locale(i18n.locale);
   if (-sinceNow.asSeconds() <= 60) {
-    // Count seconds (ss: 0) up to a minute, in the active moment locale (#1324).
-    return sinceNow.humanize(true, { ss: 0, s: 60 });
+    // Count seconds with locale-aware plurals, independent of Moment's global locale (#1324).
+    return new Intl.RelativeTimeFormat(i18n.locale, { numeric: 'always' }).format(
+      Math.round(sinceNow.asSeconds()) || -0,
+      'second'
+    );
   } else if (-sinceNow.asSeconds() <= 60 * 60 * 24) {
     return sinceNow.humanize(true);
   }

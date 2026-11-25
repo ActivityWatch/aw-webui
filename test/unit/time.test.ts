@@ -6,7 +6,7 @@ import {
   seconds_to_duration,
 } from '~/util/time';
 import moment from 'moment';
-import 'moment/locale/de';
+import { i18n } from '~/i18n';
 
 describe('seconds_to_duration', () => {
   test('should format 8145 seconds as "2h 15m 45s"', () => {
@@ -88,17 +88,49 @@ describe('locale-aware time labels', () => {
 });
 
 describe('friendlydate', () => {
+  let previousLocale: string;
+  let previousAppLocale: string;
+
+  beforeEach(() => {
+    previousLocale = moment.locale();
+    previousAppLocale = i18n.locale;
+    jest.useFakeTimers().setSystemTime(new Date('2026-11-24T12:00:00Z'));
+  });
+
   afterEach(() => {
+    moment.locale(previousLocale);
+    i18n.locale = previousAppLocale;
+    jest.useRealTimers();
+  });
+
+  test('uses the app locale even after Timeline changes the Moment locale (#1324)', () => {
+    i18n.locale = 'de';
     moment.locale('en');
+    expect(friendlydate(moment().subtract(30, 'seconds'))).toBe('vor 30 Sekunden');
+    expect(friendlydate(moment().subtract(2, 'minutes'))).toBe('vor 2 Minuten');
+    expect(moment.locale()).toBe('en');
   });
 
-  test('uses the app locale for the last minute (#1324)', () => {
+  test.each([
+    [0, '0 seconds ago'],
+    [1, '1 second ago'],
+    [2, '2 seconds ago'],
+    [30, '30 seconds ago'],
+    [59, '59 seconds ago'],
+    [60, '60 seconds ago'],
+  ])('keeps a seconds count in English at %i seconds', (seconds, expected) => {
+    i18n.locale = 'en';
     moment.locale('de');
-    const label = friendlydate(moment().subtract(30, 'seconds'));
-    expect(label).toBe('vor 30 Sekunden');
+    expect(friendlydate(moment().subtract(seconds, 'seconds'))).toBe(expected);
   });
 
-  test('keeps a seconds count in English', () => {
-    expect(friendlydate(moment().subtract(30, 'seconds'))).toBe('30 seconds ago');
+  test.each([
+    ['de', 'vor 1 Sekunde'],
+    ['pt-BR', 'há 1 segundo'],
+    ['zh-CN', '1秒钟前'],
+  ])('handles one second in %s', (locale, expected) => {
+    i18n.locale = locale;
+    moment.locale('en');
+    expect(friendlydate(moment().subtract(1, 'second'))).toBe(expected);
   });
 });
