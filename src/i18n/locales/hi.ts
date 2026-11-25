@@ -428,7 +428,7 @@ export default {
     rangeStart: 'शुरुआती तारीख',
     rangeEnd: 'अंतिम तारीख',
     invalidRange: 'URL में तारीख की अवधि अमान्य है, इसलिए आज की अवधि दिखाई जा रही है।',
-    invalidUrlPeriod: 'URL में तारीख या अवधि अमान्य है, इसलिए आज की अवधि दिखाई जा रही है।',
+    invalidUrlPeriod: 'URL में तारीख या अवधि अमान्य है, इसलिए निकटतम मान्य तारीख दिखाई जा रही है।',
     periodExactInterval: 'सटीक समय',
     intervalStart: 'प्रारंभ समय',
     intervalEnd: 'समाप्ति समय (शामिल नहीं)',

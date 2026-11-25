@@ -436,7 +436,8 @@ export default {
     rangeStart: 'Data de início',
     rangeEnd: 'Data de término',
     invalidRange: 'Intervalo de datas inválido na URL; exibindo hoje no lugar.',
-    invalidUrlPeriod: 'Data ou período inválido na URL; exibindo hoje no lugar.',
+    invalidUrlPeriod:
+      'Data ou período inválido na URL; exibindo a data válida mais próxima no lugar.',
     periodExactInterval: 'horários exatos',
     intervalStart: 'Horário de início',
     intervalEnd: 'Horário de término (exclusivo)',

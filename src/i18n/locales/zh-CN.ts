@@ -410,7 +410,7 @@ export default {
     rangeStart: '开始日期',
     rangeEnd: '结束日期',
     invalidRange: 'URL 中的日期范围无效，改为显示今天。',
-    invalidUrlPeriod: 'URL 中的日期或时间段无效，改为显示今天。',
+    invalidUrlPeriod: 'URL 中的日期或时间段无效，改为显示最近的有效日期。',
     periodExactInterval: '精确时间',
     intervalStart: '开始时间',
     intervalEnd: '结束时间（不含）',

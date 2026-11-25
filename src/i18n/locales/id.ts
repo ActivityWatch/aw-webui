@@ -431,7 +431,7 @@ export default {
     rangeEnd: 'Tanggal akhir',
     invalidRange: 'Rentang tanggal di URL tidak valid, menampilkan hari ini sebagai gantinya.',
     invalidUrlPeriod:
-      'Tanggal atau periode di URL tidak valid, menampilkan hari ini sebagai gantinya.',
+      'Tanggal atau periode di URL tidak valid, menampilkan tanggal valid terdekat sebagai gantinya.',
     periodExactInterval: 'waktu tepat',
     intervalStart: 'Waktu mulai',
     intervalEnd: 'Waktu akhir (tidak termasuk)',
