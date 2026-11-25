@@ -115,20 +115,9 @@ import {
 const today = moment().startOf('day');
 const tomorrow = moment(today).add(24, 'hours');
 
-// Per settings store: the last saved-query list known to be on the server, and
-// how many writes are in flight. While a write is pending, the store holds an
-// optimistic list that may include another request's unconfirmed changes, so
-// it cannot serve as the offline rollback target.
-const savedQueryBaselines = new WeakMap<
-  object,
-  {
-    confirmed: SavedQuery[];
-    pending: number;
-    issued: number;
-    confirmedRequest: number;
-    version: number;
-  }
->();
+// Shared across remounted explorers: hold the save lock through any recovery
+// read-back. Reject overlap instead of queueing drafts built from optimistic state.
+const pendingSavedQueryStores = new WeakSet<object>();
 
 export default {
   name: 'QueryExplorer',
@@ -189,55 +178,36 @@ RETURN = sort_by_duration(merged_events);
   },
   methods: {
     persistSavedQueries: async function (savedQueries: SavedQuery[]) {
-      // settingsStore.update() applies the new list before the request is made.
-      let baseline = savedQueryBaselines.get(this.settingsStore);
-      if (!baseline) {
-        baseline = { confirmed: [], pending: 0, issued: 0, confirmedRequest: 0, version: 0 };
-        savedQueryBaselines.set(this.settingsStore, baseline);
+      if (pendingSavedQueryStores.has(this.settingsStore)) {
+        this.saved_query_error =
+          'Another query preset save is in progress. Please retry after it finishes.';
+        return false;
       }
-      // With no write in flight the store matches the server.
-      if (baseline.pending === 0) baseline.confirmed = this.settingsStore.saved_queries;
-      baseline.pending += 1;
-      const request = ++baseline.issued;
+      pendingSavedQueryStores.add(this.settingsStore);
+      // No earlier preset write can still own this optimistic settings state.
+      const previous = _.cloneDeep(this.settingsStore.saved_queries || []);
       const attempted = sortSavedQueries(savedQueries);
       try {
         this.saved_query_error = '';
         await this.settingsStore.update({ saved_queries: attempted });
-        // A late response to an older write must not regress a newer confirmation.
-        if (request >= baseline.confirmedRequest) {
-          baseline.confirmed = attempted;
-          baseline.confirmedRequest = request;
-          baseline.version += 1;
-        }
         return true;
       } catch (e) {
         console.error('Failed to save query presets', e);
         // The write may have landed before the follow-up reload failed, so ask
         // the server what it holds; the old list is only the offline fallback.
         let confirmed: SavedQuery[] | undefined;
-        const readVersion = baseline.version;
         try {
           const server = (await getClient().get_settings()) as {
             saved_queries?: SavedQuery[];
           };
-          if (
-            Array.isArray(server?.saved_queries) &&
-            baseline.version === readVersion &&
-            request >= baseline.confirmedRequest
-          ) {
-            // The server may have produced this snapshot before another save
-            // completed. Only accept it if no newer confirmation superseded it.
+          if (Array.isArray(server?.saved_queries)) {
             confirmed = server.saved_queries;
-            baseline.confirmed = confirmed;
-            baseline.confirmedRequest = request;
-            baseline.version += 1;
           }
         } catch (err) {
           console.error('Failed to read back query presets', err);
         }
-        // Another request may have confirmed a save while the read-back waited.
-        confirmed = confirmed ?? baseline.confirmed;
-        // A newer save may have replaced the list meanwhile: leave that alone.
+        confirmed = confirmed ?? previous;
+        // Leave unrelated settings refreshes alone if they replaced the list.
         // Otherwise a failed save leaves a phantom preset (and a retry saves a
         // duplicate), and a failed delete hides a preset that still exists.
         if (_.isEqual(this.settingsStore.saved_queries, attempted)) {
@@ -249,7 +219,7 @@ RETURN = sort_by_duration(merged_events);
         this.saved_query_error = 'Failed to save query presets.';
         return false;
       } finally {
-        baseline.pending -= 1;
+        pendingSavedQueryStores.delete(this.settingsStore);
       }
     },
     loadSelectedQuery: function () {

@@ -263,161 +263,97 @@ describe('QueryExplorer saved-query persistence failure', () => {
     expect(explorer.saved_query_error).toBe('');
   });
 
-  test('an older failed request does not undo a newer successful save', async () => {
-    const explorer = makeExplorer();
-    let failFirst!: (e: Error) => void;
-    save.mockImplementationOnce(
-      () =>
-        new Promise<void>((_resolve, reject) => {
-          failFirst = reject;
-        })
-    );
-    const first = explorer.persistSavedQueries([]); // delete 'existing'
-    await Promise.resolve();
-    await Promise.resolve();
-    save.mockResolvedValueOnce(undefined);
-    const newer = [existing, { ...existing, id: 'bar', name: 'bar' }];
-    expect(await explorer.persistSavedQueries(newer)).toBe(true);
-    failFirst(new Error('offline'));
-    expect(await first).toBe(false);
-    expect(ids()).toEqual(['bar', 'existing']);
-  });
-
-  test('two failed overlapping saves restore the confirmed list, not an unconfirmed one', async () => {
-    const explorer = makeExplorer();
-    const rejects: ((e: Error) => void)[] = [];
-    save.mockImplementation(() => new Promise<void>((_resolve, reject) => rejects.push(reject)));
-    const first = explorer.persistSavedQueries([]); // A: delete 'existing'
-    await Promise.resolve();
-    await Promise.resolve();
-    const foo = { ...existing, id: 'foo', name: 'foo' };
-    const second = explorer.persistSavedQueries([foo]); // B: built from A's optimistic []
-    await Promise.resolve();
-    await Promise.resolve();
-    rejects[0](new Error('offline'));
-    expect(await first).toBe(false);
-    rejects[1](new Error('offline'));
-    expect(await second).toBe(false);
-    // Neither write succeeded and the server could not be read: keep 'existing'.
-    expect(ids()).toEqual(['existing']);
-  });
-
-  test('a failed read-back restores a save confirmed while it was waiting', async () => {
-    const explorer = makeExplorer();
-    const foo = { ...existing, id: 'foo', name: 'foo' };
-    const bar = { ...existing, id: 'bar', name: 'bar' };
-    let confirmFirst!: (settings: object) => void;
-    let failSecond!: (error: Error) => void;
-    let firstReadStarted!: () => void;
-    let secondReadStarted!: () => void;
-    const firstReading = new Promise<void>(resolve => (firstReadStarted = resolve));
-    const secondReading = new Promise<void>(resolve => (secondReadStarted = resolve));
-    save.mockRejectedValue(new Error('reload failed'));
-    getSettings
-      .mockImplementationOnce(() => {
-        firstReadStarted();
-        return new Promise(resolve => (confirmFirst = resolve));
-      })
-      .mockImplementationOnce(() => {
-        secondReadStarted();
-        return new Promise((_resolve, reject) => (failSecond = reject));
-      });
-
-    const first = explorer.persistSavedQueries([existing, foo]);
-    await firstReading;
-    const second = makeExplorer().persistSavedQueries([existing, foo, bar]);
-    await secondReading;
-    confirmFirst({ saved_queries: [existing, foo] });
-    expect(await first).toBe(true);
-    failSecond(new Error('offline'));
-    expect(await second).toBe(false);
-    expect(ids()).toEqual(['existing', 'foo']);
-
-    // A subsequent edit must not send a list that deletes the confirmed preset.
-    save.mockResolvedValueOnce(undefined);
-    expect(await explorer.persistSavedQueries([...settingsStore.saved_queries, bar])).toBe(true);
-    expect(ids()).toEqual(['bar', 'existing', 'foo']);
-  });
-
-  test.each(['read-back', 'write'])(
-    'an older %s confirmation cannot replace a newer saved baseline',
-    async staleSource => {
+  test.each([
+    ['write', true],
+    ['write', false],
+    ['read-back', true],
+    ['read-back', false],
+  ])(
+    'blocks a remounted editor during %s, then retries after success=%s',
+    async (phase, succeeds) => {
       const foo = { ...existing, id: 'foo', name: 'foo' };
-      const bar = { ...existing, id: 'bar', name: 'bar' };
-      let finishOld!: () => void;
-      let failNewest!: (error: Error) => void;
-      let oldStarted!: () => void;
-      let newestStarted!: () => void;
-      const oldPending = new Promise<void>(resolve => (oldStarted = resolve));
-      const newestPending = new Promise<void>(resolve => (newestStarted = resolve));
-      if (staleSource === 'read-back') {
-        save.mockRejectedValueOnce(new Error('reload failed'));
-        getSettings.mockImplementationOnce(() => {
-          oldStarted();
-          return new Promise(resolve => {
-            finishOld = () => resolve({ saved_queries: [existing] });
+      let started!: () => void;
+      const firstPending = new Promise<void>(resolve => (started = resolve));
+      let finish!: () => void;
+      if (phase === 'write') {
+        save.mockImplementationOnce(() => {
+          started();
+          return new Promise<void>((resolve, reject) => {
+            finish = () => (succeeds ? resolve() : reject(new Error('offline')));
           });
         });
       } else {
-        save.mockImplementationOnce(() => {
-          oldStarted();
-          return new Promise<void>(resolve => (finishOld = resolve));
+        save.mockRejectedValueOnce(new Error('reload failed'));
+        getSettings.mockImplementationOnce(() => {
+          started();
+          return new Promise((resolve, reject) => {
+            finish = () =>
+              succeeds ? resolve({ saved_queries: [existing, foo] }) : reject(new Error('offline'));
+          });
         });
       }
-      const old = makeExplorer().persistSavedQueries([existing]);
-      await oldPending;
+      const first = makeExplorer().persistSavedQueries([existing, foo]);
+      await firstPending;
 
-      save.mockResolvedValueOnce(undefined);
-      expect(await makeExplorer().persistSavedQueries([existing, foo])).toBe(true);
-      save.mockImplementationOnce(() => {
-        newestStarted();
-        return new Promise<void>((_resolve, reject) => (failNewest = reject));
-      });
-      const newest = makeExplorer().persistSavedQueries([existing, foo, bar]);
-      await newestPending;
-
-      finishOld();
-      await old;
-      failNewest(new Error('offline'));
-      expect(await newest).toBe(false);
+      // Navigation destroys the first component's busy flag, not the shared store.
+      const remounted = makeExplorer();
+      remounted.saveQueryName = 'bar';
+      const draft = remounted.saveQueryDraft;
+      const confirmDraft = () =>
+        QueryExplorer.methods.onSaveQueryConfirm.call(remounted, {
+          preventDefault: jest.fn(),
+        });
+      await confirmDraft();
+      expect(save).toHaveBeenCalledTimes(1);
       expect(ids()).toEqual(['existing', 'foo']);
+      expect(remounted.saved_query_error).toMatch(/in progress.*retry/i);
+      expect(remounted.showSaveQueryModal).toBe(true);
+      expect(remounted.saveQueryDraft).toBe(draft);
+      expect(remounted.saveQueryName).toBe('bar');
+      expect(remounted.saved_query_pending).toBe(false);
 
-      // A later edit must not persist the old response's loss of foo.
-      save.mockResolvedValueOnce(undefined);
-      await makeExplorer().persistSavedQueries([...settingsStore.saved_queries, bar]);
-      expect(ids()).toEqual(['bar', 'existing', 'foo']);
+      finish();
+      expect(await first).toBe(succeeds);
+      expect(ids()).toEqual(succeeds ? ['existing', 'foo'] : ['existing']);
+      if (phase === 'read-back' && succeeds) {
+        // Both writes can land but require recovery after their reload fails.
+        // The second read-back starts only once the first is authoritative.
+        save.mockRejectedValueOnce(new Error('reload failed'));
+        getSettings.mockImplementationOnce(async () => ({
+          saved_queries: JSON.parse(JSON.stringify(settingsStore.saved_queries)),
+        }));
+      } else {
+        save.mockResolvedValueOnce(undefined);
+      }
+      await confirmDraft();
+      expect(ids()).toEqual(succeeds ? ['bar', 'existing', 'foo'] : ['bar', 'existing']);
+      expect(remounted.saved_query_error).toBe('');
+      expect(remounted.showSaveQueryModal).toBe(false);
+      expect(save).toHaveBeenCalledTimes(2);
     }
   );
 
-  test('a read-back keeps a confirmation that arrived after its snapshot was requested', async () => {
-    const foo = { ...existing, id: 'foo', name: 'foo' };
-    const bar = { ...existing, id: 'bar', name: 'bar' };
-    let confirmWrite!: () => void;
-    let returnSnapshot!: (settings: object) => void;
-    let writeStarted!: () => void;
-    let readStarted!: () => void;
-    const writing = new Promise<void>(resolve => (writeStarted = resolve));
-    const reading = new Promise<void>(resolve => (readStarted = resolve));
-    save.mockImplementationOnce(() => {
-      writeStarted();
-      return new Promise<void>(resolve => (confirmWrite = resolve));
-    });
-    const first = makeExplorer().persistSavedQueries([existing, foo]);
-    await writing;
-
-    save.mockRejectedValueOnce(new Error('offline'));
-    getSettings.mockImplementationOnce(() => {
-      readStarted();
-      return new Promise(resolve => (returnSnapshot = resolve));
-    });
-    const second = makeExplorer().persistSavedQueries([existing, foo, bar]);
-    await reading;
-    confirmWrite();
-    expect(await first).toBe(true);
-    // The second request's read was produced before the first write landed.
-    returnSnapshot({ saved_queries: [existing] });
-    expect(await second).toBe(false);
+  test('a retry after an optimistic delete fails preserves the restored preset', async () => {
+    let failDelete!: (error: Error) => void;
+    save.mockImplementationOnce(
+      () => new Promise<void>((_resolve, reject) => (failDelete = reject))
+    );
+    const deletion = makeExplorer().persistSavedQueries([]);
+    const remounted = makeExplorer();
+    const confirmDraft = () =>
+      QueryExplorer.methods.onSaveQueryConfirm.call(remounted, {
+        preventDefault: jest.fn(),
+      });
+    await confirmDraft();
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(remounted.showSaveQueryModal).toBe(true);
+    failDelete(new Error('offline'));
+    expect(await deletion).toBe(false);
+    expect(ids()).toEqual(['existing']);
+    save.mockResolvedValueOnce(undefined);
+    await confirmDraft();
     expect(ids()).toEqual(['existing', 'foo']);
+    expect(remounted.saved_query_error).toBe('');
   });
 
   test('a stored preset with a cleared date is recognised as saved after a reload failure', async () => {
