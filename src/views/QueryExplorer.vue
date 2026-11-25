@@ -119,7 +119,16 @@ const tomorrow = moment(today).add(24, 'hours');
 // how many writes are in flight. While a write is pending, the store holds an
 // optimistic list that may include another request's unconfirmed changes, so
 // it cannot serve as the offline rollback target.
-const savedQueryBaselines = new WeakMap<object, { confirmed: SavedQuery[]; pending: number }>();
+const savedQueryBaselines = new WeakMap<
+  object,
+  {
+    confirmed: SavedQuery[];
+    pending: number;
+    issued: number;
+    confirmedRequest: number;
+    version: number;
+  }
+>();
 
 export default {
   name: 'QueryExplorer',
@@ -183,30 +192,45 @@ RETURN = sort_by_duration(merged_events);
       // settingsStore.update() applies the new list before the request is made.
       let baseline = savedQueryBaselines.get(this.settingsStore);
       if (!baseline) {
-        baseline = { confirmed: [], pending: 0 };
+        baseline = { confirmed: [], pending: 0, issued: 0, confirmedRequest: 0, version: 0 };
         savedQueryBaselines.set(this.settingsStore, baseline);
       }
       // With no write in flight the store matches the server.
       if (baseline.pending === 0) baseline.confirmed = this.settingsStore.saved_queries;
       baseline.pending += 1;
+      const request = ++baseline.issued;
       const attempted = sortSavedQueries(savedQueries);
       try {
         this.saved_query_error = '';
         await this.settingsStore.update({ saved_queries: attempted });
-        baseline.confirmed = attempted;
+        // A late response to an older write must not regress a newer confirmation.
+        if (request >= baseline.confirmedRequest) {
+          baseline.confirmed = attempted;
+          baseline.confirmedRequest = request;
+          baseline.version += 1;
+        }
         return true;
       } catch (e) {
         console.error('Failed to save query presets', e);
         // The write may have landed before the follow-up reload failed, so ask
         // the server what it holds; the old list is only the offline fallback.
         let confirmed: SavedQuery[] | undefined;
+        const readVersion = baseline.version;
         try {
           const server = (await getClient().get_settings()) as {
             saved_queries?: SavedQuery[];
           };
-          if (Array.isArray(server?.saved_queries)) {
+          if (
+            Array.isArray(server?.saved_queries) &&
+            baseline.version === readVersion &&
+            request >= baseline.confirmedRequest
+          ) {
+            // The server may have produced this snapshot before another save
+            // completed. Only accept it if no newer confirmation superseded it.
             confirmed = server.saved_queries;
             baseline.confirmed = confirmed;
+            baseline.confirmedRequest = request;
+            baseline.version += 1;
           }
         } catch (err) {
           console.error('Failed to read back query presets', err);
