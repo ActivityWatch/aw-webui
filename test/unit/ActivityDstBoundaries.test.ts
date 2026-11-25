@@ -10,7 +10,7 @@ jest.mock('vue-chartjs/legacy', () => ({ Bar: { render: h => h('div') } }));
 jest.mock('chart.js/auto', () => ({}));
 
 if (!process.env.AW_UI_DST_ZONE) {
-  test.each(['Europe/Stockholm', 'Australia/Lord_Howe'])(
+  test.each(['Europe/Stockholm', 'Australia/Lord_Howe', 'America/Nuuk'])(
     'Activity boundaries replay under TZ=%s',
     zone => {
       execFileSync(
@@ -36,10 +36,33 @@ if (!process.env.AW_UI_DST_ZONE) {
   );
 }
 
-const describeZone = process.env.AW_UI_DST_ZONE ? describe : describe.skip;
+const describeZone =
+  process.env.AW_UI_DST_ZONE && process.env.AW_UI_DST_ZONE !== 'America/Nuuk'
+    ? describe
+    : describe.skip;
 const Activity: any = ActivityComponent;
 const Visualization: any = SelectableVisualization;
 const Chart: any = TimelineBarChart;
+
+const describeNuuk = process.env.AW_UI_DST_ZONE === 'America/Nuuk' ? describe : describe.skip;
+describeNuuk('chart dates when the day-start gap crosses midnight', () => {
+  test.each(['23:00', '23:30'])('keeps the requested dates with offset %s', offset => {
+    const start = dateToTimeperiod('2026-03-28', offset).start;
+    expect(moment(start).format('YYYY-MM-DD')).toBe('2026-03-29');
+    const labels = (periodLength: [number, string], withOffset = true) =>
+      Chart.computed.labels.call({
+        timeperiod_start: start,
+        timeperiod_length: periodLength,
+        timeperiod_offset: withOffset ? offset : undefined,
+      });
+    expect(labels([1, 'week'])).toEqual(['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri']);
+    expect(labels([3, 'days'])).toEqual(['Mar 28', 'Mar 29', 'Mar 30']);
+    // Trends' plural weeks use one bar per week rather than one per day.
+    expect(labels([2, 'weeks'])).toEqual(['Mar 28', 'Apr 4']);
+    // Callers without an offset still label the actual start date.
+    expect(labels([3, 'days'], false)).toEqual(['Mar 29', 'Mar 30', 'Mar 31']);
+  });
+});
 
 describeZone('DST-gap Activity consumers', () => {
   const stockholm = process.env.AW_UI_DST_ZONE === 'Europe/Stockholm';

@@ -15,6 +15,14 @@ export interface TimePeriod {
 
 const CALENDAR_UNIT_RE = /^(day|week|month|year)/;
 
+/** Nominal civil date, even when a late day start resolves past midnight. */
+export function timeperiodStartDate(start: string, offset?: string): string {
+  const local = moment(start);
+  const date = moment.utc(local.format('YYYY-MM-DD'));
+  if (offset && local.format('HH:mm') < offset) date.subtract(1, 'day');
+  return date.format('YYYY-MM-DD');
+}
+
 /**
  * `start` advanced by `count` of `unit`. For calendar units the requested
  * start-of-day is re-applied on the target date: `moment.add` keeps the wall
@@ -34,8 +42,7 @@ export function advanceTimeperiodStart(
   if (count === 0) return local;
   // Advance a civil date, not the resolved wall time. A gap at 23:00 can
   // resolve on the following date (Nuuk), so recover its nominal date first.
-  const date = moment.utc(local.format('YYYY-MM-DD'));
-  if (local.format('HH:mm') < offset) date.subtract(1, 'day');
+  const date = moment.utc(timeperiodStartDate(start, offset));
   date.add(count, unit as moment.unitOfTime.DurationConstructor);
   return moment(get_day_start_with_offset(date.format('YYYY-MM-DD'), offset));
 }
