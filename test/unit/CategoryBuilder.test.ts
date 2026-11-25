@@ -590,7 +590,7 @@ describe('CategoryBuilder embedded in the category editor', () => {
   test.each([
     [true, 'with'],
     [false, 'without'],
-  ])('New rule → Cancel leaves the list and query untouched (%s, %s other edits)', async dirty => {
+  ])('New rule → Cancel keeps the list and its page (%s, %s other edits)', async dirty => {
     if (dirty) edit();
     wrapper.vm.queryOptions = { ...wrapper.vm.queryOptions, hostname: 'unknown' };
     await flush();
@@ -598,17 +598,28 @@ describe('CategoryBuilder embedded in the category editor', () => {
     query.mockClear();
     const before = names();
     wrapper.vm.createRule('Firefox');
-    // The placeholder is a draft until OK: it must not change the rules, or
-    // opening and cancelling the modal throws away the "Show more" page.
-    expect(names()).toEqual(before);
-    expect(wrapper.vm.create.draft).not.toBeNull();
+    // The modal edits the rule by id, so the placeholder must exist.
+    expect(wrapper.vm.create.categoryId).not.toBeNull();
+    expect(names()).toContain('Firefox');
+    // …but the suggestions must not follow it while the user is deciding.
     await flush();
     expect(query).not.toHaveBeenCalled();
     await wrapper.vm.createRuleCancel();
-    expect(wrapper.vm.create.draft).toBeNull();
+    expect(wrapper.vm.create.categoryId).toBeNull();
     expect(names()).toEqual(before);
+    await flush();
     expect(query).not.toHaveBeenCalled();
     expect(categories.classes_unsaved_changes).toBe(dirty);
+  });
+
+  test('New rule opens the modal by putting the placeholder in the store', async () => {
+    // CategoryEditModal renders only for a non-null id, so holding the draft
+    // out of the store made New rule do nothing at all.
+    wrapper.vm.createRule('Firefox');
+    expect(wrapper.vm.create.categoryId).not.toBeNull();
+    expect(names()).toContain('Firefox');
+    await wrapper.vm.createRuleCancel();
+    expect(wrapper.vm.create.categoryId).toBeNull();
   });
 
   test('Cancel after a real save landed mid-draft leaves no false unsaved warning', async () => {
@@ -628,9 +639,8 @@ describe('CategoryBuilder embedded in the category editor', () => {
     wrapper.vm.createRule('Firefox');
     response.resolve();
     await saving;
-    // The draft is not part of the saved rules; only OK puts it in the store.
-    expect(names()).not.toContain('Firefox');
-    expect(categories.classes_unsaved_changes).toBe(false);
+    expect(names()).toContain('Firefox');
+    expect(categories.classes_unsaved_changes).toBe(true);
     await wrapper.vm.createRuleCancel();
     expect(names()).toEqual(['Work', 'Unsaved']);
     expect(categories.classes_unsaved_changes).toBe(false);
