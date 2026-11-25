@@ -1,7 +1,7 @@
 import { setActivePinia, createPinia } from 'pinia';
 
 import { useCategoryStore } from '~/stores/categories';
-import { defaultCategories } from '~/util/classes';
+import { Category, defaultCategories } from '~/util/classes';
 
 // ActivityWatch/aw-webui#1317 item 1: "Restore defaults" resets the primary set
 // only. Categories from the other active sets must stay visible, including
@@ -34,7 +34,28 @@ describe('restoreDefaultClasses with several active sets', () => {
     store.setActiveSets(['mine', 'shared']);
   }
 
+  function setupRaw(
+    primaryCategories: Category[],
+    secondaryCategories: Category[],
+    tombstones?: string[]
+  ) {
+    setActivePinia(createPinia());
+    store = useCategoryStore();
+    store.$patch({
+      category_sets: [
+        { id: 'mine', categories: primaryCategories, ...(tombstones ? { tombstones } : {}) },
+        { id: 'shared', categories: secondaryCategories },
+      ],
+      active_set_ids: ['mine'],
+      classes: [],
+    });
+    store.discardChanges();
+    store.setActiveSets(['mine', 'shared']);
+  }
+
   const names = () => store.classes.map(c => c.name);
+  const primaryNames = () =>
+    (store.category_sets.find(s => s.id === 'mine')?.categories ?? []).map(c => c.name);
 
   test('keeps the secondary set categories and replaces the primary set with defaults', () => {
     setup();
@@ -68,5 +89,66 @@ describe('restoreDefaultClasses with several active sets', () => {
 
     expect(store.category_sets.find(s => s.id === 'mine').tombstones).toBeUndefined();
     expect(names()).toContainEqual(['Hobby']);
+  });
+
+  test('a secondary rule with the same name as an old primary rule is not copied into the primary set', () => {
+    setupRaw(
+      [
+        { name: ['Custom'], rule: { type: 'regex', regex: 'custom' } },
+        { name: ['Hobby'], rule: { type: 'regex', regex: 'old' } },
+      ],
+      [{ name: ['Hobby'], rule: { type: 'regex', regex: 'guitar' } }]
+    );
+
+    store.restoreDefaultClasses();
+    store.setActiveSets(['mine', 'shared']);
+
+    // The reset removed Hobby from the primary set, so the secondary rule must
+    // not be written back into it.
+    expect(primaryNames()).not.toContainEqual(['Hobby']);
+    expect(names()).toContainEqual(['Hobby']);
+  });
+
+  test('a restored default survives unchecking a secondary set with an identical rule', () => {
+    // Same name, rule and data as the built-in default, so provenance comparison
+    // alone would treat the restored default as the secondary set's category.
+    const work: Category = {
+      name: ['Work'],
+      rule: {
+        type: 'regex',
+        regex: 'Google Docs|Google Sheets|libreoffice|ReText|TextEdit|^Pages$|Obsidian',
+      },
+      data: { color: '#4ADE80', score: 10 },
+    };
+    setupRaw([{ name: ['Custom'], rule: { type: 'regex', regex: 'custom' } }], [work]);
+
+    store.restoreDefaultClasses();
+    store.setActiveSets(['mine', 'shared']);
+    expect(names()).toContainEqual(['Work']);
+
+    store.setActiveSets(['mine']);
+
+    // Work is one of the primary set's own defaults after the reset, so it must
+    // stay even though the secondary set supplied an identical copy.
+    expect(primaryNames()).toContainEqual(['Work']);
+    expect(names()).toContainEqual(['Work']);
+  });
+
+  test('a generated parent of a secondary category is not saved as a primary category', () => {
+    setupRaw(
+      [{ name: ['Custom'], rule: { type: 'regex', regex: 'custom' } }],
+      [{ name: ['Hobby', 'Guitar'], rule: { type: 'regex', regex: 'guitar' } }],
+      [JSON.stringify(['Hobby', 'Guitar'])]
+    );
+
+    store.restoreDefaultClasses();
+    store.setActiveSets(['mine', 'shared']);
+
+    expect(primaryNames()).not.toContainEqual(['Hobby']);
+
+    store.setActiveSets(['mine']);
+
+    // Hobby existed only as a generated parent of the secondary set's Guitar.
+    expect(names()).not.toContainEqual(['Hobby']);
   });
 });

@@ -91,6 +91,11 @@ function comparableCategory(c: Category): Category {
   return clean;
 }
 
+// A "Restore defaults" preview only touches `classes`, so the next sync would
+// otherwise compare against the pre-reset primary set. Remember the restored
+// defaults until that sync (or a discard) consumes them.
+const pendingRestoredPrimary = new WeakMap<State, Category[]>();
+
 /**
  * Copy current effective classes back into the primary active set.
  *
@@ -106,6 +111,9 @@ function comparableCategory(c: Category): Category {
  * renames/deletions survive reload without modifying the source set.
  */
 function syncToPrimarySet(state: State) {
+  // A pending restore is committed by the next sync, so consume it here.
+  const restoredBaseline = pendingRestoredPrimary.get(state);
+  pendingRestoredPrimary.delete(state);
   if (state.active_set_ids.length === 0 || state.category_sets.length === 0) return;
   const primaryId = state.active_set_ids[0];
   const primarySet = state.category_sets.find(s => s.id === primaryId);
@@ -117,7 +125,11 @@ function syncToPrimarySet(state: State) {
   }
 
   const key = (c: Category) => JSON.stringify(c.name);
-  const primaryNames = new Set(primarySet.categories.map(key));
+  // What the primary set owns before the current edits. A "Restore defaults"
+  // preview replaces that baseline with the restored defaults, so provenance is
+  // decided against what the reset keeps instead of the stale set contents.
+  const primaryBaseline = restoredBaseline ?? primarySet.categories;
+  const primaryNames = new Set(primaryBaseline.map(key));
   const secondary = new Map<string, Category>();
   for (const id of state.active_set_ids.slice(1)) {
     const set = state.category_sets.find(s => s.id === id);
@@ -127,8 +139,16 @@ function syncToPrimarySet(state: State) {
   }
   // Parents createMissingParents adds for the merged sets, as they look untouched.
   // Merge in active_set_ids priority order so the "inherited" view matches
-  // state.classes (computeEffectiveClasses) exactly.
-  const merged = mergeCategorySets(orderedActiveSets(state.category_sets, state.active_set_ids));
+  // state.classes (computeEffectiveClasses) exactly. A restore also lifts the
+  // primary set's masks, so its stale tombstones must not hide secondary
+  // categories when checking which parents the restored view generates.
+  const primaryBaselineSet: CategorySet = restoredBaseline
+    ? { id: primaryId, categories: restoredBaseline }
+    : primarySet;
+  const merged = mergeCategorySets([
+    primaryBaselineSet,
+    ...orderedActiveSets(state.category_sets, state.active_set_ids.slice(1)),
+  ]);
   const mergedNames = new Set(merged.map(key));
   const currentNames = new Set(current.map(key));
   const tombstones = new Set(primarySet.tombstones ?? []);
@@ -291,6 +311,8 @@ export const useCategoryStore = defineStore('categories', {
      * Falls back to the legacy flat `classes` setting if no sets are defined yet.
      */
     load(this: State, classes?: Category[]) {
+      // A reload replaces the sets, so a previewed restore must not leak into it.
+      pendingRestoredPrimary.delete(this);
       if (classes !== undefined) {
         // Explicit categories provided (test / programmatic path)
         classes = createMissingParents(classes);
@@ -398,6 +420,7 @@ export const useCategoryStore = defineStore('categories', {
      * writing the discarded edits back into the set's in-memory state.
      */
     discardChanges(this: State) {
+      pendingRestoredPrimary.delete(this);
       this.classes = computeEffectiveClasses(this.category_sets, this.active_set_ids);
       this.classes_unsaved_changes = false;
     },
@@ -529,9 +552,13 @@ export const useCategoryStore = defineStore('categories', {
      */
     restoreDefaultClasses(this: State) {
       const activeId = this.active_set_ids.length > 0 ? this.active_set_ids[0] : undefined;
-      const primary: CategorySet = { id: activeId ?? '', categories: getDefaultClasses(activeId) };
+      const defaults = getDefaultClasses(activeId);
+      const primary: CategorySet = { id: activeId ?? '', categories: defaults };
       const secondary = orderedActiveSets(this.category_sets, this.active_set_ids.slice(1));
       this.classes = assignIds(createMissingParents(mergeCategorySets([primary, ...secondary])));
+      // Preview only: the primary set is rewritten on the next sync, and a
+      // discard must still drop the reset.
+      pendingRestoredPrimary.set(this, defaults);
       this.classes_unsaved_changes = true;
     },
     clearAll(this: State) {
