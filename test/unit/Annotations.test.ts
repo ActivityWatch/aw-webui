@@ -186,6 +186,24 @@ describe('Annotations view', () => {
     expect(aw.insertEvent.mock.calls[0][1].data).toEqual({ tags: ['fresh'] });
   });
 
+  test('range-only edits save when the stored tags are not form-representable', async () => {
+    // formatTags() cannot represent [7] (non-string) or a bare string, so the
+    // form shows no tags and no note. A time-only edit must still be allowed:
+    // the merge below keeps the original tags untouched.
+    const original = { ...stored(1, ['a']), data: { tags: [7] } };
+    const { wrapper, aw } = mountView([original]);
+    await flush();
+    wrapper.vm.edit(wrapper.vm.events[0]);
+    expect(wrapper.vm.tagsInput).toBe('');
+    expect(wrapper.vm.noteInput).toBe('');
+    wrapper.vm.endInput = moment(original.timestamp).add(1, 'hour').format('YYYY-MM-DDTHH:mm:ss');
+    await wrapper.vm.save();
+    expect(wrapper.vm.formError).toBeNull();
+    expect(aw.replaceEvent).toHaveBeenCalledTimes(1);
+    expect(aw.replaceEvent.mock.calls[0][1].data).toEqual({ tags: [7] });
+    expect(aw.replaceEvent.mock.calls[0][1].duration).toBe(3600);
+  });
+
   test('deletes by id and reloads', async () => {
     const { wrapper, aw } = mountView();
     await flush();

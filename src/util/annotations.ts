@@ -31,12 +31,26 @@ export function formatTags(tags: unknown): string {
 export type AnnotationDraft = { start: Date; end: Date; tags: string; note: string };
 export type AnnotationError = 'invalidRange' | 'empty';
 
-/** Returns an error key for an unusable draft, or null if it can be saved. */
-export function validateDraft(draft: AnnotationDraft): AnnotationError | null {
+/**
+ * Returns an error key for an unusable draft, or null if it can be saved.
+ *
+ * `data` is what will actually be written. Pass it when editing: the form
+ * cannot represent every stored tag value, so an untouched field must count
+ * even though the inputs it renders are blank.
+ */
+export function validateDraft(
+  draft: AnnotationDraft,
+  data: { tags?: unknown; note?: unknown } = {
+    tags: parseTags(draft.tags),
+    note: draft.note.trim(),
+  }
+): AnnotationError | null {
   const { start, end } = draft;
   if (!(start instanceof Date) || !(end instanceof Date)) return 'invalidRange';
   if (isNaN(start.getTime()) || isNaN(end.getTime()) || end <= start) return 'invalidRange';
-  if (parseTags(draft.tags).length === 0 && !draft.note.trim()) return 'empty';
+  const tags = Array.isArray(data.tags) ? data.tags : [];
+  const note = typeof data.note === 'string' ? data.note : '';
+  if (tags.length === 0 && !note.trim()) return 'empty';
   return null;
 }
 

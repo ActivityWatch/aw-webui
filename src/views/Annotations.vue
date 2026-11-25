@@ -240,8 +240,6 @@ export default {
         tags: this.tagsInput,
         note: this.noteInput,
       };
-      this.formError = validateDraft(draft);
-      if (this.formError) return;
       const event = draftToEvent(draft);
       if (this.originalData) {
         // Only replace fields the user edited: the form cannot losslessly
@@ -254,6 +252,10 @@ export default {
         }
         event.data = data;
       }
+      // Validate what will be written, not the form strings: an untouched
+      // field the form cannot represent still counts as annotation content.
+      this.formError = validateDraft(draft, event.data);
+      if (this.formError) return;
       this.saving = true;
       try {
         if (this.editingId === null) {
