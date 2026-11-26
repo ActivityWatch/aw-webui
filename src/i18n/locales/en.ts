@@ -314,7 +314,7 @@ export default {
       'ActivityWatch on Android is in a very early stage of development. There will be bugs, but we hope you bear with us as we refine things and get it on par with the desktop version of ActivityWatch (which you should try!).',
     greeting: 'Welcome to ActivityWatch',
     trackingIntro:
-      'Watchers record activity such as windows and browser tabs. Idle detection marks time without input as inactive; reports may also count configured apps or audible tabs as active. Inspect recordings in Data.',
+      'Watchers record activity such as windows and browser tabs. Idle detection marks time without input as inactive; reports may also count configured apps or audible tabs as active.',
     intro1:
       "We've come a long way{android} but we still need users (like you!) to provide feedback and help us turn ActivityWatch into a successful project. We'd love to hear any ideas you have for improvements.",
     introAndroid: ' (especially on Android!)',
@@ -556,7 +556,7 @@ export default {
       'Explore recorded events from each tracking component (watcher). Active and Inactive describe detected input, not productivity. Missing idle-detection data is not evidence of inactivity.',
     eventsShown: 'Events shown:',
     swimlanes: 'Swimlanes:',
-    filterAfk: 'Exclude inactive time',
+    filterAfk: 'Filter window events',
     mergeByApp: 'Merge by app',
     noEvents: 'No events match selected criteria. Timeline is not updated.',
     scrollHint: 'Scroll to zoom, swipe/horizontal-scroll to pan, arrow keys to navigate',

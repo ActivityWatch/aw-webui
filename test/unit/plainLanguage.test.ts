@@ -95,7 +95,8 @@ test('Data has a short title and keeps bucket terminology in contextual help', (
 
 test('English controls explain inactivity and missing data without asserting the user is inactive', () => {
   expect(en.activity.excludeAfk).toBe('Exclude inactive time');
-  expect(en.timeline.filterAfk).toBe('Exclude inactive time');
+  // The Timeline filter row renders both side by side, so they must not repeat each other.
+  expect(en.timeline.filterAfk).toBe('Filter window events');
   expect(en.activity.filterAfkTooltip).toContain('keyboard or mouse');
   expect(en.common.requiresAfk).toContain('idle-detection data');
   expect(en.visualizations.missingWatcher).toContain('missing data');
