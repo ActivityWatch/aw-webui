@@ -219,7 +219,12 @@ export default {
         const joined = joinRegexPipe(storedPatterns);
         // An incomplete row can escape the separator or swallow it into a group
         // or class. Reject that edit, but keep the untouched-original path above.
-        return samePatterns(splitRegexPipe(joined), storedPatterns) ? joined : '';
+        // A row may itself contain pasted top-level alternatives. Expand those
+        // for comparison; only separators inserted *between* rows must survive.
+        const alternatives = storedPatterns.flatMap(pattern =>
+          pattern === '' ? [''] : splitRegexPipe(pattern)
+        );
+        return samePatterns(splitRegexPipe(joined), alternatives) ? joined : '';
       }
       return this.editing.rule.regex || '';
     },

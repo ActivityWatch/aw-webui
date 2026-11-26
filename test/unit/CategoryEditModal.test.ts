@@ -644,6 +644,17 @@ describe('CategoryEditModal mounted regex rows', () => {
     }
   });
 
+  test('allows pasting top-level alternatives into a row', async () => {
+    const { wrapper, rows, save } = await openModal('Chrome');
+    try {
+      await rows().at(0).setValue('Chrome|Firefox');
+      expect((wrapper.vm as any).canSubmit).toBe(true);
+      expect(await save()).toBe('Chrome|Firefox');
+    } finally {
+      wrapper.destroy();
+    }
+  });
+
   test.each([42, true, {}, ['Chrome'], null, undefined])(
     'opens a non-string saved regex %j as an invalid blank row that can be repaired',
     async regex => {
