@@ -408,6 +408,8 @@ export default {
     exportBucketTitle: '{bucket} exportieren',
     exportAllTitle: 'Alle Buckets exportieren',
     exportFormat: 'Dateiformat',
+    exportRangeHelp:
+      'Die Zeiten verwenden Ihre lokale Zeitzone. Lassen Sie ein Feld für keine Begrenzung leer; lassen Sie beide leer, um alles zu exportieren.',
     tools: 'Werkzeuge',
     deleteFailed: 'Löschen fehlgeschlagen. Möglicherweise wurden einige Buckets nicht gelöscht.',
     exportFailed: 'Export fehlgeschlagen: {error}',

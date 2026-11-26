@@ -42,7 +42,7 @@ const stubs = Object.fromEntries(
   ].map(name => [name, true])
 );
 const BUCKET = 'aw-watcher-window_host';
-const range = exportRangeQuery('2026-10-26', '2026-10-30');
+const range = exportRangeQuery({ from: '2026-10-26', to: '2026-10-30' });
 const suffix = '_2026-10-26_2026-10-30';
 const chosen = { from: '2026-10-26', to: '2026-10-30' };
 
@@ -143,5 +143,22 @@ describe('Raw Data exports, through one dialog', () => {
     await wrapper.vm.$nextTick();
     expect(dialog().props('initialFrom')).toBe(chosen.from);
     expect(dialog().props('initialTo')).toBe(chosen.to);
+  });
+
+  test('a CSV with times: the exact range, in the URL and the file name', async () => {
+    const timed = { from: '2026-10-26', to: '2026-10-26', fromTime: '09:00', toTime: '17:30' };
+    wrapper.vm.open_export(BUCKET);
+    await wrapper.vm.run_export({ format: 'csv', ...timed });
+    expect(clicked).toEqual([
+      {
+        href: `http://127.0.0.1:5600/api/0/buckets/${BUCKET}/export/csv${exportRangeQuery(timed)}`,
+        download: `aw-events-export-${BUCKET}_2026-10-26T0900_2026-10-26T1730.csv`,
+      },
+    ]);
+    expect(exportRangeQuery(timed)).toContain('start=');
+    wrapper.vm.open_export(BUCKET);
+    await wrapper.vm.$nextTick();
+    expect(dialog().props('initialFromTime')).toBe('09:00');
+    expect(dialog().props('initialToTime')).toBe('17:30');
   });
 });

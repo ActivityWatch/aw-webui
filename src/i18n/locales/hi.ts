@@ -386,6 +386,8 @@ export default {
     exportBucketTitle: '{bucket} एक्सपोर्ट करें',
     exportAllTitle: 'सभी bucket एक्सपोर्ट करें',
     exportFormat: 'फ़ॉर्मेट',
+    exportRangeHelp:
+      'समय आपके स्थानीय समय क्षेत्र में हैं। संबंधित सीमा न रखने के लिए कोई भी फ़ील्ड खाली छोड़ें; सब कुछ एक्सपोर्ट करने के लिए दोनों खाली छोड़ें।',
     tools: 'टूल',
     deleteFailed: 'हटाना विफल रहा। हो सकता है कुछ bucket न हटे हों।',
     exportFailed: 'एक्सपोर्ट विफल रहा: {error}',

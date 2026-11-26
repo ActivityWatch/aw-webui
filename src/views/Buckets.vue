@@ -153,7 +153,8 @@ div
         | {{ export_error }}
 
   aw-export-dialog(:visible="export_dialog_open", :bucket-id="export_bucket",
-                   :initial-from="export_from", :initial-to="export_to",
+                   :initial-from="export_range.from", :initial-to="export_range.to",
+                   :initial-from-time="export_range.fromTime", :initial-to-time="export_range.toTime",
                    @export="run_export", @close="export_dialog_open = false")
 
   hr
@@ -275,6 +276,7 @@ import { getStoredApiToken } from '~/util/awclient';
 import {
   androidExportFromUrl,
   downloadBlob,
+  ExportRange,
   exportRangeQuery,
   exportRangeSuffix,
 } from '~/util/export';
@@ -336,23 +338,22 @@ export default {
       export_inflight: 0,
       export_error: null as string | null,
       // The export dialog: which bucket (null: all buckets), and the last range
-      // used, offered again while the page stays open (YYYY-MM-DD, local days).
+      // used, offered again while the page stays open (local dates, and times for CSV).
       export_dialog_open: false,
       export_bucket: null as string | null,
-      export_from: '',
-      export_to: '',
+      export_range: { from: '', to: '', fromTime: '', toTime: '' } as ExportRange,
     };
   },
   computed: {
     exporting() {
       return this.export_inflight > 0;
     },
-    // Every export of the page, JSON and CSV, takes the chosen days.
+    // Every export of the page, JSON and CSV, takes the chosen range.
     export_query(): string {
-      return exportRangeQuery(this.export_from, this.export_to);
+      return exportRangeQuery(this.export_range);
     },
     export_suffix(): string {
-      return exportRangeSuffix(this.export_from, this.export_to);
+      return exportRangeSuffix(this.export_range);
     },
     deleteHostModalTitle() {
       if (this.delete_host_selected) {
@@ -548,9 +549,8 @@ export default {
       this.export_dialog_open = true;
     },
 
-    async run_export({ format, from, to }: { format: string; from: string; to: string }) {
-      this.export_from = from;
-      this.export_to = to;
+    async run_export({ format, ...range }: { format: string } & ExportRange) {
+      this.export_range = range;
       this.export_dialog_open = false;
       if (this.export_bucket === null) await this.export_all_buckets_json();
       else if (format === 'csv') await this.export_csv(this.export_bucket);

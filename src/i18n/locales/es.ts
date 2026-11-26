@@ -391,6 +391,8 @@ export default {
     exportBucketTitle: 'Exportar {bucket}',
     exportAllTitle: 'Exportar todos los buckets',
     exportFormat: 'Formato',
+    exportRangeHelp:
+      'Las horas usan tu zona horaria local. Deja un campo vacío para no limitar ese extremo; deja ambos vacíos para exportarlo todo.',
     tools: 'Herramientas',
     deleteFailed: 'La eliminación falló. Es posible que algunos buckets no se hayan eliminado.',
     exportFailed: 'La exportación falló: {error}',

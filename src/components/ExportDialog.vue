@@ -1,18 +1,23 @@
 <template lang="pug">
 //- One dialog for every export of Raw Data: a bucket (JSON or CSV), or all buckets (JSON).
 b-modal(:visible="visible", :title="title", centered,
-        :ok-title="$t('common.export')", :ok-disabled="invalid",
+        :ok-title="$t('common.export')", :ok-disabled="invalid || unresolvable",
         :cancel-title="$t('common.cancel')",
         @show="reset", @ok="submit", @hidden="$emit('close')")
-  input-date-range(:start.sync="from", :end.sync="to")
+  input-date-range(:start.sync="from", :end.sync="to",
+                   :start-time.sync="fromTime", :end-time.sync="toTime", :allow-time="allowTime")
+  p.small.text-muted.mt-2.mb-0 {{ $t('buckets.exportRangeHelp') }}
   b-form-group.mt-3.mb-0(v-if="bucketId", :label="$t('buckets.exportFormat')")
     b-form-radio-group.export-format(v-model="format", :options="formats")
   b-alert.mt-3.mb-0(v-if="invalid", variant="warning", show)
     | {{ $t('ui.timeInterval.invalidRange') }}
+  b-alert.mt-3.mb-0(v-if="unresolvable", variant="warning", show)
+    | {{ $t('ui.timeInterval.unresolvableTime') }}
 </template>
 
 <script lang="ts">
 import InputDateRange from '~/components/InputDateRange.vue';
+import { ExportRange, exportRangeBounds } from '~/util/export';
 
 export default {
   name: 'ExportDialog',
@@ -21,12 +26,14 @@ export default {
     visible: { type: Boolean, default: false },
     // The bucket to export; null: all buckets.
     bucketId: { type: String, default: null },
-    // The last range used on the page, offered again: YYYY-MM-DD, or ''.
+    // The last range used on the page, offered again: YYYY-MM-DD and HH:mm, or ''.
     initialFrom: { type: String, default: '' },
     initialTo: { type: String, default: '' },
+    initialFromTime: { type: String, default: '' },
+    initialToTime: { type: String, default: '' },
   },
   data() {
-    return { from: '', to: '', format: 'json' };
+    return { from: '', to: '', fromTime: '', toTime: '', format: 'json' };
   },
   computed: {
     title(): string {
@@ -40,25 +47,47 @@ export default {
         { value: 'csv', text: 'CSV' },
       ];
     },
-    // Like the Timeline's range: only when both are set and the first is after the second.
+    // Exact times for the CSV export of a bucket; JSON exports take whole days.
+    allowTime(): boolean {
+      return !!this.bucketId && this.format === 'csv';
+    },
+    range(): ExportRange {
+      return {
+        from: this.from || '',
+        to: this.to || '',
+        fromTime: this.allowTime ? this.fromTime || '' : '',
+        toTime: this.allowTime ? this.toTime || '' : '',
+      };
+    },
+    bounds() {
+      return exportRangeBounds(this.range);
+    },
+    // A wall time that does not exist or happens twice (DST): never silently pick one.
+    unresolvable(): boolean {
+      return this.bounds === undefined;
+    },
+    // Like the Timeline's range: only when both sides are set and the start is not before the end.
     invalid(): boolean {
-      return !!this.from && !!this.to && this.from > this.to;
+      const b = this.bounds;
+      return !!b && !!b.start && !!b.end && b.start >= b.end;
     },
   },
   methods: {
     reset() {
       this.from = this.initialFrom;
       this.to = this.initialTo;
+      this.fromTime = this.initialFromTime;
+      this.toTime = this.initialToTime;
       this.format = 'json';
     },
     submit(event) {
-      if (this.invalid) {
+      if (this.invalid || this.unresolvable) {
         event?.preventDefault?.();
         return;
       }
       // All buckets only exist as JSON on the server.
       const format = this.bucketId ? this.format : 'json';
-      this.$emit('export', { format, from: this.from, to: this.to });
+      this.$emit('export', { format, ...this.range });
     },
   },
 };

@@ -387,6 +387,8 @@ export default {
     exportBucketTitle: '{bucket} をエクスポート',
     exportAllTitle: 'すべてのバケットをエクスポート',
     exportFormat: '形式',
+    exportRangeHelp:
+      '時刻にはローカルのタイムゾーンを使用します。空欄の側には制限がかかりません。両方を空欄にすると、すべてをエクスポートします。',
     tools: 'ツール',
     deleteFailed: '削除に失敗しました。一部のバケットが削除されていない可能性があります。',
     exportFailed: 'エクスポートに失敗しました：{error}',

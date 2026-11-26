@@ -389,6 +389,8 @@ export default {
     exportBucketTitle: 'Exportera {bucket}',
     exportAllTitle: 'Exportera alla buckets',
     exportFormat: 'Filformat',
+    exportRangeHelp:
+      'Tiderna använder din lokala tidszon. Lämna ett fält tomt för ingen gräns; lämna båda tomma för att exportera allt.',
     tools: 'Verktyg',
     deleteFailed: 'Borttagningen misslyckades. Vissa buckets kanske inte har tagits bort.',
     exportFailed: 'Exporten misslyckades: {error}',

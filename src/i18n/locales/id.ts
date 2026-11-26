@@ -388,6 +388,8 @@ export default {
     exportBucketTitle: 'Ekspor {bucket}',
     exportAllTitle: 'Ekspor semua bucket',
     exportFormat: 'Format berkas',
+    exportRangeHelp:
+      'Waktu menggunakan zona waktu lokal Anda. Kosongkan salah satu kolom agar batas tersebut tidak dibatasi; kosongkan keduanya untuk mengekspor semuanya.',
     tools: 'Alat',
     deleteFailed: 'Penghapusan gagal. Beberapa bucket mungkin belum terhapus.',
     exportFailed: 'Ekspor gagal: {error}',

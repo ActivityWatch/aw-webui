@@ -413,6 +413,8 @@ export default {
     exportBucketTitle: 'Export {bucket}',
     exportAllTitle: 'Export all buckets',
     exportFormat: 'Format',
+    exportRangeHelp:
+      'Times use your local timezone. Leave either field blank for no limit; leave both blank to export everything.',
     tools: 'Tools',
     deleteFailed: 'Deletion failed. Some buckets may not have been deleted.',
     exportFailed: 'Export failed: {error}',

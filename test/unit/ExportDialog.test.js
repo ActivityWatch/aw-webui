@@ -40,7 +40,9 @@ describe('ExportDialog', () => {
     expect(wrapper.find('b-form-radio-group-stub').exists()).toBe(false);
     wrapper.setData({ format: 'csv' }); // cannot be chosen, and ignored anyway
     wrapper.vm.submit();
-    expect(wrapper.emitted('export')).toEqual([[{ format: 'json', from: '', to: '' }]]);
+    expect(wrapper.emitted('export')).toEqual([
+      [{ format: 'json', from: '', to: '', fromTime: '', toTime: '' }],
+    ]);
   });
 
   test('offers the last range again each time it opens, JSON first', () => {
@@ -48,12 +50,15 @@ describe('ExportDialog', () => {
       bucketId: 'b',
       initialFrom: '2026-10-26',
       initialTo: '2026-10-30',
+      initialFromTime: '09:00',
     });
-    wrapper.setData({ from: 'x', to: 'y', format: 'csv' });
+    wrapper.setData({ from: 'x', to: 'y', fromTime: '01:00', toTime: '02:00', format: 'csv' });
     wrapper.vm.reset(); // @show
     expect(wrapper.vm.$data).toEqual({
       from: '2026-10-26',
       to: '2026-10-30',
+      fromTime: '09:00',
+      toTime: '',
       format: 'json',
     });
   });
@@ -64,8 +69,51 @@ describe('ExportDialog', () => {
     expect(modal(wrapper).props('okDisabled')).toBe(false);
     wrapper.vm.submit();
     expect(wrapper.emitted('export')).toEqual([
-      [{ format: 'csv', from: '2026-10-26', to: '2026-10-30' }],
+      [{ format: 'csv', from: '2026-10-26', to: '2026-10-30', fromTime: '', toTime: '' }],
     ]);
+  });
+
+  test('CSV takes optional times; JSON takes whole days', async () => {
+    const wrapper = mountDialog({ bucketId: 'b' });
+    const range = () => wrapper.findComponent({ name: 'InputDateRange' });
+    expect(range().props('allowTime')).toBe(false);
+    await wrapper.setData({
+      from: '2026-10-26',
+      fromTime: '09:00',
+      toTime: '17:30',
+      format: 'csv',
+    });
+    expect(range().props('allowTime')).toBe(true);
+    wrapper.vm.submit();
+    await wrapper.setData({ format: 'json' });
+    expect(range().props('allowTime')).toBe(false);
+    wrapper.vm.submit();
+    expect(wrapper.emitted('export')).toEqual([
+      [{ format: 'csv', from: '2026-10-26', to: '', fromTime: '09:00', toTime: '17:30' }],
+      [{ format: 'json', from: '2026-10-26', to: '', fromTime: '', toTime: '' }],
+    ]);
+  });
+
+  test('all buckets never offers times', async () => {
+    const wrapper = mountDialog({ bucketId: null });
+    await wrapper.setData({ format: 'csv' });
+    expect(wrapper.findComponent({ name: 'InputDateRange' }).props('allowTime')).toBe(false);
+  });
+
+  test('a CSV end time before its start time on the same day is invalid', async () => {
+    const wrapper = mountDialog({ bucketId: 'b' });
+    await wrapper.setData({
+      from: '2026-10-26',
+      to: '2026-10-26',
+      fromTime: '17:00',
+      toTime: '09:00',
+      format: 'csv',
+    });
+    expect(warnings(wrapper).length).toBe(1);
+    expect(modal(wrapper).props('okDisabled')).toBe(true);
+    // The same times are ignored for JSON, which exports the whole day.
+    await wrapper.setData({ format: 'json' });
+    expect(modal(wrapper).props('okDisabled')).toBe(false);
   });
 
   test('"From" after "To": the warning of the Timeline, Export greyed, nothing exported', async () => {

@@ -380,6 +380,8 @@ export default {
     exportBucketTitle: 'تصدير {bucket}',
     exportAllTitle: 'تصدير جميع buckets',
     exportFormat: 'الصيغة',
+    exportRangeHelp:
+      'تستخدم الأوقات منطقتك الزمنية المحلية. اترك أي حقل فارغًا لإلغاء الحد المقابل؛ واترك الحقلين فارغين لتصدير كل شيء.',
     tools: 'الأدوات',
     deleteFailed: 'فشل الحذف. ربما لم يتم حذف بعض buckets.',
     exportFailed: 'فشل التصدير: {error}',

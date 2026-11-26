@@ -12,6 +12,7 @@
 import Papa from 'papaparse';
 
 import { IEvent } from './interfaces';
+import { wallTimeInstants } from './timeperiod';
 
 /**
  * Cells a spreadsheet would evaluate as a formula: a leading `=`, `+`, `-` or
@@ -34,19 +35,69 @@ const localMidnight = (day: string, days: number) => {
   return new Date(year, month - 1, date + days);
 };
 
-/** Query string limiting a bucket export to whole local days, from the start of
- * `from` to the end of `to` (YYYY-MM-DD); an empty side stays open. */
-export function exportRangeQuery(from: string, to: string): string {
+/**
+ * The range of an export, in local wall time: dates (YYYY-MM-DD) and optional
+ * times (HH:mm). Every field may be empty; an empty side stays open.
+ */
+export interface ExportRange {
+  from: string;
+  to: string;
+  fromTime?: string | null;
+  toTime?: string | null;
+}
+
+/** The date an end time refers to: the end date, else (like the Timeline) the start date. */
+const endDay = (r: ExportRange) => r.to || (r.toTime ? r.from : '');
+
+/** One instant for a local wall time, or undefined when it does not exist or happens twice (DST). */
+function wallInstant(day: string, time: string): Date | undefined {
+  const instants = wallTimeInstants(`${day}T${time}`);
+  return instants.length === 1 ? new Date(instants[0]) : undefined;
+}
+
+/**
+ * The instants bounding an export; null on an open side. Without times, whole
+ * local days: from the start of `from` to the end of `to`. A time makes its
+ * side exact. Undefined when a wall time cannot name one instant.
+ */
+export function exportRangeBounds(
+  r: ExportRange
+): { start: Date | null; end: Date | null } | undefined {
+  let start: Date | null = null;
+  let end: Date | null = null;
+  if (r.from) {
+    const instant = r.fromTime ? wallInstant(r.from, r.fromTime) : localMidnight(r.from, 0);
+    if (!instant) return undefined;
+    start = instant;
+  }
+  const day = endDay(r);
+  if (day) {
+    const instant = r.toTime ? wallInstant(day, r.toTime) : localMidnight(day, 1);
+    if (!instant) return undefined;
+    end = instant;
+  }
+  return { start, end };
+}
+
+/** Query string limiting a bucket export to the range; '' for the whole history. */
+export function exportRangeQuery(r: ExportRange): string {
+  const bounds = exportRangeBounds(r);
   const params = new URLSearchParams();
-  if (from) params.set('start', localMidnight(from, 0).toISOString());
-  if (to) params.set('end', localMidnight(to, 1).toISOString());
+  if (bounds?.start) params.set('start', bounds.start.toISOString());
+  if (bounds?.end) params.set('end', bounds.end.toISOString());
   const query = params.toString();
   return query ? `?${query}` : '';
 }
 
-/** The days of a ranged export, for its file name: `_2026-10-26_2026-10-30`. */
-export const exportRangeSuffix = (from: string, to: string) =>
-  from || to ? `_${from || 'start'}_${to || 'now'}` : '';
+/** The range of an export, for its file name: `_2026-10-26_2026-10-30`, `_2026-10-26T0900_now`. */
+export function exportRangeSuffix(r: ExportRange): string {
+  const side = (day: string, time: string | null | undefined) =>
+    time ? `${day}T${time.replace(':', '')}` : day;
+  const from = r.from ? side(r.from, r.fromTime) : '';
+  const day = endDay(r);
+  const to = day ? side(day, r.toTime) : '';
+  return from || to ? `_${from || 'start'}_${to || 'now'}` : '';
+}
 
 /**
  * CSV for the Report view's events: a header row, then one row per event.

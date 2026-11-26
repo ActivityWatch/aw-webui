@@ -393,6 +393,8 @@ export default {
     exportBucketTitle: 'Exportar {bucket}',
     exportAllTitle: 'Exportar todos os buckets',
     exportFormat: 'Formato',
+    exportRangeHelp:
+      'Os horários usam seu fuso horário local. Deixe um campo vazio para não limitar esse extremo; deixe ambos vazios para exportar tudo.',
     tools: 'Ferramentas',
     deleteFailed: 'Falha na exclusão. Alguns buckets podem não ter sido excluídos.',
     exportFailed: 'Falha na exportação: {error}',

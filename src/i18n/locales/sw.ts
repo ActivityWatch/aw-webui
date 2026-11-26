@@ -390,6 +390,8 @@ export default {
     exportBucketTitle: 'Safirisha {bucket}',
     exportAllTitle: 'Safirisha buckets zote',
     exportFormat: 'Muundo',
+    exportRangeHelp:
+      'Saa zinatumia ukanda wako wa saa wa eneo lako. Acha sehemu yoyote tupu ili kutoweka kikomo hicho; acha zote mbili tupu ili kusafirisha kila kitu.',
     tools: 'Zana',
     deleteFailed: 'Ufutaji umeshindwa. Baadhi ya buckets zinaweza kuwa hazikufutwa.',
     exportFailed: 'Usafirishaji umeshindwa: {error}',
