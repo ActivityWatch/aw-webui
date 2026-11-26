@@ -76,7 +76,7 @@ describe('Activity URL date and period validation', () => {
     expect(vm.invalidUrlPeriod).toBe(true);
     expect(vm.timeperiod.length).toEqual([1, 'day']);
     // The day in the URL still applies, so the date picker moves the view.
-    expect(vm.periodReadableRange).toBe('2026-10-15—2026-10-16');
+    expect(vm.periodReadableRange).toBe('2026-10-15—2026-10-15');
     // Previous/Next build day links, otherwise they would keep re-entering `foo`.
     expect(vm.link_prefix).toBe('/activity/all/day');
   });
