@@ -678,6 +678,39 @@ describe('CategoryBuilder embedded in the category editor', () => {
     expect(categories.classes_unsaved_changes).toBe(true);
   });
 
+  test('Remove keeps the warning when the last save failed', async () => {
+    // Greptile's scenario: a save lands (extra set enabled), the user turns the
+    // set back off, and the save of that revert fails. The server still has the
+    // extra set, so Remove must not mark the editor clean.
+    const settings = useSettingsStore();
+    categories.category_sets = [
+      { id: 'default', categories: categories.classes_clean },
+      { id: 'extra', categories: [] },
+    ];
+    const update = jest.spyOn(settings, 'update').mockResolvedValue(undefined);
+    const save = () => {
+      const env = process.env.NODE_ENV;
+      try {
+        process.env.NODE_ENV = 'development';
+        return categories.save();
+      } finally {
+        process.env.NODE_ENV = env;
+      }
+    };
+    categories.setActiveSets(['default', 'extra']);
+    await save();
+    expect(categories.classes_unsaved_changes).toBe(false);
+    categories.setActiveSets(['default']);
+    update.mockRejectedValueOnce(new Error('settings reload failed'));
+    await expect(save()).rejects.toThrow('settings reload failed');
+    wrapper.vm.createRule('Firefox');
+    categories.removeClass(wrapper.vm.create.categoryId);
+    await flush();
+    await wrapper.vm.createRuleCancel();
+    expect(categories.hasUnsavedChanges).toBe(true);
+    expect(categories.classes_unsaved_changes).toBe(true);
+  });
+
   test.each(['switch', 'extra set', 'defaults', 'import', 'discard', 'delete'])(
     'refreshes suggestions after %s changes the effective rules',
     async action => {
