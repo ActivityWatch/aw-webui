@@ -598,9 +598,9 @@ function browserEvents(params: DesktopQueryParams): string {
   // The chrome regex matches forks so a fork without a dedicated bucket still
   // counts (#927). A settings-override Arc bucket can coexist with the default
   // chrome bucket, and then the same Arc activity would be counted by both
-  // streams. There is no exclude primitive common to both aw-server
-  // implementations (exclude_keyvals is Rust-only), so the chrome stream
-  // strips only the forks that actually have a dedicated bucket.
+  // streams. The chrome stream strips only the forks that actually have a
+  // dedicated bucket. Both servers provide exclude_keyvals for exact values,
+  // but these app-name patterns also need case/variant-aware regex matching.
   // Dia stays on the chrome stream: it has no dedicated bucket today.
   const dedicatedChromeForks = browsers
     .map(([browserName]) => browserName)
