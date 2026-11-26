@@ -16,7 +16,7 @@ describe('CategoryEditModal handleEnter', () => {
       editing: { rule: { type: ruleType } },
       validPattern,
       canSubmit: ruleType !== 'regex' || validPattern,
-      handleSubmit: jest.fn(),
+      handleSubmit: jest.fn(() => true),
       $emit: jest.fn(),
     };
     return { vm, event };
@@ -53,6 +53,62 @@ describe('CategoryEditModal handleEnter', () => {
     const { vm, event } = ctx({ ruleType: 'none', validPattern: false });
     handleEnter(vm, event);
     expect(vm.handleSubmit).toHaveBeenCalled();
+  });
+
+  test('does not emit ok when the submit rejected the edit', () => {
+    // A rejected submit (e.g. an empty name) leaves the modal open; `ok` would
+    // tell the category builder the draft was accepted and must not fire.
+    const { vm, event } = ctx();
+    vm.handleSubmit = jest.fn(() => false);
+    handleEnter(vm, event);
+    expect(vm.handleSubmit).toHaveBeenCalled();
+    expect(vm.$emit).not.toHaveBeenCalled();
+  });
+});
+
+describe('CategoryEditModal handleOk', () => {
+  const handleOk = (vm, event) => CategoryEditModal.methods.handleOk.call(vm, event);
+
+  function ctx(name) {
+    const updateClass = jest.fn();
+    const vm = {
+      editing: {
+        id: 1,
+        name,
+        parent: ['Work'],
+        rule: { type: 'none' },
+        match_fields: [],
+        inherit_color: true,
+        color: null,
+        inherit_score: true,
+        score: null,
+        priority: null,
+      },
+      checkFormValidity: () => true,
+      categoryStore: { updateClass },
+      $nextTick: callback => callback(),
+      $refs: { edit: { hide: jest.fn() } },
+      $emit: jest.fn(),
+      priorityFromInput: CategoryEditModal.methods.priorityFromInput,
+      handleSubmit: CategoryEditModal.methods.handleSubmit,
+    };
+    return { vm, updateClass };
+  }
+
+  test('emits ok after the category is updated', () => {
+    const { vm, updateClass } = ctx('Browser');
+    handleOk(vm, { preventDefault: jest.fn() });
+    expect(updateClass).toHaveBeenCalled();
+    expect(vm.$emit).toHaveBeenCalledWith('ok');
+  });
+
+  test('a blank name updates nothing and emits no ok', () => {
+    // `canSubmit` does not look at the name, so OK is enabled with an empty
+    // name; the modal must then stay open and not report the draft accepted.
+    const { vm, updateClass } = ctx('');
+    handleOk(vm, { preventDefault: jest.fn() });
+    expect(updateClass).not.toHaveBeenCalled();
+    expect(vm.$emit).not.toHaveBeenCalled();
   });
 });
 

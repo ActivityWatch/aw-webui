@@ -559,6 +559,7 @@ describe('CategoryBuilder embedded in the category editor', () => {
       pinia,
       propsData: { embedded: true },
       stubs: { 'aw-query-options': true, 'b-button': true, 'b-modal': true },
+      mocks: { $bvModal: { hide: jest.fn(), show: jest.fn(), msgBoxConfirm: jest.fn() } },
     });
   });
 
@@ -772,6 +773,28 @@ describe('CategoryBuilder embedded in the category editor', () => {
       expect(query).toHaveBeenCalledTimes(1);
     }
   );
+
+  test('Cancel does not delete a rule that inherited the draft id after an import', async () => {
+    edit();
+    wrapper.vm.createRule('Firefox');
+    const draftId = wrapper.vm.create.categoryId;
+    expect(names()).toContain('Firefox');
+    // An unnamed category import replaces the effective list and renumbers ids,
+    // so the draft's id can now name an imported rule.
+    categories.import([
+      { name: ['Imported'], rule: { type: 'none' } },
+      { name: ['Imported', 'Child'], rule: { type: 'none' } },
+      { name: ['Imported', 'Third'], rule: { type: 'none' } },
+    ]);
+    expect(categories.classes[draftId].name).toEqual(['Imported', 'Third']);
+    await flush();
+    // The draft is gone from the list, so the modal is closed instead of
+    // letting Cancel (or OK) write through the stale id.
+    expect(wrapper.vm.$bvModal.hide).toHaveBeenCalledWith('edit');
+    await wrapper.vm.createRuleCancel();
+    expect(wrapper.vm.create.categoryId).toBeNull();
+    expect(names()).toEqual(['Imported', 'Imported>Child', 'Imported>Third']);
+  });
 
   test('removing the new rule in the modal does not swallow the next refresh', async () => {
     const query = await openNewRule();

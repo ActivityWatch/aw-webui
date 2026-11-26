@@ -212,6 +212,11 @@ export default {
         categoryId: null,
         // Embedded mode: whether OK kept the new rule.
         accepted: false,
+        // The placeholder rule object itself. The effective list can be
+        // replaced wholesale (import, set switch, discard), which renumbers
+        // ids, so Cancel has to know whether *this* rule is still there
+        // instead of trusting the numeric id it was opened with.
+        draft: null,
       },
       // True while the New-rule modal is open. The placeholder rule is already
       // in the store (the modal edits it by id), but the suggestions list must
@@ -262,10 +267,25 @@ export default {
     hostnameEmptyKind: function () {
       return categoryBuilderHostnameEmptyKind(useBucketsStore().hosts, this.queryOptions.hostname);
     },
+    // True once the draft's placeholder rule is no longer in the effective
+    // list: an import, set switch or discard replaced it, and the id the modal
+    // holds may now name a different rule.
+    draftRuleGone: function () {
+      return (
+        this.create.categoryId !== null &&
+        this.create.draft !== null &&
+        !this.categoryStore.classes.includes(this.create.draft)
+      );
+    },
   },
   watch: {
     categoryRulesKey() {
       this.refreshIfStale();
+    },
+    draftRuleGone(gone) {
+      // Close the modal rather than let OK/Cancel write through a stale id.
+      // The resulting `hidden` event clears the draft state.
+      if (gone) this.$bvModal.hide('edit');
     },
     visible() {
       this.refreshIfStale();
@@ -459,11 +479,13 @@ export default {
       // The modal edits the rule by id, so the placeholder has to be in the
       // store before it opens. Pause refreshing instead: it would reset
       // visible_count and hide the row the user clicked.
-      const lastId = this.categoryStore.addClass({
+      const draft = {
         name: [word],
         rule: { type: 'regex', regex: _.escapeRegExp(word) },
-      });
+      };
+      const lastId = this.categoryStore.addClass(draft);
       this.create.word = word;
+      this.create.draft = draft;
       this.create.categoryId = lastId;
       this.suggestionsPaused = true;
     },
@@ -484,13 +506,21 @@ export default {
     async createRuleCancel() {
       // Also runs after OK, since the modal emits `hidden` whenever it closes.
       console.log('Cancelling create rule');
-      const { categoryId, accepted } = this.create;
+      const { accepted, draft } = this.create;
       this.create.categoryId = null;
+      this.create.draft = null;
       if (!this.embedded) {
         this.categoryStore.load(); // Restore categories to last saved
-      } else if (!accepted && categoryId !== null) {
+      } else if (
+        !accepted &&
+        draft !== null &&
+        draft.id !== undefined &&
+        // Only while this exact rule is still in the list. If an import or set
+        // switch replaced the list, its id may now name an unrelated rule.
+        this.categoryStore.classes.includes(draft)
+      ) {
         // Drop only the placeholder rule, keeping the editor's other edits.
-        this.categoryStore.removeClass(categoryId);
+        this.categoryStore.removeClass(draft.id);
         // Ask the store what is still unsaved rather than restoring a flag read
         // before the placeholder: a save finishing while the draft was open
         // already recorded the editor's real state, so that read is stale.
