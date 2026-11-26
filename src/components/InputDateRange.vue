@@ -4,6 +4,7 @@
 span.d-inline-flex.flex-wrap.align-items-center
   input-date.mr-1(
     :value="start", @input="$emit('update:start', $event)", :max="end || undefined"
+    :reset-button="clearableStart"
     :aria-label="$t('ui.timeInterval.startDate')"
   )
   input.form-control.form-control-sm.mr-1(
@@ -35,6 +36,8 @@ export default {
     startTime: { type: String, default: null },
     endTime: { type: String, default: null },
     allowTime: { type: Boolean, default: false },
+    // The Timeline needs a start; an export may leave it open.
+    clearableStart: { type: Boolean, default: false },
   },
 };
 </script>

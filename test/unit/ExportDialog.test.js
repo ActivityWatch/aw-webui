@@ -104,6 +104,18 @@ describe('ExportDialog', () => {
     ]);
   });
 
+  test('a remembered start date can be cleared to export the whole history', async () => {
+    const wrapper = mountDialog({ bucketId: 'b', initialFrom: '2026-10-26' });
+    wrapper.vm.reset(); // @show
+    const range = wrapper.findComponent({ name: 'InputDateRange' });
+    expect(range.props('clearableStart')).toBe(true);
+    range.vm.$emit('update:start', ''); // the start picker's reset button
+    wrapper.vm.submit();
+    expect(wrapper.emitted('export')).toEqual([
+      [{ format: 'json', from: '', to: '', fromTime: '', toTime: '' }],
+    ]);
+  });
+
   test('all buckets never offers times', async () => {
     const wrapper = mountDialog({ bucketId: null });
     await wrapper.setData({ format: 'csv' });

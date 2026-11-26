@@ -5,7 +5,7 @@ b-modal(:visible="visible", :title="title", centered,
         :cancel-title="$t('common.cancel')",
         @show="reset", @ok="submit", @hidden="$emit('close')")
   input-date-range(:start.sync="from", :end.sync="to",
-                   :start-time.sync="fromTime", :end-time.sync="toTime", :allow-time="allowTime")
+                   :start-time.sync="fromTime", :end-time.sync="toTime", :allow-time="allowTime", clearable-start)
   p.small.text-muted.mt-2.mb-0 {{ $t('buckets.exportRangeHelp') }}
   b-form-group.mt-3.mb-0(v-if="bucketId", :label="$t('buckets.exportFormat')")
     b-form-radio-group.export-format(v-model="format", :options="formats")
