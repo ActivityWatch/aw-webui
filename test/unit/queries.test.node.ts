@@ -1308,3 +1308,44 @@ describe('JSON query literals ending in backslashes', () => {
     );
   });
 });
+
+describe('category history bucket encoding', () => {
+  test('desktop history uses the same encoded sources as totals', () => {
+    const params: DesktopQueryParams = {
+      bid_window: 'window_my "box"',
+      bid_afk: 'afk_my "box"',
+      bid_browsers: ['aw-watcher-web-chrome_bad\\', 'aw-watcher-web-chrome_good "box"'],
+      filter_afk: true,
+      include_audible: true,
+      categories: [],
+      filter_categories: [],
+    };
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    try {
+      const historyQuery = categoryQuery(params).join('\n');
+      const totals = fullDesktopQuery(params).join('\n');
+      for (const id of [params.bid_window, params.bid_afk, params.bid_browsers[1]]) {
+        const literal = `query_bucket("${escape_doublequote(id)}")`;
+        expect(totals).toContain(literal);
+        expect(historyQuery).toContain(literal);
+      }
+      expect(historyQuery).not.toContain('chrome_bad');
+      expect(historyQuery).toContain('RETURN = { "cat_events": cat_events };');
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  test('multidevice host overrides are encoded exactly once', () => {
+    const query = categoryQuery({
+      hosts: ['host'],
+      host_params: { host: { bid_window: 'window_"box"', bid_afk: 'afk_"box"' } },
+      filter_afk: true,
+      always_active_pattern: '',
+      categories: [],
+      filter_categories: [],
+    }).join('\n');
+    expect(query).toContain('query_bucket("window_\\"box\\"")');
+    expect(query).toContain('query_bucket("afk_\\"box\\"")');
+  });
+});

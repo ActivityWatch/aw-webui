@@ -207,9 +207,7 @@ function get_params(
   // a phone synced via aw-sync) queries via the android path instead, which
   // has no afk filter — see buildMultideviceHostParams.
   if (host_params && isAndroidParams(host_params) && host_params.bid_android) {
-    const bid_browsers = includeBrowsers
-      ? _.map(host_params.bid_browsers || [], escape_doublequote)
-      : [];
+    const bid_browsers = includeBrowsers ? escapeBucketIds(host_params.bid_browsers || []) : [];
     const new_params: AndroidQueryParams = {
       ...params,
       bid_android: escape_doublequote(host_params.bid_android),
@@ -223,8 +221,8 @@ function get_params(
 
   const new_params: DesktopQueryParams = {
     ...params,
-    bid_window: escape_doublequote('aw-watcher-window_' + host),
-    bid_afk: escape_doublequote('aw-watcher-afk_' + host),
+    bid_window: 'aw-watcher-window_' + host,
+    bid_afk: 'aw-watcher-afk_' + host,
     bid_browsers: [],
     return_variable_suffix: hostVariableSuffix(params, i),
   };
@@ -242,11 +240,9 @@ function get_params(
       }
       const value = overrides[key];
       if (typeof value === 'string' && value.length > 0) {
-        target[key] = escape_doublequote(value);
+        target[key] = value;
       } else if (Array.isArray(value) && value.length > 0) {
-        target[key] = value.map(item =>
-          typeof item === 'string' ? escape_doublequote(item) : item
-        );
+        target[key] = value;
       }
     });
   }
@@ -1018,7 +1014,20 @@ export function categoryQuery(
   params: MultiQueryParams | DesktopQueryParams | AndroidQueryParams
 ): string[] {
   const q = `
-  ${isMultiParams(params) ? canonicalMultideviceEvents(params) : canonicalEvents(params)}
+  ${
+    isMultiParams(params)
+      ? canonicalMultideviceEvents(params)
+      : canonicalEvents({
+          ...params,
+          ...(isDesktopParams(params)
+            ? {
+                bid_window: escape_doublequote(params.bid_window),
+                bid_afk: escape_doublequote(params.bid_afk),
+              }
+            : { bid_android: escape_doublequote(params.bid_android) }),
+          bid_browsers: escapeBucketIds(params.bid_browsers || []),
+        })
+  }
   cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
   RETURN = { "cat_events": cat_events };
 `;

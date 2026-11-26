@@ -15,17 +15,8 @@ interface TimelineBucket {
 }
 
 // `canonicalEvents` writes bucket ids verbatim, so callers escape them first.
-// A value ending in a backslash cannot be written in aw-query at all; skip that
-// source with a warning rather than emit an unparsable query that fails the
-// whole categorized timeline.
-function escapeTimelineBucketId(id: string): string | null {
-  try {
-    return escape_doublequote(id);
-  } catch (e) {
-    console.warn(`Skipping timeline source: ${(e as Error).message}`);
-    return null;
-  }
-}
+// All selected activity sources are required: an unrepresentable ID must show
+// the view's category-error warning, not silently produce a partial timeline.
 
 /** Use the Activity view's canonical stream, not independently classified raw buckets.
  * Earlier visible sources win overlaps, just as in the multidevice Activity query.
@@ -43,10 +34,7 @@ export function categoryTimelineQuery(
       b =>
         b.type === 'currentwindow' || (b.type === 'app' && b.id.startsWith('aw-import-screentime'))
     )
-    .flatMap(bucket => {
-      const id = escapeTimelineBucketId(bucket.id);
-      return id === null ? [] : [{ bucket, id }];
-    });
+    .map(bucket => ({ bucket, id: escape_doublequote(bucket.id) }));
   if (!sources.length) return null;
   const queries = sources.map(({ bucket, id }, i) => {
     const common = { ...params, filter_categories: [], return_variable_suffix: `timeline_${i}` };

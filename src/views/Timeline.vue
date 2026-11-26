@@ -142,7 +142,7 @@ import { mapState } from 'pinia';
 import { useSettingsStore } from '~/stores/settings';
 import { useBucketsStore } from '~/stores/buckets';
 import { getClient } from '~/util/awclient';
-import { canonicalEvents, querystr_to_array } from '~/queries';
+import { canonicalEvents, escape_doublequote, querystr_to_array } from '~/queries';
 import { useCategoryStore } from '~/stores/categories';
 import { matchString } from '~/util/classes';
 import { getCategorizationStringFromEvent } from '~/util/color';
@@ -488,8 +488,8 @@ export default {
     _queryAfkFilteredEvents: async function (windowBucketId, afkBucketId) {
       const queryCode =
         canonicalEvents({
-          bid_window: windowBucketId,
-          bid_afk: afkBucketId,
+          bid_window: escape_doublequote(windowBucketId),
+          bid_afk: escape_doublequote(afkBucketId),
           filter_afk: true,
           always_active_pattern: this.always_active_pattern || undefined,
           categories: [],

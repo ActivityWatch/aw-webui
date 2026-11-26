@@ -339,3 +339,38 @@ test('mergeCategoryIntervals keeps a real 1 ms gap split', () => {
   ]);
   expect(merged).toHaveLength(2);
 });
+
+test.each(['window', 'phone', 'mixed'])(
+  'an unrepresentable %s source reports a category error while retaining raw rows',
+  async kind => {
+    const raw = buckets();
+    if (kind === 'phone') {
+      raw[0].id = 'aw-watcher-android_phone\\';
+    } else {
+      raw[0].id = 'window_laptop\\';
+    }
+    if (kind !== 'mixed') raw.splice(2, 1);
+    raw[0].events = [event(0, 10)];
+    mockGetBucketsWithEvents.mockResolvedValueOnce(raw);
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    try {
+      const vm = context();
+      await vm.getBuckets();
+      expect(vm.categoryError).toBe(true);
+      expect(vm.categorizedEvents).toEqual([]);
+      expect(vm.buckets).toEqual(raw);
+      expect(mockQuery).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+    }
+  }
+);
+
+test('raw Timeline AFK filtering escapes both bucket IDs exactly once', async () => {
+  const vm = context();
+  await vm._queryAfkFilteredEvents('window_Dev\\Ops "box"', 'afk_Dev\\Ops "box"');
+  const code = mockQuery.mock.calls[0][1].join('\n');
+  expect(code).toContain('query_bucket("window_Dev\\Ops \\"box\\"")');
+  expect(code).toContain('query_bucket("afk_Dev\\Ops \\"box\\"")');
+  expect(code).toContain('filter_period_intersect');
+});
