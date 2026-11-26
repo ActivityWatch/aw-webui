@@ -648,6 +648,10 @@ export default {
     };
   },
   computed: {
+    hostPriorityKey(): string {
+      // Settings reloads replace the array even when its contents are identical.
+      return JSON.stringify(this.settingsStore.multideviceHostOrder);
+    },
     viewSavePending() {
       return this.newViewSaving || this.viewsStore.saving;
     },
@@ -1020,13 +1024,10 @@ export default {
     },
   },
   watch: {
-    'settingsStore.multideviceHostOrder': {
-      deep: true,
-      handler() {
-        // moveHost refreshes after save: an early refresh aborts the shared
-        // client's in-flight settings request, losing persistence on reload.
-        if (this.isMultidevice && !this.prioritySaving) this.refresh();
-      },
+    hostPriorityKey() {
+      // moveHost refreshes after save: an early refresh aborts the shared
+      // client's in-flight settings request, losing persistence on reload.
+      if (this.isMultidevice && !this.prioritySaving) this.refresh();
     },
     async needsCategoryHistory(needed) {
       // Switched to a view with the timeline barchart after a load that skipped it
