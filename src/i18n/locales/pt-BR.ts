@@ -1035,13 +1035,9 @@ export default {
     },
     buckets: { id: 'ID' },
     userPoll: {
-      question:
-        'Olá! Você já usa o ActivityWatch há um tempo. Qual a probabilidade de você recomendá-lo a um amigo ou colega, em uma escala de 1 a 10? (sendo 10 a mais provável)',
       dontShowAgain: 'Não mostrar novamente',
-      submit: 'Enviar',
       positiveIntro:
         'Ficamos felizes em saber que você gosta de usar o ActivityWatch, mas podemos melhorar!',
-      positiveHelp: 'Para nos ajudar a ajudar você, aqui estão algumas coisas que você pode fazer:',
       support: 'Apoie-nos no',
       tellFriends: 'Conte aos seus amigos e colegas!',
       social: 'Publique sobre nós nas redes sociais; estamos no',
@@ -1052,7 +1048,6 @@ export default {
         'Lamentamos saber que você não gostou do ActivityWatch, mas queremos melhorar! Ficaríamos muito agradecidos se você nos ajudasse:',
       feedback: 'Preencha a',
       vote: 'Vote em novos recursos no',
-      feedbackPrefix: 'Preencha o',
       feedbackForm: 'formulário de feedback',
     },
   },

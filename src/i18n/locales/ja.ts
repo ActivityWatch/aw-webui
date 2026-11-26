@@ -1025,12 +1025,8 @@ export default {
     },
     buckets: { id: 'ID' },
     userPoll: {
-      question:
-        'こんにちは！ ActivityWatch をしばらくご利用いただいています。友人や同僚にどのくらいおすすめしたいと思いますか？ 1～10 の10段階でお答えください (10が最もおすすめしたい)',
       dontShowAgain: '今後表示しない',
-      submit: '送信',
       positiveIntro: 'ActivityWatch をお楽しみいただけてうれしく思います。さらに良くしていきます！',
-      positiveHelp: '次のような方法でご協力いただけると助かります:',
       support: '支援する:',
       tellFriends: '友人や同僚に伝える',
       social: 'SNSで紹介する。公式アカウントはこちら:',
@@ -1041,7 +1037,6 @@ export default {
         'ActivityWatch をお気に召さなかったとのこと、申し訳ありません。改善に努めますので、次のような方法でご協力いただけるとありがたく思います:',
       feedback: '記入する:',
       vote: '新機能に投票する:',
-      feedbackPrefix: '記入する:',
       feedbackForm: 'フィードバックフォーム',
     },
   },

@@ -1025,13 +1025,8 @@ export default {
     },
     buckets: { id: 'ID' },
     userPoll: {
-      question:
-        'Halo! Anda sudah cukup lama menggunakan ActivityWatch. Seberapa besar kemungkinan Anda merekomendasikannya kepada teman/kolega, dalam skala 1-10? (10 berarti sangat mungkin)',
       dontShowAgain: 'Jangan tampilkan lagi',
-      submit: 'Kirim',
       positiveIntro: 'Kami senang Anda menikmati ActivityWatch, tetapi kami bisa lebih baik lagi!',
-      positiveHelp:
-        'Agar kami dapat membantu Anda lebih baik, berikut beberapa hal yang bisa Anda lakukan:',
       support: 'Dukung kami di',
       tellFriends: 'Ceritakan kepada teman dan kolega Anda!',
       social: 'Bagikan di media sosial; kami ada di',
@@ -1042,7 +1037,6 @@ export default {
         'Kami menyesal mendengar Anda kurang menyukai ActivityWatch, tetapi kami ingin menjadi lebih baik! Kami akan sangat berterima kasih jika Anda membantu kami dengan:',
       feedback: 'Isi',
       vote: 'Pilih fitur baru di',
-      feedbackPrefix: 'Isi',
       feedbackForm: 'formulir masukan',
     },
   },

@@ -43,6 +43,11 @@ const ENGLISH_FALLBACK_KEYS = new Set([
   'timeline.intro',
   'buckets.intro',
   'ui.bucketDetail.help',
+  'ui.userPoll.askQuestion',
+  'ui.userPoll.workingWell',
+  'ui.userPoll.couldBeBetter',
+  'ui.userPoll.supportLink',
+  'ui.userPoll.forum',
 ]);
 const SRC_DIR = path.join(__dirname, '../src');
 const INDEX_PATH = path.join(SRC_DIR, 'i18n/index.ts');

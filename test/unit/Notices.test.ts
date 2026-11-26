@@ -309,3 +309,212 @@ describe('release notice persistence', () => {
     wrapper.destroy();
   });
 });
+
+describe('poll in the host', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    jest.useFakeTimers();
+  });
+  afterEach(() => jest.useRealTimers());
+
+  async function mountPoll() {
+    const UserSatisfactionPoll = (await import('~/components/UserSatisfactionPoll.vue')).default;
+    // Drive visibility directly; the settings/backoff workflow is covered in notificationPersistence.
+    const wrapper = mount({ ...UserSatisfactionPoll, mounted: jest.fn() }, {
+      localVue,
+      ...i18n,
+      stubs: { icon: true },
+    } as any);
+    const vm: any = wrapper.vm;
+    vm.saveData = jest.fn().mockResolvedValue(true);
+    return { wrapper, vm, notices: useNoticesStore() };
+  }
+
+  test('waits behind the bell, then opens on its own once after the dwell time', async () => {
+    const { wrapper, vm, notices } = await mountPoll();
+    vm.isPollVisible = true;
+    await wrapper.vm.$nextTick();
+    expect(notices.ids).toEqual(['poll']);
+    expect(notices.hasUnseen).toBe(true);
+    expect(notices.isOpen).toBe(false);
+
+    jest.advanceTimersByTime(7999);
+    expect(notices.isOpen).toBe(false);
+    jest.advanceTimersByTime(1);
+    expect(notices.isOpen).toBe(true);
+
+    // The user closes it; it does not reopen by itself.
+    notices.close();
+    jest.advanceTimersByTime(60000);
+    expect(notices.isOpen).toBe(false);
+    wrapper.destroy();
+  });
+
+  test('counts a show once, when the host displays the poll', async () => {
+    const { wrapper, vm, notices } = await mountPoll();
+    vm.isPollVisible = true;
+    await wrapper.vm.$nextTick();
+    expect(vm.saveData).not.toHaveBeenCalled();
+    jest.advanceTimersByTime(8000);
+    await wrapper.vm.$nextTick();
+    expect(vm.saveData).toHaveBeenCalledTimes(1);
+    expect(vm.saveData).toHaveBeenCalledWith(expect.objectContaining({ timesPollIsShown: 1 }));
+    notices.close();
+    await wrapper.vm.$nextTick();
+    notices.open();
+    await wrapper.vm.$nextTick();
+    expect(vm.saveData).toHaveBeenCalledTimes(1);
+    wrapper.destroy();
+  });
+
+  test('a poll that becomes eligible in the open host is counted at once', async () => {
+    const { wrapper, vm, notices } = await mountPoll();
+    notices.open();
+    await wrapper.vm.$nextTick();
+    vm.isPollVisible = true;
+    await wrapper.vm.$nextTick();
+    expect(vm.saveData).toHaveBeenCalledWith(expect.objectContaining({ timesPollIsShown: 1 }));
+    wrapper.destroy();
+  });
+
+  test('does not auto-open if the user already opened the host from the bell', async () => {
+    const { wrapper, vm, notices } = await mountPoll();
+    vm.isPollVisible = true;
+    await wrapper.vm.$nextTick();
+    notices.open();
+    await wrapper.vm.$nextTick();
+    notices.close();
+    jest.advanceTimersByTime(60000);
+    expect(notices.isOpen).toBe(false);
+    wrapper.destroy();
+  });
+
+  test('opening and closing the host before the poll is eligible does not schedule a reopen', async () => {
+    const { wrapper, vm, notices } = await mountPoll();
+    notices.open();
+    await wrapper.vm.$nextTick();
+    vm.isPollVisible = true; // eligibility lands while the host is already open
+    await wrapper.vm.$nextTick();
+    notices.close();
+    await wrapper.vm.$nextTick();
+    jest.advanceTimersByTime(60000);
+    expect(notices.isOpen).toBe(false);
+    wrapper.destroy();
+  });
+
+  test('a host opened and closed before the poll is eligible is not reopened later', async () => {
+    const { wrapper, vm, notices } = await mountPoll();
+    notices.open();
+    await wrapper.vm.$nextTick();
+    notices.close();
+    await wrapper.vm.$nextTick();
+    vm.isPollVisible = true; // eligibility lands after the user dismissed the host
+    await wrapper.vm.$nextTick();
+    jest.advanceTimersByTime(60000);
+    expect(notices.isOpen).toBe(false);
+    expect(notices.ids).toEqual(['poll']);
+    wrapper.destroy();
+  });
+
+  test('closing the host while an answer is saving discards the follow-up', async () => {
+    const { wrapper, vm, notices } = await mountPoll();
+    let finishSave;
+    vm.saveData = jest.fn(() => new Promise(resolve => (finishSave = () => resolve(true))));
+    vm.isPollVisible = true;
+    await wrapper.vm.$nextTick();
+    notices.open();
+    await wrapper.vm.$nextTick();
+    const answered = vm.choose(true);
+    notices.close();
+    await wrapper.vm.$nextTick();
+    finishSave();
+    await answered;
+    await wrapper.vm.$nextTick();
+    expect(vm.isPosFollowUpVisible).toBe(false);
+    expect(notices.ids).toEqual([]);
+    wrapper.destroy();
+  });
+
+  test('the answer only routes: positive goes to the attributed support page', async () => {
+    const { wrapper, vm, notices } = await mountPoll();
+    vm.isPollVisible = true;
+    await wrapper.vm.$nextTick();
+    notices.open();
+    await wrapper.find('[data-testid="poll-positive"]').trigger('click');
+    await wrapper.vm.$nextTick();
+    expect(vm.saveData).toHaveBeenCalledWith(expect.objectContaining({ isEnabled: false }));
+    expect(wrapper.find('[data-testid="poll-ask"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="poll-support"]').attributes('href')).toBe(
+      'https://activitywatch.net/go/?src=inapp-poll'
+    );
+    expect(notices.ids).toEqual(['poll']);
+
+    // Seen once the host closes: the follow-up is not listed again.
+    notices.open();
+    await wrapper.vm.$nextTick();
+    notices.close();
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.$nextTick();
+    expect(notices.ids).toEqual([]);
+    wrapper.destroy();
+  });
+
+  test('negative goes to the attributed feedback form', async () => {
+    const { wrapper, vm, notices } = await mountPoll();
+    vm.isPollVisible = true;
+    await wrapper.vm.$nextTick();
+    notices.open();
+    await wrapper.find('[data-testid="poll-negative"]').trigger('click');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('[data-testid="poll-feedback"]').attributes('href')).toBe(
+      'https://activitywatch.net/go/?src=inapp-survey&to=survey'
+    );
+    wrapper.destroy();
+  });
+
+  test('uses the host Close for deferral, with only a secondary permanent opt-out', async () => {
+    const { wrapper, vm, notices } = await mountPoll();
+    vm.isPollVisible = true;
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('[data-testid="poll-not-now"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="poll-dont-ask"]').classes()).toContain('btn-link');
+    notices.open();
+    await wrapper.vm.$nextTick();
+    notices.close();
+    await wrapper.vm.$nextTick();
+    // Closing records nothing beyond the display itself.
+    expect(vm.saveData).not.toHaveBeenCalledWith(expect.objectContaining({ isEnabled: false }));
+    // Closing is temporary: the prompt remains accessible from the bell this load.
+    expect(notices.ids).toEqual(['poll']);
+    wrapper.destroy();
+  });
+
+  test('shows all ways to help without disclosure, with funding and word of mouth before reviews', async () => {
+    const { wrapper, vm, notices } = await mountPoll();
+    vm.isPollVisible = true;
+    await wrapper.vm.$nextTick();
+    notices.open();
+    await wrapper.find('[data-testid="poll-positive"]').trigger('click');
+    await wrapper.vm.$nextTick();
+    const step = wrapper.find('[data-testid="poll-positive-step"]');
+    expect(step.find('details').exists()).toBe(false);
+    const items = step.findAll('li');
+    expect(items.at(0).find('[data-testid="poll-support"]').exists()).toBe(true);
+    expect(items.at(1).text()).toContain('ui.userPoll.tellFriends');
+    expect(items.at(items.length - 1).text()).toContain('AlternativeTo');
+    expect(step.text()).toContain('Discord');
+    expect(step.text()).toContain('newsletter');
+    wrapper.destroy();
+  });
+
+  test('"Don\'t ask again" disables the poll', async () => {
+    const { wrapper, vm } = await mountPoll();
+    vm.isPollVisible = true;
+    await wrapper.vm.$nextTick();
+    await wrapper.find('[data-testid="poll-dont-ask"]').trigger('click');
+    await wrapper.vm.$nextTick();
+    expect(vm.saveData).toHaveBeenCalledWith(expect.objectContaining({ isEnabled: false }));
+    expect(vm.isPollVisible).toBe(false);
+    wrapper.destroy();
+  });
+});

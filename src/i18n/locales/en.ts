@@ -1049,12 +1049,8 @@ export default {
     },
     buckets: { id: 'ID' },
     userPoll: {
-      question:
-        "Hey there! You've been using ActivityWatch for a while. How likely are you to recommend it to a friend/colleague on a scale 1-10? (with 10 being the most likely)",
-      dontShowAgain: "Don't show again",
-      submit: 'Submit',
+      dontShowAgain: "Don't ask again",
       positiveIntro: 'We are happy to hear you enjoy using ActivityWatch, but we can do better!',
-      positiveHelp: 'To help us help you, here are a few things you can do:',
       support: 'Support us on',
       tellFriends: 'Tell your friends and colleagues!',
       social: 'Post about it on social media; we are on',
@@ -1065,8 +1061,12 @@ export default {
         'We are sorry to hear that you did not like ActivityWatch, but we want to improve! We would be very thankful if you helped us by:',
       feedback: 'Fill out the',
       vote: 'Vote for new features on the',
-      feedbackPrefix: 'Fill out the',
       feedbackForm: 'feedback form',
+      askQuestion: 'How is ActivityWatch working for you?',
+      workingWell: 'Working well',
+      couldBeBetter: 'Could be better',
+      supportLink: 'our support page',
+      forum: 'forum',
     },
   },
   extraViews: {

@@ -984,12 +984,8 @@ export default {
     },
     buckets: { id: 'ID' },
     userPoll: {
-      question:
-        '你好！你已经使用 ActivityWatch 一段时间了。在 1-10 分的范围内，你有多大可能向朋友或同事推荐它？（10 分表示最有可能）',
       dontShowAgain: '不再显示',
-      submit: '提交',
       positiveIntro: '很高兴你喜欢 ActivityWatch，不过我们还可以做得更好！',
-      positiveHelp: '为了帮助我们继续改进，你可以：',
       support: '支持我们：',
       tellFriends: '告诉你的朋友和同事！',
       social: '在社交媒体上分享我们：',
@@ -1000,7 +996,6 @@ export default {
         '很遗憾这次没有让你喜欢 ActivityWatch，但我们想继续改进！如果你愿意帮助我们，我们将非常感谢：',
       feedback: '填写',
       vote: '为新功能投票：',
-      feedbackPrefix: '填写',
       feedbackForm: '反馈表单',
     },
   },
