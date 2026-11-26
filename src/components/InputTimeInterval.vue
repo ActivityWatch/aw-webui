@@ -213,6 +213,10 @@ export default {
     // (fall-back) cannot name an exact interval, and we never silently pick one.
     unresolvableTime() {
       if (!this.hasTime) return false;
+      // No date selected yet: rangeStart/rangeEnd are null because there is
+      // no date, not because the wall time cannot be resolved. That case is
+      // already handled by emptyDaterange, so it must not show this warning.
+      if (!this.start) return false;
       return this.rangeStart === null || this.rangeEnd === null;
     },
     dateRange() {

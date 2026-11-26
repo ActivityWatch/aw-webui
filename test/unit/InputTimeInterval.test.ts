@@ -116,6 +116,48 @@ test('a wall time that names no instant is reported, not silently resolved', asy
   }
 });
 
+test('a time without a date does not show a false daylight-saving warning', async () => {
+  const wrapper = make({ allowTime: true });
+  try {
+    // #1312: no date selected, only a start time. rangeStart/rangeEnd are
+    // null because there is no date, not because the wall time is unresolvable.
+    await wrapper.setData({ mode: 'range', startTime: '09:00' });
+    expect(wrapper.vm.hasTime).toBe(true);
+    expect(wrapper.vm.emptyDaterange).toBe(true);
+    expect(wrapper.vm.unresolvableTime).toBe(false);
+  } finally {
+    wrapper.destroy();
+  }
+});
+
+test('an unresolvable end time still warns when a date is selected', async () => {
+  const wrapper = make({ allowTime: true });
+  try {
+    await wrapper.setData({
+      mode: 'range',
+      start: '2026-06-10',
+      startTime: '09:30',
+      end: '2026-06-10',
+      endTime: '25:00',
+    });
+    expect(wrapper.vm.unresolvableTime).toBe(true);
+  } finally {
+    wrapper.destroy();
+  }
+});
+
+test('an end time alone without a date does not show a false daylight-saving warning', async () => {
+  const wrapper = make({ allowTime: true });
+  try {
+    await wrapper.setData({ mode: 'range', endTime: '09:00' });
+    expect(wrapper.vm.hasTime).toBe(true);
+    expect(wrapper.vm.emptyDaterange).toBe(true);
+    expect(wrapper.vm.unresolvableTime).toBe(false);
+  } finally {
+    wrapper.destroy();
+  }
+});
+
 test('maxDuration applies to the exact interval when times are set', async () => {
   const wrapper = make({ allowTime: true, maxDuration: 60 * 60 });
   try {
