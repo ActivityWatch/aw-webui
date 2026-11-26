@@ -28,9 +28,9 @@ const androidBucket = {
   data: {},
 };
 const events = app => [[{ data: { app }, duration: 120 }]];
-const deferred = () => {
+const deferred = <T = unknown>() => {
   let resolve, reject;
-  const promise = new Promise((res, rej) => {
+  const promise = new Promise<T>((res, rej) => {
     resolve = res;
     reject = rej;
   });
@@ -537,5 +537,341 @@ describe('CategoryBuilder mounted append rule', () => {
     expect(saved[0].rule.ignore_case).toBe(rule.ignore_case);
     expect(saved[0].rule.select_keys).toEqual(rule.select_keys);
     expect(categories.classes[0].rule).toEqual(saved[0].rule);
+  });
+});
+
+// Embedded in Settings → Categorization, the builder shares the categories store
+// with the editor, so it must neither reload nor save it (aw-webui#1328 item 1).
+describe('CategoryBuilder embedded in the category editor', () => {
+  let wrapper, categories;
+
+  beforeEach(() => {
+    const pinia = createTestingPinia({ createSpy: jest.fn, stubActions: false });
+    const buckets: any = useBucketsStore();
+    buckets.buckets = [androidBucket];
+    jest.spyOn(buckets, 'ensureLoaded').mockResolvedValue(undefined);
+    jest.spyOn(useSettingsStore(), 'ensureLoaded').mockResolvedValue(undefined);
+    categories = useCategoryStore();
+    categories.load([{ name: ['Work'], rule: { type: 'regex', regex: 'Editor' } }]);
+    getClient.mockReturnValue({ query: jest.fn().mockResolvedValue(events('Firefox')) });
+    wrapper = shallowMount(CategoryBuilder, {
+      localVue,
+      pinia,
+      propsData: { embedded: true },
+      stubs: { 'aw-query-options': true, 'b-button': true, 'b-modal': true },
+      mocks: { $bvModal: { hide: jest.fn(), show: jest.fn(), msgBoxConfirm: jest.fn() } },
+    });
+  });
+
+  afterEach(() => {
+    wrapper?.destroy();
+    jest.restoreAllMocks();
+  });
+
+  const names = () => categories.classes.map(c => c.name.join('>'));
+  const edit = () =>
+    categories.addClass({ name: ['Unsaved'], rule: { type: 'regex', regex: 'UnsavedPattern' } });
+  // Results accumulate across tests, so read the client this test mounted.
+  const queryCalls = () => getClient.mock.results.at(-1).value.query.mock.calls;
+
+  test('loading words keeps the editor’s unsaved edits', async () => {
+    // Pin the host so fetchWords queries instead of waiting for the picker.
+    wrapper.vm.queryOptions = { ...wrapper.vm.queryOptions, hostname: 'unknown' };
+    edit();
+    await wrapper.vm.fetchWords();
+    await flush();
+    expect(wrapper.text()).toContain('Firefox');
+    expect(names()).toContain('Unsaved');
+    expect(categories.classes_unsaved_changes).toBe(true);
+    // The unsaved rule really reaches the query; the words above would still be
+    // returned by this fake client even if it did not.
+    expect(queryCalls().at(-1)[1].join('\n')).toContain('UnsavedPattern');
+  });
+
+  test.each([
+    [true, 'with'],
+    [false, 'without'],
+  ])('New rule → Cancel keeps the list and its page (%s, %s other edits)', async dirty => {
+    if (dirty) edit();
+    wrapper.vm.queryOptions = { ...wrapper.vm.queryOptions, hostname: 'unknown' };
+    await flush();
+    const query = getClient.mock.results.at(-1).value.query;
+    query.mockClear();
+    const before = names();
+    wrapper.vm.createRule('Firefox');
+    // The modal edits the rule by id, so the placeholder must exist.
+    expect(wrapper.vm.create.categoryId).not.toBeNull();
+    expect(names()).toContain('Firefox');
+    // …but the suggestions must not follow it while the user is deciding.
+    await flush();
+    expect(query).not.toHaveBeenCalled();
+    await wrapper.vm.createRuleCancel();
+    expect(wrapper.vm.create.categoryId).toBeNull();
+    expect(names()).toEqual(before);
+    await flush();
+    expect(query).not.toHaveBeenCalled();
+    expect(categories.classes_unsaved_changes).toBe(dirty);
+  });
+
+  test('New rule opens the modal by putting the placeholder in the store', async () => {
+    // CategoryEditModal renders only for a non-null id, so holding the draft
+    // out of the store made New rule do nothing at all.
+    wrapper.vm.createRule('Firefox');
+    expect(wrapper.vm.create.categoryId).not.toBeNull();
+    expect(names()).toContain('Firefox');
+    await wrapper.vm.createRuleCancel();
+    expect(wrapper.vm.create.categoryId).toBeNull();
+  });
+
+  test('Cancel after a real save landed mid-draft leaves no false unsaved warning', async () => {
+    const response = deferred<void>();
+    const settings = useSettingsStore();
+    jest.spyOn(settings, 'update').mockReturnValue(response.promise);
+    const env = process.env.NODE_ENV;
+    let saving;
+    edit();
+    try {
+      process.env.NODE_ENV = 'development';
+      saving = categories.save();
+    } finally {
+      process.env.NODE_ENV = env;
+    }
+    expect(settings.update).toHaveBeenCalledTimes(1);
+    wrapper.vm.createRule('Firefox');
+    response.resolve();
+    await saving;
+    expect(names()).toContain('Firefox');
+    expect(categories.classes_unsaved_changes).toBe(true);
+    await wrapper.vm.createRuleCancel();
+    expect(names()).toEqual(['Work', 'Unsaved']);
+    expect(categories.classes_unsaved_changes).toBe(false);
+  });
+
+  test('Cancel keeps the warning while a newer category-set save is pending', async () => {
+    const settings = useSettingsStore();
+    categories.category_sets = [
+      { id: 'default', categories: categories.classes_clean },
+      { id: 'extra', categories: [] },
+    ];
+    const response = deferred<void>();
+    const update = jest.spyOn(settings, 'update').mockResolvedValue(undefined);
+    const save = () => {
+      const env = process.env.NODE_ENV;
+      try {
+        process.env.NODE_ENV = 'development';
+        return categories.save();
+      } finally {
+        process.env.NODE_ENV = env;
+      }
+    };
+    edit();
+    await save();
+    categories.setActiveSets(['default', 'extra']);
+    update.mockReturnValueOnce(response.promise);
+    const saving = save();
+    categories.setActiveSets(['default']);
+    wrapper.vm.createRule('Firefox');
+    await wrapper.vm.createRuleCancel();
+    expect(categories.classes_unsaved_changes).toBe(true);
+    response.resolve();
+    await saving;
+    expect(categories.classes_unsaved_changes).toBe(true);
+  });
+
+  test('Remove keeps the warning when the last save failed', async () => {
+    // Greptile's scenario: a save lands (extra set enabled), the user turns the
+    // set back off, and the save of that revert fails. The server still has the
+    // extra set, so Remove must not mark the editor clean.
+    const settings = useSettingsStore();
+    categories.category_sets = [
+      { id: 'default', categories: categories.classes_clean },
+      { id: 'extra', categories: [] },
+    ];
+    const update = jest.spyOn(settings, 'update').mockResolvedValue(undefined);
+    const save = () => {
+      const env = process.env.NODE_ENV;
+      try {
+        process.env.NODE_ENV = 'development';
+        return categories.save();
+      } finally {
+        process.env.NODE_ENV = env;
+      }
+    };
+    categories.setActiveSets(['default', 'extra']);
+    await save();
+    expect(categories.classes_unsaved_changes).toBe(false);
+    categories.setActiveSets(['default']);
+    update.mockRejectedValueOnce(new Error('settings reload failed'));
+    await expect(save()).rejects.toThrow('settings reload failed');
+    wrapper.vm.createRule('Firefox');
+    categories.removeClass(wrapper.vm.create.categoryId);
+    await flush();
+    await wrapper.vm.createRuleCancel();
+    expect(categories.hasUnsavedChanges).toBe(true);
+    expect(categories.classes_unsaved_changes).toBe(true);
+  });
+
+  test.each(['switch', 'extra set', 'defaults', 'import', 'discard', 'delete'])(
+    'refreshes suggestions after %s changes the effective rules',
+    async action => {
+      await flush();
+      const query = getClient().query;
+      query.mockClear();
+      categories.category_sets = [
+        { id: 'default', categories: categories.classes_clean },
+        { id: 'extra', categories: [{ name: ['Other'], rule: { type: 'regex', regex: 'Other' } }] },
+      ];
+      if (action === 'switch') categories.switchToSet('extra');
+      if (action === 'extra set') categories.setActiveSets(['default', 'extra']);
+      if (action === 'defaults') categories.restoreDefaultClasses();
+      if (action === 'import') categories.import([{ name: ['Imported'], rule: { type: 'none' } }]);
+      if (action === 'discard') categories.load([]);
+      if (action === 'delete') categories.deleteSet('default');
+      await flush();
+      expect(query).toHaveBeenCalled();
+      const code = query.mock.calls.at(-1)[1].join('\n');
+      if (['switch', 'extra set', 'delete'].includes(action)) expect(code).toContain('Other');
+      if (['switch', 'discard', 'delete', 'import'].includes(action)) {
+        expect(code).not.toContain('Editor');
+      }
+    }
+  );
+
+  test('New rule → OK keeps the rule unsaved instead of saving the editor', async () => {
+    edit();
+    wrapper.vm.createRule('Firefox');
+    await wrapper.vm.createRuleOk();
+    // The modal also emits `hidden` after OK.
+    await wrapper.vm.createRuleCancel();
+    expect(categories.save).not.toHaveBeenCalled();
+    expect(names()).toEqual(expect.arrayContaining(['Unsaved', 'Firefox']));
+    expect(categories.classes_unsaved_changes).toBe(true);
+  });
+
+  test('Append rule leaves the change unsaved', async () => {
+    edit();
+    wrapper.vm.append.word = 'Firefox';
+    wrapper.vm.append.category = ['Work'];
+    await wrapper.vm.appendRuleOk();
+    expect(categories.save).not.toHaveBeenCalled();
+    expect(categories.get_category(['Work']).rule.regex).toBe('Editor|Firefox');
+    expect(names()).toContain('Unsaved');
+  });
+
+  test('Append rule refreshes once instead of racing a second fetch', async () => {
+    // Pin the host so fetchWords does not just wait for a host pick.
+    wrapper.vm.queryOptions = { ...wrapper.vm.queryOptions, hostname: 'unknown' };
+    await flush();
+    const fetchSpy = jest.spyOn(wrapper.vm, 'fetchWords');
+    wrapper.vm.append.word = 'Firefox';
+    wrapper.vm.append.category = ['Work'];
+    await wrapper.vm.appendRuleOk();
+    await flush();
+    // appendClassRule changes the rules, so the watcher already refreshes; an
+    // explicit fetchWords started a second one that reset the list and spinner.
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  // Pins the host, opens New rule and lets the paused watcher run, as a click would.
+  const openNewRule = async () => {
+    wrapper.vm.queryOptions = { ...wrapper.vm.queryOptions, hostname: 'unknown' };
+    await flush();
+    const query = getClient.mock.results.at(-1).value.query;
+    query.mockClear();
+    wrapper.vm.createRule('Firefox');
+    await flush();
+    return query;
+  };
+
+  test.each([false, true])(
+    'New rule → OK refreshes exactly once (rule edited in the modal: %s)',
+    async edited => {
+      const query = await openNewRule();
+      // The modal writes its edits to the store right before emitting `ok`.
+      if (edited) {
+        categories.updateClass({
+          id: wrapper.vm.create.categoryId,
+          name: ['Firefox'],
+          rule: { type: 'regex', regex: 'EditedPattern' },
+        });
+      }
+      await wrapper.vm.createRuleOk();
+      await wrapper.vm.createRuleCancel();
+      await flush();
+      expect(query).toHaveBeenCalledTimes(1);
+      // Reopening an up-to-date builder must not reset the user's page.
+      await wrapper.setProps({ visible: false });
+      await wrapper.setProps({ visible: true });
+      await flush();
+      expect(query).toHaveBeenCalledTimes(1);
+    }
+  );
+
+  test('Cancel does not delete a rule that inherited the draft id after an import', async () => {
+    edit();
+    wrapper.vm.createRule('Firefox');
+    const draftId = wrapper.vm.create.categoryId;
+    expect(names()).toContain('Firefox');
+    // An unnamed category import replaces the effective list and renumbers ids,
+    // so the draft's id can now name an imported rule.
+    categories.import([
+      { name: ['Imported'], rule: { type: 'none' } },
+      { name: ['Imported', 'Child'], rule: { type: 'none' } },
+      { name: ['Imported', 'Third'], rule: { type: 'none' } },
+    ]);
+    expect(categories.classes[draftId].name).toEqual(['Imported', 'Third']);
+    await flush();
+    // The draft is gone from the list, so the modal is closed instead of
+    // letting Cancel (or OK) write through the stale id.
+    expect(wrapper.vm.$bvModal.hide).toHaveBeenCalledWith('edit');
+    await wrapper.vm.createRuleCancel();
+    expect(wrapper.vm.create.categoryId).toBeNull();
+    expect(names()).toEqual(['Imported', 'Imported>Child', 'Imported>Third']);
+  });
+
+  test('removing the new rule in the modal leaves no false unsaved warning', async () => {
+    // The editor is clean, so dropping the draft restores the saved state.
+    wrapper.vm.createRule('Firefox');
+    expect(categories.classes_unsaved_changes).toBe(true);
+    categories.removeClass(wrapper.vm.create.categoryId);
+    await flush();
+    await wrapper.vm.createRuleCancel();
+    expect(categories.classes_unsaved_changes).toBe(false);
+  });
+
+  test('removing the new rule in the modal does not swallow the next refresh', async () => {
+    const query = await openNewRule();
+    // The modal's Remove button drops the placeholder, then hides the modal.
+    categories.removeClass(wrapper.vm.create.categoryId);
+    await flush();
+    await wrapper.vm.createRuleCancel();
+    await flush();
+    expect(query).not.toHaveBeenCalled();
+    edit();
+    await flush();
+    expect(query).toHaveBeenCalledTimes(1);
+  });
+
+  test('a collapsed builder does not query and refreshes once when reopened', async () => {
+    wrapper.vm.queryOptions = { ...wrapper.vm.queryOptions, hostname: 'unknown' };
+    await flush();
+    const query = getClient.mock.results.at(-1).value.query;
+    await wrapper.setProps({ visible: false });
+    await flush();
+    query.mockClear();
+
+    edit();
+    await flush();
+    expect(query).not.toHaveBeenCalled();
+
+    // A second change while still collapsed must not pile up work.
+    categories.addClass({ name: ['Second'], rule: { type: 'regex', regex: 'SecondPattern' } });
+    await flush();
+    expect(query).not.toHaveBeenCalled();
+
+    await wrapper.setProps({ visible: true });
+    await flush();
+    expect(query).toHaveBeenCalledTimes(1);
+    expect(query.mock.calls[0][1].join('\n')).toContain('SecondPattern');
   });
 });

@@ -164,6 +164,10 @@ export default {
     // When embedded inside CategorizationSettings, drop the standalone
     // page chrome so the embed reads as a subsection of the parent.
     embedded: { type: Boolean, default: false },
+    // Embedded mode keeps this component mounted while the parent collapses it,
+    // so tell it whether anyone can see the suggestions: a hidden builder must
+    // not keep querying activity for edits only the editor knows about.
+    visible: { type: Boolean, default: true },
   },
   data() {
     return {
@@ -206,11 +210,31 @@ export default {
       create: {
         word: '',
         categoryId: null,
+        // Embedded mode: whether OK kept the new rule.
+        accepted: false,
+        // The placeholder rule object itself. The effective list can be
+        // replaced wholesale (import, set switch, discard), which renumbers
+        // ids, so Cancel has to know whether *this* rule is still there
+        // instead of trusting the numeric id it was opened with.
+        draft: null,
       },
+      // True while the New-rule modal is open. The placeholder rule is already
+      // in the store (the modal edits it by id), but the suggestions list must
+      // not follow it while the user is still deciding.
+      suggestionsPaused: false,
+      // categoryRulesKey as of the latest fetch: the list on screen is stale
+      // exactly when the current rules differ from it.
+      fetchedRulesKey: null,
     };
   },
   computed: {
     ...mapState(useCategoryStore, ['allCategoriesSelect', 'classes_unsaved_changes']),
+    // Compare query contents, not array identity: saves may rebuild an equivalent
+    // class list. Every effective rule change (including imports/set switches)
+    // must invalidate suggestions, regardless of which editor action made it.
+    categoryRulesKey(): string {
+      return JSON.stringify(this.categoryStore.classes_for_query);
+    },
     // Persisted in server settings so "Ignore" survives reloads (aw-webui#486).
     ignored_words: function (): string[] {
       return this.settingsStore.category_builder_ignored_words || [];
@@ -243,8 +267,29 @@ export default {
     hostnameEmptyKind: function () {
       return categoryBuilderHostnameEmptyKind(useBucketsStore().hosts, this.queryOptions.hostname);
     },
+    // True once the draft's placeholder rule is no longer in the effective
+    // list: an import, set switch or discard replaced it, and the id the modal
+    // holds may now name a different rule.
+    draftRuleGone: function () {
+      return (
+        this.create.categoryId !== null &&
+        this.create.draft !== null &&
+        !this.categoryStore.classes.includes(this.create.draft)
+      );
+    },
   },
   watch: {
+    categoryRulesKey() {
+      this.refreshIfStale();
+    },
+    draftRuleGone(gone) {
+      // Close the modal rather than let OK/Cancel write through a stale id.
+      // The resulting `hidden` event clears the draft state.
+      if (gone) this.$bvModal.hide('edit');
+    },
+    visible() {
+      this.refreshIfStale();
+    },
     queryOptions: {
       handler: function () {
         this.fetchWords();
@@ -271,8 +316,16 @@ export default {
         return msg;
       }
     },
+    // Embedded mode: follow the editor's rules, but only while someone can see
+    // the list and no New-rule placeholder is being edited.
+    refreshIfStale() {
+      if (!this.embedded || !this.bucketsReady) return;
+      if (!this.visible || this.suggestionsPaused) return;
+      if (this.categoryRulesKey !== this.fetchedRulesKey) this.fetchWords();
+    },
     async fetchWords() {
       const requestId = ++this.requestId;
+      this.fetchedRulesKey = this.categoryRulesKey;
       const options = { ...this.queryOptions };
       this.loading = true;
       this.loadError = '';
@@ -320,9 +373,15 @@ export default {
           return;
         }
 
-        // Make sure we don't query with stale unsaved category changes.
-        await this.categoryStore.load();
-        if (requestId !== this.requestId) return;
+        // Standalone: make sure we don't query with stale unsaved category changes.
+        // Embedded: the store is shared with the category editor, so reloading
+        // would discard the user's unsaved edits; query with them instead.
+        if (!this.embedded) {
+          await this.categoryStore.load();
+          if (requestId !== this.requestId) return;
+        }
+        // The rules may have changed while the stores were loading.
+        this.fetchedRulesKey = this.categoryRulesKey;
         const query =
           canonicalEvents({
             ...bucketParams,
@@ -416,22 +475,58 @@ export default {
     },
     createRule(word: string) {
       console.log('Opening modal for creating rule with word: ' + word);
-      const lastId = this.categoryStore.addClass({
+      this.create.accepted = false;
+      // The modal edits the rule by id, so the placeholder has to be in the
+      // store before it opens. Pause refreshing instead: it would reset
+      // visible_count and hide the row the user clicked.
+      const draft = {
         name: [word],
         rule: { type: 'regex', regex: _.escapeRegExp(word) },
-      });
+      };
+      const lastId = this.categoryStore.addClass(draft);
       this.create.word = word;
+      this.create.draft = draft;
       this.create.categoryId = lastId;
+      this.suggestionsPaused = true;
     },
     async createRuleOk() {
       console.log('Creating rule with word: ' + this.create.word);
-      await this.categoryStore.save();
-      this.fetchWords();
+      if (this.embedded) {
+        // Saving here would also commit the editor's other unsaved edits.
+        // Leave the new rule unsaved; the editor's Save button persists it.
+        this.create.accepted = true;
+        this.suggestionsPaused = false;
+        this.refreshIfStale();
+      } else {
+        await this.categoryStore.save();
+        this.suggestionsPaused = false;
+        this.fetchWords();
+      }
     },
     async createRuleCancel() {
+      // Also runs after OK, since the modal emits `hidden` whenever it closes.
       console.log('Cancelling create rule');
+      const { accepted, draft } = this.create;
       this.create.categoryId = null;
-      this.categoryStore.load(); // Restore categories to last saved
+      this.create.draft = null;
+      if (!this.embedded) {
+        this.categoryStore.load(); // Restore categories to last saved
+      } else if (!accepted && draft !== null) {
+        // Drop only the placeholder rule, keeping the editor's other edits.
+        // Only while this exact rule is still in the list: an import or set
+        // switch may have reused its id for an unrelated rule.
+        if (draft.id !== undefined && this.categoryStore.classes.includes(draft)) {
+          this.categoryStore.removeClass(draft.id);
+        }
+        // Ask the store what is still unsaved rather than restoring a flag read
+        // before the placeholder: a save finishing while the draft was open
+        // already recorded the editor's real state, so that read is stale. Also
+        // runs when the modal's Remove button already dropped the draft.
+        this.categoryStore.classes_unsaved_changes = this.categoryStore.hasUnsavedChanges;
+      }
+      this.suggestionsPaused = false;
+      // A no-op if the rules are back to what the list was fetched with.
+      this.refreshIfStale();
     },
     appendRule(word) {
       console.log('Opening modal to append rule with word: ' + word);
@@ -442,8 +537,13 @@ export default {
       console.log('Appending rule with word: ' + this.append.word);
       const cat = this.categoryStore.get_category(this.append.category);
       this.categoryStore.appendClassRule(cat.id, this.append.word);
-      await this.categoryStore.save();
-      this.fetchWords();
+      // Embedded: leave the change unsaved alongside the editor's other edits.
+      if (!this.embedded) {
+        await this.categoryStore.save();
+        // Embedded mode's rule watcher owns the refresh, so the append does not
+        // race a second, identical query.
+        this.fetchWords();
+      }
     },
     handleOk(bvModalEvent) {
       // Prevent modal from closing (to be closed later in handleSubmit, if validation passes)

@@ -101,7 +101,9 @@ div
         | {{ builderOpen ? $t('settings.categorization.hideBuilder') : $t('settings.categorization.openBuilder') }}
     b-collapse#category-builder-collapse(v-model="builderOpen")
       div.mt-3(v-if="builderMounted")
-        CategoryBuilder(embedded)
+        //- The builder stays mounted while collapsed, so it needs to know it is
+        //- hidden and must not query activity for the suggestions list.
+        CategoryBuilder(embedded :visible="builderOpen")
 
   b-modal(
     v-model="showCreateSetModal"

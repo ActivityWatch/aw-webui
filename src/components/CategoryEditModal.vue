@@ -203,20 +203,24 @@ export default {
         return;
       }
       event.preventDefault();
-      this.handleSubmit();
-      this.$emit('ok');
+      // `ok` means "the category was updated": a rejected submit keeps the
+      // modal open and must not let the caller treat the draft as accepted.
+      if (this.handleSubmit()) {
+        this.$emit('ok');
+      }
     },
     handleOk(event) {
       // Prevent modal from closing
       event.preventDefault();
       // Trigger submit handler
-      this.handleSubmit();
-      this.$emit('ok');
+      if (this.handleSubmit()) {
+        this.$emit('ok');
+      }
     },
-    handleSubmit() {
+    handleSubmit(): boolean {
       // Exit when the form isn't valid
       if (!this.checkFormValidity()) {
-        return;
+        return false;
       }
 
       // Save the category
@@ -231,7 +235,7 @@ export default {
       // The leaf name must be valid on its own — do NOT let a blank name
       // silently collapse a child into its parent's path.
       if (!isValid(this.editing.name)) {
-        return;
+        return false;
       }
       const nameSegments = parent.concat(this.editing.name);
       const rule =
@@ -271,6 +275,7 @@ export default {
       this.$nextTick(() => {
         this.$refs.edit?.hide();
       });
+      return true;
     },
     resetModal() {
       const cat = this.categoryStore.get_category_by_id(this.categoryId);

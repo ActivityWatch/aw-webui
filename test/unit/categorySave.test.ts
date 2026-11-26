@@ -158,6 +158,39 @@ test('an earlier matching snapshot stays dirty while a different snapshot is que
   expect(store.classes_unsaved_changes).toBe(true); // Persisted B, current has no B.
 });
 
+// beforeEach leaves saved_snapshot null; load() sets a real baseline first.
+test('a successful save becomes the baseline for hasUnsavedChanges', async () => {
+  store.load(clone(store.classes));
+  expect(store.hasUnsavedChanges).toBe(false);
+  store.addClass(category('B'));
+  expect(store.hasUnsavedChanges).toBe(true);
+  const saving = store.save();
+  requests[0].resolve();
+  await saving;
+  // The baseline must be the saved state, not the state at load().
+  expect(store.hasUnsavedChanges).toBe(false);
+});
+
+test('a write that succeeds before a queued write fails stays the saved baseline', async () => {
+  const initial = store.save(); // baseline: the server holds the current state
+  requests[0].resolve();
+  await initial;
+  expect(store.hasUnsavedChanges).toBe(false);
+  store.addClass(category('B'));
+  const first = store.save(); // edited: persists B
+  store.removeClass(store.get_category(['B']).id);
+  const second = store.save(); // reverted to the baseline: fails before writing
+  const secondResult = second.catch(error => error);
+  requests[1].resolve();
+  await first;
+  await flush();
+  requests[2].reject(new Error('offline'));
+  await secondResult;
+  // The server holds B and the editor does not, so the editor is dirty.
+  expect(store.hasUnsavedChanges).toBe(true);
+  expect(store.classes_unsaved_changes).toBe(true);
+});
+
 test('different Pinia stores do not block one another', async () => {
   const first = store.save();
   const other = useCategoryStore(createPinia());
