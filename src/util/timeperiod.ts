@@ -5,6 +5,51 @@ import { useSettingsStore } from '~/stores/settings';
 export interface TimePeriod {
   start: string;
   length: [number, string];
+  /**
+   * The start-of-day (`HH:mm`) the calendar period was requested with. `start`
+   * alone loses it when the requested time falls in a DST gap (02:00 resolves to
+   * 03:00), and every later boundary would then keep the shifted time.
+   */
+  offset?: string;
+}
+
+const CALENDAR_UNIT_RE = /^(day|week|month|year)/;
+
+/** Nominal civil date, even when a late day start resolves past midnight. */
+export function timeperiodStartDate(start: string, offset?: string): string {
+  const local = moment(start);
+  const date = moment.utc(local.format('YYYY-MM-DD'));
+  if (offset && local.format('HH:mm') < offset) date.subtract(1, 'day');
+  return date.format('YYYY-MM-DD');
+}
+
+/**
+ * `start` advanced by `count` of `unit`. For calendar units the requested
+ * start-of-day is re-applied on the target date: `moment.add` keeps the wall
+ * clock, so a start that was moved out of a DST gap would otherwise pin the
+ * next boundary an hour (or 30 minutes) past the real start of that day.
+ */
+export function advanceTimeperiodStart(
+  start: string,
+  count: number,
+  unit: string,
+  offset?: string
+): moment.Moment {
+  const local = moment(start);
+  if (!offset || !CALENDAR_UNIT_RE.test(unit)) {
+    return local.add(count, unit as moment.unitOfTime.DurationConstructor);
+  }
+  if (count === 0) return local;
+  // Advance a civil date, not the resolved wall time. A gap at 23:00 can
+  // resolve on the following date (Nuuk), so recover its nominal date first.
+  const date = moment.utc(timeperiodStartDate(start, offset));
+  date.add(count, unit as moment.unitOfTime.DurationConstructor);
+  return moment(get_day_start_with_offset(date.format('YYYY-MM-DD'), offset));
+}
+
+/** Exclusive end of a period. */
+export function timeperiodEnd(tp: TimePeriod): moment.Moment {
+  return advanceTimeperiodStart(tp.start, tp.length[0], tp.length[1], tp.offset);
 }
 
 export function dateToTimeperiod(
@@ -12,15 +57,16 @@ export function dateToTimeperiod(
   offset: string,
   duration?: [number, string]
 ): TimePeriod {
-  return { start: get_day_start_with_offset(date, offset), length: duration || [1, 'day'] };
+  return {
+    start: get_day_start_with_offset(date, offset),
+    length: duration || [1, 'day'],
+    offset,
+  };
 }
 
 export function timeperiodToStr(tp: TimePeriod): string {
   const start = moment(tp.start).format();
-  const end = moment(start)
-    .add(tp.length[0], tp.length[1] as moment.unitOfTime.DurationConstructor)
-    .format();
-  return [start, end].join('/');
+  return [start, timeperiodEnd(tp).format()].join('/');
 }
 
 export function dateformat(periodLength: string) {
@@ -99,9 +145,12 @@ export function periodStartDate(date: string, periodLength: string): string {
 export function timeperiodsAroundTimeperiod(timeperiod: TimePeriod): TimePeriod[] {
   const periods = [];
   for (let i = -15; i <= 15; i++) {
-    const start = moment(timeperiod.start)
-      .add(i * timeperiod.length[0], timeperiod.length[1] as moment.unitOfTime.DurationConstructor)
-      .format();
+    const start = advanceTimeperiodStart(
+      timeperiod.start,
+      i * timeperiod.length[0],
+      timeperiod.length[1],
+      timeperiod.offset
+    ).format();
     periods.push({ ...timeperiod, start });
   }
   return periods;
@@ -115,9 +164,7 @@ export function timeperiodsAroundTimeperiod(timeperiod: TimePeriod): TimePeriod[
  */
 export function timeperiodsHoursOfPeriod(timeperiod: TimePeriod): TimePeriod[] {
   const start = moment(timeperiod.start);
-  const end = start
-    .clone()
-    .add(timeperiod.length[0], timeperiod.length[1] as moment.unitOfTime.DurationConstructor);
+  const end = timeperiodEnd(timeperiod);
   const periods: TimePeriod[] = [];
   let cur = start.clone();
   while (cur.isBefore(end)) {
@@ -170,10 +217,17 @@ export function timeperiodsDaysOfPeriod(timeperiod: TimePeriod): TimePeriod[] {
   }
 
   for (let i = 0; i < count; i++) {
-    const start = moment(timeperiod.start)
-      .add(i * _length[0], _length[1] as moment.unitOfTime.DurationConstructor)
-      .format();
-    periods.push({ start, length: _length });
+    const start = advanceTimeperiodStart(
+      timeperiod.start,
+      i * _length[0],
+      _length[1],
+      timeperiod.offset
+    ).format();
+    periods.push(
+      timeperiod.offset
+        ? { start, length: _length, offset: timeperiod.offset }
+        : { start, length: _length }
+    );
   }
   return periods;
 }
@@ -184,10 +238,17 @@ export function timeperiodsMonthsOfPeriod(timeperiod: TimePeriod): TimePeriod[] 
 
   const count = 12;
   for (let i = 0; i < count; i++) {
-    const start = moment(timeperiod.start)
-      .add(i * _length[0], _length[1] as moment.unitOfTime.DurationConstructor)
-      .format();
-    periods.push({ start, length: _length });
+    const start = advanceTimeperiodStart(
+      timeperiod.start,
+      i * _length[0],
+      _length[1],
+      timeperiod.offset
+    ).format();
+    periods.push(
+      timeperiod.offset
+        ? { start, length: _length, offset: timeperiod.offset }
+        : { start, length: _length }
+    );
   }
   return periods;
 }
@@ -239,6 +300,7 @@ export function dateRangeToTimeperiod(range: DateRange, offset: string): TimePer
   return {
     start: get_day_start_with_offset(range.start, offset),
     length: [dateRangeDays(range), 'days'],
+    offset,
   };
 }
 
@@ -258,18 +320,18 @@ export const EXACT_HOURLY_MAX_MS = 24 * 3600 * 1000;
  */
 export function timeperiodsCalendarMonthsOfPeriod(timeperiod: TimePeriod): TimePeriod[] {
   const start = moment(timeperiod.start);
-  const end = start
-    .clone()
-    .add(timeperiod.length[0], timeperiod.length[1] as moment.unitOfTime.DurationConstructor);
+  const end = timeperiodEnd(timeperiod);
   const periods: TimePeriod[] = [];
   let cur = start.clone();
   while (cur.isBefore(end)) {
     let next = cur.clone().startOf('month').add(1, 'month');
-    // Keep the day-start offset (e.g. 04:00) on month boundaries
-    next = next.hours(start.hours()).minutes(start.minutes());
+    // Use the requested day start, not a wall time shifted out of a DST gap.
+    next = timeperiod.offset
+      ? moment(get_day_start_with_offset(next, timeperiod.offset))
+      : next.hours(start.hours()).minutes(start.minutes());
     if (next.isAfter(end)) next = end.clone();
-    const days = next.diff(cur, 'days', true);
-    periods.push({ start: cur.format(), length: [Math.round(days), 'days'] });
+    // Store exact bounds: rounded calendar days lose a clipped/DST-shifted end.
+    periods.push({ start: cur.format(), length: [next.diff(cur), 'milliseconds'] });
     cur = next;
   }
   return periods;
@@ -327,13 +389,11 @@ export function usesMonthlyBuckets(timeperiod: TimePeriod): boolean {
  */
 export function splitTimeperiodStrs(timeperiod: TimePeriod, maxDays: number): string[] {
   const start = moment(timeperiod.start);
-  const end = start
-    .clone()
-    .add(timeperiod.length[0], timeperiod.length[1] as moment.unitOfTime.DurationConstructor);
+  const end = timeperiodEnd(timeperiod);
   const periods: string[] = [];
   let cur = start.clone();
   while (cur.isBefore(end)) {
-    let next = cur.clone().add(maxDays, 'days');
+    let next = advanceTimeperiodStart(cur.format(), maxDays, 'days', timeperiod.offset);
     if (next.isAfter(end)) next = end.clone();
     periods.push([cur.format(), next.format()].join('/'));
     cur = next;

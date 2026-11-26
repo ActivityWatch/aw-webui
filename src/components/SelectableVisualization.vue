@@ -84,7 +84,7 @@ div(v-if="editable || !activityStore.buckets.loaded || has_prerequisites || !set
     div(v-if="type == 'category_sunburst'")
       aw-sunburst-categories(:data="top_categories_hierarchy", style="height: 20em")
     div(v-if="type == 'timeline_barchart'")
-      aw-timeline-barchart(:datasets="datasets", :timeperiod_start="activityStore.query_options.timeperiod.start", :timeperiod_length="activityStore.query_options.timeperiod.length", :clamp_hourly="true", style="height: 100")
+      aw-timeline-barchart(:datasets="datasets", :timeperiod_start="activityStore.query_options.timeperiod.start", :timeperiod_length="activityStore.query_options.timeperiod.length", :timeperiod_offset="activityStore.query_options.timeperiod.offset", :clamp_hourly="true", style="height: 100")
     div(v-if="type == 'sunburst_clock' && isSingleDay")
       aw-sunburst-clock(:date="activityStore.query_options.timeperiod.start", :afkBucketId="activityStore.buckets.afk[0]", :windowBucketId="activityStore.buckets.window[0]")
     div(v-if="type == 'custom_vis'")
@@ -137,7 +137,7 @@ import { useBucketsStore } from '~/stores/buckets';
 import { useViewsStore } from '~/stores/views';
 import { useSettingsStore } from '~/stores/settings';
 import { isBrowserAllowlistMiss } from '~/util/browserAllowlist';
-import { isExactTimeperiod } from '~/util/timeperiod';
+import { isExactTimeperiod, timeperiodEnd } from '~/util/timeperiod';
 import { categoryPathLabel } from '~/util/categoryLabels';
 
 import moment from 'moment';
@@ -342,12 +342,8 @@ export default {
       // The timeline only supports whole days; never fetch a full day for an exact interval
       if (isExactTimeperiod(this.activityStore.query_options.timeperiod)) return null;
 
-      let date = this.activityStore.query_options.date;
-      if (!date) {
-        date = this.activityStore.query_options.timeperiod.start;
-      }
-
-      return [moment(date), moment(date).add(1, 'day')];
+      const period = this.activityStore.query_options.timeperiod;
+      return [moment(period.start), timeperiodEnd({ ...period, length: [1, 'day'] })];
     },
     isSingleDay: function () {
       return _.isEqual(this.activityStore.query_options.timeperiod.length, [1, 'day']);

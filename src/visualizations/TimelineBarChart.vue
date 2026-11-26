@@ -26,6 +26,7 @@ import {
   hourlyLabels,
   timeperiodsCalendarMonthsOfPeriod,
   timeperiodsHoursOfPeriod,
+  timeperiodStartDate,
 } from '~/util/timeperiod';
 import { i18n } from '~/i18n';
 import { clampStackedHours } from '~/util/timelineClamp';
@@ -66,6 +67,12 @@ export default {
       type: Array,
       default: () => [1, 'day'],
     },
+    // The start of day the period was requested with; without it a DST-gap day
+    // would get a bucket per wall-clock hour instead of per elapsed hour.
+    timeperiod_offset: {
+      type: String,
+      default: undefined,
+    },
     // Only hourly activity views (single-day or exact interval) should trim overlapping stacks.
     // Other callers (Trends, Report, multi-day Activity) reuse the default
     // `[1, 'day']` timeperiod but pass per-day values, which must not be clamped.
@@ -82,12 +89,22 @@ export default {
     labels() {
       const start = this.timeperiod_start;
       const [count, resolution] = this.timeperiod_length;
+      // Use the same nominal date as calendar query advancement. A day start
+      // in Nuuk's 23:00 gap resolves to the following date, not the first label.
+      const calendarStart = () =>
+        new Date(`${timeperiodStartDate(start, this.timeperiod_offset)}T12:00:00`);
       if (resolution === 'milliseconds') {
         // Exact interval: the same clipped buckets the category query uses
         return start ? exactBucketLabels({ start, length: [count, resolution] }) : [];
       }
       if (resolution.startsWith('day') && count == 1) {
-        if (start) return hourlyLabels({ start, length: [count, resolution] });
+        if (start) {
+          return hourlyLabels({
+            start,
+            length: [count, resolution],
+            offset: this.timeperiod_offset,
+          });
+        }
         // Reports aggregate by wall-clock hour without a selected calendar day.
         const hourOffset = get_hour_offset();
         return _.range(0, 24).map(h => `${(h + hourOffset) % 24}`);
@@ -97,27 +114,25 @@ export default {
         return timeperiodsCalendarMonthsOfPeriod({
           start,
           length: [count, resolution],
+          offset: this.timeperiod_offset,
         }).map(p => fmt.format(new Date(p.start)));
       } else if (resolution.startsWith('day')) {
         return _.range(count).map(d => {
-          const date = new Date(start);
-          date.setHours(12, 0, 0, 0);
+          const date = calendarStart();
           date.setDate(date.getDate() + d);
           return format_date_short(date, i18n.locale);
         });
       } else if (resolution === 'weeks') {
         // One bar per week (Trends), labelled with each week's start date
         return _.range(count).map(w => {
-          const date = new Date(start);
-          date.setHours(12, 0, 0, 0);
+          const date = calendarStart();
           date.setDate(date.getDate() + 7 * w);
           return format_date_short(date, i18n.locale);
         });
       } else if (resolution.startsWith('week')) {
         // Look up days of the week from `start`
         return _.range(7).map(d => {
-          const date = new Date(start);
-          date.setHours(12, 0, 0, 0);
+          const date = calendarStart();
           date.setDate(date.getDate() + d);
           return format_weekday_short(date);
         });
@@ -139,12 +154,14 @@ export default {
       let datasets = _.sortBy(this.datasets, d => d.label);
       const [count, resolution] = this.timeperiod_length;
       if (this.clamp_hourly) {
-        if (resolution.startsWith('day') && count === 1) {
-          datasets = clampStackedHours(datasets);
-        } else if (resolution === 'milliseconds' && count <= EXACT_HOURLY_MAX_MS) {
+        if (
+          (resolution.startsWith('day') && count === 1) ||
+          (resolution === 'milliseconds' && count <= EXACT_HOURLY_MAX_MS)
+        ) {
           const bucketHours = timeperiodsHoursOfPeriod({
             start: this.timeperiod_start,
             length: [count, resolution],
+            offset: this.timeperiod_offset,
           }).map(period => period.length[0]);
           datasets = clampStackedHours(datasets, bucketHours);
         }
