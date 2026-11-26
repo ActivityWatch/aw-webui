@@ -1,5 +1,7 @@
 import _ from 'lodash';
 
+import { supportsMergeSubwatcherFields } from '~/util/serverCapabilities';
+
 // TODO: Sanitize string input of buckets
 
 // Substitute `marker` everywhere except inside double-quoted string literals.
@@ -312,6 +314,28 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
     isDesktopParams(params) && params.filter_afk && params.bid_browsers
       ? 'browser_events = filter_period_intersect(browser_events, not_afk);'
       : '',
+    // Enrich window events with browser url/$domain so URL-based category rules
+    // fire on the main events stream. `merge_subwatcher_fields` was added in
+    // aw-server-rust#824, which is newer than the server floor this webui
+    // supports, so only emit it when the startup capability probe found it
+    // (see util/serverCapabilities). Otherwise the query fails server-side with
+    // VariableNotDefined and the whole Activity view breaks.
+    // Must run BEFORE the stopwatch union: stopwatch events explicitly recorded
+    // by the user should not be split and given browser url/$domain.
+    // Incognito events are excluded — those URLs already appear in the Browser
+    // section and should not reach the category engine via this path.
+    // base_wins preserves the url already present in window events on macOS
+    // (aw-watcher-window writes url natively for supported browsers). Copy only
+    // url, then derive its fields so a preserved native URL cannot acquire a
+    // different browser page's $domain.
+    isDesktopParams(params) &&
+    params.categories &&
+    params.bid_browsers &&
+    params.bid_browsers.length > 0 &&
+    supportsMergeSubwatcherFields()
+      ? `events = merge_subwatcher_fields(events, exclude_keyvals(browser_events, "incognito", [true]), ["url"], "base_wins");
+         events = split_url_events(events);`
+      : '',
     params.bid_stopwatch
       ? `stopwatch_events = query_bucket("${params.bid_stopwatch}");
          events = union_no_overlap(stopwatch_events, events);`
@@ -574,9 +598,9 @@ function browserEvents(params: DesktopQueryParams): string {
   // The chrome regex matches forks so a fork without a dedicated bucket still
   // counts (#927). A settings-override Arc bucket can coexist with the default
   // chrome bucket, and then the same Arc activity would be counted by both
-  // streams. There is no exclude primitive common to both aw-server
-  // implementations (exclude_keyvals is Rust-only), so the chrome stream
-  // strips only the forks that actually have a dedicated bucket.
+  // streams. The chrome stream strips only the forks that actually have a
+  // dedicated bucket. Both servers provide exclude_keyvals for exact values,
+  // but these app-name patterns also need case/variant-aware regex matching.
   // Dia stays on the chrome stream: it has no dedicated bucket today.
   const dedicatedChromeForks = browsers
     .map(([browserName]) => browserName)

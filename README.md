@@ -136,6 +136,35 @@ Python form (`(?P<name>...)`) or omit named groups entirely.
 Malformed presets are logged and ignored rather than breaking the UI.
 See `src/util/presetCategories.ts`.
 
+## Unreleased: browser-aware categorization
+
+On servers that support `merge_subwatcher_fields`, desktop queries that supply
+browser buckets and enable categorization now copy browser `url` and `$domain`
+onto window time before applying category rules. Older servers retain the previous
+behavior. Stopwatch time is not enriched; incognito browser events are excluded
+from this merge, and existing window-watcher fields take precedence.
+
+- **Existing totals can change.** Rules with blank match fields inspect every
+  string field, now including browser URLs and domains. For example, an unanchored
+  `vim` expression also matches `vimeo.com`, and `ActivityWatch|aw-` can match a URL
+  containing `aw-`. Restrict rules to `app`/`title` to retain their previous match
+  surface. This change does not rewrite stored events or category rules.
+- **Title hiding is not a cross-bucket privacy boundary.** `--exclude-title`,
+  `--exclude-titles`, and privacy filters targeting only window events do not
+  remove the separate browser history. This merge can attach its URL to window
+  time whose title was hidden/redacted. `base_wins` does not prevent this when
+  the window event has no URL. Filter sensitive browser data at collection or
+  in the browser bucket as well; hiding only a window title is insufficient.
+- **Edge v0.6.0 extension limitation.** That extension can identify Edge as
+  Chrome. Edge time may miss enrichment, and simultaneous Chrome use can receive
+  Edge URLs from the shared bucket. ActivityWatch/aw-watcher-web#262 fixes browser
+  identification for a future extension release; overriding the browser name to
+  `edge` in extension settings separates newly collected events, not old data.
+- **Coverage is caller-dependent.** Only queries passing browser buckets are
+  enriched; this does not add URL categorization to every view. The rule-editor
+  `url`/`$domain` field picker is a separate stacked change,
+  [ActivityWatch/aw-webui#1171](https://github.com/ActivityWatch/aw-webui/pull/1171).
+
 ## Tests
 
 Tests can be run with:
