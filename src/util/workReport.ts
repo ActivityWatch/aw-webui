@@ -103,7 +103,7 @@ export function buildWorkReportQuery(
             events_${hi} = filter_keyvals(events_${hi}, "$category", ${jsonForQuery(
       categoriesFilter
     )});
-          `;
+`;
   }
   query += '\nevents = [];';
   for (let hi = 0; hi < hosts.length; hi++) {
@@ -112,14 +112,9 @@ export function buildWorkReportQuery(
   query += `
           duration = sum_durations(events);
           RETURN = {"events": events, "duration": duration};
-        `;
-  // Strip per-line trailing whitespace so the snapshot test stays stable
-  // under the trailing-whitespace pre-commit hook. aw-query is whitespace-
-  // tolerant so this has no runtime effect.
-  return query
-    .split('\n')
-    .map(line => line.replace(/\s+$/, ''))
-    .join('\n');
+`;
+  // Do not trim assembled queries: whitespace inside literals is user data.
+  return query;
 }
 
 export interface WorkSessionSummary {
