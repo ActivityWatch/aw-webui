@@ -390,7 +390,7 @@ export default {
   },
   activity: {
     watcherLiveness: {
-      stopped: 'Bevakaren har stoppat:',
+      stopped: 'Bevakaren har slutat rapportera:',
       lastReported: '{name} rapporterade senast {ago}.',
       hint: 'Kontrollera ikonen i systemfältet eller {link}.',
       restart: 'starta om bevakaren',
