@@ -277,3 +277,20 @@ test('a saved edit refetches the raw buckets for the same range', async () => {
   expect(mockGetBucketsWithEvents).toHaveBeenCalledTimes(2);
   expect(vm.buckets[0].events[0].duration).toBe(99);
 });
+
+test('mergeCategoryIntervals joins touching intervals whose microsecond timestamps truncate unevenly', () => {
+  // True end of the first is 10:00:10.000400, the start of the second; Date drops the microseconds.
+  const merged = mergeCategoryIntervals([
+    { timestamp: '2026-10-18T10:00:00.000600Z', duration: 9.9998, data: { $category: ['Work'] } },
+    { timestamp: '2026-10-18T10:00:10.000400Z', duration: 5, data: { $category: ['Work'] } },
+  ]);
+  expect(merged).toHaveLength(1);
+});
+
+test('mergeCategoryIntervals keeps a real 1 ms gap split', () => {
+  const merged = mergeCategoryIntervals([
+    { timestamp: '2026-10-18T10:00:00.000Z', duration: 10, data: { $category: ['Work'] } },
+    { timestamp: '2026-10-18T10:00:10.001Z', duration: 5, data: { $category: ['Work'] } },
+  ]);
+  expect(merged).toHaveLength(2);
+});

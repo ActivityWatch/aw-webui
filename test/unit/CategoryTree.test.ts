@@ -103,3 +103,19 @@ describe('CategoryTree structural identity', () => {
     expect(icon('Work')).toBe('regular/minus-square');
   });
 });
+
+describe('CategoryTree percentages', () => {
+  test('keep one decimal instead of rounding to whole percent', async () => {
+    const wrapper = mount(CategoryTree, {
+      localVue,
+      propsData: { events: [event(['Media'], 996), event(['Work'], 4)] },
+      stubs: { icon: true, 'b-checkbox': true },
+    });
+    wrapper.setData({ show_perc: true });
+    await wrapper.vm.$nextTick();
+    const values = wrapper.findAll('.category-value').wrappers.map(w => w.text());
+    // 4s of 1000s is 0.4%, not "0%" (Math.round ignores a second argument)
+    expect(values).toEqual(['99.6%', '0.4%']);
+    wrapper.destroy();
+  });
+});
