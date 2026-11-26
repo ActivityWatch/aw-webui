@@ -17,16 +17,9 @@ export function replaceOutsideStrings(
 ): string {
   let out = '';
   let inString = false;
-  let inEscape = false;
   for (let i = 0; i < querystr.length; i++) {
     const char = querystr[i];
-    if (inEscape) {
-      out += char;
-      inEscape = false;
-    } else if (char === '\\' && inString) {
-      out += char;
-      inEscape = true;
-    } else if (char === '"') {
+    if (char === '"' && !(inString && querystr[i - 1] === '\\')) {
       inString = !inString;
       out += char;
     } else if (!inString && querystr.startsWith(marker, i)) {
@@ -43,19 +36,15 @@ export function querystr_to_array(querystr: string): string[] {
   // Split on ';' but only when not inside a double-quoted string literal.
   // A naive .split(';') breaks category rules whose regex contains semicolons,
   // e.g. `"regex": "foo;bar"` would be shredded before reaching the server.
+  // Literals end where aw-query (Rust and Python) ends them: at the first quote
+  // not preceded by a backslash. Backslashes are not read in pairs.
   const statements: string[] = [];
   let current = '';
   let inString = false;
-  let inEscape = false;
+  let prev = '';
 
   for (const char of querystr) {
-    if (inEscape) {
-      current += char;
-      inEscape = false;
-    } else if (char === '\\' && inString) {
-      current += char;
-      inEscape = true;
-    } else if (char === '"') {
+    if (char === '"' && !(inString && prev === '\\')) {
       inString = !inString;
       current += char;
     } else if (char === ';' && !inString) {
@@ -65,6 +54,7 @@ export function querystr_to_array(querystr: string): string[] {
     } else {
       current += char;
     }
+    prev = char;
   }
 
   const trimmed = current.trim();
@@ -73,8 +63,68 @@ export function querystr_to_array(querystr: string): string[] {
   return statements;
 }
 
-function escape_doublequote(s: string) {
+// Encode a value as the content of a double-quoted query literal.
+//
+// aw-query turns each `\"` into `"` and keeps every other backslash as
+// written, so one backslash before each quote sends any value unchanged,
+// including bucket IDs and patterns that already hold backslashes. A value
+// ending in a backslash cannot be written: that backslash would escape the
+// closing quote. It is rejected rather than changed, so a bucket ID is never
+// swapped for a different one.
+export function escape_doublequote(s: string): string {
+  if (s.endsWith('\\')) {
+    throw new Error(
+      `aw-query cannot represent a string ending in a backslash: ${JSON.stringify(s)}`
+    );
+  }
   return s.replace(/"/g, '\\"');
+}
+
+// Encode a regex pattern for a query literal. Like `escape_doublequote`, but a
+// pattern ending in an escaped backslash (`C:\\`) is valid, so it gets an
+// empty group appended instead of being rejected: `C:\\(?:)` matches the same text.
+function querySafePattern(pattern: string): string {
+  return /\\$/.test(pattern) ? `${pattern}(?:)` : pattern;
+}
+
+function escapePatternForQuery(pattern: string): string {
+  return escape_doublequote(querySafePattern(pattern));
+}
+
+// Encode a list of optional buckets, such as browser buckets. An ID that cannot
+// be written is left out with a warning, so one unusable bucket does not stop
+// the whole query; the selectors pick among the IDs that remain.
+function escapeBucketIds(ids: string[]): string[] {
+  return ids.flatMap(id => {
+    try {
+      return [escape_doublequote(id)];
+    } catch (e) {
+      console.warn(`Skipping bucket: ${(e as Error).message}`);
+      return [];
+    }
+  });
+}
+
+// Keep JSON's collection/scalar syntax, but encode each string with aw-query's
+// rules (only quotes are escaped). Undoing backslashes globally would conflate
+// real control characters with literal escape text, e.g. a tab with `\t`.
+// Literal names cannot use the regex workaround: reject an unrepresentable
+// value instead of emitting an unclosed string or changing its identity.
+export function jsonForQuery(value: unknown): string {
+  return JSON.stringify(value).replace(/"(?:\\.|[^"\\])*"/g, literal => {
+    return `"${escape_doublequote(JSON.parse(literal))}"`;
+  });
+}
+
+// Only rule.regex is a regex; category paths and select_keys are literal names.
+// Copy rather than modifying the user's saved rules.
+export function categoriesForQuery(categories: Category[]): string {
+  return jsonForQuery(
+    categories.map(([path, rule]) => [
+      path,
+      rule.regex === undefined ? rule : { ...rule, regex: querySafePattern(rule.regex) },
+    ])
+  );
 }
 
 // Hostname safe for using as a variable name
@@ -155,9 +205,7 @@ function get_params(
   // a phone synced via aw-sync) queries via the android path instead, which
   // has no afk filter — see buildMultideviceHostParams.
   if (host_params && isAndroidParams(host_params) && host_params.bid_android) {
-    const bid_browsers = includeBrowsers
-      ? _.map(host_params.bid_browsers || [], escape_doublequote)
-      : [];
+    const bid_browsers = includeBrowsers ? escapeBucketIds(host_params.bid_browsers || []) : [];
     const new_params: AndroidQueryParams = {
       ...params,
       bid_android: escape_doublequote(host_params.bid_android),
@@ -171,8 +219,8 @@ function get_params(
 
   const new_params: DesktopQueryParams = {
     ...params,
-    bid_window: escape_doublequote('aw-watcher-window_' + host),
-    bid_afk: escape_doublequote('aw-watcher-afk_' + host),
+    bid_window: 'aw-watcher-window_' + host,
+    bid_afk: 'aw-watcher-afk_' + host,
     bid_browsers: [],
     return_variable_suffix: hostVariableSuffix(params, i),
   };
@@ -190,14 +238,16 @@ function get_params(
       }
       const value = overrides[key];
       if (typeof value === 'string' && value.length > 0) {
-        target[key] = escape_doublequote(value);
+        target[key] = key === 'bid_stopwatch' ? escape_doublequote(value) : value;
       } else if (Array.isArray(value) && value.length > 0) {
-        target[key] = value.map(item =>
-          typeof item === 'string' ? escape_doublequote(item) : item
-        );
+        target[key] = value;
       }
     });
   }
+  // Bucket hostnames can be any text (e.g. ScreenTime device names).
+  new_params.bid_window = escape_doublequote(new_params.bid_window);
+  new_params.bid_afk = escape_doublequote(new_params.bid_afk);
+  new_params.bid_browsers = escapeBucketIds(new_params.bid_browsers || []);
   return new_params;
 }
 
@@ -231,14 +281,15 @@ function queryBucket(bid: string): string {
 //  - Filters by category (if filter_categories set)
 // Puts it's results in `events` and `not_afk` (if not_afk available for platform).
 export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams): string {
-  // Needs escaping for regex patterns like '\w' to work (JSON.stringify adds extra unnecessary escaping)
-  const categories_str = params.categories
-    ? JSON.stringify(params.categories).replace(/\\\\/g, '\\')
-    : '';
-  const always_active_pattern_str = isDesktopParams(params)
-    ? params.always_active_pattern
-    : undefined;
-  const cat_filter_str = JSON.stringify(params.filter_categories);
+  // Single backslashes, so regex patterns like '\w' survive the JSON round-trip.
+  const categories_str = params.categories ? categoriesForQuery(params.categories) : '';
+  // Escaped here, so every caller gets a valid string literal.
+  const always_active_pattern_str =
+    isDesktopParams(params) && params.always_active_pattern
+      ? escapePatternForQuery(params.always_active_pattern)
+      : undefined;
+  // Same un-doubling as categories_str, so names compare equal server-side.
+  const cat_filter_str = params.filter_categories ? jsonForQuery(params.filter_categories) : '';
 
   // For simplicity, we assume that bid_window and bid_android are exchangeable (note however it needs special treatment)
   const bid_window = isDesktopParams(params) ? params.bid_window : params.bid_android;
@@ -600,7 +651,7 @@ function browserEvents(params: DesktopQueryParams): string {
     if (pattern) {
       // JSON.stringify adds extra unnecessary escaping for backslashes (e.g. '\.' becomes '\\.')
       // which breaks regex patterns like arc(\.exe)?$ on Windows. Undo the double-escaping.
-      const pattern_str = JSON.stringify(pattern).replace(/\\\\/g, '\\');
+      const pattern_str = jsonForQuery(pattern);
       code += `
        window_${browserName}_re = filter_keyvals_regex(events, "app", ${pattern_str});
        window_${browserName} = sort_by_timestamp(concat(window_${browserName}, window_${browserName}_re));`;
@@ -638,15 +689,15 @@ export function browserSearchQuery(browserBuckets: string[], pattern: string): s
   // needs a single backslash, so patterns like '\d' must be un-escaped to match
   // (same treatment as `categories_str` in canonicalEvents).
   // Match window search's ignore_case rule for both URL and title matches.
-  const escapedPattern = JSON.stringify('(?i)' + pattern).replace(/\\\\/g, '\\');
+  const escapedPattern = `"${escapePatternForQuery('(?i)' + pattern)}"`;
   let code = 'browser_results = [];';
   // Use numeric indices as variable-name suffixes so every bucket is queried
   // regardless of whether its name matches a known browser — this also handles
   // multiple buckets for the same browser (e.g. two Chrome profiles).
-  browserBuckets.forEach((bucketId, idx) => {
+  escapeBucketIds(browserBuckets).forEach((bucketId, idx) => {
     const v = `b${idx}`;
     code += `
-    events_${v} = flood(query_bucket("${escape_doublequote(bucketId)}"));
+    events_${v} = flood(query_bucket("${bucketId}"));
     events_${v} = split_url_events(events_${v});
     url_${v} = filter_keyvals_regex(events_${v}, "url", ${escapedPattern});
     title_${v} = filter_keyvals_regex(events_${v}, "title", ${escapedPattern});
@@ -669,7 +720,7 @@ export function fullDesktopQuery(params: DesktopQueryParams, limit = default_lim
       // Escape `"`
       bid_window: escape_doublequote(params.bid_window),
       bid_afk: escape_doublequote(params.bid_afk),
-      bid_browsers: _.map(params.bid_browsers, escape_doublequote),
+      bid_browsers: escapeBucketIds(params.bid_browsers || []),
     })}
     title_events = sort_by_duration(merge_events_by_keys(events, ["app", "title"]));
     app_events   = sort_by_duration(merge_events_by_keys(title_events, ["app"]));
@@ -791,8 +842,8 @@ export function multideviceQuery(params: MultiQueryParams, limit = default_limit
 // app names in combined (multidevice) views, like the single-device view does.
 export function screentimeNamesQuery(bucketIds: string[]): string[] {
   const q = ['events = [];'];
-  for (const bid of bucketIds) {
-    q.push(`events = concat(events, query_bucket("${escape_doublequote(bid)}"));`);
+  for (const bid of escapeBucketIds(bucketIds)) {
+    q.push(`events = concat(events, query_bucket("${bid}"));`);
   }
   q.push('RETURN = merge_events_by_keys(events, ["app", "title"]);');
   return q;
@@ -800,8 +851,8 @@ export function screentimeNamesQuery(bucketIds: string[]): string[] {
 
 export function editorActivityQuery(editorbuckets: string[], limit = default_limit): string[] {
   let q = ['events = [];'];
-  for (const editorbucket of editorbuckets) {
-    q.push(`events = concat(events, flood(query_bucket("${escape_doublequote(editorbucket)}")));`);
+  for (const editorbucket of escapeBucketIds(editorbuckets)) {
+    q.push(`events = concat(events, flood(query_bucket("${editorbucket}")));`);
   }
   q = q.concat([
     'files = sort_by_duration(merge_events_by_keys(events, ["file", "language"]));',
@@ -865,10 +916,8 @@ export function activeDurationQuery(
         filter_afk: options.filter_afk !== false,
         bid_window: escape_doublequote(source.bid_window),
         bid_afk: escape_doublequote(source.bid_afk),
-        bid_browsers: (source.bid_browsers || []).map(escape_doublequote),
-        always_active_pattern: options.always_active_pattern
-          ? escape_doublequote(options.always_active_pattern)
-          : undefined,
+        bid_browsers: escapeBucketIds(source.bid_browsers || []),
+        always_active_pattern: options.always_active_pattern || undefined,
         categories: null,
         filter_categories: null,
       });
@@ -945,7 +994,7 @@ export function analysisContextQuery(params: DesktopQueryParams): string[] {
       ...params,
       bid_window: escape_doublequote(params.bid_window),
       bid_afk: escape_doublequote(params.bid_afk),
-      bid_browsers: _.map(params.bid_browsers, escape_doublequote),
+      bid_browsers: escapeBucketIds(params.bid_browsers || []),
     })}
     events = sort_by_timestamp(events);
     browser_events = split_url_events(browser_events);
@@ -963,7 +1012,20 @@ export function categoryQuery(
   params: MultiQueryParams | DesktopQueryParams | AndroidQueryParams
 ): string[] {
   const q = `
-  ${isMultiParams(params) ? canonicalMultideviceEvents(params) : canonicalEvents(params)}
+  ${
+    isMultiParams(params)
+      ? canonicalMultideviceEvents(params)
+      : canonicalEvents({
+          ...params,
+          ...(isDesktopParams(params)
+            ? {
+                bid_window: escape_doublequote(params.bid_window),
+                bid_afk: escape_doublequote(params.bid_afk),
+              }
+            : { bid_android: escape_doublequote(params.bid_android) }),
+          bid_browsers: escapeBucketIds(params.bid_browsers || []),
+        })
+  }
   cat_events   = sort_by_duration(merge_events_by_keys(events, ["$category"]));
   RETURN = { "cat_events": cat_events };
 `;
@@ -973,7 +1035,7 @@ export function categoryQuery(
 // Query browser buckets standalone, without requiring window/afk watchers.
 // Used on Android and other platforms where only aw-watcher-web is running.
 export function browserOnlyQuery(browserbuckets: string[]): string[] {
-  const escaped = browserbuckets.map(escape_doublequote);
+  const escaped = escapeBucketIds(browserbuckets);
 
   let code = `browser_events = [];`;
   escaped.forEach((bucketId, i) => {
@@ -1089,7 +1151,7 @@ export function androidBrowserQuery(
   isIos = false
 ): string[] {
   bid_android = escape_doublequote(bid_android);
-  const escaped_browsers = bid_browsers.map(escape_doublequote);
+  const escaped_browsers = escapeBucketIds(bid_browsers);
   // keep_event_timestamps: merge_events_by_keys collapses each app into one
   // event at its first timestamp with summed duration, so URL intersection
   // would match the wrong clock times (Chrome 09:00–09:10 and 10:00–10:10

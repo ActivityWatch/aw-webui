@@ -1,5 +1,11 @@
 import _ from 'lodash';
-import { canonicalEvents, querystr_to_array, BaseQueryParams } from '~/queries';
+import {
+  canonicalEvents,
+  escape_doublequote,
+  jsonForQuery,
+  querystr_to_array,
+  BaseQueryParams,
+} from '~/queries';
 import { IEvent } from './interfaces';
 
 interface TimelineBucket {
@@ -7,6 +13,10 @@ interface TimelineBucket {
   type: string;
   hostname?: string;
 }
+
+// `canonicalEvents` writes bucket ids verbatim, so callers escape them first.
+// All selected activity sources are required: an unrepresentable ID must show
+// the view's category-error warning, not silently produce a partial timeline.
 
 /** Use the Activity view's canonical stream, not independently classified raw buckets.
  * Earlier visible sources win overlaps, just as in the multidevice Activity query.
@@ -19,11 +29,14 @@ export function categoryTimelineQuery(
   all: TimelineBucket[],
   params: BaseQueryParams & { always_active_pattern?: string }
 ): string[] | null {
-  const sources = visible.filter(
-    b => b.type === 'currentwindow' || (b.type === 'app' && b.id.startsWith('aw-import-screentime'))
-  );
+  const sources = visible
+    .filter(
+      b =>
+        b.type === 'currentwindow' || (b.type === 'app' && b.id.startsWith('aw-import-screentime'))
+    )
+    .map(bucket => ({ bucket, id: escape_doublequote(bucket.id) }));
   if (!sources.length) return null;
-  const queries = sources.map((bucket, i) => {
+  const queries = sources.map(({ bucket, id }, i) => {
     const common = { ...params, filter_categories: [], return_variable_suffix: `timeline_${i}` };
     if (
       bucket.id.startsWith('aw-watcher-android') ||
@@ -31,17 +44,20 @@ export function categoryTimelineQuery(
     ) {
       return canonicalEvents({
         ...common,
-        bid_android: bucket.id,
+        bid_android: id,
         isIos: bucket.id.startsWith('aw-import-screentime'),
         keep_event_timestamps: true,
       });
     }
     const afk = all.find(b => b.type === 'afkstatus' && b.hostname === bucket.hostname);
+    // An existing AFK bucket is required: dropping its filter would count idle
+    // time as activity. Let the view report the error and retain its raw rows.
+    const afk_id = afk ? escape_doublequote(afk.id) : null;
     return canonicalEvents({
       ...common,
-      bid_window: bucket.id,
-      bid_afk: afk?.id || '',
-      filter_afk: !!afk,
+      bid_window: id,
+      bid_afk: afk_id ?? '',
+      filter_afk: !!afk_id,
     });
   });
   queries.push('events = [];');
@@ -61,7 +77,9 @@ export function categoryTimelineQuery(
       ],
       _.isEqual
     );
-    queries.push(`events = filter_keyvals(events, "$category", ${JSON.stringify(selected)});`);
+    // Un-double backslashes as canonicalEvents does for categorize, so names match.
+    const selected_str = jsonForQuery(selected);
+    queries.push(`events = filter_keyvals(events, "$category", ${selected_str});`);
   }
   queries.push('RETURN = sort_by_timestamp(events);');
   return querystr_to_array(queries.join('\n'));

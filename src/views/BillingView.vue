@@ -91,6 +91,7 @@ import {
 } from '~/util/time';
 import { periodStartDate } from '~/util/timeperiod';
 import { neutralizeCsvFormula } from '~/util/export';
+import { categoriesForQuery, jsonForQuery } from '~/queries';
 import {
   getWorkReportHostBuckets,
   getWorkReportHostOptions,
@@ -114,8 +115,8 @@ function buildBillingQuery(hosts: WorkReportHostBuckets[], categoriesStr: string
   for (let hi = 0; hi < hosts.length; hi++) {
     const bucketIds = hosts[hi];
     query += `
-events_${hi} = flood(query_bucket(${JSON.stringify(bucketIds.window)}));
-not_afk_${hi} = flood(query_bucket(${JSON.stringify(bucketIds.afk)}));
+events_${hi} = flood(query_bucket(${jsonForQuery(bucketIds.window)}));
+not_afk_${hi} = flood(query_bucket(${jsonForQuery(bucketIds.afk)}));
 not_afk_${hi} = filter_keyvals(not_afk_${hi}, "status", ["not-afk"]);
 events_${hi} = filter_period_intersect(events_${hi}, not_afk_${hi});
 events_${hi} = categorize(events_${hi}, ${categoriesStr});`;
@@ -127,10 +128,8 @@ events_${hi} = categorize(events_${hi}, ${categoriesStr});`;
   query += `
 duration = sum_durations(events);
 RETURN = {"events": events, "duration": duration};`;
-  return query
-    .split('\n')
-    .map(line => line.replace(/\s+$/, ''))
-    .join('\n');
+  // Do not trim assembled queries: whitespace inside literals is user data.
+  return query;
 }
 
 export default {
@@ -232,7 +231,7 @@ export default {
         }
 
         const categories = this.categoryStore.classes_for_query;
-        const categoriesStr = JSON.stringify(categories).replace(/\\\\/g, '\\');
+        const categoriesStr = categoriesForQuery(categories);
         const query = buildBillingQuery(hostsToQuery, categoriesStr);
         const tp = this.getTimeperiod();
 

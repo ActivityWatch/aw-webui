@@ -96,6 +96,7 @@ import {
   get_today_with_offset,
 } from '~/util/time';
 import { periodStartDate } from '~/util/timeperiod';
+import { categoriesForQuery } from '~/queries';
 import {
   getSupportedWorkReportHosts,
   getWorkReportHostBuckets,
@@ -287,7 +288,7 @@ export default {
         const categoriesFilter = expanded;
 
         const categories = this.categoryStore.classes_for_query;
-        const categoriesStr = JSON.stringify(categories).replace(/\\\\/g, '\\');
+        const categoriesStr = categoriesForQuery(categories);
 
         const query = buildWorkReportQuery(hostsToQuery, categoriesStr, categoriesFilter);
         const parameters: CalculationParameters = {

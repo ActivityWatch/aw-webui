@@ -142,7 +142,7 @@ import { mapState } from 'pinia';
 import { useSettingsStore } from '~/stores/settings';
 import { useBucketsStore } from '~/stores/buckets';
 import { getClient } from '~/util/awclient';
-import { canonicalEvents, querystr_to_array } from '~/queries';
+import { canonicalEvents, escape_doublequote, querystr_to_array } from '~/queries';
 import { useCategoryStore } from '~/stores/categories';
 import { matchString } from '~/util/classes';
 import { getCategorizationStringFromEvent } from '~/util/color';
@@ -322,32 +322,31 @@ export default {
 
       // Start the category query now so it runs concurrently with the raw-row
       // filtering below, and publish raw rows without waiting for it.
-      let categoryPromise: Promise<{
+      const categoryPromise: Promise<{
         events: ReturnType<typeof mergeCategoryIntervals>;
         error: boolean;
-      }>;
-      const categoryQuery = categoryTimelineQuery(buckets, this.all_buckets, {
-        categories: useCategoryStore().classes_for_query,
-        filter_categories: this.filter_categories,
-        always_active_pattern: this.always_active_pattern || undefined,
-      });
-      if (categoryQuery) {
-        categoryPromise = getClient()
-          .query([`${this.daterange[0].format()}/${this.daterange[1].format()}`], categoryQuery)
-          .then(data => {
-            let events = mergeCategoryIntervals(data[0] || []);
-            if (this.filter_duration > 0) {
-              events = events.filter(e => e.duration >= this.filter_duration);
-            }
-            return { events, error: false };
-          })
-          .catch(error => {
-            console.warn('Categorized timeline query failed:', error);
-            return { events: [], error: true };
+      }> = (async () => {
+        try {
+          const categoryQuery = categoryTimelineQuery(buckets, this.all_buckets, {
+            categories: useCategoryStore().classes_for_query,
+            filter_categories: this.filter_categories,
+            always_active_pattern: this.always_active_pattern || undefined,
           });
-      } else {
-        categoryPromise = Promise.resolve({ events: [], error: false });
-      }
+          if (!categoryQuery) return { events: [], error: false };
+          const data = await getClient().query(
+            [`${this.daterange[0].format()}/${this.daterange[1].format()}`],
+            categoryQuery
+          );
+          let events = mergeCategoryIntervals(data[0] || []);
+          if (this.filter_duration > 0) {
+            events = events.filter(e => e.duration >= this.filter_duration);
+          }
+          return { events, error: false };
+        } catch (error) {
+          console.warn('Categorized timeline query failed:', error);
+          return { events: [], error: true };
+        }
+      })();
 
       // AFK filtering: use query engine to filter window events by AFK status.
       // It replaces window events with a fresh query result, so it must run
@@ -489,8 +488,8 @@ export default {
     _queryAfkFilteredEvents: async function (windowBucketId, afkBucketId) {
       const queryCode =
         canonicalEvents({
-          bid_window: windowBucketId,
-          bid_afk: afkBucketId,
+          bid_window: escape_doublequote(windowBucketId),
+          bid_afk: escape_doublequote(afkBucketId),
           filter_afk: true,
           always_active_pattern: this.always_active_pattern || undefined,
           categories: [],

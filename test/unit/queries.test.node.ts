@@ -72,10 +72,14 @@ import {
   activityQuery,
   androidBrowserQuery,
   browserOnlyQuery,
+  browserSearchQuery,
   canonicalEvents,
+  categoriesForQuery,
   categoryQuery,
   chromeAppnameRegex,
   editorActivityQuery,
+  escape_doublequote,
+  jsonForQuery,
   fullDesktopQuery,
   multideviceQuery,
   querystr_to_array,
@@ -582,6 +586,132 @@ describe('querystr_to_array', () => {
     const result = querystr_to_array(query);
     expect(result).toHaveLength(2);
   });
+
+  test('a saved pattern with an escaped quote does not split the query', () => {
+    // The pattern is a regex: `a\\"b;c` matches a quote between a and b. Its
+    // quote gets one more backslash, and aw-query drops exactly that one.
+    const query = canonicalEvents({
+      bid_window: 'aw-watcher-window_testhost',
+      bid_afk: 'aw-watcher-afk_testhost',
+      bid_browsers: [],
+      filter_afk: true,
+      categories: [],
+      filter_categories: [],
+      always_active_pattern: 'a\\"b;c',
+    });
+    const result = querystr_to_array(query);
+    expect(result).toContain(
+      'not_treat_as_afk = filter_keyvals_regex(events, "app", "a\\\\"b;c");'
+    );
+    // Nothing was cut at the semicolon inside the pattern.
+    expect(result.filter(s => s.includes('filter_keyvals_regex'))).toHaveLength(2);
+  });
+
+  test('a quote after an even backslash run stays inside the literal, as on the server', () => {
+    // aw-query ends a literal only at a quote with no backslash before it.
+    const result = querystr_to_array('x = "a\\\\";b"; RETURN = x;');
+    expect(result).toEqual(['x = "a\\\\";b";', 'RETURN = x;']);
+  });
+
+  // aw-query (Rust and Python) ends a literal at the first quote with no
+  // backslash before it, turns each `\\"` into `"` and keeps every other
+  // backslash as written.
+  function awQueryLiteral(statement: string): string {
+    const match = statement.match(/"app", "(.*)"\);$/);
+    if (!match) throw new Error(`no app literal in: ${statement}`);
+    expect(match[1]).not.toMatch(/(^|[^\\])"/);
+    return match[1].replace(/\\"/g, '"');
+  }
+
+  function alwaysActiveStatements(pattern: string): string[] {
+    const query = canonicalEvents({
+      bid_window: 'aw-watcher-window_testhost',
+      bid_afk: 'aw-watcher-afk_testhost',
+      bid_browsers: [],
+      filter_afk: true,
+      categories: [],
+      filter_categories: [],
+      always_active_pattern: pattern,
+    });
+    return querystr_to_array(query).filter(s => s.includes('filter_keyvals_regex'));
+  }
+
+  // Every run length arrives unchanged, in one literal.
+  test.each([0, 1, 2, 3, 4])('%i backslashes before a quote reach aw-query unchanged', n => {
+    const pattern = `a${'\\'.repeat(n)}";b`;
+    const statements = alwaysActiveStatements(pattern);
+    // Two statements (app and title), neither cut at the `;` in the pattern.
+    expect(statements).toHaveLength(2);
+    for (const statement of statements) {
+      expect(statement).toMatch(/^not_treat_as_afk = filter_keyvals_regex\(events, "(app|title)"/);
+      expect(statement).toMatch(/"\);$/);
+    }
+    expect(awQueryLiteral(statements[0])).toBe(pattern);
+  });
+
+  // A trailing backslash would escape the closing quote. A valid pattern ends
+  // in an escaped backslash, so an empty group keeps the regex the same.
+  test.each([2, 4])('%i trailing backslashes get an empty group, not an error', n => {
+    const pattern = `a;b${'\\'.repeat(n)}`;
+    const statements = alwaysActiveStatements(pattern);
+    expect(statements).toHaveLength(2);
+    const sent = awQueryLiteral(statements[0]);
+    expect(sent).toBe(`${pattern}(?:)`);
+    expect(new RegExp(sent).exec(`x${pattern}`)?.[0]).toBe(
+      new RegExp(pattern).exec(`x${pattern}`)?.[0]
+    );
+  });
+});
+
+describe('escape_doublequote', () => {
+  // Bucket IDs are matched exactly, so two IDs must never encode the same way.
+  test('IDs that differ only in backslashes before a quote stay distinct', () => {
+    const ids = ['a"b', 'a\\"b', 'a\\\\"b', 'a\\\\\\"b'];
+    const encoded = ids.map(escape_doublequote);
+    expect(new Set(encoded).size).toBe(ids.length);
+    // aw-query decodes each one back to the original ID.
+    expect(encoded.map(e => e.replace(/\\"/g, '"'))).toEqual(ids);
+  });
+
+  test('an ID ending in a backslash is rejected, not changed', () => {
+    expect(() => escape_doublequote('host\\')).toThrow(/ending in a backslash/);
+    expect(() => escape_doublequote('host\\\\')).toThrow(/ending in a backslash/);
+  });
+
+  test('an unusable browser bucket is skipped, and the rest of the query still builds', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const query = fullDesktopQuery({
+      bid_window: 'aw-watcher-window_host',
+      bid_afk: 'aw-watcher-afk_host',
+      bid_browsers: ['aw-watcher-web-chrome_bad\\', 'aw-watcher-web-chrome_good'],
+      filter_afk: true,
+      categories: [],
+      filter_categories: [],
+    }).join('\n');
+    expect(query).toContain('query_bucket("aw-watcher-web-chrome_good")');
+    expect(query).not.toContain('chrome_bad');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('chrome_bad'));
+    warn.mockRestore();
+  });
+
+  test('multidevice bucket IDs that differ by a backslash query different buckets', () => {
+    const literals = ['a"b', 'a\\"b'].map(id => {
+      const query = multideviceQuery({
+        filter_afk: true,
+        always_active_pattern: '',
+        categories: [],
+        filter_categories: [],
+        hosts: ['phone'],
+        host_params: { phone: { bid_android: id, isIos: true } },
+      });
+      const statement = query.find(s => s.includes('query_bucket('));
+      if (!statement) throw new Error('no query_bucket statement');
+      const match = statement.match(/query_bucket\("(.*?[^\\])"\)/);
+      if (!match) throw new Error(`no bucket literal in: ${statement}`);
+      return match[1].replace(/\\"/g, '"');
+    });
+    expect(literals).toEqual(['a"b', 'a\\"b']);
+  });
 });
 
 // AQL has no comment syntax, so any comment leaking into a generated query
@@ -990,6 +1120,13 @@ describe('replaceOutsideStrings', () => {
     );
   });
 
+  test('keeps placeholders inside strings after an even backslash run', () => {
+    const query = `a = "two${'\\'.repeat(2)}"__CATEGORIES__"; b = __CATEGORIES__;`;
+    expect(replaceOutsideStrings(query, marker, categories)).toBe(
+      `a = "two${'\\'.repeat(2)}"__CATEGORIES__"; b = ${categories};`
+    );
+  });
+
   test('does not treat a marker after an escaped quote as quoted', () => {
     const query = 'a = "say \\"x\\""; b = __CATEGORIES__;';
     expect(replaceOutsideStrings(query, marker, categories)).toBe(
@@ -1042,3 +1179,199 @@ describe('desktop browser AFK filtering', () => {
     expect(query).not.toContain('browser_events');
   });
 });
+
+describe('always_active_pattern escaping', () => {
+  // validateRegex accepts a double quote, so the setting can contain one.
+  const pattern = 'Meeting "Daily"';
+  const escaped = 'filter_keyvals_regex(events, "app", "Meeting \\"Daily\\"")';
+  const desktop: DesktopQueryParams = {
+    bid_window: 'aw-watcher-window_testhost',
+    bid_afk: 'aw-watcher-afk_testhost',
+    filter_afk: true,
+    always_active_pattern: pattern,
+    categories: [],
+    filter_categories: [],
+  };
+
+  test.each([
+    ['fullDesktopQuery', () => fullDesktopQuery(desktop).join('\n')],
+    ['categoryQuery', () => categoryQuery(desktop).join('\n')],
+    ['analysisContextQuery', () => analysisContextQuery(desktop).join('\n')],
+    ['canonicalEvents', () => canonicalEvents(desktop)],
+    [
+      'multideviceQuery',
+      () =>
+        multideviceQuery({
+          hosts: ['testhost'],
+          host_params: {
+            testhost: { bid_window: desktop.bid_window, bid_afk: desktop.bid_afk },
+          },
+          filter_afk: true,
+          always_active_pattern: pattern,
+          categories: [],
+          filter_categories: [],
+        }).join('\n'),
+    ],
+  ])('%s escapes quotes in the pattern', (_name, build) => {
+    const query = build();
+    expect(query).toContain(escaped);
+    expect(query).not.toContain('"Meeting "Daily""');
+  });
+});
+
+describe('multidevice bucket id escaping', () => {
+  // Bucket hostnames can be any text, e.g. a ScreenTime import's device name.
+  const base = {
+    filter_afk: true,
+    always_active_pattern: '',
+    categories: [],
+    filter_categories: [],
+  };
+
+  test('android host bucket ids', () => {
+    const query = multideviceQuery({
+      ...base,
+      hosts: ['phone'],
+      host_params: {
+        phone: { bid_android: 'aw-import-screentime_Bob "Work" iPhone', isIos: true },
+      },
+    }).join('\n');
+    expect(query).toContain('query_bucket("aw-import-screentime_Bob \\"Work\\" iPhone")');
+  });
+
+  test('desktop host bucket ids derived from the hostname', () => {
+    const query = categoryQuery({ ...base, hosts: ['my "box"'], host_params: {} }).join('\n');
+    expect(query).toContain('query_bucket("aw-watcher-window_my \\"box\\"")');
+    expect(query).toContain('query_bucket("aw-watcher-afk_my \\"box\\"")');
+  });
+});
+
+test('filter_categories names are written the same way as in categorize', () => {
+  // categorize un-doubles JSON's backslashes; the filter must match it, or a
+  // selected category whose name has a backslash filters out every event.
+  const q = categoryQuery({
+    bid_window: 'w_h',
+    bid_afk: 'a_h',
+    filter_afk: true,
+    categories: [[['Dev\\Ops'], { type: 'regex', regex: 'x' }]],
+    filter_categories: [['Dev\\Ops']],
+  }).join('\n');
+  const cat = q.match(/categorize\(events, \[\[\["([^"]*)"/)[1];
+  const filt = q.match(/"\$category", \[\["([^"]*)"/)[1];
+  expect(cat).toBe('Dev\\Ops');
+  expect(filt).toBe(cat);
+});
+
+describe('JSON query literals ending in backslashes', () => {
+  test.each([2, 4])('category regex with %i trailing backslashes keeps statements intact', n => {
+    const pattern = 'C:' + '\\'.repeat(n);
+    const statements = categoryQuery({
+      bid_window: 'w_h',
+      bid_afk: 'a_h',
+      filter_afk: true,
+      categories: [[['Paths'], { type: 'regex', regex: pattern }]],
+      filter_categories: [['Paths']],
+    });
+    const encoded = statements.find(s => s.startsWith('events = categorize'));
+    expect(encoded).toContain(`"regex":"${pattern}(?:)"`);
+    expect(encoded).not.toContain('filter_keyvals');
+    expect(statements[statements.length - 1]).toBe('RETURN = { "cat_events": cat_events };');
+    for (const sample of ['C:', 'C:\\', 'C:\\\\', 'xC:\\y']) {
+      expect(new RegExp(pattern + '(?:)').test(sample)).toBe(new RegExp(pattern).test(sample));
+    }
+  });
+
+  test('browser search applies the regex workaround to both fields', () => {
+    const pattern = 'C:' + '\\'.repeat(2);
+    const statements = browserSearchQuery(['aw-watcher-web-chrome_h'], pattern);
+    expect(statements.filter(s => s.includes('filter_keyvals_regex'))).toHaveLength(2);
+    expect(statements.join('\n')).toContain(`"(?i)${pattern}(?:)"`);
+    expect(statements[statements.length - 1]).toBe('RETURN = browser_results;');
+  });
+
+  test('literal category names are rejected rather than silently changed', () => {
+    expect(() => jsonForQuery([['Paths\\']])).toThrow(/ending in a backslash/);
+  });
+
+  test('shared category encoder preserves names, select_keys and saved regexes', () => {
+    const pattern = 'C:' + '\\'.repeat(2);
+    const categories: DesktopQueryParams['categories'] = [
+      [['Dev\\Ops'], { type: 'regex', regex: pattern, select_keys: ['title'], ignore_case: true }],
+    ];
+    const original = JSON.stringify(categories);
+    expect(categoriesForQuery(categories)).toBe(
+      `[[["Dev\\Ops"],{"type":"regex","regex":"${pattern}(?:)","select_keys":["title"],"ignore_case":true}]]`
+    );
+    expect(JSON.stringify(categories)).toBe(original);
+    expect(() => categoriesForQuery([[['Paths\\'], { type: 'none' }]])).toThrow(
+      /ending in a backslash/
+    );
+  });
+});
+
+describe('category history bucket encoding', () => {
+  test('desktop history uses the same encoded sources as totals', () => {
+    const params: DesktopQueryParams = {
+      bid_window: 'window_my "box"',
+      bid_afk: 'afk_my "box"',
+      bid_browsers: ['aw-watcher-web-chrome_bad\\', 'aw-watcher-web-chrome_good "box"'],
+      filter_afk: true,
+      include_audible: true,
+      categories: [],
+      filter_categories: [],
+    };
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    try {
+      const historyQuery = categoryQuery(params).join('\n');
+      const totals = fullDesktopQuery(params).join('\n');
+      for (const id of [params.bid_window, params.bid_afk, params.bid_browsers[1]]) {
+        const literal = `query_bucket("${escape_doublequote(id)}")`;
+        expect(totals).toContain(literal);
+        expect(historyQuery).toContain(literal);
+      }
+      expect(historyQuery).not.toContain('chrome_bad');
+      expect(historyQuery).toContain('RETURN = { "cat_events": cat_events };');
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  test('multidevice host overrides are encoded exactly once', () => {
+    const query = categoryQuery({
+      hosts: ['host'],
+      host_params: { host: { bid_window: 'window_"box"', bid_afk: 'afk_"box"' } },
+      filter_afk: true,
+      always_active_pattern: '',
+      categories: [],
+      filter_categories: [],
+    }).join('\n');
+    expect(query).toContain('query_bucket("window_\\"box\\"")');
+    expect(query).toContain('query_bucket("afk_\\"box\\"")');
+  });
+});
+
+test('multidevice stopwatch overrides are still escaped', () => {
+  const query = categoryQuery({
+    hosts: ['host'],
+    host_params: {
+      host: { bid_window: 'window_host', bid_afk: 'afk_host', bid_stopwatch: 'stopwatch_"work"' },
+    },
+    filter_afk: true,
+    always_active_pattern: '',
+    categories: [],
+    filter_categories: [],
+  }).join('\n');
+  expect(query).toContain('query_bucket("stopwatch_\\"work\\"")');
+});
+
+test.each(['\t', '\n', '\r', '\b', '\f', '\u0001'])(
+  'query JSON keeps control character %p distinct from its literal escape text',
+  control => {
+    const literal = JSON.stringify(control).slice(1, -1);
+    const encodedControl = jsonForQuery([[`Dev${control}Ops`]]);
+    const encodedLiteral = jsonForQuery([[`Dev${literal}Ops`]]);
+    expect(encodedControl).not.toBe(encodedLiteral);
+    expect(encodedControl).toBe(`[["Dev${control}Ops"]]`);
+    expect(encodedLiteral).toBe(`[["Dev${literal}Ops"]]`);
+  }
+);

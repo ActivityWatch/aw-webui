@@ -124,6 +124,29 @@ test('query failure clears the old row and shows an explicit warning alongside r
   warn.mockRestore();
 });
 
+test('an unrepresentable AFK bucket reports a category error without losing raw rows', async () => {
+  const vm = context();
+  await vm.getBuckets();
+  expect(vm.categorizedEvents).not.toHaveLength(0);
+  const raw = buckets();
+  raw[1].id = 'afk_laptop\\';
+  raw[0].events = [event(0, 10)];
+  mockGetBucketsWithEvents.mockResolvedValueOnce(raw);
+  const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+  mockQuery.mockClear();
+  vm.daterange = [moment.utc('2026-10-19'), moment.utc('2026-10-20')];
+  try {
+    await vm.getBuckets();
+    expect(vm.categoryError).toBe(true);
+    expect(vm.categorizedEvents).toEqual([]);
+    expect(vm.buckets).toEqual(raw);
+    expect(mockQuery).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith('Categorized timeline query failed:', expect.any(Error));
+  } finally {
+    warn.mockRestore();
+  }
+});
+
 test('a slow old query cannot overwrite the newly selected day', async () => {
   const vm = context();
   let finishOld;
@@ -230,6 +253,28 @@ test('mobile canonical queries retain timestamps, use actual synced IDs, and omi
   expect(code).not.toContain('merge_events_by_keys');
 });
 
+test('timeline sources escape bucket ids that contain quotes', () => {
+  const sources = [
+    { id: 'aw-import-screentime_Bob "Work" iPhone', type: 'app', hostname: 'ios' },
+    { id: 'window_laptop', type: 'currentwindow', hostname: 'laptop' },
+  ];
+  const code = categoryTimelineQuery(sources, sources, {
+    categories: [],
+    filter_categories: [],
+  }).join('\n');
+  expect(code).toContain('query_bucket("aw-import-screentime_Bob \\"Work\\" iPhone")');
+  expect(code).toContain('query_bucket("window_laptop")');
+});
+
+test('category timeline filter writes backslashes the same way as categorize', () => {
+  const code = categoryTimelineQuery(buckets(), buckets(), {
+    categories: [[['Dev\\Ops'], { type: 'regex', regex: 'Code' }]],
+    filter_categories: [['Dev\\Ops']],
+  }).join('\n');
+  expect(code).toContain('[["Dev\\Ops"],');
+  expect(code).toContain('filter_keyvals(events, "$category", [["Dev\\Ops"]])');
+});
+
 test('parent category filters include descendants after resolving source overlap', () => {
   const code = categoryTimelineQuery(buckets(), buckets(), {
     categories: [[['Work', 'Programming'], { type: 'regex', regex: 'Code' }]],
@@ -293,4 +338,39 @@ test('mergeCategoryIntervals keeps a real 1 ms gap split', () => {
     { timestamp: '2026-10-18T10:00:10.001Z', duration: 5, data: { $category: ['Work'] } },
   ]);
   expect(merged).toHaveLength(2);
+});
+
+test.each(['window', 'phone', 'mixed'])(
+  'an unrepresentable %s source reports a category error while retaining raw rows',
+  async kind => {
+    const raw = buckets();
+    if (kind === 'phone') {
+      raw[0].id = 'aw-watcher-android_phone\\';
+    } else {
+      raw[0].id = 'window_laptop\\';
+    }
+    if (kind !== 'mixed') raw.splice(2, 1);
+    raw[0].events = [event(0, 10)];
+    mockGetBucketsWithEvents.mockResolvedValueOnce(raw);
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    try {
+      const vm = context();
+      await vm.getBuckets();
+      expect(vm.categoryError).toBe(true);
+      expect(vm.categorizedEvents).toEqual([]);
+      expect(vm.buckets).toEqual(raw);
+      expect(mockQuery).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+    }
+  }
+);
+
+test('raw Timeline AFK filtering escapes both bucket IDs exactly once', async () => {
+  const vm = context();
+  await vm._queryAfkFilteredEvents('window_Dev\\Ops "box"', 'afk_Dev\\Ops "box"');
+  const code = mockQuery.mock.calls[0][1].join('\n');
+  expect(code).toContain('query_bucket("window_Dev\\Ops \\"box\\"")');
+  expect(code).toContain('query_bucket("afk_Dev\\Ops \\"box\\"")');
+  expect(code).toContain('filter_period_intersect');
 });

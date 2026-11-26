@@ -202,3 +202,23 @@ describe('summarizeWorkSessions', () => {
     expect(summarizeWorkSessions(events, 0)).toEqual({ bridgedSeconds: 0, sessions: 2 });
   });
 });
+
+test('work report category filters use the same backslashes as categorized labels', () => {
+  const name = 'Dev\\Ops';
+  const query = buildWorkReportQuery(
+    [{ host: 'laptop', window: 'window_laptop', afk: 'afk_laptop' }],
+    `[[["${name}"],{"type":"regex","regex":"Code"}]]`,
+    [[name]]
+  );
+  expect(query).toContain(`filter_keyvals(events_0, "$category", [["${name}"]])`);
+});
+
+test('work report bucket IDs preserve backslashes as well as quotes', () => {
+  const query = buildWorkReportQuery(
+    [{ host: 'laptop', window: 'window_Dev\\Ops "box"', afk: 'afk_Dev\\Ops "box"' }],
+    '[]',
+    []
+  );
+  expect(query).toContain('query_bucket("window_Dev\\Ops \\"box\\"")');
+  expect(query).toContain('query_bucket("afk_Dev\\Ops \\"box\\"")');
+});
