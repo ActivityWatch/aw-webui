@@ -246,6 +246,31 @@ describe('AwNotifySettings', () => {
     );
   });
 
+  test('re-enabling does not report a previous run as stopped', async () => {
+    // The heartbeat bucket outlives the daemon, so a stale last event after a
+    // fresh enable says nothing about the daemon that is starting now.
+    mockGet.mockResolvedValue({ data: { enabled: false, alerts: [] } });
+    mockGetBuckets.mockResolvedValue({ 'aw-notify_host': {} });
+    const stale = new Date(Date.now() - 3_600_000).toISOString();
+    mockGetEvents.mockResolvedValue([{ timestamp: stale, duration: 5 }]);
+    const wrapper: any = shallowMount(AwNotifySettings, {
+      mocks: { $t: key => key },
+    });
+    await flushPromises();
+
+    wrapper.vm.enabled = true;
+    await wrapper.vm.save();
+    await flushPromises();
+
+    expect(wrapper.vm.liveness).toBe('never');
+
+    // Once the daemon we just started heartbeats, it reports running.
+    mockGetEvents.mockResolvedValue([{ timestamp: new Date().toISOString(), duration: 5 }]);
+    await wrapper.vm.refreshLiveness();
+    expect(wrapper.vm.liveness).toBe('running');
+    wrapper.destroy();
+  });
+
   describe('liveness polling', () => {
     beforeEach(() => {
       // Keep setTimeout real so flushPromises still works.

@@ -120,6 +120,19 @@ describe('awNotifyLiveness', () => {
     expect(awNotifyLiveness([endingAgo(3_600_000), endingAgo(1_000)], now)).toBe('running');
   });
 
+  test('ignores heartbeats that ended before notBefore', () => {
+    // Re-enabling: the bucket survives the previous run, so its last event is
+    // not evidence about the daemon that was just started.
+    const enabledTenSecondsAgo = new Date(now.getTime() - 10_000);
+    expect(awNotifyLiveness([endingAgo(3_600_000)], now, enabledTenSecondsAgo)).toBe('never');
+    // A heartbeat that arrived after enabling still counts.
+    expect(awNotifyLiveness([endingAgo(2_000)], now, enabledTenSecondsAgo)).toBe('running');
+    // The floor is per-event: one stale host does not hide a fresh one.
+    expect(
+      awNotifyLiveness([endingAgo(3_600_000), endingAgo(2_000)], now, enabledTenSecondsAgo)
+    ).toBe('running');
+  });
+
   test('a heartbeat ending slightly in the future (clock skew) counts as running', () => {
     expect(awNotifyLiveness([endingAgo(-5_000)], now)).toBe('running');
   });

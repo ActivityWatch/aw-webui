@@ -140,6 +140,10 @@ export default {
       error: '',
       success: false,
       liveness: null as AwNotifyLiveness | null,
+      // Set when this session enabled notifications. Heartbeats older than
+      // this belong to a previous run: the bucket outlives the daemon, so they
+      // are not evidence that the daemon we just started has failed.
+      livenessSince: null as Date | null,
       livenessRequest: 0,
       livenessTimer: null as ReturnType<typeof setInterval> | null,
       destroyed: false,
@@ -191,7 +195,7 @@ export default {
           ids.map(async id => (await client.getEvents(id, { limit: 1 }))[0] ?? null)
         );
         if (!this.destroyed && request === this.livenessRequest) {
-          this.liveness = awNotifyLiveness(latest);
+          this.liveness = awNotifyLiveness(latest, new Date(), this.livenessSince ?? undefined);
         }
       } catch (e) {
         if (!this.destroyed && request === this.livenessRequest) {
@@ -265,12 +269,21 @@ export default {
           enabled: this.enabled,
           alerts: alertDtos,
         };
+        const wasEnabled = this.config.enabled ?? false;
+        const enablingAt = new Date();
         await client.req.post(`/0/settings/${SETTINGS_KEY}`, payload, {
           headers: { 'Content-Type': 'application/json' },
         });
         // Keep this.config in sync so a subsequent disabled save uses the
         // latest saved alerts, not the stale snapshot from page load.
         this.config = payload;
+        if (this.enabled && !wasEnabled) {
+          // Heartbeats in the bucket predate this enable; ignore them until
+          // the daemon we just started reports for the first time.
+          this.livenessSince = enablingAt;
+        } else if (!this.enabled) {
+          this.livenessSince = null;
+        }
         this.success = true;
         this.syncLivenessPolling();
         void this.refreshLiveness();

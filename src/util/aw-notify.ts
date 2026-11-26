@@ -127,12 +127,22 @@ interface HeartbeatEvent {
  * Liveness from the latest event of each `aw-notify_*` bucket (null for an
  * empty bucket). Running if any heartbeat ended within the stale window;
  * `never` if no heartbeat bucket or event exists at all.
+ *
+ * `notBefore` drops heartbeats that ended before that moment. Pass the time
+ * the user enabled notifications: the bucket survives a previous run, so its
+ * last event says nothing about a daemon that was just (re)started. Without
+ * the floor, re-enabling after a disable reports `stopped` and tells the user
+ * to restart ActivityWatch while it is in fact starting normally.
  */
 export function awNotifyLiveness(
   latestEvents: (HeartbeatEvent | null)[],
-  now: Date = new Date()
+  now: Date = new Date(),
+  notBefore?: Date
 ): AwNotifyLiveness {
-  const events = latestEvents.filter((e): e is HeartbeatEvent => e !== null);
+  const floor = notBefore ? notBefore.getTime() : -Infinity;
+  const events = latestEvents
+    .filter((e): e is HeartbeatEvent => e !== null)
+    .filter(e => new Date(e.timestamp).getTime() + (e.duration || 0) * 1000 >= floor);
   if (events.length === 0) return 'never';
   const fresh = events.some(e => {
     const end = new Date(e.timestamp).getTime() + (e.duration || 0) * 1000;
