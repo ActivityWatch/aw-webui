@@ -48,6 +48,8 @@ function mountBucket(id): any {
       'input-timeinterval': InputTimeIntervalStub,
       'vis-timeline': true,
       'aw-eventlist': true,
+      'b-popover': true,
+      icon: true,
     },
     filters: { iso8601: v => v },
   });
@@ -77,6 +79,34 @@ describe('Bucket view', () => {
     expect(mockGetBucketWithEvents).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'aw-watcher-window_host' })
     );
+  });
+
+  test('keeps metadata compact, help on demand, and empty data hidden', async () => {
+    mockState.buckets = [{ ...knownBucket, data: {} }];
+    mockCountEvents.mockResolvedValue(0);
+    const wrapper = mountBucket(knownBucket.id);
+    await flush();
+
+    const helpButton = wrapper.find('#bucket-details-help');
+    expect(helpButton.attributes('type')).toBe('button');
+    expect(helpButton.attributes('aria-label')).toBe('More information');
+    const help = wrapper.find('b-popover-stub');
+    expect(help.attributes('target')).toBe('bucket-details-help');
+    expect(help.attributes('triggers')).toBe('hover focus click blur');
+    expect(help.find('a').attributes('href')).toContain('buckets-and-events.html');
+    expect(wrapper.findAll('th').wrappers.map(row => row.text())).toEqual([
+      'Type:',
+      'Client:',
+      'Device:',
+      'Created:',
+      'Event count:',
+    ]);
+    expect(wrapper.findAll('tr').at(4).find('td').text()).toBe('0');
+
+    mockState.buckets = [{ ...knownBucket, data: { source: 'import' } }];
+    await Vue.nextTick();
+    expect(wrapper.findAll('tr').at(5).text()).toContain('import');
+    wrapper.destroy();
   });
 
   test('shows a count of 0 when aw-client returns the raw response', async () => {

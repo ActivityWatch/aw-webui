@@ -7,7 +7,7 @@ export default {
     activity: 'Activity',
     loading: 'Loading...',
     noActivityReports:
-      'No activity reports available. Make sure you have both an AFK and window watcher running.',
+      'No activity reports available. Make sure the idle-detection and active-window tracking components (aw-watcher-afk and aw-watcher-window) are running.',
     timeline: 'Timeline',
     stopwatch: 'Stopwatch',
     tools: 'Tools',
@@ -21,7 +21,7 @@ export default {
     categoryBuilder: 'Category Builder',
     query: 'Query',
     graph: 'Graph',
-    rawData: 'Raw Data',
+    rawData: 'Data',
     settings: 'Settings',
     syncSettings: 'Sync settings',
     apiAuthentication: 'API authentication',
@@ -51,6 +51,7 @@ export default {
     export: 'Export',
     open: 'Open',
     more: 'More',
+    moreInformation: 'More information',
     delete: 'Delete',
     enabled: 'Enabled',
     disabled: 'Disabled',
@@ -70,7 +71,9 @@ export default {
     requestFailed: 'The request failed.',
     all: 'All',
     uncategorized: 'Uncategorized',
-    requiresAfk: 'requires aw-watcher-afk',
+    requiresAfk: 'requires idle-detection data (aw-watcher-afk)',
+    active: 'Active',
+    inactive: 'Inactive',
     unknown: 'unknown',
   },
   categoryNames: {
@@ -176,7 +179,8 @@ export default {
     },
     activePattern: {
       title: 'Always count as active pattern',
-      help1: 'Apps or titles matching this regular expression will never be counted as AFK.',
+      help1:
+        'Apps or window titles matching this regular expression will not be counted as inactive in activity reports.',
       help2:
         'Can be used to count time as active, despite no input (like meetings, or games with controllers). An empty string disables it.',
       example: 'Example expression:',
@@ -309,6 +313,8 @@ export default {
     androidNote:
       'ActivityWatch on Android is in a very early stage of development. There will be bugs, but we hope you bear with us as we refine things and get it on par with the desktop version of ActivityWatch (which you should try!).',
     greeting: 'Welcome to ActivityWatch',
+    trackingIntro:
+      'Watchers record activity such as windows and browser tabs. Idle detection marks time without input as inactive; reports may also count configured apps or audible tabs as active.',
     intro1:
       "We've come a long way{android} but we still need users (like you!) to provide feedback and help us turn ActivityWatch into a successful project. We'd love to hear any ideas you have for improvements.",
     introAndroid: ' (especially on Android!)',
@@ -357,7 +363,9 @@ export default {
     },
   },
   buckets: {
-    title: 'Buckets',
+    title: 'Data',
+    intro:
+      'Browse recordings by device, or import and export them. Each watcher stores its events in a bucket.',
     moreWatchers: 'Are you looking to collect more data? Check out',
     docsLink: 'the docs',
     thisDevice: 'this device',
@@ -429,7 +437,7 @@ export default {
     filters: 'Filters',
     filtersTitle: 'Filters',
     refresh: 'Refresh',
-    excludeAfk: 'Exclude AFK time',
+    excludeAfk: 'Exclude inactive time',
     audibleActive: 'Count audible browser tab as active',
     includeStopwatch: 'Include manually logged events (stopwatch)',
     newView: 'New view',
@@ -459,17 +467,18 @@ export default {
       'No window bucket for {host}. Start aw-watcher-window, then refresh this page.',
     diagnosticMissingAfk: 'No AFK bucket for {host}. Start aw-watcher-afk, then refresh this page.',
     diagnosticAmbiguousWindow:
-      'Multiple window buckets may describe {host}: {buckets}. Choose the correct device above or inspect Raw Data.',
+      'Multiple window buckets may describe {host}: {buckets}. Choose the correct device above or inspect Data.',
     diagnosticMismatchedHostnames:
       'aw-watcher-window reports {host} as {windowHosts}, but aw-watcher-afk reports it as {afkHosts}. Activity needs both under the same hostname: restart both watchers, then refresh this page.',
     diagnosticNoWindowEvents:
       'No window activity was found for this period. Check that aw-watcher-window is running. On Wayland, try awatcher.',
-    diagnosticOpenRawData: 'Open Raw Data.',
+    diagnosticOpenRawData: 'Open Data.',
     periodAllTime: 'all time',
     previousPeriod: 'Previous {period}',
     nextPeriod: 'Next {period}',
     allTimeSlowHint: 'All time can take a while on large databases.',
-    filterAfkTooltip: 'Filter away time where the AFK watcher did not detect any input.',
+    filterAfkTooltip:
+      'Exclude time marked inactive by the idle-detection component (aw-watcher-afk), usually after no keyboard or mouse input. Missing idle-detection data does not mean you were inactive. Apps matching the always-active pattern are still included.',
     filterAudibleTooltip:
       'If the active window is an audible browser tab, count as active. Requires a browser watcher.',
     showCategory: 'Show category',
@@ -519,7 +528,7 @@ export default {
   visualizations: {
     noData: '(no data)',
     unsupportedPeriod: "This feature doesn't support the current time period.",
-    missingWatcher: 'This feature is missing data from a required watcher.',
+    missingWatcher: 'This feature is missing data from a required tracking component (watcher).',
     docLink: 'documentation',
     allCategories: 'All',
     topApps: 'Top Applications',
@@ -543,9 +552,11 @@ export default {
   },
   timeline: {
     title: 'Timeline',
+    intro:
+      'Explore recorded events from each tracking component (watcher). Active and Inactive describe detected input, not productivity. Missing idle-detection data is not evidence of inactivity.',
     eventsShown: 'Events shown:',
     swimlanes: 'Swimlanes:',
-    filterAfk: 'Filter AFK',
+    filterAfk: 'Filter window events',
     mergeByApp: 'Merge by app',
     noEvents: 'No events match selected criteria. Timeline is not updated.',
     scrollHint: 'Scroll to zoom, swipe/horizontal-scroll to pan, arrow keys to navigate',
@@ -635,7 +646,8 @@ export default {
     bucketDetail: {
       type: 'Type:',
       client: 'Client:',
-      hostname: 'Hostname:',
+      hostname: 'Device:',
+      help: 'Type identifies the event format; client is the recorder; device is its hostname. Event count covers the whole bucket, not just the selected dates.',
       created: 'Created:',
       firstLastEvent: 'First/last event:',
       eventCount: 'Event count:',
@@ -1001,7 +1013,7 @@ export default {
       hours: '{count}+ hrs',
       merge: 'Merge:',
       categories: 'Categories:',
-      afkFiltered: 'AFK filtered',
+      afkFiltered: 'inactive time excluded',
       mergedByApp: 'merged by app',
       categoriesCount: '{count} categories',
       none: 'none',
@@ -1011,7 +1023,7 @@ export default {
       collapseGroups: 'Collapse groups',
       groupBreakdown: 'Activity breakdown',
       totalTime: 'Total time',
-      bucketsNoEvents: 'Buckets with no events in the queried range will be hidden.',
+      bucketsNoEvents: 'Buckets without events in the selected time range are hidden.',
       editSaved: 'Your edit is saved. Refresh the timeline to see it reflected.',
       editSavedTitle: 'Heads up',
       list: 'List',
