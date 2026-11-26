@@ -430,6 +430,7 @@ export default {
     rangeStart: 'آغاز کی تاریخ',
     rangeEnd: 'اختتام کی تاریخ',
     invalidRange: 'URL میں تاریخ کی حد غلط ہے، اس کی بجائے آج دکھایا جا رہا ہے۔',
+    invalidUrlPeriod: 'URL میں تاریخ یا مدت غلط ہے۔',
     periodExactInterval: 'درست اوقات',
     intervalStart: 'آغاز کا وقت',
     intervalEnd: 'اختتام کا وقت (شامل نہیں)',

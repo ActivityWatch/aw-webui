@@ -434,6 +434,7 @@ export default {
     rangeStart: 'Fecha de inicio',
     rangeEnd: 'Fecha de fin',
     invalidRange: 'Rango de fechas no válido en la URL; se muestra el día de hoy.',
+    invalidUrlPeriod: 'Fecha o período no válido en la URL.',
     periodAllTime: 'todo el tiempo',
     previousPeriod: '{period} anterior',
     nextPeriod: '{period} siguiente',
