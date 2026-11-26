@@ -7,6 +7,8 @@
  * silently no-op (ActivityWatch/aw-android#247).
  */
 
+import { parseCategoryScore } from '~/util/categoryScore';
+
 export function shouldAttemptJsonImport(file: { name?: string; type?: string }): boolean {
   const type = (file.type || '').toLowerCase();
   if (type.startsWith('image/') || type.startsWith('video/') || type.startsWith('audio/')) {
@@ -59,11 +61,21 @@ function isCategory(value: unknown): boolean {
     if (data.color !== undefined && data.color !== null && typeof data.color !== 'string') {
       return false;
     }
-    if (data.score !== undefined && data.score !== null && !Number.isFinite(data.score)) {
+    if (
+      data.score !== undefined &&
+      data.score !== null &&
+      parseCategoryScore(data.score) === undefined
+    ) {
       return false;
     }
   }
   return true;
+}
+
+function normalizeScore(category: unknown): unknown {
+  const data = (category as { data?: unknown }).data;
+  if (!isObject(data) || typeof data.score !== 'string') return category;
+  return { ...(category as object), data: { ...data, score: parseCategoryScore(data.score) } };
 }
 
 export function parseCategoryImport(text: string): { categories: unknown[]; id?: string } {
@@ -79,7 +91,7 @@ export function parseCategoryImport(text: string): { categories: unknown[]; id?:
       throw new Error('Invalid category in import');
     }
     return {
-      categories: obj.categories,
+      categories: obj.categories.map(normalizeScore),
       id: typeof obj.id === 'string' ? obj.id : undefined,
     };
   }

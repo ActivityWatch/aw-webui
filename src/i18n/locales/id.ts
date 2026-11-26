@@ -951,6 +951,8 @@ export default {
       productivityScore: 'Skor produktivitas',
       inheritScore: 'Gunakan skor induk',
       score: 'Skor',
+      invalidScore:
+        'Masukkan angka berhingga atau pilih “Gunakan skor induk”. Gunakan 1.125 untuk desimal atau 1125 untuk bilangan bulat, bukan 1,125.',
       remove: 'Hapus kategori',
       noRule: 'Tanpa aturan',
       none: 'Tidak ada',

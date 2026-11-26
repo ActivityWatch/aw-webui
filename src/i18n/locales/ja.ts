@@ -951,6 +951,8 @@ export default {
       productivityScore: '生産性スコア',
       inheritScore: '親のスコアを継承',
       score: 'スコア',
+      invalidScore:
+        '有限の数値を入力するか、「親のスコアを継承」を選んでください。 1,125 の代わりに、小数なら 1.125、整数なら 1125 と入力してください。',
       remove: 'カテゴリを削除',
       noRule: 'ルールなし',
       none: 'なし',

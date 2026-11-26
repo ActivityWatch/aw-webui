@@ -61,7 +61,16 @@ b-modal(id="edit" ref="edit" :title="$t('ui.categoryEditor.editTitle')" @show="r
     b-form-checkbox(v-model="editing.inherit_score" switch)
       | {{ $t('ui.categoryEditor.inheritScore') }}
     b-input-group.my-1(:prepend="$t('ui.categoryEditor.score')" v-if="!editing.inherit_score")
-      b-form-input(v-model="editing.score")
+      b-form-input(
+        v-model="editing.score"
+        :state="validScore ? null : false"
+        :aria-describedby="validScore ? null : 'category-score-error-' + categoryId"
+      )
+    small.text-danger(
+      v-if="!validScore"
+      :id="'category-score-error-' + categoryId"
+    )
+      | {{ $t('ui.categoryEditor.invalidScore') }}
 
   hr
   div.my-1
@@ -73,6 +82,7 @@ b-modal(id="edit" ref="edit" :title="$t('ui.categoryEditor.editTitle')" @show="r
 <script lang="ts">
 import _ from 'lodash';
 import ColorPicker from '~/components/ColorPicker.vue';
+import { parseCategoryScore } from '~/util/categoryScore';
 import { useCategoryStore } from '~/stores/categories';
 import { validateRegex, isRegexBroad } from '~/util/validate';
 import { CANONICAL_SELECT_KEYS, normalizeSelectKeys } from '~/util/classes';
@@ -123,6 +133,9 @@ export default {
       return this.canSubmit;
     },
     canSubmit: function () {
+      if (!this.validScore) {
+        return false;
+      }
       if (this.editing.rule.type === 'regex') {
         return this.validPattern && this.validPriority;
       }
@@ -133,6 +146,9 @@ export default {
     },
     broad_pattern: function () {
       return this.editing.rule.type === 'regex' && isRegexBroad(this.editing.rule.regex || '');
+    },
+    validScore: function () {
+      return this.editing.inherit_score || parseCategoryScore(this.editing.score) !== undefined;
     },
     validPriority: function () {
       if (this.editing.rule.type !== 'regex') {
@@ -182,6 +198,9 @@ export default {
       this.categoryStore.removeClass(this.categoryId);
     },
     checkFormValidity() {
+      if (!this.validScore) {
+        return false;
+      }
       if (this.editing.rule.type === 'regex' && !this.validPriority) {
         return false;
       }
@@ -265,7 +284,10 @@ export default {
         rule,
         data: {
           color: this.editing.inherit_color === true ? undefined : this.editing.color,
-          score: this.editing.inherit_score === true ? undefined : this.editing.score,
+          score:
+            this.editing.inherit_score === true
+              ? undefined
+              : parseCategoryScore(this.editing.score),
         },
       };
       this.categoryStore.updateClass(new_class);
@@ -281,8 +303,10 @@ export default {
       const cat = this.categoryStore.get_category_by_id(this.categoryId);
       const color = cat.data ? cat.data.color : undefined;
       const inherit_color = !color;
-      const score = cat.data ? cat.data.score : undefined;
-      const inherit_score = score === null || score === undefined;
+      const storedScore = cat.data?.score;
+      // Show malformed legacy values for correction instead of silently inheriting.
+      const score = parseCategoryScore(storedScore) ?? storedScore;
+      const inherit_score = storedScore === null || storedScore === undefined;
       const rule = _.cloneDeep(cat.rule) || {};
       const storedKeys = normalizeSelectKeys(rule.select_keys);
       this.editing = {

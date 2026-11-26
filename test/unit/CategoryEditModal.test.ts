@@ -1,3 +1,4 @@
+import en from '~/i18n/locales/en';
 import { createLocalVue, mount } from '@vue/test-utils';
 import BootstrapVue, { BModal } from 'bootstrap-vue';
 import { createPinia, PiniaVuePlugin, setActivePinia } from 'pinia';
@@ -253,6 +254,7 @@ describe('CategoryEditModal rule priority', () => {
   test('negative priorities disable submission and cannot be saved', () => {
     const { vm, updateClass } = ctx({ priority: '-1' });
     vm.validPattern = true;
+    vm.validScore = true;
     vm.validPriority = CategoryEditModal.computed.validPriority.call(vm);
     vm.canSubmit = CategoryEditModal.computed.canSubmit.call(vm);
     vm.checkFormValidity = () => CategoryEditModal.methods.checkFormValidity.call(vm);
@@ -282,7 +284,7 @@ describe('CategoryEditModal rule priority', () => {
 });
 
 describe('CategoryEditModal score round trip', () => {
-  test.each([0, 0.5, -0.5, null, undefined])('reopens and saves score %s', score => {
+  test.each([0, 0.5, -0.5, 1000, null, undefined])('reopens and saves score %s', score => {
     const updateClass = jest.fn();
     const category = {
       id: 2,
@@ -313,8 +315,103 @@ describe('CategoryEditModal score round trip', () => {
   });
 });
 
+describe('CategoryEditModal typed score', () => {
+  // ActivityWatch/aw-webui#1317: a typed score reached the store as a string.
+  test.each([
+    ['5', 5],
+    ['-1.5', -1.5],
+    ['0', 0],
+    [' 2 ', 2],
+    // Phone decimal keypads in comma locales type "1,5".
+    ['1,5', 1.5],
+    ['-1,5', -1.5],
+    ['-0,25', -0.25],
+    ['0,125', 0.125],
+    ['-0,125', -0.125],
+  ])('saves typed score %j as %s', (typed, expected) => {
+    const updateClass = jest.fn();
+    const vm: any = {
+      editing: {
+        id: 2,
+        name: 'Child',
+        parent: ['Parent'],
+        rule: { type: 'none' },
+        color: '#123456',
+        inherit_color: false,
+        score: typed,
+        inherit_score: false,
+      },
+      categoryStore: { updateClass },
+      priorityFromRule: CategoryEditModal.methods.priorityFromRule,
+      checkFormValidity: () => true,
+      $nextTick: callback => callback(),
+      $refs: { edit: { hide: jest.fn() } },
+    };
+
+    CategoryEditModal.methods.handleSubmit.call(vm);
+
+    expect(updateClass.mock.calls[0][0].data.score).toBe(expected);
+  });
+});
+
+describe('CategoryEditModal invalid legacy scores', () => {
+  const invalidScores = ['abc', '5%', 'Infinity', '', '1,000', '-12,345', ' 123,456 ', '1,000e2'];
+  test.each(invalidScores)('requires correction of stored score %j', stored => {
+    const updateClass = jest.fn();
+    const vm: any = {
+      categoryId: 2,
+      categoryStore: {
+        get_category_by_id: () => ({
+          id: 2,
+          subname: 'Child',
+          parent: ['Parent'],
+          rule: { type: 'none' },
+          data: { score: stored },
+        }),
+        updateClass,
+      },
+      priorityFromRule: CategoryEditModal.methods.priorityFromRule,
+      checkFormValidity: () => CategoryEditModal.methods.checkFormValidity.call(vm),
+      $nextTick: callback => callback(),
+      $refs: { edit: { hide: jest.fn() } },
+    };
+    Object.defineProperty(vm, 'validScore', {
+      get: () => CategoryEditModal.computed.validScore.call(vm),
+    });
+
+    CategoryEditModal.methods.resetModal.call(vm);
+    expect(vm.editing.inherit_score).toBe(false);
+    expect(vm.editing.score).toBe(stored);
+    expect(CategoryEditModal.computed.canSubmit.call(vm)).toBe(false);
+    CategoryEditModal.methods.handleSubmit.call(vm);
+    expect(updateClass).not.toHaveBeenCalled();
+
+    vm.editing.score = '2.5';
+    expect(CategoryEditModal.computed.canSubmit.call(vm)).toBe(true);
+    CategoryEditModal.methods.handleSubmit.call(vm);
+    expect(updateClass.mock.calls[0][0].data.score).toBe(2.5);
+
+    vm.editing.score = stored;
+    vm.editing.inherit_score = true;
+    expect(CategoryEditModal.computed.canSubmit.call(vm)).toBe(true);
+    CategoryEditModal.methods.handleSubmit.call(vm);
+    expect(updateClass.mock.calls[1][0].data.score).toBeUndefined();
+  });
+});
+
 describe('CategoryEditModal mounted score round trip', () => {
-  test('keeps numeric zero after showing, saving, and reopening the modal', async () => {
+  test.each([
+    [0, 0, false],
+    [' 2 ', 2, false],
+    [' -1.5 ', -1.5, false],
+    [' 0 ', 0, false],
+    ['abc', 2.5, true],
+    ['5%', 2.5, true],
+    ['1,000', 1000, true],
+    ['1,125', 1.125, true],
+    ['1,125', 1125, true],
+    ['', 2.5, true],
+  ])('displays and saves stored score %j as %s', async (stored, expected, invalid) => {
     const localVue = createLocalVue();
     localVue.use(BootstrapVue);
     localVue.use(PiniaVuePlugin);
@@ -323,7 +420,7 @@ describe('CategoryEditModal mounted score round trip', () => {
     const store = useCategoryStore();
     store.load([
       { name: ['Parent'], rule: { type: 'none' }, data: { score: 1 } },
-      { name: ['Parent', 'Child'], rule: { type: 'none' }, data: { score: 0 } },
+      { name: ['Parent', 'Child'], rule: { type: 'none' }, data: { score: stored as any } },
     ]);
     const categoryId = store.get_category(['Parent', 'Child']).id;
     const openModal = async () => {
@@ -331,7 +428,10 @@ describe('CategoryEditModal mounted score round trip', () => {
         localVue,
         pinia,
         propsData: { categoryId },
-        mocks: { $t: key => key },
+        mocks: {
+          $t: key =>
+            key === 'ui.categoryEditor.invalidScore' ? en.ui.categoryEditor.invalidScore : key,
+        },
         stubs: {
           'color-picker': true,
           icon: true,
@@ -353,16 +453,30 @@ describe('CategoryEditModal mounted score round trip', () => {
         .findAllComponents({ name: 'BInputGroup' })
         .wrappers.find(group => group.text().includes('ui.categoryEditor.score'))
         .find('input');
-      expect((scoreInput.element as HTMLInputElement).value).toBe('0');
+      expect((scoreInput.element as HTMLInputElement).value).toBe(
+        String(invalid ? stored : expected)
+      );
+      if (invalid) {
+        expect(wrapper.text()).toContain(en.ui.categoryEditor.invalidScore);
+        expect(wrapper.text()).toContain('1.125');
+        expect(wrapper.text()).toContain('1125');
+        expect(wrapper.text()).toContain('1,125');
+        expect((wrapper.vm as any).canSubmit).toBe(false);
+        (wrapper.vm.$refs.edit as any).$emit('ok', { preventDefault: jest.fn() });
+        await localVue.nextTick();
+        expect(store.get_category(['Parent', 'Child']).data.score).toBe(stored);
+        await scoreInput.setValue(String(expected));
+        expect((wrapper.vm as any).canSubmit).toBe(true);
+      }
       (wrapper.vm.$refs.edit as any).$emit('ok', { preventDefault: jest.fn() });
       await localVue.nextTick();
-      expect(store.get_category(['Parent', 'Child']).data.score).toBe(0);
-      expect(store.get_category_score(['Parent', 'Child'])).toBe(0);
+      expect(store.get_category(['Parent', 'Child']).data.score).toBe(expected);
+      expect(store.get_category_score(['Parent', 'Child'])).toBe(expected);
 
       wrapper.destroy();
       wrapper = await openModal();
       expect((wrapper.vm as any).editing.inherit_score).toBe(false);
-      expect((wrapper.vm as any).editing.score).toBe(0);
+      expect((wrapper.vm as any).editing.score).toBe(expected);
     } finally {
       wrapper.destroy();
     }
