@@ -105,17 +105,15 @@ function escapeBucketIds(ids: string[]): string[] {
   });
 }
 
-// JSON for a value interpolated into a query. `JSON.stringify` doubles every
-// backslash, and aw-query takes the literal's content as written, so a regex
-// like `arc(\.exe)?$` or `\w` would reach the server as `arc(\\.exe)?$`.
-// Undo the doubling here so every caller escapes backslashes the same way.
+// Keep JSON's collection/scalar syntax, but encode each string with aw-query's
+// rules (only quotes are escaped). Undoing backslashes globally would conflate
+// real control characters with literal escape text, e.g. a tab with `\t`.
 // Literal names cannot use the regex workaround: reject an unrepresentable
 // value instead of emitting an unclosed string or changing its identity.
 export function jsonForQuery(value: unknown): string {
-  return JSON.stringify(value, (_key, item) => {
-    if (typeof item === 'string') escape_doublequote(item);
-    return item;
-  }).replace(/\\\\/g, '\\');
+  return JSON.stringify(value).replace(/"(?:\\.|[^"\\])*"/g, literal => {
+    return `"${escape_doublequote(JSON.parse(literal))}"`;
+  });
 }
 
 // Only rule.regex is a regex; category paths and select_keys are literal names.

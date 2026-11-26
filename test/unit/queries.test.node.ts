@@ -1363,3 +1363,15 @@ test('multidevice stopwatch overrides are still escaped', () => {
   }).join('\n');
   expect(query).toContain('query_bucket("stopwatch_\\"work\\"")');
 });
+
+test.each(['\t', '\n', '\r', '\b', '\f', '\u0001'])(
+  'query JSON keeps control character %p distinct from its literal escape text',
+  control => {
+    const literal = JSON.stringify(control).slice(1, -1);
+    const encodedControl = jsonForQuery([[`Dev${control}Ops`]]);
+    const encodedLiteral = jsonForQuery([[`Dev${literal}Ops`]]);
+    expect(encodedControl).not.toBe(encodedLiteral);
+    expect(encodedControl).toBe(`[["Dev${control}Ops"]]`);
+    expect(encodedLiteral).toBe(`[["Dev${literal}Ops"]]`);
+  }
+);
