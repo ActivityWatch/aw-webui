@@ -108,7 +108,7 @@ import {
   formatTimelineHostLabelHtml,
   shortenBucketLabel,
 } from '../util/timelineLabels';
-import { nestGroupsByHost } from '../util/timelineHostGroups';
+import { HOST_GROUP_PREFIX, nestGroupsByHost } from '../util/timelineHostGroups';
 
 import { Timeline } from 'vis-timeline/esnext';
 import 'vis-timeline/styles/vis-timeline-graph2d.css';
@@ -594,18 +594,16 @@ export default {
           id => hostById.get(id),
           formatTimelineHostLabelHtml
         );
-        // The host parent row carries the hostname, so drop the "@ host" suffix.
-        isNested = nested !== groups;
-        groups =
-          nested === groups
-            ? groups
-            : nested.map(g =>
-                g.nestedGroups
-                  ? g
-                  : hostById.get(g.id)
-                  ? { ...g, content: formatTimelineBucketLabelHtml(g.id, { omitHost: true }) }
-                  : g
-              );
+        // nestGroupsByHost always returns explicit levels, so nesting is visible
+        // in the rows themselves rather than in array identity.
+        isNested = nested.some(g => g.id.startsWith(HOST_GROUP_PREFIX));
+        // A host parent row carries the hostname, so its children drop the
+        // "@ host" suffix. Flat rows have no parent row and keep it.
+        groups = nested.map(g =>
+          g.treeLevel === 1
+            ? { ...g, content: formatTimelineBucketLabelHtml(g.id, { omitHost: true }) }
+            : g
+        );
       }
       // vis-timeline hid the children of a collapsed host by writing visible:false
       // into the group data. Once the host rows are gone, show the buckets again.
