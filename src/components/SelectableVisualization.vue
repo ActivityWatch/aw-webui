@@ -9,6 +9,13 @@ div(v-if="editable || !activityStore.buckets.loaded || has_prerequisites || !set
         icon(name="cog")
       b-dropdown-item(v-for="t in types" :key="t" variant="outline-secondary" @click="$emit('onTypeChange', id, t)")
         | {{ visualizations[t].title }} #[span.small.text-warning(v-if="!visualizations[t].available") {{ $t('visualizations.noData') }}]
+    //- The clock draws at a fixed size, so it is always full width.
+    b-dropdown.mr-1(v-if="type != 'sunburst_clock'" size="sm" variant="outline-secondary" right :title="$t('visualizations.width')")
+      template(v-slot:button-content="")
+        icon(name="arrows-alt-h")
+      b-dropdown-header {{ $t('visualizations.width') }}
+      b-dropdown-item(v-for="w in widths" :key="String(w.value)" :active="w.value === activeWidth" @click="$emit('onWidthChange', id, w.value)")
+        | {{ $t(w.label) }}
     b-button.p-0(size="sm", variant="outline-danger" @click="$emit('onRemove', id)")
       icon(name="times")
 
@@ -122,6 +129,7 @@ div(v-if="editable || !activityStore.buckets.loaded || has_prerequisites || !set
 
 <script lang="ts">
 import _ from 'lodash';
+import 'vue-awesome/icons/arrows-alt-h';
 import 'vue-awesome/icons/cog';
 import 'vue-awesome/icons/times';
 import 'vue-awesome/icons/bars';
@@ -154,6 +162,7 @@ export default {
     id: Number,
     type: String,
     props: Object,
+    width: { type: Number, default: null },
     viewId: { type: String, default: '' },
     editable: { type: Boolean, default: true },
     disabled: { type: Boolean, default: false },
@@ -207,6 +216,19 @@ export default {
     };
   },
   computed: {
+    // Only 1|2|3 are selectable; any other stored value renders as the type
+    // default, so the menu must highlight Automatic for it too.
+    activeWidth() {
+      return [1, 2, 3].includes(this.width) ? this.width : null;
+    },
+    widths() {
+      return [
+        { value: null, label: 'visualizations.widthAuto' },
+        { value: 1, label: 'visualizations.widthFull' },
+        { value: 2, label: 'visualizations.widthHalf' },
+        { value: 3, label: 'visualizations.widthThird' },
+      ];
+    },
     visualizations: function () {
       return {
         top_apps: {

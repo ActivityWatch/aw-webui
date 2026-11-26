@@ -11,6 +11,8 @@ const mockViews = [
 
 const mockSave = jest.fn();
 const mockLoad = jest.fn();
+const mockEditView = jest.fn();
+const mockSetVisualizationWidth = jest.fn();
 
 jest.mock('~/stores/views', () => ({
   useViewsStore: () => ({
@@ -19,6 +21,8 @@ jest.mock('~/stores/views', () => ({
     isDefaultSummary: view => view?.id === 'summary',
     save: (...args) => mockSave(...args),
     load: (...args) => mockLoad(...args),
+    editView: (...args) => mockEditView(...args),
+    setVisualizationWidth: (...args) => mockSetVisualizationWidth(...args),
   }),
 }));
 
@@ -80,9 +84,9 @@ describe('ActivityView mobile presentation', () => {
       };
       window.matchMedia = jest.fn().mockReturnValue(query);
       const elements = [
-        { type: 'top_apps' },
+        { type: 'top_apps', width: 2 },
         { type: 'top_categories' },
-        { type: 'timeline_barchart' },
+        { type: 'timeline_barchart', width: 1 },
       ];
       const wrapper = shallowMount(ActivityView, {
         computed: { view: () => ({ id: 'summary', elements }) },
@@ -103,6 +107,13 @@ describe('ActivityView mobile presentation', () => {
         const order = () =>
           wrapper.findAll('[data-type]').wrappers.map(el => el.attributes('data-type'));
         expect(order()).toEqual(['timeline_barchart', 'top_apps', 'top_categories']);
+        const chartClasses = wrapper.find('[data-type="timeline_barchart"]').element.parentElement
+          .classList;
+        expect(Array.from(chartClasses)).toEqual(
+          expect.arrayContaining(['summary-timeline', 'col-lg-12'])
+        );
+        const appClasses = wrapper.find('[data-type="top_apps"]').element.parentElement.classList;
+        expect(Array.from(appClasses)).toContain('col-lg-6');
         expect(wrapper.findAll('[data-id]').wrappers.map(el => el.attributes('data-id'))).toEqual([
           '2',
           '0',
@@ -128,6 +139,65 @@ describe('ActivityView mobile presentation', () => {
       }
     }
   );
+});
+
+describe('ActivityView onTypeChange', () => {
+  beforeEach(() => {
+    mockEditView.mockClear();
+    mockSetVisualizationWidth.mockClear();
+  });
+
+  test('clears a stored width when the card becomes the fixed-size clock', async () => {
+    const vm = { view: { id: 'default' } };
+    await ActivityView.methods.onTypeChange.call(vm, 1, 'sunburst_clock');
+    expect(mockEditView).toHaveBeenCalledWith({
+      view_id: 'default',
+      el_id: 1,
+      type: 'sunburst_clock',
+      props: {},
+    });
+    expect(mockSetVisualizationWidth).toHaveBeenCalledWith({
+      view_id: 'default',
+      el_id: 1,
+      width: null,
+    });
+  });
+
+  test('keeps a chosen width when switching between width-capable types', async () => {
+    const vm = { view: { id: 'default' } };
+    await ActivityView.methods.onTypeChange.call(vm, 1, 'top_titles');
+    expect(mockSetVisualizationWidth).not.toHaveBeenCalled();
+  });
+});
+
+describe('ActivityView visClass', () => {
+  const visClass = el => ActivityView.methods.visClass.call(ActivityView.methods, el);
+
+  test('without a chosen width, keeps the per-type layout', () => {
+    expect(visClass({ type: 'top_apps', size: 3 })).toEqual(['col-md-6', 'col-lg-4']);
+    expect(visClass({ type: 'vis_timeline' })).toEqual(['col-md-12', 'col-lg-12']);
+    // Changing a default card's type keeps its stored size: 3; the timeline stays full width.
+    expect(visClass({ type: 'sunburst_clock', size: 3 })).toEqual(['col-md-12', 'col-lg-12']);
+  });
+
+  test('a chosen width sets the cards per row on large screens', () => {
+    expect(visClass({ type: 'top_apps', width: 1 })).toEqual(['col-md-12', 'col-lg-12']);
+    expect(visClass({ type: 'top_apps', width: 2 })).toEqual(['col-md-6', 'col-lg-6']);
+    expect(visClass({ type: 'vis_timeline', width: 3 })).toEqual(['col-md-6', 'col-lg-4']);
+  });
+
+  test('the fixed-size clock stays full width whatever is stored', () => {
+    expect(visClass({ type: 'sunburst_clock', width: 3 })).toEqual(['col-md-12', 'col-lg-12']);
+  });
+
+  test('an unselectable stored width falls back to the per-type default', () => {
+    // The menu can only highlight 1|2|3|null, so anything else must render the
+    // same as Automatic rather than a layout no option represents.
+    expect(visClass({ type: 'top_apps', width: 4 })).toEqual(visClass({ type: 'top_apps' }));
+    expect(visClass({ type: 'vis_timeline', width: 4 })).toEqual(
+      visClass({ type: 'vis_timeline' })
+    );
+  });
 });
 
 describe('ActivityView custom visualization modal', () => {

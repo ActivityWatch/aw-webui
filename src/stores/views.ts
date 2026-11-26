@@ -1,9 +1,16 @@
 import { defineStore } from 'pinia';
+import { set, del } from 'vue';
 import { useSettingsStore } from './settings';
+
+/** Items per row on large screens: 1 = full width, 2 = half, 3 = a third. */
+export type ElementWidth = 1 | 2 | 3;
 
 interface IElement {
   type: string;
+  // Stored by every default view, but never read for layout (see `width`).
   size?: number;
+  // Chosen by the user in edit mode. Unset keeps the per-type default.
+  width?: ElementWidth;
   props?: Record<string, unknown>;
 }
 
@@ -156,7 +163,15 @@ const LEGACY_ANDROID_SUMMARY_ONLY: View[] = [
 
 const LEGACY_ANDROID_DEFAULTS: View[][] = [...LEGACY_DESKTOP_DEFAULTS, LEGACY_ANDROID_SUMMARY_ONLY];
 
-function sameLayout(a: View[], b: View[]): boolean {
+/**
+ * Compare two view layouts element by element.
+ *
+ * `ignoreWidth` is for presentation-only callers: a card width has no effect
+ * below `md` (every card is full width there), so a desktop-only width tweak
+ * must not change phone presentation. Migration callers keep the default,
+ * where a non-null width *is* a user edit worth preserving.
+ */
+function sameLayout(a: View[], b: View[], ignoreWidth = false): boolean {
   return (
     a.length === b.length &&
     a.every((view, i) => {
@@ -170,6 +185,8 @@ function sameLayout(a: View[], b: View[]): boolean {
           (el, j) =>
             el.type === other.elements[j].type &&
             el.size === other.elements[j].size &&
+            // A null width renders as Automatic, so it is not a user edit.
+            (ignoreWidth || el.width == null) &&
             el.props === undefined
         )
       );
@@ -209,7 +226,12 @@ export const useViewsStore = defineStore('views', {
     isDefaultSummary:
       () =>
       (view?: View): boolean =>
-        !!view && [desktopViews[0], androidViews[0]].some(summary => sameLayout([view], [summary])),
+        !!view &&
+        [desktopViews[0], androidViews[0]].some(summary =>
+          // Width is a desktop-only presentation detail, so ignore it here:
+          // setting it must not disable the phone chart-first reorder.
+          sameLayout([view], [summary], true)
+        ),
   },
   actions: {
     async load() {
@@ -331,6 +353,19 @@ export const useViewsStore = defineStore('views', {
       const element = this.views.find(v => v.id == view_id).elements[el_id];
       element.type = type;
       element.props = props;
+    },
+    setVisualizationWidth(
+      this: State,
+      { view_id, el_id, width }: { view_id: string; el_id: number; width: ElementWidth | null }
+    ) {
+      const element = this.views.find(v => v.id == view_id).elements[el_id];
+      // Most elements have no `width` key yet; Vue 2 only tracks added or
+      // removed keys through set/del.
+      if (width === null) {
+        del(element, 'width');
+      } else {
+        set(element, 'width', width);
+      }
     },
     addVisualization(this: State, { view_id, type }) {
       this.views.find(v => v.id == view_id).elements.push({ type: type });
