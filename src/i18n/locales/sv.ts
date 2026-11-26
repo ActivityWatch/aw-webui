@@ -398,7 +398,7 @@ export default {
     allDevices: 'Alla enheter',
     allDevicesCount: 'Alla enheter ({count})',
     onlyThisDevice: 'endast',
-    multideviceNote: 'Webbläsar- och stoppursdata visas bara när en enskild enhet är vald.',
+    multideviceNote: 'Stoppursdata visas bara när en enskild enhet är vald.',
     deviceBreakdownTooltip:
       'Aktiv tid per enhet. När enheter överlappar räknas tiden en gång, för den enhet som listas först.',
     overlapPriority: 'Prioritet vid överlapp',

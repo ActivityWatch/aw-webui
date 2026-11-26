@@ -397,7 +397,7 @@ export default {
     allDevicesCount: 'すべてのデバイス（{count}）',
     onlyThisDevice: 'のみ',
     multideviceNote:
-      'ブラウザとストップウォッチのデータは、単一のデバイスを表示している場合のみ利用できます。',
+      'ストップウォッチのデータは、単一のデバイスを表示している場合のみ利用できます。',
     deviceBreakdownTooltip:
       'デバイスごとのアクティブ時間。デバイスの時間が重なる場合は、先に表示されているデバイスに一度だけ計上されます。',
     overlapPriority: '重複時の優先度',

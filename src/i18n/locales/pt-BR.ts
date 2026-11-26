@@ -403,7 +403,7 @@ export default {
     allDevicesCount: 'Todos os dispositivos ({count})',
     onlyThisDevice: 'somente',
     multideviceNote:
-      'Os dados do navegador e do cronômetro só estão disponíveis ao visualizar um único dispositivo.',
+      'Os dados do cronômetro só estão disponíveis ao visualizar um único dispositivo.',
     deviceBreakdownTooltip:
       'Tempo ativo por dispositivo. Quando dispositivos se sobrepõem, o tempo é contado uma vez, para o dispositivo listado primeiro.',
     overlapPriority: 'Prioridade de sobreposição',

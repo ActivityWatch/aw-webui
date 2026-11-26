@@ -405,7 +405,7 @@ export default {
     allDevicesCount: 'Tous les appareils ({count})',
     onlyThisDevice: 'uniquement',
     multideviceNote:
-      'Les données du navigateur et du chronomètre ne sont disponibles que pour un seul appareil à la fois.',
+      'Les données du chronomètre ne sont disponibles que pour un seul appareil à la fois.',
     deviceBreakdownTooltip:
       "Temps actif par appareil. Lorsque des appareils se chevauchent, le temps est compté une seule fois, pour l'appareil listé en premier.",
     overlapPriority: 'Priorité de chevauchement',

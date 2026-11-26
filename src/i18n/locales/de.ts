@@ -417,8 +417,7 @@ export default {
     allDevices: 'Alle Geräte',
     allDevicesCount: 'Alle Geräte ({count})',
     onlyThisDevice: 'nur',
-    multideviceNote:
-      'Browser- und Stoppuhrdaten sind nur bei Auswahl eines einzelnen Geräts verfügbar.',
+    multideviceNote: 'Stoppuhrdaten sind nur bei Auswahl eines einzelnen Geräts verfügbar.',
     deviceBreakdownTooltip:
       'Aktive Zeit pro Gerät. Überschneiden sich Geräte, wird die Zeit nur einmal gezählt, für das zuerst aufgeführte Gerät.',
     overlapPriority: 'Überschneidungspriorität',
