@@ -216,7 +216,10 @@ export default {
         if (samePatterns(storedPatterns, splitRegexPipe(original))) {
           return original;
         }
-        return joinRegexPipe(storedPatterns);
+        const joined = joinRegexPipe(storedPatterns);
+        // An incomplete row can escape the separator or swallow it into a group
+        // or class. Reject that edit, but keep the untouched-original path above.
+        return samePatterns(splitRegexPipe(joined), storedPatterns) ? joined : '';
       }
       return this.editing.rule.regex || '';
     },
@@ -353,7 +356,12 @@ export default {
       const inherit_score = storedScore === null || storedScore === undefined;
       const rule = _.cloneDeep(cat.rule) || {};
       const storedKeys = normalizeSelectKeys(rule.select_keys);
-      const originalRegex = rule.type === 'regex' ? rule.regex || '' : '';
+      // Imported/legacy rules may contain non-text values. Open an invalid blank
+      // row for correction instead of passing them to the string splitter.
+      if (rule.type === 'regex' && typeof rule.regex !== 'string') {
+        rule.regex = '';
+      }
+      const originalRegex = rule.type === 'regex' ? rule.regex : '';
       this.editing = {
         id: cat.id,
         name: cat.subname,

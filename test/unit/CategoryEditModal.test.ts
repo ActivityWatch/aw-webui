@@ -539,7 +539,7 @@ describe('CategoryEditModal mounted score round trip', () => {
 });
 
 describe('CategoryEditModal mounted regex rows', () => {
-  async function openModal(regex: string) {
+  async function openModal(regex: any) {
     const localVue = createLocalVue();
     localVue.use(BootstrapVue);
     localVue.use(PiniaVuePlugin);
@@ -622,6 +622,59 @@ describe('CategoryEditModal mounted regex rows', () => {
       wrapper.destroy();
     }
   });
+
+  test.each([
+    ['Chrome\\', 'Firefox'],
+    ['(Chrome', 'Firefox)'],
+    ['[Chrome', 'Firefox]'],
+  ])('rejects incomplete rows %j and %j even when their join compiles', async (first, second) => {
+    const { wrapper, rows, save } = await openModal('Chrome|Firefox');
+    try {
+      await rows().at(0).setValue(first);
+      await rows().at(1).setValue(second);
+      expect((wrapper.vm as any).validPattern).toBe(false);
+      expect((wrapper.vm as any).canSubmit).toBe(false);
+      expect(await save()).toBe('Chrome|Firefox');
+      await rows().at(0).setValue('Chromium');
+      await rows().at(1).setValue('Firefox');
+      expect((wrapper.vm as any).canSubmit).toBe(true);
+      expect(await save()).toBe('Chromium|Firefox');
+    } finally {
+      wrapper.destroy();
+    }
+  });
+
+  test.each([42, true, {}, ['Chrome'], null, undefined])(
+    'opens a non-string saved regex %j as an invalid blank row that can be repaired',
+    async regex => {
+      const { wrapper, rows, save } = await openModal(regex);
+      try {
+        expect(rows().length).toBe(1);
+        expect((rows().at(0).element as HTMLInputElement).value).toBe('');
+        expect((wrapper.vm as any).canSubmit).toBe(false);
+        await save();
+        expect(wrapper.emitted('ok')).toBeUndefined();
+        await rows().at(0).setValue('Firefox');
+        expect((wrapper.vm as any).canSubmit).toBe(true);
+        expect(await save()).toBe('Firefox');
+      } finally {
+        wrapper.destroy();
+      }
+    }
+  );
+
+  test.each(['Chrome\\|Firefox', '(Chrome|Firefox)', '[]|a]|Firefox', 'Chrome||Firefox|'])(
+    'preserves untouched saved regex %s byte-for-byte',
+    async regex => {
+      const { wrapper, save } = await openModal(regex);
+      try {
+        expect((wrapper.vm as any).canSubmit).toBe(true);
+        expect(await save()).toBe(regex);
+      } finally {
+        wrapper.destroy();
+      }
+    }
+  );
 
   test('cannot remove the last row', async () => {
     const { wrapper, rows } = await openModal('Firefox');
