@@ -23,13 +23,32 @@ div
       :aria-label="$t('stopwatch.placeholder')"
       @keyup.enter="startTimer(label)"
     )
+    b-input.stopwatch-tags-input(
+      id="stopwatch-tags"
+      data-testid="stopwatch-tags"
+      v-model="tags"
+      placeholder="work, meeting"
+      :aria-label="$t('stopwatch.tagsLabel')"
+      :title="$t('stopwatch.tagsLabel')"
+      @input="onTagsInput"
+      @keyup.enter="startTimer(label)"
+    )
     b-input-group-append
       b-button(@click="startTimer(label)", variant="success")
         icon(name="play")
         | {{ $t('stopwatch.start') }}
 
-  b-form-group.mt-2(:label="$t('stopwatch.tagsLabel')" label-for="stopwatch-tags")
-    b-input(id="stopwatch-tags" data-testid="stopwatch-tags" v-model="tags" placeholder="work, meeting")
+  div.stopwatch-recent-tags.mt-1(v-if="tagChips.length > 0" data-testid="stopwatch-recent-tags")
+    b-button.stopwatch-recent-tag(
+      v-for="t in tagChips"
+      :key="t"
+      size="sm"
+      pill
+      :variant="selectedTags.includes(t) ? 'primary' : 'light'"
+      :aria-pressed="selectedTags.includes(t) ? 'true' : 'false'"
+      :title="t"
+      @click="toggleTag(t)"
+    ) {{ t }}
 
   hr
 
@@ -69,6 +88,15 @@ div
 </template>
 
 <style scoped lang="scss">
+.stopwatch-tags-input {
+  max-width: 14em;
+}
+
+.stopwatch-recent-tag {
+  margin-right: 0.25em;
+  font-weight: normal;
+}
+
 .btn {
   margin-right: 0.5em;
 
@@ -83,6 +111,8 @@ div
 import _ from 'lodash';
 import moment from 'moment';
 import { parseTags } from '../util/tags';
+
+const RECENT_TAG_LIMIT = 8;
 
 import StopwatchEntry from '../components/StopwatchEntry.vue';
 import 'vue-awesome/icons/play';
@@ -110,6 +140,9 @@ export default {
       events: [],
       label: '',
       tags: '',
+      // Chip selections stay separate from the typed draft: a selected tag
+      // may itself contain a comma and must never be parsed as draft text.
+      selectedTagList: [] as string[],
       now: moment(),
     };
   },
@@ -119,6 +152,37 @@ export default {
     },
     stoppedTimers() {
       return _.filter(this.events, e => !e.data.running);
+    },
+    selectedTags(): string[] {
+      return [...new Set([...this.selectedTagList, ...parseTags(this.tags)])];
+    },
+    // Most recently used first; at most RECENT_TAG_LIMIT distinct tags.
+    recentTags() {
+      const seen = new Set<string>();
+      const sorted = [...this.events].sort(
+        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+      for (const e of sorted) {
+        // Events created before tags became arrays stored a comma-separated
+        // string; read it for suggestions but never rewrite the event.
+        const tags = Array.isArray(e.data.tags)
+          ? e.data.tags
+          : typeof e.data.tags === 'string'
+          ? parseTags(e.data.tags)
+          : [];
+        for (const t of tags) {
+          if (typeof t === 'string' && t.trim()) seen.add(t.trim());
+        }
+      }
+      return [...seen].slice(0, RECENT_TAG_LIMIT);
+    },
+    // Chips for recent tags plus every chip-selected tag that is no longer
+    // recent (its supplying events were deleted, or it aged out of the limit).
+    // A selection must stay visible and clickable: otherwise Start silently
+    // saves a tag the user can no longer see or remove.
+    tagChips(): string[] {
+      const missing = this.selectedTagList.filter(t => !this.recentTags.includes(t));
+      return [...this.recentTags, ...missing];
     },
     timersByDate() {
       return _.groupBy(this.stoppedTimers, e => moment(e.timestamp).format('YYYY-MM-DD'));
@@ -141,7 +205,36 @@ export default {
     clearInterval(this.clockInterval);
   },
   methods: {
-    startTimer: async function (label, tags = parseTags(this.tags)) {
+    onTagsInput: function (text: string) {
+      this.tags = text;
+    },
+
+    toggleTag: function (tag) {
+      if (this.selectedTags.includes(tag)) {
+        this.selectedTagList = this.selectedTagList.filter(t => t !== tag);
+        // A tag can also be selected via the draft. Removing it there is what
+        // makes one click actually deselect it (a draft-only tag would keep
+        // the chip pressed), but only touch the draft when it holds the tag so
+        // an unrelated draft is never re-serialized.
+        const draft = parseTags(this.tags);
+        if (draft.includes(tag)) {
+          this.tags = draft.filter(t => t !== tag).join(', ');
+        }
+      } else {
+        this.selectedTagList = [...this.selectedTagList, tag];
+      }
+    },
+
+    startTimer: async function (label, tags) {
+      // No explicit tags means the tag input row was used. "Start new" on a
+      // historical timer passes that timer's tags, which is an explicit
+      // restart and must leave a prepared draft alone.
+      const fromInputRow = tags === undefined;
+      if (fromInputRow) tags = this.selectedTags;
+      // Snapshot what the form submitted: a start can be in flight while the
+      // user keeps typing, and completion must not erase those later edits.
+      const submittedDraft = this.tags;
+      const submittedChips = [...this.selectedTagList];
       // Old events may carry comma-separated text or an unsupported shape.
       // Normalize only the new timer; never rewrite the historical event.
       tags = Array.isArray(tags) ? tags : typeof tags === 'string' ? parseTags(tags) : [];
@@ -154,6 +247,17 @@ export default {
         },
       };
       await this.$aw.heartbeat(this.bucket_id, 1, event);
+      // A started timer must not preload the next one. Chip selections are
+      // otherwise invisible state that keeps applying to later timers, so
+      // clear both sources once the heartbeat is accepted.
+      if (
+        fromInputRow &&
+        this.tags === submittedDraft &&
+        _.isEqual(this.selectedTagList, submittedChips)
+      ) {
+        this.tags = '';
+        this.selectedTagList = [];
+      }
       await this.getEvents();
     },
 

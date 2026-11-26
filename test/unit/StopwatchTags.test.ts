@@ -43,7 +43,9 @@ describe('Stopwatch event tags', () => {
     await flush();
     const tags = wrapper.find('[data-testid="stopwatch-tags"]');
     expect(tags.exists()).toBe(true);
-    await wrapper.setData({ tags: ' study,  deep work, ,reading , ' });
+    // Emit from the input component so the v-model/@input wiring is exercised.
+    tags.vm.$emit('input', ' study,  deep work, ,reading , ');
+    await wrapper.vm.$nextTick();
     await wrapper.vm.$nextTick();
     await wrapper.vm.startTimer('Study');
     expect(aw.heartbeat.mock.calls[0][2].data).toEqual({
@@ -51,6 +53,200 @@ describe('Stopwatch event tags', () => {
       running: true,
       tags: ['study', 'deep work', 'reading'],
     });
+    wrapper.destroy();
+  });
+
+  test('offers recent tags (newest first, deduplicated) and toggles them into the input', async () => {
+    const older = {
+      ...timer(['work', 'deep work']),
+      id: 1,
+      timestamp: new Date('2026-10-19T12:00:00Z'),
+    };
+    const newer = {
+      ...timer(['meeting', 'work']),
+      id: 2,
+      timestamp: new Date('2026-10-20T12:00:00Z'),
+    };
+    const { wrapper } = stopwatch([older, newer]);
+    await flush();
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.recentTags).toEqual(['meeting', 'work', 'deep work']);
+    expect(wrapper.find('[data-testid="stopwatch-recent-tags"]').exists()).toBe(true);
+
+    wrapper.vm.toggleTag('work');
+    wrapper.vm.toggleTag('meeting');
+    expect(wrapper.vm.selectedTags).toEqual(['work', 'meeting']);
+    expect(wrapper.vm.tags).toBe('');
+    wrapper.vm.toggleTag('work');
+    expect(wrapper.vm.selectedTags).toEqual(['meeting']);
+    wrapper.destroy();
+  });
+
+  test('a clicked recent tag containing a comma stays one array entry', async () => {
+    const past = timer(['research, development', 'work']);
+    const { wrapper, aw } = stopwatch([past]);
+    await flush();
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.recentTags).toContain('research, development');
+
+    wrapper.vm.toggleTag('research, development');
+    await wrapper.vm.$nextTick();
+    // Selected state survives the text round-trip, so a second click removes it.
+    expect(wrapper.vm.selectedTags).toEqual(['research, development']);
+    wrapper.vm.toggleTag('research, development');
+    expect(wrapper.vm.selectedTags).toEqual([]);
+
+    wrapper.vm.toggleTag('research, development');
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.startTimer('Study');
+    expect(aw.heartbeat.mock.calls[0][2].data.tags).toEqual(['research, development']);
+    wrapper.destroy();
+  });
+
+  test('typing after selecting a comma-containing tag preserves its boundary', async () => {
+    const { wrapper, aw } = stopwatch([timer(['research, development', 'work'])]);
+    await flush();
+    wrapper.vm.toggleTag('research, development');
+    await wrapper.vm.$nextTick();
+    // The text field is a separate draft, not a lossy serialization of chips.
+    expect(wrapper.vm.tags).toBe('');
+    const input = wrapper.find('[data-testid="stopwatch-tags"]');
+    input.vm.$emit('input', 'urgent, work');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.selectedTags).toEqual(['research, development', 'urgent', 'work']);
+    expect(wrapper.find('.stopwatch-recent-tag').attributes('aria-pressed')).toBe('true');
+    // Clearing the draft cannot delete a selected chip, but clicking it can.
+    input.vm.$emit('input', '');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.selectedTags).toEqual(['research, development']);
+    input.vm.$emit('input', 'urgent, work');
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.startTimer('Study');
+    expect(aw.heartbeat.mock.calls[0][2].data.tags).toEqual([
+      'research, development',
+      'urgent',
+      'work',
+    ]);
+    wrapper.destroy();
+  });
+
+  test('keeps tags typed while a start is in flight', async () => {
+    const { wrapper, aw } = stopwatch([timer(['work'])]);
+    await flush();
+    let resolveStart;
+    aw.heartbeat.mockReturnValueOnce(
+      new Promise(resolve => {
+        resolveStart = resolve;
+      })
+    );
+    const input = wrapper.find('[data-testid="stopwatch-tags"]');
+    input.vm.$emit('input', 'work');
+    await wrapper.vm.$nextTick();
+    const starting = wrapper.vm.startTimer('Study');
+    // The user keeps typing before the heartbeat resolves.
+    input.vm.$emit('input', 'urgent');
+    await wrapper.vm.$nextTick();
+    resolveStart(undefined);
+    await starting;
+    await flush();
+    expect(wrapper.vm.tags).toBe('urgent');
+    wrapper.destroy();
+  });
+
+  test('starting a timer clears chip selections and the tag draft', async () => {
+    const { wrapper, aw } = stopwatch([timer(['work'])]);
+    await flush();
+    await wrapper.vm.$nextTick();
+    wrapper.vm.toggleTag('work');
+    const input = wrapper.find('[data-testid="stopwatch-tags"]');
+    input.vm.$emit('input', 'urgent');
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.startTimer('Study');
+    expect(aw.heartbeat.mock.calls[0][2].data.tags).toEqual(['work', 'urgent']);
+    // A started timer must not preload the next one with invisible state.
+    expect(wrapper.vm.selectedTags).toEqual([]);
+    expect(wrapper.vm.tags).toBe('');
+    await wrapper.vm.startTimer('Study again');
+    expect(aw.heartbeat.mock.calls[1][2].data.tags).toEqual([]);
+    wrapper.destroy();
+  });
+
+  test('toggling a typed recent tag removes it and selecting it again does not duplicate it', async () => {
+    const { wrapper } = stopwatch([timer(['work'])]);
+    await flush();
+    const input = wrapper.find('[data-testid="stopwatch-tags"]');
+    input.vm.$emit('input', 'work, urgent');
+    await wrapper.vm.$nextTick();
+    wrapper.vm.toggleTag('work');
+    expect(wrapper.vm.selectedTags).toEqual(['urgent']);
+    expect(wrapper.vm.tags).toBe('urgent');
+    wrapper.vm.toggleTag('work');
+    input.vm.$emit('input', 'urgent, work');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.selectedTags).toEqual(['work', 'urgent']);
+    wrapper.destroy();
+  });
+
+  test('suggests chips for legacy comma-separated string tags', async () => {
+    const legacy = {
+      ...timer(),
+      data: { ...timer().data, tags: 'work, meeting' },
+    };
+    const { wrapper } = stopwatch([legacy]);
+    await flush();
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.recentTags).toEqual(['work', 'meeting']);
+    expect(wrapper.find('[data-testid="stopwatch-recent-tags"]').exists()).toBe(true);
+    wrapper.destroy();
+  });
+
+  test('recent-tag chips expose their pressed state to assistive tech', async () => {
+    const { wrapper } = stopwatch([timer(['work'])]);
+    await flush();
+    await wrapper.vm.$nextTick();
+    const chip = wrapper.find('.stopwatch-recent-tag');
+    expect(chip.attributes('aria-pressed')).toBe('false');
+    wrapper.vm.toggleTag('work');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('.stopwatch-recent-tag').attributes('aria-pressed')).toBe('true');
+    wrapper.destroy();
+  });
+
+  test('keeps a chip-selected tag visible and removable after its events disappear', async () => {
+    const { wrapper, aw } = stopwatch([timer(['work'])]);
+    await flush();
+    await wrapper.vm.$nextTick();
+    wrapper.vm.toggleTag('work');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.selectedTags).toEqual(['work']);
+
+    // The only event supplying the tag is deleted, so it leaves recentTags.
+    aw.req.post.mockResolvedValue({ data: [{ running: [], history: [] }] });
+    await wrapper.vm.getEvents();
+    await flush();
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.recentTags).toEqual([]);
+
+    // The selection must not become a hidden tag that Start would still save.
+    const chips = wrapper.findAll('.stopwatch-recent-tag');
+    expect(chips).toHaveLength(1);
+    expect(chips.at(0).text()).toBe('work');
+    expect(chips.at(0).attributes('aria-pressed')).toBe('true');
+    expect(wrapper.vm.selectedTags).toEqual(['work']);
+
+    wrapper.vm.toggleTag('work');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.selectedTags).toEqual([]);
+    expect(wrapper.find('[data-testid="stopwatch-recent-tags"]').exists()).toBe(false);
+    wrapper.destroy();
+  });
+
+  test('hides the recent-tag row when no event has tags', async () => {
+    const { wrapper } = stopwatch([timer()]);
+    await flush();
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.recentTags).toEqual([]);
+    expect(wrapper.find('[data-testid="stopwatch-recent-tags"]').exists()).toBe(false);
     wrapper.destroy();
   });
 
@@ -62,7 +258,7 @@ describe('Stopwatch event tags', () => {
       const { wrapper, aw } = stopwatch([past]);
       await flush();
       // A separate draft must not leak into a restarted historical timer.
-      await wrapper.setData({ tags: 'unrelated draft' });
+      wrapper.vm.onTagsInput('unrelated draft');
       wrapper.findComponent(StopwatchEntry).vm.$emit('new');
       await flush();
       expect(aw.heartbeat.mock.calls[0][2].data).toEqual({
@@ -70,6 +266,9 @@ describe('Stopwatch event tags', () => {
         running: true,
         tags: tags || [],
       });
+      // An explicit restart carries its own tags, so it must not discard a
+      // draft the user prepared for the next timer.
+      expect(wrapper.vm.tags).toBe('unrelated draft');
       expect(JSON.stringify(past)).toBe(original);
       if (tags) expect(aw.heartbeat.mock.calls[0][2].data.tags).not.toBe(tags);
       wrapper.destroy();
@@ -85,7 +284,7 @@ describe('Stopwatch event tags', () => {
     const original = JSON.stringify(past);
     const { wrapper, aw } = stopwatch([past]);
     await flush();
-    await wrapper.setData({ tags: 'unrelated draft' });
+    wrapper.vm.onTagsInput('unrelated draft');
     wrapper.findComponent(StopwatchEntry).vm.$emit('new');
     await flush();
     expect(aw.heartbeat).toHaveBeenCalledTimes(1);
