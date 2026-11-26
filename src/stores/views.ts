@@ -11,6 +11,8 @@ export interface View {
   id: string;
   name: string;
   elements: IElement[];
+  // Stored with the layout in the same settings write, never a separate key.
+  customized?: boolean;
 }
 
 const desktopViews: View[] = [
@@ -64,6 +66,15 @@ export const androidViews: View[] = [
       { type: 'timeline_barchart', size: 3 },
       { type: 'category_tree', size: 3 },
       { type: 'category_sunburst', size: 3 },
+    ],
+  },
+  {
+    id: 'browser',
+    name: 'Browser',
+    elements: [
+      { type: 'top_domains', size: 3 },
+      { type: 'top_urls', size: 3 },
+      { type: 'top_browser_titles', size: 3 },
     ],
   },
 ];
@@ -127,6 +138,24 @@ const LEGACY_DESKTOP_DEFAULTS: View[][] = [
   LEGACY_DESKTOP_WITH_BROWSER_TITLES,
 ];
 
+// The Android default before it had a Browser view (#1321). Browser data was
+// queried but no view showed it, so an unmodified copy gets the current default.
+const LEGACY_ANDROID_SUMMARY_ONLY: View[] = [
+  {
+    id: 'summary',
+    name: 'Summary',
+    elements: [
+      { type: 'top_apps', size: 3 },
+      { type: 'top_categories', size: 3 },
+      { type: 'timeline_barchart', size: 3 },
+      { type: 'category_tree', size: 3 },
+      { type: 'category_sunburst', size: 3 },
+    ],
+  },
+];
+
+const LEGACY_ANDROID_DEFAULTS: View[][] = [...LEGACY_DESKTOP_DEFAULTS, LEGACY_ANDROID_SUMMARY_ONLY];
+
 function sameLayout(a: View[], b: View[]): boolean {
   return (
     a.length === b.length &&
@@ -149,14 +178,15 @@ function sameLayout(a: View[], b: View[]): boolean {
 }
 
 /**
- * On Android, replace stored views that are an unmodified desktop default with
- * the Android defaults (aw-android#321). Views the user edited are kept.
+ * On Android, replace stored views that are an unmodified earlier default (the
+ * desktop layout, aw-android#321, or the summary-only Android layout, #1321)
+ * with the Android defaults. Views the user edited are kept.
  */
 export function migrateStoredViews(stored: View[], isAndroid: boolean = onAndroid): View[] {
-  if (!isAndroid || !Array.isArray(stored)) {
+  if (!isAndroid || !Array.isArray(stored) || stored.some(view => view.customized === true)) {
     return stored;
   }
-  if (!LEGACY_DESKTOP_DEFAULTS.some(legacy => sameLayout(stored, legacy))) {
+  if (!LEGACY_ANDROID_DEFAULTS.some(legacy => sameLayout(stored, legacy))) {
     return stored;
   }
   // A copy, so later view edits don't mutate the shared default.
@@ -198,7 +228,19 @@ export const useViewsStore = defineStore('views', {
         // Settings.update patches its state before persistence. Keep its confirmed
         // baseline separate from the draft, including when persistence rejects.
         const confirmed = JSON.parse(JSON.stringify(settingsStore.views));
-        const draft = JSON.parse(JSON.stringify(this.views));
+        const draft: View[] = JSON.parse(JSON.stringify(this.views));
+        // A user can recreate an old default by deleting Browser. Persist the
+        // distinction inside that layout, atomically with the views write.
+        const keepCustomized =
+          Array.isArray(confirmed) &&
+          confirmed.some((view: View) => view.customized === true) &&
+          sameLayout(draft, confirmed);
+        if (
+          (onAndroid || keepCustomized) &&
+          LEGACY_ANDROID_DEFAULTS.some(legacy => sameLayout(draft, legacy))
+        ) {
+          draft[0].customized = true;
+        }
         try {
           await settingsStore.update({ views: draft });
         } catch (error) {
@@ -251,7 +293,9 @@ export const useViewsStore = defineStore('views', {
       return [...this.views, ...stored].some(v => v.id === id);
     },
     loadViews(views: View[]) {
-      this.$patch({ views: JSON.parse(JSON.stringify(views)) });
+      // Persistence metadata is not part of the editable layout.
+      const editable = views.map(({ customized: _customized, ...view }) => view);
+      this.$patch({ views: JSON.parse(JSON.stringify(editable)) });
       console.log('Loaded views:', this.views);
     },
     clearViews(this: State) {

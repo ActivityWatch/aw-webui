@@ -64,6 +64,21 @@ const storedDesktopDefault = () => [
   },
 ];
 
+// The Android default saved before the Browser tab was introduced.
+const storedAndroidDefault = () => [
+  {
+    id: 'summary',
+    name: 'Summary',
+    elements: [
+      { type: 'top_apps', size: 3 },
+      { type: 'top_categories', size: 3 },
+      { type: 'timeline_barchart', size: 3 },
+      { type: 'category_tree', size: 3 },
+      { type: 'category_sunburst', size: 3 },
+    ],
+  },
+];
+
 describe('migrateStoredViews', () => {
   test('replaces a stored desktop default on Android', () => {
     const migrated = migrateStoredViews(storedDesktopDefault(), true);
@@ -88,6 +103,28 @@ describe('migrateStoredViews', () => {
     } finally {
       defaultViews[0].elements = original;
     }
+  });
+
+  test('Android defaults include a Browser view for aw-watcher-web data (#1321)', () => {
+    const browser = androidViews.find(view => view.id === 'browser');
+    expect(browser?.elements.map(el => el.type)).toEqual([
+      'top_domains',
+      'top_urls',
+      'top_browser_titles',
+    ]);
+  });
+
+  test('replaces the stored summary-only Android default with the current one', () => {
+    const stored = storedAndroidDefault();
+    const migrated = migrateStoredViews(stored, true);
+    expect(migrated).toEqual(androidViews);
+    expect(migrated.map(view => view.id)).toContain('browser');
+  });
+
+  test('keeps an edited summary-only Android layout', () => {
+    const stored = storedAndroidDefault();
+    stored[0].elements.pop();
+    expect(migrateStoredViews(stored, true)).toBe(stored);
   });
 
   test('keeps the stored desktop default off Android', () => {
@@ -135,6 +172,7 @@ describe('views store on an Android build', () => {
         pinia: require('pinia'),
         views: require('~/stores/views'),
         settings: require('~/stores/settings'),
+        awclient: require('~/util/awclient'),
       };
     });
     mods.pinia.setActivePinia(mods.pinia.createPinia());
@@ -151,6 +189,7 @@ describe('views store on an Android build', () => {
       settingsStore,
       save,
       update,
+      awclient: mods.awclient,
     };
   }
 
@@ -161,6 +200,87 @@ describe('views store on an Android build', () => {
     expect(settingsStore.views).toEqual(storedDesktopDefault());
     expect(save).not.toHaveBeenCalled();
     expect(update).not.toHaveBeenCalled();
+  });
+
+  test('Browser removal and its marker survive the real settings HTTP lifecycle', async () => {
+    const { viewsStore, settingsStore, save, awclient } = await loadOnAndroid(
+      storedAndroidDefault()
+    );
+    save.mockRestore();
+    awclient.createClient();
+    const client = awclient.getClient();
+    const copy = value => JSON.parse(JSON.stringify(value));
+    const backend = { views: storedAndroidDefault() };
+    const read = jest.spyOn(client, 'get_settings').mockImplementation(async () => copy(backend));
+    const previousRequest = client.req;
+    const previousStorage = (global as any).localStorage;
+    (global as any).localStorage = { setItem: jest.fn(), getItem: () => null };
+    const post = jest.fn(async (url, value) => {
+      // Only the views key is writable: a separate marker request must fail.
+      if (url !== '/0/settings/views') throw new Error('second settings write failed');
+      backend.views = copy(value);
+      return {};
+    });
+    client.req = { post, defaults: {} };
+    try {
+      expect(viewsStore.views.map(view => view.id)).toContain('browser');
+      viewsStore.removeView({ view_id: 'browser' });
+      await viewsStore.save();
+      expect(post).toHaveBeenCalledTimes(1);
+      expect(post).toHaveBeenCalledWith(
+        '/0/settings/views',
+        [{ ...storedAndroidDefault()[0], customized: true }],
+        expect.anything()
+      );
+      expect(viewsStore.views).toEqual(storedAndroidDefault());
+      settingsStore.$reset();
+      await settingsStore.load();
+      await viewsStore.load();
+      expect(settingsStore.views[0].customized).toBe(true);
+      expect(viewsStore.views).toEqual(storedAndroidDefault());
+    } finally {
+      read.mockRestore();
+      client.req = previousRequest;
+      if (previousStorage === undefined) delete (global as any).localStorage;
+      else (global as any).localStorage = previousStorage;
+    }
+  });
+
+  test('an unchanged desktop save preserves Android Browser removal across reloads', async () => {
+    const android = await loadOnAndroid(storedAndroidDefault());
+    android.viewsStore.removeView({ view_id: 'browser' });
+    await android.viewsStore.save();
+    const stored = JSON.parse(JSON.stringify(android.settingsStore.views));
+    expect(stored[0].customized).toBe(true);
+
+    // The module imported at file scope is the non-Android build. Both clients
+    // connect to the same settings backend, including its customization marker.
+    const { useSettingsStore } = await import('~/stores/settings');
+    setActivePinia(createPinia());
+    const settings = useSettingsStore();
+    settings.$patch({ views: stored, _loaded: true });
+    jest.spyOn(settings, 'save').mockResolvedValue(undefined);
+    const desktop = useViewsStore();
+    await desktop.load();
+    expect(desktop.views[0].customized).toBeUndefined();
+    await desktop.save();
+    const persisted = JSON.parse(JSON.stringify(settings.views));
+    expect(persisted[0].customized).toBe(true);
+
+    const reloaded = await loadOnAndroid(persisted);
+    expect(reloaded.views).toEqual(storedAndroidDefault());
+  });
+
+  test('a failed save rolls back the customization marker so legacy defaults still migrate', async () => {
+    const { viewsStore, settingsStore, save, expected } = await loadOnAndroid(
+      storedAndroidDefault()
+    );
+    viewsStore.removeView({ view_id: 'browser' });
+    save.mockRejectedValueOnce(new Error('offline'));
+    await expect(viewsStore.save()).rejects.toThrow('offline');
+    expect(settingsStore.views[0].customized).toBeUndefined();
+    await viewsStore.load();
+    expect(viewsStore.views).toEqual(expected);
   });
 
   test('saving an edit persists the migrated Android layout', async () => {
