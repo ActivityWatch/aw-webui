@@ -240,7 +240,7 @@ function get_params(
       }
       const value = overrides[key];
       if (typeof value === 'string' && value.length > 0) {
-        target[key] = value;
+        target[key] = key === 'bid_stopwatch' ? escape_doublequote(value) : value;
       } else if (Array.isArray(value) && value.length > 0) {
         target[key] = value;
       }

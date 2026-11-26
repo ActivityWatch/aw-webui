@@ -1349,3 +1349,17 @@ describe('category history bucket encoding', () => {
     expect(query).toContain('query_bucket("afk_\\"box\\"")');
   });
 });
+
+test('multidevice stopwatch overrides are still escaped', () => {
+  const query = categoryQuery({
+    hosts: ['host'],
+    host_params: {
+      host: { bid_window: 'window_host', bid_afk: 'afk_host', bid_stopwatch: 'stopwatch_"work"' },
+    },
+    filter_afk: true,
+    always_active_pattern: '',
+    categories: [],
+    filter_categories: [],
+  }).join('\n');
+  expect(query).toContain('query_bucket("stopwatch_\\"work\\"")');
+});
