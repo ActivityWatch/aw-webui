@@ -596,6 +596,18 @@ export default {
     bucketLabel: 'بکٹ:',
     eventsLabel: 'ایونٹس:',
   },
+  datepicker: {
+    noDateSelected: 'کوئی تاریخ منتخب نہیں',
+    resetButton: 'ری سیٹ کریں',
+    calendar: 'کیلنڈر',
+    nav: 'کیلنڈر نیویگیشن',
+    prevYear: 'پچھلا سال',
+    prevMonth: 'پچھلا مہینہ',
+    currentMonth: 'موجودہ مہینہ',
+    nextMonth: 'اگلا مہینہ',
+    nextYear: 'اگلا سال',
+    today: 'آج',
+  },
   ui: {
     activity: {
       missingView: 'یہ ویو ("{view}") اس ڈیش بورڈ پر موجود نہیں ہے۔',

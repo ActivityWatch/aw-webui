@@ -599,6 +599,18 @@ export default {
     bucketLabel: 'Bucket:',
     eventsLabel: 'Matukio:',
   },
+  datepicker: {
+    noDateSelected: 'Hakuna tarehe iliyochaguliwa',
+    resetButton: 'Weka upya',
+    calendar: 'Kalenda',
+    nav: 'Urambazaji wa kalenda',
+    prevYear: 'Mwaka uliopita',
+    prevMonth: 'Mwezi uliopita',
+    currentMonth: 'Mwezi huu',
+    nextMonth: 'Mwezi ujao',
+    nextYear: 'Mwaka ujao',
+    today: 'Leo',
+  },
   ui: {
     activity: {
       missingView: 'Mwonekano huu ("{view}") haupo kwenye dashibodi hii.',

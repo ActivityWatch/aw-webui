@@ -590,6 +590,18 @@ export default {
     bucketLabel: 'Bucket:',
     eventsLabel: 'Событий:',
   },
+  datepicker: {
+    noDateSelected: 'Дата не выбрана',
+    resetButton: 'Сбросить',
+    calendar: 'Календарь',
+    nav: 'Навигация по календарю',
+    prevYear: 'Предыдущий год',
+    prevMonth: 'Предыдущий месяц',
+    currentMonth: 'Текущий месяц',
+    nextMonth: 'Следующий месяц',
+    nextYear: 'Следующий год',
+    today: 'Сегодня',
+  },
   ui: {
     activity: {
       missingView: 'Вида «{view}» нет на этой панели.',

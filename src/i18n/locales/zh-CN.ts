@@ -566,6 +566,18 @@ export default {
     bucketLabel: '存储桶：',
     eventsLabel: '事件：',
   },
+  datepicker: {
+    noDateSelected: '未选择日期',
+    resetButton: '重置',
+    calendar: '日历',
+    nav: '日历导航',
+    prevYear: '上一年',
+    prevMonth: '上个月',
+    currentMonth: '本月',
+    nextMonth: '下个月',
+    nextYear: '下一年',
+    today: '今天',
+  },
   ui: {
     activity: {
       missingView: '此视图（“{view}”）在此仪表板中不存在。',

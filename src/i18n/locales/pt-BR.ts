@@ -603,6 +603,18 @@ export default {
     bucketLabel: 'Bucket:',
     eventsLabel: 'Eventos:',
   },
+  datepicker: {
+    noDateSelected: 'Nenhuma data selecionada',
+    resetButton: 'Redefinir',
+    calendar: 'Calendário',
+    nav: 'Navegação do calendário',
+    prevYear: 'Ano anterior',
+    prevMonth: 'Mês anterior',
+    currentMonth: 'Mês atual',
+    nextMonth: 'Próximo mês',
+    nextYear: 'Próximo ano',
+    today: 'Hoje',
+  },
   ui: {
     activity: {
       missingView: 'Esta visualização ("{view}") não existe neste painel.',
