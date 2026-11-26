@@ -138,6 +138,27 @@ describe('ExportDialog', () => {
     expect(modal(wrapper).props('okDisabled')).toBe(false);
   });
 
+  test('a CSV time with no date to apply to is refused, not ignored', async () => {
+    const wrapper = mountDialog({ bucketId: 'b' });
+    await wrapper.setData({ format: 'csv' });
+    for (const orphan of [
+      { toTime: '17:30' },
+      { fromTime: '09:00' },
+      { to: '2026-10-30', fromTime: '09:00' },
+    ]) {
+      await wrapper.setData({ from: '', to: '', fromTime: '', toTime: '', ...orphan });
+      expect(modal(wrapper).props('okDisabled')).toBe(true);
+      wrapper.vm.submit();
+    }
+    expect(wrapper.emitted('export')).toBeUndefined();
+    // The start date is also the day of an end time.
+    await wrapper.setData({ from: '2026-10-26', to: '', fromTime: '', toTime: '17:30' });
+    expect(modal(wrapper).props('okDisabled')).toBe(false);
+    // JSON hides the times, so a left-over one does not block it.
+    await wrapper.setData({ from: '', format: 'json' });
+    expect(modal(wrapper).props('okDisabled')).toBe(false);
+  });
+
   test('"From" after "To": the warning of the Timeline, Export greyed, nothing exported', async () => {
     const wrapper = mountDialog({ bucketId: 'b' });
     await wrapper.setData({ from: '2026-10-30', to: '2026-10-26' });

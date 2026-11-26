@@ -1,7 +1,7 @@
 <template lang="pug">
 //- One dialog for every export of Raw Data: a bucket (JSON or CSV), or all buckets (JSON).
 b-modal(:visible="visible", :title="title", centered,
-        :ok-title="$t('common.export')", :ok-disabled="invalid || unresolvable",
+        :ok-title="$t('common.export')", :ok-disabled="invalid || unresolvable || timeWithoutDate",
         :cancel-title="$t('common.cancel')",
         @show="reset", @ok="submit", @hidden="$emit('close')")
   input-date-range(:start.sync="from", :end.sync="to",
@@ -13,6 +13,8 @@ b-modal(:visible="visible", :title="title", centered,
     | {{ $t('ui.timeInterval.invalidRange') }}
   b-alert.mt-3.mb-0(v-if="unresolvable", variant="warning", show)
     | {{ $t('ui.timeInterval.unresolvableTime') }}
+  b-alert.mt-3.mb-0(v-if="timeWithoutDate", variant="warning", show)
+    | {{ $t('buckets.exportTimeNeedsDate') }}
 </template>
 
 <script lang="ts">
@@ -68,6 +70,12 @@ export default {
     unresolvable(): boolean {
       return this.bounds === undefined;
     },
+    // A time with no date to apply to would be ignored, exporting more than asked for.
+    timeWithoutDate(): boolean {
+      const { from, to, fromTime, toTime } = this.range;
+      // An end time without an end date refers to the start date.
+      return (!!fromTime && !from) || (!!toTime && !to && !from);
+    },
     // Like the Timeline's range: only when both sides are set and the start is not before the end.
     invalid(): boolean {
       const b = this.bounds;
@@ -83,7 +91,7 @@ export default {
       this.format = 'json';
     },
     submit(event) {
-      if (this.invalid || this.unresolvable) {
+      if (this.invalid || this.unresolvable || this.timeWithoutDate) {
         event?.preventDefault?.();
         return;
       }

@@ -371,6 +371,7 @@ export default {
     exportFormat: '格式',
     exportRangeHelp:
       '时间使用您的本地时区。将任一字段留空表示不限制对应边界；将两者都留空可导出全部事件。',
+    exportTimeNeedsDate: '请为时间选择日期，或清除时间。',
     tools: '工具',
     deleteFailed: '删除失败，部分存储桶可能未被删除。',
     exportFailed: '导出失败：{error}',

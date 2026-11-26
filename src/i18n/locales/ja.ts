@@ -389,6 +389,7 @@ export default {
     exportFormat: '形式',
     exportRangeHelp:
       '時刻にはローカルのタイムゾーンを使用します。空欄の側には制限がかかりません。両方を空欄にすると、すべてをエクスポートします。',
+    exportTimeNeedsDate: '時刻に対応する日付を選ぶか、時刻を消去してください。',
     tools: 'ツール',
     deleteFailed: '削除に失敗しました。一部のバケットが削除されていない可能性があります。',
     exportFailed: 'エクスポートに失敗しました：{error}',

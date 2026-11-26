@@ -390,6 +390,7 @@ export default {
     exportFormat: 'Format berkas',
     exportRangeHelp:
       'Waktu menggunakan zona waktu lokal Anda. Kosongkan salah satu kolom agar batas tersebut tidak dibatasi; kosongkan keduanya untuk mengekspor semuanya.',
+    exportTimeNeedsDate: 'Pilih tanggal untuk waktu tersebut, atau hapus waktunya.',
     tools: 'Alat',
     deleteFailed: 'Penghapusan gagal. Beberapa bucket mungkin belum terhapus.',
     exportFailed: 'Ekspor gagal: {error}',

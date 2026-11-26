@@ -415,6 +415,7 @@ export default {
     exportFormat: 'Format',
     exportRangeHelp:
       'Times use your local timezone. Leave either field blank for no limit; leave both blank to export everything.',
+    exportTimeNeedsDate: 'Pick a date for the time, or clear the time.',
     tools: 'Tools',
     deleteFailed: 'Deletion failed. Some buckets may not have been deleted.',
     exportFailed: 'Export failed: {error}',

@@ -392,6 +392,7 @@ export default {
     exportFormat: 'Muundo',
     exportRangeHelp:
       'Saa zinatumia ukanda wako wa saa wa eneo lako. Acha sehemu yoyote tupu ili kutoweka kikomo hicho; acha zote mbili tupu ili kusafirisha kila kitu.',
+    exportTimeNeedsDate: 'Chagua tarehe ya saa hiyo, au futa saa.',
     tools: 'Zana',
     deleteFailed: 'Ufutaji umeshindwa. Baadhi ya buckets zinaweza kuwa hazikufutwa.',
     exportFailed: 'Usafirishaji umeshindwa: {error}',

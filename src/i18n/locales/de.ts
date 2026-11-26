@@ -410,6 +410,7 @@ export default {
     exportFormat: 'Dateiformat',
     exportRangeHelp:
       'Die Zeiten verwenden Ihre lokale Zeitzone. Lassen Sie ein Feld für keine Begrenzung leer; lassen Sie beide leer, um alles zu exportieren.',
+    exportTimeNeedsDate: 'Wähle ein Datum für die Uhrzeit oder lösche die Uhrzeit.',
     tools: 'Werkzeuge',
     deleteFailed: 'Löschen fehlgeschlagen. Möglicherweise wurden einige Buckets nicht gelöscht.',
     exportFailed: 'Export fehlgeschlagen: {error}',
