@@ -39,21 +39,9 @@ div
             ).d-none
             label(:for="'duration-' + _uid + '-dur' + idx" v-html="dur.label").btn.btn-light.btn-sm
       div.d-flex.flex-wrap.align-items-center(v-else)
-        input-date.mr-1(
-          v-model="start", :max="end || undefined"
-          :aria-label="$t('ui.timeInterval.startDate')"
-        )
-        input.form-control.form-control-sm.mr-1(
-          v-if="allowTime", type="time", v-model="startTime", style="width: auto"
-          :aria-label="$t('ui.timeInterval.startTime')"
-        )
-        input-date.mr-1(
-          v-model="end", :min="start || undefined", :placeholder="$t('ui.timeInterval.optional')", reset-button
-          :aria-label="$t('ui.timeInterval.endDate')"
-        )
-        input.form-control.form-control-sm.mr-1(
-          v-if="allowTime", type="time", v-model="endTime", style="width: auto"
-          :aria-label="$t('ui.timeInterval.endTime')"
+        input-date-range(
+          :start.sync="start", :end.sync="end",
+          :start-time.sync="startTime", :end-time.sync="endTime", :allow-time="allowTime"
         )
         b-button(
           size="sm" variant="outline-dark"
@@ -138,10 +126,10 @@ div
 import moment from 'moment';
 import { wallTimeInstants } from '~/util/timeperiod';
 import 'vue-awesome/icons/sync';
-import InputDate from '~/components/InputDate.vue';
+import InputDateRange from '~/components/InputDateRange.vue';
 export default {
   name: 'input-timeinterval',
-  components: { InputDate },
+  components: { InputDateRange },
   props: {
     defaultDuration: {
       type: Number,

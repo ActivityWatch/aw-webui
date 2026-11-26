@@ -2,11 +2,17 @@
  * @jest-environment node
  */
 
+import { execFileSync } from 'child_process';
+import path from 'path';
+
 import Papa from 'papaparse';
 
 import {
   androidExportFromUrl,
   CSV_FORMULA_PATTERN,
+  exportRangeBounds,
+  exportRangeQuery,
+  exportRangeSuffix,
   neutralizeCsvFormula,
   reportEventsCsv,
 } from '../../src/util/export';
@@ -111,5 +117,107 @@ describe('reportEventsCsv', () => {
       'timestamp,duration,category,app,title',
       '2026-10-26T08:00:00Z,60,Work,Firefox,"\'=1+1"',
     ]);
+  });
+});
+
+describe('exportRangeQuery', () => {
+  const params = (query: string) => Object.fromEntries(new URLSearchParams(query.slice(1)));
+
+  test('no days: no query, the whole history', () => {
+    expect(exportRangeQuery({ from: '', to: '' })).toBe('');
+  });
+
+  test('one side only leaves the other open', () => {
+    expect(Object.keys(params(exportRangeQuery({ from: '2026-11-04', to: '' })))).toEqual([
+      'start',
+    ]);
+    expect(Object.keys(params(exportRangeQuery({ from: '', to: '2026-11-04' })))).toEqual(['end']);
+  });
+
+  // Node reads TZ at startup; replay in a child so default UTC CI checks local days too.
+  if (process.env.TZ !== 'Europe/Brussels') {
+    test('replays local-day cases in Europe/Brussels', () => {
+      expect(() =>
+        execFileSync(
+          process.execPath,
+          [
+            require.resolve('jest/bin/jest'),
+            '--selectProjects',
+            'node',
+            '--runInBand',
+            '--coverage=false',
+            '--runTestsByPath',
+            __filename,
+            '--testNamePattern=in Europe/Brussels',
+          ],
+          {
+            cwd: path.resolve(__dirname, '../..'),
+            env: { ...process.env, TZ: 'Europe/Brussels' },
+            stdio: 'pipe',
+            timeout: 60000,
+          }
+        )
+      ).not.toThrow();
+    }, 65000);
+  }
+
+  const describeBrussels = process.env.TZ === 'Europe/Brussels' ? describe : describe.skip;
+  describeBrussels('in Europe/Brussels', () => {
+    test('whole local days, from the start of the first to the end of the last', () => {
+      expect(Intl.DateTimeFormat().resolvedOptions().timeZone).toBe('Europe/Brussels');
+      // Brussels is UTC+1 in winter: local midnight is 23:00 UTC the day before.
+      expect(params(exportRangeQuery({ from: '2026-10-26', to: '2026-10-30' }))).toEqual({
+        start: '2026-10-25T23:00:00.000Z',
+        end: '2026-10-30T23:00:00.000Z',
+      });
+    });
+
+    test('a day across the DST change lasts 25 hours', () => {
+      // Summer time ends on 25 October 2026: UTC+2 at its start, UTC+1 at its end.
+      const { start, end } = params(exportRangeQuery({ from: '2026-10-25', to: '2026-10-25' }));
+      expect(start).toBe('2026-10-24T22:00:00.000Z');
+      expect(end).toBe('2026-10-25T23:00:00.000Z');
+    });
+
+    test('times make their side exact, in local time', () => {
+      const day = '2026-10-26';
+      expect(
+        params(exportRangeQuery({ from: day, to: day, fromTime: '09:00', toTime: '17:30' }))
+      ).toEqual({ start: '2026-10-26T08:00:00.000Z', end: '2026-10-26T16:30:00.000Z' });
+      // A start time alone keeps the end day whole.
+      expect(params(exportRangeQuery({ from: day, to: day, fromTime: '09:00' }))).toEqual({
+        start: '2026-10-26T08:00:00.000Z',
+        end: '2026-10-26T23:00:00.000Z',
+      });
+      // Like the Timeline, an end time without an end date refers to the start date.
+      expect(params(exportRangeQuery({ from: day, to: '', toTime: '12:00' }))).toEqual({
+        start: '2026-10-25T23:00:00.000Z',
+        end: '2026-10-26T11:00:00.000Z',
+      });
+    });
+
+    test('a wall time that happens twice or never names no instant', () => {
+      // 02:30 happens twice on 25 October 2026 and never on 29 March 2026.
+      expect(exportRangeBounds({ from: '2026-10-25', to: '', fromTime: '02:30' })).toBeUndefined();
+      expect(exportRangeBounds({ from: '', to: '2026-03-29', toTime: '02:30' })).toBeUndefined();
+      expect(exportRangeBounds({ from: '2026-10-25', to: '', fromTime: '03:30' })).toEqual({
+        start: new Date('2026-10-25T02:30:00.000Z'),
+        end: null,
+      });
+    });
+  });
+});
+
+describe('exportRangeSuffix', () => {
+  test('names the file after its days', () => {
+    expect(exportRangeSuffix({ from: '2026-10-26', to: '2026-10-30' })).toBe(
+      '_2026-10-26_2026-10-30'
+    );
+    expect(exportRangeSuffix({ from: '2026-10-26', to: '' })).toBe('_2026-10-26_now');
+    expect(exportRangeSuffix({ from: '', to: '2026-10-30' })).toBe('_start_2026-10-30');
+    expect(exportRangeSuffix({ from: '', to: '' })).toBe('');
+    expect(
+      exportRangeSuffix({ from: '2026-10-26', to: '', fromTime: '09:00', toTime: '17:30' })
+    ).toBe('_2026-10-26T0900_2026-10-26T1730');
   });
 });
