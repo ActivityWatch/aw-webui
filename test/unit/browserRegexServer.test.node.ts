@@ -68,4 +68,90 @@ describeWithServer('browser regex matching through the server', () => {
       }
     }
   });
+
+  test.each([
+    { filter_afk: true, include_audible: false, duration: 10, sites: ['active'] },
+    { filter_afk: true, include_audible: true, duration: 20, sites: ['active', 'audible'] },
+    {
+      filter_afk: false,
+      include_audible: false,
+      duration: 30,
+      sites: ['active', 'silent', 'audible'],
+    },
+    {
+      filter_afk: false,
+      include_audible: true,
+      duration: 30,
+      sites: ['active', 'silent', 'audible'],
+    },
+  ])(
+    'browser totals respect filter_afk=$filter_afk and include_audible=$include_audible',
+    async ({ filter_afk, include_audible, duration, sites }) => {
+      const suffix = `afk-${process.pid}-${Date.now()}`;
+      const windowBucket = `aw-watcher-window_${suffix}`;
+      const afkBucket = `aw-watcher-afk_${suffix}`;
+      const browserBucket = `aw-watcher-web-firefox_${suffix}`;
+      const created: string[] = [];
+      const event = (second: number, seconds: number, data: Record<string, unknown>) => ({
+        timestamp: new Date(Date.UTC(2026, 0, 1, 12, 0, second)).toISOString(),
+        duration: seconds,
+        data,
+      });
+      try {
+        for (const [id, type, events] of [
+          [
+            windowBucket,
+            'currentwindow',
+            [event(0, 30, { app: 'Firefox', title: 'Browser test' })],
+          ],
+          [
+            afkBucket,
+            'afkstatus',
+            [event(0, 10, { status: 'not-afk' }), event(10, 20, { status: 'afk' })],
+          ],
+          [
+            browserBucket,
+            'web.tab.current',
+            ['active', 'silent', 'audible'].map((site, index) =>
+              event(index * 10, 10, {
+                url: `https://${site}.example/`,
+                title: site,
+                audible: site === 'audible',
+              })
+            ),
+          ],
+        ] as const) {
+          await request(`/buckets/${id}`, 'POST', {
+            client: 'aw-webui-regression-test',
+            type,
+            hostname: suffix,
+          });
+          created.push(id);
+          await request(`/buckets/${id}/events`, 'POST', events);
+        }
+        const query = fullDesktopQuery({
+          bid_window: windowBucket,
+          bid_afk: afkBucket,
+          bid_browsers: [browserBucket],
+          filter_afk,
+          include_audible,
+          categories: [],
+          filter_categories: [],
+        });
+        const result = await request('/query/', 'POST', {
+          timeperiods: ['2026-01-01T12:00:00Z/2026-01-01T12:00:30Z'],
+          query,
+        });
+        expect(result[0].window.duration).toBe(duration);
+        expect(result[0].browser.duration).toBe(duration);
+        expect(result[0].browser.urls.map(event => event.data.url).sort()).toEqual(
+          sites.map(site => `https://${site}.example/`).sort()
+        );
+      } finally {
+        for (const id of created) {
+          await request(`/buckets/${id}`, 'DELETE');
+        }
+      }
+    }
+  );
 });

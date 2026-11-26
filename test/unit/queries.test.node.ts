@@ -903,3 +903,48 @@ describe('replaceOutsideStrings', () => {
     );
   });
 });
+
+describe('desktop browser AFK filtering', () => {
+  const params = {
+    bid_window: 'aw-watcher-window_host',
+    bid_afk: 'aw-watcher-afk_host',
+    bid_browsers: ['aw-watcher-web-firefox_host'],
+    filter_afk: true,
+    categories: [],
+    filter_categories: [],
+  };
+  const browserFilter = 'browser_events = filter_period_intersect(browser_events, not_afk);';
+
+  test.each([false, true])(
+    'clips browser statistics to the final active periods (include_audible=%s)',
+    include_audible => {
+      const statements = fullDesktopQuery({ ...params, include_audible });
+      const clip = statements.indexOf(browserFilter);
+      expect(clip).toBeGreaterThan(-1);
+      expect(clip).toBeGreaterThan(
+        statements.indexOf('browser_events = sort_by_timestamp(browser_events);')
+      );
+      if (include_audible) {
+        const audibleUnion = statements.indexOf('not_afk = period_union(not_afk, audible_events);');
+        expect(audibleUnion).toBeGreaterThan(-1);
+        expect(clip).toBeGreaterThan(audibleUnion);
+      }
+      expect(clip).toBeLessThan(
+        statements.indexOf('browser_urls = merge_events_by_keys(browser_events, ["url"]);')
+      );
+    }
+  );
+
+  test.each([false, true])(
+    'preserves unfiltered browser time when filter_afk=false (include_audible=%s)',
+    include_audible => {
+      const statements = fullDesktopQuery({ ...params, filter_afk: false, include_audible });
+      expect(statements).not.toContain(browserFilter);
+    }
+  );
+
+  test('does not reference browser events when browser buckets are omitted', () => {
+    const query = canonicalEvents({ ...params, bid_browsers: undefined });
+    expect(query).not.toContain('browser_events');
+  });
+});

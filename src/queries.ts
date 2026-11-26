@@ -276,13 +276,20 @@ export function canonicalEvents(params: DesktopQueryParams | AndroidQueryParams)
       ? browserEvents(params) +
         // Include focused and audible browser events as indications of not-afk
         (params.include_audible
-          ? `audible_events = filter_keyvals(browser_events, "audible", [true]);
+          ? // Self-intersect to copy: older aw-server (Python) period_union clears
+            // .data in place, which would wipe url/title from browser_events.
+            `audible_events = filter_keyvals(browser_events, "audible", [true]);
+             audible_events = filter_period_intersect(audible_events, audible_events);
              not_afk = period_union(not_afk, audible_events);`
           : '')
       : '',
     // Filter out window events when the user was afk
     isDesktopParams(params) && params.filter_afk
       ? 'events = filter_period_intersect(events, not_afk);'
+      : '',
+    // Audible tabs must extend not_afk before browser statistics are clipped.
+    isDesktopParams(params) && params.filter_afk && params.bid_browsers
+      ? 'browser_events = filter_period_intersect(browser_events, not_afk);'
       : '',
     params.bid_stopwatch
       ? `stopwatch_events = query_bucket("${params.bid_stopwatch}");
