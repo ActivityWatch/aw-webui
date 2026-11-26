@@ -95,12 +95,46 @@ describe('ExportDialog', () => {
     ]);
   });
 
-  test('JSON keeps the day an end time without an end date refers to', async () => {
+  test('switching to JSON shows the day of an end time as the end date, which can be cleared', async () => {
     const wrapper = mountDialog({ bucketId: 'b' });
-    await wrapper.setData({ from: '2026-10-26', toTime: '17:30', format: 'json' });
+    const range = wrapper.findComponent({ name: 'InputDateRange' });
+    await wrapper.setData({ format: 'csv' });
+    await wrapper.setData({ from: '2026-10-26', toTime: '17:30' });
+    expect(range.props('end')).toBe(''); // CSV shows the time that bounds the end
+    await wrapper.setData({ format: 'json' });
+    expect(range.props('end')).toBe('2026-10-26');
+    range.vm.$emit('update:end', ''); // the end picker's reset button
     wrapper.vm.submit();
     expect(wrapper.emitted('export')).toEqual([
-      [{ format: 'json', from: '2026-10-26', to: '2026-10-26', fromTime: '', toTime: '' }],
+      [{ format: 'json', from: '2026-10-26', to: '', fromTime: '', toTime: '' }],
+    ]);
+  });
+
+  test.each(['b', null])(
+    'reopening (bucket %s) shows the day of a remembered end time as the end date',
+    async bucketId => {
+      const wrapper = mountDialog({ bucketId, initialFrom: '2026-10-26', initialToTime: '17:30' });
+      wrapper.vm.reset(); // @show
+      await wrapper.vm.$nextTick();
+      const range = wrapper.findComponent({ name: 'InputDateRange' });
+      expect(range.props('end')).toBe('2026-10-26');
+      range.vm.$emit('update:end', '');
+      wrapper.vm.submit();
+      expect(wrapper.emitted('export')).toEqual([
+        [{ format: 'json', from: '2026-10-26', to: '', fromTime: '', toTime: '' }],
+      ]);
+    }
+  );
+
+  test('a hidden end time never adds an end to a start date picked for JSON', async () => {
+    const wrapper = mountDialog({ bucketId: 'b' });
+    await wrapper.setData({ format: 'csv' });
+    await wrapper.setData({ toTime: '17:30' });
+    await wrapper.setData({ format: 'json' });
+    await wrapper.setData({ from: '2026-10-26' });
+    wrapper.vm.submit();
+    expect(wrapper.emitted('export')).toEqual([
+      [{ format: 'json', from: '2026-10-26', to: '', fromTime: '', toTime: '' }],
     ]);
   });
 

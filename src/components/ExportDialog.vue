@@ -54,11 +54,9 @@ export default {
       return !!this.bucketId && this.format === 'csv';
     },
     range(): ExportRange {
-      const timed = this.allowTime;
       return {
         from: this.from || '',
-        // Without times, an end time's day (the start date) still bounds the export, whole.
-        to: this.to || (!timed && this.toTime ? this.from || '' : ''),
+        to: this.to || '',
         fromTime: this.allowTime ? this.fromTime || '' : '',
         toTime: this.allowTime ? this.toTime || '' : '',
       };
@@ -82,6 +80,11 @@ export default {
       return !!b && !!b.start && !!b.end && b.start >= b.end;
     },
   },
+  watch: {
+    format() {
+      this.showEndTimeDay();
+    },
+  },
   methods: {
     reset() {
       this.from = this.initialFrom;
@@ -89,6 +92,12 @@ export default {
       this.fromTime = this.initialFromTime;
       this.toTime = this.initialToTime;
       this.format = 'json';
+      this.showEndTimeDay();
+    },
+    // JSON hides the times, so the day of an end time without an end date (the start
+    // date) moves into the end date field, where it can be seen and cleared.
+    showEndTimeDay() {
+      if (this.format === 'json' && this.toTime && !this.to) this.to = this.from;
     },
     submit(event) {
       if (this.invalid || this.unresolvable || this.timeWithoutDate) {
