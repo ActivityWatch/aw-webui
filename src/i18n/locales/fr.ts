@@ -395,6 +395,12 @@ export default {
     exportFailed: 'Échec de l’exportation : {error}',
   },
   activity: {
+    watcherLiveness: {
+      stopped: 'Watcher arrêté :',
+      lastReported: '{name} a envoyé son dernier rapport {ago}.',
+      hint: 'Vérifiez l’icône de la zone de notification ou {link}.',
+      restart: 'redémarrez le watcher',
+    },
     title: 'Activité',
     browserAllowlistMiss:
       'Aucune fenêtre de navigateur correspondante pour cette période. Si vous naviguiez avec un dérivé de Chromium/Firefox, le nom de son application n’est peut-être pas encore reconnu.',
@@ -549,6 +555,7 @@ export default {
     scrollHint:
       'Faites défiler pour zoomer, balayez ou faites défiler horizontalement pour vous déplacer, utilisez les flèches pour naviguer',
     loading: 'Chargement…',
+    categorizedRow: 'Catégorisé',
   },
   stopwatch: {
     title: 'Chronomètre',

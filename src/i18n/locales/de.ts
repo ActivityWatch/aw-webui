@@ -408,6 +408,12 @@ export default {
     exportFailed: 'Export fehlgeschlagen: {error}',
   },
   activity: {
+    watcherLiveness: {
+      stopped: 'Watcher gestoppt:',
+      lastReported: '{name} hat sich zuletzt {ago} gemeldet.',
+      hint: 'Prüfen Sie das Tray-Symbol oder {link}.',
+      restart: 'starten Sie den Watcher neu',
+    },
     title: 'Aktivität',
     browserAllowlistMiss:
       'Für diesen Zeitraum wurde kein passendes Browserfenster gefunden. Falls Sie in einem Chromium-/Firefox-Derivat gesurft haben, wird dessen App-Name möglicherweise noch nicht erkannt.',
@@ -558,6 +564,7 @@ export default {
     noEvents: 'Keine Ereignisse entsprechen den Kriterien. Zeitleiste nicht aktualisiert.',
     scrollHint: 'Scrollen zum Zoomen, Wischen zum Schwenken, Pfeiltasten zur Navigation',
     loading: 'Laden…',
+    categorizedRow: 'Kategorisiert',
   },
   stopwatch: {
     title: 'Stoppuhr',

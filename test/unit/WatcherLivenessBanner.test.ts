@@ -1,8 +1,9 @@
 import Vue from 'vue';
-import { shallowMount } from '@vue/test-utils';
+import { mount as fullMount, shallowMount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 import WatcherLivenessBanner from '~/components/WatcherLivenessBanner.vue';
 import { useBucketsStore } from '~/stores/buckets';
+import { i18n, setAppLocale } from '~/i18n';
 
 const NOW = Date.parse('2026-10-08T12:00:00Z');
 const bucket = (id, type, age, hostname = 'desktop') => ({
@@ -145,5 +146,59 @@ describe('watcher liveness banner', () => {
     resolve();
     await flush();
     expect(wrapper.vm.staleWatchers).toHaveLength(1);
+  });
+
+  test.each([45, 46, 90, 1500])('keeps the minute unit for a %i-minute outage', async minutes => {
+    store.buckets = [
+      bucket('window-synced', 'currentwindow', 0),
+      bucket('afk', 'afkstatus', minutes),
+    ];
+    wrapper = mount();
+    await flush();
+    expect(wrapper.vm.staleWatchers).toEqual([
+      { type: 'afk', name: 'aw-watcher-afk', minutesAgo: minutes },
+    ]);
+    // moment's default thresholds would say "an hour ago" from 45 minutes on.
+    expect(wrapper.vm.reportedAgo(wrapper.vm.staleWatchers[0])).toBe(`${minutes} minutes ago`);
+  });
+
+  test('renders the banner in the app locale, with its plural rules (#1324)', async () => {
+    // The global $t stub is English-only; render through the real vue-i18n
+    // instance, then restore the stub so later tests stay hermetic.
+    const originalT = Vue.prototype.$t;
+    Vue.prototype.$t = function (key, values) {
+      return this.$i18n.t(key, values);
+    };
+    store.buckets = [bucket('window-synced', 'currentwindow', 0), bucket('afk', 'afkstatus', 6)];
+    const render = async () => {
+      wrapper = fullMount(WatcherLivenessBanner, {
+        propsData: { host: 'desktop' },
+        i18n,
+        stubs: { 'b-alert': { template: '<div><slot /></div>' } },
+      });
+      await flush();
+      const text = wrapper.text().replace(/\s+/g, ' ');
+      wrapper.destroy();
+      wrapper = undefined;
+      return text;
+    };
+    try {
+      setAppLocale('de');
+      const de = await render();
+      expect(de).toContain('Watcher gestoppt:');
+      expect(de).toContain('aw-watcher-afk hat sich zuletzt vor 6 Minuten gemeldet.');
+      expect(de).toContain('Prüfen Sie das Tray-Symbol oder starten Sie den Watcher neu.');
+      setAppLocale('ru');
+      expect(await render()).toContain('6 минут назад');
+      setAppLocale('en');
+      const en = await render();
+      expect(en).toBe(
+        'Watcher stopped: aw-watcher-afk last reported 6 minutes ago. ' +
+          'Check the tray icon or restart the watcher.'
+      );
+    } finally {
+      setAppLocale('en');
+      Vue.prototype.$t = originalT;
+    }
   });
 });

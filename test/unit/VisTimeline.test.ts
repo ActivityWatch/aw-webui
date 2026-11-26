@@ -15,6 +15,7 @@ import EventEditorComponent from '~/components/EventEditor.vue';
 import StopwatchEntryComponent from '~/components/StopwatchEntry.vue';
 import moment from 'moment';
 import { createPinia, setActivePinia } from 'pinia';
+import { setAppLocale } from '~/i18n';
 import { DataSet } from 'vis-data';
 import { FilterXSS } from 'xss';
 
@@ -558,6 +559,14 @@ describe('derived category row (#700)', () => {
     ]);
     vm.update();
     expect(vm.groups[0]).toMatchObject({ id: '__categorized__', content: 'Categorized' });
+    // The label follows the app locale, so it must not fall back to the en key.
+    setAppLocale('de');
+    try {
+      vm.update();
+      expect(vm.groups[0]).toMatchObject({ id: '__categorized__', content: 'Kategorisiert' });
+    } finally {
+      setAppLocale('en');
+    }
     await vm.onSelect({ items: vm.itemData.getIds() });
     expect(vm.$aw.getEvent).not.toHaveBeenCalled();
   });
@@ -789,7 +798,7 @@ describe('host row labels', () => {
 
 // Labels are presentation, never event or color identities.
 test('locale changes refresh real DataSet labels without resetting IDs, colors or viewport', () => {
-  const { i18n, setAppLocale } = require('~/i18n');
+  const { i18n } = require('~/i18n');
   const original = i18n.getLocaleMessage('de');
   setAppLocale('en');
   const vm = { ...VisTimeline.data(), ...VisTimeline.methods };
@@ -807,6 +816,7 @@ test('locale changes refresh real DataSet labels without resetting IDs, colors o
     getWindow: () => ({ start: new Date(start), end: new Date(start + 10000) }),
     setOptions: jest.fn(),
     setWindow: jest.fn(),
+    redraw: jest.fn(),
   };
   try {
     vm.update();

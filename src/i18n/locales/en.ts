@@ -413,6 +413,12 @@ export default {
     exportFailed: 'Export failed: {error}',
   },
   activity: {
+    watcherLiveness: {
+      stopped: 'Watcher stopped:',
+      lastReported: '{name} last reported {ago}.',
+      hint: 'Check the tray icon or {link}.',
+      restart: 'restart the watcher',
+    },
     title: 'Activity',
     browserAllowlistMiss:
       'No matching browser window for this period. If you were browsing in a Chromium/Firefox fork, its app name may not be recognized yet.',
@@ -564,6 +570,7 @@ export default {
     noEvents: 'No events match selected criteria. Timeline is not updated.',
     scrollHint: 'Scroll to zoom, swipe/horizontal-scroll to pan, arrow keys to navigate',
     loading: 'Loading...',
+    categorizedRow: 'Categorized',
   },
   stopwatch: {
     title: 'Stopwatch',

@@ -390,6 +390,12 @@ export default {
     exportFailed: 'Usafirishaji umeshindwa: {error}',
   },
   activity: {
+    watcherLiveness: {
+      stopped: 'Watcher imesimama:',
+      lastReported: '{name} iliripoti mara ya mwisho {ago}.',
+      hint: 'Angalia ikoni ya trei ya mfumo au {link}.',
+      restart: 'anzisha upya watcher',
+    },
     title: 'Shughuli',
     browserAllowlistMiss:
       'Hakuna dirisha la kivinjari linalolingana kwa kipindi hiki. Ikiwa ulikuwa unavinjari kwenye uma wa Chromium/Firefox, jina lake la programu linaweza bado kutambuliwa.',
@@ -540,6 +546,7 @@ export default {
       'Hakuna matukio yanayolingana na vigezo vilivyochaguliwa. Mstari wa wakati haujasasishwa.',
     scrollHint: 'Tembeza kukuza, swipe/tembeza kwa usawa kupanua, vitufe vya mshale kuelekeza',
     loading: 'Inapakia...',
+    categorizedRow: 'Iliyopangwa',
   },
   stopwatch: {
     title: 'Saa ya Kuhesabu',

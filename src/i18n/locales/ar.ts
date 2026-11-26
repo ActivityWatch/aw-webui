@@ -380,6 +380,12 @@ export default {
     exportFailed: 'فشل التصدير: {error}',
   },
   activity: {
+    watcherLiveness: {
+      stopped: 'توقف watcher:',
+      lastReported: 'آخر تقرير من {name} كان {ago}.',
+      hint: 'تحقق من أيقونة شريط المهام أو {link}.',
+      restart: 'أعد تشغيل watcher',
+    },
     title: 'النشاط',
     browserAllowlistMiss:
       'لا توجد نافذة متصفح مطابقة لهذه الفترة. إذا كنت تتصفح باستخدام نسخة مشتقة من Chromium/Firefox، فقد لا يكون اسم تطبيقها معروفًا بعد.',
@@ -529,6 +535,7 @@ export default {
     noEvents: 'لا توجد أحداث تطابق المعايير المحددة. لم يتم تحديث المخطط الزمني.',
     scrollHint: 'مرّر للتكبير والتصغير، واسحب أو مرّر أفقيًا للتحريك، واستخدم مفاتيح الأسهم للتنقل',
     loading: 'جارٍ التحميل...',
+    categorizedRow: 'مصنّف',
   },
   stopwatch: {
     title: 'ساعة الإيقاف',

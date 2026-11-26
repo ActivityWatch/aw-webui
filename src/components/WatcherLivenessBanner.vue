@@ -8,14 +8,17 @@ div
     dismissible
     @dismissed="dismiss(stale.type)"
   )
-    | #[b Watcher stopped:]
-    |  {{ stale.name }} last reported {{ stale.minutesAgo }} minute{{ stale.minutesAgo === 1 ? '' : 's' }} ago.
-    |  Check the tray icon or
-    |  #[a(href="https://docs.activitywatch.net/en/latest/troubleshooting.html" target="_blank" rel="noopener") restart the watcher].
+    b {{ $t('activity.watcherLiveness.stopped') }}
+    //- Explicit space: pug emits no whitespace between this text and the next tag.
+    |  {{ $t('activity.watcherLiveness.lastReported', { name: stale.name, ago: reportedAgo(stale) }) }}{{ ' ' }}
+    i18n(path="activity.watcherLiveness.hint" tag="span")
+      template(v-slot:link)
+        a(href="https://docs.activitywatch.net/en/latest/troubleshooting.html" target="_blank" rel="noopener") {{ $t('activity.watcherLiveness.restart') }}
 </template>
 
 <script lang="ts">
 import Vue from 'vue';
+import moment from 'moment';
 import { mapStores } from 'pinia';
 import { useBucketsStore } from '~/stores/buckets';
 
@@ -126,6 +129,13 @@ export default Vue.extend({
     if (this.refreshTimer !== null) clearInterval(this.refreshTimer);
   },
   methods: {
+    // moment carries the app locale (src/i18n), including its plural rules (#1324).
+    // Explicit thresholds keep the minute unit for longer outages: moment's
+    // defaults collapse 45+ minutes to "an hour ago", which hides how long a
+    // watcher has actually been down.
+    reportedAgo(stale: StaleWatcher): string {
+      return moment.duration(-stale.minutesAgo, 'minutes').humanize(true, { m: Infinity });
+    },
     async refreshMetadata() {
       if (this.refreshing) return;
       this.refreshing = true;

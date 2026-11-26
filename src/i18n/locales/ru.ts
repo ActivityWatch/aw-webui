@@ -381,6 +381,12 @@ export default {
     exportFailed: 'Не удалось экспортировать: {error}',
   },
   activity: {
+    watcherLiveness: {
+      stopped: 'Watcher остановлен:',
+      lastReported: 'Последний отчёт от {name}: {ago}.',
+      hint: 'Проверьте значок в трее или {link}.',
+      restart: 'перезапустите watcher',
+    },
     title: 'Активность',
     browserAllowlistMiss:
       'Для этого периода не найдено подходящее окно браузера. Если вы использовали форк Chromium/Firefox, имя его приложения может пока не распознаваться.',
@@ -531,6 +537,7 @@ export default {
     scrollHint:
       'Колёсико — масштаб, свайп/горизонтальная прокрутка — панорама, стрелки — навигация',
     loading: 'Загрузка…',
+    categorizedRow: 'По категориям',
   },
   stopwatch: {
     title: 'Секундомер',

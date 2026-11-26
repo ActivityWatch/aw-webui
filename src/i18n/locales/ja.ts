@@ -387,6 +387,12 @@ export default {
     exportFailed: 'エクスポートに失敗しました：{error}',
   },
   activity: {
+    watcherLiveness: {
+      stopped: 'ウォッチャーが停止しました:',
+      lastReported: '{name} の最終報告は{ago}です。',
+      hint: 'トレイアイコンを確認するか、{link}。',
+      restart: 'ウォッチャーを再起動してください',
+    },
     title: 'アクティビティ',
     browserAllowlistMiss:
       'この期間に該当するブラウザウィンドウがありません。Chromium や Firefox の派生ブラウザを使用していた場合、そのアプリ名がまだ認識されていない可能性があります。',
@@ -538,6 +544,7 @@ export default {
     noEvents: '選択した条件に一致するイベントがありません。タイムラインは更新されません。',
     scrollHint: 'スクロールでズーム、スワイプまたは横スクロールでパン、矢印キーで移動',
     loading: '読み込み中...',
+    categorizedRow: '分類済み',
   },
   stopwatch: {
     title: 'ストップウォッチ',

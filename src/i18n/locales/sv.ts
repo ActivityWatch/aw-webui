@@ -389,6 +389,12 @@ export default {
     exportFailed: 'Exporten misslyckades: {error}',
   },
   activity: {
+    watcherLiveness: {
+      stopped: 'Bevakaren har slutat rapportera:',
+      lastReported: '{name} rapporterade senast {ago}.',
+      hint: 'Kontrollera ikonen i systemfältet eller {link}.',
+      restart: 'starta om bevakaren',
+    },
     title: 'Aktivitet',
     browserAllowlistMiss:
       'Inget matchande webbläsarfönster för den här perioden. Om du surfade i en Chromium-/Firefox-fork kanske dess appnamn inte känns igen ännu.',
@@ -539,6 +545,7 @@ export default {
     scrollHint:
       'Rulla för att zooma, svep/rulla horisontellt för att panorera, använd piltangenterna för att navigera',
     loading: 'Läser in...',
+    categorizedRow: 'Kategoriserat',
   },
   stopwatch: {
     title: 'Stoppur',
