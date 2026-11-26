@@ -350,6 +350,33 @@ describe('poll in the host', () => {
     wrapper.destroy();
   });
 
+  test('counts a show once, when the host displays the poll', async () => {
+    const { wrapper, vm, notices } = await mountPoll();
+    vm.isPollVisible = true;
+    await wrapper.vm.$nextTick();
+    expect(vm.saveData).not.toHaveBeenCalled();
+    jest.advanceTimersByTime(8000);
+    await wrapper.vm.$nextTick();
+    expect(vm.saveData).toHaveBeenCalledTimes(1);
+    expect(vm.saveData).toHaveBeenCalledWith(expect.objectContaining({ timesPollIsShown: 1 }));
+    notices.close();
+    await wrapper.vm.$nextTick();
+    notices.open();
+    await wrapper.vm.$nextTick();
+    expect(vm.saveData).toHaveBeenCalledTimes(1);
+    wrapper.destroy();
+  });
+
+  test('a poll that becomes eligible in the open host is counted at once', async () => {
+    const { wrapper, vm, notices } = await mountPoll();
+    notices.open();
+    await wrapper.vm.$nextTick();
+    vm.isPollVisible = true;
+    await wrapper.vm.$nextTick();
+    expect(vm.saveData).toHaveBeenCalledWith(expect.objectContaining({ timesPollIsShown: 1 }));
+    wrapper.destroy();
+  });
+
   test('does not auto-open if the user already opened the host from the bell', async () => {
     const { wrapper, vm, notices } = await mountPoll();
     vm.isPollVisible = true;
@@ -441,7 +468,8 @@ describe('poll in the host', () => {
     await wrapper.vm.$nextTick();
     notices.close();
     await wrapper.vm.$nextTick();
-    expect(vm.saveData).not.toHaveBeenCalled();
+    // Closing records nothing beyond the display itself.
+    expect(vm.saveData).not.toHaveBeenCalledWith(expect.objectContaining({ isEnabled: false }));
     // Closing is temporary: the prompt remains accessible from the bell this load.
     expect(notices.ids).toEqual(['poll']);
     wrapper.destroy();

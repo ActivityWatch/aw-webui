@@ -63,6 +63,7 @@ export default {
       isPosFollowUpVisible: false,
       isNegFollowUpVisible: false,
       isSaving: false,
+      isShownRecorded: false,
       dwellTimer: null,
     };
   },
@@ -81,13 +82,16 @@ export default {
       else notices.withdraw(NOTICE_ID);
     },
     isPollVisible(visible) {
-      if (visible) this.scheduleSpontaneousOpen();
-      else this.cancelDwell();
+      if (!visible) this.cancelDwell();
+      else if (this.hostOpen) this.recordShown();
+      else this.scheduleSpontaneousOpen();
     },
     // Once the user has closed the host the follow-up has been seen: stop listing it.
     hostOpen(isOpen) {
       this.cancelDwell();
-      if (!isOpen) {
+      if (isOpen) {
+        this.recordShown();
+      } else {
         this.isPosFollowUpVisible = false;
         this.isNegFollowUpVisible = false;
       }
@@ -118,19 +122,10 @@ export default {
       return;
     }
 
-    // Show poll if enough time has passed
+    // Offer the poll if enough time has passed. It only counts as shown (and starts the
+    // backoff) once the host actually displays it, see recordShown().
     if (moment() >= moment(this.data.nextPollTime)) {
-      const timesPollIsShown = this.data.timesPollIsShown + 1;
-      if (
-        await this.saveData({
-          ...this.data,
-          timesPollIsShown,
-          nextPollTime: moment().add(BACKOFF_PERIOD, 'seconds'),
-          isEnabled: timesPollIsShown < 3,
-        })
-      ) {
-        this.isPollVisible = true;
-      }
+      this.isPollVisible = true;
     }
   },
   methods: {
@@ -151,6 +146,20 @@ export default {
       } finally {
         this.isSaving = false;
       }
+    },
+    // Count a display once per page load, when the open host renders the poll. A page left
+    // before the dwell time, without opening the bell, does not use up one of the 3 shows.
+    async recordShown() {
+      if (!this.isPollVisible || this.isShownRecorded) return;
+      this.isShownRecorded = true;
+      const timesPollIsShown = this.data.timesPollIsShown + 1;
+      const saved = await this.saveData({
+        ...this.data,
+        timesPollIsShown,
+        nextPollTime: moment().add(BACKOFF_PERIOD, 'seconds'),
+        isEnabled: timesPollIsShown < 3,
+      });
+      if (!saved) this.isShownRecorded = false;
     },
     scheduleSpontaneousOpen() {
       this.cancelDwell();

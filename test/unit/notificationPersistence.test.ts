@@ -4,6 +4,7 @@ import moment from 'moment';
 import NewReleaseNotification from '~/components/NewReleaseNotification.vue';
 import UserSatisfactionPoll from '~/components/UserSatisfactionPoll.vue';
 import { useSettingsStore } from '~/stores/settings';
+import { useNoticesStore } from '~/stores/notices';
 
 const mockGetSettings = jest.fn();
 const mockPost = jest.fn();
@@ -203,6 +204,10 @@ describe('notification settings persistence', () => {
       finishLoad();
       await flush();
       expect(wrapper.vm.isPollVisible).toBe(true);
+      // Offered behind the bell, not yet displayed: nothing is counted.
+      expect(mockPost).not.toHaveBeenCalled();
+      useNoticesStore().open();
+      await flush();
       expect(server.userSatisfactionPollData).toMatchObject({
         timesPollIsShown: count + 1,
         isEnabled: count < 2,
@@ -214,6 +219,20 @@ describe('notification settings persistence', () => {
       expect(remounted.vm.isPollVisible).toBe(false);
     }
   );
+
+  test('a poll offered but never displayed does not use up a show', async () => {
+    server.userSatisfactionPollData = pollData({ timesPollIsShown: 2 });
+    const left = mountNotification(UserSatisfactionPoll);
+    await flush();
+    expect(left.vm.isPollVisible).toBe(true);
+    left.destroy(); // page left before the dwell time, bell never opened
+    newSession();
+    const back = mountNotification(UserSatisfactionPoll);
+    await flush();
+    expect(back.vm.isPollVisible).toBe(true);
+    expect(mockPost).not.toHaveBeenCalled();
+    expect(server.userSatisfactionPollData).toMatchObject({ isEnabled: true, timesPollIsShown: 2 });
+  });
 
   test.each([
     [NewReleaseNotification, 'newReleaseCheckData', 'isVisible'],
