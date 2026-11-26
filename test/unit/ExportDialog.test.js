@@ -90,7 +90,17 @@ describe('ExportDialog', () => {
     wrapper.vm.submit();
     expect(wrapper.emitted('export')).toEqual([
       [{ format: 'csv', from: '2026-10-26', to: '', fromTime: '09:00', toTime: '17:30' }],
-      [{ format: 'json', from: '2026-10-26', to: '', fromTime: '', toTime: '' }],
+      // The end time's day stays the end, as a whole day.
+      [{ format: 'json', from: '2026-10-26', to: '2026-10-26', fromTime: '', toTime: '' }],
+    ]);
+  });
+
+  test('JSON keeps the day an end time without an end date refers to', async () => {
+    const wrapper = mountDialog({ bucketId: 'b' });
+    await wrapper.setData({ from: '2026-10-26', toTime: '17:30', format: 'json' });
+    wrapper.vm.submit();
+    expect(wrapper.emitted('export')).toEqual([
+      [{ format: 'json', from: '2026-10-26', to: '2026-10-26', fromTime: '', toTime: '' }],
     ]);
   });
 

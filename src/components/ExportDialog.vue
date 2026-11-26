@@ -52,9 +52,11 @@ export default {
       return !!this.bucketId && this.format === 'csv';
     },
     range(): ExportRange {
+      const timed = this.allowTime;
       return {
         from: this.from || '',
-        to: this.to || '',
+        // Without times, an end time's day (the start date) still bounds the export, whole.
+        to: this.to || (!timed && this.toTime ? this.from || '' : ''),
         fromTime: this.allowTime ? this.fromTime || '' : '',
         toTime: this.allowTime ? this.toTime || '' : '',
       };

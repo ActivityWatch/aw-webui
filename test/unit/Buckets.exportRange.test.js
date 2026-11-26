@@ -155,7 +155,11 @@ describe('Raw Data exports, through one dialog', () => {
         download: `aw-events-export-${BUCKET}_2026-10-26T0900_2026-10-26T1730.csv`,
       },
     ]);
-    expect(exportRangeQuery(timed)).toContain('start=');
+    // Independent of exportRangeQuery: local wall times, whatever the test's TZ.
+    expect(Object.fromEntries(new URL(clicked[0].href).searchParams)).toEqual({
+      start: new Date(2026, 9, 26, 9, 0).toISOString(),
+      end: new Date(2026, 9, 26, 17, 30).toISOString(),
+    });
     wrapper.vm.open_export(BUCKET);
     await wrapper.vm.$nextTick();
     expect(dialog().props('initialFromTime')).toBe('09:00');
