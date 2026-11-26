@@ -548,6 +548,8 @@ export default {
     scrollHint:
       'Faites défiler pour zoomer, balayez ou faites défiler horizontalement pour vous déplacer, utilisez les flèches pour naviguer',
     loading: 'Chargement…',
+    loadError: 'Impossible de charger les événements pour cette plage.',
+    retry: 'Réessayer',
   },
   stopwatch: {
     title: 'Chronomètre',

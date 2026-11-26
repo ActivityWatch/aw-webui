@@ -544,6 +544,8 @@ export default {
     scrollHint:
       'Role para dar zoom, deslize/role na horizontal para mover, use as setas para navegar',
     loading: 'Carregando...',
+    loadError: 'Não foi possível carregar os eventos deste intervalo.',
+    retry: 'Tentar novamente',
   },
   stopwatch: {
     title: 'Cronômetro',

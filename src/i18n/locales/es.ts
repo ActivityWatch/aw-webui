@@ -542,6 +542,8 @@ export default {
     scrollHint:
       'Desplácese para hacer zoom, deslice o desplácese horizontalmente para moverse, use las flechas para navegar',
     loading: 'Cargando...',
+    loadError: 'No se pudieron cargar los eventos de este rango.',
+    retry: 'Reintentar',
   },
   stopwatch: {
     title: 'Cronómetro',

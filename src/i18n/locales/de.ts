@@ -558,6 +558,8 @@ export default {
     noEvents: 'Keine Ereignisse entsprechen den Kriterien. Zeitleiste nicht aktualisiert.',
     scrollHint: 'Scrollen zum Zoomen, Wischen zum Schwenken, Pfeiltasten zur Navigation',
     loading: 'Laden…',
+    loadError: 'Ereignisse für diesen Zeitraum konnten nicht geladen werden.',
+    retry: 'Erneut versuchen',
   },
   stopwatch: {
     title: 'Stoppuhr',

@@ -108,6 +108,10 @@ div
     small.text-muted.ml-auto(v-if="view_mode === 'timeline'")
       | {{ $t('timeline.scrollHint') }}
 
+  b-alert.mb-2(v-if="loadError", variant="danger", show, role="alert")
+    | {{ $t('timeline.loadError') }}
+    b-button.ml-2(size="sm", variant="outline-danger", @click="getBuckets()") {{ $t('timeline.retry') }}
+
   b-alert.mb-2(v-if="buckets !== null && num_events === 0", variant="warning", show)
     | {{ $t('timeline.noEvents') }}
 
@@ -122,7 +126,7 @@ div
 
     aw-devonly(:reason="$t('ui.devOnly.timelineExperiment')")
       aw-calendar(:buckets="buckets", :categorizedEvents="categorizedEvents")
-  div(v-else)
+  div(v-else-if="!loadError")
     h1.aw-loading {{ $t('common.loading') }}
 </template>
 
@@ -153,6 +157,7 @@ export default {
       buckets: null,
       categorizedEvents: [],
       categoryError: false,
+      loadError: false,
       clients: null,
       fetchSeq: 0,
       daterange: null,
@@ -283,6 +288,7 @@ export default {
       const range = this.daterange;
       if (this.fetchedRange !== range) {
         this.fetchedRange = range;
+        this.loadError = false;
         this.bucketsRequest = useBucketsStore().getBucketsWithEvents({
           start: range[0].format(),
           end: range[1].format(),
@@ -292,9 +298,25 @@ export default {
           if (this.fetchedRange === range) this.fetchedRange = null;
         });
       }
-      const fetched = await this.bucketsRequest;
+      let fetched;
+      try {
+        fetched = await this.bucketsRequest;
+      } catch (error) {
+        if (seq !== this.fetchSeq) return;
+        console.error('Could not load timeline events', error);
+        // Don't keep showing the previous range's events under the new range.
+        this.all_buckets = null;
+        this.hosts = null;
+        this.clients = null;
+        this.buckets = null;
+        this.categorizedEvents = [];
+        this.categoryError = false;
+        this.loadError = true;
+        return;
+      }
       // A newer call (range or filter change) took over while this one was loading
       if (seq !== this.fetchSeq) return;
+      this.loadError = false;
       this.all_buckets = Object.freeze(fetched);
 
       this.hosts = this.all_buckets

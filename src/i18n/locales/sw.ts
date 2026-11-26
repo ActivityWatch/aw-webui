@@ -540,6 +540,8 @@ export default {
       'Hakuna matukio yanayolingana na vigezo vilivyochaguliwa. Mstari wa wakati haujasasishwa.',
     scrollHint: 'Tembeza kukuza, swipe/tembeza kwa usawa kupanua, vitufe vya mshale kuelekeza',
     loading: 'Inapakia...',
+    loadError: 'Imeshindwa kupakia matukio ya masafa haya.',
+    retry: 'Jaribu tena',
   },
   stopwatch: {
     title: 'Saa ya Kuhesabu',
