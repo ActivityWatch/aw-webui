@@ -185,6 +185,10 @@ export default {
     async refreshLiveness() {
       // Saving and polling can overlap; only the newest request may update status.
       const request = ++this.livenessRequest;
+      // Classify against the moment the read started, not when the responses
+      // arrive: a slow bucket/event read must not age a fresh heartbeat into
+      // "stopped" on the way back.
+      const requestedAt = new Date();
       // Best effort: liveness is informational and must never block the form.
       try {
         const client = getClient();
@@ -195,7 +199,7 @@ export default {
           ids.map(async id => (await client.getEvents(id, { limit: 1 }))[0] ?? null)
         );
         if (!this.destroyed && request === this.livenessRequest) {
-          this.liveness = awNotifyLiveness(latest, new Date(), this.livenessSince ?? undefined);
+          this.liveness = awNotifyLiveness(latest, requestedAt, this.livenessSince ?? undefined);
         }
       } catch (e) {
         if (!this.destroyed && request === this.livenessRequest) {
