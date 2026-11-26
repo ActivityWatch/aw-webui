@@ -613,6 +613,8 @@ export default {
       prioritySaving: false,
       priorityRefreshPending: false,
       priorityRefreshForce: false,
+      // A host switch on All time during a save; its abort runs once the save settles.
+      deferredHostAbort: false,
       priorityError: false,
       bucketsStore: useBucketsStore(),
 
@@ -622,6 +624,7 @@ export default {
       showDeviceBreakdown: false,
       // First day with data for the host, used by All time
       earliestDate: null,
+      earliestDateGeneration: 0,
       // Problem with the last exact start/end edit (nonexistent or repeated DST time, bad order)
       intervalIssue: null,
       navigationNow: Date.now(),
@@ -1028,12 +1031,25 @@ export default {
       }
     },
     host: function () {
+      // All time has no timeperiod until the new host's earliest date is known,
+      // so refresh() below returns early and never aborts the old host's
+      // chunked load; it would keep running and writing into the store.
+      // Aborting the shared client also cancels an in-flight save (a settings
+      // read that has not written yet), so a pending save defers the abort to
+      // flushDeferredRefresh(), which runs it as soon as the save settles.
+      if (this.periodLength === 'all') {
+        if (this.prioritySaving || this.viewSavePending) this.deferredHostAbort = true;
+        else getClient().abort();
+      }
       this.earliestDate = null;
       this.loadEarliestDate();
       this.refresh();
     },
     periodLength: function () {
       this.loadEarliestDate();
+    },
+    viewSavePending(isPending) {
+      if (!isPending) this.flushDeferredRefresh();
     },
     timeperiod: function () {
       this.intervalIssue = null;
@@ -1307,26 +1323,53 @@ export default {
     loadEarliestDate: async function (reload = false) {
       if (this.periodLength !== 'all' || (this.earliestDate && !reload)) return false;
       const host = this.host;
-      const { date: found, approximate } = await this.activityStore.get_earliest_date(host, {
-        force: reload,
-      });
-      if (host !== this.host) return false;
-      // No data at all: fall back to today
-      const date = nextEarliestDate(
-        this.earliestDate,
-        found || get_today_with_offset(this.settingsStore.startOfDay),
-        { approximate }
-      );
-      const changed = date !== this.earliestDate;
-      this.earliestDate = date;
-      return changed;
+      const generation = ++this.earliestDateGeneration;
+      const isCurrent = () =>
+        generation === this.earliestDateGeneration &&
+        host === this.host &&
+        this.periodLength === 'all' &&
+        !this.priorityDisposed;
+      while (isCurrent()) {
+        const signal = getClient().controller.signal;
+        let result;
+        let canceled = false;
+        try {
+          result = await this.activityStore.get_earliest_date(host, { force: reload });
+        } catch (e) {
+          if (e.message !== 'canceled') throw e;
+          canceled = true;
+        }
+        // A canceled store lookup can resolve with a bucket-creation fallback.
+        // Never publish it, or retry work a newer lookup/navigation replaced.
+        if (!isCurrent()) return false;
+        if (signal.aborted || canceled) {
+          // Unrelated activity loads can abort the shared client more than
+          // once. Keep recovering the range while this lookup is current,
+          // yielding between attempts so repeated cancellation cannot spin.
+          // abort() installs a fresh controller for the next request.
+          await new Promise(resolve => setTimeout(resolve, 100));
+          continue;
+        }
+        const { date: found, approximate } = result;
+        // No data at all: fall back to today
+        const date = nextEarliestDate(
+          this.earliestDate,
+          found || get_today_with_offset(this.settingsStore.startOfDay),
+          { approximate }
+        );
+        const changed = date !== this.earliestDate;
+        this.earliestDate = date;
+        return changed;
+      }
+      return false;
     },
 
     refresh: async function (force) {
       if (this.priorityDisposed) return;
       // Activity loads abort the shared client, including an in-flight settings
-      // read. Coalesce navigation and manual refreshes until the save settles.
-      if (this.prioritySaving) {
+      // read. Coalesce navigation and manual refreshes until the save settles
+      // (a device priority save or a layout save).
+      if (this.prioritySaving || this.viewSavePending) {
         this.priorityRefreshPending = true;
         this.priorityRefreshForce = this.priorityRefreshForce || !!force;
         return;
@@ -1342,9 +1385,9 @@ export default {
           return;
         }
       }
-      // A reorder may have started while the All time lookup was awaiting.
+      // A save may have started while the All time lookup was awaiting.
       if (this.priorityDisposed) return;
-      if (this.prioritySaving) {
+      if (this.prioritySaving || this.viewSavePending) {
         this.priorityRefreshPending = true;
         this.priorityRefreshForce = this.priorityRefreshForce || !!force;
         return;
@@ -1377,6 +1420,8 @@ export default {
         if (generation === this.refreshGeneration && this.needsCategoryHistory) {
           await this.activityStore.ensure_category_history();
         }
+      } catch (e) {
+        if (e.message !== 'canceled') throw e;
       } finally {
         if (generation === this.refreshGeneration) this.refreshing = false;
       }
@@ -1448,13 +1493,29 @@ export default {
         console.error('Failed to save device overlap priority', error);
       } finally {
         this.prioritySaving = false;
-        const refreshPending = this.priorityRefreshPending;
-        const force = this.priorityRefreshForce;
-        this.priorityRefreshPending = false;
-        this.priorityRefreshForce = false;
         // Use the current route, even on failure or a switch to one device.
-        if (refreshPending && !this.priorityDisposed) await this.refresh(force);
+        await this.flushDeferredRefresh();
       }
+    },
+
+    // Replays the abort and refresh that a save deferred. A no-op while any
+    // save is still pending: the last save to settle runs it.
+    flushDeferredRefresh: async function () {
+      if (this.priorityDisposed || this.prioritySaving || this.viewSavePending) return;
+      if (this.deferredHostAbort) {
+        this.deferredHostAbort = false;
+        if (this.periodLength === 'all') {
+          getClient().abort();
+          // The abort also cancels the new host's earliest-date lookup if it
+          // was still running; without a date All time would never load.
+          if (this.earliestDate === null) this.loadEarliestDate();
+        }
+      }
+      const refreshPending = this.priorityRefreshPending;
+      const force = this.priorityRefreshForce;
+      this.priorityRefreshPending = false;
+      this.priorityRefreshForce = false;
+      if (refreshPending) await this.refresh(force);
     },
 
     toggleHost(host: string) {

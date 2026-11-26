@@ -68,11 +68,14 @@ describe('overlap priority settings persistence', () => {
         prioritySaving: false,
         priorityRefreshPending: false,
         priorityRefreshForce: false,
+        viewSavePending: false,
+        deferredHostAbort: false,
         refresh: jest.fn(),
         activityStore: {
           reset: jest.fn(async () => rejectGet(new Error('canceled'))),
         },
       };
+      vm.flushDeferredRefresh = Activity.methods.flushDeferredRefresh.bind(vm);
       const saving = Activity.methods.moveHost.call(vm, 'phone', -1);
       // Wait until either the pre-POST or final reload GET is in flight.
       for (let i = 0; i < 100 && !rejectGet; i++) await Promise.resolve();
