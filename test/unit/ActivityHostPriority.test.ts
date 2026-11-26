@@ -1,3 +1,4 @@
+import Vue from 'vue';
 import ActivityComponent from '~/views/activity/Activity.vue';
 
 jest.mock('~/util/awclient', () => ({ getClient: () => ({ abort: jest.fn() }) }));
@@ -27,6 +28,42 @@ function vmFor() {
 }
 
 describe('Activity overlap priority controls', () => {
+  test('reloads only when the host priority order actually changes', async () => {
+    const vm = new Vue({
+      data: vmFor,
+      computed: {
+        hostPriorityKey: Activity.computed.hostPriorityKey,
+      },
+      watch: {
+        hostPriorityKey: Activity.watch.hostPriorityKey,
+      },
+    });
+    try {
+      const settings = vm.$data.settingsStore;
+      const refresh = vm.$data.refresh;
+      settings.multideviceHostOrder = [...settings.multideviceHostOrder];
+      await Vue.nextTick();
+      expect(refresh).not.toHaveBeenCalled();
+
+      settings.multideviceHostOrder.reverse();
+      await Vue.nextTick();
+      expect(refresh).toHaveBeenCalledTimes(1);
+
+      vm.$data.prioritySaving = true;
+      settings.multideviceHostOrder = ['desktop', 'laptop'];
+      await Vue.nextTick();
+      expect(refresh).toHaveBeenCalledTimes(1);
+
+      vm.$data.prioritySaving = false;
+      vm.$data.isMultidevice = false;
+      settings.multideviceHostOrder = ['laptop', 'desktop'];
+      await Vue.nextTick();
+      expect(refresh).toHaveBeenCalledTimes(1);
+    } finally {
+      vm.$destroy();
+    }
+  });
+
   test('moves a device one position and saves the order without losing offline hosts', async () => {
     const vm = vmFor();
     await Activity.methods.moveHost.call(vm, 'phone', -1);
@@ -289,16 +326,5 @@ describe('Activity overlap priority controls', () => {
     vm.loadEarliestDate.mockResolvedValue(false);
     await vm.refresh(vm.priorityRefreshForce);
     expect(vm.activityStore.ensure_loaded).toHaveBeenCalledTimes(1);
-  });
-
-  test('priority changes reload multi-device results, not a single-device view', () => {
-    const refresh = jest.fn();
-    const handler = Activity.watch['settingsStore.multideviceHostOrder'].handler;
-    handler.call({ isMultidevice: false, refresh });
-    expect(refresh).not.toHaveBeenCalled();
-    handler.call({ isMultidevice: true, prioritySaving: true, refresh });
-    expect(refresh).not.toHaveBeenCalled();
-    handler.call({ isMultidevice: true, prioritySaving: false, refresh });
-    expect(refresh).toHaveBeenCalledTimes(1);
   });
 });
