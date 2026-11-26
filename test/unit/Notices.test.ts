@@ -402,6 +402,20 @@ describe('poll in the host', () => {
     wrapper.destroy();
   });
 
+  test('a host opened and closed before the poll is eligible is not reopened later', async () => {
+    const { wrapper, vm, notices } = await mountPoll();
+    notices.open();
+    await wrapper.vm.$nextTick();
+    notices.close();
+    await wrapper.vm.$nextTick();
+    vm.isPollVisible = true; // eligibility lands after the user dismissed the host
+    await wrapper.vm.$nextTick();
+    jest.advanceTimersByTime(60000);
+    expect(notices.isOpen).toBe(false);
+    expect(notices.ids).toEqual(['poll']);
+    wrapper.destroy();
+  });
+
   test('closing the host while an answer is saving discards the follow-up', async () => {
     const { wrapper, vm, notices } = await mountPoll();
     let finishSave;

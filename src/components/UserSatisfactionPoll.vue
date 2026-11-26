@@ -64,6 +64,7 @@ export default {
       isNegFollowUpVisible: false,
       isSaving: false,
       isShownRecorded: false,
+      hostWasOpened: false,
       dwellTimer: null,
     };
   },
@@ -90,6 +91,7 @@ export default {
     hostOpen(isOpen) {
       this.cancelDwell();
       if (isOpen) {
+        this.hostWasOpened = true;
         this.recordShown();
       } else {
         this.isPosFollowUpVisible = false;
@@ -164,7 +166,7 @@ export default {
     scheduleSpontaneousOpen() {
       this.cancelDwell();
       // Already opened (and possibly closed again) by the user: do not reopen it later.
-      if (useNoticesStore().isOpen) return;
+      if (this.hostWasOpened || useNoticesStore().isOpen) return;
       this.dwellTimer = setTimeout(() => {
         this.dwellTimer = null;
         if (this.isPollVisible) useNoticesStore().open();
