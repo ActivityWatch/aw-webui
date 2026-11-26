@@ -36,6 +36,8 @@ describe('i18n', () => {
     expect(isAppLocale('id')).toBe(true);
     expect(isAppLocale('id-ID')).toBe(false);
     expect(isAppLocale('sw')).toBe(true);
+    expect(isAppLocale('zh-TW')).toBe(true);
+    expect(isAppLocale('zh-Hant')).toBe(false);
     expect(isAppLocale('')).toBe(false);
     expect(isAppLocale(null)).toBe(false);
   });
@@ -514,6 +516,111 @@ describe('i18n', () => {
     expect(i18n.t('common.save')).toBe('Hifadhi');
     expect(document.documentElement.lang).toBe('sw');
     expect(localStorage.getItem('locale')).toBe('sw');
+  });
+
+  test.each([
+    ['zh-TW', 'zh-TW'],
+    ['zh-HK', 'zh-TW'],
+    ['zh-MO', 'zh-TW'],
+    ['zh-Hant', 'zh-TW'],
+    ['zh-Hant-TW', 'zh-TW'],
+    ['zh-Hant-HK', 'zh-TW'],
+    ['zh-Hant-CN', 'zh-TW'],
+    ['zh-Hans', 'zh-CN'],
+    ['zh-Hans-TW', 'zh-CN'],
+    ['zh-Hans-HK', 'zh-CN'],
+    ['zh-Hans-CN', 'zh-CN'],
+    ['zh', 'zh-CN'],
+    ['zh-CN', 'zh-CN'],
+    ['zh-SG', 'zh-CN'],
+  ])('initial locale maps Chinese browser language %s to %s', (tag, expected) => {
+    Object.defineProperty(navigator, 'language', {
+      value: tag,
+      configurable: true,
+    });
+    const { i18n } = loadI18n();
+    expect(i18n.locale).toBe(expected);
+    expect(document.documentElement.lang).toBe(expected);
+    expect(document.documentElement.dir).toBe('ltr');
+  });
+
+  test.each(['zh-CN', 'zh-TW'])(
+    'saved %s preference wins over a Chinese browser language of the other script',
+    saved => {
+      Object.defineProperty(navigator, 'language', {
+        value: saved === 'zh-CN' ? 'zh-Hant-TW' : 'zh-Hans-CN',
+        configurable: true,
+      });
+      localStorage.setItem('locale', saved);
+      const { i18n } = loadI18n();
+      expect(i18n.locale).toBe(saved);
+      expect(document.documentElement.lang).toBe(saved);
+    }
+  );
+
+  test('setAppLocale switches to Traditional Chinese messages and persists', () => {
+    const { setAppLocale, i18n, LANGUAGE_NAMES } = loadI18n();
+    setAppLocale('zh-TW');
+    expect(i18n.locale).toBe('zh-TW');
+    expect(LANGUAGE_NAMES['zh-TW']).toBe('繁體中文');
+    expect(i18n.t('common.save')).toBe('儲存');
+    expect(document.documentElement.lang).toBe('zh-TW');
+    expect(document.documentElement.dir).toBe('ltr');
+    expect(localStorage.getItem('locale')).toBe('zh-TW');
+  });
+
+  test('switching zh-CN -> zh-TW -> zh-CN changes messages without mixing scripts', () => {
+    const { setAppLocale, i18n } = loadI18n();
+    setAppLocale('zh-CN');
+    const simplified = i18n.t('common.save');
+    setAppLocale('zh-TW');
+    expect(i18n.t('common.save')).not.toBe(simplified);
+    setAppLocale('zh-CN');
+    expect(i18n.t('common.save')).toBe(simplified);
+  });
+
+  test('switching from Arabic to Traditional Chinese restores ltr', () => {
+    const { setAppLocale } = loadI18n();
+    setAppLocale('ar');
+    expect(document.documentElement.dir).toBe('rtl');
+    setAppLocale('zh-TW');
+    expect(document.documentElement.lang).toBe('zh-TW');
+    expect(document.documentElement.dir).toBe('ltr');
+  });
+
+  test('Traditional Chinese falls back to English, not Simplified Chinese', () => {
+    const { i18n } = loadI18n();
+    expect(i18n.fallbackLocale).toBe('en');
+  });
+
+  test('Traditional Chinese dates use the zh-tw Moment locale', () => {
+    const { setAppLocale } = loadI18n();
+    const moment = require('moment');
+    setAppLocale('zh-TW');
+    expect(moment.locale()).toBe('zh-tw');
+    // 2026-10-19 is a Monday
+    expect(moment('2026-10-19T19:23:00').format('LL')).toBe('2026年10月19日');
+    expect(moment('2026-10-19T19:23:00').format('dddd')).toBe('星期一');
+    // switching away from Arabic must not leak its digit overrides into zh-tw
+    setAppLocale('ar');
+    setAppLocale('zh-TW');
+    expect(moment('2026-10-19T19:23:00').format('LL')).toBe('2026年10月19日');
+  });
+
+  test('Traditional Chinese messages keep every interpolation placeholder from English', () => {
+    const en = require('~/i18n/locales/en').default;
+    const zhTW = require('~/i18n/locales/zh-TW').default;
+    const placeholders = v => (v.match(/\{[^}]+\}/g) || []).sort();
+    const walk = (a, b, path) => {
+      for (const [k, v] of Object.entries(a)) {
+        if (typeof v === 'string') {
+          expect([path + k, placeholders(b[k] ?? '')]).toEqual([path + k, placeholders(v)]);
+        } else {
+          walk(v, b[k] ?? {}, path + k + '.');
+        }
+      }
+    };
+    walk(en, zhTW, '');
   });
 
   test('setAppLocale falls back to en for invalid locale', () => {
