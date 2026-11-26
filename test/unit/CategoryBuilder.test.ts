@@ -796,6 +796,16 @@ describe('CategoryBuilder embedded in the category editor', () => {
     expect(names()).toEqual(['Imported', 'Imported>Child', 'Imported>Third']);
   });
 
+  test('removing the new rule in the modal leaves no false unsaved warning', async () => {
+    // The editor is clean, so dropping the draft restores the saved state.
+    wrapper.vm.createRule('Firefox');
+    expect(categories.classes_unsaved_changes).toBe(true);
+    categories.removeClass(wrapper.vm.create.categoryId);
+    await flush();
+    await wrapper.vm.createRuleCancel();
+    expect(categories.classes_unsaved_changes).toBe(false);
+  });
+
   test('removing the new rule in the modal does not swallow the next refresh', async () => {
     const query = await openNewRule();
     // The modal's Remove button drops the placeholder, then hides the modal.

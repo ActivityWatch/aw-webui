@@ -511,19 +511,17 @@ export default {
       this.create.draft = null;
       if (!this.embedded) {
         this.categoryStore.load(); // Restore categories to last saved
-      } else if (
-        !accepted &&
-        draft !== null &&
-        draft.id !== undefined &&
-        // Only while this exact rule is still in the list. If an import or set
-        // switch replaced the list, its id may now name an unrelated rule.
-        this.categoryStore.classes.includes(draft)
-      ) {
+      } else if (!accepted && draft !== null) {
         // Drop only the placeholder rule, keeping the editor's other edits.
-        this.categoryStore.removeClass(draft.id);
+        // Only while this exact rule is still in the list: an import or set
+        // switch may have reused its id for an unrelated rule.
+        if (draft.id !== undefined && this.categoryStore.classes.includes(draft)) {
+          this.categoryStore.removeClass(draft.id);
+        }
         // Ask the store what is still unsaved rather than restoring a flag read
         // before the placeholder: a save finishing while the draft was open
-        // already recorded the editor's real state, so that read is stale.
+        // already recorded the editor's real state, so that read is stale. Also
+        // runs when the modal's Remove button already dropped the draft.
         this.categoryStore.classes_unsaved_changes = this.categoryStore.hasUnsavedChanges;
       }
       this.suggestionsPaused = false;
