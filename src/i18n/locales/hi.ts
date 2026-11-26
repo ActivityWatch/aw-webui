@@ -941,6 +941,8 @@ export default {
       rule: 'नियम',
       type: 'प्रकार',
       pattern: 'पैटर्न',
+      addPattern: 'पैटर्न जोड़ें',
+      removePattern: 'पैटर्न {number} हटाएँ',
       caseInsensitive: 'अक्षर-भेद अनदेखा करें',
       matchFields: 'मिलान फ़ील्ड',
       matchFieldsHelp: 'सभी स्ट्रिंग फ़ील्ड से मिलान के लिए खाली छोड़ें (डिफ़ॉल्ट)।',

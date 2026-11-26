@@ -936,6 +936,8 @@ export default {
       rule: 'নিয়ম',
       type: 'ধরন',
       pattern: 'প্যাটার্ন',
+      addPattern: 'প্যাটার্ন যোগ করুন',
+      removePattern: 'প্যাটার্ন {number} সরান',
       caseInsensitive: 'বড়/ছোট হাতের অক্ষর নির্বিশেষে',
       matchFields: 'মেলানোর ফিল্ড',
       matchFieldsHelp: 'প্রতিটি স্ট্রিং ফিল্ডের সাথে মেলাতে খালি রাখুন (ডিফল্ট)।',

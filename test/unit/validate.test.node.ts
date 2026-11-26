@@ -1,4 +1,4 @@
-import { validateRegex, isRegexBroad } from '~/util/validate';
+import { validateRegex, isRegexBroad, splitRegexPipe, joinRegexPipe } from '~/util/validate';
 
 describe('validateRegex', () => {
   test('accepts valid patterns', () => {
@@ -153,5 +153,43 @@ describe('isRegexBroad', () => {
   test('does not flag specific patterns as broad', () => {
     expect(isRegexBroad('Notepad\\+\\+')).toBe(false);
     expect(isRegexBroad('MySpecificApp')).toBe(false);
+  });
+});
+
+describe('splitRegexPipe / joinRegexPipe', () => {
+  test('keeps surrounding spaces in alternatives (no trim)', () => {
+    const original = 'Google Chrome| - YouTube';
+    expect(splitRegexPipe(original)).toEqual(['Google Chrome', ' - YouTube']);
+    expect(joinRegexPipe(['Google Chrome', ' - YouTube'])).toBe(original);
+  });
+
+  test('does not split on | inside a character class', () => {
+    expect(splitRegexPipe('foo[a|b]x|bar')).toEqual(['foo[a|b]x', 'bar']);
+  });
+
+  test('keeps empty alternatives so a||b round-trips through split', () => {
+    expect(splitRegexPipe('a||b')).toEqual(['a', '', 'b']);
+  });
+
+  test('join preserves empty alternatives and whitespace', () => {
+    expect(joinRegexPipe(['a', '', 'b'])).toBe('a||b');
+    expect(joinRegexPipe(['Google Chrome', ' - YouTube', ''])).toBe('Google Chrome| - YouTube|');
+  });
+
+  test.each(['[]|a]|Firefox', '[^]|a]|Firefox'])('keeps a leading literal ] in %s', regex => {
+    expect(splitRegexPipe(regex)).toEqual([regex.slice(0, -8), 'Firefox']);
+  });
+
+  test('splits long rules with a linear scan', () => {
+    const pattern = 'a'.repeat(1001);
+    expect(splitRegexPipe(`${pattern}|Firefox`)).toEqual([pattern, 'Firefox']);
+  });
+
+  test('does not split on | inside groups', () => {
+    expect(splitRegexPipe('(a|b)|c')).toEqual(['(a|b)', 'c']);
+  });
+
+  test('treats escaped \\| as a literal', () => {
+    expect(splitRegexPipe('foo\\|bar|baz')).toEqual(['foo\\|bar', 'baz']);
   });
 });

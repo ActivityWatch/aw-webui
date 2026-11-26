@@ -953,6 +953,8 @@ export default {
       rule: 'Regra',
       type: 'Tipo',
       pattern: 'Padrão',
+      addPattern: 'Adicionar padrão',
+      removePattern: 'Remover padrão {number}',
       caseInsensitive: 'Sem diferenciar maiúsculas de minúsculas',
       matchFields: 'Campos de correspondência',
       matchFieldsHelp: 'Deixe em branco para corresponder a todos os campos de texto (padrão).',

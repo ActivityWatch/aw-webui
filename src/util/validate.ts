@@ -442,3 +442,61 @@ export function isRegexBroad(re: string | RegExp) {
     'THIS STRING SHOULD PROBABLY NOT MATCH: ' + alphabet + alphabet.toUpperCase() + numbers
   );
 }
+
+/**
+ * Split a combined regex string into individual patterns by top-level `|`.
+ * Parenthesized groups and character classes are not split; `\|` is a literal.
+ * Empty alternatives are kept so `a||b` round-trips.
+ */
+export function splitRegexPipe(regex: string): string[] {
+  if (!regex) return [];
+  const parts: string[] = [];
+  let depth = 0;
+  let inClass = false;
+  let classContentStart = -1;
+  let escaping = false;
+  let start = 0;
+  for (let i = 0; i < regex.length; i++) {
+    const ch = regex[i];
+    if (escaping) {
+      escaping = false;
+      continue;
+    }
+    if (ch === '\\') {
+      escaping = true;
+      continue;
+    }
+    if (!inClass && ch === '[') {
+      inClass = true;
+      // In Python, ] is literal at the start of a class (after an optional ^).
+      classContentStart = i + (regex[i + 1] === '^' ? 2 : 1);
+      continue;
+    }
+    if (inClass) {
+      if (ch === ']' && i !== classContentStart) inClass = false;
+      continue;
+    }
+    if (ch === '(') {
+      depth++;
+      continue;
+    }
+    if (ch === ')') {
+      if (depth > 0) depth--;
+      continue;
+    }
+    if (ch === '|' && depth === 0) {
+      parts.push(regex.slice(start, i));
+      start = i + 1;
+    }
+  }
+  parts.push(regex.slice(start));
+  return parts;
+}
+
+/**
+ * Join pattern lines with `|`. Do not trim: whitespace is part of the pattern.
+ * Empty alternatives are meaningful; the editor omits only unused new rows.
+ */
+export function joinRegexPipe(patterns: string[]): string {
+  return patterns.join('|');
+}

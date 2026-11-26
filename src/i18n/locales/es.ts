@@ -952,6 +952,8 @@ export default {
       rule: 'Regla',
       type: 'Tipo',
       pattern: 'Patrón',
+      addPattern: 'Añadir patrón',
+      removePattern: 'Eliminar patrón {number}',
       caseInsensitive: 'No distinguir mayúsculas y minúsculas',
       matchFields: 'Campos de coincidencia',
       matchFieldsHelp:

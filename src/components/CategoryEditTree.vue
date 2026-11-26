@@ -2,7 +2,7 @@
 div
   div.row.py-2.class
     div.col-8.col-md-4
-      span(:style="{ marginLeft: (1.5 * depth) + 'em', cursor: _class.children.length > 0 ? 'pointer' : null}" @click="expanded = !expanded")
+      span(:style="{ marginLeft: (1.5 * depth) + 'em', cursor: _class.children.length > 0 ? 'pointer' : null }" @click="expanded = !expanded")
         span(v-if="_class.children.length > 0" style="opacity: 0.8")
           icon(:name="expanded ? 'regular/minus-square' : 'regular/plus-square'" scale="0.8")
         span(v-else style="opacity: 0.6")

@@ -943,6 +943,8 @@ export default {
       rule: 'Aturan',
       type: 'Tipe',
       pattern: 'Pola',
+      addPattern: 'Tambah pola',
+      removePattern: 'Hapus pola {number}',
       caseInsensitive: 'Tidak peka huruf besar/kecil',
       matchFields: 'Kolom yang dicocokkan',
       matchFieldsHelp: 'Biarkan kosong untuk mencocokkan semua kolom string (default).',
