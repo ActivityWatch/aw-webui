@@ -359,7 +359,11 @@ describe('Annotations view', () => {
     await flush();
     expect(wrapper.vm.error).toBeTruthy();
     expect(aw.getEvents).not.toHaveBeenCalled();
+    // A failed read must not also claim that nothing is saved.
+    expect(wrapper.text()).not.toContain('annotations.empty');
     await wrapper.vm.load();
+    await wrapper.vm.$nextTick();
+    expect(wrapper.text()).toContain('annotations.empty');
     expect(failure).toHaveBeenCalledTimes(2);
     expect(aw.getEvents).toHaveBeenCalledWith('aw-annotations_box', { limit: 101 });
     expect(wrapper.vm.error).toBeNull();

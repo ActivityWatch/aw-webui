@@ -41,7 +41,7 @@ div
   div(v-if="loading")
     b-spinner.mr-2(small)
     span.text-muted {{ $t('common.loading') }}
-  div(v-else-if="events.length === 0")
+  div(v-else-if="events.length === 0 && !error")
     p.text-muted {{ $t('annotations.empty') }}
   div(v-else)
     div(v-for="day in days" :key="day.date")
