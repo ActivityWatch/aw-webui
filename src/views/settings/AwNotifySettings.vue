@@ -14,7 +14,7 @@ div
       size="sm"
       variant="outline-danger"
       :disabled="loading"
-      @click="load"
+      @click="retryLoad"
     ) {{ $t('common.retry') }}
   b-alert(v-if="success" show variant="success" dismissible @dismissed="success = false") {{ $t('settings.notifications.saved') }}
 
@@ -207,6 +207,15 @@ export default {
           this.liveness = null;
         }
       }
+    },
+    async retryLoad() {
+      // mounted() is the only other path that follows load() with a liveness
+      // refresh and poll. Retry after a failed GET must do the same, or an
+      // enabled config recovered here never starts the 15 s timer.
+      await this.load();
+      if (this.destroyed || this.loadFailed) return;
+      await this.refreshLiveness();
+      this.syncLivenessPolling();
     },
     async load() {
       this.loading = true;

@@ -133,6 +133,25 @@ describe('awNotifyLiveness', () => {
     ).toBe('running');
   });
 
+  test('a failed start after notBefore becomes stopped once the grace window expires', () => {
+    // During the grace window the daemon is still starting: empty/pre-floor
+    // events stay `never` so the UI does not tell the user to restart.
+    const enabledJustNow = new Date(now.getTime() - 10_000);
+    expect(awNotifyLiveness([], now, enabledJustNow)).toBe('never');
+    expect(awNotifyLiveness([endingAgo(3_600_000)], now, enabledJustNow)).toBe('never');
+    const atGraceBoundary = new Date(now.getTime() - AW_NOTIFY_STALE_AFTER_MS);
+    expect(awNotifyLiveness([], now, atGraceBoundary)).toBe('never');
+
+    // After the stale window with no post-floor heartbeat, the daemon never
+    // came up. `never` would tell the user to enable-and-save again.
+    const enabledTooLongAgo = new Date(now.getTime() - AW_NOTIFY_STALE_AFTER_MS - 1);
+    expect(awNotifyLiveness([], now, enabledTooLongAgo)).toBe('stopped');
+    expect(awNotifyLiveness([null], now, enabledTooLongAgo)).toBe('stopped');
+    expect(awNotifyLiveness([endingAgo(3_600_000)], now, enabledTooLongAgo)).toBe('stopped');
+    // Without a floor, empty still means the daemon has never run.
+    expect(awNotifyLiveness([], now)).toBe('never');
+  });
+
   test('a heartbeat ending slightly in the future (clock skew) counts as running', () => {
     expect(awNotifyLiveness([endingAgo(-5_000)], now)).toBe('running');
   });

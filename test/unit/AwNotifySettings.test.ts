@@ -226,6 +226,9 @@ describe('AwNotifySettings', () => {
     expect(wrapper.vm.enabled).toBe(true);
     expect(wrapper.find('button.btn-primary').attributes('disabled')).toBeUndefined();
     expect(wrapper.find('input[type="checkbox"]').exists()).toBe(true);
+    // Retry, not a page reload, must start the 15 s liveness poll when the
+    // recovered config is enabled. mounted() already ran and saw a failed load.
+    expect(wrapper.vm.livenessTimer).not.toBeNull();
     wrapper.destroy();
   });
 
@@ -268,6 +271,27 @@ describe('AwNotifySettings', () => {
     mockGetEvents.mockResolvedValue([{ timestamp: new Date().toISOString(), duration: 5 }]);
     await wrapper.vm.refreshLiveness();
     expect(wrapper.vm.liveness).toBe('running');
+    wrapper.destroy();
+  });
+
+  test('re-enable with no new heartbeat becomes stopped after the stale window', async () => {
+    mockGet.mockResolvedValue({ data: { enabled: false, alerts: [] } });
+    mockGetBuckets.mockResolvedValue({ 'aw-notify_host': {} });
+    const stale = new Date(Date.now() - 3_600_000).toISOString();
+    mockGetEvents.mockResolvedValue([{ timestamp: stale, duration: 5 }]);
+    const wrapper: any = shallowMount(AwNotifySettings, {
+      mocks: { $t: key => key },
+    });
+    await flushPromises();
+
+    wrapper.vm.enabled = true;
+    await wrapper.vm.save();
+    await flushPromises();
+    expect(wrapper.vm.liveness).toBe('never');
+
+    wrapper.vm.livenessSince = new Date(Date.now() - 31_000);
+    await wrapper.vm.refreshLiveness();
+    expect(wrapper.vm.liveness).toBe('stopped');
     wrapper.destroy();
   });
 

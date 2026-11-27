@@ -133,6 +133,11 @@ interface HeartbeatEvent {
  * last event says nothing about a daemon that was just (re)started. Without
  * the floor, re-enabling after a disable reports `stopped` and tells the user
  * to restart ActivityWatch while it is in fact starting normally.
+ *
+ * After `now - notBefore` exceeds the stale window with no post-floor
+ * heartbeat, return `stopped` rather than `never`: the daemon had a full
+ * window to report and did not, so the UI should advise a restart instead of
+ * "enable notifications and save" (which the user just did).
  */
 export function awNotifyLiveness(
   latestEvents: (HeartbeatEvent | null)[],
@@ -143,7 +148,12 @@ export function awNotifyLiveness(
   const events = latestEvents
     .filter((e): e is HeartbeatEvent => e !== null)
     .filter(e => new Date(e.timestamp).getTime() + (e.duration || 0) * 1000 >= floor);
-  if (events.length === 0) return 'never';
+  if (events.length === 0) {
+    if (notBefore && now.getTime() - notBefore.getTime() > AW_NOTIFY_STALE_AFTER_MS) {
+      return 'stopped';
+    }
+    return 'never';
+  }
   const fresh = events.some(e => {
     const end = new Date(e.timestamp).getTime() + (e.duration || 0) * 1000;
     return now.getTime() - end <= AW_NOTIFY_STALE_AFTER_MS;
