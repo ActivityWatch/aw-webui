@@ -14,7 +14,7 @@ div
       size="sm"
       variant="outline-danger"
       :disabled="loading"
-      @click="load"
+      @click="retryLoad"
     ) {{ $t('common.retry') }}
   b-alert(v-if="success" show variant="success" dismissible @dismissed="success = false") {{ $t('settings.notifications.saved') }}
 
@@ -28,6 +28,8 @@ div
       b-form-checkbox(v-model="enabled" switch)
         | {{ $t('extraViews.notifications.enabled') }}
         small.text-muted.ml-2 {{ $t('extraViews.notifications.enabledHelp') }}
+      p.small.mb-0.mt-1(v-if="config.enabled && liveness" :class="livenessClass" data-test="aw-notify-liveness")
+        | {{ $t(`settings.notifications.liveness${liveness[0].toUpperCase()}${liveness.slice(1)}`) }}
 
     template(v-if="enabled")
       p.text-muted.small.mb-3
@@ -79,8 +81,11 @@ import 'vue-awesome/icons/trash';
 
 import { getClient } from '~/util/awclient';
 import {
+  AW_NOTIFY_BUCKET_PREFIX,
   AwNotifyAlert,
   AwNotifyConfig,
+  AwNotifyLiveness,
+  awNotifyLiveness,
   parseAwNotifyConfig,
   parseThresholds,
 } from '~/util/aw-notify';
@@ -116,6 +121,10 @@ function rowToDto(row: AlertRow): AwNotifyAlert {
   };
 }
 
+// aw-notify-rs heartbeats every few seconds; poll often enough that starting or
+// stopping it (e.g. from the tray) shows up without a page reload.
+const LIVENESS_POLL_MS = 15_000;
+
 export default {
   name: 'AwNotifySettings',
   data() {
@@ -130,16 +139,95 @@ export default {
       saving: false,
       error: '',
       success: false,
+      liveness: null as AwNotifyLiveness | null,
+      // Set when this session enabled notifications. Heartbeats older than
+      // this belong to a previous run: the bucket outlives the daemon, so they
+      // are not evidence that the daemon we just started has failed.
+      livenessSince: null as Date | null,
+      livenessRequest: 0,
+      livenessInFlight: false,
+      livenessTimer: null as ReturnType<typeof setInterval> | null,
+      destroyed: false,
       goalOptions: [
         { text: this.$t('settings.notifications.goalWarning'), value: false },
         { text: this.$t('settings.notifications.goalReached'), value: true },
       ],
     };
   },
+  computed: {
+    livenessClass(): string {
+      return this.liveness === 'running' ? 'text-success' : 'text-muted';
+    },
+  },
   async mounted() {
     await this.load();
+    await this.refreshLiveness();
+    this.syncLivenessPolling();
+  },
+  beforeDestroy() {
+    this.destroyed = true;
+    this.stopLivenessPolling();
   },
   methods: {
+    // Poll only while the saved config is enabled (the status line is hidden
+    // otherwise). mounted() is async, so guard against starting a timer after
+    // the component was destroyed mid-load.
+    syncLivenessPolling() {
+      this.stopLivenessPolling();
+      if (this.destroyed || !this.config.enabled) return;
+      this.livenessTimer = setInterval(() => this.refreshLiveness(), LIVENESS_POLL_MS);
+    },
+    stopLivenessPolling() {
+      if (this.livenessTimer !== null) {
+        clearInterval(this.livenessTimer);
+        this.livenessTimer = null;
+      }
+    },
+    async refreshLiveness(opts: { preempt?: boolean } = {}) {
+      // Poll ticks skip while a read is in flight. Otherwise a 15 s interval
+      // overlapping a 15–30 s getBuckets/getEvents pair increments
+      // livenessRequest forever and every completion is discarded, so the
+      // status line freezes. Save still preempts: it must replace an in-flight
+      // poll, and the request number still drops the older result.
+      if (this.livenessInFlight && !opts.preempt) return;
+      this.livenessInFlight = true;
+      const request = ++this.livenessRequest;
+      // Classify against the moment the read started, not when the responses
+      // arrive: a slow bucket/event read must not age a fresh heartbeat into
+      // "stopped" on the way back.
+      const requestedAt = new Date();
+      // Best effort: liveness is informational and must never block the form.
+      try {
+        const client = getClient();
+        const ids = Object.keys(await client.getBuckets()).filter(id =>
+          id.startsWith(AW_NOTIFY_BUCKET_PREFIX)
+        );
+        const latest = await Promise.all(
+          ids.map(async id => (await client.getEvents(id, { limit: 1 }))[0] ?? null)
+        );
+        if (!this.destroyed && request === this.livenessRequest) {
+          this.liveness = awNotifyLiveness(latest, requestedAt, this.livenessSince ?? undefined);
+        }
+      } catch (e) {
+        if (!this.destroyed && request === this.livenessRequest) {
+          console.warn('Could not determine aw-notify liveness:', e);
+          this.liveness = null;
+        }
+      } finally {
+        if (request === this.livenessRequest) {
+          this.livenessInFlight = false;
+        }
+      }
+    },
+    async retryLoad() {
+      // mounted() is the only other path that follows load() with a liveness
+      // refresh and poll. Retry after a failed GET must do the same, or an
+      // enabled config recovered here never starts the 15 s timer.
+      await this.load();
+      if (this.destroyed || this.loadFailed) return;
+      await this.refreshLiveness();
+      this.syncLivenessPolling();
+    },
     async load() {
       this.loading = true;
       this.loadFailed = false;
@@ -205,13 +293,24 @@ export default {
           enabled: this.enabled,
           alerts: alertDtos,
         };
+        const wasEnabled = this.config.enabled ?? false;
+        const enablingAt = new Date();
         await client.req.post(`/0/settings/${SETTINGS_KEY}`, payload, {
           headers: { 'Content-Type': 'application/json' },
         });
         // Keep this.config in sync so a subsequent disabled save uses the
         // latest saved alerts, not the stale snapshot from page load.
         this.config = payload;
+        if (this.enabled && !wasEnabled) {
+          // Heartbeats in the bucket predate this enable; ignore them until
+          // the daemon we just started reports for the first time.
+          this.livenessSince = enablingAt;
+        } else if (!this.enabled) {
+          this.livenessSince = null;
+        }
         this.success = true;
+        this.syncLivenessPolling();
+        void this.refreshLiveness({ preempt: true });
       } catch (e: any) {
         this.error = `Failed to save settings: ${e?.message ?? e}`;
       } finally {

@@ -273,6 +273,11 @@ export default {
       loadFailed: 'No se pudo cargar la configuración: {error}',
       saveFailed: 'No se pudo guardar la configuración: {error}',
       thresholdsInvalid: 'Los umbrales deben ser minutos enteros positivos separados por comas.',
+      livenessRunning: 'aw-notify está en ejecución.',
+      livenessStopped:
+        'aw-notify no ha dado señales en los últimos 30 segundos. Se inicia con ActivityWatch mientras las notificaciones estén activadas; si sigue detenido, reinicia ActivityWatch.',
+      livenessNever:
+        'aw-notify aún no ha dado señales a este servidor. Cuando actives las notificaciones y guardes, ActivityWatch lo iniciará.',
     },
     privacyFilters: {
       title: 'Filtros de privacidad',

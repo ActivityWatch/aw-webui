@@ -275,6 +275,11 @@ export default {
       saveFailed: 'Échec de l’enregistrement des paramètres : {error}',
       thresholdsInvalid:
         'Les seuils doivent être des minutes entières positives séparées par des virgules.',
+      livenessRunning: 'aw-notify est en cours d’exécution.',
+      livenessStopped:
+        'aw-notify ne s’est pas manifesté depuis 30 secondes. Il démarre avec ActivityWatch tant que les notifications sont activées ; s’il reste arrêté, redémarrez ActivityWatch.',
+      livenessNever:
+        'aw-notify ne s’est pas encore manifesté auprès de ce serveur. Une fois les notifications activées et enregistrées, ActivityWatch le démarre.',
     },
     privacyFilters: {
       title: 'Filtres de confidentialité',

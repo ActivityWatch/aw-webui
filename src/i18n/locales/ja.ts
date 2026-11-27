@@ -268,6 +268,11 @@ export default {
       loadFailed: '設定の読み込みに失敗しました: {error}',
       saveFailed: '設定の保存に失敗しました: {error}',
       thresholdsInvalid: 'しきい値は、正の整数の分数をカンマ区切りで指定してください。',
+      livenessRunning: 'aw-notify は実行中です。',
+      livenessStopped:
+        'aw-notify から過去 30 秒間応答がありません。通知が有効な間は ActivityWatch と一緒に起動します。停止したままの場合は ActivityWatch を再起動してください。',
+      livenessNever:
+        'aw-notify はまだこのサーバーに応答していません。通知を有効にして保存すると、ActivityWatch が起動します。',
     },
     privacyFilters: {
       title: 'プライバシーフィルター',

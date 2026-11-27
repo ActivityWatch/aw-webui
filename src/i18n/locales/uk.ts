@@ -166,6 +166,11 @@ export default {
       loadFailed: 'Не вдалося завантажити налаштування: {error}',
       saveFailed: 'Не вдалося зберегти налаштування: {error}',
       thresholdsInvalid: 'Пороги мають бути додатними цілими хвилинами через кому.',
+      livenessRunning: 'aw-notify працює.',
+      livenessStopped:
+        'aw-notify не подавав сигналів останні 30 секунд. Він запускається разом з ActivityWatch, поки сповіщення ввімкнені; якщо він залишається зупиненим, перезапустіть ActivityWatch.',
+      livenessNever:
+        'aw-notify ще не подавав сигналів цьому серверу. Після того як ви ввімкнете сповіщення та збережете, ActivityWatch запустить його.',
     },
     privacyFilters: {
       title: 'Фільтри приватності',

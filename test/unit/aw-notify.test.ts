@@ -1,4 +1,9 @@
-import { parseAwNotifyConfig, parseThresholds } from '~/util/aw-notify';
+import {
+  AW_NOTIFY_STALE_AFTER_MS,
+  awNotifyLiveness,
+  parseAwNotifyConfig,
+  parseThresholds,
+} from '~/util/aw-notify';
 
 describe('parseThresholds', () => {
   test('parses comma-separated positive whole minutes', () => {
@@ -81,5 +86,73 @@ describe('parseAwNotifyConfig', () => {
     { alerts: [canonicalAlert], enabled: 'yes' },
   ])('rejects unsupported config %p', config => {
     expect(parseAwNotifyConfig(config)).toBeNull();
+  });
+});
+
+describe('awNotifyLiveness', () => {
+  const now = new Date('2026-11-15T12:00:00Z');
+  const endingAgo = (ms: number, duration = 5) => ({
+    timestamp: new Date(now.getTime() - ms - duration * 1000).toISOString(),
+    duration,
+  });
+
+  test('never when there is no heartbeat bucket or event', () => {
+    expect(awNotifyLiveness([], now)).toBe('never');
+    expect(awNotifyLiveness([null], now)).toBe('never');
+  });
+
+  test('running when the latest heartbeat ended within the stale window', () => {
+    expect(awNotifyLiveness([endingAgo(2_000)], now)).toBe('running');
+    expect(awNotifyLiveness([endingAgo(AW_NOTIFY_STALE_AFTER_MS)], now)).toBe('running');
+  });
+
+  test('counts the merged event duration, not just its start', () => {
+    // A long merged run started an hour ago but its last pulse was 3 s ago.
+    expect(awNotifyLiveness([endingAgo(3_000, 3600)], now)).toBe('running');
+  });
+
+  test('stopped when every heartbeat is older than the stale window', () => {
+    expect(awNotifyLiveness([endingAgo(AW_NOTIFY_STALE_AFTER_MS + 1)], now)).toBe('stopped');
+    expect(awNotifyLiveness([endingAgo(3_600_000), null], now)).toBe('stopped');
+  });
+
+  test('running if any host bucket is fresh', () => {
+    expect(awNotifyLiveness([endingAgo(3_600_000), endingAgo(1_000)], now)).toBe('running');
+  });
+
+  test('ignores heartbeats that ended before notBefore', () => {
+    // Re-enabling: the bucket survives the previous run, so its last event is
+    // not evidence about the daemon that was just started.
+    const enabledTenSecondsAgo = new Date(now.getTime() - 10_000);
+    expect(awNotifyLiveness([endingAgo(3_600_000)], now, enabledTenSecondsAgo)).toBe('never');
+    // A heartbeat that arrived after enabling still counts.
+    expect(awNotifyLiveness([endingAgo(2_000)], now, enabledTenSecondsAgo)).toBe('running');
+    // The floor is per-event: one stale host does not hide a fresh one.
+    expect(
+      awNotifyLiveness([endingAgo(3_600_000), endingAgo(2_000)], now, enabledTenSecondsAgo)
+    ).toBe('running');
+  });
+
+  test('a failed start after notBefore becomes stopped once the grace window expires', () => {
+    // During the grace window the daemon is still starting: empty/pre-floor
+    // events stay `never` so the UI does not tell the user to restart.
+    const enabledJustNow = new Date(now.getTime() - 10_000);
+    expect(awNotifyLiveness([], now, enabledJustNow)).toBe('never');
+    expect(awNotifyLiveness([endingAgo(3_600_000)], now, enabledJustNow)).toBe('never');
+    const atGraceBoundary = new Date(now.getTime() - AW_NOTIFY_STALE_AFTER_MS);
+    expect(awNotifyLiveness([], now, atGraceBoundary)).toBe('never');
+
+    // After the stale window with no post-floor heartbeat, the daemon never
+    // came up. `never` would tell the user to enable-and-save again.
+    const enabledTooLongAgo = new Date(now.getTime() - AW_NOTIFY_STALE_AFTER_MS - 1);
+    expect(awNotifyLiveness([], now, enabledTooLongAgo)).toBe('stopped');
+    expect(awNotifyLiveness([null], now, enabledTooLongAgo)).toBe('stopped');
+    expect(awNotifyLiveness([endingAgo(3_600_000)], now, enabledTooLongAgo)).toBe('stopped');
+    // Without a floor, empty still means the daemon has never run.
+    expect(awNotifyLiveness([], now)).toBe('never');
+  });
+
+  test('a heartbeat ending slightly in the future (clock skew) counts as running', () => {
+    expect(awNotifyLiveness([endingAgo(-5_000)], now)).toBe('running');
   });
 });

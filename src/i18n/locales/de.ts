@@ -185,6 +185,11 @@ export default {
       saveFailed: 'Einstellungen konnten nicht gespeichert werden: {error}',
       thresholdsInvalid:
         'Schwellenwerte müssen durch Kommas getrennte, positive ganze Minuten sein.',
+      livenessRunning: 'aw-notify läuft.',
+      livenessStopped:
+        'aw-notify hat sich in den letzten 30 Sekunden nicht gemeldet. Es startet mit ActivityWatch, solange Benachrichtigungen aktiviert sind; bleibt es gestoppt, starte ActivityWatch neu.',
+      livenessNever:
+        'aw-notify hat sich bei diesem Server noch nicht gemeldet. Nachdem du Benachrichtigungen aktiviert und gespeichert hast, startet ActivityWatch es.',
     },
     privacyFilters: {
       title: 'Datenschutzfilter',

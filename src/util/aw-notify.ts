@@ -105,3 +105,58 @@ export function parseAwNotifyConfig(value: unknown): AwNotifyConfig | null {
 
   return null;
 }
+
+/** aw-notify-rs writes heartbeats to `aw-notify_<hostname>`. */
+export const AW_NOTIFY_BUCKET_PREFIX = 'aw-notify_';
+
+/**
+ * aw-notify-rs heartbeats every 5 s with a 10 s pulsetime, so a running
+ * daemon's last event always ends within seconds of now. Allow several missed
+ * beats before reporting it as stopped.
+ */
+export const AW_NOTIFY_STALE_AFTER_MS = 30_000;
+
+export type AwNotifyLiveness = 'running' | 'stopped' | 'never';
+
+interface HeartbeatEvent {
+  timestamp: string | Date;
+  duration?: number;
+}
+
+/**
+ * Liveness from the latest event of each `aw-notify_*` bucket (null for an
+ * empty bucket). Running if any heartbeat ended within the stale window;
+ * `never` if no heartbeat bucket or event exists at all.
+ *
+ * `notBefore` drops heartbeats that ended before that moment. Pass the time
+ * the user enabled notifications: the bucket survives a previous run, so its
+ * last event says nothing about a daemon that was just (re)started. Without
+ * the floor, re-enabling after a disable reports `stopped` and tells the user
+ * to restart ActivityWatch while it is in fact starting normally.
+ *
+ * After `now - notBefore` exceeds the stale window with no post-floor
+ * heartbeat, return `stopped` rather than `never`: the daemon had a full
+ * window to report and did not, so the UI should advise a restart instead of
+ * "enable notifications and save" (which the user just did).
+ */
+export function awNotifyLiveness(
+  latestEvents: (HeartbeatEvent | null)[],
+  now: Date = new Date(),
+  notBefore?: Date
+): AwNotifyLiveness {
+  const floor = notBefore ? notBefore.getTime() : -Infinity;
+  const events = latestEvents
+    .filter((e): e is HeartbeatEvent => e !== null)
+    .filter(e => new Date(e.timestamp).getTime() + (e.duration || 0) * 1000 >= floor);
+  if (events.length === 0) {
+    if (notBefore && now.getTime() - notBefore.getTime() > AW_NOTIFY_STALE_AFTER_MS) {
+      return 'stopped';
+    }
+    return 'never';
+  }
+  const fresh = events.some(e => {
+    const end = new Date(e.timestamp).getTime() + (e.duration || 0) * 1000;
+    return now.getTime() - end <= AW_NOTIFY_STALE_AFTER_MS;
+  });
+  return fresh ? 'running' : 'stopped';
+}
