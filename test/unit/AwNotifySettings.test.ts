@@ -350,6 +350,34 @@ describe('AwNotifySettings', () => {
       wrapper.destroy();
     });
 
+    test('a slow poll still applies when the next tick fires before it finishes', async () => {
+      mockGet.mockResolvedValue({ data: { enabled: true, alerts: [] } });
+      mockGetBuckets.mockResolvedValue({ 'aw-notify_host': {} });
+      const wrapper: any = shallowMount(AwNotifySettings, {
+        mocks: { $t: key => key },
+      });
+      await flushPromises();
+
+      let resolveSlow!: (value: any) => void;
+      mockGetEvents.mockReturnValueOnce(
+        new Promise(resolve => {
+          resolveSlow = resolve;
+        })
+      );
+      jest.advanceTimersByTime(15_000);
+      await flushPromises();
+      const callsDuringSlow = mockGetEvents.mock.calls.length;
+
+      jest.advanceTimersByTime(15_000);
+      await flushPromises();
+      expect(mockGetEvents.mock.calls.length).toBe(callsDuringSlow);
+
+      resolveSlow([{ timestamp: new Date().toISOString(), duration: 5 }]);
+      await flushPromises();
+      expect(wrapper.vm.liveness).toBe('running');
+      wrapper.destroy();
+    });
+
     test.each(['success', 'failure'])(
       'ignores an older polling %s after a save refresh',
       async outcome => {

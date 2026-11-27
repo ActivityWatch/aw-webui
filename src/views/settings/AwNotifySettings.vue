@@ -145,6 +145,7 @@ export default {
       // are not evidence that the daemon we just started has failed.
       livenessSince: null as Date | null,
       livenessRequest: 0,
+      livenessInFlight: false,
       livenessTimer: null as ReturnType<typeof setInterval> | null,
       destroyed: false,
       goalOptions: [
@@ -182,8 +183,14 @@ export default {
         this.livenessTimer = null;
       }
     },
-    async refreshLiveness() {
-      // Saving and polling can overlap; only the newest request may update status.
+    async refreshLiveness(opts: { preempt?: boolean } = {}) {
+      // Poll ticks skip while a read is in flight. Otherwise a 15 s interval
+      // overlapping a 15–30 s getBuckets/getEvents pair increments
+      // livenessRequest forever and every completion is discarded, so the
+      // status line freezes. Save still preempts: it must replace an in-flight
+      // poll, and the request number still drops the older result.
+      if (this.livenessInFlight && !opts.preempt) return;
+      this.livenessInFlight = true;
       const request = ++this.livenessRequest;
       // Classify against the moment the read started, not when the responses
       // arrive: a slow bucket/event read must not age a fresh heartbeat into
@@ -205,6 +212,10 @@ export default {
         if (!this.destroyed && request === this.livenessRequest) {
           console.warn('Could not determine aw-notify liveness:', e);
           this.liveness = null;
+        }
+      } finally {
+        if (request === this.livenessRequest) {
+          this.livenessInFlight = false;
         }
       }
     },
@@ -299,7 +310,7 @@ export default {
         }
         this.success = true;
         this.syncLivenessPolling();
-        void this.refreshLiveness();
+        void this.refreshLiveness({ preempt: true });
       } catch (e: any) {
         this.error = `Failed to save settings: ${e?.message ?? e}`;
       } finally {
