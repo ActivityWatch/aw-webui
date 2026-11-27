@@ -1063,6 +1063,8 @@ export default {
       noCandidates: 'Hakuna matukio yaliyohifadhiwa katika bucket hii na kipindi hiki.',
       noMatchingCandidates:
         'Kichujio cha kivinjari hakikupata yanayolingana. Baadhi ya mifumo ya utafutaji ya seva haitumiki hapa. Zima kichujio hapo juu ili kuona matukio yote yaliyohifadhiwa ambayo yamepakiwa.',
+      unsupportedPatternShowsAll:
+        'Muundo huu wa utafutaji si halali katika kivinjari, kwa hivyo matukio yote yaliyohifadhiwa yaliyopakiwa yanaonyeshwa.',
       load: 'Pakia',
       data: 'Data',
       staleResults:

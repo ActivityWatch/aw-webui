@@ -1068,6 +1068,8 @@ export default {
       noCandidates: 'No hay eventos guardados en este bucket e intervalo.',
       noMatchingCandidates:
         'El filtro del navegador no encontró coincidencias. Algunos patrones del servidor no se admiten aquí. Desactiva el filtro de coincidencias de arriba para ver todos los eventos guardados cargados.',
+      unsupportedPatternShowsAll:
+        'Este patrón de búsqueda no es válido en el navegador, así que se muestran todos los eventos guardados cargados.',
       load: 'Cargar',
       data: 'Datos',
       staleResults:

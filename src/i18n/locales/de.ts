@@ -1082,6 +1082,8 @@ export default {
       noCandidates: 'Keine gespeicherten Ereignisse in diesem Bucket und Intervall.',
       noMatchingCandidates:
         'Der Browserfilter hat keine Treffer gefunden. Manche Suchmuster des Servers werden hier nicht unterstützt. Deaktivieren Sie den Filter oben, um alle geladenen gespeicherten Ereignisse anzuzeigen.',
+      unsupportedPatternShowsAll:
+        'Dieses Suchmuster ist im Browser ungültig, daher werden alle geladenen gespeicherten Ereignisse angezeigt.',
       load: 'Laden',
       data: 'Daten',
       staleResults:

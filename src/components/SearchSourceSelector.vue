@@ -23,6 +23,7 @@ b-modal(:id="modalId", ref="modal", :title="$t('extraViews.search.editStoredTitl
   b-alert.mt-2(v-if="error", show, variant="danger") {{ error }}
   b-alert.mt-2(v-if="outOfRange", show, variant="warning") {{ $t('extraViews.search.outOfRange') }}
   b-alert.mt-2(v-if="truncated", show, variant="warning") {{ $t('extraViews.search.truncated') }}
+  b-alert.mt-2(v-if="unsupportedPattern && onlyMatching && candidates && candidates.length", show, variant="warning") {{ $t('extraViews.search.unsupportedPatternShowsAll') }}
 
   div.mt-2(v-if="loading") #[icon(name="spinner" pulse)]
   div.mt-2(v-else-if="candidates")
@@ -92,15 +93,22 @@ export default {
     truncated() {
       return this.candidates !== null && this.candidates.length >= this.limit;
     },
+    // null: JavaScript cannot compile the pattern (Python-only syntax or invalid).
+    patternRe() {
+      try {
+        return new RegExp(this.pattern, 'i');
+      } catch (e) {
+        return null;
+      }
+    },
+    unsupportedPattern() {
+      return this.patternRe === null;
+    },
     shown() {
       if (!this.candidates) return [];
-      if (!this.onlyMatching) return this.candidates;
-      let re;
-      try {
-        re = new RegExp(this.pattern, 'i');
-      } catch (e) {
-        return [];
-      }
+      const re = this.patternRe;
+      // A compile failure must not hide server matches: list the loaded records.
+      if (!this.onlyMatching || !re) return this.candidates;
       return this.candidates.filter(e =>
         Object.values(e.data || {}).some(v => typeof v === 'string' && re.test(v))
       );

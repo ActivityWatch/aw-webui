@@ -1013,6 +1013,7 @@ export default {
       noCandidates: '此存储桶和时间区间内没有已存储的事件。',
       noMatchingCandidates:
         '浏览器筛选器未找到匹配项。此处不支持某些服务器搜索模式。关闭上方的匹配筛选器，即可查看所有已加载的存储事件。',
+      unsupportedPatternShowsAll: '此搜索模式在浏览器中无效，因此列出所有已加载的存储事件。',
       load: '加载',
       data: '数据',
       staleResults: '事件已被修改，但无法刷新结果，因此结果可能已过时。请重新搜索。',

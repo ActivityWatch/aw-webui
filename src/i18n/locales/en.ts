@@ -1064,6 +1064,8 @@ export default {
       noCandidates: 'No stored events in this bucket and interval.',
       noMatchingCandidates:
         'The browser filter found no matches. Some server search patterns are not supported here. Turn off the matching filter above to see all loaded stored events.',
+      unsupportedPatternShowsAll:
+        'This search pattern is not valid in the browser, so every loaded stored event is listed.',
       load: 'Load',
       data: 'Data',
       staleResults:

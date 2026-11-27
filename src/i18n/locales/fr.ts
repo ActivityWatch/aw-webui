@@ -1077,6 +1077,8 @@ export default {
       noCandidates: 'Aucun événement enregistré dans ce bucket et cet intervalle.',
       noMatchingCandidates:
         'Le filtre du navigateur ne trouve aucune correspondance. Certains motifs du serveur ne sont pas pris en charge ici. Désactivez le filtre ci-dessus pour voir tous les événements enregistrés chargés.',
+      unsupportedPatternShowsAll:
+        "Ce motif de recherche n'est pas valable dans le navigateur, tous les événements enregistrés chargés sont donc affichés.",
       load: 'Charger',
       data: 'Données',
       staleResults:

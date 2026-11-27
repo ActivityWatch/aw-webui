@@ -1067,6 +1067,8 @@ export default {
       noCandidates: 'Nenhum evento armazenado neste bucket e intervalo.',
       noMatchingCandidates:
         'O filtro do navegador não encontrou correspondências. Alguns padrões do servidor não são compatíveis aqui. Desative o filtro acima para ver todos os eventos armazenados carregados.',
+      unsupportedPatternShowsAll:
+        'Este padrão de busca não é válido no navegador, então todos os eventos armazenados carregados são listados.',
       load: 'Carregar',
       data: 'Dados',
       staleResults:

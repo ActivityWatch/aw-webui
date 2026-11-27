@@ -186,21 +186,34 @@ describe('SearchSourceSelector', () => {
     expect(vm.$emit).not.toHaveBeenCalled();
   });
 
-  test('an invalid pattern shows no matches unless filtering is explicitly disabled', async () => {
+  test('an invalid pattern falls back to unfiltered stored events without selecting one', async () => {
     const vm = selectorVm(jest.fn().mockResolvedValue([stored(1, 'example')]));
     vm.search = { ...search, pattern: '(' };
     vm.open();
     await vm.load();
     expect(vm.candidates).toHaveLength(1);
-    expect(vm.shown).toEqual([]);
+    expect(vm.unsupportedPattern).toBe(true);
+    expect(vm.shown.map(e => e.id)).toEqual([1]);
     expect(vm.$emit).not.toHaveBeenCalled();
     vm.onlyMatching = false;
     expect(vm.shown.map(e => e.id)).toEqual([1]);
     expect(vm.$emit).not.toHaveBeenCalled();
   });
 
-  test.each(['(?P<word>example)', '(?i)example', 'no match'])(
-    'explains an empty browser-side filter for %s and offers the unfiltered records',
+  test('Python named groups still list stored events that the server matched', async () => {
+    const vm = selectorVm(
+      jest.fn().mockResolvedValue([stored(1, 'zebra'), stored(2, 'unrelated')])
+    );
+    vm.search = { ...search, pattern: '(?P<word>zebra)' };
+    vm.open();
+    await vm.load();
+    expect(vm.unsupportedPattern).toBe(true);
+    expect(vm.shown.map(e => e.id)).toEqual([1, 2]);
+    expect(vm.$emit).not.toHaveBeenCalled();
+  });
+
+  test.each(['(?P<word>example)', '(?i)example'])(
+    'lists loaded records when the browser cannot compile %s',
     async pattern => {
       const localVue = createLocalVue();
       for (const name of ['shortdate', 'shorttime', 'friendlyduration'])
@@ -212,18 +225,41 @@ describe('SearchSourceSelector', () => {
         stubs: ['b-modal', 'b-form-select', 'b-input', 'b-button', 'b-form-checkbox', 'b-alert'],
       });
       await wrapper.setData({ candidates: [stored(1, 'example')] });
-      expect(wrapper.text()).toContain('extraViews.search.noMatchingCandidates');
+      expect(wrapper.text()).toContain('extraViews.search.unsupportedPatternShowsAll');
+      expect(wrapper.text()).not.toContain('extraViews.search.noMatchingCandidates');
       expect(wrapper.text()).not.toContain('extraViews.search.noCandidates');
-      expect(wrapper.find('table').exists()).toBe(false);
-      await wrapper.setData({ onlyMatching: false });
       expect(wrapper.find('table').exists()).toBe(true);
       expect(wrapper.emitted('select')).toBeUndefined();
       await wrapper.setData({ candidates: [] });
       expect(wrapper.text()).toContain('extraViews.search.noCandidates');
-      expect(wrapper.text()).not.toContain('extraViews.search.noMatchingCandidates');
+      expect(wrapper.text()).not.toContain('extraViews.search.unsupportedPatternShowsAll');
       wrapper.destroy();
     }
   );
+
+  test('explains an empty browser-side filter for a valid pattern with no matches', async () => {
+    const localVue = createLocalVue();
+    for (const name of ['shortdate', 'shorttime', 'friendlyduration'])
+      localVue.filter(name, String);
+    const wrapper = shallowMount(SelectorComponent, {
+      localVue,
+      propsData: { search: { ...search, pattern: 'no match' } },
+      mocks: { $t: key => key },
+      stubs: ['b-modal', 'b-form-select', 'b-input', 'b-button', 'b-form-checkbox', 'b-alert'],
+    });
+    await wrapper.setData({ candidates: [stored(1, 'example')] });
+    expect(wrapper.text()).toContain('extraViews.search.noMatchingCandidates');
+    expect(wrapper.text()).not.toContain('extraViews.search.noCandidates');
+    expect(wrapper.text()).not.toContain('extraViews.search.unsupportedPatternShowsAll');
+    expect(wrapper.find('table').exists()).toBe(false);
+    await wrapper.setData({ onlyMatching: false });
+    expect(wrapper.find('table').exists()).toBe(true);
+    expect(wrapper.emitted('select')).toBeUndefined();
+    await wrapper.setData({ candidates: [] });
+    expect(wrapper.text()).toContain('extraViews.search.noCandidates');
+    expect(wrapper.text()).not.toContain('extraViews.search.noMatchingCandidates');
+    wrapper.destroy();
+  });
 
   test('a list that reaches the limit is flagged as possibly incomplete', async () => {
     const vm = selectorVm(jest.fn().mockResolvedValue([stored(1, 'a'), stored(2, 'b')]), 2);

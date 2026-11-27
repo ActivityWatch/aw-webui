@@ -1056,6 +1056,8 @@ export default {
       noCandidates: 'Tidak ada peristiwa tersimpan di bucket dan interval ini.',
       noMatchingCandidates:
         'Filter browser tidak menemukan kecocokan. Beberapa pola pencarian server tidak didukung di sini. Nonaktifkan filter di atas untuk melihat semua peristiwa tersimpan yang telah dimuat.',
+      unsupportedPatternShowsAll:
+        'Pola pencarian ini tidak valid di browser, jadi semua peristiwa tersimpan yang telah dimuat ditampilkan.',
       load: 'Muat',
       data: 'Data',
       staleResults:

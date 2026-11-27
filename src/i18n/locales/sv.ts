@@ -1071,6 +1071,8 @@ export default {
       noCandidates: 'Inga lagrade händelser i denna bucket och detta intervall.',
       noMatchingCandidates:
         'Webbläsarfiltret hittade inga träffar. Vissa sökmönster på servern stöds inte här. Stäng av matchningsfiltret ovan för att visa alla inlästa lagrade händelser.',
+      unsupportedPatternShowsAll:
+        'Sökmönstret är inte giltigt i webbläsaren, så alla inlästa lagrade händelser visas.',
       load: 'Ladda',
       data: 'Data',
       staleResults:
