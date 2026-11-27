@@ -16,7 +16,16 @@ div
           b-form-select.mt-1(v-if="endCandidates.length > 1" v-model="endPick" :options="timeOptions(endCandidates)" :disabled="saving" :aria-label="$t('activity.intervalAmbiguousTime')")
       b-col(md="6")
         b-form-group(:label="$t('annotations.tags')" label-for="annotation-tags")
-          b-form-input#annotation-tags(v-model="tagsInput" :disabled="saving || loading || !bucket_id" :placeholder="$t('annotations.tagsPlaceholder')")
+          b-form-tags(
+            input-id="annotation-tags"
+            v-model="tags"
+            :disabled="saving || loading || !bucket_id"
+            separator=","
+            add-on-change
+            :placeholder="$t('annotations.tagsPlaceholder')"
+            :add-button-text="$t('ui.activity.add')"
+            :tag-remove-label="$t('activityView.remove')"
+          )
     b-form-group(:label="$t('annotations.note')" label-for="annotation-note")
       b-form-textarea#annotation-note(v-model="noteInput" :disabled="saving || loading || !bucket_id" rows="2" max-rows="6")
     b-alert(v-if="formError" show variant="warning") {{ formErrorMessage }}
@@ -27,7 +36,7 @@ div
 
   b-alert(v-if="error" show variant="danger")
     | {{ error }}
-    b-button.ml-2(size="sm" @click="load") {{ $t('activity.refresh') }}
+    b-button.ml-2(size="sm" :disabled="saving" @click="load") {{ $t('activity.refresh') }}
 
   div(v-if="loading")
     b-spinner.mr-2(small)
@@ -48,7 +57,7 @@ div
           div(v-if="e.data.note").annotation-note {{ e.data.note }}
         b-button.mx-1(size="sm" variant="outline-dark" :disabled="saving" @click="edit(e)") {{ $t('annotations.edit') }}
         b-button.mx-1(size="sm" variant="outline-danger" :disabled="saving" @click="remove(e)") {{ $t('common.delete') }}
-    b-button.mt-3(v-if="hasMore" variant="outline-secondary" @click="showMore") {{ $t('annotations.showMore') }}
+    b-button.mt-3(v-if="hasMore" variant="outline-secondary" :disabled="saving" @click="showMore") {{ $t('annotations.showMore') }}
 </template>
 
 <style scoped lang="scss">
@@ -71,10 +80,10 @@ import { wallTimeInstants } from '~/util/timeperiod';
 import {
   ANNOTATION_BUCKET_TYPE,
   annotationBucketId,
+  applyTagEdits,
   draftToEvent,
   formatNote,
-  formatTags,
-  parseTags,
+  tagChips,
   validateDraft,
 } from '~/util/annotations';
 
@@ -93,6 +102,7 @@ export default {
       limit: PAGE_SIZE,
       hasMore: false,
       events: [],
+      loadSequence: 0,
       editingId: null,
       originalRange: null,
       originalData: null,
@@ -100,7 +110,7 @@ export default {
       endPick: null,
       startInput: moment().subtract(1, 'hour').format(LOCAL_FORMAT),
       endInput: moment().format(LOCAL_FORMAT),
-      tagsInput: '',
+      tags: [],
       noteInput: '',
     };
   },
@@ -173,7 +183,7 @@ export default {
       return new Date(new Date(e.timestamp).getTime() + e.duration * 1000);
     },
     tagList(e) {
-      return parseTags(formatTags(e.data && e.data.tags));
+      return tagChips(e.data && e.data.tags);
     },
     resetForm() {
       this.editingId = null;
@@ -182,7 +192,7 @@ export default {
       this.startPick = null;
       this.endPick = null;
       this.formError = null;
-      this.tagsInput = '';
+      this.tags = [];
       this.noteInput = '';
       this.startInput = moment().subtract(1, 'hour').format(LOCAL_FORMAT);
       this.endInput = moment().format(LOCAL_FORMAT);
@@ -197,11 +207,14 @@ export default {
       this.formError = null;
       this.startInput = moment(e.timestamp).format(LOCAL_FORMAT);
       this.endInput = moment(this.endOf(e)).format(LOCAL_FORMAT);
-      this.tagsInput = formatTags(e.data.tags);
+      this.tags = tagChips(e.data.tags);
       this.noteInput = formatNote(e.data.note);
       window.scrollTo && window.scrollTo(0, 0);
     },
     load: async function () {
+      // Only the newest read may update the view: an older one can return last
+      // and bring back events from before a save or delete.
+      const sequence = ++this.loadSequence;
       this.loading = true;
       this.error = null;
       try {
@@ -213,14 +226,15 @@ export default {
         }
         // Ask for one extra event to know whether more history exists.
         const events = await this.$aw.getEvents(this.bucket_id, { limit: this.limit + 1 });
+        if (sequence !== this.loadSequence) return;
         this.hasMore = events.length > this.limit;
         this.events = events
           .slice(0, this.limit)
           .map(e => ({ ...e, timestamp: new Date(e.timestamp) }));
       } catch (e) {
-        this.error = this.$t('annotations.errors.load');
+        if (sequence === this.loadSequence) this.error = this.$t('annotations.errors.load');
       } finally {
-        this.loading = false;
+        if (sequence === this.loadSequence) this.loading = false;
       }
     },
     showMore: async function () {
@@ -238,7 +252,7 @@ export default {
       const draft = {
         start,
         end,
-        tags: this.tagsInput,
+        tags: this.tags,
         note: this.noteInput,
       };
       const event = draftToEvent(draft);
@@ -246,14 +260,16 @@ export default {
         // Only replace fields the user edited: the form cannot losslessly
         // represent every tag value or metadata written by another client.
         const data = { ...this.originalData };
-        if (this.tagsInput !== formatTags(this.originalData.tags)) data.tags = event.data.tags;
+        if (!_.isEqual(this.tags, tagChips(data.tags))) {
+          data.tags = applyTagEdits(data.tags, this.tags);
+        }
         if (this.noteInput !== formatNote(this.originalData.note)) {
           if (event.data.note) data.note = event.data.note;
           else delete data.note;
         }
         event.data = data;
       }
-      // Validate what will be written, not the form strings: an untouched
+      // Validate what will be written, not the form inputs: an untouched
       // field the form cannot represent still counts as annotation content.
       this.formError = validateDraft(draft, event.data);
       if (this.formError) return;

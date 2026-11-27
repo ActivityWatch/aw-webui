@@ -1,14 +1,14 @@
 import { execFileSync } from 'child_process';
 import path from 'path';
 import moment from 'moment';
-import { createLocalVue, shallowMount, Wrapper } from '@vue/test-utils';
+import { createLocalVue, mount, shallowMount, Wrapper } from '@vue/test-utils';
 import { BootstrapVue } from 'bootstrap-vue';
 import Annotations from '~/views/Annotations.vue';
 import {
   annotationBucketId,
+  applyTagEdits,
   draftToEvent,
-  formatTags,
-  parseTags,
+  tagChips,
   validateDraft,
 } from '~/util/annotations';
 
@@ -23,15 +23,18 @@ const flush = async () => {
 };
 
 describe('annotation helpers', () => {
-  test('parseTags trims, drops empties and de-duplicates', () => {
-    expect(parseTags(' a, b ,, a ,c')).toEqual(['a', 'b', 'c']);
-    expect(parseTags('')).toEqual([]);
+  test('tagChips trims and de-duplicates without splitting stored names', () => {
+    expect(tagChips([' a,b ', '', 'c', 'c', 7])).toEqual(['a,b', 'c']);
+    expect(tagChips('x, y')).toEqual(['x', 'y']);
+    expect(tagChips({ name: 'x' })).toEqual([]);
+    expect(tagChips(undefined)).toEqual([]);
   });
 
-  test('formatTags tolerates non-array data', () => {
-    expect(formatTags(['a', 'b'])).toBe('a, b');
-    expect(formatTags('a')).toBe('');
-    expect(formatTags(undefined)).toBe('');
+  test('applyTagEdits only changes the names the user added or removed', () => {
+    expect(applyTagEdits(['a,b', 7, ' c '], ['a,b', 'c', 'new'])).toEqual(['a,b', 7, ' c ', 'new']);
+    expect(applyTagEdits(['a,b', 7, 'c'], ['c'])).toEqual([7, 'c']);
+    expect(applyTagEdits('x, y', ['y', 'z'])).toEqual(['y', 'z']);
+    expect(applyTagEdits(undefined, ['z'])).toEqual(['z']);
   });
 
   test('bucket id is per host', () => {
@@ -41,23 +44,25 @@ describe('annotation helpers', () => {
   test('validateDraft rejects bad ranges and empty annotations', () => {
     const start = new Date('2026-01-01T10:00:00Z');
     const end = new Date('2026-01-01T11:00:00Z');
-    expect(validateDraft({ start, end, tags: 'a', note: '' })).toBeNull();
-    expect(validateDraft({ start, end, tags: '', note: ' hi ' })).toBeNull();
-    expect(validateDraft({ start, end, tags: ' , ', note: '  ' })).toBe('empty');
-    expect(validateDraft({ start: end, end: start, tags: 'a', note: '' })).toBe('invalidRange');
-    expect(validateDraft({ start, end: start, tags: 'a', note: '' })).toBe('invalidRange');
-    expect(validateDraft({ start: new Date('x'), end, tags: 'a', note: '' })).toBe('invalidRange');
+    expect(validateDraft({ start, end, tags: ['a'], note: '' })).toBeNull();
+    expect(validateDraft({ start, end, tags: [], note: ' hi ' })).toBeNull();
+    expect(validateDraft({ start, end, tags: [' ', ''], note: '  ' })).toBe('empty');
+    expect(validateDraft({ start: end, end: start, tags: ['a'], note: '' })).toBe('invalidRange');
+    expect(validateDraft({ start, end: start, tags: ['a'], note: '' })).toBe('invalidRange');
+    expect(validateDraft({ start: new Date('x'), end, tags: ['a'], note: '' })).toBe(
+      'invalidRange'
+    );
   });
 
   test('draftToEvent stores tags as an array and omits a blank note', () => {
     const start = new Date('2026-01-01T10:00:00Z');
     const end = new Date('2026-01-01T10:30:00Z');
-    expect(draftToEvent({ start, end, tags: 'a, b', note: '  ' })).toEqual({
+    expect(draftToEvent({ start, end, tags: ['a', 'b'], note: '  ' })).toEqual({
       timestamp: start,
       duration: 1800,
       data: { tags: ['a', 'b'] },
     });
-    expect(draftToEvent({ start, end, tags: '', note: ' hi ' }).data).toEqual({
+    expect(draftToEvent({ start, end, tags: [], note: ' hi ' }).data).toEqual({
       tags: [],
       note: 'hi',
     });
@@ -103,7 +108,7 @@ describe('Annotations view', () => {
   test('adds an annotation as a tags array via insertEvent', async () => {
     const { wrapper, aw } = mountView();
     await flush();
-    wrapper.vm.tagsInput = 'a, b';
+    wrapper.vm.tags = ['a', 'b'];
     wrapper.vm.noteInput = 'note';
     await wrapper.vm.save();
     expect(aw.insertEvent).toHaveBeenCalledTimes(1);
@@ -111,7 +116,7 @@ describe('Annotations view', () => {
     expect(bucket).toBe('aw-annotations_box');
     expect(event.data).toEqual({ tags: ['a', 'b'], note: 'note' });
     expect(aw.replaceEvent).not.toHaveBeenCalled();
-    expect(wrapper.vm.tagsInput).toBe('');
+    expect(wrapper.vm.tags).toEqual([]);
   });
 
   test('refuses an empty annotation without touching the server', async () => {
@@ -126,9 +131,9 @@ describe('Annotations view', () => {
     const { wrapper, aw } = mountView();
     await flush();
     wrapper.vm.edit(wrapper.vm.events[0]);
-    expect(wrapper.vm.tagsInput).toBe('client-x');
+    expect(wrapper.vm.tags).toEqual(['client-x']);
     expect(wrapper.vm.noteInput).toBe('call');
-    wrapper.vm.tagsInput = 'client-y';
+    wrapper.vm.tags = ['client-y'];
     await wrapper.vm.save();
     expect(aw.insertEvent).not.toHaveBeenCalled();
     const [, event] = aw.replaceEvent.mock.calls[0];
@@ -146,7 +151,7 @@ describe('Annotations view', () => {
     await flush();
     wrapper.vm.edit(wrapper.vm.events[0]);
     if (field === 'note') wrapper.vm.noteInput = ' updated ';
-    if (field === 'tags') wrapper.vm.tagsInput = 'new, tags';
+    if (field === 'tags') wrapper.vm.tags = [...wrapper.vm.tags, 'new'];
     if (field === 'range') {
       wrapper.vm.endInput = moment(wrapper.vm.endInput)
         .add(1, 'minute')
@@ -157,7 +162,7 @@ describe('Annotations view', () => {
     expect(aw.replaceEvent.mock.calls[0][1].data).toEqual({
       ...before.data,
       ...(field === 'note' ? { note: 'updated' } : {}),
-      ...(field === 'tags' ? { tags: ['new', 'tags'] } : {}),
+      ...(field === 'tags' ? { tags: ['a,b', 7, 'new'] } : {}),
     });
     expect(original).toEqual(before);
   });
@@ -173,7 +178,7 @@ describe('Annotations view', () => {
       const { wrapper, aw } = mountView([original]);
       await flush();
       wrapper.vm.edit(wrapper.vm.events[0]);
-      wrapper.vm.tagsInput = 'changed';
+      wrapper.vm.tags = ['changed'];
       await expect(wrapper.vm.save()).resolves.toBeUndefined();
       expect(aw.replaceEvent).toHaveBeenCalledTimes(1);
       expect(aw.replaceEvent.mock.calls[0][1].data).toEqual({
@@ -210,27 +215,27 @@ describe('Annotations view', () => {
     await wrapper.vm.save();
     expect(aw.replaceEvent.mock.calls[0][1].data).toEqual({ tags: ['a'], source: 'cli' });
     wrapper.vm.edit(wrapper.vm.events[0]);
-    wrapper.vm.tagsInput = '';
+    wrapper.vm.tags = [];
     await wrapper.vm.save();
     expect(aw.replaceEvent.mock.calls[1][1].data).toEqual({
       tags: [],
       note: 'note',
       source: 'cli',
     });
-    wrapper.vm.tagsInput = 'fresh';
+    wrapper.vm.tags = ['fresh'];
     await wrapper.vm.save();
     expect(aw.insertEvent.mock.calls[0][1].data).toEqual({ tags: ['fresh'] });
   });
 
   test('range-only edits save when the stored tags are not form-representable', async () => {
-    // formatTags() cannot represent [7] (non-string) or a bare string, so the
+    // The editor cannot show [7] (not a string), so the
     // form shows no tags and no note. A time-only edit must still be allowed:
     // the merge below keeps the original tags untouched.
     const original = { ...stored(1, ['a']), data: { tags: [7] } };
     const { wrapper, aw } = mountView([original]);
     await flush();
     wrapper.vm.edit(wrapper.vm.events[0]);
-    expect(wrapper.vm.tagsInput).toBe('');
+    expect(wrapper.vm.tags).toEqual([]);
     expect(wrapper.vm.noteInput).toBe('');
     wrapper.vm.endInput = moment(original.timestamp).add(1, 'hour').format('YYYY-MM-DDTHH:mm:ss');
     await wrapper.vm.save();
@@ -253,6 +258,77 @@ describe('Annotations view', () => {
     expect(wrapper.vm.formError).toBeNull();
     expect(aw.replaceEvent).toHaveBeenCalledTimes(1);
     expect(aw.replaceEvent.mock.calls[0][1].data).toEqual(data);
+  });
+
+  test('the tag editor keeps stored names whole and untouched tags verbatim', async () => {
+    const original = { ...stored(1, ['a']), data: { tags: [' a,b ', 7, 'c', 'c'] } };
+    const aw = mountView([original]).aw;
+    // A real BootstrapVue tag input: it normalises its model, which must not
+    // count as an edit.
+    const wrapper: Wrapper<any> = mount(Annotations, {
+      localVue,
+      mocks: { $aw: aw, $t: (k: string) => k },
+      stubs: { icon: true },
+    });
+    await flush();
+    wrapper.vm.edit(wrapper.vm.events[0]);
+    await wrapper.vm.$nextTick();
+    wrapper.vm.noteInput = 'note';
+    await wrapper.vm.save();
+    expect(aw.replaceEvent.mock.calls[0][1].data.tags).toEqual(original.data.tags);
+
+    await flush();
+    wrapper.vm.edit(wrapper.vm.events[0]);
+    await wrapper.vm.$nextTick();
+    const input = wrapper.find('#annotation-tags');
+    await input.setValue('new');
+    await input.trigger('change');
+    await wrapper.vm.save();
+    expect(aw.replaceEvent.mock.calls[1][1].data.tags).toEqual([' a,b ', 7, 'c', 'c', 'new']);
+  });
+
+  test.each(['resolves', 'rejects'])(
+    'an older read that %s last cannot replace newer events',
+    async outcome => {
+      const { wrapper, aw } = mountView([stored(1, ['a'])]);
+      await flush();
+      let finish;
+      aw.getEvents.mockReturnValueOnce(
+        new Promise((resolve, reject) => {
+          finish = () =>
+            outcome === 'resolves' ? resolve([stored(1, ['a'])]) : reject(new Error('late'));
+        })
+      );
+      const older = wrapper.vm.showMore();
+      aw.getEvents.mockResolvedValueOnce([]);
+      await wrapper.vm.load();
+      finish();
+      await older;
+      expect(wrapper.vm.events).toEqual([]);
+      expect(wrapper.vm.error).toBeNull();
+      expect(wrapper.vm.loading).toBe(false);
+    }
+  );
+
+  test('paging is disabled while a write is pending', async () => {
+    const many = Array.from({ length: 101 }, (_, i) => stored(101 - i, ['t']));
+    const { wrapper, aw } = mountView(many);
+    await flush();
+    let finish;
+    aw.deleteEvent.mockReturnValueOnce(
+      new Promise(resolve => {
+        finish = resolve;
+      })
+    );
+    const showMore = () =>
+      wrapper.findAll('b-button-stub').wrappers.find(w => w.text() === 'annotations.showMore');
+    const deleting = wrapper.vm.remove(wrapper.vm.events[0]);
+    await wrapper.vm.$nextTick();
+    expect(showMore().attributes('disabled')).toBeDefined();
+    finish();
+    await deleting;
+    await wrapper.vm.$nextTick();
+    expect(showMore().attributes('disabled')).toBeUndefined();
   });
 
   test('deletes by id and reloads', async () => {
@@ -298,7 +374,7 @@ describe('Annotations view', () => {
     const { wrapper, aw } = mountView([original]);
     await flush();
     wrapper.vm.edit(wrapper.vm.events[0]);
-    wrapper.vm.tagsInput = 'changed';
+    wrapper.vm.tags = ['changed'];
     await wrapper.vm.save();
     expect(aw.replaceEvent).toHaveBeenCalledTimes(1);
     const event = aw.replaceEvent.mock.calls[0][1];
@@ -323,7 +399,7 @@ describe('Annotations view', () => {
     expect(aw.deleteEvent).not.toHaveBeenCalled();
     expect(wrapper.vm.editingId).toBe(1);
     await wrapper.vm.$nextTick();
-    expect(wrapper.find('#annotation-tags').attributes('disabled')).toBeDefined();
+    expect(wrapper.find('b-form-tags-stub').attributes('disabled')).toBeDefined();
     const edit = wrapper
       .findAll('b-button-stub')
       .wrappers.find(w => w.text() === 'annotations.edit');
@@ -340,7 +416,7 @@ describe('Annotations view', () => {
     });
     const { wrapper, aw } = mountView();
     await flush();
-    wrapper.vm.tagsInput = 'a';
+    wrapper.vm.tags = ['a'];
     aw.insertEvent.mockReturnValueOnce(request);
     const saving = wrapper.vm.save();
     await wrapper.vm.save();
@@ -406,7 +482,7 @@ describeDST('annotation DST handling', () => {
   test('changed repeated times require an explicit occurrence and stale choices reset', async () => {
     const { wrapper, aw } = mountView();
     await flush();
-    wrapper.vm.tagsInput = 'a';
+    wrapper.vm.tags = ['a'];
     wrapper.vm.startInput = '2026-10-25T02:30:00';
     wrapper.vm.endInput = '2026-10-25T03:30:00';
     await wrapper.vm.$nextTick();
@@ -437,7 +513,7 @@ describeDST('annotation DST handling', () => {
   test('spring-forward gaps are rejected rather than silently normalized', async () => {
     const { wrapper, aw } = mountView();
     await flush();
-    wrapper.vm.tagsInput = 'a';
+    wrapper.vm.tags = ['a'];
     wrapper.vm.startInput = '2026-03-29T02:30:00';
     wrapper.vm.endInput = '2026-03-29T03:30:00';
     await wrapper.vm.save();

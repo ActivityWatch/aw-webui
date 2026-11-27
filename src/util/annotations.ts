@@ -1,3 +1,5 @@
+import { parseTags } from './tags';
+
 // Annotations are user-authored, time-ranged events in their own bucket.
 // They carry free-form tags and an optional note and never touch watcher data.
 // See knowledge/research/2026-10-19-aw-annotations-design-options in the design thread.
@@ -14,18 +16,29 @@ export function annotationBucketId(hostname: string): string {
   return ANNOTATION_BUCKET_PREFIX + hostname;
 }
 
-/** Split comma-separated input into trimmed, de-duplicated, non-empty tags. */
-export function parseTags(input: string): string[] {
-  const seen = new Set<string>();
-  for (const part of (input || '').split(',')) {
-    const tag = part.trim();
-    if (tag) seen.add(tag);
-  }
-  return Array.from(seen);
+/** Trimmed, de-duplicated, non-empty tag names. Never splits a name on commas. */
+function cleanTags(tags: unknown[]): string[] {
+  const names = tags.map(tag => (typeof tag === 'string' ? tag.trim() : ''));
+  return Array.from(new Set(names.filter(Boolean)));
 }
 
-export function formatTags(tags: unknown): string {
-  return Array.isArray(tags) ? tags.filter(t => typeof t === 'string').join(', ') : '';
+/** The editable tags of a stored value. */
+export function tagChips(tags: unknown): string[] {
+  // A bare string is the comma-separated form some clients write.
+  if (typeof tags === 'string') return cleanTags(parseTags(tags));
+  return Array.isArray(tags) ? cleanTags(tags) : [];
+}
+
+/**
+ * Apply tag edits to a stored value. Kept names stay exactly as stored, and so
+ * do entries the editor cannot show (anything that is not a string).
+ */
+export function applyTagEdits(stored: unknown, chips: string[]): unknown[] {
+  const wanted = cleanTags(chips);
+  const entries: unknown[] = Array.isArray(stored) ? stored : tagChips(stored);
+  const kept = entries.filter(t => typeof t !== 'string' || wanted.includes(t.trim()));
+  const present = tagChips(kept);
+  return [...kept, ...wanted.filter(t => !present.includes(t))];
 }
 
 export function formatNote(note: unknown): string {
@@ -39,7 +52,7 @@ function hasContent(value: unknown): boolean {
   return value !== undefined && value !== null;
 }
 
-export type AnnotationDraft = { start: Date; end: Date; tags: string; note: string };
+export type AnnotationDraft = { start: Date; end: Date; tags: string[]; note: string };
 export type AnnotationError = 'invalidRange' | 'empty';
 
 /**
@@ -52,7 +65,7 @@ export type AnnotationError = 'invalidRange' | 'empty';
 export function validateDraft(
   draft: AnnotationDraft,
   data: { tags?: unknown; note?: unknown } = {
-    tags: parseTags(draft.tags),
+    tags: cleanTags(draft.tags),
     note: draft.note.trim(),
   }
 ): AnnotationError | null {
@@ -65,7 +78,7 @@ export function validateDraft(
 
 /** Build the event to store. A blank note is omitted rather than stored as "". */
 export function draftToEvent(draft: AnnotationDraft) {
-  const data: AnnotationData = { tags: parseTags(draft.tags) };
+  const data: AnnotationData = { tags: cleanTags(draft.tags) };
   const note = draft.note.trim();
   if (note) data.note = note;
   return {
