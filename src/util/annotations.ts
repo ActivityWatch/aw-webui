@@ -28,6 +28,17 @@ export function formatTags(tags: unknown): string {
   return Array.isArray(tags) ? tags.filter(t => typeof t === 'string').join(', ') : '';
 }
 
+export function formatNote(note: unknown): string {
+  return typeof note === 'string' ? note : '';
+}
+
+/** Whether a stored field holds anything worth keeping, representable or not. */
+function hasContent(value: unknown): boolean {
+  if (typeof value === 'string') return !!value.trim();
+  if (Array.isArray(value)) return value.length > 0;
+  return value !== undefined && value !== null;
+}
+
 export type AnnotationDraft = { start: Date; end: Date; tags: string; note: string };
 export type AnnotationError = 'invalidRange' | 'empty';
 
@@ -35,8 +46,8 @@ export type AnnotationError = 'invalidRange' | 'empty';
  * Returns an error key for an unusable draft, or null if it can be saved.
  *
  * `data` is what will actually be written. Pass it when editing: the form
- * cannot represent every stored tag value, so an untouched field must count
- * even though the inputs it renders are blank.
+ * cannot represent every stored tag or note value, so an untouched field must
+ * count even though the inputs it renders are blank.
  */
 export function validateDraft(
   draft: AnnotationDraft,
@@ -48,9 +59,7 @@ export function validateDraft(
   const { start, end } = draft;
   if (!(start instanceof Date) || !(end instanceof Date)) return 'invalidRange';
   if (isNaN(start.getTime()) || isNaN(end.getTime()) || end <= start) return 'invalidRange';
-  const tags = Array.isArray(data.tags) ? data.tags : [];
-  const note = typeof data.note === 'string' ? data.note : '';
-  if (tags.length === 0 && !note.trim()) return 'empty';
+  if (!hasContent(data.tags) && !hasContent(data.note)) return 'empty';
   return null;
 }
 

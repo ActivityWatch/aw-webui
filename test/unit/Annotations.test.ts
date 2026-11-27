@@ -240,6 +240,21 @@ describe('Annotations view', () => {
     expect(aw.replaceEvent.mock.calls[0][1].duration).toBe(3600);
   });
 
+  test.each([
+    ['numeric note without tags', { tags: [], note: 5 }],
+    ['string tags without a note', { tags: 'x,y' }],
+  ])('range-only edits count unrepresentable data as content: %s', async (_name, data) => {
+    const original = { ...stored(1, ['a']), data };
+    const { wrapper, aw } = mountView([original]);
+    await flush();
+    wrapper.vm.edit(wrapper.vm.events[0]);
+    wrapper.vm.endInput = moment(original.timestamp).add(1, 'hour').format('YYYY-MM-DDTHH:mm:ss');
+    await wrapper.vm.save();
+    expect(wrapper.vm.formError).toBeNull();
+    expect(aw.replaceEvent).toHaveBeenCalledTimes(1);
+    expect(aw.replaceEvent.mock.calls[0][1].data).toEqual(data);
+  });
+
   test('deletes by id and reloads', async () => {
     const { wrapper, aw } = mountView();
     await flush();
