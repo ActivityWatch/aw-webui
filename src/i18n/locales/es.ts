@@ -1070,6 +1070,24 @@ export default {
       duration: 'Duración',
       title: 'Título',
       noResults: 'No se encontraron resultados.',
+      editStored: 'Editar un evento guardado',
+      editStoredTitle: 'Editar un evento guardado',
+      editStoredHelp:
+        'Los resultados de búsqueda son derivados (combinados, divididos y recortados) y no se pueden editar directamente. Elige el evento guardado que quieres cambiar en el bucket donde se registró. Al guardar se modifica ese evento guardado, que puede extenderse fuera del periodo de búsqueda.',
+      onlyMatching: 'Mostrar solo eventos cuyos datos coincidan con el patrón de búsqueda',
+      outOfRange:
+        'El intervalo no puede estar vacío y debe estar dentro del periodo de búsqueda original.',
+      truncated:
+        'Esta lista alcanzó el límite de resultados y puede estar incompleta. Reduce el intervalo para ver el resto.',
+      noCandidates: 'No hay eventos guardados en este bucket e intervalo.',
+      noMatchingCandidates:
+        'El filtro del navegador no encontró coincidencias. Algunos patrones del servidor no se admiten aquí. Desactiva el filtro de coincidencias de arriba para ver todos los eventos guardados cargados.',
+      unsupportedPatternShowsAll:
+        'Este patrón de búsqueda no es válido en el navegador, así que se muestran todos los eventos guardados cargados.',
+      load: 'Cargar',
+      data: 'Datos',
+      staleResults:
+        'Se modificó un evento, pero no se pudieron actualizar los resultados, por lo que pueden estar desactualizados. Busca de nuevo.',
     },
     trends: { toUse: 'para usar esta vista.' },
     workReport: {

@@ -1079,6 +1079,25 @@ export default {
       duration: 'Durée',
       title: 'Titre',
       noResults: 'Aucun résultat trouvé.',
+      editStored: 'Modifier un événement enregistré',
+      editStoredTitle: 'Modifier un événement enregistré',
+      editStoredHelp:
+        "Les résultats de recherche sont dérivés (fusionnés, découpés et tronqués) et ne peuvent pas être modifiés directement. Choisissez l'événement enregistré à modifier dans le bucket où il a été enregistré. L'enregistrement modifie cet événement, qui peut dépasser la période de recherche.",
+      onlyMatching:
+        "N'afficher que les événements dont les données correspondent au motif de recherche",
+      outOfRange:
+        "L'intervalle ne doit pas être vide et doit se situer dans la période de recherche d'origine.",
+      truncated:
+        "Cette liste a atteint la limite de résultats et peut être incomplète. Réduisez l'intervalle pour voir le reste.",
+      noCandidates: 'Aucun événement enregistré dans ce bucket et cet intervalle.',
+      noMatchingCandidates:
+        'Le filtre du navigateur ne trouve aucune correspondance. Certains motifs du serveur ne sont pas pris en charge ici. Désactivez le filtre ci-dessus pour voir tous les événements enregistrés chargés.',
+      unsupportedPatternShowsAll:
+        "Ce motif de recherche n'est pas valable dans le navigateur, tous les événements enregistrés chargés sont donc affichés.",
+      load: 'Charger',
+      data: 'Données',
+      staleResults:
+        "Un événement a été modifié, mais les résultats n'ont pas pu être actualisés et peuvent être obsolètes. Relancez la recherche.",
     },
     trends: { toUse: 'pour utiliser cette vue.' },
     workReport: {

@@ -1083,6 +1083,23 @@ export default {
       duration: 'Duration',
       title: 'Title',
       noResults: 'No results found.',
+      editStored: 'Edit a stored event',
+      editStoredTitle: 'Edit a stored event',
+      editStoredHelp:
+        'Search results are derived (merged, split and clipped) and cannot be edited directly. Pick the stored event you want to change from the bucket it was recorded in. Saving changes that stored event, which may extend outside the search period.',
+      onlyMatching: 'Only show events whose data matches the search pattern',
+      outOfRange: 'The interval must be non-empty and lie within the original search period.',
+      truncated:
+        'This list reached the result limit and may be incomplete. Narrow the interval to see the rest.',
+      noCandidates: 'No stored events in this bucket and interval.',
+      noMatchingCandidates:
+        'The browser filter found no matches. Some server search patterns are not supported here. Turn off the matching filter above to see all loaded stored events.',
+      unsupportedPatternShowsAll:
+        'This search pattern is not valid in the browser, so every loaded stored event is listed.',
+      load: 'Load',
+      data: 'Data',
+      staleResults:
+        'An event was changed but the results could not be refreshed, so they may be out of date. Search again.',
     },
     trends: { toUse: 'to use this view.' },
     workReport: {

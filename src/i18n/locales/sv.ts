@@ -1074,6 +1074,24 @@ export default {
       duration: 'Varaktighet',
       title: 'Titel',
       noResults: 'Inga resultat hittades.',
+      editStored: 'Redigera en lagrad händelse',
+      editStoredTitle: 'Redigera en lagrad händelse',
+      editStoredHelp:
+        'Sökresultat är härledda (sammanslagna, delade och beskurna) och kan inte redigeras direkt. Välj den lagrade händelse du vill ändra från den bucket där den registrerades. När du sparar ändras den lagrade händelsen, som kan sträcka sig utanför sökperioden.',
+      onlyMatching: 'Visa bara händelser vars data matchar sökmönstret',
+      outOfRange:
+        'Intervallet får inte vara tomt och måste ligga inom den ursprungliga sökperioden.',
+      truncated:
+        'Listan nådde resultatgränsen och kan vara ofullständig. Begränsa intervallet för att se resten.',
+      noCandidates: 'Inga lagrade händelser i denna bucket och detta intervall.',
+      noMatchingCandidates:
+        'Webbläsarfiltret hittade inga träffar. Vissa sökmönster på servern stöds inte här. Stäng av matchningsfiltret ovan för att visa alla inlästa lagrade händelser.',
+      unsupportedPatternShowsAll:
+        'Sökmönstret är inte giltigt i webbläsaren, så alla inlästa lagrade händelser visas.',
+      load: 'Ladda',
+      data: 'Data',
+      staleResults:
+        'En händelse ändrades men resultaten kunde inte uppdateras, så de kan vara inaktuella. Sök igen.',
     },
     trends: { toUse: 'behöver vara igång för att använda den här vyn.' },
     workReport: {
