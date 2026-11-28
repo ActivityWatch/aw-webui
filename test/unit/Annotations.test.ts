@@ -228,10 +228,10 @@ describe('Annotations view', () => {
   });
 
   test('range-only edits save when the stored tags are not form-representable', async () => {
-    // The editor cannot show [7] (not a string), so the
+    // The editor cannot show [7] (not a string) or a numeric note, so the
     // form shows no tags and no note. A time-only edit must still be allowed:
-    // the merge below keeps the original tags untouched.
-    const original = { ...stored(1, ['a']), data: { tags: [7] } };
+    // the merge below keeps the original values untouched.
+    const original = { ...stored(1, ['a']), data: { tags: [7], note: 5 } };
     const { wrapper, aw } = mountView([original]);
     await flush();
     wrapper.vm.edit(wrapper.vm.events[0]);
@@ -241,8 +241,26 @@ describe('Annotations view', () => {
     await wrapper.vm.save();
     expect(wrapper.vm.formError).toBeNull();
     expect(aw.replaceEvent).toHaveBeenCalledTimes(1);
-    expect(aw.replaceEvent.mock.calls[0][1].data).toEqual({ tags: [7] });
+    expect(aw.replaceEvent.mock.calls[0][1].data).toEqual({ tags: [7], note: 5 });
     expect(aw.replaceEvent.mock.calls[0][1].duration).toBe(3600);
+  });
+
+  test('clearing a note the form cannot represent removes it', async () => {
+    // A numeric note renders blank, so "blank" is both what an untouched note
+    // and a cleared note look like. Editing the textarea is the only signal the
+    // user can give, and it must drop the stored value rather than write it
+    // back invisibly on every save.
+    const original = { ...stored(1, ['a']), data: { tags: ['a'], note: 5 } };
+    const { wrapper, aw } = mountView([original]);
+    await flush();
+    wrapper.vm.edit(wrapper.vm.events[0]);
+    expect(wrapper.vm.noteInput).toBe('');
+    wrapper.find('#annotation-note').vm.$emit('input', '');
+    await flush();
+    await wrapper.vm.save();
+    expect(wrapper.vm.formError).toBeNull();
+    expect(aw.replaceEvent).toHaveBeenCalledTimes(1);
+    expect(aw.replaceEvent.mock.calls[0][1].data).toEqual({ tags: ['a'] });
   });
 
   test.each([

@@ -27,7 +27,7 @@ div
             :tag-remove-label="$t('activityView.remove')"
           )
     b-form-group(:label="$t('annotations.note')" label-for="annotation-note")
-      b-form-textarea#annotation-note(v-model="noteInput" :disabled="saving || loading || !bucket_id" rows="2" max-rows="6")
+      b-form-textarea#annotation-note(v-model="noteInput" :disabled="saving || loading || !bucket_id" rows="2" max-rows="6" @input="noteDirty = true")
     b-alert(v-if="formError" show variant="warning") {{ formErrorMessage }}
     b-button.mr-2(type="submit" variant="primary" :disabled="saving || loading || !bucket_id") {{ editingId === null ? $t('annotations.add') : $t('common.save') }}
     b-button(v-if="editingId !== null" variant="outline-secondary" :disabled="saving" @click="resetForm") {{ $t('common.cancel') }}
@@ -112,6 +112,10 @@ export default {
       endInput: moment().format(LOCAL_FORMAT),
       tags: [],
       noteInput: '',
+      // A note the form cannot represent renders blank, so "blank" alone does
+      // not tell us whether the user cleared it or never touched it. Only an
+      // explicit edit may replace or drop the stored note.
+      noteDirty: false,
     };
   },
   computed: {
@@ -201,6 +205,7 @@ export default {
       this.formError = null;
       this.tags = [];
       this.noteInput = '';
+      this.noteDirty = false;
       this.startInput = moment().subtract(1, 'hour').format(LOCAL_FORMAT);
       this.endInput = moment().format(LOCAL_FORMAT);
     },
@@ -216,6 +221,7 @@ export default {
       this.endInput = moment(this.endOf(e)).format(LOCAL_FORMAT);
       this.tags = tagChips(e.data.tags);
       this.noteInput = formatNote(e.data.note);
+      this.noteDirty = false;
       window.scrollTo && window.scrollTo(0, 0);
     },
     load: async function () {
@@ -270,7 +276,7 @@ export default {
         if (!_.isEqual(this.tags, tagChips(data.tags))) {
           data.tags = applyTagEdits(data.tags, this.tags);
         }
-        if (this.noteInput !== formatNote(this.originalData.note)) {
+        if (this.noteDirty || this.noteInput !== formatNote(this.originalData.note)) {
           if (event.data.note) data.note = event.data.note;
           else delete data.note;
         }
