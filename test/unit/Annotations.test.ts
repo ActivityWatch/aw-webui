@@ -475,6 +475,15 @@ describe('Annotations view', () => {
 });
 
 // Node reads TZ at startup; replay these component tests in a real DST zone.
+// A minimal image without tzdata makes glibc treat the unknown zone as UTC,
+// which would fail the DST assertions for an environment reason, not a
+// regression. The replay child detects that and skips the DST block.
+const dstZoneResolves = (() => {
+  const january = new Date('2026-01-15T12:00:00Z').getTimezoneOffset();
+  const july = new Date('2026-07-15T12:00:00Z').getTimezoneOffset();
+  return january !== july;
+})();
+
 if (!process.env.AW_ANNOTATION_ZONE) {
   // eslint-disable-next-line jest/expect-expect
   test('annotation regressions replay in Europe/Stockholm', () => {
@@ -489,7 +498,11 @@ if (!process.env.AW_ANNOTATION_ZONE) {
       ],
       {
         cwd: path.resolve(__dirname, '../..'),
-        env: { ...process.env, TZ: 'Europe/Stockholm', AW_ANNOTATION_ZONE: '1' },
+        env: {
+          ...process.env,
+          TZ: 'Europe/Stockholm',
+          AW_ANNOTATION_ZONE: '1',
+        },
         stdio: 'pipe',
         timeout: 90000,
       }
@@ -497,7 +510,7 @@ if (!process.env.AW_ANNOTATION_ZONE) {
   }, 95000);
 }
 
-const describeDST = process.env.AW_ANNOTATION_ZONE ? describe : describe.skip;
+const describeDST = process.env.AW_ANNOTATION_ZONE && dstZoneResolves ? describe : describe.skip;
 describeDST('annotation DST handling', () => {
   test('note-only edits retain both occurrences and milliseconds of a repeated hour', async () => {
     const original = {
