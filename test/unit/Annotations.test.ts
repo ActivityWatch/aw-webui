@@ -1,4 +1,6 @@
 import { execFileSync } from 'child_process';
+import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import moment from 'moment';
 import { createLocalVue, mount, shallowMount, Wrapper } from '@vue/test-utils';
@@ -484,34 +486,75 @@ const dstZoneResolves = (() => {
   return january !== july;
 })();
 
+// Node reads TZ at startup, so whether the zone actually resolves has to be
+// asked of a child process rather than computed here.
+function zoneResolvesInChild(tz: string): boolean {
+  const probe =
+    'const o=(d)=>new Date(d).getTimezoneOffset();' +
+    'process.stdout.write(String(o("2026-01-15T12:00:00Z")!==o("2026-07-15T12:00:00Z")));';
+  try {
+    const out = execFileSync(process.execPath, ['-e', probe], {
+      env: { ...process.env, TZ: tz },
+      stdio: 'pipe',
+      timeout: 15000,
+    });
+    return out.toString().trim() === 'true';
+  } catch {
+    return false;
+  }
+}
+
 if (!process.env.AW_ANNOTATION_ZONE) {
-  // eslint-disable-next-line jest/expect-expect
-  test('annotation regressions replay in Europe/Stockholm', () => {
-    execFileSync(
-      process.execPath,
-      [
-        require.resolve('jest/bin/jest'),
-        '--runInBand',
-        '--coverage=false',
-        '--runTestsByPath',
-        __filename,
-      ],
-      {
-        cwd: path.resolve(__dirname, '../..'),
-        env: {
-          ...process.env,
-          TZ: 'Europe/Stockholm',
-          AW_ANNOTATION_ZONE: '1',
-        },
-        stdio: 'pipe',
-        timeout: 90000,
+  // Skip the replay loudly when the zone cannot resolve: the child would skip
+  // its DST block and still exit 0, so reporting a pass would claim coverage
+  // that never ran.
+  const dstReplay = zoneResolvesInChild('Europe/Stockholm') ? test : test.skip;
+  dstReplay(
+    'annotation regressions replay in Europe/Stockholm',
+    () => {
+      // The DST describe writes this marker; without it the replay asserted
+      // nothing and must not report green.
+      const marker = path.join(os.tmpdir(), `aw-annotation-dst-${process.pid}`);
+      fs.rmSync(marker, { force: true });
+      try {
+        execFileSync(
+          process.execPath,
+          [
+            require.resolve('jest/bin/jest'),
+            '--runInBand',
+            '--coverage=false',
+            '--runTestsByPath',
+            __filename,
+          ],
+          {
+            cwd: path.resolve(__dirname, '../..'),
+            env: {
+              ...process.env,
+              TZ: 'Europe/Stockholm',
+              AW_ANNOTATION_ZONE: '1',
+              AW_ANNOTATION_DST_MARKER: marker,
+            },
+            stdio: 'pipe',
+            timeout: 90000,
+          }
+        );
+        // eslint-disable-next-line jest/no-standalone-expect
+        expect(fs.existsSync(marker)).toBe(true);
+      } finally {
+        fs.rmSync(marker, { force: true });
       }
-    );
-  }, 95000);
+    },
+    95000
+  );
 }
 
 const describeDST = process.env.AW_ANNOTATION_ZONE && dstZoneResolves ? describe : describe.skip;
 describeDST('annotation DST handling', () => {
+  if (process.env.AW_ANNOTATION_DST_MARKER) {
+    beforeAll(() => {
+      fs.writeFileSync(process.env.AW_ANNOTATION_DST_MARKER as string, 'ran');
+    });
+  }
   test('note-only edits retain both occurrences and milliseconds of a repeated hour', async () => {
     const original = {
       ...stored(1, ['a']),
