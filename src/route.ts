@@ -15,6 +15,7 @@ const Trends = () => import('./views/Trends.vue');
 const Settings = () => import('./views/settings/Settings.vue');
 const CategoryBuilder = () => import('./views/settings/CategoryBuilder.vue');
 const Stopwatch = () => import('./views/Stopwatch.vue');
+const Annotations = () => import('./views/Annotations.vue');
 const WorkReport = () => import('./views/WorkReport.vue');
 const BillingView = () => import('./views/BillingView.vue');
 const AISummaryView = () => import('./views/AISummaryView.vue');
@@ -79,6 +80,7 @@ const router = new VueRouter({
       props: true,
     },
     { path: '/stopwatch', component: Stopwatch },
+    { path: '/annotations', component: Annotations },
     { path: '/work-report', component: WorkReport },
     { path: '/billing', component: BillingView },
     { path: '/analysis/activity', component: AISummaryView },
