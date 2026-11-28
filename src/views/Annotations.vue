@@ -54,7 +54,7 @@ div
               template(v-if="endDate(e)") {{ endDate(e) }}
               |  {{ endOf(e) | shorttime }}
             b-badge.ml-2(v-for="t in tagList(e)" :key="t" variant="secondary") {{ t }}
-          div(v-if="e.data.note").annotation-note {{ e.data.note }}
+          div(v-if="noteText(e)").annotation-note {{ noteText(e) }}
         b-button.mx-1(size="sm" variant="outline-dark" :disabled="saving" @click="edit(e)") {{ $t('annotations.edit') }}
         b-button.mx-1(size="sm" variant="outline-danger" :disabled="saving" @click="remove(e)") {{ $t('common.delete') }}
     b-button.mt-3(v-if="hasMore" variant="outline-secondary" :disabled="saving" @click="showMore") {{ $t('annotations.showMore') }}
@@ -184,6 +184,13 @@ export default {
     },
     tagList(e) {
       return tagChips(e.data && e.data.tags);
+    },
+    noteText(e) {
+      // formatNote is a module import, not a template-visible member (Vue 2),
+      // so the list needs this wrapper like tagList does for tagChips. Without
+      // it, Vue interpolates a structured note as JSON instead of the blank
+      // the editor shows for values it cannot represent.
+      return formatNote(e.data && e.data.note);
     },
     resetForm() {
       this.editingId = null;

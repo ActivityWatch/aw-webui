@@ -439,6 +439,21 @@ describe('Annotations view', () => {
     await flush();
     expect(wrapper.find('.annotation-entry').text()).toContain('2026-01-02');
   });
+
+  test('the list renders notes through formatNote instead of raw values', async () => {
+    const { wrapper } = mountView([
+      stored(1, ['a'], 'plain note'),
+      stored(2, ['a'], { text: 'external note' }),
+    ]);
+    await flush();
+    const notes = wrapper.findAll('.annotation-note');
+    // A string note renders as-is; a structured note is not JSON-stringified
+    // into the UI (the editor already shows such values as blank).
+    expect(notes).toHaveLength(1);
+    expect(notes.at(0).text()).toBe('plain note');
+    expect(wrapper.text()).not.toContain('external note');
+    expect(wrapper.text()).not.toContain('"text"');
+  });
 });
 
 // Node reads TZ at startup; replay these component tests in a real DST zone.
